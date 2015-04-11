@@ -1,150 +1,121 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH -next v3] target/rd: Don't pass imcomplete scatterlist entries to sbc_dif_verify_*
-Date: Sat, 11 Apr 2015 13:17:31 +0900
-Message-ID: <1428725851-9275-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: Re: [PATCH RFC 1/3] vfs: add copy_file_range syscall and vfs helper
+Date: Sat, 11 Apr 2015 09:04:02 -0400
+Message-ID: <20150411090402.67d22d02@tlielax.poochiereds.net>
+References: <1428703236-24735-1-git-send-email-zab@redhat.com>
+	<1428703236-24735-2-git-send-email-zab@redhat.com>
+	<CAHQdGtSwSf0j6ge7rCue48bZ08212Ny2Crz9WMadSno11N8z_g@mail.gmail.com>
+	<20150411000208.GA20949@lenny.home.zabbo.net>
+	<CAHQdGtSaaPHbvtBM3yVGtAFpEAP8ZquYvErknq_rCoCCK+W2bA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAHQdGtSaaPHbvtBM3yVGtAFpEAP8ZquYvErknq_rCoCCK+W2bA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Trond Myklebust <trond.myklebust@primarydata.com>
+Cc: Zach Brown <zab@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The scatterlist for protection information which is passed to
-sbc_dif_verify_read() or sbc_dif_verify_write() requires that
-neighboring scatterlist entries are contiguous or chained so that they
-can be iterated by sg_next().
+On Fri, 10 Apr 2015 20:24:06 -0400
+Trond Myklebust <trond.myklebust@primarydata.com> wrote:
 
-However, the protection information for RD-MCP backends could be located
-in the multiple scatterlist arrays when the ramdisk space is too large.
-So if the read/write request straddles this boundary, sbc_dif_verify_read()
-or sbc_dif_verify_write() can't iterate all scatterlist entries.
+> On Fri, Apr 10, 2015 at 8:02 PM, Zach Brown <zab@redhat.com> wrote:
+> > On Fri, Apr 10, 2015 at 06:36:41PM -0400, Trond Myklebust wrote:
+> >> On Fri, Apr 10, 2015 at 6:00 PM, Zach Brown <zab@redhat.com> wrote:
+> >
+> >> > +
+> >> > +/*
+> >> > + * copy_file_range() differs from regular file read and write in that it
+> >> > + * specifically allows return partial success.  When it does so is up to
+> >> > + * the copy_file_range method.
+> >> > + */
+> >> > +ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >> > +                           struct file *file_out, loff_t pos_out,
+> >> > +                           size_t len, int flags)
+> >>
+> >> I'm going to repeat a gripe with this interface. I really don't think
+> >> we should treat copy_file_range() as taking a size_t length, since
+> >> that is not sufficient to do a full file copy on 32-bit systems w/ LFS
+> >> support.
+> >
+> > *nod*.  The length type is limited by the syscall return type and the
+> > arbitrary desire to mimic read/write.
+> >
+> > I sympathize with wanting to copy giant files with operations that don't
+> > scale with file size because files can be enormous but sparse.
+> 
+> The other argument against using a size_t is that there is no memory
+> buffer involved here. size_t is, after all, a type describing
+> in-memory objects, not files.
+> 
+> >> Could we perhaps instead of a length, define a 'pos_in_start' and a
+> >> 'pos_in_end' offset (with the latter being -1 for a full-file copy)
+> >> and then return an 'loff_t' value stating where the copy ended?
+> >
+> > Well, the resulting offset will be set if the caller provided it.  So
+> > they could already be getting the copied length from that.  But they
+> > might not specify the offsets.  Maybe they're just using the results to
+> > total up a completion indicator.
+> >
+> > Maybe we could make the length a pointer like the offsets that's set to
+> > the copied length on return.
+> 
+> That works, but why do we care so much about the difference between a
+> length and an offset as a return value?
+> 
 
-This problem can be fixed by chaining protection information scatterlist
-at creation time.  For the architectures which don't support sg chaining
-(i.e. !CONFIG_ARCH_HAS_SG_CHAIN), fix it by allocating temporary
-scatterlist if needed.
+I think it just comes down to potential confusion for users. What's
+more useful, the number of bytes actually copied, or the offset into the
+file where the copy ended?
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
-* v3
-- Fix it by chaining protection information scatterlist at creation time
-  if CONFIG_ARCH_HAS_SG_CHAIN is defined.
+I tend to the think an offset is more useful for someone trying to
+copy a file in chunks, particularly if the file is sparse. That gives
+them a clear place to continue the copy.
 
- drivers/target/target_core_rd.c | 67 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 64 insertions(+), 3 deletions(-)
+So, I think I agree with Trond that phrasing this interface in terms of
+file offsets seems like it might be more useful. That also neatly
+sidesteps the size_t limitations on 32-bit platforms.
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index ac5e8d2..b4e6de0 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -139,10 +139,22 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
- 	unsigned char *p;
- 
- 	while (total_sg_needed) {
-+		unsigned int chain_entry = 0;
-+
- 		sg_per_table = (total_sg_needed > max_sg_per_table) ?
- 			max_sg_per_table : total_sg_needed;
- 
--		sg = kzalloc(sg_per_table * sizeof(struct scatterlist),
-+#ifdef CONFIG_ARCH_HAS_SG_CHAIN
-+
-+		/*
-+		 * Reserve extra element for chain entry
-+		 */
-+		if (sg_per_table < total_sg_needed)
-+			chain_entry = 1;
-+
-+#endif /* CONFIG_ARCH_HAS_SG_CHAIN */
-+
-+		sg = kcalloc(sg_per_table + chain_entry, sizeof(*sg),
- 				GFP_KERNEL);
- 		if (!sg) {
- 			pr_err("Unable to allocate scatterlist array"
-@@ -150,7 +162,16 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
- 			return -ENOMEM;
- 		}
- 
--		sg_init_table(sg, sg_per_table);
-+		sg_init_table(sg, sg_per_table + chain_entry);
-+
-+#ifdef CONFIG_ARCH_HAS_SG_CHAIN
-+
-+		if (i > 0) {
-+			sg_chain(sg_table[i - 1].sg_table,
-+				 max_sg_per_table + 1, sg);
-+		}
-+
-+#endif /* CONFIG_ARCH_HAS_SG_CHAIN */
- 
- 		sg_table[i].sg_table = sg;
- 		sg_table[i].rd_sg_count = sg_per_table;
-@@ -390,11 +411,13 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *prot_table;
-+	bool need_to_release = false;
- 	struct scatterlist *prot_sg;
- 	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
- 	u32 prot_offset, prot_page;
-+	u32 prot_npages __maybe_unused;
- 	u64 tmp;
--	sense_reason_t rc;
-+	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	tmp = cmd->t_task_lba * se_dev->prot_length;
- 	prot_offset = do_div(tmp, PAGE_SIZE);
-@@ -407,7 +430,45 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
- 	prot_sg = &prot_table->sg_table[prot_page -
- 					prot_table->page_start_offset];
- 
-+#ifndef CONFIG_ARCH_HAS_SG_CHAIN
-+
-+	prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
-+				   PAGE_SIZE);
-+
-+	/*
-+	 * Allocate temporaly contiguous scatterlist entries if prot pages
-+	 * straddles multiple scatterlist tables.
-+	 */
-+	if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
-+		int i;
-+
-+		prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
-+		if (!prot_sg)
-+			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+
-+		need_to_release = true;
-+		sg_init_table(prot_sg, prot_npages);
-+
-+		for (i = 0; i < prot_npages; i++) {
-+			if (prot_page + i > prot_table->page_end_offset) {
-+				prot_table = rd_get_prot_table(dev,
-+								prot_page + i);
-+				if (!prot_table) {
-+					kfree(prot_sg);
-+					return rc;
-+				}
-+				sg_unmark_end(&prot_sg[i - 1]);
-+			}
-+			prot_sg[i] = prot_table->sg_table[prot_page + i -
-+						prot_table->page_start_offset];
-+		}
-+	}
-+
-+#endif /* !CONFIG_ARCH_HAS_SG_CHAIN */
-+
- 	rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg, prot_offset);
-+	if (need_to_release)
-+		kfree(prot_sg);
- 
- 	return rc;
- }
+> To be fair, the NFS copy offload also allows the copy to proceed out
+> of order, in which case the range of copied data could be
+> non-contiguous in the case of a failure. However neither the length
+> nor the offset case will give you the full story in that case. Any
+> return value can at best be considered to define an offset range whose
+> contents need to be checked for success/failure.
+> 
+
+Yuck! How the heck do you clean up the mess if that happens? I guess
+you're just stuck redoing the copy with normal READ/WRITE?
+
+Maybe we need to have the interface return a hard error in that
+case and not try to give back any sort of offset?
+
+> > This all seems pretty gross.  Does anyone else have a vote?
+> >
+> > (And I'll argue strongly against creating magical offset values that
+> > change behaviour.  If we want to ignore arguments and get the length
+> > from the source file we'd add a flag to do so.)
+> 
+> The '-1' was not intended to be a special/magical value: as far as I'm
+> concerned any end offset that covers the full range of supported file
+> lengths would be OK.
+> 
+
+Agreed. A "whole file" flag might also be useful too, but I'd leave
+that for after the initial implementation is merged, just in the
+interest of having _something_ that works in the near term.
+
+> >> Note that both btrfs and NFSv4.2 allow for 64-bit lengths, so this
+> >> interface would be closer to what is already in use anyway.
+> >
+> > Yeah, btrfs doesn't allow partial progress.  It returns 0 on success.
+> > We could also do that but people have expressed an interest in returning
+> > partial progress.
+> 
+> Returning an end offset would satisfy the partial progress requirement
+> (with the caveat mentioned above).
+> 
+
 -- 
-1.9.1
+Jeff Layton <jlayton@poochiereds.net>
