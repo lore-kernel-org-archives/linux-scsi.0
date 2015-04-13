@@ -1,51 +1,34 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] [SCSI] bnx2fc: Fix debug messasges in bnx2fc_io.c
-Date: Mon, 13 Apr 2015 16:15:05 -0400
-Message-ID: <alpine.OSX.2.00.1504131614140.2118@administrators-macbook-pro.local>
-References: <1428847633-30232-1-git-send-email-standby24x7@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/4] cxgbi: driver update
+Date: Mon, 13 Apr 2015 15:26:54 -0500
+Message-ID: <552C268E.10001@cs.wisc.edu>
+References: <201504102057.t3AKv9xR028741@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1428847633-30232-1-git-send-email-standby24x7@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38028 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754932AbbDMUbi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Apr 2015 16:31:38 -0400
+In-Reply-To: <201504102057.t3AKv9xR028741@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, James.Bottomley@HansenPartnership.com
 
-Looks ok.
+On 04/10/2015 03:57 PM, Karen Xie wrote:
+> This patch set contains fixes and updates for the cxgbi drivers. It updates 
+> the driver copyrights and versions, added logic to adjust the send/recv 
+> window based on the link speed and the initial sequence number.
+> 
+> Karen Xie (4):
+> cxgbi: use per-connection link-speed dependent send/recv windows
+> cxgbi: update copyright to 2015
+> cxgbi: update driver versions
+> cxgb4i: added setting of the initial sequence number
+> 
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Looks ok to me.
 
-On Sun, 12 Apr 2015, Masanari Iida wrote:
-
-> The debug messages in bnx2fc_process_seq_cleanup_compl() doesn't
-> match its function name.
->
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> ---
-> drivers/scsi/bnx2fc/bnx2fc_io.c | 4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> index 9ecca85..1b53a68 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> @@ -1319,7 +1319,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
-> 	int rc = 0;
-> 	struct bnx2fc_rport *tgt = orig_io_req->tgt;
->
-> -	BNX2FC_IO_DBG(orig_io_req, "Entered process_cleanup_compl xid = 0x%x"
-> +	BNX2FC_IO_DBG(orig_io_req, "Entered process_seq_cleanup_compl xid = 0x%x"
-> 			      "cmd_type = %d\n",
-> 		   seq_clnp_req->xid, seq_clnp_req->cmd_type);
->
-> @@ -1334,7 +1334,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
-> 	spin_lock_bh(&tgt->tgt_lock);
->
-> 	if (rc)
-> -		printk(KERN_ERR PFX "clnup_compl: Unable to send SRR"
-> +		printk(KERN_ERR PFX "process_seq_clenup_compl: Unable to send SRR"
-> 			" IO will abort\n");
-> 	seq_clnp_req->cb_arg = NULL;
-> 	kref_put(&orig_io_req->refcount, bnx2fc_cmd_release);
->
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
