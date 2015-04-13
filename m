@@ -1,72 +1,35 @@
-From: Zach Brown <zab@redhat.com>
-Subject: Re: [PATCH RFC 1/3] vfs: add copy_file_range syscall and vfs helper
-Date: Mon, 13 Apr 2015 09:32:11 -0700
-Message-ID: <20150413163211.GA8500@lenny.home.zabbo.net>
-References: <1428703236-24735-1-git-send-email-zab@redhat.com>
- <1428703236-24735-2-git-send-email-zab@redhat.com>
- <CAHQdGtSwSf0j6ge7rCue48bZ08212Ny2Crz9WMadSno11N8z_g@mail.gmail.com>
- <20150411000208.GA20949@lenny.home.zabbo.net>
- <CAHQdGtSaaPHbvtBM3yVGtAFpEAP8ZquYvErknq_rCoCCK+W2bA@mail.gmail.com>
- <20150411090402.67d22d02@tlielax.poochiereds.net>
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH net-next v2 1/4] cxgb4/iw_cxgb4/cxgb4i: remove duplicate
+ definitions
+Date: Mon, 13 Apr 2015 10:38:08 -0600
+Message-ID: <20150413163808.GA17521@obsidianresearch.com>
+References: <cover.1428930614.git.varun@chelsio.com>
+ <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150411090402.67d22d02@tlielax.poochiereds.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Layton <jlayton@poochiereds.net>
-Cc: Trond Myklebust <trond.myklebust@primarydata.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-btrfs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-scsi@vger.kernel.org
+In-Reply-To: <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, davem@davemloft.net, JBottomley@parallels.com, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com, kxie@chelsio.com, praveenm@chelsio.com, kumaras@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-> > >> Could we perhaps instead of a length, define a 'pos_in_start' and a
-> > >> 'pos_in_end' offset (with the latter being -1 for a full-file copy)
-> > >> and then return an 'loff_t' value stating where the copy ended?
-> > >
-> > > Well, the resulting offset will be set if the caller provided it.  So
-> > > they could already be getting the copied length from that.  But they
-> > > might not specify the offsets.  Maybe they're just using the results to
-> > > total up a completion indicator.
-> > >
-> > > Maybe we could make the length a pointer like the offsets that's set to
-> > > the copied length on return.
-> > 
-> > That works, but why do we care so much about the difference between a
-> > length and an offset as a return value?
-> > 
-> 
-> I think it just comes down to potential confusion for users. What's
-> more useful, the number of bytes actually copied, or the offset into the
-> file where the copy ended?
-> 
-> I tend to the think an offset is more useful for someone trying to
-> copy a file in chunks, particularly if the file is sparse. That gives
-> them a clear place to continue the copy.
-> 
-> So, I think I agree with Trond that phrasing this interface in terms of
-> file offsets seems like it might be more useful. That also neatly
-> sidesteps the size_t limitations on 32-bit platforms.
+On Mon, Apr 13, 2015 at 07:34:23PM +0530, Varun Prakash wrote:
+> define struct ulptx_idata in common header file t4_msg.h
+> to remove duplicate definitions.
 
-Yeah, fair enough.  I'll rework it.
+The Infiniband side of this patch looks OK.
 
-> > To be fair, the NFS copy offload also allows the copy to proceed out
-> > of order, in which case the range of copied data could be
-> > non-contiguous in the case of a failure. However neither the length
-> > nor the offset case will give you the full story in that case. Any
-> > return value can at best be considered to define an offset range whose
-> > contents need to be checked for success/failure.
-> > 
-> 
-> Yuck! How the heck do you clean up the mess if that happens? I guess
-> you're just stuck redoing the copy with normal READ/WRITE?
+Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-I don't think anyone will worry about checking file contents.
+Just some random thoughts on the other patches:
+ - Try and use 'if (IS_ENABLED(CONFIG_XX))' over #ifdef 
+   to improve compile test coverage. This would drop a fair number
+   of ifdefs.
+ - Some of the commit message are short, or non existant (ie #4)
+ - Generally, no need for 'static inline' in a .c file, the compiler knows
+   what to do.
 
-Yes, technically you can get fragmented completion past the initial
-contiguous region that the interface told you is done.   You can get
-that with O_DIRECT today.
-
-But it's a rare case that is not worth worrying about.  You'll retry at
-the contiguous offset until it doesn't make progress and then fall back
-to read/write.
-
-- z
+Regards,
+Jason
