@@ -1,39 +1,78 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH net-next v2 0/4] cxgb4: add FCoE DDP and RSS
-Date: Mon, 13 Apr 2015 19:34:22 +0530
-Message-ID: <cover.1428930614.git.varun@chelsio.com>
+Subject: [PATCH net-next v2 1/4] cxgb4/iw_cxgb4/cxgb4i: remove duplicate definitions
+Date: Mon, 13 Apr 2015 19:34:23 +0530
+Message-ID: <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
+References: <cover.1428930614.git.varun@chelsio.com>
 Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <cover.1428930614.git.varun@chelsio.com>
+In-Reply-To: <cover.1428930614.git.varun@chelsio.com>
+References: <cover.1428930614.git.varun@chelsio.com>
 Sender: netdev-owner@vger.kernel.org
 To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 Cc: davem@davemloft.net, JBottomley@parallels.com, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com, kxie@chelsio.com, praveenm@chelsio.com, kumaras@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch series enables RSS for FCoE frames and adds
-DDP support for FCoE target.
+define struct ulptx_idata in common header file t4_msg.h
+to remove duplicate definitions.
 
-v2: add patch 1/4 to fix build error "redefinition of 
-    struct ulptx_idata".
+Signed-off-by: Varun Prakash <varun@chelsio.com>
+---
+ drivers/infiniband/hw/cxgb4/t4fw_ri_api.h   |    9 ---------
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h |    5 +++++
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.h          |    5 -----
+ 3 files changed, 5 insertions(+), 14 deletions(-)
 
-Varun Prakash (4):
-  cxgb4/iw_cxgb4/cxgb4i: remove duplicate definitions
-  cxgb4: add structure and macro definitions for FCoE DDP
-  cxgb4: add DDP support for FCoE target
-  cxgb4: enable RSS for FCoE frames
-
- drivers/infiniband/hw/cxgb4/t4fw_ri_api.h       |    9 -
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |    1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c |  600 +++++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h |   54 ++-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   47 ++-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h  |    7 +
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  328 ++++++++++++-
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |    1 +
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.h      |   29 ++
- drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |   64 +++
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |    8 +
- drivers/net/ethernet/chelsio/cxgb4/t4_tcb.h     |   90 ++++
- drivers/net/ethernet/chelsio/cxgb4/t4_values.h  |    3 +
- drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |    9 +
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.h              |    5 -
- 15 files changed, 1234 insertions(+), 21 deletions(-)
- create mode 100644 drivers/net/ethernet/chelsio/cxgb4/t4_tcb.h
+diff --git a/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h b/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
+index 5e53327..210f04a 100644
+--- a/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
++++ b/drivers/infiniband/hw/cxgb4/t4fw_ri_api.h
+@@ -818,15 +818,6 @@ struct cpl_pass_accept_req {
+ #define SYN_INTF_V(x) ((x) << SYN_INTF_S)
+ #define SYN_INTF_G(x) (((x) >> SYN_INTF_S) & SYN_INTF_M)
+ 
+-struct ulptx_idata {
+-	__be32 cmd_more;
+-	__be32 len;
+-};
+-
+-#define ULPTX_NSGE_S    0
+-#define ULPTX_NSGE_M    0xFFFF
+-#define ULPTX_NSGE_V(x) ((x) << ULPTX_NSGE_S)
+-
+ #define RX_DACK_MODE_S    29
+ #define RX_DACK_MODE_M    0x3
+ #define RX_DACK_MODE_V(x) ((x) << RX_DACK_MODE_S)
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
+index 30a2f56..7e2137d 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
+@@ -1054,6 +1054,11 @@ struct ulptx_sgl {
+ 	struct ulptx_sge_pair sge[0];
+ };
+ 
++struct ulptx_idata {
++	__be32 cmd_more;
++	__be32 len;
++};
++
+ #define ULPTX_NSGE_S    0
+ #define ULPTX_NSGE_V(x) ((x) << ULPTX_NSGE_S)
+ 
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
+index 1096026..342263b 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.h
+@@ -23,11 +23,6 @@
+ #define CXGB4I_TX_HEADER_LEN \
+ 	(sizeof(struct fw_ofld_tx_data_wr) + sizeof(struct sge_opaque_hdr))
+ 
+-struct ulptx_idata {
+-	__be32 cmd_more;
+-	__be32 len;
+-};
+-
+ struct cpl_rx_data_ddp {
+ 	union opcode_tid ot;
+ 	__be16 urg;
+-- 
+1.7.1
