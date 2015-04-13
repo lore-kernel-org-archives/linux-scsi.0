@@ -1,92 +1,51 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [scsi:misc 14/106] drivers/scsi/storvsc_drv.c:1658
- storvsc_queuecommand() warn: curly braces intended?
-Date: Mon, 13 Apr 2015 19:20:05 +0000
-Message-ID: <BY2PR0301MB071154F226D3914431F9F88DA0E70@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <20150413115603.GR16501@mwanda> <1428935248.2314.3.camel@Odin.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH] [SCSI] bnx2fc: Fix debug messasges in bnx2fc_io.c
+Date: Mon, 13 Apr 2015 16:15:05 -0400
+Message-ID: <alpine.OSX.2.00.1504131614140.2118@administrators-macbook-pro.local>
+References: <1428847633-30232-1-git-send-email-standby24x7@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0140.outbound.protection.outlook.com ([65.55.169.140]:17820
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751881AbbDMTUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2015 15:20:08 -0400
-In-Reply-To: <1428935248.2314.3.camel@Odin.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1428847633-30232-1-git-send-email-standby24x7@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@odin.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86amJvdHRvbWxleUBvZGluLmNvbV0NCj4gU2VudDogTW9uZGF5LCBBcHJpbCAxMywg
-MjAxNSA3OjI2IEFNDQo+IFRvOiBkYW4uY2FycGVudGVyQG9yYWNsZS5jb20NCj4gQ2M6IGxpbnV4
-LXNjc2lAdmdlci5rZXJuZWwub3JnOyBrYnVpbGRAMDEub3JnOyBLWSBTcmluaXZhc2FuDQo+IFN1
-YmplY3Q6IFJlOiBbc2NzaTptaXNjIDE0LzEwNl0gZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmM6
-MTY1OA0KPiBzdG9ydnNjX3F1ZXVlY29tbWFuZCgpIHdhcm46IGN1cmx5IGJyYWNlcyBpbnRlbmRl
-ZD8NCj4gDQo+IE9uIE1vbiwgMjAxNS0wNC0xMyBhdCAxNDo1NiArMDMwMCwgRGFuIENhcnBlbnRl
-ciB3cm90ZToNCj4gPiB0cmVlOiAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgv
-a2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0IG1pc2MNCj4gPiBoZWFkOiAgIDAzNTFiOGY4MTM5MmM2
-ZGJiYmIwMzZlNWM4ZjczY2VmZjY4NzI2ZTkNCj4gPiBjb21taXQ6IGJlMGNmNmNhMzAxYzYxNDU4
-ZGM0YWExYTM3YWNmNGY1OGQyZWQzZDYgWzE0LzEwNl0gc2NzaToNCj4gc3RvcnZzYzogU2V0IHRo
-ZSB0YWJsZXNpemUgYmFzZWQgb24gdGhlIGluZm9ybWF0aW9uIGdpdmVuIGJ5IHRoZSBob3N0DQo+
-ID4NCj4gPiBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYzoxNjU4IHN0b3J2c2NfcXVldWVjb21t
-YW5kKCkgd2FybjogY3VybHkNCj4gYnJhY2VzIGludGVuZGVkPw0KPiA+DQo+ID4gZ2l0IHJlbW90
-ZSBhZGQgc2NzaQ0KPiBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9n
-aXQvamVqYi9zY3NpLmdpdA0KPiA+IGdpdCByZW1vdGUgdXBkYXRlIHNjc2kNCj4gPiBnaXQgY2hl
-Y2tvdXQgYmUwY2Y2Y2EzMDFjNjE0NThkYzRhYTFhMzdhY2Y0ZjU4ZDJlZDNkNg0KPiA+IHZpbSAr
-MTY1OCBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+DQo+ID4gYzViNDYzYWUgZHJpdmVy
-cy9zdGFnaW5nL2h2L3N0b3J2c2NfZHJ2LmMgSy4gWS4gU3Jpbml2YXNhbiAyMDExLTA1LTEwICAx
-NjQyDQo+IAkJCXNnbCA9IGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsOw0KPiA+IGM1YjQ2M2FlIGRy
-aXZlcnMvc3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsuIFkuIFNyaW5pdmFzYW4gMjAxMS0wNS0x
-MCAgMTY0Mw0KPiAJCQlzZ19jb3VudCA9IGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50Ow0K
-PiA+IGM1YjQ2M2FlIGRyaXZlcnMvc3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsuIFkuIFNyaW5p
-dmFzYW4gMjAxMS0wNS0xMCAgMTY0NA0KPiAJCX0NCj4gPiBjNWI0NjNhZSBkcml2ZXJzL3N0YWdp
-bmcvaHYvc3RvcnZzY19kcnYuYyBLLiBZLiBTcmluaXZhc2FuIDIwMTEtMDUtMTAgIDE2NDUNCj4g
-PiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZh
-c2FuIDIwMTUtMDMtMjcgIDE2NDYNCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19k
-cnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NDcNCj4gCQlpZiAoc2df
-Y291bnQgPiBNQVhfUEFHRV9CVUZGRVJfQ09VTlQpIHsNCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Nj
-c2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NDgN
-Cj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmlu
-aXZhc2FuIDIwMTUtMDMtMjcgIDE2NDkNCj4gCQkJcGF5bG9hZF9zeiA9IChzZ19jb3VudCAqIHNp
-emVvZih2b2lkICopICsNCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAg
-ICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NTANCj4gCQkJCSAgICAgIHNpemVv
-ZihzdHJ1Y3Qgdm1idXNfcGFja2V0X21wYl9hcnJheSkpOw0KPiA+IGJlMGNmNmNhIGRyaXZlcnMv
-c2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY1
-MQ0KPiAJCQlwYXlsb2FkID0ga21hbGxvYyhwYXlsb2FkX3N6LCBHRlBfQVRPTUlDKTsNCj4gPiBi
-ZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2Fu
-IDIwMTUtMDMtMjcgIDE2NTINCj4gCQkJaWYgKCFwYXlsb2FkKSB7DQo+ID4gYmUwY2Y2Y2EgZHJp
-dmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3
-ICAxNjUzDQo+IAkJCQlpZiAoY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2xfY291bnQpDQo+ID4NCj4g
-PiBTdGFydCBibG9jayBoZXJlLg0KPiA+DQo+ID4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2
-c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjU0DQo+IAkJCQkJ
-ZGVzdHJveV9ib3VuY2VfYnVmZmVyKA0KPiA+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNj
-X2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY1NQ0KPiAJCQkJCWNt
-ZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsLA0KPiA+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNj
-X2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY1Ng0KPiAJCQkJCWNt
-ZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KTsNCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kv
-c3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NTcNCj4g
-PiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZh
-c2FuIDIwMTUtMDMtMjcgQDE2NTgNCj4gCQkJCQlyZXR1cm4NCj4gU0NTSV9NTFFVRVVFX0RFVklD
-RV9CVVNZOw0KPiA+DQo+ID4gRW5kIGJsb2NrIGhlcmUuDQo+ID4NCj4gPiBiZTBjZjZjYSBkcml2
-ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcg
-IDE2NTkNCj4gCQkJfQ0KPiA+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAg
-ICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY2MA0KPiAJCX0NCj4gPiBiZTBjZjZj
-YSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUt
-MDMtMjcgIDE2NjENCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAg
-ICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjINCj4gCQlwYXlsb2FkLT5yYW5nZS5s
-ZW4gPSBsZW5ndGg7DQo+ID4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAg
-ICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjYzDQo+IAkJcGF5bG9hZC0+cmFuZ2Uu
-b2Zmc2V0ID0gc2dsWzBdLm9mZnNldDsNCj4gPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZz
-Y19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjQNCj4gPiBhYWNl
-ZDk5MyBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIw
-MTUtMDMtMjcgIDE2NjUNCj4gCQljdXJfc2dsID0gc2dsOw0KPiA+IGFhY2VkOTkzIGRyaXZlcnMv
-c2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY2
-Ng0KPiAJCWZvciAoaSA9IDA7IGkgPCBzZ19jb3VudDsgaSsrKSB7DQo+IA0KPiBJIHRoaW5rIHRo
-aXMgaXMganVzdCBzY3Jld2VkIHVwIGluZGVudGF0aW9uLiAgWW91IGhhdmUgdG8gcmV0dXJuDQo+
-IERFVklDRV9CVVNZIGZvciB0aGUga21hbGxvYyBmYWlsdXJlLiAgVGhlIGlmIGlzIGp1c3Qgc2Vl
-aW5nIGlmIGNsZWFudXANCj4gaXMgbmVlZGVkLg0KDQpZZXM7IGJhZCBpbmRlbnRhdGlvbi4gSSB3
-aWxsIGZpeCBpdC4NCg0KSy4gWQ0KPiANCj4gSmFtZXMNCg0K
+Looks ok.
+
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+
+On Sun, 12 Apr 2015, Masanari Iida wrote:
+
+> The debug messages in bnx2fc_process_seq_cleanup_compl() doesn't
+> match its function name.
+>
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> ---
+> drivers/scsi/bnx2fc/bnx2fc_io.c | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 9ecca85..1b53a68 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -1319,7 +1319,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
+> 	int rc = 0;
+> 	struct bnx2fc_rport *tgt = orig_io_req->tgt;
+>
+> -	BNX2FC_IO_DBG(orig_io_req, "Entered process_cleanup_compl xid = 0x%x"
+> +	BNX2FC_IO_DBG(orig_io_req, "Entered process_seq_cleanup_compl xid = 0x%x"
+> 			      "cmd_type = %d\n",
+> 		   seq_clnp_req->xid, seq_clnp_req->cmd_type);
+>
+> @@ -1334,7 +1334,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
+> 	spin_lock_bh(&tgt->tgt_lock);
+>
+> 	if (rc)
+> -		printk(KERN_ERR PFX "clnup_compl: Unable to send SRR"
+> +		printk(KERN_ERR PFX "process_seq_clenup_compl: Unable to send SRR"
+> 			" IO will abort\n");
+> 	seq_clnp_req->cb_arg = NULL;
+> 	kref_put(&orig_io_req->refcount, bnx2fc_cmd_release);
+>
