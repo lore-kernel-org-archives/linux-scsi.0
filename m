@@ -1,57 +1,68 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH -next v3] target/rd: Don't pass imcomplete scatterlist
- entries to sbc_dif_verify_*
-Date: Mon, 13 Apr 2015 20:49:35 +0900
-Message-ID: <CAC5umyh8kukPxgxuw=PXiW3qGO0o5Y09T=K78GVWwb5_T+u+VA@mail.gmail.com>
-References: <1428725851-9275-1-git-send-email-akinobu.mita@gmail.com>
-	<1428901171.15567.1.camel@haakon3.risingtidesystems.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Mon, 13 Apr 2015 15:18:44 +0200
+Message-ID: <552BC234.4020000@redhat.com>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>	<54AC0A17.8020405@redhat.com>	<20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428901171.15567.1.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Vinson Lee <vlee@twopensource.com>
+Cc: Greg KH <greg@kroah.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-2015-04-13 13:59 GMT+09:00 Nicholas A. Bellinger <nab@linux-iscsi.org>:
-> On Sat, 2015-04-11 at 13:17 +0900, Akinobu Mita wrote:
->> The scatterlist for protection information which is passed to
->> sbc_dif_verify_read() or sbc_dif_verify_write() requires that
->> neighboring scatterlist entries are contiguous or chained so that they
->> can be iterated by sg_next().
+On 04/11/2015 12:45 AM, Vinson Lee wrote:
+> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
+>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
+>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
+>>>> Dear stable maintainers,
+>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
+>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
+>>>> earlier, if applicable)?
+>>> Please do not apply this patch isolated from his friend, the
+>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
+>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
+>>>
+>>> In addition to that, after the original issue goes away you may notice sometimes
+>>> an unhandled irq 16 message, to fix this a patch is posted
+>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
+>>> This patch still awaits a maintainers review though.
+>>>
+>>> Probably the best idea is to wait until the issue is solved completely.
+>> I'll wait, when it all gets worked out, please let stable@ know what
+>> patches to apply where.
 >>
->> However, the protection information for RD-MCP backends could be located
->> in the multiple scatterlist arrays when the ramdisk space is too large.
->> So if the read/write request straddles this boundary, sbc_dif_verify_read()
->> or sbc_dif_verify_write() can't iterate all scatterlist entries.
+>> thanks,
 >>
->> This problem can be fixed by chaining protection information scatterlist
->> at creation time.  For the architectures which don't support sg chaining
->> (i.e. !CONFIG_ARCH_HAS_SG_CHAIN), fix it by allocating temporary
->> scatterlist if needed.
->>
->> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
->> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
->> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
->> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
->> Cc: target-devel@vger.kernel.org
->> Cc: linux-scsi@vger.kernel.org
->> ---
->> * v3
->> - Fix it by chaining protection information scatterlist at creation time
->>   if CONFIG_ARCH_HAS_SG_CHAIN is defined.
->>
->>  drivers/target/target_core_rd.c | 67 +++++++++++++++++++++++++++++++++++++++--
->>  1 file changed, 64 insertions(+), 3 deletions(-)
+>> greg k-h
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe stable" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> Applied to target-pending/for-next.
+> Hi, Thomas.
 >
-> Thanks for updating to use CONFIG_ARCH_HAS_SG_CHAIN for the common
-> case.  :)
+> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
+> turn off interrupts when kdump starts".
+>
+> Are the following patches suitable for stable now?
 
-BTW, does anyone know why some architectures disable
-CONFIG_ARCH_HAS_SG_CHAIN?  As far as I can see, there is no additional
-requirement to enable it for those that currently disable it.
+Yes, I believe they are, just note that 
+03741d9 hpsa: fix memory leak in kdump hard reset
+is not a part of that group we discussed before, but it may be added
+to stable too.
+
+Cheers,
+Tomas
+
+>
+> 3b74729 hpsa: turn off interrupts when kdump starts
+> 03741d9 hpsa: fix memory leak in kdump hard reset
+> 859c75a hpsa: add missing pci_set_master in kdump path
+> 132aa22 hpsa: refine the pci enable/disable handling
+>
+> Cheers,
+> Vinson
