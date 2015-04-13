@@ -1,83 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] mpt2sas,mpt3sas - PCI master abort fixups
-Date: Mon, 13 Apr 2015 07:38:00 -0700
-Message-ID: <1428935880.2314.7.camel@HansenPartnership.com>
-References: <1419948455-31624-1-git-send-email-joe.lawrence@stratus.com>
-		 <552B0998.1050808@stratus.com>
-	 <1428886445.2196.43.camel@HansenPartnership.com>
-	 <552BCD57.6090509@stratus.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 1/3] target/file: Fix BUG() when CONFIG_DEBUG_SG=y and
+ DIF protection enabled
+Date: Mon, 13 Apr 2015 17:55:19 +0300
+Message-ID: <552BD8D7.4050801@dev.mellanox.co.il>
+References: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43100 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753640AbbDMOiE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2015 10:38:04 -0400
-In-Reply-To: <552BCD57.6090509@stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, 2015-04-13 at 10:06 -0400, Joe Lawrence wrote:
-> On 04/12/2015 08:54 PM, James Bottomley wrote:
-> > On Sun, 2015-04-12 at 20:11 -0400, Joe Lawrence wrote:
-> >> On 12/30/2014 09:07 AM, Joe Lawrence wrote:
-> >>> A colleague noticed that the mpt2 and mpt3sas drivers do not correctly
-> >>> check the PCI master abort pattern in _base_wait_for_doorbell_ack.  This
-> >>> pattern should be checked *prior* to any valid bit patterns, which would
-> >>> always return true since a PCI read on master abort sets all bits high.
-> >>>
-> >>> The second patch adds similar checking to _base_wait_for_doorbell_int and
-> >>> _base_wait_for_doorbell_not_used to avoid potentially long loops around
-> >>> PCI reads.
-> >>>
-> >>> Joe Lawrence (2):
-> >>>   mpt2sas,mpt3sas: correct master-abort checking in doorbell ack
-> >>>   mpt2sas,mpt3sas: additional master abort checks
-> >>>
-> >>>  drivers/scsi/mpt2sas/mpt2sas_base.c |   17 ++++++++++++-----
-> >>>  drivers/scsi/mpt3sas/mpt3sas_base.c |   17 ++++++++++++-----
-> >>>  2 files changed, 24 insertions(+), 10 deletions(-)
-> >>>
-> >>
-> >> Avago ping?
-> >>
-> >> This one was pretty straightforward: check 0xFFFFFFFF *before* any
-> >> individual bit(s), i.e. before reading the doorbell register.
-> > 
-> > OK, Joe, explain why this patch is important: what problems could result
-> > from it not being present?  If you convince everyone then no more mpt2/3
-> > sas patches until this is at least commented on and a plan of action
-> > proposed.
-> 
-> Hi James,
-> 
-> As currently coded:  If the PCI read returns a master abort,
-> _base_wait_for_doorbell_ack will loop until it exhausts its timeout (up
-> to 15 seconds).  Other parts of the driver, like the periodic watchdog
-> or EEH, may detect a similar problem before such a long time and cleanup
-> the mess.  However, complete device removal may be stalled until whoever
-> called _base_wait_for_doorbell_ack is satisfied that it has finished.
+On 4/13/2015 5:21 PM, Akinobu Mita wrote:
+> When CONFIG_DEBUG_SG=y and DIF protection support enabled, kernel
+> BUG()s are triggered due to the following two issues:
+>
+> 1) prot_sg is not initialized by sg_init_table().
+>
+> When CONFIG_DEBUG_SG=y, scatterlist helpers check sg entry has a
+> correct magic value.
+>
+> 2) vmalloc'ed buffer is passed to sg_set_buf().
+>
+> sg_set_buf() uses virt_to_page() to convert virtual address to struct
+> page, but it doesn't work with vmalloc address.  vmalloc_to_page()
+> should be used instead.  As prot_buf isn't usually too large, so
+> fix it by allocating prot_buf by kmalloc instead of vmalloc.
+>
 
-I think we all picked this up from the changelog.  What I meant was in
-what situations might a card get a master abort ... because that's when
-the problem becomes user visible.  It sounds like it's something that
-might not occur very often or is a bit theoretical, is that right?
+Hi Akinobu,
 
-> This behavior is not really a bug, but feels like one in the making.
-> Should additional code be introduced, copy/pasted, etc. it may not do
-> what was intended.
-> 
-> For future reference, would a repost have been more appropriate?  This
-> changeset was so small that I figured a status ping would have sufficed.
+This obviously fixes a bug, but I'm afraid that for certain
+workloads (large IO size) this would trigger higher order allocations.
 
-Either works.  I was just trying to work out what sort of attention
-needs to be paid to the fix based on what sort of problem it fixes for
-the end user.
+how about removing the prot_buf altogether? The only reason why
+this bounce is used is to allow code sharing with rd_mcp DIF mode
+calling sbc_verify_[write|read]. But I'd say it doesn't make sense
+anymore given these fixes.
 
-James
+IMO, the t_prot_sg can be used just like t_data_sg.
+In the read case, we just read the data into t_prot_sg using
+bvec_iter (better to reuse fd_do_rw code) and just call
+__sbc_dif_verify_read (that would not copy sg's).
+In the write case, we call sbc_dif_verify_write() with NULL to
+avoid the copy and then just write it to the file (reusing fd_do_rw
+code).
 
+Thoughts?
 
+Sagi.
