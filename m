@@ -1,163 +1,83 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 3/3] target/file: Fix UNMAP with DIF protection support
-Date: Mon, 13 Apr 2015 23:21:58 +0900
-Message-ID: <1428934918-4004-3-git-send-email-akinobu.mita@gmail.com>
-References: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+From: James Bottomley <jbottomley@odin.com>
+Subject: Re: [scsi:misc 14/106] drivers/scsi/storvsc_drv.c:1658
+ storvsc_queuecommand() warn: curly braces intended?
+Date: Mon, 13 Apr 2015 14:26:12 +0000
+Message-ID: <1428935248.2314.3.camel@Odin.com>
+References: <20150413115603.GR16501@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:37503 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604AbbDMO1b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:27:31 -0400
+In-Reply-To: <20150413115603.GR16501@mwanda>
+Content-Language: en-US
+Content-ID: <2ADDA923A9F04044957167D30B2A5849@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>, "kys@microsoft.com" <kys@microsoft.com>
 
-When UNMAP command is issued with DIF protection support enabled,
-the protection info for the unmapped region is remain unchanged.
-So READ command for the region causes data integrity failure.
-
-This fixes it by invalidating protection info for the unmapped region
-by filling with 0xff pattern.  This change also adds helper function
-fd_do_prot_fill() in order to reduce code duplication with existing
-fd_format_prot().
-
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
- drivers/target/target_core_file.c | 86 +++++++++++++++++++++++++++------------
- 1 file changed, 61 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 4c7a6c8..cbb0cc2 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -541,6 +541,56 @@ fd_execute_write_same(struct se_cmd *cmd)
- 	return 0;
- }
- 
-+static int
-+fd_do_prot_fill(struct se_device *se_dev, sector_t lba, sector_t nolb,
-+		void *buf, size_t bufsize)
-+{
-+	struct fd_dev *fd_dev = FD_DEV(se_dev);
-+	struct file *prot_fd = fd_dev->fd_prot_file;
-+	sector_t prot_length, prot;
-+	loff_t pos = lba * se_dev->prot_length;
-+
-+	if (!prot_fd) {
-+		pr_err("Unable to locate fd_dev->fd_prot_file\n");
-+		return -ENODEV;
-+	}
-+
-+	prot_length = nolb * se_dev->prot_length;
-+
-+	for (prot = 0; prot < prot_length;) {
-+		sector_t len = min_t(sector_t, bufsize, prot_length - prot);
-+		ssize_t ret = kernel_write(prot_fd, buf, len, pos + prot);
-+
-+		if (ret != len) {
-+			pr_err("vfs_write to prot file failed: %zd\n", ret);
-+			return ret < 0 ? ret : -ENODEV;
-+		}
-+		prot += ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+fd_do_prot_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
-+{
-+	void *buf;
-+	int rc;
-+
-+	buf = (void *)__get_free_page(GFP_KERNEL);
-+	if (!buf) {
-+		pr_err("Unable to allocate FILEIO prot buf\n");
-+		return -ENOMEM;
-+	}
-+	memset(buf, 0xff, PAGE_SIZE);
-+
-+	rc = fd_do_prot_fill(cmd->se_dev, lba, nolb, buf, PAGE_SIZE);
-+
-+	free_page((unsigned long)buf);
-+
-+	return rc;
-+}
-+
- static sense_reason_t
- fd_do_unmap(struct se_cmd *cmd, void *priv, sector_t lba, sector_t nolb)
- {
-@@ -548,6 +598,12 @@ fd_do_unmap(struct se_cmd *cmd, void *priv, sector_t lba, sector_t nolb)
- 	struct inode *inode = file->f_mapping->host;
- 	int ret;
- 
-+	if (cmd->se_dev->dev_attrib.pi_prot_type) {
-+		ret = fd_do_prot_unmap(cmd, lba, nolb);
-+		if (ret)
-+			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+	}
-+
- 	if (S_ISBLK(inode->i_mode)) {
- 		/* The backend is block device, use discard */
- 		struct block_device *bdev = inode->i_bdev;
-@@ -870,48 +926,28 @@ static int fd_init_prot(struct se_device *dev)
- 
- static int fd_format_prot(struct se_device *dev)
- {
--	struct fd_dev *fd_dev = FD_DEV(dev);
--	struct file *prot_fd = fd_dev->fd_prot_file;
--	sector_t prot_length, prot;
- 	unsigned char *buf;
--	loff_t pos = 0;
- 	int unit_size = FDBD_FORMAT_UNIT_SIZE * dev->dev_attrib.block_size;
--	int rc, ret = 0, size, len;
-+	int ret;
- 
- 	if (!dev->dev_attrib.pi_prot_type) {
- 		pr_err("Unable to format_prot while pi_prot_type == 0\n");
- 		return -ENODEV;
- 	}
--	if (!prot_fd) {
--		pr_err("Unable to locate fd_dev->fd_prot_file\n");
--		return -ENODEV;
--	}
- 
- 	buf = vzalloc(unit_size);
- 	if (!buf) {
- 		pr_err("Unable to allocate FILEIO prot buf\n");
- 		return -ENOMEM;
- 	}
--	prot_length = (dev->transport->get_blocks(dev) + 1) * dev->prot_length;
--	size = prot_length;
- 
- 	pr_debug("Using FILEIO prot_length: %llu\n",
--		 (unsigned long long)prot_length);
-+		 (unsigned long long)(dev->transport->get_blocks(dev) + 1) *
-+					dev->prot_length);
- 
- 	memset(buf, 0xff, unit_size);
--	for (prot = 0; prot < prot_length; prot += unit_size) {
--		len = min(unit_size, size);
--		rc = kernel_write(prot_fd, buf, len, pos);
--		if (rc != len) {
--			pr_err("vfs_write to prot file failed: %d\n", rc);
--			ret = -ENODEV;
--			goto out;
--		}
--		pos += len;
--		size -= len;
--	}
--
--out:
-+	ret = fd_do_prot_fill(dev, 0, dev->transport->get_blocks(dev) + 1,
-+			      buf, unit_size);
- 	vfree(buf);
- 	return ret;
- }
--- 
-1.9.1
+T24gTW9uLCAyMDE1LTA0LTEzIGF0IDE0OjU2ICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
+PiB0cmVlOiAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9q
+ZWpiL3Njc2kuZ2l0IG1pc2MNCj4gaGVhZDogICAwMzUxYjhmODEzOTJjNmRiYmJiMDM2ZTVjOGY3
+M2NlZmY2ODcyNmU5DQo+IGNvbW1pdDogYmUwY2Y2Y2EzMDFjNjE0NThkYzRhYTFhMzdhY2Y0ZjU4
+ZDJlZDNkNiBbMTQvMTA2XSBzY3NpOiBzdG9ydnNjOiBTZXQgdGhlIHRhYmxlc2l6ZSBiYXNlZCBv
+biB0aGUgaW5mb3JtYXRpb24gZ2l2ZW4gYnkgdGhlIGhvc3QNCj4gDQo+IGRyaXZlcnMvc2NzaS9z
+dG9ydnNjX2Rydi5jOjE2NTggc3RvcnZzY19xdWV1ZWNvbW1hbmQoKSB3YXJuOiBjdXJseSBicmFj
+ZXMgaW50ZW5kZWQ/DQo+IA0KPiBnaXQgcmVtb3RlIGFkZCBzY3NpIGdpdDovL2dpdC5rZXJuZWwu
+b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0DQo+IGdpdCByZW1vdGUg
+dXBkYXRlIHNjc2kNCj4gZ2l0IGNoZWNrb3V0IGJlMGNmNmNhMzAxYzYxNDU4ZGM0YWExYTM3YWNm
+NGY1OGQyZWQzZDYNCj4gdmltICsxNjU4IGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IA0K
+PiBjNWI0NjNhZSBkcml2ZXJzL3N0YWdpbmcvaHYvc3RvcnZzY19kcnYuYyBLLiBZLiBTcmluaXZh
+c2FuIDIwMTEtMDUtMTAgIDE2NDIgIAkJCXNnbCA9IGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsOw0K
+PiBjNWI0NjNhZSBkcml2ZXJzL3N0YWdpbmcvaHYvc3RvcnZzY19kcnYuYyBLLiBZLiBTcmluaXZh
+c2FuIDIwMTEtMDUtMTAgIDE2NDMgIAkJCXNnX2NvdW50ID0gY21kX3JlcXVlc3QtPmJvdW5jZV9z
+Z2xfY291bnQ7DQo+IGM1YjQ2M2FlIGRyaXZlcnMvc3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsu
+IFkuIFNyaW5pdmFzYW4gMjAxMS0wNS0xMCAgMTY0NCAgCQl9DQo+IGM1YjQ2M2FlIGRyaXZlcnMv
+c3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsuIFkuIFNyaW5pdmFzYW4gMjAxMS0wNS0xMCAgMTY0
+NSAgDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNy
+aW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY0NiAgDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9y
+dnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY0NyAgCQlpZiAo
+c2dfY291bnQgPiBNQVhfUEFHRV9CVUZGRVJfQ09VTlQpIHsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9z
+Y3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjQ4
+ICANCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jp
+bml2YXNhbiAyMDE1LTAzLTI3ICAxNjQ5ICAJCQlwYXlsb2FkX3N6ID0gKHNnX2NvdW50ICogc2l6
+ZW9mKHZvaWQgKikgKw0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAg
+ICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NTAgIAkJCQkgICAgICBzaXplb2Yoc3Ry
+dWN0IHZtYnVzX3BhY2tldF9tcGJfYXJyYXkpKTsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0
+b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjUxICAJCQlw
+YXlsb2FkID0ga21hbGxvYyhwYXlsb2FkX3N6LCBHRlBfQVRPTUlDKTsNCj4gYmUwY2Y2Y2EgZHJp
+dmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3
+ICAxNjUyICAJCQlpZiAoIXBheWxvYWQpIHsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2
+c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjUzICAJCQkJaWYg
+KGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KQ0KPiANCj4gU3RhcnQgYmxvY2sgaGVyZS4N
+Cj4gDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNy
+aW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY1NCAgCQkJCQlkZXN0cm95X2JvdW5jZV9idWZmZXIoDQo+
+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFz
+YW4gMjAxNS0wMy0yNyAgMTY1NSAgCQkJCQljbWRfcmVxdWVzdC0+Ym91bmNlX3NnbCwNCj4gYmUw
+Y2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAy
+MDE1LTAzLTI3ICAxNjU2ICAJCQkJCWNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KTsNCj4g
+YmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNh
+biAyMDE1LTAzLTI3ICAxNjU3ICANCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
+LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3IEAxNjU4ICAJCQkJCXJldHVybiBT
+Q1NJX01MUVVFVUVfREVWSUNFX0JVU1k7DQo+IA0KPiBFbmQgYmxvY2sgaGVyZS4NCj4gDQo+IGJl
+MGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4g
+MjAxNS0wMy0yNyAgMTY1OSAgCQkJfQ0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19k
+cnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjAgIAkJfQ0KPiBiZTBj
+ZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIw
+MTUtMDMtMjcgIDE2NjEgIA0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAg
+ICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjIgIAkJcGF5bG9hZC0+cmFuZ2Uu
+bGVuID0gbGVuZ3RoOw0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAg
+ICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjMgIAkJcGF5bG9hZC0+cmFuZ2Uub2Zm
+c2V0ID0gc2dsWzBdLm9mZnNldDsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
+LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjY0ICANCj4gYWFjZWQ5OTMg
+ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAz
+LTI3ICAxNjY1ICAJCWN1cl9zZ2wgPSBzZ2w7DQo+IGFhY2VkOTkzIGRyaXZlcnMvc2NzaS9zdG9y
+dnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY2NiAgCQlmb3Ig
+KGkgPSAwOyBpIDwgc2dfY291bnQ7IGkrKykgew0KDQpJIHRoaW5rIHRoaXMgaXMganVzdCBzY3Jl
+d2VkIHVwIGluZGVudGF0aW9uLiAgWW91IGhhdmUgdG8gcmV0dXJuDQpERVZJQ0VfQlVTWSBmb3Ig
+dGhlIGttYWxsb2MgZmFpbHVyZS4gIFRoZSBpZiBpcyBqdXN0IHNlZWluZyBpZiBjbGVhbnVwDQpp
+cyBuZWVkZWQuDQoNCkphbWVzDQoNCg==
