@@ -1,31 +1,32 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 1/3] target/file: Fix BUG() when CONFIG_DEBUG_SG=y and DIF protection enabled
-Date: Mon, 13 Apr 2015 23:21:56 +0900
-Message-ID: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH 2/3] target/file: Fix SG table for prot_buf initialization
+Date: Mon, 13 Apr 2015 23:21:57 +0900
+Message-ID: <1428934918-4004-2-git-send-email-akinobu.mita@gmail.com>
+References: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:35182 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932131AbbDMOWM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:22:12 -0400
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:32797 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131AbbDMOWQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:22:16 -0400
+In-Reply-To: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-When CONFIG_DEBUG_SG=y and DIF protection support enabled, kernel
-BUG()s are triggered due to the following two issues:
+In fd_do_prot_rw(), it allocates prot_buf which is used to copy from
+se_cmd->t_prot_sg by sbc_dif_copy_prot().  The SG table for prot_buf
+is also initialized by allocating 'se_cmd->t_prot_nents' entries of
+scatterlist and setting the data length of each entry to PAGE_SIZE
+at most.
 
-1) prot_sg is not initialized by sg_init_table().
+However if se_cmd->t_prot_sg contains a clustered entry (i.e.
+sg->length > PAGE_SIZE), the SG table for prot_buf can't be
+initialized correctly and sbc_dif_copy_prot() can't copy to prot_buf.
+(This actually happened with TCM loopback fabric module)
 
-When CONFIG_DEBUG_SG=y, scatterlist helpers check sg entry has a
-correct magic value.
-
-2) vmalloc'ed buffer is passed to sg_set_buf().
-
-sg_set_buf() uses virt_to_page() to convert virtual address to struct
-page, but it doesn't work with vmalloc address.  vmalloc_to_page()
-should be used instead.  As prot_buf isn't usually too large, so
-fix it by allocating prot_buf by kmalloc instead of vmalloc.
+As prot_buf is allocated by kzalloc() and it's physically contiguous,
+we only need a single scatterlist entry.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
@@ -36,75 +37,56 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/target/target_core_file.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/target/target_core_file.c | 21 ++++++---------------
+ 1 file changed, 6 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 44620fb..8ca1883 100644
+index 8ca1883..4c7a6c8 100644
 --- a/drivers/target/target_core_file.c
 +++ b/drivers/target/target_core_file.c
-@@ -274,7 +274,7 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
- 		     se_dev->prot_length;
+@@ -264,11 +264,10 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+ 	struct se_device *se_dev = cmd->se_dev;
+ 	struct fd_dev *dev = FD_DEV(se_dev);
+ 	struct file *prot_fd = dev->fd_prot_file;
+-	struct scatterlist *sg;
+ 	loff_t pos = (cmd->t_task_lba * se_dev->prot_length);
+ 	unsigned char *buf;
+-	u32 prot_size, len, size;
+-	int rc, ret = 1, i;
++	u32 prot_size;
++	int rc, ret = 1;
  
- 	if (!is_write) {
--		fd_prot->prot_buf = vzalloc(prot_size);
-+		fd_prot->prot_buf = kzalloc(prot_size, GFP_KERNEL);
- 		if (!fd_prot->prot_buf) {
- 			pr_err("Unable to allocate fd_prot->prot_buf\n");
- 			return -ENOMEM;
-@@ -286,9 +286,10 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
- 					   fd_prot->prot_sg_nents, GFP_KERNEL);
+ 	prot_size = (cmd->data_length / se_dev->dev_attrib.block_size) *
+ 		     se_dev->prot_length;
+@@ -281,24 +280,16 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+ 		}
+ 		buf = fd_prot->prot_buf;
+ 
+-		fd_prot->prot_sg_nents = cmd->t_prot_nents;
+-		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist) *
+-					   fd_prot->prot_sg_nents, GFP_KERNEL);
++		fd_prot->prot_sg_nents = 1;
++		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist),
++					   GFP_KERNEL);
  		if (!fd_prot->prot_sg) {
  			pr_err("Unable to allocate fd_prot->prot_sg\n");
--			vfree(fd_prot->prot_buf);
-+			kfree(fd_prot->prot_buf);
+ 			kfree(fd_prot->prot_buf);
  			return -ENOMEM;
  		}
-+		sg_init_table(fd_prot->prot_sg, fd_prot->prot_sg_nents);
- 		size = prot_size;
- 
- 		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
-@@ -318,7 +319,7 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
- 
- 	if (is_write || ret < 0) {
- 		kfree(fd_prot->prot_sg);
--		vfree(fd_prot->prot_buf);
-+		kfree(fd_prot->prot_buf);
+ 		sg_init_table(fd_prot->prot_sg, fd_prot->prot_sg_nents);
+-		size = prot_size;
+-
+-		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
+-
+-			len = min_t(u32, PAGE_SIZE, size);
+-			sg_set_buf(sg, buf, len);
+-			size -= len;
+-			buf += len;
+-		}
++		sg_set_buf(fd_prot->prot_sg, buf, prot_size);
  	}
  
- 	return ret;
-@@ -658,11 +659,11 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 						 0, fd_prot.prot_sg, 0);
- 			if (rc) {
- 				kfree(fd_prot.prot_sg);
--				vfree(fd_prot.prot_buf);
-+				kfree(fd_prot.prot_buf);
- 				return rc;
- 			}
- 			kfree(fd_prot.prot_sg);
--			vfree(fd_prot.prot_buf);
-+			kfree(fd_prot.prot_buf);
- 		}
- 	} else {
- 		memset(&fd_prot, 0, sizeof(struct fd_prot));
-@@ -678,7 +679,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 						  0, fd_prot.prot_sg, 0);
- 			if (rc) {
- 				kfree(fd_prot.prot_sg);
--				vfree(fd_prot.prot_buf);
-+				kfree(fd_prot.prot_buf);
- 				return rc;
- 			}
- 		}
-@@ -714,7 +715,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 	if (ret < 0) {
- 		kfree(fd_prot.prot_sg);
--		vfree(fd_prot.prot_buf);
-+		kfree(fd_prot.prot_buf);
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
- 
+ 	if (is_write) {
 -- 
 1.9.1
 
