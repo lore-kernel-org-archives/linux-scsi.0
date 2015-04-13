@@ -1,49 +1,57 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH scsi] aacraid: aac_src_intr_message() can be static
-Date: Mon, 13 Apr 2015 11:04:31 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AB7F5800E@BBYEXM01.pmc-sierra.internal>
-References: <201504101622.qu6odppW%fengguang.wu@intel.com>
- <20150410085338.GA3332@snb>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH -next v3] target/rd: Don't pass imcomplete scatterlist
+ entries to sbc_dif_verify_*
+Date: Mon, 13 Apr 2015 20:49:35 +0900
+Message-ID: <CAC5umyh8kukPxgxuw=PXiW3qGO0o5Y09T=K78GVWwb5_T+u+VA@mail.gmail.com>
+References: <1428725851-9275-1-git-send-email-akinobu.mita@gmail.com>
+	<1428901171.15567.1.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:33487 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932106AbbDMLEd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2015 07:04:33 -0400
-In-Reply-To: <20150410085338.GA3332@snb>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1428901171.15567.1.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: "kbuild-all@01.org" <kbuild-all@01.org>, James Bottomley <JBottomley@Odin.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
-Acked-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+2015-04-13 13:59 GMT+09:00 Nicholas A. Bellinger <nab@linux-iscsi.org>:
+> On Sat, 2015-04-11 at 13:17 +0900, Akinobu Mita wrote:
+>> The scatterlist for protection information which is passed to
+>> sbc_dif_verify_read() or sbc_dif_verify_write() requires that
+>> neighboring scatterlist entries are contiguous or chained so that they
+>> can be iterated by sg_next().
+>>
+>> However, the protection information for RD-MCP backends could be located
+>> in the multiple scatterlist arrays when the ramdisk space is too large.
+>> So if the read/write request straddles this boundary, sbc_dif_verify_read()
+>> or sbc_dif_verify_write() can't iterate all scatterlist entries.
+>>
+>> This problem can be fixed by chaining protection information scatterlist
+>> at creation time.  For the architectures which don't support sg chaining
+>> (i.e. !CONFIG_ARCH_HAS_SG_CHAIN), fix it by allocating temporary
+>> scatterlist if needed.
+>>
+>> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>> Cc: target-devel@vger.kernel.org
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>> * v3
+>> - Fix it by chaining protection information scatterlist at creation time
+>>   if CONFIG_ARCH_HAS_SG_CHAIN is defined.
+>>
+>>  drivers/target/target_core_rd.c | 67 +++++++++++++++++++++++++++++++++++++++--
+>>  1 file changed, 64 insertions(+), 3 deletions(-)
+>
+> Applied to target-pending/for-next.
+>
+> Thanks for updating to use CONFIG_ARCH_HAS_SG_CHAIN for the common
+> case.  :)
 
------Original Message-----
-From: kbuild test robot [mailto:fengguang.wu@intel.com] 
-Sent: Friday, April 10, 2015 2:24 PM
-To: Mahesh Rajashekhara
-Cc: kbuild-all@01.org; James Bottomley; Adaptec OEM Raid Solutions; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH scsi] aacraid: aac_src_intr_message() can be static
-
-
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- src.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c index 50f181f..79a3ed1 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -46,7 +46,7 @@
- 
- static int aac_src_get_sync_status(struct aac_dev *dev);
- 
--irqreturn_t aac_src_intr_message(int irq, void *dev_id)
-+static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
- {
- 	struct aac_msix_ctx *ctx;
- 	struct aac_dev *dev;
+BTW, does anyone know why some architectures disable
+CONFIG_ARCH_HAS_SG_CHAIN?  As far as I can see, there is no additional
+requirement to enable it for those that currently disable it.
