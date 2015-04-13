@@ -1,68 +1,39 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Mon, 13 Apr 2015 15:18:44 +0200
-Message-ID: <552BC234.4020000@redhat.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>	<54AC0A17.8020405@redhat.com>	<20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Vinson Lee <vlee@twopensource.com>
-Cc: Greg KH <greg@kroah.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+From: Varun Prakash <varun@chelsio.com>
+Subject: [PATCH net-next v2 0/4] cxgb4: add FCoE DDP and RSS
+Date: Mon, 13 Apr 2015 19:34:22 +0530
+Message-ID: <cover.1428930614.git.varun@chelsio.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
+Cc: davem@davemloft.net, JBottomley@parallels.com, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com, kxie@chelsio.com, praveenm@chelsio.com, kumaras@chelsio.com, varun@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/11/2015 12:45 AM, Vinson Lee wrote:
-> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
->> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
->>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
->>>> Dear stable maintainers,
->>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
->>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
->>>> earlier, if applicable)?
->>> Please do not apply this patch isolated from his friend, the
->>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
->>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
->>>
->>> In addition to that, after the original issue goes away you may notice sometimes
->>> an unhandled irq 16 message, to fix this a patch is posted
->>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
->>> This patch still awaits a maintainers review though.
->>>
->>> Probably the best idea is to wait until the issue is solved completely.
->> I'll wait, when it all gets worked out, please let stable@ know what
->> patches to apply where.
->>
->> thanks,
->>
->> greg k-h
->> --
->> To unsubscribe from this list: send the line "unsubscribe stable" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> Hi, Thomas.
->
-> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
-> turn off interrupts when kdump starts".
->
-> Are the following patches suitable for stable now?
+This patch series enables RSS for FCoE frames and adds
+DDP support for FCoE target.
 
-Yes, I believe they are, just note that 
-03741d9 hpsa: fix memory leak in kdump hard reset
-is not a part of that group we discussed before, but it may be added
-to stable too.
+v2: add patch 1/4 to fix build error "redefinition of 
+    struct ulptx_idata".
 
-Cheers,
-Tomas
+Varun Prakash (4):
+  cxgb4/iw_cxgb4/cxgb4i: remove duplicate definitions
+  cxgb4: add structure and macro definitions for FCoE DDP
+  cxgb4: add DDP support for FCoE target
+  cxgb4: enable RSS for FCoE frames
 
->
-> 3b74729 hpsa: turn off interrupts when kdump starts
-> 03741d9 hpsa: fix memory leak in kdump hard reset
-> 859c75a hpsa: add missing pci_set_master in kdump path
-> 132aa22 hpsa: refine the pci enable/disable handling
->
-> Cheers,
-> Vinson
+ drivers/infiniband/hw/cxgb4/t4fw_ri_api.h       |    9 -
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |    1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c |  600 +++++++++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h |   54 ++-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   47 ++-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h  |    7 +
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  328 ++++++++++++-
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |    1 +
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.h      |   29 ++
+ drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |   64 +++
+ drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |    8 +
+ drivers/net/ethernet/chelsio/cxgb4/t4_tcb.h     |   90 ++++
+ drivers/net/ethernet/chelsio/cxgb4/t4_values.h  |    3 +
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h   |    9 +
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.h              |    5 -
+ 15 files changed, 1234 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/net/ethernet/chelsio/cxgb4/t4_tcb.h
