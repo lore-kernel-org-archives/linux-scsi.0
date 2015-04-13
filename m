@@ -1,110 +1,83 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 4/9] snic:Add snic target discovery
-Date: Mon, 13 Apr 2015 16:29:23 +0200
-Message-ID: <552BD2C3.8010103@suse.de>
-References: <1428580189-22785-1-git-send-email-nmusini@cisco.com> <1428580189-22785-5-git-send-email-nmusini@cisco.com> <552677A6.3030602@suse.de> <D1514FCB.207B3%nmusini@cisco.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] mpt2sas,mpt3sas - PCI master abort fixups
+Date: Mon, 13 Apr 2015 07:38:00 -0700
+Message-ID: <1428935880.2314.7.camel@HansenPartnership.com>
+References: <1419948455-31624-1-git-send-email-joe.lawrence@stratus.com>
+		 <552B0998.1050808@stratus.com>
+	 <1428886445.2196.43.camel@HansenPartnership.com>
+	 <552BCD57.6090509@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49134 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753974AbbDMO3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2015 10:29:25 -0400
-In-Reply-To: <D1514FCB.207B3%nmusini@cisco.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43100 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753640AbbDMOiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Apr 2015 10:38:04 -0400
+In-Reply-To: <552BCD57.6090509@stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
-Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Christoph Hellwig <hch@infradead.org>
 
-On 04/13/2015 07:25 AM, Narsimhulu Musini (nmusini) wrote:
-> Hi Hannes,
->=20
->   Thank you for reviewing patches. Please find responses inline.
->=20
->=20
->=20
-> On 09/04/15 6:29 pm, "Hannes Reinecke" <hare@suse.de> wrote:
->=20
->>
->> On 04/09/2015 01:49 PM, Narsimhulu Musini wrote:
-[ .. ]
->>> +/* snic_tgt_create: checks for existence of snic_tgt, if it doesn'=
-t
->>> + * it creates one.
->>> + */
->>> +static struct snic_tgt *
->>> +snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
->>> +{
->>> +	struct snic_tgt *tgt =3D NULL;
->>> +	unsigned long flags;
->>> +	int ret;
->>> +
->>> +	tgt =3D snic_tgt_lookup(snic, tgtid);
->>> +	if (tgt) {
->>> +		/* update the information if required */
->>> +		return tgt;
->>> +	}
->>> +
->>> +	tgt =3D kzalloc(sizeof(*tgt), GFP_KERNEL);
->>> +	if (!tgt) {
->>> +		SNIC_HOST_ERR(snic->shost, "Failure to allocate snic_tgt.\n");
->>> +		ret =3D -ENOMEM;
->>> +
->>> +		return tgt;
->>> +	}
->>> +
->>> +	INIT_LIST_HEAD(&tgt->list);
->>> +	tgt->id =3D tgtid->tgt_id;
->>> +	tgt->channel =3D 0;
->>> +
->>> +	SNIC_BUG_ON(tgtid->tgt_type > SNIC_TGT_SAN);
->>> +	tgt->tdata.typ =3D tgtid->tgt_type;
->>> +
->>> +	/*
->>> +	 * Plugging into SML Device Tree
->>> +	 */
->>> +	tgt->tdata.disc_id =3D 0;
->>> +	tgt->state =3D SNIC_TGT_STAT_INIT;
->>> +	device_initialize(&tgt->dev);
->>> +	tgt->dev.parent =3D get_device(&snic->shost->shost_gendev);
->>> +	tgt->dev.release =3D snic_tgt_dev_release;
->> Why do you use your own scsi target instantiation here?
->> If it's equivalent to the scsi target than you should rather use the
->> 'scsi_target' structure here and attach driver-specific information
->> to either hostdata or starget_data.
-> I got your idea, we followed an approach similar to fc (fc_rport_crea=
-te()
-> in scsi_transport_fc.c).
-> Both are valid approaches. We opted for current approach, and gone th=
-rough
-> good amount of testing.
-> I would like to keep the way it is. Please share your thoughts.
+On Mon, 2015-04-13 at 10:06 -0400, Joe Lawrence wrote:
+> On 04/12/2015 08:54 PM, James Bottomley wrote:
+> > On Sun, 2015-04-12 at 20:11 -0400, Joe Lawrence wrote:
+> >> On 12/30/2014 09:07 AM, Joe Lawrence wrote:
+> >>> A colleague noticed that the mpt2 and mpt3sas drivers do not correctly
+> >>> check the PCI master abort pattern in _base_wait_for_doorbell_ack.  This
+> >>> pattern should be checked *prior* to any valid bit patterns, which would
+> >>> always return true since a PCI read on master abort sets all bits high.
+> >>>
+> >>> The second patch adds similar checking to _base_wait_for_doorbell_int and
+> >>> _base_wait_for_doorbell_not_used to avoid potentially long loops around
+> >>> PCI reads.
+> >>>
+> >>> Joe Lawrence (2):
+> >>>   mpt2sas,mpt3sas: correct master-abort checking in doorbell ack
+> >>>   mpt2sas,mpt3sas: additional master abort checks
+> >>>
+> >>>  drivers/scsi/mpt2sas/mpt2sas_base.c |   17 ++++++++++++-----
+> >>>  drivers/scsi/mpt3sas/mpt3sas_base.c |   17 ++++++++++++-----
+> >>>  2 files changed, 24 insertions(+), 10 deletions(-)
+> >>>
+> >>
+> >> Avago ping?
+> >>
+> >> This one was pretty straightforward: check 0xFFFFFFFF *before* any
+> >> individual bit(s), i.e. before reading the doorbell register.
+> > 
+> > OK, Joe, explain why this patch is important: what problems could result
+> > from it not being present?  If you convince everyone then no more mpt2/3
+> > sas patches until this is at least commented on and a plan of action
+> > proposed.
+> 
+> Hi James,
+> 
+> As currently coded:  If the PCI read returns a master abort,
+> _base_wait_for_doorbell_ack will loop until it exhausts its timeout (up
+> to 15 seconds).  Other parts of the driver, like the periodic watchdog
+> or EEH, may detect a similar problem before such a long time and cleanup
+> the mess.  However, complete device removal may be stalled until whoever
+> called _base_wait_for_doorbell_ack is satisfied that it has finished.
 
-scsi_transport_fc() creates its own sysfs hierarchy for the remote
-port, which is inserted between scsi_host and scsi_target:
+I think we all picked this up from the changelog.  What I meant was in
+what situations might a card get a master abort ... because that's when
+the problem becomes user visible.  It sounds like it's something that
+might not occur very often or is a bit theoretical, is that right?
 
-/sys/devices/pci0000:00/0000:00:03.0/0000:07:00.3/host2/rport-2:0-13/ta=
-rget2:0:11/2:0:11:7
+> This behavior is not really a bug, but feels like one in the making.
+> Should additional code be introduced, copy/pasted, etc. it may not do
+> what was intended.
+> 
+> For future reference, would a repost have been more appropriate?  This
+> changeset was so small that I figured a status ping would have sufficed.
 
-here, the fc_rport structure corresponds to the FC sysfs hierarchy,
-containing all FC-related sysfs attributes. And as such makes sense
-have a distinct object.
+Either works.  I was just trying to work out what sort of attention
+needs to be paid to the fix based on what sort of problem it fixes for
+the end user.
 
-In your case no such hiearchy exists, and there are no additional
-sysfs attributes which would warrant the creation of a distinct object.
+James
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
