@@ -1,44 +1,49 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: ufs: add ioctl interface for query request
-Date: Mon, 13 Apr 2015 14:01:58 +0300
-Message-ID: <20150413110158.GO16501@mwanda>
-References: <20150409201755.GA9651@mwanda>
- <bad58376cabac273fbe5a8ea22356204.squirrel@www.codeaurora.org>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH scsi] aacraid: aac_src_intr_message() can be static
+Date: Mon, 13 Apr 2015 11:04:31 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AB7F5800E@BBYEXM01.pmc-sierra.internal>
+References: <201504101622.qu6odppW%fengguang.wu@intel.com>
+ <20150410085338.GA3332@snb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21169 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621AbbDMLCO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 07:02:14 -0400
-Content-Disposition: inline
-In-Reply-To: <bad58376cabac273fbe5a8ea22356204.squirrel@www.codeaurora.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:33487 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932106AbbDMLEd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Apr 2015 07:04:33 -0400
+In-Reply-To: <20150410085338.GA3332@snb>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: draviv@codeaurora.org, linux-scsi@vger.kernel.org
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: "kbuild-all@01.org" <kbuild-all@01.org>, James Bottomley <JBottomley@Odin.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
-On Mon, Apr 13, 2015 at 10:55:58AM -0000, Gilad Broner wrote:
-> > copy_to/from_user() returns the number of bytes not copied and not an
-> > error code.  Printing these error messages in the ioctl means the user
-> > can trigger a DoS by filling up /var/log/messages.  They make the code
-> > uglier.  We should stop here if the copy fails and goto out_release_mem
-> > otherwise we might end up returning success by mistake.
-> 
-> Thanks for the comment, I will update the code.
-> I wanted to clarify about the possibility of a DoS attack:
-> - Isn't var/log/messages cyclic or size limited in some way?
+Acked-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
-Some people limit it some people don't.  To be honest, I'm not really
-concerned about this, but I use it as an excuse to remove debug
-messages.
+-----Original Message-----
+From: kbuild test robot [mailto:fengguang.wu@intel.com] 
+Sent: Friday, April 10, 2015 2:24 PM
+To: Mahesh Rajashekhara
+Cc: kbuild-all@01.org; James Bottomley; Adaptec OEM Raid Solutions; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCH scsi] aacraid: aac_src_intr_message() can be static
 
-> - What determines that dev_err() prints go to /var/log/messages?
->   would it still be the case if dev_dbg() was used instead?
 
-Normally dev_dbg() message are not printed.  But just remove them.  They
-make the code uglier.
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+ src.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-regards,
-dan carpenter
-
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c index 50f181f..79a3ed1 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -46,7 +46,7 @@
+ 
+ static int aac_src_get_sync_status(struct aac_dev *dev);
+ 
+-irqreturn_t aac_src_intr_message(int irq, void *dev_id)
++static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
+ {
+ 	struct aac_msix_ctx *ctx;
+ 	struct aac_dev *dev;
