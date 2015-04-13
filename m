@@ -1,69 +1,110 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 0/2] mpt2sas,mpt3sas - PCI master abort fixups
-Date: Mon, 13 Apr 2015 10:06:15 -0400
-Message-ID: <552BCD57.6090509@stratus.com>
-References: <1419948455-31624-1-git-send-email-joe.lawrence@stratus.com>	 <552B0998.1050808@stratus.com> <1428886445.2196.43.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 1/3] target/file: Fix BUG() when CONFIG_DEBUG_SG=y and DIF protection enabled
+Date: Mon, 13 Apr 2015 23:21:56 +0900
+Message-ID: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o148.mxlogic.net ([208.65.145.71]:55754 "EHLO
-	p01c12o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753640AbbDMOG3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:06:29 -0400
-In-Reply-To: <1428886445.2196.43.camel@HansenPartnership.com>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35182 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131AbbDMOWM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:22:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Christoph Hellwig <hch@infradead.org>
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On 04/12/2015 08:54 PM, James Bottomley wrote:
-> On Sun, 2015-04-12 at 20:11 -0400, Joe Lawrence wrote:
->> On 12/30/2014 09:07 AM, Joe Lawrence wrote:
->>> A colleague noticed that the mpt2 and mpt3sas drivers do not correctly
->>> check the PCI master abort pattern in _base_wait_for_doorbell_ack.  This
->>> pattern should be checked *prior* to any valid bit patterns, which would
->>> always return true since a PCI read on master abort sets all bits high.
->>>
->>> The second patch adds similar checking to _base_wait_for_doorbell_int and
->>> _base_wait_for_doorbell_not_used to avoid potentially long loops around
->>> PCI reads.
->>>
->>> Joe Lawrence (2):
->>>   mpt2sas,mpt3sas: correct master-abort checking in doorbell ack
->>>   mpt2sas,mpt3sas: additional master abort checks
->>>
->>>  drivers/scsi/mpt2sas/mpt2sas_base.c |   17 ++++++++++++-----
->>>  drivers/scsi/mpt3sas/mpt3sas_base.c |   17 ++++++++++++-----
->>>  2 files changed, 24 insertions(+), 10 deletions(-)
->>>
->>
->> Avago ping?
->>
->> This one was pretty straightforward: check 0xFFFFFFFF *before* any
->> individual bit(s), i.e. before reading the doorbell register.
-> 
-> OK, Joe, explain why this patch is important: what problems could result
-> from it not being present?  If you convince everyone then no more mpt2/3
-> sas patches until this is at least commented on and a plan of action
-> proposed.
+When CONFIG_DEBUG_SG=y and DIF protection support enabled, kernel
+BUG()s are triggered due to the following two issues:
 
-Hi James,
+1) prot_sg is not initialized by sg_init_table().
 
-As currently coded:  If the PCI read returns a master abort,
-_base_wait_for_doorbell_ack will loop until it exhausts its timeout (up
-to 15 seconds).  Other parts of the driver, like the periodic watchdog
-or EEH, may detect a similar problem before such a long time and cleanup
-the mess.  However, complete device removal may be stalled until whoever
-called _base_wait_for_doorbell_ack is satisfied that it has finished.
+When CONFIG_DEBUG_SG=y, scatterlist helpers check sg entry has a
+correct magic value.
 
-This behavior is not really a bug, but feels like one in the making.
-Should additional code be introduced, copy/pasted, etc. it may not do
-what was intended.
+2) vmalloc'ed buffer is passed to sg_set_buf().
 
-For future reference, would a repost have been more appropriate?  This
-changeset was so small that I figured a status ping would have sufficed.
+sg_set_buf() uses virt_to_page() to convert virtual address to struct
+page, but it doesn't work with vmalloc address.  vmalloc_to_page()
+should be used instead.  As prot_buf isn't usually too large, so
+fix it by allocating prot_buf by kmalloc instead of vmalloc.
 
-Regards,
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/target/target_core_file.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
--- Joe
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 44620fb..8ca1883 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -274,7 +274,7 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+ 		     se_dev->prot_length;
+ 
+ 	if (!is_write) {
+-		fd_prot->prot_buf = vzalloc(prot_size);
++		fd_prot->prot_buf = kzalloc(prot_size, GFP_KERNEL);
+ 		if (!fd_prot->prot_buf) {
+ 			pr_err("Unable to allocate fd_prot->prot_buf\n");
+ 			return -ENOMEM;
+@@ -286,9 +286,10 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+ 					   fd_prot->prot_sg_nents, GFP_KERNEL);
+ 		if (!fd_prot->prot_sg) {
+ 			pr_err("Unable to allocate fd_prot->prot_sg\n");
+-			vfree(fd_prot->prot_buf);
++			kfree(fd_prot->prot_buf);
+ 			return -ENOMEM;
+ 		}
++		sg_init_table(fd_prot->prot_sg, fd_prot->prot_sg_nents);
+ 		size = prot_size;
+ 
+ 		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
+@@ -318,7 +319,7 @@ static int fd_do_prot_rw(struct se_cmd *cmd, struct fd_prot *fd_prot,
+ 
+ 	if (is_write || ret < 0) {
+ 		kfree(fd_prot->prot_sg);
+-		vfree(fd_prot->prot_buf);
++		kfree(fd_prot->prot_buf);
+ 	}
+ 
+ 	return ret;
+@@ -658,11 +659,11 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 						 0, fd_prot.prot_sg, 0);
+ 			if (rc) {
+ 				kfree(fd_prot.prot_sg);
+-				vfree(fd_prot.prot_buf);
++				kfree(fd_prot.prot_buf);
+ 				return rc;
+ 			}
+ 			kfree(fd_prot.prot_sg);
+-			vfree(fd_prot.prot_buf);
++			kfree(fd_prot.prot_buf);
+ 		}
+ 	} else {
+ 		memset(&fd_prot, 0, sizeof(struct fd_prot));
+@@ -678,7 +679,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 						  0, fd_prot.prot_sg, 0);
+ 			if (rc) {
+ 				kfree(fd_prot.prot_sg);
+-				vfree(fd_prot.prot_buf);
++				kfree(fd_prot.prot_buf);
+ 				return rc;
+ 			}
+ 		}
+@@ -714,7 +715,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 
+ 	if (ret < 0) {
+ 		kfree(fd_prot.prot_sg);
+-		vfree(fd_prot.prot_buf);
++		kfree(fd_prot.prot_buf);
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
+ 
+-- 
+1.9.1
+
