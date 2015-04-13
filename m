@@ -1,83 +1,110 @@
-From: James Bottomley <jbottomley@odin.com>
-Subject: Re: [scsi:misc 14/106] drivers/scsi/storvsc_drv.c:1658
- storvsc_queuecommand() warn: curly braces intended?
-Date: Mon, 13 Apr 2015 14:26:12 +0000
-Message-ID: <1428935248.2314.3.camel@Odin.com>
-References: <20150413115603.GR16501@mwanda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 4/9] snic:Add snic target discovery
+Date: Mon, 13 Apr 2015 16:29:23 +0200
+Message-ID: <552BD2C3.8010103@suse.de>
+References: <1428580189-22785-1-git-send-email-nmusini@cisco.com> <1428580189-22785-5-git-send-email-nmusini@cisco.com> <552677A6.3030602@suse.de> <D1514FCB.207B3%nmusini@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:37503 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604AbbDMO1b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 10:27:31 -0400
-In-Reply-To: <20150413115603.GR16501@mwanda>
-Content-Language: en-US
-Content-ID: <2ADDA923A9F04044957167D30B2A5849@sw.swsoft.com>
+Received: from cantor2.suse.de ([195.135.220.15]:49134 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753974AbbDMO3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Apr 2015 10:29:25 -0400
+In-Reply-To: <D1514FCB.207B3%nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kbuild@01.org" <kbuild@01.org>, "kys@microsoft.com" <kys@microsoft.com>
+To: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
+Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
-T24gTW9uLCAyMDE1LTA0LTEzIGF0IDE0OjU2ICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
-PiB0cmVlOiAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9q
-ZWpiL3Njc2kuZ2l0IG1pc2MNCj4gaGVhZDogICAwMzUxYjhmODEzOTJjNmRiYmJiMDM2ZTVjOGY3
-M2NlZmY2ODcyNmU5DQo+IGNvbW1pdDogYmUwY2Y2Y2EzMDFjNjE0NThkYzRhYTFhMzdhY2Y0ZjU4
-ZDJlZDNkNiBbMTQvMTA2XSBzY3NpOiBzdG9ydnNjOiBTZXQgdGhlIHRhYmxlc2l6ZSBiYXNlZCBv
-biB0aGUgaW5mb3JtYXRpb24gZ2l2ZW4gYnkgdGhlIGhvc3QNCj4gDQo+IGRyaXZlcnMvc2NzaS9z
-dG9ydnNjX2Rydi5jOjE2NTggc3RvcnZzY19xdWV1ZWNvbW1hbmQoKSB3YXJuOiBjdXJseSBicmFj
-ZXMgaW50ZW5kZWQ/DQo+IA0KPiBnaXQgcmVtb3RlIGFkZCBzY3NpIGdpdDovL2dpdC5rZXJuZWwu
-b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0DQo+IGdpdCByZW1vdGUg
-dXBkYXRlIHNjc2kNCj4gZ2l0IGNoZWNrb3V0IGJlMGNmNmNhMzAxYzYxNDU4ZGM0YWExYTM3YWNm
-NGY1OGQyZWQzZDYNCj4gdmltICsxNjU4IGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IA0K
-PiBjNWI0NjNhZSBkcml2ZXJzL3N0YWdpbmcvaHYvc3RvcnZzY19kcnYuYyBLLiBZLiBTcmluaXZh
-c2FuIDIwMTEtMDUtMTAgIDE2NDIgIAkJCXNnbCA9IGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsOw0K
-PiBjNWI0NjNhZSBkcml2ZXJzL3N0YWdpbmcvaHYvc3RvcnZzY19kcnYuYyBLLiBZLiBTcmluaXZh
-c2FuIDIwMTEtMDUtMTAgIDE2NDMgIAkJCXNnX2NvdW50ID0gY21kX3JlcXVlc3QtPmJvdW5jZV9z
-Z2xfY291bnQ7DQo+IGM1YjQ2M2FlIGRyaXZlcnMvc3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsu
-IFkuIFNyaW5pdmFzYW4gMjAxMS0wNS0xMCAgMTY0NCAgCQl9DQo+IGM1YjQ2M2FlIGRyaXZlcnMv
-c3RhZ2luZy9odi9zdG9ydnNjX2Rydi5jIEsuIFkuIFNyaW5pdmFzYW4gMjAxMS0wNS0xMCAgMTY0
-NSAgDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNy
-aW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY0NiAgDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9y
-dnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY0NyAgCQlpZiAo
-c2dfY291bnQgPiBNQVhfUEFHRV9CVUZGRVJfQ09VTlQpIHsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9z
-Y3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjQ4
-ICANCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jp
-bml2YXNhbiAyMDE1LTAzLTI3ICAxNjQ5ICAJCQlwYXlsb2FkX3N6ID0gKHNnX2NvdW50ICogc2l6
-ZW9mKHZvaWQgKikgKw0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAg
-ICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NTAgIAkJCQkgICAgICBzaXplb2Yoc3Ry
-dWN0IHZtYnVzX3BhY2tldF9tcGJfYXJyYXkpKTsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0
-b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjUxICAJCQlw
-YXlsb2FkID0ga21hbGxvYyhwYXlsb2FkX3N6LCBHRlBfQVRPTUlDKTsNCj4gYmUwY2Y2Y2EgZHJp
-dmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3
-ICAxNjUyICAJCQlpZiAoIXBheWxvYWQpIHsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2
-c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjUzICAJCQkJaWYg
-KGNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KQ0KPiANCj4gU3RhcnQgYmxvY2sgaGVyZS4N
-Cj4gDQo+IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNy
-aW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY1NCAgCQkJCQlkZXN0cm95X2JvdW5jZV9idWZmZXIoDQo+
-IGJlMGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFz
-YW4gMjAxNS0wMy0yNyAgMTY1NSAgCQkJCQljbWRfcmVxdWVzdC0+Ym91bmNlX3NnbCwNCj4gYmUw
-Y2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAy
-MDE1LTAzLTI3ICAxNjU2ICAJCQkJCWNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KTsNCj4g
-YmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNh
-biAyMDE1LTAzLTI3ICAxNjU3ICANCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
-LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3IEAxNjU4ICAJCQkJCXJldHVybiBT
-Q1NJX01MUVVFVUVfREVWSUNFX0JVU1k7DQo+IA0KPiBFbmQgYmxvY2sgaGVyZS4NCj4gDQo+IGJl
-MGNmNmNhIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4g
-MjAxNS0wMy0yNyAgMTY1OSAgCQkJfQ0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19k
-cnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjAgIAkJfQ0KPiBiZTBj
-ZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAgICBLLiBZLiBTcmluaXZhc2FuIDIw
-MTUtMDMtMjcgIDE2NjEgIA0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAg
-ICAgICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjIgIAkJcGF5bG9hZC0+cmFuZ2Uu
-bGVuID0gbGVuZ3RoOw0KPiBiZTBjZjZjYSBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyAgICAg
-ICBLLiBZLiBTcmluaXZhc2FuIDIwMTUtMDMtMjcgIDE2NjMgIAkJcGF5bG9hZC0+cmFuZ2Uub2Zm
-c2V0ID0gc2dsWzBdLm9mZnNldDsNCj4gYmUwY2Y2Y2EgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
-LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAzLTI3ICAxNjY0ICANCj4gYWFjZWQ5OTMg
-ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgICAgICAgSy4gWS4gU3Jpbml2YXNhbiAyMDE1LTAz
-LTI3ICAxNjY1ICAJCWN1cl9zZ2wgPSBzZ2w7DQo+IGFhY2VkOTkzIGRyaXZlcnMvc2NzaS9zdG9y
-dnNjX2Rydi5jICAgICAgIEsuIFkuIFNyaW5pdmFzYW4gMjAxNS0wMy0yNyAgMTY2NiAgCQlmb3Ig
-KGkgPSAwOyBpIDwgc2dfY291bnQ7IGkrKykgew0KDQpJIHRoaW5rIHRoaXMgaXMganVzdCBzY3Jl
-d2VkIHVwIGluZGVudGF0aW9uLiAgWW91IGhhdmUgdG8gcmV0dXJuDQpERVZJQ0VfQlVTWSBmb3Ig
-dGhlIGttYWxsb2MgZmFpbHVyZS4gIFRoZSBpZiBpcyBqdXN0IHNlZWluZyBpZiBjbGVhbnVwDQpp
-cyBuZWVkZWQuDQoNCkphbWVzDQoNCg==
+On 04/13/2015 07:25 AM, Narsimhulu Musini (nmusini) wrote:
+> Hi Hannes,
+>=20
+>   Thank you for reviewing patches. Please find responses inline.
+>=20
+>=20
+>=20
+> On 09/04/15 6:29 pm, "Hannes Reinecke" <hare@suse.de> wrote:
+>=20
+>>
+>> On 04/09/2015 01:49 PM, Narsimhulu Musini wrote:
+[ .. ]
+>>> +/* snic_tgt_create: checks for existence of snic_tgt, if it doesn'=
+t
+>>> + * it creates one.
+>>> + */
+>>> +static struct snic_tgt *
+>>> +snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
+>>> +{
+>>> +	struct snic_tgt *tgt =3D NULL;
+>>> +	unsigned long flags;
+>>> +	int ret;
+>>> +
+>>> +	tgt =3D snic_tgt_lookup(snic, tgtid);
+>>> +	if (tgt) {
+>>> +		/* update the information if required */
+>>> +		return tgt;
+>>> +	}
+>>> +
+>>> +	tgt =3D kzalloc(sizeof(*tgt), GFP_KERNEL);
+>>> +	if (!tgt) {
+>>> +		SNIC_HOST_ERR(snic->shost, "Failure to allocate snic_tgt.\n");
+>>> +		ret =3D -ENOMEM;
+>>> +
+>>> +		return tgt;
+>>> +	}
+>>> +
+>>> +	INIT_LIST_HEAD(&tgt->list);
+>>> +	tgt->id =3D tgtid->tgt_id;
+>>> +	tgt->channel =3D 0;
+>>> +
+>>> +	SNIC_BUG_ON(tgtid->tgt_type > SNIC_TGT_SAN);
+>>> +	tgt->tdata.typ =3D tgtid->tgt_type;
+>>> +
+>>> +	/*
+>>> +	 * Plugging into SML Device Tree
+>>> +	 */
+>>> +	tgt->tdata.disc_id =3D 0;
+>>> +	tgt->state =3D SNIC_TGT_STAT_INIT;
+>>> +	device_initialize(&tgt->dev);
+>>> +	tgt->dev.parent =3D get_device(&snic->shost->shost_gendev);
+>>> +	tgt->dev.release =3D snic_tgt_dev_release;
+>> Why do you use your own scsi target instantiation here?
+>> If it's equivalent to the scsi target than you should rather use the
+>> 'scsi_target' structure here and attach driver-specific information
+>> to either hostdata or starget_data.
+> I got your idea, we followed an approach similar to fc (fc_rport_crea=
+te()
+> in scsi_transport_fc.c).
+> Both are valid approaches. We opted for current approach, and gone th=
+rough
+> good amount of testing.
+> I would like to keep the way it is. Please share your thoughts.
+
+scsi_transport_fc() creates its own sysfs hierarchy for the remote
+port, which is inserted between scsi_host and scsi_target:
+
+/sys/devices/pci0000:00/0000:00:03.0/0000:07:00.3/host2/rport-2:0-13/ta=
+rget2:0:11/2:0:11:7
+
+here, the fc_rport structure corresponds to the FC sysfs hierarchy,
+containing all FC-related sysfs attributes. And as such makes sense
+have a distinct object.
+
+In your case no such hiearchy exists, and there are no additional
+sysfs attributes which would warrant the creation of a distinct object.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
