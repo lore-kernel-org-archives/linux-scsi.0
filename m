@@ -1,21 +1,42 @@
-From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Subject: Re: [PATCH net-next v2 1/4] cxgb4/iw_cxgb4/cxgb4i: remove duplicate
- definitions
-Date: Mon, 13 Apr 2015 13:13:57 -0500
-Message-ID: <552C0765.8080705@opengridcomputing.com>
-References: <cover.1428930614.git.varun@chelsio.com> <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
+From: Torsten Luettgert <ml-lkml@enda.eu>
+Subject: Re: BUG: unable to handle kernel NULL pointer deref, bisected to
+ 746650160
+Date: Mon, 13 Apr 2015 20:28:29 +0200
+Message-ID: <20150413202829.580e3801@goldlack.schiller106>
+References: <20150408183333.493607a3@goldlack.schiller106>
+	<20150413174105.GA14988@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Varun Prakash <varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, praveenm-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kumaras-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150413174105.GA14988@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 13 Apr 2015 19:41:05 +0200
+Christoph Hellwig <hch@lst.de> wrote:
+
+> Can you run gdb on your vmlinux file and send the output of the
+> following command in gdb
+> 
+> l *(scsi_dma_unmap+0x54)
+
+Thanks for looking into it! Here is what gdb says:
+
+Reading symbols
+from /opt/kvm/bisect/vmlinux-3.16.0-74665016086615bb+...done.
+(gdb) l *(scsi_dma_unmap+0x54)
+0xffffffff8146a0b4 is in scsi_dma_unmap
+(drivers/scsi/scsi_lib_dma.c:50).
+45 struct device *dev = cmd->device->host->dma_dev;
+46
+47 dma_unmap_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
+48 cmd->sc_data_direction);
+49		}
+50	}
+51	EXPORT_SYMBOL(scsi_dma_unmap);
+
+Regards,
+Torsten
