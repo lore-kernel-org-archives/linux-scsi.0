@@ -1,34 +1,44 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/4] cxgbi: driver update
-Date: Mon, 13 Apr 2015 15:26:54 -0500
-Message-ID: <552C268E.10001@cs.wisc.edu>
-References: <201504102057.t3AKv9xR028741@localhost6.localdomain6>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH-v2 02/15] target: Add protected fabric + unprotected device support
+Date: Mon, 13 Apr 2015 21:15:14 -0400
+Message-ID: <yq1bnir7bod.fsf@sermon.lab.mkp.net>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
+	<1427686104-14231-3-git-send-email-nab@daterainc.com>
+	<yq1sicbh63q.fsf@sermon.lab.mkp.net>
+	<1428478828.18203.109.camel@haakon3.risingtidesystems.com>
+	<yq18ue1f02d.fsf@sermon.lab.mkp.net>
+	<1428692341.20502.17.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38028 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754932AbbDMUbi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Apr 2015 16:31:38 -0400
-In-Reply-To: <201504102057.t3AKv9xR028741@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1428692341.20502.17.camel@haakon3.risingtidesystems.com>
+	(Nicholas A. Bellinger's message of "Fri, 10 Apr 2015 11:59:01 -0700")
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org
-Cc: hch@infradead.org, James.Bottomley@HansenPartnership.com
 
-On 04/10/2015 03:57 PM, Karen Xie wrote:
-> This patch set contains fixes and updates for the cxgbi drivers. It updates 
-> the driver copyrights and versions, added logic to adjust the send/recv 
-> window based on the link speed and the initial sequence number.
-> 
-> Karen Xie (4):
-> cxgbi: use per-connection link-speed dependent send/recv windows
-> cxgbi: update copyright to 2015
-> cxgbi: update driver versions
-> cxgb4i: added setting of the initial sequence number
-> 
+>>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
 
-Looks ok to me.
+nab> The following incremental patch saves the current sess_prot_type
+nab> into se_node_acl, and will always reset sess_prot_type if a
+nab> previous saved value exists.  So the PI setting for the fabric's
+nab> session with backend devices not supporting PI is persistent across
+nab> session restart.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+nab> I also noticed the internal DIF emulation was not honoring se_cmd->
+nab> prot_checks for the WRPROTECT/RDPROTECT == 0x3 case, so
+nab> sbc_dif_v1_verify() has been updated to follow which checks have
+nab> been calculated based on WRPROTECT/RDPROTECT in
+nab> sbc_set_prot_op_checks().
+
+nab> Finally in sbc_check_prot(), if PROTECT is non-zero for a backend
+nab> device with DIF disabled, and sess_prot_type is not set go ahead
+nab> and return INVALID_CDB_FIELD.
+
+Looks good to me.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
