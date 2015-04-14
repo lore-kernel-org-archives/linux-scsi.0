@@ -1,81 +1,36 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 2/5] ufs: Rename of regulator_set_optimum_mode
-Date: Tue, 14 Apr 2015 21:11:58 +0900
-Message-ID: <CAC5umyisp-aWU1mGajCCwS5yxaJvqh1UHUACEXb2ixHk5_+fJA@mail.gmail.com>
-References: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
-	<1423712131-23795-3-git-send-email-bjorn.andersson@sonymobile.com>
+Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection
+ information code.
+Date: Tue, 14 Apr 2015 21:17:42 +0900
+Message-ID: <CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
+References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1423712131-23795-3-git-send-email-bjorn.andersson@sonymobile.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Mark Brown <broonie@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-2015-02-12 12:35 GMT+09:00 Bjorn Andersson <bjorn.andersson@sonymobile.com>:
-> The function regulator_set_optimum_mode() is changing name to
-> regulator_set_load(), so update the code accordingly. Also cleaned up
-> ufshcd_config_vreg_load() while touching the code.
+2015-04-14 2:19 GMT+09:00 Sagi Grimberg <sagig@mellanox.com>:
+> Hey All,
 >
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 27 +++++++--------------------
->  1 file changed, 7 insertions(+), 20 deletions(-)
+> This set follows the patchset from Akinobu Mita that addresses
+> DIF bounce buffer sgl construction. Instead of trying to fix these
+> bugs, this removes it altogether and work with cmd->t_prot_sg
+> directly.
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 2e4614b..4b73b94 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4225,22 +4225,15 @@ static struct scsi_host_template ufshcd_driver_template = {
->  static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
->                                    int ua)
->  {
-> -       int ret = 0;
-> -       struct regulator *reg = vreg->reg;
-> -       const char *name = vreg->name;
-> +       int ret;
+> The first patch is a simplification of the DIF verify varius
+> routines leaving a single generic sbc_dif_verify that handles
+> the protection information sgl we are working on.
 >
-> -       BUG_ON(!vreg);
-> +       if (!vreg)
-> +               return 0;
+> The second patch uses this simplification to remove the local
+> prot_fd bounce buffer altogether.
 >
-> -       ret = regulator_set_optimum_mode(reg, ua);
-> -       if (ret >= 0) {
-> -               /*
-> -                * regulator_set_optimum_mode() returns new regulator
-> -                * mode upon success.
-> -                */
-> -               ret = 0;
-> -       } else {
-> -               dev_err(dev, "%s: %s set optimum mode(ua=%d) failed, err=%d\n",
-> -                               __func__, name, ua, ret);
-> +       ret = regulator_set_load(vreg->reg, ua);
-> +       if (ret < 0) {
-> +               dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
-> +                               __func__, vreg->name, ua, ret);
->         }
->
->         return ret;
-> @@ -4249,18 +4242,12 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
->  static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
->                                          struct ufs_vreg *vreg)
->  {
-> -       if (!vreg)
-> -               return 0;
-> -
->         return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
->  }
->
->  static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
->                                          struct ufs_vreg *vreg)
->  {
-> -       if (!vreg)
-> -               return 0;
-> -
->         return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
->  }
+> This passed minimal IO testing.
 
-I tried this patch and it caused kernel null pointer dereference with
-'verg->max_uA' when vreg == NULL.  So you can't simply move !vreg check here
-into ufshcd_config_vreg_load().
+Looks good...
+
+I'll test with these patches and check if the problems I met
+disappear.
