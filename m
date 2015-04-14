@@ -1,36 +1,63 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Has anyone seen this?
-Date: Tue, 14 Apr 2015 14:18:21 -0400
-Message-ID: <yq1egnm60b6.fsf@sermon.lab.mkp.net>
-References: <552D45B5.1040801@dev.mellanox.co.il>
+From: bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org (J. Bruce Fields)
+Subject: Re: [PATCH RFC 1/3] vfs: add copy_file_range syscall and vfs helper
+Date: Tue, 14 Apr 2015 14:19:11 -0400
+Message-ID: <20150414181911.GA2080@fieldses.org>
+References: <1428703236-24735-1-git-send-email-zab@redhat.com>
+ <1428703236-24735-2-git-send-email-zab@redhat.com>
+ <CAHQdGtSwSf0j6ge7rCue48bZ08212Ny2Crz9WMadSno11N8z_g@mail.gmail.com>
+ <20150411000208.GA20949@lenny.home.zabbo.net>
+ <CAHQdGtSaaPHbvtBM3yVGtAFpEAP8ZquYvErknq_rCoCCK+W2bA@mail.gmail.com>
+ <20150411090402.67d22d02@tlielax.poochiereds.net>
+ <20150414165344.GA21421@infradead.org>
+ <552D4B5D.3090904@Netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18195 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbbDNSSZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2015 14:18:25 -0400
-In-Reply-To: <552D45B5.1040801@dev.mellanox.co.il> (Sagi Grimberg's message of
-	"Tue, 14 Apr 2015 19:52:05 +0300")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <552D4B5D.3090904-ZwjVKphTwtPQT0dZR+AlfA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Anna Schumaker <Anna.Schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, Zach Brown <zab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS-devel Mailing List <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
->>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
+On Tue, Apr 14, 2015 at 01:16:13PM -0400, Anna Schumaker wrote:
+> On 04/14/2015 12:53 PM, Christoph Hellwig wrote:
+> > On Sat, Apr 11, 2015 at 09:04:02AM -0400, Jeff Layton wrote:
+> >> Yuck! How the heck do you clean up the mess if that happens? I
+> >> guess you're just stuck redoing the copy with normal READ/WRITE?
+> >>
+> >> Maybe we need to have the interface return a hard error in that
+> >> case and not try to give back any sort of offset?
+> > 
+> > The NFSv4.2 COPY interface is a train wreck.  At least for Linux I'd
+> > expect us to simply ignore it and only implement my new CLONE
+> > operation with sane semantics.  That is unless someone can show some
+> > real life use case for the inter server copy, in which case we'll
+> > have to deal with that mess.  But getting that one right at the VFS
+> > level will be a nightmare anyway.
+> > 
+> > Make this a vote from me to not support partial copies and just
+> > return and error in that case.
+> 
+> Agreed.  Looking at the v4.2 spec, COPY does take ca_consecutive and a
+> ca_synchronous flags that let the client state if the copy should be
+> done consecutively or synchronously.  I expected to always set
+> consecutive to "true" for the Linux client.
 
-Sagi,
+That's supposed to mean results are well-defined in the partial-copy
+case, but I think Christoph's suggesting eliminating the partial-copy
+case entirely?
 
-Sagi> scsi_debug $modprobe scsi_debug dif=1 dix=1
+Which would be fine with me.
 
-Sagi> scsi_debug: host protection DIF1 DIX1
+It might actually have been me advocating for partial copies.  But that
+was only because a partial-copy-handling-loop seemed simpler to me than
+progress callbacks if we were going to support long-running copies.
 
-Sagi> sd 9:0:0:0: [sdc] Enabling DIF Type 1 protection
+I'm happy enough not to have it at all.
 
-This looks odd. dix specifies the host protection mask. A value of 1 is
-"DIF Type 1" so DIX should never get enabled.
-
-But I'll take a look...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--b.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
