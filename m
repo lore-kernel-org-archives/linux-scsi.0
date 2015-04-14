@@ -1,48 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Has anyone seen this?
-Date: Tue, 14 Apr 2015 11:14:29 -0700
-Message-ID: <1429035269.2209.41.camel@HansenPartnership.com>
+Date: Tue, 14 Apr 2015 14:18:21 -0400
+Message-ID: <yq1egnm60b6.fsf@sermon.lab.mkp.net>
 References: <552D45B5.1040801@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47825 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753287AbbDNSOb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:14:31 -0400
-In-Reply-To: <552D45B5.1040801@dev.mellanox.co.il>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18195 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293AbbDNSSZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2015 14:18:25 -0400
+In-Reply-To: <552D45B5.1040801@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Tue, 14 Apr 2015 19:52:05 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sagi Grimberg <sagig@dev.mellanox.co.il>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Tue, 2015-04-14 at 19:52 +0300, Sagi Grimberg wrote:
-> When I set up a DIX enabled device for the first time (say
-> scsi_debug) it all works, but when I remove it
-> and set it up again I get the below crash:
-> 
-> Reproducer:
-> $modprobe scsi_debug dif=1 dix=1
-> $modprobe -r scsi_debug
-> $modprobe scsi_debug dif=1 dix=1
-> 
-> It seems that somehow bdi_destroy() is not
-> invoked for DIX...
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
-That implies a refcount imbalance on the block queue.  Either from a
-stray get (which looks impossible, because we only do queue gets and
-puts in two places) or because there's an outstanding request, or
-because there's an imbalance higher up.
+Sagi,
 
-Could you instrument and check we call
-scsi_device_dev_release_usercontext() for the device (that should do the
-final put).  If that's not happening, then we have an imbalance on the
-scsi device itself.
+Sagi> scsi_debug $modprobe scsi_debug dif=1 dix=1
 
-Thanks,
+Sagi> scsi_debug: host protection DIF1 DIX1
 
-James
+Sagi> sd 9:0:0:0: [sdc] Enabling DIF Type 1 protection
 
+This looks odd. dix specifies the host protection mask. A value of 1 is
+"DIF Type 1" so DIX should never get enabled.
 
+But I'll take a look...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
