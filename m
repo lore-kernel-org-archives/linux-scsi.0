@@ -1,33 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection information code.
-Date: Mon, 13 Apr 2015 21:23:05 -0400
-Message-ID: <yq1y4lv5wqu.fsf@sermon.lab.mkp.net>
-References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] megaraid_sas : Code optimization and refactoring
+Date: Mon, 13 Apr 2015 22:56:40 -0700
+Message-ID: <20150414055640.GA29338@infradead.org>
+References: <201503271156.t2RBum1Y032249@palmhbs0.lsi.com>
+ <yq11tjvil9g.fsf@sermon.lab.mkp.net>
+ <bc4eb5dffe342f41aa5e9dba5afe3d95@mail.gmail.com>
+ <yq17ftf7bko.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428945575-30839-1-git-send-email-sagig@mellanox.com> (Sagi
-	Grimberg's message of "Mon, 13 Apr 2015 20:19:33 +0300")
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:49163 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbbDNF4n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2015 01:56:43 -0400
+Content-Disposition: inline
+In-Reply-To: <yq17ftf7bko.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
 
->>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
+On Mon, Apr 13, 2015 at 09:17:27PM -0400, Martin K. Petersen wrote:
+> >>>>> "Sumit" == Sumit Saxena <sumit.saxena@avagotech.com> writes:
+> 
+> Sumit> Ok, I will spilt this patch in 7 patches. Do you have any
+> Sumit> feedback/comments for other patches of this series? IF you are ok
+> Sumit> with other patches, I will resend the series with patch#1
+> Sumit> splitted in 7 patches and rest of the patches(2,3,4 and 5) will
+> Sumit> remain unchanged.
+> 
+> The other patches looked OK on their own. But it's probably best to
+> repost the whole series since you'll need a review from at least one
+> person other than me.
 
-Sagi> This set follows the patchset from Akinobu Mita that addresses DIF
-Sagi> bounce buffer sgl construction. Instead of trying to fix these
-Sagi> bugs, this removes it altogether and work with cmd->t_prot_sg
-Sagi> directly.
-
-Sagi> The first patch is a simplification of the DIF verify varius
-Sagi> routines leaving a single generic sbc_dif_verify that handles the
-Sagi> protection information sgl we are working on.
-
-Sagi> The second patch uses this simplification to remove the local
-Sagi> prot_fd bounce buffer altogether.
-
-Looks like a nice cleanup to me.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Please also include the sparse fixes I sent you a while ago in the
+repost.
