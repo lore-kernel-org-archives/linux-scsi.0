@@ -1,9 +1,8 @@
-From: Zach Brown <zab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH RFC 1/3] vfs: add copy_file_range syscall and vfs helper
-Date: Tue, 14 Apr 2015 11:54:08 -0700
-Message-ID: <20150414185408.GC23129@lenny.home.zabbo.net>
-References: <1428703236-24735-2-git-send-email-zab@redhat.com>
- <CAHQdGtSwSf0j6ge7rCue48bZ08212Ny2Crz9WMadSno11N8z_g@mail.gmail.com>
+Date: Tue, 14 Apr 2015 12:23:25 -0700
+Message-ID: <20150414192325.GB20599@infradead.org>
+References: <CAHQdGtSwSf0j6ge7rCue48bZ08212Ny2Crz9WMadSno11N8z_g@mail.gmail.com>
  <20150411000208.GA20949@lenny.home.zabbo.net>
  <CAHQdGtSaaPHbvtBM3yVGtAFpEAP8ZquYvErknq_rCoCCK+W2bA@mail.gmail.com>
  <20150411090402.67d22d02@tlielax.poochiereds.net>
@@ -12,89 +11,28 @@ References: <1428703236-24735-2-git-send-email-zab@redhat.com>
  <20150414181911.GA2080@fieldses.org>
  <20150414182241.GB23129@lenny.home.zabbo.net>
  <20150414182906.GB2080@fieldses.org>
+ <20150414185408.GC23129@lenny.home.zabbo.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150414182906.GB2080-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20150414185408.GC23129-fypN+1c5dIyjpB87vu3CluTW4wlIGRCZ@public.gmane.org>
 Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
-Cc: Anna Schumaker <Anna.Schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS-devel Mailing List <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zach Brown <zab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Anna Schumaker <Anna.Schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux FS-devel Mailing List <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 14, 2015 at 02:29:06PM -0400, J. Bruce Fields wrote:
-> On Tue, Apr 14, 2015 at 11:22:41AM -0700, Zach Brown wrote:
-> > On Tue, Apr 14, 2015 at 02:19:11PM -0400, J. Bruce Fields wrote:
-> > > On Tue, Apr 14, 2015 at 01:16:13PM -0400, Anna Schumaker wrote:
-> > > > On 04/14/2015 12:53 PM, Christoph Hellwig wrote:
-> > > > > On Sat, Apr 11, 2015 at 09:04:02AM -0400, Jeff Layton wrote:
-> > > > >> Yuck! How the heck do you clean up the mess if that happens? I
-> > > > >> guess you're just stuck redoing the copy with normal READ/WRITE?
-> > > > >>
-> > > > >> Maybe we need to have the interface return a hard error in that
-> > > > >> case and not try to give back any sort of offset?
-> > > > > 
-> > > > > The NFSv4.2 COPY interface is a train wreck.  At least for Linux I'd
-> > > > > expect us to simply ignore it and only implement my new CLONE
-> > > > > operation with sane semantics.  That is unless someone can show some
-> > > > > real life use case for the inter server copy, in which case we'll
-> > > > > have to deal with that mess.  But getting that one right at the VFS
-> > > > > level will be a nightmare anyway.
-> > > > > 
-> > > > > Make this a vote from me to not support partial copies and just
-> > > > > return and error in that case.
-> > > > 
-> > > > Agreed.  Looking at the v4.2 spec, COPY does take ca_consecutive and a
-> > > > ca_synchronous flags that let the client state if the copy should be
-> > > > done consecutively or synchronously.  I expected to always set
-> > > > consecutive to "true" for the Linux client.
-> > > 
-> > > That's supposed to mean results are well-defined in the partial-copy
-> > > case, but I think Christoph's suggesting eliminating the partial-copy
-> > > case entirely?
-> > > 
-> > > Which would be fine with me.
-> > > 
-> > > It might actually have been me advocating for partial copies.  But that
-> > > was only because a partial-copy-handling-loop seemed simpler to me than
-> > > progress callbacks if we were going to support long-running copies.
-> > > 
-> > > I'm happy enough not to have it at all.
-> > 
-> > Ah, OK, that's great news.
-> > 
-> > I thought at one point we were worried about very long running RPCs on
-> > the server.  Are we not worried about that now?
-> > 
-> > Is the client expected to cut the work up into arbitrarily managable
-> > chunks?  Is the server expected to fail COPY/CLONE requests that it
-> > thinks would take way too long?  Something else?
-> 
-> Christoph is proposing a CLONE rpc that's required to be atomic:
-> 
-> 	https://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-35#section-15.13
-> 	"The CLONE operation is atomic, that is either all changes or no
-> 	changes are seen by the client or other clients."
-> 
-> So that couldn't be really long-running (or the server is nuts).
-> 
-> So that'd mean Anna would rip out the server-side copy loop and we'd
-> initially just support btrfs or whatever.
+On Tue, Apr 14, 2015 at 11:54:08AM -0700, Zach Brown wrote:
+> Is this relying on btrfs range cloning being atomic?  It certainly
+> doesn't look atomic.  It can modify items across an arbitrarily large
+> number of leaf blocks.  It can make the changes across multiple
+> transactions which could introduce partial modification on reboot after
+> crashes.  It can fail (the dynamic duo: enomem, eio) and leave the
+> desintation partially modified.
 
-Is this relying on btrfs range cloning being atomic?  It certainly
-doesn't look atomic.  It can modify items across an arbitrarily large
-number of leaf blocks.  It can make the changes across multiple
-transactions which could introduce partial modification on reboot after
-crashes.  It can fail (the dynamic duo: enomem, eio) and leave the
-desintation partially modified.
-
-> I mean the server-side copy loop may also be useful but I'm all for
-> wiring up the obvious case first.
-
-Sure, I'm all for wiring up the simple version that doesn't return
-partial progress.  If that'll work for you guys.
-
-- z
+I didn't mean atomic in the failure atomic sense, but in the sense of
+being atomic vs other writes, similar to how Posix specifies it for
+writes vs other writes.  Guess I need to express this intent better.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
