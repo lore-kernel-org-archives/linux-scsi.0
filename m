@@ -1,44 +1,156 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection
- information code.
-Date: Tue, 14 Apr 2015 20:20:59 +0300
-Message-ID: <552D4C7B.9000402@dev.mellanox.co.il>
-References: <1428945575-30839-1-git-send-email-sagig@mellanox.com> <CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Has anyone seen this?
+Date: Tue, 14 Apr 2015 19:57:35 +0200
+Message-ID: <552D550F.1000101@interlog.com>
+References: <552D45B5.1040801@dev.mellanox.co.il>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, Sagi Grimberg <sagig@mellanox.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:40344 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751976AbbDNR5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Apr 2015 13:57:41 -0400
+In-Reply-To: <552D45B5.1040801@dev.mellanox.co.il>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On 4/14/2015 3:17 PM, Akinobu Mita wrote:
-> 2015-04-14 2:19 GMT+09:00 Sagi Grimberg <sagig@mellanox.com>:
->> Hey All,
->>
->> This set follows the patchset from Akinobu Mita that addresses
->> DIF bounce buffer sgl construction. Instead of trying to fix these
->> bugs, this removes it altogether and work with cmd->t_prot_sg
->> directly.
->>
->> The first patch is a simplification of the DIF verify varius
->> routines leaving a single generic sbc_dif_verify that handles
->> the protection information sgl we are working on.
->>
->> The second patch uses this simplification to remove the local
->> prot_fd bounce buffer altogether.
->>
->> This passed minimal IO testing.
+On 15-04-14 06:52 PM, Sagi Grimberg wrote:
+> When I set up a DIX enabled device for the first time (say
+> scsi_debug) it all works, but when I remove it
+> and set it up again I get the below crash:
 >
-> Looks good...
+> Reproducer:
+> $modprobe scsi_debug dif=1 dix=1
+> $modprobe -r scsi_debug
+> $modprobe scsi_debug dif=1 dix=1
+
+Using lk 4.0.0
+
+# modprobe scsi_debug dif=1 dix=1
+# modprobe -r scsi_debug
+# modprobe scsi_debug dif=1 dix=1
+
+locks up my laptop. So does:
+
+# modprobe scsi_debug dif=1 dix=1
+# modprobe -r scsi_debug
+# modprobe scsi_debug
+
+No useful information is logged in both cases.
+However, take out the dif/dix stuff and it's okay:
+
+# modprobe scsi_debug
+# modprobe -r scsi_debug
+# modprobe scsi_debug
+
+
+So it is dif/dix related. Looking a little closer it seems
+to be related to removing a dix/dif host (and its associated
+lu(s)):
+
+# modprobe scsi_debug dif=1 dix=1
+# echo -1 > /sys/bus/pseudo/drivers/scsi_debug/add_host
+# echo 1 > /sys/bus/pseudo/drivers/scsi_debug/add_host
+<laptop freezes>
+
+The above modprobe adds on scsi_debug dif/dix host with
+one lu. The "echo -1 >" removes that host while the
+"echo 1 >" attempts to re-add that dif/dix host.
+
+My guess is that the scsi mid-level has dtor problems
+cleaning up a dif/dix host and/or its associated lu(s).
+
+Doug Gilbert
+
+> It seems that somehow bdi_destroy() is not
+> invoked for DIX...
 >
-> I'll test with these patches and check if the problems I met
-> disappear.
+> scsi_debug_init: dif_storep 131072 bytes @ ffffc90018507000
+> scsi_debug: host protection DIF1 DIX1
+> scsi host9: scsi_debug, version 1.85 [20141022], dev_size_mb=8, opts=0x0
+> scsi 9:0:0:0: Direct-Access     Linux    scsi_debug       0184 PQ: 0 ANSI: 6
+> sd 9:0:0:0: Attached scsi generic sg2 type 0
+> sd 9:0:0:0: [sdc] Enabling DIF Type 1 protection
+> sd 9:0:0:0: [sdc] 16384 512-byte logical blocks: (8.38 MB/8.00 MiB)
+> sd 9:0:0:0: [sdc] Write Protect is off
+> sd 9:0:0:0: [sdc] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> sd 9:0:0:0: [sdc] Enabling DIX T10-DIF-TYPE1-CRC protection
+> sd 9:0:0:0: [sdc] DIF application tag size 2
+> sd 9:0:0:0: [sdc] Attached SCSI disk
+> sd 9:0:0:0: [sdc] Synchronizing SCSI cache
+> scsi_debug_init: dif_storep 131072 bytes @ ffffc900185e7000
+> scsi_debug: host protection DIF1 DIX1
+> scsi host10: scsi_debug, version 1.85 [20141022], dev_size_mb=8, opts=0x0
+> scsi 10:0:0:0: Direct-Access     Linux    scsi_debug       0184 PQ: 0 ANSI: 6
+> sd 10:0:0:0: Attached scsi generic sg2 type 0
+> sd 10:0:0:0: [sdc] Enabling DIF Type 1 protection
+> sd 10:0:0:0: [sdc] 16384 512-byte logical blocks: (8.38 MB/8.00 MiB)
+> sd 10:0:0:0: [sdc] Write Protect is off
+> sd 10:0:0:0: [sdc] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> ------------[ cut here ]------------
+> WARNING: CPU: 2 PID: 753 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x65/0x80()
+> sysfs: cannot create duplicate filename '/devices/virtual/bdi/8:32'
+> ---[ end trace 08a96f4c6fca987b ]---
+> ------------[ cut here ]------------
+> WARNING: CPU: 2 PID: 753 at lib/kobject.c:240 kobject_add_internal+0x194/0x1f0()
+> ---[ end trace 08a96f4c6fca987c ]---
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000040
+> IP: [<ffffffff811cbede>] sysfs_do_create_link_sd+0x3e/0xc0
+> PGD 0
+> Oops: 0000 [#1] SMP
+> Modules linked in: netconsole tcm_loop vhost_scsi vhost ib_srpt ib_isert
+> iscsi_target_mod rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr tcm_fc libfc
+> target_core_file target_core_iblock target_core_pscsi target_core_mod configfs
+> nfsd exportfs nfsv3 nfs_acl rpcsec_gss_krb5 auth_rpcgss nfsv4 nfs fscache lockd
+> grace autofs4 sunrpc cpufreq_ondemand ipv6 ext4 jbd2 dm_mirror dm_region_hash
+> dm_log uinput iTCO_wdt iTCO_vendor_support microcode serio_raw pcspkr ipmi_si
+> ipmi_msghandler acpi_cpufreq sg sb_edac edac_core i2c_i801 lpc_ich mfd_core
+> shpchp ioatdma igb dm_mod dca i2c_algo_bit i2c_core ptp pps_core wmi ext3(E)
+> jbd(E) mbcache(E) sd_mod(E) ahci(E) libahci(E) isci(E) libsas(E)
+> scsi_transport_sas(E) qla2xxx(E) scsi_transport_fc(E) [last unloaded: netconsole]
+> CPU: 4 PID: 753 Comm: kworker/u49:6 Tainted: G        W   E   4.0.0-rc1+ #38
+> Hardware name: Supermicro SYS-1027R-WRF/X9DRW, BIOS 3.0a 08/08/2013
+> Workqueue: events_unbound async_run_entry_fn
+> task: ffff88046de44410 ti: ffff88046b754000 task.ti: ffff88046b754000
+> RIP: 0010:[<ffffffff811cbede>]  [<ffffffff811cbede>]
+> sysfs_do_create_link_sd+0x3e/0xc0
+> RSP: 0018:ffff88046b757cf8  EFLAGS: 00010246
+> RAX: 00000000112e112e RBX: ffffffff817d2813 RCX: 0000000000000001
+> RDX: 000000000000112e RSI: 0000000000000010 RDI: ffffffff81e440c8
+> RBP: ffff88046b757d28 R08: ffff880468270f50 R09: 0000000000000040
+> R10: 0000000000000001 R11: 0000000000000010 R12: ffff880079b92988
+> R13: 0000000000000010 R14: 0000000000000001 R15: ffff88046fa0ae05
+> FS:  0000000000000000(0000) GS:ffff88047fc80000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000040 CR3: 0000000001a0e000 CR4: 00000000000406e0
+> Stack:
+>   ffff88046b757d38 ffff88046ddea000 ffff88046b806008 ffff88046ddea080
+>   0000000000000000 ffff88046fa0ae05 ffff88046b757d38 ffffffff811cbfb1
+>   ffff88046b757d78 ffffffff81231c60 ffff88046b806008 008000206e800800
+> Call Trace:
+>   [<ffffffff811cbfb1>] sysfs_create_link+0x21/0x40
+>   [<ffffffff81231c60>] add_disk+0x1b0/0x310
+>   [<ffffffffa01306ec>] sd_probe_async+0x11c/0x1d0 [sd_mod]
+>   [<ffffffff8106d525>] async_run_entry_fn+0x55/0x160
+>   [<ffffffff81066126>] process_one_work+0x136/0x3a0
+>   [<ffffffff810664a7>] worker_thread+0x117/0x3b0
+>   [<ffffffff81066390>] ? process_one_work+0x3a0/0x3a0
+>   [<ffffffff81066390>] ? process_one_work+0x3a0/0x3a0
+>   [<ffffffff8106afbe>] kthread+0xce/0xf0
+>   [<ffffffff8106aef0>] ? kthread_freezable_should_stop+0x70/0x70
+>   [<ffffffff81542e6c>] ret_from_fork+0x7c/0xb0
+>   [<ffffffff8106aef0>] ? kthread_freezable_should_stop+0x70/0x70
+> Code: 48 89 d3 4c 89 6d e8 4c 89 75 f0 49 89 fc 4c 89 7d f8 49 89 f5 41 89 ce 74
+> 6e 48 85 ff 74 69 48 c7 c7 c8 40 e4 81 e8 52 6b 37 00 <4d> 8b 6d 30 4d 85 ed 74
+> 08 4c 89 ef e8 01 c7 ff ff 66 83 05 d1
+> RIP  [<ffffffff811cbede>] sysfs_do_create_link_sd+0x3e/0xc0
+>   RSP <ffff88046b757cf8>
+> CR2: 0000000000000040
+> ---[ end trace 08a96f4c6fca987d ]---
+> BUG: unable to handle kernel paging request at ffffffffffffffd8
+> --
 
-Thanks Akinobu,
-
-Waiting to hear your verdict before sending a formal patchset.
-
-Sagi.
