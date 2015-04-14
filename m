@@ -1,36 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] target/file: Fix UNMAP with DIF protection support
-Date: Mon, 13 Apr 2015 21:20:16 -0400
-Message-ID: <yq138437bfz.fsf@sermon.lab.mkp.net>
-References: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
-	<1428934918-4004-3-git-send-email-akinobu.mita@gmail.com>
+Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection information code.
+Date: Mon, 13 Apr 2015 21:23:05 -0400
+Message-ID: <yq1y4lv5wqu.fsf@sermon.lab.mkp.net>
+References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29668 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbbDNBUb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2015 21:20:31 -0400
-In-Reply-To: <1428934918-4004-3-git-send-email-akinobu.mita@gmail.com>
-	(Akinobu Mita's message of "Mon, 13 Apr 2015 23:21:58 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1428945575-30839-1-git-send-email-sagig@mellanox.com> (Sagi
+	Grimberg's message of "Mon, 13 Apr 2015 20:19:33 +0300")
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
->>>>> "Akinobu" == Akinobu Mita <akinobu.mita@gmail.com> writes:
+>>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
 
-Akinobu> When UNMAP command is issued with DIF protection support
-Akinobu> enabled, the protection info for the unmapped region is remain
-Akinobu> unchanged.  So READ command for the region causes data
-Akinobu> integrity failure.
+Sagi> This set follows the patchset from Akinobu Mita that addresses DIF
+Sagi> bounce buffer sgl construction. Instead of trying to fix these
+Sagi> bugs, this removes it altogether and work with cmd->t_prot_sg
+Sagi> directly.
 
-Akinobu> This fixes it by invalidating protection info for the unmapped
-Akinobu> region by filling with 0xff pattern.  This change also adds
-Akinobu> helper function fd_do_prot_fill() in order to reduce code
-Akinobu> duplication with existing fd_format_prot().
+Sagi> The first patch is a simplification of the DIF verify varius
+Sagi> routines leaving a single generic sbc_dif_verify that handles the
+Sagi> protection information sgl we are working on.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Sagi> The second patch uses this simplification to remove the local
+Sagi> prot_fd bounce buffer altogether.
+
+Looks like a nice cleanup to me.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
