@@ -1,48 +1,30 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] sd: fix an error return in probe()
-Date: Tue, 14 Apr 2015 17:28:58 +0300
-Message-ID: <20150414142858.GH10964@mwanda>
-References: <20150119144112.GB19086@mwanda>
+Subject: [patch] csiostor: fix an error code in csio_hw_init()
+Date: Tue, 14 Apr 2015 17:32:19 +0300
+Message-ID: <20150414143219.GA30421@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26474 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670AbbDNO3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2015 10:29:25 -0400
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150119144112.GB19086@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Hariprasad Shenai <hariprasad@chelsio.com>, Praveen Madhavan <praveenm@chelsio.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-I almost accidentally sent this one again.  I still think it's correct.
+We should return -ENOMEM if kzalloc() fails here instead of returning
+success.
 
-regards,
-dan carpenter
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-On Mon, Jan 19, 2015 at 05:41:12PM +0300, Dan Carpenter wrote:
-> If device_add() fails then it should return the error code but instead
-> the current code returns success.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index ebf35cb6..75a0b55 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3019,7 +3019,8 @@ static int sd_probe(struct device *dev)
->  	sdkp->dev.class = &sd_disk_class;
->  	dev_set_name(&sdkp->dev, "%s", dev_name(dev));
->  
-> -	if (device_add(&sdkp->dev))
-> +	error = device_add(&sdkp->dev);
-> +	if (error)
->  		goto out_free_index;
->  
->  	get_device(dev);
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 2e66f34..622bdab 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -3928,6 +3928,7 @@ csio_hw_init(struct csio_hw *hw)
+ 
+ 		evt_entry = kzalloc(sizeof(struct csio_evt_msg), GFP_KERNEL);
+ 		if (!evt_entry) {
++			rv = -ENOMEM;
+ 			csio_err(hw, "Failed to initialize eventq");
+ 			goto err_evtq_cleanup;
+ 		}
