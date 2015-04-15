@@ -1,56 +1,42 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] sd: Unregister integrity profile
-Date: Wed, 15 Apr 2015 12:22:17 +0300
-Message-ID: <552E2DC9.9020200@dev.mellanox.co.il>
-References: <552D45B5.1040801@dev.mellanox.co.il> <1429044983-3584-1-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: Fix missing ATO tag check
+Date: Wed, 15 Apr 2015 12:25:11 +0300
+Message-ID: <552E2E77.5080107@dev.mellanox.co.il>
+References: <1429045863-4300-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:38849 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754668AbbDOJWV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2015 05:22:21 -0400
-Received: by wiun10 with SMTP id n10so52381146wiu.1
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2015 02:22:20 -0700 (PDT)
-In-Reply-To: <1429044983-3584-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1429045863-4300-1-git-send-email-martin.petersen@oracle.com>
+Sender: stable-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org.#.v3.17+
+Cc: stable@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On 4/14/2015 11:56 PM, Martin K. Petersen wrote:
-> The new integrity code did not correctly unregister the profile for SD
-> disks. Call blk_integrity_unregister() when we release a disk.
+On 4/15/2015 12:11 AM, Martin K. Petersen wrote:
+> 3aec2f41a8bae introduced a merge error where we would end up check for
+> sdkp instead of sdkp->ATO. Fix this so we register app tag capability
+> correctly.
 >
 > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reported-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> CC: stable@vger.kernel.org # v3.17+
-
-Has it been there this long? I wander how we didn't step on
-this sooner...
-
+> Cc: <stable@vger.kernel.org> # v3.17+
 > ---
->   drivers/scsi/sd.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/sd_dif.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 6b78476d04bb..3290a3ed5b31 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3100,6 +3100,7 @@ static void scsi_disk_release(struct device *dev)
->   	ida_remove(&sd_index_ida, sdkp->index);
->   	spin_unlock(&sd_index_lock);
+> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+> index 14c7d42a11c2..5c06d292b94c 100644
+> --- a/drivers/scsi/sd_dif.c
+> +++ b/drivers/scsi/sd_dif.c
+> @@ -77,7 +77,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
 >
-> +	blk_integrity_unregister(disk);
->   	disk->private_data = NULL;
->   	put_disk(disk);
->   	put_device(&sdkp->device->sdev_gendev);
+>   		disk->integrity->flags |= BLK_INTEGRITY_DEVICE_CAPABLE;
+>
+> -		if (!sdkp)
+> +		if (!sdkp->ATO)
+>   			return;
+>
+>   		if (type == SD_DIF_TYPE3_PROTECTION)
 >
 
-Always nice to post a trace, go home, and find the fix in
-the next morning...
-
-Thanks Martin!
-
-Tested-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
