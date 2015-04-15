@@ -1,72 +1,58 @@
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH net-next v2 1/4] cxgb4/iw_cxgb4/cxgb4i: remove duplicate
- definitions
-Date: Wed, 15 Apr 2015 10:12:34 -0600
-Message-ID: <20150415161234.GB4653@obsidianresearch.com>
-References: <cover.1428930614.git.varun@chelsio.com>
- <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
- <20150413163808.GA17521@obsidianresearch.com>
- <20150415130425.GA5317@chelsio.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] megaraid_sas: use raw_smp_processor_id()
+Date: Wed, 15 Apr 2015 09:44:37 -0700
+Message-ID: <20150415164437.GA17287@infradead.org>
+References: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:36079 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754691AbbDOQMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Apr 2015 12:12:38 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:60998 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933718AbbDOQoi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2015 12:44:38 -0400
 Content-Disposition: inline
-In-Reply-To: <20150415130425.GA5317@chelsio.com>
+In-Reply-To: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, davem@davemloft.net, JBottomley@parallels.com, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com, kxie@chelsio.com, praveenm@chelsio.com, kumaras@chelsio.com
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, megaraidlinux.pdl@avagotech.com, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 15, 2015 at 06:34:27PM +0530, Varun Prakash wrote:
-> On Mon, Apr 13, 2015 at 10:38:08AM -0600, Jason Gunthorpe wrote:
-> > On Mon, Apr 13, 2015 at 07:34:23PM +0530, Varun Prakash wrote:
-> > > define struct ulptx_idata in common header file t4_msg.h
-> > > to remove duplicate definitions.
-> > 
-> > The Infiniband side of this patch looks OK.
-> > 
-> > Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > 
-> > Just some random thoughts on the other patches:
-> >  - Try and use 'if (IS_ENABLED(CONFIG_XX))' over #ifdef 
-> >    to improve compile test coverage. This would drop a fair number
-> >    of ifdefs.
-> 
-> FCoE specific structures and functions are defined only if 
-> CONFIG_CHELSIO_T4_FCOE is enabled.
+We only want to steer the I/O completion towards a queue, but don't
+actually access any per-CPU data, so the raw_ version is fine to use
+and avoids the warnings when using smp_processor_id().
 
-I saw a number of places that could be switched, you should look
-through.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Andy Lutomirski <luto@kernel.org>
+Tested-by: Andy Lutomirski <luto@kernel.org>
+Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
 
-> #ifdef CONFIG_CHELSIO_T4_FCOE
-> void cxgb_fcoe_init_ddp(struct adapter *adap)
-> {
-> 	...
-> }
-> #endif
-> 
-> If CONFIG_CHELSIO_T4_FCOE is disabled then following code will
-> result in build error "implicit declaration of function cxgb_fcoe_init_ddp"
->
-> if (IS_ENABLED(CONFIG_CHELSIO_T4_FCOE))
-> 	cxgb_fcoe_init_ddp(adap);
-
-Commonly the ifdef would be moved to the function header and a static
-inline cxgb_fcoe_init_ddp(..) {} declared for the ifndef case. For the
-case of static function calls, just drop the ifdefing entirely. The
-compiler will silently drop unused static functions. Think carefully
-about ifdefing out structure members - I don't think saving a few bytes of
-heap in a driver like cxgb4 is worthwhile.
-
-I also just noticed that
-
-drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c
-
-Is wrapped in a whole file #ifdef CONFIG_CHELSIO_T4_FCOE - please use
-the makefile instead for this.
-
-Jason
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 675b5e7..5a0800d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			fp_possible = io_info.fpOkForIo;
+ 	}
+ 
+-	/* Use smp_processor_id() for now until cmd->request->cpu is CPU
++	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
+ 	   id by default, not CPU group id, otherwise all MSI-X queues won't
+ 	   be utilized */
+ 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+-		smp_processor_id() % instance->msix_vectors : 0;
++		raw_smp_processor_id() % instance->msix_vectors : 0;
+ 
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+@@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+ 			<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 		cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+-			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
++			instance->msix_vectors ?
++				raw_smp_processor_id() %
++					instance->msix_vectors :
++				0;
+ 		os_timeout_value = scmd->request->timeout / HZ;
+ 
+ 		if (instance->secure_jbod_support &&
