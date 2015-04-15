@@ -1,91 +1,37 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: smp_processor_id warning in megasas driver on 3.19.3
-Date: Wed, 15 Apr 2015 21:39:18 +0530
-Message-ID: <305f00cee981e538352606afeaf23743@mail.gmail.com>
-References: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
- <20150408185138.GA32580@infradead.org> <CALCETrU2E3=mrf4MYTKs5GgKzjkQCHsF00bwi8U3BfKbk4SBmg@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection information code.
+Date: Wed, 15 Apr 2015 12:10:53 -0400
+Message-ID: <yq1egnl4bjm.fsf@sermon.lab.mkp.net>
+References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
+	<CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
+	<552D4C7B.9000402@dev.mellanox.co.il>
+	<CAC5umyj9FsnumRhvNrzqE=Rtpy3O32SBw43ZP9M8H5B3htbRpw@mail.gmail.com>
+	<552E384F.3030203@dev.mellanox.co.il>
+	<CAC5umygGG4BTs0u35eVi6dLhoDuDshGNPsQaWq2kO5YexWDP+Q@mail.gmail.com>
+	<552E76D1.7040204@dev.mellanox.co.il>
+	<552E7ED6.4080304@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:35015 "EHLO
-	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932583AbbDOQJh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2015 12:09:37 -0400
-Received: by qkhg7 with SMTP id g7so90756161qkh.2
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2015 09:09:36 -0700 (PDT)
-In-Reply-To: <CALCETrU2E3=mrf4MYTKs5GgKzjkQCHsF00bwi8U3BfKbk4SBmg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <552E7ED6.4080304@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Wed, 15 Apr 2015 18:08:06 +0300")
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>, Christoph Hellwig <hch@infradead.org>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
->-----Original Message-----
->From: Andy Lutomirski [mailto:luto@amacapital.net]
->Sent: Thursday, April 09, 2015 12:45 AM
->To: Christoph Hellwig
->Cc: Kashyap Desai; Sumit Saxena; Uday Lingala;
->megaraidlinux.pdl@avagotech.com; Linux SCSI List
->Subject: Re: smp_processor_id warning in megasas driver on 3.19.3
->
->On Wed, Apr 8, 2015 at 11:51 AM, Christoph Hellwig <hch@infradead.org>
->wrote:
->> On Wed, Apr 08, 2015 at 10:59:36AM -0700, Andy Lutomirski wrote:
->>> This is a regression somewhere between 3.15 and 3.19.3.  Let me know
->>> if more diagnostics would be helpful.
->>
->> Try this patch:
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> index 675b5e7..5a0800d 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> @@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct
->megasas_instance *instance,
->>                         fp_possible = io_info.fpOkForIo;
->>         }
->>
->> -       /* Use smp_processor_id() for now until cmd->request->cpu is CPU
->> +       /* Use raw_smp_processor_id() for now until cmd->request->cpu
->> + is CPU
->>            id by default, not CPU group id, otherwise all MSI-X queues
->> won't
->>            be utilized */
->>         cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
->> -               smp_processor_id() % instance->msix_vectors : 0;
->> +               raw_smp_processor_id() % instance->msix_vectors : 0;
->>
->>         if (fp_possible) {
->>                 megasas_set_pd_lba(io_request, scp->cmd_len, &io_info,
->> scp, @@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct
->megasas_instance *instance,
->>                         << MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
->>                 cmd->request_desc->SCSIIO.DevHandle =
->> io_request->DevHandle;
->>                 cmd->request_desc->SCSIIO.MSIxIndex =
->> -                       instance->msix_vectors ? smp_processor_id() %
->> instance-
->>msix_vectors : 0;
->> +                       instance->msix_vectors ?
->> +                               raw_smp_processor_id() %
->> +                                       instance->msix_vectors :
->> +                               0;
->>                 os_timeout_value = scmd->request->timeout / HZ;
->>
->>                 if (instance->secure_jbod_support &&
->
->I wrote an effectively identical patch (differed in whitespace and
->formatting),
->and it seems to work.
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
+>>> By the commit 436f4a0a ("loopback: Add fabric_prot_type attribute
+>>> support"), When WRITE_SAME command with WRPROTECT=0 is executed,
+>>> sbc_dif_generate() is called but cmd->t_prot_sg is NULL as block
+>>> layer didn't allocate it for WRITE_SAME.
 
-Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Sagi> Actually this is a bug. Why didn't the initiator allocate
+Sagi> integrity meta-data for WRITE_SAME? Looking at the code it looks
+Sagi> like it should.
 
->
->Tested-by: Andy Lutomirski <luto@kernel.org>
->
->--Andy
->
->--
->Andy Lutomirski
->AMA Capital Management, LLC
+We don't issue WRITE SAME with PI so there is no prot SGL.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
