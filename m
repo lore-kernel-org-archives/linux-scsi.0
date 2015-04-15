@@ -1,37 +1,72 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection information code.
-Date: Wed, 15 Apr 2015 12:10:53 -0400
-Message-ID: <yq1egnl4bjm.fsf@sermon.lab.mkp.net>
-References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
-	<CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
-	<552D4C7B.9000402@dev.mellanox.co.il>
-	<CAC5umyj9FsnumRhvNrzqE=Rtpy3O32SBw43ZP9M8H5B3htbRpw@mail.gmail.com>
-	<552E384F.3030203@dev.mellanox.co.il>
-	<CAC5umygGG4BTs0u35eVi6dLhoDuDshGNPsQaWq2kO5YexWDP+Q@mail.gmail.com>
-	<552E76D1.7040204@dev.mellanox.co.il>
-	<552E7ED6.4080304@dev.mellanox.co.il>
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH net-next v2 1/4] cxgb4/iw_cxgb4/cxgb4i: remove duplicate
+ definitions
+Date: Wed, 15 Apr 2015 10:12:34 -0600
+Message-ID: <20150415161234.GB4653@obsidianresearch.com>
+References: <cover.1428930614.git.varun@chelsio.com>
+ <6358f849b5a1a3727879f4f2f5c855e3a5b95ab4.1428930614.git.varun@chelsio.com>
+ <20150413163808.GA17521@obsidianresearch.com>
+ <20150415130425.GA5317@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <552E7ED6.4080304@dev.mellanox.co.il> (Sagi Grimberg's message of
-	"Wed, 15 Apr 2015 18:08:06 +0300")
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:36079 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754691AbbDOQMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Apr 2015 12:12:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20150415130425.GA5317@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, davem@davemloft.net, JBottomley@parallels.com, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, swise@opengridcomputing.com, kxie@chelsio.com, praveenm@chelsio.com, kumaras@chelsio.com
 
->>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
+On Wed, Apr 15, 2015 at 06:34:27PM +0530, Varun Prakash wrote:
+> On Mon, Apr 13, 2015 at 10:38:08AM -0600, Jason Gunthorpe wrote:
+> > On Mon, Apr 13, 2015 at 07:34:23PM +0530, Varun Prakash wrote:
+> > > define struct ulptx_idata in common header file t4_msg.h
+> > > to remove duplicate definitions.
+> > 
+> > The Infiniband side of this patch looks OK.
+> > 
+> > Reviewed-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > 
+> > Just some random thoughts on the other patches:
+> >  - Try and use 'if (IS_ENABLED(CONFIG_XX))' over #ifdef 
+> >    to improve compile test coverage. This would drop a fair number
+> >    of ifdefs.
+> 
+> FCoE specific structures and functions are defined only if 
+> CONFIG_CHELSIO_T4_FCOE is enabled.
 
->>> By the commit 436f4a0a ("loopback: Add fabric_prot_type attribute
->>> support"), When WRITE_SAME command with WRPROTECT=0 is executed,
->>> sbc_dif_generate() is called but cmd->t_prot_sg is NULL as block
->>> layer didn't allocate it for WRITE_SAME.
+I saw a number of places that could be switched, you should look
+through.
 
-Sagi> Actually this is a bug. Why didn't the initiator allocate
-Sagi> integrity meta-data for WRITE_SAME? Looking at the code it looks
-Sagi> like it should.
+> #ifdef CONFIG_CHELSIO_T4_FCOE
+> void cxgb_fcoe_init_ddp(struct adapter *adap)
+> {
+> 	...
+> }
+> #endif
+> 
+> If CONFIG_CHELSIO_T4_FCOE is disabled then following code will
+> result in build error "implicit declaration of function cxgb_fcoe_init_ddp"
+>
+> if (IS_ENABLED(CONFIG_CHELSIO_T4_FCOE))
+> 	cxgb_fcoe_init_ddp(adap);
 
-We don't issue WRITE SAME with PI so there is no prot SGL.
+Commonly the ifdef would be moved to the function header and a static
+inline cxgb_fcoe_init_ddp(..) {} declared for the ifndef case. For the
+case of static function calls, just drop the ifdefing entirely. The
+compiler will silently drop unused static functions. Think carefully
+about ifdefing out structure members - I don't think saving a few bytes of
+heap in a driver like cxgb4 is worthwhile.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I also just noticed that
+
+drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c
+
+Is wrapped in a whole file #ifdef CONFIG_CHELSIO_T4_FCOE - please use
+the makefile instead for this.
+
+Jason
