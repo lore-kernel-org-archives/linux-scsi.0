@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 16/43] hpsa: break hpsa_free_irqs_and_disable_msix into
- two functions
-Date: Thu, 16 Apr 2015 08:48:09 -0500
-Message-ID: <20150416134809.30238.43519.stgit@brunhilda>
+Subject: [PATCH v4 18/43] hpsa: refactor freeing of resources into more
+ logical functions
+Date: Thu, 16 Apr 2015 08:48:22 -0500
+Message-ID: <20150416134822.30238.46143.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:49346 "EHLO
-	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503AbbDPNtM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:12 -0400
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:44556 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668AbbDPNtX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:23 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,100 +20,195 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-replace calls to hpsa_free_irqs_and_disable_msix with
-hpsa_free_irqs and hpsa_disable_interrupt_mode
+refactor freeing of resources into more logical functions
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+ drivers/scsi/hpsa.c |  104 +++++++++++++++++++++++++++------------------------
+ 1 file changed, 56 insertions(+), 48 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ad2b44c..b743f1a 100644
+index 9e26eb0..c9c42e9 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6375,10 +6375,20 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
- 	return -1;
+@@ -235,6 +235,8 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
+ static void calc_bucket_map(int *bucket, int num_buckets,
+ 	int nsgs, int min_blocks, u32 *bucket_map);
+ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h);
++static void hpsa_free_ioaccel1_cmd_and_bft(struct ctlr_info *h);
++static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h);
+ static inline u32 next_command(struct ctlr_info *h, u8 q);
+ static int hpsa_find_cfg_addrs(struct pci_dev *pdev, void __iomem *vaddr,
+ 			       u32 *cfg_base_addr, u64 *cfg_base_addr_index,
+@@ -6897,6 +6899,21 @@ out_disable:
+ 	return rc;
  }
  
-+static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
++static void hpsa_free_cmd_pool(struct ctlr_info *h)
 +{
-+	if (h->msix_vector) {
-+		if (h->pdev->msix_enabled)
-+			pci_disable_msix(h->pdev);
-+	} else if (h->msi_vector) {
-+		if (h->pdev->msi_enabled)
-+			pci_disable_msi(h->pdev);
-+	}
++	kfree(h->cmd_pool_bits);
++	if (h->cmd_pool)
++		pci_free_consistent(h->pdev,
++				h->nr_cmds * sizeof(struct CommandList),
++				h->cmd_pool,
++				h->cmd_pool_dhandle);
++	if (h->errinfo_pool)
++		pci_free_consistent(h->pdev,
++				h->nr_cmds * sizeof(struct ErrorInfo),
++				h->errinfo_pool,
++				h->errinfo_pool_dhandle);
 +}
 +
- /* If MSI/MSI-X is supported by the kernel we will try to enable it on
-  * controllers that are capable. If not, we use legacy INTx mode.
-  */
--
- static void hpsa_interrupt_mode(struct ctlr_info *h)
+ static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
  {
- #ifdef CONFIG_PCI_MSI
-@@ -7019,20 +7029,6 @@ static int hpsa_kdump_soft_reset(struct ctlr_info *h)
+ 	h->cmd_pool_bits = kzalloc(
+@@ -6921,28 +6938,6 @@ clean_up:
+ 	return -ENOMEM;
+ }
+ 
+-static void hpsa_free_cmd_pool(struct ctlr_info *h)
+-{
+-	kfree(h->cmd_pool_bits);
+-	if (h->cmd_pool)
+-		pci_free_consistent(h->pdev,
+-			    h->nr_cmds * sizeof(struct CommandList),
+-			    h->cmd_pool, h->cmd_pool_dhandle);
+-	if (h->ioaccel2_cmd_pool)
+-		pci_free_consistent(h->pdev,
+-			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
+-			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
+-	if (h->errinfo_pool)
+-		pci_free_consistent(h->pdev,
+-			    h->nr_cmds * sizeof(struct ErrorInfo),
+-			    h->errinfo_pool,
+-			    h->errinfo_pool_dhandle);
+-	if (h->ioaccel_cmd_pool)
+-		pci_free_consistent(h->pdev,
+-			h->nr_cmds * sizeof(struct io_accel1_cmd),
+-			h->ioaccel_cmd_pool, h->ioaccel_cmd_pool_dhandle);
+-}
+-
+ static void hpsa_irq_affinity_hints(struct ctlr_info *h)
+ {
+ 	int i, cpu;
+@@ -7063,8 +7058,10 @@ static void hpsa_free_reply_queues(struct ctlr_info *h)
+ 	for (i = 0; i < h->nreply_queues; i++) {
+ 		if (!h->reply_queue[i].head)
+ 			continue;
+-		pci_free_consistent(h->pdev, h->reply_queue_size,
+-			h->reply_queue[i].head, h->reply_queue[i].busaddr);
++		pci_free_consistent(h->pdev,
++					h->reply_queue_size,
++					h->reply_queue[i].head,
++					h->reply_queue[i].busaddr);
+ 		h->reply_queue[i].head = NULL;
+ 		h->reply_queue[i].busaddr = 0;
+ 	}
+@@ -7075,9 +7072,10 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	hpsa_free_irqs(h);
+ 	hpsa_free_sg_chain_blocks(h);
+ 	hpsa_free_cmd_pool(h);
+-	kfree(h->ioaccel1_blockFetchTable);
+-	kfree(h->blockFetchTable);
+-	hpsa_free_reply_queues(h);
++	kfree(h->blockFetchTable);		/* perf 2 */
++	hpsa_free_reply_queues(h);		/* perf 1 */
++	hpsa_free_ioaccel1_cmd_and_bft(h);	/* perf 1 */
++	hpsa_free_ioaccel2_cmd_and_bft(h);	/* perf 1 */
+ 	hpsa_free_cfgtables(h);			/* pci_init 4 */
+ 	iounmap(h->vaddr);			/* pci_init 3 */
+ 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+@@ -7509,6 +7507,8 @@ reinit_after_soft_reset:
+ clean4:
+ 	hpsa_free_sg_chain_blocks(h);
+ 	hpsa_free_cmd_pool(h);
++	hpsa_free_ioaccel1_cmd_and_bft(h);
++	hpsa_free_ioaccel2_cmd_and_bft(h);
+ clean2_and_free_irqs:
+ 	hpsa_free_irqs(h);
+ clean2:
+@@ -7610,17 +7610,11 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 
+ 	hpsa_free_device_info(h);
+ 	hpsa_free_sg_chain_blocks(h);
+-	pci_free_consistent(h->pdev,
+-		h->nr_cmds * sizeof(struct CommandList),
+-		h->cmd_pool, h->cmd_pool_dhandle);
+-	pci_free_consistent(h->pdev,
+-		h->nr_cmds * sizeof(struct ErrorInfo),
+-		h->errinfo_pool, h->errinfo_pool_dhandle);
+-	hpsa_free_reply_queues(h);
+-	kfree(h->cmd_pool_bits);
+-	kfree(h->blockFetchTable);
+-	kfree(h->ioaccel1_blockFetchTable);
+-	kfree(h->ioaccel2_blockFetchTable);
++	kfree(h->blockFetchTable);		/* perf 2 */
++	hpsa_free_reply_queues(h);		/* perf 1 */
++	hpsa_free_ioaccel1_cmd_and_bft(h);	/* perf 1 */
++	hpsa_free_ioaccel2_cmd_and_bft(h);	/* perf 1 */
++	hpsa_free_cmd_pool(h);			/* init_one 5 */
+ 	kfree(h->hba_inquiry_data);
+ 
+ 	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
+@@ -7867,6 +7861,17 @@ static int hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
  	return 0;
  }
  
--static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
--{
--	hpsa_free_irqs(h);
--#ifdef CONFIG_PCI_MSI
--	if (h->msix_vector) {
--		if (h->pdev->msix_enabled)
--			pci_disable_msix(h->pdev);
--	} else if (h->msi_vector) {
--		if (h->pdev->msi_enabled)
--			pci_disable_msi(h->pdev);
--	}
--#endif /* CONFIG_PCI_MSI */
--}
--
- static void hpsa_free_reply_queues(struct ctlr_info *h)
++/* Free ioaccel1 mode command blocks and block fetch table */
++static void hpsa_free_ioaccel1_cmd_and_bft(struct ctlr_info *h)
++{
++	if (h->ioaccel_cmd_pool)
++		pci_free_consistent(h->pdev,
++			h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
++			h->ioaccel_cmd_pool,
++			h->ioaccel_cmd_pool_dhandle);
++	kfree(h->ioaccel1_blockFetchTable);
++}
++
+ /* Allocate ioaccel1 mode command blocks and block fetch table */
+ static int hpsa_alloc_ioaccel1_cmd_and_bft(struct ctlr_info *h)
  {
- 	int i;
-@@ -7049,7 +7045,7 @@ static void hpsa_free_reply_queues(struct ctlr_info *h)
+@@ -7899,14 +7904,21 @@ static int hpsa_alloc_ioaccel1_cmd_and_bft(struct ctlr_info *h)
+ 	return 0;
  
- static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- {
--	hpsa_free_irqs_and_disable_msix(h);
-+	hpsa_free_irqs(h);
- 	hpsa_free_sg_chain_blocks(h);
- 	hpsa_free_cmd_pool(h);
- 	kfree(h->ioaccel1_blockFetchTable);
-@@ -7061,6 +7057,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 		iounmap(h->transtable);
- 	if (h->cfgtable)
- 		iounmap(h->cfgtable);
-+	hpsa_disable_interrupt_mode(h);
- 	pci_disable_device(h->pdev);
- 	pci_release_regions(h->pdev);
- 	kfree(h);
-@@ -7550,7 +7547,8 @@ static void hpsa_shutdown(struct pci_dev *pdev)
- 	 */
- 	hpsa_flush_cache(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
--	hpsa_free_irqs_and_disable_msix(h);
-+	hpsa_free_irqs(h);
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+ clean_up:
+-	if (h->ioaccel_cmd_pool)
+-		pci_free_consistent(h->pdev,
+-			h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
+-			h->ioaccel_cmd_pool, h->ioaccel_cmd_pool_dhandle);
+-	kfree(h->ioaccel1_blockFetchTable);
++	hpsa_free_ioaccel1_cmd_and_bft(h);
+ 	return 1;
  }
  
- static void hpsa_free_device_info(struct ctlr_info *h)
-@@ -7581,7 +7579,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	destroy_workqueue(h->rescan_ctlr_wq);
- 	destroy_workqueue(h->resubmit_wq);
- 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
++/* Free ioaccel2 mode command blocks and block fetch table */
++static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
++{
++	if (h->ioaccel2_cmd_pool)
++		pci_free_consistent(h->pdev,
++			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
++			h->ioaccel2_cmd_pool,
++			h->ioaccel2_cmd_pool_dhandle);
++	kfree(h->ioaccel2_blockFetchTable);
++}
 +
-+	/* includes hpsa_free_irqs and hpsa_disable_interrupt_mode */
- 	hpsa_shutdown(pdev);
-+
- 	iounmap(h->vaddr);
- 	iounmap(h->transtable);
- 	iounmap(h->cfgtable);
+ /* Allocate ioaccel2 mode command blocks and block fetch table */
+ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
+@@ -7937,11 +7949,7 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 	return 0;
+ 
+ clean_up:
+-	if (h->ioaccel2_cmd_pool)
+-		pci_free_consistent(h->pdev,
+-			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
+-			h->ioaccel2_cmd_pool, h->ioaccel2_cmd_pool_dhandle);
+-	kfree(h->ioaccel2_blockFetchTable);
++	hpsa_free_ioaccel2_cmd_and_bft(h);
+ 	return 1;
+ }
+ 
 
