@@ -1,271 +1,253 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 19/43] hpsa: add ioaccel sg chaining for the ioaccel2 path
-Date: Thu, 16 Apr 2015 08:48:27 -0500
-Message-ID: <20150416134827.30238.67380.stgit@brunhilda>
+Subject: [PATCH v4 21/43] hpsa: do not check cmd_alloc return value - it
+ cannnot return NULL
+Date: Thu, 16 Apr 2015 08:48:38 -0500
+Message-ID: <20150416134838.30238.97749.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:44597 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754457AbbDPNt2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:28 -0400
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:34726 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933657AbbDPNtk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:40 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Webb Scales <webbnh@hp.com>
+From: Robert Elliott <elliott@hp.com>
 
-Increase the request size for ioaccel2 path.
-
-The error, if any, returned by hpsa_allocate_ioaccel2_sg_chain_blocks
-to hpsa_alloc_ioaccel2_cmd_and_bft should be returned upstream rather
-than assumed to be -ENOMEM.
-
-This differs slightly from hpsa_alloc_ioaccel1_cmd_and_bft,
-which does not call another hpsa_allocate function and only
-has -ENOMEM to return from some kmalloc calls.
+cmd_alloc can no longer return NULL, so don't check for NULL any more
+(which is unreachable code).
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |  125 +++++++++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/hpsa.h |    1 
- 2 files changed, 116 insertions(+), 10 deletions(-)
+ drivers/scsi/hpsa.c |   77 ++++++++++-----------------------------------------
+ 1 file changed, 15 insertions(+), 62 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c9c42e9..1839761 100644
+index fd9620d..2da5306 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1704,6 +1704,46 @@ static void hpsa_slave_destroy(struct scsi_device *sdev)
- 	/* nothing to do. */
- }
+@@ -2474,11 +2474,6 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
  
-+static void hpsa_free_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
-+{
-+	int i;
-+
-+	if (!h->ioaccel2_cmd_sg_list)
-+		return;
-+	for (i = 0; i < h->nr_cmds; i++) {
-+		kfree(h->ioaccel2_cmd_sg_list[i]);
-+		h->ioaccel2_cmd_sg_list[i] = NULL;
-+	}
-+	kfree(h->ioaccel2_cmd_sg_list);
-+	h->ioaccel2_cmd_sg_list = NULL;
-+}
-+
-+static int hpsa_allocate_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
-+{
-+	int i;
-+
-+	if (h->chainsize <= 0)
-+		return 0;
-+
-+	h->ioaccel2_cmd_sg_list =
-+		kzalloc(sizeof(*h->ioaccel2_cmd_sg_list) * h->nr_cmds,
-+					GFP_KERNEL);
-+	if (!h->ioaccel2_cmd_sg_list)
-+		return -ENOMEM;
-+	for (i = 0; i < h->nr_cmds; i++) {
-+		h->ioaccel2_cmd_sg_list[i] =
-+			kmalloc(sizeof(*h->ioaccel2_cmd_sg_list[i]) *
-+					h->maxsgentries, GFP_KERNEL);
-+		if (!h->ioaccel2_cmd_sg_list[i])
-+			goto clean;
-+	}
-+	return 0;
-+
-+clean:
-+	hpsa_free_ioaccel2_sg_chain_blocks(h);
-+	return -ENOMEM;
-+}
-+
- static void hpsa_free_sg_chain_blocks(struct ctlr_info *h)
- {
- 	int i;
-@@ -1746,6 +1786,39 @@ clean:
- 	return -ENOMEM;
- }
+ 	c = cmd_alloc(h);
  
-+static int hpsa_map_ioaccel2_sg_chain_block(struct ctlr_info *h,
-+	struct io_accel2_cmd *cp, struct CommandList *c)
-+{
-+	struct ioaccel2_sg_element *chain_block;
-+	u64 temp64;
-+	u32 chain_size;
-+
-+	chain_block = h->ioaccel2_cmd_sg_list[c->cmdindex];
-+	chain_size = le32_to_cpu(cp->data_len);
-+	temp64 = pci_map_single(h->pdev, chain_block, chain_size,
-+				PCI_DMA_TODEVICE);
-+	if (dma_mapping_error(&h->pdev->dev, temp64)) {
-+		/* prevent subsequent unmapping */
-+		cp->sg->address = 0;
-+		return -1;
-+	}
-+	cp->sg->address = cpu_to_le64(temp64);
-+	return 0;
-+}
-+
-+static void hpsa_unmap_ioaccel2_sg_chain_block(struct ctlr_info *h,
-+	struct io_accel2_cmd *cp)
-+{
-+	struct ioaccel2_sg_element *chain_sg;
-+	u64 temp64;
-+	u32 chain_size;
-+
-+	chain_sg = cp->sg;
-+	temp64 = le64_to_cpu(chain_sg->address);
-+	chain_size = le32_to_cpu(cp->data_len);
-+	pci_unmap_single(h->pdev, temp64, chain_size, PCI_DMA_TODEVICE);
-+}
-+
- static int hpsa_map_sg_chain_block(struct ctlr_info *h,
- 	struct CommandList *c)
- {
-@@ -1955,6 +2028,7 @@ static void complete_scsi_command(struct CommandList *cp)
- 	struct ctlr_info *h;
- 	struct ErrorInfo *ei;
- 	struct hpsa_scsi_dev_t *dev;
-+	struct io_accel2_cmd *c2;
- 
- 	int sense_key;
- 	int asc;      /* additional sense code */
-@@ -1965,12 +2039,17 @@ static void complete_scsi_command(struct CommandList *cp)
- 	cmd = cp->scsi_cmd;
- 	h = cp->h;
- 	dev = cmd->device->hostdata;
-+	c2 = &h->ioaccel2_cmd_pool[cp->cmdindex];
- 
- 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
- 	if ((cp->cmd_type == CMD_SCSI) &&
- 		(le16_to_cpu(cp->Header.SGTotal) > h->max_cmd_sg_entries))
- 		hpsa_unmap_sg_chain_block(h, cp);
- 
-+	if ((cp->cmd_type == CMD_IOACCEL2) &&
-+		(c2->sg[0].chain_indicator == IOACCEL2_CHAIN))
-+		hpsa_unmap_ioaccel2_sg_chain_block(h, c2);
-+
- 	cmd->result = (DID_OK << 16); 		/* host byte */
- 	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
- 
-@@ -3812,10 +3891,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	u32 len;
- 	u32 total_len = 0;
- 
--	if (scsi_sg_count(cmd) > h->ioaccel_maxsg) {
--		atomic_dec(&phys_disk->ioaccel_cmds_out);
--		return IO_ACCEL_INELIGIBLE;
+-	if (c == NULL) {
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -ENOMEM;
 -	}
-+	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
- 
- 	if (fixup_ioaccel_cdb(cdb, &cdb_len)) {
- 		atomic_dec(&phys_disk->ioaccel_cmds_out);
-@@ -3838,8 +3914,19 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	}
- 
- 	if (use_sg) {
--		BUG_ON(use_sg > IOACCEL2_MAXSGENTRIES);
- 		curr_sg = cp->sg;
-+		if (use_sg > h->ioaccel_maxsg) {
-+			addr64 = le64_to_cpu(
-+				h->ioaccel2_cmd_sg_list[c->cmdindex]->address);
-+			curr_sg->address = cpu_to_le64(addr64);
-+			curr_sg->length = 0;
-+			curr_sg->reserved[0] = 0;
-+			curr_sg->reserved[1] = 0;
-+			curr_sg->reserved[2] = 0;
-+			curr_sg->chain_indicator = 0x80;
-+
-+			curr_sg = h->ioaccel2_cmd_sg_list[c->cmdindex];
-+		}
- 		scsi_for_each_sg(cmd, sg, use_sg, i) {
- 			addr64 = (u64) sg_dma_address(sg);
- 			len  = sg_dma_len(sg);
-@@ -3884,14 +3971,22 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	cp->Tag = cpu_to_le32(c->cmdindex << DIRECT_LOOKUP_SHIFT);
- 	memcpy(cp->cdb, cdb, sizeof(cp->cdb));
- 
--	/* fill in sg elements */
--	cp->sg_count = (u8) use_sg;
 -
- 	cp->data_len = cpu_to_le32(total_len);
- 	cp->err_ptr = cpu_to_le64(c->busaddr +
- 			offsetof(struct io_accel2_cmd, error_data));
- 	cp->err_len = cpu_to_le32(sizeof(cp->error_data));
+ 	if (fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize,
+ 			page, scsi3addr, TYPE_CMD)) {
+ 		rc = -1;
+@@ -2507,11 +2502,6 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
+ 	struct ErrorInfo *ei;
  
-+	/* fill in sg elements */
-+	if (use_sg > h->ioaccel_maxsg) {
-+		cp->sg_count = 1;
-+		if (hpsa_map_ioaccel2_sg_chain_block(h, cp, c)) {
-+			atomic_dec(&phys_disk->ioaccel_cmds_out);
-+			scsi_dma_unmap(cmd);
-+			return -1;
-+		}
-+	} else
-+		cp->sg_count = (u8) use_sg;
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {			/* trouble... */
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -ENOMEM;
+-	}
+-
+ 	if (fill_cmd(c, BMIC_SENSE_CONTROLLER_PARAMETERS, h, buf, bufsize,
+ 			page, scsi3addr, TYPE_CMD)) {
+ 		rc = -1;
+@@ -2529,7 +2519,7 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
+ out:
+ 	cmd_free(h, c);
+ 	return rc;
+-	}
++}
+ 
+ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	u8 reset_type, int reply_queue)
+@@ -2540,10 +2530,6 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 
+ 	c = cmd_alloc(h);
+ 
+-	if (c == NULL) {			/* trouble... */
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -ENOMEM;
+-	}
+ 
+ 	/* fill_cmd can't fail here, no data buffer to map. */
+ 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+@@ -2671,10 +2657,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	struct ErrorInfo *ei;
+ 
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -ENOMEM;
+-	}
 +
- 	enqueue_cmd_and_start_io(h, c);
- 	return 0;
+ 	if (fill_cmd(c, HPSA_GET_RAID_MAP, h, &this_device->raid_map,
+ 			sizeof(this_device->raid_map), 0,
+ 			scsi3addr, TYPE_CMD)) {
+@@ -2847,10 +2830,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+ 	struct ErrorInfo *ei;
+ 
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {			/* trouble... */
+-		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -1;
+-	}
++
+ 	/* address the controller */
+ 	memset(scsi3addr, 0, sizeof(scsi3addr));
+ 	if (fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
+@@ -2965,8 +2945,7 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+ #define ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ 0x02
+ 
+ 	c = cmd_alloc(h);
+-	if (!c)
+-		return 0;
++
+ 	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
+ 	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
+ 	if (rc) {
+@@ -3040,8 +3019,7 @@ static int hpsa_device_supports_aborts(struct ctlr_info *h,
+ 		return 1;
+ 
+ 	c = cmd_alloc(h);
+-	if (!c)
+-		return -ENOMEM;
++
+ 	(void) fill_cmd(c, HPSA_ABORT_MSG, h, &tag, 0, 0, scsi3addr, TYPE_MSG);
+ 	(void) hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
+ 	/* no unmap needed here because no data xfer. */
+@@ -4612,10 +4590,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 		return 0;
+ 	}
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {			/* trouble... */
+-		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-	}
++
+ 	if (unlikely(lockup_detected(h))) {
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		cmd_free(h, c);
+@@ -4776,11 +4751,6 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 	struct CommandList *c;
+ 
+ 	c = cmd_alloc(h);
+-	if (!c) {
+-		dev_warn(&h->pdev->dev, "out of memory in "
+-			"wait_for_device_to_become_ready.\n");
+-		return IO_ERROR;
+-	}
+ 
+ 	/* Send test unit ready until device ready, or give up. */
+ 	while (count < HPSA_TUR_RETRY_LIMIT) {
+@@ -4943,10 +4913,6 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	__le32 tagupper, taglower;
+ 
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {	/* trouble... */
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		return -ENOMEM;
+-	}
+ 
+ 	/* fill_cmd can't fail here, no buffer to map */
+ 	(void) fill_cmd(c, HPSA_ABORT_MSG, h, &abort->Header.tag,
+@@ -5237,6 +5203,8 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+  * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
+  * which ones are free or in use.  Lock must be held when calling this.
+  * cmd_free() is the complement.
++ * This function never gives up and returns NULL.  If it hangs,
++ * another thread must call cmd_free() to free some tags.
+  */
+ 
+ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+@@ -5470,10 +5438,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		}
+ 	}
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {
+-		rc = -ENOMEM;
+-		goto out_kfree;
+-	}
++
+ 	/* Fill in the command type */
+ 	c->cmd_type = CMD_IOCTL_PEND;
+ 	/* Fill in Command Header */
+@@ -5609,10 +5574,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		sg_used++;
+ 	}
+ 	c = cmd_alloc(h);
+-	if (c == NULL) {
+-		status = -ENOMEM;
+-		goto cleanup1;
+-	}
++
+ 	c->cmd_type = CMD_IOCTL_PEND;
+ 	c->Header.ReplyQueue = 0;
+ 	c->Header.SGList = (u8) sg_used;
+@@ -5729,14 +5691,13 @@ static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
+ 	}
  }
-@@ -7911,6 +8006,8 @@ clean_up:
- /* Free ioaccel2 mode command blocks and block fetch table */
- static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 
+-static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
++static void hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 				u8 reset_type)
  {
-+	hpsa_free_ioaccel2_sg_chain_blocks(h);
+ 	struct CommandList *c;
+ 
+ 	c = cmd_alloc(h);
+-	if (!c)
+-		return -ENOMEM;
 +
- 	if (h->ioaccel2_cmd_pool)
- 		pci_free_consistent(h->pdev,
- 			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-@@ -7922,6 +8019,8 @@ static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
- /* Allocate ioaccel2 mode command blocks and block fetch table */
- static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
- {
-+	int rc;
-+
- 	/* Allocate ioaccel2 mode command blocks and block fetch table */
- 
- 	h->ioaccel_maxsg =
-@@ -7941,7 +8040,13 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
- 				sizeof(u32)), GFP_KERNEL);
- 
- 	if ((h->ioaccel2_cmd_pool == NULL) ||
--		(h->ioaccel2_blockFetchTable == NULL))
-+		(h->ioaccel2_blockFetchTable == NULL)) {
-+		rc = -ENOMEM;
-+		goto clean_up;
-+	}
-+
-+	rc = hpsa_allocate_ioaccel2_sg_chain_blocks(h);
-+	if (rc)
- 		goto clean_up;
- 
- 	memset(h->ioaccel2_cmd_pool, 0,
-@@ -7950,7 +8055,7 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
- 
- clean_up:
- 	hpsa_free_ioaccel2_cmd_and_bft(h);
--	return 1;
-+	return rc;
+ 	/* fill_cmd can't fail here, no data buffer to map */
+ 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+ 		RAID_CTLR_LUNID, TYPE_MSG);
+@@ -5747,7 +5708,7 @@ static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	 * the command either.  This is the last command we will send before
+ 	 * re-initializing everything, so it doesn't matter and won't leak.
+ 	 */
+-	return 0;
++	return;
  }
  
- static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 87a70b5..3acacf6 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -162,6 +162,7 @@ struct ctlr_info {
- 	u8 max_cmd_sg_entries;
- 	int chainsize;
- 	struct SGDescriptor **cmd_sg_list;
-+	struct ioaccel2_sg_element **ioaccel2_cmd_sg_list;
+ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+@@ -7147,11 +7108,7 @@ static int hpsa_request_irqs(struct ctlr_info *h,
  
- 	/* pointers to command and error info pool */
- 	struct CommandList 	*cmd_pool;
+ static int hpsa_kdump_soft_reset(struct ctlr_info *h)
+ {
+-	if (hpsa_send_host_reset(h, RAID_CTLR_LUNID,
+-		HPSA_RESET_TYPE_CONTROLLER)) {
+-		dev_warn(&h->pdev->dev, "Resetting array controller failed.\n");
+-		return -EIO;
+-	}
++	hpsa_send_host_reset(h, RAID_CTLR_LUNID, HPSA_RESET_TYPE_CONTROLLER);
+ 
+ 	dev_info(&h->pdev->dev, "Waiting for board to soft reset.\n");
+ 	if (hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_NOT_READY)) {
+@@ -7657,10 +7614,7 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+ 		return;
+ 
+ 	c = cmd_alloc(h);
+-	if (!c) {
+-		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+-		goto out_of_memory;
+-	}
++
+ 	if (fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
+ 		RAID_CTLR_LUNID, TYPE_CMD)) {
+ 		goto out;
+@@ -7674,7 +7628,6 @@ out:
+ 		dev_warn(&h->pdev->dev,
+ 			"error flushing cache on controller\n");
+ 	cmd_free(h, c);
+-out_of_memory:
+ 	kfree(flush_buf);
+ }
+ 
 
