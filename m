@@ -1,271 +1,189 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 26/43] hpsa: add support sending aborts to physical
- devices via the ioaccel2 path
-Date: Thu, 16 Apr 2015 08:49:05 -0500
-Message-ID: <20150416134904.30238.9380.stgit@brunhilda>
+Subject: [PATCH v4 35/43] hpsa: create workqueue after the driver is ready
+ for use
+Date: Thu, 16 Apr 2015 08:49:52 -0500
+Message-ID: <20150416134952.30238.81509.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5009.houston.hp.com ([15.240.92.67]:51051 "EHLO
-	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933657AbbDPNuG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:06 -0400
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:51680 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965105AbbDPNuy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:54 -0400
+Received: from g1t5424.austin.hp.com (g1t5424.austin.hp.com [15.216.225.54])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 0CA313200
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2015 13:50:54 +0000 (UTC)
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Robert Elliott <elliott@hp.com>
 
-add support for tmf when in ioaccel2 mode
+Don't create the resubmit workqueue in hpsa_init_one until everything else
+is ready to use, so everything can be freed in reverse order of when they
+were allocated without risking freeing things while workqueue items are
+still active.
+
+Destroy the workqueue in the right order in
+hpsa_undo_allocations_after_kdump_soft_reset too.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c     |  136 +++++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/hpsa.h     |    1 
- drivers/scsi/hpsa_cmd.h |    6 +-
- 3 files changed, 135 insertions(+), 8 deletions(-)
+ drivers/scsi/hpsa.c |   60 ++++++++++++++++++++++++++-------------------------
+ 1 file changed, 31 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3bbd579..3f86a61 100644
+index c6e950e..fb755a8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -861,6 +861,28 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
- 					IOACCEL1_BUSADDR_CMDTYPE;
- }
+@@ -7688,30 +7688,18 @@ reinit_after_soft_reset:
+ 	atomic_set(&h->passthru_cmds_avail, HPSA_MAX_CONCURRENT_PASSTHRUS);
+ 	atomic_set(&h->abort_cmds_available, HPSA_CMDS_RESERVED_FOR_ABORTS);
  
-+static void set_ioaccel2_tmf_performant_mode(struct ctlr_info *h,
-+						struct CommandList *c,
-+						int reply_queue)
-+{
-+	struct hpsa_tmf_struct *cp = (struct hpsa_tmf_struct *)
-+		&h->ioaccel2_cmd_pool[c->cmdindex];
-+
-+	/* Tell the controller to post the reply to the queue for this
-+	 * processor.  This seems to give the best I/O throughput.
-+	 */
-+	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
-+		cp->reply_queue = smp_processor_id() % h->nreply_queues;
-+	else
-+		cp->reply_queue = reply_queue % h->nreply_queues;
-+	/* Set the bits in the address sent down to include:
-+	 *  - performant mode bit not used in ioaccel mode 2
-+	 *  - pull count (bits 0-3)
-+	 *  - command type isn't needed for ioaccel2
-+	 */
-+	c->busaddr |= h->ioaccel2_blockFetchTable[0];
-+}
-+
- static void set_ioaccel2_performant_mode(struct ctlr_info *h,
- 						struct CommandList *c,
- 						int reply_queue)
-@@ -927,6 +949,10 @@ static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
- 		set_ioaccel2_performant_mode(h, c, reply_queue);
- 		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
- 		break;
-+	case IOACCEL2_TMF:
-+		set_ioaccel2_tmf_performant_mode(h, c, reply_queue);
-+		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
-+		break;
- 	default:
- 		set_performant_mode(h, c, reply_queue);
- 		h->access.submit_command(h, c);
-@@ -4924,6 +4950,47 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 	return rc;
- }
+-	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
+-	if (!h->rescan_ctlr_wq) {
+-		rc = -ENOMEM;
+-		goto clean1;
+-	}
+-
+-	h->resubmit_wq = hpsa_create_controller_wq(h, "resubmit");
+-	if (!h->resubmit_wq) {
+-		rc = -ENOMEM;
+-		goto clean1;	/* aer/h */
+-	}
+-
+ 	/* Allocate and clear per-cpu variable lockup_detected */
+ 	h->lockup_detected = alloc_percpu(u32);
+ 	if (!h->lockup_detected) {
+ 		dev_err(&h->pdev->dev, "Failed to allocate lockup detector\n");
+ 		rc = -ENOMEM;
+-		goto clean1;	/* wq/aer/h */
++		goto clean1;	/* aer/h */
+ 	}
+ 	set_lockup_detected_for_all_cpus(h, 0);
  
-+static void setup_ioaccel2_abort_cmd(struct CommandList *c, struct ctlr_info *h,
-+	struct CommandList *command_to_abort, int reply_queue)
-+{
-+	struct io_accel2_cmd *c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
-+	struct hpsa_tmf_struct *ac = (struct hpsa_tmf_struct *) c2;
-+	struct io_accel2_cmd *c2a =
-+		&h->ioaccel2_cmd_pool[command_to_abort->cmdindex];
-+	struct scsi_cmnd *scmd =
-+		(struct scsi_cmnd *) command_to_abort->scsi_cmd;
-+	struct hpsa_scsi_dev_t *dev = scmd->device->hostdata;
-+
-+	/*
-+	 * We're overlaying struct hpsa_tmf_struct on top of something which
-+	 * was allocated as a struct io_accel2_cmd, so we better be sure it
-+	 * actually fits, and doesn't overrun the error info space.
-+	 */
-+	BUILD_BUG_ON(sizeof(struct hpsa_tmf_struct) >
-+			sizeof(struct io_accel2_cmd));
-+	BUG_ON(offsetof(struct io_accel2_cmd, error_data) <
-+			offsetof(struct hpsa_tmf_struct, error_len) +
-+				sizeof(ac->error_len));
-+
-+	c->cmd_type = IOACCEL2_TMF;
-+	/* Adjust the DMA address to point to the accelerated command buffer */
-+	c->busaddr = (u32) h->ioaccel2_cmd_pool_dhandle +
-+				(c->cmdindex * sizeof(struct io_accel2_cmd));
-+	BUG_ON(c->busaddr & 0x0000007F);
-+
-+	memset(ac, 0, sizeof(*c2)); /* yes this is correct */
-+	ac->iu_type = IOACCEL2_IU_TMF_TYPE;
-+	ac->reply_queue = reply_queue;
-+	ac->tmf = IOACCEL2_TMF_ABORT;
-+	ac->it_nexus = cpu_to_le32(dev->ioaccel_handle);
-+	memset(ac->lun_id, 0, sizeof(ac->lun_id));
-+	ac->tag = cpu_to_le64(c->cmdindex << DIRECT_LOOKUP_SHIFT);
-+	ac->abort_tag = cpu_to_le64(le32_to_cpu(c2a->Tag));
-+	ac->error_ptr = cpu_to_le64(c->busaddr +
-+			offsetof(struct io_accel2_cmd, error_data));
-+	ac->error_len = cpu_to_le32(sizeof(c2->error_data));
-+}
-+
- /* ioaccel2 path firmware cannot handle abort task requests.
-  * Change abort requests to physical target reset, and send to the
-  * address of the physical disk used for the ioaccel 2 command.
-@@ -5002,17 +5069,72 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
- 	return rc; /* success */
- }
+ 	rc = hpsa_pci_init(h);
+ 	if (rc)
+-		goto clean2;	/* lockup, wq/aer/h */
++		goto clean2;	/* lockup, aer/h */
  
-+static int hpsa_send_abort_ioaccel2(struct ctlr_info *h,
-+	struct CommandList *abort, int reply_queue)
-+{
-+	int rc = IO_OK;
-+	struct CommandList *c;
-+	__le32 taglower, tagupper;
-+	struct hpsa_scsi_dev_t *dev;
-+	struct io_accel2_cmd *c2;
+ 	sprintf(h->devname, HPSA "%d", number_of_controllers);
+ 	h->ctlr = number_of_controllers;
+@@ -7727,7 +7715,7 @@ reinit_after_soft_reset:
+ 			dac = 0;
+ 		} else {
+ 			dev_err(&pdev->dev, "no suitable DMA available\n");
+-			goto clean3;	/* pci, lockup, wq/aer/h */
++			goto clean3;	/* pci, lockup, aer/h */
+ 		}
+ 	}
+ 
+@@ -7736,16 +7724,16 @@ reinit_after_soft_reset:
+ 
+ 	rc = hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx);
+ 	if (rc)
+-		goto clean3;	/* pci, lockup, wq/aer/h */
++		goto clean3;	/* pci, lockup, aer/h */
+ 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
+ 	       h->devname, pdev->device,
+ 	       h->intr[h->intr_mode], dac ? "" : " not");
+ 	rc = hpsa_alloc_cmd_pool(h);
+ 	if (rc)
+-		goto clean4;	/* irq, pci, lockup, wq/aer/h */
++		goto clean4;	/* irq, pci, lockup, aer/h */
+ 	rc = hpsa_alloc_sg_chain_blocks(h);
+ 	if (rc)
+-		goto clean5;	/* cmd, irq, pci, lockup, wq/aer/h */
++		goto clean5;	/* cmd, irq, pci, lockup, aer/h */
+ 	init_waitqueue_head(&h->scan_wait_queue);
+ 	init_waitqueue_head(&h->abort_cmd_wait_queue);
+ 	init_waitqueue_head(&h->abort_sync_wait_queue);
+@@ -7758,7 +7746,20 @@ reinit_after_soft_reset:
+ 	spin_lock_init(&h->devlock);
+ 	rc = hpsa_put_ctlr_into_performant_mode(h);
+ 	if (rc)
+-		goto clean6;	/* sg, cmd, irq, pci, lockup, wq/aer/h */
++		goto clean6;	/* sg, cmd, irq, pci, lockup, aer/h */
 +
-+	dev = abort->scsi_cmd->device->hostdata;
-+	if (!dev->offload_enabled && !dev->hba_ioaccel_enabled)
-+		return -1;
-+
-+	c = cmd_alloc(h);
-+	setup_ioaccel2_abort_cmd(c, h, abort, reply_queue);
-+	c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
-+	(void) hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
-+	hpsa_get_tag(h, abort, &taglower, &tagupper);
-+	dev_dbg(&h->pdev->dev,
-+		"%s: Tag:0x%08x:%08x: do_simple_cmd(ioaccel2 abort) completed.\n",
-+		__func__, tagupper, taglower);
-+	/* no unmap needed here because no data xfer. */
-+
-+	dev_dbg(&h->pdev->dev,
-+		"%s: Tag:0x%08x:%08x: abort service response = 0x%02x.\n",
-+		__func__, tagupper, taglower, c2->error_data.serv_response);
-+	switch (c2->error_data.serv_response) {
-+	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
-+	case IOACCEL2_SERV_RESPONSE_TMF_SUCCESS:
-+		rc = 0;
-+		break;
-+	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
-+	case IOACCEL2_SERV_RESPONSE_FAILURE:
-+	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
-+		rc = -1;
-+		break;
-+	default:
-+		dev_warn(&h->pdev->dev,
-+			"%s: Tag:0x%08x:%08x: unknown abort service response 0x%02x\n",
-+			__func__, tagupper, taglower,
-+			c2->error_data.serv_response);
-+		rc = -1;
++	/* create the resubmit workqueue */
++	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
++	if (!h->rescan_ctlr_wq) {
++		rc = -ENOMEM;
++		goto clean7;
 +	}
-+	cmd_free(h, c);
-+	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: Finished.\n", __func__,
-+		tagupper, taglower);
-+	return rc;
-+}
 +
- static int hpsa_send_abort_both_ways(struct ctlr_info *h,
- 	unsigned char *scsi3addr, struct CommandList *abort, int reply_queue)
- {
--	/* ioccelerator mode 2 commands should be aborted via the
-+	/*
-+	 * ioccelerator mode 2 commands should be aborted via the
- 	 * accelerated path, since RAID path is unaware of these commands,
--	 * but underlying firmware can't handle abort TMF.
--	 * Change abort to physical device reset.
-+	 * but not all underlying firmware can handle abort TMF.
-+	 * Change abort to physical device reset when abort TMF is unsupported.
- 	 */
--	if (abort->cmd_type == CMD_IOACCEL2)
--		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr,
-+	if (abort->cmd_type == CMD_IOACCEL2) {
-+		if (HPSATMF_IOACCEL_ENABLED & h->TMFSupportFlags)
-+			return hpsa_send_abort_ioaccel2(h, abort,
-+						reply_queue);
-+		else
-+			return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr,
- 							abort, reply_queue);
++	h->resubmit_wq = hpsa_create_controller_wq(h, "resubmit");
++	if (!h->resubmit_wq) {
++		rc = -ENOMEM;
++		goto clean7;	/* aer/h */
 +	}
- 	return hpsa_send_abort(h, scsi3addr, abort, reply_queue);
- }
  
-@@ -5900,7 +6022,7 @@ static inline void finish_cmd(struct CommandList *c)
- 	if (likely(c->cmd_type == CMD_IOACCEL1 || c->cmd_type == CMD_SCSI
- 			|| c->cmd_type == CMD_IOACCEL2))
- 		complete_scsi_command(c);
--	else if (c->cmd_type == CMD_IOCTL_PEND)
-+	else if (c->cmd_type == CMD_IOCTL_PEND || c->cmd_type == IOACCEL2_TMF)
- 		complete(c->waiting);
- }
+ 	/*
+ 	 * At this point, the controller is ready to take commands.
+@@ -7800,7 +7801,7 @@ reinit_after_soft_reset:
+ 		rc = hpsa_kdump_soft_reset(h);
+ 		if (rc)
+ 			/* Neither hard nor soft reset worked, we're hosed. */
+-			goto clean7;
++			goto clean8;
  
-@@ -6687,6 +6809,8 @@ static void hpsa_find_board_params(struct ctlr_info *h)
- 		dev_warn(&h->pdev->dev, "Physical aborts not supported\n");
- 	if (!(HPSATMF_LOG_TASK_ABORT & h->TMFSupportFlags))
- 		dev_warn(&h->pdev->dev, "Logical aborts not supported\n");
-+	if (!(HPSATMF_IOACCEL_ENABLED & h->TMFSupportFlags))
-+		dev_warn(&h->pdev->dev, "HP SSD Smart Path aborts not supported\n");
- }
+ 		dev_info(&h->pdev->dev, "Board READY.\n");
+ 		dev_info(&h->pdev->dev,
+@@ -7837,7 +7838,7 @@ reinit_after_soft_reset:
+ 	hpsa_hba_inquiry(h);
+ 	rc = hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
+ 	if (rc)
+-		goto clean7;
++		goto clean8; /* wq, perf, sg, cmd, irq, pci, lockup, aer/h */
  
- static inline bool hpsa_CISS_signature_present(struct ctlr_info *h)
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 3acacf6..28b5d79 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -231,6 +231,7 @@ struct ctlr_info {
- #define HPSATMF_PHYS_QRY_TASK   (1 << 7)
- #define HPSATMF_PHYS_QRY_TSET   (1 << 8)
- #define HPSATMF_PHYS_QRY_ASYNC  (1 << 9)
-+#define HPSATMF_IOACCEL_ENABLED (1 << 15)
- #define HPSATMF_MASK_SUPPORTED  (1 << 16)
- #define HPSATMF_LOG_LUN_RESET   (1 << 17)
- #define HPSATMF_LOG_NEX_RESET   (1 << 18)
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index cecb62b..3719592 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -396,6 +396,7 @@ struct ErrorInfo {
- #define CMD_SCSI	0x03
- #define CMD_IOACCEL1	0x04
- #define CMD_IOACCEL2	0x05
-+#define IOACCEL2_TMF	0x06
+ 	/* Monitor the controller for firmware lockups */
+ 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -7849,19 +7850,20 @@ reinit_after_soft_reset:
+ 				h->heartbeat_sample_interval);
+ 	return 0;
  
- #define DIRECT_LOOKUP_SHIFT 4
- #define DIRECT_LOOKUP_MASK (~((1 << DIRECT_LOOKUP_SHIFT) - 1))
-@@ -590,6 +591,7 @@ struct io_accel2_cmd {
- #define IOACCEL2_DIR_NO_DATA	0x00
- #define IOACCEL2_DIR_DATA_IN	0x01
- #define IOACCEL2_DIR_DATA_OUT	0x02
-+#define IOACCEL2_TMF_ABORT	0x01
- /*
-  * SCSI Task Management Request format for Accelerator Mode 2
-  */
-@@ -598,13 +600,13 @@ struct hpsa_tmf_struct {
- 	u8 reply_queue;		/* Reply Queue ID */
- 	u8 tmf;			/* Task Management Function */
- 	u8 reserved1;		/* byte 3 Reserved */
--	u32 it_nexus;		/* SCSI I-T Nexus */
-+	__le32 it_nexus;	/* SCSI I-T Nexus */
- 	u8 lun_id[8];		/* LUN ID for TMF request */
- 	__le64 tag;		/* cciss tag associated w/ request */
- 	__le64 abort_tag;	/* cciss tag of SCSI cmd or TMF to abort */
- 	__le64 error_ptr;		/* Error Pointer */
- 	__le32 error_len;		/* Error Length */
--};
-+} __aligned(IOACCEL2_COMMANDLIST_ALIGNMENT);
+-clean7: /* perf, sg, cmd, irq, pci, lockup, wq/aer/h */
++clean8: /* perf, sg, cmd, irq, pci, lockup, aer/h */
+ 	kfree(h->hba_inquiry_data);
++clean7: /* perf, sg, cmd, irq, pci, lockup, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ clean6: /* sg, cmd, irq, pci, lockup, wq/aer/h */
+ 	hpsa_free_sg_chain_blocks(h);
+-clean5: /* cmd, irq, pci, lockup, wq/aer/h */
++clean5: /* cmd, irq, pci, lockup, aer/h */
+ 	hpsa_free_cmd_pool(h);
+-clean4: /* irq, pci, lockup, wq/aer/h */
++clean4: /* irq, pci, lockup, aer/h */
+ 	hpsa_free_irqs(h);
+-clean3: /* pci, lockup, wq/aer/h */
++clean3: /* pci, lockup, aer/h */
+ 	hpsa_free_pci_init(h);
+-clean2: /* lockup, wq/aer/h */
++clean2: /* lockup, aer/h */
+ 	if (h->lockup_detected) {
+ 		free_percpu(h->lockup_detected);
+ 		h->lockup_detected = NULL;
+@@ -7960,9 +7962,9 @@ static void hpsa_remove_one(struct pci_dev *pdev)
  
- /* Configuration Table Structure */
- struct HostWrite {
+ 	hpsa_free_device_info(h);		/* scan */
+ 
+-	hpsa_unregister_scsi(h);			/* init_one "8" */
+-	kfree(h->hba_inquiry_data);			/* init_one "8" */
+-	h->hba_inquiry_data = NULL;			/* init_one "8" */
++	hpsa_unregister_scsi(h);			/* init_one 9 */
++	kfree(h->hba_inquiry_data);			/* init_one 9 */
++	h->hba_inquiry_data = NULL;			/* init_one 9 */
+ 	hpsa_free_performant_mode(h);			/* init_one 7 */
+ 	hpsa_free_sg_chain_blocks(h);			/* init_one 6 */
+ 	hpsa_free_cmd_pool(h);				/* init_one 5 */
 
