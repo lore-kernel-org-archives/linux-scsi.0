@@ -1,114 +1,98 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 25/43] hpsa: do not print ioaccel2 warning messages about
- unusual completions.
-Date: Thu, 16 Apr 2015 08:48:59 -0500
-Message-ID: <20150416134859.30238.19745.stgit@brunhilda>
+Subject: [PATCH v4 30/43] hpsa: performance tweak for hpsa_scatter_gather()
+Date: Thu, 16 Apr 2015 08:49:26 -0500
+Message-ID: <20150416134926.30238.26368.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:51625 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965020AbbDPNuB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:01 -0400
-Received: from g1t5425.austin.hp.com (g1t5425.austin.hp.com [15.216.225.55])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 2EE2931CB
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2015 13:50:01 +0000 (UTC)
+Received: from g9t5009.houston.hp.com ([15.240.92.67]:51387 "EHLO
+	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965088AbbDPNu0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:26 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Webb Scales <webbnh@hp.com>
 
-The SCSI midlayer already prints more detail about completions,
-and has logging level options to filter them if not wanted.
-These just slow down the system if a lot of errors occur,
-stressing error handling even more.
+Divide the loop in hpsa_scatter_gather() into two, one for the initial SG list
+and a second one for the chained list, if any.  This allows the conditional
+check which resets the indicies for the chained list to be performed outside
+the loop instead of being done on every iteration inside the loop.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+ drivers/scsi/hpsa.c |   39 ++++++++++++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 15c5b81..3bbd579 100644
+index 753026a..5e12520 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1876,9 +1876,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 		case IOACCEL2_STATUS_SR_TASK_COMP_GOOD:
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_CHK_COND:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with check condition.\n",
--				"HP SSD Smart Path");
- 			cmd->result |= SAM_STAT_CHECK_CONDITION;
- 			if (c2->error_data.data_present !=
- 					IOACCEL2_SENSE_DATA_PRESENT) {
-@@ -1898,30 +1895,18 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with BUSY status.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_RES_CON:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with reservation conflict.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_ABORTED:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with aborted status.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		default:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with unrecognized status: 0x%02x\n",
--				"HP SSD Smart Path", c2->error_data.status);
- 			retry = 1;
- 			break;
- 		}
-@@ -1950,9 +1935,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			break;
- 		default:
- 			retry = 1;
--			dev_warn(&h->pdev->dev,
--				"unexpected delivery or target failure, status = 0x%02x\n",
--				c2->error_data.status);
- 		}
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
-@@ -1960,17 +1942,11 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 	case IOACCEL2_SERV_RESPONSE_TMF_SUCCESS:
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
--		dev_warn(&h->pdev->dev, "task management function rejected.\n");
- 		retry = 1;
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
--		dev_warn(&h->pdev->dev, "task management function invalid LUN\n");
- 		break;
- 	default:
--		dev_warn(&h->pdev->dev,
--			"%s: Unrecognized server response: 0x%02x\n",
--			"HP SSD Smart Path",
--			c2->error_data.serv_response);
- 		retry = 1;
- 		break;
+@@ -3679,7 +3679,7 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
+ 		struct scsi_cmnd *cmd)
+ {
+ 	struct scatterlist *sg;
+-	int use_sg, i, sg_index, chained;
++	int use_sg, i, sg_limit, chained, last_sg;
+ 	struct SGDescriptor *curr_sg;
+ 
+ 	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
+@@ -3691,22 +3691,39 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
+ 	if (!use_sg)
+ 		goto sglist_finished;
+ 
++	/*
++	 * If the number of entries is greater than the max for a single list,
++	 * then we have a chained list; we will set up all but one entry in the
++	 * first list (the last entry is saved for link information);
++	 * otherwise, we don't have a chained list and we'll set up at each of
++	 * the entries in the one list.
++	 */
+ 	curr_sg = cp->SG;
+-	chained = 0;
+-	sg_index = 0;
+-	scsi_for_each_sg(cmd, sg, use_sg, i) {
+-		if (i == h->max_cmd_sg_entries - 1 &&
+-			use_sg > h->max_cmd_sg_entries) {
+-			chained = 1;
+-			curr_sg = h->cmd_sg_list[cp->cmdindex];
+-			sg_index = 0;
+-		}
++	chained = use_sg > h->max_cmd_sg_entries;
++	sg_limit = chained ? h->max_cmd_sg_entries - 1 : use_sg;
++	last_sg = scsi_sg_count(cmd) - 1;
++	scsi_for_each_sg(cmd, sg, sg_limit, i) {
+ 		hpsa_set_sg_descriptor(curr_sg, sg);
+ 		curr_sg++;
  	}
+ 
++	if (chained) {
++		/*
++		 * Continue with the chained list.  Set curr_sg to the chained
++		 * list.  Modify the limit to the total count less the entries
++		 * we've already set up.  Resume the scan at the list entry
++		 * where the previous loop left off.
++		 */
++		curr_sg = h->cmd_sg_list[cp->cmdindex];
++		sg_limit = use_sg - sg_limit;
++		for_each_sg(sg, sg, sg_limit, i) {
++			hpsa_set_sg_descriptor(curr_sg, sg);
++			curr_sg++;
++		}
++	}
++
+ 	/* Back the pointer up to the last entry and mark it as "last". */
+-	(--curr_sg)->Ext = cpu_to_le32(HPSA_SG_LAST);
++	(curr_sg - 1)->Ext = cpu_to_le32(HPSA_SG_LAST);
+ 
+ 	if (use_sg + chained > h->maxSG)
+ 		h->maxSG = use_sg + chained;
 
