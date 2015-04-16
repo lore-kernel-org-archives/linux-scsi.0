@@ -1,34 +1,52 @@
-From: "Chn Jng" <b3nfil@live.com>
-Subject: /investice
-Date: Wed, 15 Apr 2015 18:24:06 -0000
-Message-ID: <6e9870ff55a5550f899d7916bf949d53.squirrel@165.225.131.19>
-Reply-To: jg.chn27@gmail.com
+From: Fam Zheng <famz@redhat.com>
+Subject: Re: [PATCH 0/3] Fix return code for ioctl( BLKRRPART ) if device is
+ down
+Date: Thu, 16 Apr 2015 13:05:41 +0800
+Message-ID: <20150416050541.GC28705@ad.nay.redhat.com>
+References: <1427192175-23802-1-git-send-email-famz@redhat.com>
+ <55113DC7.7080002@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [165.225.131.19] ([165.225.131.19]:55409 "EHLO mail.vps.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752109AbbDPAv1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Apr 2015 20:51:27 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34430 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750946AbbDPFFo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2015 01:05:44 -0400
+Content-Disposition: inline
+In-Reply-To: <55113DC7.7080002@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>
 
+On Tue, 03/24 11:34, Paolo Bonzini wrote:
+> 
+> 
+> On 24/03/2015 11:16, Fam Zheng wrote:
+> > If issued right after link down, "blockdev --rereadpt" will be stuck for a
+> > while and then return normally. Although the underlying capacity and partition
+> > table are not correctly updated. And it means that userspace can't detect the
+> > error at all.
+> > 
+> > Fix this by propargating the error of "read capacity" command through the
+> > stack, so that the ioctl could fail with -EIO.
+> > 
+> > Fam Zheng (3):
+> >   block: Return error in rescan_partitions if revalidating disk failed
+> >   sd: Return error in sd_revalidate_disk if read capacity failed
+> >   sd: Return -EIO if read capacity failed
+> > 
+> >  block/partition-generic.c |  6 +++---
+> >  drivers/scsi/sd.c         | 22 +++++++++++++---------
+> >  2 files changed, 16 insertions(+), 12 deletions(-)
+> > 
+> 
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 
+Ping?
 
-
-Dobr=FD den,
-
-J=E1 jsem V=E1s kontaktovat o projektu vz=E1jemn=FDch v=FDhod pro n=E1s=
- oba. V pripade
-z=E1jmu me mu=9Eete dostat na muj e-mail n=ED=9Ee pro v=EDce informac=ED=
- a vysvetlen=ED,
-po telefonu.
-
-E-mail: jg.chn27@gmail.com
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Though patch 3 could be seen as a change in userspace ABI, so I'm less
+> sure about it.
+> 
+> Paolo
