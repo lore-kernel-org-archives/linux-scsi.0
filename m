@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 14/43] hpsa: use ioaccel2 path to submit IOs to physical
- drives in HBA mode.
-Date: Thu, 16 Apr 2015 08:47:58 -0500
-Message-ID: <20150416134758.30238.37140.stgit@brunhilda>
+Subject: [PATCH v4 15/43] hpsa: Get queue depth from identify physical bmic
+ for physical disks.
+Date: Thu, 16 Apr 2015 08:48:03 -0500
+Message-ID: <20150416134803.30238.27423.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:33331 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933642AbbDPNtA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:00 -0400
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:49226 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbbDPNtE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:04 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,69 +20,61 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Joe Handzik <joseph.t.handzik@hp.com>
 
-use ioaccel2 path to submit I/O to physical drives in HBA mode
+get drive queue depth to help avoid task set full conditions.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   10 +++++++++-
- drivers/scsi/hpsa.h |    1 +
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |   33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9ab6af8..9049133 100644
+index 9049133..ad2b44c 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1093,6 +1093,11 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
- 		h->dev[entry]->raid_map = new_entry->raid_map;
- 		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
- 	}
-+	if (new_entry->hba_ioaccel_enabled) {
-+		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
-+		wmb(); /* set ioaccel_handle *before* hba_ioaccel_enabled */
-+	}
-+	h->dev[entry]->hba_ioaccel_enabled = new_entry->hba_ioaccel_enabled;
- 	h->dev[entry]->offload_config = new_entry->offload_config;
- 	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
- 	h->dev[entry]->queue_depth = new_entry->queue_depth;
-@@ -3009,6 +3014,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
- 		this_device->offload_config = 0;
- 		this_device->offload_enabled = 0;
- 		this_device->offload_to_be_enabled = 0;
-+		this_device->hba_ioaccel_enabled = 0;
- 		this_device->volume_offline = 0;
- 		this_device->queue_depth = h->nr_cmds;
- 	}
-@@ -3297,6 +3303,8 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
- 		(struct ext_report_lun_entry *) lunaddrbytes;
- 
- 	dev->ioaccel_handle = rle->ioaccel_handle;
-+	if (PHYS_IOACCEL(lunaddrbytes) && dev->ioaccel_handle)
-+		dev->hba_ioaccel_enabled = 1;
- 	memset(id_phys, 0, sizeof(*id_phys));
- 	rc = hpsa_bmic_id_physical_device(h, lunaddrbytes,
- 			GET_BMIC_DRIVE_NUMBER(lunaddrbytes), id_phys,
-@@ -4398,7 +4406,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
- 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
- 		if (rc < 0)     /* scsi_dma_map failed. */
- 			rc = SCSI_MLQUEUE_HOST_BUSY;
--	} else if (dev->ioaccel_handle) {
-+	} else if (dev->hba_ioaccel_enabled) {
- 		hpsa_cmd_init(h, c->cmdindex, c);
- 		c->cmd_type = CMD_SCSI;
- 		c->scsi_cmd = cmd;
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index df2468c..87a70b5 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -55,6 +55,7 @@ struct hpsa_scsi_dev_t {
- 	int offload_config;		/* I/O accel RAID offload configured */
- 	int offload_enabled;		/* I/O accel RAID offload enabled */
- 	int offload_to_be_enabled;
-+	int hba_ioaccel_enabled;
- 	int offload_to_mirror;		/* Send next I/O accelerator RAID
- 					 * offload request to mirror drive
- 					 */
+@@ -3467,29 +3467,22 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 				ncurrent++;
+ 			break;
+ 		case TYPE_DISK:
+-			if (h->hba_mode_enabled) {
+-				/* never use raid mapper in HBA mode */
+-				this_device->offload_enabled = 0;
+-				ncurrent++;
+-				break;
+-			} else if (h->acciopath_status) {
+-				if (i >= nphysicals) {
+-					ncurrent++;
+-					break;
+-				}
+-			} else {
+-				if (i < nphysicals)
+-					break;
++			if (i >= nphysicals) {
+ 				ncurrent++;
+ 				break;
+ 			}
+-			if (h->transMethod & CFGTBL_Trans_io_accel1 ||
+-				h->transMethod & CFGTBL_Trans_io_accel2) {
+-				hpsa_get_ioaccel_drive_info(h, this_device,
+-							lunaddrbytes, id_phys);
+-				atomic_set(&this_device->ioaccel_cmds_out, 0);
+-				ncurrent++;
+-			}
++
++			if (h->hba_mode_enabled)
++				/* never use raid mapper in HBA mode */
++				this_device->offload_enabled = 0;
++			else if (!(h->transMethod & CFGTBL_Trans_io_accel1 ||
++				h->transMethod & CFGTBL_Trans_io_accel2))
++				break;
++
++			hpsa_get_ioaccel_drive_info(h, this_device,
++						lunaddrbytes, id_phys);
++			atomic_set(&this_device->ioaccel_cmds_out, 0);
++			ncurrent++;
+ 			break;
+ 		case TYPE_TAPE:
+ 		case TYPE_MEDIUM_CHANGER:
 
