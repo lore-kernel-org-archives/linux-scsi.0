@@ -1,51 +1,46 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 3/3] uas: Set max_sectors_240 quirk for ASM1053 devices
-Date: Thu, 16 Apr 2015 14:17:14 +0200
-Message-ID: <1429186634-6184-3-git-send-email-hdegoede@redhat.com>
-References: <1429186634-6184-1-git-send-email-hdegoede@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [patch] csiostor: fix an error code in csio_hw_init()
+Date: Thu, 16 Apr 2015 14:22:15 +0200
+Message-ID: <552FA977.9070302@redhat.com>
+References: <20150414143219.GA30421@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49046 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51952 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933576AbbDPMR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Apr 2015 08:17:29 -0400
-In-Reply-To: <1429186634-6184-1-git-send-email-hdegoede@redhat.com>
+	id S1753156AbbDPMWS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2015 08:22:18 -0400
+In-Reply-To: <20150414143219.GA30421@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Steve Bangert <sbangert@frontier.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Hariprasad Shenai <hariprasad@chelsio.com>, Praveen Madhavan <praveenm@chelsio.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Testing has shown that ASM1053 devices do not work properly with transfers
-larger than 240 sectors, so set max_sectors to 240 on these.
+On 04/14/2015 04:32 PM, Dan Carpenter wrote:
+> We should return -ENOMEM if kzalloc() fails here instead of returning
+> success.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+> index 2e66f34..622bdab 100644
+> --- a/drivers/scsi/csiostor/csio_hw.c
+> +++ b/drivers/scsi/csiostor/csio_hw.c
+> @@ -3928,6 +3928,7 @@ csio_hw_init(struct csio_hw *hw)
+>  
+>  		evt_entry = kzalloc(sizeof(struct csio_evt_msg), GFP_KERNEL);
+>  		if (!evt_entry) {
+> +			rv = -ENOMEM;
+>  			csio_err(hw, "Failed to initialize eventq");
+>  			goto err_evtq_cleanup;
+>  		}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Reported-by: Steve Bangert <sbangert@frontier.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/uas-detect.h | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
-index 63ae161..f58caa9 100644
---- a/drivers/usb/storage/uas-detect.h
-+++ b/drivers/usb/storage/uas-detect.h
-@@ -74,7 +74,7 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 	 * this writing the following versions exist:
- 	 * ASM1051 - no uas support version
- 	 * ASM1051 - with broken (*) uas support
--	 * ASM1053 - with working uas support
-+	 * ASM1053 - with working uas support, but problems with large xfers
- 	 * ASM1153 - with working uas support
- 	 *
- 	 * Devices with these chips re-use a number of device-ids over the
-@@ -104,6 +104,9 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
- 			/* Possibly an ASM1051, disable uas */
- 			flags |= US_FL_IGNORE_UAS;
-+		} else {
-+			/* ASM1053, these have issues with large transfers */
-+			flags |= US_FL_MAX_SECTORS_240;
- 		}
- 	}
- 
--- 
-2.3.5
+Tomas
 
