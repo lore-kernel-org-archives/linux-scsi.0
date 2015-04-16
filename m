@@ -1,238 +1,271 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 17/43] hpsa: clean up error handling
-Date: Thu, 16 Apr 2015 08:48:17 -0500
-Message-ID: <20150416134817.30238.89504.stgit@brunhilda>
+Subject: [PATCH v4 19/43] hpsa: add ioaccel sg chaining for the ioaccel2 path
+Date: Thu, 16 Apr 2015 08:48:27 -0500
+Message-ID: <20150416134827.30238.67380.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:49405 "EHLO
-	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503AbbDPNtR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:17 -0400
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:44597 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457AbbDPNt2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:28 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Webb Scales <webbnh@hp.com>
 
-refactor error cleanup and shutdown
-disable interrupts and pci_disable_device on critical failures
-add hpsa_free_cfgtables function
+Increase the request size for ioaccel2 path.
+
+The error, if any, returned by hpsa_allocate_ioaccel2_sg_chain_blocks
+to hpsa_alloc_ioaccel2_cmd_and_bft should be returned upstream rather
+than assumed to be -ENOMEM.
+
+This differs slightly from hpsa_alloc_ioaccel1_cmd_and_bft,
+which does not call another hpsa_allocate function and only
+has -ENOMEM to return from some kmalloc calls.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   92 ++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 58 insertions(+), 34 deletions(-)
+ drivers/scsi/hpsa.c |  125 +++++++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/hpsa.h |    1 
+ 2 files changed, 116 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b743f1a..9e26eb0 100644
+index c9c42e9..1839761 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6519,6 +6519,17 @@ static int hpsa_find_cfg_addrs(struct pci_dev *pdev, void __iomem *vaddr,
- 	return 0;
+@@ -1704,6 +1704,46 @@ static void hpsa_slave_destroy(struct scsi_device *sdev)
+ 	/* nothing to do. */
  }
  
-+static void hpsa_free_cfgtables(struct ctlr_info *h)
++static void hpsa_free_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
 +{
-+	if (h->transtable)
-+		iounmap(h->transtable);
-+	if (h->cfgtable)
-+		iounmap(h->cfgtable);
-+}
++	int i;
 +
-+/* Find and map CISS config table and transfer table
-++ * several items must be unmapped (freed) later
-++ * */
- static int hpsa_find_cfgtables(struct ctlr_info *h)
- {
- 	u64 cfg_offset;
-@@ -6545,8 +6556,11 @@ static int hpsa_find_cfgtables(struct ctlr_info *h)
- 	h->transtable = remap_pci_mem(pci_resource_start(h->pdev,
- 				cfg_base_addr_index)+cfg_offset+trans_offset,
- 				sizeof(*h->transtable));
--	if (!h->transtable)
-+	if (!h->transtable) {
-+		dev_err(&h->pdev->dev, "Failed mapping transfer table\n");
-+		hpsa_free_cfgtables(h);
- 		return -ENOMEM;
++	if (!h->ioaccel2_cmd_sg_list)
++		return;
++	for (i = 0; i < h->nr_cmds; i++) {
++		kfree(h->ioaccel2_cmd_sg_list[i]);
++		h->ioaccel2_cmd_sg_list[i] = NULL;
 +	}
- 	return 0;
- }
- 
-@@ -6722,6 +6736,17 @@ error:
- 	return -ENODEV;
- }
- 
-+/* free items allocated or mapped by hpsa_pci_init */
-+static void hpsa_free_pci_init(struct ctlr_info *h)
-+{
-+	hpsa_free_cfgtables(h);			/* pci_init 4 */
-+	iounmap(h->vaddr);			/* pci_init 3 */
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
-+	pci_release_regions(h->pdev);		/* pci_init 2 */
-+	pci_disable_device(h->pdev);		/* pci_init 1 */
++	kfree(h->ioaccel2_cmd_sg_list);
++	h->ioaccel2_cmd_sg_list = NULL;
 +}
 +
-+/* several items must be freed later */
- static int hpsa_pci_init(struct ctlr_info *h)
++static int hpsa_allocate_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
++{
++	int i;
++
++	if (h->chainsize <= 0)
++		return 0;
++
++	h->ioaccel2_cmd_sg_list =
++		kzalloc(sizeof(*h->ioaccel2_cmd_sg_list) * h->nr_cmds,
++					GFP_KERNEL);
++	if (!h->ioaccel2_cmd_sg_list)
++		return -ENOMEM;
++	for (i = 0; i < h->nr_cmds; i++) {
++		h->ioaccel2_cmd_sg_list[i] =
++			kmalloc(sizeof(*h->ioaccel2_cmd_sg_list[i]) *
++					h->maxsgentries, GFP_KERNEL);
++		if (!h->ioaccel2_cmd_sg_list[i])
++			goto clean;
++	}
++	return 0;
++
++clean:
++	hpsa_free_ioaccel2_sg_chain_blocks(h);
++	return -ENOMEM;
++}
++
+ static void hpsa_free_sg_chain_blocks(struct ctlr_info *h)
  {
- 	int prod_index, err;
-@@ -6740,15 +6765,15 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 
- 	err = pci_enable_device(h->pdev);
- 	if (err) {
--		dev_warn(&h->pdev->dev, "unable to enable PCI device\n");
-+		dev_err(&h->pdev->dev, "failed to enable PCI device\n");
- 		return err;
- 	}
- 
- 	err = pci_request_regions(h->pdev, HPSA);
- 	if (err) {
- 		dev_err(&h->pdev->dev,
--			"cannot obtain PCI resources, aborting\n");
--		return err;
-+			"failed to obtain PCI resources\n");
-+		goto clean1;	/* pci */
- 	}
- 
- 	pci_set_master(h->pdev);
-@@ -6756,40 +6781,41 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 	hpsa_interrupt_mode(h);
- 	err = hpsa_pci_find_memory_BAR(h->pdev, &h->paddr);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean2;	/* intmode+region, pci */
- 	h->vaddr = remap_pci_mem(h->paddr, 0x250);
- 	if (!h->vaddr) {
-+		dev_err(&h->pdev->dev, "failed to remap PCI mem\n");
- 		err = -ENOMEM;
--		goto err_out_free_res;
-+		goto clean2;	/* intmode+region, pci */
- 	}
- 	err = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean3;	/* vaddr, intmode+region, pci */
- 	err = hpsa_find_cfgtables(h);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean3;	/* vaddr, intmode+region, pci */
- 	hpsa_find_board_params(h);
- 
- 	if (!hpsa_CISS_signature_present(h)) {
- 		err = -ENODEV;
--		goto err_out_free_res;
-+		goto clean4;	/* cfgtables, vaddr, intmode+region, pci */
- 	}
- 	hpsa_set_driver_support_bits(h);
- 	hpsa_p600_dma_prefetch_quirk(h);
- 	err = hpsa_enter_simple_mode(h);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean4;	/* cfgtables, vaddr, intmode+region, pci */
- 	return 0;
- 
--err_out_free_res:
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	if (h->vaddr)
--		iounmap(h->vaddr);
--	pci_disable_device(h->pdev);
-+clean4:	/* cfgtables, vaddr, intmode+region, pci */
-+	hpsa_free_cfgtables(h);
-+clean3:	/* vaddr, intmode+region, pci */
-+	iounmap(h->vaddr);
-+clean2:	/* intmode+region, pci */
-+	hpsa_disable_interrupt_mode(h);
- 	pci_release_regions(h->pdev);
-+clean1:	/* pci */
-+	pci_disable_device(h->pdev);
- 	return err;
+ 	int i;
+@@ -1746,6 +1786,39 @@ clean:
+ 	return -ENOMEM;
  }
  
-@@ -6998,8 +7024,9 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 		}
- 	}
- 	if (rc) {
--		dev_err(&h->pdev->dev, "unable to get irq %d for %s\n",
-+		dev_err(&h->pdev->dev, "failed to get irq %d for %s\n",
- 		       h->intr[h->intr_mode], h->devname);
-+		hpsa_free_irqs(h);
- 		return -ENODEV;
- 	}
- 	return 0;
-@@ -7051,15 +7078,11 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 	kfree(h->ioaccel1_blockFetchTable);
- 	kfree(h->blockFetchTable);
- 	hpsa_free_reply_queues(h);
--	if (h->vaddr)
--		iounmap(h->vaddr);
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	hpsa_disable_interrupt_mode(h);
-+	hpsa_free_cfgtables(h);			/* pci_init 4 */
-+	iounmap(h->vaddr);			/* pci_init 3 */
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
- 	pci_disable_device(h->pdev);
--	pci_release_regions(h->pdev);
-+	pci_release_regions(h->pdev);		/* pci_init 2 */
- 	kfree(h);
- }
- 
-@@ -7378,7 +7401,7 @@ reinit_after_soft_reset:
- 			dac = 0;
- 		} else {
- 			dev_err(&pdev->dev, "no suitable DMA available\n");
--			goto clean1;
-+			goto clean2;
- 		}
- 	}
- 
-@@ -7489,6 +7512,7 @@ clean4:
- clean2_and_free_irqs:
- 	hpsa_free_irqs(h);
- clean2:
-+	hpsa_free_pci_init(h);
- clean1:
- 	if (h->resubmit_wq)
- 		destroy_workqueue(h->resubmit_wq);
-@@ -7580,12 +7604,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	destroy_workqueue(h->resubmit_wq);
- 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
- 
--	/* includes hpsa_free_irqs and hpsa_disable_interrupt_mode */
-+	/* includes hpsa_free_irqs */
-+	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
- 	hpsa_shutdown(pdev);
- 
--	iounmap(h->vaddr);
--	iounmap(h->transtable);
--	iounmap(h->cfgtable);
- 	hpsa_free_device_info(h);
- 	hpsa_free_sg_chain_blocks(h);
- 	pci_free_consistent(h->pdev,
-@@ -7600,8 +7622,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	kfree(h->ioaccel1_blockFetchTable);
- 	kfree(h->ioaccel2_blockFetchTable);
- 	kfree(h->hba_inquiry_data);
--	pci_disable_device(pdev);
--	pci_release_regions(pdev);
++static int hpsa_map_ioaccel2_sg_chain_block(struct ctlr_info *h,
++	struct io_accel2_cmd *cp, struct CommandList *c)
++{
++	struct ioaccel2_sg_element *chain_block;
++	u64 temp64;
++	u32 chain_size;
 +
-+	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
-+	hpsa_free_pci_init(h);
++	chain_block = h->ioaccel2_cmd_sg_list[c->cmdindex];
++	chain_size = le32_to_cpu(cp->data_len);
++	temp64 = pci_map_single(h->pdev, chain_block, chain_size,
++				PCI_DMA_TODEVICE);
++	if (dma_mapping_error(&h->pdev->dev, temp64)) {
++		/* prevent subsequent unmapping */
++		cp->sg->address = 0;
++		return -1;
++	}
++	cp->sg->address = cpu_to_le64(temp64);
++	return 0;
++}
 +
- 	free_percpu(h->lockup_detected);
- 	kfree(h);
++static void hpsa_unmap_ioaccel2_sg_chain_block(struct ctlr_info *h,
++	struct io_accel2_cmd *cp)
++{
++	struct ioaccel2_sg_element *chain_sg;
++	u64 temp64;
++	u32 chain_size;
++
++	chain_sg = cp->sg;
++	temp64 = le64_to_cpu(chain_sg->address);
++	chain_size = le32_to_cpu(cp->data_len);
++	pci_unmap_single(h->pdev, temp64, chain_size, PCI_DMA_TODEVICE);
++}
++
+ static int hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
+@@ -1955,6 +2028,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	struct ctlr_info *h;
+ 	struct ErrorInfo *ei;
+ 	struct hpsa_scsi_dev_t *dev;
++	struct io_accel2_cmd *c2;
+ 
+ 	int sense_key;
+ 	int asc;      /* additional sense code */
+@@ -1965,12 +2039,17 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	cmd = cp->scsi_cmd;
+ 	h = cp->h;
+ 	dev = cmd->device->hostdata;
++	c2 = &h->ioaccel2_cmd_pool[cp->cmdindex];
+ 
+ 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
+ 	if ((cp->cmd_type == CMD_SCSI) &&
+ 		(le16_to_cpu(cp->Header.SGTotal) > h->max_cmd_sg_entries))
+ 		hpsa_unmap_sg_chain_block(h, cp);
+ 
++	if ((cp->cmd_type == CMD_IOACCEL2) &&
++		(c2->sg[0].chain_indicator == IOACCEL2_CHAIN))
++		hpsa_unmap_ioaccel2_sg_chain_block(h, c2);
++
+ 	cmd->result = (DID_OK << 16); 		/* host byte */
+ 	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
+ 
+@@ -3812,10 +3891,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	u32 len;
+ 	u32 total_len = 0;
+ 
+-	if (scsi_sg_count(cmd) > h->ioaccel_maxsg) {
+-		atomic_dec(&phys_disk->ioaccel_cmds_out);
+-		return IO_ACCEL_INELIGIBLE;
+-	}
++	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
+ 
+ 	if (fixup_ioaccel_cdb(cdb, &cdb_len)) {
+ 		atomic_dec(&phys_disk->ioaccel_cmds_out);
+@@ -3838,8 +3914,19 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	}
+ 
+ 	if (use_sg) {
+-		BUG_ON(use_sg > IOACCEL2_MAXSGENTRIES);
+ 		curr_sg = cp->sg;
++		if (use_sg > h->ioaccel_maxsg) {
++			addr64 = le64_to_cpu(
++				h->ioaccel2_cmd_sg_list[c->cmdindex]->address);
++			curr_sg->address = cpu_to_le64(addr64);
++			curr_sg->length = 0;
++			curr_sg->reserved[0] = 0;
++			curr_sg->reserved[1] = 0;
++			curr_sg->reserved[2] = 0;
++			curr_sg->chain_indicator = 0x80;
++
++			curr_sg = h->ioaccel2_cmd_sg_list[c->cmdindex];
++		}
+ 		scsi_for_each_sg(cmd, sg, use_sg, i) {
+ 			addr64 = (u64) sg_dma_address(sg);
+ 			len  = sg_dma_len(sg);
+@@ -3884,14 +3971,22 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	cp->Tag = cpu_to_le32(c->cmdindex << DIRECT_LOOKUP_SHIFT);
+ 	memcpy(cp->cdb, cdb, sizeof(cp->cdb));
+ 
+-	/* fill in sg elements */
+-	cp->sg_count = (u8) use_sg;
+-
+ 	cp->data_len = cpu_to_le32(total_len);
+ 	cp->err_ptr = cpu_to_le64(c->busaddr +
+ 			offsetof(struct io_accel2_cmd, error_data));
+ 	cp->err_len = cpu_to_le32(sizeof(cp->error_data));
+ 
++	/* fill in sg elements */
++	if (use_sg > h->ioaccel_maxsg) {
++		cp->sg_count = 1;
++		if (hpsa_map_ioaccel2_sg_chain_block(h, cp, c)) {
++			atomic_dec(&phys_disk->ioaccel_cmds_out);
++			scsi_dma_unmap(cmd);
++			return -1;
++		}
++	} else
++		cp->sg_count = (u8) use_sg;
++
+ 	enqueue_cmd_and_start_io(h, c);
+ 	return 0;
  }
+@@ -7911,6 +8006,8 @@ clean_up:
+ /* Free ioaccel2 mode command blocks and block fetch table */
+ static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
++	hpsa_free_ioaccel2_sg_chain_blocks(h);
++
+ 	if (h->ioaccel2_cmd_pool)
+ 		pci_free_consistent(h->pdev,
+ 			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
+@@ -7922,6 +8019,8 @@ static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ /* Allocate ioaccel2 mode command blocks and block fetch table */
+ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
++	int rc;
++
+ 	/* Allocate ioaccel2 mode command blocks and block fetch table */
+ 
+ 	h->ioaccel_maxsg =
+@@ -7941,7 +8040,13 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 				sizeof(u32)), GFP_KERNEL);
+ 
+ 	if ((h->ioaccel2_cmd_pool == NULL) ||
+-		(h->ioaccel2_blockFetchTable == NULL))
++		(h->ioaccel2_blockFetchTable == NULL)) {
++		rc = -ENOMEM;
++		goto clean_up;
++	}
++
++	rc = hpsa_allocate_ioaccel2_sg_chain_blocks(h);
++	if (rc)
+ 		goto clean_up;
+ 
+ 	memset(h->ioaccel2_cmd_pool, 0,
+@@ -7950,7 +8055,7 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 
+ clean_up:
+ 	hpsa_free_ioaccel2_cmd_and_bft(h);
+-	return 1;
++	return rc;
+ }
+ 
+ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 87a70b5..3acacf6 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -162,6 +162,7 @@ struct ctlr_info {
+ 	u8 max_cmd_sg_entries;
+ 	int chainsize;
+ 	struct SGDescriptor **cmd_sg_list;
++	struct ioaccel2_sg_element **ioaccel2_cmd_sg_list;
+ 
+ 	/* pointers to command and error info pool */
+ 	struct CommandList 	*cmd_pool;
 
