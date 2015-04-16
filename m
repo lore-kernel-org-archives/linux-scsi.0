@@ -1,51 +1,95 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection
- information code.
-Date: Thu, 16 Apr 2015 22:46:15 +0900
-Message-ID: <CAC5umygHt_LHyCWEhg9whhe7PfQBy=Y9uXbKAE6+1EL7MEzmrg@mail.gmail.com>
-References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>
-	<CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>
-	<552D4C7B.9000402@dev.mellanox.co.il>
-	<CAC5umyj9FsnumRhvNrzqE=Rtpy3O32SBw43ZP9M8H5B3htbRpw@mail.gmail.com>
-	<552E384F.3030203@dev.mellanox.co.il>
-	<CAC5umygGG4BTs0u35eVi6dLhoDuDshGNPsQaWq2kO5YexWDP+Q@mail.gmail.com>
-	<552E76D1.7040204@dev.mellanox.co.il>
-	<552E7ED6.4080304@dev.mellanox.co.il>
-	<yq1egnl4bjm.fsf@sermon.lab.mkp.net>
-	<552F7840.2080804@dev.mellanox.co.il>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH v4 00/43] hpsa update
+Date: Thu, 16 Apr 2015 08:46:40 -0500
+Message-ID: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <552F7840.2080804@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:53441 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933630AbbDPNrm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:47:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-2015-04-16 17:52 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
-> On 4/15/2015 7:10 PM, Martin K. Petersen wrote:
->>>>>>>
->>>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
->>
->>
->>>>> By the commit 436f4a0a ("loopback: Add fabric_prot_type attribute
->>>>> support"), When WRITE_SAME command with WRPROTECT=0 is executed,
->>>>> sbc_dif_generate() is called but cmd->t_prot_sg is NULL as block
->>>>> layer didn't allocate it for WRITE_SAME.
->>
->>
->> Sagi> Actually this is a bug. Why didn't the initiator allocate
->> Sagi> integrity meta-data for WRITE_SAME? Looking at the code it looks
->> Sagi> like it should.
->>
->> We don't issue WRITE SAME with PI so there is no prot SGL.
->>
->
-> Is there a specific reason why we don't?
+These patches are based on Linus's tree
 
-It is not only for the WRITE SAME requests from block device but
-also for READ/WRITE with PROTECT=0 requests by SG_IO.
+The changes are:
+ - make function names consistent
+ - refactor functions
+ - cleanup driver messages
+ - cleanup error handling
+ - clean up abort management
+ - enhance sense data reporting
+ - enhance ioaccel command support
+ - add in block layer tag support
+ - clean up resets
+ - update copyright
+ - add in new controller id
 
-So isn't is appropreate to allocate prot SGL in
-target_write_prot_action() (and mark se_cmd->se_cmd_flags to release
-it at deallocation time)?
+---
+
+Don Brace (3):
+      hpsa: change driver version
+      hpsa: add PMC to copyright
+      hpsa: add in new controller id
+
+Joe Handzik (3):
+      hpsa: use ioaccel2 path to submit IOs to physical drives in HBA mode.
+      hpsa: Get queue depth from identify physical bmic for physical disks.
+      hpsa: add more ioaccel2 error handling, including underrun statuses.
+
+Robert Elliott (18):
+      hpsa: make function names consistent
+      hpsa: print accurate SSD Smart Path Enabled status
+      hpsa: break hpsa_free_irqs_and_disable_msix into two functions
+      hpsa: clean up error handling
+      hpsa: refactor freeing of resources into more logical functions
+      hpsa: do not check cmd_alloc return value - it cannnot return NULL
+      hpsa: correct return values from driver functions.
+      hpsa: clean up driver init
+      hpsa: clean up some error reporting output in abort handler
+      hpsa: do not print ioaccel2 warning messages about unusual completions.
+      hpsa: call pci_release_regions after pci_disable_device
+      hpsa: skip free_irq calls if irqs are not allocated
+      hpsa: cleanup for init_one step 2 in kdump
+      hpsa: fix try_soft_reset error handling
+      hpsa: create workqueue after the driver is ready for use
+      hpsa: add interrupt number to /proc/interrupts interrupt name
+      hpsa: use scsi host_no as hpsa controller number
+      hpsa: propagate the error code in hpsa_kdump_soft_reset
+
+Stephen Cameron (9):
+      hpsa: add masked physical devices into h->dev[] array
+      hpsa: clean up aborts
+      hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
+      hpsa: hpsa decode sense data for io and tmf
+      hpsa: allow lockup detected to be viewed via sysfs
+      hpsa: factor out hpsa_init_cmd function
+      hpsa: do not ignore return value of hpsa_register_scsi
+      hpsa: try resubmitting down raid path on task set full
+      hpsa: add support sending aborts to physical devices via the ioaccel2 path
+
+Webb Scales (10):
+      hpsa: clean up host, channel, target, lun prints
+      hpsa: rework controller command submission
+      hpsa: factor out hpsa_ioaccel_submit function
+      hpsa: add ioaccel sg chaining for the ioaccel2 path
+      hpsa: use helper routines for finishing commands
+      hpsa: don't return abort request until target is complete
+      hpsa: refactor and rework support for sending TEST_UNIT_READY
+      hpsa: performance tweak for hpsa_scatter_gather()
+      hpsa: use block layer tag for command allocation
+      hpsa: cleanup reset
+
+
+ drivers/scsi/hpsa.c     | 2782 +++++++++++++++++++++++++++++++++--------------
+ drivers/scsi/hpsa.h     |   22 
+ drivers/scsi/hpsa_cmd.h |   37 +
+ 3 files changed, 2035 insertions(+), 806 deletions(-)
+
+--
+Signature
