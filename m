@@ -1,90 +1,51 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/3] uas: Allow uas_use_uas_driver to return usb-storage flags
-Date: Thu, 16 Apr 2015 14:17:12 +0200
-Message-ID: <1429186634-6184-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Steve Bangert <sbangert-/1bC63wxbnBWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 3/3] uas: Set max_sectors_240 quirk for ASM1053 devices
+Date: Thu, 16 Apr 2015 14:17:14 +0200
+Message-ID: <1429186634-6184-3-git-send-email-hdegoede@redhat.com>
+References: <1429186634-6184-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49046 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933576AbbDPMR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2015 08:17:29 -0400
+In-Reply-To: <1429186634-6184-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Steve Bangert <sbangert@frontier.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-uas_use_uas_driver may set some US_FL_foo flags during detection, currently
-these are stored in a local variable and then throw away, but these may be
-of interest to the caller, so add an extra parameter to (optionally) return
-the detected flags, and use this in the uas driver.
+Testing has shown that ASM1053 devices do not work properly with transfers
+larger than 240 sectors, so set max_sectors to 240 on these.
 
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reported-by: Steve Bangert <sbangert@frontier.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/usb/storage/uas-detect.h | 6 +++++-
- drivers/usb/storage/uas.c        | 6 +++---
- drivers/usb/storage/usb.c        | 2 +-
- 3 files changed, 9 insertions(+), 5 deletions(-)
+ drivers/usb/storage/uas-detect.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
-index 9893d69..63ae161 100644
+index 63ae161..f58caa9 100644
 --- a/drivers/usb/storage/uas-detect.h
 +++ b/drivers/usb/storage/uas-detect.h
-@@ -51,7 +51,8 @@ static int uas_find_endpoints(struct usb_host_interface *alt,
- }
- 
- static int uas_use_uas_driver(struct usb_interface *intf,
--			      const struct usb_device_id *id)
-+			      const struct usb_device_id *id,
-+			      unsigned long *flags_ret)
- {
- 	struct usb_host_endpoint *eps[4] = { };
- 	struct usb_device *udev = interface_to_usbdev(intf);
-@@ -132,5 +133,8 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 		return 0;
+@@ -74,7 +74,7 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 	 * this writing the following versions exist:
+ 	 * ASM1051 - no uas support version
+ 	 * ASM1051 - with broken (*) uas support
+-	 * ASM1053 - with working uas support
++	 * ASM1053 - with working uas support, but problems with large xfers
+ 	 * ASM1153 - with working uas support
+ 	 *
+ 	 * Devices with these chips re-use a number of device-ids over the
+@@ -104,6 +104,9 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
+ 			/* Possibly an ASM1051, disable uas */
+ 			flags |= US_FL_IGNORE_UAS;
++		} else {
++			/* ASM1053, these have issues with large transfers */
++			flags |= US_FL_MAX_SECTORS_240;
+ 		}
  	}
- 
-+	if (flags_ret)
-+		*flags_ret = flags;
-+
- 	return 1;
- }
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 6cdabdc..c6109c1 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -887,8 +887,9 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	struct Scsi_Host *shost = NULL;
- 	struct uas_dev_info *devinfo;
- 	struct usb_device *udev = interface_to_usbdev(intf);
-+	unsigned long dev_flags;
- 
--	if (!uas_use_uas_driver(intf, id))
-+	if (!uas_use_uas_driver(intf, id, &dev_flags))
- 		return -ENODEV;
- 
- 	if (uas_switch_interface(udev, intf))
-@@ -910,8 +911,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	devinfo->udev = udev;
- 	devinfo->resetting = 0;
- 	devinfo->shutdown = 0;
--	devinfo->flags = id->driver_info;
--	usb_stor_adjust_quirks(udev, &devinfo->flags);
-+	devinfo->flags = dev_flags;
- 	init_usb_anchor(&devinfo->cmd_urbs);
- 	init_usb_anchor(&devinfo->sense_urbs);
- 	init_usb_anchor(&devinfo->data_urbs);
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index 5600c33..db6f6b5 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -1080,7 +1080,7 @@ static int storage_probe(struct usb_interface *intf,
- 
- 	/* If uas is enabled and this device can do uas then ignore it. */
- #if IS_ENABLED(CONFIG_USB_UAS)
--	if (uas_use_uas_driver(intf, id))
-+	if (uas_use_uas_driver(intf, id, NULL))
- 		return -ENXIO;
- #endif
  
 -- 
 2.3.5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
