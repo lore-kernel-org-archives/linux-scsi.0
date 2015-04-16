@@ -1,162 +1,88 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 12/43] hpsa: factor out hpsa_ioaccel_submit function
-Date: Thu, 16 Apr 2015 08:47:47 -0500
-Message-ID: <20150416134747.30238.46816.stgit@brunhilda>
+Subject: [PATCH v4 14/43] hpsa: use ioaccel2 path to submit IOs to physical
+ drives in HBA mode.
+Date: Thu, 16 Apr 2015 08:47:58 -0500
+Message-ID: <20150416134758.30238.37140.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:51588 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933655AbbDPNsu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:48:50 -0400
-Received: from g1t5425.austin.hp.com (g1t5425.austin.hp.com [15.216.225.55])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id B239E316A
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2015 13:48:49 +0000 (UTC)
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:33331 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933642AbbDPNtA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:49:00 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Webb Scales <webbnh@hp.com>
+From: Joe Handzik <joseph.t.handzik@hp.com>
 
-clean up command submission
+use ioaccel2 path to submit I/O to physical drives in HBA mode
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Signed-off-by: Webb Scales <webbnh@hp.com>
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   91 +++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 66 insertions(+), 25 deletions(-)
+ drivers/scsi/hpsa.c |   10 +++++++++-
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9c184d1..b342788 100644
+index 9ab6af8..9049133 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4378,6 +4378,33 @@ static inline void hpsa_cmd_partial_init(struct ctlr_info *h, int index,
- 	c->busaddr = (u32) cmd_dma_handle;
- }
+@@ -1093,6 +1093,11 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
+ 		h->dev[entry]->raid_map = new_entry->raid_map;
+ 		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
+ 	}
++	if (new_entry->hba_ioaccel_enabled) {
++		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
++		wmb(); /* set ioaccel_handle *before* hba_ioaccel_enabled */
++	}
++	h->dev[entry]->hba_ioaccel_enabled = new_entry->hba_ioaccel_enabled;
+ 	h->dev[entry]->offload_config = new_entry->offload_config;
+ 	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
+ 	h->dev[entry]->queue_depth = new_entry->queue_depth;
+@@ -3009,6 +3014,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		this_device->offload_config = 0;
+ 		this_device->offload_enabled = 0;
+ 		this_device->offload_to_be_enabled = 0;
++		this_device->hba_ioaccel_enabled = 0;
+ 		this_device->volume_offline = 0;
+ 		this_device->queue_depth = h->nr_cmds;
+ 	}
+@@ -3297,6 +3303,8 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
+ 		(struct ext_report_lun_entry *) lunaddrbytes;
  
-+static int hpsa_ioaccel_submit(struct ctlr_info *h,
-+		struct CommandList *c, struct scsi_cmnd *cmd,
-+		unsigned char *scsi3addr)
-+{
-+	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
-+	int rc = IO_ACCEL_INELIGIBLE;
-+
-+	cmd->host_scribble = (unsigned char *) c;
-+
-+	if (dev->offload_enabled) {
-+		hpsa_cmd_init(h, c->cmdindex, c);
-+		c->cmd_type = CMD_SCSI;
-+		c->scsi_cmd = cmd;
-+		rc = hpsa_scsi_ioaccel_raid_map(h, c);
-+		if (rc < 0)     /* scsi_dma_map failed. */
-+			rc = SCSI_MLQUEUE_HOST_BUSY;
-+	} else if (dev->ioaccel_handle) {
-+		hpsa_cmd_init(h, c->cmdindex, c);
-+		c->cmd_type = CMD_SCSI;
-+		c->scsi_cmd = cmd;
-+		rc = hpsa_scsi_ioaccel_direct_map(h, c);
-+		if (rc < 0)     /* scsi_dma_map failed. */
-+			rc = SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+	return rc;
-+}
-+
- static void hpsa_command_resubmit_worker(struct work_struct *work)
- {
- 	struct scsi_cmnd *cmd;
-@@ -4389,15 +4416,46 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
- 		cmd->result = DID_NO_CONNECT << 16;
-+		cmd_free(c->h, c);
- 		cmd->scsi_done(cmd);
- 		return;
- 	}
-+	if (c->cmd_type == CMD_IOACCEL2) {
-+		struct ctlr_info *h = c->h;
-+		struct io_accel2_cmd *c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
-+		int rc;
-+
-+		if (c2->error_data.serv_response ==
-+				IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL) {
-+			rc = hpsa_ioaccel_submit(h, c, cmd, dev->scsi3addr);
-+			if (rc == 0)
-+				return;
-+			if (rc == SCSI_MLQUEUE_HOST_BUSY) {
-+				/*
-+				 * If we get here, it means dma mapping failed.
-+				 * Try again via scsi mid layer, which will
-+				 * then get SCSI_MLQUEUE_HOST_BUSY.
-+				 */
-+				cmd->result = DID_IMM_RETRY << 16;
-+				cmd->scsi_done(cmd);
-+				cmd_free(h, c);	/* FIX-ME:  on merge, change
-+						 * to cmd_tagged_free() and
-+						 * ultimately to
-+						 * hpsa_cmd_free_and_done(). */
-+				return;
-+			}
-+			/* else, fall thru and resubmit down CISS path */
-+		}
-+	}
- 	hpsa_cmd_partial_init(c->h, c->cmdindex, c);
- 	if (hpsa_ciss_submit(c->h, c, cmd, dev->scsi3addr)) {
- 		/*
- 		 * If we get here, it means dma mapping failed. Try
- 		 * again via scsi mid layer, which will then get
- 		 * SCSI_MLQUEUE_HOST_BUSY.
-+		 *
-+		 * hpsa_ciss_submit will have already freed c
-+		 * if it encountered a dma mapping failure.
- 		 */
- 		cmd->result = DID_IMM_RETRY << 16;
- 		cmd->scsi_done(cmd);
-@@ -4447,31 +4505,14 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	if (likely(cmd->retries == 0 &&
- 		cmd->request->cmd_type == REQ_TYPE_FS &&
- 		h->acciopath_status)) {
--
--		cmd->host_scribble = (unsigned char *) c;
--
--		if (dev->offload_enabled) {
--			hpsa_cmd_init(h, c->cmdindex, c);
--			c->cmd_type = CMD_SCSI;
--			c->scsi_cmd = cmd;
--			rc = hpsa_scsi_ioaccel_raid_map(h, c);
--			if (rc == 0)
--				return 0; /* Sent on ioaccel path */
--			if (rc < 0) {   /* scsi_dma_map failed. */
--				cmd_free(h, c);
--				return SCSI_MLQUEUE_HOST_BUSY;
--			}
--		} else if (dev->ioaccel_handle) {
--			hpsa_cmd_init(h, c->cmdindex, c);
--			c->cmd_type = CMD_SCSI;
--			c->scsi_cmd = cmd;
--			rc = hpsa_scsi_ioaccel_direct_map(h, c);
--			if (rc == 0)
--				return 0; /* Sent on direct map path */
--			if (rc < 0) {   /* scsi_dma_map failed. */
--				cmd_free(h, c);
--				return SCSI_MLQUEUE_HOST_BUSY;
--			}
-+		rc = hpsa_ioaccel_submit(h, c, cmd, scsi3addr);
-+		if (rc == 0)
-+			return 0;
-+		if (rc == SCSI_MLQUEUE_HOST_BUSY) {
-+			cmd_free(h, c);	/* FIX-ME:  on merge, change to
-+					 * cmd_tagged_free(), and ultimately
-+					 * to hpsa_cmd_resolve_and_free(). */
-+			return SCSI_MLQUEUE_HOST_BUSY;
- 		}
- 	}
- 	return hpsa_ciss_submit(h, c, cmd, scsi3addr);
+ 	dev->ioaccel_handle = rle->ioaccel_handle;
++	if (PHYS_IOACCEL(lunaddrbytes) && dev->ioaccel_handle)
++		dev->hba_ioaccel_enabled = 1;
+ 	memset(id_phys, 0, sizeof(*id_phys));
+ 	rc = hpsa_bmic_id_physical_device(h, lunaddrbytes,
+ 			GET_BMIC_DRIVE_NUMBER(lunaddrbytes), id_phys,
+@@ -4398,7 +4406,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+-	} else if (dev->ioaccel_handle) {
++	} else if (dev->hba_ioaccel_enabled) {
+ 		hpsa_cmd_init(h, c->cmdindex, c);
+ 		c->cmd_type = CMD_SCSI;
+ 		c->scsi_cmd = cmd;
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index df2468c..87a70b5 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -55,6 +55,7 @@ struct hpsa_scsi_dev_t {
+ 	int offload_config;		/* I/O accel RAID offload configured */
+ 	int offload_enabled;		/* I/O accel RAID offload enabled */
+ 	int offload_to_be_enabled;
++	int hba_ioaccel_enabled;
+ 	int offload_to_mirror;		/* Send next I/O accelerator RAID
+ 					 * offload request to mirror drive
+ 					 */
 
