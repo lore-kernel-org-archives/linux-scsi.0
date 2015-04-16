@@ -1,52 +1,73 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/3] target/file: Fix BUG() when CONFIG_DEBUG_SG=y and
- DIF protection enabled
-Date: Wed, 15 Apr 2015 22:10:31 -0700
-Message-ID: <1429161031.26182.17.camel@haakon3.risingtidesystems.com>
-References: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: mvsas panics and dies when attached to a port extender on newer
+ kernels
+Date: Wed, 15 Apr 2015 22:16:01 -0700
+Message-ID: <1429161361.2608.4.camel@HansenPartnership.com>
+References: <CAH_2Ghf565hKovkkccP_z6SO8v=7Ji=wdvL8YPnZNZ9WUUfGWg@mail.gmail.com>
+	 <1429046165.2209.54.camel@HansenPartnership.com>
+	 <CAH_2GhcsaDoxuxBwTT7cUsfp+5e_KjxtkJ4tFE1N05U=FCkJnA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428934918-4004-1-git-send-email-akinobu.mita@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54222 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752664AbbDPFQD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Apr 2015 01:16:03 -0400
+In-Reply-To: <CAH_2GhcsaDoxuxBwTT7cUsfp+5e_KjxtkJ4tFE1N05U=FCkJnA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adam Talbot <ajtalbot1@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2015-04-13 at 23:21 +0900, Akinobu Mita wrote:
-> When CONFIG_DEBUG_SG=y and DIF protection support enabled, kernel
-> BUG()s are triggered due to the following two issues:
-> 
-> 1) prot_sg is not initialized by sg_init_table().
-> 
-> When CONFIG_DEBUG_SG=y, scatterlist helpers check sg entry has a
-> correct magic value.
-> 
-> 2) vmalloc'ed buffer is passed to sg_set_buf().
-> 
-> sg_set_buf() uses virt_to_page() to convert virtual address to struct
-> page, but it doesn't work with vmalloc address.  vmalloc_to_page()
-> should be used instead.  As prot_buf isn't usually too large, so
-> fix it by allocating prot_buf by kmalloc instead of vmalloc.
-> 
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: target-devel@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-> ---
->  drivers/target/target_core_file.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
-> 
+On Tue, 2015-04-14 at 14:41 -0700, Adam Talbot wrote:
+> Removing the sas expander and attaching the SATA drives directly works
+> just fine. I had to limp along with the drives direct attached for a
+> while, while debugging.
 
-Thanks for testing with CONFIG_DEBUG_SG=y.
+Well, that narrows it down.  It looks like there's a longstanding bug in
+mvs_task_prep_ata() where the physical PHY field is populated by taking
+an index through the HBA phy table.  This field is ignored for STP but
+the phy table is too small and it uses the expander phy number to index
+it (hence the GPF as we fall off the end of the phy table trying to
+dereference sas_phy->id).
 
-Applied to target-pending/for-next, with CC' for v3.14.y stable.
+This should fix the problem.
 
-Thank you,
+James
 
---nab
+---
+
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 2d5ab6d..454536c 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -441,14 +441,11 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 			     struct mvs_task_exec_info *tei)
+ {
+-	struct sas_ha_struct *sha = mvi->sas;
+ 	struct sas_task *task = tei->task;
+ 	struct domain_device *dev = task->dev;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+ 	struct mvs_cmd_hdr *hdr = tei->hdr;
+ 	struct asd_sas_port *sas_port = dev->port;
+-	struct sas_phy *sphy = dev->phy;
+-	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
+ 	struct mvs_slot_info *slot;
+ 	void *buf_prd;
+ 	u32 tag = tei->tag, hdr_tag;
+@@ -468,7 +465,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 	slot->tx = mvi->tx_prod;
+ 	del_q = TXQ_MODE_I | tag |
+ 		(TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+-		(MVS_PHY_ID << TXQ_PHY_SHIFT) |
++		((sas_port->phy_mask & TXQ_PHY_MASK) << TXQ_PHY_SHIFT) |
+ 		(mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+ 	mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+ 
+
+
+
+
