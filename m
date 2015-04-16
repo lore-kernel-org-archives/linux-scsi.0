@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 10/43] hpsa: do not ignore return value of
- hpsa_register_scsi
-Date: Thu, 16 Apr 2015 08:47:35 -0500
-Message-ID: <20150416134735.30238.9294.stgit@brunhilda>
+Subject: [PATCH v4 11/43] hpsa: try resubmitting down raid path on task set
+ full
+Date: Thu, 16 Apr 2015 08:47:41 -0500
+Message-ID: <20150416134741.30238.50426.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5009.houston.hp.com ([15.240.92.67]:49633 "EHLO
-	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933655AbbDPNsh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:48:37 -0400
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:44169 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933630AbbDPNsr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:48:47 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,28 +20,28 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen Cameron <stephenmcameron@gmail.com>
 
-add error handling for failure when registering with SCSI subsystem.
+allow the controller firmware to queue up commands when the ioaccel device
+queue is full.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 037b549..292b8bd 100644
+index 292b8bd..9c184d1 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -7427,7 +7427,9 @@ reinit_after_soft_reset:
- 	h->access.set_intr_mask(h, HPSA_INTR_ON);
- 
- 	hpsa_hba_inquiry(h);
--	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
-+	rc = hpsa_register_scsi(h); /* hook ourselves into SCSI subsystem */
-+	if (rc)
-+		goto clean4;
- 
- 	/* Monitor the controller for firmware lockups */
- 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -1825,8 +1825,7 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
+-			/* Make scsi midlayer do unlimited retries */
+-			cmd->result = DID_IMM_RETRY << 16;
++			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_ABORTED:
+ 			dev_warn(&h->pdev->dev,
 
