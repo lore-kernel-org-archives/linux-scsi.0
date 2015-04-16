@@ -1,200 +1,121 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v4 27/43] hpsa: use helper routines for finishing commands
-Date: Thu, 16 Apr 2015 08:49:10 -0500
-Message-ID: <20150416134910.30238.50544.stgit@brunhilda>
+Subject: [PATCH v4 31/43] hpsa: call pci_release_regions after
+ pci_disable_device
+Date: Thu, 16 Apr 2015 08:49:31 -0500
+Message-ID: <20150416134931.30238.90240.stgit@brunhilda>
 References: <20150416134224.30238.66082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:45061 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965060AbbDPNuL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:11 -0400
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:50374 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965093AbbDPNuc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 09:50:32 -0400
 In-Reply-To: <20150416134224.30238.66082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Webb Scales <webbnh@hp.com>
+From: Robert Elliott <elliott@hp.com>
 
-cleanup command completions
+Despite the fact that PCI devices are enabled in this order:
+    1. pci_enable_device
+    2. pci_request_regions
+
+    Documentation/PCI/pci.txt specifies that they be undone
+    in this order
+    1. pci_disable_device
+    2. pci_release_regions
+
+    Tested by injecting error in the call to pci_enable_device
+    in hpsa_init_one -> hpsa_pci_init:
+    [    9.095001] hpsa 0000:04:00.0: failed to enable PCI device
+    [    9.095005] hpsa: probe of 0000:04:00.0 failed with error -22
+    (-22 is -EINVAL)
+    and then in the call pci_request_regions:
+    [    9.178623] hpsa 0000:04:00.0: failed to obtain PCI resources
+    [    9.178671] hpsa: probe of 0000:04:00.0 failed with error -16
+    (-16 is -EBUSY)
+
+    and then by adding
+        reset_devices
+    to the kernel command line and inject errors into the two
+    calls to pci_enable_device and the call to pci_request_regions
+    in hpsa_init_one -> hpsa_init_reset_devices.
+
+    (inject on 6th call, 1st to hpsa2)
+    [   62.413750] hpsa 0000:04:00.0: Failed to enable PCI device
+
+    (inject on 7th call, 2nd to hpsa2)
+    [   62.807571] hpsa 0000:04:00.0: failed to enable device.
+
+    (inject on 8th call, 3rd to hpsa2)
+    [   62.697198] hpsa 0000:04:00.0: failed to obtain PCI resources
+    [   62.697234] hpsa: probe of 0000:04:00.0 failed with error -16
+
+    The reset_devices path calls return -ENODEV on failure
+    rather than passing the result, which apparently doesn't
+    cause the pci driver to print anything.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Signed-off-by: Webb Scales <webbnh@hp.com>
-Signed-off-by: Don Brace <don.brace@pmcs.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Don Brace < don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   78 ++++++++++++++++++++-------------------------------
- 1 file changed, 31 insertions(+), 47 deletions(-)
+ drivers/scsi/hpsa.c |   17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3f86a61..678b2bf 100644
+index 5e12520..8aeef06 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1980,6 +1980,19 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 	return retry;	/* retry on raid path? */
- }
- 
-+static void hpsa_cmd_free_and_done(struct ctlr_info *h,
-+		struct CommandList *c, struct scsi_cmnd *cmd)
-+{
-+	cmd_free(h, c);
-+	cmd->scsi_done(cmd);
-+}
-+
-+static void hpsa_retry_cmd(struct ctlr_info *h, struct CommandList *c)
-+{
-+	INIT_WORK(&c->work, hpsa_command_resubmit_worker);
-+	queue_work_on(raw_smp_processor_id(), h->resubmit_wq, &c->work);
-+}
-+
- static void process_ioaccel2_completion(struct ctlr_info *h,
- 		struct CommandList *c, struct scsi_cmnd *cmd,
- 		struct hpsa_scsi_dev_t *dev)
-@@ -1988,13 +2001,11 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 
- 	/* check for good status */
- 	if (likely(c2->error_data.serv_response == 0 &&
--			c2->error_data.status == 0)) {
--		cmd_free(h, c);
--		cmd->scsi_done(cmd);
--		return;
--	}
-+			c2->error_data.status == 0))
-+		return hpsa_cmd_free_and_done(h, c, cmd);
- 
--	/* Any RAID offload error results in retry which will use
+@@ -7048,8 +7048,12 @@ static void hpsa_free_pci_init(struct ctlr_info *h)
+ 	iounmap(h->vaddr);			/* pci_init 3 */
+ 	h->vaddr = NULL;
+ 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+-	pci_release_regions(h->pdev);		/* pci_init 2 */
 +	/*
-+	 * Any RAID offload error results in retry which will use
- 	 * the normal I/O path so the controller can handle whatever's
- 	 * wrong.
- 	 */
-@@ -2004,19 +2015,14 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 		if (c2->error_data.status ==
- 			IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
- 			dev->offload_enabled = 0;
--		goto retry_cmd;
-+
-+		return hpsa_retry_cmd(h, c);
- 	}
- 
- 	if (handle_ioaccel_mode2_error(h, c, cmd, c2))
--		goto retry_cmd;
--
--	cmd_free(h, c);
--	cmd->scsi_done(cmd);
--	return;
-+		return hpsa_retry_cmd(h, c);
- 
--retry_cmd:
--	INIT_WORK(&c->work, hpsa_command_resubmit_worker);
--	queue_work_on(raw_smp_processor_id(), h->resubmit_wq, &c->work);
-+	return hpsa_cmd_free_and_done(h, c, cmd);
++	 * call pci_disable_device before pci_release_regions per
++	 * Documentation/PCI/pci.txt
++	 */
+ 	pci_disable_device(h->pdev);		/* pci_init 1 */
++	pci_release_regions(h->pdev);		/* pci_init 2 */
  }
  
- /* Returns 0 on success, < 0 otherwise. */
-@@ -2089,22 +2095,15 @@ static void complete_scsi_command(struct CommandList *cp)
- 	if (unlikely(ei->CommandStatus == CMD_CTLR_LOCKUP)) {
- 		/* DID_NO_CONNECT will prevent a retry */
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd_free(h, cp);
--		cmd->scsi_done(cmd);
--		return;
-+		return hpsa_cmd_free_and_done(h, cp, cmd);
+ /* several items must be freed later */
+@@ -7072,6 +7076,7 @@ static int hpsa_pci_init(struct ctlr_info *h)
+ 	err = pci_enable_device(h->pdev);
+ 	if (err) {
+ 		dev_err(&h->pdev->dev, "failed to enable PCI device\n");
++		pci_disable_device(h->pdev);
+ 		return err;
  	}
  
- 	if (cp->cmd_type == CMD_IOACCEL2)
- 		return process_ioaccel2_completion(h, cp, cmd, dev);
- 
- 	scsi_set_resid(cmd, ei->ResidualCnt);
--	if (ei->CommandStatus == 0) {
--		if (cp->cmd_type == CMD_IOACCEL1)
--			atomic_dec(&cp->phys_disk->ioaccel_cmds_out);
--		cmd_free(h, cp);
--		cmd->scsi_done(cmd);
--		return;
--	}
-+	if (ei->CommandStatus == 0)
-+		return hpsa_cmd_free_and_done(h, cp, cmd);
- 
- 	/* For I/O accelerator commands, copy over some fields to the normal
- 	 * CISS header used below for error handling.
-@@ -2126,10 +2125,7 @@ static void complete_scsi_command(struct CommandList *cp)
- 		if (is_logical_dev_addr_mode(dev->scsi3addr)) {
- 			if (ei->CommandStatus == CMD_IOACCEL_DISABLED)
- 				dev->offload_enabled = 0;
--			INIT_WORK(&cp->work, hpsa_command_resubmit_worker);
--			queue_work_on(raw_smp_processor_id(),
--					h->resubmit_wq, &cp->work);
--			return;
-+			return hpsa_retry_cmd(h, cp);
- 		}
+@@ -7079,7 +7084,8 @@ static int hpsa_pci_init(struct ctlr_info *h)
+ 	if (err) {
+ 		dev_err(&h->pdev->dev,
+ 			"failed to obtain PCI resources\n");
+-		goto clean1;	/* pci */
++		pci_disable_device(h->pdev);
++		return err;
  	}
  
-@@ -2260,8 +2256,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 		dev_warn(&h->pdev->dev, "cp %p returned unknown status %x\n",
- 				cp, ei->CommandStatus);
- 	}
--	cmd_free(h, cp);
--	cmd->scsi_done(cmd);
-+
-+	return hpsa_cmd_free_and_done(h, cp, cmd);
+ 	pci_set_master(h->pdev);
+@@ -7120,9 +7126,12 @@ clean3:	/* vaddr, intmode+region, pci */
+ 	h->vaddr = NULL;
+ clean2:	/* intmode+region, pci */
+ 	hpsa_disable_interrupt_mode(h);
+-	pci_release_regions(h->pdev);
+-clean1:	/* pci */
++	/*
++	 * call pci_disable_device before pci_release_regions per
++	 * Documentation/PCI/pci.txt
++	 */
+ 	pci_disable_device(h->pdev);
++	pci_release_regions(h->pdev);
+ 	return err;
  }
  
- static void hpsa_pci_unmap(struct pci_dev *pdev,
-@@ -4514,16 +4510,13 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- {
- 	struct scsi_cmnd *cmd;
- 	struct hpsa_scsi_dev_t *dev;
--	struct CommandList *c =
--			container_of(work, struct CommandList, work);
-+	struct CommandList *c = container_of(work, struct CommandList, work);
- 
- 	cmd = c->scsi_cmd;
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd_free(c->h, c);
--		cmd->scsi_done(cmd);
--		return;
-+		return hpsa_cmd_free_and_done(c->h, c, cmd);
- 	}
- 	if (c->cmd_type == CMD_IOACCEL2) {
- 		struct ctlr_info *h = c->h;
-@@ -4542,12 +4535,7 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 				 * then get SCSI_MLQUEUE_HOST_BUSY.
- 				 */
- 				cmd->result = DID_IMM_RETRY << 16;
--				cmd->scsi_done(cmd);
--				cmd_free(h, c);	/* FIX-ME:  on merge, change
--						 * to cmd_tagged_free() and
--						 * ultimately to
--						 * hpsa_cmd_free_and_done(). */
--				return;
-+				return hpsa_cmd_free_and_done(h, c, cmd);
- 			}
- 			/* else, fall thru and resubmit down CISS path */
- 		}
-@@ -4611,9 +4599,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		if (rc == 0)
- 			return 0;
- 		if (rc == SCSI_MLQUEUE_HOST_BUSY) {
--			cmd_free(h, c);	/* FIX-ME:  on merge, change to
--					 * cmd_tagged_free(), and ultimately
--					 * to hpsa_cmd_resolve_and_free(). */
-+			cmd_free(h, c);
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		}
- 	}
-@@ -7735,8 +7721,6 @@ static void hpsa_flush_cache(struct ctlr_info *h)
- 	struct CommandList *c;
- 	int rc;
- 
--	/* Don't bother trying to flush the cache if locked up */
--	/* FIXME not necessary if do_simple_cmd does the check */
- 	if (unlikely(lockup_detected(h)))
- 		return;
- 	flush_buf = kzalloc(4, GFP_KERNEL);
 
