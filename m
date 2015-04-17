@@ -1,59 +1,132 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 4/7] be2iscsi : Fix memory check before unmapping.
-Date: Fri, 17 Apr 2015 15:02:21 +0530
-Message-ID: <60475e93-f33c-40e3-9461-7ed18d91a873@CMEXHTCAS1.ad.emulex.com>
+Subject: [PATCH 5/7] be2iscsi : Update the copyright year
+Date: Fri, 17 Apr 2015 15:03:36 +0530
+Message-ID: <94217f14-8534-454a-bb05-fce6b2602dbe@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:58883 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbbDPRRY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 13:17:24 -0400
+Received: from cmexedge2.emulex.com ([138.239.224.100]:54961 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754792AbbDPRSS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 13:18:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Check DMA memory before it is unmapped.
-
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/be2iscsi/be.h       |    2 +-
+ drivers/scsi/be2iscsi/be_cmds.c  |    2 +-
+ drivers/scsi/be2iscsi/be_cmds.h  |    2 +-
+ drivers/scsi/be2iscsi/be_iscsi.c |    2 +-
+ drivers/scsi/be2iscsi/be_iscsi.h |    2 +-
+ drivers/scsi/be2iscsi/be_main.c  |    2 +-
+ drivers/scsi/be2iscsi/be_main.h  |    2 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  |    2 +-
+ drivers/scsi/be2iscsi/be_mgmt.h  |    2 +-
+ 9 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 81e83a6..273e6f4 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 8e16c49..ff69493 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 9889743..d0097a2 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index b7391a3..508f017 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index e0b3b2d..096c928 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index dca3a55..1fbbece 100644
+index 1fbbece..b700fad 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1368,8 +1368,10 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
- 	if (io_task->cmd_bhs->iscsi_hdr.flags & ISCSI_FLAG_CMD_READ)
- 		conn->rxdata_octets += resid;
- unmap:
--	scsi_dma_unmap(io_task->scsi_cmnd);
--	io_task->scsi_cmnd = NULL;
-+	if (io_task->scsi_cmnd) {
-+		scsi_dma_unmap(io_task->scsi_cmnd);
-+		io_task->scsi_cmnd = NULL;
-+	}
- 	iscsi_complete_scsi_task(task, exp_cmdsn, max_cmdsn);
- }
- 
-@@ -4609,11 +4611,13 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
- 		spin_unlock_bh(&phba->mgmt_sgl_lock);
- 	}
- 
--	if (io_task->mtask_addr)
-+	if (io_task->mtask_addr) {
- 		pci_unmap_single(phba->pcidev,
- 				 io_task->mtask_addr,
- 				 io_task->mtask_data_count,
- 				 PCI_DMA_TODEVICE);
-+		io_task->mtask_addr = 0;
-+	}
- }
- 
+@@ -1,5 +1,5 @@
  /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 0aa0cb3..3ddde6f 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 681d4e8..78f56a6 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index bd81446..95fd99b 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Emulex
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
 -- 
 1.7.1
 
