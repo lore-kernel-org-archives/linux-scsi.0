@@ -1,18 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 21/43] hpsa: do not check cmd_alloc return value -
- it cannnot return NULL
-Date: Fri, 17 Apr 2015 15:16:42 +0200
-Message-ID: <553107BA.1000808@suse.de>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134838.30238.97749.stgit@brunhilda>
+Subject: Re: [PATCH v4 22/43] hpsa: correct return values from driver functions.
+Date: Fri, 17 Apr 2015 15:17:16 +0200
+Message-ID: <553107DC.3040004@suse.de>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134843.30238.91796.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32984 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33064 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932118AbbDQNQo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:16:44 -0400
-In-Reply-To: <20150416134838.30238.97749.stgit@brunhilda>
+	id S1753882AbbDQNRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:17:18 -0400
+In-Reply-To: <20150416134843.30238.91796.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
@@ -21,14 +20,13 @@ Cc: linux-scsi@vger.kernel.org
 On 04/16/2015 03:48 PM, Don Brace wrote:
 > From: Robert Elliott <elliott@hp.com>
 >=20
-> cmd_alloc can no longer return NULL, so don't check for NULL any more
-> (which is unreachable code).
+> correct return codes for error conditions
 >=20
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Robert Elliott <elliott@hp.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
-
+> ---
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
