@@ -1,55 +1,137 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [RFC] Simlify dif_verify routines and fixup fileio protection
- information code.
-Date: Thu, 16 Apr 2015 19:04:57 +0300
-Message-ID: <552FDDA9.1050000@dev.mellanox.co.il>
-References: <1428945575-30839-1-git-send-email-sagig@mellanox.com>	<CAC5umygZ_qCu0x3RfTQs21R1Poa6A10FkhmGak7ccc2HvY4ROQ@mail.gmail.com>	<552D4C7B.9000402@dev.mellanox.co.il>	<CAC5umyj9FsnumRhvNrzqE=Rtpy3O32SBw43ZP9M8H5B3htbRpw@mail.gmail.com>	<552E384F.3030203@dev.mellanox.co.il>	<CAC5umygGG4BTs0u35eVi6dLhoDuDshGNPsQaWq2kO5YexWDP+Q@mail.gmail.com>	<552E76D1.7040204@dev.mellanox.co.il>	<552E7ED6.4080304@dev.mellanox.co.il>	<yq1egnl4bjm.fsf@sermon.lab.mkp.net>	<552F7840.2080804@dev.mellanox.co.il> <CAC5umygHt_LHyCWEhg9whhe7PfQBy=Y9uXbKAE6+1EL7MEzmrg@mail.gmail.com> <552FDC2E.7020203@dev.mellanox.co.il>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH 1/7] be2iscsi : Fix the retry count for boot targets
+Date: Fri, 17 Apr 2015 15:00:16 +0530
+Message-ID: <84536b09-b782-4a83-94dd-79b8c0039b8f@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:34683 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbbDPQFC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 12:05:02 -0400
-Received: by widjs5 with SMTP id js5so15062699wid.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2015 09:05:00 -0700 (PDT)
-In-Reply-To: <552FDC2E.7020203@dev.mellanox.co.il>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:58564 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754209AbbDPREv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 13:04:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: John Soni Jose <sony.john-n@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-On 4/16/2015 6:58 PM, Sagi Grimberg wrote:
-> On 4/16/2015 4:46 PM, Akinobu Mita wrote:
->> 2015-04-16 17:52 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
->>> On 4/15/2015 7:10 PM, Martin K. Petersen wrote:
->>>>>>>>>
->>>>>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
->>>>
->>>>
->>>>>>> By the commit 436f4a0a ("loopback: Add fabric_prot_type attribute
->>>>>>> support"), When WRITE_SAME command with WRPROTECT=0 is executed,
->>>>>>> sbc_dif_generate() is called but cmd->t_prot_sg is NULL as block
->>>>>>> layer didn't allocate it for WRITE_SAME.
->>>>
->>>>
->>>> Sagi> Actually this is a bug. Why didn't the initiator allocate
->>>> Sagi> integrity meta-data for WRITE_SAME? Looking at the code it looks
->>>> Sagi> like it should.
->>>>
->>>> We don't issue WRITE SAME with PI so there is no prot SGL.
->>>>
->>>
->>> Is there a specific reason why we don't?
->>
->> It is not only for the WRITE SAME requests from block device but
->> also for READ/WRITE with PROTECT=0 requests by SG_IO.
->>
->
-> This is specific to loopback which is using target_submit_cmd_map_sgls()
-> Other fabrics would allocate sgls per IO and the core would allocate
-> protection SGLs as well.
->
+ Increment the retry count to get the boot target info when
+ port async event is received by the driver. Update sysfs enteries
+ with the boot target  parameters.
 
-By "This" I meant the NULL deref you are witnessing in for wrprotect=0.
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c |    4 ++++
+ drivers/scsi/be2iscsi/be_main.c |   23 ++++++++++++++++++++---
+ drivers/scsi/be2iscsi/be_main.h |    4 ++++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 80d97f3..8e16c49 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -452,6 +452,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+ 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+ 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
+ 		phba->state = BE_ADAPTER_LINK_UP | BE_ADAPTER_CHECK_BOOT;
++		phba->get_boot = BE_GET_BOOT_RETRIES;
+ 
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+@@ -480,6 +481,7 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 				case ASYNC_EVENT_NEW_ISCSI_CONN:
+ 				case ASYNC_EVENT_NEW_TCP_CONN:
+ 					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+@@ -488,6 +490,8 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 						    compl->flags);
+ 					break;
+ 				default:
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 923a2b5..66ea88c 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2037,11 +2037,16 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
+ 				/* Interpret compl as a async link evt */
+ 				beiscsi_async_link_state_process(phba,
+ 				(struct be_async_event_link_state *) mcc_compl);
+-			else
++			else {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX,
+ 					    "BM_%d :  Unsupported Async Event, flags"
+ 					    " = 0x%08x\n",
+ 					    mcc_compl->flags);
++				if (phba->state & BE_ADAPTER_LINK_UP) {
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
++				}
++			}
+ 		} else if (mcc_compl->flags & CQE_FLAGS_COMPLETED_MASK) {
+ 			be_mcc_compl_process_isr(&phba->ctrl, mcc_compl);
+ 			atomic_dec(&phba->ctrl.mcc_obj.q.used);
+@@ -4328,8 +4333,14 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : No boot session\n");
++
++		if (ret == -ENXIO)
++			phba->get_boot = 0;
++
++
+ 		return ret;
+ 	}
++	phba->get_boot = 0;
+ 	nonemb_cmd.va = pci_zalloc_consistent(phba->ctrl.pdev,
+ 					      sizeof(*session_resp),
+ 					      &nonemb_cmd.dma);
+@@ -5374,8 +5385,14 @@ beiscsi_hw_health_check(struct work_struct *work)
+ 	be_eqd_update(phba);
+ 
+ 	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
+-		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+-		be_check_boot_session(phba);
++		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
++			phba->get_boot--;
++			if (!(phba->get_boot % BE_GET_BOOT_TO))
++				be_check_boot_session(phba);
++		} else {
++			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
++			phba->get_boot = 0;
++		}
+ 	}
+ 
+ 	beiscsi_ue_detect(phba);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 7ee0ffc..0aa0cb3 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -109,6 +109,9 @@
+ 
+ #define BEISCSI_CLEAN_UNLOAD	0x01
+ #define BEISCSI_EEH_UNLOAD	0x02
++
++#define BE_GET_BOOT_RETRIES	45
++#define BE_GET_BOOT_TO		20
+ /**
+  * hardware needs the async PDU buffers to be posted in multiples of 8
+  * So have atleast 8 of them by default
+@@ -413,6 +416,7 @@ struct beiscsi_hba {
+ 	} fw_config;
+ 
+ 	unsigned int state;
++	int get_boot;
+ 	bool fw_timeout;
+ 	bool ue_detected;
+ 	struct delayed_work beiscsi_hw_check_task;
+-- 
+1.7.1
+
