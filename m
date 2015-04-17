@@ -1,17 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 10/43] hpsa: do not ignore return value of hpsa_register_scsi
-Date: Fri, 17 Apr 2015 15:05:53 +0200
-Message-ID: <55310531.5060500@suse.de>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134735.30238.9294.stgit@brunhilda>
+Subject: Re: [PATCH v4 11/43] hpsa: try resubmitting down raid path on task
+ set full
+Date: Fri, 17 Apr 2015 15:06:32 +0200
+Message-ID: <55310558.3060608@suse.de>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134741.30238.50426.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59652 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59702 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753679AbbDQNFz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:05:55 -0400
-In-Reply-To: <20150416134735.30238.9294.stgit@brunhilda>
+	id S1752176AbbDQNGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:06:33 -0400
+In-Reply-To: <20150416134741.30238.50426.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
@@ -20,31 +21,32 @@ Cc: linux-scsi@vger.kernel.org
 On 04/16/2015 03:47 PM, Don Brace wrote:
 > From: Stephen Cameron <stephenmcameron@gmail.com>
 >=20
-> add error handling for failure when registering with SCSI subsystem.
+> allow the controller firmware to queue up commands when the ioaccel d=
+evice
+> queue is full.
 >=20
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
->  drivers/scsi/hpsa.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/scsi/hpsa.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 >=20
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 037b549..292b8bd 100644
+> index 292b8bd..9c184d1 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -7427,7 +7427,9 @@ reinit_after_soft_reset:
->  	h->access.set_intr_mask(h, HPSA_INTR_ON);
-> =20
->  	hpsa_hba_inquiry(h);
-> -	hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
-> +	rc =3D hpsa_register_scsi(h); /* hook ourselves into SCSI subsystem=
- */
-> +	if (rc)
-> +		goto clean4;
-> =20
->  	/* Monitor the controller for firmware lockups */
->  	h->heartbeat_sample_interval =3D HEARTBEAT_SAMPLE_INTERVAL;
+> @@ -1825,8 +1825,7 @@ static int handle_ioaccel_mode2_error(struct ct=
+lr_info *h,
+>  			retry =3D 1;
+>  			break;
+>  		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
+> -			/* Make scsi midlayer do unlimited retries */
+> -			cmd->result =3D DID_IMM_RETRY << 16;
+> +			retry =3D 1;
+>  			break;
+>  		case IOACCEL2_STATUS_SR_TASK_COMP_ABORTED:
+>  			dev_warn(&h->pdev->dev,
 >=20
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
