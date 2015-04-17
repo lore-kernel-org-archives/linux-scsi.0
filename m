@@ -1,18 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 29/43] hpsa: refactor and rework support for sending
- TEST_UNIT_READY
-Date: Fri, 17 Apr 2015 15:25:55 +0200
-Message-ID: <553109E3.60804@suse.de>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134920.30238.52473.stgit@brunhilda>
+Subject: Re: [PATCH v4 30/43] hpsa: performance tweak for hpsa_scatter_gather()
+Date: Fri, 17 Apr 2015 15:26:39 +0200
+Message-ID: <55310A0F.60700@suse.de>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134926.30238.26368.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34107 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34197 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754209AbbDQNZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:25:57 -0400
-In-Reply-To: <20150416134920.30238.52473.stgit@brunhilda>
+	id S1753436AbbDQN0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:26:41 -0400
+In-Reply-To: <20150416134926.30238.26368.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
@@ -21,18 +20,13 @@ Cc: linux-scsi@vger.kernel.org
 On 04/16/2015 03:49 PM, Don Brace wrote:
 > From: Webb Scales <webbnh@hp.com>
 >=20
-> Factor out the code which sends the TEST_UNIT_READY from
-> wait_for_device_to_become_ready() into its own function.
->=20
-> Move the code which waits for the TEST_UNIT_READY from
-> wait_for_device_to_become_ready() into its own function.
->=20
-> If a logical drive has failed, resetting it will ensure
-> outstanding commands are completed, but polling it with
-> TURs after the reset will not work because the TURs will
-> never report good status.  So successful TUR should not
-> be a condition of success for the device reset error
-> handler.
+> Divide the loop in hpsa_scatter_gather() into two, one for the initia=
+l SG list
+> and a second one for the chained list, if any.  This allows the condi=
+tional
+> check which resets the indicies for the chained list to be performed =
+outside
+> the loop instead of being done on every iteration inside the loop.
 >=20
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
