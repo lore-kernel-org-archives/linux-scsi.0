@@ -1,30 +1,37 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 08/43] hpsa: make function names consistent
-Date: Fri, 17 Apr 2015 15:04:39 +0200
-Message-ID: <553104E7.4080301@suse.de>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134724.30238.27490.stgit@brunhilda>
+Subject: Re: [PATCH v4 09/43] hpsa: factor out hpsa_init_cmd function
+Date: Fri, 17 Apr 2015 15:05:33 +0200
+Message-ID: <5531051D.8030306@suse.de>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134730.30238.62412.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59487 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59607 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752998AbbDQNEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:04:40 -0400
-In-Reply-To: <20150416134724.30238.27490.stgit@brunhilda>
+	id S1752345AbbDQNFf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:05:35 -0400
+In-Reply-To: <20150416134730.30238.62412.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
 On 04/16/2015 03:47 PM, Don Brace wrote:
-> From: Robert Elliott <elliott@hp.com>
+> From: Stephen Cameron <stephenmcameron@gmail.com>
 >=20
-> make function names more consistent and meaningful
+> Factor out hpsa_cmd_init from cmd_alloc().  We also need
+> this for resubmitting commands down the default RAID path
+> when they have returned from the ioaccel paths with errors.
+>=20
+> In particular, reinitialize the cmd_type and busaddr fields as these
+> will not be correct for submitting down the RAID stack path
+> after ioaccel command completion.
+>=20
+> This saves time when submitting commands.
 >=20
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Robert Elliott <elliott@hp.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
