@@ -1,107 +1,93 @@
-From: Sony John-N <Sony.John-N@Emulex.Com>
-Subject: RE: [PATCH 6/7] be2iscsi: Logout of FW Boot Session
-Date: Fri, 17 Apr 2015 10:44:10 +0000
-Message-ID: <8c988ab9-d54c-4c34-a35c-6643509c58aa@CMEXHTCAS1.ad.emulex.com>
-References: <81b67d78-0558-4d7e-bce7-16ccf9d7064f@CMEXHTCAS2.ad.emulex.com>
- <553012E6.7050707@cs.wisc.edu> <553016F2.9040204@cs.wisc.edu>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: ahci Port to Host interrupt as edge trigger
+Date: Fri, 17 Apr 2015 16:22:17 +0530
+Message-ID: <CAOHikRCrbKhchHM71KPUUxSw7107ZWpBCbmTHsSSqSbUdCLJyg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:8317 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbbDQKon convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2015 06:44:43 -0400
-In-Reply-To: <553016F2.9040204@cs.wisc.edu>
-Content-Language: en-US
+Received: from exprod5og123.obsmtp.com ([64.18.0.198]:58882 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932296AbbDQKwT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 06:52:19 -0400
+Received: by widdi4 with SMTP id di4so17140502wid.0
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2015 03:52:17 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+To: Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: Loc Ho <lho@apm.com>
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Friday, April 17, 2015 1:39 AM
-To: Sony John-N; linux-scsi@vger.kernel.org
-Cc: Jayamohan Kallickal
-Subject: Re: [PATCH 6/7] be2iscsi: Logout of FW Boot Session
+Hi ,
 
-On 04/16/2015 02:52 PM, Mike Christie wrote:
-> On 04/17/2015 04:34 AM, John Soni Jose wrote:
->>  Once be2iscsi driver is loaded and operational close Boot  session 
->> established by FW.
->>
->> Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
->> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
->> ---
->>  drivers/scsi/be2iscsi/be_cmds.h  |   12 ++++++
->>  drivers/scsi/be2iscsi/be_iscsi.c |   12 ++++++
->>  drivers/scsi/be2iscsi/be_main.c  |    1 +
->>  drivers/scsi/be2iscsi/be_main.h  |    2 +
->>  drivers/scsi/be2iscsi/be_mgmt.c  |   70 ++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/be2iscsi/be_mgmt.h  |    3 ++
->>  6 files changed, 100 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/scsi/be2iscsi/be_cmds.h 
->> b/drivers/scsi/be2iscsi/be_cmds.h index d0097a2..0586815 100644
->> --- a/drivers/scsi/be2iscsi/be_cmds.h
->> +++ b/drivers/scsi/be2iscsi/be_cmds.h
->> @@ -304,6 +304,17 @@ struct mgmt_auth_method_format {
->>  	struct	mgmt_chap_format chap;
->>  } __packed;
->>  
->> +struct be_cmd_req_logout_fw_sess {
->> +	struct be_cmd_req_hdr hdr;	/* dw[4] */
->> +	uint32_t session_handle;
->> +} __packed;
->> +
->> +struct be_cmd_resp_logout_fw_sess {
->> +	struct be_cmd_resp_hdr hdr;	/* dw[4] */
->> +#define BEISCSI_MGMT_SESSION_CLOSE 0x20
->> +	uint32_t session_status;
->> +} __packed;
->> +
->>  struct mgmt_conn_login_options {
->>  	u8 flags;
->>  	u8 header_digest;
->> @@ -1136,6 +1147,7 @@ struct be_cmd_get_all_if_id_req {
->>  #define OPCODE_ISCSI_INI_CFG_GET_HBA_NAME	6
->>  #define OPCODE_ISCSI_INI_CFG_SET_HBA_NAME	7
->>  #define OPCODE_ISCSI_INI_SESSION_GET_A_SESSION  14
->> +#define OPCODE_ISCSI_INI_SESSION_LOGOUT_TARGET	 24
->>  #define OPCODE_ISCSI_INI_DRIVER_REOPEN_ALL_SESSIONS 36  #define 
->> OPCODE_ISCSI_INI_DRIVER_OFFLOAD_SESSION 41  #define 
->> OPCODE_ISCSI_INI_DRIVER_INVALIDATE_CONNECTION 42 diff --git 
->> a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
->> index 508f017..566d27c 100644
->> --- a/drivers/scsi/be2iscsi/be_iscsi.c
->> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
->> @@ -998,6 +998,18 @@ int beiscsi_conn_start(struct iscsi_cls_conn *cls_conn)
->>  	beiscsi_set_params_for_offld(beiscsi_conn, &params);
->>  	beiscsi_offload_connection(beiscsi_conn, &params);
->>  	iscsi_conn_start(cls_conn);
->> +
->> +	/* Logout from the FW boot session */
->> +	if (phba->fw_boot_state) {
->> +		int rc;
->> +
->> +		rc = beiscsi_logout_fw_sess(phba,
->> +			phba->boot_sess.session_handle);
->> +
->> +		if (!rc)
->> +			phba->fw_boot_state = 0
->> +	}
->> +
->>  	return 0;
->>  }
-> 
-> How do you know the boot session being logged out is the one we are 
-> replacing and logging into at this time? If userspace logged into 
-> sessions out of order and you logged into a non root one first, then 
-> would this kill the session that we might need to access still?
+I need some suggestion .
 
-Ignore that, I forgot we get the boot info a pci probe time or from the health check. But the, why not just have beiscsi_setup_boot_info log out the session once its done getting the boot info?
-It just seems odd to have that logout in the middle of the connection startup.
+>From the below interrupt handler in libahci.c it explains that the
+interrupt from port to Host is level  triggered. Do we have any
+existing implementation that handles the port to Host as Edge
+triggered.
 
-We  called logout from here to make sure that FW boot-Session would have completed the IO's and only NOP-IN/NOP-OUT are going on. Beiscsi_setup_boot_info was called from probe(), so thought it will be too early for issuing logout to FW boot-session.
+static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+{
+struct ata_host *host = dev_instance;
+struct ahci_host_priv *hpriv;
+unsigned int i, handled = 0;
+void __iomem *mmio;
+u32 irq_stat, irq_masked;
 
+VPRINTK("ENTER\n");
+
+hpriv = host->private_data;
+mmio = hpriv->mmio;
+
+/* sigh.  0xffffffff is a valid return from h/w */
+irq_stat = readl(mmio + HOST_IRQ_STAT);
+if (!irq_stat)
+return IRQ_NONE;
+
+irq_masked = irq_stat & hpriv->port_map;
+
+spin_lock(&host->lock);
+
+for (i = 0; i < host->n_ports; i++) {
+struct ata_port *ap;
+
+if (!(irq_masked & (1 << i)))
+continue;
+
+ap = host->ports[i];
+if (ap) {
+ahci_port_intr(ap);
+VPRINTK("port %u\n", i);
+} else {
+VPRINTK("port %u (no irq)\n", i);
+if (ata_ratelimit())
+dev_warn(host->dev,
+"interrupt on disabled port %u\n", i);
+}
+
+handled = 1;
+}
+
+/* HOST_IRQ_STAT behaves as level triggered latch meaning that
+* it should be cleared after all the port events are cleared;
+* otherwise, it will raise a spurious interrupt after each
+* valid one.  Please read section 10.6.2 of ahci 1.1 for more
+* information.
+*
+* Also, use the unmasked value to clear interrupt as spurious
+* pending event on a dummy port might cause screaming IRQ.
+*/
+writel(irq_stat, mmio + HOST_IRQ_STAT);
+
+spin_unlock(&host->lock);
+
+VPRINTK("EXIT\n");
+
+return IRQ_RETVAL(handled);
+}
+
+
+-- 
+Thanks,
+with regards,
+Suman Tripathi
