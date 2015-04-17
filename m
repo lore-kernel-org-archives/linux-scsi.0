@@ -1,135 +1,82 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/7] nbd: stop using req->cmd
-Date: Fri, 17 Apr 2015 22:37:21 +0200
-Message-ID: <1429303042-12078-7-git-send-email-hch@lst.de>
+Subject: [PATCH 2/7] block: move REQ_TYPE_ATA_TASKFILE and REQ_TYPE_ATA_PC to ide.h
+Date: Fri, 17 Apr 2015 22:37:17 +0200
+Message-ID: <1429303042-12078-3-git-send-email-hch@lst.de>
 References: <1429303042-12078-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:35542 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:35367 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882AbbDQUig (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2015 16:38:36 -0400
+	with ESMTP id S1753501AbbDQUiX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2015 16:38:23 -0400
 In-Reply-To: <1429303042-12078-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, linux-nvme@lists.infradead.org
 Cc: linux-scsi@vger.kernel.org
 
+These values are only used by the IDE driver, so move them into it
+by allowing drivers to take cmd_type values after the first private
+one.  Note that we have to turn cmd_type into a plain unsigned integer
+so that gcc doesn't complain about mismatching enum types.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/nbd.c      | 48 +++++++++++++++++++++++-------------------------
- include/uapi/linux/nbd.h |  2 --
- 2 files changed, 23 insertions(+), 27 deletions(-)
+ include/linux/blkdev.h | 11 ++---------
+ include/linux/ide.h    |  7 +++++++
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index 9cf52ac..83a7ba4 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -230,29 +230,40 @@ static int nbd_send_req(struct nbd_device *nbd, struct request *req)
- 	int result, flags;
- 	struct nbd_request request;
- 	unsigned long size = blk_rq_bytes(req);
-+	u32 type;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 98c9027..9cb4d80 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -79,14 +79,7 @@ enum rq_cmd_type_bits {
+ 	REQ_TYPE_PM_SUSPEND,		/* suspend request */
+ 	REQ_TYPE_PM_RESUME,		/* resume request */
+ 	REQ_TYPE_PM_SHUTDOWN,		/* shutdown request */
+-	REQ_TYPE_DRV_PRIV,		/* driver defined type */
+-	/*
+-	 * for ATA/ATAPI devices. this really doesn't belong here, ide should
+-	 * use REQ_TYPE_DRV_PRIV and use rq->cmd[0] with the range of driver
+-	 * private REQ_LB opcodes to differentiate what type of request this is
+-	 */
+-	REQ_TYPE_ATA_TASKFILE,
+-	REQ_TYPE_ATA_PC,
++	REQ_TYPE_DRV_PRIV,		/* driver defined types from here */
+ };
+ 
+ #define BLK_MAX_CDB	16
+@@ -108,7 +101,7 @@ struct request {
+ 	struct blk_mq_ctx *mq_ctx;
+ 
+ 	u64 cmd_flags;
+-	enum rq_cmd_type_bits cmd_type;
++	unsigned cmd_type;
+ 	unsigned long atomic_flags;
+ 
+ 	int cpu;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 93b5ca7..62ac399 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -39,6 +39,12 @@
+ 
+ struct device;
+ 
++/* IDE-specific values for req->cmd_type */
++enum ata_cmd_type_bits {
++	REQ_TYPE_ATA_TASKFILE = REQ_TYPE_DRV_PRIV + 1,
++	REQ_TYPE_ATA_PC,
++};
 +
-+	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
-+		type = NBD_CMD_DISC;
-+	else if (req->cmd_flags & REQ_DISCARD)
-+		type = NBD_CMD_TRIM;
-+	else if (req->cmd_flags & REQ_FLUSH)
-+		type = NBD_CMD_FLUSH;
-+	else if (rq_data_dir(req) == WRITE)
-+		type = NBD_CMD_WRITE;
-+	else
-+		type = NBD_CMD_READ;
+ /* Error codes returned in rq->errors to the higher part of the driver. */
+ enum {
+ 	IDE_DRV_ERROR_GENERAL	= 101,
+@@ -1551,4 +1557,5 @@ static inline void ide_set_drivedata(ide_drive_t *drive, void *data)
+ #define ide_host_for_each_port(i, port, host) \
+ 	for ((i) = 0; ((port) = (host)->ports[i]) || (i) < MAX_HOST_PORTS; (i)++)
  
- 	memset(&request, 0, sizeof(request));
- 	request.magic = htonl(NBD_REQUEST_MAGIC);
--	request.type = htonl(nbd_cmd(req));
--
--	if (nbd_cmd(req) != NBD_CMD_FLUSH && nbd_cmd(req) != NBD_CMD_DISC) {
-+	request.type = htonl(type);
-+	if (type != NBD_CMD_FLUSH && type != NBD_CMD_DISC) {
- 		request.from = cpu_to_be64((u64)blk_rq_pos(req) << 9);
- 		request.len = htonl(size);
- 	}
- 	memcpy(request.handle, &req, sizeof(req));
- 
- 	dev_dbg(nbd_to_dev(nbd), "request %p: sending control (%s@%llu,%uB)\n",
--		req, nbdcmd_to_ascii(nbd_cmd(req)),
-+		req, nbdcmd_to_ascii(type),
- 		(unsigned long long)blk_rq_pos(req) << 9, blk_rq_bytes(req));
- 	result = sock_xmit(nbd, 1, &request, sizeof(request),
--			(nbd_cmd(req) == NBD_CMD_WRITE) ? MSG_MORE : 0);
-+			(type == NBD_CMD_WRITE) ? MSG_MORE : 0);
- 	if (result <= 0) {
- 		dev_err(disk_to_dev(nbd->disk),
- 			"Send control failed (result %d)\n", result);
- 		return -EIO;
- 	}
- 
--	if (nbd_cmd(req) == NBD_CMD_WRITE) {
-+	if (type == NBD_CMD_WRITE) {
- 		struct req_iterator iter;
- 		struct bio_vec bvec;
- 		/*
-@@ -352,7 +363,7 @@ static struct request *nbd_read_stat(struct nbd_device *nbd)
- 	}
- 
- 	dev_dbg(nbd_to_dev(nbd), "request %p: got reply\n", req);
--	if (nbd_cmd(req) == NBD_CMD_READ) {
-+	if (rq_data_dir(req) != WRITE) {
- 		struct req_iterator iter;
- 		struct bio_vec bvec;
- 
-@@ -452,23 +463,11 @@ static void nbd_handle_req(struct nbd_device *nbd, struct request *req)
- 	if (req->cmd_type != REQ_TYPE_FS)
- 		goto error_out;
- 
--	nbd_cmd(req) = NBD_CMD_READ;
--	if (rq_data_dir(req) == WRITE) {
--		if ((req->cmd_flags & REQ_DISCARD)) {
--			WARN_ON(!(nbd->flags & NBD_FLAG_SEND_TRIM));
--			nbd_cmd(req) = NBD_CMD_TRIM;
--		} else
--			nbd_cmd(req) = NBD_CMD_WRITE;
--		if (nbd->flags & NBD_FLAG_READ_ONLY) {
--			dev_err(disk_to_dev(nbd->disk),
--				"Write on read-only\n");
--			goto error_out;
--		}
--	}
--
--	if (req->cmd_flags & REQ_FLUSH) {
--		BUG_ON(unlikely(blk_rq_sectors(req)));
--		nbd_cmd(req) = NBD_CMD_FLUSH;
-+	if (rq_data_dir(req) == WRITE &&
-+	    (nbd->flags & NBD_FLAG_READ_ONLY)) {
-+		dev_err(disk_to_dev(nbd->disk),
-+			"Write on read-only\n");
-+		goto error_out;
- 	}
- 
- 	req->errors = 0;
-@@ -593,7 +592,6 @@ static int __nbd_ioctl(struct block_device *bdev, struct nbd_device *nbd,
- 		mutex_lock(&nbd->tx_lock);
- 		blk_rq_init(NULL, &sreq);
- 		sreq.cmd_type = REQ_TYPE_DRV_PRIV;
--		nbd_cmd(&sreq) = NBD_CMD_DISC;
- 
- 		/* Check again after getting mutex back.  */
- 		if (!nbd->sock)
-diff --git a/include/uapi/linux/nbd.h b/include/uapi/linux/nbd.h
-index 4f52549..e08e413 100644
---- a/include/uapi/linux/nbd.h
-+++ b/include/uapi/linux/nbd.h
-@@ -44,8 +44,6 @@ enum {
- /* there is a gap here to match userspace */
- #define NBD_FLAG_SEND_TRIM    (1 << 5) /* send trim/discard */
- 
--#define nbd_cmd(req) ((req)->cmd[0])
--
- /* userspace doesn't need the nbd_device structure */
- 
- /* These are sent over the network in the request/reply magic fields */
++
+ #endif /* _IDE_H */
 -- 
 1.9.1
 
