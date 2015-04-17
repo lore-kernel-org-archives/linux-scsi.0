@@ -1,53 +1,64 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH v4 42/43] hpsa: add PMC to copyright
-Date: Fri, 17 Apr 2015 01:00:07 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A8B50C7@G9W0745.americas.hpqcorp.net>
-References: <20150416134224.30238.66082.stgit@brunhilda>
- <20150416135032.30238.85284.stgit@brunhilda>
+From: Adam Talbot <ajtalbot1@gmail.com>
+Subject: Re: mvsas panics and dies when attached to a port extender on newer kernels
+Date: Thu, 16 Apr 2015 19:26:05 -0700
+Message-ID: <CAH_2GhexZPo=oisjmv=7vcFoA9XnzkmGO+C7bPkjigjksy832A@mail.gmail.com>
+References: <CAH_2Ghf565hKovkkccP_z6SO8v=7Ji=wdvL8YPnZNZ9WUUfGWg@mail.gmail.com>
+	<1429046165.2209.54.camel@HansenPartnership.com>
+	<CAH_2GhcsaDoxuxBwTT7cUsfp+5e_KjxtkJ4tFE1N05U=FCkJnA@mail.gmail.com>
+	<1429161361.2608.4.camel@HansenPartnership.com>
+	<CAH_2GhdsUqjmG4V-9X5QRkwNiVg9O5qp9Hpskis39qy=dmgYyA@mail.gmail.com>
+	<1429205296.2196.22.camel@HansenPartnership.com>
+	<CAH_2Ghfva5b3igBN8XQRP8h0Vr4Mo0_SCNtGpJHFz-uV_oDEoA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:56725 "EHLO
-	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486AbbDQBCm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 21:02:42 -0400
-In-Reply-To: <20150416135032.30238.85284.stgit@brunhilda>
-Content-Language: en-US
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:37752 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbbDQC0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 22:26:06 -0400
+Received: by widdi4 with SMTP id di4so5319657wid.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2015 19:26:05 -0700 (PDT)
+In-Reply-To: <CAH_2Ghfva5b3igBN8XQRP8h0Vr4Mo0_SCNtGpJHFz-uV_oDEoA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, "scott.teel@pmcs.com" <scott.teel@pmcs.com>, "Kevin.Barnett@pmcs.com" <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "Justin.Lindley@pmcs.com" <Justin.Lindley@pmcs.com>"brace@pmcs.com" <brace@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Knippers, Linda" <linda.knippers@hp.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIERvbiBCcmFjZQ0KPiBTZW50OiBUaHVyc2RheSwgQXByaWwgMTYsIDIw
-MTUgODo1MSBBTQ0KPiBTdWJqZWN0OiBbUEFUQ0ggdjQgNDIvNDNdIGhwc2E6IGFkZCBQTUMgdG8g
-Y29weXJpZ2h0DQo+IA0KPiBuZWVkIHRvIGFkZCBQTUMgdG8gY29weXJpZ2h0IG5vdGljZSBhbmQg
-dXBkYXRlIHRoZSBIZXdsZXR0LVBhY2thcmQNCj4gY29weXJpZ2h0IG5vdGlmaWNhdGlvbi4NCi4u
-Lg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNh
-LmMNCi4uLg0KPiAgICogICAgRGlzayBBcnJheSBkcml2ZXIgZm9yIEhQIFNtYXJ0IEFycmF5IFNB
-UyBjb250cm9sbGVycw0KPiAtICogICAgQ29weXJpZ2h0IDIwMDAsIDIwMTQgSGV3bGV0dC1QYWNr
-YXJkIERldmVsb3BtZW50IENvbXBhbnksIEwuUC4NCj4gKyAqICAgIENvcHlyaWdodCAyMDE0LTIw
-MTUgUE1DLVNpZXJyYSwgSW5jLg0KPiArICogICAgUG9ydGlvbnMgQ29weXJpZ2h0IDIwMDgtMjAx
-NCBIZXdsZXR0LVBhY2thcmQgRGV2ZWxvcG1lbnQgQ29tcGFueSwNCj4gTC5QLg0KLi4uDQo+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaHBzYS5oIGIvZHJpdmVycy9zY3NpL2hwc2EuaA0KLi4u
-DQo+ICAgKiAgICBEaXNrIEFycmF5IGRyaXZlciBmb3IgSFAgU21hcnQgQXJyYXkgU0FTIGNvbnRy
-b2xsZXJzDQo+IC0gKiAgICBDb3B5cmlnaHQgMjAwMCwgMjAxNCBIZXdsZXR0LVBhY2thcmQgRGV2
-ZWxvcG1lbnQgQ29tcGFueSwgTC5QLg0KPiArICogICAgQ29weXJpZ2h0IDIwMTQtMjAxNSBQTUMt
-U2llcnJhLCBJbmMuDQo+ICsgKiAgICBQb3J0aW9ucyBDb3B5cmlnaHQgMjAwOC0yMDE0IEhld2xl
-dHQtUGFja2FyZCBEZXZlbG9wbWVudCBDb21wYW55LA0KPiBMLlAuDQouLi4NCj4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS9ocHNhX2NtZC5oIGIvZHJpdmVycy9zY3NpL2hwc2FfY21kLmgNCi4u
-Lg0KPiAgICogICAgRGlzayBBcnJheSBkcml2ZXIgZm9yIEhQIFNtYXJ0IEFycmF5IFNBUyBjb250
-cm9sbGVycw0KPiAtICogICAgQ29weXJpZ2h0IDIwMDAsIDIwMTQgSGV3bGV0dC1QYWNrYXJkIERl
-dmVsb3BtZW50IENvbXBhbnksIEwuUC4NCj4gKyAqICAgIENvcHlyaWdodCAyMDE0LTIwMTUgUE1D
-LVNpZXJyYSwgSW5jLg0KPiArICogICAgUG9ydGlvbnMgQ29weXJpZ2h0IDIwMDgtMjAxNCBIZXds
-ZXR0LVBhY2thcmQgRGV2ZWxvcG1lbnQgQ29tcGFueSwNCj4gTC5QLg0KLi4uDQoNCkhQIHdvdWxk
-IHByZWZlciB0byBub3QgYWRkIHRoZSB3b3JkICJQb3J0aW9ucyIgdGhlcmUuDQoNCkFsc28sIEkg
-ZG9uJ3QgdGhpbmsgdGhlIGVhcmxpZXN0IGRhdGUgc2hvdWxkIGNoYW5nZSBmcm9tIHdoYXQgd2Fz
-DQpzdWJtaXR0ZWQgaW4gdGhlIGZpcnN0IGNvbW1pdCBlZGQxNjM2ODdlYTUgKERlYyAyMDA5KSwg
-d2hpY2ggd2FzDQoiMjAwMCwgMjAwOSIuICBNYXliZSB1c2UgIjIwMDAsIDIwMDktMjAxNSIgYmFz
-ZWQgb246DQoqIDIwMDA6IG9yaWdpbmFsIGVhcmxpZXN0IGNsYWltZWQgZGF0ZQ0KKiAyMDA5OiBk
-YXRlIG9mIGZpcnN0IGluY2x1c2lvbiBpbiBrZXJuZWwNCiogMjAxNTogc29tZSBvZiB0aGUgSFAt
-ZXJhIHBhdGNoZXMgYXJlIHN0aWxsIHRyaWNrbGluZyBvdXQgDQogIHRoaXMgeWVhci4NCg0KLS0t
-DQpSb2JlcnQgRWxsaW90dCwgSFAgU2VydmVyIFN0b3JhZ2UNCg0K
+Tested against main RAID6, 7 disk array, with sas extender and work
+with out error.
+Tested against 2X mirror of SSD's, direct attached, and worked with out error.
+
+Check was a simple RAID check.  "echo check > /sys/block/md126/md/sync_action"
+
+Patched against:
+root@nas:~# uname -a
+Linux nas 4.0.0 #1 SMP Thu Apr 16 09:05:59 PDT 2015 x86_64 GNU/Linux
+
+Many thanks to all involved in helping me debug this.
+Should this patch be tested by a few other then added to the kernel tree?
+
+On Thu, Apr 16, 2015 at 10:31 AM, Adam Talbot <ajtalbot1@gmail.com> wrote:
+> Oh! Good idea. ;-)
+> I will test it in 6~8 hours, once the raid check finishes.
+>
+> On Thu, Apr 16, 2015 at 10:28 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>> On Thu, 2015-04-16 at 10:26 -0700, Adam Talbot wrote:
+>>> Wow, I forgot how long it takes to compile a full kernel.  Glad I ran
+>>> Gentoo for a few years and knew how to compile and apply patches. I
+>>> will admit I had to dust off some mental cobwebs.
+>>>
+>>> Pre-patched 4.0.0 kernel tree: Oops, as expected
+>>> Patched 4.0.0 kernel tree: IT WORKED!!!!!  Basic mount, and checking a
+>>> few files all looks good.  I will start a RAID check as that should
+>>> really push the driver. I will report back tomorrow when it finishes.
+>>
+>> Could you also check the direct ATA attachment case to make sure I
+>> didn't screw that up.  The fix is based on a theory about how the driver
+>> operates rather than any actual documentation.
+>>
+>> Thanks,
+>>
+>> James
+>>
+>>
