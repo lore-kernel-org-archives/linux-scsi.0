@@ -1,90 +1,59 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 2/7] be2iscsi : Fix the PCI request region reserving.
-Date: Fri, 17 Apr 2015 15:00:38 +0530
-Message-ID: <202d8e73-3e61-467e-a820-ea1ff303db43@CMEXHTCAS1.ad.emulex.com>
+Subject: [PATCH 4/7] be2iscsi : Fix memory check before unmapping.
+Date: Fri, 17 Apr 2015 15:02:21 +0530
+Message-ID: <60475e93-f33c-40e3-9461-7ed18d91a873@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:58819 "EHLO
+Received: from cmexedge1.emulex.com ([138.239.224.99]:58883 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbbDPROZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 13:14:25 -0400
+	with ESMTP id S1751434AbbDPRRY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2015 13:17:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Reserve device PCI I/O and Memory resources.
+ Check DMA memory before it is unmapped.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   22 ++++++++++++++++++----
- 1 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 66ea88c..4d95596 100644
+index dca3a55..1fbbece 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -668,14 +668,20 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
- 		return ret;
- 	}
- 
-+	ret = pci_request_regions(pcidev, DRV_NAME);
-+	if (ret) {
-+		dev_err(&pcidev->dev,
-+				"beiscsi_enable_pci - request region failed\n");
-+		goto pci_dev_disable;
+@@ -1368,8 +1368,10 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
+ 	if (io_task->cmd_bhs->iscsi_hdr.flags & ISCSI_FLAG_CMD_READ)
+ 		conn->rxdata_octets += resid;
+ unmap:
+-	scsi_dma_unmap(io_task->scsi_cmnd);
+-	io_task->scsi_cmnd = NULL;
++	if (io_task->scsi_cmnd) {
++		scsi_dma_unmap(io_task->scsi_cmnd);
++		io_task->scsi_cmnd = NULL;
 +	}
-+
- 	pci_set_master(pcidev);
- 	ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(64));
- 	if (ret) {
- 		ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(32));
- 		if (ret) {
- 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
--			pci_disable_device(pcidev);
--			return ret;
-+			goto pci_region_release;
- 		} else {
- 			ret = pci_set_consistent_dma_mask(pcidev,
- 							  DMA_BIT_MASK(32));
-@@ -684,11 +690,17 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
- 		ret = pci_set_consistent_dma_mask(pcidev, DMA_BIT_MASK(64));
- 		if (ret) {
- 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
--			pci_disable_device(pcidev);
--			return ret;
-+			goto pci_region_release;
- 		}
+ 	iscsi_complete_scsi_task(task, exp_cmdsn, max_cmdsn);
+ }
+ 
+@@ -4609,11 +4611,13 @@ beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
+ 		spin_unlock_bh(&phba->mgmt_sgl_lock);
  	}
- 	return 0;
-+
-+pci_region_release:
-+	pci_release_regions(pcidev);
-+pci_dev_disable:
-+	pci_disable_device(pcidev);
-+
-+	return ret;
+ 
+-	if (io_task->mtask_addr)
++	if (io_task->mtask_addr) {
+ 		pci_unmap_single(phba->pcidev,
+ 				 io_task->mtask_addr,
+ 				 io_task->mtask_data_count,
+ 				 PCI_DMA_TODEVICE);
++		io_task->mtask_addr = 0;
++	}
  }
  
- static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
-@@ -5275,6 +5287,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 	iscsi_host_free(phba->shost);
- 	pci_disable_pcie_error_reporting(pcidev);
- 	pci_set_drvdata(pcidev, NULL);
-+	pci_release_regions(pcidev);
- 	pci_disable_device(pcidev);
- }
- 
-@@ -5755,6 +5768,7 @@ hba_free:
- 	iscsi_host_free(phba->shost);
- 	pci_set_drvdata(pcidev, NULL);
- disable_pci:
-+	pci_release_regions(pcidev);
- 	pci_disable_device(pcidev);
- 	return ret;
- }
+ /**
 -- 
 1.7.1
 
