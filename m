@@ -1,51 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 30/43] hpsa: performance tweak for hpsa_scatter_gather()
-Date: Fri, 17 Apr 2015 15:26:39 +0200
-Message-ID: <55310A0F.60700@suse.de>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134926.30238.26368.stgit@brunhilda>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v4 10/43] hpsa: do not ignore return value of hpsa_register_scsi
+Date: Fri, 17 Apr 2015 15:26:23 +0200
+Message-ID: <553109FF.1030004@redhat.com>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134735.30238.9294.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34197 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:59382 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753436AbbDQN0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:26:41 -0400
-In-Reply-To: <20150416134926.30238.26368.stgit@brunhilda>
+	id S1753436AbbDQN0w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:26:52 -0400
+In-Reply-To: <20150416134735.30238.9294.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-On 04/16/2015 03:49 PM, Don Brace wrote:
-> From: Webb Scales <webbnh@hp.com>
->=20
-> Divide the loop in hpsa_scatter_gather() into two, one for the initia=
-l SG list
-> and a second one for the chained list, if any.  This allows the condi=
-tional
-> check which resets the indicies for the chained list to be performed =
-outside
-> the loop instead of being done on every iteration inside the loop.
->=20
+On 04/16/2015 03:47 PM, Don Brace wrote:
+> From: Stephen Cameron <stephenmcameron@gmail.com>
+>
+> add error handling for failure when registering with SCSI subsystem.
+>
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Webb Scales <webbnh@hp.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomas
+
