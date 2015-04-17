@@ -1,36 +1,50 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v4 17/43] hpsa: clean up error handling
-Date: Fri, 17 Apr 2015 15:29:15 +0200
-Message-ID: <55310AAB.9070800@redhat.com>
-References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134817.30238.89504.stgit@brunhilda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 34/43] hpsa: fix try_soft_reset error handling
+Date: Fri, 17 Apr 2015 15:29:49 +0200
+Message-ID: <55310ACD.2000001@suse.de>
+References: <20150416134224.30238.66082.stgit@brunhilda> <20150416134947.30238.71549.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60250 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:34596 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753183AbbDQN3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Apr 2015 09:29:46 -0400
-In-Reply-To: <20150416134817.30238.89504.stgit@brunhilda>
+	id S1753183AbbDQN3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Apr 2015 09:29:51 -0400
+In-Reply-To: <20150416134947.30238.71549.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-On 04/16/2015 03:48 PM, Don Brace wrote:
+On 04/16/2015 03:49 PM, Don Brace wrote:
 > From: Robert Elliott <elliott@hp.com>
->
-> refactor error cleanup and shutdown
-> disable interrupts and pci_disable_device on critical failures
-> add hpsa_free_cfgtables function
->
+>=20
+> If registering the special interrupt handlers in hpsa_init_one
+> before a soft reset fails, the error exit needs to deallocate
+> everything that was allocated before.
+>=20
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Robert Elliott <elliott@hp.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
+> ---
+>  drivers/scsi/hpsa.c |   16 +++++++++++-----
+>  1 file changed, 11 insertions(+), 5 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Cheers,
 
-Tomas
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
