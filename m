@@ -1,78 +1,80 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH v3 18/20] lpfc: Fix for lun discovery issue with saturn
- adapter.
-Date: Sun, 19 Apr 2015 00:57:18 +0200
-Message-ID: <20150419005718.00004f6e@localhost>
-References: <55242aef.ecyKUENhSBwQucNQ%james.smart@emulex.com>
-	<20150418211154.00004153@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 90601] panic on write to 3ware raid array
+Date: Sun, 19 Apr 2015 03:59:09 +0000
+Message-ID: <bug-90601-11613-Jth2d1Dswy@https.bugzilla.kernel.org/>
+References: <bug-90601-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:57951 "EHLO mout.gmx.net"
+Received: from mail.kernel.org ([198.145.29.136]:56281 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751105AbbDRW5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Apr 2015 18:57:25 -0400
-In-Reply-To: <20150418211154.00004153@localhost>
+	id S1751965AbbDSD7N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Apr 2015 23:59:13 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 3B3EF20461
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Apr 2015 03:59:12 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 07A1220454
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Apr 2015 03:59:10 +0000 (UTC)
+In-Reply-To: <bug-90601-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Sebastian Herbszt <herbszt@gmx.de>
+To: linux-scsi@vger.kernel.org
 
-I wrote:
-> James Smart wrote:
-> > 
-> > Fix for lun discovery issue with saturn adapter.
-> > 
-> > FCP_CMD payload was not always properly initialized on SLI-3 devices.
-> > 
-> > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-> > Signed-off-by: James Smart <james.smart@emulex.com>
-> > ---
-> >  drivers/scsi/lpfc/lpfc_scsi.c | 41 ++++++++++++++++++++---------------------
-> >  1 file changed, 20 insertions(+), 21 deletions(-)
-> 
-> This patch actually introduced a lun discovery issue here:
-> 
-> [11046.353855] Emulex LightPulse Fibre Channel SCSI driver 10.5.0.0.
-> [11046.353890] Copyright(c) 2004-2015 Emulex.  All rights reserved.
-> [11046.363664] scsi host56: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 01 device 00 irq 16
-> [11048.737880] scsi host57: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 01 device 01 irq 17
-> [11049.516065] [0]: q2t_async_event:5689:qla2x00t(38): LIP reset occurred
-> [11049.518107] [0]: q2t_handle_imm_notify:5055:qla2x00t(38): LIP reset (I 0x80)
-> [11049.535184] [0]: q2t_async_event:5679:qla2x00t(38): LIP occurred
-> [11049.536043] lpfc 0000:01:00.0: 0:1303 Link Up Event x1 received Data: x1 x1 x8 x2 x0 x0 0
-> [11049.536063] lpfc 0000:01:00.0: 0:1309 Link Up Event npiv not supported in loop topology
-> [11049.537132] lpfc 0000:01:00.0: 0:(0):2858 FLOGI failure Status:x3/x18 TMO:x0
-> [11049.538056] lpfc 0000:01:00.0: 0:(0):2858 FLOGI failure Status:x3/x18 TMO:x0
-> [11049.538948] lpfc 0000:01:00.0: 0:(0):2858 FLOGI failure Status:x3/x18 TMO:x0
-> [11049.538965] lpfc 0000:01:00.0: 0:(0):0100 FLOGI failure Status:x3/x18 TMO:x0
-> [11049.539119] [0]: q2t_handle_imm_notify:5096:qla2x00t(38): Port logout (S 00000000 -> L 0x0)
-> [11049.539136] [0]: q2t_reset:933:sess for loop_id 0x7d not found
-> [11049.541847] [0]: q2t_async_event:5671:qla2x00t(38): Loop up occurred
-> [11049.541886] qla2xxx [0000:0b:05.0]-505f:38: Link is operational (2 Gbps).
-> [11049.541921] [0]: q2t_async_event:5695:qla2x00t(38): Port update async event 0x8014 occurred
-> [11049.541961] [0]: q2t_clear_tgt_db:1057:qla2x00t: Clearing targets DB for target f523de50
-> [11049.541991] [0]: q2t_clear_tgt_db:1080:Finished clearing tgt f523de50 DB
-> [11049.542058] [0]: q2t_async_event:5695:qla2x00t(38): Port update async event 0x8014 occurred
-> [11049.542063] [0]: q2t_clear_tgt_db:1057:qla2x00t: Clearing targets DB for target f523de50
-> [11049.542066] [0]: q2t_clear_tgt_db:1080:Finished clearing tgt f523de50 DB
-> [11049.542711] [0]: q2t_send_cmd_to_scst:4125:qla2x00t(38): Unable to find wwn login (loop_id=125), trying to create it manually
-> [11049.542749] [0]: q2t_sched_sess_work:1761:Scheduling work (type 0, prm f56a7500) to find session for param f602fe70 (size 4, tgt f523de50)
-> [11049.543886] [191]: q2t_sess_work_fn:6010:Sess work (tgt f523de50)
-> [11049.543922] [191]: q2t_exec_sess_work:5829:prm f56a7500
-> [11049.543953] [191]: q2t_make_local_sess:5784:loop_id 125
-> [11049.544370] [191]: q2t_create_sess:1417:Double sess f61f4568 found (s_id 0:0:1, loop_id 125), updating to d_id 0:0:1, loop_id 125
-> [11049.544406] [191]: q2t_undelete_sess:1313:Undeleting sess f61f4568
-> [11049.544437] [191]: q2t_exec_sess_work:5910:Sending work cmd e7b83200 to SCST
-> [11049.544500] [22539]: scst: scst_parse_cmd:832:Warning: expected transfer length 36 for opcode TEST UNIT READY (handler vdisk_nullio, target qla2x00t) doesn't match decoded value 0
-> [11049.544555] [22539]: scst_parse_cmd:834:Suspicious CDB:
-> [11049.544582]  (h)___0__1__2__3__4__5__6__7__8__9__A__B__C__D__E__F
-> [11049.544611]    0: 00 00 00 00 00 00   ......
+https://bugzilla.kernel.org/show_bug.cgi?id=90601
 
-The call to lpfc_fcpcmd_to_iocb() was moved from lpfc_scsi_prep_cmnd() to
-lpfc_scsi_prep_dma_buf_s3(). It seems fcp_cmnd is not fully initialized
-inside lpfc_scsi_prep_dma_buf_s3(); only fcpDl is set and other parts still
-contain zeros. Therefore the call to lpfc_fcpcmd_to_iocb() seems premature.
+Justin Keogh <kernel.org@v6y.net> changed:
 
-Sebastian
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kernel.org@v6y.net
+
+--- Comment #20 from Justin Keogh <kernel.org@v6y.net> ---
+Created attachment 174421
+  --> https://bugzilla.kernel.org/attachment.cgi?id=174421&action=edit
+dmesg for the commit that git bisect landed on
+
+I'm getting a similar panic (attached).
+
+$lspci | grep 3ware
+05:00.0 RAID bus controller: 3ware Inc 9750 SAS2/SATA-II RAID PCIe (rev 05)
+
+$uname -a
+Linux localhost 3.16.0-rc5+ #18 SMP PREEMPT Wed Apr 8 20:11:03 2015 x86_64
+Intel(R) Xeon(R) CPU X5482 @ 3.20GHz GenuineIntel GNU/Linux
+
+root@localhost /usr/src/linux $git rev-parse HEAD
+74665016086615bbaa3fa6f83af410a0a4e029ee
+
+The panic bisected to:
+74665016086615bbaa3fa6f83af410a0a4e029ee is the first bad commit
+commit 74665016086615bbaa3fa6f83af410a0a4e029ee
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Jan 22 15:29:29 2014 +0100
+
+    scsi: convert host_busy to atomic_t
+
+    Avoid taking the host-wide host_lock to check the per-host queue limit.
+    Instead we do an atomic_inc_return early on to grab our slot in the queue,
+    and if necessary decrement it after finishing all checks.
+
+
+I was unable to trigger the panic by writing to the 3w array with:
+$dd if=/dev/zero of=test bs=1G count=10
+or even:
+$dd if=/dev/zero of=test bs=1G count=100
+
+Instead, it takes somewhere between a few hours and 2 days of writing to panic,
+so the good bisects were run for 3 days to make sure.
+
+Crash happens with and without ZFS modules loaded but most of the bisect was
+done with because I couldn't take the array out of the equation for a month.
+Both cases are attached along with .config and bisect log.
+
+I'll recompile without IOMMU and post the results, further suggestions
+appreciated.
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
