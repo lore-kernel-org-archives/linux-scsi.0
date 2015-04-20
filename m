@@ -1,170 +1,178 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: BUG: unable to handle kernel NULL pointer deref, bisected to
-	746650160
-Date: Sun, 19 Apr 2015 18:58:41 +0200
-Message-ID: <20150419165841.GA20332@lst.de>
-References: <20150408183333.493607a3@goldlack.schiller106> <20150413174105.GA14988@lst.de> <20150413202829.580e3801@goldlack.schiller106>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for the 4.0+ merge window
+Date: Sun, 19 Apr 2015 22:27:31 -0700
+Message-ID: <1429507651.2292.18.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="ikeVEW9yuYc//A+q"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33534 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751302AbbDSQ6o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Apr 2015 12:58:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20150413202829.580e3801@goldlack.schiller106>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Torsten Luettgert <ml-lkml@enda.eu>
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+I'd like to say these were a set of regressions for the recent merge
+window code.  Unfortunately, they all predate the merge window code
+(stable cc'd).  There's two fixes for data integrity (mostly only
+showing up on module removal), an mvsas crash with expander attached
+SATA devices which goes back to the dawn of the driver but is only just
+being picked up as sas expanders become a standard item in low end
+server hardware, an am53c974 one because the interrupt data isn't fully
+initialised before the line is and a megaraid_sas one because it uses
+smp_processor_id() to select MSI-X queues and that now triggers a
+WARN_ON().
 
---ikeVEW9yuYc//A+q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The patch is available here:
 
-This looks like a long standing bug in all three 3ware drivers to
-me, that the taking the host lock around the host_busy manipulation
-was hiding.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-Can you test the patch below?
+The Short Changelog is
 
---ikeVEW9yuYc//A+q
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-3w-sas-fix-command-completion-race.patch"
+Christoph Hellwig (1):
+      megaraid_sas: use raw_smp_processor_id()
 
->From b500f76e6f92722d8f1fc0de90961af730320953 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Sun, 19 Apr 2015 18:46:36 +0200
-Subject: 3w-sas: fix command completion race
+Hannes Reinecke (1):
+      am53c974: Fix crash during modprobe
 
-The 3w-sas driver needs to tear down the dma mappings before returning
-the command to the midlayer, as there is no guarantee the sglist and
-count are valid after that point.  Also remove the dma mapping helpers
-which have another inherent race due to the request_id index.
+James Bottomley (1):
+      mvsas: fix panic on expander attached SATA devices
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Martin K. Petersen (2):
+      sd: Fix missing ATO tag check
+      sd: Unregister integrity profile
+
+And the diffstat:
+
+ drivers/scsi/am53c974.c                     | 6 ++++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 ++++++---
+ drivers/scsi/mvsas/mv_sas.c                 | 5 +----
+ drivers/scsi/sd.c                           | 1 +
+ drivers/scsi/sd_dif.c                       | 2 +-
+ 5 files changed, 13 insertions(+), 10 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/3w-sas.c | 50 ++++++++++----------------------------------------
- drivers/scsi/3w-sas.h |  4 ----
- 2 files changed, 10 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 2361772..3d4c5f9 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -290,26 +290,6 @@ static int twl_post_command_packet(TW_Device_Extension *tw_dev, int request_id)
- 	return 0;
- } /* End twl_post_command_packet() */
- 
--/* This function will perform a pci-dma mapping for a scatter gather list */
--static int twl_map_scsi_sg_data(TW_Device_Extension *tw_dev, int request_id)
--{
--	int use_sg;
--	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
--
--	use_sg = scsi_dma_map(cmd);
--	if (!use_sg)
--		return 0;
--	else if (use_sg < 0) {
--		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1, "Failed to map scatter gather list");
--		return 0;
--	}
--
--	cmd->SCp.phase = TW_PHASE_SGLIST;
--	cmd->SCp.have_data_in = use_sg;
--
--	return use_sg;
--} /* End twl_map_scsi_sg_data() */
--
- /* This function hands scsi cdb's to the firmware */
- static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry_ISO *sglistarg)
- {
-@@ -357,8 +337,8 @@ static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 	if (!sglistarg) {
- 		/* Map sglist from scsi layer to cmd packet */
- 		if (scsi_sg_count(srb)) {
--			sg_count = twl_map_scsi_sg_data(tw_dev, request_id);
--			if (sg_count == 0)
-+			sg_count = scsi_dma_map(srb);
-+			if (sg_count <= 0)
- 				goto out;
- 
- 			scsi_for_each_sg(srb, sg, sg_count, i) {
-@@ -1102,15 +1082,6 @@ out:
- 	return retval;
- } /* End twl_initialize_device_extension() */
- 
--/* This function will perform a pci-dma unmap */
--static void twl_unmap_scsi_data(TW_Device_Extension *tw_dev, int request_id)
--{
--	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
--
--	if (cmd->SCp.phase == TW_PHASE_SGLIST)
--		scsi_dma_unmap(cmd);
--} /* End twl_unmap_scsi_data() */
--
- /* This function will handle attention interrupts */
- static int twl_handle_attention_interrupt(TW_Device_Extension *tw_dev)
- {
-@@ -1251,11 +1222,11 @@ static irqreturn_t twl_interrupt(int irq, void *dev_instance)
- 			}
- 
- 			/* Now complete the io */
-+			scsi_dma_unmap(cmd);
-+			cmd->scsi_done(cmd);
- 			tw_dev->state[request_id] = TW_S_COMPLETED;
- 			twl_free_request_id(tw_dev, request_id);
- 			tw_dev->posted_request_count--;
--			tw_dev->srb[request_id]->scsi_done(tw_dev->srb[request_id]);
--			twl_unmap_scsi_data(tw_dev, request_id);
- 		}
- 
- 		/* Check for another response interrupt */
-@@ -1400,10 +1371,12 @@ static int twl_reset_device_extension(TW_Device_Extension *tw_dev, int ioctl_res
- 		if ((tw_dev->state[i] != TW_S_FINISHED) &&
- 		    (tw_dev->state[i] != TW_S_INITIAL) &&
- 		    (tw_dev->state[i] != TW_S_COMPLETED)) {
--			if (tw_dev->srb[i]) {
--				tw_dev->srb[i]->result = (DID_RESET << 16);
--				tw_dev->srb[i]->scsi_done(tw_dev->srb[i]);
--				twl_unmap_scsi_data(tw_dev, i);
-+		    	struct scsi_cmnd * cmd = tw_dev->srb[i];
-+
-+			if (cmd) {
-+				cmd->result = (DID_RESET << 16);
-+				scsi_dma_unmap(cmd);
-+				cmd->scsi_done(cmd);
- 			}
- 		}
+diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+index a6f5ee8..beea30e 100644
+--- a/drivers/scsi/am53c974.c
++++ b/drivers/scsi/am53c974.c
+@@ -476,6 +476,8 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+ 		goto fail_unmap_regs;
  	}
-@@ -1507,9 +1480,6 @@ static int twl_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
- 	/* Save the scsi command for use by the ISR */
- 	tw_dev->srb[request_id] = SCpnt;
  
--	/* Initialize phase to zero */
--	SCpnt->SCp.phase = TW_PHASE_INITIAL;
--
- 	retval = twl_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NULL);
- 	if (retval) {
- 		tw_dev->state[request_id] = TW_S_COMPLETED;
-diff --git a/drivers/scsi/3w-sas.h b/drivers/scsi/3w-sas.h
-index d474892..fec6449 100644
---- a/drivers/scsi/3w-sas.h
-+++ b/drivers/scsi/3w-sas.h
-@@ -103,10 +103,6 @@ static char *twl_aen_severity_table[] =
- #define TW_CURRENT_DRIVER_BUILD 0
- #define TW_CURRENT_DRIVER_BRANCH 0
++	pci_set_drvdata(pdev, pep);
++
+ 	err = request_irq(pdev->irq, scsi_esp_intr, IRQF_SHARED,
+ 			  DRV_MODULE_NAME, esp);
+ 	if (err < 0) {
+@@ -496,8 +498,6 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+ 	/* Assume 40MHz clock */
+ 	esp->cfreq = 40000000;
  
--/* Phase defines */
--#define TW_PHASE_INITIAL 0
--#define TW_PHASE_SGLIST  2
+-	pci_set_drvdata(pdev, pep);
 -
- /* Misc defines */
- #define TW_SECTOR_SIZE                        512
- #define TW_MAX_UNITS			      32
--- 
-1.9.1
-
-
---ikeVEW9yuYc//A+q--
+ 	err = scsi_esp_register(esp, &pdev->dev);
+ 	if (err)
+ 		goto fail_free_irq;
+@@ -507,6 +507,7 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+ fail_free_irq:
+ 	free_irq(pdev->irq, esp);
+ fail_unmap_command_block:
++	pci_set_drvdata(pdev, NULL);
+ 	pci_free_consistent(pdev, 16, esp->command_block,
+ 			    esp->command_block_dma);
+ fail_unmap_regs:
+@@ -530,6 +531,7 @@ static void pci_esp_remove_one(struct pci_dev *pdev)
+ 
+ 	scsi_esp_unregister(esp);
+ 	free_irq(pdev->irq, esp);
++	pci_set_drvdata(pdev, NULL);
+ 	pci_free_consistent(pdev, 16, esp->command_block,
+ 			    esp->command_block_dma);
+ 	pci_iounmap(pdev, esp->regs);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 675b5e7..5a0800d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			fp_possible = io_info.fpOkForIo;
+ 	}
+ 
+-	/* Use smp_processor_id() for now until cmd->request->cpu is CPU
++	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
+ 	   id by default, not CPU group id, otherwise all MSI-X queues won't
+ 	   be utilized */
+ 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+-		smp_processor_id() % instance->msix_vectors : 0;
++		raw_smp_processor_id() % instance->msix_vectors : 0;
+ 
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+@@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+ 			<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 		cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+-			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
++			instance->msix_vectors ?
++				raw_smp_processor_id() %
++					instance->msix_vectors :
++				0;
+ 		os_timeout_value = scmd->request->timeout / HZ;
+ 
+ 		if (instance->secure_jbod_support &&
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 2d5ab6d..454536c 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -441,14 +441,11 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 			     struct mvs_task_exec_info *tei)
+ {
+-	struct sas_ha_struct *sha = mvi->sas;
+ 	struct sas_task *task = tei->task;
+ 	struct domain_device *dev = task->dev;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+ 	struct mvs_cmd_hdr *hdr = tei->hdr;
+ 	struct asd_sas_port *sas_port = dev->port;
+-	struct sas_phy *sphy = dev->phy;
+-	struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
+ 	struct mvs_slot_info *slot;
+ 	void *buf_prd;
+ 	u32 tag = tei->tag, hdr_tag;
+@@ -468,7 +465,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 	slot->tx = mvi->tx_prod;
+ 	del_q = TXQ_MODE_I | tag |
+ 		(TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+-		(MVS_PHY_ID << TXQ_PHY_SHIFT) |
++		((sas_port->phy_mask & TXQ_PHY_MASK) << TXQ_PHY_SHIFT) |
+ 		(mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+ 	mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+ 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index dcc4244..79beebf 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3076,6 +3076,7 @@ static void scsi_disk_release(struct device *dev)
+ 	ida_remove(&sd_index_ida, sdkp->index);
+ 	spin_unlock(&sd_index_lock);
+ 
++	blk_integrity_unregister(disk);
+ 	disk->private_data = NULL;
+ 	put_disk(disk);
+ 	put_device(&sdkp->device->sdev_gendev);
+diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+index 14c7d42..5c06d29 100644
+--- a/drivers/scsi/sd_dif.c
++++ b/drivers/scsi/sd_dif.c
+@@ -77,7 +77,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ 
+ 		disk->integrity->flags |= BLK_INTEGRITY_DEVICE_CAPABLE;
+ 
+-		if (!sdkp)
++		if (!sdkp->ATO)
+ 			return;
+ 
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
