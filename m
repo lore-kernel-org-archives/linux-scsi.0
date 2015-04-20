@@ -1,7 +1,7 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 1/4] target: ensure se_cmd->t_prot_sg is allocated when required
-Date: Tue, 21 Apr 2015 08:36:19 +0900
-Message-ID: <1429572982-6809-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH 2/4] target: Abandon odd SG mapping for data transfer memory
+Date: Tue, 21 Apr 2015 08:36:20 +0900
+Message-ID: <1429572982-6809-3-git-send-email-akinobu.mita@gmail.com>
 References: <1429572982-6809-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1429572982-6809-1-git-send-email-akinobu.mita@gmail.com>
@@ -10,19 +10,14 @@ To: target-devel@vger.kernel.org
 Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Even if the device backend is initialized with protection info is
-enabled, some requests don't have the protection info attached for
-WRITE SAME command issued by block device helpers, WRITE command with
-WRPROTECT=0 by SG_IO ioctl, etc.
+sbc_dif_generate() and sbc_dif_verify() assume that each SG element
+for data transfer memory doesn't straddle the block size boundary.
 
-So when TCM loopback fabric module is used, se_cmd->t_prot_sg is NULL
-for these requests and performing WRITE_INSERT of PI using software
-emulation by sbc_dif_generate() causes kernel crash.
+However, when using SG_IO ioctl, we can choose the data transfer memory
+which doesn't satisfy that alignment requirement.
 
-To fix this, introduce SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC for
-se_cmd_flags, which is used to determine that se_cmd->t_prot_sg needs
-to be allocated or use pre-allocated protection information by scsi
-mid-layer.
+This change detects such cases and makes those functions return failure
+to stop continuing the operation.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
@@ -33,90 +28,116 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/target/target_core_transport.c | 30 ++++++++++++++++++------------
- include/target/target_core_base.h      |  1 +
- 2 files changed, 19 insertions(+), 12 deletions(-)
+ drivers/target/target_core_sbc.c       | 10 +++++++++-
+ drivers/target/target_core_transport.c | 21 ++++++++++++---------
+ include/target/target_core_backend.h   |  2 +-
+ 3 files changed, 22 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7a9e7e2..fe52883 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1450,6 +1450,7 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
- 	if (sgl_prot_count) {
- 		se_cmd->t_prot_sg = sgl_prot;
- 		se_cmd->t_prot_nents = sgl_prot_count;
-+		se_cmd->se_cmd_flags |= SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC;
- 	}
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index edba39f..982836b 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1177,7 +1177,7 @@ err:
+ }
+ EXPORT_SYMBOL(sbc_execute_unmap);
  
- 	/*
-@@ -2181,6 +2182,12 @@ static inline void transport_reset_sgl_orig(struct se_cmd *cmd)
- 
- static inline void transport_free_pages(struct se_cmd *cmd)
+-void
++sense_reason_t
+ sbc_dif_generate(struct se_cmd *cmd)
  {
-+	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
-+		transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
-+		cmd->t_prot_sg = NULL;
-+		cmd->t_prot_nents = 0;
-+	}
+ 	struct se_device *dev = cmd->se_dev;
+@@ -1188,6 +1188,9 @@ sbc_dif_generate(struct se_cmd *cmd)
+ 	int i, j, offset = 0;
+ 
+ 	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
++		if (dsg->length % dev->dev_attrib.block_size)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
 +
- 	if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
- 		/*
- 		 * Release special case READ buffer payload required for
-@@ -2204,10 +2211,6 @@ static inline void transport_free_pages(struct se_cmd *cmd)
- 	transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
- 	cmd->t_bidi_data_sg = NULL;
- 	cmd->t_bidi_data_nents = 0;
--
--	transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
--	cmd->t_prot_sg = NULL;
--	cmd->t_prot_nents = 0;
+ 		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+ 		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+ 
+@@ -1221,6 +1224,8 @@ sbc_dif_generate(struct se_cmd *cmd)
+ 		kunmap_atomic(paddr);
+ 		kunmap_atomic(daddr);
+ 	}
++
++	return 0;
  }
  
- /**
-@@ -2346,6 +2349,17 @@ transport_generic_new_cmd(struct se_cmd *cmd)
- 	int ret = 0;
- 	bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
+ static sense_reason_t
+@@ -1323,6 +1328,9 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 	sense_reason_t rc;
  
-+	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
-+		if (cmd->prot_op != TARGET_PROT_NORMAL) {
-+			ret = target_alloc_sgl(&cmd->t_prot_sg,
-+					       &cmd->t_prot_nents,
-+					       cmd->prot_length, true);
-+			if (ret < 0)
-+				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+		}
+ 	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
++		if (dsg->length % dev->dev_attrib.block_size)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
 +
+ 		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+ 		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fe52883..d96852e 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1760,7 +1760,7 @@ static int target_write_prot_action(struct se_cmd *cmd)
+ 	switch (cmd->prot_op) {
+ 	case TARGET_PROT_DOUT_INSERT:
+ 		if (!(cmd->se_sess->sup_prot_ops & TARGET_PROT_DOUT_INSERT))
+-			sbc_dif_generate(cmd);
++			cmd->pi_err = sbc_dif_generate(cmd);
+ 		break;
+ 	case TARGET_PROT_DOUT_STRIP:
+ 		if (cmd->se_sess->sup_prot_ops & TARGET_PROT_DOUT_STRIP)
+@@ -1769,18 +1769,19 @@ static int target_write_prot_action(struct se_cmd *cmd)
+ 		sectors = cmd->data_length >> ilog2(cmd->se_dev->dev_attrib.block_size);
+ 		cmd->pi_err = sbc_dif_verify(cmd, cmd->t_task_lba,
+ 					     sectors, 0, cmd->t_prot_sg, 0);
+-		if (unlikely(cmd->pi_err)) {
+-			spin_lock_irq(&cmd->t_state_lock);
+-			cmd->transport_state &= ~CMD_T_BUSY|CMD_T_SENT;
+-			spin_unlock_irq(&cmd->t_state_lock);
+-			transport_generic_request_failure(cmd, cmd->pi_err);
+-			return -1;
+-		}
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ 
++	if (unlikely(cmd->pi_err)) {
++		spin_lock_irq(&cmd->t_state_lock);
++		cmd->transport_state &= ~CMD_T_BUSY|CMD_T_SENT;
++		spin_unlock_irq(&cmd->t_state_lock);
++		transport_generic_request_failure(cmd, cmd->pi_err);
++		return -1;
 +	}
 +
- 	/*
- 	 * Determine is the TCM fabric module has already allocated physical
- 	 * memory, and is directly calling transport_generic_map_mem_to_cmd()
-@@ -2371,14 +2385,6 @@ transport_generic_new_cmd(struct se_cmd *cmd)
- 				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 		}
+ 	return 0;
+ }
  
--		if (cmd->prot_op != TARGET_PROT_NORMAL) {
--			ret = target_alloc_sgl(&cmd->t_prot_sg,
--					       &cmd->t_prot_nents,
--					       cmd->prot_length, true);
--			if (ret < 0)
--				return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
--		}
--
- 		ret = target_alloc_sgl(&cmd->t_data_sg, &cmd->t_data_nents,
- 				       cmd->data_length, zero_flag);
- 		if (ret < 0)
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 480e9f8..13efcdd 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -167,6 +167,7 @@ enum se_cmd_flags_table {
- 	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00020000,
- 	SCF_COMPARE_AND_WRITE		= 0x00080000,
- 	SCF_COMPARE_AND_WRITE_POST	= 0x00100000,
-+	SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC = 0x00200000,
- };
+@@ -2010,7 +2011,9 @@ static bool target_read_prot_action(struct se_cmd *cmd)
+ 		if (cmd->se_sess->sup_prot_ops & TARGET_PROT_DIN_INSERT)
+ 			break;
  
- /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+-		sbc_dif_generate(cmd);
++		cmd->pi_err = sbc_dif_generate(cmd);
++		if (cmd->pi_err)
++			return true;
+ 		break;
+ 	default:
+ 		break;
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index ab8ed4c..41dfde0 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -85,7 +85,7 @@ sense_reason_t sbc_execute_unmap(struct se_cmd *cmd,
+ 	sense_reason_t (*do_unmap_fn)(struct se_cmd *cmd, void *priv,
+ 				      sector_t lba, sector_t nolb),
+ 	void *priv);
+-void	sbc_dif_generate(struct se_cmd *);
++sense_reason_t	sbc_dif_generate(struct se_cmd *);
+ sense_reason_t	sbc_dif_verify(struct se_cmd *, sector_t, unsigned int,
+ 				     unsigned int, struct scatterlist *, int);
+ void sbc_dif_copy_prot(struct se_cmd *, unsigned int, bool,
 -- 
 1.9.1
