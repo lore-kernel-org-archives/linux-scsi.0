@@ -1,42 +1,61 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH RESEND 10/18] megaraid_sas :
- megasas_complete_outstanding_ioctls() can be static
-Date: Mon, 20 Apr 2015 18:05:56 +0530
-Message-ID: <201504201238.t3KCc8GM016945@palmhbs0.lsi.com>
+Subject: [PATCH RESEND 14/18] megaraid_sas : move endianess conversion
+ into caller of megasas_get_seq_num
+Date: Mon, 20 Apr 2015 18:04:40 +0530
+Message-ID: <201504201236.t3KCaqIg016688@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:33896
+Received: from mail-bn1lp0140.outbound.protection.outlook.com ([207.46.163.140]:26368
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755167AbbDTNvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Apr 2015 09:51:36 -0400
+	id S1753266AbbDTNxq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Apr 2015 09:53:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-drivers/scsi/megaraid/megaraid_sas_base.c:1701:6: sparse: symbol 'megasas_complete_outstanding_ioctls' was not declared. Should it be static?
+Converting structure fields in place is always a bad idea, and in this case
+by moving it into the only caller we also only have to do a single byte
+swap as most fields of this structure are never used.
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2424ab2..0381833 100644
+index cb34b48..67b9de8 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1695,7 +1695,7 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
- * @instance:				Adapter soft state
- *
- */
--void megasas_complete_outstanding_ioctls(struct megasas_instance *instance)
-+static void megasas_complete_outstanding_ioctls(struct megasas_instance *instance)
- {
- 	int i;
- 	struct megasas_cmd *cmd_mfi;
+@@ -4868,11 +4868,11 @@ megasas_get_seq_num(struct megasas_instance *instance,
+ 		/*
+ 		 * Copy the data back into callers buffer
+ 		 */
+-		eli->newest_seq_num = le32_to_cpu(el_info->newest_seq_num);
+-		eli->oldest_seq_num = le32_to_cpu(el_info->oldest_seq_num);
+-		eli->clear_seq_num = le32_to_cpu(el_info->clear_seq_num);
+-		eli->shutdown_seq_num = le32_to_cpu(el_info->shutdown_seq_num);
+-		eli->boot_seq_num = le32_to_cpu(el_info->boot_seq_num);
++		eli->newest_seq_num = el_info->newest_seq_num;
++		eli->oldest_seq_num = el_info->oldest_seq_num;
++		eli->clear_seq_num = el_info->clear_seq_num;
++		eli->shutdown_seq_num = el_info->shutdown_seq_num;
++		eli->boot_seq_num = el_info->boot_seq_num;
+ 	}
+ 
+ 	pci_free_consistent(instance->pdev, sizeof(struct megasas_evt_log_info),
+@@ -5032,7 +5032,7 @@ static int megasas_start_aen(struct megasas_instance *instance)
+ 	class_locale.members.class = MR_EVT_CLASS_DEBUG;
+ 
+ 	return megasas_register_aen(instance,
+-			eli.newest_seq_num + 1,
++			le32_to_cpu(eli.newest_seq_num) + 1,
+ 			class_locale.word);
+ }
+ 
 -- 
 1.7.1
 
