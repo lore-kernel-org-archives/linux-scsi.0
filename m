@@ -1,46 +1,42 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 01/14] lpfc: The lpfc driver does not issue RFF_ID and
- RFT_ID in the correct sequence
-Date: Mon, 20 Apr 2015 09:56:24 -0400
-Message-ID: <55350588.xwtuh+7l3U0CWLLy%james.smart@emulex.com>
+Subject: [PATCH 13/14] lpfc: Change buffer pool empty message to
+ miscellaneous category
+Date: Mon, 20 Apr 2015 09:56:37 -0400
+Message-ID: <55350595.rFSb9xD4qNehcNA1%james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:29298 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755108AbbDTN5D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2015 09:57:03 -0400
+Received: from cmexedge2.emulex.com ([138.239.224.100]:30920 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755267AbbDTN5M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2015 09:57:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-The lpfc driver does not issue RFF_ID and RFT_ID in the correct sequence
+Change buffer pool empty message to miscellaneous category
 
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 2500f15..f2db89f 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -3868,11 +3868,11 @@ out:
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index cb73cf9..6228bce 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4536,7 +4536,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 	if (lpfc_cmd == NULL) {
+ 		lpfc_rampdown_queue_depth(phba);
  
- 	if (vport->port_state < LPFC_VPORT_READY) {
- 		/* Link up discovery requires Fabric registration. */
--		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0); /* Do this first! */
- 		lpfc_ns_cmd(vport, SLI_CTNS_RNN_ID, 0, 0);
- 		lpfc_ns_cmd(vport, SLI_CTNS_RSNN_NN, 0, 0);
- 		lpfc_ns_cmd(vport, SLI_CTNS_RSPN_ID, 0, 0);
- 		lpfc_ns_cmd(vport, SLI_CTNS_RFT_ID, 0, 0);
-+		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0);
- 
- 		/* Issue SCR just before NameServer GID_FT Query */
- 		lpfc_issue_els_scr(vport, SCR_DID, 0);
+-		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_MISC,
+ 				 "0707 driver's buffer pool is empty, "
+ 				 "IO busied\n");
+ 		goto out_host_busy;
 -- 
 1.7.11.7
 
