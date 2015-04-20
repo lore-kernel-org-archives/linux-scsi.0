@@ -1,23 +1,31 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [Bug 96921] New: NULL pointer dereference in lpfc_bus_reset_handler+0xd4/0x240
-Date: Mon, 20 Apr 2015 10:54:45 -0400
-Message-ID: <55351335.8040801@emulex.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 96921] NULL pointer dereference in
+ lpfc_bus_reset_handler+0xd4/0x240
+Date: Mon, 20 Apr 2015 15:10:30 +0000
+Message-ID: <bug-96921-11613-EGMFlkGafm@https.bugzilla.kernel.org/>
 References: <bug-96921-11613@https.bugzilla.kernel.org/>
-Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:31605 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbbDTOzM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2015 10:55:12 -0400
+Received: from mail.kernel.org ([198.145.29.136]:49772 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751395AbbDTPKf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Apr 2015 11:10:35 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 165C220456
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2015 15:10:34 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id B48CD20459
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2015 15:10:30 +0000 (UTC)
 In-Reply-To: <bug-96921-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=96921
+
+--- Comment #1 from James Smart <james.smart@emulex.com> ---
 This is a rather old kernel, thus old driver. Lots of changes since the 
 driver was put out in 3.11.
 I recommend pulling down the source kits for RHEL7 (3.10 kernel):
@@ -136,3 +144,6 @@ On 4/20/2015 5:11 AM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > scsi_eh_8[804] exited with preempt_count 1
 >
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
