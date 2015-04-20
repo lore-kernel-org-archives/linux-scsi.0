@@ -1,120 +1,53 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH RESEND 5/18] megaraid_sas : Enhanced few prints
-Date: Mon, 20 Apr 2015 18:03:10 +0530
-Message-ID: <201504201235.t3KCZMVU016508@palmhbs0.lsi.com>
+Subject: [PATCH RESEND 7/18] megaraid_sas : Modify driver's meta data to
+ reflect Avago
+Date: Mon, 20 Apr 2015 18:03:30 +0530
+Message-ID: <201504201235.t3KCZgEm016534@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2lp0243.outbound.protection.outlook.com ([207.46.163.243]:52304
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2lp0211.outbound.protection.outlook.com ([207.46.163.211]:49041
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754878AbbDTMsr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Apr 2015 08:48:47 -0400
+	id S1755126AbbDTMsw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Apr 2015 08:48:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-This patch will update few prints. 
+This patch will update module parameters and driver name inside SCSI host template to reflect Avago.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c |   49 ++++++++++++++---------------
- 1 files changed, 24 insertions(+), 25 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 7f426e0..d8e7075 100644
+index 85feb00..3970780 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4091,12 +4091,11 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
- 		instance->fw_supported_vd_count = MAX_LOGICAL_DRIVES;
- 		instance->fw_supported_pd_count = MAX_PHYSICAL_DEVICES;
- 	}
--	dev_info(&instance->pdev->dev, "Firmware supports %d VD %d PD\n",
--		instance->fw_supported_vd_count,
--		instance->fw_supported_pd_count);
--	dev_info(&instance->pdev->dev, "Driver supports %d VD  %d PD\n",
--		instance->drv_supported_vd_count,
--		instance->drv_supported_pd_count);
-+
-+	dev_info(&instance->pdev->dev,
-+		"firmware type\t: %s\n",
-+		instance->supportmax256vd ? "Extended VD(240 VD)firmware" :
-+		"Legacy(64 VD) firmware");
+@@ -94,8 +94,8 @@ MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Defau
  
- 	old_map_sz =  sizeof(struct MR_FW_RAID_MAP) +
- 				(sizeof(struct MR_LD_SPAN_MAP) *
-@@ -4713,9 +4712,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		ctrl_info->adapterOperations2.supportUnevenSpans;
- 	if (instance->UnevenSpanSupport) {
- 		struct fusion_context *fusion = instance->ctrl_context;
--
--		dev_info(&instance->pdev->dev, "FW supports: "
--		"UnevenSpanSupport=%x\n", instance->UnevenSpanSupport);
- 		if (MR_ValidateMapInfo(instance))
- 			fusion->fast_path_io = 1;
- 		else
-@@ -4742,13 +4738,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	instance->crash_dump_drv_support =
- 		(instance->crash_dump_fw_support &&
- 		instance->crash_dump_buf);
--	if (instance->crash_dump_drv_support) {
--		dev_info(&instance->pdev->dev, "Firmware Crash dump "
--			"feature is supported\n");
-+	if (instance->crash_dump_drv_support)
- 		megasas_set_crash_dump_params(instance,
- 			MR_CRASH_BUF_TURN_OFF);
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(MEGASAS_VERSION);
+-MODULE_AUTHOR("megaraidlinux@lsi.com");
+-MODULE_DESCRIPTION("LSI MegaRAID SAS Driver");
++MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
++MODULE_DESCRIPTION("Avago MegaRAID SAS Driver");
  
--	} else {
-+	else {
- 		if (instance->crash_dump_buf)
- 			pci_free_consistent(instance->pdev,
- 				CRASH_DMA_BUF_SIZE,
-@@ -4759,8 +4753,23 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ int megasas_transition_to_ready(struct megasas_instance *instance, int ocr);
+ static int megasas_get_pd_list(struct megasas_instance *instance);
+@@ -2775,7 +2775,7 @@ struct device_attribute *megaraid_host_attrs[] = {
+ static struct scsi_host_template megasas_template = {
  
- 	instance->secure_jbod_support =
- 		ctrl_info->adapterOperations3.supportSecurityonJBOD;
--	if (instance->secure_jbod_support)
--		dev_info(&instance->pdev->dev, "Firmware supports Secure JBOD\n");
-+
-+	dev_info(&instance->pdev->dev,
-+		"pci id\t\t: (0x%04x)/(0x%04x)/(0x%04x)/(0x%04x)\n",
-+		le16_to_cpu(ctrl_info->pci.vendor_id),
-+		le16_to_cpu(ctrl_info->pci.device_id),
-+		le16_to_cpu(ctrl_info->pci.sub_vendor_id),
-+		le16_to_cpu(ctrl_info->pci.sub_device_id));
-+	dev_info(&instance->pdev->dev, "unevenspan support	: %s\n",
-+		instance->UnevenSpanSupport ? "yes" : "no");
-+	dev_info(&instance->pdev->dev, "disable ocr		: %s\n",
-+		instance->disableOnlineCtrlReset ? "yes" : "no");
-+	dev_info(&instance->pdev->dev, "firmware crash dump	: %s\n",
-+		instance->crash_dump_drv_support ? "yes" : "no");
-+	dev_info(&instance->pdev->dev, "secure jbod		: %s\n",
-+		instance->secure_jbod_support ? "yes" : "no");
-+
-+
- 	instance->max_sectors_per_req = instance->max_num_sge *
- 						PAGE_SIZE / 512;
- 	if (tmp_sectors && (instance->max_sectors_per_req > tmp_sectors))
-@@ -5205,16 +5214,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	}
- 
- 	/*
--	 * Announce PCI information
--	 */
--	printk(KERN_INFO "megasas: %#4.04x:%#4.04x:%#4.04x:%#4.04x: ",
--	       pdev->vendor, pdev->device, pdev->subsystem_vendor,
--	       pdev->subsystem_device);
--
--	printk("bus %d:slot %d:func %d\n",
--	       pdev->bus->number, PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn));
--
--	/*
- 	 * PCI prepping: enable device set bus mastering and dma mask
- 	 */
- 	rval = pci_enable_device_mem(pdev);
+ 	.module = THIS_MODULE,
+-	.name = "LSI SAS based MegaRAID driver",
++	.name = "Avago SAS based MegaRAID driver",
+ 	.proc_name = "megaraid_sas",
+ 	.slave_configure = megasas_slave_configure,
+ 	.slave_alloc = megasas_slave_alloc,
 -- 
 1.7.1
 
