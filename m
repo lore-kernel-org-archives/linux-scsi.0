@@ -1,97 +1,75 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH RESEND 8/18] megaraid_sas : Add release date and update
- driver version
-Date: Mon, 20 Apr 2015 18:03:40 +0530
-Message-ID: <201504201235.t3KCZqwd016586@palmhbs0.lsi.com>
+Subject: [PATCH RESEND 11/18] megaraid_sas : add missing __iomem
+ annotations
+Date: Mon, 20 Apr 2015 18:04:10 +0530
+Message-ID: <201504201236.t3KCaM54016622@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2lp0241.outbound.protection.outlook.com ([207.46.163.241]:32864
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1blp0183.outbound.protection.outlook.com ([207.46.163.183]:62432
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753070AbbDTPdK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Apr 2015 11:33:10 -0400
+	id S1752946AbbDTPdE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Apr 2015 11:33:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
 
-This patch will upgrade the driver version and add back the release date and sysfs hook for the same.
-Some internal applications uses sysfs parameter for release date, so they were broken because of removal
-of release date from sysfs.
- 
-Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |    3 ++-
- drivers/scsi/megaraid/megaraid_sas_base.c |   19 +++++++++++++++++++
- 2 files changed, 21 insertions(+), 1 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h      |    2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |    9 +++++----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index e9a0820..680d90b 100644
+index 225d806..c0cd256 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -35,7 +35,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"06.806.08.00-rc1"
-+#define MEGASAS_VERSION				"06.807.10.00-rc1"
-+#define MEGASAS_RELDATE				"March 6, 2015"
+@@ -1694,7 +1694,7 @@ struct megasas_instance {
+ 	spinlock_t crashdump_lock;
  
- /*
-  * Device IDs
+ 	struct megasas_register_set __iomem *reg_set;
+-	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
++	u32 __iomem *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+ 	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+ 	u8 ld_ids[MEGASAS_MAX_LD_IDS];
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3970780..6c84f88 100644
+index 0381833..3aa5b5b 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6437,6 +6437,15 @@ static ssize_t megasas_sysfs_show_version(struct device_driver *dd, char *buf)
- static DRIVER_ATTR(version, S_IRUGO, megasas_sysfs_show_version, NULL);
- 
- static ssize_t
-+megasas_sysfs_show_release_date(struct device_driver *dd, char *buf)
-+{
-+	return snprintf(buf, strlen(MEGASAS_RELDATE) + 2, "%s\n",
-+		MEGASAS_RELDATE);
-+}
-+
-+static DRIVER_ATTR(release_date, S_IRUGO, megasas_sysfs_show_release_date, NULL);
-+
-+static ssize_t
- megasas_sysfs_show_support_poll_for_event(struct device_driver *dd, char *buf)
+@@ -808,8 +808,8 @@ megasas_adp_reset_gen2(struct megasas_instance *instance,
  {
- 	return sprintf(buf, "%u\n", support_poll_for_event);
-@@ -6776,6 +6785,11 @@ static int __init megasas_init(void)
- 		goto err_dcf_attr_ver;
+ 	u32			retry = 0 ;
+ 	u32			HostDiag;
+-	u32			*seq_offset = &reg_set->seq_offset;
+-	u32			*hostdiag_offset = &reg_set->host_diag;
++	u32 __iomem		*seq_offset = &reg_set->seq_offset;
++	u32 __iomem		*hostdiag_offset = &reg_set->host_diag;
  
- 	rval = driver_create_file(&megasas_pci_driver.driver,
-+				  &driver_attr_release_date);
-+	if (rval)
-+		goto err_dcf_rel_date;
-+
-+	rval = driver_create_file(&megasas_pci_driver.driver,
- 				&driver_attr_support_poll_for_event);
- 	if (rval)
- 		goto err_dcf_support_poll_for_event;
-@@ -6798,6 +6812,9 @@ err_dcf_dbg_lvl:
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			&driver_attr_support_poll_for_event);
- err_dcf_support_poll_for_event:
-+	driver_remove_file(&megasas_pci_driver.driver,
-+			   &driver_attr_release_date);
-+err_dcf_rel_date:
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
- err_dcf_attr_ver:
- 	pci_unregister_driver(&megasas_pci_driver);
-@@ -6817,6 +6834,8 @@ static void __exit megasas_exit(void)
- 			&driver_attr_support_poll_for_event);
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			&driver_attr_support_device_change);
-+	driver_remove_file(&megasas_pci_driver.driver,
-+			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
+ 	if (instance->instancet == &megasas_instance_template_skinny) {
+ 		seq_offset = &reg_set->fusion_seq_offset;
+@@ -4550,7 +4550,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	 * It is used for all MPT based Adapters.
+ 	 */
+ 	instance->reply_post_host_index_addr[0] =
+-		(u32 *)((u8 *)instance->reg_set +
++		(u32 __iomem *)((u8 __iomem *)instance->reg_set +
+ 		MPI2_REPLY_POST_HOST_INDEX_OFFSET);
  
- 	pci_unregister_driver(&megasas_pci_driver);
+ 	/* Check if MSI-X is supported while in ready state */
+@@ -4582,7 +4582,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			 */
+ 			for (loop = 1; loop < MR_MAX_MSIX_REG_ARRAY; loop++) {
+ 				instance->reply_post_host_index_addr[loop] =
+-					(u32 *)((u8 *)instance->reg_set +
++					(u32 __iomem *)
++					((u8 __iomem *)instance->reg_set +
+ 					MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET
+ 					+ (loop * 0x10));
+ 			}
 -- 
 1.7.1
 
