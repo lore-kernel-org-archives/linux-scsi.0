@@ -1,42 +1,62 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 13/14] lpfc: Change buffer pool empty message to
- miscellaneous category
-Date: Mon, 20 Apr 2015 09:56:37 -0400
-Message-ID: <55350595.rFSb9xD4qNehcNA1%james.smart@emulex.com>
+Subject: [PATCH 00/14] lpfc: Update lpfc driver to revision 10.6.0.1
+Date: Mon, 20 Apr 2015 09:56:23 -0400
+Message-ID: <55350587.g0H8dpKN8J7/7HWX%james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:30920 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755267AbbDTN5M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2015 09:57:12 -0400
+Received: from cmexedge1.emulex.com ([138.239.224.99]:29298 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755171AbbDTN5D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2015 09:57:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Change buffer pool empty message to miscellaneous category
+This patch set updates the lpfc driver to revision 10.6.0.1
 
-Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-Signed-off-by: James Smart <james.smart@emulex.com>
----
- drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The patches were cut against scsi-misc
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index cb73cf9..6228bce 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4536,7 +4536,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 	if (lpfc_cmd == NULL) {
- 		lpfc_rampdown_queue_depth(phba);
- 
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_MISC,
- 				 "0707 driver's buffer pool is empty, "
- 				 "IO busied\n");
- 		goto out_host_busy;
+
+-- james s
+
+
+James Smart (14):
+  The lpfc driver does not issue RFF_ID and RFT_ID in the correct
+    sequence
+  Correct loss of target discovery after cable swap.
+  Add support for ELS LCB.
+  Correct reference counting of rport
+  Fix ABORTs WQ selection in terminate_rport_io
+  Add support for RDP ELS command.
+  Correct reporting of vport state on fdisc command failure.
+  Fix discovery issue when changing from Pt2Pt to Fabric.
+  Fix to remove IRQF_SHARED flag for MSI/MSI-X vectors.
+  Fix crash in vport_delete.
+  Correct loss of RSCNs during array takeaway/giveback testing.
+  Fix incorrect log message reported for empty FCF record.
+  Change buffer pool empty message to miscellaneous category
+  Update driver version for upstream patch set 10.6.0.1.
+
+ drivers/scsi/lpfc/lpfc.h           |   2 +
+ drivers/scsi/lpfc/lpfc_crtn.h      |   2 +
+ drivers/scsi/lpfc/lpfc_disc.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 681 ++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 168 ++++-----
+ drivers/scsi/lpfc/lpfc_hw.h        | 201 +++++++++++
+ drivers/scsi/lpfc/lpfc_hw4.h       | 228 ++++++++++++-
+ drivers/scsi/lpfc/lpfc_init.c      |  22 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      | 152 +++++++++
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   8 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |  32 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |  21 ++
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   9 +-
+ 15 files changed, 1410 insertions(+), 124 deletions(-)
+
 -- 
 1.7.11.7
 
