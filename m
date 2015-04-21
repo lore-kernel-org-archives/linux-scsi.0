@@ -1,38 +1,46 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: aha1542: rework locking
-Date: Tue, 21 Apr 2015 14:41:55 +0300
-Message-ID: <20150421114155.GG16501@mwanda>
-References: <20150421092603.GC12098@mwanda>
- <201504211239.40423.linux@rainbow-software.org>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 4/4] target/file: enable WRITE SAME when protection info
+ is enabled
+Date: Tue, 21 Apr 2015 20:44:16 +0900
+Message-ID: <CAC5umyg+XK9T6rAq_Db=jq15Ft6ahAtncVZJV7cxHGWz8OmLbA@mail.gmail.com>
+References: <1429572982-6809-1-git-send-email-akinobu.mita@gmail.com>
+	<1429572982-6809-5-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34444 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752434AbbDULmK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 07:42:10 -0400
-Content-Disposition: inline
-In-Reply-To: <201504211239.40423.linux@rainbow-software.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1429572982-6809-5-git-send-email-akinobu.mita@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Apr 21, 2015 at 12:39:40PM +0200, Ondrej Zary wrote:
-> Thanks, I missed that as it was already wrong before (since at least when
-> DEF_SCSI_QCMD was introduced). And it worked despite that.
+2015-04-21 8:36 GMT+09:00 Akinobu Mita <akinobu.mita@gmail.com>:
+> Now we can generate correct PI for WRITE SAME command, so it is
+> unnecessary to disallow WRITE SAME when protection info is enabled.
 
-If you turn on CONFIG_DEBUG_ATOMIC_SLEEP=y it will generate a warning
-splat.  Otherwise you probably have to get very unlucky for this to
-deadlock.
+I noticed that this patch has multiple problems.
 
-> 
-> Should I just change that to GFP_ATOMIC?
+> @@ -381,11 +381,6 @@ fd_execute_write_same(struct se_cmd *cmd)
+>                 target_complete_cmd(cmd, SAM_STAT_GOOD);
+>                 return 0;
+>         }
+> -       if (cmd->prot_op) {
+> -               pr_err("WRITE_SAME: Protection information with FILEIO"
+> -                      " backends not supported\n");
+> -               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> -       }
+>
+>         if (cmd->t_data_nents > 1 ||
+>             cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
+> @@ -401,6 +396,14 @@ fd_execute_write_same(struct se_cmd *cmd)
+>         if (!bvec)
+>                 return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>
+> +       if (cmd->prot_op) {
+> +               ret = fd_do_rw(cmd, fd_dev->fd_prot_file, se_dev->prot_length,
+> +                               cmd->t_prot_sg, cmd->t_prot_nents,
+> +                               cmd->prot_length, 0);
 
-The other option is to do the allocation before taking the lock.  That
-looks do-able.  You are the expert here by virtue of you touched to code
-last.  So you get to decide.  :)
-
-regards,
-dan carpenter
-
+The last argument should be '1' as this is write. and we need to
+perform DIF verify
+before writing.
