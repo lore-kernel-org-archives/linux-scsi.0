@@ -1,67 +1,67 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: aha1542: rework locking
-Date: Tue, 21 Apr 2015 12:26:03 +0300
-Message-ID: <20150421092603.GC12098@mwanda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/14] lpfc: The lpfc driver does not issue RFF_ID and
+ RFT_ID in the correct sequence
+Date: Tue, 21 Apr 2015 11:58:25 +0200
+Message-ID: <55361F41.1090103@suse.de>
+References: <55350588.xwtuh+7l3U0CWLLy%james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28078 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbbDUJ0V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 05:26:21 -0400
-Content-Disposition: inline
+Received: from cantor2.suse.de ([195.135.220.15]:59070 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751297AbbDUJ62 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 05:58:28 -0400
+In-Reply-To: <55350588.xwtuh+7l3U0CWLLy%james.smart@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux@rainbow-software.org
-Cc: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
 
-Hello Ondrej Zary,
+On 04/20/2015 03:56 PM, James Smart wrote:
+>=20
+> The lpfc driver does not issue RFF_ID and RFT_ID in the correct seque=
+nce
+>=20
+> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+> Signed-off-by: James Smart <james.smart@emulex.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpf=
+c_hbadisc.c
+> index 2500f15..f2db89f 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -3868,11 +3868,11 @@ out:
+> =20
+>  	if (vport->port_state < LPFC_VPORT_READY) {
+>  		/* Link up discovery requires Fabric registration. */
+> -		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0); /* Do this first! */
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RNN_ID, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RSNN_NN, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RSPN_ID, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RFT_ID, 0, 0);
+> +		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0);
+> =20
+>  		/* Issue SCR just before NameServer GID_FT Query */
+>  		lpfc_issue_els_scr(vport, SCR_DID, 0);
+>=20
+Hehe.
+Someone screwed up with the comment ;-)
 
-The patch 1b0224b0ec60: "aha1542: rework locking" from Feb 6, 2015,
-leads to the following static checker warning:
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-	drivers/scsi/aha1542.c:448 aha1542_queuecommand()
-	error: scheduling with locks held: 'spin_lock:host_lock'
+Cheers,
 
-drivers/scsi/aha1542.c
-   400          /* Use the outgoing mailboxes in a round-robin fashion, because this
-   401             is how the host adapter will scan for them */
-   402  
-   403          spin_lock_irqsave(sh->host_lock, flags);
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Holding lock.
-
-   404          mbo = aha1542->aha1542_last_mbo_used + 1;
-   405          if (mbo >= AHA1542_MAILBOXES)
-   406                  mbo = 0;
-   407  
-
-[ snip ]
-
-   442          if (bufflen) {
-   443                  struct scatterlist *sg;
-   444                  struct chain *cptr;
-   445                  int i, sg_count = scsi_sg_count(cmd);
-   446  
-   447                  ccb[mbo].op = 2;        /* SCSI Initiator Command  w/scatter-gather */
-   448                  cmd->host_scribble = kmalloc(sizeof(*cptr)*sg_count,
-   449                                                           GFP_KERNEL | GFP_DMA);
-                                                                 ^^^^^^^^^^
-Sleeping allocation.
-
-   450                  cptr = (struct chain *) cmd->host_scribble;
-   451                  if (cptr == NULL) {
-   452                          /* free the claimed mailbox slot */
-   453                          aha1542->int_cmds[mbo] = NULL;
-   454                          spin_unlock_irqrestore(sh->host_lock, flags);
-   455                          return SCSI_MLQUEUE_HOST_BUSY;
-   456                  }
-   457                  scsi_for_each_sg(cmd, sg, sg_count, i) {
-   458                          any2scsi(cptr[i].dataptr, isa_page_to_bus(sg_page(sg))
-   459                                                                  + sg->offset);
-   460                          any2scsi(cptr[i].datalen, sg->length);
-   461                  };
-
-regards,
-dan carpenter
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
