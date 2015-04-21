@@ -1,103 +1,89 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] SCSI: add 1024 max sectors black list flag
-Date: Mon, 20 Apr 2015 22:42:24 -0500
-Message-ID: <1429587744-5666-1-git-send-email-michaelc@cs.wisc.edu>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 1/3] uas: Allow uas_use_uas_driver to return usb-storage flags
+Date: Tue, 21 Apr 2015 11:20:30 +0200
+Message-ID: <1429608032-6910-1-git-send-email-hdegoede@redhat.com>
 Return-path: <stable-owner@vger.kernel.org>
 Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, stable@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Steve Bangert <sbangert@frontier.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+uas_use_uas_driver may set some US_FL_foo flags during detection, currently
+these are stored in a local variable and then throw away, but these may be
+of interest to the caller, so add an extra parameter to (optionally) return
+the detected flags, and use this in the uas driver.
 
-This works around a issue with qnap iscsi targets not handling large IOs
-very well.
-
-The target returns:
-
-VPD INQUIRY: Block limits page (SBC)
-  Maximum compare and write length: 1 blocks
-  Optimal transfer length granularity: 1 blocks
-  Maximum transfer length: 4294967295 blocks
-  Optimal transfer length: 4294967295 blocks
-  Maximum prefetch, xdread, xdwrite transfer length: 0 blocks
-  Maximum unmap LBA count: 8388607
-  Maximum unmap block descriptor count: 1
-  Optimal unmap granularity: 16383
-  Unmap granularity alignment valid: 0
-  Unmap granularity alignment: 0
-  Maximum write same length: 0xffffffff blocks
-  Maximum atomic transfer length: 0
-  Atomic alignment: 0
-  Atomic transfer length granularity: 0
-
-and it is *sometimes* able to handle at least one IO of size up to 8 MB. We
-have seen in traces where it will sometimes work, but other times it
-looks like it fails and it looks like it returns failures if we send
-multiple large IOs sometimes. Also it looks like it can return 2 different
-errors. It will sometimes send iscsi reject errors indicating out of
-resources or it will send invalid cdb illegal requests check conditions.
-And then when it sends iscsi rejects it does not seem to handle retries
-when there are command sequence holes, so I could not just add code to
-try and gracefully handle that error code.
-
-The problem is that we do not have a good contact for the company,
-so we are not able to determine under what conditions it returns
-which error and why it sometimes works.
-
-So, this patch just adds a new black list flag to set targets like this to
-the old max safe sectors of 1024. The max_hw_sectors changes added in 3.19
-caused this regression, so I also ccing stable.
-
-Reported-by: Christian Hesse <list@eworm.de>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: stable@vger.kernel.org
-
+Cc: stable@vger.kernel.org # 3.16
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/scsi/scsi_devinfo.c | 1 +
- drivers/scsi/scsi_scan.c    | 6 ++++++
- include/scsi/scsi_devinfo.h | 1 +
- 3 files changed, 8 insertions(+)
+Changes in v2:
+-Add Cc stable@vger
+---
+ drivers/usb/storage/uas-detect.h | 6 +++++-
+ drivers/usb/storage/uas.c        | 6 +++---
+ drivers/usb/storage/usb.c        | 2 +-
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 262ab83..848c7ca 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -226,6 +226,7 @@ static struct {
- 	{"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
- 	{"Promise", "", NULL, BLIST_SPARSELUN},
-+	{"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024}, 
- 	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
- 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
- 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 9c0a520..3e6142f 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -897,6 +897,12 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 */
- 	if (*bflags & BLIST_MAX_512)
- 		blk_queue_max_hw_sectors(sdev->request_queue, 512);
-+	/*
-+	 * Max 1024 sector transfer length for targets that report incorrect
-+	 * max/optimal lengths and relied on the old block layer safe default
-+	 */
-+	else if (*bflags & BLIST_MAX_1024)
-+		blk_queue_max_hw_sectors(sdev->request_queue, 1024);
+diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
+index 9893d69..63ae161 100644
+--- a/drivers/usb/storage/uas-detect.h
++++ b/drivers/usb/storage/uas-detect.h
+@@ -51,7 +51,8 @@ static int uas_find_endpoints(struct usb_host_interface *alt,
+ }
  
- 	/*
- 	 * Some devices may not want to have a start command automatically
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 183eaab..96e3f56 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -36,5 +36,6 @@
- 					     for sequential scan */
- #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
- #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
-+#define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
+ static int uas_use_uas_driver(struct usb_interface *intf,
+-			      const struct usb_device_id *id)
++			      const struct usb_device_id *id,
++			      unsigned long *flags_ret)
+ {
+ 	struct usb_host_endpoint *eps[4] = { };
+ 	struct usb_device *udev = interface_to_usbdev(intf);
+@@ -132,5 +133,8 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 		return 0;
+ 	}
  
++	if (flags_ret)
++		*flags_ret = flags;
++
+ 	return 1;
+ }
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 6cdabdc..c6109c1 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -887,8 +887,9 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	struct Scsi_Host *shost = NULL;
+ 	struct uas_dev_info *devinfo;
+ 	struct usb_device *udev = interface_to_usbdev(intf);
++	unsigned long dev_flags;
+ 
+-	if (!uas_use_uas_driver(intf, id))
++	if (!uas_use_uas_driver(intf, id, &dev_flags))
+ 		return -ENODEV;
+ 
+ 	if (uas_switch_interface(udev, intf))
+@@ -910,8 +911,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	devinfo->udev = udev;
+ 	devinfo->resetting = 0;
+ 	devinfo->shutdown = 0;
+-	devinfo->flags = id->driver_info;
+-	usb_stor_adjust_quirks(udev, &devinfo->flags);
++	devinfo->flags = dev_flags;
+ 	init_usb_anchor(&devinfo->cmd_urbs);
+ 	init_usb_anchor(&devinfo->sense_urbs);
+ 	init_usb_anchor(&devinfo->data_urbs);
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index 5600c33..db6f6b5 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -1080,7 +1080,7 @@ static int storage_probe(struct usb_interface *intf,
+ 
+ 	/* If uas is enabled and this device can do uas then ignore it. */
+ #if IS_ENABLED(CONFIG_USB_UAS)
+-	if (uas_use_uas_driver(intf, id))
++	if (uas_use_uas_driver(intf, id, NULL))
+ 		return -ENXIO;
  #endif
+ 
 -- 
-1.8.3.1
+2.3.5
