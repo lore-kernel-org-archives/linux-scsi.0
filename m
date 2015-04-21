@@ -1,25 +1,25 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RESEND 12/18] megaraid_sas : add endianess annotations
-Date: Tue, 21 Apr 2015 12:29:35 +0200
-Message-ID: <5536268F.1030404@suse.de>
-References: <201504201236.t3KCaWMM016646@palmhbs0.lsi.com>
+Subject: Re: [PATCH RESEND 13/18] megaraid_sas : add endianess conversions
+ for all ones
+Date: Tue, 21 Apr 2015 12:29:59 +0200
+Message-ID: <553626A7.4030702@suse.de>
+References: <201504201236.t3KCagKv016670@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33146 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33157 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750960AbbDUK3h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 06:29:37 -0400
-In-Reply-To: <201504201236.t3KCaWMM016646@palmhbs0.lsi.com>
+	id S1750960AbbDUKaA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 06:30:00 -0400
+In-Reply-To: <201504201236.t3KCagKv016670@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
 On 04/20/2015 02:34 PM, Sumit.Saxena@avagotech.com wrote:
-> This adds endianness annotations to all data structures, and a few
-> variables directly referencing them.
+> Add noop conversions for all ones to make sparse happy.
 >=20
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
