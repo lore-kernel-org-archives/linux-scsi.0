@@ -1,304 +1,183 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH 03/14] lpfc: Add support for ELS LCB.
-Date: Tue, 21 Apr 2015 14:03:11 +0200
-Message-ID: <20150421140311.00002282@localhost>
-References: <5535058a.EPPUgDo7Qzh5RC0J%james.smart@emulex.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH RESEND 9/18] megaraid_sas : Support for Avago's Single
+ server High Availability product
+Date: Tue, 21 Apr 2015 14:09:08 +0200
+Message-ID: <55363DE4.2070506@redhat.com>
+References: <201504201236.t3KCa2D0016595@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:63507 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:45842 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754078AbbDUMDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 08:03:11 -0400
-In-Reply-To: <5535058a.EPPUgDo7Qzh5RC0J%james.smart@emulex.com>
+	id S1752172AbbDUMJj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 08:09:39 -0400
+In-Reply-To: <201504201236.t3KCa2D0016595@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
+To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-James Smart wrote:
-> 
-> Add support for ELS LCB.
-> 
-> Also has a little whitespace fixing.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-> Signed-off-by: James Smart <james.smart@emulex.com>
+On 04/20/2015 02:33 PM, Sumit.Saxena@avagotech.com wrote:
+> This patch will add support for Single Server High Availability(SSHA) cluster support.
+> Here is the short decsription of changes done to add support for SSHA-
+> 1) Host will send system's Unique ID based on DMI_PRODUCT_UUID to firmware.
+> 2) Toggle the devhandle in LDIO path for Remote LDs.  
+>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+>
 > ---
->  drivers/scsi/lpfc/lpfc.h      |   1 +
->  drivers/scsi/lpfc/lpfc_els.c  | 239 +++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/lpfc/lpfc_hw.h   |  32 ++++++
->  drivers/scsi/lpfc/lpfc_hw4.h  |  27 ++++-
->  drivers/scsi/lpfc/lpfc_init.c |   2 +
->  drivers/scsi/lpfc/lpfc_sli4.h |  11 ++
->  6 files changed, 306 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 9b81a34..3246d09 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -230,6 +230,7 @@ struct lpfc_stats {
->  	uint32_t elsRcvRRQ;
->  	uint32_t elsRcvRTV;
->  	uint32_t elsRcvECHO;
-> +	uint32_t elsRcvLCB;
->  	uint32_t elsXmitFLOGI;
->  	uint32_t elsXmitFDISC;
->  	uint32_t elsXmitPLOGI;
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 851e8ef..9f28dcb 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -4587,16 +4587,16 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
->  		if (!NLP_CHK_NODE_ACT(ndlp))
->  			continue;
->  		if (ndlp->nlp_state == NLP_STE_NPR_NODE &&
-> -		    (ndlp->nlp_flag & NLP_NPR_2B_DISC) != 0 &&
-> -		    (ndlp->nlp_flag & NLP_DELAY_TMO) == 0 &&
-> -		    (ndlp->nlp_flag & NLP_NPR_ADISC) == 0) {
-> +				(ndlp->nlp_flag & NLP_NPR_2B_DISC) != 0 &&
-> +				(ndlp->nlp_flag & NLP_DELAY_TMO) == 0 &&
-> +				(ndlp->nlp_flag & NLP_NPR_ADISC) == 0) {
->  			ndlp->nlp_prev_state = ndlp->nlp_state;
->  			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
->  			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
->  			sentplogi++;
->  			vport->num_disc_nodes++;
->  			if (vport->num_disc_nodes >=
-> -			    vport->cfg_discovery_threads) {
-> +					vport->cfg_discovery_threads) {
->  				spin_lock_irq(shost->host_lock);
->  				vport->fc_flag |= FC_NLP_MORE;
->  				spin_unlock_irq(shost->host_lock);
-> @@ -4615,6 +4615,233 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
->  	return sentplogi;
->  }
+>  drivers/scsi/megaraid/megaraid_sas.h        |   17 +++++++++++++++--
+>  drivers/scsi/megaraid/megaraid_sas_base.c   |   15 ++++++++++++++-
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c |   20 ++++++++++++++++++++
+>  3 files changed, 49 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+> index 680d90b..225d806 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -1272,8 +1272,10 @@ struct megasas_init_frame {
+>  	u32 queue_info_new_phys_addr_hi;	/*1Ch */
+>  	u32 queue_info_old_phys_addr_lo;	/*20h */
+>  	u32 queue_info_old_phys_addr_hi;	/*24h */
+> -
+> -	u32 reserved_4[6];	/*28h */
+> +	u32 reserved_4[2];	/*28h */
+> +	u32 system_info_lo;      /*30h */
+> +	u32 system_info_hi;      /*34h */
+> +	u32 reserved_5[2];	/*38h */
 >  
-> +static void
-> +lpfc_els_lcb_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
-> +{
-> +	MAILBOX_t *mb;
-> +	IOCB_t *icmd;
-> +	uint8_t *pcmd;
-> +	struct lpfc_iocbq *elsiocb;
-> +	struct lpfc_nodelist *ndlp;
-> +	struct ls_rjt *stat;
-> +	struct lpfc_lcb_context *lcb_context;
-> +	struct fc_lcb_res_frame  *lcb_res;
-
-Additional space here
-
-> +	uint32_t cmdsize;
-> +	int rc;
+>  } __attribute__ ((packed));
+>  
+> @@ -1650,12 +1652,22 @@ struct megasas_irq_context {
+>  	u32 MSIxIndex;
+>  };
+>  
+> +struct MR_DRV_SYSTEM_INFO {
+> +	u8	infoVersion;
+> +	u8	systemIdLength;
+> +	u16	reserved0;
+> +	u8	systemId[64];
+> +	u8	reserved[1980];
+> +};
 > +
-> +	mb = &pmb->u.mb;
-> +
-> +	lcb_context  = (struct lpfc_lcb_context *)pmb->context1;
+>  struct megasas_instance {
+>  
+>  	u32 *producer;
+>  	dma_addr_t producer_h;
+>  	u32 *consumer;
+>  	dma_addr_t consumer_h;
+> +	struct MR_DRV_SYSTEM_INFO *system_info_buf;
+> +	dma_addr_t system_info_h;
+>  	struct MR_LD_VF_AFFILIATION *vf_affiliation;
+>  	dma_addr_t vf_affiliation_h;
+>  	struct MR_LD_VF_AFFILIATION_111 *vf_affiliation_111;
+> @@ -1770,6 +1782,7 @@ struct megasas_instance {
+>  	u16 throttlequeuedepth;
+>  	u8 mask_interrupts;
+>  	u8 is_imr;
+> +	bool dev_handle;
+>  };
+>  struct MR_LD_VF_MAP {
+>  	u32 size;
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 6c84f88..2424ab2 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -5246,6 +5246,13 @@ static int megasas_probe_one(struct pci_dev *pdev,
+>  		break;
+>  	}
+>  
+> +	instance->system_info_buf = pci_alloc_consistent(pdev,
+> +					sizeof(struct MR_DRV_SYSTEM_INFO),
+> +					&instance->system_info_h);
 
-here
+I haven't found the place where the driver send the information to firmware,
+anyway weren't here a pci_zalloc_consistent better?
 
-> +	ndlp = lcb_context->ndlp;
-> +	pmb->context1 = NULL;
-> +	pmb->context2 = NULL;
+Tomas
+
 > +
-> +	if (mb->mbxStatus) {
-> +		mempool_free(pmb, phba->mbox_mem_pool);
-> +		goto error;
+> +	if (!instance->system_info_buf)
+> +		dev_info(&instance->pdev->dev, "Can't allocate system info buffer\n");
+> +
+>  	/* Crash dump feature related initialisation*/
+>  	instance->drv_buf_index = 0;
+>  	instance->drv_buf_alloc = 0;
+> @@ -5673,8 +5680,10 @@ megasas_resume(struct pci_dev *pdev)
+>  					    &instance->sriov_heartbeat_timer,
+>  					    megasas_sriov_heartbeat_handler,
+>  					    MEGASAS_SRIOV_HEARTBEAT_INTERVAL_VF);
+> -		else
+> +		else {
+>  			instance->skip_heartbeat_timer_del = 1;
+> +			goto fail_init_mfi;
+> +		}
+>  	}
+>  
+>  	instance->instancet->enable_intr(instance);
+> @@ -5838,6 +5847,10 @@ static void megasas_detach_one(struct pci_dev *pdev)
+>  		pci_free_consistent(pdev, CRASH_DMA_BUF_SIZE,
+>  			    instance->crash_dump_buf, instance->crash_dump_h);
+>  
+> +	if (instance->system_info_buf)
+> +		pci_free_consistent(pdev, sizeof(struct MR_DRV_SYSTEM_INFO),
+> +				    instance->system_info_buf, instance->system_info_h);
+> +
+>  	scsi_host_put(host);
+>  
+>  	pci_disable_device(pdev);
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 9ce4813..59848e9 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -53,6 +53,7 @@
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_dbg.h>
+> +#include <linux/dmi.h>
+>  
+>  #include "megaraid_sas_fusion.h"
+>  #include "megaraid_sas.h"
+> @@ -609,6 +610,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+>  	union MEGASAS_REQUEST_DESCRIPTOR_UNION req_desc;
+>  	int i;
+>  	struct megasas_header *frame_hdr;
+> +	const char *sys_info;
+>  
+>  	fusion = instance->ctrl_context;
+>  
+> @@ -671,6 +673,16 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+>  	/* Convert capability to LE32 */
+>  	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
+>  
+> +	sys_info = dmi_get_system_info(DMI_PRODUCT_UUID);
+> +	if (instance->system_info_buf && sys_info) {
+> +		memcpy(instance->system_info_buf->systemId, sys_info,
+> +			strlen(sys_info) > 64 ? 64 : strlen(sys_info));
+> +		instance->system_info_buf->systemIdLength =
+> +			strlen(sys_info) > 64 ? 64 : strlen(sys_info);
+> +		init_frame->system_info_lo = instance->system_info_h;
+> +		init_frame->system_info_hi = 0;
 > +	}
 > +
-> +	mempool_free(pmb, phba->mbox_mem_pool);
+>  	init_frame->queue_info_new_phys_addr_hi =
+>  		cpu_to_le32(upper_32_bits(ioc_init_handle));
+>  	init_frame->queue_info_new_phys_addr_lo =
+> @@ -1602,6 +1614,14 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+>  			cmd->pd_r1_lb = io_info.pd_after_lb;
+>  		} else
+>  			scp->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
 > +
-> +	cmdsize = sizeof(struct fc_lcb_res_frame);
-> +	elsiocb = lpfc_prep_els_iocb(phba->pport, 0, cmdsize,
-> +			lpfc_max_els_tries, ndlp,
-> +			ndlp->nlp_DID, ELS_CMD_ACC);
+> +		if ((raidLUN[0] == 1) &&
+> +			(local_map_ptr->raidMap.devHndlInfo[io_info.pd_after_lb].validHandles > 2)) {
+> +			instance->dev_handle = !(instance->dev_handle);
+> +			io_info.devHandle =
+> +				local_map_ptr->raidMap.devHndlInfo[io_info.pd_after_lb].devHandle[instance->dev_handle];
+> +		}
 > +
-> +	/* Decrement the ndlp reference count from previous mbox command */
-> +	lpfc_nlp_put(ndlp);
-> +
-> +	if (!elsiocb)
-> +		goto free_lcb_context;
-> +
-> +	lcb_res = (struct fc_lcb_res_frame *)
-> +		(((struct lpfc_dmabuf *)elsiocb->context2)->virt);
-> +
-> +	icmd = &elsiocb->iocb;
-> +	icmd->ulpContext = lcb_context->rx_id;
-> +	icmd->unsli3.rcvsli3.ox_id = lcb_context->ox_id;
-> +
-> +	pcmd = (uint8_t *)(((struct lpfc_dmabuf *)elsiocb->context2)->virt);
-> +	*((uint32_t *)(pcmd)) = ELS_CMD_ACC;
-> +	lcb_res->lcb_sub_command = lcb_context->sub_command;
-> +	lcb_res->lcb_type = lcb_context->type;
-> +	lcb_res->lcb_frequency = lcb_context->frequency;
-> +	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
-> +	phba->fc_stat.elsXmitACC++;
-> +	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
-> +	if (rc == IOCB_ERROR)
-> +		lpfc_els_free_iocb(phba, elsiocb);
-> +
-> +	kfree(lcb_context);
-> +	return;
-> +
-> +error:
-> +	cmdsize = sizeof(struct fc_lcb_res_frame);
-> +	elsiocb = lpfc_prep_els_iocb(phba->pport, 0, cmdsize,
-> +			lpfc_max_els_tries, ndlp,
-> +			ndlp->nlp_DID, ELS_CMD_LS_RJT);
-> +	lpfc_nlp_put(ndlp);
-> +	if (!elsiocb)
-> +		goto free_lcb_context;
-> +
-> +	icmd = &elsiocb->iocb;
-> +	icmd->ulpContext = lcb_context->rx_id;
-> +	icmd->unsli3.rcvsli3.ox_id = lcb_context->ox_id;
-> +	pcmd = (uint8_t *)(((struct lpfc_dmabuf *)elsiocb->context2)->virt);
-> +
-> +	*((uint32_t *)(pcmd)) = ELS_CMD_LS_RJT;
-> +	stat = (struct ls_rjt *)(pcmd + sizeof(uint32_t));
-> +	stat->un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
-> +
-> +	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
-> +	phba->fc_stat.elsXmitLSRJT++;
-> +	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
-> +	if (rc == IOCB_ERROR)
-> +		lpfc_els_free_iocb(phba, elsiocb);
-> +free_lcb_context:
-> +	kfree(lcb_context);
-> +}
-> +
-> +static int
-> +lpfc_sli4_set_beacon(struct lpfc_vport *vport,
-> +		     struct lpfc_lcb_context *lcb_context,
-> +		     uint32_t beacon_state)
-> +{
-> +	struct lpfc_hba  *phba = vport->phba;
+>  		cmd->request_desc->SCSIIO.DevHandle = io_info.devHandle;
+>  		io_request->DevHandle = io_info.devHandle;
+>  		/* populate the LUN field */
 
-here
-
-> +	LPFC_MBOXQ_t *mbox = NULL;
-> +	uint32_t len;
-> +	int rc;
-> +
-> +	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-> +	if (!mbox)
-> +		return 1;
-> +
-> +	len = sizeof(struct lpfc_mbx_set_beacon_config) -
-> +		sizeof(struct lpfc_sli4_cfg_mhdr);
-> +	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
-> +			 LPFC_MBOX_OPCODE_SET_BEACON_CONFIG, len,
-> +			 LPFC_SLI4_MBX_EMBED);
-> +	mbox->context1 = (void *)lcb_context;
-> +	mbox->vport = phba->pport;
-> +	mbox->mbox_cmpl = lpfc_els_lcb_rsp;
-> +	bf_set(lpfc_mbx_set_beacon_port_num, &mbox->u.mqe.un.beacon_config,
-> +	       phba->sli4_hba.physical_port);
-> +	bf_set(lpfc_mbx_set_beacon_state, &mbox->u.mqe.un.beacon_config,
-> +	       beacon_state);
-> +	bf_set(lpfc_mbx_set_beacon_port_type, &mbox->u.mqe.un.beacon_config, 1);
-> +	bf_set(lpfc_mbx_set_beacon_duration, &mbox->u.mqe.un.beacon_config, 0);
-> +	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
-> +	if (rc == MBX_NOT_FINISHED) {
-> +		mempool_free(mbox, phba->mbox_mem_pool);
-> +		return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +
-> +/**
-> + * lpfc_els_rcv_lcb - Process an unsolicited LCB
-> + * @vport: pointer to a host virtual N_Port data structure.
-> + * @cmdiocb: pointer to lpfc command iocb data structure.
-> + * @ndlp: pointer to a node-list data structure.
-> + *
-> + * This routine processes an unsolicited LCB(LINK CABLE BEACON) IOCB.
-> + * First, the payload of the unsolicited LCB is checked.
-> + * Then based on Subcommand  either Becon will turn on or off.
-
-here
-
-> + *
-> + * Return code
-> + * 0 - Sent the acc response
-> + * 1 - Sent the reject response.
-> + **/
-> +static int
-> +lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
-> +		 struct lpfc_nodelist *ndlp)
-> +{
-> +	struct lpfc_hba  *phba = vport->phba;
-
-here
-
-> +	struct lpfc_dmabuf *pcmd;
-> +	IOCB_t *icmd;
-> +	uint8_t *lp;
-> +	struct fc_lcb_request_frame  *beacon;
-
-here
-
-> +	struct lpfc_lcb_context *lcb_context;
-> +	uint8_t state, rjt_err;
-> +	struct ls_rjt stat;
-> +
-> +	icmd = &cmdiocb->iocb;
-> +	pcmd = (struct lpfc_dmabuf *)cmdiocb->context2;
-> +	lp = (uint8_t *)pcmd->virt;
-> +	beacon = (struct fc_lcb_request_frame *)pcmd->virt;
-> +
-> +	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-> +			"0192 ELS LCB Data x%x x%x x%x x%x sub x%x "
-> +			"type x%x frequency %x duration x%x\n",
-> +			lp[0], lp[1], lp[2],
-> +			beacon->lcb_command,
-> +			beacon->lcb_sub_command,
-> +			beacon->lcb_type,
-> +			beacon->lcb_frequency,
-> +			be16_to_cpu(beacon->lcb_duration));
-> +
-> +	if (phba->sli_rev < LPFC_SLI_REV4 ||
-> +	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
-> +	    LPFC_SLI_INTF_IF_TYPE_2)) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-> +	lcb_context = kmalloc(sizeof(struct lpfc_lcb_context), GFP_KERNEL);
-> +
-> +	if (phba->hba_flag & HBA_FCOE_MODE) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-> +	if (beacon->lcb_frequency  == 0) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-
-here
-
-> +	if ((beacon->lcb_type != LPFC_LCB_GREEN) &&
-> +	    (beacon->lcb_type  != LPFC_LCB_AMBER)) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-
-here
-
-> +	if ((beacon->lcb_sub_command != LPFC_LCB_ON) &&
-> +	    (beacon->lcb_sub_command != LPFC_LCB_OFF)) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-> +	if ((beacon->lcb_sub_command == LPFC_LCB_ON) &&
-> +	    (beacon->lcb_type != LPFC_LCB_GREEN) &&
-> +	    (beacon->lcb_type  != LPFC_LCB_AMBER)) {
-> +		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> +		goto rjt;
-> +	}
-
-and here
-
-Sebastian
