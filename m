@@ -1,31 +1,24 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RESEND 8/18] megaraid_sas : Add release date and update
- driver version
-Date: Tue, 21 Apr 2015 12:27:37 +0200
-Message-ID: <55362619.1040506@suse.de>
-References: <201504201235.t3KCZqwd016586@palmhbs0.lsi.com>
+Subject: Re: [PATCH RESEND 11/18] megaraid_sas : add missing __iomem annotations
+Date: Tue, 21 Apr 2015 12:29:07 +0200
+Message-ID: <55362673.30703@suse.de>
+References: <201504201236.t3KCaM54016622@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33025 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:33089 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbbDUK1j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 06:27:39 -0400
-In-Reply-To: <201504201235.t3KCZqwd016586@palmhbs0.lsi.com>
+	id S1750960AbbDUK3J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 06:29:09 -0400
+In-Reply-To: <201504201236.t3KCaM54016622@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-On 04/20/2015 02:33 PM, Sumit.Saxena@avagotech.com wrote:
-> This patch will upgrade the driver version and add back the release d=
-ate and sysfs hook for the same.
-> Some internal applications uses sysfs parameter for release date, so =
-they were broken because of removal
-> of release date from sysfs.
-> =20
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+On 04/20/2015 02:34 PM, Sumit.Saxena@avagotech.com wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
