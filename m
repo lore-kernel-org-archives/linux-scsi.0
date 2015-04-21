@@ -1,131 +1,79 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v3] fusion: remove dead MTRR code
-Date: Tue, 21 Apr 2015 13:46:06 -0700
-Message-ID: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Cc: luto@amacapital.net, mst@redhat.com, "Luis R. Rodriguez" <mcgrof@suse.com>, Toshi Kani <toshi.kani@hp.com>, Christoph Hellwig <hch@infradead.org>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] aha1542: Allocate memory before taking a lock
+Date: Tue, 21 Apr 2015 23:27:50 +0200
+Message-ID: <1429651670-5466-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.gsystem.sk ([62.176.172.50]:55301 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932871AbbDUV2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 17:28:12 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 
-=46rom: "Luis R. Rodriguez" <mcgrof@suse.com>
+The driver currently calls kmalloc with GFP_KERNEL while holding a lock.
+Fix it by doing the allocation earlier, before taking the lock.
 
-If and when this gets enabled the driver could should split
-up IO memory space properly and that is quite a bit of work.
-Just remove the uncommented dead MTRR code then.
+Tested on AHA-1542B.
 
-There are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Ville Syrj=C3=A4l=C3=A4 <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/message/fusion/mptbase.c | 24 ------------------------
- drivers/message/fusion/mptbase.h |  1 -
- 2 files changed, 25 deletions(-)
+ drivers/scsi/aha1542.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/=
-mptbase.c
-index 187f836..5dcc031 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -59,10 +59,6 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>		/* needed for in_interrupt() proto */
- #include <linux/dma-mapping.h>
--#include <asm/io.h>
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
- #include <linux/kthread.h>
- #include <scsi/scsi_host.h>
-=20
-@@ -2820,13 +2816,6 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
- 	pci_disable_device(ioc->pcidev);
- 	pci_release_selected_regions(ioc->pcidev, ioc->bars);
-=20
--#if defined(CONFIG_MTRR) && 0
--	if (ioc->mtrr_reg > 0) {
--		mtrr_del(ioc->mtrr_reg, 0, 0);
--		dprintk(ioc, printk(MYIOC_s_INFO_FMT "MTRR region de-registered\n", =
-ioc->name));
--	}
--#endif
--
- 	/*  Zap the adapter lookup ptr!  */
- 	list_del(&ioc->list);
-=20
-@@ -4512,19 +4501,6 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
-=20
- 		ioc->req_frames_low_dma =3D (u32) (alloc_dma & 0xFFFFFFFF);
-=20
--#if defined(CONFIG_MTRR) && 0
--		/*
--		 *  Enable Write Combining MTRR for IOC's memory region.
--		 *  (at least as much as we can; "size and base must be
--		 *  multiples of 4 kiB"
--		 */
--		ioc->mtrr_reg =3D mtrr_add(ioc->req_frames_dma,
--					 sz,
--					 MTRR_TYPE_WRCOMB, 1);
--		dprintk(ioc, printk(MYIOC_s_DEBUG_FMT "MTRR region registered (base:=
-size=3D%08x:%x)\n",
--				ioc->name, ioc->req_frames_dma, sz));
--#endif
--
- 		for (i =3D 0; i < ioc->req_depth; i++) {
- 			alloc_dma +=3D ioc->req_sz;
- 			mem +=3D ioc->req_sz;
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/=
-mptbase.h
-index 8f14090..813d463 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -671,7 +671,6 @@ typedef struct _MPT_ADAPTER
- 	u8			*HostPageBuffer; /* SAS - host page buffer support */
- 	u32			HostPageBuffer_sz;
- 	dma_addr_t		HostPageBuffer_dma;
--	int			 mtrr_reg;
- 	struct pci_dev		*pcidev;	/* struct pci_dev pointer */
- 	int			bars;		/* bitmask of BAR's that must be configured */
- 	int			msi_enable;
---=20
-2.3.2.209.gd67f9d5.dirty
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index ec43276..b95d277 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -375,9 +375,10 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	u8 lun = cmd->device->lun;
+ 	unsigned long flags;
+ 	int bufflen = scsi_bufflen(cmd);
+-	int mbo;
++	int mbo, sg_count;
+ 	struct mailbox *mb = aha1542->mb;
+ 	struct ccb *ccb = aha1542->ccb;
++	struct chain *cptr;
+ 
+ 	if (*cmd->cmnd == REQUEST_SENSE) {
+ 		/* Don't do the command - we have the sense data already */
+@@ -397,6 +398,13 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 		print_hex_dump_bytes("command: ", DUMP_PREFIX_NONE, cmd->cmnd, cmd->cmd_len);
+ 	}
+ #endif
++	if (bufflen) {	/* allocate memory before taking host_lock */
++		sg_count = scsi_sg_count(cmd);
++		cptr = kmalloc(sizeof(*cptr) * sg_count, GFP_KERNEL | GFP_DMA);
++		if (!cptr)
++			return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
+ 	/* Use the outgoing mailboxes in a round-robin fashion, because this
+ 	   is how the host adapter will scan for them */
+ 
+@@ -441,19 +449,10 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 
+ 	if (bufflen) {
+ 		struct scatterlist *sg;
+-		struct chain *cptr;
+-		int i, sg_count = scsi_sg_count(cmd);
++		int i;
+ 
+ 		ccb[mbo].op = 2;	/* SCSI Initiator Command  w/scatter-gather */
+-		cmd->host_scribble = kmalloc(sizeof(*cptr)*sg_count,
+-		                                         GFP_KERNEL | GFP_DMA);
+-		cptr = (struct chain *) cmd->host_scribble;
+-		if (cptr == NULL) {
+-			/* free the claimed mailbox slot */
+-			aha1542->int_cmds[mbo] = NULL;
+-			spin_unlock_irqrestore(sh->host_lock, flags);
+-			return SCSI_MLQUEUE_HOST_BUSY;
+-		}
++		cmd->host_scribble = (void *)cptr;
+ 		scsi_for_each_sg(cmd, sg, sg_count, i) {
+ 			any2scsi(cptr[i].dataptr, isa_page_to_bus(sg_page(sg))
+ 								+ sg->offset);
+-- 
+Ondrej Zary
+
