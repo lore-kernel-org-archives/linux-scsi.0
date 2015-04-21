@@ -1,50 +1,38 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH RESEND 1/18] megaraid_sas : Add separate function for
- setting up IRQs
-Date: Tue, 21 Apr 2015 17:11:02 +0530
-Message-ID: <8fe11fb76ad331a41f83121fb704f939@mail.gmail.com>
-References: <201504201234.t3KCYg04016312@palmhbs0.lsi.com> <20150421103330.GA8920@infradead.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: aha1542: rework locking
+Date: Tue, 21 Apr 2015 14:41:55 +0300
+Message-ID: <20150421114155.GG16501@mwanda>
+References: <20150421092603.GC12098@mwanda>
+ <201504211239.40423.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:32788 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbbDULlE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 07:41:04 -0400
-Received: by qgdy78 with SMTP id y78so66640423qgd.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2015 04:41:03 -0700 (PDT)
-In-Reply-To: <20150421103330.GA8920@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34444 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbbDULmK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 07:42:10 -0400
+Content-Disposition: inline
+In-Reply-To: <201504211239.40423.linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Christoph Hellwig [mailto:hch@infradead.org]
->Sent: Tuesday, April 21, 2015 4:04 PM
->To: Sumit.Saxena@avagotech.com
->Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
->martin.petersen@oracle.com; hch@infradead.org;
->jbottomley@parallels.com; kashyap.desai@avagotech.com
->Subject: Re: [PATCH RESEND 1/18] megaraid_sas : Add separate function for
->setting up IRQs
->
->On Mon, Apr 20, 2015 at 06:02:30PM +0530, Sumit.Saxena@avagotech.com
->wrote:
->> This patch will create separate function for setting up IRQs and enable
->interrupts after adapter's initialization.
->
->The structure of megasas_setup_irqs clearly suggest it should be two
->functions: one for the traditional case, and one for MSI-X.
->
->The irq unregister case should get a similar factoring.
+On Tue, Apr 21, 2015 at 12:39:40PM +0200, Ondrej Zary wrote:
+> Thanks, I missed that as it was already wrong before (since at least when
+> DEF_SCSI_QCMD was introduced). And it worked despite that.
 
-Ok, I will create separate functions for setup_irqs- one for MSI-x and one
-for traditional case. Will refactor to create separate function for
-freeing IRQs.
->
->Additionally the changelog needs an explanation on why you move around
->the code that registeres interrupts as well as the
->->instancet->enable_intr call.
-Will resend the patch with explanation and three new functions(MSI-x
-setup, IO_APIC setup and freeing IRQs) added.
+If you turn on CONFIG_DEBUG_ATOMIC_SLEEP=y it will generate a warning
+splat.  Otherwise you probably have to get very unlucky for this to
+deadlock.
+
+> 
+> Should I just change that to GFP_ATOMIC?
+
+The other option is to do the allocation before taking the lock.  That
+looks do-able.  You are the expert here by virtue of you touched to code
+last.  So you get to decide.  :)
+
+regards,
+dan carpenter
+
