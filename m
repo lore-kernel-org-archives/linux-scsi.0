@@ -1,57 +1,67 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v2 3/3] uas: Set max_sectors_240 quirk for ASM1053 devices
-Date: Tue, 21 Apr 2015 11:20:32 +0200
-Message-ID: <1429608032-6910-3-git-send-email-hdegoede@redhat.com>
-References: <1429608032-6910-1-git-send-email-hdegoede@redhat.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: aha1542: rework locking
+Date: Tue, 21 Apr 2015 12:26:03 +0300
+Message-ID: <20150421092603.GC12098@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51080 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752775AbbDUJUk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 05:20:40 -0400
-In-Reply-To: <1429608032-6910-1-git-send-email-hdegoede@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28078 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621AbbDUJ0V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 05:26:21 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Steve Bangert <sbangert@frontier.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: linux@rainbow-software.org
+Cc: linux-scsi@vger.kernel.org
 
-Testing has shown that ASM1053 devices do not work properly with transfers
-larger than 240 sectors, so set max_sectors to 240 on these.
+Hello Ondrej Zary,
 
-Cc: stable@vger.kernel.org # 3.16
-Reported-by: Steve Bangert <sbangert@frontier.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Tested-by: Steve Bangert <sbangert@frontier.com>
----
-Changes in v2:
--Add Cc stable@vger
--Add Tested-by tag
----
- drivers/usb/storage/uas-detect.h | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+The patch 1b0224b0ec60: "aha1542: rework locking" from Feb 6, 2015,
+leads to the following static checker warning:
 
-diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
-index 63ae161..f58caa9 100644
---- a/drivers/usb/storage/uas-detect.h
-+++ b/drivers/usb/storage/uas-detect.h
-@@ -74,7 +74,7 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 	 * this writing the following versions exist:
- 	 * ASM1051 - no uas support version
- 	 * ASM1051 - with broken (*) uas support
--	 * ASM1053 - with working uas support
-+	 * ASM1053 - with working uas support, but problems with large xfers
- 	 * ASM1153 - with working uas support
- 	 *
- 	 * Devices with these chips re-use a number of device-ids over the
-@@ -104,6 +104,9 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
- 			/* Possibly an ASM1051, disable uas */
- 			flags |= US_FL_IGNORE_UAS;
-+		} else {
-+			/* ASM1053, these have issues with large transfers */
-+			flags |= US_FL_MAX_SECTORS_240;
- 		}
- 	}
- 
--- 
-2.3.5
+	drivers/scsi/aha1542.c:448 aha1542_queuecommand()
+	error: scheduling with locks held: 'spin_lock:host_lock'
 
+drivers/scsi/aha1542.c
+   400          /* Use the outgoing mailboxes in a round-robin fashion, because this
+   401             is how the host adapter will scan for them */
+   402  
+   403          spin_lock_irqsave(sh->host_lock, flags);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Holding lock.
+
+   404          mbo = aha1542->aha1542_last_mbo_used + 1;
+   405          if (mbo >= AHA1542_MAILBOXES)
+   406                  mbo = 0;
+   407  
+
+[ snip ]
+
+   442          if (bufflen) {
+   443                  struct scatterlist *sg;
+   444                  struct chain *cptr;
+   445                  int i, sg_count = scsi_sg_count(cmd);
+   446  
+   447                  ccb[mbo].op = 2;        /* SCSI Initiator Command  w/scatter-gather */
+   448                  cmd->host_scribble = kmalloc(sizeof(*cptr)*sg_count,
+   449                                                           GFP_KERNEL | GFP_DMA);
+                                                                 ^^^^^^^^^^
+Sleeping allocation.
+
+   450                  cptr = (struct chain *) cmd->host_scribble;
+   451                  if (cptr == NULL) {
+   452                          /* free the claimed mailbox slot */
+   453                          aha1542->int_cmds[mbo] = NULL;
+   454                          spin_unlock_irqrestore(sh->host_lock, flags);
+   455                          return SCSI_MLQUEUE_HOST_BUSY;
+   456                  }
+   457                  scsi_for_each_sg(cmd, sg, sg_count, i) {
+   458                          any2scsi(cptr[i].dataptr, isa_page_to_bus(sg_page(sg))
+   459                                                                  + sg->offset);
+   460                          any2scsi(cptr[i].datalen, sg->length);
+   461                  };
+
+regards,
+dan carpenter
