@@ -1,24 +1,24 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/14] lpfc: Correct reference counting of rport
-Date: Tue, 21 Apr 2015 12:02:10 +0200
-Message-ID: <55362022.1030005@suse.de>
-References: <5535058b.hLpSoTGdp9otmjtG%james.smart@emulex.com>
+Subject: Re: [PATCH 05/14] lpfc: Fix ABORTs WQ selection in terminate_rport_io
+Date: Tue, 21 Apr 2015 12:03:13 +0200
+Message-ID: <55362061.1070503@suse.de>
+References: <5535058c.qedhvDUQw+w7AJhS%james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59424 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59631 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586AbbDUKCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 06:02:12 -0400
-In-Reply-To: <5535058b.hLpSoTGdp9otmjtG%james.smart@emulex.com>
+	id S1751160AbbDUKDO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 06:03:14 -0400
+In-Reply-To: <5535058c.qedhvDUQw+w7AJhS%james.smart@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
 
 On 04/20/2015 03:56 PM, James Smart wrote:
 >=20
-> Correct reference counting of rport
+> Fix ABORTs WQ selection in terminate_rport_io
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
