@@ -1,26 +1,26 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RESEND 1/18] megaraid_sas : Add separate function for
- setting up IRQs
-Date: Tue, 21 Apr 2015 12:17:20 +0200
-Message-ID: <553623B0.5000004@suse.de>
-References: <201504201234.t3KCYg04016312@palmhbs0.lsi.com>
+Subject: Re: [PATCH RESEND 2/18] megaraid_sas : Add separate function for
+ refiring MFI commands
+Date: Tue, 21 Apr 2015 12:18:10 +0200
+Message-ID: <553623E2.8070303@suse.de>
+References: <201504201234.t3KCYqUk016436@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60614 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60649 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488AbbDUKRW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Apr 2015 06:17:22 -0400
-In-Reply-To: <201504201234.t3KCYg04016312@palmhbs0.lsi.com>
+	id S1753182AbbDUKSM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Apr 2015 06:18:12 -0400
+In-Reply-To: <201504201234.t3KCYqUk016436@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
 On 04/20/2015 02:32 PM, Sumit.Saxena@avagotech.com wrote:
-> This patch will create separate function for setting up IRQs and enab=
-le interrupts after adapter's initialization.
+> This patch will add separate function for refiring MFI commands in Fu=
+sion adapters's OCR code.
 >=20
 > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
