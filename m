@@ -1,45 +1,59 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: RE: [PATCH v3 10/20] lpfc: Fix provide host name and OS name in
- RSNN-NN FC-GS command
-Date: Wed, 22 Apr 2015 00:40:34 +0000
-Message-ID: <C56D4DEB4BD07946B93F4A90B4FE3FC75A31DC1C@CMEXMB1.ad.emulex.com>
-References: <55242ae6.b7GjnkXu1bXVHKz1%james.smart@emulex.com>
-	<20150415000218.00007e7c@localhost>
-	<55327B0B.2010009@emulex.com>,<20150422011525.00001d22@localhost>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] block: Return error in rescan_partitions if
+ revalidating disk failed
+Date: Tue, 21 Apr 2015 19:58:26 -0700
+Message-ID: <1429671506.18798.4.camel@HansenPartnership.com>
+References: <1427192175-23802-1-git-send-email-famz@redhat.com>
+	 <1427192175-23802-2-git-send-email-famz@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:48836 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933519AbbDVAlA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2015 20:41:00 -0400
-In-Reply-To: <20150422011525.00001d22@localhost>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1427192175-23802-2-git-send-email-famz@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Primarily emulex applications that display san connectivity.  There are also some Switch mgmt suites that at least display this information. Not sure how much they act on it.
+On Tue, 2015-03-24 at 18:16 +0800, Fam Zheng wrote:
+> If the disk can't read capacity, we should return an error.
 
--- james s
+I'm not sure I buy this: you need to justify why.
 
+For instance removable media return an error in revalidate that causes
+the medium not present flag to be set ... do we really want to propagate
+the error in that case?
 
-________________________________________
-From: Sebastian Herbszt [herbszt@gmx.de]
-Sent: Tuesday, April 21, 2015 7:15 PM
-To: James Smart
-Cc: linux-scsi@vger.kernel.org; Sebastian Herbszt
-Subject: Re: [PATCH v3 10/20] lpfc: Fix provide host name and OS name in RSNN-NN FC-GS command
+> Signed-off-by: Fam Zheng <famz@redhat.com>
+> ---
+>  block/partition-generic.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/block/partition-generic.c b/block/partition-generic.c
+> index 0d9e5f9..1e60d7d 100644
+> --- a/block/partition-generic.c
+> +++ b/block/partition-generic.c
+> @@ -427,11 +427,11 @@ rescan:
+>  		return res;
+>  
+>  	if (disk->fops->revalidate_disk)
+> -		disk->fops->revalidate_disk(disk);
+> +		res = disk->fops->revalidate_disk(disk);
 
-James Smart wrote:
-> Fixes those things that parse the result of what data is registered with
-> the fabric.
->
-> -- james
+You're assuming here that a negative error code is being returned, but
+some (cciss) seem to be returning 1 on error.
 
-Any particular "thing" you got on your mind?
-qla2xxx does not provide this information (yet).
+You'll need to assure us that you've checked all the consumers before
+making this change.
 
-Sebastian
+James
+
+>  	check_disk_size_change(disk, bdev);
+>  	bdev->bd_invalidated = 0;
+> -	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
+> -		return 0;
+> +	if (res || !get_capacity(disk) || !(state = check_partition(disk, bdev)))
+> +		return res;
+>  	if (IS_ERR(state)) {
+>  		/*
+>  		 * I/O error reading the partition table.  If any
