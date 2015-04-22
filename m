@@ -1,126 +1,123 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH v5 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
-Date: Wed, 22 Apr 2015 02:24:02 -0700
-Message-ID: <1429694642-22309-10-git-send-email-nmusini@cisco.com>
-References: <1429694642-22309-1-git-send-email-nmusini@cisco.com>
+Subject: [PATCH v5 0/9] snic:initial submission of snic driver for Cisco SCSI HBA
+Date: Wed, 22 Apr 2015 02:23:53 -0700
+Message-ID: <1429694642-22309-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-4.cisco.com ([173.37.142.91]:36749 "EHLO
-	alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965819AbbDVJ1u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2015 05:27:50 -0400
-In-Reply-To: <1429694642-22309-1-git-send-email-nmusini@cisco.com>
+Received: from alln-iport-6.cisco.com ([173.37.142.93]:64766 "EHLO
+	alln-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965915AbbDVJ1y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2015 05:27:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, hare@suse.de
-Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
+Cc: Narsimhulu Musini <nmusini@cisco.com>
 
-Kconfig for kbuild
-Makefile to build snic module
+The following patch series adds snic driver for Cisco SCSI HBA
 
-Updated MAINTAINERS file
+Cisco has developed a new PCI HBA interface called sNIC, which stands for 
+SCSI NIC. This is a new storage feature supported on specialized network
+adapter. The new PCI function provides a uniform host interface and abstracts
+backend storage.
 
-Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
+* v5
+- Incorporated Dr. Hannes Reinecke's review comments.
+
+* v4
+- Incorporated Christoph Hellwig's comments.
+
 * v3
-- Added additional config section (CONFIG_SNIC_DEBUG_FS) for enabling debugging
-  functionality.
+- Incorporated Dr. Hannes Reinecke's review comments.
 
 * v2
-- Added compile time flags for debugfs dependent functionality.
+- Incorporated Dr. Hannes Reinecke's review comments.
 
- MAINTAINERS                |  7 +++++++
- drivers/scsi/Kconfig       | 17 +++++++++++++++++
- drivers/scsi/Makefile      |  1 +
- drivers/scsi/snic/Makefile | 21 +++++++++++++++++++++
- 4 files changed, 46 insertions(+)
+	Thanks
+	Narsimhulu Musini & Sesidhar Baddela
+
+Narsimhulu Musini (9):
+  snic: snic module infrastructure
+  snic:Add interrupt, resource firmware interfaces
+  snic:Add meta request,  handling of meta requests.
+  snic:Add snic target discovery
+  snic:add SCSI handling, AEN, and fwreset handling
+  snic:Add low level queuing interfaces
+  snic:Add sysfs entries to list stats and trace data
+  snic:Add event tracing to capture IO events.
+  snic:Add Makefile, patch Kconfig, MAINTAINERS
+
+ MAINTAINERS                       |    7 +
+ drivers/scsi/Kconfig              |   17 +
+ drivers/scsi/Makefile             |    1 +
+ drivers/scsi/snic/Makefile        |   21 +
+ drivers/scsi/snic/cq_desc.h       |   76 ++
+ drivers/scsi/snic/cq_enet_desc.h  |   38 +
+ drivers/scsi/snic/snic.h          |  415 ++++++
+ drivers/scsi/snic/snic_attrs.c    |   79 ++
+ drivers/scsi/snic/snic_ctl.c      |  276 ++++
+ drivers/scsi/snic/snic_debugfs.c  |  562 ++++++++
+ drivers/scsi/snic/snic_disc.c     |  602 +++++++++
+ drivers/scsi/snic/snic_disc.h     |  124 ++
+ drivers/scsi/snic/snic_fwint.h    |  525 ++++++++
+ drivers/scsi/snic/snic_io.c       |  519 ++++++++
+ drivers/scsi/snic/snic_io.h       |  118 ++
+ drivers/scsi/snic/snic_isr.c      |  209 +++
+ drivers/scsi/snic/snic_main.c     | 1039 +++++++++++++++
+ drivers/scsi/snic/snic_res.c      |  297 +++++
+ drivers/scsi/snic/snic_res.h      |   96 ++
+ drivers/scsi/snic/snic_scsi.c     | 2640 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/snic/snic_stats.h    |  123 ++
+ drivers/scsi/snic/snic_trc.c      |  182 +++
+ drivers/scsi/snic/snic_trc.h      |  121 ++
+ drivers/scsi/snic/vnic_cq.c       |   86 ++
+ drivers/scsi/snic/vnic_cq.h       |  110 ++
+ drivers/scsi/snic/vnic_cq_fw.h    |   62 +
+ drivers/scsi/snic/vnic_dev.c      |  748 +++++++++++
+ drivers/scsi/snic/vnic_dev.h      |  110 ++
+ drivers/scsi/snic/vnic_devcmd.h   |  270 ++++
+ drivers/scsi/snic/vnic_intr.c     |   59 +
+ drivers/scsi/snic/vnic_intr.h     |  105 ++
+ drivers/scsi/snic/vnic_resource.h |   68 +
+ drivers/scsi/snic/vnic_snic.h     |   54 +
+ drivers/scsi/snic/vnic_stats.h    |   68 +
+ drivers/scsi/snic/vnic_wq.c       |  237 ++++
+ drivers/scsi/snic/vnic_wq.h       |  170 +++
+ drivers/scsi/snic/wq_enet_desc.h  |   91 ++
+ 37 files changed, 10325 insertions(+)
  create mode 100644 drivers/scsi/snic/Makefile
+ create mode 100644 drivers/scsi/snic/cq_desc.h
+ create mode 100644 drivers/scsi/snic/cq_enet_desc.h
+ create mode 100644 drivers/scsi/snic/snic.h
+ create mode 100644 drivers/scsi/snic/snic_attrs.c
+ create mode 100644 drivers/scsi/snic/snic_ctl.c
+ create mode 100644 drivers/scsi/snic/snic_debugfs.c
+ create mode 100644 drivers/scsi/snic/snic_disc.c
+ create mode 100644 drivers/scsi/snic/snic_disc.h
+ create mode 100644 drivers/scsi/snic/snic_fwint.h
+ create mode 100644 drivers/scsi/snic/snic_io.c
+ create mode 100644 drivers/scsi/snic/snic_io.h
+ create mode 100644 drivers/scsi/snic/snic_isr.c
+ create mode 100644 drivers/scsi/snic/snic_main.c
+ create mode 100644 drivers/scsi/snic/snic_res.c
+ create mode 100644 drivers/scsi/snic/snic_res.h
+ create mode 100644 drivers/scsi/snic/snic_scsi.c
+ create mode 100644 drivers/scsi/snic/snic_stats.h
+ create mode 100644 drivers/scsi/snic/snic_trc.c
+ create mode 100644 drivers/scsi/snic/snic_trc.h
+ create mode 100644 drivers/scsi/snic/vnic_cq.c
+ create mode 100644 drivers/scsi/snic/vnic_cq.h
+ create mode 100644 drivers/scsi/snic/vnic_cq_fw.h
+ create mode 100644 drivers/scsi/snic/vnic_dev.c
+ create mode 100644 drivers/scsi/snic/vnic_dev.h
+ create mode 100644 drivers/scsi/snic/vnic_devcmd.h
+ create mode 100644 drivers/scsi/snic/vnic_intr.c
+ create mode 100644 drivers/scsi/snic/vnic_intr.h
+ create mode 100644 drivers/scsi/snic/vnic_resource.h
+ create mode 100644 drivers/scsi/snic/vnic_snic.h
+ create mode 100644 drivers/scsi/snic/vnic_stats.h
+ create mode 100644 drivers/scsi/snic/vnic_wq.c
+ create mode 100644 drivers/scsi/snic/vnic_wq.h
+ create mode 100644 drivers/scsi/snic/wq_enet_desc.h
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2a97e05..368fb76 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2536,6 +2536,13 @@ L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/fnic/
- 
-+CISCO SCSI HBA DRIVER
-+M:	Narsimhulu Musini <nmusini@cisco.com>
-+M:	Sesidhar Baddela <sebaddel@cisco.com>
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/snic/
-+
- CMPC ACPI DRIVER
- M:	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
- M:	Daniel Oliveira Nascimento <don@syst.com.br>
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 9c92f41..a6d3901 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -634,6 +634,23 @@ config FCOE_FNIC
- 	  <file:Documentation/scsi/scsi.txt>.
- 	  The module will be called fnic.
- 
-+config SCSI_SNIC
-+	tristate "Cisco SNIC Driver"
-+	depends on PCI && SCSI && X86
-+	help
-+	  This is support for the Cisco PCI-Express SCSI HBA.
-+
-+	  To compile this driver as a module, choose M here and read
-+	  <file:Documentation/scsi/scsi.txt>.
-+	  The module will be called snic.
-+
-+config SCSI_SNIC_DEBUG_FS
-+	bool "Cisco SNIC Driver Debugfs Support"
-+	depends on SCSI_SNIC && DEBUG_FS
-+	help
-+	  This enables to list debugging information from SNIC Driver
-+	  available via debugfs file system
-+
- config SCSI_DMX3191D
- 	tristate "DMX3191D SCSI support"
- 	depends on PCI && SCSI
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 58158f1..f643942 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -39,6 +39,7 @@ obj-$(CONFIG_LIBFC)		+= libfc/
- obj-$(CONFIG_LIBFCOE)		+= fcoe/
- obj-$(CONFIG_FCOE)		+= fcoe/
- obj-$(CONFIG_FCOE_FNIC)		+= fnic/
-+obj-$(CONFIG_SCSI_SNIC)		+= snic/
- obj-$(CONFIG_SCSI_BNX2X_FCOE)	+= libfc/ fcoe/ bnx2fc/
- obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	libiscsi_tcp.o iscsi_tcp.o
- obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
-diff --git a/drivers/scsi/snic/Makefile b/drivers/scsi/snic/Makefile
-new file mode 100644
-index 0000000..572102a
---- /dev/null
-+++ b/drivers/scsi/snic/Makefile
-@@ -0,0 +1,21 @@
-+obj-$(CONFIG_SCSI_SNIC) += snic.o
-+
-+snic-y := \
-+	snic_attrs.o \
-+	snic_main.o \
-+	snic_res.o \
-+	snic_isr.o \
-+	snic_ctl.o \
-+	snic_io.o \
-+	snic_scsi.o \
-+	snic_disc.o \
-+	vnic_cq.o \
-+	vnic_intr.o \
-+	vnic_dev.o \
-+	vnic_wq.o
-+
-+ifeq ($(CONFIG_SCSI_SNIC_DEBUG_FS), y)
-+ccflags-y += -DSNIC_DEBUG_FS
-+snic-y += snic_debugfs.o \
-+		snic_trc.o
-+endif
 -- 
 1.8.5.4
 
