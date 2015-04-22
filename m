@@ -1,43 +1,95 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH RESEND 6/18] megaraid_sas : Use Block layer tag support
- for internal command indexing
-Date: Wed, 22 Apr 2015 17:34:54 +0530
-Message-ID: <cfd2b3abaeaf5e0d9ec62ef3cfb9b27a@mail.gmail.com>
-References: <201504201235.t3KCZWSY016519@palmhbs0.lsi.com> <20150421104210.GC8920@infradead.org>
- <3224b33c001a84f19fc033e0d55422a1@mail.gmail.com> <20150422114002.GA19903@infradead.org>
+From: brace <brace@pmcs.com>
+Subject: RE: [PATCH v4 19/43] hpsa: add ioaccel sg chaining for the ioaccel2
+ path
+Date: Wed, 22 Apr 2015 19:12:03 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB4869FBD3@BBYEXM01.pmc-sierra.internal>
+References: <20150416134224.30238.66082.stgit@brunhilda>
+ <20150416134827.30238.67380.stgit@brunhilda> <55310729.1040304@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:33150 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754408AbbDVME4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2015 08:04:56 -0400
-Received: by qgdy78 with SMTP id y78so81921552qgd.0
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2015 05:04:55 -0700 (PDT)
-In-Reply-To: <20150422114002.GA19903@infradead.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:41712 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966240AbbDVTMM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Apr 2015 15:12:12 -0400
+In-Reply-To: <55310729.1040304@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
+To: Hannes Reinecke <hare@suse.de>, Scott Teel <Scott.Teel@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, Justin Lindley <Justin.Lindley@pmcs.com>, brace <brace@pmcs.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->-----Original Message-----
->From: Christoph Hellwig [mailto:hch@infradead.org]
->Sent: Wednesday, April 22, 2015 5:10 PM
->To: Sumit Saxena
->Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; thenzl@redhat.com;
->martin.petersen@oracle.com; jbottomley@parallels.com; Kashyap Desai
->Subject: Re: [PATCH RESEND 6/18] megaraid_sas : Use Block layer tag
-support
->for internal command indexing
->
->On Wed, Apr 22, 2015 at 05:02:03PM +0530, Sumit Saxena wrote:
->> Christoph,
->> I have started rework for the patches. I will remove debug printks.
->> Can you please let me know should I go for separate patch for change
->> in calling convention return_cmd?
->
->If it makes a huge difference for you feel free to keep it as-is and
-document
->the rationale for it in the changelog.
-Ok, I will create single patch and update the rationale for it in
-changelog.
+VGhlIGxhc3QgSSByZWFkIGFib3V0IG1lbXBvb2xzIHdhcyBmcm9tOg0KTGludXggRGV2aWNlIERy
+aXZlcnMNCiBCeSBKb25hdGhhbiBDb3JiZXQsIEFsZXNzYW5kcm8gUnViaW5pLCBHcmVnIEtyb2Fo
+LUhhcnRtYW4NCg0KaHR0cHM6Ly9sd24ubmV0L2ltYWdlcy9wZGYvTEREMy9jaDA4LnBkZg0KDQoN
+CklmICB5b3UgIGFyZSAgY29uc2lkZXJpbmcgIHVzaW5nICBhICBtZW1wb29sICBpbiAgeW91ciAg
+ZHJpdmVyLCAgcGxlYXNlICBrZWVwICBvbmUgIHRoaW5nICBpbg0KbWluZDogbWVtcG9vbHMgYWxs
+b2NhdGUgYSBjaHVuayBvZiBtZW1vcnkgdGhhdCBzaXRzIGluIGEgbGlzdCwgaWRsZSBhbmQgdW5h
+dmFpbGFibGUNCmZvciBhbnkgcmVhbCB1c2UuIEl0IGlzIGVhc3kgdG8gY29uc3VtZSBhIGdyZWF0
+IGRlYWwgb2YgbWVtb3J5IHdpdGggbWVtcG9vbHMuIEluDQphbG1vc3QgZXZlcnkgY2FzZSwgdGhl
+IHByZWZlcnJlZCBhbHRlcm5hdGl2ZSBpcyB0byBkbyB3aXRob3V0IHRoZSBtZW1wb29sIGFuZCBz
+aW1wbHkNCmRlYWwgd2l0aCB0aGUgcG9zc2liaWxpdHkgb2YgYWxsb2NhdGlvbiBmYWlsdXJlcyBp
+bnN0ZWFkLiBJZiB0aGVyZSBpcyBhbnkgd2F5IGZvciB5b3VyDQpkcml2ZXIgdG8gcmVzcG9uZCB0
+byBhbiBhbGxvY2F0aW9uIGZhaWx1cmUgaW4gYSB3YXkgdGhhdCBkb2VzIG5vdCBlbmRhbmdlciB0
+aGUgaW50ZWctDQpyaXR5IG9mIHRoZSBzeXN0ZW0sIGRvIHRoaW5ncyB0aGF0IHdheS4gVXNlIG9m
+IG1lbXBvb2xzIGluIGRyaXZlciBjb2RlIHNob3VsZCBiZQ0KcmFyZQ0KDQpCdXQgdGhpcyBib29r
+IGlzIG5vdyBxdWl0ZSBvbGQgaW4gTGludXggdGVybXMuDQoNClNvLCBJIGNhbiBpbnZlc3RpZ2F0
+ZSB1c2luZyBtZW1wb29scy4gSG93ZXZlciwgSSB3b3VsZCBwcmVmZXIgdG8gY29udGludWUgdXNp
+bmcgdGhlIGV4aXN0aW5nIG1ldGhvZHMgaW4gdGhpcyBjdXJyZW50IHBhdGNoc2V0Lg0KDQpJIGhv
+cGUgdGhhdCBpcyBvayB3aXRoIHlvdS4uLg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gRnJvbTogSGFubmVzIFJlaW5lY2tlIFttYWlsdG86aGFyZUBzdXNlLmRlXQ0KPiBTZW50
+OiBGcmlkYXksIEFwcmlsIDE3LCAyMDE1IDg6MTQgQU0NCj4gVG86IERvbiBCcmFjZTsgU2NvdHQg
+VGVlbDsgS2V2aW4gQmFybmV0dDsgamFtZXMuYm90dG9tbGV5QHBhcmFsbGVscy5jb207DQo+IGhj
+aEBpbmZyYWRlYWQub3JnOyBKdXN0aW4gTGluZGxleTsgYnJhY2UNCj4gQ2M6IGxpbnV4LXNjc2lA
+dmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjQgMTkvNDNdIGhwc2E6IGFk
+ZCBpb2FjY2VsIHNnIGNoYWluaW5nIGZvciB0aGUgaW9hY2NlbDINCj4gcGF0aA0KPiANCj4gT24g
+MDQvMTYvMjAxNSAwMzo0OCBQTSwgRG9uIEJyYWNlIHdyb3RlOg0KPiA+IEZyb206IFdlYmIgU2Nh
+bGVzIDx3ZWJibmhAaHAuY29tPg0KPiA+DQo+ID4gSW5jcmVhc2UgdGhlIHJlcXVlc3Qgc2l6ZSBm
+b3IgaW9hY2NlbDIgcGF0aC4NCj4gPg0KPiA+IFRoZSBlcnJvciwgaWYgYW55LCByZXR1cm5lZCBi
+eSBocHNhX2FsbG9jYXRlX2lvYWNjZWwyX3NnX2NoYWluX2Jsb2Nrcw0KPiA+IHRvIGhwc2FfYWxs
+b2NfaW9hY2NlbDJfY21kX2FuZF9iZnQgc2hvdWxkIGJlIHJldHVybmVkIHVwc3RyZWFtIHJhdGhl
+cg0KPiA+IHRoYW4gYXNzdW1lZCB0byBiZSAtRU5PTUVNLg0KPiA+DQo+ID4gVGhpcyBkaWZmZXJz
+IHNsaWdodGx5IGZyb20gaHBzYV9hbGxvY19pb2FjY2VsMV9jbWRfYW5kX2JmdCwNCj4gPiB3aGlj
+aCBkb2VzIG5vdCBjYWxsIGFub3RoZXIgaHBzYV9hbGxvY2F0ZSBmdW5jdGlvbiBhbmQgb25seQ0K
+PiA+IGhhcyAtRU5PTUVNIHRvIHJldHVybiBmcm9tIHNvbWUga21hbGxvYyBjYWxscy4NCj4gPg0K
+PiA+IFJldmlld2VkLWJ5OiBTY290dCBUZWVsIDxzY290dC50ZWVsQHBtY3MuY29tPg0KPiA+IFJl
+dmlld2VkLWJ5OiBLZXZpbiBCYXJuZXR0IDxrZXZpbi5iYXJuZXR0QHBtY3MuY29tPg0KPiA+IFNp
+Z25lZC1vZmYtYnk6IFJvYmVydCBFbGxpb3R0IDxlbGxpb3R0QGhwLmNvbT4NCj4gPiBTaWduZWQt
+b2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBwbWNzLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJp
+dmVycy9zY3NpL2hwc2EuYyB8ICAxMjUNCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKystLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNhLmggfCAgICAxDQo+
+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTE2IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQ0K
+PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ocHNhLmMgYi9kcml2ZXJzL3Njc2kv
+aHBzYS5jDQo+ID4gaW5kZXggYzljNDJlOS4uMTgzOTc2MSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2
+ZXJzL3Njc2kvaHBzYS5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+IEBAIC0x
+NzA0LDYgKzE3MDQsNDYgQEAgc3RhdGljIHZvaWQgaHBzYV9zbGF2ZV9kZXN0cm95KHN0cnVjdCBz
+Y3NpX2RldmljZQ0KPiAqc2RldikNCj4gPiAgCS8qIG5vdGhpbmcgdG8gZG8uICovDQo+ID4gIH0N
+Cj4gPg0KPiA+ICtzdGF0aWMgdm9pZCBocHNhX2ZyZWVfaW9hY2NlbDJfc2dfY2hhaW5fYmxvY2tz
+KHN0cnVjdCBjdGxyX2luZm8gKmgpDQo+ID4gK3sNCj4gPiArCWludCBpOw0KPiA+ICsNCj4gPiAr
+CWlmICghaC0+aW9hY2NlbDJfY21kX3NnX2xpc3QpDQo+ID4gKwkJcmV0dXJuOw0KPiA+ICsJZm9y
+IChpID0gMDsgaSA8IGgtPm5yX2NtZHM7IGkrKykgew0KPiA+ICsJCWtmcmVlKGgtPmlvYWNjZWwy
+X2NtZF9zZ19saXN0W2ldKTsNCj4gPiArCQloLT5pb2FjY2VsMl9jbWRfc2dfbGlzdFtpXSA9IE5V
+TEw7DQo+ID4gKwl9DQo+ID4gKwlrZnJlZShoLT5pb2FjY2VsMl9jbWRfc2dfbGlzdCk7DQo+ID4g
+KwloLT5pb2FjY2VsMl9jbWRfc2dfbGlzdCA9IE5VTEw7DQo+ID4gK30NCj4gPiArDQo+ID4gK3N0
+YXRpYyBpbnQgaHBzYV9hbGxvY2F0ZV9pb2FjY2VsMl9zZ19jaGFpbl9ibG9ja3Moc3RydWN0IGN0
+bHJfaW5mbyAqaCkNCj4gPiArew0KPiA+ICsJaW50IGk7DQo+ID4gKw0KPiA+ICsJaWYgKGgtPmNo
+YWluc2l6ZSA8PSAwKQ0KPiA+ICsJCXJldHVybiAwOw0KPiA+ICsNCj4gPiArCWgtPmlvYWNjZWwy
+X2NtZF9zZ19saXN0ID0NCj4gPiArCQlremFsbG9jKHNpemVvZigqaC0+aW9hY2NlbDJfY21kX3Nn
+X2xpc3QpICogaC0+bnJfY21kcywNCj4gPiArCQkJCQlHRlBfS0VSTkVMKTsNCj4gPiArCWlmICgh
+aC0+aW9hY2NlbDJfY21kX3NnX2xpc3QpDQo+ID4gKwkJcmV0dXJuIC1FTk9NRU07DQo+ID4gKwlm
+b3IgKGkgPSAwOyBpIDwgaC0+bnJfY21kczsgaSsrKSB7DQo+ID4gKwkJaC0+aW9hY2NlbDJfY21k
+X3NnX2xpc3RbaV0gPQ0KPiA+ICsJCQlrbWFsbG9jKHNpemVvZigqaC0+aW9hY2NlbDJfY21kX3Nn
+X2xpc3RbaV0pICoNCj4gPiArCQkJCQloLT5tYXhzZ2VudHJpZXMsIEdGUF9LRVJORUwpOw0KPiA+
+ICsJCWlmICghaC0+aW9hY2NlbDJfY21kX3NnX2xpc3RbaV0pDQo+ID4gKwkJCWdvdG8gY2xlYW47
+DQo+ID4gKwl9DQo+ID4gKwlyZXR1cm4gMDsNCj4gPiArDQo+ID4gK2NsZWFuOg0KPiA+ICsJaHBz
+YV9mcmVlX2lvYWNjZWwyX3NnX2NoYWluX2Jsb2NrcyhoKTsNCj4gPiArCXJldHVybiAtRU5PTUVN
+Ow0KPiA+ICt9DQo+ID4gKw0KPiA+ICBzdGF0aWMgdm9pZCBocHNhX2ZyZWVfc2dfY2hhaW5fYmxv
+Y2tzKHN0cnVjdCBjdGxyX2luZm8gKmgpDQo+ID4gIHsNCj4gPiAgCWludCBpOw0KPiBBbnkgcmVh
+c29uIHdoeSB5b3UgZGlkbid0IHVzZSBtZW1wb29scyBoZXJlPw0KPiANCj4gQ2hlZXJzLA0KPiAN
+Cj4gSGFubmVzDQo+IC0tDQo+IERyLiBIYW5uZXMgUmVpbmVja2UJCSAgICAgICAgICAgICAgIHpT
+ZXJpZXMgJiBTdG9yYWdlDQo+IGhhcmVAc3VzZS5kZQkJCSAgICAgICAgICAgICAgICs0OSA5MTEg
+NzQwNTMgNjg4DQo+IFNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5i
+ZXJnDQo+IEdGOiBGLiBJbWVuZMO2cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBt
+YW55dSwgRy4gTm9ydG9uDQo+IEhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0K
