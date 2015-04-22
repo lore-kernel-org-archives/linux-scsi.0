@@ -1,77 +1,37 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH 1/3] block: Return error in rescan_partitions if
- revalidating disk failed
-Date: Wed, 22 Apr 2015 12:13:10 +0800
-Message-ID: <20150422041310.GF2723@ad.nay.redhat.com>
-References: <1427192175-23802-1-git-send-email-famz@redhat.com>
- <1427192175-23802-2-git-send-email-famz@redhat.com>
- <1429671506.18798.4.camel@HansenPartnership.com>
+From: Torsten Luettgert <ml-lkml@enda.eu>
+Subject: Re: BUG: unable to handle kernel NULL pointer deref, bisected to
+ 746650160
+Date: Wed, 22 Apr 2015 10:45:19 +0200
+Message-ID: <20150422104519.772b0d39@goldlack.schiller106>
+References: <20150408183333.493607a3@goldlack.schiller106>
+	<20150413174105.GA14988@lst.de>
+	<20150413202829.580e3801@goldlack.schiller106>
+	<20150419165841.GA20332@lst.de>
+	<20150420132424.0ce7965f@goldlack.schiller106>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47480 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751686AbbDVENP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Apr 2015 00:13:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1429671506.18798.4.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150420132424.0ce7965f@goldlack.schiller106>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-On Tue, 04/21 19:58, James Bottomley wrote:
-> On Tue, 2015-03-24 at 18:16 +0800, Fam Zheng wrote:
-> > If the disk can't read capacity, we should return an error.
-> 
-> I'm not sure I buy this: you need to justify why.
-> 
-> For instance removable media return an error in revalidate that causes
-> the medium not present flag to be set ... do we really want to propagate
-> the error in that case?
+On Mon, 20 Apr 2015 13:24:24 +0200
+Torsten Luettgert <ml-lkml@enda.eu> wrote:
 
-I think we should. There is a command failed, and the user won't get a valid
-disk size.
+> > Can you test the patch below?
+> 
+> I'm running it right now and keeping my fingers crossed.
 
-> 
-> > Signed-off-by: Fam Zheng <famz@redhat.com>
-> > ---
-> >  block/partition-generic.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/block/partition-generic.c b/block/partition-generic.c
-> > index 0d9e5f9..1e60d7d 100644
-> > --- a/block/partition-generic.c
-> > +++ b/block/partition-generic.c
-> > @@ -427,11 +427,11 @@ rescan:
-> >  		return res;
-> >  
-> >  	if (disk->fops->revalidate_disk)
-> > -		disk->fops->revalidate_disk(disk);
-> > +		res = disk->fops->revalidate_disk(disk);
-> 
-> You're assuming here that a negative error code is being returned, but
-> some (cciss) seem to be returning 1 on error.
-> 
-> You'll need to assure us that you've checked all the consumers before
-> making this change.
+Just under two days uptime now, and no crashes. I'm pretty sure you
+nailed it.
 
-I'll look at the return values.
+I'll keep this running, and if - when - it has been going for a week (3
+times the max uptime without the patch) - I'll give a final notice.
 
-Fam
+Thanks a lot, Christoph! Will this patch be integrated into mainline?
 
-> 
-> James
-> 
-> >  	check_disk_size_change(disk, bdev);
-> >  	bdev->bd_invalidated = 0;
-> > -	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
-> > -		return 0;
-> > +	if (res || !get_capacity(disk) || !(state = check_partition(disk, bdev)))
-> > +		return res;
-> >  	if (IS_ERR(state)) {
-> >  		/*
-> >  		 * I/O error reading the partition table.  If any
-> 
-> 
-> 
+Regards,
+Torsten
