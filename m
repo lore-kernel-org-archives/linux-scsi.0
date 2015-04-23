@@ -1,21 +1,27 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH v3 16/18] megaraid_sas : add missing byte swaps to the
- sriov code
-Date: Thu, 23 Apr 2015 16:33:54 +0530
-Message-ID: <201504231106.t3NB6Adl030850@palmhbs0.lsi.com>
+Subject: [PATCH v3 17/18] megaraid_sas : fix megasas_fire_cmd_fusion
+ calling convention
+Date: Thu, 23 Apr 2015 16:34:09 +0530
+Message-ID: <201504231106.t3NB6PX8030941@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:52160
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1blp0186.outbound.protection.outlook.com ([207.46.163.186]:21641
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964811AbbDWLEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Apr 2015 07:04:01 -0400
+	id S964811AbbDWLER (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Apr 2015 07:04:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com
+
+The fusion HBAs don't really use the instance template like the other
+variants, as it branches off at a much higher level.  So instead of
+trying to squeeze megasas_fire_cmd_fusion into the wrong calling
+convention call it locally with argument data types that match what
+is passed.
 
 From: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
@@ -24,98 +30,134 @@ Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c |   46 +++++++++++++++-------------
- 1 files changed, 25 insertions(+), 21 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   72 +++++++++++---------------
+ 1 files changed, 31 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 8407b9b..351d0b7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1915,20 +1915,22 @@ static int megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
- 	dcmd->cmd = MFI_CMD_DCMD;
- 	dcmd->cmd_status = 0xFF;
- 	dcmd->sge_count = 1;
--	dcmd->flags = MFI_FRAME_DIR_BOTH;
-+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
- 	dcmd->timeout = 0;
- 	dcmd->pad_0 = 0;
--	dcmd->data_xfer_len = sizeof(struct MR_LD_VF_AFFILIATION_111);
--	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111;
-+	dcmd->data_xfer_len =
-+		cpu_to_le32(sizeof(struct MR_LD_VF_AFFILIATION_111));
-+	dcmd->opcode = cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 487cd34..826ba1c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -182,6 +182,31 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
+ }
  
- 	if (initial)
- 		dcmd->sgl.sge32[0].phys_addr =
--			instance->vf_affiliation_111_h;
-+			cpu_to_le32(instance->vf_affiliation_111_h);
- 	else
--		dcmd->sgl.sge32[0].phys_addr = new_affiliation_111_h;
-+		dcmd->sgl.sge32[0].phys_addr =
-+			cpu_to_le32(new_affiliation_111_h);
+ /**
++ * megasas_fire_cmd_fusion -	Sends command to the FW
++ */
++static void
++megasas_fire_cmd_fusion(struct megasas_instance *instance,
++		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
++{
++#if defined(writeq) && defined(CONFIG_64BIT)
++	u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
++			le32_to_cpu(req_desc->u.low));
++
++	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
++#else
++	unsigned long flags;
++
++	spin_lock_irqsave(&instance->hba_lock, flags);
++	writel(le32_to_cpu(req_desc->u.low),
++		&instance->reg_set->inbound_low_queue_port);
++	writel(le32_to_cpu(req_desc.u.high),
++		&instance->reg_set->inbound_high_queue_port);
++	spin_unlock_irqrestore(&instance->hba_lock, flags);
++#endif
++}
++
++
++/**
+  * megasas_teardown_frame_pool_fusion -	Destroy the cmd frame DMA pool
+  * @instance:				Adapter soft state
+  */
+@@ -679,8 +704,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 			break;
+ 	}
  
--	dcmd->sgl.sge32[0].length =
--		sizeof(struct MR_LD_VF_AFFILIATION_111);
-+	dcmd->sgl.sge32[0].length = cpu_to_le32(
-+		sizeof(struct MR_LD_VF_AFFILIATION_111));
+-	instance->instancet->fire_cmd(instance, req_desc.u.low,
+-				      req_desc.u.high, instance->reg_set);
++	megasas_fire_cmd_fusion(instance, &req_desc);
  
- 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation for "
- 	       "scsi%d\n", instance->host->host_no);
-@@ -2026,20 +2028,22 @@ static int megasas_get_ld_vf_affiliation_12(struct megasas_instance *instance,
- 	dcmd->cmd = MFI_CMD_DCMD;
- 	dcmd->cmd_status = 0xFF;
- 	dcmd->sge_count = 1;
--	dcmd->flags = MFI_FRAME_DIR_BOTH;
-+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
- 	dcmd->timeout = 0;
- 	dcmd->pad_0 = 0;
--	dcmd->data_xfer_len = (MAX_LOGICAL_DRIVES + 1) *
--		sizeof(struct MR_LD_VF_AFFILIATION);
--	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS;
-+	dcmd->data_xfer_len = cpu_to_le32((MAX_LOGICAL_DRIVES + 1) *
-+		sizeof(struct MR_LD_VF_AFFILIATION));
-+	dcmd->opcode = cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS);
+ 	wait_and_poll(instance, cmd, MFI_POLL_TIMEOUT_SECS);
  
- 	if (initial)
--		dcmd->sgl.sge32[0].phys_addr = instance->vf_affiliation_h;
-+		dcmd->sgl.sge32[0].phys_addr =
-+			cpu_to_le32(instance->vf_affiliation_h);
- 	else
--		dcmd->sgl.sge32[0].phys_addr = new_affiliation_h;
-+		dcmd->sgl.sge32[0].phys_addr =
-+			cpu_to_le32(new_affiliation_h);;
+@@ -1096,34 +1120,6 @@ fail_alloc_mfi_cmds:
+ }
  
--	dcmd->sgl.sge32[0].length = (MAX_LOGICAL_DRIVES + 1) *
--		sizeof(struct MR_LD_VF_AFFILIATION);
-+	dcmd->sgl.sge32[0].length = cpu_to_le32((MAX_LOGICAL_DRIVES + 1) *
-+		sizeof(struct MR_LD_VF_AFFILIATION));
+ /**
+- * megasas_fire_cmd_fusion -	Sends command to the FW
+- * @frame_phys_addr :		Physical address of cmd
+- * @frame_count :		Number of frames for the command
+- * @regs :			MFI register set
+- */
+-void
+-megasas_fire_cmd_fusion(struct megasas_instance *instance,
+-			dma_addr_t req_desc_lo,
+-			u32 req_desc_hi,
+-			struct megasas_register_set __iomem *regs)
+-{
+-#if defined(writeq) && defined(CONFIG_64BIT)
+-	u64 req_data = (((u64)le32_to_cpu(req_desc_hi) << 32) |
+-			le32_to_cpu(req_desc_lo));
+-
+-	writeq(req_data, &(regs)->inbound_low_queue_port);
+-#else
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&instance->hba_lock, flags);
+-
+-	writel(le32_to_cpu(req_desc_lo), &(regs)->inbound_low_queue_port);
+-	writel(le32_to_cpu(req_desc_hi), &(regs)->inbound_high_queue_port);
+-	spin_unlock_irqrestore(&instance->hba_lock, flags);
+-#endif
+-}
+-
+-/**
+  * map_cmd_status -	Maps FW cmd status to OS cmd status
+  * @cmd :		Pointer to cmd
+  * @status :		status of cmd returned by FW
+@@ -1948,9 +1944,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+ 	 */
+ 	atomic_inc(&instance->fw_outstanding);
  
- 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation for "
- 	       "scsi%d\n", instance->host->host_no);
-@@ -2187,17 +2191,17 @@ int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+-	instance->instancet->fire_cmd(instance,
+-				      req_desc->u.low, req_desc->u.high,
+-				      instance->reg_set);
++	megasas_fire_cmd_fusion(instance, req_desc);
  
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
+ 	return 0;
+ }
+@@ -2311,8 +2305,7 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+ 		printk(KERN_ERR "Couldn't issue MFI pass thru cmd\n");
+ 		return;
+ 	}
+-	instance->instancet->fire_cmd(instance, req_desc->u.low,
+-				      req_desc->u.high, instance->reg_set);
++	megasas_fire_cmd_fusion(instance, req_desc);
+ }
  
--	dcmd->mbox.s[0] = sizeof(struct MR_CTRL_HB_HOST_MEM);
-+	dcmd->mbox.s[0] = cpu_to_le16(sizeof(struct MR_CTRL_HB_HOST_MEM));
- 	dcmd->cmd = MFI_CMD_DCMD;
- 	dcmd->cmd_status = 0xFF;
- 	dcmd->sge_count = 1;
--	dcmd->flags = MFI_FRAME_DIR_BOTH;
-+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
- 	dcmd->timeout = 0;
- 	dcmd->pad_0 = 0;
--	dcmd->data_xfer_len = sizeof(struct MR_CTRL_HB_HOST_MEM);
--	dcmd->opcode = MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC;
--	dcmd->sgl.sge32[0].phys_addr = instance->hb_host_mem_h;
--	dcmd->sgl.sge32[0].length = sizeof(struct MR_CTRL_HB_HOST_MEM);
-+	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct MR_CTRL_HB_HOST_MEM));
-+	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC);
-+	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(instance->hb_host_mem_h);
-+	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct MR_CTRL_HB_HOST_MEM));
+ /**
+@@ -2522,11 +2515,9 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ 		req_desc = megasas_get_request_descriptor
+ 					(instance, smid - 1);
+ 		if (req_desc && (cmd_mfi->frame->dcmd.opcode !=
+-				cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO))) {
+-			instance->instancet->fire_cmd(instance,
+-				req_desc->u.low, req_desc->u.high,
+-				instance->reg_set);
+-		} else
++				cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO)))
++			megasas_fire_cmd_fusion(instance, req_desc);
++		else
+ 			megasas_return_cmd(instance, cmd_mfi);
+ 	}
+ }
+@@ -2961,7 +2952,6 @@ void megasas_fusion_ocr_wq(struct work_struct *work)
+ }
  
- 	printk(KERN_WARNING "megasas: SR-IOV: Starting heartbeat for scsi%d\n",
- 	       instance->host->host_no);
+ struct megasas_instance_template megasas_instance_template_fusion = {
+-	.fire_cmd = megasas_fire_cmd_fusion,
+ 	.enable_intr = megasas_enable_intr_fusion,
+ 	.disable_intr = megasas_disable_intr_fusion,
+ 	.clear_intr = megasas_clear_intr_fusion,
 -- 
 1.7.1
 
