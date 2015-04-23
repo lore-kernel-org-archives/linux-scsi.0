@@ -1,137 +1,100 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH 2/3] 3w-xxxx: fix command completion race
-Date: Thu, 23 Apr 2015 10:56:28 -0700
-Message-ID: <CAHtARFEXtLNbBNbfzwD5-0FOKQy6eLCKEfijdw2kyqy_HKdeMg@mail.gmail.com>
-References: <1429775331-1017-1-git-send-email-hch@lst.de>
-	<1429775331-1017-3-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1429775331-1017-3-git-send-email-hch@lst.de>
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Torsten Luettgert <ml-lkml@enda.eu>, Bernd Kardatzki <Bernd.Kardatzki@med.uni-tuebingen.de>, stable@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] virtio_scsi: don't select CONFIG_BLK_DEV_INTEGRITY
+Date: Thu, 23 Apr 2015 20:10:39 +0200
+Message-ID: <1429812639-8648-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:56576 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030390AbbDWSLf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 14:11:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Paolo Bonzini <pbonzini@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, Apr 23, 2015 at 12:48 AM, Christoph Hellwig <hch@lst.de> wrote:
-> The 3w-xxxx driver needs to tear down the dma mappings before returning
-> the command to the midlayer, as there is no guarantee the sglist and
-> count are valid after that point.  Also remove the dma mapping helpers
-> which have another inherent race due to the request_id index.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/scsi/3w-xxxx.c | 42 ++++++------------------------------------
->  drivers/scsi/3w-xxxx.h |  5 -----
->  2 files changed, 6 insertions(+), 41 deletions(-)
->
-> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-> index c75f204..2940bd7 100644
-> --- a/drivers/scsi/3w-xxxx.c
-> +++ b/drivers/scsi/3w-xxxx.c
-> @@ -1271,32 +1271,6 @@ static int tw_initialize_device_extension(TW_Device_Extension *tw_dev)
->         return 0;
->  } /* End tw_initialize_device_extension() */
->
-> -static int tw_map_scsi_sg_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
-> -{
-> -       int use_sg;
-> -
-> -       dprintk(KERN_WARNING "3w-xxxx: tw_map_scsi_sg_data()\n");
-> -
-> -       use_sg = scsi_dma_map(cmd);
-> -       if (use_sg < 0) {
-> -               printk(KERN_WARNING "3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.\n");
-> -               return 0;
-> -       }
-> -
-> -       cmd->SCp.phase = TW_PHASE_SGLIST;
-> -       cmd->SCp.have_data_in = use_sg;
-> -
-> -       return use_sg;
-> -} /* End tw_map_scsi_sg_data() */
-> -
-> -static void tw_unmap_scsi_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
-> -{
-> -       dprintk(KERN_WARNING "3w-xxxx: tw_unmap_scsi_data()\n");
-> -
-> -       if (cmd->SCp.phase == TW_PHASE_SGLIST)
-> -               scsi_dma_unmap(cmd);
-> -} /* End tw_unmap_scsi_data() */
-> -
->  /* This function will reset a device extension */
->  static int tw_reset_device_extension(TW_Device_Extension *tw_dev)
->  {
-> @@ -1319,8 +1293,8 @@ static int tw_reset_device_extension(TW_Device_Extension *tw_dev)
->                         srb = tw_dev->srb[i];
->                         if (srb != NULL) {
->                                 srb->result = (DID_RESET << 16);
-> -                               tw_dev->srb[i]->scsi_done(tw_dev->srb[i]);
-> -                               tw_unmap_scsi_data(tw_dev->tw_pci_dev, tw_dev->srb[i]);
-> +                               scsi_dma_unmap(srb);
-> +                               srb->scsi_done(srb);
->                         }
->                 }
->         }
-> @@ -1767,8 +1741,8 @@ static int tw_scsiop_read_write(TW_Device_Extension *tw_dev, int request_id)
->         command_packet->byte8.io.lba = lba;
->         command_packet->byte6.block_count = num_sectors;
->
-> -       use_sg = tw_map_scsi_sg_data(tw_dev->tw_pci_dev, tw_dev->srb[request_id]);
-> -       if (!use_sg)
-> +       use_sg = scsi_dma_map(srb);
-> +       if (use_sg <= 0)
->                 return 1;
->
->         scsi_for_each_sg(tw_dev->srb[request_id], sg, use_sg, i) {
-> @@ -1955,9 +1929,6 @@ static int tw_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_c
->         /* Save the scsi command for use by the ISR */
->         tw_dev->srb[request_id] = SCpnt;
->
-> -       /* Initialize phase to zero */
-> -       SCpnt->SCp.phase = TW_PHASE_INITIAL;
-> -
->         switch (*command) {
->                 case READ_10:
->                 case READ_6:
-> @@ -2185,12 +2156,11 @@ static irqreturn_t tw_interrupt(int irq, void *dev_instance)
->
->                                 /* Now complete the io */
->                                 if ((error != TW_ISR_DONT_COMPLETE)) {
-> +                                       scsi_dma_unmap(tw_dev->srb[request_id]);
-> +                                       tw_dev->srb[request_id]->scsi_done(tw_dev->srb[request_id]);
->                                         tw_dev->state[request_id] = TW_S_COMPLETED;
->                                         tw_state_request_finish(tw_dev, request_id);
->                                         tw_dev->posted_request_count--;
-> -                                       tw_dev->srb[request_id]->scsi_done(tw_dev->srb[request_id]);
-> -
-> -                                       tw_unmap_scsi_data(tw_dev->tw_pci_dev, tw_dev->srb[request_id]);
->                                 }
->                         }
->
-> diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
-> index 29b0b84e..6f65e66 100644
-> --- a/drivers/scsi/3w-xxxx.h
-> +++ b/drivers/scsi/3w-xxxx.h
-> @@ -195,11 +195,6 @@ static unsigned char tw_sense_table[][4] =
->  #define TW_AEN_SMART_FAIL        0x000F
->  #define TW_AEN_SBUF_FAIL         0x0024
->
-> -/* Phase defines */
-> -#define TW_PHASE_INITIAL 0
-> -#define TW_PHASE_SINGLE 1
-> -#define TW_PHASE_SGLIST 2
-> -
->  /* Misc defines */
->  #define TW_ALIGNMENT_6000                    64 /* 64 bytes */
->  #define TW_ALIGNMENT_7000                     4  /* 4 bytes */
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T10 PI is just another optional feature, LLDDs should work without
+the infrastructure.
 
-Acked-by: Adam Radford <aradford@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/Kconfig       |  1 -
+ drivers/scsi/virtio_scsi.c | 11 ++++++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index b021bcb..896bea6 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1743,7 +1743,6 @@ config SCSI_BFA_FC
+ config SCSI_VIRTIO
+ 	tristate "virtio-scsi support"
+ 	depends on VIRTIO
+-	select BLK_DEV_INTEGRITY
+ 	help
+           This is the virtual HBA driver for virtio.  If the kernel will
+           be used in a virtual machine, say Y or M.
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index f164f24..0f2bb5b 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -501,6 +501,7 @@ static void virtio_scsi_init_hdr(struct virtio_device *vdev,
+ 	cmd->crn = 0;
+ }
+ 
++#ifdef CONFIG_BLK_DEV_INTEGRITY
+ static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
+ 				    struct virtio_scsi_cmd_req_pi *cmd_pi,
+ 				    struct scsi_cmnd *sc)
+@@ -524,6 +525,7 @@ static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
+ 						       blk_rq_sectors(rq) *
+ 						       bi->tuple_size);
+ }
++#endif
+ 
+ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 				 struct virtio_scsi_vq *req_vq,
+@@ -546,11 +548,14 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 
+ 	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
+ 
++#ifdef CONFIG_BLK_DEV_INTEGRITY
+ 	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
+ 		virtio_scsi_init_hdr_pi(vscsi->vdev, &cmd->req.cmd_pi, sc);
+ 		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
+ 		req_size = sizeof(cmd->req.cmd_pi);
+-	} else {
++	} else
++#endif
++	{
+ 		virtio_scsi_init_hdr(vscsi->vdev, &cmd->req.cmd, sc);
+ 		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
+ 		req_size = sizeof(cmd->req.cmd);
+@@ -1002,6 +1007,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
+ 	shost->nr_hw_queues = num_queues;
+ 
++#ifdef VIRTIO_SCSI_F_T10_PI
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
+ 		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+ 			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
+@@ -1010,6 +1016,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 		scsi_host_set_prot(shost, host_prot);
+ 		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+ 	}
++#endif
+ 
+ 	err = scsi_add_host(shost, &vdev->dev);
+ 	if (err)
+@@ -1090,7 +1097,9 @@ static struct virtio_device_id id_table[] = {
+ static unsigned int features[] = {
+ 	VIRTIO_SCSI_F_HOTPLUG,
+ 	VIRTIO_SCSI_F_CHANGE,
++#ifdef VIRTIO_SCSI_F_T10_PI
+ 	VIRTIO_SCSI_F_T10_PI,
++#endif
+ };
+ 
+ static struct virtio_driver virtio_scsi_driver = {
+-- 
+1.9.1
+
