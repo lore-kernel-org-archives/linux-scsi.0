@@ -1,17 +1,17 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH v3 15/18] megaraid_sas : bytewise or should be done on
- native endian variables
-Date: Thu, 23 Apr 2015 16:33:39 +0530
-Message-ID: <201504231105.t3NB5t0U030759@palmhbs0.lsi.com>
+Subject: [PATCH v3 16/18] megaraid_sas : add missing byte swaps to the
+ sriov code
+Date: Thu, 23 Apr 2015 16:33:54 +0530
+Message-ID: <201504231106.t3NB6Adl030850@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1blp0190.outbound.protection.outlook.com ([207.46.163.190]:22279
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2lp0208.outbound.protection.outlook.com ([207.46.163.208]:52160
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933591AbbDWLDo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Apr 2015 07:03:44 -0400
+	id S964811AbbDWLEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Apr 2015 07:04:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -24,24 +24,98 @@ Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |   46 +++++++++++++++-------------
+ 1 files changed, 25 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index b995774..487cd34 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -621,7 +621,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 8407b9b..351d0b7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1915,20 +1915,22 @@ static int megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
+ 	dcmd->cmd = MFI_CMD_DCMD;
+ 	dcmd->cmd_status = 0xFF;
+ 	dcmd->sge_count = 1;
+-	dcmd->flags = MFI_FRAME_DIR_BOTH;
++	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
+ 	dcmd->timeout = 0;
+ 	dcmd->pad_0 = 0;
+-	dcmd->data_xfer_len = sizeof(struct MR_LD_VF_AFFILIATION_111);
+-	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111;
++	dcmd->data_xfer_len =
++		cpu_to_le32(sizeof(struct MR_LD_VF_AFFILIATION_111));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111);
  
- 	frame_hdr = &cmd->frame->hdr;
- 	frame_hdr->cmd_status = 0xFF;
--	frame_hdr->flags |= cpu_to_le16(MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
-+	frame_hdr->flags = cpu_to_le16(
-+		le16_to_cpu(frame_hdr->flags) |
-+		MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
+ 	if (initial)
+ 		dcmd->sgl.sge32[0].phys_addr =
+-			instance->vf_affiliation_111_h;
++			cpu_to_le32(instance->vf_affiliation_111_h);
+ 	else
+-		dcmd->sgl.sge32[0].phys_addr = new_affiliation_111_h;
++		dcmd->sgl.sge32[0].phys_addr =
++			cpu_to_le32(new_affiliation_111_h);
  
- 	init_frame->cmd	= MFI_CMD_INIT;
- 	init_frame->cmd_status = 0xFF;
+-	dcmd->sgl.sge32[0].length =
+-		sizeof(struct MR_LD_VF_AFFILIATION_111);
++	dcmd->sgl.sge32[0].length = cpu_to_le32(
++		sizeof(struct MR_LD_VF_AFFILIATION_111));
+ 
+ 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation for "
+ 	       "scsi%d\n", instance->host->host_no);
+@@ -2026,20 +2028,22 @@ static int megasas_get_ld_vf_affiliation_12(struct megasas_instance *instance,
+ 	dcmd->cmd = MFI_CMD_DCMD;
+ 	dcmd->cmd_status = 0xFF;
+ 	dcmd->sge_count = 1;
+-	dcmd->flags = MFI_FRAME_DIR_BOTH;
++	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
+ 	dcmd->timeout = 0;
+ 	dcmd->pad_0 = 0;
+-	dcmd->data_xfer_len = (MAX_LOGICAL_DRIVES + 1) *
+-		sizeof(struct MR_LD_VF_AFFILIATION);
+-	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS;
++	dcmd->data_xfer_len = cpu_to_le32((MAX_LOGICAL_DRIVES + 1) *
++		sizeof(struct MR_LD_VF_AFFILIATION));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS);
+ 
+ 	if (initial)
+-		dcmd->sgl.sge32[0].phys_addr = instance->vf_affiliation_h;
++		dcmd->sgl.sge32[0].phys_addr =
++			cpu_to_le32(instance->vf_affiliation_h);
+ 	else
+-		dcmd->sgl.sge32[0].phys_addr = new_affiliation_h;
++		dcmd->sgl.sge32[0].phys_addr =
++			cpu_to_le32(new_affiliation_h);;
+ 
+-	dcmd->sgl.sge32[0].length = (MAX_LOGICAL_DRIVES + 1) *
+-		sizeof(struct MR_LD_VF_AFFILIATION);
++	dcmd->sgl.sge32[0].length = cpu_to_le32((MAX_LOGICAL_DRIVES + 1) *
++		sizeof(struct MR_LD_VF_AFFILIATION));
+ 
+ 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation for "
+ 	       "scsi%d\n", instance->host->host_no);
+@@ -2187,17 +2191,17 @@ int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+ 
+ 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
+ 
+-	dcmd->mbox.s[0] = sizeof(struct MR_CTRL_HB_HOST_MEM);
++	dcmd->mbox.s[0] = cpu_to_le16(sizeof(struct MR_CTRL_HB_HOST_MEM));
+ 	dcmd->cmd = MFI_CMD_DCMD;
+ 	dcmd->cmd_status = 0xFF;
+ 	dcmd->sge_count = 1;
+-	dcmd->flags = MFI_FRAME_DIR_BOTH;
++	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
+ 	dcmd->timeout = 0;
+ 	dcmd->pad_0 = 0;
+-	dcmd->data_xfer_len = sizeof(struct MR_CTRL_HB_HOST_MEM);
+-	dcmd->opcode = MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC;
+-	dcmd->sgl.sge32[0].phys_addr = instance->hb_host_mem_h;
+-	dcmd->sgl.sge32[0].length = sizeof(struct MR_CTRL_HB_HOST_MEM);
++	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct MR_CTRL_HB_HOST_MEM));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC);
++	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(instance->hb_host_mem_h);
++	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct MR_CTRL_HB_HOST_MEM));
+ 
+ 	printk(KERN_WARNING "megasas: SR-IOV: Starting heartbeat for scsi%d\n",
+ 	       instance->host->host_no);
 -- 
 1.7.1
 
