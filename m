@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] 3w-sas: fix command completion race
-Date: Thu, 23 Apr 2015 09:48:49 +0200
-Message-ID: <1429775331-1017-2-git-send-email-hch@lst.de>
+Subject: [PATCH 3/3] 3w-9xxx: fix command completion race
+Date: Thu, 23 Apr 2015 09:48:51 +0200
+Message-ID: <1429775331-1017-4-git-send-email-hch@lst.de>
 References: <1429775331-1017-1-git-send-email-hch@lst.de>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1429775331-1017-1-git-send-email-hch@lst.de>
@@ -10,30 +10,50 @@ To: linux-scsi@vger.kernel.org
 Cc: Torsten Luettgert <ml-lkml@enda.eu>, Bernd Kardatzki <Bernd.Kardatzki@med.uni-tuebingen.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The 3w-sas driver needs to tear down the dma mappings before returning
+The 3w-9xxx driver needs to tear down the dma mappings before returning
 the command to the midlayer, as there is no guarantee the sglist and
 count are valid after that point.  Also remove the dma mapping helpers
 which have another inherent race due to the request_id index.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Torsten Luettgert <ml-lkml@enda.eu>
-Tested-by: Bernd Kardatzki <Bernd.Kardatzki@med.uni-tuebingen.de>
 Cc: stable@vger.kernel.org
 ---
- drivers/scsi/3w-sas.c | 50 ++++++++++----------------------------------------
- drivers/scsi/3w-sas.h |  4 ----
- 2 files changed, 10 insertions(+), 44 deletions(-)
+ drivers/scsi/3w-9xxx.c | 57 ++++++++++++--------------------------------------
+ drivers/scsi/3w-9xxx.h |  5 -----
+ 2 files changed, 13 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 2361772..3d4c5f9 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -290,26 +290,6 @@ static int twl_post_command_packet(TW_Device_Extension *tw_dev, int request_id)
- 	return 0;
- } /* End twl_post_command_packet() */
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 7600639..c3224b6 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -149,7 +149,6 @@ static int twa_reset_sequence(TW_Device_Extension *tw_dev, int soft_reset);
+ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry *sglistarg);
+ static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int request_id);
+ static char *twa_string_lookup(twa_message_type *table, unsigned int aen_code);
+-static void twa_unmap_scsi_data(TW_Device_Extension *tw_dev, int request_id);
+ 
+ /* Functions */
+ 
+@@ -1340,11 +1339,11 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+ 				}
+ 
+ 				/* Now complete the io */
++				scsi_dma_unmap(cmd);
++				cmd->scsi_done(cmd);
+ 				tw_dev->state[request_id] = TW_S_COMPLETED;
+ 				twa_free_request_id(tw_dev, request_id);
+ 				tw_dev->posted_request_count--;
+-				tw_dev->srb[request_id]->scsi_done(tw_dev->srb[request_id]);
+-				twa_unmap_scsi_data(tw_dev, request_id);
+ 			}
+ 
+ 			/* Check for valid status after each drain */
+@@ -1402,26 +1401,6 @@ static void twa_load_sgl(TW_Device_Extension *tw_dev, TW_Command_Full *full_comm
+ 	}
+ } /* End twa_load_sgl() */
  
 -/* This function will perform a pci-dma mapping for a scatter gather list */
--static int twl_map_scsi_sg_data(TW_Device_Extension *tw_dev, int request_id)
+-static int twa_map_scsi_sg_data(TW_Device_Extension *tw_dev, int request_id)
 -{
 -	int use_sg;
 -	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
@@ -42,7 +62,7 @@ index 2361772..3d4c5f9 100644
 -	if (!use_sg)
 -		return 0;
 -	else if (use_sg < 0) {
--		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1, "Failed to map scatter gather list");
+-		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1c, "Failed to map scatter gather list");
 -		return 0;
 -	}
 -
@@ -50,93 +70,94 @@ index 2361772..3d4c5f9 100644
 -	cmd->SCp.have_data_in = use_sg;
 -
 -	return use_sg;
--} /* End twl_map_scsi_sg_data() */
+-} /* End twa_map_scsi_sg_data() */
 -
- /* This function hands scsi cdb's to the firmware */
- static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id, char *cdb, int use_sg, TW_SG_Entry_ISO *sglistarg)
+ /* This function will poll for a response interrupt of a request */
+ static int twa_poll_response(TW_Device_Extension *tw_dev, int request_id, int seconds)
  {
-@@ -357,8 +337,8 @@ static int twl_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 	if (!sglistarg) {
- 		/* Map sglist from scsi layer to cmd packet */
- 		if (scsi_sg_count(srb)) {
--			sg_count = twl_map_scsi_sg_data(tw_dev, request_id);
--			if (sg_count == 0)
-+			sg_count = scsi_dma_map(srb);
-+			if (sg_count <= 0)
- 				goto out;
- 
- 			scsi_for_each_sg(srb, sg, sg_count, i) {
-@@ -1102,15 +1082,6 @@ out:
- 	return retval;
- } /* End twl_initialize_device_extension() */
- 
--/* This function will perform a pci-dma unmap */
--static void twl_unmap_scsi_data(TW_Device_Extension *tw_dev, int request_id)
--{
--	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
--
--	if (cmd->SCp.phase == TW_PHASE_SGLIST)
--		scsi_dma_unmap(cmd);
--} /* End twl_unmap_scsi_data() */
--
- /* This function will handle attention interrupts */
- static int twl_handle_attention_interrupt(TW_Device_Extension *tw_dev)
- {
-@@ -1251,11 +1222,11 @@ static irqreturn_t twl_interrupt(int irq, void *dev_instance)
- 			}
- 
- 			/* Now complete the io */
-+			scsi_dma_unmap(cmd);
-+			cmd->scsi_done(cmd);
- 			tw_dev->state[request_id] = TW_S_COMPLETED;
- 			twl_free_request_id(tw_dev, request_id);
- 			tw_dev->posted_request_count--;
--			tw_dev->srb[request_id]->scsi_done(tw_dev->srb[request_id]);
--			twl_unmap_scsi_data(tw_dev, request_id);
- 		}
- 
- 		/* Check for another response interrupt */
-@@ -1400,10 +1371,12 @@ static int twl_reset_device_extension(TW_Device_Extension *tw_dev, int ioctl_res
- 		if ((tw_dev->state[i] != TW_S_FINISHED) &&
+@@ -1600,9 +1579,11 @@ static int twa_reset_device_extension(TW_Device_Extension *tw_dev)
  		    (tw_dev->state[i] != TW_S_INITIAL) &&
  		    (tw_dev->state[i] != TW_S_COMPLETED)) {
--			if (tw_dev->srb[i]) {
+ 			if (tw_dev->srb[i]) {
 -				tw_dev->srb[i]->result = (DID_RESET << 16);
 -				tw_dev->srb[i]->scsi_done(tw_dev->srb[i]);
--				twl_unmap_scsi_data(tw_dev, i);
-+		    	struct scsi_cmnd * cmd = tw_dev->srb[i];
+-				twa_unmap_scsi_data(tw_dev, i);
++				struct scsi_cmnd * cmd = tw_dev->srb[i];
 +
-+			if (cmd) {
 +				cmd->result = (DID_RESET << 16);
 +				scsi_dma_unmap(cmd);
 +				cmd->scsi_done(cmd);
  			}
  		}
  	}
-@@ -1507,9 +1480,6 @@ static int twl_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+@@ -1781,21 +1762,18 @@ static int twa_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
  	/* Save the scsi command for use by the ISR */
  	tw_dev->srb[request_id] = SCpnt;
  
 -	/* Initialize phase to zero */
 -	SCpnt->SCp.phase = TW_PHASE_INITIAL;
 -
- 	retval = twl_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NULL);
- 	if (retval) {
- 		tw_dev->state[request_id] = TW_S_COMPLETED;
-diff --git a/drivers/scsi/3w-sas.h b/drivers/scsi/3w-sas.h
-index d474892..fec6449 100644
---- a/drivers/scsi/3w-sas.h
-+++ b/drivers/scsi/3w-sas.h
-@@ -103,10 +103,6 @@ static char *twl_aen_severity_table[] =
+ 	retval = twa_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NULL);
+ 	switch (retval) {
+ 	case SCSI_MLQUEUE_HOST_BUSY:
++		scsi_dma_unmap(SCpnt);
+ 		twa_free_request_id(tw_dev, request_id);
+-		twa_unmap_scsi_data(tw_dev, request_id);
+ 		break;
+ 	case 1:
+-		tw_dev->state[request_id] = TW_S_COMPLETED;
+-		twa_free_request_id(tw_dev, request_id);
+-		twa_unmap_scsi_data(tw_dev, request_id);
+ 		SCpnt->result = (DID_ERROR << 16);
++		scsi_dma_unmap(SCpnt);
+ 		done(SCpnt);
++		tw_dev->state[request_id] = TW_S_COMPLETED;
++		twa_free_request_id(tw_dev, request_id);
+ 		retval = 0;
+ 	}
+ out:
+@@ -1863,8 +1841,8 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
+ 				command_packet->sg_list[0].address = TW_CPU_TO_SGL(tw_dev->generic_buffer_phys[request_id]);
+ 				command_packet->sg_list[0].length = cpu_to_le32(TW_MIN_SGL_LENGTH);
+ 			} else {
+-				sg_count = twa_map_scsi_sg_data(tw_dev, request_id);
+-				if (sg_count == 0)
++				sg_count = scsi_dma_map(srb);
++				if (sg_count < 0)
+ 					goto out;
+ 
+ 				scsi_for_each_sg(srb, sg, sg_count, i) {
+@@ -1979,15 +1957,6 @@ static char *twa_string_lookup(twa_message_type *table, unsigned int code)
+ 	return(table[index].text);
+ } /* End twa_string_lookup() */
+ 
+-/* This function will perform a pci-dma unmap */
+-static void twa_unmap_scsi_data(TW_Device_Extension *tw_dev, int request_id)
+-{
+-	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
+-
+-	if (cmd->SCp.phase == TW_PHASE_SGLIST)
+-		scsi_dma_unmap(cmd);
+-} /* End twa_unmap_scsi_data() */
+-
+ /* This function gets called when a disk is coming on-line */
+ static int twa_slave_configure(struct scsi_device *sdev)
+ {
+diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
+index 040f721..0fdc83c 100644
+--- a/drivers/scsi/3w-9xxx.h
++++ b/drivers/scsi/3w-9xxx.h
+@@ -324,11 +324,6 @@ static twa_message_type twa_error_table[] = {
  #define TW_CURRENT_DRIVER_BUILD 0
  #define TW_CURRENT_DRIVER_BRANCH 0
  
 -/* Phase defines */
 -#define TW_PHASE_INITIAL 0
+-#define TW_PHASE_SINGLE  1
 -#define TW_PHASE_SGLIST  2
 -
  /* Misc defines */
+ #define TW_9550SX_DRAIN_COMPLETED	      0xFFFF
  #define TW_SECTOR_SIZE                        512
- #define TW_MAX_UNITS			      32
 -- 
 1.9.1
