@@ -1,89 +1,100 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Thu, 23 Apr 2015 11:31:26 +0000
-Message-ID: <bug-81861-11613-EYH9tqQv6s@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH v5 00/42] hpsa updates
+Date: Thu, 23 Apr 2015 09:31:41 -0500
+Message-ID: <20150423141637.18832.35621.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57294 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933900AbbDWLbb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Apr 2015 07:31:31 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 33B81203AE
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 11:31:30 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 9638B203AF
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 11:31:28 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
+Received: from g9t5009.houston.hp.com ([15.240.92.67]:44829 "EHLO
+	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756713AbbDWOcy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:32:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
+These patches are based on Linus's tree
 
---- Comment #23 from linux-ide@crashplan.pro ---
-On the Linux-scsi mailing list a possible patch was introduced that has been
-tested to fix another appearance of the mvsas port expander mvs_task_prep
-panic.
+The changes are:
+ - make function names consistent
+ - refactor functions
+ - cleanup driver messages
+ - cleanup error handling
+ - clean up abort management
+ - enhance sense data reporting
+ - enhance ioaccel command support
+ - add in block layer tag support
+ - clean up resets
+ - update copyright
+ - add in new controller id
 
-In that case the resulting panics for the combination mvsas + port expander +
-SATA drives were:
-1. RIP  [<ffffffffa00cd7ed>] mvs_task_prep+0x78d/0xe40 [mvsas]
-2. RIP  [<ffffffffa00bd90f>] mvs_task_prep+0x73f/0xd50 [mvsas]
-3. RIP  [<ffffffffa006f5b0>] mvs_task_prep_ata+0x80/0x3a0 [mvsas]
-4. RIP: 0010:[<ffffffffa00f1877>]  [<ffffffffa00f1877>]
-mvs_task_exec.isra.13+0x827/0xf10 [mvsas]
-
----
-
-James Bottomley wrote on 16-04-15 at 07:16:
-
-Well, that narrows it down.  It looks like there's a longstanding bug in
-mvs_task_prep_ata() where the physical PHY field is populated by taking
-an index through the HBA phy table.  This field is ignored for STP but
-the phy table is too small and it uses the expander phy number to index
-it (hence the GPF as we fall off the end of the phy table trying to
-dereference sas_phy->id).
-
-This should fix the problem.
-
-James
+* changes from v4
+ - changed byte extraction of resid_cnt to get_unaligned_le32 (Hannes Reinecke)
+ - changed type of asc/ascq to match scsi (Hannes Reinecke)
+ - changed driver output to use hpsa_show_dev_msg consistently (Hannes Reinecke)
+ - moved driver version patch to the end of the patchset (Hannes Reinecke)
 
 ---
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 2d5ab6d..454536c 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -441,14 +441,11 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32
-*tag)
- static int mvs_task_prep_ata(struct mvs_info *mvi,
-                  struct mvs_task_exec_info *tei)
- {
--    struct sas_ha_struct *sha = mvi->sas;
-     struct sas_task *task = tei->task;
-     struct domain_device *dev = task->dev;
-     struct mvs_device *mvi_dev = dev->lldd_dev;
-     struct mvs_cmd_hdr *hdr = tei->hdr;
-     struct asd_sas_port *sas_port = dev->port;
--    struct sas_phy *sphy = dev->phy;
--    struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
-     struct mvs_slot_info *slot;
-     void *buf_prd;
-     u32 tag = tei->tag, hdr_tag;
-@@ -468,7 +465,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
-     slot->tx = mvi->tx_prod;
-     del_q = TXQ_MODE_I | tag |
-         (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
--        (MVS_PHY_ID << TXQ_PHY_SHIFT) |
-+        ((sas_port->phy_mask & TXQ_PHY_MASK) << TXQ_PHY_SHIFT) |
-         (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
-     mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+Don Brace (2):
+      hpsa: add in new controller id
+      hpsa: change driver version
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Joe Handzik (3):
+      hpsa: use ioaccel2 path to submit IOs to physical drives in HBA mode.
+      hpsa: Get queue depth from identify physical bmic for physical disks.
+      hpsa: add more ioaccel2 error handling, including underrun statuses.
+
+Robert Elliott (18):
+      hpsa: make function names consistent
+      hpsa: print accurate SSD Smart Path Enabled status
+      hpsa: break hpsa_free_irqs_and_disable_msix into two functions
+      hpsa: clean up error handling
+      hpsa: refactor freeing of resources into more logical functions
+      hpsa: do not check cmd_alloc return value - it cannnot return NULL
+      hpsa: correct return values from driver functions.
+      hpsa: clean up driver init
+      hpsa: clean up some error reporting output in abort handler
+      hpsa: do not print ioaccel2 warning messages about unusual completions.
+      hpsa: call pci_release_regions after pci_disable_device
+      hpsa: skip free_irq calls if irqs are not allocated
+      hpsa: cleanup for init_one step 2 in kdump
+      hpsa: fix try_soft_reset error handling
+      hpsa: create workqueue after the driver is ready for use
+      hpsa: add interrupt number to /proc/interrupts interrupt name
+      hpsa: use scsi host_no as hpsa controller number
+      hpsa: propagate the error code in hpsa_kdump_soft_reset
+
+Stephen Cameron (9):
+      hpsa: add masked physical devices into h->dev[] array
+      hpsa: clean up aborts
+      hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
+      hpsa: hpsa decode sense data for io and tmf
+      hpsa: allow lockup detected to be viewed via sysfs
+      hpsa: factor out hpsa_init_cmd function
+      hpsa: do not ignore return value of hpsa_register_scsi
+      hpsa: try resubmitting down raid path on task set full
+      hpsa: add support sending aborts to physical devices via the ioaccel2 path
+
+Webb Scales (10):
+      hpsa: clean up host, channel, target, lun prints
+      hpsa: rework controller command submission
+      hpsa: factor out hpsa_ioaccel_submit function
+      hpsa: add ioaccel sg chaining for the ioaccel2 path
+      hpsa: use helper routines for finishing commands
+      hpsa: don't return abort request until target is complete
+      hpsa: refactor and rework support for sending TEST_UNIT_READY
+      hpsa: performance tweak for hpsa_scatter_gather()
+      hpsa: use block layer tag for command allocation
+      hpsa: cleanup reset
+
+
+ drivers/scsi/hpsa.c     | 2785 +++++++++++++++++++++++++++++++++--------------
+ drivers/scsi/hpsa.h     |   19 
+ drivers/scsi/hpsa_cmd.h |   34 +
+ 3 files changed, 2024 insertions(+), 814 deletions(-)
+
+--
+Signature
