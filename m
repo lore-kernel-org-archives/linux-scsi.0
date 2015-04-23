@@ -1,116 +1,205 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v5 25/42] hpsa: do not print ioaccel2 warning messages about
- unusual completions.
-Date: Thu, 23 Apr 2015 09:34:00 -0500
-Message-ID: <20150423143400.18832.27617.stgit@brunhilda>
+Subject: [PATCH v5 29/42] hpsa: refactor and rework support for sending
+ TEST_UNIT_READY
+Date: Thu, 23 Apr 2015 09:34:22 -0500
+Message-ID: <20150423143422.18832.39011.stgit@brunhilda>
 References: <20150423141637.18832.35621.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:46908 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966081AbbDWOfI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:35:08 -0400
-Received: from g1t5424.austin.hp.com (g1t5424.austin.hp.com [15.216.225.54])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 31447631F3
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 14:35:08 +0000 (UTC)
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:51763 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966199AbbDWOf2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:35:28 -0400
 In-Reply-To: <20150423141637.18832.35621.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Webb Scales <webbnh@hp.com>
 
-The SCSI midlayer already prints more detail about completions,
-and has logging level options to filter them if not wanted.
-These just slow down the system if a lot of errors occur,
-stressing error handling even more.
+Factor out the code which sends the TEST_UNIT_READY from
+wait_for_device_to_become_ready() into its own function.
+
+Move the code which waits for the TEST_UNIT_READY from
+wait_for_device_to_become_ready() into its own function.
+
+If a logical drive has failed, resetting it will ensure
+outstanding commands are completed, but polling it with
+TURs after the reset will not work because the TURs will
+never report good status.  So successful TUR should not
+be a condition of success for the device reset error
+handler.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@Suse.de>
-Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+ drivers/scsi/hpsa.c |  117 ++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 87 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 224fc48..870cf57 100644
+index 4696ccf..a184737 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1871,9 +1871,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 		case IOACCEL2_STATUS_SR_TASK_COMP_GOOD:
+@@ -4787,51 +4787,108 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ 	return -ENOMEM;
+ }
+ 
+-static int wait_for_device_to_become_ready(struct ctlr_info *h,
+-	unsigned char lunaddr[])
++/*
++ * Send a TEST_UNIT_READY command to the specified LUN using the specified
++ * reply queue; returns zero if the unit is ready, and non-zero otherwise.
++ */
++static int hpsa_send_test_unit_ready(struct ctlr_info *h,
++				struct CommandList *c, unsigned char lunaddr[],
++				int reply_queue)
++{
++	int rc;
++
++	/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
++	(void) fill_cmd(c, TEST_UNIT_READY, h,
++			NULL, 0, 0, lunaddr, TYPE_CMD);
++	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
++	if (rc)
++		return rc;
++	/* no unmap needed here because no data xfer. */
++
++	/* Check if the unit is already ready. */
++	if (c->err_info->CommandStatus == CMD_SUCCESS)
++		return 0;
++
++	/*
++	 * The first command sent after reset will receive "unit attention" to
++	 * indicate that the LUN has been reset...this is actually what we're
++	 * looking for (but, success is good too).
++	 */
++	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
++		c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
++			(c->err_info->SenseInfo[2] == NO_SENSE ||
++			 c->err_info->SenseInfo[2] == UNIT_ATTENTION))
++		return 0;
++
++	return 1;
++}
++
++/*
++ * Wait for a TEST_UNIT_READY command to complete, retrying as necessary;
++ * returns zero when the unit is ready, and non-zero when giving up.
++ */
++static int hpsa_wait_for_test_unit_ready(struct ctlr_info *h,
++				struct CommandList *c,
++				unsigned char lunaddr[], int reply_queue)
+ {
+ 	int rc;
+ 	int count = 0;
+ 	int waittime = 1; /* seconds */
+-	struct CommandList *c;
+-
+-	c = cmd_alloc(h);
+ 
+ 	/* Send test unit ready until device ready, or give up. */
+-	while (count < HPSA_TUR_RETRY_LIMIT) {
++	for (count = 0; count < HPSA_TUR_RETRY_LIMIT; count++) {
+ 
+-		/* Wait for a bit.  do this first, because if we send
++		/*
++		 * Wait for a bit.  do this first, because if we send
+ 		 * the TUR right away, the reset will just abort it.
+ 		 */
+ 		msleep(1000 * waittime);
+-		count++;
+-		rc = 0; /* Device ready. */
++
++		rc = hpsa_send_test_unit_ready(h, c, lunaddr, reply_queue);
++		if (!rc)
++			break;
+ 
+ 		/* Increase wait time with each try, up to a point. */
+ 		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
+-			waittime = waittime * 2;
++			waittime *= 2;
+ 
+-		/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
+-		(void) fill_cmd(c, TEST_UNIT_READY, h,
+-				NULL, 0, 0, lunaddr, TYPE_CMD);
+-		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
+-						NO_TIMEOUT);
+-		if (rc)
+-			goto do_it_again;
+-		/* no unmap needed here because no data xfer. */
++		dev_warn(&h->pdev->dev,
++			 "waiting %d secs for device to become ready.\n",
++			 waittime);
++	}
+ 
+-		if (c->err_info->CommandStatus == CMD_SUCCESS)
+-			break;
++	return rc;
++}
+ 
+-		if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
+-			c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
+-			(c->err_info->SenseInfo[2] == NO_SENSE ||
+-			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
++static int wait_for_device_to_become_ready(struct ctlr_info *h,
++					   unsigned char lunaddr[],
++					   int reply_queue)
++{
++	int first_queue;
++	int last_queue;
++	int rq;
++	int rc = 0;
++	struct CommandList *c;
++
++	c = cmd_alloc(h);
++
++	/*
++	 * If no specific reply queue was requested, then send the TUR
++	 * repeatedly, requesting a reply on each reply queue; otherwise execute
++	 * the loop exactly once using only the specified queue.
++	 */
++	if (reply_queue == DEFAULT_REPLY_QUEUE) {
++		first_queue = 0;
++		last_queue = h->nreply_queues - 1;
++	} else {
++		first_queue = reply_queue;
++		last_queue = reply_queue;
++	}
++
++	for (rq = first_queue; rq <= last_queue; rq++) {
++		rc = hpsa_wait_for_test_unit_ready(h, c, lunaddr, rq);
++		if (rc)
  			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_CHK_COND:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with check condition.\n",
--				"HP SSD Smart Path");
- 			cmd->result |= SAM_STAT_CHECK_CONDITION;
- 			if (c2->error_data.data_present !=
- 					IOACCEL2_SENSE_DATA_PRESENT) {
-@@ -1893,30 +1890,18 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with BUSY status.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_RES_CON:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with reservation conflict.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
- 			retry = 1;
- 			break;
- 		case IOACCEL2_STATUS_SR_TASK_COMP_ABORTED:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with aborted status.\n",
--				"HP SSD Smart Path");
- 			retry = 1;
- 			break;
- 		default:
--			dev_warn(&h->pdev->dev,
--				"%s: task complete with unrecognized status: 0x%02x\n",
--				"HP SSD Smart Path", c2->error_data.status);
- 			retry = 1;
- 			break;
- 		}
-@@ -1943,9 +1928,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 			break;
- 		default:
- 			retry = 1;
--			dev_warn(&h->pdev->dev,
--				"unexpected delivery or target failure, status = 0x%02x\n",
--				c2->error_data.status);
- 		}
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
-@@ -1953,17 +1935,11 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 	case IOACCEL2_SERV_RESPONSE_TMF_SUCCESS:
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
--		dev_warn(&h->pdev->dev, "task management function rejected.\n");
- 		retry = 1;
- 		break;
- 	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
--		dev_warn(&h->pdev->dev, "task management function invalid LUN\n");
- 		break;
- 	default:
--		dev_warn(&h->pdev->dev,
--			"%s: Unrecognized server response: 0x%02x\n",
--			"HP SSD Smart Path",
--			c2->error_data.serv_response);
- 		retry = 1;
- 		break;
+-do_it_again:
+-		dev_warn(&h->pdev->dev, "waiting %d secs "
+-			"for device to become ready.\n", waittime);
+-		rc = 1; /* device not ready. */
  	}
+ 
+ 	if (rc)
+@@ -4890,7 +4947,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+ 	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+ 			     DEFAULT_REPLY_QUEUE);
+-	if (rc == 0 && wait_for_device_to_become_ready(h, dev->scsi3addr) == 0)
++	if (rc == 0)
+ 		return SUCCESS;
+ 
+ 	dev_warn(&h->pdev->dev,
+@@ -5086,7 +5143,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 	}
+ 
+ 	/* wait for device to recover */
+-	if (wait_for_device_to_become_ready(h, psa) != 0) {
++	if (wait_for_device_to_become_ready(h, psa, reply_queue) != 0) {
+ 		dev_warn(&h->pdev->dev,
+ 			"Reset as abort: Failed: Device never recovered from reset: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+ 			psa[0], psa[1], psa[2], psa[3],
 
