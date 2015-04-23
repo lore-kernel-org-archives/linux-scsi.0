@@ -1,349 +1,116 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v5 28/42] hpsa: don't return abort request until target is
- complete
-Date: Thu, 23 Apr 2015 09:34:16 -0500
-Message-ID: <20150423143416.18832.99302.stgit@brunhilda>
+Subject: [PATCH v5 25/42] hpsa: do not print ioaccel2 warning messages about
+ unusual completions.
+Date: Thu, 23 Apr 2015 09:34:00 -0500
+Message-ID: <20150423143400.18832.27617.stgit@brunhilda>
 References: <20150423141637.18832.35621.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:35289 "EHLO
-	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965657AbbDWOfY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:35:24 -0400
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:46908 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966081AbbDWOfI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:35:08 -0400
+Received: from g1t5424.austin.hp.com (g1t5424.austin.hp.com [15.216.225.54])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 31447631F3
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 14:35:08 +0000 (UTC)
 In-Reply-To: <20150423141637.18832.35621.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Webb Scales <webbnh@hp.com>
+From: Robert Elliott <elliott@hp.com>
 
-Don't return from the abort request until the target command is complete.
-Mark outstanding commands which have a pending abort, and do not send them
-to the host if we can avoid it.
-
-If the current command has been aborted, do not call the SCSI command
-completion routine from the I/O path: when the abort returns successfully,
-the SCSI mid-layer will handle the completion implicitly.
-
-The following race was possible in theory.
-
-1. LLD is requested to abort a scsi command
-2. scsi command completes
-3. The struct CommandList associated with 2 is made available.
-4. new io request to LLD to another LUN re-uses struct CommandList
-5. abort handler follows scsi_cmnd->host_scribble and
-   finds struct CommandList and tries to aborts it.
-
-Now we have aborted the wrong command.
-
-Fix by resetting the scsi_cmd field of struct CommandList
-upon completion and making the abort handler check that
-the scsi_cmd pointer in the CommadList struct matches the
-scsi_cmnd that it has been asked to abort.
+The SCSI midlayer already prints more detail about completions,
+and has logging level options to filter them if not wanted.
+These just slow down the system if a lot of errors occur,
+stressing error handling even more.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@Suse.de>
-Signed-off-by: Webb Scales <webbnh@hp.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c     |  120 +++++++++++++++++++++++++++++++++++------------
- drivers/scsi/hpsa.h     |    1 
- drivers/scsi/hpsa_cmd.h |    2 +
- 3 files changed, 93 insertions(+), 30 deletions(-)
+ drivers/scsi/hpsa.c |   24 ------------------------
+ 1 file changed, 24 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 0b5d011..4696ccf 100644
+index 224fc48..870cf57 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -195,6 +195,10 @@ static struct board_type products[] = {
- 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
- };
- 
-+#define SCSI_CMD_BUSY ((struct scsi_cmnd *)&hpsa_cmd_busy)
-+static const struct scsi_cmnd hpsa_cmd_busy;
-+#define SCSI_CMD_IDLE ((struct scsi_cmnd *)&hpsa_cmd_idle)
-+static const struct scsi_cmnd hpsa_cmd_idle;
- static int number_of_controllers;
- 
- static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
-@@ -270,6 +274,11 @@ static inline struct ctlr_info *shost_to_hba(struct Scsi_Host *sh)
- 	return (struct ctlr_info *) *priv;
- }
- 
-+static inline bool hpsa_is_cmd_idle(struct CommandList *c)
-+{
-+	return c->scsi_cmd == SCSI_CMD_IDLE;
-+}
-+
- /* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
- static void decode_sense_data(const u8 *sense_data, int sense_data_len,
- 			u8 *sense_key, u8 *asc, u8 *ascq)
-@@ -959,9 +968,11 @@ static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
- 	}
- }
- 
--static void enqueue_cmd_and_start_io(struct ctlr_info *h,
--					struct CommandList *c)
-+static void enqueue_cmd_and_start_io(struct ctlr_info *h, struct CommandList *c)
- {
-+	if (unlikely(c->abort_pending))
-+		return finish_cmd(c);
-+
- 	__enqueue_cmd_and_start_io(h, c, DEFAULT_REPLY_QUEUE);
- }
- 
-@@ -1973,9 +1984,36 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 	return retry;	/* retry on raid path? */
- }
- 
-+static void hpsa_cmd_resolve_events(struct ctlr_info *h,
-+		struct CommandList *c)
-+{
-+	/*
-+	 * Prevent the following race in the abort handler:
-+	 *
-+	 * 1. LLD is requested to abort a SCSI command
-+	 * 2. The SCSI command completes
-+	 * 3. The struct CommandList associated with step 2 is made available
-+	 * 4. New I/O request to LLD to another LUN re-uses struct CommandList
-+	 * 5. Abort handler follows scsi_cmnd->host_scribble and
-+	 *    finds struct CommandList and tries to aborts it
-+	 * Now we have aborted the wrong command.
-+	 *
-+	 * Clear c->scsi_cmd here so that the abort handler will know this
-+	 * command has completed.  Then, check to see if the abort handler is
-+	 * waiting for this command, and, if so, wake it.
-+	 */
-+	c->scsi_cmd = SCSI_CMD_IDLE;
-+	mb(); /* Ensure c->scsi_cmd is set to SCSI_CMD_IDLE */
-+	if (c->abort_pending) {
-+		c->abort_pending = false;
-+		wake_up_all(&h->abort_sync_wait_queue);
-+	}
-+}
-+
- static void hpsa_cmd_free_and_done(struct ctlr_info *h,
- 		struct CommandList *c, struct scsi_cmnd *cmd)
- {
-+	hpsa_cmd_resolve_events(h, c);
- 	cmd_free(h, c);
- 	cmd->scsi_done(cmd);
- }
-@@ -1986,6 +2024,21 @@ static void hpsa_retry_cmd(struct ctlr_info *h, struct CommandList *c)
- 	queue_work_on(raw_smp_processor_id(), h->resubmit_wq, &c->work);
- }
- 
-+static void hpsa_set_scsi_cmd_aborted(struct scsi_cmnd *cmd)
-+{
-+	cmd->result = DID_ABORT << 16;
-+}
-+
-+static void hpsa_cmd_abort_and_free(struct ctlr_info *h, struct CommandList *c,
-+				    struct scsi_cmnd *cmd)
-+{
-+	hpsa_set_scsi_cmd_aborted(cmd);
-+	dev_warn(&h->pdev->dev, "CDB %16phN was aborted with status 0x%x\n",
-+			 c->Request.CDB, c->err_info->ScsiStatus);
-+	hpsa_cmd_resolve_events(h, c);
-+	cmd_free(h, c);		/* FIX-ME:  change to cmd_tagged_free(h, c) */
-+}
-+
- static void process_ioaccel2_completion(struct ctlr_info *h,
- 		struct CommandList *c, struct scsi_cmnd *cmd,
- 		struct hpsa_scsi_dev_t *dev)
-@@ -1997,6 +2050,10 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 			c2->error_data.status == 0))
- 		return hpsa_cmd_free_and_done(h, c, cmd);
- 
-+	/* don't requeue a command which is being aborted */
-+	if (unlikely(c->abort_pending))
-+		return hpsa_cmd_abort_and_free(h, c, cmd);
-+
- 	/*
- 	 * Any RAID offload error results in retry which will use
- 	 * the normal I/O path so the controller can handle whatever's
-@@ -2118,10 +2175,14 @@ static void complete_scsi_command(struct CommandList *cp)
- 		if (is_logical_dev_addr_mode(dev->scsi3addr)) {
- 			if (ei->CommandStatus == CMD_IOACCEL_DISABLED)
- 				dev->offload_enabled = 0;
--			return hpsa_retry_cmd(h, cp);
-+			if (!cp->abort_pending)
-+				return hpsa_retry_cmd(h, cp);
+@@ -1871,9 +1871,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_GOOD:
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_CHK_COND:
+-			dev_warn(&h->pdev->dev,
+-				"%s: task complete with check condition.\n",
+-				"HP SSD Smart Path");
+ 			cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 			if (c2->error_data.data_present !=
+ 					IOACCEL2_SENSE_DATA_PRESENT) {
+@@ -1893,30 +1890,18 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_BUSY:
+-			dev_warn(&h->pdev->dev,
+-				"%s: task complete with BUSY status.\n",
+-				"HP SSD Smart Path");
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_RES_CON:
+-			dev_warn(&h->pdev->dev,
+-				"%s: task complete with reservation conflict.\n",
+-				"HP SSD Smart Path");
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL:
+ 			retry = 1;
+ 			break;
+ 		case IOACCEL2_STATUS_SR_TASK_COMP_ABORTED:
+-			dev_warn(&h->pdev->dev,
+-				"%s: task complete with aborted status.\n",
+-				"HP SSD Smart Path");
+ 			retry = 1;
+ 			break;
+ 		default:
+-			dev_warn(&h->pdev->dev,
+-				"%s: task complete with unrecognized status: 0x%02x\n",
+-				"HP SSD Smart Path", c2->error_data.status);
+ 			retry = 1;
+ 			break;
  		}
- 	}
- 
-+	if (cp->abort_pending)
-+		ei->CommandStatus = CMD_ABORTED;
-+
- 	/* an error has occurred */
- 	switch (ei->CommandStatus) {
- 
-@@ -2209,10 +2270,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 			cp->Request.CDB);
+@@ -1943,9 +1928,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			break;
+ 		default:
+ 			retry = 1;
+-			dev_warn(&h->pdev->dev,
+-				"unexpected delivery or target failure, status = 0x%02x\n",
+-				c2->error_data.status);
+ 		}
  		break;
- 	case CMD_ABORTED:
--		cmd->result = DID_ABORT << 16;
--		dev_warn(&h->pdev->dev, "CDB %16phN was aborted with status 0x%x\n",
--				cp->Request.CDB, ei->ScsiStatus);
--		break;
-+		/* Return now to avoid calling scsi_done(). */
-+		return hpsa_cmd_abort_and_free(h, cp, cmd);
- 	case CMD_ABORT_FAILED:
- 		cmd->result = DID_ERROR << 16;
- 		dev_warn(&h->pdev->dev, "CDB %16phN : abort failed\n",
-@@ -4450,6 +4509,7 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
- 	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
- 	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
- 	c->h = h;
-+	c->scsi_cmd = SCSI_CMD_IDLE;
- }
- 
- static void hpsa_preinitialize_commands(struct ctlr_info *h)
-@@ -4513,6 +4573,8 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 		cmd->result = DID_NO_CONNECT << 16;
- 		return hpsa_cmd_free_and_done(c->h, c, cmd);
+ 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
+@@ -1953,17 +1935,11 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 	case IOACCEL2_SERV_RESPONSE_TMF_SUCCESS:
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_REJECTED:
+-		dev_warn(&h->pdev->dev, "task management function rejected.\n");
+ 		retry = 1;
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_WRONG_LUN:
+-		dev_warn(&h->pdev->dev, "task management function invalid LUN\n");
+ 		break;
+ 	default:
+-		dev_warn(&h->pdev->dev,
+-			"%s: Unrecognized server response: 0x%02x\n",
+-			"HP SSD Smart Path",
+-			c2->error_data.serv_response);
+ 		retry = 1;
+ 		break;
  	}
-+	if (c->abort_pending)
-+		return hpsa_cmd_abort_and_free(c->h, c, cmd);
- 	if (c->cmd_type == CMD_IOACCEL2) {
- 		struct ctlr_info *h = c->h;
- 		struct io_accel2_cmd *c2 = &h->ioaccel2_cmd_pool[c->cmdindex];
-@@ -4928,8 +4990,7 @@ static void setup_ioaccel2_abort_cmd(struct CommandList *c, struct ctlr_info *h,
- 	struct hpsa_tmf_struct *ac = (struct hpsa_tmf_struct *) c2;
- 	struct io_accel2_cmd *c2a =
- 		&h->ioaccel2_cmd_pool[command_to_abort->cmdindex];
--	struct scsi_cmnd *scmd =
--		(struct scsi_cmnd *) command_to_abort->scsi_cmd;
-+	struct scsi_cmnd *scmd = command_to_abort->scsi_cmd;
- 	struct hpsa_scsi_dev_t *dev = scmd->device->hostdata;
- 
- 	/*
-@@ -4944,6 +5005,8 @@ static void setup_ioaccel2_abort_cmd(struct CommandList *c, struct ctlr_info *h,
- 				sizeof(ac->error_len));
- 
- 	c->cmd_type = IOACCEL2_TMF;
-+	c->scsi_cmd = SCSI_CMD_BUSY;
-+
- 	/* Adjust the DMA address to point to the accelerated command buffer */
- 	c->busaddr = (u32) h->ioaccel2_cmd_pool_dhandle +
- 				(c->cmdindex * sizeof(struct io_accel2_cmd));
-@@ -5137,7 +5200,7 @@ static inline int wait_for_available_abort_cmd(struct ctlr_info *h)
- static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- {
- 
--	int i, rc;
-+	int rc;
- 	struct ctlr_info *h;
- 	struct hpsa_scsi_dev_t *dev;
- 	struct CommandList *abort; /* pointer to command to be aborted */
-@@ -5210,6 +5273,16 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- 		return FAILED;
- 	}
- 
-+	/*
-+	 * Check that we're aborting the right command.
-+	 * It's possible the CommandList already completed and got re-used.
-+	 */
-+	if (abort->scsi_cmd != sc) {
-+		cmd_free(h, abort);
-+		return SUCCESS;
-+	}
-+
-+	abort->abort_pending = true;
- 	hpsa_get_tag(h, abort, &taglower, &tagupper);
- 	reply_queue = hpsa_extract_reply_queue(h, abort);
- 	ml += sprintf(msg+ml, "Tag:0x%08x:%08x ", tagupper, taglower);
-@@ -5245,27 +5318,10 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- 		return FAILED;
- 	}
- 	dev_info(&h->pdev->dev, "%s SENT, SUCCESS\n", msg);
--
--	/*
--	 * If the abort(s) above completed and actually aborted the
--	 * command, then the command to be aborted should already be
--	 * completed.  If not, wait around a bit more to see if they
--	 * manage to complete normally.
--	 */
--#define ABORT_COMPLETE_WAIT_SECS 30
--	for (i = 0; i < ABORT_COMPLETE_WAIT_SECS * 10; i++) {
--		refcount = atomic_read(&abort->refcount);
--		if (refcount < 2) {
--			cmd_free(h, abort);
--			return SUCCESS;
--		} else {
--			msleep(100);
--		}
--	}
--	dev_warn(&h->pdev->dev, "%s FAILED. Aborted command has not completed after %d seconds.\n",
--		msg, ABORT_COMPLETE_WAIT_SECS);
-+	wait_event(h->abort_sync_wait_queue,
-+		   abort->scsi_cmd != sc || lockup_detected(h));
- 	cmd_free(h, abort);
--	return FAILED;
-+	return !lockup_detected(h) ? SUCCESS : FAILED;
- }
- 
- /*
-@@ -5511,6 +5567,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 
- 	/* Fill in the command type */
- 	c->cmd_type = CMD_IOCTL_PEND;
-+	c->scsi_cmd = SCSI_CMD_BUSY;
- 	/* Fill in Command Header */
- 	c->Header.ReplyQueue = 0; /* unused in simple mode */
- 	if (iocommand.buf_size > 0) {	/* buffer to fill */
-@@ -5646,6 +5703,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 	c = cmd_alloc(h);
- 
- 	c->cmd_type = CMD_IOCTL_PEND;
-+	c->scsi_cmd = SCSI_CMD_BUSY;
- 	c->Header.ReplyQueue = 0;
- 	c->Header.SGList = (u8) sg_used;
- 	c->Header.SGTotal = cpu_to_le16(sg_used);
-@@ -5789,6 +5847,7 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	u64 tag; /* for commands to be aborted */
- 
- 	c->cmd_type = CMD_IOCTL_PEND;
-+	c->scsi_cmd = SCSI_CMD_BUSY;
- 	c->Header.ReplyQueue = 0;
- 	if (buff != NULL && size > 0) {
- 		c->Header.SGList = 1;
-@@ -7581,6 +7640,7 @@ reinit_after_soft_reset:
- 		goto clean5;	/* cmd, irq, pci, lockup, wq/aer/h */
- 	init_waitqueue_head(&h->scan_wait_queue);
- 	init_waitqueue_head(&h->abort_cmd_wait_queue);
-+	init_waitqueue_head(&h->abort_sync_wait_queue);
- 	h->scan_finished = 1; /* no scan currently in progress */
- 
- 	pci_set_drvdata(pdev, h);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 28b5d79..7cb8586 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -266,6 +266,7 @@ struct ctlr_info {
- 	struct workqueue_struct *rescan_ctlr_wq;
- 	atomic_t abort_cmds_available;
- 	wait_queue_head_t abort_cmd_wait_queue;
-+	wait_queue_head_t abort_sync_wait_queue;
- };
- 
- struct offline_device_entry {
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 3719592..f986402 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -439,6 +439,8 @@ struct CommandList {
- 	 * not used.
- 	 */
- 	struct hpsa_scsi_dev_t *phys_disk;
-+
-+	int abort_pending;
- 	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
- } __aligned(COMMANDLIST_ALIGNMENT);
- 
 
