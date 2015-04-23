@@ -1,74 +1,101 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v5 22/42] hpsa: correct return values from driver functions.
-Date: Thu, 23 Apr 2015 09:33:43 -0500
-Message-ID: <20150423143343.18832.62630.stgit@brunhilda>
+Subject: [PATCH v5 20/42] hpsa: add more ioaccel2 error handling,
+ including underrun statuses.
+Date: Thu, 23 Apr 2015 09:33:32 -0500
+Message-ID: <20150423143332.18832.62562.stgit@brunhilda>
 References: <20150423141637.18832.35621.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:37555 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966081AbbDWOev (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:34:51 -0400
-Received: from g1t5425.austin.hp.com (g1t5425.austin.hp.com [15.216.225.55])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id EDA0C316E
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 14:34:50 +0000 (UTC)
+Received: from g9t5009.houston.hp.com ([15.240.92.67]:45823 "EHLO
+	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757991AbbDWOej (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2015 10:34:39 -0400
 In-Reply-To: <20150423141637.18832.35621.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Joe Handzik <joseph.t.handzik@hp.com>
 
-correct return codes for error conditions
+improve ioaccel2 error handling, including better handling of
+underrun statuses
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@Suse.de>
-Signed-off-by: Robert Elliott <elliott@hp.com>
- igned-off-by: Don Brace <don.brace@pmcs.com>
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
+Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/hpsa.c     |   31 ++++++++++++++++++++++++++-----
+ drivers/scsi/hpsa_cmd.h |    6 ++++++
+ 2 files changed, 32 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c8ee240..4418ffd 100644
+index ef77a88..09573b97 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2655,9 +2655,9 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
- 	if (fill_cmd(c, HPSA_GET_RAID_MAP, h, &this_device->raid_map,
- 			sizeof(this_device->raid_map), 0,
- 			scsi3addr, TYPE_CMD)) {
--		dev_warn(&h->pdev->dev, "Out of memory in hpsa_get_raid_map()\n");
--		rc = -ENOMEM;
--		goto out;
-+		dev_warn(&h->pdev->dev, "hpsa_get_raid_map fill_cmd failed\n");
-+		cmd_free(h, c);
-+		return -1;
- 	}
- 	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
- 					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
-@@ -5405,7 +5405,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 	if (iocommand.buf_size > 0) {
- 		buff = kmalloc(iocommand.buf_size, GFP_KERNEL);
- 		if (buff == NULL)
--			return -EFAULT;
-+			return -ENOMEM;
- 		if (iocommand.Request.Type.Direction & XFER_WRITE) {
- 			/* Copy the data into the buffer we created */
- 			if (copy_from_user(buff, iocommand.buf,
-@@ -7954,7 +7954,7 @@ static int hpsa_alloc_ioaccel1_cmd_and_bft(struct ctlr_info *h)
+@@ -1863,6 +1863,7 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ {
+ 	int data_len;
+ 	int retry = 0;
++	u32 ioaccel2_resid = 0;
  
- clean_up:
- 	hpsa_free_ioaccel1_cmd_and_bft(h);
--	return 1;
-+	return -ENOMEM;
- }
- 
- /* Free ioaccel2 mode command blocks and block fetch table */
+ 	switch (c2->error_data.serv_response) {
+ 	case IOACCEL2_SERV_RESPONSE_COMPLETE:
+@@ -1921,11 +1922,31 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 		}
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_FAILURE:
+-		/* don't expect to get here. */
+-		dev_warn(&h->pdev->dev,
+-			"unexpected delivery or target failure, status = 0x%02x\n",
+-			c2->error_data.status);
+-		retry = 1;
++		switch (c2->error_data.status) {
++		case IOACCEL2_STATUS_SR_IO_ERROR:
++		case IOACCEL2_STATUS_SR_IO_ABORTED:
++		case IOACCEL2_STATUS_SR_OVERRUN:
++			retry = 1;
++			break;
++		case IOACCEL2_STATUS_SR_UNDERRUN:
++			cmd->result = (DID_OK << 16);		/* host byte */
++			cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
++			ioaccel2_resid = get_unaligned_le32(
++						&c2->error_data.resid_cnt[0]);
++			scsi_set_resid(cmd, ioaccel2_resid);
++			break;
++		case IOACCEL2_STATUS_SR_NO_PATH_TO_DEVICE:
++		case IOACCEL2_STATUS_SR_INVALID_DEVICE:
++		case IOACCEL2_STATUS_SR_IOACCEL_DISABLED:
++			/* We will get an event from ctlr to trigger rescan */
++			retry = 1;
++			break;
++		default:
++			retry = 1;
++			dev_warn(&h->pdev->dev,
++				"unexpected delivery or target failure, status = 0x%02x\n",
++				c2->error_data.status);
++		}
+ 		break;
+ 	case IOACCEL2_SERV_RESPONSE_TMF_COMPLETE:
+ 		break;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 0efb6f2b..cecb62b 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -532,6 +532,12 @@ struct io_accel2_scsi_response {
+ #define IOACCEL2_STATUS_SR_TASK_COMP_SET_FULL	0x28
+ #define IOACCEL2_STATUS_SR_TASK_COMP_ABORTED	0x40
+ #define IOACCEL2_STATUS_SR_IOACCEL_DISABLED	0x0E
++#define IOACCEL2_STATUS_SR_IO_ERROR		0x01
++#define IOACCEL2_STATUS_SR_IO_ABORTED		0x02
++#define IOACCEL2_STATUS_SR_NO_PATH_TO_DEVICE	0x03
++#define IOACCEL2_STATUS_SR_INVALID_DEVICE	0x04
++#define IOACCEL2_STATUS_SR_UNDERRUN		0x51
++#define IOACCEL2_STATUS_SR_OVERRUN		0x75
+ 	u8 data_present;		/* low 2 bits */
+ #define IOACCEL2_NO_DATAPRESENT		0x000
+ #define IOACCEL2_RESPONSE_DATAPRESENT	0x001
 
