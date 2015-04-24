@@ -1,77 +1,86 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 22/23] advansys: Remove call to dma_cache_sync()
-Date: Fri, 24 Apr 2015 13:18:41 +0200
-Message-ID: <1429874322-85488-24-git-send-email-hare@suse.de>
+Subject: [PATCH 16/23] advansys: rename 'ASC_RQ_XX' to 'ADV_RQ_XX'
+Date: Fri, 24 Apr 2015 13:18:35 +0200
+Message-ID: <1429874322-85488-18-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58927 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58840 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966351AbbDXLSx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:53 -0400
+	id S967105AbbDXLSv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:51 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Only required if the dma buffer has been allocated via
-dma_alloc_noncoherent(), which this one is not.
-With that call removed we can now also compile on ARM.
+These definitions are only ever used for the wide-scsi board,
+so they should be prefixed with 'ADV', not 'ASC'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/Kconfig    |  2 +-
- drivers/scsi/advansys.c | 10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/advansys.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index b021bcb..a4564b3 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -503,7 +503,7 @@ config SCSI_DPT_I2O
- 
- config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
--	depends on SCSI && VIRT_TO_BUS && !ARM
-+	depends on SCSI && VIRT_TO_BUS
- 	depends on ISA || EISA || PCI
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 7142a79..3b81f44 100644
+index 18f75ea..f01839b 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -7510,17 +7510,17 @@ static int advansys_slave_configure(struct scsi_device *sdev)
- 	return 0;
- }
+@@ -1700,13 +1700,13 @@ typedef struct adv_carr_t {
+ /*
+  * Mask used to eliminate low 4 bits of carrier 'next_vpa' field.
+  */
+-#define ASC_NEXT_VPA_MASK       0xFFFFFFF0
++#define ADV_NEXT_VPA_MASK       0xFFFFFFF0
  
--static __le32 advansys_get_sense_buffer_dma(struct scsi_cmnd *scp)
-+static __le32 asc_get_sense_buffer_dma(struct scsi_cmnd *scp)
- {
- 	struct asc_board *board = shost_priv(scp->device->host);
-+
- 	scp->SCp.dma_handle = dma_map_single(board->dev, scp->sense_buffer,
--					     SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-+					     SCSI_SENSE_BUFFERSIZE,
-+					     DMA_FROM_DEVICE);
- 	if (dma_mapping_error(board->dev, scp->SCp.dma_handle)) {
- 		ASC_DBG(1, "failed to map sense buffer\n");
- 		return 0;
- 	}
--	dma_cache_sync(board->dev, scp->sense_buffer,
--		       SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
- 	return cpu_to_le32(scp->SCp.dma_handle);
- }
+-#define ASC_RQ_DONE             0x00000001
+-#define ASC_RQ_GOOD             0x00000002
+-#define ASC_CQ_STOPPER          0x00000000
++#define ADV_RQ_DONE             0x00000001
++#define ADV_RQ_GOOD             0x00000002
++#define ADV_CQ_STOPPER          0x00000000
  
-@@ -7549,7 +7549,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	asc_scsi_q->q1.target_lun = scp->device->lun;
- 	asc_scsi_q->q2.target_ix =
- 	    ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
--	asc_scsi_q->q1.sense_addr = advansys_get_sense_buffer_dma(scp);
-+	asc_scsi_q->q1.sense_addr = asc_get_sense_buffer_dma(scp);
- 	asc_scsi_q->q1.sense_len = SCSI_SENSE_BUFFERSIZE;
- 	if (!asc_scsi_q->q1.sense_addr)
- 		return ASC_BUSY;
+-#define ASC_GET_CARRP(carrp) ((carrp) & ASC_NEXT_VPA_MASK)
++#define ADV_GET_CARRP(carrp) ((carrp) & ADV_NEXT_VPA_MASK)
+ 
+ /*
+  * Each carrier is 64 bytes, and we need three additional
+@@ -4295,7 +4295,7 @@ static ADV_CARR_T *adv_get_next_carrier(struct adv_dvc_var *adv_dvc)
+ 	/*
+ 	 * insert stopper carrier to terminate list
+ 	 */
+-	carrp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
++	carrp->next_vpa = cpu_to_le32(ADV_CQ_STOPPER);
+ 
+ 	return carrp;
+ }
+@@ -6198,7 +6198,7 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 	 * Check if the IRQ stopper carrier contains a completed request.
+ 	 */
+ 	while (((irq_next_vpa =
+-		 le32_to_cpu(asc_dvc->irq_sp->next_vpa)) & ASC_RQ_DONE) != 0) {
++		 le32_to_cpu(asc_dvc->irq_sp->next_vpa)) & ADV_RQ_DONE) != 0) {
+ 		/*
+ 		 * Get a pointer to the newly completed ADV_SCSI_REQ_Q structure.
+ 		 * The RISC will have set 'areq_vpa' to a virtual address.
+@@ -6219,7 +6219,7 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		 * DMAed to host memory by the firmware. Set all status fields
+ 		 * to indicate good status.
+ 		 */
+-		if ((irq_next_vpa & ASC_RQ_GOOD) != 0) {
++		if ((irq_next_vpa & ADV_RQ_GOOD) != 0) {
+ 			scsiq->done_status = QD_NO_ERROR;
+ 			scsiq->host_status = scsiq->scsi_status = 0;
+ 			scsiq->data_cnt = 0L;
+@@ -6232,7 +6232,7 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		 */
+ 		free_carrp = asc_dvc->irq_sp;
+ 		asc_dvc->irq_sp = adv_get_carrier(asc_dvc,
+-						  ASC_GET_CARRP(irq_next_vpa));
++						  ADV_GET_CARRP(irq_next_vpa));
+ 
+ 		free_carrp->next_vpa = asc_dvc->carr_freelist->carr_va;
+ 		asc_dvc->carr_freelist = free_carrp;
 -- 
 1.8.5.2
 
