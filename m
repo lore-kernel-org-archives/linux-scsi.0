@@ -1,533 +1,461 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/22] advansys: use shared host tag map for command lookup
-Date: Fri, 24 Apr 2015 10:32:37 +0200
-Message-ID: <1429864377-67002-3-git-send-email-hare@suse.de>
+Subject: [PATCH 04/22] advansys: Use DMA-API for carrier buffer
+Date: Fri, 24 Apr 2015 10:32:39 +0200
+Message-ID: <1429864377-67002-5-git-send-email-hare@suse.de>
 References: <1429864377-67002-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43095 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42973 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966386AbbDXIdE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 04:33:04 -0400
+	id S966362AbbDXIdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 04:33:01 -0400
 In-Reply-To: <1429864377-67002-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Convert to use a shared host tag map for command lookup. This
-saves us having an internal structure and avoid the command
-pointer abuse.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 225 +++++++++++++++++-------------------------------
- 1 file changed, 79 insertions(+), 146 deletions(-)
+ drivers/scsi/advansys.c | 236 +++++++++++++++++++++---------------------------
+ 1 file changed, 103 insertions(+), 133 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index e936f48..b595e8b 100644
+index a45e78f..25bd17d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -315,7 +315,7 @@ typedef struct asc_scsiq_1 {
- } ASC_SCSIQ_1;
+@@ -963,8 +963,6 @@ typedef struct asc_mc_saved {
+ #define ADV_MEM_WRITEW(addr, word) writew(word, addr)
+ #define ADV_MEM_WRITEDW(addr, dword) writel(dword, addr)
  
- typedef struct asc_scsiq_2 {
--	ASC_VADDR srb_ptr;
-+	u32 srb_tag;
- 	uchar target_ix;
- 	uchar flag;
- 	uchar cdb_len;
-@@ -592,8 +592,6 @@ typedef struct asc_dvc_var {
- 	uchar min_sdtr_index;
- 	uchar max_sdtr_index;
- 	struct asc_board *drv_ptr;
--	int ptr_map_count;
--	void **ptr_map;
- 	ASC_DCNT uc_break;
- } ASC_DVC_VAR;
+-#define ADV_CARRIER_COUNT (ASC_DEF_MAX_HOST_QNG + 15)
+-
+ /*
+  * Define total number of simultaneous maximum element scatter-gather
+  * request blocks per wide adapter. ASC_DEF_MAX_HOST_QNG (253) is the
+@@ -1745,16 +1743,16 @@ typedef struct adveep_38C1600_config {
+  * little-endian.
+  */
+ typedef struct adv_carr_t {
+-	ADV_VADDR carr_va;	/* Carrier Virtual Address */
+-	ADV_PADDR carr_pa;	/* Carrier Physical Address */
+-	ADV_VADDR areq_vpa;	/* ASC_SCSI_REQ_Q Virtual or Physical Address */
++	__le32 carr_va;	/* Carrier Virtual Address */
++	__le32 carr_pa;	/* Carrier Physical Address */
++	__le32 areq_vpa;	/* ASC_SCSI_REQ_Q Virtual or Physical Address */
+ 	/*
+ 	 * next_vpa [31:4]            Carrier Virtual or Physical Next Pointer
+ 	 *
+ 	 * next_vpa [3:1]             Reserved Bits
+ 	 * next_vpa [0]               Done Flag set in Response Queue.
+ 	 */
+-	ADV_VADDR next_vpa;
++	__le32 next_vpa;
+ } ADV_CARR_T;
  
-@@ -1866,7 +1864,7 @@ typedef struct adv_scsi_req_q {
+ /*
+@@ -1768,11 +1766,14 @@ typedef struct adv_carr_t {
+ 
+ #define ASC_GET_CARRP(carrp) ((carrp) & ASC_NEXT_VPA_MASK)
+ 
+-#define ADV_CARRIER_NUM_PAGE_CROSSING \
+-    (((ADV_CARRIER_COUNT * sizeof(ADV_CARR_T)) + (PAGE_SIZE - 1))/PAGE_SIZE)
++/*
++ * Each carrier is 64 bytes, and we need three additional
++ * carrier for icq, irq, and the termination carrier.
++ */
++#define ADV_CARRIER_COUNT (ASC_DEF_MAX_HOST_QNG + 3)
+ 
+ #define ADV_CARRIER_BUFSIZE \
+-    ((ADV_CARRIER_COUNT + ADV_CARRIER_NUM_PAGE_CROSSING) * sizeof(ADV_CARR_T))
++    (ADV_CARRIER_COUNT * sizeof(ADV_CARR_T))
+ 
+ /*
+  * ASC_SCSI_REQ_Q 'a_flag' definitions
+@@ -1845,7 +1846,7 @@ typedef struct adv_scsi_req_q {
+ 	ADV_PADDR data_addr;	/* Data buffer physical address. */
+ 	ADV_DCNT data_cnt;	/* Data count. Ucode sets to residual. */
+ 	__le32 sense_addr;
+-	ADV_PADDR carr_pa;
++	__le32 carr_pa;
+ 	uchar mflag;
+ 	uchar sense_len;
+ 	uchar cdb_len;		/* SCSI CDB length. Must <= 16 bytes. */
+@@ -1856,19 +1857,18 @@ typedef struct adv_scsi_req_q {
+ 	uchar sg_working_ix;
+ 	uchar cdb[12];		/* SCSI CDB bytes 0-11. */
+ 	ADV_PADDR sg_real_addr;	/* SG list physical address. */
+-	ADV_PADDR scsiq_rptr;
++	__le32 scsiq_rptr;
+ 	uchar cdb16[4];		/* SCSI CDB bytes 12-15. */
+-	ADV_VADDR scsiq_ptr;
+-	ADV_VADDR carr_va;
++	__le32 scsiq_ptr;
++	__le32 carr_va;
+ 	/*
  	 * End of microcode structure - 60 bytes. The rest of the structure
  	 * is used by the Adv Library and ignored by the microcode.
  	 */
--	ADV_VADDR srb_ptr;
-+	u32 srb_tag;
- 	ADV_SG_BLOCK *sg_list_ptr;	/* SG list virtual address. */
- 	char *vdata_addr;	/* Data buffer virtual address. */
+ 	u32 srb_tag;
+-	ADV_SG_BLOCK *sg_list_ptr;	/* SG list virtual address. */
+-	char *vdata_addr;	/* Data buffer virtual address. */
  	uchar a_flag;
-@@ -1877,9 +1875,9 @@ typedef struct adv_scsi_req_q {
-  * The following two structures are used to process Wide Board requests.
-  *
-  * The ADV_SCSI_REQ_Q structure in adv_req_t is passed to the Adv Library
-- * and microcode with the ADV_SCSI_REQ_Q field 'srb_ptr' pointing to the
-- * adv_req_t. The adv_req_t structure 'cmndp' field in turn points to the
-- * Mid-Level SCSI request structure.
-+ * and microcode with the ADV_SCSI_REQ_Q field 'srb_tag' set to the
-+ * SCSI request tag. The adv_req_t structure 'cmndp' field in turn points
-+ * to the Mid-Level SCSI request structure.
-  *
-  * Zero or more ADV_SG_BLOCK are used with each ADV_SCSI_REQ_Q. Each
-  * ADV_SG_BLOCK structure holds 15 scatter-gather elements. Under Linux
-@@ -1942,7 +1940,6 @@ typedef struct adv_dvc_var {
+-	uchar pad[2];		/* Pad out to a word boundary. */
++	uchar pad[3];		/* Pad out to a word boundary. */
++	ADV_SG_BLOCK *sg_list_ptr;	/* SG list virtual address. */
+ } ADV_SCSI_REQ_Q;
+ 
+ /*
+@@ -1935,8 +1935,9 @@ typedef struct adv_dvc_var {
+ 	uchar chip_scsi_id;	/* chip SCSI target ID */
+ 	uchar chip_type;
+ 	uchar bist_err_code;
+-	ADV_CARR_T *carrier_buf;
++	ADV_CARR_T *carrier;
+ 	ADV_CARR_T *carr_freelist;	/* Carrier free list. */
++	dma_addr_t carrier_addr;
  	ADV_CARR_T *icq_sp;	/* Initiator command queue stopper pointer. */
  	ADV_CARR_T *irq_sp;	/* Initiator response queue stopper pointer. */
  	ushort carr_pending_cnt;	/* Count of pending carriers. */
--	struct adv_req *orig_reqp;	/* adv_req_t memory block. */
- 	/*
- 	 * Note: The following fields will not be used after initialization. The
- 	 * driver may discard the buffer after initialization is done.
-@@ -2068,8 +2065,8 @@ do { \
-     AdvReadByteRegister((iop_base), IOPB_CHIP_TYPE_REV)
+@@ -2467,12 +2468,11 @@ static void asc_prt_adv_dvc_var(ADV_DVC_VAR *h)
+ 	printk("  start_motor 0x%x, scsi_reset_wait 0x%x\n",
+ 	       (unsigned)h->start_motor, (unsigned)h->scsi_reset_wait);
  
- /*
-- * Abort an SRB in the chip's RISC Memory. The 'srb_ptr' argument must
-- * match the ASC_SCSI_REQ_Q 'srb_ptr' field.
-+ * Abort an SRB in the chip's RISC Memory. The 'srb_tag' argument must
-+ * match the ASC_SCSI_REQ_Q 'srb_tag' field.
-  *
-  * If the request has not yet been sent to the device it will simply be
-  * aborted from RISC memory. If the request is disconnected it will be
-@@ -2079,9 +2076,9 @@ do { \
-  *      ADV_TRUE(1) - Queue was successfully aborted.
-  *      ADV_FALSE(0) - Queue was not found on the active queue list.
-  */
--#define AdvAbortQueue(asc_dvc, scsiq) \
--        AdvSendIdleCmd((asc_dvc), (ushort) IDLE_CMD_ABORT, \
--                       (ADV_DCNT) (scsiq))
-+#define AdvAbortQueue(asc_dvc, srb_tag) \
-+     AdvSendIdleCmd((asc_dvc), (ushort) IDLE_CMD_ABORT, \
-+		    (ADV_DCNT) (srb_tag))
+-	printk("  max_host_qng %u, max_dvc_qng %u, carr_freelist 0x%lxn\n",
++	printk("  max_host_qng %u, max_dvc_qng %u, carr_freelist 0x%p\n",
+ 	       (unsigned)h->max_host_qng, (unsigned)h->max_dvc_qng,
+-	       (ulong)h->carr_freelist);
++	       h->carr_freelist);
  
- /*
-  * Send a Bus Device Reset Message to the specified target ID.
-@@ -2095,8 +2092,8 @@ do { \
-  *                     are not purged.
-  */
- #define AdvResetDevice(asc_dvc, target_id) \
--        AdvSendIdleCmd((asc_dvc), (ushort) IDLE_CMD_DEVICE_RESET, \
--                    (ADV_DCNT) (target_id))
-+     AdvSendIdleCmd((asc_dvc), (ushort) IDLE_CMD_DEVICE_RESET,	\
-+		    (ADV_DCNT) (target_id))
+-	printk("  icq_sp 0x%lx, irq_sp 0x%lx\n",
+-	       (ulong)h->icq_sp, (ulong)h->irq_sp);
++	printk("  icq_sp 0x%p, irq_sp 0x%p\n", h->icq_sp, h->irq_sp);
  
- /*
-  * SCSI Wide Type definition.
-@@ -2345,6 +2342,7 @@ struct asc_stats {
-  */
- struct asc_board {
- 	struct device *dev;
-+	struct Scsi_Host *shost;
- 	uint flags;		/* Board flags */
- 	unsigned int irq;
- 	union {
-@@ -2599,8 +2597,8 @@ static void asc_prt_asc_scsi_q(ASC_SCSI_Q *q)
- 	printk("ASC_SCSI_Q at addr 0x%lx\n", (ulong)q);
+ 	printk("  no_scam 0x%x, tagqng_able 0x%x\n",
+ 	       (unsigned)h->no_scam, (unsigned)h->tagqng_able);
+@@ -2677,8 +2677,8 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
+ 	printk("  target_id %u, target_lun %u, srb_tag 0x%x, a_flag 0x%x\n",
+ 	       q->target_id, q->target_lun, q->srb_tag, q->a_flag);
  
- 	printk
--	    (" target_ix 0x%x, target_lun %u, srb_ptr 0x%lx, tag_code 0x%x,\n",
--	     q->q2.target_ix, q->q1.target_lun, (ulong)q->q2.srb_ptr,
-+	    (" target_ix 0x%x, target_lun %u, srb_tag 0x%x, tag_code 0x%x,\n",
-+	     q->q2.target_ix, q->q1.target_lun, q->q2.srb_tag,
- 	     q->q2.tag_code);
+-	printk("  cntl 0x%x, data_addr 0x%lx, vdata_addr 0x%lx\n",
+-	       q->cntl, (ulong)le32_to_cpu(q->data_addr), (ulong)q->vdata_addr);
++	printk("  cntl 0x%x, data_addr 0x%lx\n",
++	       q->cntl, (ulong)le32_to_cpu(q->data_addr));
  
- 	printk
-@@ -2633,8 +2631,8 @@ static void asc_prt_asc_scsi_q(ASC_SCSI_Q *q)
- static void asc_prt_asc_qdone_info(ASC_QDONE_INFO *q)
- {
- 	printk("ASC_QDONE_INFO at addr 0x%lx\n", (ulong)q);
--	printk(" srb_ptr 0x%lx, target_ix %u, cdb_len %u, tag_code %u,\n",
--	       (ulong)q->d2.srb_ptr, q->d2.target_ix, q->d2.cdb_len,
-+	printk(" srb_tag 0x%x, target_ix %u, cdb_len %u, tag_code %u,\n",
-+	       q->d2.srb_tag, q->d2.target_ix, q->d2.cdb_len,
- 	       q->d2.tag_code);
- 	printk
- 	    (" done_stat 0x%x, host_stat 0x%x, scsi_stat 0x%x, scsi_msg 0x%x\n",
-@@ -2676,8 +2674,8 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
- 
- 	printk("ADV_SCSI_REQ_Q at addr 0x%lx\n", (ulong)q);
- 
--	printk("  target_id %u, target_lun %u, srb_ptr 0x%lx, a_flag 0x%x\n",
--	       q->target_id, q->target_lun, (ulong)q->srb_ptr, q->a_flag);
-+	printk("  target_id %u, target_lun %u, srb_tag 0x%x, a_flag 0x%x\n",
-+	       q->target_id, q->target_lun, q->srb_tag, q->a_flag);
- 
- 	printk("  cntl 0x%x, data_addr 0x%lx, vdata_addr 0x%lx\n",
- 	       q->cntl, (ulong)le32_to_cpu(q->data_addr), (ulong)q->vdata_addr);
-@@ -2721,59 +2719,6 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
- #endif /* ADVANSYS_DEBUG */
- 
- /*
-- * The advansys chip/microcode contains a 32-bit identifier for each command
-- * known as the 'srb'.  I don't know what it stands for.  The driver used
-- * to encode the scsi_cmnd pointer by calling virt_to_bus and retrieve it
-- * with bus_to_virt.  Now the driver keeps a per-host map of integers to
-- * pointers.  It auto-expands when full, unless it can't allocate memory.
-- * Note that an srb of 0 is treated specially by the chip/firmware, hence
-- * the return of i+1 in this routine, and the corresponding subtraction in
-- * the inverse routine.
-- */
--#define BAD_SRB 0
--static u32 advansys_ptr_to_srb(struct asc_dvc_var *asc_dvc, void *ptr)
--{
--	int i;
--	void **new_ptr;
--
--	for (i = 0; i < asc_dvc->ptr_map_count; i++) {
--		if (!asc_dvc->ptr_map[i])
--			goto out;
--	}
--
--	if (asc_dvc->ptr_map_count == 0)
--		asc_dvc->ptr_map_count = 1;
--	else
--		asc_dvc->ptr_map_count *= 2;
--
--	new_ptr = krealloc(asc_dvc->ptr_map,
--			asc_dvc->ptr_map_count * sizeof(void *), GFP_ATOMIC);
--	if (!new_ptr)
--		return BAD_SRB;
--	asc_dvc->ptr_map = new_ptr;
-- out:
--	ASC_DBG(3, "Putting ptr %p into array offset %d\n", ptr, i);
--	asc_dvc->ptr_map[i] = ptr;
--	return i + 1;
--}
--
--static void * advansys_srb_to_ptr(struct asc_dvc_var *asc_dvc, u32 srb)
--{
--	void *ptr;
--
--	srb--;
--	if (srb >= asc_dvc->ptr_map_count) {
--		printk("advansys: bad SRB %u, max %u\n", srb,
--							asc_dvc->ptr_map_count);
--		return NULL;
--	}
--	ptr = asc_dvc->ptr_map[srb];
--	asc_dvc->ptr_map[srb] = NULL;
--	ASC_DBG(3, "Returning ptr %p from array offset %d\n", ptr, srb);
--	return ptr;
--}
--
--/*
-  * advansys_info()
-  *
-  * Return suitable for printing on the console with the argument
-@@ -6133,15 +6078,15 @@ static void adv_async_callback(ADV_DVC_VAR *adv_dvc_varp, uchar code)
-  */
- static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- {
--	struct asc_board *boardp;
-+	struct asc_board *boardp = adv_dvc_varp->drv_ptr;
-+	u32 srb_tag;
- 	adv_req_t *reqp;
- 	adv_sgblk_t *sgblkp;
- 	struct scsi_cmnd *scp;
--	struct Scsi_Host *shost;
- 	ADV_DCNT resid_cnt;
- 
--	ASC_DBG(1, "adv_dvc_varp 0x%lx, scsiqp 0x%lx\n",
--		 (ulong)adv_dvc_varp, (ulong)scsiqp);
-+	ASC_DBG(1, "adv_dvc_varp 0x%p, scsiqp 0x%p\n",
-+		adv_dvc_varp, scsiqp);
- 	ASC_DBG_PRT_ADV_SCSI_REQ_Q(2, scsiqp);
- 
- 	/*
-@@ -6149,22 +6094,9 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	 * completed. The adv_req_t structure actually contains the
- 	 * completed ADV_SCSI_REQ_Q structure.
- 	 */
--	reqp = (adv_req_t *)ADV_U32_TO_VADDR(scsiqp->srb_ptr);
--	ASC_DBG(1, "reqp 0x%lx\n", (ulong)reqp);
--	if (reqp == NULL) {
--		ASC_PRINT("adv_isr_callback: reqp is NULL\n");
--		return;
--	}
-+	srb_tag = le32_to_cpu(scsiqp->srb_tag);
-+	scp = scsi_host_find_tag(boardp->shost, scsiqp->srb_tag);
- 
--	/*
--	 * Get the struct scsi_cmnd structure and Scsi_Host structure for the
--	 * command that has been completed.
--	 *
--	 * Note: The adv_req_t request structure and adv_sgblk_t structure,
--	 * if any, are dropped, because a board structure pointer can not be
--	 * determined.
--	 */
--	scp = reqp->cmndp;
- 	ASC_DBG(1, "scp 0x%p\n", scp);
- 	if (scp == NULL) {
- 		ASC_PRINT
-@@ -6173,12 +6105,21 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	}
- 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
- 
--	shost = scp->device->host;
--	ASC_STATS(shost, callback);
--	ASC_DBG(1, "shost 0x%p\n", shost);
-+	reqp = (adv_req_t *)scp->host_scribble;
-+	ASC_DBG(1, "reqp 0x%lx\n", (ulong)reqp);
-+	if (reqp == NULL) {
-+		ASC_PRINT("adv_isr_callback: reqp is NULL\n");
-+		return;
-+	}
-+	/*
-+	 * Remove backreferences to avoid duplicate
-+	 * command completions.
-+	 */
-+	scp->host_scribble = NULL;
-+	reqp->cmndp = NULL;
- 
--	boardp = shost_priv(shost);
--	BUG_ON(adv_dvc_varp != &boardp->dvc_var.adv_dvc_var);
-+	ASC_STATS(boardp->shost, callback);
-+	ASC_DBG(1, "shost 0x%p\n", boardp->shost);
- 
- 	/*
- 	 * 'done_status' contains the command's ending status.
-@@ -6276,13 +6217,6 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 		boardp->adv_sgblkp = sgblkp;
- 	}
- 
--	/*
--	 * Free the adv_req_t structure used with the command by adding
--	 * it back to the board free list.
--	 */
--	reqp->next_reqp = boardp->adv_reqp;
--	boardp->adv_reqp = reqp;
--
- 	ASC_DBG(1, "done\n");
+ 	printk("  data_cnt %lu, sense_addr 0x%lx, sense_len %u,\n",
+ 	       (ulong)le32_to_cpu(q->data_cnt),
+@@ -4326,38 +4326,61 @@ static int AdvLoadMicrocode(AdvPortAddr iop_base, const unsigned char *buf,
+ 	return 0;
  }
  
-@@ -7092,25 +7026,24 @@ _AscCopyLramScsiDoneQ(PortAddr iop_base,
-  */
- static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+-static void AdvBuildCarrierFreelist(struct adv_dvc_var *asc_dvc)
++static void AdvBuildCarrierFreelist(struct adv_dvc_var *adv_dvc)
  {
--	struct asc_board *boardp;
-+	struct asc_board *boardp = asc_dvc_varp->drv_ptr;
-+	u32 srb_tag;
- 	struct scsi_cmnd *scp;
--	struct Scsi_Host *shost;
+-	ADV_CARR_T *carrp;
+-	ADV_SDCNT buf_size;
+-	ADV_PADDR carr_paddr;
++	off_t carr_offset = 0, next_offset;
++	dma_addr_t carr_paddr;
++	int carr_num = ADV_CARRIER_BUFSIZE / sizeof(ADV_CARR_T), i;
  
- 	ASC_DBG(1, "asc_dvc_varp 0x%p, qdonep 0x%p\n", asc_dvc_varp, qdonep);
- 	ASC_DBG_PRT_ASC_QDONE_INFO(2, qdonep);
- 
--	scp = advansys_srb_to_ptr(asc_dvc_varp, qdonep->d2.srb_ptr);
-+	/*
-+	 * Decrease the srb_tag by 1 to find the SCSI command
-+	 */
-+	srb_tag = qdonep->d2.srb_tag - 1;
-+	scp = scsi_host_find_tag(boardp->shost, srb_tag);
- 	if (!scp)
- 		return;
- 
- 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
- 
--	shost = scp->device->host;
--	ASC_STATS(shost, callback);
--	ASC_DBG(1, "shost 0x%p\n", shost);
--
--	boardp = shost_priv(shost);
--	BUG_ON(asc_dvc_varp != &boardp->dvc_var.asc_dvc_var);
-+	ASC_STATS(boardp->shost, callback);
- 
- 	dma_unmap_single(boardp->dev, scp->SCp.dma_handle,
- 			 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-@@ -7293,7 +7226,7 @@ static int AscIsrQDone(ASC_DVC_VAR *asc_dvc)
- 			scsiq->d3.done_stat = QD_WITH_ERROR;
- 			goto FATAL_ERR_QDONE;
- 		}
--		if ((scsiq->d2.srb_ptr == 0UL) ||
-+		if ((scsiq->d2.srb_tag == 0UL) ||
- 		    ((scsiq->q_status & QS_ABORTED) != 0)) {
- 			return (0x11);
- 		} else if (scsiq->q_status == QS_DONE) {
-@@ -7861,17 +7794,16 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- {
- 	struct asc_dvc_var *asc_dvc = &boardp->dvc_var.asc_dvc_var;
- 	int use_sg;
-+	u32 srb_tag;
- 
- 	memset(asc_scsi_q, 0, sizeof(*asc_scsi_q));
- 
- 	/*
--	 * Point the ASC_SCSI_Q to the 'struct scsi_cmnd'.
-+	 * Set the srb_tag to the command tag + 1, as
-+	 * srb_tag '0' is used internally by the chip.
- 	 */
--	asc_scsi_q->q2.srb_ptr = advansys_ptr_to_srb(asc_dvc, scp);
--	if (asc_scsi_q->q2.srb_ptr == BAD_SRB) {
--		scp->result = HOST_BYTE(DID_SOFT_ERROR);
--		return ASC_ERROR;
--	}
-+	srb_tag = scp->request->tag + 1;
-+	asc_scsi_q->q2.srb_tag = srb_tag;
- 
- 	/*
- 	 * Build the ASC_SCSI_Q request.
-@@ -8083,6 +8015,7 @@ static int
- adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	      ADV_SCSI_REQ_Q **adv_scsiqpp)
- {
-+	u32 srb_tag = scp->request->tag;
- 	adv_req_t *reqp;
- 	ADV_SCSI_REQ_Q *scsiqp;
- 	int i;
-@@ -8093,14 +8026,11 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	 * Allocate an adv_req_t structure from the board to execute
- 	 * the command.
- 	 */
--	if (boardp->adv_reqp == NULL) {
-+	reqp = &boardp->adv_reqp[srb_tag];
-+	if (reqp->cmndp && reqp->cmndp != scp ) {
- 		ASC_DBG(1, "no free adv_req_t\n");
- 		ASC_STATS(scp->device->host, adv_build_noreq);
- 		return ASC_BUSY;
+-	carrp = (ADV_CARR_T *) ADV_16BALIGN(asc_dvc->carrier_buf);
+-	asc_dvc->carr_freelist = NULL;
+-	if (carrp == asc_dvc->carrier_buf) {
+-		buf_size = ADV_CARRIER_BUFSIZE;
 -	} else {
--		reqp = boardp->adv_reqp;
--		boardp->adv_reqp = reqp->next_reqp;
--		reqp->next_reqp = NULL;
+-		buf_size = ADV_CARRIER_BUFSIZE - sizeof(ADV_CARR_T);
++	for (i = 0; i < carr_num; i++) {
++		carr_offset = i * sizeof(ADV_CARR_T);
++		/* Get physical address of the carrier 'carrp'. */
++		carr_paddr = adv_dvc->carrier_addr + carr_offset;
++
++		adv_dvc->carrier[i].carr_pa = cpu_to_le32(carr_paddr);
++		adv_dvc->carrier[i].carr_va = cpu_to_le32(carr_offset);
++		adv_dvc->carrier[i].areq_vpa = 0;
++		next_offset = carr_offset + sizeof(ADV_CARR_T);
++		if (i == carr_num)
++			next_offset = ~0;
++		adv_dvc->carrier[i].next_vpa = cpu_to_le32(next_offset);
  	}
++	/*
++	 * We cannot have a carrier with 'carr_va' of '0', as
++	 * a reference to this carrier would be interpreted as
++	 * list termination.
++	 * So start at carrier 1 with the freelist.
++	 */
++	adv_dvc->carr_freelist = &adv_dvc->carrier[1];
++}
  
- 	/*
-@@ -8114,14 +8044,15 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	scsiqp->cntl = scsiqp->scsi_cntl = scsiqp->done_status = 0;
+-	do {
+-		/* Get physical address of the carrier 'carrp'. */
+-		carr_paddr = cpu_to_le32(virt_to_bus(carrp));
++static ADV_CARR_T *adv_get_carrier(struct adv_dvc_var *adv_dvc, u32 offset)
++{
++	int index;
  
- 	/*
--	 * Set the ADV_SCSI_REQ_Q 'srb_ptr' to point to the adv_req_t structure.
-+	 * Set the srb_tag to the command tag.
- 	 */
--	scsiqp->srb_ptr = ADV_VADDR_TO_U32(reqp);
-+	scsiqp->srb_tag = srb_tag;
+-		buf_size -= sizeof(ADV_CARR_T);
++	BUG_ON(offset > ADV_CARRIER_BUFSIZE);
  
- 	/*
- 	 * Set the adv_req_t 'cmndp' to point to the struct scsi_cmnd structure.
- 	 */
- 	reqp->cmndp = scp;
-+	scp->host_scribble = (void *)reqp;
+-		carrp->carr_pa = carr_paddr;
+-		carrp->carr_va = cpu_to_le32(ADV_VADDR_TO_U32(carrp));
++	index = offset / sizeof(ADV_CARR_T);
++	return &adv_dvc->carrier[index];
++}
  
- 	/*
- 	 * Build the ADV_SCSI_REQ_Q request.
-@@ -8163,13 +8094,8 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 				   scp->device->host->sg_tablesize);
- 			scsi_dma_unmap(scp);
- 			scp->result = HOST_BYTE(DID_ERROR);
--
--			/*
--			 * Free the 'adv_req_t' structure by adding it back
--			 * to the board free list.
--			 */
--			reqp->next_reqp = boardp->adv_reqp;
--			boardp->adv_reqp = reqp;
-+			reqp->cmndp = NULL;
-+			scp->host_scribble = NULL;
- 
- 			return ASC_ERROR;
- 		}
-@@ -8178,12 +8104,10 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 
- 		ret = adv_get_sglist(boardp, reqp, scp, use_sg);
- 		if (ret != ADV_SUCCESS) {
--			/*
--			 * Free the adv_req_t structure by adding it back to
--			 * the board free list.
--			 */
--			reqp->next_reqp = boardp->adv_reqp;
--			boardp->adv_reqp = reqp;
-+			scsi_dma_unmap(scp);
-+			scp->result = HOST_BYTE(DID_ERROR);
-+			reqp->cmndp = NULL;
-+			scp->host_scribble = NULL;
- 
- 			return ret;
- 		}
-@@ -11244,6 +11168,7 @@ static struct scsi_host_template advansys_template = {
- 	 * by enabling clustering, I/O throughput increases as well.
- 	 */
- 	.use_clustering = ENABLE_CLUSTERING,
-+	.use_blk_tags = 1,
- };
- 
- static int advansys_wide_init_chip(struct Scsi_Host *shost)
-@@ -11272,7 +11197,7 @@ static int advansys_wide_init_chip(struct Scsi_Host *shost)
- 	 * If the allocation fails decrement and try again.
- 	 */
- 	for (req_cnt = adv_dvc->max_host_qng; req_cnt > 0; req_cnt--) {
--		reqp = kmalloc(sizeof(adv_req_t) * req_cnt, GFP_KERNEL);
-+		reqp = kzalloc(sizeof(adv_req_t) * req_cnt, GFP_KERNEL);
- 
- 		ASC_DBG(1, "reqp 0x%p, req_cnt %d, bytes %lu\n", reqp, req_cnt,
- 			 (ulong)sizeof(adv_req_t) * req_cnt);
-@@ -11284,7 +11209,7 @@ static int advansys_wide_init_chip(struct Scsi_Host *shost)
- 	if (!reqp)
- 		goto kmalloc_failed;
- 
--	adv_dvc->orig_reqp = reqp;
-+	board->adv_reqp = reqp;
- 
- 	/*
- 	 * Allocate up to ADV_TOT_SG_BLOCK request structures for
-@@ -11317,7 +11242,6 @@ static int advansys_wide_init_chip(struct Scsi_Host *shost)
- 	for (; req_cnt > 0; req_cnt--) {
- 		reqp[req_cnt - 1].next_reqp = &reqp[req_cnt];
- 	}
--	board->adv_reqp = &reqp[0];
- 
- 	if (adv_dvc->chip_type == ADV_CHIP_ASC3550) {
- 		ASC_DBG(2, "AdvInitAsc3550Driver()\n");
-@@ -11350,8 +11274,8 @@ static void advansys_wide_free_mem(struct asc_board *board)
- 	struct adv_dvc_var *adv_dvc = &board->dvc_var.adv_dvc_var;
- 	kfree(adv_dvc->carrier_buf);
- 	adv_dvc->carrier_buf = NULL;
--	kfree(adv_dvc->orig_reqp);
--	adv_dvc->orig_reqp = board->adv_reqp = NULL;
-+	kfree(board->adv_reqp);
-+	board->adv_reqp = NULL;
- 	while (board->adv_sgblkp) {
- 		adv_sgblk_t *sgp = board->adv_sgblkp;
- 		board->adv_sgblkp = sgp->next_sgblkp;
-@@ -11651,6 +11575,11 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
- 		/* Set maximum number of queues the adapter can handle. */
- 		shost->can_queue = adv_dvc_varp->max_host_qng;
- 	}
-+	ret = scsi_init_shared_tag_map(shost, shost->can_queue);
-+	if (ret) {
-+		shost_printk(KERN_ERR, shost, "init tag map failed\n");
-+		goto err_free_dma;
+-		/*
+-		 * Insert the carrier at the beginning of the freelist.
+-		 */
+-		carrp->next_vpa =
+-			cpu_to_le32(ADV_VADDR_TO_U32(asc_dvc->carr_freelist));
+-		asc_dvc->carr_freelist = carrp;
++static ADV_CARR_T *adv_get_next_carrier(struct adv_dvc_var *adv_dvc)
++{
++	ADV_CARR_T *carrp = adv_dvc->carr_freelist;
++	u32 next_vpa = le32_to_cpu(carrp->next_vpa);
++
++	if (next_vpa == 0 || next_vpa == ~0) {
++		ASC_DBG(1, "invalid vpa offset 0x%x\n", next_vpa);
++		return NULL;
 +	}
  
+-		carrp++;
+-	} while (buf_size > 0);
++	adv_dvc->carr_freelist = adv_get_carrier(adv_dvc, next_vpa);
++	/*
++	 * insert stopper carrier to terminate list
++	 */
++	carrp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
++
++	return carrp;
+ }
+ 
+ /*
+@@ -4846,17 +4869,11 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
+ 	 * Set-up the Host->RISC Initiator Command Queue (ICQ).
+ 	 */
+ 
+-	if ((asc_dvc->icq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->icq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->icq_sp) {
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->icq_sp->next_vpa));
+-
+-	/*
+-	 * The first command issued will be placed in the stopper carrier.
+-	 */
+-	asc_dvc->icq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
+ 
  	/*
- 	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
-@@ -11922,6 +11851,7 @@ static int advansys_isa_probe(struct device *dev, unsigned int id)
- 	board = shost_priv(shost);
- 	board->irq = advansys_isa_irq_no(iop_base);
- 	board->dev = dev;
-+	board->shost = shost;
+ 	 * Set RISC ICQ physical address start value.
+@@ -4866,21 +4883,11 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
+ 	/*
+ 	 * Set-up the RISC->Host Initiator Response Queue (IRQ).
+ 	 */
+-	if ((asc_dvc->irq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->irq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->irq_sp) {
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->irq_sp->next_vpa));
+-
+-	/*
+-	 * The first command completed by the RISC will be placed in
+-	 * the stopper.
+-	 *
+-	 * Note: Set 'next_vpa' to ASC_CQ_STOPPER. When the request is
+-	 * completed the RISC will set the ASC_RQ_STOPPER bit.
+-	 */
+-	asc_dvc->irq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
  
- 	err = advansys_board_found(shost, iop_base, ASC_IS_ISA);
- 	if (err)
-@@ -12004,6 +11934,7 @@ static int advansys_vlb_probe(struct device *dev, unsigned int id)
- 	board = shost_priv(shost);
- 	board->irq = advansys_vlb_irq_no(iop_base);
- 	board->dev = dev;
-+	board->shost = shost;
+ 	/*
+ 	 * Set RISC IRQ physical address start value.
+@@ -5343,17 +5350,12 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 	 * Set-up the Host->RISC Initiator Command Queue (ICQ).
+ 	 */
  
- 	err = advansys_board_found(shost, iop_base, ASC_IS_VL);
- 	if (err)
-@@ -12111,6 +12042,7 @@ static int advansys_eisa_probe(struct device *dev)
- 		board = shost_priv(shost);
- 		board->irq = irq;
- 		board->dev = dev;
-+		board->shost = shost;
+-	if ((asc_dvc->icq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->icq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->icq_sp) {
++		ASC_DBG(0, "Failed to get ICQ carrier\n");
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->icq_sp->next_vpa));
+-
+-	/*
+-	 * The first command issued will be placed in the stopper carrier.
+-	 */
+-	asc_dvc->icq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
  
- 		err = advansys_board_found(shost, ioport, ASC_IS_EISA);
- 		if (!err) {
-@@ -12227,6 +12159,7 @@ static int advansys_pci_probe(struct pci_dev *pdev,
- 	board = shost_priv(shost);
- 	board->irq = pdev->irq;
- 	board->dev = &pdev->dev;
-+	board->shost = shost;
+ 	/*
+ 	 * Set RISC ICQ physical address start value.
+@@ -5364,21 +5366,12 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 	/*
+ 	 * Set-up the RISC->Host Initiator Response Queue (IRQ).
+ 	 */
+-	if ((asc_dvc->irq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->irq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->irq_sp) {
++		ASC_DBG(0, "Failed to get IRQ carrier\n");
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->irq_sp->next_vpa));
+-
+-	/*
+-	 * The first command completed by the RISC will be placed in
+-	 * the stopper.
+-	 *
+-	 * Note: Set 'next_vpa' to ASC_CQ_STOPPER. When the request is
+-	 * completed the RISC will set the ASC_RQ_STOPPER bit.
+-	 */
+-	asc_dvc->irq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
  
- 	if (pdev->device == PCI_DEVICE_ID_ASP_ABP940UW ||
- 	    pdev->device == PCI_DEVICE_ID_38C0800_REV1 ||
+ 	/*
+ 	 * Set RISC IRQ physical address start value.
+@@ -5853,17 +5846,11 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 	/*
+ 	 * Set-up the Host->RISC Initiator Command Queue (ICQ).
+ 	 */
+-	if ((asc_dvc->icq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->icq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->icq_sp) {
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->icq_sp->next_vpa));
+-
+-	/*
+-	 * The first command issued will be placed in the stopper carrier.
+-	 */
+-	asc_dvc->icq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
+ 
+ 	/*
+ 	 * Set RISC ICQ physical address start value. Initialize the
+@@ -5877,21 +5864,11 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 	/*
+ 	 * Set-up the RISC->Host Initiator Response Queue (IRQ).
+ 	 */
+-	if ((asc_dvc->irq_sp = asc_dvc->carr_freelist) == NULL) {
++	asc_dvc->irq_sp = adv_get_next_carrier(asc_dvc);
++	if (!asc_dvc->irq_sp) {
+ 		asc_dvc->err_code |= ASC_IERR_NO_CARRIER;
+ 		return ADV_ERROR;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(asc_dvc->irq_sp->next_vpa));
+-
+-	/*
+-	 * The first command completed by the RISC will be placed in
+-	 * the stopper.
+-	 *
+-	 * Note: Set 'next_vpa' to ASC_CQ_STOPPER. When the request is
+-	 * completed the RISC will set the ASC_RQ_STOPPER bit.
+-	 */
+-	asc_dvc->irq_sp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
+ 
+ 	/*
+ 	 * Set RISC IRQ physical address start value.
+@@ -6324,11 +6301,10 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		 * stopper carrier.
+ 		 */
+ 		free_carrp = asc_dvc->irq_sp;
+-		asc_dvc->irq_sp = (ADV_CARR_T *)
+-		    ADV_U32_TO_VADDR(ASC_GET_CARRP(irq_next_vpa));
++		asc_dvc->irq_sp = adv_get_carrier(asc_dvc,
++						  ASC_GET_CARRP(irq_next_vpa));
+ 
+-		free_carrp->next_vpa =
+-		    cpu_to_le32(ADV_VADDR_TO_U32(asc_dvc->carr_freelist));
++		free_carrp->next_vpa = asc_dvc->carr_freelist->carr_va;
+ 		asc_dvc->carr_freelist = free_carrp;
+ 		asc_dvc->carr_pending_cnt--;
+ 
+@@ -8091,7 +8067,6 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 		/* Zero-length transfer */
+ 		reqp->sgblkp = NULL;
+ 		scsiqp->data_cnt = 0;
+-		scsiqp->vdata_addr = NULL;
+ 
+ 		scsiqp->data_addr = 0;
+ 		scsiqp->sg_list_ptr = NULL;
+@@ -8740,19 +8715,13 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 	 * Allocate a carrier ensuring at least one carrier always
+ 	 * remains on the freelist and initialize fields.
+ 	 */
+-	if ((new_carrp = asc_dvc->carr_freelist) == NULL) {
++	new_carrp = adv_get_next_carrier(asc_dvc);
++	if (!new_carrp) {
++		ASC_DBG(1, "No free carriers\n");
+ 		return ADV_BUSY;
+ 	}
+-	asc_dvc->carr_freelist = (ADV_CARR_T *)
+-	    ADV_U32_TO_VADDR(le32_to_cpu(new_carrp->next_vpa));
+-	asc_dvc->carr_pending_cnt++;
+ 
+-	/*
+-	 * Set the carrier to be a stopper by setting 'next_vpa'
+-	 * to the stopper value. The current stopper will be changed
+-	 * below to point to the new stopper.
+-	 */
+-	new_carrp->next_vpa = cpu_to_le32(ASC_CQ_STOPPER);
++	asc_dvc->carr_pending_cnt++;
+ 
+ 	/*
+ 	 * Clear the ADV_SCSI_REQ_Q done flag.
+@@ -8768,11 +8737,7 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 	scsiq->scsiq_ptr = cpu_to_le32(ADV_VADDR_TO_U32(scsiq));
+ 	scsiq->scsiq_rptr = req_paddr;
+ 
+-	scsiq->carr_va = cpu_to_le32(ADV_VADDR_TO_U32(asc_dvc->icq_sp));
+-	/*
+-	 * Every ADV_CARR_T.carr_pa is byte swapped to little-endian
+-	 * order during initialization.
+-	 */
++	scsiq->carr_va = asc_dvc->icq_sp->carr_va;
+ 	scsiq->carr_pa = asc_dvc->icq_sp->carr_pa;
+ 
+ 	/*
+@@ -11192,12 +11157,13 @@ static int advansys_wide_init_chip(struct Scsi_Host *shost)
+ 
+ 	/*
+ 	 * Allocate buffer carrier structures. The total size
+-	 * is about 4 KB, so allocate all at once.
++	 * is about 8 KB, so allocate all at once.
+ 	 */
+-	adv_dvc->carrier_buf = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
+-	ASC_DBG(1, "carrier_buf 0x%p\n", adv_dvc->carrier_buf);
++	adv_dvc->carrier = dma_alloc_coherent(board->dev,
++		ADV_CARRIER_BUFSIZE, &adv_dvc->carrier_addr, GFP_KERNEL);
++	ASC_DBG(1, "carrier 0x%p\n", adv_dvc->carrier);
+ 
+-	if (!adv_dvc->carrier_buf)
++	if (!adv_dvc->carrier)
+ 		goto kmalloc_failed;
+ 
+ 	/*
+@@ -11281,8 +11247,12 @@ static int advansys_wide_init_chip(struct Scsi_Host *shost)
+ static void advansys_wide_free_mem(struct asc_board *board)
+ {
+ 	struct adv_dvc_var *adv_dvc = &board->dvc_var.adv_dvc_var;
+-	kfree(adv_dvc->carrier_buf);
+-	adv_dvc->carrier_buf = NULL;
++
++	if (adv_dvc->carrier) {
++		dma_free_coherent(board->dev, ADV_CARRIER_BUFSIZE,
++				  adv_dvc->carrier, adv_dvc->carrier_addr);
++		adv_dvc->carrier = NULL;
++	}
+ 	kfree(board->adv_reqp);
+ 	board->adv_reqp = NULL;
+ 	while (board->adv_sgblkp) {
 -- 
 1.8.5.2
 
