@@ -1,100 +1,140 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/23] advansys: Check for DMA mapping errors
-Date: Fri, 24 Apr 2015 13:18:39 +0200
-Message-ID: <1429874322-85488-22-git-send-email-hare@suse.de>
+Subject: [PATCH 11/23] advansys: Make AscIsrChipHalted() a void function
+Date: Fri, 24 Apr 2015 13:18:30 +0200
+Message-ID: <1429874322-85488-13-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58860 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58897 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967109AbbDXLSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:52 -0400
+	id S966641AbbDXLSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:50 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-DMA mapping might fail, so we need to check for errors here.
+AscIsrChipHalted will only ever return '0', so make it
+a void function.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 27 ++++++++++++++++++++++-----
- 1 file changed, 22 insertions(+), 5 deletions(-)
+ drivers/scsi/advansys.c | 30 +++++++++++++-----------------
+ 1 file changed, 13 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 5a55272..485eaf0 100644
+index 35fc291..23a4a7d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -7514,6 +7514,10 @@ static __le32 advansys_get_sense_buffer_dma(struct scsi_cmnd *scp)
- 	struct asc_board *board = shost_priv(scp->device->host);
- 	scp->SCp.dma_handle = dma_map_single(board->dev, scp->sense_buffer,
- 					     SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(board->dev, scp->SCp.dma_handle)) {
-+		ASC_DBG(1, "failed to map sense buffer\n");
-+		return 0;
-+	}
- 	dma_cache_sync(board->dev, scp->sense_buffer,
- 		       SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
- 	return cpu_to_le32(scp->SCp.dma_handle);
-@@ -7546,6 +7550,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	    ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
- 	asc_scsi_q->q1.sense_addr = advansys_get_sense_buffer_dma(scp);
- 	asc_scsi_q->q1.sense_len = SCSI_SENSE_BUFFERSIZE;
-+	if (!asc_scsi_q->q1.sense_addr)
-+		return ASC_BUSY;
+@@ -6440,7 +6440,7 @@ static void AscSetChipSDTR(PortAddr iop_base, uchar sdtr_data, uchar tid_no)
+ 	AscPutMCodeSDTRDoneAtID(iop_base, tid_no, sdtr_data);
+ }
  
- 	/*
- 	 * If there are any outstanding requests for the current target,
-@@ -7567,7 +7573,10 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 
- 	/* Build ASC_SCSI_Q */
- 	use_sg = scsi_dma_map(scp);
--	if (use_sg != 0) {
-+	if (use_sg < 0) {
-+		ASC_DBG(1, "failed to map sglist\n");
-+		return ASC_BUSY;
-+	} else if (use_sg > 0) {
- 		int sgcnt;
- 		struct scatterlist *slp;
- 		struct asc_sg_head *asc_sg_head;
-@@ -7799,13 +7808,22 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 
- 	sense_addr = dma_map_single(boardp->dev, scp->sense_buffer,
- 				    SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(boardp->dev, sense_addr)) {
-+		ASC_DBG(1, "failed to map sense buffer\n");
-+		ASC_STATS(scp->device->host, adv_build_noreq);
-+		return ASC_BUSY;
-+	}
- 	scsiqp->sense_addr = cpu_to_le32(sense_addr);
- 	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
- 
- 	/* Build ADV_SCSI_REQ_Q */
- 
- 	use_sg = scsi_dma_map(scp);
--	if (use_sg == 0) {
-+	if (use_sg < 0) {
-+		ASC_DBG(1, "failed to map SG list\n");
-+		ASC_STATS(scp->device->host, adv_build_noreq);
-+		return ASC_BUSY;
-+	} else if (use_sg == 0) {
- 		/* Zero-length transfer */
- 		reqp->sgblkp = NULL;
- 		scsiqp->data_cnt = 0;
-@@ -8473,11 +8491,10 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
- 		struct asc_scsi_q asc_scsi_q;
- 
--		/* asc_build_req() can not return ASC_BUSY. */
- 		ret = asc_build_req(boardp, scp, &asc_scsi_q);
--		if (ret == ASC_ERROR) {
-+		if (ret != ASC_NOERROR) {
- 			ASC_STATS(scp->device->host, build_error);
--			return ASC_ERROR;
-+			return ret;
+-static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
++static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ {
+ 	EXT_MSG ext_msg;
+ 	EXT_MSG out_msg;
+@@ -6487,14 +6487,14 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 			boardp->sdtr_data[tid_no] = 0;
  		}
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	} else if (int_halt_code == ASC_HALT_ENABLE_ASYN_USE_SYN_FIX) {
+ 		if (asc_dvc->pci_fix_asyn_xfer & target_id) {
+ 			AscSetChipSDTR(iop_base, asyn_sdtr, tid_no);
+ 			boardp->sdtr_data[tid_no] = asyn_sdtr;
+ 		}
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	} else if (int_halt_code == ASC_HALT_EXTMSG_IN) {
+ 		AscMemWordCopyPtrFromLram(iop_base,
+ 					  ASCV_MSGIN_BEG,
+@@ -6580,7 +6580,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 						  (ushort)ASC_SCSIQ_B_CNTL),
+ 					 q_cntl);
+ 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-			return (0);
++			return;
+ 		} else if (ext_msg.msg_type == EXTENDED_MESSAGE &&
+ 			   ext_msg.msg_req == EXTENDED_WDTR &&
+ 			   ext_msg.msg_len == MS_WDTR_LEN) {
+@@ -6596,7 +6596,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 						  (ushort)ASC_SCSIQ_B_CNTL),
+ 					 q_cntl);
+ 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-			return (0);
++			return;
+ 		} else {
  
- 		ret = AscExeScsiQueue(asc_dvc, &asc_scsi_q);
+ 			ext_msg.msg_type = MESSAGE_REJECT;
+@@ -6610,7 +6610,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 						  (ushort)ASC_SCSIQ_B_CNTL),
+ 					 q_cntl);
+ 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-			return (0);
++			return;
+ 		}
+ 	} else if (int_halt_code == ASC_HALT_CHK_CONDITION) {
+ 
+@@ -6667,7 +6667,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 		AscWriteLramByte(iop_base, (ushort)ASCV_SCSIBUSY_B, scsi_busy);
+ 
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	} else if (int_halt_code == ASC_HALT_SDTR_REJECTED) {
+ 
+ 		AscMemWordCopyPtrFromLram(iop_base,
+@@ -6689,7 +6689,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 				 (ushort)(halt_q_addr +
+ 					  (ushort)ASC_SCSIQ_B_CNTL), q_cntl);
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	} else if (int_halt_code == ASC_HALT_SS_QUEUE_FULL) {
+ 
+ 		scsi_status = AscReadLramByte(iop_base,
+@@ -6734,7 +6734,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 			}
+ 		}
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	}
+ #if CC_VERY_LONG_SG_LIST
+ 	else if (int_halt_code == ASC_HALT_HOST_COPY_SG_LIST_TO_RISC) {
+@@ -6890,10 +6890,10 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 		 * after the return.
+ 		 */
+ 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
+-		return (0);
++		return;
+ 	}
+ #endif /* CC_VERY_LONG_SG_LIST */
+-	return (0);
++	return;
+ }
+ 
+ /*
+@@ -7306,13 +7306,9 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
+ 		AscAckInterrupt(iop_base);
+ 		int_pending = ASC_TRUE;
+ 		if ((chipstat & CSW_HALTED) && (ctrl_reg & CC_SINGLE_STEP)) {
+-			if (AscIsrChipHalted(asc_dvc) == ASC_ERROR) {
+-				goto ISR_REPORT_QDONE_FATAL_ERROR;
+-			} else {
+-				saved_ctrl_reg &= (uchar)(~CC_HALT);
+-			}
++			AscIsrChipHalted(asc_dvc);
++			saved_ctrl_reg &= (uchar)(~CC_HALT);
+ 		} else {
+- ISR_REPORT_QDONE_FATAL_ERROR:
+ 			if ((asc_dvc->dvc_cntl & ASC_CNTL_INT_MULTI_Q) != 0) {
+ 				while (((status =
+ 					 AscIsrQDone(asc_dvc)) & 0x01) != 0) {
 -- 
 1.8.5.2
 
