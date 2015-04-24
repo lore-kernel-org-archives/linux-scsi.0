@@ -1,76 +1,106 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/23] advansys: remove 'ERR' definition
-Date: Fri, 24 Apr 2015 13:18:29 +0200
-Message-ID: <1429874322-85488-12-git-send-email-hare@suse.de>
+Subject: [PATCH 23/23] advansys: Update to version 3.5 and remove compilation warning
+Date: Fri, 24 Apr 2015 13:18:42 +0200
+Message-ID: <1429874322-85488-25-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58898 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58864 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965944AbbDXLSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:50 -0400
+	id S967111AbbDXLSx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:53 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+The driver has now been converted to DMA-API, so we should
+increase the version number and remove the compilation
+warning.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ MAINTAINERS             |  1 +
+ drivers/scsi/Kconfig    |  2 +-
+ drivers/scsi/advansys.c | 27 +++++++--------------------
+ 3 files changed, 9 insertions(+), 21 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ea00017..e784106 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -445,6 +445,7 @@ F:	drivers/input/misc/adxl34x.c
+ 
+ ADVANSYS SCSI DRIVER
+ M:	Matthew Wilcox <matthew@wil.cx>
++M:	Hannes Reinecke <hare@suse.de>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/scsi/advansys.txt
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a4564b3..ac404db 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -503,7 +503,7 @@ config SCSI_DPT_I2O
+ 
+ config SCSI_ADVANSYS
+ 	tristate "AdvanSys SCSI support"
+-	depends on SCSI && VIRT_TO_BUS
++	depends on SCSI
+ 	depends on ISA || EISA || PCI
+ 	help
+ 	  This is a driver for all SCSI host adapters manufactured by
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 973c3d8..35fc291 100644
+index 3b81f44..a8d180b 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -78,7 +78,6 @@
+@@ -1,12 +1,10 @@
+-#define DRV_NAME "advansys"
+-#define ASC_VERSION "3.4"	/* AdvanSys Driver Version */
+-
+ /*
+  * advansys.c - Linux Host Driver for AdvanSys SCSI Adapters
+  *
+  * Copyright (c) 1995-2000 Advanced System Products, Inc.
+  * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
+  * Copyright (c) 2007 Matthew Wilcox <matthew@wil.cx>
++ * Copyright (c) 2014 Hannes Reinecke <hare@suse.de>
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -49,26 +47,15 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
  
- typedef unsigned char uchar;
++#define DRV_NAME "advansys"
++#define ASC_VERSION "3.5"	/* AdvanSys Driver Version */
++
+ /* FIXME:
+  *
+- *  1. Although all of the necessary command mapping places have the
+- *     appropriate dma_map.. APIs, the driver still processes its internal
+- *     queue using bus_to_virt() and virt_to_bus() which are illegal under
+- *     the API.  The entire queue processing structure will need to be
+- *     altered to fix this.
+- *  2. Need to add memory mapping workaround. Test the memory mapping.
+- *     If it doesn't work revert to I/O port access. Can a test be done
+- *     safely?
+- *  3. Handle an interrupt not working. Keep an interrupt counter in
+- *     the interrupt handler. In the timeout function if the interrupt
+- *     has not occurred then print a message and run in polled mode.
+- *  4. Need to add support for target mode commands, cf. CAM XPT.
+- *  5. check DMA mapping functions for failure
+- *  6. Use scsi_transport_spi
+- *  7. advansys_info is not safe against multiple simultaneous callers
+- *  8. Add module_param to override ISA/VLB ioport array
++ *  1. Use scsi_transport_spi
++ *  2. advansys_info is not safe against multiple simultaneous callers
++ *  3. Add module_param to override ISA/VLB ioport array
+  */
+-#warning this driver is still not properly converted to the DMA API
  
--#define ERR      (-1)
- #define UW_ERR   (uint)(0xFFFF)
- #define isodd_word(val)   ((((uint)val) & (uint)0x0001) != 0)
- 
-@@ -7307,7 +7306,7 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
- 		AscAckInterrupt(iop_base);
- 		int_pending = ASC_TRUE;
- 		if ((chipstat & CSW_HALTED) && (ctrl_reg & CC_SINGLE_STEP)) {
--			if (AscIsrChipHalted(asc_dvc) == ERR) {
-+			if (AscIsrChipHalted(asc_dvc) == ASC_ERROR) {
- 				goto ISR_REPORT_QDONE_FATAL_ERROR;
- 			} else {
- 				saved_ctrl_reg &= (uchar)(~CC_HALT);
-@@ -8437,7 +8436,7 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
- 	iop_base = asc_dvc->iop_base;
- 	sg_head = scsiq->sg_head;
- 	if (asc_dvc->err_code != 0)
--		return (ERR);
-+		return ASC_ERROR;
- 	scsiq->q1.q_no = 0;
- 	if ((scsiq->q2.tag_code & ASC_TAG_FLAG_EXTRA_BYTES) == 0) {
- 		scsiq->q1.extra_bytes = 0;
-@@ -8463,18 +8462,18 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
- 	}
- 	if (asc_dvc->in_critical_cnt != 0) {
- 		AscSetLibErrorCode(asc_dvc, ASCQ_ERR_CRITICAL_RE_ENTRY);
--		return (ERR);
-+		return ASC_ERROR;
- 	}
- 	asc_dvc->in_critical_cnt++;
- 	if ((scsiq->q1.cntl & QC_SG_HEAD) != 0) {
- 		if ((sg_entry_cnt = sg_head->entry_cnt) == 0) {
- 			asc_dvc->in_critical_cnt--;
--			return (ERR);
-+			return ASC_ERROR;
- 		}
- #if !CC_VERY_LONG_SG_LIST
- 		if (sg_entry_cnt > ASC_MAX_SG_LIST) {
- 			asc_dvc->in_critical_cnt--;
--			return (ERR);
-+			return ASC_ERROR;
- 		}
- #endif /* !CC_VERY_LONG_SG_LIST */
- 		if (sg_entry_cnt == 1) {
+ /* Enable driver /proc statistics. */
+ #define ADVANSYS_STATS
 -- 
 1.8.5.2
 
