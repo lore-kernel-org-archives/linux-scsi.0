@@ -1,65 +1,126 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 00/22] Nobody loves the advansys driver
-Date: Fri, 24 Apr 2015 10:32:35 +0200
-Message-ID: <1429864377-67002-1-git-send-email-hare@suse.de>
+Subject: [PATCH 07/22] advansys: use 'bool' instead of 'int'
+Date: Fri, 24 Apr 2015 10:32:42 +0200
+Message-ID: <1429864377-67002-8-git-send-email-hare@suse.de>
+References: <1429864377-67002-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42953 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42965 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966349AbbDXIdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S966361AbbDXIdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 24 Apr 2015 04:33:01 -0400
+In-Reply-To: <1429864377-67002-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/advansys.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-it has been bugged me for ages that the advansys driver always
-reported a compilation warning about not having been converted
-to the DMA-API.
-And even aggressive waiting hasn't made this warning go away.
-
-So here's a patchset to update the advansys driver to current
-standards and use the DMA-API.
-Tested on ABP940-U2W and ABP-960-U (Thanks, Doug!)
-
-As usual, reviews and comments are welcome.
-
-Changes to the original version:
-- Fixed issue noted by Ondrey Zary
-- Tested narrow-scsi support
-- Fixed sg list corruption on wide boards
-- Even more cleanup
-
-Hannes Reinecke (22):
-  advansys: use host_reset
-  advansys: use shared host tag map for command lookup
-  advansys: use DMA-API for mapping sense buffer
-  advansys: Use DMA-API for carrier buffer
-  advansys: Use DMA-API for mapping request blocks
-  advansys: Use dma_pool for sg elements
-  advansys: use 'bool' instead of 'int'
-  advansys: use standard data types
-  advansys: Remove 'TRUE' and 'FALSE' definitions
-  advansys: remove 'ERR' definition
-  advansys: Make AscIsrChipHalted() a void function
-  advansys: cleanup function return codes
-  advansys: scsi_q1->data_addr is little endian
-  advansys: Remove ASC_SCSI_REQ_Q
-  advansys: Remove CC_VERY_LONG_SG_LIST
-  advansys: rename 'ASC_RQ_XX' to 'ADV_RQ_XX'
-  advansys: Remove 'a_flag'
-  advansys: Remove obsolete virtual memory mapping comment
-  advansys: Remove comment around cmd_per_lun
-  advansys: Check for DMA mapping errors
-  advansys: use spin_lock_irqsave() in interrupt handler
-  advansys: Update to version 3.5 and remove compilation warning
-
- MAINTAINERS             |    1 +
- drivers/scsi/Kconfig    |    2 +-
- drivers/scsi/advansys.c | 1457 ++++++++++++++++-------------------------------
- 3 files changed, 508 insertions(+), 952 deletions(-)
-
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index b4a7a67..52e2afd 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -3801,17 +3801,17 @@ static int AscStopChip(PortAddr iop_base)
+ 	return (1);
+ }
+ 
+-static int AscIsChipHalted(PortAddr iop_base)
++static bool AscIsChipHalted(PortAddr iop_base)
+ {
+ 	if ((AscGetChipStatus(iop_base) & CSW_HALTED) != 0) {
+ 		if ((AscGetChipControl(iop_base) & CC_HALT) != 0) {
+-			return (1);
++			return true;
+ 		}
+ 	}
+-	return (0);
++	return false;
+ }
+ 
+-static int AscResetChipAndScsiBus(ASC_DVC_VAR *asc_dvc)
++static bool AscResetChipAndScsiBus(ASC_DVC_VAR *asc_dvc)
+ {
+ 	PortAddr iop_base;
+ 	int i = 10;
+@@ -6446,11 +6446,11 @@ AscCalSDTRData(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar syn_offset)
+ 	return byte;
+ }
+ 
+-static int AscSetChipSynRegAtID(PortAddr iop_base, uchar id, uchar sdtr_data)
++static bool AscSetChipSynRegAtID(PortAddr iop_base, uchar id, uchar sdtr_data)
+ {
+ 	ASC_SCSI_BIT_ID_TYPE org_id;
+ 	int i;
+-	int sta = TRUE;
++	bool sta = true;
+ 
+ 	AscSetBank(iop_base, 1);
+ 	org_id = AscReadChipDvcID(iop_base);
+@@ -6464,10 +6464,10 @@ static int AscSetChipSynRegAtID(PortAddr iop_base, uchar id, uchar sdtr_data)
+ 		AscSetBank(iop_base, 0);
+ 		AscSetChipSyn(iop_base, sdtr_data);
+ 		if (AscGetChipSyn(iop_base) != sdtr_data) {
+-			sta = FALSE;
++			sta = false;
+ 		}
+ 	} else {
+-		sta = FALSE;
++		sta = false;
+ 	}
+ 	AscSetBank(iop_base, 1);
+ 	AscWriteChipDvcID(iop_base, org_id);
+@@ -7527,32 +7527,32 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
+ 	return result;
+ }
+ 
+-static int AscHostReqRiscHalt(PortAddr iop_base)
++static bool AscHostReqRiscHalt(PortAddr iop_base)
+ {
+ 	int count = 0;
+-	int sta = 0;
++	bool sta = false;
+ 	uchar saved_stop_code;
+ 
+ 	if (AscIsChipHalted(iop_base))
+-		return (1);
++		return true;
+ 	saved_stop_code = AscReadLramByte(iop_base, ASCV_STOP_CODE_B);
+ 	AscWriteLramByte(iop_base, ASCV_STOP_CODE_B,
+ 			 ASC_STOP_HOST_REQ_RISC_HALT | ASC_STOP_REQ_RISC_STOP);
+ 	do {
+ 		if (AscIsChipHalted(iop_base)) {
+-			sta = 1;
++			sta = true;
+ 			break;
+ 		}
+ 		mdelay(100);
+ 	} while (count++ < 20);
+ 	AscWriteLramByte(iop_base, ASCV_STOP_CODE_B, saved_stop_code);
+-	return (sta);
++	return sta;
+ }
+ 
+-static int
++static bool
+ AscSetRunChipSynRegAtID(PortAddr iop_base, uchar tid_no, uchar sdtr_data)
+ {
+-	int sta = FALSE;
++	bool sta = false;
+ 
+ 	if (AscHostReqRiscHalt(iop_base)) {
+ 		sta = AscSetChipSynRegAtID(iop_base, tid_no, sdtr_data);
+@@ -9449,7 +9449,7 @@ static ushort AscInitFromEEP(ASC_DVC_VAR *asc_dvc)
+ 		AscResetChipAndScsiBus(asc_dvc);
+ 		mdelay(asc_dvc->scsi_reset_wait * 1000); /* XXX: msleep? */
+ 	}
+-	if (AscIsChipHalted(iop_base) == FALSE) {
++	if (!AscIsChipHalted(iop_base)) {
+ 		asc_dvc->err_code |= ASC_IERR_START_STOP_CHIP;
+ 		return (warn_code);
+ 	}
 -- 
 1.8.5.2
 
