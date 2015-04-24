@@ -1,108 +1,96 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/23] advansys: Remove 'a_flag'
-Date: Fri, 24 Apr 2015 13:18:36 +0200
-Message-ID: <1429874322-85488-19-git-send-email-hare@suse.de>
+Subject: [PATCH 03/23] advansys: use DMA-API for mapping sense buffer
+Date: Fri, 24 Apr 2015 13:18:22 +0200
+Message-ID: <1429874322-85488-5-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58921 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58864 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967106AbbDXLSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:52 -0400
+	id S966609AbbDXLSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:48 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Unused, so remove it.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 32 +++++++-------------------------
- 1 file changed, 7 insertions(+), 25 deletions(-)
+ drivers/scsi/advansys.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index f01839b..be89245 100644
+index b595e8b..dba8c1a 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -1717,16 +1717,6 @@ typedef struct adv_carr_t {
- #define ADV_CARRIER_BUFSIZE \
-     (ADV_CARRIER_COUNT * sizeof(ADV_CARR_T))
+@@ -1844,7 +1844,7 @@ typedef struct adv_scsi_req_q {
+ 	uchar target_lun;	/* Device target logical unit number. */
+ 	ADV_PADDR data_addr;	/* Data buffer physical address. */
+ 	ADV_DCNT data_cnt;	/* Data count. Ucode sets to residual. */
+-	ADV_PADDR sense_addr;
++	__le32 sense_addr;
+ 	ADV_PADDR carr_pa;
+ 	uchar mflag;
+ 	uchar sense_len;
+@@ -6084,6 +6084,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	adv_sgblk_t *sgblkp;
+ 	struct scsi_cmnd *scp;
+ 	ADV_DCNT resid_cnt;
++	dma_addr_t sense_addr;
  
--/*
-- * ADV_SCSI_REQ_Q 'a_flag' definitions
-- *
-- * The Adv Library should limit use to the lower nibble (4 bits) of
-- * a_flag. Drivers are free to use the upper nibble (4 bits) of a_flag.
-- */
--#define ADV_POLL_REQUEST                0x01	/* poll for request completion */
--#define ADV_SCSIQ_DONE                  0x02	/* request done */
--#define ADV_DONT_RETRY                  0x08	/* don't do retry */
--
- #define ADV_CHIP_ASC3550          0x01	/* Ultra-Wide IC */
- #define ADV_CHIP_ASC38C0800       0x02	/* Ultra2-Wide/LVD IC */
- #define ADV_CHIP_ASC38C1600       0x03	/* Ultra3-Wide/LVD2 IC */
-@@ -1808,8 +1798,6 @@ typedef struct adv_scsi_req_q {
- 	 * is used by the Adv Library and ignored by the microcode.
+ 	ASC_DBG(1, "adv_dvc_varp 0x%p, scsiqp 0x%p\n",
+ 		adv_dvc_varp, scsiqp);
+@@ -6121,6 +6122,10 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	ASC_STATS(boardp->shost, callback);
+ 	ASC_DBG(1, "shost 0x%p\n", boardp->shost);
+ 
++	sense_addr = le32_to_cpu(scsiqp->sense_addr);
++	dma_unmap_single(boardp->dev, sense_addr,
++			 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
++
+ 	/*
+ 	 * 'done_status' contains the command's ending status.
  	 */
- 	u32 srb_tag;
--	uchar a_flag;
--	uchar pad[3];		/* Pad out to a word boundary. */
- 	ADV_SG_BLOCK *sg_list_ptr;	/* SG list virtual address. */
- } ADV_SCSI_REQ_Q;
+@@ -8018,9 +8023,9 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	u32 srb_tag = scp->request->tag;
+ 	adv_req_t *reqp;
+ 	ADV_SCSI_REQ_Q *scsiqp;
+-	int i;
+ 	int ret;
+ 	int use_sg;
++	dma_addr_t sense_addr;
  
-@@ -2592,15 +2580,15 @@ static void asc_prt_adv_sgblock(int sgblockno, ADV_SG_BLOCK *b)
- 
- 	printk(" ADV_SG_BLOCK at addr 0x%lx (sgblockno %d)\n",
- 	       (ulong)b, sgblockno);
--	printk("  sg_cnt %u, sg_ptr 0x%lx\n",
--	       b->sg_cnt, (ulong)le32_to_cpu(b->sg_ptr));
-+	printk("  sg_cnt %u, sg_ptr 0x%x\n",
-+	       b->sg_cnt, (u32)le32_to_cpu(b->sg_ptr));
- 	BUG_ON(b->sg_cnt > NO_OF_SG_PER_BLOCK);
- 	if (b->sg_ptr != 0)
- 		BUG_ON(b->sg_cnt != NO_OF_SG_PER_BLOCK);
- 	for (i = 0; i < b->sg_cnt; i++) {
--		printk("  [%u]: sg_addr 0x%lx, sg_count 0x%lx\n",
--		       i, (ulong)b->sg_list[i].sg_addr,
--		       (ulong)b->sg_list[i].sg_count);
-+		printk("  [%u]: sg_addr 0x%x, sg_count 0x%x\n",
-+		       i, (u32)le32_to_cpu(b->sg_list[i].sg_addr),
-+		       (u32)le32_to_cpu(b->sg_list[i].sg_count));
+ 	/*
+ 	 * Allocate an adv_req_t structure from the board to execute
+@@ -8061,19 +8066,21 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	/* Set CDB length and copy it to the request structure.  */
+ 	scsiqp->cdb_len = scp->cmd_len;
+ 	/* Copy first 12 CDB bytes to cdb[]. */
+-	for (i = 0; i < scp->cmd_len && i < 12; i++) {
+-		scsiqp->cdb[i] = scp->cmnd[i];
+-	}
++	memcpy(scsiqp->cdb, scp->cmnd, scp->cmd_len < 12 ? scp->cmd_len : 12);
+ 	/* Copy last 4 CDB bytes, if present, to cdb16[]. */
+-	for (; i < scp->cmd_len; i++) {
+-		scsiqp->cdb16[i - 12] = scp->cmnd[i];
++	if (scp->cmd_len > 12) {
++		int cdb16_len = scp->cmd_len - 12;
++
++		memcpy(scsiqp->cdb16, &scp->cmnd[12], cdb16_len);
  	}
- }
  
-@@ -2617,8 +2605,8 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
+ 	scsiqp->target_id = scp->device->id;
+ 	scsiqp->target_lun = scp->device->lun;
  
- 	printk("ADV_SCSI_REQ_Q at addr 0x%lx\n", (ulong)q);
+-	scsiqp->sense_addr = cpu_to_le32(virt_to_bus(&scp->sense_buffer[0]));
+-	scsiqp->sense_len = SCSI_SENSE_BUFFERSIZE;
++	sense_addr = dma_map_single(boardp->dev, scp->sense_buffer,
++				    SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
++	scsiqp->sense_addr = cpu_to_le32(sense_addr);
++	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
  
--	printk("  target_id %u, target_lun %u, srb_tag 0x%x, a_flag 0x%x\n",
--	       q->target_id, q->target_lun, q->srb_tag, q->a_flag);
-+	printk("  target_id %u, target_lun %u, srb_tag 0x%x\n",
-+	       q->target_id, q->target_lun, q->srb_tag);
+ 	/* Build ADV_SCSI_REQ_Q */
  
- 	printk("  cntl 0x%x, data_addr 0x%lx\n",
- 	       q->cntl, (ulong)le32_to_cpu(q->data_addr));
-@@ -6249,7 +6237,6 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
- 		 * Notify the driver of the completed request by passing
- 		 * the ADV_SCSI_REQ_Q pointer to its callback function.
- 		 */
--		scsiq->a_flag |= ADV_SCSIQ_DONE;
- 		adv_isr_callback(asc_dvc, scsiq);
- 		/*
- 		 * Note: After the driver callback function is called, 'scsiq'
-@@ -8429,11 +8416,6 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, adv_req_t *reqp)
- 
- 	asc_dvc->carr_pending_cnt++;
- 
--	/*
--	 * Clear the ADV_SCSI_REQ_Q done flag.
--	 */
--	scsiq->a_flag &= ~ADV_SCSIQ_DONE;
--
- 	/* Save virtual and physical address of ADV_SCSI_REQ_Q and carrier. */
- 	scsiq->scsiq_ptr = cpu_to_le32(scsiq->srb_tag);
- 	scsiq->scsiq_rptr = cpu_to_le32(reqp->req_addr);
 -- 
 1.8.5.2
 
