@@ -1,194 +1,193 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH RESEND 0/4] bfa: Patches for scsi "misc" branch
-Date: Fri, 24 Apr 2015 05:46:08 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF5901006752@avmb2.qlogic.org>
-References: <1422953103-5470-1-git-send-email-anil.gurumurthy@qlogic.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target updates for v4.1-rc1
+Date: Thu, 23 Apr 2015 23:50:46 -0700
+Message-ID: <1429858246.21204.37.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF5901006752avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40586 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754607AbbDXFqM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 01:46:12 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t3O5iVAq032133
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 22:46:11 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1tv76senh9-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2015 22:46:10 -0700
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "Jej B (James.Bottomley@hansenpartnership.com)" <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF5901006752avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hi Linus,
 
-Could I get a review for this patch series?
+Here are the target-pending updates for v4.1-rc1 code.
 
-Thanks,
-Anil
+Please go ahead and pull from:
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
-.org] On Behalf Of anil.gurumurthy@qlogic.com
-Sent: 03 February 2015 14:15
-To: James.Bottomley@HansenPartnership.com; hch@infradead.org
-Cc: linux-scsi
-Subject: [PATCH RESEND 0/4] bfa: Patches for scsi "misc" branch
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-Hi James, Christoph,
+Note you'll hit two minor merge conflicts as reported by SFR:
 
-Re-sending the patches to move user visible strings to a separate patch.
-Please apply the following patches to the scsi tree, misc branch  at your e=
-arliest convenience.
+linux-next: manual merge of the target-updates tree with the xen-tip tree
+http://marc.info/?l=xen-devel&m=142865578923608&w=2
 
-Thanks,
-Anil
+linux-next: manual merge of the target-updates tree with the infiniband tree
+http://marc.info/?l=linux-next&m=142950419300852&w=2
 
-Anil Gurumurthy (4):
-  bfa:Updating copyright messages
-  bfa:Fix for crash when bfa_itnim is NULL
-  bfa:File header and user visible string changes
-  bfa:Update driver version to 3.2.25.0
+Lots of activity in target land the last months.
 
- drivers/scsi/bfa/bfa.h           |    7 ++--
- drivers/scsi/bfa/bfa_core.c      |    7 ++--
- drivers/scsi/bfa/bfa_cs.h        |    7 ++--
- drivers/scsi/bfa/bfa_defs.h      |    7 ++--
- drivers/scsi/bfa/bfa_defs_fcs.h  |    7 ++--
- drivers/scsi/bfa/bfa_defs_svc.h  |    7 ++--
- drivers/scsi/bfa/bfa_fc.h        |    7 ++--
- drivers/scsi/bfa/bfa_fcbuild.c   |    7 ++--
- drivers/scsi/bfa/bfa_fcbuild.h   |    7 ++--
- drivers/scsi/bfa/bfa_fcpim.c     |    7 ++--
- drivers/scsi/bfa/bfa_fcpim.h     |    7 ++--
- drivers/scsi/bfa/bfa_fcs.c       |    7 ++--
- drivers/scsi/bfa/bfa_fcs.h       |    9 +++--
- drivers/scsi/bfa/bfa_fcs_fcpim.c |    7 ++--
- drivers/scsi/bfa/bfa_fcs_lport.c |    9 +++--
- drivers/scsi/bfa/bfa_fcs_rport.c |    7 ++--
- drivers/scsi/bfa/bfa_hw_cb.c     |    7 ++--
- drivers/scsi/bfa/bfa_hw_ct.c     |    7 ++--
- drivers/scsi/bfa/bfa_ioc.c       |    9 +++--
- drivers/scsi/bfa/bfa_ioc.h       |    7 ++--
- drivers/scsi/bfa/bfa_ioc_cb.c    |    7 ++--
- drivers/scsi/bfa/bfa_ioc_ct.c    |    7 ++--
- drivers/scsi/bfa/bfa_modules.h   |    7 ++--
- drivers/scsi/bfa/bfa_plog.h      |    7 ++--
- drivers/scsi/bfa/bfa_port.c      |    7 ++--
- drivers/scsi/bfa/bfa_port.h      |    7 ++--
- drivers/scsi/bfa/bfa_svc.c       |    7 ++--
- drivers/scsi/bfa/bfa_svc.h       |    7 ++--
- drivers/scsi/bfa/bfad.c          |   24 +++++-------
- drivers/scsi/bfa/bfad_attr.c     |   75 +++++++++++++++++++---------------=
-----
- drivers/scsi/bfa/bfad_bsg.c      |    7 ++--
- drivers/scsi/bfa/bfad_bsg.h      |    7 ++--
- drivers/scsi/bfa/bfad_debugfs.c  |    7 ++--
- drivers/scsi/bfa/bfad_drv.h      |    9 +++--
- drivers/scsi/bfa/bfad_im.c       |   35 ++++++++++++++++--
- drivers/scsi/bfa/bfad_im.h       |    7 ++--
- drivers/scsi/bfa/bfi.h           |    7 ++--
- drivers/scsi/bfa/bfi_ms.h        |    7 ++--
- drivers/scsi/bfa/bfi_reg.h       |    9 +++--
- 39 files changed, 228 insertions(+), 168 deletions(-)
+The highlights include:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
-e body of a message to majordomo@vger.kernel.org More majordomo info at  ht=
-tp://vger.kernel.org/majordomo-info.html
+ - Convert fabric drivers tree-wide to target_register_template() (hch + bart)
+ - iser-target hardening fixes + v1.0 improvements (sagi)
+ - Convert iscsi_thread_set usage to kthread.h + kill iscsi_target_tq.c (sagi + nab)
+ - Add support for T10-PI WRITE_STRIP + READ_INSERT operation (mkp + sagi + nab)
+ - DIF fixes for CONFIG_DEBUG_SG=y + UNMAP file emulation (akinobu + sagi + mkp)
+ - Extended TCMU ABI v2 for future BIDI + DIF support (andy + ilias)
+ - Fix COMPARE_AND_WRITE handling for NO_ALLLOC drivers (hch + nab)
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF5901006752avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Thanks to everyone who contributed this round with new features,
+bug-reports, fixes, cleanups and improvements.
 
-eJ8+IvxrAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEM3RjYxQTMz
-QzEzQ0UxNEU5RUQzRTM2QjM3OURGQ0M0AHMHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBAAYAAUA
-LgAIAAUAQgEBIIADAA4AAADfBwQAGAAFAC4ACAAFAEIBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADsAAABSRTogW1BBVENIIFJFU0VORCAwLzRdIGJmYTogUGF0Y2hlcyBm
-b3Igc2NzaSAibWlzYyIgYnJhbmNoAO8RAQOQBgDwEAAAQQAAAAIBfwABAAAAPAAAADwyMEIxQTND
-QkQ5OEYzODQ1QjNGNUY1NkQ4NTk3RUY1OTAxMDA2NzUyQGF2bWIyLnFsb2dpYy5vcmc+AAsAHw4B
-AAAAAgEJEAEAAACxBQAArQUAACoOAABMWkZ1SJ9W02EACmZiaWQEAABjY8BwZzEyNTIA/gND8HRl
-eHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIW
-cQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAF
-wAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBF
-R0lOfQr8AfEL8cogCFFsHGBJIBgwBUA8YSAJcB1iHHAFsXRo1QQAIAqwdBHAIBIACIHQcz9cbAuA
-ZQqBJGTWVBmhH1AsJFVBAwEkXOotJzJPBRBnC4AHQAXQuQeQc2EYMCczJFVGA2HEOiAkYXV4LQTw
-AJBILW93GFFAdhgwckQuawSRZWwuBbBn3CBbAMADEBiQOimvKr1IXSBPA6BCZRHQbJ5mLkAu0ABw
-AxAuZwhwjHVtCHAjMHlAcQkA6SewYy4FoG0kVQZgAjCBKYAwMyBGZWIvkAkKwHkgAdAxNSAxHDQ6
-MnAkxiwQIEph8QeBLkJvAkADcB5wMAC2SABxCfBQH4EYUXMjQKJwMII7IGgRwEALgD0DUGEBADaQ
-K2IkVUNjYymKMMZ1YmoFkDFhWyBQQVRDSAfwRVNIRU5EMYAvNC4wYvxmYSmANQAjoQeRIvIsksgg
-Im0EAGMiOpAYcLZuEcAkXEg74DOjLCGQxmgFEB9gb3BoJZYkVf5SKHA00Q3gGcAjIRngI4ObB5EY
-kCAEYBowIHUj4f4gHWAAkAJgGeAfYAUQGcC/QSMiYBIACrEYgEClLiRV2lAecGESACJQcAtQMjD7
-QIICEGwJAAPwQFFAyUCCvzuzQqAJ4D4wPBI8ZSAiUNUFQHkIYSA2sHIkYAeQzwVAG+MDAAnwY2VE
-RiTPEyXfTCcgRy+HICg0HCk6SrVIwDqiVXBkpxiAQEIFoHB5J5FoBUCPB4EoQg4ATupGaXgi43cF
-AETwI8B3OzADoDqhXxZpNTAHcCAjUU5VTP5MUV1CYTswNpEFwABwHGC/Qc9QAhmjUUxPoxngZAUQ
-NxoxQgA1UWkCIEEyMy5yMlpQNS4BQErLWRVz2i8ski86oVxyLkixXRfCfF0SNyArKyi3W6/9XHJf
-BaFKkEhAXX9ej1+a/zPgXQdhD2IfX+QBAWOXZE/7ZV9maF8RsGOTZ49on2mp/HN2MHBqn2uvX7cR
-sGOv425/b49jYnUDEDbQYJJ/cU9yX3NsXQJ0j3WfcCZw/wdwYIV3z3jfeepdBHsPfB//cCYz4GCV
-fj9/T4BZXQaBg/45geGCD4MfajJ6ZIGPhe/5hvhscAkRh+aFH4lvhzSOcorqiG+Mz19od2Aw/mJ6
-n49PkF+LEpGvkr9fqP9Z0DBxhF+Vv5bPhDyVf5nf/5eSkUebv5zPndmUpZ7/oA//X+QEYSHAM9F3
-j6MPX6gLUP8wQGcPpg+nHYr0qG+pf6qO/6hPrJ9fe22SgQ+vz7Dfmy/Psv9cHHQktUkyNJjCtiJ3
-KIq237fjXxiAQqCUuTd/MoC5Y71MubW+erovuzti/nOoIKuPv3/Aj66/wq+7HfsBAHPgZ2bhwaHF
-X8Zvx3Z/GiDE25i/ye+70Xp3yHQzf70PzG/Nf33GyH/Q/1yEafdc/9OP1J9ppKBjn9bv1//vCXDE
-x8vPTxIzzCDVkKTxxVdlZD4wMjI4U+A0wUMAIFnRcygrKT4wMZ4234ABAB5w3/QtKSZe3zL3ViAA
-gDjwBPJiRbEck/8jQkrAH2ApgEACQHNKwjvwv+M6LDg8UAuAQHMG4GQyME8ZMCJRUNVBM2FqBbBk
-9QNwbyqvTWBR6RjfkQIQh0jSNgACQHA6Ly8qvdov6Sct67LVsHQ0UEq1AxVC75AAAAAfAEIAAQAA
-ACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AZQABAAAANgAAAEEAbgBpAGwA
-LgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkA
-bAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1
-AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA2AAAAQQBuAGkAbAAuAEcA
-dQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABz
-AGkAcAA6AGEAbgBpAGwALgBnAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwAaDAEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfAB8MAQAA
-ADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0B
-D1QCAAAAgEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwA
-LgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAA
-AEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAA
-HwD4PwEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfACNAAQAAADYAAABB
-AG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A
-IkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAA
-gEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUA
-cgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAEEAbgBp
-AGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEA
-AAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBv
-AHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAx/YaM8E84U6e0+Nr
-N538xAMAFwABAAAAQAA5AACQGPZRftABQAAIMJIxG/ZRftABCwApAAAAAAALACMAAAAAAB8AAICG
-AwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEA
-AAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAA
-AHYAAABSAEUAOgAgAFsAUABBAFQAQwBIACAAUgBFAFMARQBOAEQAIAAwAC8ANABdACAAYgBmAGEA
-OgAgAFAAYQB0AGMAaABlAHMAIABmAG8AcgAgAHMAYwBzAGkAIAAiAG0AaQBzAGMAIgAgAGIAcgBh
-AG4AYwBoAAAAAAAfAD0AAQAAAAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEA
-AAACAAAAAAAAAAIBcQABAAAAIAAAAAEB0D+TOPI9K3un4BxKgVCBtisa8BOdFus1sIBFM1ewHwBw
-AAEAAABuAAAAWwBQAEEAVABDAEgAIABSAEUAUwBFAE4ARAAgADAALwA0AF0AIABiAGYAYQA6ACAA
-UABhAHQAYwBoAGUAcwAgAGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEAbgBj
-AGgAAAAAAB8ANRABAAAAeAAAADwAMgAwAEIAMQBBADMAQwBCAEQAOQA4AEYAMwA4ADQANQBCADMA
-RgA1AEYANQA2AEQAOAA1ADkANwBFAEYANQA5ADAAMQAwADAANgA3ADUAMgBAAGEAdgBtAGIAMgAu
-AHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAfgAAADwAMQA0ADIAMgA5ADUAMwAxADAA
-MwAtADUANAA3ADAALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBuAGkAbAAu
-AGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAAAAAAAAwDeP59O
-AAALAACACCAGAAAAAADAAAAAAAAARgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAA
-AAGFAAAAAAAAAwCAEP////9AAAcwMjYO9VF+0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcA
-AQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE1MDQyNDA1NDYwOFotOTM1ODMAAAAC
-ARAwAQAAAEYAAAAAAAAApfa6WPiUnECXquZDOkRWvwcAILGjy9mPOEWz9fVthZfvWQAAAPSNGAAA
-ZwQxjMtxokilXd7HughfeQBLeqYupAAAAAAfAPo/AQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBt
-AHUAcgB0AGgAeQAAAAMACVkBAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACA
-CCAGAAAAAADAAAAAAAAARgAAAAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAA
-AAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAgoUAAAAAAABAAACACCAGAAAAAADAAAAAAAAARgAA
-AAC/hQAA8ERuTk9+0AEfAACACCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIAAABJAFAATQAu
-AE4AbwB0AGUAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMA
-LQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAA
-LgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABh
-AGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAACzg
+Looking forward, it's currently shaping up to be a busy v4.2 as well.
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF5901006752avmb2qlogicorg_--
+Thank you,
+
+--nab
+
+Akinobu Mita (5):
+  target/rd: reduce code duplication in rd_execute_rw()
+  target/rd: Don't pass incomplete scatterlist entries to
+    sbc_dif_verify_*
+  target/file: Fix BUG() when CONFIG_DEBUG_SG=y and DIF protection
+    enabled
+  target/file: Fix SG table for prot_buf initialization
+  target/file: Fix UNMAP with DIF protection support
+
+Andy Grover (2):
+  target: Version 2 of TCMU ABI
+  target: Put TCMU under a new config option
+
+Bart Van Assche (3):
+  target: Fix two sparse warnings
+  target: Remove the unused flag SCF_ACK_KREF
+  target: Make core_tmr_abort_task() skip TMFs
+
+Christoph Hellwig (12):
+  target: use vfs_iter_read/write in fd_do_rw
+  target: rewrite fd_execute_write_same
+  target: move external declarations to a headers
+  target: mark tcm_loop_primary static
+  target: mark iscsit_start_kthreads static
+  target: add __releases annotation to target_release_cmd_kref
+  target: add missing sense_reason_t annotations
+  target: add missing __user annotations
+  target: remove the unused SCF_CMD_XCOPY_PASSTHROUGH flag
+  target: simplify target_xcopy_init_pt_lun
+  target: simplify the target template registration API
+  target: fix tcm_mod_builder.py
+
+Ilias Tsitsimpis (1):
+  target: Better handling of AllRegistrants reservations
+
+Julia Lawall (1):
+  iscsi-target: don't export static symbol
+
+Ming Lin (1):
+  tcm_loop: fixup tpgt string to integer conversion
+
+Nicholas Bellinger (26):
+  target: Add target_show_dynamic_sessions attribute helper
+  iscsi-target: Expose per endpoint dynamic_sessions attribute
+  tcm_qla2xxx: Expose per endpoint dynamic_sessions attribute
+  target: Convert fabric module autoload failures to pr_debug
+  iscsi-target: Convert iscsi_thread_set usage to kthread.h
+  iscsi-target: Drop legacy iscsi_target_tq.c logic
+  target: Convert DIF emulation to use cmd->prot_type
+  target: Add protected fabric + unprotected device support
+  target: Update SPC/SBC emulation for sess_prot_type
+  target: Move cmd->prot_op check into target_write_prot_action
+  target: Add internal WRITE_STRIP support
+  target: Move cmd->prot_op check into target_read_prot_action
+  target: Add internal READ_INSERT support
+  target/file: Add checks for backend DIF emulation
+  target/iblock: Add checks for backend DIF emulation
+  target/rd: Add checks for backend DIF emulation
+  loopback: Add fabric_prot_type attribute support
+  vhost/scsi: Add fabric_prot_type attribute support
+  tcm_qla2xxx: Set TARGET_PROT_ALL for sup_prot_ops
+  tcm_qla2xxx: Add fabric_prot_type attribute support
+  iscsi/iser-target: Add fabric_prot_type attribute support
+  target: Fix COMPARE_AND_WRITE with SG_TO_MEM_NOALLOC handling
+  target: Ensure sess_prot_type is saved across session restart
+  target/sbc: Return INVALID_CDB_FIELD if DIF + sess_prot_type disabled
+  target/sbc: Make internal DIF emulation honor ->prot_checks
+  target/sbc: Update sbc_dif_generate pr_debug output
+
+Sagi Grimberg (18):
+  iser-target: Fix session hang in case of an rdma read DIF error
+  iser-target: Fix possible deadlock in RDMA_CM connection error
+  iser-target: Use a single DMA MR and PD per device
+  iser-target: Remove redundant check on recv completion
+  iser-target: Remove dead code
+  iser-target: Remove redundant local variable
+  iser-target: Remove redundant casting on void pointers
+  iser-target: Split isert_setup_qp
+  iser-target: Introduce isert_[alloc|free]_comps
+  iser-target: Remove redundant assignment to local variable
+  iser-target: Rename rend/recv completion routines
+  iser-target: Rename device find/release routines
+  iser-target: Split some logic in isert_connect_request to routines
+  iser-target: Get rid of redundant max_accept
+  iser-target: Remove redundant check on the device
+  iser-target: Remove un-needed rdma_listen backlog
+  iser-target: Remove conn_ prefix from struct isert_conn members
+  iser-target: Bump version to 1.0
+
+ Documentation/target/tcm_mod_builder.py      |  79 +--
+ Documentation/target/tcmu-design.txt         |  43 +-
+ drivers/infiniband/ulp/isert/ib_isert.c      | 691 +++++++++++++++------------
+ drivers/infiniband/ulp/isert/ib_isert.h      |  37 +-
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |  49 +-
+ drivers/scsi/qla2xxx/qla_target.c            |   2 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           | 174 ++++---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h           |   1 +
+ drivers/target/Kconfig                       |   5 +-
+ drivers/target/Makefile                      |   2 +-
+ drivers/target/iscsi/Makefile                |   1 -
+ drivers/target/iscsi/iscsi_target.c          | 131 +++--
+ drivers/target/iscsi/iscsi_target.h          |   2 +-
+ drivers/target/iscsi/iscsi_target_configfs.c | 208 ++++----
+ drivers/target/iscsi/iscsi_target_configfs.h |   7 -
+ drivers/target/iscsi/iscsi_target_erl0.c     |  14 +-
+ drivers/target/iscsi/iscsi_target_login.c    |  60 ++-
+ drivers/target/iscsi/iscsi_target_tpg.c      |  25 +-
+ drivers/target/iscsi/iscsi_target_tpg.h      |   1 +
+ drivers/target/iscsi/iscsi_target_tq.c       | 495 -------------------
+ drivers/target/iscsi/iscsi_target_tq.h       |  84 ----
+ drivers/target/iscsi/iscsi_target_util.c     |   1 -
+ drivers/target/loopback/tcm_loop.c           | 242 ++++------
+ drivers/target/loopback/tcm_loop.h           |   1 +
+ drivers/target/sbp/sbp_target.c              |  68 +--
+ drivers/target/target_core_configfs.c        | 192 +++-----
+ drivers/target/target_core_fabric_configfs.c |  38 +-
+ drivers/target/target_core_file.c            | 261 +++++-----
+ drivers/target/target_core_iblock.c          |   4 +-
+ drivers/target/target_core_internal.h        |   6 +
+ drivers/target/target_core_pr.c              |  48 +-
+ drivers/target/target_core_rd.c              | 137 ++++--
+ drivers/target/target_core_sbc.c             | 109 +++--
+ drivers/target/target_core_spc.c             |  16 +-
+ drivers/target/target_core_tmr.c             |   4 +-
+ drivers/target/target_core_tpg.c             |   2 +-
+ drivers/target/target_core_transport.c       | 162 ++++++-
+ drivers/target/target_core_user.c            |  52 +-
+ drivers/target/target_core_xcopy.c           |  46 +-
+ drivers/target/tcm_fc/tcm_fc.h               |   1 -
+ drivers/target/tcm_fc/tfc_conf.c             |  89 +---
+ drivers/usb/gadget/legacy/tcm_usb_gadget.c   |  57 +--
+ drivers/vhost/scsi.c                         | 126 ++---
+ drivers/xen/xen-scsiback.c                   |  74 +--
+ include/target/iscsi/iscsi_target_core.h     |  15 +-
+ include/target/target_core_base.h            |  10 +-
+ include/target/target_core_configfs.h        |   6 -
+ include/target/target_core_fabric.h          |  33 +-
+ include/target/target_core_fabric_configfs.h |   5 +
+ include/uapi/linux/target_core_user.h        |  44 +-
+ 50 files changed, 1687 insertions(+), 2273 deletions(-)
+ delete mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
+ delete mode 100644 drivers/target/iscsi/iscsi_target_tq.c
+ delete mode 100644 drivers/target/iscsi/iscsi_target_tq.h
