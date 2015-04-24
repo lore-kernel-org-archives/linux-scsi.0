@@ -1,98 +1,65 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/22] advansys: use DMA-API for mapping sense buffer
-Date: Fri, 24 Apr 2015 10:32:38 +0200
-Message-ID: <1429864377-67002-4-git-send-email-hare@suse.de>
-References: <1429864377-67002-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 00/22] Nobody loves the advansys driver
+Date: Fri, 24 Apr 2015 10:32:35 +0200
+Message-ID: <1429864377-67002-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42954 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42953 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966357AbbDXIdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S966349AbbDXIdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 24 Apr 2015 04:33:01 -0400
-In-Reply-To: <1429864377-67002-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/advansys.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+Hi all,
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index b595e8b..a45e78f 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -1844,7 +1844,7 @@ typedef struct adv_scsi_req_q {
- 	uchar target_lun;	/* Device target logical unit number. */
- 	ADV_PADDR data_addr;	/* Data buffer physical address. */
- 	ADV_DCNT data_cnt;	/* Data count. Ucode sets to residual. */
--	ADV_PADDR sense_addr;
-+	__le32 sense_addr;
- 	ADV_PADDR carr_pa;
- 	uchar mflag;
- 	uchar sense_len;
-@@ -6084,6 +6084,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	adv_sgblk_t *sgblkp;
- 	struct scsi_cmnd *scp;
- 	ADV_DCNT resid_cnt;
-+	dma_addr_t sense_addr;
- 
- 	ASC_DBG(1, "adv_dvc_varp 0x%p, scsiqp 0x%p\n",
- 		adv_dvc_varp, scsiqp);
-@@ -6121,6 +6122,10 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	ASC_STATS(boardp->shost, callback);
- 	ASC_DBG(1, "shost 0x%p\n", boardp->shost);
- 
-+	sense_addr = le32_to_cpu(scsiqp->sense_addr);
-+	dma_unmap_single(boardp->dev, sense_addr,
-+			 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-+
- 	/*
- 	 * 'done_status' contains the command's ending status.
- 	 */
-@@ -8018,9 +8023,9 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	u32 srb_tag = scp->request->tag;
- 	adv_req_t *reqp;
- 	ADV_SCSI_REQ_Q *scsiqp;
--	int i;
- 	int ret;
- 	int use_sg;
-+	dma_addr_t sense_addr;
- 
- 	/*
- 	 * Allocate an adv_req_t structure from the board to execute
-@@ -8061,19 +8066,23 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 	/* Set CDB length and copy it to the request structure.  */
- 	scsiqp->cdb_len = scp->cmd_len;
- 	/* Copy first 12 CDB bytes to cdb[]. */
--	for (i = 0; i < scp->cmd_len && i < 12; i++) {
--		scsiqp->cdb[i] = scp->cmnd[i];
--	}
-+	memcpy(scsiqp->cdb, scp->cmnd, scp->cmd_len < 12 ? scp->cmd_len : 12);
- 	/* Copy last 4 CDB bytes, if present, to cdb16[]. */
--	for (; i < scp->cmd_len; i++) {
--		scsiqp->cdb16[i - 12] = scp->cmnd[i];
-+	if (scp->cmd_len > 12) {
-+		int cdb16_len = scp->cmd_len - 12;
-+
-+		memcpy(scsiqp->cdb16, &scp->cmnd[12], cdb16_len);
- 	}
- 
- 	scsiqp->target_id = scp->device->id;
- 	scsiqp->target_lun = scp->device->lun;
- 
--	scsiqp->sense_addr = cpu_to_le32(virt_to_bus(&scp->sense_buffer[0]));
--	scsiqp->sense_len = SCSI_SENSE_BUFFERSIZE;
-+	sense_addr = dma_map_single(boardp->dev, scp->sense_buffer,
-+				    SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
-+	scsiqp->sense_addr = cpu_to_le32(sense_addr);
-+	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
-+	dma_cache_sync(boardp->dev, scp->sense_buffer,
-+		       SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
- 
- 	/* Build ADV_SCSI_REQ_Q */
- 
+it has been bugged me for ages that the advansys driver always
+reported a compilation warning about not having been converted
+to the DMA-API.
+And even aggressive waiting hasn't made this warning go away.
+
+So here's a patchset to update the advansys driver to current
+standards and use the DMA-API.
+Tested on ABP940-U2W and ABP-960-U (Thanks, Doug!)
+
+As usual, reviews and comments are welcome.
+
+Changes to the original version:
+- Fixed issue noted by Ondrey Zary
+- Tested narrow-scsi support
+- Fixed sg list corruption on wide boards
+- Even more cleanup
+
+Hannes Reinecke (22):
+  advansys: use host_reset
+  advansys: use shared host tag map for command lookup
+  advansys: use DMA-API for mapping sense buffer
+  advansys: Use DMA-API for carrier buffer
+  advansys: Use DMA-API for mapping request blocks
+  advansys: Use dma_pool for sg elements
+  advansys: use 'bool' instead of 'int'
+  advansys: use standard data types
+  advansys: Remove 'TRUE' and 'FALSE' definitions
+  advansys: remove 'ERR' definition
+  advansys: Make AscIsrChipHalted() a void function
+  advansys: cleanup function return codes
+  advansys: scsi_q1->data_addr is little endian
+  advansys: Remove ASC_SCSI_REQ_Q
+  advansys: Remove CC_VERY_LONG_SG_LIST
+  advansys: rename 'ASC_RQ_XX' to 'ADV_RQ_XX'
+  advansys: Remove 'a_flag'
+  advansys: Remove obsolete virtual memory mapping comment
+  advansys: Remove comment around cmd_per_lun
+  advansys: Check for DMA mapping errors
+  advansys: use spin_lock_irqsave() in interrupt handler
+  advansys: Update to version 3.5 and remove compilation warning
+
+ MAINTAINERS             |    1 +
+ drivers/scsi/Kconfig    |    2 +-
+ drivers/scsi/advansys.c | 1457 ++++++++++++++++-------------------------------
+ 3 files changed, 508 insertions(+), 952 deletions(-)
+
 -- 
 1.8.5.2
 
