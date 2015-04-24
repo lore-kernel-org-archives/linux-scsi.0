@@ -1,127 +1,101 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/22] advansys: Remove ASC_SCSI_REQ_Q
-Date: Fri, 24 Apr 2015 10:32:49 +0200
-Message-ID: <1429864377-67002-15-git-send-email-hare@suse.de>
+Subject: [PATCH 20/22] advansys: Check for DMA mapping errors
+Date: Fri, 24 Apr 2015 10:32:55 +0200
+Message-ID: <1429864377-67002-21-git-send-email-hare@suse.de>
 References: <1429864377-67002-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43095 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:43111 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966435AbbDXIdO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 04:33:14 -0400
+	id S966349AbbDXIdU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 04:33:20 -0400
 In-Reply-To: <1429864377-67002-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Removed unused structure ASC_SCSI_REQ_Q and update the
-comments to 'ADV_SCSI_REQ_Q'.
+DMA mapping might fail, so we need to check for errors here.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 31 ++++++++++---------------------
- 1 file changed, 10 insertions(+), 21 deletions(-)
+ drivers/scsi/advansys.c | 27 ++++++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index d9052f3..1731761 100644
+index 4f9392d..2c9f9e9 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -353,17 +353,6 @@ typedef struct asc_scsi_q {
- 	ushort next_sg_index;
- } ASC_SCSI_Q;
+@@ -7514,6 +7514,10 @@ static __le32 advansys_get_sense_buffer_dma(struct scsi_cmnd *scp)
+ 	struct asc_board *board = shost_priv(scp->device->host);
+ 	scp->SCp.dma_handle = dma_map_single(board->dev, scp->sense_buffer,
+ 					     SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(board->dev, scp->SCp.dma_handle)) {
++		ASC_DBG(1, "failed to map sense buffer\n");
++		return 0;
++	}
+ 	dma_cache_sync(board->dev, scp->sense_buffer,
+ 		       SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
+ 	return cpu_to_le32(scp->SCp.dma_handle);
+@@ -7546,6 +7550,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	    ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
+ 	asc_scsi_q->q1.sense_addr = advansys_get_sense_buffer_dma(scp);
+ 	asc_scsi_q->q1.sense_len = SCSI_SENSE_BUFFERSIZE;
++	if (!asc_scsi_q->q1.sense_addr)
++		return ASC_BUSY;
  
--typedef struct asc_scsi_req_q {
--	ASC_SCSIQ_1 r1;
--	ASC_SCSIQ_2 r2;
--	uchar *cdbptr;
--	ASC_SG_HEAD *sg_head;
--	uchar *sense_ptr;
--	ASC_SCSIQ_3 r3;
--	uchar cdb[ASC_MAX_CDB_LEN];
--	uchar sense[ASC_MIN_SENSE_LEN];
--} ASC_SCSI_REQ_Q;
--
- typedef struct asc_scsi_bios_req_q {
- 	ASC_SCSIQ_1 r1;
- 	ASC_SCSIQ_2 r2;
-@@ -1707,7 +1696,7 @@ typedef struct adveep_38C1600_config {
- typedef struct adv_carr_t {
- 	__le32 carr_va;	/* Carrier Virtual Address */
- 	__le32 carr_pa;	/* Carrier Physical Address */
--	__le32 areq_vpa;	/* ASC_SCSI_REQ_Q Virtual or Physical Address */
-+	__le32 areq_vpa;	/* ADV_SCSI_REQ_Q Virtual or Physical Address */
  	/*
- 	 * next_vpa [31:4]            Carrier Virtual or Physical Next Pointer
- 	 *
-@@ -1738,7 +1727,7 @@ typedef struct adv_carr_t {
-     (ADV_CARRIER_COUNT * sizeof(ADV_CARR_T))
+ 	 * If there are any outstanding requests for the current target,
+@@ -7567,7 +7573,10 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
  
- /*
-- * ASC_SCSI_REQ_Q 'a_flag' definitions
-+ * ADV_SCSI_REQ_Q 'a_flag' definitions
-  *
-  * The Adv Library should limit use to the lower nibble (4 bits) of
-  * a_flag. Drivers are free to use the upper nibble (4 bits) of a_flag.
-@@ -2029,7 +2018,7 @@ do { \
+ 	/* Build ASC_SCSI_Q */
+ 	use_sg = scsi_dma_map(scp);
+-	if (use_sg != 0) {
++	if (use_sg < 0) {
++		ASC_DBG(1, "failed to map sglist\n");
++		return ASC_BUSY;
++	} else if (use_sg > 0) {
+ 		int sgcnt;
+ 		struct scatterlist *slp;
+ 		struct asc_sg_head *asc_sg_head;
+@@ -7799,6 +7808,11 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
  
- /*
-  * Abort an SRB in the chip's RISC Memory. The 'srb_tag' argument must
-- * match the ASC_SCSI_REQ_Q 'srb_tag' field.
-+ * match the ADV_SCSI_REQ_Q 'srb_tag' field.
-  *
-  * If the request has not yet been sent to the device it will simply be
-  * aborted from RISC memory. If the request is disconnected it will be
-@@ -2075,7 +2064,7 @@ do { \
- #define ADV_TID_TO_TIDMASK(tid)   (0x01 << ((tid) & ADV_MAX_TID))
+ 	sense_addr = dma_map_single(boardp->dev, scp->sense_buffer,
+ 				    SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(boardp->dev, sense_addr)) {
++		ASC_DBG(1, "failed to map sense buffer\n");
++		ASC_STATS(scp->device->host, adv_build_noreq);
++		return ASC_BUSY;
++	}
+ 	scsiqp->sense_addr = cpu_to_le32(sense_addr);
+ 	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
+ 	dma_cache_sync(boardp->dev, scp->sense_buffer,
+@@ -7807,7 +7821,11 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	/* Build ADV_SCSI_REQ_Q */
  
- /*
-- * ASC_SCSI_REQ_Q 'done_status' and 'host_status' return values.
-+ * ADV_SCSI_REQ_Q 'done_status' and 'host_status' return values.
-  */
+ 	use_sg = scsi_dma_map(scp);
+-	if (use_sg == 0) {
++	if (use_sg < 0) {
++		ASC_DBG(1, "failed to map SG list\n");
++		ASC_STATS(scp->device->host, adv_build_noreq);
++		return ASC_BUSY;
++	} else if (use_sg == 0) {
+ 		/* Zero-length transfer */
+ 		reqp->sgblkp = NULL;
+ 		scsiqp->data_cnt = 0;
+@@ -8475,11 +8493,10 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
+ 		struct asc_scsi_q asc_scsi_q;
  
- #define QD_NO_STATUS         0x00	/* Request not completed yet. */
-@@ -6237,9 +6226,9 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
- 		 * Get a pointer to the newly completed ADV_SCSI_REQ_Q structure.
- 		 * The RISC will have set 'areq_vpa' to a virtual address.
- 		 *
--		 * The firmware will have copied the ASC_SCSI_REQ_Q.scsiq_ptr
-+		 * The firmware will have copied the ADV_SCSI_REQ_Q.scsiq_ptr
- 		 * field to the carrier ADV_CARR_T.areq_vpa field. The conversion
--		 * below complements the conversion of ASC_SCSI_REQ_Q.scsiq_ptr'
-+		 * below complements the conversion of ADV_SCSI_REQ_Q.scsiq_ptr'
- 		 * in AdvExeScsiQueue().
- 		 */
- 		u32 pa_offset = le32_to_cpu(asc_dvc->irq_sp->areq_vpa);
-@@ -6751,9 +6740,9 @@ static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 		q_addr = ASC_QNO_TO_QADDR(q_no);
+-		/* asc_build_req() can not return ASC_BUSY. */
+ 		ret = asc_build_req(boardp, scp, &asc_scsi_q);
+-		if (ret == ASC_ERROR) {
++		if (ret != ASC_NOERROR) {
+ 			ASC_STATS(scp->device->host, build_error);
+-			return ASC_ERROR;
++			return ret;
+ 		}
  
- 		/*
--		 * Convert the request's SRB pointer to a host ASC_SCSI_REQ
-+		 * Convert the request's SRB pointer to a host ASC_SCSI_Q
- 		 * structure pointer using a macro provided by the driver.
--		 * The ASC_SCSI_REQ pointer provides a pointer to the
-+		 * The ASC_SCSI_Q pointer provides a pointer to the
- 		 * host ASC_SG_HEAD structure.
- 		 */
- 		/* Read request's SRB pointer. */
-@@ -7947,7 +7936,7 @@ adv_get_sglist(struct asc_board *boardp, adv_req_t *reqp,
-  * If an adv_req_t can not be allocated to issue the request,
-  * then return ASC_BUSY. If an error occurs, then return ASC_ERROR.
-  *
-- * Multi-byte fields in the ASC_SCSI_REQ_Q that are used by the
-+ * Multi-byte fields in the ADV_SCSI_REQ_Q that are used by the
-  * microcode for DMA addresses or math operations are byte swapped
-  * to little-endian order.
-  */
-@@ -8635,7 +8624,7 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
-  * If 'done_status' is not set to QD_DO_RETRY, then 'error_retry' will be
-  * set to SCSI_MAX_RETRY.
-  *
-- * Multi-byte fields in the ASC_SCSI_REQ_Q that are used by the microcode
-+ * Multi-byte fields in the ADV_SCSI_REQ_Q that are used by the microcode
-  * for DMA addresses or math operations are byte swapped to little-endian
-  * order.
-  *
+ 		ret = AscExeScsiQueue(asc_dvc, &asc_scsi_q);
 -- 
 1.8.5.2
 
