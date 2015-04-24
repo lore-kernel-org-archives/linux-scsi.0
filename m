@@ -1,13 +1,13 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 23/23] advansys: Update to version 3.5 and remove compilation warning
-Date: Fri, 24 Apr 2015 13:18:42 +0200
-Message-ID: <1429874322-85488-25-git-send-email-hare@suse.de>
+Subject: [PATCH 1/2] advansys: Update to version 3.5 and remove compilation warning
+Date: Fri, 24 Apr 2015 13:18:19 +0200
+Message-ID: <1429874322-85488-2-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58864 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58859 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967111AbbDXLSx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:53 -0400
+	id S966593AbbDXLSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:48 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,8 +22,8 @@ Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
  MAINTAINERS             |  1 +
  drivers/scsi/Kconfig    |  2 +-
- drivers/scsi/advansys.c | 27 +++++++--------------------
- 3 files changed, 9 insertions(+), 21 deletions(-)
+ drivers/scsi/advansys.c | 25 +++++++++----------------
+ 3 files changed, 11 insertions(+), 17 deletions(-)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
 index ea00017..e784106 100644
@@ -38,20 +38,20 @@ index ea00017..e784106 100644
  S:	Maintained
  F:	Documentation/scsi/advansys.txt
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index a4564b3..ac404db 100644
+index b021bcb..ae7daf2 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
 @@ -503,7 +503,7 @@ config SCSI_DPT_I2O
  
  config SCSI_ADVANSYS
  	tristate "AdvanSys SCSI support"
--	depends on SCSI && VIRT_TO_BUS
-+	depends on SCSI
+-	depends on SCSI && VIRT_TO_BUS && !ARM
++	depends on SCSI && !ARM
  	depends on ISA || EISA || PCI
  	help
  	  This is a driver for all SCSI host adapters manufactured by
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 3b81f44..a8d180b 100644
+index 7142a79..89e6ce5 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
 @@ -1,12 +1,10 @@
@@ -68,7 +68,7 @@ index 3b81f44..a8d180b 100644
   * All Rights Reserved.
   *
   * This program is free software; you can redistribute it and/or modify
-@@ -49,26 +47,15 @@
+@@ -49,26 +47,21 @@
  #include <scsi/scsi.h>
  #include <scsi/scsi_host.h>
  
@@ -83,19 +83,21 @@ index 3b81f44..a8d180b 100644
 - *     the API.  The entire queue processing structure will need to be
 - *     altered to fix this.
 - *  2. Need to add memory mapping workaround. Test the memory mapping.
-- *     If it doesn't work revert to I/O port access. Can a test be done
-- *     safely?
++ *  1. Need to add memory mapping workaround. Test the memory mapping.
+  *     If it doesn't work revert to I/O port access. Can a test be done
+  *     safely?
 - *  3. Handle an interrupt not working. Keep an interrupt counter in
-- *     the interrupt handler. In the timeout function if the interrupt
-- *     has not occurred then print a message and run in polled mode.
++ *  2. Handle an interrupt not working. Keep an interrupt counter in
+  *     the interrupt handler. In the timeout function if the interrupt
+  *     has not occurred then print a message and run in polled mode.
 - *  4. Need to add support for target mode commands, cf. CAM XPT.
 - *  5. check DMA mapping functions for failure
 - *  6. Use scsi_transport_spi
 - *  7. advansys_info is not safe against multiple simultaneous callers
 - *  8. Add module_param to override ISA/VLB ioport array
-+ *  1. Use scsi_transport_spi
-+ *  2. advansys_info is not safe against multiple simultaneous callers
-+ *  3. Add module_param to override ISA/VLB ioport array
++ *  3. Use scsi_transport_spi
++ *  4. advansys_info is not safe against multiple simultaneous callers
++ *  5. Add module_param to override ISA/VLB ioport array
   */
 -#warning this driver is still not properly converted to the DMA API
  
