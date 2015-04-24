@@ -1,140 +1,108 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/23] advansys: Make AscIsrChipHalted() a void function
-Date: Fri, 24 Apr 2015 13:18:30 +0200
-Message-ID: <1429874322-85488-13-git-send-email-hare@suse.de>
+Subject: [PATCH 17/23] advansys: Remove 'a_flag'
+Date: Fri, 24 Apr 2015 13:18:36 +0200
+Message-ID: <1429874322-85488-19-git-send-email-hare@suse.de>
 References: <1429874322-85488-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58897 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:58921 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966641AbbDXLSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 07:18:50 -0400
+	id S967106AbbDXLSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Apr 2015 07:18:52 -0400
 In-Reply-To: <1429874322-85488-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-AscIsrChipHalted will only ever return '0', so make it
-a void function.
+Unused, so remove it.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/advansys.c | 30 +++++++++++++-----------------
- 1 file changed, 13 insertions(+), 17 deletions(-)
+ drivers/scsi/advansys.c | 32 +++++++-------------------------
+ 1 file changed, 7 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 35fc291..23a4a7d 100644
+index f01839b..be89245 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -6440,7 +6440,7 @@ static void AscSetChipSDTR(PortAddr iop_base, uchar sdtr_data, uchar tid_no)
- 	AscPutMCodeSDTRDoneAtID(iop_base, tid_no, sdtr_data);
+@@ -1717,16 +1717,6 @@ typedef struct adv_carr_t {
+ #define ADV_CARRIER_BUFSIZE \
+     (ADV_CARRIER_COUNT * sizeof(ADV_CARR_T))
+ 
+-/*
+- * ADV_SCSI_REQ_Q 'a_flag' definitions
+- *
+- * The Adv Library should limit use to the lower nibble (4 bits) of
+- * a_flag. Drivers are free to use the upper nibble (4 bits) of a_flag.
+- */
+-#define ADV_POLL_REQUEST                0x01	/* poll for request completion */
+-#define ADV_SCSIQ_DONE                  0x02	/* request done */
+-#define ADV_DONT_RETRY                  0x08	/* don't do retry */
+-
+ #define ADV_CHIP_ASC3550          0x01	/* Ultra-Wide IC */
+ #define ADV_CHIP_ASC38C0800       0x02	/* Ultra2-Wide/LVD IC */
+ #define ADV_CHIP_ASC38C1600       0x03	/* Ultra3-Wide/LVD2 IC */
+@@ -1808,8 +1798,6 @@ typedef struct adv_scsi_req_q {
+ 	 * is used by the Adv Library and ignored by the microcode.
+ 	 */
+ 	u32 srb_tag;
+-	uchar a_flag;
+-	uchar pad[3];		/* Pad out to a word boundary. */
+ 	ADV_SG_BLOCK *sg_list_ptr;	/* SG list virtual address. */
+ } ADV_SCSI_REQ_Q;
+ 
+@@ -2592,15 +2580,15 @@ static void asc_prt_adv_sgblock(int sgblockno, ADV_SG_BLOCK *b)
+ 
+ 	printk(" ADV_SG_BLOCK at addr 0x%lx (sgblockno %d)\n",
+ 	       (ulong)b, sgblockno);
+-	printk("  sg_cnt %u, sg_ptr 0x%lx\n",
+-	       b->sg_cnt, (ulong)le32_to_cpu(b->sg_ptr));
++	printk("  sg_cnt %u, sg_ptr 0x%x\n",
++	       b->sg_cnt, (u32)le32_to_cpu(b->sg_ptr));
+ 	BUG_ON(b->sg_cnt > NO_OF_SG_PER_BLOCK);
+ 	if (b->sg_ptr != 0)
+ 		BUG_ON(b->sg_cnt != NO_OF_SG_PER_BLOCK);
+ 	for (i = 0; i < b->sg_cnt; i++) {
+-		printk("  [%u]: sg_addr 0x%lx, sg_count 0x%lx\n",
+-		       i, (ulong)b->sg_list[i].sg_addr,
+-		       (ulong)b->sg_list[i].sg_count);
++		printk("  [%u]: sg_addr 0x%x, sg_count 0x%x\n",
++		       i, (u32)le32_to_cpu(b->sg_list[i].sg_addr),
++		       (u32)le32_to_cpu(b->sg_list[i].sg_count));
+ 	}
  }
  
--static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
-+static void AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- {
- 	EXT_MSG ext_msg;
- 	EXT_MSG out_msg;
-@@ -6487,14 +6487,14 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 			boardp->sdtr_data[tid_no] = 0;
- 		}
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	} else if (int_halt_code == ASC_HALT_ENABLE_ASYN_USE_SYN_FIX) {
- 		if (asc_dvc->pci_fix_asyn_xfer & target_id) {
- 			AscSetChipSDTR(iop_base, asyn_sdtr, tid_no);
- 			boardp->sdtr_data[tid_no] = asyn_sdtr;
- 		}
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	} else if (int_halt_code == ASC_HALT_EXTMSG_IN) {
- 		AscMemWordCopyPtrFromLram(iop_base,
- 					  ASCV_MSGIN_BEG,
-@@ -6580,7 +6580,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 						  (ushort)ASC_SCSIQ_B_CNTL),
- 					 q_cntl);
- 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--			return (0);
-+			return;
- 		} else if (ext_msg.msg_type == EXTENDED_MESSAGE &&
- 			   ext_msg.msg_req == EXTENDED_WDTR &&
- 			   ext_msg.msg_len == MS_WDTR_LEN) {
-@@ -6596,7 +6596,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 						  (ushort)ASC_SCSIQ_B_CNTL),
- 					 q_cntl);
- 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--			return (0);
-+			return;
- 		} else {
+@@ -2617,8 +2605,8 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
  
- 			ext_msg.msg_type = MESSAGE_REJECT;
-@@ -6610,7 +6610,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 						  (ushort)ASC_SCSIQ_B_CNTL),
- 					 q_cntl);
- 			AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--			return (0);
-+			return;
- 		}
- 	} else if (int_halt_code == ASC_HALT_CHK_CONDITION) {
+ 	printk("ADV_SCSI_REQ_Q at addr 0x%lx\n", (ulong)q);
  
-@@ -6667,7 +6667,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 		AscWriteLramByte(iop_base, (ushort)ASCV_SCSIBUSY_B, scsi_busy);
+-	printk("  target_id %u, target_lun %u, srb_tag 0x%x, a_flag 0x%x\n",
+-	       q->target_id, q->target_lun, q->srb_tag, q->a_flag);
++	printk("  target_id %u, target_lun %u, srb_tag 0x%x\n",
++	       q->target_id, q->target_lun, q->srb_tag);
  
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	} else if (int_halt_code == ASC_HALT_SDTR_REJECTED) {
- 
- 		AscMemWordCopyPtrFromLram(iop_base,
-@@ -6689,7 +6689,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 				 (ushort)(halt_q_addr +
- 					  (ushort)ASC_SCSIQ_B_CNTL), q_cntl);
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	} else if (int_halt_code == ASC_HALT_SS_QUEUE_FULL) {
- 
- 		scsi_status = AscReadLramByte(iop_base,
-@@ -6734,7 +6734,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 			}
- 		}
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	}
- #if CC_VERY_LONG_SG_LIST
- 	else if (int_halt_code == ASC_HALT_HOST_COPY_SG_LIST_TO_RISC) {
-@@ -6890,10 +6890,10 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
- 		 * after the return.
+ 	printk("  cntl 0x%x, data_addr 0x%lx\n",
+ 	       q->cntl, (ulong)le32_to_cpu(q->data_addr));
+@@ -6249,7 +6237,6 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		 * Notify the driver of the completed request by passing
+ 		 * the ADV_SCSI_REQ_Q pointer to its callback function.
  		 */
- 		AscWriteLramWord(iop_base, ASCV_HALTCODE_W, 0);
--		return (0);
-+		return;
- 	}
- #endif /* CC_VERY_LONG_SG_LIST */
--	return (0);
-+	return;
- }
+-		scsiq->a_flag |= ADV_SCSIQ_DONE;
+ 		adv_isr_callback(asc_dvc, scsiq);
+ 		/*
+ 		 * Note: After the driver callback function is called, 'scsiq'
+@@ -8429,11 +8416,6 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, adv_req_t *reqp)
  
- /*
-@@ -7306,13 +7306,9 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
- 		AscAckInterrupt(iop_base);
- 		int_pending = ASC_TRUE;
- 		if ((chipstat & CSW_HALTED) && (ctrl_reg & CC_SINGLE_STEP)) {
--			if (AscIsrChipHalted(asc_dvc) == ASC_ERROR) {
--				goto ISR_REPORT_QDONE_FATAL_ERROR;
--			} else {
--				saved_ctrl_reg &= (uchar)(~CC_HALT);
--			}
-+			AscIsrChipHalted(asc_dvc);
-+			saved_ctrl_reg &= (uchar)(~CC_HALT);
- 		} else {
-- ISR_REPORT_QDONE_FATAL_ERROR:
- 			if ((asc_dvc->dvc_cntl & ASC_CNTL_INT_MULTI_Q) != 0) {
- 				while (((status =
- 					 AscIsrQDone(asc_dvc)) & 0x01) != 0) {
+ 	asc_dvc->carr_pending_cnt++;
+ 
+-	/*
+-	 * Clear the ADV_SCSI_REQ_Q done flag.
+-	 */
+-	scsiq->a_flag &= ~ADV_SCSIQ_DONE;
+-
+ 	/* Save virtual and physical address of ADV_SCSI_REQ_Q and carrier. */
+ 	scsiq->scsiq_ptr = cpu_to_le32(scsiq->srb_tag);
+ 	scsiq->scsiq_rptr = cpu_to_le32(reqp->req_addr);
 -- 
 1.8.5.2
 
