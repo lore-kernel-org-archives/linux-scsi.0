@@ -1,46 +1,137 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 22/22] advansys: Update to version 3.5 and remove compilation
- warning
-Date: Fri, 24 Apr 2015 11:47:27 +0200
-Message-ID: <553A112F.6040008@suse.de>
-References: <1429864377-67002-1-git-send-email-hare@suse.de> <1429864377-67002-23-git-send-email-hare@suse.de> <20150424094224.GB23248@infradead.org>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH V2 1/7] be2iscsi : Fix the retry count for boot targets
+Date: Sat, 25 Apr 2015 08:16:57 +0530
+Message-ID: <af86e006-ff99-4c9e-b89f-d56ad34b9880@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35174 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966749AbbDXJr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Apr 2015 05:47:29 -0400
-In-Reply-To: <20150424094224.GB23248@infradead.org>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:6787 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbbDXKVa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2015 06:21:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Ondrey Zary <linux@rainbow-software.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: John Soni Jose <sony.john-n@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-On 04/24/2015 11:42 AM, Christoph Hellwig wrote:
->>  config SCSI_ADVANSYS
->>  	tristate "AdvanSys SCSI support"
->> -	depends on SCSI && VIRT_TO_BUS && !ARM
->> +	depends on SCSI && !ARM
->=20
-> Care to remove the bogus call to dma_cache_sync and allow compiling o=
-n
-> arm as well?
->=20
-Sure, no problem.
+ Increment the retry count to get the boot target info when
+ port async event is received by the driver. Update sysfs enteries
+ with the boot target  parameters.
 
-Cheers,
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c |    4 ++++
+ drivers/scsi/be2iscsi/be_main.c |   23 ++++++++++++++++++++---
+ drivers/scsi/be2iscsi/be_main.h |    4 ++++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 80d97f3..8e16c49 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -452,6 +452,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+ 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+ 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
+ 		phba->state = BE_ADAPTER_LINK_UP | BE_ADAPTER_CHECK_BOOT;
++		phba->get_boot = BE_GET_BOOT_RETRIES;
+ 
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+@@ -480,6 +481,7 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 				case ASYNC_EVENT_NEW_ISCSI_CONN:
+ 				case ASYNC_EVENT_NEW_TCP_CONN:
+ 					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+@@ -488,6 +490,8 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 						    compl->flags);
+ 					break;
+ 				default:
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 923a2b5..66ea88c 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2037,11 +2037,16 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
+ 				/* Interpret compl as a async link evt */
+ 				beiscsi_async_link_state_process(phba,
+ 				(struct be_async_event_link_state *) mcc_compl);
+-			else
++			else {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX,
+ 					    "BM_%d :  Unsupported Async Event, flags"
+ 					    " = 0x%08x\n",
+ 					    mcc_compl->flags);
++				if (phba->state & BE_ADAPTER_LINK_UP) {
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = BE_GET_BOOT_RETRIES;
++				}
++			}
+ 		} else if (mcc_compl->flags & CQE_FLAGS_COMPLETED_MASK) {
+ 			be_mcc_compl_process_isr(&phba->ctrl, mcc_compl);
+ 			atomic_dec(&phba->ctrl.mcc_obj.q.used);
+@@ -4328,8 +4333,14 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : No boot session\n");
++
++		if (ret == -ENXIO)
++			phba->get_boot = 0;
++
++
+ 		return ret;
+ 	}
++	phba->get_boot = 0;
+ 	nonemb_cmd.va = pci_zalloc_consistent(phba->ctrl.pdev,
+ 					      sizeof(*session_resp),
+ 					      &nonemb_cmd.dma);
+@@ -5374,8 +5385,14 @@ beiscsi_hw_health_check(struct work_struct *work)
+ 	be_eqd_update(phba);
+ 
+ 	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
+-		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+-		be_check_boot_session(phba);
++		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
++			phba->get_boot--;
++			if (!(phba->get_boot % BE_GET_BOOT_TO))
++				be_check_boot_session(phba);
++		} else {
++			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
++			phba->get_boot = 0;
++		}
+ 	}
+ 
+ 	beiscsi_ue_detect(phba);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 7ee0ffc..0aa0cb3 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -109,6 +109,9 @@
+ 
+ #define BEISCSI_CLEAN_UNLOAD	0x01
+ #define BEISCSI_EEH_UNLOAD	0x02
++
++#define BE_GET_BOOT_RETRIES	45
++#define BE_GET_BOOT_TO		20
+ /**
+  * hardware needs the async PDU buffers to be posted in multiples of 8
+  * So have atleast 8 of them by default
+@@ -413,6 +416,7 @@ struct beiscsi_hba {
+ 	} fw_config;
+ 
+ 	unsigned int state;
++	int get_boot;
+ 	bool fw_timeout;
+ 	bool ue_detected;
+ 	struct delayed_work beiscsi_hw_check_task;
+-- 
+1.7.1
+
