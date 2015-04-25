@@ -1,42 +1,35 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [RFC PATCH 2/2] lpfc: add target hooks
-Date: Sat, 25 Apr 2015 00:50:17 +0200
-Message-ID: <20150425005017.000078d5@localhost>
-References: <20150412161740.00001d41@localhost>
-	<552DAFE0.7050109@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <552DAFE0.7050109@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Smart <james.smart@emulex.com>, Sebastian Herbszt <herbszt@gmx.de>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Set the SRB flags correctly when no data transfer is needed
+Date: Fri, 24 Apr 2015 17:23:23 -0700
+Message-ID: <1429921403-8606-1-git-send-email-kys@microsoft.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Andy Grover wrote:
-> On 04/12/2015 07:17 AM, Sebastian Herbszt wrote:
-> > Add target hooks.
-> >
-> > Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
-> 
-> > +#ifdef LPFC_TARGET_MODE
-> > +#include "lpfc_target_api.h"
-> > +#include "lpfc_target_api_base.h"
-> > +#endif
-> 
-> Hi, great to see new fabrics posted.
+Set the SRB flags correctly when there is no data transfer.
 
-The code is actually not new. This is just yet another attempt to get
-it upstream [1].
+Cc: <stable@vger.kernel.org>
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-> There are a great many ifdefs like this. Are they strictly necessary?
-
-None should be necessary. I left them in to allow an easy way to test
-the code without impact on the initiator part of lpfc.
-
-> Thanks -- Regards -- Andy
-
-[1] http://www.spinics.net/lists/kernel/msg1060127.html
-
-Sebastian
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index d9dad90..3c6584f 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1600,8 +1600,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 		break;
+ 	default:
+ 		vm_srb->data_in = UNKNOWN_TYPE;
+-		vm_srb->win8_extension.srb_flags |= (SRB_FLAGS_DATA_IN |
+-						     SRB_FLAGS_DATA_OUT);
++		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_NO_DATA_TRANSFER;
+ 		break;
+ 	}
+ 
+-- 
+1.7.4.1
