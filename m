@@ -1,94 +1,87 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 19/23] advansys: Remove cmd_per_lun setting
-Date: Sun, 26 Apr 2015 11:52:46 -0700
-Message-ID: <1430074366.2314.3.camel@HansenPartnership.com>
-References: <1429874322-85488-1-git-send-email-hare@suse.de>
-	 <1429874322-85488-21-git-send-email-hare@suse.de>
-	 <201504261657.01552.linux@rainbow-software.org>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH] lpfc: fix model description
+Date: Mon, 27 Apr 2015 00:32:11 +0200
+Message-ID: <20150427003211.0000410a@localhost>
+References: <20150422231618.00005ec8@localhost>
+ <5538A10E.10904@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55207 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752264AbbDZSws (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Apr 2015 14:52:48 -0400
-In-Reply-To: <201504261657.01552.linux@rainbow-software.org>
+Received: from mout.gmx.net ([212.227.15.15]:49199 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751148AbbDZWcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Apr 2015 18:32:07 -0400
+In-Reply-To: <5538A10E.10904@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <James.Smart@Emulex.Com>, Sebastian Herbszt <herbszt@gmx.de>
 
-On Sun, 2015-04-26 at 16:57 +0200, Ondrej Zary wrote:
-> On Friday 24 April 2015 13:18:38 Hannes Reinecke wrote:
-> > Ancient, and pretty much obsolete by now.
+Bart Van Assche wrote:
+> On 04/22/15 23:16, Sebastian Herbszt wrote:
+> > Remove trailing space from model description.
 > >
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > ---
-> >  drivers/scsi/advansys.c | 18 ------------------
-> >  1 file changed, 18 deletions(-)
+> > Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
 > >
-> > diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> > index 74e5518..5a55272 100644
-> > --- a/drivers/scsi/advansys.c
-> > +++ b/drivers/scsi/advansys.c
-> > @@ -11212,24 +11212,6 @@ static int advansys_board_found(struct Scsi_Host
-> > *shost, unsigned int iop, }
-> >
-> >  	/*
-> > -	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
-> > -	 * and should be set to zero.
-> > -	 *
-> > -	 * But because of a bug introduced in v1.3.89 if the driver is
-> > -	 * compiled as a module and 'cmd_per_lun' is zero, the Mid-Level
-> > -	 * SCSI function 'allocate_device' will panic. To allow the driver
-> > -	 * to work as a module in these kernels set 'cmd_per_lun' to 1.
-> > -	 *
-> > -	 * Note: This is wrong.  cmd_per_lun should be set to the depth
-> > -	 * you want on untagged devices always.
-> > -	 #ifdef MODULE
-> > -	 */
-> > -	shost->cmd_per_lun = 1;
-> > -/* #else
-> > -            shost->cmd_per_lun = 0;
-> > -#endif */
-> > -
-> > -	/*
-> >  	 * Set the maximum number of scatter-gather elements the
-> >  	 * adapter can handle.
-> >  	 */
+> > diff -up 4.0/drivers/scsi/lpfc.orig/lpfc_init.c 4.0/drivers/scsi/lpfc/lpfc_init.c
+> > --- 4.0/drivers/scsi/lpfc.orig/lpfc_init.c	2015-04-15 06:18:24.673045138 +0200
+> > +++ 4.0/drivers/scsi/lpfc/lpfc_init.c	2015-04-22 21:03:39.203230409 +0200
+> > @@ -2253,7 +2253,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba
+> >   				phba->Port);
+> >   		else if (max_speed == 0)
+> >   			snprintf(descp, 255,
+> > -				"Emulex %s %s %s ",
+> > +				"Emulex %s %s %s",
+> >   				m.name, m.bus, m.function);
+> >   		else
+> >   			snprintf(descp, 255,
 > 
-> This patch breaks my setup: "modprobe advansys" hangs.
+> Hello Sebastian,
+
+Hello Bart,
+
+> Since you are touching that code, please include the following 
+> additional changes in your patch or in a separate patch:
+
+I could follow up with a patch containing
+
+> * Change the type of the third argument of lpfc_get_hba_model_desc()
+>    from uint8_t * into char * since that pointer is used to store a
+>    '\0'-terminated ASCII string.
+
+-static void lpfc_get_hba_model_desc(struct lpfc_hba *, uint8_t *, uint8_t *);
++static void lpfc_get_hba_model_desc(struct lpfc_hba *, char *, char *);
+
+and
+
+-lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
++lpfc_get_hba_model_desc(struct lpfc_hba *phba, char *mdp, char *descp)
+
+since both mdp and descp are strings.
+
+> * Add a size argument to lpfc_get_hba_model_desc() such that the callers
+>    of this function can specify what the size is of the array descp
+>    points at (sizeof(phba->ModelDesc) ?).
+
+I am not sure whether this change is necessary because callers of
+lpfc_get_hba_model_desc() are limited to lpfc_init.c and always use
+the same arguments (phba->ModelName, phba->ModelDesc):
+
+        char ModelDesc[256];            /* Model Description */
+        char ModelName[80];             /* Model Name */
+
+> * Switch from snprintf() to scnprintf() because the latter function
+>    guarantees '\0'-termination if the output has to be truncated.
+
+Doesn't snprintf() guarantee this too? The only difference between
+snprintf() and scnprintf() seems to be the return value.
+snprintf() calls vsnprintf() and scnprintf() calls vscnprintf() which
+calls vsnprintf() itself.
+
+> Thanks,
 > 
-> It works when all other patches are applied except this one.
+> Bart.
+> 
 
-The specific problem is that a cmd_per_lun of zero breaks everything
-because we use it for the initial queue depth and if you don't actually
-set it, you get zero (because the template is in static memory).  This
-should be a global fix that changes the default initial queue depth to 1
-for the probe phase if it's unset in the template or the host.
-
-Hopefully this should set us up for removing cmd_per_lun.
-
-James
-
----
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 60aae01..681a59a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -280,7 +280,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 				    sdev->host->cmd_per_lun, shost->bqt,
- 				    shost->hostt->tag_alloc_policy);
- 	}
--	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun);
-+	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?
-+					sdev->host->cmd_per_lun : 1);
- 
- 	scsi_sysfs_device_initialize(sdev);
- 
-
-
-
+Sebastian
