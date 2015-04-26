@@ -1,40 +1,22 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v3 4/5] target: Fix sbc_dif_generate() and sbc_dif_verify()
- for WRITE SAME
-Date: Sun, 26 Apr 2015 12:53:21 +0300
-Message-ID: <553CB591.4040807@dev.mellanox.co.il>
-References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-5-git-send-email-akinobu.mita@gmail.com>
+Subject: Re: [PATCH v3 5/5] target/file: enable WRITE SAME when protection
+ info is enabled
+Date: Sun, 26 Apr 2015 12:58:23 +0300
+Message-ID: <553CB6BF.8090601@dev.mellanox.co.il>
+References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-6-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:37891 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbbDZJxo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2015 05:53:44 -0400
-Received: by wiun10 with SMTP id n10so60975683wiu.1
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2015 02:53:43 -0700 (PDT)
-In-Reply-To: <1429972410-7146-5-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1429972410-7146-6-git-send-email-akinobu.mita@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 On 4/25/2015 5:33 PM, Akinobu Mita wrote:
-> For WRITE SAME, data transfer memory only contains a single block but
-> protection information is required for all blocks that are written by
-> the command.
->
-> This makes sbc_dif_generate() and sbc_dif_verify() work for WRITE_SAME.
-
-This feels a bit like an overshoot...
-
-You only have 1 block, is it really a good idea to calculate
-the CRC over and over for write same? Wouldn't it be better to
-have a really simple sbc_dif_generate_same() that calculates the
-block CRC once and uses it for the entire payload (and watches for
-Type 1 to increment the ref-tag)?
-
+> Now we can generate correct PI for WRITE SAME command, so it is
+> unnecessary to disallow WRITE SAME when protection info is enabled.
 >
 > Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
@@ -45,92 +27,65 @@ Type 1 to increment the ref-tag)?
 > Cc: target-devel@vger.kernel.org
 > Cc: linux-scsi@vger.kernel.org
 > ---
-> * Changes from v2:
-> - Handle odd SG mapping correctly instead of giving up
+> * No change from v2
 >
->   drivers/target/target_core_sbc.c | 28 ++++++++++++++++++++++++++++
->   1 file changed, 28 insertions(+)
+>   drivers/target/target_core_file.c | 18 +++++++++++++-----
+>   1 file changed, 13 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 33d2426..10c7cb9 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -1177,6 +1177,24 @@ err:
->   }
->   EXPORT_SYMBOL(sbc_execute_unmap);
+> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+> index 829817a..fe98f58 100644
+> --- a/drivers/target/target_core_file.c
+> +++ b/drivers/target/target_core_file.c
+> @@ -376,16 +376,12 @@ fd_execute_write_same(struct se_cmd *cmd)
+>   	struct bio_vec *bvec;
+>   	unsigned int len = 0, i;
+>   	ssize_t ret;
+> +	sense_reason_t rc;
 >
-> +static bool sbc_is_write_same(struct se_cmd *cmd)
-> +{
-> +	u16 service_action;
+>   	if (!nolb) {
+>   		target_complete_cmd(cmd, SAM_STAT_GOOD);
+>   		return 0;
+>   	}
+> -	if (cmd->prot_op) {
+> -		pr_err("WRITE_SAME: Protection information with FILEIO"
+> -		       " backends not supported\n");
+> -		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> -	}
+>
+>   	if (cmd->t_data_nents > 1 ||
+>   	    cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
+> @@ -397,6 +393,10 @@ fd_execute_write_same(struct se_cmd *cmd)
+>   		return TCM_INVALID_CDB_FIELD;
+>   	}
+>
+> +	rc = sbc_dif_verify(cmd, cmd->t_task_lba, nolb, 0, cmd->t_prot_sg, 0);
+> +	if (rc)
+> +		return rc;
 > +
-> +	switch (cmd->t_task_cdb[0]) {
-> +	case WRITE_SAME:
-> +	case WRITE_SAME_16:
-> +		return true;
-> +	case VARIABLE_LENGTH_CMD:
-> +		service_action = get_unaligned_be16(&cmd->t_task_cdb[8]);
-> +		if (service_action == WRITE_SAME_32)
-> +			return true;
-> +		break;
+>   	bvec = kcalloc(nolb, sizeof(struct bio_vec), GFP_KERNEL);
+>   	if (!bvec)
+>   		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> @@ -418,6 +418,14 @@ fd_execute_write_same(struct se_cmd *cmd)
+>   		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>   	}
+>
+> +	if (cmd->prot_op) {
+> +		ret = fd_do_rw(cmd, fd_dev->fd_prot_file, se_dev->prot_length,
+> +				cmd->t_prot_sg, cmd->t_prot_nents,
+> +				cmd->prot_length, 1);
+> +		if (ret < 0)
+> +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
 > +	}
 > +
-> +	return false;
-> +}
-> +
->   void
->   sbc_dif_generate(struct se_cmd *cmd)
->   {
-> @@ -1187,6 +1205,7 @@ sbc_dif_generate(struct se_cmd *cmd)
->   	void *daddr, *paddr;
->   	int i, j, offset = 0;
->   	unsigned int block_size = dev->dev_attrib.block_size;
-> +	bool is_write_same = sbc_is_write_same(cmd);
->
->   	for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
->   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> @@ -1201,6 +1220,8 @@ sbc_dif_generate(struct se_cmd *cmd)
->   				offset -= dsg->length;
->   				kunmap_atomic(daddr);
->   				dsg = sg_next(dsg);
-> +				if (!dsg && is_write_same)
-> +					dsg = cmd->t_data_sg;
->   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   			}
->
-> @@ -1211,6 +1232,8 @@ sbc_dif_generate(struct se_cmd *cmd)
->   			if (avail < block_size) {
->   				kunmap_atomic(daddr);
->   				dsg = sg_next(dsg);
-> +				if (!dsg && is_write_same)
-> +					dsg = cmd->t_data_sg;
->   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   				offset = block_size - avail;
->   				crc = crc_t10dif_update(crc, daddr, offset);
-> @@ -1336,6 +1359,7 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
->   	sense_reason_t rc;
->   	int dsg_off = 0;
->   	unsigned int block_size = dev->dev_attrib.block_size;
-> +	bool is_write_same = sbc_is_write_same(cmd);
->
->   	for (; psg && sector < start + sectors; psg = sg_next(psg)) {
->   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> @@ -1351,6 +1375,8 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
->   				dsg_off -= dsg->length;
->   				kunmap_atomic(daddr);
->   				dsg = sg_next(dsg);
-> +				if (!dsg && is_write_same)
-> +					dsg = cmd->t_data_sg;
->   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   			}
->
-> @@ -1372,6 +1398,8 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
->   			if (avail < block_size) {
->   				kunmap_atomic(daddr);
->   				dsg = sg_next(dsg);
-> +				if (!dsg && is_write_same)
-> +					dsg = cmd->t_data_sg;
->   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   				dsg_off = block_size - avail;
->   				crc = crc_t10dif_update(crc, daddr, dsg_off);
+>   	target_complete_cmd(cmd, SAM_STAT_GOOD);
+>   	return 0;
+>   }
 >
 
+This looks good,
+
+iblock is needed too though. I think you just need a missing call to
+iblock_alloc_bip() and you're good to go (you can use scsi_debug with
+dif/dix to test it). I think it belongs in the same patch.
+
+Sagi.
