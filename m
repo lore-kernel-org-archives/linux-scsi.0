@@ -1,160 +1,136 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v3 1/5] target: ensure se_cmd->t_prot_sg is allocated
- when required
-Date: Sun, 26 Apr 2015 12:44:33 +0300
-Message-ID: <553CB381.6090409@dev.mellanox.co.il>
-References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-2-git-send-email-akinobu.mita@gmail.com> <553CAF32.2030904@dev.mellanox.co.il>
+Subject: Re: [PATCH v3 4/5] target: Fix sbc_dif_generate() and sbc_dif_verify()
+ for WRITE SAME
+Date: Sun, 26 Apr 2015 12:53:21 +0300
+Message-ID: <553CB591.4040807@dev.mellanox.co.il>
+References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-5-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <553CAF32.2030904@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37891 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbbDZJxo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2015 05:53:44 -0400
+Received: by wiun10 with SMTP id n10so60975683wiu.1
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2015 02:53:43 -0700 (PDT)
+In-Reply-To: <1429972410-7146-5-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-On 4/26/2015 12:26 PM, Sagi Grimberg wrote:
-> On 4/25/2015 5:33 PM, Akinobu Mita wrote:
->> Even if the device backend is initialized with protection info is
->> enabled, some requests don't have the protection info attached for
->> WRITE SAME command issued by block device helpers, WRITE command with
->> WRPROTECT=0 by SG_IO ioctl, etc.
->>
->> So when TCM loopback fabric module is used, se_cmd->t_prot_sg is NULL
->> for these requests and performing WRITE_INSERT of PI using software
->> emulation by sbc_dif_generate() causes kernel crash.
->>
->> To fix this, introduce SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC for
->> se_cmd_flags, which is used to determine that se_cmd->t_prot_sg needs
->> to be allocated or use pre-allocated protection information by scsi
->> mid-layer.
->>
->> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
->> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
->> Cc: Sagi Grimberg <sagig@mellanox.com>
->> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
->> Cc: target-devel@vger.kernel.org
->> Cc: linux-scsi@vger.kernel.org
->> ---
->> * No change from v2
->>
->>   drivers/target/target_core_transport.c | 30
->> ++++++++++++++++++------------
->>   include/target/target_core_base.h      |  1 +
->>   2 files changed, 19 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/target/target_core_transport.c
->> b/drivers/target/target_core_transport.c
->> index 7a9e7e2..fe52883 100644
->> --- a/drivers/target/target_core_transport.c
->> +++ b/drivers/target/target_core_transport.c
->> @@ -1450,6 +1450,7 @@ int target_submit_cmd_map_sgls(struct se_cmd
->> *se_cmd, struct se_session *se_sess
->>       if (sgl_prot_count) {
->>           se_cmd->t_prot_sg = sgl_prot;
->>           se_cmd->t_prot_nents = sgl_prot_count;
->> +        se_cmd->se_cmd_flags |= SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC;
->>       }
->>
->>       /*
->> @@ -2181,6 +2182,12 @@ static inline void
->> transport_reset_sgl_orig(struct se_cmd *cmd)
->>
->>   static inline void transport_free_pages(struct se_cmd *cmd)
->>   {
->> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
->> +        transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
->> +        cmd->t_prot_sg = NULL;
->> +        cmd->t_prot_nents = 0;
->> +    }
->> +
+On 4/25/2015 5:33 PM, Akinobu Mita wrote:
+> For WRITE SAME, data transfer memory only contains a single block but
+> protection information is required for all blocks that are written by
+> the command.
 >
-> Hi Akinobu,
->
-> Any reason why this changed it's location to the start of the function?
->
->>       if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
->>           /*
->>            * Release special case READ buffer payload required for
->> @@ -2204,10 +2211,6 @@ static inline void transport_free_pages(struct
->> se_cmd *cmd)
->>       transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
->>       cmd->t_bidi_data_sg = NULL;
->>       cmd->t_bidi_data_nents = 0;
->> -
->> -    transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
->> -    cmd->t_prot_sg = NULL;
->> -    cmd->t_prot_nents = 0;
->>   }
->>
->>   /**
->> @@ -2346,6 +2349,17 @@ transport_generic_new_cmd(struct se_cmd *cmd)
->>       int ret = 0;
->>       bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
->>
->> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
->> +        if (cmd->prot_op != TARGET_PROT_NORMAL) {
->
-> This seems wrong,
->
-> What will happen for transports that will actually to allocate
-> protection SGLs? The allocation is unreachable since
-> SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is not set...
+> This makes sbc_dif_generate() and sbc_dif_verify() work for WRITE_SAME.
 
-Umm, actually this is reachable... But I still think the condition
-should be the other way around (saving a condition in some common
-cases).
+This feels a bit like an overshoot...
+
+You only have 1 block, is it really a good idea to calculate
+the CRC over and over for write same? Wouldn't it be better to
+have a really simple sbc_dif_generate_same() that calculates the
+block CRC once and uses it for the entire payload (and watches for
+Type 1 to increment the ref-tag)?
 
 >
-> I'd say this needs to be:
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> Cc: Sagi Grimberg <sagig@mellanox.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+> Cc: target-devel@vger.kernel.org
+> Cc: linux-scsi@vger.kernel.org
+> ---
+> * Changes from v2:
+> - Handle odd SG mapping correctly instead of giving up
 >
-> if (cmd->prot_op != TARGET_PROT_NORMAL &&
->      !(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>   drivers/target/target_core_sbc.c | 28 ++++++++++++++++++++++++++++
+>   1 file changed, 28 insertions(+)
 >
->> +            ret = target_alloc_sgl(&cmd->t_prot_sg,
->> +                           &cmd->t_prot_nents,
->> +                           cmd->prot_length, true);
->> +            if (ret < 0)
->> +                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> +        }
->> +
->> +    }
->> +
->>       /*
->>        * Determine is the TCM fabric module has already allocated
->> physical
->>        * memory, and is directly calling
->> transport_generic_map_mem_to_cmd()
->> @@ -2371,14 +2385,6 @@ transport_generic_new_cmd(struct se_cmd *cmd)
->>                   return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->>           }
->>
->> -        if (cmd->prot_op != TARGET_PROT_NORMAL) {
->> -            ret = target_alloc_sgl(&cmd->t_prot_sg,
->> -                           &cmd->t_prot_nents,
->> -                           cmd->prot_length, true);
->> -            if (ret < 0)
->> -                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> -        }
->> -
->>           ret = target_alloc_sgl(&cmd->t_data_sg, &cmd->t_data_nents,
->>                          cmd->data_length, zero_flag);
->>           if (ret < 0)
->> diff --git a/include/target/target_core_base.h
->> b/include/target/target_core_base.h
->> index 480e9f8..13efcdd 100644
->> --- a/include/target/target_core_base.h
->> +++ b/include/target/target_core_base.h
->> @@ -167,6 +167,7 @@ enum se_cmd_flags_table {
->>       SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00020000,
->>       SCF_COMPARE_AND_WRITE        = 0x00080000,
->>       SCF_COMPARE_AND_WRITE_POST    = 0x00100000,
->> +    SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC = 0x00200000,
->>   };
->>
->>   /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
->>
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 33d2426..10c7cb9 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -1177,6 +1177,24 @@ err:
+>   }
+>   EXPORT_SYMBOL(sbc_execute_unmap);
 >
+> +static bool sbc_is_write_same(struct se_cmd *cmd)
+> +{
+> +	u16 service_action;
+> +
+> +	switch (cmd->t_task_cdb[0]) {
+> +	case WRITE_SAME:
+> +	case WRITE_SAME_16:
+> +		return true;
+> +	case VARIABLE_LENGTH_CMD:
+> +		service_action = get_unaligned_be16(&cmd->t_task_cdb[8]);
+> +		if (service_action == WRITE_SAME_32)
+> +			return true;
+> +		break;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>   void
+>   sbc_dif_generate(struct se_cmd *cmd)
+>   {
+> @@ -1187,6 +1205,7 @@ sbc_dif_generate(struct se_cmd *cmd)
+>   	void *daddr, *paddr;
+>   	int i, j, offset = 0;
+>   	unsigned int block_size = dev->dev_attrib.block_size;
+> +	bool is_write_same = sbc_is_write_same(cmd);
+>
+>   	for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
+>   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+> @@ -1201,6 +1220,8 @@ sbc_dif_generate(struct se_cmd *cmd)
+>   				offset -= dsg->length;
+>   				kunmap_atomic(daddr);
+>   				dsg = sg_next(dsg);
+> +				if (!dsg && is_write_same)
+> +					dsg = cmd->t_data_sg;
+>   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+>   			}
+>
+> @@ -1211,6 +1232,8 @@ sbc_dif_generate(struct se_cmd *cmd)
+>   			if (avail < block_size) {
+>   				kunmap_atomic(daddr);
+>   				dsg = sg_next(dsg);
+> +				if (!dsg && is_write_same)
+> +					dsg = cmd->t_data_sg;
+>   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+>   				offset = block_size - avail;
+>   				crc = crc_t10dif_update(crc, daddr, offset);
+> @@ -1336,6 +1359,7 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+>   	sense_reason_t rc;
+>   	int dsg_off = 0;
+>   	unsigned int block_size = dev->dev_attrib.block_size;
+> +	bool is_write_same = sbc_is_write_same(cmd);
+>
+>   	for (; psg && sector < start + sectors; psg = sg_next(psg)) {
+>   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+> @@ -1351,6 +1375,8 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+>   				dsg_off -= dsg->length;
+>   				kunmap_atomic(daddr);
+>   				dsg = sg_next(dsg);
+> +				if (!dsg && is_write_same)
+> +					dsg = cmd->t_data_sg;
+>   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+>   			}
+>
+> @@ -1372,6 +1398,8 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+>   			if (avail < block_size) {
+>   				kunmap_atomic(daddr);
+>   				dsg = sg_next(dsg);
+> +				if (!dsg && is_write_same)
+> +					dsg = cmd->t_data_sg;
+>   				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+>   				dsg_off = block_size - avail;
+>   				crc = crc_t10dif_update(crc, daddr, dsg_off);
+>
+
