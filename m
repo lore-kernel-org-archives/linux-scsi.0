@@ -1,237 +1,65 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v3 3/5] target: handle odd SG mapping for data transfer
- memory
-Date: Sun, 26 Apr 2015 13:07:35 +0300
-Message-ID: <553CB8E7.8060402@dev.mellanox.co.il>
-References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-4-git-send-email-akinobu.mita@gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 19/23] advansys: Remove cmd_per_lun setting
+Date: Sun, 26 Apr 2015 16:57:01 +0200
+Message-ID: <201504261657.01552.linux@rainbow-software.org>
+References: <1429874322-85488-1-git-send-email-hare@suse.de> <1429874322-85488-21-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1429972410-7146-4-git-send-email-akinobu.mita@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org
-Cc: Tim Chen <tim.c.chen@linux.intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-1-out2.atlantis.sk ([80.94.52.22]:35810 "EHLO
+	mail-1-out2.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195AbbDZPEc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2015 11:04:32 -0400
+In-Reply-To: <1429874322-85488-21-git-send-email-hare@suse.de>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-On 4/25/2015 5:33 PM, Akinobu Mita wrote:
-> sbc_dif_generate() and sbc_dif_verify() currently assume that each
-> SG element for data transfer memory doesn't straddle the block size
-> boundary.
+On Friday 24 April 2015 13:18:38 Hannes Reinecke wrote:
+> Ancient, and pretty much obsolete by now.
 >
-> However, when using SG_IO ioctl, we can choose the data transfer
-> memory which doesn't satisfy that alignment requirement.
->
-> In order to handle such cases correctly, this change inverts the outer
-> loop to iterate data transfer memory and the inner loop to iterate
-> protection information and enables to calculate CRC for a block which
-> straddles multiple SG elements.
->
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Tim Chen <tim.c.chen@linux.intel.com>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: linux-crypto@vger.kernel.org
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: target-devel@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
-> * Changes from v2:
-> - Handle odd SG mapping correctly instead of giving up
+>  drivers/scsi/advansys.c | 18 ------------------
+>  1 file changed, 18 deletions(-)
 >
->   drivers/target/target_core_sbc.c | 108 +++++++++++++++++++++++++--------------
->   1 file changed, 69 insertions(+), 39 deletions(-)
+> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> index 74e5518..5a55272 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -11212,24 +11212,6 @@ static int advansys_board_found(struct Scsi_Host
+> *shost, unsigned int iop, }
 >
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index edba39f..33d2426 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -1182,27 +1182,43 @@ sbc_dif_generate(struct se_cmd *cmd)
->   {
->   	struct se_device *dev = cmd->se_dev;
->   	struct se_dif_v1_tuple *sdt;
-> -	struct scatterlist *dsg, *psg = cmd->t_prot_sg;
-> +	struct scatterlist *dsg = cmd->t_data_sg, *psg;
->   	sector_t sector = cmd->t_task_lba;
->   	void *daddr, *paddr;
->   	int i, j, offset = 0;
-> +	unsigned int block_size = dev->dev_attrib.block_size;
->
-> -	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
-> -		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-> +	for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
->   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> +		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->
-> -		for (j = 0; j < dsg->length; j += dev->dev_attrib.block_size) {
-> +		for (j = 0; j < psg->length;
-> +				j += sizeof(struct se_dif_v1_tuple)) {
-> +			__u16 crc = 0;
-> +			unsigned int avail;
->
-> -			if (offset >= psg->length) {
-> -				kunmap_atomic(paddr);
-> -				psg = sg_next(psg);
-> -				paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> -				offset = 0;
-> +			if (offset >= dsg->length) {
-> +				offset -= dsg->length;
-> +				kunmap_atomic(daddr);
-
-This unmap is inconsistent. You need to unmap (daddr - dsg->offset).
-
-This applies throughout the patch.
-
-> +				dsg = sg_next(dsg);
-> +				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   			}
->
-> -			sdt = paddr + offset;
-> -			sdt->guard_tag = cpu_to_be16(crc_t10dif(daddr + j,
-> -						dev->dev_attrib.block_size));
-> +			sdt = paddr + j;
-> +
-> +			avail = min(block_size, dsg->length - offset);
-> +			crc = crc_t10dif(daddr + offset, avail);
-> +			if (avail < block_size) {
-> +				kunmap_atomic(daddr);
-> +				dsg = sg_next(dsg);
-> +				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-> +				offset = block_size - avail;
-> +				crc = crc_t10dif_update(crc, daddr, offset);
-> +			} else {
-> +				offset += block_size;
-> +			}
-> +
-> +			sdt->guard_tag = cpu_to_be16(crc);
->   			if (cmd->prot_type == TARGET_DIF_TYPE1_PROT)
->   				sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
->   			sdt->app_tag = 0;
-> @@ -1215,26 +1231,23 @@ sbc_dif_generate(struct se_cmd *cmd)
->   				 be32_to_cpu(sdt->ref_tag));
->
->   			sector++;
-> -			offset += sizeof(struct se_dif_v1_tuple);
->   		}
->
-> -		kunmap_atomic(paddr);
->   		kunmap_atomic(daddr);
-> +		kunmap_atomic(paddr);
->   	}
->   }
->
->   static sense_reason_t
->   sbc_dif_v1_verify(struct se_cmd *cmd, struct se_dif_v1_tuple *sdt,
-> -		  const void *p, sector_t sector, unsigned int ei_lba)
-> +		  __u16 crc, sector_t sector, unsigned int ei_lba)
->   {
-> -	struct se_device *dev = cmd->se_dev;
-> -	int block_size = dev->dev_attrib.block_size;
->   	__be16 csum;
->
->   	if (!(cmd->prot_checks & TARGET_DIF_CHECK_GUARD))
->   		goto check_ref;
->
-> -	csum = cpu_to_be16(crc_t10dif(p, block_size));
-> +	csum = cpu_to_be16(crc);
->
->   	if (sdt->guard_tag != csum) {
->   		pr_err("DIFv1 checksum failed on sector %llu guard tag 0x%04x"
-> @@ -1316,26 +1329,32 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
->   {
->   	struct se_device *dev = cmd->se_dev;
->   	struct se_dif_v1_tuple *sdt;
-> -	struct scatterlist *dsg;
-> +	struct scatterlist *dsg = cmd->t_data_sg;
->   	sector_t sector = start;
->   	void *daddr, *paddr;
-> -	int i, j;
-> +	int i;
->   	sense_reason_t rc;
-> +	int dsg_off = 0;
-> +	unsigned int block_size = dev->dev_attrib.block_size;
->
-> -	for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
-> -		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-> +	for (; psg && sector < start + sectors; psg = sg_next(psg)) {
->   		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> +		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->
-> -		for (j = 0; j < dsg->length; j += dev->dev_attrib.block_size) {
+>  	/*
+> -	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
+> -	 * and should be set to zero.
+> -	 *
+> -	 * But because of a bug introduced in v1.3.89 if the driver is
+> -	 * compiled as a module and 'cmd_per_lun' is zero, the Mid-Level
+> -	 * SCSI function 'allocate_device' will panic. To allow the driver
+> -	 * to work as a module in these kernels set 'cmd_per_lun' to 1.
+> -	 *
+> -	 * Note: This is wrong.  cmd_per_lun should be set to the depth
+> -	 * you want on untagged devices always.
+> -	 #ifdef MODULE
+> -	 */
+> -	shost->cmd_per_lun = 1;
+> -/* #else
+> -            shost->cmd_per_lun = 0;
+> -#endif */
 > -
-> -			if (psg_off >= psg->length) {
-> -				kunmap_atomic(paddr - psg->offset);
-> -				psg = sg_next(psg);
-> -				paddr = kmap_atomic(sg_page(psg)) + psg->offset;
-> -				psg_off = 0;
-> +		for (i = psg_off; i < psg->length &&
-> +				sector < start + sectors;
-> +				i += sizeof(struct se_dif_v1_tuple)) {
-> +			__u16 crc;
-> +			unsigned int avail;
-> +
-> +			if (dsg_off >= dsg->length) {
-> +				dsg_off -= dsg->length;
-> +				kunmap_atomic(daddr);
-> +				dsg = sg_next(dsg);
-> +				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->   			}
->
-> -			sdt = paddr + psg_off;
-> +			sdt = paddr + i;
->
->   			pr_debug("DIF READ sector: %llu guard_tag: 0x%04x"
->   				 " app_tag: 0x%04x ref_tag: %u\n",
-> @@ -1343,27 +1362,38 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
->   				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
->
->   			if (sdt->app_tag == cpu_to_be16(0xffff)) {
-> -				sector++;
-> -				psg_off += sizeof(struct se_dif_v1_tuple);
-> -				continue;
-> +				dsg_off += block_size;
-> +				goto next;
-> +			}
-> +
-> +			avail = min(block_size, dsg->length - dsg_off);
-> +
-> +			crc = crc_t10dif(daddr + dsg_off, avail);
-> +			if (avail < block_size) {
-> +				kunmap_atomic(daddr);
-> +				dsg = sg_next(dsg);
-> +				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
-> +				dsg_off = block_size - avail;
-> +				crc = crc_t10dif_update(crc, daddr, dsg_off);
-> +			} else {
-> +				dsg_off += block_size;
->   			}
->
-> -			rc = sbc_dif_v1_verify(cmd, sdt, daddr + j, sector,
-> -					       ei_lba);
-> +			rc = sbc_dif_v1_verify(cmd, sdt, crc, sector, ei_lba);
->   			if (rc) {
-> -				kunmap_atomic(paddr - psg->offset);
->   				kunmap_atomic(daddr - dsg->offset);
-> +				kunmap_atomic(paddr - psg->offset);
->   				cmd->bad_sector = sector;
->   				return rc;
->   			}
-> -
-> +next:
->   			sector++;
->   			ei_lba++;
-> -			psg_off += sizeof(struct se_dif_v1_tuple);
->   		}
->
-> -		kunmap_atomic(paddr - psg->offset);
-> +		psg_off = 0;
->   		kunmap_atomic(daddr - dsg->offset);
-> +		kunmap_atomic(paddr - psg->offset);
->   	}
->
->   	return 0;
->
+> -	/*
+>  	 * Set the maximum number of scatter-gather elements the
+>  	 * adapter can handle.
+>  	 */
+
+This patch breaks my setup: "modprobe advansys" hangs.
+
+It works when all other patches are applied except this one.
+
+-- 
+Ondrej Zary
