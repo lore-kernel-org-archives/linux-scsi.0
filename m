@@ -1,86 +1,160 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Sun, 26 Apr 2015 11:27:19 +0200
-Message-ID: <20150426092719.GA1460@kroah.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
- <54AC0A17.8020405@redhat.com>
- <20150128001837.GE17677@kroah.com>
- <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
- <552BC234.4020000@redhat.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH v3 1/5] target: ensure se_cmd->t_prot_sg is allocated
+ when required
+Date: Sun, 26 Apr 2015 12:44:33 +0300
+Message-ID: <553CB381.6090409@dev.mellanox.co.il>
+References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com> <1429972410-7146-2-git-send-email-akinobu.mita@gmail.com> <553CAF32.2030904@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:57614 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751420AbbDZJ1V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Apr 2015 05:27:21 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-	by mailout.nyi.internal (Postfix) with ESMTP id 589F920A83
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2015 05:27:21 -0400 (EDT)
-Content-Disposition: inline
-In-Reply-To: <552BC234.4020000@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <553CAF32.2030904@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>, target-devel@vger.kernel.org
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Vinson Lee <vlee@twopensource.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
-> On 04/11/2015 12:45 AM, Vinson Lee wrote:
-> > On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
-> >> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
-> >>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
-> >>>> Dear stable maintainers,
-> >>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
-> >>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
-> >>>> earlier, if applicable)?
-> >>> Please do not apply this patch isolated from his friend, the
-> >>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
-> >>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
-> >>>
-> >>> In addition to that, after the original issue goes away you may notice sometimes
-> >>> an unhandled irq 16 message, to fix this a patch is posted
-> >>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
-> >>> This patch still awaits a maintainers review though.
-> >>>
-> >>> Probably the best idea is to wait until the issue is solved completely.
-> >> I'll wait, when it all gets worked out, please let stable@ know what
-> >> patches to apply where.
-> >>
-> >> thanks,
-> >>
-> >> greg k-h
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe stable" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > Hi, Thomas.
-> >
-> > The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
-> > turn off interrupts when kdump starts".
-> >
-> > Are the following patches suitable for stable now?
-> 
-> Yes, I believe they are, just note that 
-> 03741d9 hpsa: fix memory leak in kdump hard reset
-> is not a part of that group we discussed before, but it may be added
-> to stable too.
-> 
-> Cheers,
-> Tomas
-> 
-> >
-> > 3b74729 hpsa: turn off interrupts when kdump starts
-> > 03741d9 hpsa: fix memory leak in kdump hard reset
-> > 859c75a hpsa: add missing pci_set_master in kdump path
-> > 132aa22 hpsa: refine the pci enable/disable handling
+On 4/26/2015 12:26 PM, Sagi Grimberg wrote:
+> On 4/25/2015 5:33 PM, Akinobu Mita wrote:
+>> Even if the device backend is initialized with protection info is
+>> enabled, some requests don't have the protection info attached for
+>> WRITE SAME command issued by block device helpers, WRITE command with
+>> WRPROTECT=0 by SG_IO ioctl, etc.
+>>
+>> So when TCM loopback fabric module is used, se_cmd->t_prot_sg is NULL
+>> for these requests and performing WRITE_INSERT of PI using software
+>> emulation by sbc_dif_generate() causes kernel crash.
+>>
+>> To fix this, introduce SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC for
+>> se_cmd_flags, which is used to determine that se_cmd->t_prot_sg needs
+>> to be allocated or use pre-allocated protection information by scsi
+>> mid-layer.
+>>
+>> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>> Cc: target-devel@vger.kernel.org
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>> * No change from v2
+>>
+>>   drivers/target/target_core_transport.c | 30
+>> ++++++++++++++++++------------
+>>   include/target/target_core_base.h      |  1 +
+>>   2 files changed, 19 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_transport.c
+>> b/drivers/target/target_core_transport.c
+>> index 7a9e7e2..fe52883 100644
+>> --- a/drivers/target/target_core_transport.c
+>> +++ b/drivers/target/target_core_transport.c
+>> @@ -1450,6 +1450,7 @@ int target_submit_cmd_map_sgls(struct se_cmd
+>> *se_cmd, struct se_session *se_sess
+>>       if (sgl_prot_count) {
+>>           se_cmd->t_prot_sg = sgl_prot;
+>>           se_cmd->t_prot_nents = sgl_prot_count;
+>> +        se_cmd->se_cmd_flags |= SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC;
+>>       }
+>>
+>>       /*
+>> @@ -2181,6 +2182,12 @@ static inline void
+>> transport_reset_sgl_orig(struct se_cmd *cmd)
+>>
+>>   static inline void transport_free_pages(struct se_cmd *cmd)
+>>   {
+>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>> +        transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
+>> +        cmd->t_prot_sg = NULL;
+>> +        cmd->t_prot_nents = 0;
+>> +    }
+>> +
+>
+> Hi Akinobu,
+>
+> Any reason why this changed it's location to the start of the function?
+>
+>>       if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
+>>           /*
+>>            * Release special case READ buffer payload required for
+>> @@ -2204,10 +2211,6 @@ static inline void transport_free_pages(struct
+>> se_cmd *cmd)
+>>       transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
+>>       cmd->t_bidi_data_sg = NULL;
+>>       cmd->t_bidi_data_nents = 0;
+>> -
+>> -    transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
+>> -    cmd->t_prot_sg = NULL;
+>> -    cmd->t_prot_nents = 0;
+>>   }
+>>
+>>   /**
+>> @@ -2346,6 +2349,17 @@ transport_generic_new_cmd(struct se_cmd *cmd)
+>>       int ret = 0;
+>>       bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
+>>
+>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>> +        if (cmd->prot_op != TARGET_PROT_NORMAL) {
+>
+> This seems wrong,
+>
+> What will happen for transports that will actually to allocate
+> protection SGLs? The allocation is unreachable since
+> SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is not set...
 
-So what order, and to what stable tree(s) do you want these applied to?
-They seem to span a number of kernel versions, so I'm not quite sure
-what you are wanting me to do.
+Umm, actually this is reachable... But I still think the condition
+should be the other way around (saving a condition in some common
+cases).
 
-thanks,
-
-greg k-h
+>
+> I'd say this needs to be:
+>
+> if (cmd->prot_op != TARGET_PROT_NORMAL &&
+>      !(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>
+>> +            ret = target_alloc_sgl(&cmd->t_prot_sg,
+>> +                           &cmd->t_prot_nents,
+>> +                           cmd->prot_length, true);
+>> +            if (ret < 0)
+>> +                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> +        }
+>> +
+>> +    }
+>> +
+>>       /*
+>>        * Determine is the TCM fabric module has already allocated
+>> physical
+>>        * memory, and is directly calling
+>> transport_generic_map_mem_to_cmd()
+>> @@ -2371,14 +2385,6 @@ transport_generic_new_cmd(struct se_cmd *cmd)
+>>                   return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>>           }
+>>
+>> -        if (cmd->prot_op != TARGET_PROT_NORMAL) {
+>> -            ret = target_alloc_sgl(&cmd->t_prot_sg,
+>> -                           &cmd->t_prot_nents,
+>> -                           cmd->prot_length, true);
+>> -            if (ret < 0)
+>> -                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> -        }
+>> -
+>>           ret = target_alloc_sgl(&cmd->t_data_sg, &cmd->t_data_nents,
+>>                          cmd->data_length, zero_flag);
+>>           if (ret < 0)
+>> diff --git a/include/target/target_core_base.h
+>> b/include/target/target_core_base.h
+>> index 480e9f8..13efcdd 100644
+>> --- a/include/target/target_core_base.h
+>> +++ b/include/target/target_core_base.h
+>> @@ -167,6 +167,7 @@ enum se_cmd_flags_table {
+>>       SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00020000,
+>>       SCF_COMPARE_AND_WRITE        = 0x00080000,
+>>       SCF_COMPARE_AND_WRITE_POST    = 0x00100000,
+>> +    SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC = 0x00200000,
+>>   };
+>>
+>>   /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+>>
+>
