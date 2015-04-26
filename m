@@ -1,37 +1,94 @@
-From: Ondrej Zary <linux@rainbow-software.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 19/23] advansys: Remove cmd_per_lun setting
-Date: Sun, 26 Apr 2015 20:23:52 +0200
-Message-ID: <201504262023.52590.linux@rainbow-software.org>
-References: <1429874322-85488-1-git-send-email-hare@suse.de> <201504261657.01552.linux@rainbow-software.org> <20150426165541.GA14192@lst.de>
+Date: Sun, 26 Apr 2015 11:52:46 -0700
+Message-ID: <1430074366.2314.3.camel@HansenPartnership.com>
+References: <1429874322-85488-1-git-send-email-hare@suse.de>
+	 <1429874322-85488-21-git-send-email-hare@suse.de>
+	 <201504261657.01552.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1.atlantis.sk ([92.240.247.91]:57157 "EHLO
-	smtp-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbbDZSYE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2015 14:24:04 -0400
-In-Reply-To: <20150426165541.GA14192@lst.de>
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55207 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752264AbbDZSws (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Apr 2015 14:52:48 -0400
+In-Reply-To: <201504261657.01552.linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-On Sunday 26 April 2015 18:55:41 Christoph Hellwig wrote:
-> On Sun, Apr 26, 2015 at 04:57:01PM +0200, Ondrej Zary wrote:
-> > This patch breaks my setup: "modprobe advansys" hangs.
+On Sun, 2015-04-26 at 16:57 +0200, Ondrej Zary wrote:
+> On Friday 24 April 2015 13:18:38 Hannes Reinecke wrote:
+> > Ancient, and pretty much obsolete by now.
 > >
-> > It works when all other patches are applied except this one.
->
-> Oh damn, looks like the code does have issues in this case.
-> So let's just drop this change for now.
->
->
-> Jusr curious: do you have more than a single disk on this controller?
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/scsi/advansys.c | 18 ------------------
+> >  1 file changed, 18 deletions(-)
+> >
+> > diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> > index 74e5518..5a55272 100644
+> > --- a/drivers/scsi/advansys.c
+> > +++ b/drivers/scsi/advansys.c
+> > @@ -11212,24 +11212,6 @@ static int advansys_board_found(struct Scsi_Host
+> > *shost, unsigned int iop, }
+> >
+> >  	/*
+> > -	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
+> > -	 * and should be set to zero.
+> > -	 *
+> > -	 * But because of a bug introduced in v1.3.89 if the driver is
+> > -	 * compiled as a module and 'cmd_per_lun' is zero, the Mid-Level
+> > -	 * SCSI function 'allocate_device' will panic. To allow the driver
+> > -	 * to work as a module in these kernels set 'cmd_per_lun' to 1.
+> > -	 *
+> > -	 * Note: This is wrong.  cmd_per_lun should be set to the depth
+> > -	 * you want on untagged devices always.
+> > -	 #ifdef MODULE
+> > -	 */
+> > -	shost->cmd_per_lun = 1;
+> > -/* #else
+> > -            shost->cmd_per_lun = 0;
+> > -#endif */
+> > -
+> > -	/*
+> >  	 * Set the maximum number of scatter-gather elements the
+> >  	 * adapter can handle.
+> >  	 */
+> 
+> This patch breaks my setup: "modprobe advansys" hangs.
+> 
+> It works when all other patches are applied except this one.
 
-I was testing this with only one device attached: HP ScanJet IIp scanner.
+The specific problem is that a cmd_per_lun of zero breaks everything
+because we use it for the initial queue depth and if you don't actually
+set it, you get zero (because the template is in static memory).  This
+should be a global fix that changes the default initial queue depth to 1
+for the probe phase if it's unset in the template or the host.
 
--- 
-Ondrej Zary
+Hopefully this should set us up for removing cmd_per_lun.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 60aae01..681a59a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -280,7 +280,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 				    sdev->host->cmd_per_lun, shost->bqt,
+ 				    shost->hostt->tag_alloc_policy);
+ 	}
+-	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun);
++	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?
++					sdev->host->cmd_per_lun : 1);
+ 
+ 	scsi_sysfs_device_initialize(sdev);
+ 
+
+
+
