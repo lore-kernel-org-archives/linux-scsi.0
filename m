@@ -1,96 +1,93 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 3/5] target: handle odd SG mapping for data transfer memory
-Date: Mon, 27 Apr 2015 22:03:25 +0900
-Message-ID: <CAC5umyh4fjdXnYfSZkVQkRyg-69mkLp+7rezA5nVCWUQZz-saA@mail.gmail.com>
-References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com>
-	<1429972410-7146-4-git-send-email-akinobu.mita@gmail.com>
-	<553CB8E7.8060402@dev.mellanox.co.il>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Mon, 27 Apr 2015 15:10:35 +0200
+Message-ID: <553E354B.90208@redhat.com>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com> <54AC0A17.8020405@redhat.com> <20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com> <552BC234.4020000@redhat.com> <20150426092719.GA1460@kroah.com> <553E28DC.1040100@redhat.com> <20150427125529.GA18817@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <553CB8E7.8060402@dev.mellanox.co.il>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: target-devel@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20150427125529.GA18817@kroah.com>
+Sender: stable-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>, Masoud Sharbiani <msharbiani@twopensource.com>
+Cc: Vinson Lee <vlee@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-2015-04-26 19:07 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
-> On 4/25/2015 5:33 PM, Akinobu Mita wrote:
+On 04/27/2015 02:55 PM, Greg KH wrote:
+> On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
+>> On 04/26/2015 11:27 AM, Greg KH wrote:
+>>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
+>>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
+>>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
+>>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
+>>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
+>>>>>>>> Dear stable maintainers,
+>>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
+>>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
+>>>>>>>> earlier, if applicable)?
+>>>>>>> Please do not apply this patch isolated from his friend, the
+>>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
+>>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
+>>>>>>>
+>>>>>>> In addition to that, after the original issue goes away you may notice sometimes
+>>>>>>> an unhandled irq 16 message, to fix this a patch is posted
+>>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
+>>>>>>> This patch still awaits a maintainers review though.
+>>>>>>>
+>>>>>>> Probably the best idea is to wait until the issue is solved completely.
+>>>>>> I'll wait, when it all gets worked out, please let stable@ know what
+>>>>>> patches to apply where.
+>>>>>>
+>>>>>> thanks,
+>>>>>>
+>>>>>> greg k-h
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> Hi, Thomas.
+>>>>>
+>>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
+>>>>> turn off interrupts when kdump starts".
+>>>>>
+>>>>> Are the following patches suitable for stable now?
+>>>> Yes, I believe they are, just note that 
+>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+>>>> is not a part of that group we discussed before, but it may be added
+>>>> to stable too.
+>>>>
+>>>> Cheers,
+>>>> Tomas
+>>>>
+>>>>> 3b74729 hpsa: turn off interrupts when kdump starts
+>>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+>>>>> 859c75a hpsa: add missing pci_set_master in kdump path
+>>>>> 132aa22 hpsa: refine the pci enable/disable handling
+>>> So what order, and to what stable tree(s) do you want these applied to?
+>>> They seem to span a number of kernel versions, so I'm not quite sure
+>>> what you are wanting me to do.
+>> Please add it in this order
+>> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
+>> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
+>>    The first two patches create the fix Masoud has asked for originally to port to stable.
+>> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
+>>    The third should be added too, it fixes an issue made visible by the first patch
 >>
->> sbc_dif_generate() and sbc_dif_verify() currently assume that each
->> SG element for data transfer memory doesn't straddle the block size
->> boundary.
->>
->> However, when using SG_IO ioctl, we can choose the data transfer
->> memory which doesn't satisfy that alignment requirement.
->>
->> In order to handle such cases correctly, this change inverts the outer
->> loop to iterate data transfer memory and the inner loop to iterate
->> protection information and enables to calculate CRC for a block which
->> straddles multiple SG elements.
->>
->> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
->> Cc: Tim Chen <tim.c.chen@linux.intel.com>
->> Cc: Herbert Xu <herbert@gondor.apana.org.au>
->> Cc: "David S. Miller" <davem@davemloft.net>
->> Cc: linux-crypto@vger.kernel.org
->> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
->> Cc: Sagi Grimberg <sagig@mellanox.com>
->> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
->> Cc: target-devel@vger.kernel.org
->> Cc: linux-scsi@vger.kernel.org
->> ---
->> * Changes from v2:
->> - Handle odd SG mapping correctly instead of giving up
->>
->>   drivers/target/target_core_sbc.c | 108
->> +++++++++++++++++++++++++--------------
->>   1 file changed, 69 insertions(+), 39 deletions(-)
->>
->> diff --git a/drivers/target/target_core_sbc.c
->> b/drivers/target/target_core_sbc.c
->> index edba39f..33d2426 100644
->> --- a/drivers/target/target_core_sbc.c
->> +++ b/drivers/target/target_core_sbc.c
->> @@ -1182,27 +1182,43 @@ sbc_dif_generate(struct se_cmd *cmd)
->>   {
->>         struct se_device *dev = cmd->se_dev;
->>         struct se_dif_v1_tuple *sdt;
->> -       struct scatterlist *dsg, *psg = cmd->t_prot_sg;
->> +       struct scatterlist *dsg = cmd->t_data_sg, *psg;
->>         sector_t sector = cmd->t_task_lba;
->>         void *daddr, *paddr;
->>         int i, j, offset = 0;
->> +       unsigned int block_size = dev->dev_attrib.block_size;
->>
->> -       for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
->> -               daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->> +       for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
->>                 paddr = kmap_atomic(sg_page(psg)) + psg->offset;
->> +               daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
->>
->> -               for (j = 0; j < dsg->length; j +=
->> dev->dev_attrib.block_size) {
->> +               for (j = 0; j < psg->length;
->> +                               j += sizeof(struct se_dif_v1_tuple)) {
->> +                       __u16 crc = 0;
->> +                       unsigned int avail;
->>
->> -                       if (offset >= psg->length) {
->> -                               kunmap_atomic(paddr);
->> -                               psg = sg_next(psg);
->> -                               paddr = kmap_atomic(sg_page(psg)) +
->> psg->offset;
->> -                               offset = 0;
->> +                       if (offset >= dsg->length) {
->> +                               offset -= dsg->length;
->> +                               kunmap_atomic(daddr);
->
->
-> This unmap is inconsistent. You need to unmap (daddr - dsg->offset).
->
-> This applies throughout the patch.
+>> The fourth patch
+>> 03741d956e hpsa: fix memory leak in kdump hard reset
+>> is completely unrelated to the first group, so it may be added after or before
+>> or in the same sequence as it is in the mainline - that is before the third patch.
+>> This patch is tiny error path fix - not sure if important enough for stable.
+> Which stable tree(s) do you want these applied to?  As these "span"
+> different kernel versions, I have no idea of what to do here.
 
-Thanks for pointing out.  I'll fix them all.
+Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
+I don't know much about stable so I can't decide to which tree(s) the series should be ported.
+
+>
+> Please be specific.
+>
+> thanks,
+>
+> greg k-h
