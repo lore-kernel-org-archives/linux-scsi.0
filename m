@@ -1,108 +1,108 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2] virtio_scsi: don't select CONFIG_BLK_DEV_INTEGRITY
-Date: Mon, 27 Apr 2015 15:01:17 +0200
-Message-ID: <553E331D.2040206@redhat.com>
-References: <1430139374-28741-1-git-send-email-hch@lst.de>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v3 5/5] target/file: enable WRITE SAME when protection
+ info is enabled
+Date: Mon, 27 Apr 2015 22:02:06 +0900
+Message-ID: <CAC5umygSWWQW9kb+dp1nQvxfgxrX_HZKikTiO96Aq+RBQYTZ_w@mail.gmail.com>
+References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com>
+	<1429972410-7146-6-git-send-email-akinobu.mita@gmail.com>
+	<553CB6BF.8090601@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45182 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751336AbbD0NBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Apr 2015 09:01:21 -0400
-In-Reply-To: <1430139374-28741-1-git-send-email-hch@lst.de>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:35461 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932784AbbD0NCH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2015 09:02:07 -0400
+In-Reply-To: <553CB6BF.8090601@dev.mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+2015-04-26 18:58 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
+> On 4/25/2015 5:33 PM, Akinobu Mita wrote:
+>>
+>> Now we can generate correct PI for WRITE SAME command, so it is
+>> unnecessary to disallow WRITE SAME when protection info is enabled.
+>>
+>> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>> Cc: target-devel@vger.kernel.org
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>> * No change from v2
+>>
+>>   drivers/target/target_core_file.c | 18 +++++++++++++-----
+>>   1 file changed, 13 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_file.c
+>> b/drivers/target/target_core_file.c
+>> index 829817a..fe98f58 100644
+>> --- a/drivers/target/target_core_file.c
+>> +++ b/drivers/target/target_core_file.c
+>> @@ -376,16 +376,12 @@ fd_execute_write_same(struct se_cmd *cmd)
+>>         struct bio_vec *bvec;
+>>         unsigned int len = 0, i;
+>>         ssize_t ret;
+>> +       sense_reason_t rc;
+>>
+>>         if (!nolb) {
+>>                 target_complete_cmd(cmd, SAM_STAT_GOOD);
+>>                 return 0;
+>>         }
+>> -       if (cmd->prot_op) {
+>> -               pr_err("WRITE_SAME: Protection information with FILEIO"
+>> -                      " backends not supported\n");
+>> -               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> -       }
+>>
+>>         if (cmd->t_data_nents > 1 ||
+>>             cmd->t_data_sg[0].length !=
+>> cmd->se_dev->dev_attrib.block_size) {
+>> @@ -397,6 +393,10 @@ fd_execute_write_same(struct se_cmd *cmd)
+>>                 return TCM_INVALID_CDB_FIELD;
+>>         }
+>>
+>> +       rc = sbc_dif_verify(cmd, cmd->t_task_lba, nolb, 0, cmd->t_prot_sg,
+>> 0);
+>> +       if (rc)
+>> +               return rc;
+>> +
+>>         bvec = kcalloc(nolb, sizeof(struct bio_vec), GFP_KERNEL);
+>>         if (!bvec)
+>>                 return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> @@ -418,6 +418,14 @@ fd_execute_write_same(struct se_cmd *cmd)
+>>                 return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>>         }
+>>
+>> +       if (cmd->prot_op) {
+>> +               ret = fd_do_rw(cmd, fd_dev->fd_prot_file,
+>> se_dev->prot_length,
+>> +                               cmd->t_prot_sg, cmd->t_prot_nents,
+>> +                               cmd->prot_length, 1);
+>> +               if (ret < 0)
+>> +                       return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> +       }
+>> +
+>>         target_complete_cmd(cmd, SAM_STAT_GOOD);
+>>         return 0;
+>>   }
+>>
+>
+> This looks good,
 
+As you pointed out in the other mail, this change doesn't work with
+a real HW fabric because it doesn't generate multiple same protection
+fields for a single data block currently.
 
-On 27/04/2015 14:56, Christoph Hellwig wrote:
-> T10 PI is just another optional feature, LLDDs should work without
-> the infrastructure.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/Kconfig       |  1 -
->  drivers/scsi/virtio_scsi.c | 11 ++++++++++-
->  2 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index b021bcb..896bea6 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1743,7 +1743,6 @@ config SCSI_BFA_FC
->  config SCSI_VIRTIO
->  	tristate "virtio-scsi support"
->  	depends on VIRTIO
-> -	select BLK_DEV_INTEGRITY
->  	help
->            This is the virtual HBA driver for virtio.  If the kernel will
->            be used in a virtual machine, say Y or M.
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index f164f24..285f775 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -501,6 +501,7 @@ static void virtio_scsi_init_hdr(struct virtio_device *vdev,
->  	cmd->crn = 0;
->  }
->  
-> +#ifdef CONFIG_BLK_DEV_INTEGRITY
->  static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
->  				    struct virtio_scsi_cmd_req_pi *cmd_pi,
->  				    struct scsi_cmnd *sc)
-> @@ -524,6 +525,7 @@ static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
->  						       blk_rq_sectors(rq) *
->  						       bi->tuple_size);
->  }
-> +#endif
->  
->  static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  				 struct virtio_scsi_vq *req_vq,
-> @@ -546,11 +548,14 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  
->  	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
->  
-> +#ifdef CONFIG_BLK_DEV_INTEGRITY
->  	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
->  		virtio_scsi_init_hdr_pi(vscsi->vdev, &cmd->req.cmd_pi, sc);
->  		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
->  		req_size = sizeof(cmd->req.cmd_pi);
-> -	} else {
-> +	} else
-> +#endif
-> +	{
->  		virtio_scsi_init_hdr(vscsi->vdev, &cmd->req.cmd, sc);
->  		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
->  		req_size = sizeof(cmd->req.cmd);
-> @@ -1002,6 +1007,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
->  	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
->  	shost->nr_hw_queues = num_queues;
->  
-> +#ifdef CONFIG_BLK_DEV_INTEGRITY
->  	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
->  		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
->  			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
-> @@ -1010,6 +1016,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
->  		scsi_host_set_prot(shost, host_prot);
->  		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
->  	}
-> +#endif
->  
->  	err = scsi_add_host(shost, &vdev->dev);
->  	if (err)
-> @@ -1090,7 +1097,9 @@ static struct virtio_device_id id_table[] = {
->  static unsigned int features[] = {
->  	VIRTIO_SCSI_F_HOTPLUG,
->  	VIRTIO_SCSI_F_CHANGE,
-> +#ifdef CONFIG_BLK_DEV_INTEGRITY
->  	VIRTIO_SCSI_F_T10_PI,
-> +#endif
->  };
->  
->  static struct virtio_driver virtio_scsi_driver = {
-> 
+So I'm considering dropping this from this patch series for now.
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> iblock is needed too though. I think you just need a missing call to
+> iblock_alloc_bip() and you're good to go (you can use scsi_debug with
+> dif/dix to test it). I think it belongs in the same patch.
+
+Thanks for the information.  I'll take a look.
