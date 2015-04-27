@@ -1,31 +1,39 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 5/5] target/file: enable WRITE SAME when protection
- info is enabled
-Date: Mon, 27 Apr 2015 22:02:06 +0900
-Message-ID: <CAC5umygSWWQW9kb+dp1nQvxfgxrX_HZKikTiO96Aq+RBQYTZ_w@mail.gmail.com>
+Subject: Re: [PATCH v3 3/5] target: handle odd SG mapping for data transfer memory
+Date: Mon, 27 Apr 2015 22:03:25 +0900
+Message-ID: <CAC5umyh4fjdXnYfSZkVQkRyg-69mkLp+7rezA5nVCWUQZz-saA@mail.gmail.com>
 References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com>
-	<1429972410-7146-6-git-send-email-akinobu.mita@gmail.com>
-	<553CB6BF.8090601@dev.mellanox.co.il>
+	<1429972410-7146-4-git-send-email-akinobu.mita@gmail.com>
+	<553CB8E7.8060402@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:35461 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932784AbbD0NCH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2015 09:02:07 -0400
-In-Reply-To: <553CB6BF.8090601@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <553CB8E7.8060402@dev.mellanox.co.il>
+Sender: linux-crypto-owner@vger.kernel.org
 To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: target-devel@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-2015-04-26 18:58 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
+2015-04-26 19:07 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
 > On 4/25/2015 5:33 PM, Akinobu Mita wrote:
 >>
->> Now we can generate correct PI for WRITE SAME command, so it is
->> unnecessary to disallow WRITE SAME when protection info is enabled.
+>> sbc_dif_generate() and sbc_dif_verify() currently assume that each
+>> SG element for data transfer memory doesn't straddle the block size
+>> boundary.
+>>
+>> However, when using SG_IO ioctl, we can choose the data transfer
+>> memory which doesn't satisfy that alignment requirement.
+>>
+>> In order to handle such cases correctly, this change inverts the outer
+>> loop to iterate data transfer memory and the inner loop to iterate
+>> protection information and enables to calculate CRC for a block which
+>> straddles multiple SG elements.
 >>
 >> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Tim Chen <tim.c.chen@linux.intel.com>
+>> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+>> Cc: "David S. Miller" <davem@davemloft.net>
+>> Cc: linux-crypto@vger.kernel.org
 >> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 >> Cc: Sagi Grimberg <sagig@mellanox.com>
 >> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -34,75 +42,55 @@ Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi
 >> Cc: target-devel@vger.kernel.org
 >> Cc: linux-scsi@vger.kernel.org
 >> ---
->> * No change from v2
+>> * Changes from v2:
+>> - Handle odd SG mapping correctly instead of giving up
 >>
->>   drivers/target/target_core_file.c | 18 +++++++++++++-----
->>   1 file changed, 13 insertions(+), 5 deletions(-)
+>>   drivers/target/target_core_sbc.c | 108
+>> +++++++++++++++++++++++++--------------
+>>   1 file changed, 69 insertions(+), 39 deletions(-)
 >>
->> diff --git a/drivers/target/target_core_file.c
->> b/drivers/target/target_core_file.c
->> index 829817a..fe98f58 100644
->> --- a/drivers/target/target_core_file.c
->> +++ b/drivers/target/target_core_file.c
->> @@ -376,16 +376,12 @@ fd_execute_write_same(struct se_cmd *cmd)
->>         struct bio_vec *bvec;
->>         unsigned int len = 0, i;
->>         ssize_t ret;
->> +       sense_reason_t rc;
+>> diff --git a/drivers/target/target_core_sbc.c
+>> b/drivers/target/target_core_sbc.c
+>> index edba39f..33d2426 100644
+>> --- a/drivers/target/target_core_sbc.c
+>> +++ b/drivers/target/target_core_sbc.c
+>> @@ -1182,27 +1182,43 @@ sbc_dif_generate(struct se_cmd *cmd)
+>>   {
+>>         struct se_device *dev = cmd->se_dev;
+>>         struct se_dif_v1_tuple *sdt;
+>> -       struct scatterlist *dsg, *psg = cmd->t_prot_sg;
+>> +       struct scatterlist *dsg = cmd->t_data_sg, *psg;
+>>         sector_t sector = cmd->t_task_lba;
+>>         void *daddr, *paddr;
+>>         int i, j, offset = 0;
+>> +       unsigned int block_size = dev->dev_attrib.block_size;
 >>
->>         if (!nolb) {
->>                 target_complete_cmd(cmd, SAM_STAT_GOOD);
->>                 return 0;
->>         }
->> -       if (cmd->prot_op) {
->> -               pr_err("WRITE_SAME: Protection information with FILEIO"
->> -                      " backends not supported\n");
->> -               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> -       }
+>> -       for_each_sg(cmd->t_data_sg, dsg, cmd->t_data_nents, i) {
+>> -               daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+>> +       for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
+>>                 paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+>> +               daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
 >>
->>         if (cmd->t_data_nents > 1 ||
->>             cmd->t_data_sg[0].length !=
->> cmd->se_dev->dev_attrib.block_size) {
->> @@ -397,6 +393,10 @@ fd_execute_write_same(struct se_cmd *cmd)
->>                 return TCM_INVALID_CDB_FIELD;
->>         }
+>> -               for (j = 0; j < dsg->length; j +=
+>> dev->dev_attrib.block_size) {
+>> +               for (j = 0; j < psg->length;
+>> +                               j += sizeof(struct se_dif_v1_tuple)) {
+>> +                       __u16 crc = 0;
+>> +                       unsigned int avail;
 >>
->> +       rc = sbc_dif_verify(cmd, cmd->t_task_lba, nolb, 0, cmd->t_prot_sg,
->> 0);
->> +       if (rc)
->> +               return rc;
->> +
->>         bvec = kcalloc(nolb, sizeof(struct bio_vec), GFP_KERNEL);
->>         if (!bvec)
->>                 return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> @@ -418,6 +418,14 @@ fd_execute_write_same(struct se_cmd *cmd)
->>                 return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->>         }
->>
->> +       if (cmd->prot_op) {
->> +               ret = fd_do_rw(cmd, fd_dev->fd_prot_file,
->> se_dev->prot_length,
->> +                               cmd->t_prot_sg, cmd->t_prot_nents,
->> +                               cmd->prot_length, 1);
->> +               if (ret < 0)
->> +                       return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> +       }
->> +
->>         target_complete_cmd(cmd, SAM_STAT_GOOD);
->>         return 0;
->>   }
->>
+>> -                       if (offset >= psg->length) {
+>> -                               kunmap_atomic(paddr);
+>> -                               psg = sg_next(psg);
+>> -                               paddr = kmap_atomic(sg_page(psg)) +
+>> psg->offset;
+>> -                               offset = 0;
+>> +                       if (offset >= dsg->length) {
+>> +                               offset -= dsg->length;
+>> +                               kunmap_atomic(daddr);
 >
-> This looks good,
+>
+> This unmap is inconsistent. You need to unmap (daddr - dsg->offset).
+>
+> This applies throughout the patch.
 
-As you pointed out in the other mail, this change doesn't work with
-a real HW fabric because it doesn't generate multiple same protection
-fields for a single data block currently.
-
-So I'm considering dropping this from this patch series for now.
-
-> iblock is needed too though. I think you just need a missing call to
-> iblock_alloc_bip() and you're good to go (you can use scsi_debug with
-> dif/dix to test it). I think it belongs in the same patch.
-
-Thanks for the information.  I'll take a look.
+Thanks for pointing out.  I'll fix them all.
