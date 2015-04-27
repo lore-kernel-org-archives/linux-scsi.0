@@ -1,92 +1,36 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v3 1/5] target: ensure se_cmd->t_prot_sg is allocated
- when required
-Date: Mon, 27 Apr 2015 18:08:16 +0300
-Message-ID: <553E50E0.6080900@dev.mellanox.co.il>
-References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com>	<1429972410-7146-2-git-send-email-akinobu.mita@gmail.com>	<553CAF32.2030904@dev.mellanox.co.il>	<553CB381.6090409@dev.mellanox.co.il> <CAC5umyjPxmFVcW43iY0RCrQfGbuEx4k-owHUR3oM0Bg-DvzWoA@mail.gmail.com>
+From: Torsten Luettgert <ml-lkml@enda.eu>
+Subject: Re: BUG: unable to handle kernel NULL pointer deref, bisected to
+ 746650160
+Date: Mon, 27 Apr 2015 17:17:10 +0200
+Message-ID: <20150427171710.0944f8da@goldlack.schiller106>
+References: <20150408183333.493607a3@goldlack.schiller106>
+	<20150413174105.GA14988@lst.de>
+	<20150413202829.580e3801@goldlack.schiller106>
+	<20150419165841.GA20332@lst.de>
+	<20150420132424.0ce7965f@goldlack.schiller106>
+	<20150422104519.772b0d39@goldlack.schiller106>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33716 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932670AbbD0PIl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2015 11:08:41 -0400
-Received: by wiax7 with SMTP id x7so86518808wia.0
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2015 08:08:40 -0700 (PDT)
-In-Reply-To: <CAC5umyjPxmFVcW43iY0RCrQfGbuEx4k-owHUR3oM0Bg-DvzWoA@mail.gmail.com>
+Received: from mail.cbxnet.de ([212.87.33.16]:41938 "EHLO mail1.cbxnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752318AbbD0PRO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Apr 2015 11:17:14 -0400
+In-Reply-To: <20150422104519.772b0d39@goldlack.schiller106>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 
-On 4/27/2015 3:57 PM, Akinobu Mita wrote:
-> 2015-04-26 18:44 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
->>>> @@ -2181,6 +2182,12 @@ static inline void
->>>> transport_reset_sgl_orig(struct se_cmd *cmd)
->>>>
->>>>    static inline void transport_free_pages(struct se_cmd *cmd)
->>>>    {
->>>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
->>>> +        transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
->>>> +        cmd->t_prot_sg = NULL;
->>>> +        cmd->t_prot_nents = 0;
->>>> +    }
->>>> +
->>>
->>>
->>> Hi Akinobu,
->>>
->>> Any reason why this changed it's location to the start of the function?
->
-> Because when SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC is set, it will not
-> reach the tail of the function.  So when SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC
-> is cleared and SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is set,
-> se_cmd->t_prot_sg leaks.
+On Wed, 22 Apr 2015 10:45:19 +0200
+Torsten Luettgert <ml-lkml@enda.eu> wrote:
 
-I see. That's fine...
+> I'll keep this running, and if - when - it has been going for a week
+> (3 times the max uptime without the patch) - I'll give a final notice.
 
->
->>>>        if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
->>>>            /*
->>>>             * Release special case READ buffer payload required for
->>>> @@ -2204,10 +2211,6 @@ static inline void transport_free_pages(struct
->>>> se_cmd *cmd)
->>>>        transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
->>>>        cmd->t_bidi_data_sg = NULL;
->>>>        cmd->t_bidi_data_nents = 0;
->>>> -
->>>> -    transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
->>>> -    cmd->t_prot_sg = NULL;
->>>> -    cmd->t_prot_nents = 0;
->>>>    }
->>>>
->>>>    /**
->>>> @@ -2346,6 +2349,17 @@ transport_generic_new_cmd(struct se_cmd *cmd)
->>>>        int ret = 0;
->>>>        bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
->>>>
->>>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
->>>> +        if (cmd->prot_op != TARGET_PROT_NORMAL) {
->>>
->>>
->>> This seems wrong,
->>>
->>> What will happen for transports that will actually to allocate
->>> protection SGLs? The allocation is unreachable since
->>> SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is not set...
->>
->>
->> Umm, actually this is reachable... But I still think the condition
->> should be the other way around (saving a condition in some common
->> cases).
->
-> Do you mean you prefer below?
->
-> if (cmd->prot_op != TARGET_PROT_NORMAL &&
->      !(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
-> ...
->
+So here it is, the final notice:
+17:16:36 up 7 days,  4:07,  2 users,  load average: 3.64, 3.11, 3.19
 
-I think it will be better.
-
+Thanks again,
+Torsten
