@@ -1,93 +1,92 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Mon, 27 Apr 2015 15:10:35 +0200
-Message-ID: <553E354B.90208@redhat.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com> <54AC0A17.8020405@redhat.com> <20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com> <552BC234.4020000@redhat.com> <20150426092719.GA1460@kroah.com> <553E28DC.1040100@redhat.com> <20150427125529.GA18817@kroah.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH v3 1/5] target: ensure se_cmd->t_prot_sg is allocated
+ when required
+Date: Mon, 27 Apr 2015 18:08:16 +0300
+Message-ID: <553E50E0.6080900@dev.mellanox.co.il>
+References: <1429972410-7146-1-git-send-email-akinobu.mita@gmail.com>	<1429972410-7146-2-git-send-email-akinobu.mita@gmail.com>	<553CAF32.2030904@dev.mellanox.co.il>	<553CB381.6090409@dev.mellanox.co.il> <CAC5umyjPxmFVcW43iY0RCrQfGbuEx4k-owHUR3oM0Bg-DvzWoA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20150427125529.GA18817@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>, Masoud Sharbiani <msharbiani@twopensource.com>
-Cc: Vinson Lee <vlee@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33716 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932670AbbD0PIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2015 11:08:41 -0400
+Received: by wiax7 with SMTP id x7so86518808wia.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2015 08:08:40 -0700 (PDT)
+In-Reply-To: <CAC5umyjPxmFVcW43iY0RCrQfGbuEx4k-owHUR3oM0Bg-DvzWoA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 04/27/2015 02:55 PM, Greg KH wrote:
-> On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
->> On 04/26/2015 11:27 AM, Greg KH wrote:
->>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
->>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
->>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
->>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
->>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
->>>>>>>> Dear stable maintainers,
->>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
->>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
->>>>>>>> earlier, if applicable)?
->>>>>>> Please do not apply this patch isolated from his friend, the
->>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
->>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
->>>>>>>
->>>>>>> In addition to that, after the original issue goes away you may notice sometimes
->>>>>>> an unhandled irq 16 message, to fix this a patch is posted
->>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
->>>>>>> This patch still awaits a maintainers review though.
->>>>>>>
->>>>>>> Probably the best idea is to wait until the issue is solved completely.
->>>>>> I'll wait, when it all gets worked out, please let stable@ know what
->>>>>> patches to apply where.
->>>>>>
->>>>>> thanks,
->>>>>>
->>>>>> greg k-h
->>>>>> --
->>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
->>>>>> the body of a message to majordomo@vger.kernel.org
->>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> Hi, Thomas.
->>>>>
->>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
->>>>> turn off interrupts when kdump starts".
->>>>>
->>>>> Are the following patches suitable for stable now?
->>>> Yes, I believe they are, just note that 
->>>> 03741d9 hpsa: fix memory leak in kdump hard reset
->>>> is not a part of that group we discussed before, but it may be added
->>>> to stable too.
+On 4/27/2015 3:57 PM, Akinobu Mita wrote:
+> 2015-04-26 18:44 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
+>>>> @@ -2181,6 +2182,12 @@ static inline void
+>>>> transport_reset_sgl_orig(struct se_cmd *cmd)
 >>>>
->>>> Cheers,
->>>> Tomas
+>>>>    static inline void transport_free_pages(struct se_cmd *cmd)
+>>>>    {
+>>>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>>>> +        transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
+>>>> +        cmd->t_prot_sg = NULL;
+>>>> +        cmd->t_prot_nents = 0;
+>>>> +    }
+>>>> +
+>>>
+>>>
+>>> Hi Akinobu,
+>>>
+>>> Any reason why this changed it's location to the start of the function?
+>
+> Because when SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC is set, it will not
+> reach the tail of the function.  So when SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC
+> is cleared and SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is set,
+> se_cmd->t_prot_sg leaks.
+
+I see. That's fine...
+
+>
+>>>>        if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
+>>>>            /*
+>>>>             * Release special case READ buffer payload required for
+>>>> @@ -2204,10 +2211,6 @@ static inline void transport_free_pages(struct
+>>>> se_cmd *cmd)
+>>>>        transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
+>>>>        cmd->t_bidi_data_sg = NULL;
+>>>>        cmd->t_bidi_data_nents = 0;
+>>>> -
+>>>> -    transport_free_sgl(cmd->t_prot_sg, cmd->t_prot_nents);
+>>>> -    cmd->t_prot_sg = NULL;
+>>>> -    cmd->t_prot_nents = 0;
+>>>>    }
 >>>>
->>>>> 3b74729 hpsa: turn off interrupts when kdump starts
->>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
->>>>> 859c75a hpsa: add missing pci_set_master in kdump path
->>>>> 132aa22 hpsa: refine the pci enable/disable handling
->>> So what order, and to what stable tree(s) do you want these applied to?
->>> They seem to span a number of kernel versions, so I'm not quite sure
->>> what you are wanting me to do.
->> Please add it in this order
->> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
->> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
->>    The first two patches create the fix Masoud has asked for originally to port to stable.
->> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
->>    The third should be added too, it fixes an issue made visible by the first patch
+>>>>    /**
+>>>> @@ -2346,6 +2349,17 @@ transport_generic_new_cmd(struct se_cmd *cmd)
+>>>>        int ret = 0;
+>>>>        bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
+>>>>
+>>>> +    if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+>>>> +        if (cmd->prot_op != TARGET_PROT_NORMAL) {
+>>>
+>>>
+>>> This seems wrong,
+>>>
+>>> What will happen for transports that will actually to allocate
+>>> protection SGLs? The allocation is unreachable since
+>>> SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC is not set...
 >>
->> The fourth patch
->> 03741d956e hpsa: fix memory leak in kdump hard reset
->> is completely unrelated to the first group, so it may be added after or before
->> or in the same sequence as it is in the mainline - that is before the third patch.
->> This patch is tiny error path fix - not sure if important enough for stable.
-> Which stable tree(s) do you want these applied to?  As these "span"
-> different kernel versions, I have no idea of what to do here.
+>>
+>> Umm, actually this is reachable... But I still think the condition
+>> should be the other way around (saving a condition in some common
+>> cases).
+>
+> Do you mean you prefer below?
+>
+> if (cmd->prot_op != TARGET_PROT_NORMAL &&
+>      !(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
+> ...
+>
 
-Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
-I don't know much about stable so I can't decide to which tree(s) the series should be ported.
+I think it will be better.
 
->
-> Please be specific.
->
-> thanks,
->
-> greg k-h
