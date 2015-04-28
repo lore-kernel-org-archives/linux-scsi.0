@@ -1,62 +1,35 @@
-From: Valentin Rothberg <valentinrothberg@gmail.com>
-Subject: [PATCH] drivers/scsi/arm/acornscsi.c: rename CONFIG_ACORNSCSI_CONSTANTS
-Date: Tue, 28 Apr 2015 16:15:11 +0200
-Message-ID: <1430230511-10869-1-git-send-email-valentinrothberg@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH RESEND 2/4] bfa:Fix for crash when bfa_itnim is NULL
+Date: Tue, 28 Apr 2015 16:28:08 +0200
+Message-ID: <553F98F8.70502@redhat.com>
+References: <1422953103-5470-1-git-send-email-anil.gurumurthy@qlogic.com> <1422953103-5470-3-git-send-email-anil.gurumurthy@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:35020 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965659AbbD1OPT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2015 10:15:19 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:59824 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030271AbbD1O2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Apr 2015 10:28:12 -0400
+In-Reply-To: <1422953103-5470-3-git-send-email-anil.gurumurthy@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@odin.com, linux@arm.linux.org.uk, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Valentin Rothberg <valentinrothberg@gmail.com>
+To: anil.gurumurthy@qlogic.com, James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
-CONFIG_ACORNSCSI_CONSTANTS is a file local CPP identifier and thereby
-violates the naming convention of Kconfig options in Make and CPP
-syntax; only Kconfig options should carry the 'CONFIG_' prefix.
+Anil, 
+the issue you are fixing here is described in comments, but adding
+the description to the body of your mail might make it more attractive
+for reviewers.
+Please add a proper description to your patches in the future.
 
-This patch removes the 'CONFIG_' prefix to apply to this convention and
-to make static analysis tools happy.
+> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+>
+>     Signed-off-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+>     Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-Signed-off-by: Valentin Rothberg <valentinrothberg@gmail.com>
----
-I detected this issue with ./scripts/checkkconfigsymbols.py
----
- drivers/scsi/arm/acornscsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index deaaf84989cd..ce764c3ed99c 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -96,7 +96,7 @@
-  * Define this if you want to have verbose explanation of SCSI
-  * status/messages.
-  */
--#undef CONFIG_ACORNSCSI_CONSTANTS
-+#undef ACORNSCSI_CONSTANTS
- /*
-  * Define this if you want to use the on board DMAC [don't remove this option]
-  * If not set, then use PIO mode (not currently supported).
-@@ -399,7 +399,7 @@ void acornscsi_resetcard(AS_Host *host)
- /*=============================================================================================
-  * Utility routines (eg. debug)
-  */
--#ifdef CONFIG_ACORNSCSI_CONSTANTS
-+#ifdef ACORNSCSI_CONSTANTS
- static char *acornscsi_interrupttype[] = {
-   "rst",  "suc",  "p/a",  "3",
-   "term", "5",	  "6",	  "7",
-@@ -477,7 +477,7 @@ void print_scsi_status(unsigned int ssr)
- static
- void print_sbic_status(int asr, int ssr, int cmdphase)
- {
--#ifdef CONFIG_ACORNSCSI_CONSTANTS
-+#ifdef ACORNSCSI_CONSTANTS
-     printk("sbic: %c%c%c%c%c%c ",
- 	    asr & ASR_INT ? 'I' : 'i',
- 	    asr & ASR_LCI ? 'L' : 'l',
--- 
-2.1.4
+Tomas
+
 
