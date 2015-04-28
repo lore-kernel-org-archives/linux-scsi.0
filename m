@@ -1,80 +1,62 @@
-From: "Dov Levenglick" <dovl@codeaurora.org>
-Subject: Re: [PATCH v8 2/3] scsi: ufs: add debugfs for ufs
-Date: Tue, 28 Apr 2015 14:10:21 -0000
-Message-ID: <a6975524841300d9a2dfbfde2384aea8.squirrel@www.codeaurora.org>
-References: <1429012281-24068-1-git-send-email-gbroner@codeaurora.org>
-    <1429012281-24068-3-git-send-email-gbroner@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1429012281-24068-3-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+From: Valentin Rothberg <valentinrothberg@gmail.com>
+Subject: [PATCH] drivers/scsi/arm/acornscsi.c: rename CONFIG_ACORNSCSI_CONSTANTS
+Date: Tue, 28 Apr 2015 16:15:11 +0200
+Message-ID: <1430230511-10869-1-git-send-email-valentinrothberg@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:35020 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965659AbbD1OPT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2015 10:15:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@odin.com, linux@arm.linux.org.uk, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Valentin Rothberg <valentinrothberg@gmail.com>
 
-Reviewed-by: Dov Levenglick <dovl@codeaurora.org>
+CONFIG_ACORNSCSI_CONSTANTS is a file local CPP identifier and thereby
+violates the naming convention of Kconfig options in Make and CPP
+syntax; only Kconfig options should carry the 'CONFIG_' prefix.
 
-> From: Lee Susman <lsusman@codeaurora.org>
->
-> Adding debugfs capability for ufshcd.
->
-> debugfs attributes introduced in this patch:
->  - View driver/controller runtime data
->  - Command tag statistics for performance analisis
->  - Dump device descriptor info
->  - Track recoverable errors statistics during runtime
->  - Change UFS power mode during runtime
->      entry a string in the format 'GGLLMM' where:
->          G - selected gear
->          L - number of lanes
->          M - power mode
->              (1=fast mode, 2=slow mode, 4=fast-auto mode,
->               5=slow-auto mode)
->      First letter is for RX, second is for TX.
->  - Get/set DME attributes
->
-> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
-> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
-> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-> ---
->  drivers/scsi/ufs/Makefile      |   3 +-
->  drivers/scsi/ufs/ufs-debugfs.c | 901
-> +++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufs-debugfs.h |  38 ++
->  drivers/scsi/ufs/ufshcd.c      | 229 ++++++++++-
->  drivers/scsi/ufs/ufshcd.h      |  65 +++
->  drivers/scsi/ufs/ufshci.h      |   2 +
->  6 files changed, 1225 insertions(+), 13 deletions(-)
->  create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
->  create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
->
+This patch removes the 'CONFIG_' prefix to apply to this convention and
+to make static analysis tools happy.
 
-<snip many lines of code>
+Signed-off-by: Valentin Rothberg <valentinrothberg@gmail.com>
+---
+I detected this issue with ./scripts/checkkconfigsymbols.py
+---
+ drivers/scsi/arm/acornscsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> @@ -72,6 +72,8 @@ enum {
->  	REG_UIC_COMMAND_ARG_1			= 0x94,
->  	REG_UIC_COMMAND_ARG_2			= 0x98,
->  	REG_UIC_COMMAND_ARG_3			= 0x9C,
-> +
-> +	UFSHCI_REG_SPACE_SIZE			= 0xA0,
->  };
->
->  /* Controller capability masks */
-> --
-> Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index deaaf84989cd..ce764c3ed99c 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -96,7 +96,7 @@
+  * Define this if you want to have verbose explanation of SCSI
+  * status/messages.
+  */
+-#undef CONFIG_ACORNSCSI_CONSTANTS
++#undef ACORNSCSI_CONSTANTS
+ /*
+  * Define this if you want to use the on board DMAC [don't remove this option]
+  * If not set, then use PIO mode (not currently supported).
+@@ -399,7 +399,7 @@ void acornscsi_resetcard(AS_Host *host)
+ /*=============================================================================================
+  * Utility routines (eg. debug)
+  */
+-#ifdef CONFIG_ACORNSCSI_CONSTANTS
++#ifdef ACORNSCSI_CONSTANTS
+ static char *acornscsi_interrupttype[] = {
+   "rst",  "suc",  "p/a",  "3",
+   "term", "5",	  "6",	  "7",
+@@ -477,7 +477,7 @@ void print_scsi_status(unsigned int ssr)
+ static
+ void print_sbic_status(int asr, int ssr, int cmdphase)
+ {
+-#ifdef CONFIG_ACORNSCSI_CONSTANTS
++#ifdef ACORNSCSI_CONSTANTS
+     printk("sbic: %c%c%c%c%c%c ",
+ 	    asr & ASR_INT ? 'I' : 'i',
+ 	    asr & ASR_LCI ? 'L' : 'l',
+-- 
+2.1.4
 
-
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
