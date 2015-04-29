@@ -1,159 +1,125 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
- output? [BKO63661]
-Date: Wed, 29 Apr 2015 12:28:32 -0500
-Message-ID: <20150429172832.GB7888@google.com>
-References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
- <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
- <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z:
+ dev error handler -> general protection fault, RIP:
+ mvs_task_prep_ata+0x80/0x3a0
+Date: Wed, 29 Apr 2015 11:05:00 -0700
+Message-ID: <1430330700.2189.17.camel@HansenPartnership.com>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
+	 <bug-81861-11613-zXvwHJt3aC@https.bugzilla.kernel.org/>
+	 <1430317204.2189.2.camel@HansenPartnership.com>
+	 <CAC2CY-2YAy8GfjCHO+PrFWAuBnhfnMvK33KJ3YCVRZXJMEHykQ@mail.gmail.com>
+	 <1430322102.2189.14.camel@HansenPartnership.com>
+	 <CAH_2GhcOwjQqD0VYqMiD9UGRsYf4L-XRPaMHwPiRR1c2-PSQ7A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
-Sender: linux-pci-owner@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, " linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, megaraidlinux.pdl@avagotech.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37462 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753804AbbD2SFC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2015 14:05:02 -0400
+In-Reply-To: <CAH_2GhcOwjQqD0VYqMiD9UGRsYf4L-XRPaMHwPiRR1c2-PSQ7A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adam Talbot <ajtalbot1@gmail.com>
+Cc: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-[+cc linux-pci, linux-kernel, Kashyap, Sumit, Uday, megaraidlinux.pdl]
+On Wed, 2015-04-29 at 09:24 -0700, Adam Talbot wrote:
+> Attached is what I see on my 4.0.0 patched kernel.  I am going through
+> a SAS expander:
+> [    5.176095] scsi host4: mvsas
+> [    5.180076] sas: phy-4:0 added to port-4:0, phy_mask:0x1 (50030480002f51ff)
+> [    5.180079] drivers/scsi/mvsas/mv_sas.c 1118:set wide port phy map 1
+> [    5.190007] sas: phy1 matched wide port0
+> [    5.190010] sas: phy-4:1 added to port-4:0, phy_mask:0x3 (50030480002f51ff)
+> [    5.190012] drivers/scsi/mvsas/mv_sas.c 1118:set wide port phy map 3
+> [    5.209850] sas: phy2 matched wide port0
+> [    5.209853] sas: phy-4:2 added to port-4:0, phy_mask:0x7 (50030480002f51ff)
+> [    5.209854] drivers/scsi/mvsas/mv_sas.c 1118:set wide port phy map 7
+> [    5.239609] sas: phy3 matched wide port0
+> [    5.239612] sas: phy-4:3 added to port-4:0, phy_mask:0xf (50030480002f51ff)
+> [    5.239613] drivers/scsi/mvsas/mv_sas.c 1118:set wide port phy map f
+> [    5.279368] sas: DOING DISCOVERY on port 0, pid:6
+> [    5.280102] sas: ex 50030480002f51ff phy00:S:9 attached:
+> 5005043011ab0000 (host)
+> [    5.280356] sas: ex 50030480002f51ff phy01:S:9 attached:
+> 5005043011ab0000 (host)
+> [    5.280622] sas: ex 50030480002f51ff phy02:S:9 attached:
+> 5005043011ab0000 (host)
+> [    5.280877] sas: ex 50030480002f51ff phy03:S:9 attached:
+> 5005043011ab0000 (host)
+> [    5.281141] sas: ex 50030480002f51ff phy04:D:9 attached:
+> 50030480002f51c4 (stp)
+> [    5.281339] sas: ex 50030480002f51ff phy05:D:9 attached:
+> 50030480002f51c5 (stp)
+> [    5.281547] sas: ex 50030480002f51ff phy06:D:9 attached:
+> 50030480002f51c6 (stp)
+> [    5.281801] sas: ex 50030480002f51ff phy07:D:9 attached:
+> 50030480002f51c7 (stp)
+> [    5.282003] sas: ex 50030480002f51ff phy08:D:9 attached:
+> 50030480002f51c8 (stp)
+> [    5.282216] sas: ex 50030480002f51ff phy09:D:8 attached:
+> 50030480002f51c9 (stp)
+> [    5.282419] sas: ex 50030480002f51ff phy10:D:8 attached:
+> 50030480002f51ca (stp)
+> [    5.282636] sas: ex 50030480002f51ff phy11:D:8 attached:
+> 50030480002f51cb (stp)
+> [    5.282862] sas: ex 50030480002f51ff phy12:D:8 attached:
+> 50030480002f51cc (stp)
+> [    5.283042] sas: ex 50030480002f51ff phy13:D:9 attached:
+> 50030480002f51cd (stp)
+> [    5.283202] sas: ex 50030480002f51ff phy14:D:8 attached:
+> 50030480002f51ce (stp)
+> [    5.283355] sas: ex 50030480002f51ff phy15:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.283504] sas: ex 50030480002f51ff phy16:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.283655] sas: ex 50030480002f51ff phy17:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.283808] sas: ex 50030480002f51ff phy18:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.283957] sas: ex 50030480002f51ff phy19:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.284084] sas: ex 50030480002f51ff phy20:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284235] sas: ex 50030480002f51ff phy21:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284385] sas: ex 50030480002f51ff phy22:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284508] sas: ex 50030480002f51ff phy23:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284659] sas: ex 50030480002f51ff phy24:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284787] sas: ex 50030480002f51ff phy25:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.284938] sas: ex 50030480002f51ff phy26:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.285091] sas: ex 50030480002f51ff phy27:T:0 attached:
+> 0000000000000000 (no device)
+> [    5.285220] sas: ex 50030480002f51ff phy28:D:9 attached:
+> 50030480002f51fd (host+target)
+> [    5.285346] sas: ex 50030480002f51ff phy29:D:0 attached:
+> 0000000000000000 (no device)
+> [    5.286367] sas: DONE DISCOVERY on port 0, pid:6, result:0
+> [    5.286426] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+> [    5.286438] sas: ata5: end_device-4:0:4: dev error handler
+> [    5.286501] sas: ata6: end_device-4:0:5: dev error handler
+> [    5.286622] sas: ata7: end_device-4:0:6: dev error handler
+> [    5.286717] sas: ata8: end_device-4:0:7: dev error handler
+> [    5.286802] sas: ata9: end_device-4:0:8: dev error handler
+> [    5.286866] sas: ata10: end_device-4:0:9: dev error handler
+> [    5.286922] sas: ata11: end_device-4:0:10: dev error handler
+> [    5.287008] sas: ata12: end_device-4:0:11: dev error handler
+> [    5.287096] sas: ata13: end_device-4:0:12: dev error handler
+> [    5.287183] sas: ata14: end_device-4:0:13: dev error handler
+> [    5.287265] sas: ata15: end_device-4:0:14: dev error handler
 
-On Sun, Jul 13, 2014 at 01:35:51AM +0000, Robin H. Johnson wrote:
-> On Sat, Jul 12, 2014 at 11:29:20AM -0600, Bjorn Helgaas wrote:
-> > Thanks for the report, Robin.
-> >=20
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D63661 bisected the pr=
-oblem
-> > to 3c076351c402 ("PCI: Rework ASPM disable code"), which appeared i=
-n
-> > v3.3.  For starters, can you verify that, e.g., by building
-> > 69166fbf02c7 (the parent of 3c076351c402) to make sure that it work=
-s,
-> > and building 3c076351c402 itself to make sure it fails?
-> >=20
-> > Assuming that's the case, please attach the complete dmesg and "lsp=
-ci
-> > -vvxxx" output for both kernels to the bugzilla.  ASPM is a feature
-> > that is configured on both ends of a PCIe link, so I want to see th=
-e
-> > lspci info for the whole system, not just the SAS adapters.
-> >=20
-> > It's not practical to revert 3c076351c402 now, so I'd also like to =
-see
-> > the same information for the newest possible kernel (if this is
-> > possible; I'm not clear on whether you can boot your system or not)=
- so
-> > we can figure out what needs to be changed.
-> TL;DR: FastBoot is leaving the MegaRaidSAS in a weird state, and it f=
-ails to
-> start; Commit 3c076351c402 did make it worse, but I think we're right=
- that the
-> bug lies in the SAS code.
->=20
-> Ok, I have done more testing on it (40+ boots), and I think we can sh=
-ow the
-> problem is somewhere in how the BIOS/EFI/ROM brings up the card in Fa=
-stBoot
-> more, or how it leaves the card.
+Right, but I actually need the configuration of the system that is
+currently oopsing.  Your trace seems to show a normal SATA discovery
+(the error handler shows up because a reset fis is part of SATA
+discovery).
 
-I attached your dmesg and lspci logs to
-https://bugzilla.kernel.org/show_bug.cgi?id=3D63661, thank you! =A0You =
-did
-a huge amount of excellent testing and analysis, and I'm sorry that we
-haven't made progress using the results.
+James
 
-I still think this is a megaraid_sas driver bug, but I don't have
-enough evidence to really point fingers.
 
-Based on your testing, before 3c076351c402 ("PCI: Rework ASPM disable
-code"), megaraid_sas worked reliably. =A0After 3c076351c402,
-megaraid_sas does not work reliably when BIOS Fast Boot is enabled.
-
-=46ast Boot probably means we don't run the option ROM on the device.
-Your dmesg logs show that in the working case, BIOS has enabled the
-device. =A0In the failing case it has not. =A0They also show that when
-=46ast Boot is enabled, there's a little less MTRR write-protect space,
-which I'm guessing is space that wasn't needed for shadowing option
-ROMs.
-
-I suspect megaraid_sas depends on something done by the option ROM,
-and that prior to 3c076351c402, Linux did something to ASPM that was
-enough to make megaraid_sas work.
-
-I attached a couple debug patches to
-https://bugzilla.kernel.org/show_bug.cgi?id=3D63661 that log all the
-ASPM configuration the PCI core does.  One applies to 69166fbf02c7
-(the pre-3c076351c402 commit), and the other applies to v4.1-rc1.
-Could you boot both of those with "pci=3Dearlydump" and attach the dmes=
-g
-logs to the bugzilla?  If you boot with the BIOS CMOS reset settings
-(Fast Boot enabled and ASPM set to "BIOS"), I expect the 69166fbf02c7-
-based kernel to work, and the v4.1-rc1-based one to fail.
-
-> Full boot of the system was difficult on the 3.2 kernels, they didn't=
- make it
-> to userspace for other stuff being too new. For testing, I compiled
-> CONFIG_MEGARAID_SAS=3Dy on 3.2, and =3Dm on 3.16-rc4; that way when t=
-he initramfs &
-> userspace failed, the megaraid load was captured over IPMI serial.
->=20
-> I've done a lot of the analysis below while capturing.
->=20
-> I was going to be booting many times, so I flipped the 'Fast Boot'
-> option back to Disabled, so I could more easily get to the BIOS setti=
-ngs
-> to change options while testing. When I did so, an accidental boot on=
- a
-> kernel that previously failed suddenly worked, leading me to raise an
-> eyebrow, and this expanded my test matrix more.
->=20
-> 3 kernels, 6 different BIOS config combinations (2x3) =3D 18 test cas=
-es
-> Each configuration was booted at least twice; if the result of two bo=
-ots was
-> not identical, I booted a third time and took the majority result.
->=20
-> All kernels had no boot params involving PCI specified (none of pci=3D=
-, pcie*=3D,
-> disable_msi*).
->=20
-> Kernels:
-> K.1: Ubuntu's 3.16-rc4
-> K.2: 3.2-rc4 3c076351c402 - aspm merged
-> K.3: 3.2-rc4 69166fbf02c7 - aspm merge parent
-> Notes: 3.2* compiled with GCC4.6, 3.16-rc4 with GCC4.8
->=20
-> BIOS: Boot -> FastBoot:
-> B1.1 Off
-> B1.2 On (CMOS reset default)
->=20
-> BIOS: Advanced -> PCIe/PCI/PnP Configuration -> ASPM Support
-> B2.1 Force L0s
-> B2.2 BIOS (CMOS reset default)
-> B2.3 Disabled
->=20
-> Reduced Kernaugh Map of results:
-> Kernels,B1,B2:   Result
->   *, B1.1,    *  PASS
->   *, B1.2, B2.1  VARIABLE (9 runs: 5 fail, 4 pass, no kernel consiste=
-ncy)
-> K.1, B1.2, B2.2  FAIL
-> K.1, B1.2, B2.3  FAIL
-> K.2, B1.2, B2.2  FAIL
-> K.2, B1.2, B2.3  FAIL
-> K.3, B1.2, B2.2  PASS
-> K.3, B1.2, B2.3  PASS
-
-I'm not very practiced with Karnaugh maps, so correct me if my
-understanding is wrong:
-
-  - Fast Boot disabled: all kernels always passed
-
-  - Fast Boot enabled, ASPM set to Force L0s enabled: variable; no
-    consistency of results
-
-  - Fast Boot enabled, ASPM set to BIOS or Disabled: pre-3c076351c402
-    always passed, post-3c076351c402 always failed
-
-Bjorn
