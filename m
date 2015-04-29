@@ -1,29 +1,36 @@
-From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: [PATCH] scatterlist: enable sg chaining for all architectures
-Date: Wed, 29 Apr 2015 10:31:00 +0300
-Message-ID: <554088B4.2020804@plexistor.com>
-References: <1429973776-7499-1-git-send-email-akinobu.mita@gmail.com>	 <20150428142743.578d1c930aca013b596d7546@linux-foundation.org>	 <1430259419.2181.26.camel@HansenPartnership.com>	 <CAC5umyhM6s4dgJt6BQMhVihh3C8uYd+s2XEZB9UTQKK63OXxfQ@mail.gmail.com> <1430273746.2181.49.camel@HansenPartnership.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/3] scsi: proper state checking and module refcount
+	handling in scsi_device_get
+Date: Wed, 29 Apr 2015 15:27:58 +0200
+Message-ID: <20150429132758.GA4048@lst.de>
+References: <1422882086-1863-1-git-send-email-hch@lst.de> <1422882086-1863-3-git-send-email-hch@lst.de> <CAC5umyiSEmBOLT2MeztTq8z5-wE3koXpRQkD+tuX8b-PMg-e+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1430273746.2181.49.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-arch@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, Parisc List <linux-parisc@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:45796 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422884AbbD2N2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2015 09:28:00 -0400
+Content-Disposition: inline
+In-Reply-To: <CAC5umyiSEmBOLT2MeztTq8z5-wE3koXpRQkD+tuX8b-PMg-e+A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
-On 04/29/2015 05:15 AM, James Bottomley wrote:
-> 
-> Perhaps the best thing to do is just fix target and call it quits?
-> 
+On Wed, Apr 29, 2015 at 10:17:59AM +0900, Akinobu Mita wrote:
+> This change broke ufs driver.
 
-Right! drivers write code for sg_chaining and on ARCHs that do not
-support it the code just works.
-Only the max_sg is smaller and the chaining code never kicks in
-and is dead code for these ARCHs.
+I'd claim the ufs driver, or rather more specifily the ufs spec
+had already been broken.  That whole concept of keeping references
+to scsi devices to send commands to for host state changes is just
+fundamentally broken.  
 
-> James
+> The reason for scsi_device_get() in ufshcd_set_dev_pwr_mode() is
+> to avoid manual delete of UFS device W-LUN by holding the reference
+> to it.  So can we acquire shost->scan_mutex lock instead of
+> scsi_device_get()?  I tried attached patch and it seems to be working,
+> but I would like to ask your opinion about this change.
 
-Cheers
-Boaz
+It seems like a reasonable workaround.  But then again the concept
+of the driver hanging on scsi_devices is and will stay broken.
