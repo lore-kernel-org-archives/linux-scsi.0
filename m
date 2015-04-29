@@ -1,138 +1,82 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH 3/3] scsi: proper state checking and module refcount
- handling in scsi_device_get
-Date: Wed, 29 Apr 2015 10:17:59 +0900
-Message-ID: <CAC5umyiSEmBOLT2MeztTq8z5-wE3koXpRQkD+tuX8b-PMg-e+A@mail.gmail.com>
-References: <1422882086-1863-1-git-send-email-hch@lst.de>
-	<1422882086-1863-3-git-send-email-hch@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scatterlist: enable sg chaining for all architectures
+Date: Tue, 28 Apr 2015 19:15:46 -0700
+Message-ID: <1430273746.2181.49.camel@HansenPartnership.com>
+References: <1429973776-7499-1-git-send-email-akinobu.mita@gmail.com>
+	 <20150428142743.578d1c930aca013b596d7546@linux-foundation.org>
+	 <1430259419.2181.26.camel@HansenPartnership.com>
+	 <CAC5umyhM6s4dgJt6BQMhVihh3C8uYd+s2XEZB9UTQKK63OXxfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a1134635af597730514d2bfa2
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33654 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031319AbbD2BSB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2015 21:18:01 -0400
-Received: by lbbzk7 with SMTP id zk7so9323741lbb.0
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2015 18:17:59 -0700 (PDT)
-In-Reply-To: <1422882086-1863-3-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyhM6s4dgJt6BQMhVihh3C8uYd+s2XEZB9UTQKK63OXxfQ@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-arch@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel@vger.kernel.org, Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
---001a1134635af597730514d2bfa2
-Content-Type: text/plain; charset=UTF-8
+On Wed, 2015-04-29 at 09:34 +0900, Akinobu Mita wrote:
+> 2015-04-29 7:16 GMT+09:00 James Bottomley
+> <James.Bottomley@hansenpartnership.com>:
+> > On Tue, 2015-04-28 at 14:27 -0700, Andrew Morton wrote:
+> >> On Sat, 25 Apr 2015 23:56:16 +0900 Akinobu Mita <akinobu.mita@gmail.com> wrote:
+> >>
+> >> > Some architectures enable sg chaining option while others do not.
+> >> >
+> >> > The requirement to enable sg chaining is that pages must be aligned
+> >> > at a 32-bit boundary in order to overload the LSB of the pointer.
+> >> > Regardless of whether ARCH_HAS_SG_CHAIN is defined or not, the above
+> >> > requirement is always chacked by BUG_ON() in sg_assign_page.  So
+> >> > all architectures can enable sg chaining.
+> >> >
+> >> > As you can see from the changes in drivers/target/target_core_rd.c,
+> >> > enabling SG chaining for all architectures allows us to allocate
+> >> > discontiguous scatterlist tables which can be traversed throughout
+> >> > by sg_next() without a special handling for some architectures.
+> >>
+> >> Thanks, I'll grab this.  If anyone has concerns, speak now or hold both
+> >> pieces!
+> >
+> > It breaks a host of architectures doesn't it?  I can specifically speak
+> > for PARISC:  The problem is the way our iommus are consuming
+> > scatterlists.  They're assuming we can dereference the scatterlist as an
+> > array (like this code in ccio-dma.c):
+> >
+> > static int
+> > ccio_map_sg(struct device *dev, struct scatterlist *sglist, int nents,
+> >             enum dma_data_direction direction)
+> > [...]
+> >         for(i = 0; i < nents; i++)
+> >                 prev_len += sglist[i].length;
+> >
+> > If you turn on sg chaining on our architecture, we'll run off the end of
+> > that array dereference and crash.
+> >
+> > This can all be fixed by making our architecture dma mapping code use
+> > iterators instead of array lists, but that needs more code than this
+> > patch provides.  I assume there are similar issues on a lot of other
+> > architectures, so before you can contemplate a patch like this, surely
+> > all the architecture consumers have to be converted to iterator instead
+> > of array format?
+> >
+> > The first place to start would be a survey of who's still using the
+> > array format.
+> 
+> Agreed.  I could find similar issues in arch/m68k/kernel/dma.c.
+> (git grep '[^a-z]sg++' shows that there are a lot of similar issues)
 
-2015-02-02 22:01 GMT+09:00 Christoph Hellwig <hch@lst.de>:
-> This effectively reverts commits 85b6c7 ("[SCSI] sd: fix cache flushing on
-> module removal (and individual device removal)" and dc4515ea ("scsi: always
-> increment reference count").
->
-> We now never call scsi_device_get from the shutdown path, and the fact
-> that we started grabbing reference there in commit 85b6c7 turned out
-> turned out to create more problems than it solves, and required
-> workarounds for workarounds for workarounds. Move back to properly checking
-> the device state and carefully handle module refcounting.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/scsi.c | 20 +++++++++++++-------
->  1 file changed, 13 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 9b38299..9b7fd0b 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -979,18 +979,24 @@ EXPORT_SYMBOL(scsi_report_opcode);
->   * Description: Gets a reference to the scsi_device and increments the use count
->   * of the underlying LLDD module.  You must hold host_lock of the
->   * parent Scsi_Host or already have a reference when calling this.
-> + *
-> + * This will fail if a device is deleted or cancelled, or when the LLD module
-> + * is in the process of being unloaded.
->   */
->  int scsi_device_get(struct scsi_device *sdev)
+OK, so the original idea of the chained SG lists was that most of the
+older architectures have fixed length lists for their IOMMUs, or simply
+wouldn't see a benefit with IO lengths > 0.5MB (which was the default
+before chaining) so there wasn't much point converting them to chaining
+if they wouldn't see any benefit from it.
 
-Hi Christoph,
+ARCH_HAS_SG_CHAIN is supposed to be completely transparent to all driver
+side consumers, so there was never thought to be much point removing it.
+It looks like there's some sort of cockup going on in the target driver
+but otherwise, your removal patch is pretty empty, confirming this.
 
-This change broke ufs driver.
+Perhaps the best thing to do is just fix target and call it quits?
 
-Because scsi_device_get() can be called while the module is being
-unloaded with the device runtime suspended.
-(i.e. driver_detach -> ... pm_runtime_get_sync() ... ->
-ufshcd_runtime_resume -> ufshcd_resume -> ufshcd_set_dev_pwr_mode ->
-scsi_device_get -> try_module_get -> return -ENXIO)
-
-The reason for scsi_device_get() in ufshcd_set_dev_pwr_mode() is
-to avoid manual delete of UFS device W-LUN by holding the reference
-to it.  So can we acquire shost->scan_mutex lock instead of
-scsi_device_get()?  I tried attached patch and it seems to be working,
-but I would like to ask your opinion about this change.
-
->  {
-> -       if (sdev->sdev_state == SDEV_DEL)
-> -               return -ENXIO;
-> +       if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
-> +               goto fail;
->         if (!get_device(&sdev->sdev_gendev))
-> -               return -ENXIO;
-> -       /* We can fail try_module_get if we're doing SCSI operations
-> -        * from module exit (like cache flush) */
-> -       __module_get(sdev->host->hostt->module);
-> -
-> +               goto fail;
-> +       if (!try_module_get(sdev->host->hostt->module))
-> +               goto fail_put_device;
->         return 0;
-> +
-> +fail_put_device:
-> +       put_device(&sdev->sdev_gendev);
-> +fail:
-> +       return -ENXIO;
->  }
->  EXPORT_SYMBOL(scsi_device_get);
->
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---001a1134635af597730514d2bfa2
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-scsi-ufs-fix-ufshcd_set_dev_pwr_mode-when-unloading-.patch"
-Content-Disposition: attachment;
-	filename="0001-scsi-ufs-fix-ufshcd_set_dev_pwr_mode-when-unloading-.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i921x3yw0
-
-RnJvbSBhMzA1YTUyODRjYWMyM2FkYmY3Zjg2YjMwMTRjYzJlNjMyNWM3Yjg4IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBa2lub2J1IE1pdGEgPGFraW5vYnUubWl0YUBnbWFpbC5jb20+
-CkRhdGU6IFdlZCwgMjkgQXByIDIwMTUgMTA6MDI6MTcgKzA5MDAKU3ViamVjdDogW1BBVENIXSBz
-Y3NpOiB1ZnM6IGZpeCB1ZnNoY2Rfc2V0X2Rldl9wd3JfbW9kZSgpIHdoZW4gdW5sb2FkaW5nCiBt
-b2R1bGUKCi0tLQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDE4ICsrKysrKystLS0tLS0t
-LS0tLQogMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgMTEgZGVsZXRpb25zKC0pCgpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMv
-dWZzaGNkLmMKaW5kZXggNTQwZTAwZC4uOTFjYmMwNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3Np
-L3Vmcy91ZnNoY2QuYworKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jCkBAIC00Njk1LDIz
-ICs0Njk1LDE5IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3NldF9kZXZfcHdyX21vZGUoc3RydWN0IHVm
-c19oYmEgKmhiYSwKIAlzdHJ1Y3Qgc2NzaV9zZW5zZV9oZHIgc3NoZHI7CiAJc3RydWN0IHNjc2lf
-ZGV2aWNlICpzZHA7CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKLQlpbnQgcmV0OworCWludCByZXQg
-PSAwOwogCisJbXV0ZXhfbG9jaygmaGJhLT5ob3N0LT5zY2FuX211dGV4KTsKIAlzcGluX2xvY2tf
-aXJxc2F2ZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOwogCXNkcCA9IGhiYS0+c2Rldl91
-ZnNfZGV2aWNlOwotCWlmIChzZHApIHsKLQkJcmV0ID0gc2NzaV9kZXZpY2VfZ2V0KHNkcCk7Ci0J
-CWlmICghcmV0ICYmICFzY3NpX2RldmljZV9vbmxpbmUoc2RwKSkgewotCQkJcmV0ID0gLUVOT0RF
-VjsKLQkJCXNjc2lfZGV2aWNlX3B1dChzZHApOwotCQl9Ci0JfSBlbHNlIHsKKwlpZiAoIXNkcCB8
-fCAhc2NzaV9kZXZpY2Vfb25saW5lKHNkcCkpCiAJCXJldCA9IC1FTk9ERVY7Ci0JfQogCXNwaW5f
-dW5sb2NrX2lycXJlc3RvcmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsKIAotCWlmIChy
-ZXQpCisJaWYgKHJldCkgeworCQltdXRleF91bmxvY2soJmhiYS0+aG9zdC0+c2Nhbl9tdXRleCk7
-CiAJCXJldHVybiByZXQ7CisJfQogCiAJLyoKIAkgKiBJZiBzY3NpIGNvbW1hbmRzIGZhaWwsIHRo
-ZSBzY3NpIG1pZC1sYXllciBzY2hlZHVsZXMgc2NzaSBlcnJvci0KQEAgLTQ3NDgsNyArNDc0NCw3
-IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3NldF9kZXZfcHdyX21vZGUoc3RydWN0IHVmc19oYmEgKmhi
-YSwKIAlpZiAoIXJldCkKIAkJaGJhLT5jdXJyX2Rldl9wd3JfbW9kZSA9IHB3cl9tb2RlOwogb3V0
-OgotCXNjc2lfZGV2aWNlX3B1dChzZHApOworCW11dGV4X3VubG9jaygmaGJhLT5ob3N0LT5zY2Fu
-X211dGV4KTsKIAloYmEtPmhvc3QtPmVoX25vcmVzdW1lID0gMDsKIAlyZXR1cm4gcmV0OwogfQot
-LSAKMS45LjEKCg==
---001a1134635af597730514d2bfa2--
+James
