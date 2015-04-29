@@ -1,40 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z:
- dev error handler -> general protection fault, RIP:
- mvs_task_prep_ata+0x80/0x3a0
-Date: Wed, 29 Apr 2015 11:10:08 -0700
-Message-ID: <1430331008.2189.18.camel@HansenPartnership.com>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
-	 <bug-81861-11613-zXvwHJt3aC@https.bugzilla.kernel.org/>
-	 <1430317204.2189.2.camel@HansenPartnership.com>
-	 <CAC2CY-2YAy8GfjCHO+PrFWAuBnhfnMvK33KJ3YCVRZXJMEHykQ@mail.gmail.com>
-	 <1430322102.2189.14.camel@HansenPartnership.com>
-	 <CAH_2GhcOwjQqD0VYqMiD9UGRsYf4L-XRPaMHwPiRR1c2-PSQ7A@mail.gmail.com>
-	 <1430330700.2189.17.camel@HansenPartnership.com>
-	 <CAH_2GheihL3WE75FrDigEdPzKRK6Up=rvoU10Y2rDMfp0_2q=g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37489 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753861AbbD2SKK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Apr 2015 14:10:10 -0400
-In-Reply-To: <CAH_2GheihL3WE75FrDigEdPzKRK6Up=rvoU10Y2rDMfp0_2q=g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fabian Frederick <fabf@skynet.be>
+Subject: [PATCH 1/1 linux-next] bnx2fc: make bnx2fc_global_lock static
+Date: Wed, 29 Apr 2015 20:21:15 +0200
+Message-ID: <1430331675-26139-1-git-send-email-fabf@skynet.be>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Talbot <ajtalbot1@gmail.com>
-Cc: Nathan Rennie-Waldock <nathan.renniewaldock@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2015-04-29 at 11:07 -0700, Adam Talbot wrote:
-> My system was oopsing, pre patch.  I am happy to give you the full
-> configuration. Would that help?
+bnx2fc_global_lock is only used in bnx2fc_fcoe.c
 
-Not really ... the other guy on the thread has a system oopsing post
-patch.  It's oopsing in a different place from yours.  That's the system
-I need the configuration for.
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-James
-
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 98d06d1..66fb527 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -49,7 +49,7 @@ struct workqueue_struct *bnx2fc_wq;
+  * Here the io threads are per cpu but the l2 thread is just one
+  */
+ struct fcoe_percpu_s bnx2fc_global;
+-DEFINE_SPINLOCK(bnx2fc_global_lock);
++static DEFINE_SPINLOCK(bnx2fc_global_lock);
+ 
+ static struct cnic_ulp_ops bnx2fc_cnic_cb;
+ static struct libfc_function_template bnx2fc_libfc_fcn_templ;
+-- 
+1.9.1
