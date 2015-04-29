@@ -1,36 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] scsi: proper state checking and module refcount
-	handling in scsi_device_get
-Date: Wed, 29 Apr 2015 15:27:58 +0200
-Message-ID: <20150429132758.GA4048@lst.de>
-References: <1422882086-1863-1-git-send-email-hch@lst.de> <1422882086-1863-3-git-send-email-hch@lst.de> <CAC5umyiSEmBOLT2MeztTq8z5-wE3koXpRQkD+tuX8b-PMg-e+A@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
+ error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
+Date: Wed, 29 Apr 2015 13:40:15 +0000
+Message-ID: <bug-81861-11613-zXvwHJt3aC@https.bugzilla.kernel.org/>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45796 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.136]:41956 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422884AbbD2N2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Apr 2015 09:28:00 -0400
-Content-Disposition: inline
-In-Reply-To: <CAC5umyiSEmBOLT2MeztTq8z5-wE3koXpRQkD+tuX8b-PMg-e+A@mail.gmail.com>
+	id S1422935AbbD2NkT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2015 09:40:19 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 7946C201F2
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2015 13:40:18 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 8B685201E4
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2015 13:40:17 +0000 (UTC)
+In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
 
-On Wed, Apr 29, 2015 at 10:17:59AM +0900, Akinobu Mita wrote:
-> This change broke ufs driver.
+https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
-I'd claim the ufs driver, or rather more specifily the ufs spec
-had already been broken.  That whole concept of keeping references
-to scsi devices to send commands to for host state changes is just
-fundamentally broken.  
+--- Comment #24 from Nathan R <nathan.renniewaldock+kernelbugs@gmail.com> ---
+Created attachment 175261
+  --> https://bugzilla.kernel.org/attachment.cgi?id=175261&action=edit
+dmesg output after loading module
 
-> The reason for scsi_device_get() in ufshcd_set_dev_pwr_mode() is
-> to avoid manual delete of UFS device W-LUN by holding the reference
-> to it.  So can we acquire shost->scan_mutex lock instead of
-> scsi_device_get()?  I tried attached patch and it seems to be working,
-> but I would like to ask your opinion about this change.
+Just tested the driver from linux-stable since that patch has been merged.
+After loading, I get a bunch of "failed to IDENTIFY" errors, then an oops and
+insmod never returned (so far been 15mins and nothing new in dmesg).
 
-It seems like a reasonable workaround.  But then again the concept
-of the driver hanging on scsi_devices is and will stay broken.
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
