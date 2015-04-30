@@ -1,87 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: always retry READ CAPACITY for ALUA state transition
-Date: Thu, 30 Apr 2015 14:26:24 +0200
-Message-ID: <55421F70.80102@suse.de>
-References: <1430127309-90412-1-git-send-email-hare@suse.de> <1430255925.2181.16.camel@HansenPartnership.com>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
+Date: Thu, 30 Apr 2015 17:13:30 +0300
+Message-ID: <5542388A.5050008@dev.mellanox.co.il>
+References: <5541EE21.3050809@sandisk.com> <5541EE4A.30803@sandisk.com> <20150430093719.GA23486@infradead.org> <5542034D.5010300@sandisk.com> <554204D7.9050204@dev.mellanox.co.il> <55420AEA.10108@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42300 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895AbbD3M01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Apr 2015 08:26:27 -0400
-In-Reply-To: <1430255925.2181.16.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <55420AEA.10108-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 04/28/2015 11:18 PM, James Bottomley wrote:
-> On Mon, 2015-04-27 at 11:35 +0200, Hannes Reinecke wrote:
->> During ALUA state transitions the device might return
->> a sense code 02/04/0a (Logical unit not accessible, asymmetric
->> access state transition). As this is a transient error
->> we should just retry the READ CAPACITY call until
->> the state transition finishes and the correct
->> capacity can be returned.
+On 4/30/2015 1:58 PM, Bart Van Assche wrote:
+> On 04/30/15 12:33, Sagi Grimberg wrote:
+>> On 4/30/2015 1:26 PM, Bart Van Assche wrote:
+>>> On 04/30/15 11:37, Christoph Hellwig wrote:
+>>>> On Thu, Apr 30, 2015 at 10:56:42AM +0200, Bart Van Assche wrote:
+>>>>> Introduce the helper function srp_wait_for_queuecommand().
+>>>>> Move the definition of scsi_request_fn_active(). This patch
+>>>>> does not change any functionality. A second call to
+>>>>> scsi_wait_for_queuecommand() will be introduced in the next
+>>>>> patch.
+>>>>
+>>>> Can we take a step back here?
+>>>>
+>>>> This isn;t something driver should be doing, so we really should take
+>>>> care of this in the SCSI midlayer.
+>>>>
+>>>> Especially given that we don't maintain request_fn_active for blk-mq.
+>>>
+>>> Hello Christoph,
+>>>
+>>> How about the following:
+>>> * Modify scsi_target_block() and scsi_target_unblock(...,
+>>>     SDEV_TRANSPORT_OFFLINE) such that these functions wait until
+>>>     active queuecommand() calls have finished.
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/scsi/sd.c | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index 79beebf..7178b05 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -1987,6 +1987,11 @@ static int read_capacity_16(struct scsi_disk =
-*sdkp, struct scsi_device *sdp,
->>  				 * give it one more chance */
->>  				if (--reset_retries > 0)
->>  					continue;
->> +			if (sense_valid &&
->> +			    sshdr.sense_key =3D=3D NOT_READY &&
->> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A)
->> +				/* ALUA state transition; always retry */
->> +				continue;
->>  		}
->>  		retries--;
->> =20
->> @@ -2069,6 +2074,11 @@ static int read_capacity_10(struct scsi_disk =
-*sdkp, struct scsi_device *sdp,
->>  				 * give it one more chance */
->>  				if (--reset_retries > 0)
->>  					continue;
->> +			if (sense_valid &&
->> +			    sshdr.sense_key =3D=3D NOT_READY &&
->> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A)
->> +				/* ALUA state transition; always retry */
->> +				continue;
->>  		}
->>  		retries--;
->> =20
->=20
-> Got to say I really don't like this infinite retry possibility.  How
-> long does the ALUA transition take?  Would increasing retries work (o=
-r
-> even hijacking reset_retries)?
->=20
-Well ... transitioning could be quite long (NetApp FAS has a
-transition timeout of 30 _minutes_ ...).
-But yeah, I could see to limit this somewhat.
+>> Won't this make scsi_target_unblock a sleeping function? It might
+>> not fit all the contexts scsi_target_unblock is called.
+>
+> The only callers in upstream code of scsi_target_block() and
+> scsi_target_unblock() I am aware of are the FC, iSCSI and SRP transport
+> layers and the drivers that use these transport layers. As far as I can
+> see both functions are always called from thread context and without
+> holding any spinlocks. A possible alternative to what I proposed in my
+> previous e-mail could be to provide a new function that waits for active
+> queuecommand() calls and that has to be called explicitly.
+>
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+Maybe that might be better.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
