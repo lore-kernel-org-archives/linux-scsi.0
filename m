@@ -1,57 +1,103 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
-Date: Thu, 30 Apr 2015 17:13:30 +0300
-Message-ID: <5542388A.5050008@dev.mellanox.co.il>
-References: <5541EE21.3050809@sandisk.com> <5541EE4A.30803@sandisk.com> <20150430093719.GA23486@infradead.org> <5542034D.5010300@sandisk.com> <554204D7.9050204@dev.mellanox.co.il> <55420AEA.10108@sandisk.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scatterlist: enable sg chaining for all architectures
+Date: Thu, 30 Apr 2015 07:55:07 -0700
+Message-ID: <1430405707.2167.13.camel@HansenPartnership.com>
+References: <1429973776-7499-1-git-send-email-akinobu.mita@gmail.com>
+	 <20150428142743.578d1c930aca013b596d7546@linux-foundation.org>
+	 <1430259419.2181.26.camel@HansenPartnership.com>
+	 <CAC5umyhM6s4dgJt6BQMhVihh3C8uYd+s2XEZB9UTQKK63OXxfQ@mail.gmail.com>
+	 <1430273746.2181.49.camel@HansenPartnership.com>
+	 <1430380782.24121.99.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <55420AEA.10108-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <1430380782.24121.99.camel@haakon3.risingtidesystems.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-arch@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org, Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 4/30/2015 1:58 PM, Bart Van Assche wrote:
-> On 04/30/15 12:33, Sagi Grimberg wrote:
->> On 4/30/2015 1:26 PM, Bart Van Assche wrote:
->>> On 04/30/15 11:37, Christoph Hellwig wrote:
->>>> On Thu, Apr 30, 2015 at 10:56:42AM +0200, Bart Van Assche wrote:
->>>>> Introduce the helper function srp_wait_for_queuecommand().
->>>>> Move the definition of scsi_request_fn_active(). This patch
->>>>> does not change any functionality. A second call to
->>>>> scsi_wait_for_queuecommand() will be introduced in the next
->>>>> patch.
->>>>
->>>> Can we take a step back here?
->>>>
->>>> This isn;t something driver should be doing, so we really should take
->>>> care of this in the SCSI midlayer.
->>>>
->>>> Especially given that we don't maintain request_fn_active for blk-mq.
->>>
->>> Hello Christoph,
->>>
->>> How about the following:
->>> * Modify scsi_target_block() and scsi_target_unblock(...,
->>>     SDEV_TRANSPORT_OFFLINE) such that these functions wait until
->>>     active queuecommand() calls have finished.
->>
->> Won't this make scsi_target_unblock a sleeping function? It might
->> not fit all the contexts scsi_target_unblock is called.
+On Thu, 2015-04-30 at 00:59 -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2015-04-28 at 19:15 -0700, James Bottomley wrote:
+> > On Wed, 2015-04-29 at 09:34 +0900, Akinobu Mita wrote:
+> > > 2015-04-29 7:16 GMT+09:00 James Bottomley
+> > > <James.Bottomley@hansenpartnership.com>:
+> > > > On Tue, 2015-04-28 at 14:27 -0700, Andrew Morton wrote:
+> > > >> On Sat, 25 Apr 2015 23:56:16 +0900 Akinobu Mita <akinobu.mita@gmail.com> wrote:
+> > > >>
+> > > >> > Some architectures enable sg chaining option while others do not.
+> > > >> >
+> > > >> > The requirement to enable sg chaining is that pages must be aligned
+> > > >> > at a 32-bit boundary in order to overload the LSB of the pointer.
+> > > >> > Regardless of whether ARCH_HAS_SG_CHAIN is defined or not, the above
+> > > >> > requirement is always chacked by BUG_ON() in sg_assign_page.  So
+> > > >> > all architectures can enable sg chaining.
+> > > >> >
+> > > >> > As you can see from the changes in drivers/target/target_core_rd.c,
+> > > >> > enabling SG chaining for all architectures allows us to allocate
+> > > >> > discontiguous scatterlist tables which can be traversed throughout
+> > > >> > by sg_next() without a special handling for some architectures.
+> > > >>
+> > > >> Thanks, I'll grab this.  If anyone has concerns, speak now or hold both
+> > > >> pieces!
+> > > >
+> > > > It breaks a host of architectures doesn't it?  I can specifically speak
+> > > > for PARISC:  The problem is the way our iommus are consuming
+> > > > scatterlists.  They're assuming we can dereference the scatterlist as an
+> > > > array (like this code in ccio-dma.c):
+> > > >
+> > > > static int
+> > > > ccio_map_sg(struct device *dev, struct scatterlist *sglist, int nents,
+> > > >             enum dma_data_direction direction)
+> > > > [...]
+> > > >         for(i = 0; i < nents; i++)
+> > > >                 prev_len += sglist[i].length;
+> > > >
+> > > > If you turn on sg chaining on our architecture, we'll run off the end of
+> > > > that array dereference and crash.
+> > > >
+> > > > This can all be fixed by making our architecture dma mapping code use
+> > > > iterators instead of array lists, but that needs more code than this
+> > > > patch provides.  I assume there are similar issues on a lot of other
+> > > > architectures, so before you can contemplate a patch like this, surely
+> > > > all the architecture consumers have to be converted to iterator instead
+> > > > of array format?
+> > > >
+> > > > The first place to start would be a survey of who's still using the
+> > > > array format.
+> > > 
+> > > Agreed.  I could find similar issues in arch/m68k/kernel/dma.c.
+> > > (git grep '[^a-z]sg++' shows that there are a lot of similar issues)
+> > 
+> > OK, so the original idea of the chained SG lists was that most of the
+> > older architectures have fixed length lists for their IOMMUs, or simply
+> > wouldn't see a benefit with IO lengths > 0.5MB (which was the default
+> > before chaining) so there wasn't much point converting them to chaining
+> > if they wouldn't see any benefit from it.
+> > 
+> > ARCH_HAS_SG_CHAIN is supposed to be completely transparent to all driver
+> > side consumers, so there was never thought to be much point removing it.
+> > It looks like there's some sort of cockup going on in the target driver
+> > but otherwise, your removal patch is pretty empty, confirming this.
+> > 
+> > Perhaps the best thing to do is just fix target and call it quits?
+> > 
+> 
+> So the ARCH_HAS_SG_CHAIN usage in target_core_rd.c was recently added so
+> target DIF emulation could use standard SGL iterators and correctly
+> handle boundaries across T10-PI metadata SGL tables in the ramdisk
+> backend.
 >
-> The only callers in upstream code of scsi_target_block() and
-> scsi_target_unblock() I am aware of are the FC, iSCSI and SRP transport
-> layers and the drivers that use these transport layers. As far as I can
-> see both functions are always called from thread context and without
-> holding any spinlocks. A possible alternative to what I proposed in my
-> previous e-mail could be to provide a new function that waits for active
-> queuecommand() calls and that has to be called explicitly.
->
+> The SGLs in question are never actually mapped to a HW IOMMU, and
+> Akinobu's current changes in mainline do support both arch cases and
+> make common sbc_dif_copy_prot() code a bit simpler too.
+> 
+> That said, I'd rather to keep the hack around for now so that both
+> ARCH_HAS_SG_CHAIN types can still work, short of a full arch conversion
+> of course..
 
-Maybe that might be better.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It looks like you might not have needed the hack if you'd used the
+existing sg chain allocators ....
+
+James
