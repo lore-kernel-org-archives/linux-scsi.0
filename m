@@ -1,64 +1,87 @@
-From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Subject: [PATCH] qla2xxx: prevent board_disable from running during EEH
-Date: Thu, 30 Apr 2015 09:13:05 -0300
-Message-ID: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
-Reply-To: Thadeu Lima de Souza Cascardo <cascardo@debian.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] sd: always retry READ CAPACITY for ALUA state transition
+Date: Thu, 30 Apr 2015 14:26:24 +0200
+Message-ID: <55421F70.80102@suse.de>
+References: <1430127309-90412-1-git-send-email-hare@suse.de> <1430255925.2181.16.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp05.br.ibm.com ([32.104.18.26]:55929 "EHLO
-	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbbD3MNm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2015 08:13:42 -0400
-Received: from /spool/local
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
-	Thu, 30 Apr 2015 09:13:40 -0300
+Received: from cantor2.suse.de ([195.135.220.15]:42300 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895AbbD3M01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2015 08:26:27 -0400
+In-Reply-To: <1430255925.2181.16.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, JBottomley@parallels.com, qla2xxx-upstream@qlogic.com, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, cascardo@debian.org, mauricfo@linux.vnet.ibm.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Commit f3ddac1918fe963bcbf8d407a3a3c0881b47248b ("[SCSI] qla2xxx:
-Disable adapter when we encounter a PCI disconnect.") has introduced a
-code that disables the board, releasing some resources, when reading
-0xffffffff.
+On 04/28/2015 11:18 PM, James Bottomley wrote:
+> On Mon, 2015-04-27 at 11:35 +0200, Hannes Reinecke wrote:
+>> During ALUA state transitions the device might return
+>> a sense code 02/04/0a (Logical unit not accessible, asymmetric
+>> access state transition). As this is a transient error
+>> we should just retry the READ CAPACITY call until
+>> the state transition finishes and the correct
+>> capacity can be returned.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/sd.c | 10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 79beebf..7178b05 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -1987,6 +1987,11 @@ static int read_capacity_16(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+>>  				 * give it one more chance */
+>>  				if (--reset_retries > 0)
+>>  					continue;
+>> +			if (sense_valid &&
+>> +			    sshdr.sense_key =3D=3D NOT_READY &&
+>> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A)
+>> +				/* ALUA state transition; always retry */
+>> +				continue;
+>>  		}
+>>  		retries--;
+>> =20
+>> @@ -2069,6 +2074,11 @@ static int read_capacity_10(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+>>  				 * give it one more chance */
+>>  				if (--reset_retries > 0)
+>>  					continue;
+>> +			if (sense_valid &&
+>> +			    sshdr.sense_key =3D=3D NOT_READY &&
+>> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A)
+>> +				/* ALUA state transition; always retry */
+>> +				continue;
+>>  		}
+>>  		retries--;
+>> =20
+>=20
+> Got to say I really don't like this infinite retry possibility.  How
+> long does the ALUA transition take?  Would increasing retries work (o=
+r
+> even hijacking reset_retries)?
+>=20
+Well ... transitioning could be quite long (NetApp FAS has a
+transition timeout of 30 _minutes_ ...).
+But yeah, I could see to limit this somewhat.
 
-In case this happens when there is an EEH, this read will trigger EEH
-detection and set PCI channel offline. EEH will be able to recover the
-card from this state by doing a reset, so it's a better option than
-simply disabling the card.
+Cheers,
 
-Since eeh_check_failure will mark the channel as offline before
-returning the read value, in case there really was an EEH, we can simply
-check for pci_channel_offline, preventing the board_disable code from
-running if it's true.
-
-Without this patch, EEH code will try to access those same resources
-that board_disable will try to free. This race can cause EEH recovery to
-fail.
-
-[  504.370577] EEH: Notify device driver to resume
-[  504.370580] qla2xxx [0001:07:00.0]-9002:2: The device failed to resume I/O from slot/link_reset.
-
-Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: <cascardo@debian.org>
-Cc: <mauricfo@linux.vnet.ibm.com>
----
- drivers/scsi/qla2xxx/qla_isr.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a04a1b1..8132926 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -116,7 +116,7 @@ bool
- qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
- {
- 	/* Check for PCI disconnection */
--	if (reg == 0xffffffff) {
-+	if (reg == 0xffffffff && !pci_channel_offline(vha->hw->pdev)) {
- 		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
- 		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags) &&
- 		    !test_bit(PFLG_DRIVER_PROBING, &vha->pci_flags)) {
--- 
-1.7.10.4
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
