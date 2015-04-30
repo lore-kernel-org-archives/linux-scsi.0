@@ -1,7 +1,8 @@
 From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 12/12] IB/srp: Make CM timeout dependent on subnet timeout
-Date: Thu, 30 Apr 2015 11:02:43 +0200
-Message-ID: <5541EFB3.6030704@sandisk.com>
+Subject: [PATCH 03/12] IB/srp: Remove an extraneous scsi_host_put() from an
+ error path
+Date: Thu, 30 Apr 2015 10:57:36 +0200
+Message-ID: <5541EE80.6070505@sandisk.com>
 References: <5541EE21.3050809@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,68 +14,74 @@ To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In large networks the subnet timeout may have been set to a value
-above 20. In small networks it can be safe to reduce the subnet
-timeout below 20. The CM timeout should be proportional to the
-subnet timeout. Hence make the CM timeout dependent on the subnet
-timeout. Since the default subnet timeout used by OpenSM is 18
-this patch does not change the CM timeout if the default OpenSM
-subnet timeout is used.
+Fix a scsi_get_host() / scsi_host_put() imbalance in the error
+path of srp_create_target(). See also patch "IB/srp: Avoid that
+I/O hangs due to a cable pull during LUN scanning" (commit ID
+34aa654ecb8e).
 
 Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
 Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #v3.19
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 27d3a64..a18a2ae 100644
+index 918814c..5ce6cfd 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -704,6 +704,19 @@ static int srp_lookup_path(struct srp_rdma_ch *ch)
- 	return ch->status;
+@@ -3172,11 +3172,11 @@ static ssize_t srp_create_target(struct device *dev,
+ 
+ 	ret = srp_parse_options(buf, target);
+ 	if (ret)
+-		goto err;
++		goto out;
+ 
+ 	ret = scsi_init_shared_tag_map(target_host, target_host->can_queue);
+ 	if (ret)
+-		goto err;
++		goto out;
+ 
+ 	target->req_ring_size = target->queue_size - SRP_TSK_MGMT_SQ_SIZE;
+ 
+@@ -3187,7 +3187,7 @@ static ssize_t srp_create_target(struct device *dev,
+ 			     be64_to_cpu(target->ioc_guid),
+ 			     be64_to_cpu(target->initiator_ext));
+ 		ret = -EEXIST;
+-		goto err;
++		goto out;
+ 	}
+ 
+ 	if (!srp_dev->has_fmr && !srp_dev->has_fr && !target->allow_ext_sg &&
+@@ -3208,7 +3208,7 @@ static ssize_t srp_create_target(struct device *dev,
+ 	spin_lock_init(&target->lock);
+ 	ret = ib_query_gid(ibdev, host->port, 0, &target->sgid);
+ 	if (ret)
+-		goto err;
++		goto out;
+ 
+ 	ret = -ENOMEM;
+ 	target->ch_count = max_t(unsigned, num_online_nodes(),
+@@ -3219,7 +3219,7 @@ static ssize_t srp_create_target(struct device *dev,
+ 	target->ch = kcalloc(target->ch_count, sizeof(*target->ch),
+ 			     GFP_KERNEL);
+ 	if (!target->ch)
+-		goto err;
++		goto out;
+ 
+ 	node_idx = 0;
+ 	for_each_online_node(node) {
+@@ -3315,9 +3315,6 @@ err_disconnect:
+ 	}
+ 
+ 	kfree(target->ch);
+-
+-err:
+-	scsi_host_put(target_host);
+ 	goto out;
  }
  
-+static u8 srp_get_subnet_timeout(struct srp_host *host)
-+{
-+	struct ib_port_attr attr;
-+	int ret;
-+	u8 subnet_timeout = 18;
-+
-+	ret = ib_query_port(host->srp_dev->dev, host->port, &attr);
-+	if (ret == 0)
-+		subnet_timeout = attr.subnet_timeout;
-+
-+	return subnet_timeout;
-+}
-+
- static int srp_send_req(struct srp_rdma_ch *ch, bool multich)
- {
- 	struct srp_target_port *target = ch->target;
-@@ -711,8 +724,11 @@ static int srp_send_req(struct srp_rdma_ch *ch, bool multich)
- 		struct ib_cm_req_param param;
- 		struct srp_login_req   priv;
- 	} *req = NULL;
-+	u8 subnet_timeout;
- 	int status;
- 
-+	subnet_timeout = srp_get_subnet_timeout(target->srp_host);
-+
- 	req = kzalloc(sizeof *req, GFP_KERNEL);
- 	if (!req)
- 		return -ENOMEM;
-@@ -734,8 +750,8 @@ static int srp_send_req(struct srp_rdma_ch *ch, bool multich)
- 	 * module parameters if anyone cared about setting them.
- 	 */
- 	req->param.responder_resources	      = 4;
--	req->param.remote_cm_response_timeout = 20;
--	req->param.local_cm_response_timeout  = 20;
-+	req->param.remote_cm_response_timeout = subnet_timeout + 2;
-+	req->param.local_cm_response_timeout  = subnet_timeout + 2;
- 	req->param.retry_count                = target->tl_retry_count;
- 	req->param.rnr_retry_count 	      = 7;
- 	req->param.max_cm_retries 	      = 15;
 -- 
 2.1.4
 
