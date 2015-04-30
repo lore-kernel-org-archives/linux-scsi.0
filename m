@@ -1,55 +1,64 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 04/12] IB/srp: Fix connection state tracking
-Date: Thu, 30 Apr 2015 13:25:18 +0200
-Message-ID: <5542111E.1080305@sandisk.com>
-References: <5541EE21.3050809@sandisk.com> <5541EE9F.8090605@sandisk.com>
- <5541FB3F.70902@dev.mellanox.co.il>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: [PATCH] qla2xxx: prevent board_disable from running during EEH
+Date: Thu, 30 Apr 2015 09:13:05 -0300
+Message-ID: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
+Reply-To: Thadeu Lima de Souza Cascardo <cascardo@debian.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0058.outbound.protection.outlook.com ([65.55.169.58]:36576
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750866AbbD3LZZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Apr 2015 07:25:25 -0400
-In-Reply-To: <5541FB3F.70902@dev.mellanox.co.il>
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:55929 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbbD3MNm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2015 08:13:42 -0400
+Received: from /spool/local
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
+	Thu, 30 Apr 2015 09:13:40 -0300
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Doug Ledford <dledford@redhat.com>
-Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, JBottomley@parallels.com, qla2xxx-upstream@qlogic.com, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, cascardo@debian.org, mauricfo@linux.vnet.ibm.com
 
-On 04/30/15 11:51, Sagi Grimberg wrote:
-> On 4/30/2015 11:58 AM, Bart Van Assche wrote:
->> -        srp_change_conn_state(target, false);
->> +        ch->connected = false;
->
-> Shouldn't this be protected by the channel lock (like the target)?
+Commit f3ddac1918fe963bcbf8d407a3a3c0881b47248b ("[SCSI] qla2xxx:
+Disable adapter when we encounter a PCI disconnect.") has introduced a
+code that disables the board, releasing some resources, when reading
+0xffffffff.
 
-On all CPU architectures I'm familiar with changes of boolean variables 
-are atomic so I think modifying that variable without locking is fine.
+In case this happens when there is an EEH, this read will trigger EEH
+detection and set PCI channel offline. EEH will be able to recover the
+card from this state by doing a reset, so it's a better option than
+simply disabling the card.
 
->> @@ -170,6 +170,7 @@ struct srp_rdma_ch {
->>
->>       struct completion    tsk_mgmt_done;
->>       u8            tsk_mgmt_status;
->> +    bool            connected;
->
-> I generally agree with this flag, but I'm a bit confused about the
-> semantics of two connected flags? Also, we check the target connected
-> flag on TMFs, although we are executing it on a channel (should we
-> check both?)
->
-> I'd say keep only the channel connected flag, the target logic needs to
-> be mandated by the state.
+Since eeh_check_failure will mark the channel as offline before
+returning the read value, in case there really was an EEH, we can simply
+check for pci_channel_offline, preventing the board_disable code from
+running if it's true.
 
-I think we need both flags. The ch->connected flag is used only in 
-srp_destroy_qp() to verify whether a channel has been disconnected 
-before it is destroyed. The target->connected flag provides an easy way 
-to test the connected state in e.g. srp_disconnect_target(). And if it 
-is attempted to send a task management function over a channel that has 
-just been disconnected that should be fine since any channel disconnect 
-causes tl_err_work to be queued. That last action will sooner or later 
-result in a reconnect.
+Without this patch, EEH code will try to access those same resources
+that board_disable will try to free. This race can cause EEH recovery to
+fail.
 
-Bart.
+[  504.370577] EEH: Notify device driver to resume
+[  504.370580] qla2xxx [0001:07:00.0]-9002:2: The device failed to resume I/O from slot/link_reset.
+
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Cc: <cascardo@debian.org>
+Cc: <mauricfo@linux.vnet.ibm.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a04a1b1..8132926 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -116,7 +116,7 @@ bool
+ qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+ {
+ 	/* Check for PCI disconnection */
+-	if (reg == 0xffffffff) {
++	if (reg == 0xffffffff && !pci_channel_offline(vha->hw->pdev)) {
+ 		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
+ 		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags) &&
+ 		    !test_bit(PFLG_DRIVER_PROBING, &vha->pci_flags)) {
+-- 
+1.7.10.4
+
