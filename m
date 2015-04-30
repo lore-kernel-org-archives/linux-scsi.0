@@ -1,60 +1,88 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
-Date: Thu, 30 Apr 2015 12:58:50 +0200
-Message-ID: <55420AEA.10108@sandisk.com>
-References: <5541EE21.3050809@sandisk.com> <5541EE4A.30803@sandisk.com>
- <20150430093719.GA23486@infradead.org> <5542034D.5010300@sandisk.com>
- <554204D7.9050204@dev.mellanox.co.il>
+Subject: Re: [PATCH 06/12] scsi_transport_srp: Reduce failover time
+Date: Thu, 30 Apr 2015 13:02:02 +0200
+Message-ID: <55420BAA.7060507@sandisk.com>
+References: <5541EE21.3050809@sandisk.com> <5541EF01.3030008@sandisk.com>
+ <5542002D.8060308@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0095.outbound.protection.outlook.com ([157.56.110.95]:48768
+Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:64992
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752243AbbD3K66 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Apr 2015 06:58:58 -0400
-In-Reply-To: <554204D7.9050204@dev.mellanox.co.il>
+	id S1751253AbbD3LCL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2015 07:02:11 -0400
+In-Reply-To: <5542002D.8060308@dev.mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@infradead.org>
-Cc: Doug Ledford <dledford@redhat.com>, James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Doug Ledford <dledford@redhat.com>
+Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 04/30/15 12:33, Sagi Grimberg wrote:
-> On 4/30/2015 1:26 PM, Bart Van Assche wrote:
->> On 04/30/15 11:37, Christoph Hellwig wrote:
->>> On Thu, Apr 30, 2015 at 10:56:42AM +0200, Bart Van Assche wrote:
->>>> Introduce the helper function srp_wait_for_queuecommand().
->>>> Move the definition of scsi_request_fn_active(). This patch
->>>> does not change any functionality. A second call to
->>>> scsi_wait_for_queuecommand() will be introduced in the next
->>>> patch.
->>>
->>> Can we take a step back here?
->>>
->>> This isn;t something driver should be doing, so we really should take
->>> care of this in the SCSI midlayer.
->>>
->>> Especially given that we don't maintain request_fn_active for blk-mq.
+On 04/30/15 12:13, Sagi Grimberg wrote:
+> On 4/30/2015 11:59 AM, Bart Van Assche wrote:
+>> Unlike FC, there is no risk that SCSI devices will be offlined
+>> by the error handler if it is started while a reconnect attempt
+>> is ongoing. Hence report timeout errors as soon as possible
+>> if a higher software layer (e.g. multipathd) needs to be informed
+>> about a timeout. It is assumed that if both fast_io_fail_tmo < 0
+>> and rport->dev_loss_tmo < 0 that this means that there is no
+>> need to report timeouts quickly.
 >>
->> Hello Christoph,
+>> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>> Cc: James Bottomley <JBottomley@Odin.com>
+>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>> Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+>> ---
+>>   drivers/scsi/scsi_transport_srp.c | 9 ++++++++-
+>>   1 file changed, 8 insertions(+), 1 deletion(-)
 >>
->> How about the following:
->> * Modify scsi_target_block() and scsi_target_unblock(...,
->>     SDEV_TRANSPORT_OFFLINE) such that these functions wait until
->>     active queuecommand() calls have finished.
+>> diff --git a/drivers/scsi/scsi_transport_srp.c
+>> b/drivers/scsi/scsi_transport_srp.c
+>> index 4a44337..6667c2b 100644
+>> --- a/drivers/scsi/scsi_transport_srp.c
+>> +++ b/drivers/scsi/scsi_transport_srp.c
+>> @@ -61,6 +61,11 @@ static inline struct Scsi_Host
+>> *rport_to_shost(struct srp_rport *r)
+>>       return dev_to_shost(r->dev.parent);
+>>   }
+>>
+>> +static inline struct srp_rport *shost_to_rport(struct Scsi_Host *shost)
+>> +{
+>> +    return transport_class_to_srp_rport(&shost->shost_gendev);
+>> +}
+>> +
+>>   /**
+>>    * srp_tmo_valid() - check timeout combination validity
+>>    * @reconnect_delay: Reconnect delay in seconds.
+>> @@ -626,9 +631,11 @@ static enum blk_eh_timer_return
+>> srp_timed_out(struct scsi_cmnd *scmd)
+>>       struct scsi_device *sdev = scmd->device;
+>>       struct Scsi_Host *shost = sdev->host;
+>>       struct srp_internal *i = to_srp_internal(shost->transportt);
+>> +    struct srp_rport *rport = shost_to_rport(shost);
+>>
+>>       pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
+>> -    return i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
+>> +    return rport->fast_io_fail_tmo < 0 && rport->dev_loss_tmo < 0 &&
+>> +        i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
+>>           BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
+>>   }
+>>
+>>
 >
-> Won't this make scsi_target_unblock a sleeping function? It might
-> not fit all the contexts scsi_target_unblock is called.
+> I'm not sure I understand the purpose of this patch? If the user
+> requested fast_io_fail_tmo of X, I would assume it wants srp to retry
+> for the command for X secs. Why should we fail it any earlier than that?
+>
+> There is a situation where I've seen srp starting the fast_io_fail_tmo
+> later than expected because the QP retry exceeded error completion
+> arrives late for certain workloads. Was this the motivation for this
+> patch?
 
-The only callers in upstream code of scsi_target_block() and 
-scsi_target_unblock() I am aware of are the FC, iSCSI and SRP transport 
-layers and the drivers that use these transport layers. As far as I can 
-see both functions are always called from thread context and without 
-holding any spinlocks. A possible alternative to what I proposed in my 
-previous e-mail could be to provide a new function that waits for active 
-queuecommand() calls and that has to be called explicitly.
+The purpose of the srp_timed_out() function is not about failing 
+commands early but about postponing timeout errors. The above patch 
+causes a SCSI timeout to be handled as soon as the command timer expires 
+if rport->fast_io_fail_tmo >= 0 or rport->dev_loss_tmo >= 0.
 
 Bart.
-
-
