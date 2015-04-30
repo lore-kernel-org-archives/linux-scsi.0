@@ -1,81 +1,50 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 02/12] scsi_transport_srp: Fix a race condition
-Date: Thu, 30 Apr 2015 12:20:59 +0200
-Message-ID: <5542020B.40704@sandisk.com>
-References: <5541EE21.3050809@sandisk.com> <5541EE66.7090608@sandisk.com>
- <5541F96F.8090503@dev.mellanox.co.il>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
+Date: Thu, 30 Apr 2015 12:26:21 +0200
+Message-ID: <5542034D.5010300@sandisk.com>
+References: <5541EE21.3050809@sandisk.com> <5541EE4A.30803@sandisk.com>
+ <20150430093719.GA23486@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5541F96F.8090503-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0054.outbound.protection.outlook.com ([157.56.110.54]:59993
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750710AbbD3K03 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Apr 2015 06:26:29 -0400
+In-Reply-To: <20150430093719.GA23486@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Doug Ledford <dledford@redhat.com>, James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 04/30/15 11:44, Sagi Grimberg wrote:
-> On 4/30/2015 11:57 AM, Bart Van Assche wrote:
->> Avoid that srp_terminate_io() can get invoked while srp_queuecommand()
->> is in progress. This patch avoids that an I/O timeout can trigger the
->> following kernel warning:
->>
->> WARNING: at drivers/infiniband/ulp/srp/ib_srp.c:1447
->> srp_terminate_io+0xef/0x100 [ib_srp]()
->> Call Trace:
->>   [<ffffffff814c65a2>] dump_stack+0x4e/0x68
->>   [<ffffffff81051f71>] warn_slowpath_common+0x81/0xa0
->>   [<ffffffff8105204a>] warn_slowpath_null+0x1a/0x20
->>   [<ffffffffa075f51f>] srp_terminate_io+0xef/0x100 [ib_srp]
->>   [<ffffffffa07495da>] __rport_fail_io_fast+0xba/0xc0
->> [scsi_transport_srp]
->>   [<ffffffffa0749a90>] rport_fast_io_fail_timedout+0xe0/0xf0
->> [scsi_transport_srp]
->>   [<ffffffff8106e09b>] process_one_work+0x1db/0x780
->>   [<ffffffff8106e75b>] worker_thread+0x11b/0x450
->>   [<ffffffff81073c64>] kthread+0xe4/0x100
->>   [<ffffffff814cf26c>] ret_from_fork+0x7c/0xb0
->>
->> See also patch "scsi_transport_srp: Add transport layer error
->> handling" (commit ID 29c17324803c).
->>
->> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
->> Cc: James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
->> Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
->> Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
->> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #v3.13
->> ---
->>   drivers/scsi/scsi_transport_srp.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi_transport_srp.c
->> b/drivers/scsi/scsi_transport_srp.c
->> index 6ce1c48..4a44337 100644
->> --- a/drivers/scsi/scsi_transport_srp.c
->> +++ b/drivers/scsi/scsi_transport_srp.c
->> @@ -437,8 +437,10 @@ static void __rport_fail_io_fast(struct srp_rport
->> *rport)
->>
->>       /* Involve the LLD if possible to terminate all I/O on the
->> rport. */
->>       i = to_srp_internal(shost->transportt);
->> -    if (i->f->terminate_rport_io)
->> +    if (i->f->terminate_rport_io) {
->> +        srp_wait_for_queuecommand(shost);
->>           i->f->terminate_rport_io(rport);
->> +    }
+On 04/30/15 11:37, Christoph Hellwig wrote:
+> On Thu, Apr 30, 2015 at 10:56:42AM +0200, Bart Van Assche wrote:
+>> Introduce the helper function srp_wait_for_queuecommand().
+>> Move the definition of scsi_request_fn_active(). This patch
+>> does not change any functionality. A second call to
+>> scsi_wait_for_queuecommand() will be introduced in the next
+>> patch.
 >
-> Why not just terminate the inflight IO before unblocking the target?
+> Can we take a step back here?
+>
+> This isn;t something driver should be doing, so we really should take
+> care of this in the SCSI midlayer.
+>
+> Especially given that we don't maintain request_fn_active for blk-mq.
 
-Sorry but I don't think that would prevent the described race condition. 
-The call trace in the description of this patch illustrates that 
-srp_queuecommand() can still be active even after the transport state 
-has been changed into "offline". Hence if terminate_rport_io() would be 
-invoked earlier the same race would still exist.
+Hello Christoph,
+
+How about the following:
+* Modify scsi_target_block() and scsi_target_unblock(...,
+   SDEV_TRANSPORT_OFFLINE) such that these functions wait until
+   active queuecommand() calls have finished.
+* Ensure that this approach works not only for the traditional
+   block layer but also for blk-mq.
+
+With these changes it won't be necessary anymore to have something like 
+srp_wait_for_queuecommand() in the SRP transport layer.
 
 Bart.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
