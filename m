@@ -1,92 +1,52 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 07/12] IB/srp: Remove superfluous casts
-Date: Thu, 30 Apr 2015 13:13:51 +0300
-Message-ID: <5542005F.4030904@dev.mellanox.co.il>
-References: <5541EE21.3050809@sandisk.com> <5541EF27.7000207@sandisk.com>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH 08/12] IB/srp: Rearrange module description
+Date: Thu, 30 Apr 2015 13:15:48 +0300
+Message-ID: <554200D4.5060300@dev.mellanox.co.il>
+References: <5541EE21.3050809@sandisk.com> <5541EF39.6040301@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35271 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbbD3KNz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2015 06:13:55 -0400
-Received: by widdi4 with SMTP id di4so13080085wid.0
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2015 03:13:54 -0700 (PDT)
-In-Reply-To: <5541EF27.7000207@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5541EF39.6040301-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Doug Ledford <dledford@redhat.com>
-Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 On 4/30/2015 12:00 PM, Bart Van Assche wrote:
-> A long time ago the data type int64_t was declared as long long
-> on x86 systems and as long on PPC systems. Today that data type
-> is declared as long long on all Linux architectures. This means
-> that the casts from uint64_t into unsigned long long are
-> superfluous.  Remove these superfluous casts.
+> Move the module version and release date into separate fields.
+> This makes the modinfo output easier to read.
 >
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
 > ---
->   drivers/infiniband/ulp/srp/ib_srp.c | 13 +++++--------
->   1 file changed, 5 insertions(+), 8 deletions(-)
+>   drivers/infiniband/ulp/srp/ib_srp.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-> index 5d7d790..8b6f166 100644
+> index 8b6f166..3727b90 100644
 > --- a/drivers/infiniband/ulp/srp/ib_srp.c
 > +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> @@ -780,7 +780,7 @@ static int srp_send_req(struct srp_rdma_ch *ch, bool multich)
->   		shost_printk(KERN_DEBUG, target->scsi_host,
->   			     PFX "Topspin/Cisco initiator port ID workaround "
->   			     "activated for target GUID %016llx\n",
-> -			     (unsigned long long) be64_to_cpu(target->ioc_guid));
-> +			     be64_to_cpu(target->ioc_guid));
->   		memset(req->priv.initiator_port_id, 0, 8);
->   		memcpy(req->priv.initiator_port_id + 8,
->   		       &target->srp_host->srp_dev->dev->node_guid, 8);
-> @@ -2561,8 +2561,7 @@ static ssize_t show_id_ext(struct device *dev, struct device_attribute *attr,
->   {
->   	struct srp_target_port *target = host_to_target(class_to_shost(dev));
+> @@ -59,9 +59,10 @@
+>   #define DRV_RELDATE	"July 1, 2013"
 >
-> -	return sprintf(buf, "0x%016llx\n",
-> -		       (unsigned long long) be64_to_cpu(target->id_ext));
-> +	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->id_ext));
->   }
+>   MODULE_AUTHOR("Roland Dreier");
+> -MODULE_DESCRIPTION("InfiniBand SCSI RDMA Protocol initiator "
+> -		   "v" DRV_VERSION " (" DRV_RELDATE ")");
+> +MODULE_DESCRIPTION("InfiniBand SCSI RDMA Protocol initiator");
+>   MODULE_LICENSE("Dual BSD/GPL");
+> +MODULE_VERSION(DRV_VERSION);
+> +MODULE_INFO(release_date, DRV_RELDATE);
 >
->   static ssize_t show_ioc_guid(struct device *dev, struct device_attribute *attr,
-> @@ -2570,8 +2569,7 @@ static ssize_t show_ioc_guid(struct device *dev, struct device_attribute *attr,
->   {
->   	struct srp_target_port *target = host_to_target(class_to_shost(dev));
->
-> -	return sprintf(buf, "0x%016llx\n",
-> -		       (unsigned long long) be64_to_cpu(target->ioc_guid));
-> +	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->ioc_guid));
->   }
->
->   static ssize_t show_service_id(struct device *dev,
-> @@ -2579,8 +2577,7 @@ static ssize_t show_service_id(struct device *dev,
->   {
->   	struct srp_target_port *target = host_to_target(class_to_shost(dev));
->
-> -	return sprintf(buf, "0x%016llx\n",
-> -		       (unsigned long long) be64_to_cpu(target->service_id));
-> +	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->service_id));
->   }
->
->   static ssize_t show_pkey(struct device *dev, struct device_attribute *attr,
-> @@ -2771,7 +2768,7 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
->
->   	target->state = SRP_TARGET_SCANNING;
->   	sprintf(target->target_name, "SRP.T10:%016llX",
-> -		 (unsigned long long) be64_to_cpu(target->id_ext));
-> +		be64_to_cpu(target->id_ext));
->
->   	if (scsi_add_host(target->scsi_host, host->srp_dev->dev->dma_device))
->   		return -ENODEV;
+>   static unsigned int srp_sg_tablesize;
+>   static unsigned int cmd_sg_entries;
 >
 
 Looks good.
 
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
