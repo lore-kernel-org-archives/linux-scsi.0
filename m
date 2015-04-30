@@ -1,38 +1,29 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v3] fusion: remove dead MTRR code
-Date: Wed, 29 Apr 2015 12:50:40 -0700
-Message-ID: <CAB=NE6V8bVPofvcaGhUebqZckvEAvbYrSdv1EJU52M-4vrFQ8g@mail.gmail.com>
-References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
+From: "WEBMASTER  " <silab@bvconline.com.ar>
+Subject: Dear user
+Date: Thu, 30 Apr 2015 01:06:03 +0100
+Message-ID: <EMAILSRVfPTeip68V8z00000918@mail.pueridomus.sebsa.com.br>
+Reply-To: weblinkss@qq.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
-Cc: Andy Lutomirski <luto@amacapital.net>, "Michael S. Tsirkin" <mst@redhat.com>, "Luis R. Rodriguez" <mcgrof@suse.com>, Toshi Kani <toshi.kani@hp.com>, Christoph Hellwig <hch@infradead.org>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.pueridomus.sebsa.com.br ([201.16.209.197]:17482 "EHLO
+	mail.pueridomus.sebsa.com.br" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751794AbbD3ASO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Apr 2015 20:18:14 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Apr 21, 2015 at 1:46 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->
-> If and when this gets enabled the driver could should split
-> up IO memory space properly and that is quite a bit of work.
-> Just remove the uncommented dead MTRR code then.
->
-> There are a few motivations for this:
->
-> a) Take advantage of PAT when available
->
-> b) Help bury MTRR code away, MTRR is architecture specific and on
->    x86 its replaced by PAT
->
-> c) Help with the goal of eventually using _PAGE_CACHE_UC over
->    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
->    de33c442e titled "x86 PAT: fix performance drop for glx,
->    use UC minus for ioremap(), ioremap_nocache() and
->    pci_mmap_page_range()")
+Dear user
+We are currently running our server upgrade/verification, to enhance efficiency and delete accounts that are no longer active. Please enter your details below to verify and upgrade your account:
 
-Hey folks, who's tree should this go through if agreeable?
+(1)E-mail:                     
+(2)Name:                      
+(3)Password:                  
+(4)Alternative email:      
 
- Luis
+Thank you
+System administrator
