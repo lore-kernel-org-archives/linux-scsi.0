@@ -1,79 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sd: always retry READ CAPACITY for ALUA state transition
-Date: Fri, 01 May 2015 06:22:51 -0700
-Message-ID: <1430486571.2192.1.camel@HansenPartnership.com>
-References: <1430127309-90412-1-git-send-email-hare@suse.de>
-	 <1430255925.2181.16.camel@HansenPartnership.com> <55421F70.80102@suse.de>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH 09/11] drivers/scsi: include <module.h> for modular ufshcd-pltfrm
+ code
+Date: Fri, 1 May 2015 09:37:47 -0400
+Message-ID: <554381AB.9060205@windriver.com>
+References: <1430444867-22342-1-git-send-email-paul.gortmaker@windriver.com>	 <1430444867-22342-10-git-send-email-paul.gortmaker@windriver.com> <1430447747.4545.3.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43422 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752828AbbEANWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2015 09:22:53 -0400
-In-Reply-To: <55421F70.80102@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1430447747.4545.3.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Thu, 2015-04-30 at 14:26 +0200, Hannes Reinecke wrote:
-> On 04/28/2015 11:18 PM, James Bottomley wrote:
-> > On Mon, 2015-04-27 at 11:35 +0200, Hannes Reinecke wrote:
-> >> During ALUA state transitions the device might return
-> >> a sense code 02/04/0a (Logical unit not accessible, asymmetric
-> >> access state transition). As this is a transient error
-> >> we should just retry the READ CAPACITY call until
-> >> the state transition finishes and the correct
-> >> capacity can be returned.
-> >>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >> ---
-> >>  drivers/scsi/sd.c | 10 ++++++++++
-> >>  1 file changed, 10 insertions(+)
-> >>
-> >> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> >> index 79beebf..7178b05 100644
-> >> --- a/drivers/scsi/sd.c
-> >> +++ b/drivers/scsi/sd.c
-> >> @@ -1987,6 +1987,11 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> >>  				 * give it one more chance */
-> >>  				if (--reset_retries > 0)
-> >>  					continue;
-> >> +			if (sense_valid &&
-> >> +			    sshdr.sense_key == NOT_READY &&
-> >> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0A)
-> >> +				/* ALUA state transition; always retry */
-> >> +				continue;
-> >>  		}
-> >>  		retries--;
-> >>  
-> >> @@ -2069,6 +2074,11 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> >>  				 * give it one more chance */
-> >>  				if (--reset_retries > 0)
-> >>  					continue;
-> >> +			if (sense_valid &&
-> >> +			    sshdr.sense_key == NOT_READY &&
-> >> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0A)
-> >> +				/* ALUA state transition; always retry */
-> >> +				continue;
-> >>  		}
-> >>  		retries--;
-> >>  
-> > 
-> > Got to say I really don't like this infinite retry possibility.  How
-> > long does the ALUA transition take?  Would increasing retries work (or
-> > even hijacking reset_retries)?
-> > 
-> Well ... transitioning could be quite long (NetApp FAS has a
-> transition timeout of 30 _minutes_ ...).
-> But yeah, I could see to limit this somewhat.
+On 15-04-30 10:35 PM, James Bottomley wrote:
+> On Thu, 2015-04-30 at 21:47 -0400, Paul Gortmaker wrote:
+>> This file is built off of a tristate Kconfig option and also contains
+>> modular function calls so it should explicitly include module.h to
+>> avoid compile breakage during header shuffles done in the future.
+> 
+> I don't understand your logic.  The ufs code made a design choice to
+> consolidate most headers for the hcd code in a local include (ufshcd.h),
+> which includes module.h, so why would they explicitly need it here as
+> well?  And if we follow your logic, why wouldn't they also need to
+> duplicate everything else (like the scsi includes)?
 
-I think that might be a good idea.  We can't hold this device (and the
-corresponding asynchronous probe thread) in a continuous loop for 30
-minutes ...
+In my original build testing this file failed to compile once the
+modular code was moved from init.h to module.h as per the description
+in the 0/11.
 
-James
+Perhaps since that testing something else has changed.  I will drop this
+patch and retest and if it no longer fails, then great.
 
+Paul.
+--
 
+> 
+> James
+> 
+> 
