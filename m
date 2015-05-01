@@ -1,29 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 09/11] drivers/scsi: include <module.h> for modular
- ufshcd-pltfrm code
-Date: Thu, 30 Apr 2015 19:35:47 -0700
-Message-ID: <1430447747.4545.3.camel@HansenPartnership.com>
-References: <1430444867-22342-1-git-send-email-paul.gortmaker@windriver.com>
-	 <1430444867-22342-10-git-send-email-paul.gortmaker@windriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1430444867-22342-10-git-send-email-paul.gortmaker@windriver.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v4 1/4] target: Fix inconsistent address passed to kunmap_atomic() in sbc_dif_copy_prot()
+Date: Fri,  1 May 2015 15:23:48 +0900
+Message-ID: <1430461431-5936-2-git-send-email-akinobu.mita@gmail.com>
+References: <1430461431-5936-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:35276 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904AbbEAGYM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2015 02:24:12 -0400
+In-Reply-To: <1430461431-5936-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2015-04-30 at 21:47 -0400, Paul Gortmaker wrote:
-> This file is built off of a tristate Kconfig option and also contains
-> modular function calls so it should explicitly include module.h to
-> avoid compile breakage during header shuffles done in the future.
+In sbc_dif_copy_prot(), the addresses passed to kunmap_atomic() are
+inconsistent with the addresses which are mapped by kmap_atomic().
+That could be problematic if an SG element has its length larger than
+PAGE_SIZE as kunmap_atomic() will attempt to unmap different page.
 
-I don't understand your logic.  The ufs code made a design choice to
-consolidate most headers for the hcd code in a local include (ufshcd.h),
-which includes module.h, so why would they explicitly need it here as
-well?  And if we follow your logic, why wouldn't they also need to
-duplicate everything else (like the scsi includes)?
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+* New patch from v3
 
-James
+ drivers/target/target_core_sbc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index edba39f..b765cdd 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1299,13 +1299,14 @@ void sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
+ 			copied += len;
+ 			psg_len -= len;
+ 
++			kunmap_atomic(addr - sg->offset - offset);
++
+ 			if (offset >= sg->length) {
+ 				sg = sg_next(sg);
+ 				offset = 0;
+ 			}
+-			kunmap_atomic(addr);
+ 		}
+-		kunmap_atomic(paddr);
++		kunmap_atomic(paddr - psg->offset);
+ 	}
+ }
+ EXPORT_SYMBOL(sbc_dif_copy_prot);
+-- 
+1.9.1
+
