@@ -1,42 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 9/9] scsi_dh: don't allow to detach device handlers at
- runtime
-Date: Fri, 01 May 2015 09:19:12 +0200
-Message-ID: <554328F0.1020101@suse.de>
-References: <1430415151-30948-1-git-send-email-hch@lst.de> <1430415151-30948-10-git-send-email-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/9] dm-mpath, scsi_dh: don't let dm detach device
+	handlers
+Date: Fri, 1 May 2015 11:20:53 +0200
+Message-ID: <20150501092053.GA9341@lst.de>
+References: <1430415151-30948-1-git-send-email-hch@lst.de> <1430415151-30948-3-git-send-email-hch@lst.de> <20150430182153.GB30542@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60141 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:54564 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751604AbbEAHTO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 May 2015 03:19:14 -0400
-In-Reply-To: <1430415151-30948-10-git-send-email-hch@lst.de>
+	id S1752984AbbEAJUz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 May 2015 05:20:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20150430182153.GB30542@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: Mike Snitzer <snitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 04/30/2015 07:32 PM, Christoph Hellwig wrote:
-> The I/O submission and completion pathes call into the device handler
-> without any synchronization agains detachment.  So disallow detaching
-> device handlers at runtime.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On Thu, Apr 30, 2015 at 02:21:54PM -0400, Mike Snitzer wrote:
+> > While allowing dm-mpath to attach device handlers is a functionality we need
+> > for backwards compatibility reason there is no reason to reference count
+> > them and detach them if dm-mpath stops using the device for some reason.
+> > 
+> > If the device handler works for the given device it can just stay attached.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Looks good.  But, unless I'm missing something, these DM and scsi_dh
+> changes can be made in separate patches so that I can carry the DM
+> change without needing to touch scsi_dh (SCSI maintainer boundary).
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Unfortunately they can't.  E.g. if we remove the detach in dm-mpath
+but keep the refcounting in scsi_dh we'll leak references.  Of if we
+remove the request_module in dm without adding it to scsi we stop
+asking for the module.  So I'll need to collect ACKs from both sides
+and find a suitable tree to get this in.
