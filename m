@@ -1,38 +1,75 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/9] dm-mpath, scsi_dh: don't let dm detach device
-	handlers
-Date: Fri, 1 May 2015 11:20:53 +0200
-Message-ID: <20150501092053.GA9341@lst.de>
-References: <1430415151-30948-1-git-send-email-hch@lst.de> <1430415151-30948-3-git-send-email-hch@lst.de> <20150430182153.GB30542@redhat.com>
+From: Martin George <marting@netapp.com>
+Subject: Re: [PATCH] sd: always retry READ CAPACITY for ALUA state transition
+Date: Fri, 1 May 2015 18:09:35 +0530
+Message-ID: <55437407.7060702@netapp.com>
+References: <1430127309-90412-1-git-send-email-hare@suse.de> <1430255925.2181.16.camel@HansenPartnership.com> <55421F70.80102@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54564 "EHLO newverein.lst.de"
+Received: from mx143.netapp.com ([216.240.21.24]:51670 "EHLO mx143.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752984AbbEAJUz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 May 2015 05:20:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20150430182153.GB30542@redhat.com>
+	id S1751122AbbEAMtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 May 2015 08:49:07 -0400
+In-Reply-To: <55421F70.80102@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Thu, Apr 30, 2015 at 02:21:54PM -0400, Mike Snitzer wrote:
-> > While allowing dm-mpath to attach device handlers is a functionality we need
-> > for backwards compatibility reason there is no reason to reference count
-> > them and detach them if dm-mpath stops using the device for some reason.
-> > 
-> > If the device handler works for the given device it can just stay attached.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Looks good.  But, unless I'm missing something, these DM and scsi_dh
-> changes can be made in separate patches so that I can carry the DM
-> change without needing to touch scsi_dh (SCSI maintainer boundary).
+On 4/30/2015 5:56 PM, Hannes Reinecke wrote:
+> On 04/28/2015 11:18 PM, James Bottomley wrote:
+>> On Mon, 2015-04-27 at 11:35 +0200, Hannes Reinecke wrote:
+>>> During ALUA state transitions the device might return
+>>> a sense code 02/04/0a (Logical unit not accessible, asymmetric
+>>> access state transition). As this is a transient error
+>>> we should just retry the READ CAPACITY call until
+>>> the state transition finishes and the correct
+>>> capacity can be returned.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> ---
+>>>   drivers/scsi/sd.c | 10 ++++++++++
+>>>   1 file changed, 10 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>>> index 79beebf..7178b05 100644
+>>> --- a/drivers/scsi/sd.c
+>>> +++ b/drivers/scsi/sd.c
+>>> @@ -1987,6 +1987,11 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>>>   				 * give it one more chance */
+>>>   				if (--reset_retries > 0)
+>>>   					continue;
+>>> +			if (sense_valid &&
+>>> +			    sshdr.sense_key == NOT_READY &&
+>>> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0A)
+>>> +				/* ALUA state transition; always retry */
+>>> +				continue;
+>>>   		}
+>>>   		retries--;
+>>>
+>>> @@ -2069,6 +2074,11 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>>>   				 * give it one more chance */
+>>>   				if (--reset_retries > 0)
+>>>   					continue;
+>>> +			if (sense_valid &&
+>>> +			    sshdr.sense_key == NOT_READY &&
+>>> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0A)
+>>> +				/* ALUA state transition; always retry */
+>>> +				continue;
+>>>   		}
+>>>   		retries--;
+>>>
+>>
+>> Got to say I really don't like this infinite retry possibility.  How
+>> long does the ALUA transition take?  Would increasing retries work (or
+>> even hijacking reset_retries)?
+>>
+> Well ... transitioning could be quite long (NetApp FAS has a
+> transition timeout of 30 _minutes_ ...).
 
-Unfortunately they can't.  E.g. if we remove the detach in dm-mpath
-but keep the refcounting in scsi_dh we'll leak references.  Of if we
-remove the request_module in dm without adding it to scsi we stop
-asking for the module.  So I'll need to collect ACKs from both sides
-and find a suitable tree to get this in.
+Well, actually NetApp FAS has a transition timeout of 2 minutes, and not 
+30 minutes - as reported in the IMPLICIT TRANSITION TIMEOUT value in the 
+extended RTPG data.
+
+-Martin
