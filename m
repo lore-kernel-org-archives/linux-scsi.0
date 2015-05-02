@@ -1,179 +1,108 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: RE: sysfs group not found for kobject on mvsas drive removal
-Date: Sat, 2 May 2015 00:45:06 +0000
-Message-ID: <b9300ff86eb6463286ace251be231b01@EX01.lg.local>
-References: <c952e6a1dc4b4badb3b4a55272bfbc48@EX01.lg.local>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Sat, 2 May 2015 19:56:21 +0200
+Message-ID: <20150502175621.GA15525@kroah.com>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
+ <54AC0A17.8020405@redhat.com>
+ <20150128001837.GE17677@kroah.com>
+ <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
+ <552BC234.4020000@redhat.com>
+ <20150426092719.GA1460@kroah.com>
+ <553E28DC.1040100@redhat.com>
+ <20150427125529.GA18817@kroah.com>
+ <553E354B.90208@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o143.mxlogic.net ([208.65.144.66]:56367 "EHLO
-	p01c11o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbbEBAqg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2015 20:46:36 -0400
-In-Reply-To: <c952e6a1dc4b4badb3b4a55272bfbc48@EX01.lg.local>
-Content-Language: en-US
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53416 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750955AbbEBR4Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2015 13:56:25 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailout.nyi.internal (Postfix) with ESMTP id 7E11F20808
+	for <linux-scsi@vger.kernel.org>; Sat,  2 May 2015 13:56:24 -0400 (EDT)
+Content-Disposition: inline
+In-Reply-To: <553E354B.90208@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James Bottomley (James.Bottomley@HansenPartnership.com)" <James.Bottomley@HansenPartnership.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: Masoud Sharbiani <msharbiani@twopensource.com>, Vinson Lee <vlee@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-After some debugging this is what I have found
-
-sas_phye_loss_of_signal gets triggered on phy_event from mvsas
-	sas_phye_loss_of_signal calls sas_deform_port
-		sas_deform_port posts a DISCE_DESTRUCT event (sas_unregister_domain_devices-> sas_unregister_dev)
-		sas_deform_port calls sas_port_delete
-			sas_port_delete calls sas_port_delete_link
-				sysfs_remove_group: kobject 'port-X:Y'
-			sas_port_delete calls device_del
-				sysfs_remove_group: kobject 'port-X:Y'
-		
-sas_destruct_devices gets triggered for the destruct event (DISCE_DESTRUCT)
-	sas_destruct_devices calls sas_rphy_delete
-		sas_rphy_delete calls scsi_remove_device
-			scsi_remove_device calls __scsi_remove_device
-				__scsi_remove_device calls bsg_unregister_queue
-					bsg_unregister_queue -> device_unregister -> device_del -> sysfs_remove_group: kobject 'X:0:0:0'
-
-Since X:0:0:0 falls under port-X:Y (which got deleted during sas_port_delete), this call results in the warning. All the later warnings in the dmesg output I sent earlier are trying to delete objects under port-X:Y. Since port-X:Y got recursively deleted, all these calls result in warnings. Since, the PHY and DISC events are processed in two different work queues (and one triggers the other), is there any way other than checking if the object exists in sysfs (in device_del) before deleting?
-
-Praveen
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Praveen Murali
-> Sent: Friday, May 01, 2015 1:47 PM
-> To: James Bottomley (James.Bottomley@HansenPartnership.com);
-> dan.j.williams@intel.com
-> Cc: linux-scsi@vger.kernel.org
-> Subject: sysfs group not found for kobject on mvsas drive removal
+On Mon, Apr 27, 2015 at 03:10:35PM +0200, Tomas Henzl wrote:
+> On 04/27/2015 02:55 PM, Greg KH wrote:
+> > On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
+> >> On 04/26/2015 11:27 AM, Greg KH wrote:
+> >>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
+> >>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
+> >>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
+> >>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
+> >>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
+> >>>>>>>> Dear stable maintainers,
+> >>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
+> >>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
+> >>>>>>>> earlier, if applicable)?
+> >>>>>>> Please do not apply this patch isolated from his friend, the
+> >>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
+> >>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
+> >>>>>>>
+> >>>>>>> In addition to that, after the original issue goes away you may notice sometimes
+> >>>>>>> an unhandled irq 16 message, to fix this a patch is posted
+> >>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
+> >>>>>>> This patch still awaits a maintainers review though.
+> >>>>>>>
+> >>>>>>> Probably the best idea is to wait until the issue is solved completely.
+> >>>>>> I'll wait, when it all gets worked out, please let stable@ know what
+> >>>>>> patches to apply where.
+> >>>>>>
+> >>>>>> thanks,
+> >>>>>>
+> >>>>>> greg k-h
+> >>>>>> --
+> >>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
+> >>>>>> the body of a message to majordomo@vger.kernel.org
+> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>>>> Hi, Thomas.
+> >>>>>
+> >>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
+> >>>>> turn off interrupts when kdump starts".
+> >>>>>
+> >>>>> Are the following patches suitable for stable now?
+> >>>> Yes, I believe they are, just note that 
+> >>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+> >>>> is not a part of that group we discussed before, but it may be added
+> >>>> to stable too.
+> >>>>
+> >>>> Cheers,
+> >>>> Tomas
+> >>>>
+> >>>>> 3b74729 hpsa: turn off interrupts when kdump starts
+> >>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+> >>>>> 859c75a hpsa: add missing pci_set_master in kdump path
+> >>>>> 132aa22 hpsa: refine the pci enable/disable handling
+> >>> So what order, and to what stable tree(s) do you want these applied to?
+> >>> They seem to span a number of kernel versions, so I'm not quite sure
+> >>> what you are wanting me to do.
+> >> Please add it in this order
+> >> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
+> >> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
+> >>    The first two patches create the fix Masoud has asked for originally to port to stable.
+> >> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
+> >>    The third should be added too, it fixes an issue made visible by the first patch
+> >>
+> >> The fourth patch
+> >> 03741d956e hpsa: fix memory leak in kdump hard reset
+> >> is completely unrelated to the first group, so it may be added after or before
+> >> or in the same sequence as it is in the mainline - that is before the third patch.
+> >> This patch is tiny error path fix - not sure if important enough for stable.
+> > Which stable tree(s) do you want these applied to?  As these "span"
+> > different kernel versions, I have no idea of what to do here.
 > 
-> Hi Guys,
->   I have a server with the Marvell SAS HBA and in the newer versions of the
-> kernel I have been seeing a whole bunch of this "sysfs group not found for
-> kobject" warnings when a drive is removed; I am specifically trying to get the
-> 3.16 kernel up and running. Looking around I found there were a few reports
-> and patches on this issue which have been included in and around 3.14. The last
-> one (I believe) was by Joe Lawrence (scsi_transport_sas: move bsg destructor
-> into sas_rphy_remove). I checked the sources and looks like all patches are
-> included but I still see this issue.
->  Could this be an issue with the order in which mvsas driver does the tear down
-> during drive removal? Following is a snippet of the trace. I have attached the
-> full logs to the mail which contains rest of the trace with all the warnings
-> related to a drive removal. Any ideas?
-> 
-> Thanks,
-> Praveen
-> 
-> [ 2338.512534] ------------[ cut here ]------------
-> [ 2338.512551] WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:219
-> device_del+0x40/0x1c0()
-> [ 2338.512557] sysfs group ffffffff818b97e0 not found for kobject '2:0:4:0'
-> [ 2338.512561] Modules linked in: g_mass_storage usb_f_mass_storage
-> libcomposite firewire_sbp2 iptable_filter ip_tables x_tables joydev sg
-> hid_multitouch usbhid hid firewire_ohci firewire_core crc_itu_t uhci_hcd
-> scsi_transport_iscsi evdev via_rng rng_core kvm_intel dm_dmirror dm_zcache
-> dm_mod kvm padlock_aes snd_hda_codec_hdmi psmouse snd_hda_codec_via
-> padlock_sha pcspkr snd_hda_codec_generic serio_raw tpm_tis tpm xhci_hcd
-> ehci_pci ehci_hcd shpchp usb3380 ac udc_core snd_hda_intel
-> snd_hda_controller snd_hda_codec snd_hwdep snd_pcm video r8169 mii
-> snd_timer snd soundcore mvsas iscsi_target_mod processor target_core_mod
-> button configfs sswipe libsas scsi_transport_sas picdev usbcore usb_common
-> via_cputemp hwmon_vid fuse parport_pc ppdev lp parport autofs4 ext4 crc16
-> mbcache jbd2 s3g(PO) sd_mod crc_t10dif crct10dif_common ahci libahci libata
-> scsi_mod fan thermal_sys s3g_drm(O) drm i2c_core [last unloaded:
-> libcomposite]
-> [ 2338.512724] CPU: 2 PID: 6 Comm: kworker/u8:0 Tainted: P        W  O  3.16.7-
-> ckt9-logicube-ng.3 #1
-> [ 2338.512729] Hardware name: To be filled by O.E.M. To be filled by
-> O.E.M./VT6085, BIOS 4.6.5 01/23/2015
-> [ 2338.512747] Workqueue: scsi_wq_2 sas_destruct_devices [libsas]
-> [ 2338.512751]  0000000000000009 ffffffff8151cd18 ffff88011b35bcd8
-> ffffffff810687b7
-> [ 2338.512760]  ffff88011a661400 ffff88011b35bd28 ffff8800c6e5e968
-> ffff880000028810
-> [ 2338.512767]  ffff8800c89f2c00 ffffffff8106881c ffffffff81733b68
-> 0000000000000028
-> [ 2338.512775] Call Trace:
-> [ 2338.512787]  [<ffffffff8151cd18>] ? dump_stack+0x41/0x51
-> [ 2338.512796]  [<ffffffff810687b7>] ? warn_slowpath_common+0x77/0x90
-> [ 2338.512804]  [<ffffffff8106881c>] ? warn_slowpath_fmt+0x4c/0x50
-> [ 2338.512812]  [<ffffffff813ad2d0>] ? device_del+0x40/0x1c0
-> [ 2338.512819]  [<ffffffff813ad46a>] ? device_unregister+0x1a/0x70
-> [ 2338.512828]  [<ffffffff812a535e>] ? bsg_unregister_queue+0x5e/0xb0
-> [ 2338.512847]  [<ffffffffa00781a9>] ? __scsi_remove_device+0xa9/0xd0
-> [scsi_mod]
-> [ 2338.512860]  [<ffffffffa00781f1>] ? scsi_remove_device+0x21/0x30
-> [scsi_mod]
-> [ 2338.512873]  [<ffffffffa0078392>] ? scsi_remove_target+0x162/0x260
-> [scsi_mod]
-> [ 2338.512885]  [<ffffffffa03639cd>] ? sas_rphy_remove+0x5d/0x70
-> [scsi_transport_sas]
-> [ 2338.512895]  [<ffffffffa0365f2e>] ? sas_rphy_delete+0xe/0x20
-> [scsi_transport_sas]
-> [ 2338.512905]  [<ffffffffa0384865>] ? sas_destruct_devices+0x65/0x90 [libsas]
-> [ 2338.512914]  [<ffffffff81083054>] ? process_one_work+0x174/0x460
-> [ 2338.512921]  [<ffffffff81083a5b>] ? worker_thread+0x6b/0x530
-> [ 2338.512928]  [<ffffffff810839f0>] ? rescuer_thread+0x2d0/0x2d0
-> [ 2338.512936]  [<ffffffff81089ccf>] ? kthread+0xcf/0xf0
-> [ 2338.512945]  [<ffffffff81089c00>] ? kthread_create_on_node+0x180/0x180
-> [ 2338.512953]  [<ffffffff81522b58>] ? ret_from_fork+0x58/0x90
-> [ 2338.512961]  [<ffffffff81089c00>] ? kthread_create_on_node+0x180/0x180
-> [ 2338.512966] ---[ end trace a726bd98d3e66840 ]---
-> [ 2338.513091] ------------[ cut here ]------------
-> [ 2338.513100] WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:219
-> device_del+0x40/0x1c0()
-> [ 2338.513104] sysfs group ffffffff818b97e0 not found for kobject '2:0:4:0'
-> [ 2338.513107] Modules linked in: g_mass_storage usb_f_mass_storage
-> libcomposite firewire_sbp2 iptable_filter ip_tables x_tables joydev sg
-> hid_multitouch usbhid hid firewire_ohci firewire_core crc_itu_t uhci_hcd
-> scsi_transport_iscsi evdev via_rng rng_core kvm_intel dm_dmirror dm_zcache
-> dm_mod kvm padlock_aes snd_hda_codec_hdmi psmouse snd_hda_codec_via
-> padlock_sha pcspkr snd_hda_codec_generic serio_raw tpm_tis tpm xhci_hcd
-> ehci_pci ehci_hcd shpchp usb3380 ac udc_core snd_hda_intel
-> snd_hda_controller snd_hda_codec snd_hwdep snd_pcm video r8169 mii
-> snd_timer snd soundcore mvsas iscsi_target_mod processor target_core_mod
-> button configfs sswipe libsas scsi_transport_sas picdev usbcore usb_common
-> via_cputemp hwmon_vid fuse parport_pc ppdev lp parport autofs4 ext4 crc16
-> mbcache jbd2 s3g(PO) sd_mod crc_t10dif crct10dif_common ahci libahci libata
-> scsi_mod fan thermal_sys s3g_drm(O) drm i2c_core [last unloaded:
-> libcomposite]
-> [ 2338.513243] CPU: 2 PID: 6 Comm: kworker/u8:0 Tainted: P        W  O  3.16.7-
-> ckt9-logicube-ng.3 #1
-> [ 2338.513247] Hardware name: To be filled by O.E.M. To be filled by
-> O.E.M./VT6085, BIOS 4.6.5 01/23/2015
-> [ 2338.513258] Workqueue: scsi_wq_2 sas_destruct_devices [libsas]
-> [ 2338.513262]  0000000000000009 ffffffff8151cd18 ffff88011b35bce8
-> ffffffff810687b7
-> [ 2338.513270]  ffff8800c6e5ec20 ffff88011b35bd38 ffff8800c6e5e968
-> ffff880000028810
-> [ 2338.513277]  ffff8800c89f2c00 ffffffff8106881c ffffffff81733b68
-> 0000000000000028
-> [ 2338.513285] Call Trace:
-> [ 2338.513293]  [<ffffffff8151cd18>] ? dump_stack+0x41/0x51
-> [ 2338.513300]  [<ffffffff810687b7>] ? warn_slowpath_common+0x77/0x90
-> [ 2338.513308]  [<ffffffff8106881c>] ? warn_slowpath_fmt+0x4c/0x50
-> [ 2338.513317]  [<ffffffff812b9f70>] ? cleanup_uevent_env+0x10/0x10
-> [ 2338.513324]  [<ffffffff813ad2d0>] ? device_del+0x40/0x1c0
-> [ 2338.513331]  [<ffffffff813ad46a>] ? device_unregister+0x1a/0x70
-> [ 2338.513345]  [<ffffffffa00781b5>] ? __scsi_remove_device+0xb5/0xd0
-> [scsi_mod]
-> [ 2338.513358]  [<ffffffffa00781f1>] ? scsi_remove_device+0x21/0x30
-> [scsi_mod]
-> [ 2338.513370]  [<ffffffffa0078392>] ? scsi_remove_target+0x162/0x260
-> [scsi_mod]
-> [ 2338.513380]  [<ffffffffa03639cd>] ? sas_rphy_remove+0x5d/0x70
-> [scsi_transport_sas]
-> [ 2338.513390]  [<ffffffffa0365f2e>] ? sas_rphy_delete+0xe/0x20
-> [scsi_transport_sas]
-> [ 2338.513400]  [<ffffffffa0384865>] ? sas_destruct_devices+0x65/0x90 [libsas]
-> [ 2338.513408]  [<ffffffff81083054>] ? process_one_work+0x174/0x460
-> [ 2338.513415]  [<ffffffff81083a5b>] ? worker_thread+0x6b/0x530
-> [ 2338.513422]  [<ffffffff810839f0>] ? rescuer_thread+0x2d0/0x2d0
-> [ 2338.513429]  [<ffffffff81089ccf>] ? kthread+0xcf/0xf0
-> [ 2338.513437]  [<ffffffff81089c00>] ? kthread_create_on_node+0x180/0x180
-> [ 2338.513445]  [<ffffffff81522b58>] ? ret_from_fork+0x58/0x90
-> [ 2338.513453]  [<ffffffff81089c00>] ? kthread_create_on_node+0x180/0x180
-> [ 2338.513458] ---[ end trace a726bd98d3e66841 ]---
-> [ 2338.513476] ------------[ cut here ]------------
+> Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
+> I don't know much about stable so I can't decide to which tree(s) the series should be ported.
+
+Ok, I'll wait for someone to clarify before doing anything here.
+
+thanks,
+
+greg k-h
