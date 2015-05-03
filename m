@@ -1,28 +1,36 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH] [SCSI] libsas: Kconfig: Enable SATA compatibility by default
-Date: Sun, 3 May 2015 23:07:14 +1000
-Message-ID: <CAGRGNgX=C-D_UcnkncwwpR=iwHC2p7qm0MTp+=48eWLLhLYHXQ@mail.gmail.com>
-References: <21826.14993.432271.52216@mariner.uk.xensource.com> <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ian Jackson <ian.jackson@eu.citrix.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xen-devel@lists.xenproject.org, James Bottomley <James.Bottomley@suse.de>, Donald D Dugger <donald.d.dugger@intel.com>, Pawel Baldysiak <pawel.baldysiak@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Ian Campbell <ian.campbell@citrix.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH v3 0/2] ata: ahci_xgene: Add support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller driver.
+Date: Sun,  3 May 2015 21:03:38 +0530
+Message-ID: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Ian,
+V2 change:
+ * Drop the MIDR based implementation.
 
-On Sat, May 2, 2015 at 12:36 AM, Ian Jackson <ian.jackson@eu.citrix.com> wrote:
-> SATA controllers support SATA disks.  The kernel should be able to
+V3 change:
+ * Implement the support for HOST_IRQ_STAT as edge trigger latch.
 
-Do you mean SAS controllers?
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+---
 
-Thanks,
+Suman Tripathi (2):
+  libahci: Add support to handle HOST_IRQ_STAT as edge trigger latch.
+  ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC
+    AHCI SATA     Host controller.
 
--- 
-Julian Calaby
+ drivers/ata/ahci.h       |  2 ++
+ drivers/ata/ahci_xgene.c | 90 ++++++++++++++++++++++++++++++++++++++----------
+ drivers/ata/libahci.c    | 19 ++++++++++
+ 3 files changed, 93 insertions(+), 18 deletions(-)
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+--
+1.8.2.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
