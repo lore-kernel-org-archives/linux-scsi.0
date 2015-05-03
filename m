@@ -1,622 +1,234 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 25/34] atp870u: Remove is880()
-Date: Sun,  3 May 2015 19:31:41 +0200
-Message-ID: <1430674310-11576-26-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 13/34] atp870u: Remove ugly gotos
+Date: Sun,  3 May 2015 19:31:29 +0200
+Message-ID: <1430674310-11576-14-git-send-email-linux@rainbow-software.org>
 References: <1430674310-11576-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:36102 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:36104 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbbECRxm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 May 2015 13:53:42 -0400
+	id S1750989AbbECRxp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 May 2015 13:53:45 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1YoxkO-0000Ql-2P
-	for linux-scsi@vger.kernel.org; Sun, 03 May 2015 19:32:08 +0200
+	id 1YoxkL-0000Ql-9o
+	for linux-scsi@vger.kernel.org; Sun, 03 May 2015 19:32:05 +0200
 In-Reply-To: <1430674310-11576-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Now that is880() and is885() are almost identical (except for some cpu_relax()
-calls and debug printks), remove is880() and use is885() instead.
-
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |  572 +-----------------------------------------------
- 1 file changed, 1 insertion(+), 571 deletions(-)
+ drivers/scsi/atp870u.c |   84 +++++++++++++++++-------------------------------
+ 1 file changed, 30 insertions(+), 54 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 2722dd3..4222c8d 100644
+index f902c16..88339e4 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -1596,576 +1596,6 @@ set_syn_ok:
- 	atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xef);
- }
+@@ -55,20 +55,17 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ #ifdef ED_DBGP
+ 	unsigned long l;
+ #endif
+-	int errstus;
+ 	struct Scsi_Host *host = dev_id;
+ 	struct atp_unit *dev = (struct atp_unit *)&host->hostdata;
  
--static void is880(struct atp_unit *dev, unsigned char c, unsigned char lvdmode)
--{
--	unsigned char i, j, k, rmb, n;
--	unsigned short int m;
--	static unsigned char mbuf[512];
--	static unsigned char satn[9] = { 0, 0, 0, 0, 0, 0, 0, 6, 6 };
--	static unsigned char inqd[9] = { 0x12, 0, 0, 0, 0x24, 0, 0, 0x24, 6 };
--	static unsigned char synn[6] = { 0x80, 1, 3, 1, 0x19, 0x0e };
--	unsigned char synu[6] = { 0x80, 1, 3, 1, 0x0a, 0x0e };
--	static unsigned char synw[6] = { 0x80, 1, 3, 1, 0x19, 0x0e };
--	unsigned char synuw[6] = { 0x80, 1, 3, 1, 0x0a, 0x0e };
--	static unsigned char wide[6] = { 0x80, 1, 2, 3, 1, 0 };
--	static unsigned char u3[9] = { 0x80, 1, 6, 4, 0x09, 00, 0x0e, 0x01, 0x02 };
--
--	for (i = 0; i < 16; i++) {
--		m = 1;
--		m = m << i;
--		if ((m & dev->active_id[c]) != 0) {
--			continue;
+ 	for (c = 0; c < 2; c++) {
+ 		j = inb(dev->ioport[c] + 0x1f);
+ 		if ((j & 0x80) != 0)
+-		{			
+-	   		goto ch_sel;
 -		}
--		if (i == dev->host_id[c]) {
--			printk(KERN_INFO "         ID: %2d  Host Adapter\n", dev->host_id[c]);
--			continue;
--		}
--		atp_writeb_io(dev, c, 0x1b, 0x01);
--		atp_writeb_io(dev, c, 1, 0x08);
--		atp_writeb_io(dev, c, 2, 0x7f);
--		atp_writeb_io(dev, c, 3, satn[0]);
--		atp_writeb_io(dev, c, 4, satn[1]);
--		atp_writeb_io(dev, c, 5, satn[2]);
--		atp_writeb_io(dev, c, 6, satn[3]);
--		atp_writeb_io(dev, c, 7, satn[4]);
--		atp_writeb_io(dev, c, 8, satn[5]);
--		atp_writeb_io(dev, c, 0x0f, 0);
--		atp_writeb_io(dev, c, 0x11, dev->id[c][i].devsp);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, satn[6]);
--		atp_writeb_io(dev, c, 0x14, satn[7]);
--		j = i;
--		if ((j & 0x08) != 0) {
--			j = (j & 0x07) | 0x40;
--		}
--		atp_writeb_io(dev, c, 0x15, j);
--		atp_writeb_io(dev, c, 0x18, satn[8]);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
--			continue;
--
--		while (atp_readb_io(dev, c, 0x17) != 0x8e)
--			cpu_relax();
--
--		dev->active_id[c] |= m;
--
--		atp_writeb_io(dev, c, 0x10, 0x30);
--		atp_writeb_io(dev, c, 0x14, 0x00);
--
--phase_cmd:
--		atp_writeb_io(dev, c, 0x18, 0x08);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17);
--		if (j != 0x16) {
--			atp_writeb_io(dev, c, 0x10, 0x41);
--			goto phase_cmd;
--		}
--sel_ok:
--		atp_writeb_io(dev, c, 3, inqd[0]);
--		atp_writeb_io(dev, c, 4, inqd[1]);
--		atp_writeb_io(dev, c, 5, inqd[2]);
--		atp_writeb_io(dev, c, 6, inqd[3]);
--		atp_writeb_io(dev, c, 7, inqd[4]);
--		atp_writeb_io(dev, c, 8, inqd[5]);
--		atp_writeb_io(dev, c, 0x0f, 0);
--		atp_writeb_io(dev, c, 0x11, dev->id[c][i].devsp);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, inqd[6]);
--		atp_writeb_io(dev, c, 0x14, inqd[7]);
--		atp_writeb_io(dev, c, 0x18, inqd[8]);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
--			continue;
--
--		while (atp_readb_io(dev, c, 0x17) != 0x8e)
--			cpu_relax();
--
--		atp_writeb_io(dev, c, 0x1b, 0x00);
--		atp_writeb_io(dev, c, 0x18, 0x08);
--		j = 0;
--rd_inq_data:
--		k = atp_readb_io(dev, c, 0x1f);
--		if ((k & 0x01) != 0) {
--			mbuf[j++] = atp_readb_io(dev, c, 0x19);
--			goto rd_inq_data;
--		}
--		if ((k & 0x80) == 0) {
--			goto rd_inq_data;
--		}
--		j = atp_readb_io(dev, c, 0x17);
--		if (j == 0x16) {
--			goto inq_ok;
--		}
--		atp_writeb_io(dev, c, 0x10, 0x46);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, 0);
--		atp_writeb_io(dev, c, 0x14, 0);
--		atp_writeb_io(dev, c, 0x18, 0x08);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x16)
--			goto sel_ok;
--
--inq_ok:
--		mbuf[36] = 0;
--		printk(KERN_INFO "         ID: %2d  %s\n", i, &mbuf[8]);
--		dev->id[c][i].devtype = mbuf[0];
--		rmb = mbuf[1];
--		n = mbuf[7];
--		if ((mbuf[7] & 0x60) == 0) {
--			goto not_wide;
--		}
--		if ((i < 8) && ((dev->global_map[c] & 0x20) == 0)) {
--			goto not_wide;
--		}
--		if (lvdmode == 0) {
--			goto chg_wide;
--		}
--		if (dev->sp[c][i] != 0x04)	// force u2
--		{
--			goto chg_wide;
--		}
--
--		atp_writeb_io(dev, c, 0x1b, 0x01);
--		atp_writeb_io(dev, c, 3, satn[0]);
--		atp_writeb_io(dev, c, 4, satn[1]);
--		atp_writeb_io(dev, c, 5, satn[2]);
--		atp_writeb_io(dev, c, 6, satn[3]);
--		atp_writeb_io(dev, c, 7, satn[4]);
--		atp_writeb_io(dev, c, 8, satn[5]);
--		atp_writeb_io(dev, c, 0x0f, 0);
--		atp_writeb_io(dev, c, 0x11, dev->id[c][i].devsp);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, satn[6]);
--		atp_writeb_io(dev, c, 0x14, satn[7]);
--		atp_writeb_io(dev, c, 0x18, satn[8]);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
--			continue;
--
--		while (atp_readb_io(dev, c, 0x17) != 0x8e)
--			cpu_relax();
--
--try_u3:
--		j = 0;
--		atp_writeb_io(dev, c, 0x14, 0x09);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0)
--				atp_writeb_io(dev, c, 0x19, u3[j++]);
--		}
--
--		while ((atp_readb_io(dev, c, 0x17) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto u3p_in;
--		}
--		if (j == 0x0a) {
--			goto u3p_cmd;
--		}
--		if (j == 0x0e) {
--			goto try_u3;
--		}
--		continue;
--u3p_out:
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0)
--				atp_writeb_io(dev, c, 0x19, 0);
--		}
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto u3p_in;
--		}
--		if (j == 0x0a) {
--			goto u3p_cmd;
--		}
--		if (j == 0x0e) {
--			goto u3p_out;
--		}
--		continue;
--u3p_in:
--		atp_writeb_io(dev, c, 0x14, 0x09);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		k = 0;
--u3p_in1:
--		j = atp_readb_io(dev, c, 0x1f);
--		if ((j & 0x01) != 0) {
--			mbuf[k++] = atp_readb_io(dev, c, 0x19);
--			goto u3p_in1;
--		}
--		if ((j & 0x80) == 0x00) {
--			goto u3p_in1;
--		}
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto u3p_in;
--		}
--		if (j == 0x0a) {
--			goto u3p_cmd;
--		}
--		if (j == 0x0e) {
--			goto u3p_out;
--		}
--		continue;
--u3p_cmd:
--		atp_writeb_io(dev, c, 0x10, 0x30);
--		atp_writeb_io(dev, c, 0x14, 0x00);
--		atp_writeb_io(dev, c, 0x18, 0x08);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17);
--		if (j != 0x16) {
--			if (j == 0x4e) {
--				goto u3p_out;
--			}
--			continue;
--		}
--		if (mbuf[0] != 0x01) {
--			goto chg_wide;
--		}
--		if (mbuf[1] != 0x06) {
--			goto chg_wide;
--		}
--		if (mbuf[2] != 0x04) {
--			goto chg_wide;
--		}
--		if (mbuf[3] == 0x09) {
--			m = 1;
--			m = m << i;
--			dev->wide_id[c] |= m;
--			dev->id[c][i].devsp = 0xce;
--			continue;
--		}
--chg_wide:
--		atp_writeb_io(dev, c, 0x1b, 0x01);
--		atp_writeb_io(dev, c, 3, satn[0]);
--		atp_writeb_io(dev, c, 4, satn[1]);
--		atp_writeb_io(dev, c, 5, satn[2]);
--		atp_writeb_io(dev, c, 6, satn[3]);
--		atp_writeb_io(dev, c, 7, satn[4]);
--		atp_writeb_io(dev, c, 8, satn[5]);
--		atp_writeb_io(dev, c, 0x0f, 0);
--		atp_writeb_io(dev, c, 0x11, dev->id[c][i].devsp);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, satn[6]);
--		atp_writeb_io(dev, c, 0x14, satn[7]);
--		atp_writeb_io(dev, c, 0x18, satn[8]);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
--			continue;
--
--		while (atp_readb_io(dev, c, 0x17) != 0x8e)
--			cpu_relax();
--
--try_wide:
--		j = 0;
--		atp_writeb_io(dev, c, 0x14, 0x05);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0)
--				atp_writeb_io(dev, c, 0x19, wide[j++]);
--		}
--
--		while ((atp_readb_io(dev, c, 0x17) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto widep_in;
--		}
--		if (j == 0x0a) {
--			goto widep_cmd;
--		}
--		if (j == 0x0e) {
--			goto try_wide;
--		}
--		continue;
--widep_out:
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0)
--				atp_writeb_io(dev, c, 0x19, 0);
--		}
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto widep_in;
--		}
--		if (j == 0x0a) {
--			goto widep_cmd;
--		}
--		if (j == 0x0e) {
--			goto widep_out;
--		}
--		continue;
--widep_in:
--		atp_writeb_io(dev, c, 0x14, 0xff);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		k = 0;
--widep_in1:
--		j = atp_readb_io(dev, c, 0x1f);
--		if ((j & 0x01) != 0) {
--			mbuf[k++] = atp_readb_io(dev, c, 0x19);
--			goto widep_in1;
--		}
--		if ((j & 0x80) == 0x00) {
--			goto widep_in1;
--		}
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto widep_in;
--		}
--		if (j == 0x0a) {
--			goto widep_cmd;
--		}
--		if (j == 0x0e) {
--			goto widep_out;
--		}
--		continue;
--widep_cmd:
--		atp_writeb_io(dev, c, 0x10, 0x30);
--		atp_writeb_io(dev, c, 0x14, 0x00);
--		atp_writeb_io(dev, c, 0x18, 0x08);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17);
--		if (j != 0x16) {
--			if (j == 0x4e) {
--				goto widep_out;
--			}
--			continue;
--		}
--		if (mbuf[0] != 0x01) {
--			goto not_wide;
--		}
--		if (mbuf[1] != 0x02) {
--			goto not_wide;
--		}
--		if (mbuf[2] != 0x03) {
--			goto not_wide;
--		}
--		if (mbuf[3] != 0x01) {
--			goto not_wide;
--		}
--		m = 1;
--		m = m << i;
--		dev->wide_id[c] |= m;
--not_wide:
--		if ((dev->id[c][i].devtype == 0x00) || (dev->id[c][i].devtype == 0x07) || ((dev->id[c][i].devtype == 0x05) && ((n & 0x10) != 0))) {
--			m = 1;
--			m = m << i;
--			if ((dev->async[c] & m) != 0) {
--				goto set_sync;
--			}
--		}
--		continue;
--set_sync:
--		if (dev->sp[c][i] == 0x02) {
--			synu[4] = 0x0c;
--			synuw[4] = 0x0c;
--		} else {
--			if (dev->sp[c][i] >= 0x03) {
--				synu[4] = 0x0a;
--				synuw[4] = 0x0a;
--			}
--		}
--		j = 0;
--		if ((m & dev->wide_id[c]) != 0) {
--			j |= 0x01;
--		}
--		atp_writeb_io(dev, c, 0x1b, j);
--		atp_writeb_io(dev, c, 3, satn[0]);
--		atp_writeb_io(dev, c, 4, satn[1]);
--		atp_writeb_io(dev, c, 5, satn[2]);
--		atp_writeb_io(dev, c, 6, satn[3]);
--		atp_writeb_io(dev, c, 7, satn[4]);
--		atp_writeb_io(dev, c, 8, satn[5]);
--		atp_writeb_io(dev, c, 0x0f, 0);
--		atp_writeb_io(dev, c, 0x11, dev->id[c][i].devsp);
--		atp_writeb_io(dev, c, 0x12, 0);
--		atp_writeb_io(dev, c, 0x13, satn[6]);
--		atp_writeb_io(dev, c, 0x14, satn[7]);
--		atp_writeb_io(dev, c, 0x18, satn[8]);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		if (atp_readb_io(dev, c, 0x17) != 0x11 && atp_readb_io(dev, c, 0x17) != 0x8e)
--			continue;
--
--		while (atp_readb_io(dev, c, 0x17) != 0x8e)
--			cpu_relax();
--
--try_sync:
--		j = 0;
--		atp_writeb_io(dev, c, 0x14, 0x06);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0) {
--				if ((m & dev->wide_id[c]) != 0) {
--					if ((m & dev->ultra_map[c]) != 0) {
--						atp_writeb_io(dev, c, 0x19, synuw[j++]);
--					} else {
--						atp_writeb_io(dev, c, 0x19, synw[j++]);
--					}
--				} else {
--					if ((m & dev->ultra_map[c]) != 0) {
--						atp_writeb_io(dev, c, 0x19, synu[j++]);
--					} else {
--						atp_writeb_io(dev, c, 0x19, synn[j++]);
--					}
++			break;
+ 		dev->in_int[c] = 0;
+ 	}
+-	return IRQ_NONE;
+-ch_sel:
++	if ((j & 0x80) == 0)
++		return IRQ_NONE;
+ #ifdef ED_DBGP	
+ 	printk("atp870u_intr_handle enter\n");
+ #endif	
+@@ -82,15 +79,12 @@ ch_sel:
+ 		if ((inb(dev->pciport[c]) & 0x08) != 0)
+ 		{
+ 			for (k=0; k < 1000; k++) {
+-				if ((inb(dev->pciport[c] + 2) & 0x08) == 0) {
+-					goto stop_dma;
 -				}
--			}
--		}
--
--		while ((atp_readb_io(dev, c, 0x17) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17) & 0x0f;
--		if (j == 0x0f) {
--			goto phase_ins;
--		}
--		if (j == 0x0a) {
--			goto phase_cmds;
--		}
--		if (j == 0x0e) {
--			goto try_sync;
--		}
--		continue;
--phase_outs:
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00) {
--			if ((atp_readb_io(dev, c, 0x1f) & 0x01) != 0x00)
--				atp_writeb_io(dev, c, 0x19, 0x00);
--		}
--		j = atp_readb_io(dev, c, 0x17);
--		if (j == 0x85) {
--			goto tar_dcons;
--		}
--		j &= 0x0f;
--		if (j == 0x0f) {
--			goto phase_ins;
--		}
--		if (j == 0x0a) {
--			goto phase_cmds;
--		}
--		if (j == 0x0e) {
--			goto phase_outs;
--		}
--		continue;
--phase_ins:
--		atp_writeb_io(dev, c, 0x14, 0x06);
--		atp_writeb_io(dev, c, 0x18, 0x20);
--		k = 0;
--phase_ins1:
--		j = atp_readb_io(dev, c, 0x1f);
--		if ((j & 0x01) != 0x00) {
--			mbuf[k++] = atp_readb_io(dev, c, 0x19);
--			goto phase_ins1;
--		}
--		if ((j & 0x80) == 0x00) {
--			goto phase_ins1;
--		}
--
--		while ((atp_readb_io(dev, c, 0x17) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17);
--		if (j == 0x85) {
--			goto tar_dcons;
--		}
--		j &= 0x0f;
--		if (j == 0x0f) {
--			goto phase_ins;
--		}
--		if (j == 0x0a) {
--			goto phase_cmds;
--		}
--		if (j == 0x0e) {
--			goto phase_outs;
--		}
--		continue;
--phase_cmds:
--		atp_writeb_io(dev, c, 0x10, 0x30);
--tar_dcons:
--		atp_writeb_io(dev, c, 0x14, 0x00);
--		atp_writeb_io(dev, c, 0x18, 0x08);
--
--		while ((atp_readb_io(dev, c, 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--
--		j = atp_readb_io(dev, c, 0x17);
--		if (j != 0x16) {
--			continue;
--		}
--		if (mbuf[0] != 0x01) {
--			continue;
--		}
--		if (mbuf[1] != 0x03) {
--			continue;
--		}
--		if (mbuf[4] == 0x00) {
--			continue;
--		}
--		if (mbuf[3] > 0x64) {
--			continue;
--		}
--		if (mbuf[4] > 0x0e) {
--			mbuf[4] = 0x0e;
--		}
--		dev->id[c][i].devsp = mbuf[4];
--		if (mbuf[3] < 0x0c) {
--			j = 0xb0;
--			goto set_syn_ok;
--		}
--		if ((mbuf[3] < 0x0d) && (rmb == 0)) {
--			j = 0xa0;
--			goto set_syn_ok;
--		}
--		if (mbuf[3] < 0x1a) {
--			j = 0x20;
--			goto set_syn_ok;
--		}
--		if (mbuf[3] < 0x33) {
--			j = 0x40;
--			goto set_syn_ok;
--		}
--		if (mbuf[3] < 0x4c) {
--			j = 0x50;
--			goto set_syn_ok;
--		}
--		j = 0x60;
--set_syn_ok:
--		dev->id[c][i].devsp = (dev->id[c][i].devsp & 0x0f) | j;
--	}
--}
--
- static void atp870u_free_tables(struct Scsi_Host *host)
- {
- 	struct atp_unit *atp_dev = (struct atp_unit *)&host->hostdata;
-@@ -2377,7 +1807,7 @@ flash_ok_880:
- 		outb(0x20, base_io + 0x51);
+-				if ((inb(dev->pciport[c] + 2) & 0x01) == 0) {
+-					goto stop_dma;
+-				}
++				if ((inb(dev->pciport[c] + 2) & 0x08) == 0)
++					break;
++				if ((inb(dev->pciport[c] + 2) & 0x01) == 0)
++					break;
+ 			}
+ 		}
+-stop_dma:
+ 		outb(0x00, dev->pciport[c]);
+ 		
+ 		i = inb(dev->ioport[c] + 0x17);
+@@ -170,13 +164,13 @@ stop_dma:
+ #ifdef ED_DBGP
+ 				printk("Status 0x85 return\n");
+ #endif				
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
  
- 		tscam(shpnt);
--		is880(p, 0, atp_readb_base(p, 0x3f) & 0x40);
-+		is885(p, 0, atp_readb_base(p, 0x3f) & 0x40);
- 		outb(0xb0, base_io + 0x38);
- 		shpnt->max_id = 16;
- 		shpnt->this_id = host_id;
+ 		if (i == 0x40) {
+ 		     dev->last_cmd[c] |= 0x40;
+ 		     dev->in_int[c] = 0;
+-		     goto handled;
++		     return IRQ_HANDLED;
+ 		}
+ 
+ 		if (i == 0x21) {
+@@ -194,7 +188,7 @@ stop_dma:
+ 			outb(0x41, dev->ioport[c] + 0x10);
+ 			outb(0x08, dev->ioport[c] + 0x18);
+ 			dev->in_int[c] = 0;
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
+ 
+ 		if (dev->dev_id == ATP885_DEVID) {
+@@ -231,7 +225,7 @@ stop_dma:
+ 					dev->id[c][target_id].last_len = adrcnt;
+ 					outb(0x08, dev->ioport[c] + 0x18);
+ 					dev->in_int[c] = 0;
+-					goto handled;
++					return IRQ_HANDLED;
+ 				} else {
+ #ifdef ED_DBGP
+ 					printk("cmdp != 0x41\n");
+@@ -243,7 +237,7 @@ stop_dma:
+ 					outb(0x00, dev->ioport[c] + 0x14);
+ 					outb(0x08, dev->ioport[c] + 0x18);
+ 					dev->in_int[c] = 0;
+-					goto handled;
++					return IRQ_HANDLED;
+ 				}
+ 			}
+ 			if (dev->last_cmd[c] != 0xff) {
+@@ -336,7 +330,7 @@ stop_dma:
+ #ifdef ED_DBGP
+ 				printk("dev->id[c][target_id].last_len = 0\n");
+ #endif					
+-				goto handled;
++				return IRQ_HANDLED;
+ 			}
+ #ifdef ED_DBGP
+ 			printk("target_id = %d adrcnt = %d\n",target_id,adrcnt);
+@@ -382,7 +376,7 @@ stop_dma:
+ #ifdef ED_DBGP
+ 				printk("status 0x80 return dirct != 0\n");
+ #endif				
+-				goto handled;
++				return IRQ_HANDLED;
+ 			}
+ 			outb(0x08, dev->ioport[c] + 0x18);
+ 			outb(0x09, dev->pciport[c]);
+@@ -390,7 +384,7 @@ stop_dma:
+ #ifdef ED_DBGP
+ 			printk("status 0x80 return dirct = 0\n");
+ #endif			
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
+ 
+ 		/*
+@@ -399,27 +393,19 @@ stop_dma:
+ 
+ 		workreq = dev->id[c][target_id].curr_req;
+ 
+-		if (i == 0x42) {
+-			if ((dev->last_cmd[c] & 0xf0) != 0x40)
+-			{
+-			   dev->last_cmd[c] = 0xff;
+-			}
+-			errstus = 0x02;
+-			workreq->result = errstus;
+-			goto go_42;
+-		}
+-		if (i == 0x16) {
++		if (i == 0x42 || i == 0x16) {
+ 			if ((dev->last_cmd[c] & 0xf0) != 0x40) {
+ 			   dev->last_cmd[c] = 0xff;
+ 			}
+-			errstus = 0;
+-			errstus = inb(dev->ioport[c] + 0x0f);
+-			if (((dev->r1f[c][target_id] & 0x10) != 0)&&(dev->dev_id==ATP885_DEVID)) {
+-			   printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
+-			   errstus = 0x02;
+-			}
+-			workreq->result = errstus;
+-go_42:
++			if (i == 0x16) {
++				workreq->result = inb(dev->ioport[c] + 0x0f);
++				if (((dev->r1f[c][target_id] & 0x10) != 0)&&(dev->dev_id==ATP885_DEVID)) {
++					printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
++					workreq->result = 0x02;
++				}
++			} else
++				workreq->result = 0x02;
++
+ 			if (dev->dev_id == ATP885_DEVID) {		
+ 				j = inb(dev->baseport + 0x29) | 0x01;
+ 				outb(j, dev->baseport + 0x29);
+@@ -462,7 +448,7 @@ go_42:
+ 			}
+ 			spin_unlock_irqrestore(dev->host->host_lock, flags);
+ 			dev->in_int[c] = 0;
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
+ 		if ((dev->last_cmd[c] & 0xf0) != 0x40) {
+ 		   dev->last_cmd[c] = 0xff;
+@@ -488,7 +474,7 @@ go_42:
+ 			outb(0x08, dev->ioport[c] + 0x18);
+ 			outb(0x09, dev->pciport[c]);
+ 			dev->in_int[c] = 0;
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
+ 		if (i == 0x08) {
+ 			outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
+@@ -506,7 +492,7 @@ go_42:
+ 			outb(0x08, dev->ioport[c] + 0x18);
+ 			outb(0x01, dev->pciport[c]);
+ 			dev->in_int[c] = 0;
+-			goto handled;
++			return IRQ_HANDLED;
+ 		}
+ 		if (i == 0x0a) {
+ 			outb(0x30, dev->ioport[c] + 0x10);
+@@ -518,19 +504,9 @@ go_42:
+ 		outb(0x00, dev->ioport[c] + 0x13);
+ 		outb(0x00, dev->ioport[c] + 0x14);
+ 		outb(0x08, dev->ioport[c] + 0x18);
+-		dev->in_int[c] = 0;
+-		goto handled;
+-	} else {
+-//		inb(dev->ioport[c] + 0x17);
+-//		dev->working[c] = 0;
+-		dev->in_int[c] = 0;
+-		goto handled;
+ 	}
+-	
+-handled:
+-#ifdef ED_DBGP
+-	printk("atp870u_intr_handle exit\n");
+-#endif			
++	dev->in_int[c] = 0;
++
+ 	return IRQ_HANDLED;
+ }
+ /**
 -- 
 Ondrej Zary
 
