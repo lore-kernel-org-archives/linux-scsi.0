@@ -1,108 +1,78 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Sat, 2 May 2015 19:56:21 +0200
-Message-ID: <20150502175621.GA15525@kroah.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
- <54AC0A17.8020405@redhat.com>
- <20150128001837.GE17677@kroah.com>
- <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
- <552BC234.4020000@redhat.com>
- <20150426092719.GA1460@kroah.com>
- <553E28DC.1040100@redhat.com>
- <20150427125529.GA18817@kroah.com>
- <553E354B.90208@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 97641] New: Repeated unit attentions trigger initiator lockup
+Date: Sun, 03 May 2015 09:24:49 +0000
+Message-ID: <bug-97641-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53416 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750955AbbEBR4Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2015 13:56:25 -0400
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailout.nyi.internal (Postfix) with ESMTP id 7E11F20808
-	for <linux-scsi@vger.kernel.org>; Sat,  2 May 2015 13:56:24 -0400 (EDT)
-Content-Disposition: inline
-In-Reply-To: <553E354B.90208@redhat.com>
+Received: from mail.kernel.org ([198.145.29.136]:45215 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbbECJYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 May 2015 05:24:51 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 5AEFE200D4
+	for <linux-scsi@vger.kernel.org>; Sun,  3 May 2015 09:24:50 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 90B5C2041B
+	for <linux-scsi@vger.kernel.org>; Sun,  3 May 2015 09:24:49 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Masoud Sharbiani <msharbiani@twopensource.com>, Vinson Lee <vlee@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Apr 27, 2015 at 03:10:35PM +0200, Tomas Henzl wrote:
-> On 04/27/2015 02:55 PM, Greg KH wrote:
-> > On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
-> >> On 04/26/2015 11:27 AM, Greg KH wrote:
-> >>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
-> >>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
-> >>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
-> >>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
-> >>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
-> >>>>>>>> Dear stable maintainers,
-> >>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
-> >>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
-> >>>>>>>> earlier, if applicable)?
-> >>>>>>> Please do not apply this patch isolated from his friend, the
-> >>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
-> >>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
-> >>>>>>>
-> >>>>>>> In addition to that, after the original issue goes away you may notice sometimes
-> >>>>>>> an unhandled irq 16 message, to fix this a patch is posted
-> >>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
-> >>>>>>> This patch still awaits a maintainers review though.
-> >>>>>>>
-> >>>>>>> Probably the best idea is to wait until the issue is solved completely.
-> >>>>>> I'll wait, when it all gets worked out, please let stable@ know what
-> >>>>>> patches to apply where.
-> >>>>>>
-> >>>>>> thanks,
-> >>>>>>
-> >>>>>> greg k-h
-> >>>>>> --
-> >>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
-> >>>>>> the body of a message to majordomo@vger.kernel.org
-> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>> Hi, Thomas.
-> >>>>>
-> >>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
-> >>>>> turn off interrupts when kdump starts".
-> >>>>>
-> >>>>> Are the following patches suitable for stable now?
-> >>>> Yes, I believe they are, just note that 
-> >>>> 03741d9 hpsa: fix memory leak in kdump hard reset
-> >>>> is not a part of that group we discussed before, but it may be added
-> >>>> to stable too.
-> >>>>
-> >>>> Cheers,
-> >>>> Tomas
-> >>>>
-> >>>>> 3b74729 hpsa: turn off interrupts when kdump starts
-> >>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
-> >>>>> 859c75a hpsa: add missing pci_set_master in kdump path
-> >>>>> 132aa22 hpsa: refine the pci enable/disable handling
-> >>> So what order, and to what stable tree(s) do you want these applied to?
-> >>> They seem to span a number of kernel versions, so I'm not quite sure
-> >>> what you are wanting me to do.
-> >> Please add it in this order
-> >> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
-> >> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
-> >>    The first two patches create the fix Masoud has asked for originally to port to stable.
-> >> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
-> >>    The third should be added too, it fixes an issue made visible by the first patch
-> >>
-> >> The fourth patch
-> >> 03741d956e hpsa: fix memory leak in kdump hard reset
-> >> is completely unrelated to the first group, so it may be added after or before
-> >> or in the same sequence as it is in the mainline - that is before the third patch.
-> >> This patch is tiny error path fix - not sure if important enough for stable.
-> > Which stable tree(s) do you want these applied to?  As these "span"
-> > different kernel versions, I have no idea of what to do here.
-> 
-> Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
-> I don't know much about stable so I can't decide to which tree(s) the series should be ported.
+https://bugzilla.kernel.org/show_bug.cgi?id=97641
 
-Ok, I'll wait for someone to clarify before doing anything here.
+            Bug ID: 97641
+           Summary: Repeated unit attentions trigger initiator lockup
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.1-rc1
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: bvanassche@acm.org
+        Regression: No
 
-thanks,
+Created attachment 175651
+  --> https://bugzilla.kernel.org/attachment.cgi?id=175651&action=edit
+initiator-deadlock.txt
 
-greg k-h
+Two virtual machines were configured such that one had the role of iSCSI target
+system and the other of iSCSI initiator system. After iSCSI login a fio job was
+started on the initiator system against LUN 0 of the target system. When I
+start 
+run the following test at the target side:
+
+# cd /sys/kernel/scst_tgt/targets/iscsi/iqn.2012-06.be.bva\:tgt1/luns/
+# while true; do echo del 1 > mgmt; echo add diskf0 1 > mgmt; done
+
+that results in the following error messages at the initiator side:
+
+iscsid: Can not allocate memory for receive context.
+kernel: [  231.226002]  connection1:0: detected conn error (1011)
+
+and exactly 30 seconds later the initiator system locks up reporting the
+following (see also the initiator-deadlock.txt attachment):
+
+[ INFO: HARDIRQ-safe -> HARDIRQ-unsafe lock order detected ]
+4.1.0-rc1-debug+ #2 Not tainted
+------------------------------------------------------
+swapper/0/0 [HC0[0]:SC1[1]:HE0:SE0] is trying to acquire:
+ (&(&session->frwd_lock)->rlock){+.-...}, at: [<ffffffffc0185f42>]
+iscsi_eh_cmd_timed_out+0x42/0x330 [libiscsi]
+
+and this task is already holding:
+ (&(&q->__queue_lock)->rlock){-.-...}, at: [<ffffffff81328037>]
+blk_rq_timed_out_timer+0x27/0x130
+which would create a new lock dependency:
+ (&(&q->__queue_lock)->rlock){-.-...} ->
+(&(&session->frwd_lock)->rlock){+.-...}
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
