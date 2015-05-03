@@ -1,39 +1,28 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 97641] Repeated unit attentions trigger initiator lockup
-Date: Sun, 03 May 2015 09:37:23 +0000
-Message-ID: <bug-97641-11613-MBu7iOqB2O@https.bugzilla.kernel.org/>
-References: <bug-97641-11613@https.bugzilla.kernel.org/>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] [SCSI] libsas: Kconfig: Enable SATA compatibility by default
+Date: Sun, 3 May 2015 23:07:14 +1000
+Message-ID: <CAGRGNgX=C-D_UcnkncwwpR=iwHC2p7qm0MTp+=48eWLLhLYHXQ@mail.gmail.com>
+References: <21826.14993.432271.52216@mariner.uk.xensource.com> <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45366 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016AbbECJh2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 May 2015 05:37:28 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E617D203A4
-	for <linux-scsi@vger.kernel.org>; Sun,  3 May 2015 09:37:26 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 95FC62043C
-	for <linux-scsi@vger.kernel.org>; Sun,  3 May 2015 09:37:23 +0000 (UTC)
-In-Reply-To: <bug-97641-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ian Jackson <ian.jackson@eu.citrix.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xen-devel@lists.xenproject.org, James Bottomley <James.Bottomley@suse.de>, Donald D Dugger <donald.d.dugger@intel.com>, Pawel Baldysiak <pawel.baldysiak@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Ian Campbell <ian.campbell@citrix.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=97641
+Hi Ian,
 
---- Comment #1 from Bart Van Assche <bvanassche@acm.org> ---
-The fio job at the initiator side was started as follows:
+On Sat, May 2, 2015 at 12:36 AM, Ian Jackson <ian.jackson@eu.citrix.com> wrote:
+> SATA controllers support SATA disks.  The kernel should be able to
 
-mkfs.ext4 -O ^has_journal ${LUN0_DEV_NODE}
-umount /mnt
-mount ${LUN0_DEV_NODE} /mnt
-fio --verify=md5 -rw=randwrite --size=10m --bs=4K --loops=10000000 \
-    --iodepth=64 --group_reporting --sync=1 --direct=1 --ioengine=libaio \
-    --directory=/mnt --name=test --thread --numjobs=1
+Do you mean SAS controllers?
+
+Thanks,
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
