@@ -1,723 +1,116 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 10/34] atp870u: Untangle tmport #8
-Date: Sun,  3 May 2015 19:31:26 +0200
-Message-ID: <1430674310-11576-11-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 24/34] atp870u: Move chip-specific lines out of is880() and is885()
+Date: Sun,  3 May 2015 19:31:40 +0200
+Message-ID: <1430674310-11576-25-git-send-email-linux@rainbow-software.org>
 References: <1430674310-11576-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:36059 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:36062 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbbECRwF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 May 2015 13:52:05 -0400
+	id S1751348AbbECRwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 May 2015 13:52:11 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1YoxkK-0000Ql-Qi
-	for linux-scsi@vger.kernel.org; Sun, 03 May 2015 19:32:04 +0200
+	id 1YoxkN-0000Ql-RM
+	for linux-scsi@vger.kernel.org; Sun, 03 May 2015 19:32:07 +0200
 In-Reply-To: <1430674310-11576-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Untangle the tmport crap so it becomes obvious what ports are accessed.
+Move few chip-specifis lines out of is880() and is885() so they become
+almost identical.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |  478 ++++++++++++++++++------------------------------
- 1 file changed, 177 insertions(+), 301 deletions(-)
+ drivers/scsi/atp870u.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index d133c48..2b8ae0d 100644
+index b16a9e7..2722dd3 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -2871,7 +2871,6 @@ static void tscam_885(void)
+@@ -41,7 +41,7 @@
  
- static void is885(struct atp_unit *dev, unsigned int wkport,unsigned char c)
+ static struct scsi_host_template atp870u_template;
+ static void send_s870(struct atp_unit *dev,unsigned char c);
+-static void is885(struct atp_unit *dev, unsigned char c);
++static void is885(struct atp_unit *dev, unsigned char c, unsigned char lvdmode);
+ static void tscam_885(void);
+ 
+ static inline void atp_writeb_base(struct atp_unit *atp, u8 reg, u8 val)
+@@ -1596,9 +1596,9 @@ set_syn_ok:
+ 	atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xef);
+ }
+ 
+-static void is880(struct atp_unit *dev, unsigned char c)
++static void is880(struct atp_unit *dev, unsigned char c, unsigned char lvdmode)
  {
--	unsigned int tmport;
- 	unsigned char i, j, k, rmb, n, lvdmode;
+-	unsigned char i, j, k, rmb, n, lvdmode;
++	unsigned char i, j, k, rmb, n;
  	unsigned short int m;
  	static unsigned char mbuf[512];
-@@ -2896,123 +2895,93 @@ static void is885(struct atp_unit *dev, unsigned int wkport,unsigned char c)
- 			printk(KERN_INFO "         ID: %2d  Host Adapter\n", dev->host_id[c]);
- 			continue;
- 		}
--		tmport = wkport + 0x1b;
--		outb(0x01, tmport);
--		tmport = wkport + 0x01;
--		outb(0x08, tmport++);
--		outb(0x7f, tmport++);
--		outb(satn[0], tmport++);
--		outb(satn[1], tmport++);
--		outb(satn[2], tmport++);
--		outb(satn[3], tmport++);
--		outb(satn[4], tmport++);
--		outb(satn[5], tmport++);
--		tmport += 0x06;
--		outb(0, tmport);
--		tmport += 0x02;
--		outb(dev->id[c][i].devsp, tmport++);
-+		outb(0x01, wkport + 0x1b);
-+		outb(0x08, wkport + 0x01);
-+		outb(0x7f, wkport + 0x02);
-+		outb(satn[0], wkport + 0x03);
-+		outb(satn[1], wkport + 0x04);
-+		outb(satn[2], wkport + 0x05);
-+		outb(satn[3], wkport + 0x06);
-+		outb(satn[4], wkport + 0x07);
-+		outb(satn[5], wkport + 0x08);
-+		outb(0, wkport + 0x0f);
-+		outb(dev->id[c][i].devsp, wkport + 0x11);
- 		
--		outb(0, tmport++);
--		outb(satn[6], tmport++);
--		outb(satn[7], tmport++);
-+		outb(0, wkport + 0x12);
-+		outb(satn[6], wkport + 0x13);
-+		outb(satn[7], wkport + 0x14);
- 		j = i;
- 		if ((j & 0x08) != 0) {
- 			j = (j & 0x07) | 0x40;
- 		}
--		outb(j, tmport);
--		tmport += 0x03;
--		outb(satn[8], tmport);
--		tmport += 0x07;
-+		outb(j, wkport + 0x15);
-+		outb(satn[8], wkport + 0x18);
+ 	static unsigned char satn[9] = { 0, 0, 0, 0, 0, 0, 0, 6, 6 };
+@@ -1610,8 +1610,6 @@ static void is880(struct atp_unit *dev, unsigned char c)
+ 	static unsigned char wide[6] = { 0x80, 1, 2, 3, 1, 0 };
+ 	static unsigned char u3[9] = { 0x80, 1, 6, 4, 0x09, 00, 0x0e, 0x01, 0x02 };
  
--		while ((inb(tmport) & 0x80) == 0x00)
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if ((inb(tmport) != 0x11) && (inb(tmport) != 0x8e)) {
-+		if ((inb(wkport + 0x17) != 0x11) && (inb(wkport + 0x17) != 0x8e)) {
- 			continue;
- 		}
--		while (inb(tmport) != 0x8e)
-+		while (inb(wkport + 0x17) != 0x8e)
- 			cpu_relax();
- 		dev->active_id[c] |= m;
+-	lvdmode = atp_readb_base(dev, 0x3f) & 0x40;
+-
+ 	for (i = 0; i < 16; i++) {
+ 		m = 1;
+ 		m = m << i;
+@@ -2379,7 +2377,7 @@ flash_ok_880:
+ 		outb(0x20, base_io + 0x51);
  
--		tmport = wkport + 0x10;
--		outb(0x30, tmport);
--		tmport = wkport + 0x14;
--		outb(0x00, tmport);
-+		outb(0x30, wkport + 0x10);
-+		outb(0x00, wkport + 0x14);
+ 		tscam(shpnt);
+-		is880(p, 0);
++		is880(p, 0, atp_readb_base(p, 0x3f) & 0x40);
+ 		outb(0xb0, base_io + 0x38);
+ 		shpnt->max_id = 16;
+ 		shpnt->this_id = host_id;
+@@ -2525,10 +2523,11 @@ flash_ok_885:
  
- phase_cmd:
--		tmport = wkport + 0x18;
--		outb(0x08, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x08, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		j = inb(tmport);
-+		j = inb(wkport + 0x17);
- 		if (j != 0x16) {
--			tmport = wkport + 0x10;
--			outb(0x41, tmport);
-+			outb(0x41, wkport + 0x10);
- 			goto phase_cmd;
- 		}
- sel_ok:
--		tmport = wkport + 0x03;
--		outb(inqd[0], tmport++);
--		outb(inqd[1], tmport++);
--		outb(inqd[2], tmport++);
--		outb(inqd[3], tmport++);
--		outb(inqd[4], tmport++);
--		outb(inqd[5], tmport);
--		tmport += 0x07;
--		outb(0, tmport);
--		tmport += 0x02;
--		outb(dev->id[c][i].devsp, tmport++);
--		outb(0, tmport++);
--		outb(inqd[6], tmport++);
--		outb(inqd[7], tmport++);
--		tmport += 0x03;
--		outb(inqd[8], tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(inqd[0], wkport + 0x03);
-+		outb(inqd[1], wkport + 0x04);
-+		outb(inqd[2], wkport + 0x05);
-+		outb(inqd[3], wkport + 0x06);
-+		outb(inqd[4], wkport + 0x07);
-+		outb(inqd[5], wkport + 0x08);
-+		outb(0, wkport + 0x0f);
-+		outb(dev->id[c][i].devsp, wkport + 0x11);
-+		outb(0, wkport + 0x12);
-+		outb(inqd[6], wkport + 0x13);
-+		outb(inqd[7], wkport + 0x14);
-+		outb(inqd[8], wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if ((inb(tmport) != 0x11) && (inb(tmport) != 0x8e)) {
-+		if ((inb(wkport + 0x17) != 0x11) && (inb(wkport + 0x17) != 0x8e)) {
- 			continue;
- 		}
--		while (inb(tmport) != 0x8e)
-+		while (inb(wkport + 0x17) != 0x8e)
- 			cpu_relax();
--		tmport = wkport + 0x1b;
--		outb(0x00, tmport);
--		tmport = wkport + 0x18;
--		outb(0x08, tmport);
--		tmport += 0x07;
-+		outb(0x00, wkport + 0x1b);
-+		outb(0x08, wkport + 0x18);
- 		j = 0;
- rd_inq_data:
--		k = inb(tmport);
-+		k = inb(wkport + 0x1f);
- 		if ((k & 0x01) != 0) {
--			tmport -= 0x06;
--			mbuf[j++] = inb(tmport);
--			tmport += 0x06;
-+			mbuf[j++] = inb(wkport + 0x19);
- 			goto rd_inq_data;
- 		}
- 		if ((k & 0x80) == 0) {
- 			goto rd_inq_data;
- 		}
--		tmport -= 0x08;
--		j = inb(tmport);
-+		j = inb(wkport + 0x17);
- 		if (j == 0x16) {
- 			goto inq_ok;
- 		}
--		tmport = wkport + 0x10;
--		outb(0x46, tmport);
--		tmport += 0x02;
--		outb(0, tmport++);
--		outb(0, tmport++);
--		outb(0, tmport++);
--		tmport += 0x03;
--		outb(0x08, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x46, wkport + 0x10);
-+		outb(0, wkport + 0x12);
-+		outb(0, wkport + 0x13);
-+		outb(0, wkport + 0x14);
-+		outb(0x08, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if (inb(tmport) != 0x16) {
-+		if (inb(wkport + 0x17) != 0x16) {
- 			goto sel_ok;
- 		}
- inq_ok:
-@@ -3034,54 +3003,40 @@ inq_ok:
- 		   goto chg_wide;
- 		}
+ 		tscam_885();
+ 		printk(KERN_INFO "   Scanning Channel A SCSI Device ...\n");
+-		is885(p, 0);
++		is885(p, 0, atp_readb_io(p, 0, 0x1b) >> 7);
++		atp_writeb_io(p, 0, 0x16, 0x80);
+ 		printk(KERN_INFO "   Scanning Channel B SCSI Device ...\n");
+-		is885(p, 1);
+-
++		is885(p, 1, atp_readb_io(p, 1, 0x1b) >> 7);
++		atp_writeb_io(p, 1, 0x16, 0x80);
+ 		k = inb(base_io + 0x28) & 0xcf;
+ 		k |= 0xc0;
+ 		outb(k, base_io + 0x28);
+@@ -2830,9 +2829,9 @@ static void tscam_885(void)
  
--		tmport = wkport + 0x1b;
--		outb(0x01, tmport);
--		tmport = wkport + 0x03;
--		outb(satn[0], tmport++);
--		outb(satn[1], tmport++);
--		outb(satn[2], tmport++);
--		outb(satn[3], tmport++);
--		outb(satn[4], tmport++);
--		outb(satn[5], tmport++);
--		tmport += 0x06;
--		outb(0, tmport);
--		tmport += 0x02;
--		outb(dev->id[c][i].devsp, tmport++);
--		outb(0, tmport++);
--		outb(satn[6], tmport++);
--		outb(satn[7], tmport++);
--		tmport += 0x03;
--		outb(satn[8], tmport);
--		tmport += 0x07;
+ 
+ 
+-static void is885(struct atp_unit *dev, unsigned char c)
++static void is885(struct atp_unit *dev, unsigned char c, unsigned char lvdmode)
+ {
+-	unsigned char i, j, k, rmb, n, lvdmode;
++	unsigned char i, j, k, rmb, n;
+ 	unsigned short int m;
+ 	static unsigned char mbuf[512];
+ 	static unsigned char satn[9] = { 0, 0, 0, 0, 0, 0, 0, 6, 6 };
+@@ -2844,8 +2843,6 @@ static void is885(struct atp_unit *dev, unsigned char c)
+ 	static unsigned char wide[6] = { 0x80, 1, 2, 3, 1, 0 };
+ 	static unsigned char u3[9] = { 0x80, 1, 6, 4, 0x09, 00, 0x0e, 0x01, 0x02 };
+ 
+-	lvdmode = atp_readb_io(dev, c, 0x1b) >> 7;
 -
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x01, wkport + 0x1b);
-+		outb(satn[0], wkport + 0x03);
-+		outb(satn[1], wkport + 0x04);
-+		outb(satn[2], wkport + 0x05);
-+		outb(satn[3], wkport + 0x06);
-+		outb(satn[4], wkport + 0x07);
-+		outb(satn[5], wkport + 0x08);
-+		outb(0, wkport + 0x0f);
-+		outb(dev->id[c][i].devsp, wkport + 0x11);
-+		outb(0, wkport + 0x12);
-+		outb(satn[6], wkport + 0x13);
-+		outb(satn[7], wkport + 0x14);
-+		outb(satn[8], wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if ((inb(tmport) != 0x11) && (inb(tmport) != 0x8e)) {
-+		if ((inb(wkport + 0x17) != 0x11) && (inb(wkport + 0x17) != 0x8e)) {
- 			continue;
- 		}
--		while (inb(tmport) != 0x8e)
-+		while (inb(wkport + 0x17) != 0x8e)
- 			cpu_relax();
- try_u3:
- 		j = 0;
--		tmport = wkport + 0x14;
--		outb(0x09, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
--
--		while ((inb(tmport) & 0x80) == 0) {
--			if ((inb(tmport) & 0x01) != 0) {
--				tmport -= 0x06;
--				outb(u3[j++], tmport);
--				tmport += 0x06;
--			}
-+		outb(0x09, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0)
-+				outb(u3[j++], wkport + 0x19);
- 			cpu_relax();
- 		}
--		tmport -= 0x08;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		while ((inb(wkport + 0x17) & 0x80) == 0x00)
- 			cpu_relax();
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto u3p_in;
- 		}
-@@ -3093,19 +3048,13 @@ try_u3:
- 		}
- 		continue;
- u3p_out:
--		tmport = wkport + 0x18;
--		outb(0x20, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0) {
--			if ((inb(tmport) & 0x01) != 0) {
--				tmport -= 0x06;
--				outb(0, tmport);
--				tmport += 0x06;
--			}
-+		outb(0x20, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0)
-+				outb(0, wkport + 0x19);
- 			cpu_relax();
- 		}
--		tmport -= 0x08;
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto u3p_in;
- 		}
-@@ -3117,25 +3066,19 @@ u3p_out:
- 		}
- 		continue;
- u3p_in:
--		tmport = wkport + 0x14;
--		outb(0x09, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
-+		outb(0x09, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
- 		k = 0;
- u3p_in1:
--		j = inb(tmport);
-+		j = inb(wkport + 0x1f);
- 		if ((j & 0x01) != 0) {
--			tmport -= 0x06;
--			mbuf[k++] = inb(tmport);
--			tmport += 0x06;
-+			mbuf[k++] = inb(wkport + 0x19);
- 			goto u3p_in1;
- 		}
- 		if ((j & 0x80) == 0x00) {
- 			goto u3p_in1;
- 		}
--		tmport -= 0x08;
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto u3p_in;
- 		}
-@@ -3147,16 +3090,11 @@ u3p_in1:
- 		}
- 		continue;
- u3p_cmd:
--		tmport = wkport + 0x10;
--		outb(0x30, tmport);
--		tmport = wkport + 0x14;
--		outb(0x00, tmport);
--		tmport += 0x04;
--		outb(0x08, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00);
--		tmport -= 0x08;
--		j = inb(tmport);
-+		outb(0x30, wkport + 0x10);
-+		outb(0x00, wkport + 0x14);
-+		outb(0x08, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00);
-+		j = inb(wkport + 0x17);
- 		if (j != 0x16) {
- 			if (j == 0x4e) {
- 				goto u3p_out;
-@@ -3183,54 +3121,40 @@ u3p_cmd:
- 			continue;
- 		}
- chg_wide:
--		tmport = wkport + 0x1b;
--		outb(0x01, tmport);
--		tmport = wkport + 0x03;
--		outb(satn[0], tmport++);
--		outb(satn[1], tmport++);
--		outb(satn[2], tmport++);
--		outb(satn[3], tmport++);
--		outb(satn[4], tmport++);
--		outb(satn[5], tmport++);
--		tmport += 0x06;
--		outb(0, tmport);
--		tmport += 0x02;
--		outb(dev->id[c][i].devsp, tmport++);
--		outb(0, tmport++);
--		outb(satn[6], tmport++);
--		outb(satn[7], tmport++);
--		tmport += 0x03;
--		outb(satn[8], tmport);
--		tmport += 0x07;
--
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x01, wkport + 0x1b);
-+		outb(satn[0], wkport + 0x03);
-+		outb(satn[1], wkport + 0x04);
-+		outb(satn[2], wkport + 0x05);
-+		outb(satn[3], wkport + 0x06);
-+		outb(satn[4], wkport + 0x07);
-+		outb(satn[5], wkport + 0x08);
-+		outb(0, wkport + 0x0f);
-+		outb(dev->id[c][i].devsp, wkport + 0x11);
-+		outb(0, wkport + 0x12);
-+		outb(satn[6], wkport + 0x13);
-+		outb(satn[7], wkport + 0x14);
-+		outb(satn[8], wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if ((inb(tmport) != 0x11) && (inb(tmport) != 0x8e)) {
-+		if ((inb(wkport + 0x17) != 0x11) && (inb(wkport + 0x17) != 0x8e)) {
- 			continue;
- 		}
--		while (inb(tmport) != 0x8e)
-+		while (inb(wkport + 0x17) != 0x8e)
- 			cpu_relax();
- try_wide:
- 		j = 0;
--		tmport = wkport + 0x14;
--		outb(0x05, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
--
--		while ((inb(tmport) & 0x80) == 0) {
--			if ((inb(tmport) & 0x01) != 0) {
--				tmport -= 0x06;
--				outb(wide[j++], tmport);
--				tmport += 0x06;
--			}
-+		outb(0x05, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0)
-+				outb(wide[j++], wkport + 0x19);
- 			cpu_relax();
- 		}
--		tmport -= 0x08;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		while ((inb(wkport + 0x17) & 0x80) == 0x00)
- 			cpu_relax();
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto widep_in;
- 		}
-@@ -3242,19 +3166,13 @@ try_wide:
- 		}
- 		continue;
- widep_out:
--		tmport = wkport + 0x18;
--		outb(0x20, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0) {
--			if ((inb(tmport) & 0x01) != 0) {
--				tmport -= 0x06;
--				outb(0, tmport);
--				tmport += 0x06;
--			}
-+		outb(0x20, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0)
-+				outb(0, wkport + 0x19);
- 			cpu_relax();
- 		}
--		tmport -= 0x08;
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto widep_in;
- 		}
-@@ -3266,25 +3184,19 @@ widep_out:
- 		}
- 		continue;
- widep_in:
--		tmport = wkport + 0x14;
--		outb(0xff, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
-+		outb(0xff, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
- 		k = 0;
- widep_in1:
--		j = inb(tmport);
-+		j = inb(wkport + 0x1f);
- 		if ((j & 0x01) != 0) {
--			tmport -= 0x06;
--			mbuf[k++] = inb(tmport);
--			tmport += 0x06;
-+			mbuf[k++] = inb(wkport + 0x19);
- 			goto widep_in1;
- 		}
- 		if ((j & 0x80) == 0x00) {
- 			goto widep_in1;
- 		}
--		tmport -= 0x08;
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto widep_in;
- 		}
-@@ -3296,17 +3208,12 @@ widep_in1:
- 		}
- 		continue;
- widep_cmd:
--		tmport = wkport + 0x10;
--		outb(0x30, tmport);
--		tmport = wkport + 0x14;
--		outb(0x00, tmport);
--		tmport += 0x04;
--		outb(0x08, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x30, wkport + 0x10);
-+		outb(0x00, wkport + 0x14);
-+		outb(0x08, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		j = inb(tmport);
-+		j = inb(wkport + 0x17);
- 		if (j != 0x16) {
- 			if (j == 0x4e) {
- 				goto widep_out;
-@@ -3348,69 +3255,56 @@ set_sync:
- 		      synuw[4]=0x0a;
- 		   }
- 		}
--		tmport = wkport + 0x1b;
- 		j = 0;
- 		if ((m & dev->wide_id[c]) != 0) {
- 			j |= 0x01;
- 		}
--		outb(j, tmport);
--		tmport = wkport + 0x03;
--		outb(satn[0], tmport++);
--		outb(satn[1], tmport++);
--		outb(satn[2], tmport++);
--		outb(satn[3], tmport++);
--		outb(satn[4], tmport++);
--		outb(satn[5], tmport++);
--		tmport += 0x06;
--		outb(0, tmport);
--		tmport += 0x02;
--		outb(dev->id[c][i].devsp, tmport++);
--		outb(0, tmport++);
--		outb(satn[6], tmport++);
--		outb(satn[7], tmport++);
--		tmport += 0x03;
--		outb(satn[8], tmport);
--		tmport += 0x07;
--
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(j, wkport + 0x1b);
-+		outb(satn[0], wkport + 0x03);
-+		outb(satn[1], wkport + 0x04);
-+		outb(satn[2], wkport + 0x05);
-+		outb(satn[3], wkport + 0x06);
-+		outb(satn[4], wkport + 0x07);
-+		outb(satn[5], wkport + 0x08);
-+		outb(0, wkport + 0x0f);
-+		outb(dev->id[c][i].devsp, wkport + 0x11);
-+		outb(0, wkport + 0x12);
-+		outb(satn[6], wkport + 0x13);
-+		outb(satn[7], wkport + 0x14);
-+		outb(satn[8], wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		if ((inb(tmport) != 0x11) && (inb(tmport) != 0x8e)) {
-+		if ((inb(wkport + 0x17) != 0x11) && (inb(wkport + 0x17) != 0x8e)) {
- 			continue;
- 		}
--		while (inb(tmport) != 0x8e)
-+		while (inb(wkport + 0x17) != 0x8e)
- 			cpu_relax();
- try_sync:
- 		j = 0;
--		tmport = wkport + 0x14;
--		outb(0x06, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
--
--		while ((inb(tmport) & 0x80) == 0) {
--			if ((inb(tmport) & 0x01) != 0) {
--				tmport -= 0x06;
-+		outb(0x06, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
-+
-+		while ((inb(wkport + 0x1f) & 0x80) == 0) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0) {
- 				if ((m & dev->wide_id[c]) != 0) {
- 					if ((m & dev->ultra_map[c]) != 0) {
--						outb(synuw[j++], tmport);
-+						outb(synuw[j++], wkport + 0x19);
- 					} else {
--						outb(synw[j++], tmport);
-+						outb(synw[j++], wkport + 0x19);
- 					}
- 				} else {
- 					if ((m & dev->ultra_map[c]) != 0) {
--						outb(synu[j++], tmport);
-+						outb(synu[j++], wkport + 0x19);
- 					} else {
--						outb(synn[j++], tmport);
-+						outb(synn[j++], wkport + 0x19);
- 					}
- 				}
--				tmport += 0x06;
- 			}
- 		}
--		tmport -= 0x08;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		while ((inb(wkport + 0x17) & 0x80) == 0x00)
- 			cpu_relax();
--		j = inb(tmport) & 0x0f;
-+		j = inb(wkport + 0x17) & 0x0f;
- 		if (j == 0x0f) {
- 			goto phase_ins;
- 		}
-@@ -3422,19 +3316,13 @@ try_sync:
- 		}
- 		continue;
- phase_outs:
--		tmport = wkport + 0x18;
--		outb(0x20, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00) {
--			if ((inb(tmport) & 0x01) != 0x00) {
--				tmport -= 0x06;
--				outb(0x00, tmport);
--				tmport += 0x06;
--			}
-+		outb(0x20, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00) {
-+			if ((inb(wkport + 0x1f) & 0x01) != 0x00)
-+				outb(0x00, wkport + 0x19);
- 			cpu_relax();
- 		}
--		tmport -= 0x08;
--		j = inb(tmport);
-+		j = inb(wkport + 0x17);
- 		if (j == 0x85) {
- 			goto tar_dcons;
- 		}
-@@ -3450,26 +3338,20 @@ phase_outs:
- 		}
- 		continue;
- phase_ins:
--		tmport = wkport + 0x14;
--		outb(0x06, tmport);
--		tmport += 0x04;
--		outb(0x20, tmport);
--		tmport += 0x07;
-+		outb(0x06, wkport + 0x14);
-+		outb(0x20, wkport + 0x18);
- 		k = 0;
- phase_ins1:
--		j = inb(tmport);
-+		j = inb(wkport + 0x1f);
- 		if ((j & 0x01) != 0x00) {
--			tmport -= 0x06;
--			mbuf[k++] = inb(tmport);
--			tmport += 0x06;
-+			mbuf[k++] = inb(wkport + 0x19);
- 			goto phase_ins1;
- 		}
- 		if ((j & 0x80) == 0x00) {
- 			goto phase_ins1;
- 		}
--		tmport -= 0x08;
--		while ((inb(tmport) & 0x80) == 0x00);
--		j = inb(tmport);
-+		while ((inb(wkport + 0x17) & 0x80) == 0x00);
-+		j = inb(wkport + 0x17);
- 		if (j == 0x85) {
- 			goto tar_dcons;
- 		}
-@@ -3485,18 +3367,13 @@ phase_ins1:
- 		}
- 		continue;
- phase_cmds:
--		tmport = wkport + 0x10;
--		outb(0x30, tmport);
-+		outb(0x30, wkport + 0x10);
- tar_dcons:
--		tmport = wkport + 0x14;
--		outb(0x00, tmport);
--		tmport += 0x04;
--		outb(0x08, tmport);
--		tmport += 0x07;
--		while ((inb(tmport) & 0x80) == 0x00)
-+		outb(0x00, wkport + 0x14);
-+		outb(0x08, wkport + 0x18);
-+		while ((inb(wkport + 0x1f) & 0x80) == 0x00)
- 			cpu_relax();
--		tmport -= 0x08;
--		j = inb(tmport);
-+		j = inb(wkport + 0x17);
- 		if (j != 0x16) {
- 			continue;
- 		}
-@@ -3543,8 +3420,7 @@ tar_dcons:
+ 	for (i = 0; i < 16; i++) {
+ 		m = 1;
+ 		m = m << i;
+@@ -3409,7 +3406,6 @@ set_syn_ok:
  		printk("dev->id[%2d][%2d].devsp = %2x\n",c,i,dev->id[c][i].devsp);
  #endif
  	}
--	tmport = wkport + 0x16;
--	outb(0x80, tmport);
-+	outb(0x80, wkport + 0x16);
+-	atp_writeb_io(dev, c, 0x16, 0x80);
  }
  
  module_init(atp870u_init);
