@@ -1,45 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 4 May 2015 14:26:18 -0400
-Message-ID: <20150504182618.GG1971@htj.duckdns.org>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
- <1430667220-23477-2-git-send-email-stripathi@apm.com>
- <20150504154726.GA1971@htj.duckdns.org>
- <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference
+ counting
+Date: Mon, 4 May 2015 16:09:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1505041607350.1450-100000@iolanthe.rowland.org>
+References: <1430752523.2177.15.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1430752523.2177.15.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, 4 May 2015, James Bottomley wrote:
 
-On Mon, May 04, 2015 at 10:13:11PM +0530, Suman Tripathi wrote:
-> AFAIK clearing host_irq_stat means we have handled port interrupts .
-> Now for our case we still have interrupts left because it didn't get
-> detected on
-> first ahci_port_intr.  So you  mean to handle that residual irq in the
-> next cycle (i mean next call intr handler ) ??
+> However, it does also strike me that these three drivers have problems
+> because they're using the wrong initialisation pattern: the template is
+> supposed to be in the bus connector for compound drivers not in the
+> core.
 
-Heh, I think we're talking past each other.  For level triggered IRQs,
-the latched IRQ bits should be cleared after handling the events;
-otherwise, the latched bits are gonna get set immediately as the
-events are still pending.  Also, this doesn't lose any events as
-they're level triggered latches - if any event is pending, the IRQ is
-gonna be raised again.
+Why is it supposed to be done that way?  Isn't that less efficient?  It 
+means you have to have a separate copy of the template for each bus 
+connector driver, instead of letting them all share a common template 
+in the core.
 
-Edge triggered latches are the other way around.  You should clear the
-latches before actually handling and clearing the events.  The pending
-events won't trigger the latches again as it's edge-triggered and the
-events which happens after this irq handling starts won't get lost as
-they'll be latched for the next round.
+Alan Stern
 
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
