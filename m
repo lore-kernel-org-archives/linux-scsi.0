@@ -1,55 +1,53 @@
-From: "Mrs. Pavolt Tan" <mrsarunarsabbah@gmail.com>
-Subject: HELLO DEAR
-Date: Mon, 4 May 2015 15:06:25 +0000
-Message-ID: <CA+bzJWmZEQFgWMG=Grnwd+fJ-93F5AUQdPED3Aqx1ZK1DHh01g@mail.gmail.com>
-Reply-To: ladyaruna@hotmail.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module
+ reference counting
+Date: Mon, 04 May 2015 08:15:23 -0700
+Message-ID: <1430752523.2177.15.camel@HansenPartnership.com>
+References: <1430750769-11405-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f195.google.com ([209.85.212.195]:33806 "EHLO
-	mail-wi0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608AbbEDPG1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 11:06:27 -0400
-Received: by wivr20 with SMTP id r20so14058484wiv.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2015 08:06:26 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34167 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751935AbbEDPPZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 11:15:25 -0400
+In-Reply-To: <1430750769-11405-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-Dear Friend,
+On Mon, 2015-05-04 at 23:46 +0900, Akinobu Mita wrote:
+> While accessing a scsi_device, the use count of the underlying LLDD module
+> is incremented.  The module reference is retrieved through .module field of
+> struct scsi_host_template.
+> 
+> This mapping between scsi_device and underlying LLDD module works well
+> except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
+> These drivers consist with core driver and actual LLDDs, and
+> scsi_host_template is defined in the core driver.  So the actual LLDDs can
+> be unloaded even if the scsi_device is being accessed.
+> 
+> This patch series first adds ability to adjust module reference for
+> scsi host by LLDDs and then fixes actual LLDDs by adjusting module
+> reference after scsi host allocation.
 
-I assume that this message will reach you in good health.I'm Mrs
-Pavolt Tan,the foreign operation manager of the African Development
-Bank Burkina Faso (ADB) I have the opportunity of transferring the
-left over funds what of ($25.2Million Dollars) from the account of our
-bank's customer who died along with his entire family in a plane
-crash. However, it's just my urgent need for foreign partner that made
-me to contact you for this transaction.
+This series is still missing an ack from ufs.  However, as we're on
+series 6, final warning: object now or I'll take it without ufs ack.
 
-I assured you honesty and reliability to champion this business
-opportunity. I am contacting you for this business while the money
-will be shared between us in the ratio of 50/50,on the acceptance of
-my proposal, Further details of the transfer will be forwarded to you
-as soon as i receive your response. Hoping to hear from you as soon as
-possible.
+However, it does also strike me that these three drivers have problems
+because they're using the wrong initialisation pattern: the template is
+supposed to be in the bus connector for compound drivers not in the
+core.  To see how the pattern is supposed to work look at the 53c700
+series of drivers.  They have a tiny template in the bus connector part
+and then the function NCR_700_detect() fills in the rest.
 
-Your Full Name_______________
+53c700 is possibly not the best example because it fills in the template
+for every host rather than once at module init time, but you get the
+idea.  how difficult would it be to convert these things to use the
+correct pattern rather than hacking it in the mid layer?
 
-Your Age________________
+James
 
-Your Country________________
 
-Your Home Address_____________
-
-Your Occupation_______________
-
-Your Mobile Phone No__________
-
-Your Marital Status_____________
-
-Your Office Address_____________
-
-please contact me through my private email address: avottan@gmail.com
-Mobile: +226 6719 6371
-
-Regards
-Mrs Pavolt Tan
