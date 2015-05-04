@@ -1,47 +1,90 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 04 May 2015 16:08:08 +0300
-Message-ID: <55476F38.7080002@cogentembedded.com>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com> <1430667220-23477-2-git-send-email-stripathi@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1430667220-23477-2-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference counting
+Date: Mon,  4 May 2015 23:46:05 +0900
+Message-ID: <1430750769-11405-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:34825 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbbEDOqZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 10:46:25 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-Hello.
+While accessing a scsi_device, the use count of the underlying LLDD module
+is incremented.  The module reference is retrieved through .module field of
+struct scsi_host_template.
 
-On 5/3/2015 6:33 PM, Suman Tripathi wrote:
+This mapping between scsi_device and underlying LLDD module works well
+except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
+These drivers consist with core driver and actual LLDDs, and
+scsi_host_template is defined in the core driver.  So the actual LLDDs can
+be unloaded even if the scsi_device is being accessed.
 
-> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
-> latch.
+This patch series first adds ability to adjust module reference for
+scsi host by LLDDs and then fixes actual LLDDs by adjusting module
+reference after scsi host allocation.
 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   drivers/ata/ahci.h    |  2 ++
->   drivers/ata/libahci.c | 19 +++++++++++++++++++
->   2 files changed, 21 insertions(+)
+* v6:
+- Rebased as v5 doesn't apply cleanly to the latest tree anymore.
 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 71262e0..2df2237 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-[...]
-> +++ b/drivers/ata/libahci.c
-> @@ -1879,6 +1879,25 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
->   	 */
->   	writel(irq_stat, mmio + HOST_IRQ_STAT);
->
-> +	/*
-> +	 * HOST_IRQ_STAT behaves as edge trigger latch. When HOST_IRQ_STAT
-> +	 * detects a egde from PORT_IRQ_STAT, it happens to loose interrupts
+* v5:
+- Discard v4 changes and restore to v3.  Because v4 shows that
+  moving owner module field from scsi_host_template to Scsi_Host
+  requires a lot of changes and introduces complication to existing
+  drivers which don't have the module reference mismatch issue.
+- Rebased to the 4.0-rc1
 
-    s/loose/lose/.
+* v4:
+- Patch series is almost rewritten as module reference field in
+  struct scsi_host_template has been unused anymore.  So Acked-by: and
+  Reviewed-by: tags that have been received are deleted.
 
-MBR, Sergei
+* v3:
+- Add fix for ESP SCSI drivers
+
+* v2:
+- Pass correct module reference to usb_stor_probe1() instead of touching
+  all ums-* drivers, suggested by Alan Stern
+
+Akinobu Mita (4):
+  scsi: add ability to adjust module reference for scsi host
+  scsi: ufs: adjust module reference for scsi host
+  usb: storage: adjust module reference for scsi host
+  scsi: esp_scsi: adjust module reference for scsi host
+
+ drivers/scsi/am53c974.c          |  3 +--
+ drivers/scsi/esp_scsi.c          | 16 +++++++++++++---
+ drivers/scsi/esp_scsi.h          | 11 +++++++----
+ drivers/scsi/hosts.c             |  1 +
+ drivers/scsi/jazz_esp.c          |  3 +--
+ drivers/scsi/mac_esp.c           |  3 +--
+ drivers/scsi/scsi.c              |  4 ++--
+ drivers/scsi/sun3x_esp.c         |  3 +--
+ drivers/scsi/sun_esp.c           |  3 +--
+ drivers/scsi/ufs/ufshcd-pci.c    |  1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  1 +
+ drivers/scsi/ufs/ufshcd.c        |  1 -
+ drivers/usb/storage/usb.c        |  8 +++++---
+ drivers/usb/storage/usb.h        |  7 +++++--
+ include/scsi/scsi_host.h         |  1 +
+ 15 files changed, 41 insertions(+), 25 deletions(-)
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: linux-usb@vger.kernel.org
+Cc: usb-storage@lists.one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
+-- 
+1.9.1
 
