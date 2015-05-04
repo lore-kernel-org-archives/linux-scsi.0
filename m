@@ -1,104 +1,79 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v6 1/4] scsi: add ability to adjust module reference for scsi host
-Date: Mon,  4 May 2015 23:46:06 +0900
-Message-ID: <1430750769-11405-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v6 2/4] scsi: ufs: adjust module reference for scsi host
+Date: Mon,  4 May 2015 23:46:07 +0900
+Message-ID: <1430750769-11405-3-git-send-email-akinobu.mita@gmail.com>
 References: <1430750769-11405-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33958 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863AbbEDOqb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 10:46:31 -0400
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:35004 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbbEDOqf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 10:46:35 -0400
+Received: by pdbqd1 with SMTP id qd1so164998365pdb.2
+        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2015 07:46:34 -0700 (PDT)
 In-Reply-To: <1430750769-11405-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-While accessing a scsi_device, the use count of the underlying LLDD module
-is incremented.  The module reference is retrieved through .module field of
-struct scsi_host_template.
+While accessing a UFS device, the module reference count for core driver
+(ufshcd) is incremented but not incremented for the actual glue driver
+(ufshcd-pci or ufshcd-pltfrm).  Because these drivers allocate scsi hosts
+with scsi_host_template defined in ufshcd module.  So these drivers always
+can be unloaded.
 
-This mapping between scsi_device and underlying LLDD module works well
-except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
-These drivers consist with core driver and actual LLDDs, and
-scsi_host_template is defined in the core driver.  So the actual LLDDs can
-be unloaded even if the scsi_device is being accessed.
-
-This adds .module field in struct Scsi_Host and let the module reference
-be retrieved though it instead of struct scsi_host_template.  This allows
-the actual LLDDs adjust module reference.
+This fixes it by adjusting module reference after scsi host allocation.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>
 Cc: Dolev Raviv <draviv@codeaurora.org>
 Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Cc: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: linux-usb@vger.kernel.org
-Cc: usb-storage@lists.one-eyed-alien.net
 Cc: linux-scsi@vger.kernel.org
 ---
-* Changes from v5
-- Rebased as v5 doesn't apply cleanly to the latest tree anymore.
+ drivers/scsi/ufs/ufshcd-pci.c    | 1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
+ drivers/scsi/ufs/ufshcd.c        | 1 -
+ 3 files changed, 2 insertions(+), 1 deletion(-)
 
- drivers/scsi/hosts.c     | 1 +
- drivers/scsi/scsi.c      | 4 ++--
- include/scsi/scsi_host.h | 1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..21f1442 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -411,6 +411,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	 */
- 	shost->max_cmd_len = 12;
- 	shost->hostt = sht;
-+	shost->module = sht->module;
- 	shost->this_id = sht->this_id;
- 	shost->can_queue = sht->can_queue;
- 	shost->sg_tablesize = sht->sg_tablesize;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 3833bf5..f7534a9 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -982,7 +982,7 @@ int scsi_device_get(struct scsi_device *sdev)
- 		goto fail;
- 	if (!get_device(&sdev->sdev_gendev))
- 		goto fail;
--	if (!try_module_get(sdev->host->hostt->module))
-+	if (!try_module_get(sdev->host->module))
- 		goto fail_put_device;
- 	return 0;
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index d15eaa4..9fe21b4 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -142,6 +142,7 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return err;
+ 	}
  
-@@ -1003,7 +1003,7 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
-+	module_put(sdev->host->module);
- 	put_device(&sdev->sdev_gendev);
++	hba->host->module = THIS_MODULE;
+ 	INIT_LIST_HEAD(&hba->clk_list_head);
+ 
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index e6b29b1..d08e0bb 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -322,6 +322,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+ 		goto out;
+ 	}
+ 
++	hba->host->module = THIS_MODULE;
+ 	hba->vops = get_variant_ops(&pdev->dev);
+ 
+ 	err = ufshcd_parse_clock_info(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 996030b..c499f16 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4237,7 +4237,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
  }
- EXPORT_SYMBOL(scsi_device_put);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index e113c75..8742bfd 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -620,6 +620,7 @@ struct Scsi_Host {
- 	 */
- 	unsigned short max_cmd_len;
  
-+	struct module *module;
- 	int this_id;
- 	int can_queue;
- 	short cmd_per_lun;
+ static struct scsi_host_template ufshcd_driver_template = {
+-	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+ 	.proc_name		= UFSHCD,
+ 	.queuecommand		= ufshcd_queuecommand,
 -- 
 1.9.1
 
