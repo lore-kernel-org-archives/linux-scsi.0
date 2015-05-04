@@ -1,43 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module
- reference counting
-Date: Mon, 04 May 2015 14:41:04 -0700
-Message-ID: <1430775664.2177.36.camel@HansenPartnership.com>
-References: <Pine.LNX.4.44L0.1505041607350.1450-100000@iolanthe.rowland.org>
+From: Karen Xie <kxie@chelsio.com>
+Subject: RE: [PATCH 0/4] cxgbi: driver update
+Date: Mon, 4 May 2015 22:43:30 +0000
+Message-ID: <1442C3287A121140B690F7F20F94463D8F157C@nice.asicdesigners.com>
+References: <201504102057.t3AKv9xR028741@localhost6.localdomain6>,<552C268E.10001@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35577 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751102AbbEDVlH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 17:41:07 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1505041607350.1450-100000@iolanthe.rowland.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:4681 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbbEDWqH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 18:46:07 -0400
+In-Reply-To: <552C268E.10001@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-
-On Mon, 2015-05-04 at 16:09 -0400, Alan Stern wrote:
-> On Mon, 4 May 2015, James Bottomley wrote:
-> 
-> > However, it does also strike me that these three drivers have problems
-> > because they're using the wrong initialisation pattern: the template is
-> > supposed to be in the bus connector for compound drivers not in the
-> > core.
-> 
-> Why is it supposed to be done that way?  Isn't that less efficient?  It 
-> means you have to have a separate copy of the template for each bus 
-> connector driver, instead of letting them all share a common template 
-> in the core.
-
-Well, no it doesn't.  The way 53c700 implements it is that there is a
-common template in the core.  The drivers just initialise their variant
-fields (for 53c700 it's name, proc_name and this_id) and the core fills
-in the rest.  Admittedly wd33c93 doesn't quite get this right, that's
-why I cited 53c700.
-
-James
+To: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "hch@infradead.org" <hch@infradead.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
 
+On Monday, April 13, 2015 1:26 PM, Mike Christie wrote:
+>
+>> This patch set contains fixes and updates for the cxgbi drivers. It updates
+>> the driver copyrights and versions, added logic to adjust the send/recv
+>> window based on the link speed and the initial sequence number.
+>>
+>> Karen Xie (4):
+>> cxgbi: use per-connection link-speed dependent send/recv windows
+>> cxgbi: update copyright to 2015
+>> cxgbi: update driver versions
+>> cxgb4i: added setting of the initial sequence number
+>>
+>
+> Looks ok to me.
+>
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
+Any chance this patch set would get merged soon? Thanks!
