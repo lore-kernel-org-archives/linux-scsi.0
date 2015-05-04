@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/17] scsi_dh_alua: Use vpd_pg83 information
-Date: Mon,  4 May 2015 14:42:09 +0200
-Message-ID: <1430743343-47174-4-git-send-email-hare@suse.de>
+Subject: [PATCH 06/17] scsi_dh_alua: use flag for RTPG extended header
+Date: Mon,  4 May 2015 14:42:12 +0200
+Message-ID: <1430743343-47174-7-git-send-email-hare@suse.de>
 References: <1430743343-47174-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47304 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47303 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753300AbbEDMm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753301AbbEDMm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 May 2015 08:42:28 -0400
 In-Reply-To: <1430743343-47174-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,161 +14,74 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The SCSI device now has the VPD page 0x83 information attached,
-so there is no need to query it again.
+We should be using a flag when RTPG extended header is not
+supported, that saves us sending RTPG twice for older arrays.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 93 +++++++-----------------------
- 1 file changed, 21 insertions(+), 72 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 834e80f..b5903eb 100644
+index f5d5859..69cad2a 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -131,43 +131,6 @@ static struct request *get_alua_req(struct scsi_device *sdev,
- }
+@@ -61,6 +61,7 @@
  
- /*
-- * submit_vpd_inquiry - Issue an INQUIRY VPD page 0x83 command
-- * @sdev: sdev the command should be sent to
-- */
--static int submit_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
--{
--	struct request *rq;
--	int err = SCSI_DH_RES_TEMP_UNAVAIL;
--
--	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
--	if (!rq)
--		goto done;
--
--	/* Prepare the command. */
--	rq->cmd[0] = INQUIRY;
--	rq->cmd[1] = 1;
--	rq->cmd[2] = 0x83;
--	rq->cmd[4] = h->bufflen;
--	rq->cmd_len = COMMAND_SIZE(INQUIRY);
--
--	rq->sense = h->sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = h->senselen = 0;
--
--	err = blk_execute_rq(rq->q, NULL, rq, 1);
--	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: evpd inquiry failed with %x\n",
--			    ALUA_DH_NAME, rq->errors);
--		h->senselen = rq->sense_len;
--		err = SCSI_DH_IO;
--	}
--	blk_put_request(rq);
--done:
--	return err;
--}
--
--/*
+ /* flags passed from user level */
+ #define ALUA_OPTIMIZE_STPG		1
++#define ALUA_RTPG_EXT_HDR_UNSUPP	2
+ 
+ struct alua_dh_data {
+ 	int			group_id;
+@@ -135,8 +136,7 @@ static struct request *get_alua_req(struct scsi_device *sdev,
   * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
   * @sdev: sdev the command should be sent to
   */
-@@ -352,55 +315,42 @@ static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
- 		sdev_printk(KERN_INFO, sdev, "%s: supports implicit TPGS\n",
- 			    ALUA_DH_NAME);
- 		break;
--	default:
--		h->tpgs = TPGS_MODE_NONE;
-+	case TPGS_MODE_NONE:
- 		sdev_printk(KERN_INFO, sdev, "%s: not supported\n",
- 			    ALUA_DH_NAME);
- 		err = SCSI_DH_DEV_UNSUPP;
- 		break;
-+	default:
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: unsupported TPGS setting %d\n",
-+			    ALUA_DH_NAME, h->tpgs);
-+		h->tpgs = TPGS_MODE_NONE;
-+		err = SCSI_DH_DEV_UNSUPP;
-+		break;
- 	}
- 
- 	return err;
- }
- 
- /*
-- * alua_vpd_inquiry - Evaluate INQUIRY vpd page 0x83
-+ * alua_check_vpd - Evaluate INQUIRY vpd page 0x83
-  * @sdev: device to be checked
-  *
-  * Extract the relative target port and the target port group
-  * descriptor from the list of identificators.
-  */
--static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
-+static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
+-			    bool rtpg_ext_hdr_req)
++static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
  {
--	int len;
--	unsigned err;
- 	unsigned char *d;
+ 	struct request *rq;
+ 	int err;
+@@ -149,7 +149,7 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
  
-- retry:
--	err = submit_vpd_inquiry(sdev, h);
--
--	if (err != SCSI_DH_OK)
--		return err;
--
--	/* Check if vpd page exceeds initial buffer */
--	len = (h->buff[2] << 8) + h->buff[3] + 4;
--	if (len > h->bufflen) {
--		/* Resubmit with the correct length */
--		if (realloc_buffer(h, len)) {
--			sdev_printk(KERN_WARNING, sdev,
--				    "%s: kmalloc buffer failed\n",
--				    ALUA_DH_NAME);
--			/* Temporary failure, bypass */
--			return SCSI_DH_DEV_TEMP_BUSY;
--		}
--		goto retry;
--	}
-+	if (!sdev->vpd_pg83)
-+		return SCSI_DH_DEV_UNSUPP;
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (rtpg_ext_hdr_req)
++	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+@@ -499,7 +499,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 	int len, k, off, valid_states = 0;
+ 	unsigned char *ucp;
+ 	unsigned err, retval;
+-	bool rtpg_ext_hdr_req = 1;
+ 	unsigned long expiry, interval = 0;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
+@@ -510,7 +509,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
  
- 	/*
--	 * Now look for the correct descriptor.
-+	 * Look for the correct descriptor.
- 	 */
--	d = h->buff + 4;
--	while (d < h->buff + len) {
-+	d = sdev->vpd_pg83 + 4;
-+	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
- 		switch (d[1] & 0xf) {
- 		case 0x4:
- 			/* Relative target port */
-@@ -427,14 +377,13 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
- 			    ALUA_DH_NAME);
- 		h->state = TPGS_STATE_OPTIMIZED;
- 		h->tpgs = TPGS_MODE_NONE;
--		err = SCSI_DH_DEV_UNSUPP;
--	} else {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: port group %02x rel port %02x\n",
--			    ALUA_DH_NAME, h->group_id, h->rel_port);
-+		return SCSI_DH_DEV_UNSUPP;
- 	}
-+	sdev_printk(KERN_INFO, sdev,
-+		    "%s: port group %02x rel port %02x\n",
-+		    ALUA_DH_NAME, h->group_id, h->rel_port);
+  retry:
+-	retval = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
++	retval = submit_rtpg(sdev, h);
  
--	return err;
-+	return 0;
- }
- 
- static char print_alua_state(int state)
-@@ -697,7 +646,7 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
- 	if (err != SCSI_DH_OK)
- 		goto out;
- 
--	err = alua_vpd_inquiry(sdev, h);
-+	err = alua_check_vpd(sdev, h);
- 	if (err != SCSI_DH_OK)
- 		goto out;
+ 	if (retval) {
+ 		if (h->senselen == 0 ||
+@@ -534,10 +533,10 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		 * The retry without rtpg_ext_hdr_req set
+ 		 * handles this.
+ 		 */
+-		if (rtpg_ext_hdr_req == 1 &&
++		if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
+ 		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
+ 		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
+-			rtpg_ext_hdr_req = 0;
++			h->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
+ 			goto retry;
+ 		}
  
 -- 
 1.8.5.2
