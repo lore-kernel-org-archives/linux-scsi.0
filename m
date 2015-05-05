@@ -1,38 +1,168 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Tue, 5 May 2015 09:18:54 -0400
-Message-ID: <20150505131854.GJ1971@htj.duckdns.org>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
- <1430667220-23477-2-git-send-email-stripathi@apm.com>
- <20150504154726.GA1971@htj.duckdns.org>
- <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
- <20150504182618.GG1971@htj.duckdns.org>
- <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference counting
+Date: Tue, 5 May 2015 22:39:07 +0900
+Message-ID: <CAC5umyjN0h-p=V4jfgLVicEOJ9AJU+wUm1qJndaMYBE0sj9LMQ@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1505041607350.1450-100000@iolanthe.rowland.org>
+	<1430775664.2177.36.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:34866 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbbEENS6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 09:18:58 -0400
-Content-Disposition: inline
-In-Reply-To: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary=089e0158c316863de3051555cd71
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1430775664.2177.36.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
-On Tue, May 05, 2015 at 11:25:14AM +0530, Suman Tripathi wrote:
-> Yeah it's very simple. The clearing of irq_stat needs to move up.
-> That's it. tried and it worked. Thanks a lot !!
-> Just a quick question : Why edge trigger handling is not yet present
-> in libahci yet? I mean no one has used it yet ??
+--089e0158c316863de3051555cd71
+Content-Type: text/plain; charset=UTF-8
 
-Yeah, no other ahci controller uses edge triggered latches.  I think
-ahci spec says irq is supposed to be level triggered.
+2015-05-05 6:41 GMT+09:00 James Bottomley
+<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>:
+> On Mon, 2015-05-04 at 16:09 -0400, Alan Stern wrote:
+>> On Mon, 4 May 2015, James Bottomley wrote:
+>>
+>> > However, it does also strike me that these three drivers have problems
+>> > because they're using the wrong initialisation pattern: the template is
+>> > supposed to be in the bus connector for compound drivers not in the
+>> > core.
+>>
+>> Why is it supposed to be done that way?  Isn't that less efficient?  It
+>> means you have to have a separate copy of the template for each bus
+>> connector driver, instead of letting them all share a common template
+>> in the core.
+>
+> Well, no it doesn't.  The way 53c700 implements it is that there is a
+> common template in the core.  The drivers just initialise their variant
+> fields (for 53c700 it's name, proc_name and this_id) and the core fills
+> in the rest.  Admittedly wd33c93 doesn't quite get this right, that's
+> why I cited 53c700.
 
-Thanks.
+I have converted usb-storage and ums-alauda in the attached patch.
+Each ums-* driver needs to expand module_usb_driver() macro as we need
+to initialize their scsi host template in module_init().
 
--- 
-tejun
+Alan, how do you feel the change like this?
+
+--089e0158c316863de3051555cd71
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-usb-storage-fix-module-reference-for-scsi-host.patch"
+Content-Disposition: attachment;
+	filename="0001-usb-storage-fix-module-reference-for-scsi-host.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i9bd3czm0
+
+RnJvbSA0YzZhYTBiNTZjMTUzYWZlMzMxYTk4OTY5YTg1N2YxNmQ5OWY5NmI2IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBa2lub2J1IE1pdGEgPGFraW5vYnUubWl0YUBnbWFpbC5jb20+
+CkRhdGU6IFR1ZSwgNSBNYXkgMjAxNSAyMjozMDowNCArMDkwMApTdWJqZWN0OiBbUEFUQ0hdIHVz
+Yjogc3RvcmFnZTogZml4IG1vZHVsZSByZWZlcmVuY2UgIGZvciBzY3NpIGhvc3QKCi0tLQogZHJp
+dmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEuYyAgIHwgMjEgKysrKysrKysrKysrKysrKysrKy0tCiBk
+cml2ZXJzL3VzYi9zdG9yYWdlL3Njc2lnbHVlLmMgfCAxMiArKysrKysrKysrKy0KIGRyaXZlcnMv
+dXNiL3N0b3JhZ2Uvc2NzaWdsdWUuaCB8ICAzICsrLQogZHJpdmVycy91c2Ivc3RvcmFnZS91c2Iu
+YyAgICAgIHwgMjUgKysrKysrKysrKysrKysrKysrKysrLS0tLQogZHJpdmVycy91c2Ivc3RvcmFn
+ZS91c2IuaCAgICAgIHwgIDMgKystCiA1IGZpbGVzIGNoYW5nZWQsIDU1IGluc2VydGlvbnMoKyks
+IDkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEu
+YyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2UvYWxhdWRhLmMKaW5kZXggNGI1NWFiNi4uMGJhYTQ4NCAx
+MDA2NDQKLS0tIGEvZHJpdmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEuYworKysgYi9kcml2ZXJzL3Vz
+Yi9zdG9yYWdlL2FsYXVkYS5jCkBAIC00Miw2ICs0Miw3IEBACiAjaW5jbHVkZSAidHJhbnNwb3J0
+LmgiCiAjaW5jbHVkZSAicHJvdG9jb2wuaCIKICNpbmNsdWRlICJkZWJ1Zy5oIgorI2luY2x1ZGUg
+InNjc2lnbHVlLmgiCiAKIE1PRFVMRV9ERVNDUklQVElPTigiRHJpdmVyIGZvciBBbGF1ZGEtYmFz
+ZWQgY2FyZCByZWFkZXJzIik7CiBNT0RVTEVfQVVUSE9SKCJEYW5pZWwgRHJha2UgPGRzZEBnZW50
+b28ub3JnPiIpOwpAQCAtMTIzMiw2ICsxMjMzLDggQEAgc3RhdGljIGludCBhbGF1ZGFfdHJhbnNw
+b3J0KHN0cnVjdCBzY3NpX2NtbmQgKnNyYiwgc3RydWN0IHVzX2RhdGEgKnVzKQogCXJldHVybiBV
+U0JfU1RPUl9UUkFOU1BPUlRfRkFJTEVEOwogfQogCitzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF90
+ZW1wbGF0ZSBhbGF1ZGFfaG9zdF90ZW1wbGF0ZTsKKwogc3RhdGljIGludCBhbGF1ZGFfcHJvYmUo
+c3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJCQkgY29uc3Qgc3RydWN0IHVzYl9kZXZpY2Vf
+aWQgKmlkKQogewpAQCAtMTIzOSw3ICsxMjQyLDggQEAgc3RhdGljIGludCBhbGF1ZGFfcHJvYmUo
+c3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJaW50IHJlc3VsdDsKIAogCXJlc3VsdCA9IHVz
+Yl9zdG9yX3Byb2JlMSgmdXMsIGludGYsIGlkLAotCQkJKGlkIC0gYWxhdWRhX3VzYl9pZHMpICsg
+YWxhdWRhX3VudXN1YWxfZGV2X2xpc3QpOworCQkJKGlkIC0gYWxhdWRhX3VzYl9pZHMpICsgYWxh
+dWRhX3VudXN1YWxfZGV2X2xpc3QsCisJCQkmYWxhdWRhX2hvc3RfdGVtcGxhdGUpOwogCWlmIChy
+ZXN1bHQpCiAJCXJldHVybiByZXN1bHQ7CiAKQEAgLTEyNjYsNCArMTI3MCwxNyBAQCBzdGF0aWMg
+c3RydWN0IHVzYl9kcml2ZXIgYWxhdWRhX2RyaXZlciA9IHsKIAkubm9fZHluYW1pY19pZCA9IDEs
+CiB9OwogCi1tb2R1bGVfdXNiX2RyaXZlcihhbGF1ZGFfZHJpdmVyKTsKK3N0YXRpYyBpbnQgX19p
+bml0IGFsYXVkYV9kcml2ZXJfaW5pdCh2b2lkKQoreworCXVzYl9zdG9yX2hvc3RfdGVtcGxhdGVf
+aW5pdCgmYWxhdWRhX2hvc3RfdGVtcGxhdGUsICJ1bXMtYWxhdWRhIiwKKwkJCQkgICAgVEhJU19N
+T0RVTEUpOworCisJcmV0dXJuIHVzYl9yZWdpc3RlcigmYWxhdWRhX2RyaXZlcik7Cit9Cittb2R1
+bGVfaW5pdChhbGF1ZGFfZHJpdmVyX2luaXQpOworCitzdGF0aWMgdm9pZCBfX2V4aXQgYWxhdWRh
+X2RyaXZlcl9leGl0KHZvaWQpCit7CisJdXNiX2RlcmVnaXN0ZXIoJmFsYXVkYV9kcml2ZXIpOwor
+fQorbW9kdWxlX2V4aXQoYWxhdWRhX2RyaXZlcl9leGl0KTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+dXNiL3N0b3JhZ2Uvc2NzaWdsdWUuYyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2Uvc2NzaWdsdWUuYwpp
+bmRleCAwZTQwMGYzLi4wNWI4ZmUyIDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3Nj
+c2lnbHVlLmMKKysrIGIvZHJpdmVycy91c2Ivc3RvcmFnZS9zY3NpZ2x1ZS5jCkBAIC01NDAsNyAr
+NTQwLDcgQEAgc3RhdGljIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICpzeXNmc19kZXZpY2VfYXR0
+cl9saXN0W10gPSB7CiAgKiB0aGlzIGRlZmluZXMgb3VyIGhvc3QgdGVtcGxhdGUsIHdpdGggd2hp
+Y2ggd2UnbGwgYWxsb2NhdGUgaG9zdHMKICAqLwogCi1zdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRl
+IHVzYl9zdG9yX2hvc3RfdGVtcGxhdGUgPSB7CitzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF90ZW1w
+bGF0ZSB1c2Jfc3Rvcl9ob3N0X3RlbXBsYXRlID0gewogCS8qIGJhc2ljIHVzZXJsYW5kIGludGVy
+ZmFjZSBzdHVmZiAqLwogCS5uYW1lID0JCQkJInVzYi1zdG9yYWdlIiwKIAkucHJvY19uYW1lID0J
+CQkidXNiLXN0b3JhZ2UiLApAQCAtNTkyLDYgKzU5MiwxNiBAQCBzdHJ1Y3Qgc2NzaV9ob3N0X3Rl
+bXBsYXRlIHVzYl9zdG9yX2hvc3RfdGVtcGxhdGUgPSB7CiAJLm1vZHVsZSA9CQkJVEhJU19NT0RV
+TEUKIH07CiAKK3ZvaWQgdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZV9pbml0KHN0cnVjdCBzY3NpX2hv
+c3RfdGVtcGxhdGUgKnNodCwKKwkJCQkgY29uc3QgY2hhciAqbmFtZSwgc3RydWN0IG1vZHVsZSAq
+b3duZXIpCit7CisJbWVtY3B5KHNodCwgJnVzYl9zdG9yX2hvc3RfdGVtcGxhdGUsIHNpemVvZigq
+c2h0KSk7CisJc2h0LT5uYW1lID0gbmFtZTsKKwlzaHQtPnByb2NfbmFtZSA9IG5hbWU7CisJc2h0
+LT5tb2R1bGUgPSBvd25lcjsKK30KK0VYUE9SVF9TWU1CT0xfR1BMKHVzYl9zdG9yX2hvc3RfdGVt
+cGxhdGVfaW5pdCk7CisKIC8qIFRvIFJlcG9ydCAiSWxsZWdhbCBSZXF1ZXN0OiBJbnZhbGlkIEZp
+ZWxkIGluIENEQiAqLwogdW5zaWduZWQgY2hhciB1c2Jfc3Rvcl9zZW5zZV9pbnZhbGlkQ0RCWzE4
+XSA9IHsKIAlbMF0JPSAweDcwLAkJCSAgICAvKiBjdXJyZW50IGVycm9yICovCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL3VzYi9zdG9yYWdlL3Njc2lnbHVlLmggYi9kcml2ZXJzL3VzYi9zdG9yYWdlL3Nj
+c2lnbHVlLmgKaW5kZXggZmZhMWNjYS4uMTkwOTYwMSAxMDA2NDQKLS0tIGEvZHJpdmVycy91c2Iv
+c3RvcmFnZS9zY3NpZ2x1ZS5oCisrKyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2Uvc2NzaWdsdWUuaApA
+QCAtNDMsNiArNDMsNyBAQCBleHRlcm4gdm9pZCB1c2Jfc3Rvcl9yZXBvcnRfZGV2aWNlX3Jlc2V0
+KHN0cnVjdCB1c19kYXRhICp1cyk7CiBleHRlcm4gdm9pZCB1c2Jfc3Rvcl9yZXBvcnRfYnVzX3Jl
+c2V0KHN0cnVjdCB1c19kYXRhICp1cyk7CiAKIGV4dGVybiB1bnNpZ25lZCBjaGFyIHVzYl9zdG9y
+X3NlbnNlX2ludmFsaWRDREJbMThdOwotZXh0ZXJuIHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUg
+dXNiX3N0b3JfaG9zdF90ZW1wbGF0ZTsKK2V4dGVybiB2b2lkIHVzYl9zdG9yX2hvc3RfdGVtcGxh
+dGVfaW5pdChzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICpzaHQsCisJCQkJCWNvbnN0IGNoYXIg
+Km5hbWUsIHN0cnVjdCBtb2R1bGUgKm93bmVyKTsKIAogI2VuZGlmCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL3VzYi9zdG9yYWdlL3VzYi5jIGIvZHJpdmVycy91c2Ivc3RvcmFnZS91c2IuYwppbmRleCA2
+YzEwYzg4Li4wZjc2ODk5IDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3VzYi5jCisr
+KyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2UvdXNiLmMKQEAgLTkyNCw3ICs5MjQsOCBAQCBzdGF0aWMg
+dW5zaWduZWQgaW50IHVzYl9zdG9yX3NnX3RhYmxlc2l6ZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAq
+aW50ZikKIGludCB1c2Jfc3Rvcl9wcm9iZTEoc3RydWN0IHVzX2RhdGEgKipwdXMsCiAJCXN0cnVj
+dCB1c2JfaW50ZXJmYWNlICppbnRmLAogCQljb25zdCBzdHJ1Y3QgdXNiX2RldmljZV9pZCAqaWQs
+Ci0JCXN0cnVjdCB1c191bnVzdWFsX2RldiAqdW51c3VhbF9kZXYpCisJCXN0cnVjdCB1c191bnVz
+dWFsX2RldiAqdW51c3VhbF9kZXYsCisJCXN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKnNodCkK
+IHsKIAlzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0OwogCXN0cnVjdCB1c19kYXRhICp1czsKQEAgLTkz
+Niw3ICs5MzcsNyBAQCBpbnQgdXNiX3N0b3JfcHJvYmUxKHN0cnVjdCB1c19kYXRhICoqcHVzLAog
+CSAqIEFzayB0aGUgU0NTSSBsYXllciB0byBhbGxvY2F0ZSBhIGhvc3Qgc3RydWN0dXJlLCB3aXRo
+IGV4dHJhCiAJICogc3BhY2UgYXQgdGhlIGVuZCBmb3Igb3VyIHByaXZhdGUgdXNfZGF0YSBzdHJ1
+Y3R1cmUuCiAJICovCi0JaG9zdCA9IHNjc2lfaG9zdF9hbGxvYygmdXNiX3N0b3JfaG9zdF90ZW1w
+bGF0ZSwgc2l6ZW9mKCp1cykpOworCWhvc3QgPSBzY3NpX2hvc3RfYWxsb2Moc2h0LCBzaXplb2Yo
+KnVzKSk7CiAJaWYgKCFob3N0KSB7CiAJCWRldl93YXJuKCZpbnRmLT5kZXYsICJVbmFibGUgdG8g
+YWxsb2NhdGUgdGhlIHNjc2kgaG9zdFxuIik7CiAJCXJldHVybiAtRU5PTUVNOwpAQCAtMTA3Myw2
+ICsxMDc0LDggQEAgdm9pZCB1c2Jfc3Rvcl9kaXNjb25uZWN0KHN0cnVjdCB1c2JfaW50ZXJmYWNl
+ICppbnRmKQogfQogRVhQT1JUX1NZTUJPTF9HUEwodXNiX3N0b3JfZGlzY29ubmVjdCk7CiAKK3N0
+YXRpYyBzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlIHVzYl9zdG9yX2hvc3RfdGVtcGxhdGU7CisK
+IC8qIFRoZSBtYWluIHByb2JlIHJvdXRpbmUgZm9yIHN0YW5kYXJkIGRldmljZXMgKi8KIHN0YXRp
+YyBpbnQgc3RvcmFnZV9wcm9iZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAqaW50ZiwKIAkJCSBjb25z
+dCBzdHJ1Y3QgdXNiX2RldmljZV9pZCAqaWQpCkBAIC0xMTEzLDcgKzExMTYsOCBAQCBzdGF0aWMg
+aW50IHN0b3JhZ2VfcHJvYmUoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJCQlpZC0+aWRW
+ZW5kb3IsIGlkLT5pZFByb2R1Y3QpOwogCX0KIAotCXJlc3VsdCA9IHVzYl9zdG9yX3Byb2JlMSgm
+dXMsIGludGYsIGlkLCB1bnVzdWFsX2Rldik7CisJcmVzdWx0ID0gdXNiX3N0b3JfcHJvYmUxKCZ1
+cywgaW50ZiwgaWQsIHVudXN1YWxfZGV2LAorCQkJCSAmdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZSk7
+CiAJaWYgKHJlc3VsdCkKIAkJcmV0dXJuIHJlc3VsdDsKIApAQCAtMTEzNyw0ICsxMTQxLDE3IEBA
+IHN0YXRpYyBzdHJ1Y3QgdXNiX2RyaXZlciB1c2Jfc3RvcmFnZV9kcml2ZXIgPSB7CiAJLnNvZnRf
+dW5iaW5kID0JMSwKIH07CiAKLW1vZHVsZV91c2JfZHJpdmVyKHVzYl9zdG9yYWdlX2RyaXZlcik7
+CitzdGF0aWMgaW50IF9faW5pdCB1c2Jfc3RvcmFnZV9kcml2ZXJfaW5pdCh2b2lkKQoreworCXVz
+Yl9zdG9yX2hvc3RfdGVtcGxhdGVfaW5pdCgmdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZSwgInVzYi1z
+dG9yYWdlIiwKKwkJCQkgICAgVEhJU19NT0RVTEUpOworCisJcmV0dXJuIHVzYl9yZWdpc3Rlcigm
+dXNiX3N0b3JhZ2VfZHJpdmVyKTsKK30KK21vZHVsZV9pbml0KHVzYl9zdG9yYWdlX2RyaXZlcl9p
+bml0KTsKKworc3RhdGljIHZvaWQgX19leGl0IHVzYl9zdG9yYWdlX2RyaXZlcl9leGl0KHZvaWQp
+Cit7CisJdXNiX2RlcmVnaXN0ZXIoJnVzYl9zdG9yYWdlX2RyaXZlcik7Cit9Cittb2R1bGVfZXhp
+dCh1c2Jfc3RvcmFnZV9kcml2ZXJfZXhpdCk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL3VzYi9zdG9y
+YWdlL3VzYi5oIGIvZHJpdmVycy91c2Ivc3RvcmFnZS91c2IuaAppbmRleCAzMDdlMzM5Li5hMDBl
+YzRmIDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3VzYi5oCisrKyBiL2RyaXZlcnMv
+dXNiL3N0b3JhZ2UvdXNiLmgKQEAgLTE5Nyw3ICsxOTcsOCBAQCBleHRlcm4gaW50IHVzYl9zdG9y
+X3Bvc3RfcmVzZXQoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmlmYWNlKTsKIGV4dGVybiBpbnQgdXNi
+X3N0b3JfcHJvYmUxKHN0cnVjdCB1c19kYXRhICoqcHVzLAogCQlzdHJ1Y3QgdXNiX2ludGVyZmFj
+ZSAqaW50ZiwKIAkJY29uc3Qgc3RydWN0IHVzYl9kZXZpY2VfaWQgKmlkLAotCQlzdHJ1Y3QgdXNf
+dW51c3VhbF9kZXYgKnVudXN1YWxfZGV2KTsKKwkJc3RydWN0IHVzX3VudXN1YWxfZGV2ICp1bnVz
+dWFsX2RldiwKKwkJc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqc2h0KTsKIGV4dGVybiBpbnQg
+dXNiX3N0b3JfcHJvYmUyKHN0cnVjdCB1c19kYXRhICp1cyk7CiBleHRlcm4gdm9pZCB1c2Jfc3Rv
+cl9kaXNjb25uZWN0KHN0cnVjdCB1c2JfaW50ZXJmYWNlICppbnRmKTsKIAotLSAKMS45LjEKCg==
+--089e0158c316863de3051555cd71--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
