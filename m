@@ -1,168 +1,119 @@
-From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference counting
-Date: Tue, 5 May 2015 22:39:07 +0900
-Message-ID: <CAC5umyjN0h-p=V4jfgLVicEOJ9AJU+wUm1qJndaMYBE0sj9LMQ@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1505041607350.1450-100000@iolanthe.rowland.org>
-	<1430775664.2177.36.camel@HansenPartnership.com>
+From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/12] IB/srp: Fix connection state tracking
+Date: Tue, 05 May 2015 10:10:29 -0400
+Message-ID: <1430835029.2407.187.camel@redhat.com>
+References: <5541EE21.3050809@sandisk.com> <5541EE9F.8090605@sandisk.com>
+	 <1430410094.102408.71.camel@redhat.com> <55488BAE.7070006@sandisk.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=089e0158c316863de3051555cd71
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1430775664.2177.36.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-b/9kMWqo69srs43lW7Xj"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <55488BAE.7070006-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
---089e0158c316863de3051555cd71
-Content-Type: text/plain; charset=UTF-8
 
-2015-05-05 6:41 GMT+09:00 James Bottomley
-<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>:
-> On Mon, 2015-05-04 at 16:09 -0400, Alan Stern wrote:
->> On Mon, 4 May 2015, James Bottomley wrote:
->>
->> > However, it does also strike me that these three drivers have problems
->> > because they're using the wrong initialisation pattern: the template is
->> > supposed to be in the bus connector for compound drivers not in the
->> > core.
->>
->> Why is it supposed to be done that way?  Isn't that less efficient?  It
->> means you have to have a separate copy of the template for each bus
->> connector driver, instead of letting them all share a common template
->> in the core.
->
-> Well, no it doesn't.  The way 53c700 implements it is that there is a
-> common template in the core.  The drivers just initialise their variant
-> fields (for 53c700 it's name, proc_name and this_id) and the core fills
-> in the rest.  Admittedly wd33c93 doesn't quite get this right, that's
-> why I cited 53c700.
+--=-b/9kMWqo69srs43lW7Xj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I have converted usb-storage and ums-alauda in the attached patch.
-Each ums-* driver needs to expand module_usb_driver() macro as we need
-to initialize their scsi host template in module_init().
+On Tue, 2015-05-05 at 11:21 +0200, Bart Van Assche wrote:
+> On 04/30/15 18:08, Doug Ledford wrote:
+> > On Thu, 2015-04-30 at 10:58 +0200, Bart Van Assche wrote:
+> >> @@ -2367,7 +2368,7 @@ static int srp_cm_handler(struct ib_cm_id *cm_id=
+, struct ib_cm_event *event)
+> >>   	case IB_CM_DREQ_RECEIVED:
+> >>   		shost_printk(KERN_WARNING, target->scsi_host,
+> >>   			     PFX "DREQ received - connection closed\n");
+> >> -		srp_change_conn_state(target, false);
+> >> +		ch->connected =3D false;
+> >
+> > So, in this patch, you modify disconnect to set srp_change_conn_state()
+> > to false for the target, then loop through all the channels sending
+> > cm_dreq's, and on the receiving side, you modify the cm_dreq handler to
+> > set each channel to false.  However, once you get to 0 channels open,
+> > shouldn't you then set the target state to false too just to keep thing=
+s
+> > consistent?
+>=20
+> Hello Doug,
+>=20
+> What is not visible in this patch but only in the ib_srp.c source code=
+=20
+> is that the first received DREQ initiates a reconnect (the queue_work()=
+=20
+> call below):
+>=20
+> 	case IB_CM_DREQ_RECEIVED:
+> 		shost_printk(KERN_WARNING, target->scsi_host,
+> 			     PFX "DREQ received - connection closed\n");
+> 		ch->connected =3D false;
+> 		if (ib_send_cm_drep(cm_id, NULL, 0))
+> 			shost_printk(KERN_ERR, target->scsi_host,
+> 				     PFX "Sending CM DREP failed\n");
+> 		queue_work(system_long_wq, &target->tl_err_work);
+> 		break;
+>=20
+> That should be sufficient to restore communication after a DREQ has been=
+=20
+> received.
 
-Alan, how do you feel the change like this?
+Sure, but there is no guarantee that the wq is not busy with something
+else, or that the reconnect attempt will succeed.  So, it would seem to
+me that if you want to make sure your internal driver state is always
+consistent, you should set the device connected state to 0 when there
+are no connected channels any more.
 
---089e0158c316863de3051555cd71
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-usb-storage-fix-module-reference-for-scsi-host.patch"
-Content-Disposition: attachment;
-	filename="0001-usb-storage-fix-module-reference-for-scsi-host.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i9bd3czm0
+However, while looking through the driver to research this, I noticed
+something else that seems more important if you ask me.  With this patch
+we now implement individual channel connection tracking.  However, in
+srp_queuecommand() you pick the channel based on the tag, and the blk
+layer has no idea of these disconnects, so the blk layer is free to
+assign a tag/channel to a channel that's disconnected, and then as best
+I can tell, you will simply try to post a work request to a channel
+that's already disconnected, which I would expect to fail if we have
+already disconnected this particular qp and not brought up a new one
+yet.  So it seems to me there is a race condition between new incoming
+SCSI commands and this disconnect/reconnect window, and that maybe we
+should be sending these commands back to the mid layer for requeueing
+when the channel the blk_mq tag points to is disconnected.  Or am I
+missing something in there?
 
-RnJvbSA0YzZhYTBiNTZjMTUzYWZlMzMxYTk4OTY5YTg1N2YxNmQ5OWY5NmI2IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBa2lub2J1IE1pdGEgPGFraW5vYnUubWl0YUBnbWFpbC5jb20+
-CkRhdGU6IFR1ZSwgNSBNYXkgMjAxNSAyMjozMDowNCArMDkwMApTdWJqZWN0OiBbUEFUQ0hdIHVz
-Yjogc3RvcmFnZTogZml4IG1vZHVsZSByZWZlcmVuY2UgIGZvciBzY3NpIGhvc3QKCi0tLQogZHJp
-dmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEuYyAgIHwgMjEgKysrKysrKysrKysrKysrKysrKy0tCiBk
-cml2ZXJzL3VzYi9zdG9yYWdlL3Njc2lnbHVlLmMgfCAxMiArKysrKysrKysrKy0KIGRyaXZlcnMv
-dXNiL3N0b3JhZ2Uvc2NzaWdsdWUuaCB8ICAzICsrLQogZHJpdmVycy91c2Ivc3RvcmFnZS91c2Iu
-YyAgICAgIHwgMjUgKysrKysrKysrKysrKysrKysrKysrLS0tLQogZHJpdmVycy91c2Ivc3RvcmFn
-ZS91c2IuaCAgICAgIHwgIDMgKystCiA1IGZpbGVzIGNoYW5nZWQsIDU1IGluc2VydGlvbnMoKyks
-IDkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEu
-YyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2UvYWxhdWRhLmMKaW5kZXggNGI1NWFiNi4uMGJhYTQ4NCAx
-MDA2NDQKLS0tIGEvZHJpdmVycy91c2Ivc3RvcmFnZS9hbGF1ZGEuYworKysgYi9kcml2ZXJzL3Vz
-Yi9zdG9yYWdlL2FsYXVkYS5jCkBAIC00Miw2ICs0Miw3IEBACiAjaW5jbHVkZSAidHJhbnNwb3J0
-LmgiCiAjaW5jbHVkZSAicHJvdG9jb2wuaCIKICNpbmNsdWRlICJkZWJ1Zy5oIgorI2luY2x1ZGUg
-InNjc2lnbHVlLmgiCiAKIE1PRFVMRV9ERVNDUklQVElPTigiRHJpdmVyIGZvciBBbGF1ZGEtYmFz
-ZWQgY2FyZCByZWFkZXJzIik7CiBNT0RVTEVfQVVUSE9SKCJEYW5pZWwgRHJha2UgPGRzZEBnZW50
-b28ub3JnPiIpOwpAQCAtMTIzMiw2ICsxMjMzLDggQEAgc3RhdGljIGludCBhbGF1ZGFfdHJhbnNw
-b3J0KHN0cnVjdCBzY3NpX2NtbmQgKnNyYiwgc3RydWN0IHVzX2RhdGEgKnVzKQogCXJldHVybiBV
-U0JfU1RPUl9UUkFOU1BPUlRfRkFJTEVEOwogfQogCitzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF90
-ZW1wbGF0ZSBhbGF1ZGFfaG9zdF90ZW1wbGF0ZTsKKwogc3RhdGljIGludCBhbGF1ZGFfcHJvYmUo
-c3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJCQkgY29uc3Qgc3RydWN0IHVzYl9kZXZpY2Vf
-aWQgKmlkKQogewpAQCAtMTIzOSw3ICsxMjQyLDggQEAgc3RhdGljIGludCBhbGF1ZGFfcHJvYmUo
-c3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJaW50IHJlc3VsdDsKIAogCXJlc3VsdCA9IHVz
-Yl9zdG9yX3Byb2JlMSgmdXMsIGludGYsIGlkLAotCQkJKGlkIC0gYWxhdWRhX3VzYl9pZHMpICsg
-YWxhdWRhX3VudXN1YWxfZGV2X2xpc3QpOworCQkJKGlkIC0gYWxhdWRhX3VzYl9pZHMpICsgYWxh
-dWRhX3VudXN1YWxfZGV2X2xpc3QsCisJCQkmYWxhdWRhX2hvc3RfdGVtcGxhdGUpOwogCWlmIChy
-ZXN1bHQpCiAJCXJldHVybiByZXN1bHQ7CiAKQEAgLTEyNjYsNCArMTI3MCwxNyBAQCBzdGF0aWMg
-c3RydWN0IHVzYl9kcml2ZXIgYWxhdWRhX2RyaXZlciA9IHsKIAkubm9fZHluYW1pY19pZCA9IDEs
-CiB9OwogCi1tb2R1bGVfdXNiX2RyaXZlcihhbGF1ZGFfZHJpdmVyKTsKK3N0YXRpYyBpbnQgX19p
-bml0IGFsYXVkYV9kcml2ZXJfaW5pdCh2b2lkKQoreworCXVzYl9zdG9yX2hvc3RfdGVtcGxhdGVf
-aW5pdCgmYWxhdWRhX2hvc3RfdGVtcGxhdGUsICJ1bXMtYWxhdWRhIiwKKwkJCQkgICAgVEhJU19N
-T0RVTEUpOworCisJcmV0dXJuIHVzYl9yZWdpc3RlcigmYWxhdWRhX2RyaXZlcik7Cit9Cittb2R1
-bGVfaW5pdChhbGF1ZGFfZHJpdmVyX2luaXQpOworCitzdGF0aWMgdm9pZCBfX2V4aXQgYWxhdWRh
-X2RyaXZlcl9leGl0KHZvaWQpCit7CisJdXNiX2RlcmVnaXN0ZXIoJmFsYXVkYV9kcml2ZXIpOwor
-fQorbW9kdWxlX2V4aXQoYWxhdWRhX2RyaXZlcl9leGl0KTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-dXNiL3N0b3JhZ2Uvc2NzaWdsdWUuYyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2Uvc2NzaWdsdWUuYwpp
-bmRleCAwZTQwMGYzLi4wNWI4ZmUyIDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3Nj
-c2lnbHVlLmMKKysrIGIvZHJpdmVycy91c2Ivc3RvcmFnZS9zY3NpZ2x1ZS5jCkBAIC01NDAsNyAr
-NTQwLDcgQEAgc3RhdGljIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICpzeXNmc19kZXZpY2VfYXR0
-cl9saXN0W10gPSB7CiAgKiB0aGlzIGRlZmluZXMgb3VyIGhvc3QgdGVtcGxhdGUsIHdpdGggd2hp
-Y2ggd2UnbGwgYWxsb2NhdGUgaG9zdHMKICAqLwogCi1zdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRl
-IHVzYl9zdG9yX2hvc3RfdGVtcGxhdGUgPSB7CitzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF90ZW1w
-bGF0ZSB1c2Jfc3Rvcl9ob3N0X3RlbXBsYXRlID0gewogCS8qIGJhc2ljIHVzZXJsYW5kIGludGVy
-ZmFjZSBzdHVmZiAqLwogCS5uYW1lID0JCQkJInVzYi1zdG9yYWdlIiwKIAkucHJvY19uYW1lID0J
-CQkidXNiLXN0b3JhZ2UiLApAQCAtNTkyLDYgKzU5MiwxNiBAQCBzdHJ1Y3Qgc2NzaV9ob3N0X3Rl
-bXBsYXRlIHVzYl9zdG9yX2hvc3RfdGVtcGxhdGUgPSB7CiAJLm1vZHVsZSA9CQkJVEhJU19NT0RV
-TEUKIH07CiAKK3ZvaWQgdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZV9pbml0KHN0cnVjdCBzY3NpX2hv
-c3RfdGVtcGxhdGUgKnNodCwKKwkJCQkgY29uc3QgY2hhciAqbmFtZSwgc3RydWN0IG1vZHVsZSAq
-b3duZXIpCit7CisJbWVtY3B5KHNodCwgJnVzYl9zdG9yX2hvc3RfdGVtcGxhdGUsIHNpemVvZigq
-c2h0KSk7CisJc2h0LT5uYW1lID0gbmFtZTsKKwlzaHQtPnByb2NfbmFtZSA9IG5hbWU7CisJc2h0
-LT5tb2R1bGUgPSBvd25lcjsKK30KK0VYUE9SVF9TWU1CT0xfR1BMKHVzYl9zdG9yX2hvc3RfdGVt
-cGxhdGVfaW5pdCk7CisKIC8qIFRvIFJlcG9ydCAiSWxsZWdhbCBSZXF1ZXN0OiBJbnZhbGlkIEZp
-ZWxkIGluIENEQiAqLwogdW5zaWduZWQgY2hhciB1c2Jfc3Rvcl9zZW5zZV9pbnZhbGlkQ0RCWzE4
-XSA9IHsKIAlbMF0JPSAweDcwLAkJCSAgICAvKiBjdXJyZW50IGVycm9yICovCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3VzYi9zdG9yYWdlL3Njc2lnbHVlLmggYi9kcml2ZXJzL3VzYi9zdG9yYWdlL3Nj
-c2lnbHVlLmgKaW5kZXggZmZhMWNjYS4uMTkwOTYwMSAxMDA2NDQKLS0tIGEvZHJpdmVycy91c2Iv
-c3RvcmFnZS9zY3NpZ2x1ZS5oCisrKyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2Uvc2NzaWdsdWUuaApA
-QCAtNDMsNiArNDMsNyBAQCBleHRlcm4gdm9pZCB1c2Jfc3Rvcl9yZXBvcnRfZGV2aWNlX3Jlc2V0
-KHN0cnVjdCB1c19kYXRhICp1cyk7CiBleHRlcm4gdm9pZCB1c2Jfc3Rvcl9yZXBvcnRfYnVzX3Jl
-c2V0KHN0cnVjdCB1c19kYXRhICp1cyk7CiAKIGV4dGVybiB1bnNpZ25lZCBjaGFyIHVzYl9zdG9y
-X3NlbnNlX2ludmFsaWRDREJbMThdOwotZXh0ZXJuIHN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUg
-dXNiX3N0b3JfaG9zdF90ZW1wbGF0ZTsKK2V4dGVybiB2b2lkIHVzYl9zdG9yX2hvc3RfdGVtcGxh
-dGVfaW5pdChzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICpzaHQsCisJCQkJCWNvbnN0IGNoYXIg
-Km5hbWUsIHN0cnVjdCBtb2R1bGUgKm93bmVyKTsKIAogI2VuZGlmCmRpZmYgLS1naXQgYS9kcml2
-ZXJzL3VzYi9zdG9yYWdlL3VzYi5jIGIvZHJpdmVycy91c2Ivc3RvcmFnZS91c2IuYwppbmRleCA2
-YzEwYzg4Li4wZjc2ODk5IDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3VzYi5jCisr
-KyBiL2RyaXZlcnMvdXNiL3N0b3JhZ2UvdXNiLmMKQEAgLTkyNCw3ICs5MjQsOCBAQCBzdGF0aWMg
-dW5zaWduZWQgaW50IHVzYl9zdG9yX3NnX3RhYmxlc2l6ZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAq
-aW50ZikKIGludCB1c2Jfc3Rvcl9wcm9iZTEoc3RydWN0IHVzX2RhdGEgKipwdXMsCiAJCXN0cnVj
-dCB1c2JfaW50ZXJmYWNlICppbnRmLAogCQljb25zdCBzdHJ1Y3QgdXNiX2RldmljZV9pZCAqaWQs
-Ci0JCXN0cnVjdCB1c191bnVzdWFsX2RldiAqdW51c3VhbF9kZXYpCisJCXN0cnVjdCB1c191bnVz
-dWFsX2RldiAqdW51c3VhbF9kZXYsCisJCXN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKnNodCkK
-IHsKIAlzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0OwogCXN0cnVjdCB1c19kYXRhICp1czsKQEAgLTkz
-Niw3ICs5MzcsNyBAQCBpbnQgdXNiX3N0b3JfcHJvYmUxKHN0cnVjdCB1c19kYXRhICoqcHVzLAog
-CSAqIEFzayB0aGUgU0NTSSBsYXllciB0byBhbGxvY2F0ZSBhIGhvc3Qgc3RydWN0dXJlLCB3aXRo
-IGV4dHJhCiAJICogc3BhY2UgYXQgdGhlIGVuZCBmb3Igb3VyIHByaXZhdGUgdXNfZGF0YSBzdHJ1
-Y3R1cmUuCiAJICovCi0JaG9zdCA9IHNjc2lfaG9zdF9hbGxvYygmdXNiX3N0b3JfaG9zdF90ZW1w
-bGF0ZSwgc2l6ZW9mKCp1cykpOworCWhvc3QgPSBzY3NpX2hvc3RfYWxsb2Moc2h0LCBzaXplb2Yo
-KnVzKSk7CiAJaWYgKCFob3N0KSB7CiAJCWRldl93YXJuKCZpbnRmLT5kZXYsICJVbmFibGUgdG8g
-YWxsb2NhdGUgdGhlIHNjc2kgaG9zdFxuIik7CiAJCXJldHVybiAtRU5PTUVNOwpAQCAtMTA3Myw2
-ICsxMDc0LDggQEAgdm9pZCB1c2Jfc3Rvcl9kaXNjb25uZWN0KHN0cnVjdCB1c2JfaW50ZXJmYWNl
-ICppbnRmKQogfQogRVhQT1JUX1NZTUJPTF9HUEwodXNiX3N0b3JfZGlzY29ubmVjdCk7CiAKK3N0
-YXRpYyBzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlIHVzYl9zdG9yX2hvc3RfdGVtcGxhdGU7CisK
-IC8qIFRoZSBtYWluIHByb2JlIHJvdXRpbmUgZm9yIHN0YW5kYXJkIGRldmljZXMgKi8KIHN0YXRp
-YyBpbnQgc3RvcmFnZV9wcm9iZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAqaW50ZiwKIAkJCSBjb25z
-dCBzdHJ1Y3QgdXNiX2RldmljZV9pZCAqaWQpCkBAIC0xMTEzLDcgKzExMTYsOCBAQCBzdGF0aWMg
-aW50IHN0b3JhZ2VfcHJvYmUoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGYsCiAJCQlpZC0+aWRW
-ZW5kb3IsIGlkLT5pZFByb2R1Y3QpOwogCX0KIAotCXJlc3VsdCA9IHVzYl9zdG9yX3Byb2JlMSgm
-dXMsIGludGYsIGlkLCB1bnVzdWFsX2Rldik7CisJcmVzdWx0ID0gdXNiX3N0b3JfcHJvYmUxKCZ1
-cywgaW50ZiwgaWQsIHVudXN1YWxfZGV2LAorCQkJCSAmdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZSk7
-CiAJaWYgKHJlc3VsdCkKIAkJcmV0dXJuIHJlc3VsdDsKIApAQCAtMTEzNyw0ICsxMTQxLDE3IEBA
-IHN0YXRpYyBzdHJ1Y3QgdXNiX2RyaXZlciB1c2Jfc3RvcmFnZV9kcml2ZXIgPSB7CiAJLnNvZnRf
-dW5iaW5kID0JMSwKIH07CiAKLW1vZHVsZV91c2JfZHJpdmVyKHVzYl9zdG9yYWdlX2RyaXZlcik7
-CitzdGF0aWMgaW50IF9faW5pdCB1c2Jfc3RvcmFnZV9kcml2ZXJfaW5pdCh2b2lkKQoreworCXVz
-Yl9zdG9yX2hvc3RfdGVtcGxhdGVfaW5pdCgmdXNiX3N0b3JfaG9zdF90ZW1wbGF0ZSwgInVzYi1z
-dG9yYWdlIiwKKwkJCQkgICAgVEhJU19NT0RVTEUpOworCisJcmV0dXJuIHVzYl9yZWdpc3Rlcigm
-dXNiX3N0b3JhZ2VfZHJpdmVyKTsKK30KK21vZHVsZV9pbml0KHVzYl9zdG9yYWdlX2RyaXZlcl9p
-bml0KTsKKworc3RhdGljIHZvaWQgX19leGl0IHVzYl9zdG9yYWdlX2RyaXZlcl9leGl0KHZvaWQp
-Cit7CisJdXNiX2RlcmVnaXN0ZXIoJnVzYl9zdG9yYWdlX2RyaXZlcik7Cit9Cittb2R1bGVfZXhp
-dCh1c2Jfc3RvcmFnZV9kcml2ZXJfZXhpdCk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL3VzYi9zdG9y
-YWdlL3VzYi5oIGIvZHJpdmVycy91c2Ivc3RvcmFnZS91c2IuaAppbmRleCAzMDdlMzM5Li5hMDBl
-YzRmIDEwMDY0NAotLS0gYS9kcml2ZXJzL3VzYi9zdG9yYWdlL3VzYi5oCisrKyBiL2RyaXZlcnMv
-dXNiL3N0b3JhZ2UvdXNiLmgKQEAgLTE5Nyw3ICsxOTcsOCBAQCBleHRlcm4gaW50IHVzYl9zdG9y
-X3Bvc3RfcmVzZXQoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmlmYWNlKTsKIGV4dGVybiBpbnQgdXNi
-X3N0b3JfcHJvYmUxKHN0cnVjdCB1c19kYXRhICoqcHVzLAogCQlzdHJ1Y3QgdXNiX2ludGVyZmFj
-ZSAqaW50ZiwKIAkJY29uc3Qgc3RydWN0IHVzYl9kZXZpY2VfaWQgKmlkLAotCQlzdHJ1Y3QgdXNf
-dW51c3VhbF9kZXYgKnVudXN1YWxfZGV2KTsKKwkJc3RydWN0IHVzX3VudXN1YWxfZGV2ICp1bnVz
-dWFsX2RldiwKKwkJc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqc2h0KTsKIGV4dGVybiBpbnQg
-dXNiX3N0b3JfcHJvYmUyKHN0cnVjdCB1c19kYXRhICp1cyk7CiBleHRlcm4gdm9pZCB1c2Jfc3Rv
-cl9kaXNjb25uZWN0KHN0cnVjdCB1c2JfaW50ZXJmYWNlICppbnRmKTsKIAotLSAKMS45LjEKCg==
---089e0158c316863de3051555cd71--
+
+--=20
+Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+              GPG KeyID: 0E572FDD
+
+
+
+--=-b/9kMWqo69srs43lW7Xj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJVSM9VAAoJELgmozMOVy/d11wP/A1hUawxgttKhRyQG1UNqovW
+WjcJvVmRXzvjN2Ae+qQtGDWzlDaS7k/opjfHLs2NbR+CnuHfhWgz7IPa8iVVUfqE
+M0X4b51w2NCp2oLwoLJc+dp+Q21QAoBNmHq95+Dfdf8IK1wK7neYvPcIg0EVYgD1
+CzJXyj7dfBPP3qh425K7Pl5ZVGmpmJx1aRRfdDkZiz6Sfq4FKoDBPnFO9MCsZAy7
+v/GkNa5RE1ljAwj7ydFyzEzlfCuQWr5C/zG24hHSLDO6ygQiOEQxyY+k4o6nWfja
+/xLK0m33bxORDcqMl2Ypyrxuw0GyvKS1l6QkVZzwqOzySBhVbm7rA9kZSLpdxd4g
+IBbnOC5RD9BkGvW7sru44YY1w9IZz7jxSzrxgFttCTD916N9AnpWc/j2IjHwP/L1
+bNNQXuL5CdD1QzFzMZQU4lbe+iEo2w2/jW/ByZf4XQfbBfhUl1tZJ/2/OhBQZWZE
+HDo/dnz2kXf3vGWDEocSnd16uPZZnk+ZUxKYglzjybpLfCt6/idaW+Hzdh+CEH8/
+6MgZPlYFL1gfM/TstufPOK6onmbcPALYjL67lFyhtbwNEoj1njGW0KrcFpkUDTei
+lxphrakRSa1AiWMCk2WUPLmrbrQtVd2VYJDVITHNmWfiQn/flbls51a3s4A16Xl3
+BgGs/xD1Lzz2LYNI6Gf8
+=CjzJ
+-----END PGP SIGNATURE-----
+
+--=-b/9kMWqo69srs43lW7Xj--
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
