@@ -1,119 +1,94 @@
-From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 04/12] IB/srp: Fix connection state tracking
-Date: Tue, 05 May 2015 10:10:29 -0400
-Message-ID: <1430835029.2407.187.camel@redhat.com>
-References: <5541EE21.3050809@sandisk.com> <5541EE9F.8090605@sandisk.com>
-	 <1430410094.102408.71.camel@redhat.com> <55488BAE.7070006@sandisk.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH kernel] commit 4fbdf9cb ("lpfc: Fix for lun discovery
+ issue with saturn adapter.")
+Date: Tue, 05 May 2015 11:33:21 -0400
+Message-ID: <5548E2C1.3070209@emulex.com>
+References: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-b/9kMWqo69srs43lW7Xj"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <55488BAE.7070006-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
 
-
---=-b/9kMWqo69srs43lW7Xj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2015-05-05 at 11:21 +0200, Bart Van Assche wrote:
-> On 04/30/15 18:08, Doug Ledford wrote:
-> > On Thu, 2015-04-30 at 10:58 +0200, Bart Van Assche wrote:
-> >> @@ -2367,7 +2368,7 @@ static int srp_cm_handler(struct ib_cm_id *cm_id=
-, struct ib_cm_event *event)
-> >>   	case IB_CM_DREQ_RECEIVED:
-> >>   		shost_printk(KERN_WARNING, target->scsi_host,
-> >>   			     PFX "DREQ received - connection closed\n");
-> >> -		srp_change_conn_state(target, false);
-> >> +		ch->connected =3D false;
-> >
-> > So, in this patch, you modify disconnect to set srp_change_conn_state()
-> > to false for the target, then loop through all the channels sending
-> > cm_dreq's, and on the receiving side, you modify the cm_dreq handler to
-> > set each channel to false.  However, once you get to 0 channels open,
-> > shouldn't you then set the target state to false too just to keep thing=
-s
-> > consistent?
->=20
-> Hello Doug,
->=20
-> What is not visible in this patch but only in the ib_srp.c source code=
-=20
-> is that the first received DREQ initiates a reconnect (the queue_work()=
-=20
-> call below):
->=20
-> 	case IB_CM_DREQ_RECEIVED:
-> 		shost_printk(KERN_WARNING, target->scsi_host,
-> 			     PFX "DREQ received - connection closed\n");
-> 		ch->connected =3D false;
-> 		if (ib_send_cm_drep(cm_id, NULL, 0))
-> 			shost_printk(KERN_ERR, target->scsi_host,
-> 				     PFX "Sending CM DREP failed\n");
-> 		queue_work(system_long_wq, &target->tl_err_work);
-> 		break;
->=20
-> That should be sufficient to restore communication after a DREQ has been=
-=20
-> received.
-
-Sure, but there is no guarantee that the wq is not busy with something
-else, or that the reconnect attempt will succeed.  So, it would seem to
-me that if you want to make sure your internal driver state is always
-consistent, you should set the device connected state to 0 when there
-are no connected channels any more.
-
-However, while looking through the driver to research this, I noticed
-something else that seems more important if you ask me.  With this patch
-we now implement individual channel connection tracking.  However, in
-srp_queuecommand() you pick the channel based on the tag, and the blk
-layer has no idea of these disconnects, so the blk layer is free to
-assign a tag/channel to a channel that's disconnected, and then as best
-I can tell, you will simply try to post a work request to a channel
-that's already disconnected, which I would expect to fail if we have
-already disconnected this particular qp and not brought up a new one
-yet.  So it seems to me there is a race condition between new incoming
-SCSI commands and this disconnect/reconnect window, and that maybe we
-should be sending these commands back to the mid layer for requeueing
-when the channel the blk_mq tag points to is disconnected.  Or am I
-missing something in there?
-
-
---=20
-Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-              GPG KeyID: 0E572FDD
-
-
-
---=-b/9kMWqo69srs43lW7Xj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJVSM9VAAoJELgmozMOVy/d11wP/A1hUawxgttKhRyQG1UNqovW
-WjcJvVmRXzvjN2Ae+qQtGDWzlDaS7k/opjfHLs2NbR+CnuHfhWgz7IPa8iVVUfqE
-M0X4b51w2NCp2oLwoLJc+dp+Q21QAoBNmHq95+Dfdf8IK1wK7neYvPcIg0EVYgD1
-CzJXyj7dfBPP3qh425K7Pl5ZVGmpmJx1aRRfdDkZiz6Sfq4FKoDBPnFO9MCsZAy7
-v/GkNa5RE1ljAwj7ydFyzEzlfCuQWr5C/zG24hHSLDO6ygQiOEQxyY+k4o6nWfja
-/xLK0m33bxORDcqMl2Ypyrxuw0GyvKS1l6QkVZzwqOzySBhVbm7rA9kZSLpdxd4g
-IBbnOC5RD9BkGvW7sru44YY1w9IZz7jxSzrxgFttCTD916N9AnpWc/j2IjHwP/L1
-bNNQXuL5CdD1QzFzMZQU4lbe+iEo2w2/jW/ByZf4XQfbBfhUl1tZJ/2/OhBQZWZE
-HDo/dnz2kXf3vGWDEocSnd16uPZZnk+ZUxKYglzjybpLfCt6/idaW+Hzdh+CEH8/
-6MgZPlYFL1gfM/TstufPOK6onmbcPALYjL67lFyhtbwNEoj1njGW0KrcFpkUDTei
-lxphrakRSa1AiWMCk2WUPLmrbrQtVd2VYJDVITHNmWfiQn/flbls51a3s4A16Xl3
-BgGs/xD1Lzz2LYNI6Gf8
-=CjzJ
------END PGP SIGNATURE-----
-
---=-b/9kMWqo69srs43lW7Xj--
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+UmV2aWV3ZWQtQnk6IEphbWVzIFNtYXJ0IDxqYW1lcy5zbWFydEBlbXVsZXguY29tPgoKCkFsZXhl
+eSwgU2ViYXN0aWFuLAoKWWVzIC0gdGhpcyBzZWN0aW9uIG5lZWRzIHRvIGJlIHJldmVydGVkLiAg
+VGhpcyBwYXRjaCBpcyBnb29kLgoKLS0gamFtZXMgcwoKCgoKT24gNC8yOC8yMDE1IDQ6MjYgQU0s
+IEFsZXhleSBLYXJkYXNoZXZza2l5IHdyb3RlOgo+IFRoaXMgcmV2ZXJ0cyA0ZmJkZjljYiBpcyBi
+cmVha3MgTFBGQyBvbiBQT1dFUjcgbWFjaGluZSwgYmlnIGVuZGlhbiBrZXJuZWwuCj4KPiBUaGlz
+IGlzIHRoZSBoYXJkd2FyZSB1c2VkIGZvciB2ZXJpZmljYXRpb246Cj4gMDAwNTowMTowMC4wIEZp
+YnJlIENoYW5uZWwgWzBjMDRdOiBFbXVsZXggQ29ycG9yYXRpb24gU2F0dXJuLVg6IExpZ2h0UHVs
+c2UgRmlicmUgQ2hhbm5lbCBIb3N0IEFkYXB0ZXIgWzEwZGY6ZjEwMF0gKHJldiAwMykKPiAwMDA1
+OjAxOjAwLjEgRmlicmUgQ2hhbm5lbCBbMGMwNF06IEVtdWxleCBDb3Jwb3JhdGlvbiBTYXR1cm4t
+WDogTGlnaHRQdWxzZSBGaWJyZSBDaGFubmVsIEhvc3QgQWRhcHRlciBbMTBkZjpmMTAwXSAocmV2
+IDAzKQo+Cj4gU2lnbmVkLW9mZi1ieTogQWxleGV5IEthcmRhc2hldnNraXkgPGFpa0BvemxhYnMu
+cnU+Cj4gLS0tCj4gICBkcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYyB8IDQxICsrKysrKysr
+KysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gICAxIGZpbGUgY2hhbmdlZCwgMjEg
+aW5zZXJ0aW9ucygrKSwgMjAgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
+Y3NpL2xwZmMvbHBmY19zY3NpLmMgYi9kcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYwo+IGlu
+ZGV4IGNiNzNjZjkuLmMxNDBmOTkgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvbHBm
+Y19zY3NpLmMKPiArKysgYi9kcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYwo+IEBAIC0xMTMw
+LDI1ICsxMTMwLDYgQEAgbHBmY19yZWxlYXNlX3Njc2lfYnVmKHN0cnVjdCBscGZjX2hiYSAqcGhi
+YSwgc3RydWN0IGxwZmNfc2NzaV9idWYgKnBzYikKPiAgIH0KPiAgIAo+ICAgLyoqCj4gLSAqIGxw
+ZmNfZmNwY21kX3RvX2lvY2IgLSBjb3B5IHRoZSBmY3BfY21kIGRhdGEgaW50byB0aGUgSU9DQgo+
+IC0gKiBAZGF0YTogQSBwb2ludGVyIHRvIHRoZSBpbW1lZGlhdGUgY29tbWFuZCBkYXRhIHBvcnRp
+b24gb2YgdGhlIElPQ0IuCj4gLSAqIEBmY3BfY21uZDogVGhlIEZDUCBDb21tYW5kIHRoYXQgaXMg
+cHJvdmlkZWQgYnkgdGhlIFNDU0kgbGF5ZXIuCj4gLSAqCj4gLSAqIFRoZSByb3V0aW5lIGNvcGll
+cyB0aGUgZW50aXJlIEZDUCBjb21tYW5kIGZyb20gQGZjcF9jbW5kIHRvIEBkYXRhIHdoaWxlCj4g
+LSAqIGJ5dGUgc3dhcHBpbmcgdGhlIGRhdGEgdG8gYmlnIGVuZGlhbiBmb3JtYXQgZm9yIHRyYW5z
+bWlzc2lvbiBvbiB0aGUgd2lyZS4KPiAtICoqLwo+IC1zdGF0aWMgdm9pZAo+IC1scGZjX2ZjcGNt
+ZF90b19pb2NiKHVpbnQ4X3QgKmRhdGEsIHN0cnVjdCBmY3BfY21uZCAqZmNwX2NtbmQpCj4gLXsK
+PiAtCWludCBpLCBqOwo+IC0KPiAtCWZvciAoaSA9IDAsIGogPSAwOyBpIDwgc2l6ZW9mKHN0cnVj
+dCBmY3BfY21uZCk7Cj4gLQkgICAgIGkgKz0gc2l6ZW9mKHVpbnQzMl90KSwgaisrKSB7Cj4gLQkJ
+KCh1aW50MzJfdCAqKWRhdGEpW2pdID0gY3B1X3RvX2JlMzIoKCh1aW50MzJfdCAqKWZjcF9jbW5k
+KVtqXSk7Cj4gLQl9Cj4gLX0KPiAtCj4gLS8qKgo+ICAgICogbHBmY19zY3NpX3ByZXBfZG1hX2J1
+Zl9zMyAtIERNQSBtYXBwaW5nIGZvciBzY3NpIGJ1ZmZlciB0byBTTEkzIElGIHNwZWMKPiAgICAq
+IEBwaGJhOiBUaGUgSGJhIGZvciB3aGljaCB0aGlzIGNhbGwgaXMgYmVpbmcgZXhlY3V0ZWQuCj4g
+ICAgKiBAbHBmY19jbWQ6IFRoZSBzY3NpIGJ1ZmZlciB3aGljaCBpcyBnb2luZyB0byBiZSBtYXBw
+ZWQuCj4gQEAgLTEyODMsNyArMTI2NCw2IEBAIGxwZmNfc2NzaV9wcmVwX2RtYV9idWZfczMoc3Ry
+dWN0IGxwZmNfaGJhICpwaGJhLCBzdHJ1Y3QgbHBmY19zY3NpX2J1ZiAqbHBmY19jbWQpCj4gICAJ
+ICogd2UgbmVlZCB0byBzZXQgd29yZCA0IG9mIElPQ0IgaGVyZQo+ICAgCSAqLwo+ICAgCWlvY2Jf
+Y21kLT51bi5mY3BpLmZjcGlfcGFybSA9IHNjc2lfYnVmZmxlbihzY3NpX2NtbmQpOwo+IC0JbHBm
+Y19mY3BjbWRfdG9faW9jYihpb2NiX2NtZC0+dW5zbGkzLmZjcF9leHQuaWNkLCBmY3BfY21uZCk7
+Cj4gICAJcmV0dXJuIDA7Cj4gICB9Cj4gICAKPiBAQCAtNDE0Nyw2ICs0MTI3LDI0IEBAIGxwZmNf
+c2NzaV9jbWRfaW9jYl9jbXBsKHN0cnVjdCBscGZjX2hiYSAqcGhiYSwgc3RydWN0IGxwZmNfaW9j
+YnEgKnBJb2NiSW4sCj4gICB9Cj4gICAKPiAgIC8qKgo+ICsgKiBscGZjX2ZjcGNtZF90b19pb2Ni
+IC0gY29weSB0aGUgZmNwX2NtZCBkYXRhIGludG8gdGhlIElPQ0IKPiArICogQGRhdGE6IEEgcG9p
+bnRlciB0byB0aGUgaW1tZWRpYXRlIGNvbW1hbmQgZGF0YSBwb3J0aW9uIG9mIHRoZSBJT0NCLgo+
+ICsgKiBAZmNwX2NtbmQ6IFRoZSBGQ1AgQ29tbWFuZCB0aGF0IGlzIHByb3ZpZGVkIGJ5IHRoZSBT
+Q1NJIGxheWVyLgo+ICsgKgo+ICsgKiBUaGUgcm91dGluZSBjb3BpZXMgdGhlIGVudGlyZSBGQ1Ag
+Y29tbWFuZCBmcm9tIEBmY3BfY21uZCB0byBAZGF0YSB3aGlsZQo+ICsgKiBieXRlIHN3YXBwaW5n
+IHRoZSBkYXRhIHRvIGJpZyBlbmRpYW4gZm9ybWF0IGZvciB0cmFuc21pc3Npb24gb24gdGhlIHdp
+cmUuCj4gKyAqKi8KPiArc3RhdGljIHZvaWQKPiArbHBmY19mY3BjbWRfdG9faW9jYih1aW50OF90
+ICpkYXRhLCBzdHJ1Y3QgZmNwX2NtbmQgKmZjcF9jbW5kKQo+ICt7Cj4gKwlpbnQgaSwgajsKPiAr
+CWZvciAoaSA9IDAsIGogPSAwOyBpIDwgc2l6ZW9mKHN0cnVjdCBmY3BfY21uZCk7Cj4gKwkgICAg
+IGkgKz0gc2l6ZW9mKHVpbnQzMl90KSwgaisrKSB7Cj4gKwkJKCh1aW50MzJfdCAqKWRhdGEpW2pd
+ID0gY3B1X3RvX2JlMzIoKCh1aW50MzJfdCAqKWZjcF9jbW5kKVtqXSk7Cj4gKwl9Cj4gK30KPiAr
+Cj4gKy8qKgo+ICAgICogbHBmY19zY3NpX3ByZXBfY21uZCAtIFdyYXBwZXIgZnVuYyBmb3IgY29u
+dmVydCBzY3NpIGNtbmQgdG8gRkNQIGluZm8gdW5pdAo+ICAgICogQHZwb3J0OiBUaGUgdmlydHVh
+bCBwb3J0IGZvciB3aGljaCB0aGlzIGNhbGwgaXMgYmVpbmcgZXhlY3V0ZWQuCj4gICAgKiBAbHBm
+Y19jbWQ6IFRoZSBzY3NpIGNvbW1hbmQgd2hpY2ggbmVlZHMgdG8gc2VuZC4KPiBAQCAtNDIyNSw2
+ICs0MjIzLDkgQEAgbHBmY19zY3NpX3ByZXBfY21uZChzdHJ1Y3QgbHBmY192cG9ydCAqdnBvcnQs
+IHN0cnVjdCBscGZjX3Njc2lfYnVmICpscGZjX2NtZCwKPiAgIAkJZmNwX2NtbmQtPmZjcENudGwz
+ID0gMDsKPiAgIAkJcGhiYS0+ZmM0Q29udHJvbFJlcXVlc3RzKys7Cj4gICAJfQo+ICsJaWYgKHBo
+YmEtPnNsaV9yZXYgPT0gMyAmJgo+ICsJICAgICEocGhiYS0+c2xpM19vcHRpb25zICYgTFBGQ19T
+TEkzX0JHX0VOQUJMRUQpKQo+ICsJCWxwZmNfZmNwY21kX3RvX2lvY2IoaW9jYl9jbWQtPnVuc2xp
+My5mY3BfZXh0LmljZCwgZmNwX2NtbmQpOwo+ICAgCS8qCj4gICAJICogRmluaXNoIGluaXRpYWxp
+emluZyB0aG9zZSBJT0NCIGZpZWxkcyB0aGF0IGFyZSBpbmRlcGVuZGVudAo+ICAgCSAqIG9mIHRo
+ZSBzY3NpX2NtbmQgcmVxdWVzdF9idWZmZXIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2
+QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4
+cHBjLWRldg==
