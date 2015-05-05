@@ -1,73 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Tue, 5 May 2015 13:04:40 -0400
-Message-ID: <20150505170440.GW1971@htj.duckdns.org>
-References: <1430838822-17507-1-git-send-email-stripathi@apm.com>
- <1430838822-17507-2-git-send-email-stripathi@apm.com>
+From: linux@highpoint-tech.com
+Subject: Question about driver category for submission
+Date: Tue, 5 May 2015 13:00:54 -0400 (EDT)
+Message-ID: <1430845254.106831601@apps.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:33684 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbbEEREo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 13:04:44 -0400
-Content-Disposition: inline
-In-Reply-To: <1430838822-17507-2-git-send-email-stripathi@apm.com>
+Received: from smtp126.iad3a.emailsrvr.com ([173.203.187.126]:58808 "EHLO
+	smtp126.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933304AbbEERGl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 May 2015 13:06:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org
 
-Hello, Suman.
+Hello,
+We would like to submit our driver for Linux kernel embedded. Our produ=
+ct is using Marvell 9480/9495 SAS/SATA controller with Marvell Port Mul=
+tiplier(PM) controller to provide PM feature for SATA HDDs. From driver=
+ source package, we found the Marvell has provided =E2=80=9Cmvsas=E2=80=
+=9D source package that covers this chip. But here are questions
 
-Looks pretty.  Some nitpicks.
+1.  The =E2=80=9Cmvsas=E2=80=9D is based on SCSI modules so it links to=
+ scsi library where it doesn=E2=80=99t support PM feature
+2.  We use the same controller chip, so we can=E2=80=99t have the code =
+in other category.=20
+3. To use PM feature, we need to link to SATA library
 
-On Tue, May 05, 2015 at 08:43:41PM +0530, Suman Tripathi wrote:
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 71262e0..2df2237 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -238,6 +238,8 @@ enum {
->  	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
->  	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
->  	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
-> +	AHCI_HFLAG_EDGE_TRIG_IRQ	= (1 << 19), /* HOST_IRQ_STAT behaves as
-> +							Edge Triggered */
+Our current code is proprietary which uses scsi module and add PM and s=
+taggered drive spin up features. Hence, this question is to ask Linux c=
+ommunity to tell us how should we proceed this if we want to open our c=
+ode and get driver embedded? Do we need to add our code based on mvsas =
+source? How do we include SATA library in scsi module? or other alterna=
+tives?
 
-Let's just name it ahci_HFLAG_EDGE_IRQ.
 
-> +static irqreturn_t ahci_level_trig_intr(int irq, void *dev_instance)
+Best Regards,
+HighPoint Linux Team=20
 
-ahci_single_level_irq_intr()
 
-> +{
-...
-> @@ -1877,13 +1885,51 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
->  	 * Also, use the unmasked value to clear interrupt as spurious
->  	 * pending event on a dummy port might cause screaming IRQ.
->  	 */
-> +
 
-Extra newline which wasn't there before.
 
-> +	writel(irq_stat, mmio + HOST_IRQ_STAT);
-> +
-> +	spin_unlock(&host->lock);
-> +
-> +	VPRINTK("EXIT\n");
-> +
-> +	return IRQ_RETVAL(rc);
-> +}
-> +
-> +static irqreturn_t ahci_edge_trig_intr(int irq, void *dev_instance)
 
-ahci_single_edge_irq_intr()
-
-And let's please separate refactoring of intr routine and addition of
-edge irq handling into two patches.
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
