@@ -1,94 +1,338 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH kernel] commit 4fbdf9cb ("lpfc: Fix for lun discovery
- issue with saturn adapter.")
-Date: Tue, 05 May 2015 11:33:21 -0400
-Message-ID: <5548E2C1.3070209@emulex.com>
-References: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
-Reply-To: james.smart@emulex.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] mpt2sas: mpt3sas: Fix memory corruption during initialization
+Date: Tue, 05 May 2015 17:35:49 +0200
+Message-ID: <5548E355.2040606@redhat.com>
+References: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org, Sebastian Herbszt <herbszt@gmx.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43927 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2993417AbbEEPg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 May 2015 11:36:29 -0400
+In-Reply-To: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, calvinowens@fb.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jejb@kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, chaitra.basappa@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org
 
-UmV2aWV3ZWQtQnk6IEphbWVzIFNtYXJ0IDxqYW1lcy5zbWFydEBlbXVsZXguY29tPgoKCkFsZXhl
-eSwgU2ViYXN0aWFuLAoKWWVzIC0gdGhpcyBzZWN0aW9uIG5lZWRzIHRvIGJlIHJldmVydGVkLiAg
-VGhpcyBwYXRjaCBpcyBnb29kLgoKLS0gamFtZXMgcwoKCgoKT24gNC8yOC8yMDE1IDQ6MjYgQU0s
-IEFsZXhleSBLYXJkYXNoZXZza2l5IHdyb3RlOgo+IFRoaXMgcmV2ZXJ0cyA0ZmJkZjljYiBpcyBi
-cmVha3MgTFBGQyBvbiBQT1dFUjcgbWFjaGluZSwgYmlnIGVuZGlhbiBrZXJuZWwuCj4KPiBUaGlz
-IGlzIHRoZSBoYXJkd2FyZSB1c2VkIGZvciB2ZXJpZmljYXRpb246Cj4gMDAwNTowMTowMC4wIEZp
-YnJlIENoYW5uZWwgWzBjMDRdOiBFbXVsZXggQ29ycG9yYXRpb24gU2F0dXJuLVg6IExpZ2h0UHVs
-c2UgRmlicmUgQ2hhbm5lbCBIb3N0IEFkYXB0ZXIgWzEwZGY6ZjEwMF0gKHJldiAwMykKPiAwMDA1
-OjAxOjAwLjEgRmlicmUgQ2hhbm5lbCBbMGMwNF06IEVtdWxleCBDb3Jwb3JhdGlvbiBTYXR1cm4t
-WDogTGlnaHRQdWxzZSBGaWJyZSBDaGFubmVsIEhvc3QgQWRhcHRlciBbMTBkZjpmMTAwXSAocmV2
-IDAzKQo+Cj4gU2lnbmVkLW9mZi1ieTogQWxleGV5IEthcmRhc2hldnNraXkgPGFpa0BvemxhYnMu
-cnU+Cj4gLS0tCj4gICBkcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYyB8IDQxICsrKysrKysr
-KysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gICAxIGZpbGUgY2hhbmdlZCwgMjEg
-aW5zZXJ0aW9ucygrKSwgMjAgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL2xwZmMvbHBmY19zY3NpLmMgYi9kcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYwo+IGlu
-ZGV4IGNiNzNjZjkuLmMxNDBmOTkgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9zY3NpL2xwZmMvbHBm
-Y19zY3NpLmMKPiArKysgYi9kcml2ZXJzL3Njc2kvbHBmYy9scGZjX3Njc2kuYwo+IEBAIC0xMTMw
-LDI1ICsxMTMwLDYgQEAgbHBmY19yZWxlYXNlX3Njc2lfYnVmKHN0cnVjdCBscGZjX2hiYSAqcGhi
-YSwgc3RydWN0IGxwZmNfc2NzaV9idWYgKnBzYikKPiAgIH0KPiAgIAo+ICAgLyoqCj4gLSAqIGxw
-ZmNfZmNwY21kX3RvX2lvY2IgLSBjb3B5IHRoZSBmY3BfY21kIGRhdGEgaW50byB0aGUgSU9DQgo+
-IC0gKiBAZGF0YTogQSBwb2ludGVyIHRvIHRoZSBpbW1lZGlhdGUgY29tbWFuZCBkYXRhIHBvcnRp
-b24gb2YgdGhlIElPQ0IuCj4gLSAqIEBmY3BfY21uZDogVGhlIEZDUCBDb21tYW5kIHRoYXQgaXMg
-cHJvdmlkZWQgYnkgdGhlIFNDU0kgbGF5ZXIuCj4gLSAqCj4gLSAqIFRoZSByb3V0aW5lIGNvcGll
-cyB0aGUgZW50aXJlIEZDUCBjb21tYW5kIGZyb20gQGZjcF9jbW5kIHRvIEBkYXRhIHdoaWxlCj4g
-LSAqIGJ5dGUgc3dhcHBpbmcgdGhlIGRhdGEgdG8gYmlnIGVuZGlhbiBmb3JtYXQgZm9yIHRyYW5z
-bWlzc2lvbiBvbiB0aGUgd2lyZS4KPiAtICoqLwo+IC1zdGF0aWMgdm9pZAo+IC1scGZjX2ZjcGNt
-ZF90b19pb2NiKHVpbnQ4X3QgKmRhdGEsIHN0cnVjdCBmY3BfY21uZCAqZmNwX2NtbmQpCj4gLXsK
-PiAtCWludCBpLCBqOwo+IC0KPiAtCWZvciAoaSA9IDAsIGogPSAwOyBpIDwgc2l6ZW9mKHN0cnVj
-dCBmY3BfY21uZCk7Cj4gLQkgICAgIGkgKz0gc2l6ZW9mKHVpbnQzMl90KSwgaisrKSB7Cj4gLQkJ
-KCh1aW50MzJfdCAqKWRhdGEpW2pdID0gY3B1X3RvX2JlMzIoKCh1aW50MzJfdCAqKWZjcF9jbW5k
-KVtqXSk7Cj4gLQl9Cj4gLX0KPiAtCj4gLS8qKgo+ICAgICogbHBmY19zY3NpX3ByZXBfZG1hX2J1
-Zl9zMyAtIERNQSBtYXBwaW5nIGZvciBzY3NpIGJ1ZmZlciB0byBTTEkzIElGIHNwZWMKPiAgICAq
-IEBwaGJhOiBUaGUgSGJhIGZvciB3aGljaCB0aGlzIGNhbGwgaXMgYmVpbmcgZXhlY3V0ZWQuCj4g
-ICAgKiBAbHBmY19jbWQ6IFRoZSBzY3NpIGJ1ZmZlciB3aGljaCBpcyBnb2luZyB0byBiZSBtYXBw
-ZWQuCj4gQEAgLTEyODMsNyArMTI2NCw2IEBAIGxwZmNfc2NzaV9wcmVwX2RtYV9idWZfczMoc3Ry
-dWN0IGxwZmNfaGJhICpwaGJhLCBzdHJ1Y3QgbHBmY19zY3NpX2J1ZiAqbHBmY19jbWQpCj4gICAJ
-ICogd2UgbmVlZCB0byBzZXQgd29yZCA0IG9mIElPQ0IgaGVyZQo+ICAgCSAqLwo+ICAgCWlvY2Jf
-Y21kLT51bi5mY3BpLmZjcGlfcGFybSA9IHNjc2lfYnVmZmxlbihzY3NpX2NtbmQpOwo+IC0JbHBm
-Y19mY3BjbWRfdG9faW9jYihpb2NiX2NtZC0+dW5zbGkzLmZjcF9leHQuaWNkLCBmY3BfY21uZCk7
-Cj4gICAJcmV0dXJuIDA7Cj4gICB9Cj4gICAKPiBAQCAtNDE0Nyw2ICs0MTI3LDI0IEBAIGxwZmNf
-c2NzaV9jbWRfaW9jYl9jbXBsKHN0cnVjdCBscGZjX2hiYSAqcGhiYSwgc3RydWN0IGxwZmNfaW9j
-YnEgKnBJb2NiSW4sCj4gICB9Cj4gICAKPiAgIC8qKgo+ICsgKiBscGZjX2ZjcGNtZF90b19pb2Ni
-IC0gY29weSB0aGUgZmNwX2NtZCBkYXRhIGludG8gdGhlIElPQ0IKPiArICogQGRhdGE6IEEgcG9p
-bnRlciB0byB0aGUgaW1tZWRpYXRlIGNvbW1hbmQgZGF0YSBwb3J0aW9uIG9mIHRoZSBJT0NCLgo+
-ICsgKiBAZmNwX2NtbmQ6IFRoZSBGQ1AgQ29tbWFuZCB0aGF0IGlzIHByb3ZpZGVkIGJ5IHRoZSBT
-Q1NJIGxheWVyLgo+ICsgKgo+ICsgKiBUaGUgcm91dGluZSBjb3BpZXMgdGhlIGVudGlyZSBGQ1Ag
-Y29tbWFuZCBmcm9tIEBmY3BfY21uZCB0byBAZGF0YSB3aGlsZQo+ICsgKiBieXRlIHN3YXBwaW5n
-IHRoZSBkYXRhIHRvIGJpZyBlbmRpYW4gZm9ybWF0IGZvciB0cmFuc21pc3Npb24gb24gdGhlIHdp
-cmUuCj4gKyAqKi8KPiArc3RhdGljIHZvaWQKPiArbHBmY19mY3BjbWRfdG9faW9jYih1aW50OF90
-ICpkYXRhLCBzdHJ1Y3QgZmNwX2NtbmQgKmZjcF9jbW5kKQo+ICt7Cj4gKwlpbnQgaSwgajsKPiAr
-CWZvciAoaSA9IDAsIGogPSAwOyBpIDwgc2l6ZW9mKHN0cnVjdCBmY3BfY21uZCk7Cj4gKwkgICAg
-IGkgKz0gc2l6ZW9mKHVpbnQzMl90KSwgaisrKSB7Cj4gKwkJKCh1aW50MzJfdCAqKWRhdGEpW2pd
-ID0gY3B1X3RvX2JlMzIoKCh1aW50MzJfdCAqKWZjcF9jbW5kKVtqXSk7Cj4gKwl9Cj4gK30KPiAr
-Cj4gKy8qKgo+ICAgICogbHBmY19zY3NpX3ByZXBfY21uZCAtIFdyYXBwZXIgZnVuYyBmb3IgY29u
-dmVydCBzY3NpIGNtbmQgdG8gRkNQIGluZm8gdW5pdAo+ICAgICogQHZwb3J0OiBUaGUgdmlydHVh
-bCBwb3J0IGZvciB3aGljaCB0aGlzIGNhbGwgaXMgYmVpbmcgZXhlY3V0ZWQuCj4gICAgKiBAbHBm
-Y19jbWQ6IFRoZSBzY3NpIGNvbW1hbmQgd2hpY2ggbmVlZHMgdG8gc2VuZC4KPiBAQCAtNDIyNSw2
-ICs0MjIzLDkgQEAgbHBmY19zY3NpX3ByZXBfY21uZChzdHJ1Y3QgbHBmY192cG9ydCAqdnBvcnQs
-IHN0cnVjdCBscGZjX3Njc2lfYnVmICpscGZjX2NtZCwKPiAgIAkJZmNwX2NtbmQtPmZjcENudGwz
-ID0gMDsKPiAgIAkJcGhiYS0+ZmM0Q29udHJvbFJlcXVlc3RzKys7Cj4gICAJfQo+ICsJaWYgKHBo
-YmEtPnNsaV9yZXYgPT0gMyAmJgo+ICsJICAgICEocGhiYS0+c2xpM19vcHRpb25zICYgTFBGQ19T
-TEkzX0JHX0VOQUJMRUQpKQo+ICsJCWxwZmNfZmNwY21kX3RvX2lvY2IoaW9jYl9jbWQtPnVuc2xp
-My5mY3BfZXh0LmljZCwgZmNwX2NtbmQpOwo+ICAgCS8qCj4gICAJICogRmluaXNoIGluaXRpYWxp
-emluZyB0aG9zZSBJT0NCIGZpZWxkcyB0aGF0IGFyZSBpbmRlcGVuZGVudAo+ICAgCSAqIG9mIHRo
-ZSBzY3NpX2NtbmQgcmVxdWVzdF9idWZmZXIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2
-QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4
-cHBjLWRldg==
+On 05/04/2015 05:05 PM, Sreekanth Reddy wrote:
+> I have applied this patch on the latest upstream mpt3sas driver, then I have compiled and loaded the driver.
+> In the driver logs I didn't see any attached drives are added to the OS, 'fdisk -l' command also doesn't list
+>  the drives which are actually attached to the HBA.
+>
+> When I debug this issue then I see that in '_scsih_target_alloc'
+>  driver is searching for sas_device from the lists 'sas_device_init_list' & 'sas_device_list'
+>  based on the device sas address using the function mpt3sas_scsih_sas_device_find_by_sas_address(),
+>  since this device is not in the 'sas_device_init_list' (as it is moved it to head list) driver exit
+>  from this function without updating the required device addition information.
+>
+> To solve the original problem (i.e memory corruption), here I have attached the patch,
+>  in this patch I have added one atomic flag is_on_sas_device_init_list in _sas_device_structure
+>  and I followed below algorithm.
+>
+> 1. when ever a device is added to sas_device_init_list then driver will set this atomic flag of this device to one.
+>
+> 2. And during the addition of this device to SCSI mid layer,
+>         if the device is successfully added to the OS then driver will move this device list in to sas_device_list list from sas_device_init_list list and at this time driver will reset this flag to zero.
+>         if device is failed to register with SCSI mid layer then also driver will reset this flag to zero in function _scsih_sas_device_remove and will remove the device entry from sas_device_init_list and will free the device structure.
+>
+> 3. Now when a device is removed then driver will receive target not responding event and in the function _scsih_device_remove_by_handle,
+>          a. driver will check whether addition of discovered devices to SML process is currently running or not,
+>                i. if addition (or registration) of discovered devices to SML process is running then driver will check whether device is in sas_device_init_list or not (by reading the atomic flag)?.
+>                     if it is in a sas_device_init_list then driver will ignore this device removal event (since device registration with SML will fail and it is removed in function _scsih_sas_device_remove as mentioned in step 2).
+>              ii. if the device is not in a sas_device_init_list or addition (or registration) of discovered devices to SML process is already completed then device structure is removed from this function and this device entry is removed from sas_device_list.
+>
+> 4. if the device removal event is received after device structure is freed due to failure of device registration with SML them in the function _scsih_device_remove_by_handle driver won't find this device in the sas_device_list or in a sas_device_init_list and so driver will ignore this  device removal event.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 ++
+>  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 45 +++++++++++++++++++++++++++---------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 ++
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 43 ++++++++++++++++++++++++++--------
+>  4 files changed, 71 insertions(+), 21 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> index caff8d1..1aa10d2 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> @@ -376,6 +376,7 @@ struct _sas_device {
+>  	u8	phy;
+>  	u8	responding;
+>  	u8	pfa_led_on;
+> +	atomic_t is_on_sas_device_init_list;
+
+Hi Sreekanth,
+when is_on_sas_device_init_list is used it's protected
+by ioc->sas_device_lock - why do you need a atomic_t ?
+There is one exception, but easily fixable. 
+
+>  };
+>  
+>  /**
+> @@ -833,6 +834,7 @@ struct MPT2SAS_ADAPTER {
+>  	u8		broadcast_aen_busy;
+>  	u16		broadcast_aen_pending;
+>  	u8		shost_recovery;
+> +	u8		discovered_device_addition_on;
+>  
+>  	struct mutex	reset_in_progress_mutex;
+>  	spinlock_t 	ioc_reset_in_progress_lock;
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index 3f26147..2a61286 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -590,13 +590,20 @@ _scsih_sas_device_remove(struct MPT2SAS_ADAPTER *ioc,
+>      struct _sas_device *sas_device)
+>  {
+>  	unsigned long flags;
+> +	struct _sas_device *same_sas_device;
+>  
+>  	if (!sas_device)
+>  		return;
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> -	list_del(&sas_device->list);
+> -	kfree(sas_device);
+> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> +						sas_device->handle);
+
+Is it possible that when same_sas_device is not null, that the
+value is not the same as for the sas_device ? 
+
+> +	if (same_sas_device) {
+> +		list_del(&same_sas_device->list);
+> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
+
+Seems easier to just set the variable without a test.
+
+> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> +		kfree(same_sas_device);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  }
+>  
+> @@ -658,6 +664,7 @@ _scsih_sas_device_init_add(struct MPT2SAS_ADAPTER *ioc,
+>  	    "(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
+>  	    sas_device->handle, (unsigned long long)sas_device->sas_address));
+>  
+> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
+>  	_scsih_determine_boot_device(ioc, sas_device, 0);
+> @@ -5364,8 +5371,14 @@ _scsih_device_remove_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -5391,8 +5404,14 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+>  	    sas_address);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -7978,32 +7997,36 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
+>  	struct _sas_device *sas_device, *next;
+>  	unsigned long flags;
+>  
+> +	ioc->discovered_device_addition_on = 1;
+>  	/* SAS Device List */
+>  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+>  	    list) {
+>  
+>  		if (ioc->hide_drives)
+>  			continue;
+> -
+> +
+>  		if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
+>  		    sas_device->sas_address_parent)) {
+> -			list_del(&sas_device->list);
+> -			kfree(sas_device);
+> +			mpt2sas_transport_port_remove(ioc,
+> +					sas_device->sas_address,
+> +					sas_device->sas_address_parent);
+> +			_scsih_sas_device_remove(ioc, sas_device);
+>  			continue;
+>  		} else if (!sas_device->starget) {
+>  			if (!ioc->is_driver_loading) {
+>  				mpt2sas_transport_port_remove(ioc,
+>  					sas_device->sas_address,
+>  					sas_device->sas_address_parent);
+> -				list_del(&sas_device->list);
+> -				kfree(sas_device);
+> +				_scsih_sas_device_remove(ioc, sas_device);
+>  				continue;
+>  			}
+>  		}
+>  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
+
+Why not 'atomic_set(&sas_device->is_on_sas_device_init_list, 0);' ?
+There is no place where you set the value of is_on_sas_device_init_list
+higher than '1'.
+
+Cheers,
+Tomas
+
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> +	ioc->discovered_device_addition_on = 0;
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index afa8816..6188490 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -315,6 +315,7 @@ struct _sas_device {
+>  	u8	responding;
+>  	u8	fast_path;
+>  	u8	pfa_led_on;
+> +	atomic_t is_on_sas_device_init_list;
+>  };
+>  
+>  /**
+> @@ -766,6 +767,7 @@ struct MPT3SAS_ADAPTER {
+>  	u8		broadcast_aen_busy;
+>  	u16		broadcast_aen_pending;
+>  	u8		shost_recovery;
+> +	u8		discovered_device_addition_on;
+>  
+>  	struct mutex	reset_in_progress_mutex;
+>  	spinlock_t	ioc_reset_in_progress_lock;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 5a97e32..53cc9ea 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -582,13 +582,20 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER *ioc,
+>  	struct _sas_device *sas_device)
+>  {
+>  	unsigned long flags;
+> +	struct _sas_device *same_sas_device;
+>  
+>  	if (!sas_device)
+>  		return;
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> -	list_del(&sas_device->list);
+> -	kfree(sas_device);
+> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> +						sas_device->handle);
+> +	if (same_sas_device) {
+> +		list_del(&same_sas_device->list);
+> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
+> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> +		kfree(same_sas_device);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  }
+>  
+> @@ -610,8 +616,14 @@ _scsih_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -637,8 +649,14 @@ mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
+>  	    sas_address);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -663,6 +681,7 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *ioc,
+>  		ioc->name, __func__, sas_device->handle,
+>  		(unsigned long long)sas_device->sas_address));
+>  
+> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_list);
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> @@ -7610,14 +7629,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+>  	struct _sas_device *sas_device, *next;
+>  	unsigned long flags;
+>  
+> +	ioc->discovered_device_addition_on = 1;
+>  	/* SAS Device List */
+>  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+>  	    list) {
+>  
+>  		if (!mpt3sas_transport_port_add(ioc, sas_device->handle,
+>  		    sas_device->sas_address_parent)) {
+> -			list_del(&sas_device->list);
+> -			kfree(sas_device);
+> +			mpt3sas_transport_port_remove(ioc,
+> +					sas_device->sas_address,
+> +					sas_device->sas_address_parent);
+> +			_scsih_sas_device_remove(ioc, sas_device);
+>  			continue;
+>  		} else if (!sas_device->starget) {
+>  			/*
+> @@ -7630,16 +7652,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+>  				mpt3sas_transport_port_remove(ioc,
+>  				    sas_device->sas_address,
+>  				    sas_device->sas_address_parent);
+> -				list_del(&sas_device->list);
+> -				kfree(sas_device);
+> +				_scsih_sas_device_remove(ioc, sas_device);
+>  				continue;
+>  			}
+>  		}
+>  
+>  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> +	ioc->discovered_device_addition_on = 0;
+>  }
+>  
+>  /**
+
