@@ -1,174 +1,35 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v4 1/2] libahci: Add support to handle HOST_IRQ_STAT as edge trigger latch.
-Date: Tue,  5 May 2015 20:43:41 +0530
-Message-ID: <1430838822-17507-2-git-send-email-stripathi@apm.com>
-References: <1430838822-17507-1-git-send-email-stripathi@apm.com>
+Subject: [PATCH v4 0/2] ata: ahci_xgene: Add support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller driver.
+Date: Tue,  5 May 2015 20:43:40 +0530
+Message-ID: <1430838822-17507-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1430838822-17507-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the support to handle HOST_IRQ_STAT as edge trigger
-latch.
+V2 change:
+ * Drop the MIDR based implementation.
+
+V3 change:
+ * Implement the support for HOST_IRQ_STAT as edge trigger latch.
+
+V4 change:
+ * Implement seperate irq handler for level and edge trigger latch.
 
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/ahci.h    |  2 ++
- drivers/ata/libahci.c | 93 +++++++++++++++++++++++++++++++++++++++------------
- 2 files changed, 73 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 71262e0..2df2237 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -238,6 +238,8 @@ enum {
- 	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
- 	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
- 	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
-+	AHCI_HFLAG_EDGE_TRIG_IRQ	= (1 << 19), /* HOST_IRQ_STAT behaves as
-+							Edge Triggered */
+Suman Tripathi (2):
+  libahci: Add support to handle HOST_IRQ_STAT as edge trigger latch.
+  ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC
+    AHCI SATA     Host controller.
 
- 	/* ap->flags bits */
+ drivers/ata/ahci.h       |  2 ++
+ drivers/ata/ahci_xgene.c | 90 ++++++++++++++++++++++++++++++++++++----------
+ drivers/ata/libahci.c    | 93 ++++++++++++++++++++++++++++++++++++------------
+ 3 files changed, 145 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 61a9c07..6f1a603 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1826,27 +1826,9 @@ static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
- 	return IRQ_WAKE_THREAD;
- }
-
--static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
-+static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
- {
--	struct ata_host *host = dev_instance;
--	struct ahci_host_priv *hpriv;
- 	unsigned int i, handled = 0;
--	void __iomem *mmio;
--	u32 irq_stat, irq_masked;
--
--	VPRINTK("ENTER\n");
--
--	hpriv = host->private_data;
--	mmio = hpriv->mmio;
--
--	/* sigh.  0xffffffff is a valid return from h/w */
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--	if (!irq_stat)
--		return IRQ_NONE;
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	spin_lock(&host->lock);
-
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap;
-@@ -1864,10 +1846,36 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
- 				dev_warn(host->dev,
- 					 "interrupt on disabled port %u\n", i);
- 		}
--
- 		handled = 1;
- 	}
-
-+	return handled;
-+}
-+
-+static irqreturn_t ahci_level_trig_intr(int irq, void *dev_instance)
-+{
-+	struct ata_host *host = dev_instance;
-+	struct ahci_host_priv *hpriv;
-+	unsigned int rc = 0;
-+	void __iomem *mmio;
-+	u32 irq_stat, irq_masked;
-+
-+	VPRINTK("ENTER\n");
-+
-+	hpriv = host->private_data;
-+	mmio = hpriv->mmio;
-+
-+	/* sigh.  0xffffffff is a valid return from h/w */
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+	if (!irq_stat)
-+		return IRQ_NONE;
-+
-+	irq_masked = irq_stat & hpriv->port_map;
-+
-+	spin_lock(&host->lock);
-+
-+	rc = ahci_handle_port_intr(host, irq_masked);
-+
- 	/* HOST_IRQ_STAT behaves as level triggered latch meaning that
- 	 * it should be cleared after all the port events are cleared;
- 	 * otherwise, it will raise a spurious interrupt after each
-@@ -1877,13 +1885,51 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
- 	 * Also, use the unmasked value to clear interrupt as spurious
- 	 * pending event on a dummy port might cause screaming IRQ.
- 	 */
-+
-+	writel(irq_stat, mmio + HOST_IRQ_STAT);
-+
-+	spin_unlock(&host->lock);
-+
-+	VPRINTK("EXIT\n");
-+
-+	return IRQ_RETVAL(rc);
-+}
-+
-+static irqreturn_t ahci_edge_trig_intr(int irq, void *dev_instance)
-+{
-+	struct ata_host *host = dev_instance;
-+	struct ahci_host_priv *hpriv;
-+	unsigned int rc = 0;
-+	void __iomem *mmio;
-+	u32 irq_stat, irq_masked;
-+
-+	VPRINTK("ENTER\n");
-+
-+	hpriv = host->private_data;
-+	mmio = hpriv->mmio;
-+
-+	/* sigh.  0xffffffff is a valid return from h/w */
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+	if (!irq_stat)
-+		return IRQ_NONE;
-+
-+	irq_masked = irq_stat & hpriv->port_map;
-+
-+	spin_lock(&host->lock);
-+
-+	/*
-+	 * HOST_IRQ_STAT behaves as edge triggered latch meaning that
-+	 * it should be cleared before all the port events are cleared;
-+	 */
- 	writel(irq_stat, mmio + HOST_IRQ_STAT);
-
-+	rc = ahci_handle_port_intr(host, irq_masked);
-+
- 	spin_unlock(&host->lock);
-
- 	VPRINTK("EXIT\n");
-
--	return IRQ_RETVAL(handled);
-+	return IRQ_RETVAL(rc);
- }
-
- unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-@@ -2486,8 +2532,11 @@ int ahci_host_activate(struct ata_host *host, int irq,
-
- 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
- 		rc = ahci_host_activate_multi_irqs(host, irq, sht);
-+	else if (hpriv->flags & AHCI_HFLAG_EDGE_TRIG_IRQ)
-+		rc = ata_host_activate(host, irq, ahci_edge_trig_intr,
-+				       IRQF_SHARED, sht);
- 	else
--		rc = ata_host_activate(host, irq, ahci_single_irq_intr,
-+		rc = ata_host_activate(host, irq, ahci_level_trig_intr,
- 				       IRQF_SHARED, sht);
- 	return rc;
- }
 --
 1.8.2.1
 
