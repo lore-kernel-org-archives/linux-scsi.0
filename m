@@ -1,39 +1,67 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: RE: [PATCH 0/4] cxgbi: driver update
-Date: Mon, 4 May 2015 22:43:30 +0000
-Message-ID: <1442C3287A121140B690F7F20F94463D8F157C@nice.asicdesigners.com>
-References: <201504102057.t3AKv9xR028741@localhost6.localdomain6>,<552C268E.10001@cs.wisc.edu>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Tue, 5 May 2015 11:25:14 +0530
+Message-ID: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
+References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+	<1430667220-23477-2-git-send-email-stripathi@apm.com>
+	<20150504154726.GA1971@htj.duckdns.org>
+	<CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+	<20150504182618.GG1971@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:4681 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbbEDWqH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2015 18:46:07 -0400
-In-Reply-To: <552C268E.10001@cs.wisc.edu>
-Content-Language: en-US
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:58376 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932617AbbEEFzR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 01:55:17 -0400
+Received: by wicmx19 with SMTP id mx19so92241548wic.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2015 22:55:15 -0700 (PDT)
+In-Reply-To: <20150504182618.GG1971@htj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "hch@infradead.org" <hch@infradead.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+
+Hi Tejun,
+
+On Mon, May 4, 2015 at 11:56 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> On Mon, May 04, 2015 at 10:13:11PM +0530, Suman Tripathi wrote:
+>> AFAIK clearing host_irq_stat means we have handled port interrupts .
+>> Now for our case we still have interrupts left because it didn't get
+>> detected on
+>> first ahci_port_intr.  So you  mean to handle that residual irq in the
+>> next cycle (i mean next call intr handler ) ??
+>
+> Heh, I think we're talking past each other.  For level triggered IRQs,
+> the latched IRQ bits should be cleared after handling the events;
+> otherwise, the latched bits are gonna get set immediately as the
+> events are still pending.  Also, this doesn't lose any events as
+> they're level triggered latches - if any event is pending, the IRQ is
+> gonna be raised again.
+>
+> Edge triggered latches are the other way around.  You should clear the
+> latches before actually handling and clearing the events.  The pending
+> events won't trigger the latches again as it's edge-triggered and the
+> events which happens after this irq handling starts won't get lost as
+> they'll be latched for the next round.
+
+Yeah it's very simple. The clearing of irq_stat needs to move up.
+That's it. tried and it worked. Thanks a lot !!
+Just a quick question : Why edge trigger handling is not yet present
+in libahci yet? I mean no one has used it yet ??
+
+>
+> Thanks.
+>
+> --
+> tejun
 
 
-On Monday, April 13, 2015 1:26 PM, Mike Christie wrote:
->
->> This patch set contains fixes and updates for the cxgbi drivers. It updates
->> the driver copyrights and versions, added logic to adjust the send/recv
->> window based on the link speed and the initial sequence number.
->>
->> Karen Xie (4):
->> cxgbi: use per-connection link-speed dependent send/recv windows
->> cxgbi: update copyright to 2015
->> cxgbi: update driver versions
->> cxgb4i: added setting of the initial sequence number
->>
->
-> Looks ok to me.
->
-> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-Any chance this patch set would get merged soon? Thanks!
+-- 
+Thanks,
+with regards,
+Suman Tripathi
