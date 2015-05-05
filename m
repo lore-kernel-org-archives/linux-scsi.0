@@ -1,45 +1,81 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: RFC: struct request cleanups
-Date: Tue, 05 May 2015 13:41:40 -0600
-Message-ID: <55491CF4.6060903@kernel.dk>
-References: <1429303042-12078-1-git-send-email-hch@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module
+ reference counting
+Date: Tue, 05 May 2015 14:42:28 -0700
+Message-ID: <1430862148.2173.73.camel@HansenPartnership.com>
+References: <Pine.LNX.4.44L0.1505051432090.1639-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:37325 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345AbbEETlr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 15:41:47 -0400
-Received: by igblo3 with SMTP id lo3so108340464igb.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 May 2015 12:41:43 -0700 (PDT)
-In-Reply-To: <1429303042-12078-1-git-send-email-hch@lst.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40461 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423623AbbEEVma (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 17:42:30 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1505051432090.1639-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 04/17/2015 02:37 PM, Christoph Hellwig wrote:
-> The first 5 patches move the magic IDE request types into the old IDE
-> driver to keep the core block code clean of them.  Those are basically
-> ready to merge, just like the 6th one which is a cleanup on it's own.
->
-> The real RFC is the last one which allocates the block_pc specific
-> data separately in the callers instead of bloating every struct
-> request with it.  I always hated what we did, but with the upcoming
-> split of nvme into transports and command sets we'll need a NVME
-> equivalent of BLOCK_PC, and as NVMe was designed by crackmonkeys
-> dreaming of an ATA controller the "command block" for NVME is even
-> bigger than what we have to deal with in SCSI.
->
-> Note that the old IDE driver doesn't compile with the last patch
-> yet as there are major nightmares to sort out, and BLOCK_PC passthrough
-> with dm-multipath doesn't work yet either.  If I get some general
-> concensus on the approach I'll fix those of course.
+On Tue, 2015-05-05 at 15:14 -0400, Alan Stern wrote:
+> On Tue, 5 May 2015, James Bottomley wrote:
+> 
+> > > The cost is duplication of the .owner field in every Scsi_Host.  The 
+> > > savings is a reduction in the number of scsi_host_templates.
+> > 
+> > So your essential objection is the host template duplication?  I know
+> > it's a couple of hundred bytes, but surely its dwarfed by all the other
+> > stuff you have to duplicate ... the module size of each of these is
+> > around 0.25MB, so a couple of hundred bytes would seem a bit
+> > insignificant.
+> 
+> Agreed, the size is relatively insignificant.  I drop any objection on
+> that account.  (But turning things around, what's wrong with
+> duplicating the .owner field in the Scsi_Host structure when we're
+> already duplicating this_id, can_queue, sg_tablesize, and a large bunch
+> of others?)
 
-These are nice improvements, it'd be great to get rid of embeeding the 
-command block. I have applied 1-6 for 4.2.
+It's really only the pattern wrongness.  However, as Rusty says (at
+length) the best APIs are those that you can't get wrong and having the
+owner in the template gives that (it's a Level 10 interface).
+Duplicating the owner in the host gets us to the point where following
+convention you get it right but nothing prevents abuse (it's a Level 4
+interface).  I mean, it could be worse (his scale goes down to -10) but
+I'd rather not move down if we don't have to.
 
--- 
-Jens Axboe
+> On the other hand, your code to populate the template copies is a mess.  
+> I like Akinobu's approach much better
+
+Unfortunately with that approach, values in the host template can't be
+overridden.
+
+> , although I would change a few
+> details:
+> 
+> 	Declare usb_stor_host_template as "const", and define a new, 
+> 	separate usb_stor_template in usb.c for actual use.
+> 
+> 	In usb_stor_host_template_init(), do a plain structure
+> 	assignment rather than memcpy.
+
+OK, so I'm happy with that: it solves the "can't be overridden" problem
+if you mean a driver should 
+
+declare a local template
+
+call usb_stor_host_template_init() on the local template
+
+override whatever they want (or nothing)
+
+call usb_stor_probe1 with the new template.
+
+I also note that you can
+
+#define usb_stor_host_template_init(t, n) __usb_stor_host_template_init((t), (n), THIS_MODULE)
+
+And make it just work for normal usage.
+
+James
+
 
