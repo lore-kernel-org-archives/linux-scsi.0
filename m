@@ -1,36 +1,48 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/3] megaraid_sas: use dev_printk when possible
-Date: Tue, 5 May 2015 13:30:19 -0500
-Message-ID: <CAErSpo5bmtbq_ji8OM4_fbz4ix1xLw2LUD6tbdr0jKNSzN5xyw@mail.gmail.com>
-References: <20150428231312.10378.49039.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150428231417.10378.97464.stgit@bhelgaas-glaptop2.roam.corp.google.com> <3a237529c12b20e6b7a4c8de82b6a3ee@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v6 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference
+ counting
+Date: Tue, 5 May 2015 15:14:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1505051432090.1639-100000@iolanthe.rowland.org>
+References: <1430849124.2173.40.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3a237529c12b20e6b7a4c8de82b6a3ee@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:51977 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753295AbbEETOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 15:14:37 -0400
+In-Reply-To: <1430849124.2173.40.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Wed, Apr 29, 2015 at 12:44 AM, Sumit Saxena
-<sumit.saxena@avagotech.com> wrote:
->>-----Original Message-----
->>From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->>Sent: Wednesday, April 29, 2015 4:44 AM
->>To: Kashyap Desai; Uday Lingala; Sumit Saxena
->>Cc: megaraidlinux.pdl@avagotech.com; James E.J. Bottomley; linux-
->>kernel@vger.kernel.org; linux-scsi@vger.kernel.org
->>Subject: [PATCH 3/3] megaraid_sas: use dev_printk when possible
->>
->>Use dev_printk() when possible to make messages more useful.
->> ...
+On Tue, 5 May 2015, James Bottomley wrote:
 
-> Currently few patches are sent for megaraid_sas driver and after applying
-> those patches, this patch may not apply cleanly. Once those patches are
-> accepted, I will rebase and send this patch again.
+> > The cost is duplication of the .owner field in every Scsi_Host.  The 
+> > savings is a reduction in the number of scsi_host_templates.
+> 
+> So your essential objection is the host template duplication?  I know
+> it's a couple of hundred bytes, but surely its dwarfed by all the other
+> stuff you have to duplicate ... the module size of each of these is
+> around 0.25MB, so a couple of hundred bytes would seem a bit
+> insignificant.
 
-OK, sure.  Do you want me to repost these after your patches get
-merged somewhere?
+Agreed, the size is relatively insignificant.  I drop any objection on
+that account.  (But turning things around, what's wrong with
+duplicating the .owner field in the Scsi_Host structure when we're
+already duplicating this_id, can_queue, sg_tablesize, and a large bunch
+of others?)
 
-Bjorn
+On the other hand, your code to populate the template copies is a mess.  
+I like Akinobu's approach much better, although I would change a few
+details:
+
+	Declare usb_stor_host_template as "const", and define a new, 
+	separate usb_stor_template in usb.c for actual use.
+
+	In usb_stor_host_template_init(), do a plain structure
+	assignment rather than memcpy.
+
+Alan Stern
+
