@@ -1,338 +1,165 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] mpt2sas: mpt3sas: Fix memory corruption during initialization
-Date: Tue, 05 May 2015 17:35:49 +0200
-Message-ID: <5548E355.2040606@redhat.com>
-References: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 04/12] IB/srp: Fix connection state tracking
+Date: Tue, 05 May 2015 12:10:01 -0400
+Message-ID: <1430842201.2407.226.camel@redhat.com>
+References: <5541EE21.3050809@sandisk.com> <5541EE9F.8090605@sandisk.com>
+	 <1430410094.102408.71.camel@redhat.com> <55488BAE.7070006@sandisk.com>
+	 <1430835029.2407.187.camel@redhat.com> <5548D2FF.7030501@sandisk.com>
+	 <1430838637.2407.209.camel@redhat.com> <5548E155.70007@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43927 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993417AbbEEPg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 May 2015 11:36:29 -0400
-In-Reply-To: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-BXLfnfHHxW3m1wV/cNj4"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5548E155.70007-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, calvinowens@fb.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jejb@kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, chaitra.basappa@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org
 
-On 05/04/2015 05:05 PM, Sreekanth Reddy wrote:
-> I have applied this patch on the latest upstream mpt3sas driver, then I have compiled and loaded the driver.
-> In the driver logs I didn't see any attached drives are added to the OS, 'fdisk -l' command also doesn't list
->  the drives which are actually attached to the HBA.
->
-> When I debug this issue then I see that in '_scsih_target_alloc'
->  driver is searching for sas_device from the lists 'sas_device_init_list' & 'sas_device_list'
->  based on the device sas address using the function mpt3sas_scsih_sas_device_find_by_sas_address(),
->  since this device is not in the 'sas_device_init_list' (as it is moved it to head list) driver exit
->  from this function without updating the required device addition information.
->
-> To solve the original problem (i.e memory corruption), here I have attached the patch,
->  in this patch I have added one atomic flag is_on_sas_device_init_list in _sas_device_structure
->  and I followed below algorithm.
->
-> 1. when ever a device is added to sas_device_init_list then driver will set this atomic flag of this device to one.
->
-> 2. And during the addition of this device to SCSI mid layer,
->         if the device is successfully added to the OS then driver will move this device list in to sas_device_list list from sas_device_init_list list and at this time driver will reset this flag to zero.
->         if device is failed to register with SCSI mid layer then also driver will reset this flag to zero in function _scsih_sas_device_remove and will remove the device entry from sas_device_init_list and will free the device structure.
->
-> 3. Now when a device is removed then driver will receive target not responding event and in the function _scsih_device_remove_by_handle,
->          a. driver will check whether addition of discovered devices to SML process is currently running or not,
->                i. if addition (or registration) of discovered devices to SML process is running then driver will check whether device is in sas_device_init_list or not (by reading the atomic flag)?.
->                     if it is in a sas_device_init_list then driver will ignore this device removal event (since device registration with SML will fail and it is removed in function _scsih_sas_device_remove as mentioned in step 2).
->              ii. if the device is not in a sas_device_init_list or addition (or registration) of discovered devices to SML process is already completed then device structure is removed from this function and this device entry is removed from sas_device_list.
->
-> 4. if the device removal event is received after device structure is freed due to failure of device registration with SML them in the function _scsih_device_remove_by_handle driver won't find this device in the sas_device_list or in a sas_device_init_list and so driver will ignore this  device removal event.
->
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 ++
->  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 45 +++++++++++++++++++++++++++---------
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 ++
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 43 ++++++++++++++++++++++++++--------
->  4 files changed, 71 insertions(+), 21 deletions(-)
->
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> index caff8d1..1aa10d2 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> @@ -376,6 +376,7 @@ struct _sas_device {
->  	u8	phy;
->  	u8	responding;
->  	u8	pfa_led_on;
-> +	atomic_t is_on_sas_device_init_list;
 
-Hi Sreekanth,
-when is_on_sas_device_init_list is used it's protected
-by ioc->sas_device_lock - why do you need a atomic_t ?
-There is one exception, but easily fixable. 
+--=-BXLfnfHHxW3m1wV/cNj4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->  };
->  
->  /**
-> @@ -833,6 +834,7 @@ struct MPT2SAS_ADAPTER {
->  	u8		broadcast_aen_busy;
->  	u16		broadcast_aen_pending;
->  	u8		shost_recovery;
-> +	u8		discovered_device_addition_on;
->  
->  	struct mutex	reset_in_progress_mutex;
->  	spinlock_t 	ioc_reset_in_progress_lock;
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> index 3f26147..2a61286 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> @@ -590,13 +590,20 @@ _scsih_sas_device_remove(struct MPT2SAS_ADAPTER *ioc,
->      struct _sas_device *sas_device)
->  {
->  	unsigned long flags;
-> +	struct _sas_device *same_sas_device;
->  
->  	if (!sas_device)
->  		return;
->  
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-> -	list_del(&sas_device->list);
-> -	kfree(sas_device);
-> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
-> +						sas_device->handle);
+On Tue, 2015-05-05 at 17:27 +0200, Bart Van Assche wrote:
+> On 05/05/15 17:10, Doug Ledford wrote:
+> > On Tue, 2015-05-05 at 16:26 +0200, Bart Van Assche wrote:
+> >> On 05/05/15 16:10, Doug Ledford wrote:
+> >>> However, while looking through the driver to research this, I noticed
+> >>> something else that seems more important if you ask me.  With this pa=
+tch
+> >>> we now implement individual channel connection tracking.  However, in
+> >>> srp_queuecommand() you pick the channel based on the tag, and the blk
+> >>> layer has no idea of these disconnects, so the blk layer is free to
+> >>> assign a tag/channel to a channel that's disconnected, and then as be=
+st
+> >>> I can tell, you will simply try to post a work request to a channel
+> >>> that's already disconnected, which I would expect to fail if we have
+> >>> already disconnected this particular qp and not brought up a new one
+> >>> yet.  So it seems to me there is a race condition between new incomin=
+g
+> >>> SCSI commands and this disconnect/reconnect window, and that maybe we
+> >>> should be sending these commands back to the mid layer for requeueing
+> >>> when the channel the blk_mq tag points to is disconnected.  Or am I
+> >>> missing something in there?
+> >>
+> >> Hello Doug,
+> >>
+> >> Around the time a cable disconnect or other link layer failure is
+> >> detected by the SRP initiator or any other SCSI LLD it is unavoidable
+> >> that one or more SCSI requests fail. It is up to a higher layer (e.g.
+> >> dm-multipath + multipathd) to decide what to do with such requests, e.=
+g.
+> >> queue these requests and resend these over another path.
+> >
+> > Sure, but that wasn't my point.  My point was that if you know the
+> > channel is disconnected, then why don't you go immediately to the
+> > correct action in queuecommand (where correct action could be requeue
+> > waiting on reconnect or return with error, whatever is appropriate)?
+> > Instead you attempt to post a command to a known disconnected queue
+> > pair.
+> >
+> >> The SRP initiator driver has been tested thoroughly with the multipath
+> >> queue_if_no_path policy, with a fio job with I/O verification enabled
+> >> running on top of a dm device while concurrently repeatedly simulating
+> >> link layer failures (via ibportstate).
+> >
+> > Part of my questions here are because I don't know how the blk_mq
+> > handles certain conditions.  However, your testing above only handles
+> > one case: all channels get dropped.  As unlikely it may be, what if
+> > resource constraints caused just one channel to be dropped out of the
+> > bunch and the others stayed alive?  Then the blk_mq would see requests
+> > on just one queue come back errored, while the others finished
+> > successfully.  Does it drop that one queue out of rotation, or does it
+> > fail over the entire connection?
+>=20
+> Hello Doug,
+>=20
+> Sorry but I don't think that a SCSI LLD is the appropriate layer to=20
+> choose between requeuing or failing a request.
 
-Is it possible that when same_sas_device is not null, that the
-value is not the same as for the sas_device ? 
+Be that as it may, that doesn't change what I said about posting a
+command to a known disconnected QP.  You could just fail immediately.
+Something like:
 
-> +	if (same_sas_device) {
-> +		list_del(&same_sas_device->list);
-> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
+if (!ch->connected) {
+	scmnd->result =3D DID_NO_CONNECT;
+	goto err;
+}
 
-Seems easier to just set the variable without a test.
+right after getting the channel in queuecommand would work.  That would
+save a couple spinlocks, several DMA mappings, a call into the low level
+driver, and a few other things.  (And I only left requeue on the table
+because I wasn't sure how the blk_mq dealt with just a single channel
+being down versus all of them being down)
 
-> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
-> +		kfree(same_sas_device);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  }
->  
-> @@ -658,6 +664,7 @@ _scsih_sas_device_init_add(struct MPT2SAS_ADAPTER *ioc,
->  	    "(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
->  	    sas_device->handle, (unsigned long long)sas_device->sas_address));
->  
-> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
->  	_scsih_determine_boot_device(ioc, sas_device, 0);
-> @@ -5364,8 +5371,14 @@ _scsih_device_remove_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
->  
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-> -	if (sas_device)
-> -		list_del(&sas_device->list);
-> +	if (sas_device) {
-> +		if (ioc->discovered_device_addition_on &&
-> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
-> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> +			return;
-> +		} else
-> +			list_del(&sas_device->list);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	if (sas_device)
->  		_scsih_remove_device(ioc, sas_device);
-> @@ -5391,8 +5404,14 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
->  	    sas_address);
-> -	if (sas_device)
-> -		list_del(&sas_device->list);
-> +	if (sas_device) {
-> +		if (ioc->discovered_device_addition_on &&
-> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
-> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> +			return;
-> +		} else
-> +			list_del(&sas_device->list);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	if (sas_device)
->  		_scsih_remove_device(ioc, sas_device);
-> @@ -7978,32 +7997,36 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
->  	struct _sas_device *sas_device, *next;
->  	unsigned long flags;
->  
-> +	ioc->discovered_device_addition_on = 1;
->  	/* SAS Device List */
->  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
->  	    list) {
->  
->  		if (ioc->hide_drives)
->  			continue;
-> -
-> +
->  		if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
->  		    sas_device->sas_address_parent)) {
-> -			list_del(&sas_device->list);
-> -			kfree(sas_device);
-> +			mpt2sas_transport_port_remove(ioc,
-> +					sas_device->sas_address,
-> +					sas_device->sas_address_parent);
-> +			_scsih_sas_device_remove(ioc, sas_device);
->  			continue;
->  		} else if (!sas_device->starget) {
->  			if (!ioc->is_driver_loading) {
->  				mpt2sas_transport_port_remove(ioc,
->  					sas_device->sas_address,
->  					sas_device->sas_address_parent);
-> -				list_del(&sas_device->list);
-> -				kfree(sas_device);
-> +				_scsih_sas_device_remove(ioc, sas_device);
->  				continue;
->  			}
->  		}
->  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
-> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
+>  If multiple paths are=20
+> available between an initiator system and a SAN and if one path fails
 
-Why not 'atomic_set(&sas_device->is_on_sas_device_init_list, 0);' ?
-There is no place where you set the value of is_on_sas_device_init_list
-higher than '1'.
+Who says the path failed?  The path may be just fine.
 
-Cheers,
-Tomas
+> only the multipath layer knows whether there are other working paths=20
+> available. If a working path is still available then the request should=
+=20
+> be resent as soon as possible over another path. The multipath layer can=
+=20
+> only take such a decision after a SCSI LLD has failed a request.
 
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	}
-> +	ioc->discovered_device_addition_on = 0;
->  }
->  
->  /**
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index afa8816..6188490 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -315,6 +315,7 @@ struct _sas_device {
->  	u8	responding;
->  	u8	fast_path;
->  	u8	pfa_led_on;
-> +	atomic_t is_on_sas_device_init_list;
->  };
->  
->  /**
-> @@ -766,6 +767,7 @@ struct MPT3SAS_ADAPTER {
->  	u8		broadcast_aen_busy;
->  	u16		broadcast_aen_pending;
->  	u8		shost_recovery;
-> +	u8		discovered_device_addition_on;
->  
->  	struct mutex	reset_in_progress_mutex;
->  	spinlock_t	ioc_reset_in_progress_lock;
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 5a97e32..53cc9ea 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -582,13 +582,20 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER *ioc,
->  	struct _sas_device *sas_device)
->  {
->  	unsigned long flags;
-> +	struct _sas_device *same_sas_device;
->  
->  	if (!sas_device)
->  		return;
->  
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-> -	list_del(&sas_device->list);
-> -	kfree(sas_device);
-> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
-> +						sas_device->handle);
-> +	if (same_sas_device) {
-> +		list_del(&same_sas_device->list);
-> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
-> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
-> +		kfree(same_sas_device);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  }
->  
-> @@ -610,8 +616,14 @@ _scsih_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
->  
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-> -	if (sas_device)
-> -		list_del(&sas_device->list);
-> +	if (sas_device) {
-> +		if (ioc->discovered_device_addition_on &&
-> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
-> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> +			return;
-> +		} else
-> +			list_del(&sas_device->list);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	if (sas_device)
->  		_scsih_remove_device(ioc, sas_device);
-> @@ -637,8 +649,14 @@ mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
->  	    sas_address);
-> -	if (sas_device)
-> -		list_del(&sas_device->list);
-> +	if (sas_device) {
-> +		if (ioc->discovered_device_addition_on &&
-> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
-> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> +			return;
-> +		} else
-> +			list_del(&sas_device->list);
-> +	}
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	if (sas_device)
->  		_scsih_remove_device(ioc, sas_device);
-> @@ -663,6 +681,7 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *ioc,
->  		ioc->name, __func__, sas_device->handle,
->  		(unsigned long long)sas_device->sas_address));
->  
-> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_add_tail(&sas_device->list, &ioc->sas_device_list);
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> @@ -7610,14 +7629,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
->  	struct _sas_device *sas_device, *next;
->  	unsigned long flags;
->  
-> +	ioc->discovered_device_addition_on = 1;
->  	/* SAS Device List */
->  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
->  	    list) {
->  
->  		if (!mpt3sas_transport_port_add(ioc, sas_device->handle,
->  		    sas_device->sas_address_parent)) {
-> -			list_del(&sas_device->list);
-> -			kfree(sas_device);
-> +			mpt3sas_transport_port_remove(ioc,
-> +					sas_device->sas_address,
-> +					sas_device->sas_address_parent);
-> +			_scsih_sas_device_remove(ioc, sas_device);
->  			continue;
->  		} else if (!sas_device->starget) {
->  			/*
-> @@ -7630,16 +7652,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
->  				mpt3sas_transport_port_remove(ioc,
->  				    sas_device->sas_address,
->  				    sas_device->sas_address_parent);
-> -				list_del(&sas_device->list);
-> -				kfree(sas_device);
-> +				_scsih_sas_device_remove(ioc, sas_device);
->  				continue;
->  			}
->  		}
->  
->  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
-> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	}
-> +	ioc->discovered_device_addition_on = 0;
->  }
->  
->  /**
+Sure.  I totally get failing fast and unilaterally for multipath managed
+devices.  That's all assuming multipath though.  There are uses without
+that.
 
+But my point in all of this is that if you have a single qp between
+yourself and the target, then any error including a qp resource error =3D=
+=3D
+path error since you only have one path.  When you have a multi queue
+device, that's no longer true.  A transient resource problem on one qp
+does not mean a path event (at least not necessarily, although your
+statement below converts a QP event into a path event by virtue
+disconnecting and reconnecting all of the QPs).  My curiosity is now
+moot given what you wrote about tearing everything down and reconnecting
+(unless the error handling is modified to be more subtle in its
+workings), but the original question in my mind was what happens at the
+blk_mq level if you did have a single queue drop but not all of them and
+you weren't using multipath.
+
+> If only one channel fails all other channels are disconnected and the=20
+> transport layer error handling mechanism is started.
+
+I missed that.  I assume it's done in srp_start_tl_fail_timers()?
+
+--=20
+Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+              GPG KeyID: 0E572FDD
+
+
+
+--=-BXLfnfHHxW3m1wV/cNj4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJVSOtZAAoJELgmozMOVy/d0ZoP/A/I6hrvlZtBy5Wgmms6cbyk
+yjIlJbzYrmkOzajbLmCdTdwmCANRoAlsUubGbBy/j+hHehT327mG72ZSiYKZfE0K
+b3Tpi9tvhUOaDHqOtLIvyfO45Fh5wnrQKba38JcDRARxzxjaPqyA1qQBFPeOX650
+H2j594CAUUz3SYKaNuUWrpaphPqI2XLIhUCsJ+6ndj2qKH2TqX2CWmz0gxo4yN2e
+uevBOtGKXSizZsp7r9hP+VL6TdeHTngvMe8nUpWMMm2Gm/tWQ3fXSY7+c1iBqh6a
++b4a9xcTeoe0aSS6BRv+dwQonbrOVHOtqNea1G4uRGxIQDCB2NDYjbg6+cTgTxcO
+MWTo0o+w4+oYGVMzDQzphaEqxMZozhEUDTrOO8DJKr4mBlRqTA9nCGR2ru8ec1bn
+cBftgOERRF38HYETFtlscJCDCMZgzgIkazgyXfL6UmS9ka4xtaZ5UARHXasKCCS1
+8E4Mjgg0K1UIporoyjcSgLUhWXgY6KBdjsJVNWR13Hzd6yqOdlnbEScMVhY9Hxs3
++6wpC2ujuK0WQVbG4XgwuLuW0zHLJ20xPNyXWmB18vuyef3vOESRfsCBnAYiQvuK
+qt8WsIQTbUFK2uPggznGSBeOWqmS7jn9AUTHv4I45CzpKnV158aJxORohyvn1Trp
+IwiGLz/9+BsHXXF3YT2s
+=TTLN
+-----END PGP SIGNATURE-----
+
+--=-BXLfnfHHxW3m1wV/cNj4--
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
