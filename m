@@ -1,7 +1,7 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 1/3] libahci: Refactoring of ahci_single_irq_intr function.
-Date: Wed,  6 May 2015 00:51:10 +0530
-Message-ID: <1430853672-6227-2-git-send-email-stripathi@apm.com>
+Subject: [PATCH v5 3/3] ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller.
+Date: Wed,  6 May 2015 00:51:12 +0530
+Message-ID: <1430853672-6227-4-git-send-email-stripathi@apm.com>
 References: <1430853672-6227-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1430853672-6227-1-git-send-email-stripathi@apm.com>
@@ -10,99 +10,179 @@ To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch refactors the ahci_single_irq_intr function and also rename
-it to ahci_single_level_irq_intr as it handles a level triggered latch.
+This patch enables full AHCI feature support for APM X-Gene SoC SATA
+host controller. The following errata's are removed:
 
-Signed-off-by: Suman tripathi <stripathi@apm.com>
+1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
+                 IDENTIFY DEVICE PIO mode command")
+2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
+                 ATA_CMD_SMART PIO mode command")
+3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
+                 support PMP")
+4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
+                 enumeration and discovery")
+5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
+                 ATA_CMD_PACKET PIO mode command")
+6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene
+		SoC AHCI SATA Host Controller driver")
+
+In addition, enable PMP support for APM X-Gene SoC and enable FBS
+support for second generation APM X-Gene SoC.
+
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/libahci.c | 51 ++++++++++++++++++++++++++++++---------------------
- 1 file changed, 30 insertions(+), 21 deletions(-)
+ drivers/ata/ahci_xgene.c | 90 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 72 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 61a9c07..aa89c8e 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1826,27 +1826,9 @@ static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
- 	return IRQ_WAKE_THREAD;
- }
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 2b78510..88a0988 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -27,6 +27,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/ahci_platform.h>
+ #include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_irq.h>
+ #include <linux/phy/phy.h>
+ #include "ahci.h"
+@@ -84,6 +85,11 @@
+ /* Max retry for link down */
+ #define MAX_LINK_DOWN_RETRY 3
 
--static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
-+static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
++enum xgene_ahci_version {
++	XGENE_AHCI_V1 = 1,
++	XGENE_AHCI_V2,
++};
++
+ struct xgene_ahci_context {
+ 	struct ahci_host_priv *hpriv;
+ 	struct device *dev;
+@@ -547,9 +553,6 @@ static struct ata_port_operations xgene_ahci_ops = {
+ 	.host_stop = xgene_ahci_host_stop,
+ 	.hardreset = xgene_ahci_hardreset,
+ 	.read_id = xgene_ahci_read_id,
+-	.qc_issue = xgene_ahci_qc_issue,
+-	.softreset = xgene_ahci_softreset,
+-	.pmp_softreset = xgene_ahci_pmp_softreset
+ };
+
+ static const struct ata_port_info xgene_ahci_port_info = {
+@@ -629,12 +632,30 @@ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id xgene_ahci_acpi_match[] = {
++	{ "APMC0D0D", XGENE_AHCI_V1},
++	{ "APMC0D32", XGENE_AHCI_V2},
++	{},
++};
++MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
++#endif
++
++static const struct of_device_id xgene_ahci_of_match[] = {
++	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
++	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
++	{},
++};
++MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
++
+ static int xgene_ahci_probe(struct platform_device *pdev)
  {
--	struct ata_host *host = dev_instance;
--	struct ahci_host_priv *hpriv;
- 	unsigned int i, handled = 0;
--	void __iomem *mmio;
--	u32 irq_stat, irq_masked;
--
--	VPRINTK("ENTER\n");
--
--	hpriv = host->private_data;
--	mmio = hpriv->mmio;
--
--	/* sigh.  0xffffffff is a valid return from h/w */
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--	if (!irq_stat)
--		return IRQ_NONE;
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	spin_lock(&host->lock);
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	struct xgene_ahci_context *ctx;
+ 	struct resource *res;
++	const struct of_device_id *of_devid;
++	enum xgene_ahci_version version = XGENE_AHCI_V1;
+ 	int rc;
 
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap;
-@@ -1868,6 +1850,33 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
- 		handled = 1;
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -677,6 +698,37 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 		ctx->csr_mux = csr;
  	}
 
-+	return handled;
-+}
++	of_devid = of_match_device(xgene_ahci_of_match, dev);
++	if (of_devid) {
++		if (of_devid->data)
++			version = (enum xgene_ahci_version) of_devid->data;
++	}
++#ifdef CONFIG_ACPI
++	else {
++		const struct acpi_device_id *acpi_id;
++		struct acpi_device_info *info;
++		acpi_status status;
 +
-+static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
-+{
-+	struct ata_host *host = dev_instance;
-+	struct ahci_host_priv *hpriv;
-+	unsigned int rc = 0;
-+	void __iomem *mmio;
-+	u32 irq_stat, irq_masked;
++		acpi_id = acpi_match_device(xgene_ahci_acpi_match, &pdev->dev);
++		if (!acpi_id) {
++			dev_warn(&pdev->dev, "No node entry in ACPI table. Assume version1\n");
++			version = XGENE_AHCI_V1;
++		}
 +
-+	VPRINTK("ENTER\n");
++		if (acpi_id->driver_data) {
++			version = (enum xgene_ahci_version) acpi_id->driver_data;
++			status = acpi_get_object_info(ACPI_HANDLE(&pdev->dev), &info);
++			if (ACPI_FAILURE(status)) {
++				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
++					__func__);
++				version = XGENE_AHCI_V1;
++			}
++			if (info->valid & ACPI_VALID_CID)
++				version = XGENE_AHCI_V2;
++		}
++	}
++#endif
 +
-+	hpriv = host->private_data;
-+	mmio = hpriv->mmio;
-+
-+	/* sigh.  0xffffffff is a valid return from h/w */
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+	if (!irq_stat)
-+		return IRQ_NONE;
-+
-+	irq_masked = irq_stat & hpriv->port_map;
-+
-+	spin_lock(&host->lock);
-+
-+	rc = ahci_handle_port_intr(host, irq_masked);
-+
- 	/* HOST_IRQ_STAT behaves as level triggered latch meaning that
- 	 * it should be cleared after all the port events are cleared;
- 	 * otherwise, it will raise a spurious interrupt after each
-@@ -1883,7 +1892,7 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+ 	dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n", ctx->csr_core,
+ 		hpriv->mmio);
 
- 	VPRINTK("EXIT\n");
+@@ -704,7 +756,23 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	/* Configure the host controller */
+ 	xgene_ahci_hw_init(hpriv);
+ skip_clk_phy:
+-	hpriv->flags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
++
++	switch (version) {
++	case XGENE_AHCI_V1:
++		hpriv->flags = AHCI_HFLAG_NO_NCQ;
++		/*
++		 * Override the callbacks for storm ERRATA
++		 */
++		xgene_ahci_ops.qc_issue = xgene_ahci_qc_issue;
++		xgene_ahci_ops.softreset = xgene_ahci_softreset;
++		xgene_ahci_ops.pmp_softreset = xgene_ahci_pmp_softreset;
++		break;
++	case XGENE_AHCI_V2:
++		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
++		break;
++	default:
++		break;
++	}
 
--	return IRQ_RETVAL(handled);
-+	return IRQ_RETVAL(rc);
- }
-
- unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-@@ -2487,7 +2496,7 @@ int ahci_host_activate(struct ata_host *host, int irq,
- 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
- 		rc = ahci_host_activate_multi_irqs(host, irq, sht);
- 	else
--		rc = ata_host_activate(host, irq, ahci_single_irq_intr,
-+		rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
- 				       IRQF_SHARED, sht);
+ 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+ 				     &ahci_platform_sht);
+@@ -719,20 +787,6 @@ disable_resources:
  	return rc;
  }
+
+-#ifdef CONFIG_ACPI
+-static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+-	{ "APMC0D0D", },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+-#endif
+-
+-static const struct of_device_id xgene_ahci_of_match[] = {
+-	{.compatible = "apm,xgene-ahci"},
+-	{},
+-};
+-MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
+-
+ static struct platform_driver xgene_ahci_driver = {
+ 	.probe = xgene_ahci_probe,
+ 	.remove = ata_platform_remove_one,
 --
 1.8.2.1
 
