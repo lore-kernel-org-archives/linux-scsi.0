@@ -1,49 +1,38 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH 1/1] fcoe: use continue instead of goto+label
-Date: Tue,  5 May 2015 14:56:39 +0200
-Message-ID: <1430830599-19406-1-git-send-email-jslaby@suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Tue, 5 May 2015 09:18:54 -0400
+Message-ID: <20150505131854.GJ1971@htj.duckdns.org>
+References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+ <1430667220-23477-2-git-send-email-stripathi@apm.com>
+ <20150504154726.GA1971@htj.duckdns.org>
+ <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+ <20150504182618.GG1971@htj.duckdns.org>
+ <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip4-83-240-67-251.cust.nbox.cz ([83.240.67.251]:57450 "EHLO
-	ip4-83-240-18-248.cust.nbox.cz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1423065AbbEEM4r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 08:56:47 -0400
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:34866 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbbEENS6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 09:18:58 -0400
+Content-Disposition: inline
+In-Reply-To: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robert.w.love@intel.com
-Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>, fcoe-devel@open-fcoe.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
-There is a label pointing to the start of a while loop and a goto
-nested only in the loop. The goto jumps to the label in some cases.
-Replace the goto and the label by simple continue.
+On Tue, May 05, 2015 at 11:25:14AM +0530, Suman Tripathi wrote:
+> Yeah it's very simple. The clearing of irq_stat needs to move up.
+> That's it. tried and it worked. Thanks a lot !!
+> Just a quick question : Why edge trigger handling is not yet present
+> in libahci yet? I mean no one has used it yet ??
 
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: fcoe-devel@open-fcoe.org
----
- drivers/scsi/fcoe/fcoe.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Yeah, no other ahci controller uses edge triggered latches.  I think
+ahci spec says irq is supposed to be level triggered.
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index ec193a8357d7..179d0ff5562f 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1873,7 +1873,6 @@ static int fcoe_percpu_receive_thread(void *arg)
- 
- 	set_user_nice(current, MIN_NICE);
- 
--retry:
- 	while (!kthread_should_stop()) {
- 
- 		spin_lock_bh(&p->fcoe_rx_list.lock);
-@@ -1883,7 +1882,7 @@ retry:
- 			set_current_state(TASK_INTERRUPTIBLE);
- 			spin_unlock_bh(&p->fcoe_rx_list.lock);
- 			schedule();
--			goto retry;
-+			continue;
- 		}
- 
- 		spin_unlock_bh(&p->fcoe_rx_list.lock);
+Thanks.
+
 -- 
-2.3.5
-
+tejun
