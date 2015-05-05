@@ -1,73 +1,45 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 01/14] lpfc: The lpfc driver does not issue RFF_ID and
- RFT_ID in the correct sequence
-Date: Tue, 05 May 2015 15:32:47 -0400
-Message-ID: <55491ADF.80102@emulex.com>
-References: <55350588.xwtuh+7l3U0CWLLy%james.smart@emulex.com> <20150421132312.00006862@localhost>
-Reply-To: james.smart@emulex.com
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: RFC: struct request cleanups
+Date: Tue, 05 May 2015 13:41:40 -0600
+Message-ID: <55491CF4.6060903@kernel.dk>
+References: <1429303042-12078-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:62244 "EHLO
-	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757371AbbEETct (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 15:32:49 -0400
-In-Reply-To: <20150421132312.00006862@localhost>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:37325 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345AbbEETlr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 15:41:47 -0400
+Received: by igblo3 with SMTP id lo3so108340464igb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 May 2015 12:41:43 -0700 (PDT)
+In-Reply-To: <1429303042-12078-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
+To: Christoph Hellwig <hch@lst.de>, linux-nvme@lists.infradead.org
 Cc: linux-scsi@vger.kernel.org
 
-
-On 4/21/2015 7:23 AM, Sebastian Herbszt wrote:
-> James Smart wrote:
->> The lpfc driver does not issue RFF_ID and RFT_ID in the correct sequence
->>
->> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
->> Signed-off-by: James Smart <james.smart@emulex.com>
->> ---
->>   drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
->> index 2500f15..f2db89f 100644
->> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
->> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
->> @@ -3868,11 +3868,11 @@ out:
->>   
->>   	if (vport->port_state < LPFC_VPORT_READY) {
->>   		/* Link up discovery requires Fabric registration. */
->> -		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0); /* Do this first! */
->>   		lpfc_ns_cmd(vport, SLI_CTNS_RNN_ID, 0, 0);
->>   		lpfc_ns_cmd(vport, SLI_CTNS_RSNN_NN, 0, 0);
->>   		lpfc_ns_cmd(vport, SLI_CTNS_RSPN_ID, 0, 0);
->>   		lpfc_ns_cmd(vport, SLI_CTNS_RFT_ID, 0, 0);
->> +		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0);
->>   
->>   		/* Issue SCR just before NameServer GID_FT Query */
->>   		lpfc_issue_els_scr(vport, SCR_DID, 0);
-> Can you please elaborate on the correct command order?
-> SLI_CTNS_RFF_ID was added last in 2fb9bd8 and moved to the top in
-> 92d7f7b with the comment "Do this first!". Now it's moved back.
+On 04/17/2015 02:37 PM, Christoph Hellwig wrote:
+> The first 5 patches move the magic IDE request types into the old IDE
+> driver to keep the core block code clean of them.  Those are basically
+> ready to merge, just like the 6th one which is a cleanup on it's own.
 >
-> The libfc code suggests this is correct because it uses the same order.
-> qla2xxx on the other hand uses RFT_ID, RFF_ID, RNN_ID, RSNN_NN, but in
-> any case RFF_ID follows RFT_ID.
+> The real RFC is the last one which allocates the block_pc specific
+> data separately in the callers instead of bloating every struct
+> request with it.  I always hated what we did, but with the upcoming
+> split of nvme into transports and command sets we'll need a NVME
+> equivalent of BLOCK_PC, and as NVMe was designed by crackmonkeys
+> dreaming of an ATA controller the "command block" for NVME is even
+> bigger than what we have to deal with in SCSI.
 >
-> Sebastian
+> Note that the old IDE driver doesn't compile with the last patch
+> yet as there are major nightmares to sort out, and BLOCK_PC passthrough
+> with dm-multipath doesn't work yet either.  If I get some general
+> concensus on the approach I'll fix those of course.
 
-The order (it's a shall, but hard to dictate after the fact) is given in 
-FC-SCM - kind of.  SCM indicates what shall be implemented, lists it as 
-(a), (b), (c), but actually doesn't say it has to be in that order.  The 
-only hard requirement, called out in FCP-4, is that you must register 
-your FC-4 Type (via RFT_ID) before registering FC-4 Type Features (via 
-RFF_ID), which makes sense. We obviously violated this above and there 
-were some switches (or newer fw in them) that enforced it.  The other 
-rule of thumbs are: register your data with the switch first, then 
-register for SCRs, then do queries about the fabric, with the SCRs 
-telling you of changes post the queries.
+These are nice improvements, it'd be great to get rid of embeeding the 
+command block. I have applied 1-6 for 4.2.
 
--- james s
-
+-- 
+Jens Axboe
 
