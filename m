@@ -1,58 +1,54 @@
-From: yoma sophian <sophian.yoma@gmail.com>
-Subject: possible race condition for usb_stor_port_reset and usb_reset_and_verify_device
-Date: Wed, 6 May 2015 14:27:06 +0800
-Message-ID: <CADUS3omfQ=4HTMYOZibvZuhcyfqmc8OWonHGZPkQxnLdQQCOkA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH -next] crct10dif: remove extra function call in crc_t10dif() and crc_t10dif_update()
+Date: Wed,  6 May 2015 18:18:51 +0900
+Message-ID: <1430903931-4465-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:34985 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbbEFG1H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2015 02:27:07 -0400
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:35832 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbbEFJTQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2015 05:19:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Tim Chen <tim.c.chen@linux.intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, linux-crypto@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-hi all:
-I am writing a thread and it will call sd_check_events per 1 second.
+Calling crypto_shash_import() in crc_t10dif() and crc_t10dif_update()
+is overkill as the existing crct10dif modules (crct10dif-generic and
+crct10dif-pclmul) don't require.
 
-1. before system goes to hibernate, the thread works fine
+We also do the same thing with crc32c() in lib/libcrc32.c.
 
-2. system hibernate and restore back.
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Tim Chen <tim.c.chen@linux.intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-crypto@vger.kernel.org
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+ lib/crc-t10dif.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-3. udev->state will keep USB_STATE_SUSPENDED before finish_port_resume
+diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
+index d775737..1ad33e5 100644
+--- a/lib/crc-t10dif.c
++++ b/lib/crc-t10dif.c
+@@ -32,9 +32,8 @@ __u16 crc_t10dif_update(__u16 crc, const unsigned char *buffer, size_t len)
+ 
+ 	desc.shash.tfm = crct10dif_tfm;
+ 	desc.shash.flags = 0;
++	*(__u16 *)desc.ctx = crc;
+ 
+-	err = crypto_shash_import(&desc.shash, &crc);
+-	BUG_ON(err);
+ 	err = crypto_shash_update(&desc.shash, buffer, len);
+ 	BUG_ON(err);
+ 
+-- 
+1.9.1
 
-4. during above 2) and 3) sd_check_events keep polling but get
-transport error and call usb_stor_port_reset.
-    since udev->state is USB_STATE_SUSPENDED, the usb_stor_port_reset
-will fail due to unable lock device for reset (error = -113)
-
-5. in finish_port_resume, it first change udev->state as
-USB_STATE_CONFIGURED or USB_STATE_ADDRESS. then call
-usb_reset_and_verify_device like below:
-    usb_set_device_state(udev, udev->actconfig
-            ? USB_STATE_CONFIGURED
-            : USB_STATE_ADDRESS);
-
-    /* 10.5.4.5 says not to reset a suspended port if the attached
-     * device is enabled for remote wakeup.  Hence the reset
-     * operation is carried out here, after the port has been
-     * resumed.
-     */
-    if (udev->reset_resume)
- retry_reset_resume:
-        status = usb_reset_and_verify_device(udev);
-
-6. usb_reset_and_verify_device will call hub_port_init
-
-7. usb_reset_and_verify_device will call descriptors_changed,
-
-8. if sd_check_events polling again in during 6) and 7),
-descriptors_changed may return true and report port resume fail.
-
-My questions are:
-a. is there any system flag such suspend/resume in scsi layer for
-checking before sending command to downlayer driver, such as usb.
-b. shall we add other flag in usb_stor_port_reset to make sure above
-race condition will not happen?
-appreciate your kind help,
