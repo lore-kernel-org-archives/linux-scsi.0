@@ -1,54 +1,356 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: possible race condition for usb_stor_port_reset and
- usb_reset_and_verify_device
-Date: Wed, 6 May 2015 14:16:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1505061406230.1133-100000@iolanthe.rowland.org>
-References: <CADUS3ok_63WuXBufTfnk1NeosmK7eT91k0vrAHZpWSjD5GqmHw@mail.gmail.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [PATCH] mpt2sas: mpt3sas: Fix memory corruption during
+ initialization
+Date: Wed, 6 May 2015 11:48:52 -0700
+Message-ID: <20150506184852.GA1007288@mail.thefacebook.com>
+References: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CADUS3ok_63WuXBufTfnk1NeosmK7eT91k0vrAHZpWSjD5GqmHw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: yoma sophian <sophian.yoma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jejb@kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, chaitra.basappa@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, calvinowens@fb.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 7 May 2015, yoma sophian wrote:
+On Monday 05/04 at 20:35 +0530, Sreekanth Reddy wrote:
+> I have applied this patch on the latest upstream mpt3sas driver, then
+> I have compiled and loaded the driver.  In the driver logs I didn't
+> see any attached drives are added to the OS, 'fdisk -l' command also
+> doesn't list the drives which are actually attached to the HBA.
+>
+> When I debug this issue then I see that in '_scsih_target_alloc'
+> driver is searching for sas_device from the lists
+> 'sas_device_init_list' & 'sas_device_list' based on the device sas
+> address using the function
+> mpt3sas_scsih_sas_device_find_by_sas_address(), since this device is
+> not in the 'sas_device_init_list' (as it is moved it to head list)
+> driver exit from this function without updating the required device
+> addition information.
 
-> > Besides, the kernel already contains a thread that calls
-> > sd_check_events periodically.  Why do you need to write a new one?
-> I create the thread since some buggy devices needs to periodically
-> polling to let it not going to disconnection.
-> Would you mind to let me know which kernel thread that calls
-> sd_check_events periodically?
+Yes, I misunderstood that the initialization depended on the devices
+still being on the init_list.
 
-There is not a dedicated thread.  Each block device has a workqueue
-item that runs on the system_freezable_power_efficient_wq work queue.  
-For more information, see the "Disk events" section of block/genhd.c.  
-In particular, look at the disk_check_events() routine.
+What's interesting about this is that when I tested it, it still worked.
+I think the MPT2SAS_PORT_ENABLE_COMPLETE fw_event might zero
+ioc->start_scan and allow scsih_scan_finished() to start probing devices
+before all the devices are actually on the init_list. It seems to be
+very repeatable per-machine whether or not it works.
 
-For a typical USB storage device, the system will poll for media 
-changes by calling sd_check_events.
+But in any case, my patch was wrong.
 
-> >> My questions are:
-> >> a. is there any system flag such suspend/resume in scsi layer for
-> >> checking before sending command to downlayer driver, such as usb.
-> >
-> > I don't know of any.  In general, the kernel is designed so that no
-> > SCSI commands will be sent while the system is in suspend or
-> > hibernation, so no checking is needed.
-> which flag or callback function we used to determine the system is in
-> suspend or hibernation?
-> udev->state?
+> To solve the original problem (i.e memory corruption), here I have
+> attached the patch, in this patch I have added one atomic flag
+> is_on_sas_device_init_list in _sas_device_structure and I followed
+> below algorithm.
 
-You don't use any flags or callbacks, and you don't determine when the 
-system is in suspend or hibernation.  Instead you make your thread 
-freezable, so that it will get frozen automatically whenever the system 
-goes into suspend or hibernation.
+The problem is that this only solves a single case. There isn't anything
+to enforce that this or a similar chain of events can't happen elsewhere
+in the code.
 
-Alan Stern
+I think the best general solution would be to add a refcount to these
+objects.  They sit on a list that can be concurrently accessed from
+multiple threads, so I think a refcount is the best way to ensure that
+objects aren't freed out from under other users.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm working on a patchset that does this. I'm starting by adding a
+refcount to the sas_device object only, and refactoring the code in
+mpt2sas_scsih.c to use it. I should be able to send up a first version
+of that pretty soon to get some feedback.
+
+Thanks,
+Calvin
+
+ 
+> 1. when ever a device is added to sas_device_init_list then driver
+> will set this atomic flag of this device to one.
+> 
+> 2. And during the addition of this device to SCSI mid layer, if the
+> device is successfully added to the OS then driver will move this
+> device list in to sas_device_list list from sas_device_init_list list
+> and at this time driver will reset this flag to zero.  if device is
+> failed to register with SCSI mid layer then also driver will reset
+> this flag to zero in function _scsih_sas_device_remove and will remove
+> the device entry from sas_device_init_list and will free the device
+> structure.
+> 
+> 3. Now when a device is removed then driver will receive target not responding event and in the function _scsih_device_remove_by_handle,
+>          a. driver will check whether addition of discovered devices to SML process is currently running or not,
+>                i. if addition (or registration) of discovered devices to SML process is running then driver will check whether device is in sas_device_init_list or not (by reading the atomic flag)?.
+>                     if it is in a sas_device_init_list then driver will ignore this device removal event (since device registration with SML will fail and it is removed in function _scsih_sas_device_remove as mentioned in step 2).
+>              ii. if the device is not in a sas_device_init_list or addition (or registration) of discovered devices to SML process is already completed then device structure is removed from this function and this device entry is removed from sas_device_list.
+> 
+> 4. if the device removal event is received after device structure is freed due to failure of device registration with SML them in the function _scsih_device_remove_by_handle driver won't find this device in the sas_device_list or in a sas_device_init_list and so driver will ignore this  device removal event.
+> 
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> ---
+>  drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 ++
+>  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 45 +++++++++++++++++++++++++++---------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 ++
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 43 ++++++++++++++++++++++++++--------
+>  4 files changed, 71 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> index caff8d1..1aa10d2 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> @@ -376,6 +376,7 @@ struct _sas_device {
+>  	u8	phy;
+>  	u8	responding;
+>  	u8	pfa_led_on;
+> +	atomic_t is_on_sas_device_init_list;
+>  };
+>  
+>  /**
+> @@ -833,6 +834,7 @@ struct MPT2SAS_ADAPTER {
+>  	u8		broadcast_aen_busy;
+>  	u16		broadcast_aen_pending;
+>  	u8		shost_recovery;
+> +	u8		discovered_device_addition_on;
+>  
+>  	struct mutex	reset_in_progress_mutex;
+>  	spinlock_t 	ioc_reset_in_progress_lock;
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index 3f26147..2a61286 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -590,13 +590,20 @@ _scsih_sas_device_remove(struct MPT2SAS_ADAPTER *ioc,
+>      struct _sas_device *sas_device)
+>  {
+>  	unsigned long flags;
+> +	struct _sas_device *same_sas_device;
+>  
+>  	if (!sas_device)
+>  		return;
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> -	list_del(&sas_device->list);
+> -	kfree(sas_device);
+> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> +						sas_device->handle);
+> +	if (same_sas_device) {
+> +		list_del(&same_sas_device->list);
+> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
+> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> +		kfree(same_sas_device);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  }
+>  
+> @@ -658,6 +664,7 @@ _scsih_sas_device_init_add(struct MPT2SAS_ADAPTER *ioc,
+>  	    "(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
+>  	    sas_device->handle, (unsigned long long)sas_device->sas_address));
+>  
+> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
+>  	_scsih_determine_boot_device(ioc, sas_device, 0);
+> @@ -5364,8 +5371,14 @@ _scsih_device_remove_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -5391,8 +5404,14 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+>  	    sas_address);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -7978,32 +7997,36 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
+>  	struct _sas_device *sas_device, *next;
+>  	unsigned long flags;
+>  
+> +	ioc->discovered_device_addition_on = 1;
+>  	/* SAS Device List */
+>  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+>  	    list) {
+>  
+>  		if (ioc->hide_drives)
+>  			continue;
+> -
+> +
+>  		if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
+>  		    sas_device->sas_address_parent)) {
+> -			list_del(&sas_device->list);
+> -			kfree(sas_device);
+> +			mpt2sas_transport_port_remove(ioc,
+> +					sas_device->sas_address,
+> +					sas_device->sas_address_parent);
+> +			_scsih_sas_device_remove(ioc, sas_device);
+>  			continue;
+>  		} else if (!sas_device->starget) {
+>  			if (!ioc->is_driver_loading) {
+>  				mpt2sas_transport_port_remove(ioc,
+>  					sas_device->sas_address,
+>  					sas_device->sas_address_parent);
+> -				list_del(&sas_device->list);
+> -				kfree(sas_device);
+> +				_scsih_sas_device_remove(ioc, sas_device);
+>  				continue;
+>  			}
+>  		}
+>  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> +	ioc->discovered_device_addition_on = 0;
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index afa8816..6188490 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -315,6 +315,7 @@ struct _sas_device {
+>  	u8	responding;
+>  	u8	fast_path;
+>  	u8	pfa_led_on;
+> +	atomic_t is_on_sas_device_init_list;
+>  };
+>  
+>  /**
+> @@ -766,6 +767,7 @@ struct MPT3SAS_ADAPTER {
+>  	u8		broadcast_aen_busy;
+>  	u16		broadcast_aen_pending;
+>  	u8		shost_recovery;
+> +	u8		discovered_device_addition_on;
+>  
+>  	struct mutex	reset_in_progress_mutex;
+>  	spinlock_t	ioc_reset_in_progress_lock;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 5a97e32..53cc9ea 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -582,13 +582,20 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER *ioc,
+>  	struct _sas_device *sas_device)
+>  {
+>  	unsigned long flags;
+> +	struct _sas_device *same_sas_device;
+>  
+>  	if (!sas_device)
+>  		return;
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> -	list_del(&sas_device->list);
+> -	kfree(sas_device);
+> +	same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> +						sas_device->handle);
+> +	if (same_sas_device) {
+> +		list_del(&same_sas_device->list);
+> +		if (atomic_read(&sas_device->is_on_sas_device_init_list))
+> +			atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> +		kfree(same_sas_device);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  }
+>  
+> @@ -610,8 +616,14 @@ _scsih_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+>  
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -637,8 +649,14 @@ mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
+>  	    sas_address);
+> -	if (sas_device)
+> -		list_del(&sas_device->list);
+> +	if (sas_device) {
+> +		if (ioc->discovered_device_addition_on &&
+> +		    atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> +			spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +			return;
+> +		} else
+> +			list_del(&sas_device->list);
+> +	}
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	if (sas_device)
+>  		_scsih_remove_device(ioc, sas_device);
+> @@ -663,6 +681,7 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *ioc,
+>  		ioc->name, __func__, sas_device->handle,
+>  		(unsigned long long)sas_device->sas_address));
+>  
+> +	atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_list);
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> @@ -7610,14 +7629,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+>  	struct _sas_device *sas_device, *next;
+>  	unsigned long flags;
+>  
+> +	ioc->discovered_device_addition_on = 1;
+>  	/* SAS Device List */
+>  	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+>  	    list) {
+>  
+>  		if (!mpt3sas_transport_port_add(ioc, sas_device->handle,
+>  		    sas_device->sas_address_parent)) {
+> -			list_del(&sas_device->list);
+> -			kfree(sas_device);
+> +			mpt3sas_transport_port_remove(ioc,
+> +					sas_device->sas_address,
+> +					sas_device->sas_address_parent);
+> +			_scsih_sas_device_remove(ioc, sas_device);
+>  			continue;
+>  		} else if (!sas_device->starget) {
+>  			/*
+> @@ -7630,16 +7652,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+>  				mpt3sas_transport_port_remove(ioc,
+>  				    sas_device->sas_address,
+>  				    sas_device->sas_address_parent);
+> -				list_del(&sas_device->list);
+> -				kfree(sas_device);
+> +				_scsih_sas_device_remove(ioc, sas_device);
+>  				continue;
+>  			}
+>  		}
+>  
+>  		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  		list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> +		atomic_dec(&sas_device->is_on_sas_device_init_list);
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> +	ioc->discovered_device_addition_on = 0;
+>  }
+>  
+>  /**
+> -- 
+> 2.0.2
+> 
