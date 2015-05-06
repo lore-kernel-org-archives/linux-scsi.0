@@ -1,35 +1,88 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] libsas: Kconfig: Enable SATA compatibility by
- default
-Date: Wed, 06 May 2015 07:23:30 -0700
-Message-ID: <1430922210.2173.157.camel@HansenPartnership.com>
-References: <21826.14993.432271.52216@mariner.uk.xensource.com>
-	 <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: possible race condition for usb_stor_port_reset and
+ usb_reset_and_verify_device
+Date: Wed, 6 May 2015 10:27:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1505061019080.1094-100000@iolanthe.rowland.org>
+References: <CADUS3omfQ=4HTMYOZibvZuhcyfqmc8OWonHGZPkQxnLdQQCOkA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1430490978-1091-1-git-send-email-ian.jackson@eu.citrix.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ian Jackson <ian.jackson@eu.citrix.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, James Bottomley <James.Bottomley@suse.de>, Donald D Dugger <donald.d.dugger@intel.com>, Pawel Baldysiak <pawel.baldysiak@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Ian Campbell <ian.campbell@citrix.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33756 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752470AbbEFO1o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2015 10:27:44 -0400
+In-Reply-To: <CADUS3omfQ=4HTMYOZibvZuhcyfqmc8OWonHGZPkQxnLdQQCOkA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: yoma sophian <sophian.yoma@gmail.com>
+Cc: linux-scsi@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
 
-On Fri, 2015-05-01 at 15:36 +0100, Ian Jackson wrote:
-> SATA controllers support SATA disks.  The kernel should be able to
-> drive these, by default.  It should not silently (apart from a
-> debugging-only printk) ignore them.
+On Wed, 6 May 2015, yoma sophian wrote:
 
-To be honest, this is a bit pointless: no distribution takes the kernel
-defaults anyway so changing it achieves nothing.
+> hi all:
+> I am writing a thread and it will call sd_check_events per 1 second.
 
-The original thought behind doing this is that libata was huge and is
-pulled in by the sata code whether its actually used or not.  Certain
-configurations might not want this.  However, I think we can all agree
-that the major SAS user is enterprise and for them, kernel size isn't
-usually a huge worry.  Even for enterprise, the predominant
-configuration seems to be SAS expanders with SATA drives, so they can't
-turn it off anyway.  Therefore a more useful question might be: is it
-time to remove the option entirely?
+Is your thread freezable?  It should be, if it is going to do I/O.
 
-James
+> 1. before system goes to hibernate, the thread works fine
+> 
+> 2. system hibernate and restore back.
+> 
+> 3. udev->state will keep USB_STATE_SUSPENDED before finish_port_resume
+> 
+> 4. during above 2) and 3) sd_check_events keep polling but get
+> transport error and call usb_stor_port_reset.
+>     since udev->state is USB_STATE_SUSPENDED, the usb_stor_port_reset
+> will fail due to unable lock device for reset (error = -113)
+
+That's why your thread needs to be freezable.
+
+Also, it sounds like you haven't considered Runtime PM.  A USB
+mass-storage device can be set to go into runtime suspend after (for
+example) 5 seconds of inactivity.  If your new thread calls
+sd_check_events every second then the device will never have 5 seconds
+of inactivity, so it will never go into runtime suspend.  This means
+your thread will waste energy.
+
+Besides, the kernel already contains a thread that calls 
+sd_check_events periodically.  Why do you need to write a new one?
+
+> 5. in finish_port_resume, it first change udev->state as
+> USB_STATE_CONFIGURED or USB_STATE_ADDRESS. then call
+> usb_reset_and_verify_device like below:
+>     usb_set_device_state(udev, udev->actconfig
+>             ? USB_STATE_CONFIGURED
+>             : USB_STATE_ADDRESS);
+> 
+>     /* 10.5.4.5 says not to reset a suspended port if the attached
+>      * device is enabled for remote wakeup.  Hence the reset
+>      * operation is carried out here, after the port has been
+>      * resumed.
+>      */
+>     if (udev->reset_resume)
+>  retry_reset_resume:
+>         status = usb_reset_and_verify_device(udev);
+> 
+> 6. usb_reset_and_verify_device will call hub_port_init
+> 
+> 7. usb_reset_and_verify_device will call descriptors_changed,
+> 
+> 8. if sd_check_events polling again in during 6) and 7),
+> descriptors_changed may return true and report port resume fail.
+> 
+> My questions are:
+> a. is there any system flag such suspend/resume in scsi layer for
+> checking before sending command to downlayer driver, such as usb.
+
+I don't know of any.  In general, the kernel is designed so that no
+SCSI commands will be sent while the system is in suspend or
+hibernation, so no checking is needed.
+
+> b. shall we add other flag in usb_stor_port_reset to make sure above
+> race condition will not happen?
+
+No.  You should fix your thread (or get rid of it and use the existing
+kernel thread instead).
+
+Alan Stern
+
