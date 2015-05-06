@@ -1,78 +1,55 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH 01/14] lpfc: The lpfc driver does not issue RFF_ID and
- RFT_ID in the correct sequence
-Date: Wed, 6 May 2015 00:10:21 +0200
-Message-ID: <20150506001021.00001006@localhost>
-References: <55350588.xwtuh+7l3U0CWLLy%james.smart@emulex.com>
-	<20150421132312.00006862@localhost>
-	<55491ADF.80102@emulex.com>
+From: "Seymour, Shane M" <shane.seymour@hp.com>
+Subject: RE: [PATCH v7] st implement tape statistics
+Date: Wed, 6 May 2015 01:11:26 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB3BFA96F7@G9W0766.americas.hpqcorp.net>
+References: <DDB9C85B850785449757F9914A034FCB3BFA45A3@G9W0766.americas.hpqcorp.net>
+ <20150505174241.GA6033@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:64723 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751578AbbEEWK2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 May 2015 18:10:28 -0400
-In-Reply-To: <55491ADF.80102@emulex.com>
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:47123 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150AbbEFBNF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2015 21:13:05 -0400
+In-Reply-To: <20150505174241.GA6033@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Laurence Oberman (loberman@redhat.com)" <loberman@redhat.com>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
 
-James Smart wrote:
-> 
-> On 4/21/2015 7:23 AM, Sebastian Herbszt wrote:
-> > James Smart wrote:
-> >> The lpfc driver does not issue RFF_ID and RFT_ID in the correct sequence
-> >>
-> >> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-> >> Signed-off-by: James Smart <james.smart@emulex.com>
-> >> ---
-> >>   drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
-> >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> >> index 2500f15..f2db89f 100644
-> >> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> >> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> >> @@ -3868,11 +3868,11 @@ out:
-> >>   
-> >>   	if (vport->port_state < LPFC_VPORT_READY) {
-> >>   		/* Link up discovery requires Fabric registration. */
-> >> -		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0); /* Do this first! */
-> >>   		lpfc_ns_cmd(vport, SLI_CTNS_RNN_ID, 0, 0);
-> >>   		lpfc_ns_cmd(vport, SLI_CTNS_RSNN_NN, 0, 0);
-> >>   		lpfc_ns_cmd(vport, SLI_CTNS_RSPN_ID, 0, 0);
-> >>   		lpfc_ns_cmd(vport, SLI_CTNS_RFT_ID, 0, 0);
-> >> +		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0);
-> >>   
-> >>   		/* Issue SCR just before NameServer GID_FT Query */
-> >>   		lpfc_issue_els_scr(vport, SCR_DID, 0);
-> > Can you please elaborate on the correct command order?
-> > SLI_CTNS_RFF_ID was added last in 2fb9bd8 and moved to the top in
-> > 92d7f7b with the comment "Do this first!". Now it's moved back.
-> >
-> > The libfc code suggests this is correct because it uses the same order.
-> > qla2xxx on the other hand uses RFT_ID, RFF_ID, RNN_ID, RSNN_NN, but in
-> > any case RFF_ID follows RFT_ID.
-> >
-> > Sebastian
-> 
-> The order (it's a shall, but hard to dictate after the fact) is given in 
-> FC-SCM - kind of.  SCM indicates what shall be implemented, lists it as 
-> (a), (b), (c), but actually doesn't say it has to be in that order.  The 
-> only hard requirement, called out in FCP-4, is that you must register 
-> your FC-4 Type (via RFT_ID) before registering FC-4 Type Features (via 
-> RFF_ID), which makes sense. We obviously violated this above and there 
-> were some switches (or newer fw in them) that enforced it.  The other 
-> rule of thumbs are: register your data with the switch first, then 
-> register for SCRs, then do queries about the fabric, with the SCRs 
-> telling you of changes post the queries.
-> 
-> -- james s
-> 
+Hi Christoph,
 
-Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+> The subject line should be
+> 
+> "st: implement tape statistics" to fit the general scheme.
 
-Sebastian 
+No problem I can fix that easily.
+
+> > On Thu, Apr 23, 2015 at 08:06:50AM +0000, Seymour, Shane M wrote:
+> > Signed-off-by: Shane Seymour <shane.seymour@hp.com>
+> > Tested-by: Shane Seymour <shane.seymour@hp.com>
+>
+> Tested-by is usually used for other testers, not the patch author.
+
+I'll remove that.
+
+> Where is the description of what these staistics do and what you need
+> them for?  A patch with just a subject and a signoff is unlikely to get applied.
+
+I'll add that.
+
+> A lot of the code seems to be duplicates of what we do in block layer
+> statistics, I wonder if there is any way to share that code?
+
+The following two paragraphs are from Kai about that issue from an email a while ago:
+
+"The tape driver does not have access to the block device i/o statistics because the tapes are not block devices but character devices. They use the Linux block subsystem enough to do i/o but this does not include access to the statistics counters.
+
+... One alternative is, of course, to tie the st driver more into the Linux block device system. I have looked into this several times but have never seen how to do this in a simple enough way."
+
+Some of the statistics I'm trying to implement aren't possible to determine just using the block layer statistics like keeping track of time spent doing other I/O such as tape movement since it's not a read or a write. The other thing is that disk stats measure I/O in sectors but tape drives are character devices. While most I/O to tape probably happens in a multiple of a sector size it doesn't have to and that means that some I/O would be over or under counted when rounded up or down to the sector size.
+
+Thanks
+Shane
