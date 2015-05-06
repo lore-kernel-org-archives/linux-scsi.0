@@ -1,37 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] usb: storage: fix module reference for scsi host
-Date: Wed, 6 May 2015 10:55:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1505061054590.1094-100000@iolanthe.rowland.org>
-References: <1430904261-5049-1-git-send-email-akinobu.mita@gmail.com>
+From: "Seymour, Shane M" <shane.seymour@hp.com>
+Subject: RE: [PATCH v7] st implement tape statistics
+Date: Wed, 6 May 2015 15:05:49 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB3BFA9A0E@G9W0766.americas.hpqcorp.net>
+References: <DDB9C85B850785449757F9914A034FCB3BFA45A3@G9W0766.americas.hpqcorp.net>
+ <20150505174241.GA6033@infradead.org>
+ <DDB9C85B850785449757F9914A034FCB3BFA96F7@G9W0766.americas.hpqcorp.net>
+ <20150506043047.GA2077@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33814 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750965AbbEFOzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2015 10:55:36 -0400
-In-Reply-To: <1430904261-5049-1-git-send-email-akinobu.mita@gmail.com>
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:54592 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbbEFPGf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2015 11:06:35 -0400
+In-Reply-To: <20150506043047.GA2077@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Laurence Oberman (loberman@redhat.com)" <loberman@redhat.com>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
 
-On Wed, 6 May 2015, Akinobu Mita wrote:
+I don't see this as something that is easily done. It would require new entries in the statistics (and including increasing the arrays to include an other count and adding a byte count which has to be a u64). It would seem that if you were taking this approach you would really need to almost rewrite the tape driver to achieve close integration. If someone wants to rewrite the driver I'd be happy to help on the statistics side.
 
-> While accessing a unusual usb storage (ums-alauda, ums-cypress, ...),
-> the module reference count is not incremented.  Because these drivers
-> allocate scsi hosts with usb_stor_host_template defined in usb-storage
-> module.  So these drivers always can be unloaded.
+I don't feel that I have the experience to complete such a project by myself and there are huge risks associated with significant changes to the block layer in doing this. In the st driver the changes are isolated and we have a driver that only allows a single outstanding read or write or ioctl to a tape drive so it doesn't need the same level of complexity that the block layer provides.
+
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org] 
+Sent: Wednesday, May 06, 2015 2:31 PM
+To: Seymour, Shane M
+Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Laurence Oberman (loberman@redhat.com); Kai.Makisara@kolumbus.fi; James E.J. Bottomley (JBottomley@parallels.com); Elliott, Robert (Server Storage)
+Subject: Re: [PATCH v7] st implement tape statistics
+
+On Wed, May 06, 2015 at 01:11:26AM +0000, Seymour, Shane M wrote:
+> "The tape driver does not have access to the block device i/o statistics because the tapes are not block devices but character devices. They use the Linux block subsystem enough to do i/o but this does not include access to the statistics counters.
 > 
-> This fixes it by preparing scsi host template which is initialized
-> at module_init() for each ums-* driver.  In order to minimize the
-> difference in ums-* drivers, introduce module_usb_stor_driver() helper
-> macro which is same as module_usb_driver() except that it also
-> initializes scsi host template.
-> 
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> ... One alternative is, of course, to tie the st driver more into the Linux block device system. I have looked into this several times but have never seen how to do this in a simple enough way."
 
-This looks very good.
-
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-
+I know the architecture pretty well, but the question is if we can export some of that functionality so that it works for character devices nodes that driver a request_queue.  Note that it was formualted as a questions as thast change seems obvious but might not be feasible for one reason or another.  If you looked at it and consider it not doable or at least not worthwhile for good reasons document those in the patch description.
