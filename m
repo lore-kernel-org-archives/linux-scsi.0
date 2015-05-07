@@ -1,38 +1,60 @@
-From: Kyuho Choi <chlrbgh0@gmail.com>
-Subject: [PATCH] scsi: ufs: enable no_write_same for ufs
-Date: Thu,  7 May 2015 22:06:21 +0900
-Message-ID: <1431003981-7106-1-git-send-email-kyuho.choi@sk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 10/17] scsi_dh_alua: Use separate alua_port_group structure
+Date: Thu, 7 May 2015 15:36:08 +0200
+Message-ID: <554B6A48.1090405@sandisk.com>
+References: <1430743343-47174-1-git-send-email-hare@suse.de>
+ <1430743343-47174-11-git-send-email-hare@suse.de>
+ <554B5BD8.2090605@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35731 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbbEGNGc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2015 09:06:32 -0400
-Received: by pabtp1 with SMTP id tp1so39833885pab.2
-        for <linux-scsi@vger.kernel.org>; Thu, 07 May 2015 06:06:32 -0700 (PDT)
+Received: from mail-by2on0057.outbound.protection.outlook.com ([207.46.100.57]:37232
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751311AbbEGNgO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 May 2015 09:36:14 -0400
+In-Reply-To: <554B5BD8.2090605@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, JBottomley@odin.com
-Cc: linux-scsi@vger.kernel.org, Kyuho Choi <kyuho.choi@sk.com>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-This patch disables write_same for ufs.
+On 05/07/15 14:34, Bart Van Assche wrote:
+> On 05/04/15 14:42, Hannes Reinecke wrote:
+>> +    spin_lock(&port_group_lock);
+>> +    pg = kzalloc(sizeof(struct alua_port_group), GFP_ATOMIC);
+>> +    if (!pg) {
+>> +        sdev_printk(KERN_WARNING, sdev,
+>> +                "%s: kzalloc port group failed\n",
+>> +                ALUA_DH_NAME);
+>> +        /* Temporary failure, bypass */
+>> +        spin_unlock(&port_group_lock);
+>> +        return SCSI_DH_DEV_TEMP_BUSY;
+>> +    }
+>> +    pg->group_id = group_id;
+>> +    pg->buff = pg->inq;
+>> +    pg->bufflen = ALUA_INQUIRY_SIZE;
+>> +    pg->tpgs = h->tpgs;
+>> +    pg->state = TPGS_STATE_OPTIMIZED;
+>> +    kref_init(&pg->kref);
+>> +    list_add(&pg->node, &port_group_list);
+>> +    h->pg = pg;
+>> +    spin_unlock(&port_group_lock);
+>
+> Sorry but it's not clear to me why the kzalloc() statement happens under
+> port_group_lock. Please consider to perform only the list_add()
+> statement under port_group_lock, to perform all other assignments
+> without holding that lock and to change GFP_ATOMIC into GFP_KERNEL.
 
-Signed-off-by: Kyuho Choi <kyuho.choi@sk.com>
----
- drivers/scsi/ufs/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+(replying to my own e-mail)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 648a446..6f770cd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4255,6 +4255,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.max_host_blocked	= 1,
- 	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
-+	.no_write_same		= 1,
- };
- 
- static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
--- 
-1.9.1
+Hello Hannes,
 
+Is it correct that port_group_list is only accessed from thread context 
+? If so, has it been considered to change port_group_lock into a mutex 
+instead ?
+
+Thanks,
+
+Bart.
