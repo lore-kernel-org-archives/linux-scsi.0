@@ -1,79 +1,51 @@
 From: Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH] scsi:treewide: Fix typo in drivers/scsi
-Date: Thu,  7 May 2015 23:21:27 +0900
-Message-ID: <1431008487-5123-1-git-send-email-standby24x7@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, trivial@kernel.org
-Cc: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] scsi:qla4xxx: Fix typo in qla4xxx
+Date: Thu,  7 May 2015 23:27:54 +0900
+Message-ID: <1431008874-5522-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:33364 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbbEGO1w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2015 10:27:52 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, QLogic-Storage-Upstream@qlogic.com, JBottomley@odin.com, linux-scsi@vger.kernel.org
+Cc: trivial@kernel.org, Masanari Iida <standby24x7@gmail.com>
 
-This patch fix spme spelling typos in printk
-within drivers/scsi.
+This patch fix spelling typo in printk within drivers/qla4xxx.
 
 Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- drivers/scsi/53c700.c               | 2 +-
- drivers/scsi/scsi_transport_iscsi.c | 2 +-
- drivers/scsi/scsi_transport_spi.c   | 4 ++--
- drivers/scsi/wd719x.c               | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/qla4xxx/ql4_83xx.c | 2 +-
+ drivers/scsi/qla4xxx/ql4_bsg.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 82abfce..a209c34 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -299,7 +299,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
- 	memory = dma_alloc_noncoherent(hostdata->dev, TOTAL_MEM_SIZE,
- 				       &pScript, GFP_KERNEL);
- 	if(memory == NULL) {
--		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detatching\n");
-+		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detaching\n");
- 		return NULL;
+diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
+index 556c152..5d4f8e6 100644
+--- a/drivers/scsi/qla4xxx/ql4_83xx.c
++++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+@@ -828,7 +828,7 @@ void qla4_83xx_read_reset_template(struct scsi_qla_host *ha)
+ 	ret_val = qla4_83xx_flash_read_u32(ha, addr, p_buff,
+ 					   tmplt_hdr_def_size);
+ 	if (ret_val != QLA_SUCCESS) {
+-		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset tempelate\n",
++		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset template\n",
+ 			   __func__);
+ 		goto exit_read_template_error;
  	}
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+index 9f92cbf..415ee5e 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.c
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -571,7 +571,7 @@ static int qla4_83xx_pre_loopback_config(struct scsi_qla_host *ha,
  
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 67d43e3..73d6a61 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3035,7 +3035,7 @@ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
- 
- 	shost = scsi_host_lookup(ev->u.get_chap.host_no);
- 	if (!shost) {
--		printk(KERN_ERR "%s: failed. Cound not find host no %u\n",
-+		printk(KERN_ERR "%s: failed. Could not find host no %u\n",
- 		       __func__, ev->u.get_chap.host_no);
- 		return -ENODEV;
+ 	if ((config & ENABLE_INTERNAL_LOOPBACK) ||
+ 	    (config & ENABLE_EXTERNAL_LOOPBACK)) {
+-		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already in progress. Invalid requiest\n",
++		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already in progress. Invalid request\n",
+ 			   __func__);
+ 		goto exit_pre_loopback_config;
  	}
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 31bbb0d..319868f 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -786,10 +786,10 @@ spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
- 		 * IU, then QAS (if we can control them), then finally
- 		 * fall down the periods */
- 		if (i->f->set_iu && spi_iu(starget)) {
--			starget_printk(KERN_ERR, starget, "Domain Validation Disabing Information Units\n");
-+			starget_printk(KERN_ERR, starget, "Domain Validation Disabling Information Units\n");
- 			DV_SET(iu, 0);
- 		} else if (i->f->set_qas && spi_qas(starget)) {
--			starget_printk(KERN_ERR, starget, "Domain Validation Disabing Quick Arbitration and Selection\n");
-+			starget_printk(KERN_ERR, starget, "Domain Validation Disabling Quick Arbitration and Selection\n");
- 			DV_SET(qas, 0);
- 		} else {
- 			newperiod = spi_period(starget);
-diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-index 289ad01..c8e74d3 100644
---- a/drivers/scsi/wd719x.c
-+++ b/drivers/scsi/wd719x.c
-@@ -590,7 +590,7 @@ static inline void wd719x_interrupt_SCB(struct wd719x *wd,
- 		dev_dbg(&wd->pdev->dev, "selection timeout\n");
- 		break;
- 	case WD719X_SUE_RESET:
--		dev_dbg(&wd->pdev->dev, "bus reset occured\n");
-+		dev_dbg(&wd->pdev->dev, "bus reset occurred\n");
- 		result = DID_RESET;
- 		break;
- 	case WD719X_SUE_BUSERROR:
 -- 
 2.4.0.rc3.3.g6eb1401
+
