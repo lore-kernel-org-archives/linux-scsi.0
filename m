@@ -1,77 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 10/17] scsi_dh_alua: Use separate alua_port_group structure
-Date: Thu, 07 May 2015 15:46:59 +0200
-Message-ID: <554B6CD3.5070000@suse.de>
-References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-11-git-send-email-hare@suse.de> <554B5BD8.2090605@sandisk.com> <554B6A48.1090405@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47079 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751072AbbEGNrB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 May 2015 09:47:01 -0400
-In-Reply-To: <554B6A48.1090405@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] scsi:treewide: Fix typo in drivers/scsi
+Date: Thu,  7 May 2015 23:21:27 +0900
+Message-ID: <1431008487-5123-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, trivial@kernel.org
+Cc: Masanari Iida <standby24x7@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 05/07/2015 03:36 PM, Bart Van Assche wrote:
-> On 05/07/15 14:34, Bart Van Assche wrote:
->> On 05/04/15 14:42, Hannes Reinecke wrote:
->>> +    spin_lock(&port_group_lock);
->>> +    pg =3D kzalloc(sizeof(struct alua_port_group), GFP_ATOMIC);
->>> +    if (!pg) {
->>> +        sdev_printk(KERN_WARNING, sdev,
->>> +                "%s: kzalloc port group failed\n",
->>> +                ALUA_DH_NAME);
->>> +        /* Temporary failure, bypass */
->>> +        spin_unlock(&port_group_lock);
->>> +        return SCSI_DH_DEV_TEMP_BUSY;
->>> +    }
->>> +    pg->group_id =3D group_id;
->>> +    pg->buff =3D pg->inq;
->>> +    pg->bufflen =3D ALUA_INQUIRY_SIZE;
->>> +    pg->tpgs =3D h->tpgs;
->>> +    pg->state =3D TPGS_STATE_OPTIMIZED;
->>> +    kref_init(&pg->kref);
->>> +    list_add(&pg->node, &port_group_list);
->>> +    h->pg =3D pg;
->>> +    spin_unlock(&port_group_lock);
->>
->> Sorry but it's not clear to me why the kzalloc() statement happens
->> under
->> port_group_lock. Please consider to perform only the list_add()
->> statement under port_group_lock, to perform all other assignments
->> without holding that lock and to change GFP_ATOMIC into GFP_KERNEL.
->=20
-> (replying to my own e-mail)
->=20
-> Hello Hannes,
->=20
-> Is it correct that port_group_list is only accessed from thread
-> context ? If so, has it been considered to change port_group_lock
-> into a mutex instead ?
->=20
-The lock is only taken for list modifications; the actual
-accesses are done via RCU references.
-So converting this to a mutex would give an insignificant
-advantage. Plus I'm not sure if using a mutex in the face
-for RCU accesses is valid; the documentation only uses
-spinlocks here.
+This patch fix spme spelling typos in printk
+within drivers/scsi.
 
-Cheers,
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/scsi/53c700.c               | 2 +-
+ drivers/scsi/scsi_transport_iscsi.c | 2 +-
+ drivers/scsi/scsi_transport_spi.c   | 4 ++--
+ drivers/scsi/wd719x.c               | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 82abfce..a209c34 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -299,7 +299,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+ 	memory = dma_alloc_noncoherent(hostdata->dev, TOTAL_MEM_SIZE,
+ 				       &pScript, GFP_KERNEL);
+ 	if(memory == NULL) {
+-		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detatching\n");
++		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detaching\n");
+ 		return NULL;
+ 	}
+ 
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 67d43e3..73d6a61 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -3035,7 +3035,7 @@ iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 
+ 	shost = scsi_host_lookup(ev->u.get_chap.host_no);
+ 	if (!shost) {
+-		printk(KERN_ERR "%s: failed. Cound not find host no %u\n",
++		printk(KERN_ERR "%s: failed. Could not find host no %u\n",
+ 		       __func__, ev->u.get_chap.host_no);
+ 		return -ENODEV;
+ 	}
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 31bbb0d..319868f 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -786,10 +786,10 @@ spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
+ 		 * IU, then QAS (if we can control them), then finally
+ 		 * fall down the periods */
+ 		if (i->f->set_iu && spi_iu(starget)) {
+-			starget_printk(KERN_ERR, starget, "Domain Validation Disabing Information Units\n");
++			starget_printk(KERN_ERR, starget, "Domain Validation Disabling Information Units\n");
+ 			DV_SET(iu, 0);
+ 		} else if (i->f->set_qas && spi_qas(starget)) {
+-			starget_printk(KERN_ERR, starget, "Domain Validation Disabing Quick Arbitration and Selection\n");
++			starget_printk(KERN_ERR, starget, "Domain Validation Disabling Quick Arbitration and Selection\n");
+ 			DV_SET(qas, 0);
+ 		} else {
+ 			newperiod = spi_period(starget);
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index 289ad01..c8e74d3 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -590,7 +590,7 @@ static inline void wd719x_interrupt_SCB(struct wd719x *wd,
+ 		dev_dbg(&wd->pdev->dev, "selection timeout\n");
+ 		break;
+ 	case WD719X_SUE_RESET:
+-		dev_dbg(&wd->pdev->dev, "bus reset occured\n");
++		dev_dbg(&wd->pdev->dev, "bus reset occurred\n");
+ 		result = DID_RESET;
+ 		break;
+ 	case WD719X_SUE_BUSERROR:
+-- 
+2.4.0.rc3.3.g6eb1401
