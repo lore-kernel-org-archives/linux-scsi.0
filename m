@@ -1,71 +1,173 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 4/5] target: Correct a comment
-Date: Fri, 08 May 2015 14:38:00 +0200
-Message-ID: <554CAE28.3040107@suse.de>
-References: <554C6E79.7020501@sandisk.com> <554C6F17.30501@sandisk.com>
+From: Nilesh Javali <nilesh.javali@qlogic.com>
+Subject: RE: [PATCH] scsi:qla4xxx: Fix typo in qla4xxx
+Date: Fri, 8 May 2015 13:07:51 +0000
+Message-ID: <058691E078642A44B7C96BB0B1DB4F2481C8AA53@AVMB1.qlogic.org>
+References: <1431008874-5522-1-git-send-email-standby24x7@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <554C6F17.30501@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@odin.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: multipart/mixed;
+	boundary="_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:58204 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751751AbbEHNHx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2015 09:07:53 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t48D59OX016288
+	for <linux-scsi@vger.kernel.org>; Fri, 8 May 2015 06:07:53 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1u8j7urm9q-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 08 May 2015 06:07:53 -0700
+In-Reply-To: <1431008874-5522-1-git-send-email-standby24x7@gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Masanari Iida <standby24x7@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>, "JBottomley@odin.com" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "trivial@kernel.org" <trivial@kernel.org>
 
-On 05/08/2015 10:08 AM, Bart Van Assche wrote:
-> Correct the comment above the definition of TCM_MAX_COMMAND_SIZE.
-> A quote from Christoph:
+--_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Acked-by: Nilesh Javali <nilesh.javali@qlogic.com>
+
+
+> -----Original Message-----
+> From: Masanari Iida [mailto:standby24x7@gmail.com]
+> Sent: Thursday, May 07, 2015 7:58 PM
+> To: linux-kernel; Dept-Eng QLogic Storage Upstream; JBottomley@odin.com;
+> linux-scsi
+> Cc: trivial@kernel.org; Masanari Iida
+> Subject: [PATCH] scsi:qla4xxx: Fix typo in qla4xxx
 >=20
->     There aren't any legacy issues, we just decided to handle >
->     16 byte CDBs in the slow path.
+> This patch fix spelling typo in printk within drivers/qla4xxx.
 >=20
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 > ---
->  include/target/target_core_base.h | 12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
+>  drivers/scsi/qla4xxx/ql4_83xx.c | 2 +-
+>  drivers/scsi/qla4xxx/ql4_bsg.c  | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/include/target/target_core_base.h b/include/target/targe=
-t_core_base.h
-> index 480e9f8..0203774 100644
-> --- a/include/target/target_core_base.h
-> +++ b/include/target/target_core_base.h
-> @@ -17,16 +17,8 @@
->  /* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
->  #define TRANSPORT_MAX_LUNS_PER_TPG		256
->  /*
-> - * By default we use 32-byte CDBs in TCM Core and subsystem plugin c=
-ode.
-> - *
-> - * Note that both include/scsi/scsi_cmnd.h:MAX_COMMAND_SIZE and
-> - * include/linux/blkdev.h:BLOCK_MAX_CDB as of v2.6.36-rc4 still use
-> - * 16-byte CDBs by default and require an extra allocation for
-> - * 32-byte CDBs to because of legacy issues.
-> - *
-> - * Within TCM Core there are no such legacy limitiations, so we go a=
-head
-> - * use 32-byte CDBs by default and use include/scsi/scsi.h:scsi_comm=
-and_size()
-> - * within all TCM Core and subsystem plugin code.
-> + * Maximum size of a CDB that can be stored in se_cmd without alloca=
-ting
-> + * memory dynamically for the CDB.
->   */
->  #define TCM_MAX_COMMAND_SIZE			32
->  /*
+> diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_8=
+3xx.c
+> index 556c152..5d4f8e6 100644
+> --- a/drivers/scsi/qla4xxx/ql4_83xx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+> @@ -828,7 +828,7 @@ void qla4_83xx_read_reset_template(struct
+> scsi_qla_host *ha)
+>  	ret_val =3D qla4_83xx_flash_read_u32(ha, addr, p_buff,
+>  					   tmplt_hdr_def_size);
+>  	if (ret_val !=3D QLA_SUCCESS) {
+> -		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset
+> tempelate\n",
+> +		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset
+> template\n",
+>  			   __func__);
+>  		goto exit_read_template_error;
+>  	}
+> diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bs=
+g.c
+> index 9f92cbf..415ee5e 100644
+> --- a/drivers/scsi/qla4xxx/ql4_bsg.c
+> +++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+> @@ -571,7 +571,7 @@ static int qla4_83xx_pre_loopback_config(struct
+> scsi_qla_host *ha,
 >=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>  	if ((config & ENABLE_INTERNAL_LOOPBACK) ||
+>  	    (config & ENABLE_EXTERNAL_LOOPBACK)) {
+> -		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already
+> in progress. Invalid requiest\n",
+> +		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already
+> in
+> +progress. Invalid request\n",
+>  			   __func__);
+>  		goto exit_pre_loopback_config;
+>  	}
+> --
+> 2.4.0.rc3.3.g6eb1401
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+--_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+AgFBAAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACATgBpAGwAZQBzAGgAIABKAGEAdgBh
+AGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8AAl0BAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AG4AaQBsAGUAcwBoAC4AagBhAHYA
+YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABOAGkAbABlAHMAaAAg
+AEoAYQB2AGEAbABpAAAAHwAfDAEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEA
+bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAcAAA
+AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAABTAE0A
+VABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AAFdAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwD4PwEAAAAcAAAATgBpAGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAB8AI0ABAAAAMgAA
+AG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJA
+AQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBO
+AGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAUwBNAFQAUAAAAG4AaQBsAGUAcwBoAC4AagBhAHYA
+YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAbgBpAGwAZQBzAGgALgBq
+AGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAA
+SQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAADw
+ugG+pCSmTpdkkAifc+BiAwAXAAEAAABAADkAgO3l/I+J0AFAAAgwZy8i/Y+J0AELACkAAAAAAAsA
+IwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
+AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
+AAAAAB8ANwABAAAAXAAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAHMAYwBzAGkAOgBxAGwAYQA0
+AHgAeAB4ADoAIABGAGkAeAAgAHQAeQBwAG8AIABpAG4AIABxAGwAYQA0AHgAeAB4AAAAHwA9AAEA
+AAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAcgAAADwAMQA0ADMAMQAw
+ADAAOAA4ADcANAAtADUANQAyADIALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0A
+cwB0AGEAbgBkAGIAeQAyADQAeAA3AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAb
+AAAAAQHQiNIBRHSZCGjELEWi0ujPMw78eZ1yDZFQAB8AcAABAAAAVAAAAFsAUABBAFQAQwBIAF0A
+IABzAGMAcwBpADoAcQBsAGEANAB4AHgAeAA6ACAARgBpAHgAIAB0AHkAcABvACAAaQBuACAAcQBs
+AGEANAB4AHgAeAAAAB8ANRABAAAAeAAAADwAMAA1ADgANgA5ADEARQAwADcAOAA2ADQAMgBBADQA
+NABCADcAQwA5ADYAQgBCADAAQgAxAEQAQgA0AEYAMgA0ADgAMQBDADgAQQBBADUAMwBAAEEAVgBN
+AEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAcgAAADwAMQA0ADMAMQAwADAA
+OAA4ADcANAAtADUANQAyADIALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AcwB0
+AGEAbgBkAGIAeQAyADQAeAA3AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAwDeP59OAAALAACA
+CCAGAAAAAADAAAAAAAAARgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAA
+AAAAAwCAEP////9AAAcwR5JJ/I+J0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC0A
+AABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIxLTE1MDUwODEzMDc1MVotNDY2NQAAAAACARAwAQAA
+AEYAAAAAAAAAgqc0rY6x/kS2Wxuo6bh73AcAzTs2Ijp7n0Cm/muqxOLaYQAAAGx4FQAAdI0nmS6j
+ZkyYdyYbqJkFWwB0fThj4AAAAAAfAPo/AQAAABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABp
+AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAA
+AAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAG
+AAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAA
+EgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAg
+AAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAA
+AADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAA
+ABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAA
+ZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAA63I=
+
+--_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_--
