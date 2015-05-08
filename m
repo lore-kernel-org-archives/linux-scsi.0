@@ -1,71 +1,110 @@
-From: Kyuho Choi <chlrbgh0@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: enable no_write_same for ufs
-Date: Sat, 9 May 2015 00:47:44 +0900
-Message-ID: <CAP2JTQKP71bFNi9DXAs5sMfN7ge1rAw0js2jZij+EBcGEyBEbg@mail.gmail.com>
-References: <1431003981-7106-1-git-send-email-kyuho.choi@sk.com> <CAC5umyisxmQh9=vKDHPf5gcjF0-u8m8=rbpZTyaVZN6AbsLBEw@mail.gmail.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v5 2/3] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Sat, 9 May 2015 00:43:49 +0530
+Message-ID: <CAOHikRA9uiqVcmN0x3CaBp7Pd9bAidfqL3UzSTC3hYESRnSdTQ@mail.gmail.com>
+References: <1430853672-6227-1-git-send-email-stripathi@apm.com>
+	<1430853672-6227-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:38709 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699AbbEHPsF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2015 11:48:05 -0400
-Received: by wiun10 with SMTP id n10so31997006wiu.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2015 08:48:04 -0700 (PDT)
-In-Reply-To: <CAC5umyisxmQh9=vKDHPf5gcjF0-u8m8=rbpZTyaVZN6AbsLBEw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1430853672-6227-3-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: vinayak holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kyuho Choi <kyuho.choi@sk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hi Akinobu,
+Hi Tejun
 
-On Fri, May 8, 2015 at 10:33 PM, Akinobu Mita <akinobu.mita@gmail.com> wrote:
+On Wed, May 6, 2015 at 12:51 AM, Suman Tripathi <stripathi@apm.com> wrote:
 >
-> Hi Kyuho,
+> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
+> latch.
 >
-> 2015-05-07 22:06 GMT+09:00 Kyuho Choi <chlrbgh0@gmail.com>:
-> > This patch disables write_same for ufs.
-> >
-> > Signed-off-by: Kyuho Choi <kyuho.choi@sk.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 648a446..6f770cd 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -4255,6 +4255,7 @@ static struct scsi_host_template ufshcd_driver_template = {
-> >         .max_host_blocked       = 1,
-> >         .use_blk_tags           = 1,
-> >         .track_queue_depth      = 1,
-> > +       .no_write_same          = 1,
-> >  };
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>  drivers/ata/ahci.h    |  2 ++
+>  drivers/ata/libahci.c | 40 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
 >
-> Is there any specific reason to disable WRITE_SAME in the host
-> controller level?
-
-Nope.
-But, according to UFS specification, does not support WRITE_SAME until UFS 2.0.
-So I thought host controller does not need WRITE_SAME command for UFS device.
-
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 71262e0..f442960 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -238,6 +238,8 @@ enum {
+>         AHCI_HFLAG_MULTI_MSI            = (1 << 16), /* multiple PCI MSIs */
+>         AHCI_HFLAG_NO_DEVSLP            = (1 << 17), /* no device sleep */
+>         AHCI_HFLAG_NO_FBS               = (1 << 18), /* no FBS */
+> +       AHCI_HFLAG_EDGE_IRQ             = (1 << 19), /* HOST_IRQ_STAT behaves as
+> +                                                       Edge Triggered */
 >
-> no_write_same flag in scsi_host_template was introduced by commit
-> 54b2b50c ("[SCSI] Disable WRITE SAME for RAID and virtual host adapter
-> drivers") for RAID and virtual host adapter drivers which can lead
-> to adapter firmware hangs or excessive I/O errors.
-
-Right. I'd refer that for this patch.
-
+>         /* ap->flags bits */
 >
-> The UFS device that does not support WRITE SAME should return
-> ILLEGAL_REQUEST sense key (and with INVALID COMMAND OPCODE code for
-> example).  If there is a specific product model/revision which causes
-> an undesirable result by WRITE_SAME, we should disable only when
-> such device is detected.  Otherwise I think this patch could conflict
-> with any attempts to support WRITE SAME by some vendors who want it in
-> their products or future UFS specification change.
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index aa89c8e..1add5ba 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1853,6 +1853,43 @@ static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
+>         return handled;
+>  }
+>
+> +static irqreturn_t ahci_single_edge_irq_intr(int irq, void *dev_instance)
+> +{
+> +       struct ata_host *host = dev_instance;
+> +       struct ahci_host_priv *hpriv;
+> +       unsigned int rc = 0;
+> +       void __iomem *mmio;
+> +       u32 irq_stat, irq_masked;
+> +
+> +       VPRINTK("ENTER\n");
+> +
+> +       hpriv = host->private_data;
+> +       mmio = hpriv->mmio;
+> +
+> +       /* sigh.  0xffffffff is a valid return from h/w */
+> +       irq_stat = readl(mmio + HOST_IRQ_STAT);
+> +       if (!irq_stat)
+> +               return IRQ_NONE;
+> +
+> +       irq_masked = irq_stat & hpriv->port_map;
+> +
+> +       spin_lock(&host->lock);
+> +
+> +       /*
+> +        * HOST_IRQ_STAT behaves as edge triggered latch meaning that
+> +        * it should be cleared before all the port events are cleared.
+> +        */
+> +       writel(irq_stat, mmio + HOST_IRQ_STAT);
+> +
+> +       rc = ahci_handle_port_intr(host, irq_masked);
+> +
+> +       spin_unlock(&host->lock);
+> +
+> +       VPRINTK("EXIT\n");
+> +
+> +       return IRQ_RETVAL(rc);
+> +}
+> +
+>  static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
+>  {
+>         struct ata_host *host = dev_instance;
+> @@ -2495,6 +2532,9 @@ int ahci_host_activate(struct ata_host *host, int irq,
+>
+>         if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+>                 rc = ahci_host_activate_multi_irqs(host, irq, sht);
+> +       else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
+> +               rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
+> +                                      IRQF_SHARED, sht);
+>         else
+>                 rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
+>                                        IRQF_SHARED, sht);
+> --
+> 1.8.2.1
+>
 
-Right. UFS device always should return ILLEGAL_REQUEST about WRITE_SAME command.
-But I didn't consider of specification change in future.
+Any comments on this version ??
+
+-- 
+Thanks,
+with regards,
+Suman Tripathi
