@@ -1,173 +1,56 @@
-From: Nilesh Javali <nilesh.javali@qlogic.com>
-Subject: RE: [PATCH] scsi:qla4xxx: Fix typo in qla4xxx
-Date: Fri, 8 May 2015 13:07:51 +0000
-Message-ID: <058691E078642A44B7C96BB0B1DB4F2481C8AA53@AVMB1.qlogic.org>
-References: <1431008874-5522-1-git-send-email-standby24x7@gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: enable no_write_same for ufs
+Date: Fri, 8 May 2015 22:33:44 +0900
+Message-ID: <CAC5umyisxmQh9=vKDHPf5gcjF0-u8m8=rbpZTyaVZN6AbsLBEw@mail.gmail.com>
+References: <1431003981-7106-1-git-send-email-kyuho.choi@sk.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:58204 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751751AbbEHNHx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2015 09:07:53 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t48D59OX016288
-	for <linux-scsi@vger.kernel.org>; Fri, 8 May 2015 06:07:53 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1u8j7urm9q-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 08 May 2015 06:07:53 -0700
-In-Reply-To: <1431008874-5522-1-git-send-email-standby24x7@gmail.com>
-Content-Language: en-US
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:36380 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbbEHNdq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2015 09:33:46 -0400
+Received: by lbbqq2 with SMTP id qq2so53252249lbb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2015 06:33:45 -0700 (PDT)
+In-Reply-To: <1431003981-7106-1-git-send-email-kyuho.choi@sk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Masanari Iida <standby24x7@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>, "JBottomley@odin.com" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "trivial@kernel.org" <trivial@kernel.org>
+To: Kyuho Choi <chlrbgh0@gmail.com>
+Cc: vinayak holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kyuho Choi <kyuho.choi@sk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
---_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hi Kyuho,
 
-Acked-by: Nilesh Javali <nilesh.javali@qlogic.com>
-
-
-> -----Original Message-----
-> From: Masanari Iida [mailto:standby24x7@gmail.com]
-> Sent: Thursday, May 07, 2015 7:58 PM
-> To: linux-kernel; Dept-Eng QLogic Storage Upstream; JBottomley@odin.com;
-> linux-scsi
-> Cc: trivial@kernel.org; Masanari Iida
-> Subject: [PATCH] scsi:qla4xxx: Fix typo in qla4xxx
->=20
-> This patch fix spelling typo in printk within drivers/qla4xxx.
->=20
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+2015-05-07 22:06 GMT+09:00 Kyuho Choi <chlrbgh0@gmail.com>:
+> This patch disables write_same for ufs.
+>
+> Signed-off-by: Kyuho Choi <kyuho.choi@sk.com>
 > ---
->  drivers/scsi/qla4xxx/ql4_83xx.c | 2 +-
->  drivers/scsi/qla4xxx/ql4_bsg.c  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_8=
-3xx.c
-> index 556c152..5d4f8e6 100644
-> --- a/drivers/scsi/qla4xxx/ql4_83xx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-> @@ -828,7 +828,7 @@ void qla4_83xx_read_reset_template(struct
-> scsi_qla_host *ha)
->  	ret_val =3D qla4_83xx_flash_read_u32(ha, addr, p_buff,
->  					   tmplt_hdr_def_size);
->  	if (ret_val !=3D QLA_SUCCESS) {
-> -		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset
-> tempelate\n",
-> +		ql4_printk(KERN_ERR, ha, "%s: Failed to read reset
-> template\n",
->  			   __func__);
->  		goto exit_read_template_error;
->  	}
-> diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bs=
-g.c
-> index 9f92cbf..415ee5e 100644
-> --- a/drivers/scsi/qla4xxx/ql4_bsg.c
-> +++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-> @@ -571,7 +571,7 @@ static int qla4_83xx_pre_loopback_config(struct
-> scsi_qla_host *ha,
->=20
->  	if ((config & ENABLE_INTERNAL_LOOPBACK) ||
->  	    (config & ENABLE_EXTERNAL_LOOPBACK)) {
-> -		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already
-> in progress. Invalid requiest\n",
-> +		ql4_printk(KERN_INFO, ha, "%s: Loopback diagnostics already
-> in
-> +progress. Invalid request\n",
->  			   __func__);
->  		goto exit_pre_loopback_config;
->  	}
-> --
-> 2.4.0.rc3.3.g6eb1401
+>  drivers/scsi/ufs/ufshcd.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 648a446..6f770cd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4255,6 +4255,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+>         .max_host_blocked       = 1,
+>         .use_blk_tags           = 1,
+>         .track_queue_depth      = 1,
+> +       .no_write_same          = 1,
+>  };
 
+Is there any specific reason to disable WRITE_SAME in the host
+controller level?
 
---_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+no_write_same flag in scsi_host_template was introduced by commit
+54b2b50c ("[SCSI] Disable WRITE SAME for RAID and virtual host adapter
+drivers") for RAID and virtual host adapter drivers which can lead
+to adapter firmware hangs or excessive I/O errors.
 
-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
-AgFBAAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACATgBpAGwAZQBzAGgAIABKAGEAdgBh
-AGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAB8AAl0BAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AG4AaQBsAGUAcwBoAC4AagBhAHYA
-YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABwAAABOAGkAbABlAHMAaAAg
-AEoAYQB2AGEAbABpAAAAHwAfDAEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAcAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAABTAE0A
-VABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAFdAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwD4PwEAAAAcAAAATgBpAGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAB8AI0ABAAAAMgAA
-AG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJA
-AQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBO
-AGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAUwBNAFQAUAAAAG4AaQBsAGUAcwBoAC4AagBhAHYA
-YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAyAAAAbgBpAGwAZQBzAGgALgBq
-AGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAA
-SQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAADw
-ugG+pCSmTpdkkAifc+BiAwAXAAEAAABAADkAgO3l/I+J0AFAAAgwZy8i/Y+J0AELACkAAAAAAAsA
-IwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
-AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
-AAAAAB8ANwABAAAAXAAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAHMAYwBzAGkAOgBxAGwAYQA0
-AHgAeAB4ADoAIABGAGkAeAAgAHQAeQBwAG8AIABpAG4AIABxAGwAYQA0AHgAeAB4AAAAHwA9AAEA
-AAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAcgAAADwAMQA0ADMAMQAw
-ADAAOAA4ADcANAAtADUANQAyADIALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0A
-cwB0AGEAbgBkAGIAeQAyADQAeAA3AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAb
-AAAAAQHQiNIBRHSZCGjELEWi0ujPMw78eZ1yDZFQAB8AcAABAAAAVAAAAFsAUABBAFQAQwBIAF0A
-IABzAGMAcwBpADoAcQBsAGEANAB4AHgAeAA6ACAARgBpAHgAIAB0AHkAcABvACAAaQBuACAAcQBs
-AGEANAB4AHgAeAAAAB8ANRABAAAAeAAAADwAMAA1ADgANgA5ADEARQAwADcAOAA2ADQAMgBBADQA
-NABCADcAQwA5ADYAQgBCADAAQgAxAEQAQgA0AEYAMgA0ADgAMQBDADgAQQBBADUAMwBAAEEAVgBN
-AEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAcgAAADwAMQA0ADMAMQAwADAA
-OAA4ADcANAAtADUANQAyADIALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AcwB0
-AGEAbgBkAGIAeQAyADQAeAA3AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAwDeP59OAAALAACA
-CCAGAAAAAADAAAAAAAAARgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAA
-AAAAAwCAEP////9AAAcwR5JJ/I+J0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC0A
-AABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIxLTE1MDUwODEzMDc1MVotNDY2NQAAAAACARAwAQAA
-AEYAAAAAAAAAgqc0rY6x/kS2Wxuo6bh73AcAzTs2Ijp7n0Cm/muqxOLaYQAAAGx4FQAAdI0nmS6j
-ZkyYdyYbqJkFWwB0fThj4AAAAAAfAPo/AQAAABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABp
-AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAA
-AAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAG
-AAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAA
-EgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAg
-AAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAA
-AADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAA
-ABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAA
-ZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAA63I=
-
---_000_058691E078642A44B7C96BB0B1DB4F2481C8AA53AVMB1qlogicorg_--
+The UFS device that does not support WRITE SAME should return
+ILLEGAL_REQUEST sense key (and with INVALID COMMAND OPCODE code for
+example).  If there is a specific product model/revision which causes
+an undesirable result by WRITE_SAME, we should disable only when
+such device is detected.  Otherwise I think this patch could conflict
+with any attempts to support WRITE SAME by some vendors who want it in
+their products or future UFS specification change.
