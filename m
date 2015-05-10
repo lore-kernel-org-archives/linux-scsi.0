@@ -1,373 +1,730 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/8] scsi_dh: integrate into the core SCSI code
-Date: Sun, 10 May 2015 20:40:56 +0200
-Message-ID: <1431283260-13406-5-git-send-email-hch@lst.de>
+Subject: [PATCH 6/8] scsi_dh: kill struct scsi_dh_data
+Date: Sun, 10 May 2015 20:40:58 +0200
+Message-ID: <1431283260-13406-7-git-send-email-hch@lst.de>
 References: <1431283260-13406-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52236 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:52248 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbbEJSm3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2015 14:42:29 -0400
+	with ESMTP id S1751925AbbEJSmf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2015 14:42:35 -0400
 In-Reply-To: <1431283260-13406-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Stop building scsi_dh as a separate module and integrate it fully into the
-core SCSI code with explicit callouts at bus scan time.  For now the
-callouts are placed at the same point as the old bus notifiers were called,
-but in the future we will be able to look at ALUA INQUIRY data earlier on.
-
-Note that this also means that the device handler modules need to be loaded
-by the time we scan the bus.  The next patches will add support for
-autoloading device handlers at bus scan time to make sure they are always
-loaded if they are enabled in the kernel config.
+Add a ->handler and a ->handler_data field to struct scsi_device and kill
+this indirection.  Also move struct scsi_device_handler to scsi_dh.h so that
+changes to it don't require rebuilding every SCSI LLDD.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/scsi/Makefile               |   2 +-
- drivers/scsi/device_handler/Kconfig |   2 +-
- drivers/scsi/scsi_dh.c              | 183 +++---------------------------------
- drivers/scsi/scsi_priv.h            |   9 ++
- drivers/scsi/scsi_sysfs.c           |  10 ++
- include/scsi/scsi_dh.h              |   2 +-
- 6 files changed, 34 insertions(+), 174 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c  | 24 ++++------
+ drivers/scsi/device_handler/scsi_dh_emc.c   | 28 ++++-------
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c | 24 ++++------
+ drivers/scsi/device_handler/scsi_dh_rdac.c  | 29 +++++-------
+ drivers/scsi/scsi_dh.c                      | 72 +++++++++++------------------
+ drivers/scsi/scsi_error.c                   |  6 +--
+ drivers/scsi/scsi_lib.c                     |  6 +--
+ include/scsi/scsi_device.h                  | 25 ++--------
+ include/scsi/scsi_dh.h                      | 17 +++++++
+ 9 files changed, 92 insertions(+), 139 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 9c53883d..060ff6f 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -169,7 +169,7 @@ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
- scsi_mod-y			+= scsi_trace.o scsi_logging.o
- scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
--obj-$(CONFIG_SCSI_DH)		+= scsi_dh.o
-+scsi_mod-$(CONFIG_SCSI_DH)	+= scsi_dh.o
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index ace2457..e418849 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -62,7 +62,6 @@
+ #define ALUA_OPTIMIZE_STPG		1
  
- hv_storvsc-y			:= storvsc_drv.o
+ struct alua_dh_data {
+-	struct scsi_dh_data	dh_data;
+ 	int			group_id;
+ 	int			rel_port;
+ 	int			tpgs;
+@@ -86,11 +85,6 @@ struct alua_dh_data {
+ static char print_alua_state(int);
+ static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
  
-diff --git a/drivers/scsi/device_handler/Kconfig b/drivers/scsi/device_handler/Kconfig
-index 69abd0a..e5647d5 100644
---- a/drivers/scsi/device_handler/Kconfig
-+++ b/drivers/scsi/device_handler/Kconfig
-@@ -3,7 +3,7 @@
- #
- 
- menuconfig SCSI_DH
--	tristate "SCSI Device Handlers"
-+	bool "SCSI Device Handlers"
- 	depends on SCSI
- 	default n
- 	help
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 3c06c72..2d6a8bd 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -57,15 +57,8 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
- 	return dh;
- }
- 
--/*
-- * device_handler_match_function - Match a device handler to a device
-- * @sdev - SCSI device to be tested
-- *
-- * Tests @sdev against the match function of all registered device_handler.
-- * Returns the found device handler or NULL if not found.
-- */
- static struct scsi_device_handler *
--device_handler_match_function(struct scsi_device *sdev)
-+device_handler_match(struct scsi_device *sdev)
- {
- 	struct scsi_device_handler *tmp_dh, *found_dh = NULL;
- 
-@@ -81,29 +74,6 @@ device_handler_match_function(struct scsi_device *sdev)
- }
- 
- /*
-- * device_handler_match - Attach a device handler to a device
-- * @scsi_dh - The device handler to match against or NULL
-- * @sdev - SCSI device to be tested against @scsi_dh
-- *
-- * Tests @sdev against the device handler @scsi_dh or against
-- * all registered device_handler if @scsi_dh == NULL.
-- * Returns the found device handler or NULL if not found.
-- */
--static struct scsi_device_handler *
--device_handler_match(struct scsi_device_handler *scsi_dh,
--		     struct scsi_device *sdev)
+-static inline struct alua_dh_data *get_alua_data(struct scsi_device *sdev)
 -{
--	struct scsi_device_handler *found_dh;
--
--	found_dh = device_handler_match_function(sdev);
--
--	if (scsi_dh && found_dh != scsi_dh)
--		found_dh = NULL;
--
--	return found_dh;
+-	return container_of(sdev->scsi_dh_data, struct alua_dh_data, dh_data);
 -}
 -
--/*
-  * scsi_dh_handler_attach - Attach a device handler to a device
-  * @sdev - SCSI device the device handler should attach to
-  * @scsi_dh - The device handler to attach
-@@ -211,119 +181,26 @@ static struct device_attribute scsi_dh_state_attr =
- 	__ATTR(dh_state, S_IRUGO | S_IWUSR, show_dh_state,
- 	       store_dh_state);
- 
--/*
-- * scsi_dh_sysfs_attr_add - Callback for scsi_init_dh
-- */
--static int scsi_dh_sysfs_attr_add(struct device *dev, void *data)
-+int scsi_dh_add_device(struct scsi_device *sdev)
+ static int realloc_buffer(struct alua_dh_data *h, unsigned len)
  {
--	struct scsi_device *sdev;
-+	struct scsi_device_handler *devinfo;
+ 	if (h->buff && h->buff != h->inq)
+@@ -708,7 +702,7 @@ out:
+  */
+ static int alua_set_params(struct scsi_device *sdev, const char *params)
+ {
+-	struct alua_dh_data *h = get_alua_data(sdev);
++	struct alua_dh_data *h = sdev->handler_data;
+ 	unsigned int optimize = 0, argc;
+ 	const char *p = params;
+ 	int result = SCSI_DH_OK;
+@@ -746,7 +740,7 @@ MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than
+ static int alua_activate(struct scsi_device *sdev,
+ 			activate_complete fn, void *data)
+ {
+-	struct alua_dh_data *h = get_alua_data(sdev);
++	struct alua_dh_data *h = sdev->handler_data;
+ 	int err = SCSI_DH_OK;
+ 	int stpg = 0;
+ 
+@@ -804,7 +798,7 @@ out:
+  */
+ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+ {
+-	struct alua_dh_data *h = get_alua_data(sdev);
++	struct alua_dh_data *h = sdev->handler_data;
+ 	int ret = BLKPREP_OK;
+ 
+ 	if (h->state == TPGS_STATE_TRANSITIONING)
+@@ -823,14 +817,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+  * alua_bus_attach - Attach device handler
+  * @sdev: device to be attached to
+  */
+-static struct scsi_dh_data *alua_bus_attach(struct scsi_device *sdev)
++static int alua_bus_attach(struct scsi_device *sdev)
+ {
+ 	struct alua_dh_data *h;
  	int err;
  
--	if (!scsi_is_sdev_device(dev))
--		return 0;
--
--	sdev = to_scsi_device(dev);
--
--	err = device_create_file(&sdev->sdev_gendev,
--				 &scsi_dh_state_attr);
--
--	return 0;
--}
--
--/*
-- * scsi_dh_sysfs_attr_remove - Callback for scsi_exit_dh
-- */
--static int scsi_dh_sysfs_attr_remove(struct device *dev, void *data)
--{
--	struct scsi_device *sdev;
--
--	if (!scsi_is_sdev_device(dev))
--		return 0;
--
--	sdev = to_scsi_device(dev);
--
--	device_remove_file(&sdev->sdev_gendev,
--			   &scsi_dh_state_attr);
--
--	return 0;
--}
-+	err = device_create_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
-+	if (err)
-+		return err;
+ 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
+ 	if (!h)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 	h->tpgs = TPGS_MODE_UNINITIALIZED;
+ 	h->state = TPGS_STATE_OPTIMIZED;
+ 	h->group_id = -1;
+@@ -843,11 +837,11 @@ static struct scsi_dh_data *alua_bus_attach(struct scsi_device *sdev)
+ 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
+ 		goto failed;
  
--/*
-- * scsi_dh_notifier - notifier chain callback
-- */
--static int scsi_dh_notifier(struct notifier_block *nb,
--			    unsigned long action, void *data)
--{
--	struct device *dev = data;
--	struct scsi_device *sdev;
--	int err = 0;
--	struct scsi_device_handler *devinfo = NULL;
--
--	if (!scsi_is_sdev_device(dev))
--		return 0;
--
--	sdev = to_scsi_device(dev);
--
--	if (action == BUS_NOTIFY_ADD_DEVICE) {
--		err = device_create_file(dev, &scsi_dh_state_attr);
--		/* don't care about err */
--		devinfo = device_handler_match(NULL, sdev);
--		if (devinfo)
--			err = scsi_dh_handler_attach(sdev, devinfo);
--	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
--		device_remove_file(dev, &scsi_dh_state_attr);
--		if (sdev->scsi_dh_data)
--			scsi_dh_handler_detach(sdev);
--	}
-+	devinfo = device_handler_match(sdev);
-+	if (devinfo)
-+		err = scsi_dh_handler_attach(sdev, devinfo);
- 	return err;
- }
- 
--/*
-- * scsi_dh_notifier_add - Callback for scsi_register_device_handler
-- */
--static int scsi_dh_notifier_add(struct device *dev, void *data)
-+void scsi_dh_remove_device(struct scsi_device *sdev)
- {
--	struct scsi_device_handler *scsi_dh = data;
--	struct scsi_device *sdev;
--
--	if (!scsi_is_sdev_device(dev))
--		return 0;
--
--	if (!get_device(dev))
--		return 0;
--
--	sdev = to_scsi_device(dev);
--
--	if (device_handler_match(scsi_dh, sdev))
--		scsi_dh_handler_attach(sdev, scsi_dh);
--
--	put_device(dev);
--
--	return 0;
--}
--
--/*
-- * scsi_dh_notifier_remove - Callback for scsi_unregister_device_handler
-- */
--static int scsi_dh_notifier_remove(struct device *dev, void *data)
--{
--	struct scsi_device_handler *scsi_dh = data;
--	struct scsi_device *sdev;
--
--	if (!scsi_is_sdev_device(dev))
--		return 0;
--
--	if (!get_device(dev))
--		return 0;
--
--	sdev = to_scsi_device(dev);
--
--	if (sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh == scsi_dh)
-+	if (sdev->scsi_dh_data)
- 		scsi_dh_handler_detach(sdev);
--
--	put_device(dev);
--
--	return 0;
-+	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+-	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", ALUA_DH_NAME);
+-	return &h->dh_data;
++	sdev->handler_data = h;
++	return 0;
+ failed:
+ 	kfree(h);
+-	return ERR_PTR(-EINVAL);
++	return -EINVAL;
  }
  
  /*
-@@ -345,7 +222,6 @@ int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
- 	list_add(&scsi_dh->list, &scsi_dh_list);
- 	spin_unlock(&list_lock);
- 
--	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh, scsi_dh_notifier_add);
- 	printk(KERN_INFO "%s: device handler registered\n", scsi_dh->name);
- 
- 	return SCSI_DH_OK;
-@@ -361,13 +237,9 @@ EXPORT_SYMBOL_GPL(scsi_register_device_handler);
+@@ -856,7 +850,7 @@ failed:
   */
- int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
+ static void alua_bus_detach(struct scsi_device *sdev)
  {
+-	struct alua_dh_data *h = get_alua_data(sdev);
++	struct alua_dh_data *h = sdev->handler_data;
+ 
+ 	if (h->buff && h->inq != h->buff)
+ 		kfree(h->buff);
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index fd31e67..4b75b50 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -72,7 +72,6 @@ static const char * lun_state[] =
+ };
+ 
+ struct clariion_dh_data {
+-	struct scsi_dh_data dh_data;
+ 	/*
+ 	 * Flags:
+ 	 *  CLARIION_SHORT_TRESPASS
+@@ -114,13 +113,6 @@ struct clariion_dh_data {
+ 	int current_sp;
+ };
+ 
+-static inline struct clariion_dh_data
+-			*get_clariion_data(struct scsi_device *sdev)
+-{
+-	return container_of(sdev->scsi_dh_data, struct clariion_dh_data,
+-			dh_data);
+-}
 -
- 	if (!__scsi_dh_lookup(scsi_dh->name))
+ /*
+  * Parse MODE_SELECT cmd reply.
+  */
+@@ -450,7 +442,7 @@ static int clariion_check_sense(struct scsi_device *sdev,
+ 
+ static int clariion_prep_fn(struct scsi_device *sdev, struct request *req)
+ {
+-	struct clariion_dh_data *h = get_clariion_data(sdev);
++	struct clariion_dh_data *h = sdev->handler_data;
+ 	int ret = BLKPREP_OK;
+ 
+ 	if (h->lun_state != CLARIION_LUN_OWNED) {
+@@ -533,7 +525,7 @@ retry:
+ static int clariion_activate(struct scsi_device *sdev,
+ 				activate_complete fn, void *data)
+ {
+-	struct clariion_dh_data *csdev = get_clariion_data(sdev);
++	struct clariion_dh_data *csdev = sdev->handler_data;
+ 	int result;
+ 
+ 	result = clariion_send_inquiry(sdev, csdev);
+@@ -574,7 +566,7 @@ done:
+  */
+ static int clariion_set_params(struct scsi_device *sdev, const char *params)
+ {
+-	struct clariion_dh_data *csdev = get_clariion_data(sdev);
++	struct clariion_dh_data *csdev = sdev->handler_data;
+ 	unsigned int hr = 0, st = 0, argc;
+ 	const char *p = params;
+ 	int result = SCSI_DH_OK;
+@@ -622,14 +614,14 @@ done:
+ 	return result;
+ }
+ 
+-static struct scsi_dh_data *clariion_bus_attach(struct scsi_device *sdev)
++static int clariion_bus_attach(struct scsi_device *sdev)
+ {
+ 	struct clariion_dh_data *h;
+ 	int err;
+ 
+ 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
+ 	if (!h)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 	h->lun_state = CLARIION_LUN_UNINITIALIZED;
+ 	h->default_sp = CLARIION_UNBOUND_LU;
+ 	h->current_sp = CLARIION_UNBOUND_LU;
+@@ -647,18 +639,18 @@ static struct scsi_dh_data *clariion_bus_attach(struct scsi_device *sdev)
+ 		    CLARIION_NAME, h->current_sp + 'A',
+ 		    h->port, lun_state[h->lun_state],
+ 		    h->default_sp + 'A');
+-	return &h->dh_data;
++
++	sdev->handler_data = h;
++	return 0;
+ 
+ failed:
+ 	kfree(h);
+-	return ERR_PTR(-EINVAL);
++	return -EINVAL;
+ }
+ 
+ static void clariion_bus_detach(struct scsi_device *sdev)
+ {
+-	struct clariion_dh_data *h = get_clariion_data(sdev);
+-
+-	kfree(h);
++	kfree(sdev->handler_data);
+ }
+ 
+ static struct scsi_device_handler clariion_dh = {
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 1bf10d3..d5390ba 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -38,7 +38,6 @@
+ #define HP_SW_PATH_PASSIVE		1
+ 
+ struct hp_sw_dh_data {
+-	struct scsi_dh_data dh_data;
+ 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
+ 	int path_state;
+ 	int retries;
+@@ -50,11 +49,6 @@ struct hp_sw_dh_data {
+ 
+ static int hp_sw_start_stop(struct hp_sw_dh_data *);
+ 
+-static inline struct hp_sw_dh_data *get_hp_sw_data(struct scsi_device *sdev)
+-{
+-	return container_of(sdev->scsi_dh_data, struct hp_sw_dh_data, dh_data);
+-}
+-
+ /*
+  * tur_done - Handle TEST UNIT READY return status
+  * @sdev: sdev the command has been sent to
+@@ -267,7 +261,7 @@ static int hp_sw_start_stop(struct hp_sw_dh_data *h)
+ 
+ static int hp_sw_prep_fn(struct scsi_device *sdev, struct request *req)
+ {
+-	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
++	struct hp_sw_dh_data *h = sdev->handler_data;
+ 	int ret = BLKPREP_OK;
+ 
+ 	if (h->path_state != HP_SW_PATH_ACTIVE) {
+@@ -292,7 +286,7 @@ static int hp_sw_activate(struct scsi_device *sdev,
+ 				activate_complete fn, void *data)
+ {
+ 	int ret = SCSI_DH_OK;
+-	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
++	struct hp_sw_dh_data *h = sdev->handler_data;
+ 
+ 	ret = hp_sw_tur(sdev, h);
+ 
+@@ -311,14 +305,14 @@ static int hp_sw_activate(struct scsi_device *sdev,
+ 	return 0;
+ }
+ 
+-static struct scsi_dh_data *hp_sw_bus_attach(struct scsi_device *sdev)
++static int hp_sw_bus_attach(struct scsi_device *sdev)
+ {
+ 	struct hp_sw_dh_data *h;
+ 	int ret;
+ 
+ 	h = kzalloc(sizeof(*h), GFP_KERNEL);
+ 	if (!h)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 	h->path_state = HP_SW_PATH_UNINITIALIZED;
+ 	h->retries = HP_SW_RETRIES;
+ 	h->sdev = sdev;
+@@ -330,17 +324,17 @@ static struct scsi_dh_data *hp_sw_bus_attach(struct scsi_device *sdev)
+ 	sdev_printk(KERN_INFO, sdev, "%s: attached to %s path\n",
+ 		    HP_SW_NAME, h->path_state == HP_SW_PATH_ACTIVE?
+ 		    "active":"passive");
+-	return &h->dh_data;
++
++	sdev->handler_data = h;
++	return 0;
+ failed:
+ 	kfree(h);
+-	return ERR_PTR(-EINVAL);
++	return -EINVAL;
+ }
+ 
+ static void hp_sw_bus_detach( struct scsi_device *sdev )
+ {
+-	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
+-
+-	kfree(h);
++	kfree(sdev->handler_data);
+ }
+ 
+ static struct scsi_device_handler hp_sw_dh = {
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index d89616f..0c6d612 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -181,7 +181,6 @@ struct c2_inquiry {
+ };
+ 
+ struct rdac_dh_data {
+-	struct scsi_dh_data	dh_data;
+ 	struct rdac_controller	*ctlr;
+ #define UNINITIALIZED_LUN	(1 << 8)
+ 	unsigned		lun;
+@@ -260,11 +259,6 @@ do { \
+ 		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ## arg); \
+ } while (0);
+ 
+-static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+-{
+-	return container_of(sdev->scsi_dh_data, struct rdac_dh_data, dh_data);
+-}
+-
+ static struct request *get_rdac_req(struct scsi_device *sdev,
+ 			void *buffer, unsigned buflen, int rw)
+ {
+@@ -544,7 +538,7 @@ static int mode_select_handle_sense(struct scsi_device *sdev,
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int err = SCSI_DH_IO, ret;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 
+ 	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+ 	if (!ret)
+@@ -589,7 +583,7 @@ static void send_mode_select(struct work_struct *work)
+ 		container_of(work, struct rdac_controller, ms_work);
+ 	struct request *rq;
+ 	struct scsi_device *sdev = ctlr->ms_sdev;
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 	struct request_queue *q = sdev->request_queue;
+ 	int err, retry_cnt = RDAC_RETRY_COUNT;
+ 	struct rdac_queue_data *tmp, *qdata;
+@@ -648,7 +642,7 @@ static int queue_mode_select(struct scsi_device *sdev,
+ 	if (!qdata)
+ 		return SCSI_DH_RETRY;
+ 
+-	qdata->h = get_rdac_data(sdev);
++	qdata->h = sdev->handler_data;
+ 	qdata->callback_fn = fn;
+ 	qdata->callback_data = data;
+ 
+@@ -667,7 +661,7 @@ static int queue_mode_select(struct scsi_device *sdev,
+ static int rdac_activate(struct scsi_device *sdev,
+ 			activate_complete fn, void *data)
+ {
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 	int err = SCSI_DH_OK;
+ 	int act = 0;
+ 
+@@ -702,7 +696,7 @@ done:
+ 
+ static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
+ {
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 	int ret = BLKPREP_OK;
+ 
+ 	if (h->state != RDAC_STATE_ACTIVE) {
+@@ -716,7 +710,7 @@ static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
+ static int rdac_check_sense(struct scsi_device *sdev,
+ 				struct scsi_sense_hdr *sense_hdr)
+ {
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 
+ 	RDAC_LOG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
+ 			"I/O returned with sense %02x/%02x/%02x",
+@@ -778,7 +772,7 @@ static int rdac_check_sense(struct scsi_device *sdev,
+ 	return SCSI_RETURN_NOT_HANDLED;
+ }
+ 
+-static struct scsi_dh_data *rdac_bus_attach(struct scsi_device *sdev)
++static int rdac_bus_attach(struct scsi_device *sdev)
+ {
+ 	struct rdac_dh_data *h;
+ 	int err;
+@@ -787,7 +781,7 @@ static struct scsi_dh_data *rdac_bus_attach(struct scsi_device *sdev)
+ 
+ 	h = kzalloc(sizeof(*h) , GFP_KERNEL);
+ 	if (!h)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 	h->lun = UNINITIALIZED_LUN;
+ 	h->state = RDAC_STATE_ACTIVE;
+ 
+@@ -812,7 +806,8 @@ static struct scsi_dh_data *rdac_bus_attach(struct scsi_device *sdev)
+ 		    RDAC_NAME, h->lun, mode[(int)h->mode],
+ 		    lun_state[(int)h->lun_state]);
+ 
+-	return &h->dh_data;
++	sdev->handler_data = h;
++	return 0;
+ 
+ clean_ctlr:
+ 	spin_lock(&list_lock);
+@@ -821,12 +816,12 @@ clean_ctlr:
+ 
+ failed:
+ 	kfree(h);
+-	return ERR_PTR(-EINVAL);
++	return -EINVAL;
+ }
+ 
+ static void rdac_bus_detach( struct scsi_device *sdev )
+ {
+-	struct rdac_dh_data *h = get_rdac_data(sdev);
++	struct rdac_dh_data *h = sdev->handler_data;
+ 
+ 	if (h->ctlr && h->ctlr->ms_queued)
+ 		flush_workqueue(kmpath_rdacd);
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 8f0a6dc..f0b100e 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -126,26 +126,19 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
+ static int scsi_dh_handler_attach(struct scsi_device *sdev,
+ 				  struct scsi_device_handler *scsi_dh)
+ {
+-	struct scsi_dh_data *d;
++	int error;
+ 
+ 	if (!try_module_get(scsi_dh->module))
+ 		return -EINVAL;
+ 
+-	d = scsi_dh->attach(sdev);
+-	if (IS_ERR(d)) {
+-		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%ld)\n",
+-			    scsi_dh->name, PTR_ERR(d));
++	error = scsi_dh->attach(sdev);
++	if (error) {
++		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
++			    scsi_dh->name, error);
+ 		module_put(scsi_dh->module);
+-		return PTR_ERR(d);
+ 	}
+ 
+-	d->scsi_dh = scsi_dh;
+-	d->sdev = sdev;
+-
+-	spin_lock_irq(sdev->request_queue->queue_lock);
+-	sdev->scsi_dh_data = d;
+-	spin_unlock_irq(sdev->request_queue->queue_lock);
+-	return 0;
++	return error;
+ }
+ 
+ /*
+@@ -154,17 +147,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
+  */
+ static void scsi_dh_handler_detach(struct scsi_device *sdev)
+ {
+-	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
+-	struct scsi_device_handler *scsi_dh = scsi_dh_data->scsi_dh;
+-
+-	scsi_dh->detach(sdev);
+-
+-	spin_lock_irq(sdev->request_queue->queue_lock);
+-	sdev->scsi_dh_data = NULL;
+-	spin_unlock_irq(sdev->request_queue->queue_lock);
+-
+-	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", scsi_dh->name);
+-	module_put(scsi_dh->module);
++	sdev->handler->detach(sdev);
++	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", sdev->handler->name);
++	module_put(sdev->handler->module);
+ }
+ 
+ /*
+@@ -182,7 +167,7 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+ 	    sdev->sdev_state == SDEV_DEL)
  		return -ENODEV;
  
--	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh,
--			 scsi_dh_notifier_remove);
--
- 	spin_lock(&list_lock);
- 	list_del(&scsi_dh->list);
- 	spin_unlock(&list_lock);
-@@ -537,34 +409,3 @@ const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
- 	return handler_name;
+-	if (!sdev->scsi_dh_data) {
++	if (!sdev->handler) {
+ 		/*
+ 		 * Attach to a device handler
+ 		 */
+@@ -190,7 +175,6 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+ 			return err;
+ 		err = scsi_dh_handler_attach(sdev, scsi_dh);
+ 	} else {
+-		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+ 		if (!strncmp(buf, "detach", 6)) {
+ 			/*
+ 			 * Detach from a device handler
+@@ -201,8 +185,8 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+ 			/*
+ 			 * Activate a device handler
+ 			 */
+-			if (scsi_dh->activate)
+-				err = scsi_dh->activate(sdev, NULL, NULL);
++			if (sdev->handler->activate)
++				err = sdev->handler->activate(sdev, NULL, NULL);
+ 			else
+ 				err = 0;
+ 		}
+@@ -216,10 +200,10 @@ show_dh_state(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 
+-	if (!sdev->scsi_dh_data)
++	if (!sdev->handler)
+ 		return snprintf(buf, 20, "detached\n");
+ 
+-	return snprintf(buf, 20, "%s\n", sdev->scsi_dh_data->scsi_dh->name);
++	return snprintf(buf, 20, "%s\n", sdev->handler->name);
  }
- EXPORT_SYMBOL_GPL(scsi_dh_attached_handler_name);
+ 
+ static struct device_attribute scsi_dh_state_attr =
+@@ -246,7 +230,7 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+ 
+ void scsi_dh_remove_device(struct scsi_device *sdev)
+ {
+-	if (sdev->scsi_dh_data)
++	if (sdev->handler)
+ 		scsi_dh_handler_detach(sdev);
+ 	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+ }
+@@ -315,7 +299,6 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 	int err = 0;
+ 	unsigned long flags;
+ 	struct scsi_device *sdev;
+-	struct scsi_device_handler *scsi_dh = NULL;
+ 	struct device *dev = NULL;
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+@@ -328,10 +311,8 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 		return err;
+ 	}
+ 
+-	if (sdev->scsi_dh_data)
+-		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+ 	dev = get_device(&sdev->sdev_gendev);
+-	if (!scsi_dh || !dev ||
++	if (!sdev->handler || !dev ||
+ 	    sdev->sdev_state == SDEV_CANCEL ||
+ 	    sdev->sdev_state == SDEV_DEL)
+ 		err = SCSI_DH_NOSYS;
+@@ -345,8 +326,8 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+ 		goto out;
+ 	}
+ 
+-	if (scsi_dh->activate)
+-		err = scsi_dh->activate(sdev, fn, data);
++	if (sdev->handler->activate)
++		err = sdev->handler->activate(sdev, fn, data);
+ out:
+ 	put_device(dev);
+ 	return err;
+@@ -368,19 +349,18 @@ int scsi_dh_set_params(struct request_queue *q, const char *params)
+ 	int err = -SCSI_DH_NOSYS;
+ 	unsigned long flags;
+ 	struct scsi_device *sdev;
+-	struct scsi_device_handler *scsi_dh = NULL;
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+ 	sdev = q->queuedata;
+-	if (sdev && sdev->scsi_dh_data)
+-		scsi_dh = sdev->scsi_dh_data->scsi_dh;
+-	if (scsi_dh && scsi_dh->set_params && get_device(&sdev->sdev_gendev))
++	if (sdev->handler &&
++	    sdev->handler->set_params &&
++	    get_device(&sdev->sdev_gendev))
+ 		err = 0;
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	if (err)
+ 		return err;
+-	err = scsi_dh->set_params(sdev, params);
++	err = sdev->handler->set_params(sdev, params);
+ 	put_device(&sdev->sdev_gendev);
+ 	return err;
+ }
+@@ -412,8 +392,8 @@ int scsi_dh_attach(struct request_queue *q, const char *name)
+ 	if (err)
+ 		return err;
+ 
+-	if (sdev->scsi_dh_data) {
+-		if (sdev->scsi_dh_data->scsi_dh != scsi_dh)
++	if (sdev->handler) {
++		if (sdev->handler != scsi_dh)
+ 			err = -EBUSY;
+ 		goto out_put_device;
+ 	}
+@@ -450,8 +430,8 @@ const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
+ 	if (!sdev)
+ 		return NULL;
+ 
+-	if (sdev->scsi_dh_data)
+-		handler_name = kstrdup(sdev->scsi_dh_data->scsi_dh->name, gfp);
++	if (sdev->handler)
++		handler_name = kstrdup(sdev->handler->name, gfp);
+ 
+ 	put_device(&sdev->sdev_gendev);
+ 	return handler_name;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c95a4e9..a29c0c9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -37,6 +37,7 @@
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
++#include <scsi/scsi_dh.h>
+ #include <scsi/sg.h>
+ 
+ #include "scsi_priv.h"
+@@ -460,11 +461,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 	if (scsi_sense_is_deferred(&sshdr))
+ 		return NEEDS_RETRY;
+ 
+-	if (sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh &&
+-			sdev->scsi_dh_data->scsi_dh->check_sense) {
++	if (sdev->handler && sdev->handler->check_sense) {
+ 		int rc;
+ 
+-		rc = sdev->scsi_dh_data->scsi_dh->check_sense(sdev, &sshdr);
++		rc = sdev->handler->check_sense(sdev, &sshdr);
+ 		if (rc != SCSI_RETURN_NOT_HANDLED)
+ 			return rc;
+ 		/* handler does not care. Drop down to default handling */
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b1a2631..01c92ca 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_dh.h>
+ 
+ #include <trace/events/scsi.h>
+ 
+@@ -1248,9 +1249,8 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
+ {
+ 	struct scsi_cmnd *cmd = req->special;
+ 
+-	if (unlikely(sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh
+-			 && sdev->scsi_dh_data->scsi_dh->prep_fn)) {
+-		int ret = sdev->scsi_dh_data->scsi_dh->prep_fn(sdev, req);
++	if (unlikely(sdev->handler && sdev->handler->prep_fn)) {
++		int ret = sdev->handler->prep_fn(sdev, req);
+ 		if (ret != BLKPREP_OK)
+ 			return ret;
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index dcc5c69..05583d8 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -195,32 +195,13 @@ struct scsi_device {
+ 	struct execute_work	ew; /* used to get process context on put */
+ 	struct work_struct	requeue_work;
+ 
+-	struct scsi_dh_data	*scsi_dh_data;
++	struct scsi_device_handler *handler;
++	void			*handler_data;
++
+ 	enum scsi_device_state sdev_state;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
+-typedef void (*activate_complete)(void *, int);
+-struct scsi_device_handler {
+-	/* Used by the infrastructure */
+-	struct list_head list; /* list of scsi_device_handlers */
 -
--static struct notifier_block scsi_dh_nb = {
--	.notifier_call = scsi_dh_notifier
+-	/* Filled by the hardware handler */
+-	struct module *module;
+-	const char *name;
+-	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
+-	struct scsi_dh_data *(*attach)(struct scsi_device *);
+-	void (*detach)(struct scsi_device *);
+-	int (*activate)(struct scsi_device *, activate_complete, void *);
+-	int (*prep_fn)(struct scsi_device *, struct request *);
+-	int (*set_params)(struct scsi_device *, const char *);
 -};
 -
--static int __init scsi_dh_init(void)
--{
--	int r;
+-struct scsi_dh_data {
+-	struct scsi_device_handler *scsi_dh;
+-	struct scsi_device *sdev;
+-};
 -
--	r = bus_register_notifier(&scsi_bus_type, &scsi_dh_nb);
--
--	if (!r)
--		bus_for_each_dev(&scsi_bus_type, NULL, NULL,
--				 scsi_dh_sysfs_attr_add);
--
--	return r;
--}
--
--static void __exit scsi_dh_exit(void)
--{
--	bus_for_each_dev(&scsi_bus_type, NULL, NULL,
--			 scsi_dh_sysfs_attr_remove);
--	bus_unregister_notifier(&scsi_bus_type, &scsi_dh_nb);
--}
--
--module_init(scsi_dh_init);
--module_exit(scsi_dh_exit);
--
--MODULE_DESCRIPTION("SCSI device handler");
--MODULE_AUTHOR("Chandra Seetharaman <sekharan@us.ibm.com>");
--MODULE_LICENSE("GPL");
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index e3902fc..644bb73 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -170,6 +170,15 @@ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
- extern struct async_domain scsi_sd_pm_domain;
- extern struct async_domain scsi_sd_probe_domain;
- 
-+/* scsi_dh.c */
-+#ifdef CONFIG_SCSI_DH
-+int scsi_dh_add_device(struct scsi_device *sdev);
-+void scsi_dh_remove_device(struct scsi_device *sdev);
-+#else
-+static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
-+static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
-+#endif
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 1ac38e7..c8a120f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1030,11 +1030,20 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 				"failed to add device: %d\n", error);
- 		return error;
- 	}
-+
-+	error = scsi_dh_add_device(sdev);
-+	if (error) {
-+		sdev_printk(KERN_INFO, sdev,
-+				"failed to add device handler: %d\n", error);
-+		return error;
-+	}
-+
- 	device_enable_async_suspend(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add class device: %d\n", error);
-+		scsi_dh_remove_device(sdev);
- 		device_del(&sdev->sdev_gendev);
- 		return error;
- 	}
-@@ -1074,6 +1083,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		bsg_unregister_queue(sdev->request_queue);
- 		device_unregister(&sdev->sdev_dev);
- 		transport_remove_device(dev);
-+		scsi_dh_remove_device(sdev);
- 		device_del(dev);
- 	} else
- 		put_device(&sdev->sdev_dev);
+ #define	to_scsi_device(d)	\
+ 	container_of(d, struct scsi_device, sdev_gendev)
+ #define	class_to_sdev(d)	\
 diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
-index 966b921..3a37b4c45 100644
+index 3a37b4c45..85d7317 100644
 --- a/include/scsi/scsi_dh.h
 +++ b/include/scsi/scsi_dh.h
-@@ -55,7 +55,7 @@ enum {
+@@ -55,6 +55,23 @@ enum {
  	SCSI_DH_NOSYS,
  	SCSI_DH_DRIVER_MAX,
  };
--#if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
-+#ifdef CONFIG_SCSI_DH
++
++typedef void (*activate_complete)(void *, int);
++struct scsi_device_handler {
++	/* Used by the infrastructure */
++	struct list_head list; /* list of scsi_device_handlers */
++
++	/* Filled by the hardware handler */
++	struct module *module;
++	const char *name;
++	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
++	int (*attach)(struct scsi_device *);
++	void (*detach)(struct scsi_device *);
++	int (*activate)(struct scsi_device *, activate_complete, void *);
++	int (*prep_fn)(struct scsi_device *, struct request *);
++	int (*set_params)(struct scsi_device *, const char *);
++};
++
+ #ifdef CONFIG_SCSI_DH
  extern int scsi_dh_activate(struct request_queue *, activate_complete, void *);
  extern int scsi_dh_attach(struct request_queue *, const char *);
- extern const char *scsi_dh_attached_handler_name(struct request_queue *, gfp_t);
 -- 
 1.9.1
 
