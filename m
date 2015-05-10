@@ -1,40 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 3/3] ata: ahci_xgene: Add AHCI Support for 2nd HW
- version of APM X-Gene SoC AHCI SATA Host controller.
-Date: Sun, 10 May 2015 11:54:54 -0400
-Message-ID: <20150510155454.GD5856@htj.duckdns.org>
-References: <1430853672-6227-1-git-send-email-stripathi@apm.com>
- <1430853672-6227-4-git-send-email-stripathi@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: integrate scsi_dh better into the scsi core V2
+Date: Sun, 10 May 2015 20:40:52 +0200
+Message-ID: <1431283260-13406-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:33887 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbbEJPy7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2015 11:54:59 -0400
-Content-Disposition: inline
-In-Reply-To: <1430853672-6227-4-git-send-email-stripathi@apm.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:52210 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbbEJSmO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2015 14:42:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hello,
+This series ties scsi_dh deeper into the scsi core, and fixes all kinds
+of issues in it, most importantly the race between using and detaching
+device handlers.
 
-On Wed, May 06, 2015 at 12:51:12AM +0530, Suman Tripathi wrote:
-> +	switch (version) {
-> +	case XGENE_AHCI_V1:
-> +		hpriv->flags = AHCI_HFLAG_NO_NCQ;
-> +		/*
-> +		 * Override the callbacks for storm ERRATA
-> +		 */
-> +		xgene_ahci_ops.qc_issue = xgene_ahci_qc_issue;
-> +		xgene_ahci_ops.softreset = xgene_ahci_softreset;
-> +		xgene_ahci_ops.pmp_softreset = xgene_ahci_pmp_softreset;
+Changes since V1:
+  - updated comments / strings based on review feedback
+  - moved scsi_dh.c to drivers/scsi to fix the srcdir = objdir build
+  - changed the old patch 2 to have saner handling of mismatching device
+    handlers in dm.
+  - dropped patch 1: not having a hw handler is fine if we don't plan to
+    change it anyway
+  - dropped patch 3: not necessary anymore.
 
-Let's please create separate ops structs for v1 and v2.
-
-Thanks.
-
--- 
-tejun
