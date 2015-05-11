@@ -1,62 +1,48 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v6 1/1] ata: ahci_xgene: Add AHCI Support for 2nd HW
- version of APM X-Gene SoC AHCI SATA Host controller.
-Date: Mon, 11 May 2015 19:01:32 +0530
-Message-ID: <CAOHikRBC_KOtL=hJHp7D+9DWNOnuN=VE=RQEnU_TJJ6wOXkO9g@mail.gmail.com>
-References: <1431333375-30433-1-git-send-email-stripathi@apm.com>
-	<1431333375-30433-2-git-send-email-stripathi@apm.com>
-	<20150511112800.GA11388@htj.duckdns.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 14/17] scsi_dh_alua: Use workqueue for RTPG
+Date: Mon, 11 May 2015 15:49:14 +0200
+Message-ID: <20150511134914.GA7795@lst.de>
+References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-15-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og104.obsmtp.com ([64.18.0.178]:33136 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754152AbbEKNbf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2015 09:31:35 -0400
-Received: by wiun10 with SMTP id n10so96481123wiu.1
-        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2015 06:31:32 -0700 (PDT)
-In-Reply-To: <20150511112800.GA11388@htj.duckdns.org>
+Received: from verein.lst.de ([213.95.11.211]:40548 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754439AbbEKNtQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2015 09:49:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1430743343-47174-15-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Hi Tejun,
+On Mon, May 04, 2015 at 02:42:20PM +0200, Hannes Reinecke wrote:
+> The current ALUA device_handler has two drawbacks:
+> - We're sending a 'SET TARGET PORT GROUP' command to every LUN,
+>   disregarding the fact that several LUNs might be in a port group
+>   and will be automatically switched whenever _any_ LUN within
+>   that port group receives the command.
+> - Whenever a LUN is in 'transitioning' mode we cannot block I/O
+>   to that LUN, instead the controller has to abort the command.
+>   This leads to increased traffic across the wire and heavy load
+>   on the controller during switchover.
+> 
+> With this patch the RTPG handling is moved to a workqueue, which
+> is being run once per port group. This reduces the number of
+> 'REPORT TARGET PORT GROUP' and 'SET TARGET PORT GROUPS' which
+> will be send to the controller. It also allows us to block
+> I/O to any LUN / port group found to be in 'transitioning' ALUA
+> mode, as the workqueue item will be requeued until the controller
+> moves out of transitioning.
 
-On Mon, May 11, 2015 at 4:58 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Suman.
->
-> On Mon, May 11, 2015 at 02:06:15PM +0530, Suman Tripathi wrote:
->> -#ifdef CONFIG_ACPI
->> -static const struct acpi_device_id xgene_ahci_acpi_match[] = {
->> -     { "APMC0D0D", },
->> -     { }
->> -};
->> -MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
->> -#endif
->> -
->> -static const struct of_device_id xgene_ahci_of_match[] = {
->> -     {.compatible = "apm,xgene-ahci"},
->> -     {},
->> -};
->> -MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
->
-> I applied the patch as-is this time but please don't combine code
-> movement with actual changes in the future.  Split them out to
-> separate patches.  It makes the changes a lot easier to follow and
-> verify.
+I'm having a hard time understanding the workqueue use here.
+What is the benefit of that one worker function to do everything?
+It seems having a work struct in struct alua_queue_data to just
+run STPG, and a different one to run RPTG in the port group structure
+would be more sensible instead of interwinding them.
 
-Sorry . I will take care of it next time onwards.
->
-> Thanks.
->
-> --
-> tejun
-
-
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+Also why do you need the sigle threaded workqueue?  That seems
+like a possible limiting factor in a large enough system having
+to deal with a cable disconnect cutting off multiple port groups,
+or just during bootup.
