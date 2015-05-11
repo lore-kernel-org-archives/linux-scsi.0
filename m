@@ -1,85 +1,62 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/17] scsi_dh_alua: Improve error handling
-Date: Mon, 11 May 2015 15:19:05 +0200
-Message-ID: <5550AC49.3070502@suse.de>
-References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-5-git-send-email-hare@suse.de> <554B5113.7050800@sandisk.com> <554B51E5.3030305@suse.de>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v6 1/1] ata: ahci_xgene: Add AHCI Support for 2nd HW
+ version of APM X-Gene SoC AHCI SATA Host controller.
+Date: Mon, 11 May 2015 19:01:32 +0530
+Message-ID: <CAOHikRBC_KOtL=hJHp7D+9DWNOnuN=VE=RQEnU_TJJ6wOXkO9g@mail.gmail.com>
+References: <1431333375-30433-1-git-send-email-stripathi@apm.com>
+	<1431333375-30433-2-git-send-email-stripathi@apm.com>
+	<20150511112800.GA11388@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49293 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753955AbbEKNTH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2015 09:19:07 -0400
-In-Reply-To: <554B51E5.3030305@suse.de>
+Received: from exprod5og104.obsmtp.com ([64.18.0.178]:33136 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754152AbbEKNbf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2015 09:31:35 -0400
+Received: by wiun10 with SMTP id n10so96481123wiu.1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2015 06:31:32 -0700 (PDT)
+In-Reply-To: <20150511112800.GA11388@htj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
-On 05/07/2015 01:52 PM, Hannes Reinecke wrote:
-> On 05/07/2015 01:48 PM, Bart Van Assche wrote:
->> On 05/04/15 14:42, Hannes Reinecke wrote:
->>> @@ -161,12 +164,12 @@ static unsigned submit_rtpg(struct
->>> scsi_device *sdev, struct alua_dh_data *h,
->>>       rq->sense_len =3D h->senselen =3D 0;
->>>
->>>       err =3D blk_execute_rq(rq->q, NULL, rq, 1);
->>> -    if (err =3D=3D -EIO) {
->>> -        sdev_printk(KERN_INFO, sdev,
->>> -                "%s: rtpg failed with %x\n",
->>> -                ALUA_DH_NAME, rq->errors);
->>> +    if (err < 0) {
->>> +        if (!rq->errors)
->>> +            err =3D DID_ERROR << 16;
->>> +        else
->>> +            err =3D rq->errors;
->>>           h->senselen =3D rq->sense_len;
->>> -        err =3D SCSI_DH_IO;
->>>       }
->>>       blk_put_request(rq);
->>>   done:
->>
->> Running the grep query "->errors =3D " over the Linux kernel source
->> tree shows that sometimes a SCSI error code is written into that
->> field and sometimes a negative error code. Does this mean that the
->> test !rq->errors should be modified into !rq->errors &&
->> !IS_ERR_VALUE(rq->errors) ?
->>
-> Hmm. I'm going to review this. 'rq->errors' should be used consistent=
-ly.
->=20
-drivers/scsi/scsi_lib.c:scsi_execute() has this comment in the
-header:
+Hi Tejun,
 
- * returns the req->errors value which is the scsi_cmnd result
- * field.
+On Mon, May 11, 2015 at 4:58 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Suman.
+>
+> On Mon, May 11, 2015 at 02:06:15PM +0530, Suman Tripathi wrote:
+>> -#ifdef CONFIG_ACPI
+>> -static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+>> -     { "APMC0D0D", },
+>> -     { }
+>> -};
+>> -MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+>> -#endif
+>> -
+>> -static const struct of_device_id xgene_ahci_of_match[] = {
+>> -     {.compatible = "apm,xgene-ahci"},
+>> -     {},
+>> -};
+>> -MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
+>
+> I applied the patch as-is this time but please don't combine code
+> movement with actual changes in the future.  Split them out to
+> separate patches.  It makes the changes a lot easier to follow and
+> verify.
 
-And later on 'req->errors' is used verbatim as the return value:
+Sorry . I will take care of it next time onwards.
+>
+> Thanks.
+>
+> --
+> tejun
 
-	if (resid)
-		*resid =3D req->resid_len;
-	ret =3D req->errors;
- out:
-	blk_put_request(req);
 
-	return ret;
-}
 
-As the above patch is modeled according to this, any issue here
-would affect scsi_execute, too.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Thanks,
+with regards,
+Suman Tripathi
