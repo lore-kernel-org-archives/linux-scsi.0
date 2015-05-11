@@ -1,214 +1,102 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v6 1/1] ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller.
-Date: Mon, 11 May 2015 14:06:15 +0530
-Message-ID: <1431333375-30433-2-git-send-email-stripathi@apm.com>
-References: <1431333375-30433-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1431333375-30433-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: hosts resets in SRP and the rest of the world, was: Re: [PATCH
+ 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
+Date: Mon, 11 May 2015 10:54:30 +0200
+Message-ID: <55506E46.2060103@sandisk.com>
+References: <5541EE21.3050809@sandisk.com> <5541EE4A.30803@sandisk.com>
+ <20150430093719.GA23486@infradead.org> <5542034D.5010300@sandisk.com>
+ <554204D7.9050204@dev.mellanox.co.il> <55420AEA.10108@sandisk.com>
+ <20150430172516.GA19200@infradead.org> <5549E600.9050208@sandisk.com>
+ <20150511075058.GA18483@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0094.outbound.protection.outlook.com ([65.55.169.94]:19552
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753119AbbEKIyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2015 04:54:43 -0400
+In-Reply-To: <20150511075058.GA18483@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Doug Ledford <dledford@redhat.com>, James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Jens Axboe <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-This patch enables full AHCI feature support for APM X-Gene SoC SATA
-host controller. The following errata's are removed:
+On 05/11/15 09:50, Christoph Hellwig wrote:
+> Hi Bart,
+>
+> I've looked at this and didn't really like the unconditional hctx lock
+> in the blk-mq path which might have nasty effects when just using a
+> single hctx.
+>
+> So I'm taking another step back and try to understand what you're doign
+> here.
+>
+> Let me try to recreate the issue:
+>
+>   - we get a ->host_reset call for the SRP initiator, which then
+>     calls srp_reconnect_rport, at which point we still have outstanding
+>     commands on the wire, and we still allow concurrent I/O submission
+>   - srp_reconnect_rport then blocks new I/O, and tries to drain the
+>     peding requeuest from ->queuecommand.  It then calls into
+>     srp_rport_reconnect, which after some work also clears out all
+>     commands on the wire and the reconnects
+>
+> Maybe it's time to move to what Hannes suggested in
+> events.linuxfoundation.org/sites/events/files/slides/SCSI-EH.pdf
+> slides 56+ at least for SRP as a start, that is:
+>
+>   - once escalating to a LUN reset fail all commands for the LUN
+>     and block the the LUN for I/O and send a TMF abort
+>   - once scalatating to the host reset fail all I/O for the host
+>     and block the host (all LUNs) for I/O, and only then call
+>     the host reset action (reconnect in the SRP case)
+>     (or rather replace the current RP host reset with the
+>     I_T Nexus reset suggested by Hannes)
+>
+> The advantage is that we can do the full drain much more easily
+> than just waiting for command leaving ->queuecommnd.  The other
+> advantage is that we can implement this with fairly small changes
+> in the scsi_error.c code trggered off a host or transport template
+> flag, without touching code in the block layer while at the same
+> time significantly simplifying the transport layer and drivers.
 
-1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
-                 IDENTIFY DEVICE PIO mode command")
-2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
-                 ATA_CMD_SMART PIO mode command")
-3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
-                 support PMP")
-4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
-                 enumeration and discovery")
-5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
-                 ATA_CMD_PACKET PIO mode command")
-6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene
-		SoC AHCI SATA Host Controller driver")
+Hello Christoph,
 
-In addition, enable PMP support for APM X-Gene SoC and enable FBS
-support for second generation APM X-Gene SoC.
+There are multiple events that can cause the SRP initiator driver to 
+initiate a reconnect:
+1. The SCSI core invoking eh_host_reset_handler().
+2. An error reported by the IB HCA or by the IB core, e.g. an RDMA
+    transmit timeout or a transport layer disconnect reported by the
+    IB/CM.
 
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 105 ++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 86 insertions(+), 19 deletions(-)
+The reason I added (2) is to reduce the failover time in a H.A. setup. 
+If e.g. a path fails it can take up to (2 * SCSI timeout) before all 
+outstanding SCSI commands have timed out. The next step is that the SCSI 
+error handler invokes a device reset. If a cable has been pulled the 
+task management function issued by srp_reset_device() will time out. The 
+next step is that srp_reset_host() will try to perform a reconnect. If a 
+cable has been pulled this reconnect attempt will also time out. Because 
+of how the retry count and timeout parameters for establishing a 
+connection in the SRP initiator have been chosen it can take 
+considerable time before a reconnect attempt times out and hence before 
+srp_reset_host() reports a failure.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 2b78510..2add250 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -27,6 +27,7 @@
- #include <linux/platform_device.h>
- #include <linux/ahci_platform.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_irq.h>
- #include <linux/phy/phy.h>
- #include "ahci.h"
-@@ -84,6 +85,11 @@
- /* Max retry for link down */
- #define MAX_LINK_DOWN_RETRY 3
+A common complaint about older versions of the SRP initiator was that 
+failover took to long, namely several minutes instead of less than a 
+minute. The reason why (2) had been introduced was to reduce the path 
+failover time to less than a minute. As soon as the IB HCA and/or IB 
+core have reported an error we know that a connection has to be 
+reestablished. Waiting until the SCSI error handler has finished its 
+escalation strategy only slows down failover and does not provide any 
+benefits from the point of view an SRP initiator.
 
-+enum xgene_ahci_version {
-+	XGENE_AHCI_V1 = 1,
-+	XGENE_AHCI_V2,
-+};
-+
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-@@ -542,7 +548,7 @@ softreset_retry:
- 	return rc;
- }
+In summary, if it would be possible to modify the SCSI error handling 
+strategy such that (2) can be dropped without increasing the SRP 
+initiator failover time I definitely would like to hear about that. But 
+I'm not sure that's possible.
 
--static struct ata_port_operations xgene_ahci_ops = {
-+static struct ata_port_operations xgene_ahci_v1_ops = {
- 	.inherits = &ahci_ops,
- 	.host_stop = xgene_ahci_host_stop,
- 	.hardreset = xgene_ahci_hardreset,
-@@ -552,11 +558,25 @@ static struct ata_port_operations xgene_ahci_ops = {
- 	.pmp_softreset = xgene_ahci_pmp_softreset
- };
+Best regards,
 
--static const struct ata_port_info xgene_ahci_port_info = {
-+static const struct ata_port_info xgene_ahci_v1_port_info = {
- 	.flags = AHCI_FLAG_COMMON | ATA_FLAG_PMP,
- 	.pio_mask = ATA_PIO4,
- 	.udma_mask = ATA_UDMA6,
--	.port_ops = &xgene_ahci_ops,
-+	.port_ops = &xgene_ahci_v1_ops,
-+};
-+
-+static struct ata_port_operations xgene_ahci_v2_ops = {
-+	.inherits = &ahci_ops,
-+	.host_stop = xgene_ahci_host_stop,
-+	.hardreset = xgene_ahci_hardreset,
-+	.read_id = xgene_ahci_read_id,
-+};
-+
-+static const struct ata_port_info xgene_ahci_v2_port_info = {
-+	.flags = AHCI_FLAG_COMMON | ATA_FLAG_PMP,
-+	.pio_mask = ATA_PIO4,
-+	.udma_mask = ATA_UDMA6,
-+	.port_ops = &xgene_ahci_v2_ops,
- };
-
- static int xgene_ahci_hw_init(struct ahci_host_priv *hpriv)
-@@ -629,12 +649,32 @@ static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT(DRV_NAME),
- };
-
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id xgene_ahci_acpi_match[] = {
-+	{ "APMC0D0D", XGENE_AHCI_V1},
-+	{ "APMC0D32", XGENE_AHCI_V2},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-+#endif
-+
-+static const struct of_device_id xgene_ahci_of_match[] = {
-+	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
-+	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
-+
- static int xgene_ahci_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
- 	struct xgene_ahci_context *ctx;
- 	struct resource *res;
-+	const struct of_device_id *of_devid;
-+	enum xgene_ahci_version version = XGENE_AHCI_V1;
-+	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
-+					      &xgene_ahci_v2_port_info };
- 	int rc;
-
- 	hpriv = ahci_platform_get_resources(pdev);
-@@ -677,6 +717,37 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 		ctx->csr_mux = csr;
- 	}
-
-+	of_devid = of_match_device(xgene_ahci_of_match, dev);
-+	if (of_devid) {
-+		if (of_devid->data)
-+			version = (enum xgene_ahci_version) of_devid->data;
-+	}
-+#ifdef CONFIG_ACPI
-+	else {
-+		const struct acpi_device_id *acpi_id;
-+		struct acpi_device_info *info;
-+		acpi_status status;
-+
-+		acpi_id = acpi_match_device(xgene_ahci_acpi_match, &pdev->dev);
-+		if (!acpi_id) {
-+			dev_warn(&pdev->dev, "No node entry in ACPI table. Assume version1\n");
-+			version = XGENE_AHCI_V1;
-+		}
-+
-+		if (acpi_id->driver_data) {
-+			version = (enum xgene_ahci_version) acpi_id->driver_data;
-+			status = acpi_get_object_info(ACPI_HANDLE(&pdev->dev), &info);
-+			if (ACPI_FAILURE(status)) {
-+				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
-+					__func__);
-+				version = XGENE_AHCI_V1;
-+			}
-+			if (info->valid & ACPI_VALID_CID)
-+				version = XGENE_AHCI_V2;
-+		}
-+	}
-+#endif
-+
- 	dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n", ctx->csr_core,
- 		hpriv->mmio);
-
-@@ -704,9 +775,19 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
- skip_clk_phy:
--	hpriv->flags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-
--	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
-+	switch (version) {
-+	case XGENE_AHCI_V1:
-+		hpriv->flags = AHCI_HFLAG_NO_NCQ;
-+		break;
-+	case XGENE_AHCI_V2:
-+		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
- 				     &ahci_platform_sht);
- 	if (rc)
- 		goto disable_resources;
-@@ -719,20 +800,6 @@ disable_resources:
- 	return rc;
- }
-
--#ifdef CONFIG_ACPI
--static const struct acpi_device_id xgene_ahci_acpi_match[] = {
--	{ "APMC0D0D", },
--	{ }
--};
--MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
--#endif
--
--static const struct of_device_id xgene_ahci_of_match[] = {
--	{.compatible = "apm,xgene-ahci"},
--	{},
--};
--MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
--
- static struct platform_driver xgene_ahci_driver = {
- 	.probe = xgene_ahci_probe,
- 	.remove = ata_platform_remove_one,
---
-1.8.2.1
-
+Bart.
