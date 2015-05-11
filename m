@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: hosts resets in SRP and the rest of the world, was: Re: [PATCH
  01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
-Date: Mon, 11 May 2015 04:47:18 -0700
-Message-ID: <20150511114718.GA32341@infradead.org>
+Date: Mon, 11 May 2015 04:50:29 -0700
+Message-ID: <20150511115029.GB32341@infradead.org>
 References: <20150430093719.GA23486@infradead.org>
  <5542034D.5010300@sandisk.com>
  <554204D7.9050204@dev.mellanox.co.il>
@@ -12,27 +12,35 @@ References: <20150430093719.GA23486@infradead.org>
  <20150511075058.GA18483@infradead.org>
  <55506E46.2060103@sandisk.com>
  <20150511093130.GA30217@infradead.org>
- <55507D63.6010007@sandisk.com>
+ <55508B3B.9080806@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44615 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:46310 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752841AbbEKLr1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2015 07:47:27 -0400
+	with ESMTP id S1751299AbbEKLuh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2015 07:50:37 -0400
 Content-Disposition: inline
-In-Reply-To: <55507D63.6010007@sandisk.com>
+In-Reply-To: <55508B3B.9080806@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Doug Ledford <dledford@redhat.com>, James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Jens Axboe <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On Mon, May 11, 2015 at 11:58:59AM +0200, Bart Van Assche wrote:
-> Your proposal absolutely makes sense to me but unfortunately I do not have
-> the time available now to implement it. Would it be acceptable if I rework
-> scsi_wait_for_queuecommand() such that per-CPU counters are introduced in
-> blk-mq instead of one counter per hctx ?
+On Mon, May 11, 2015 at 12:58:03PM +0200, Bart Van Assche wrote:
+> What I'm wondering about is whether it will be possible with the above
+> approach to trigger path failover before (2 * SCSI timeout) has expired ?
+> Starting SCSI error handling immediately after the block layer has reported
+> the first SCSI timeout is only safe if all ongoing SCSI commands are
+> canceled in some way. Is this what the function blk_abort_request() is
+> intended for ? As far as I can see invoking that function or any function
+> with a similar purpose is only safe after the queuecommand() callback
+> function has finished. However, blk_mq_run_hw_queue() invokes
+> mq_ops->queue_rq() without holding any lock. So it's not clear to me how to
+> safely cancel ongoing blk-mq requests without waiting until these have timed
+> out. I hope that this means that overlooked something ?
 
-If we can't fix this for real I'd prefer to do nothing, or at least
-almost nothing for now, e.g. keep your original patch and ignore the
-blk-mq case for now.
+For the blk-mq case invoking it earlier should be fine - the
+REQ_ATOM_STARTED and REQ_ATOM_COMPLETE bit ops are specifily designed
+so that calling the timeout handler on any request is fine.  I'm not
+sure about the !blk-mq case, though.
