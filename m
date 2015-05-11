@@ -1,46 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 3/9] snic:Add meta request,  handling of meta requests.
-Date: Mon, 11 May 2015 19:56:25 +0200
-Message-ID: <5550ED49.9040902@suse.de>
-References: <1429694642-22309-1-git-send-email-nmusini@cisco.com> <1429694642-22309-4-git-send-email-nmusini@cisco.com>
+From: Stephen Boyd <sboyd@codeaurora.org>
+Subject: Re: [PATCH v1 2/2] phy: update obsolete configuration of ARCH_MSM
+ into ARCH_QCOM
+Date: Mon, 11 May 2015 10:58:04 -0700
+Message-ID: <5550EDAC.9000209@codeaurora.org>
+References: <1431357321-7932-1-git-send-email-ygardi@codeaurora.org> <1431357321-7932-3-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47770 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbbEKR41 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2015 13:56:27 -0400
-In-Reply-To: <1429694642-22309-4-git-send-email-nmusini@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1431357321-7932-3-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>, James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, draviv@codeaurora.org, gbroner@codeaurora.org, Kishon Vijay Abraham I <kishon@ti.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Narsimhulu Musini <nmusini@cisco.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
-On 04/22/2015 11:23 AM, Narsimhulu Musini wrote:
-> snic_io.h contains meta request structure definition
-> meta request contains high level information about firmware requests.
-> such as request information, size, SGLs.
->=20
-> snic_io.c contains interfaces to handle meta request, firmware acknow=
-ledgment,
-> and high level generic queueing interface.
->=20
-> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
-> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+On 05/11/15 08:15, Yaniv Gardi wrote:
+> Since ARCH_MSM is no longer supported as configuration definition,
+> it should be modified into ARCH_QCOM in order to add support for
+> Qualcomm platforms.
+>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
 > ---
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+I've already sent this patch[1]. Can you please ack it?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] https://lkml.org/lkml/2015/4/10/862
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
