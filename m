@@ -1,25 +1,32 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 6/9] snic:Add low level queuing interfaces
-Date: Mon, 11 May 2015 20:01:51 +0200
-Message-ID: <5550EE8F.4070702@suse.de>
-References: <1429694642-22309-1-git-send-email-nmusini@cisco.com> <1429694642-22309-7-git-send-email-nmusini@cisco.com>
+Subject: Re: [PATCH v5 8/9] snic:Add event tracing to capture IO events.
+Date: Mon, 11 May 2015 20:03:10 +0200
+Message-ID: <5550EEDE.2070900@suse.de>
+References: <1429694642-22309-1-git-send-email-nmusini@cisco.com> <1429694642-22309-9-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48419 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:48493 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754423AbbEKSBx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2015 14:01:53 -0400
-In-Reply-To: <1429694642-22309-7-git-send-email-nmusini@cisco.com>
+	id S1754560AbbEKSDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2015 14:03:11 -0400
+In-Reply-To: <1429694642-22309-9-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Narsimhulu Musini <nmusini@cisco.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
-On 04/22/2015 11:23 AM, Narsimhulu Musini wrote:
-> These files contain low level queueing interfaces includes
-> hardware queues, and management of hardware features.
+On 04/22/2015 11:24 AM, Narsimhulu Musini wrote:
+> snic_trc.h contains global trace structure definitions for snic drive=
+r
+>=20
+> snic_trc.c adds tracing functionality to capture various IO events.
+> It maintains global trace buffer to maintain recent history of IO eve=
+nts.
+> It helps to understand the sequence of events prior to particular IO =
+event,
+> or hung, panic, etc,.
 >=20
 > Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 > Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
