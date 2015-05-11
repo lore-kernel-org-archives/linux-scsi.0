@@ -1,24 +1,22 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RFC 1/2] cxlflash: Base support for IBM CXL Flash Adapter
-Date: Mon, 11 May 2015 02:09:41 -0700
-Message-ID: <20150511090941.GD28820@infradead.org>
-References: <1430110220-13268-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] scsi: storvsc: Set the SRB flags correctly when no
+ data transfer is needed
+Date: Mon, 11 May 2015 02:10:09 -0700
+Message-ID: <20150511091009.GE28820@infradead.org>
+References: <1429921403-8606-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:39513 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbbEKJJm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2015 05:09:42 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1430110220-13268-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1429921403-8606-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, mikey@neuling.org, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On Sun, Apr 26, 2015 at 11:50:20PM -0500, Matthew R. Ochs wrote:
-> SCSI device driver to support filesystem access on the IBM CXL Flash adapter.
+On Fri, Apr 24, 2015 at 05:23:23PM -0700, K. Y. Srinivasan wrote:
+> Set the SRB flags correctly when there is no data transfer.
 
-Please drop all the code related to your weird direct access ioctls
-from this patch.  Without that it looks mostly mergeable.
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
