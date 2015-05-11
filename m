@@ -1,33 +1,52 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/17] scsi_dh_alua: revert commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
-Date: Mon, 11 May 2015 12:00:36 +0200
-Message-ID: <55507DC4.3000800@suse.de>
-References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-14-git-send-email-hare@suse.de> <20150511070025.GI30516@lst.de>
+Subject: Re: [PATCH 03/17] scsi_dh_alua: Use vpd_pg83 information
+Date: Mon, 11 May 2015 12:11:55 +0200
+Message-ID: <5550806B.6070005@suse.de>
+References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-4-git-send-email-hare@suse.de> <20150511064848.GC30516@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37007 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:37568 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752610AbbEKKAh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 May 2015 06:00:37 -0400
-In-Reply-To: <20150511070025.GI30516@lst.de>
+	id S1753262AbbEKKL5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 May 2015 06:11:57 -0400
+In-Reply-To: <20150511064848.GC30516@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 05/11/2015 09:00 AM, Christoph Hellwig wrote:
-> On Mon, May 04, 2015 at 02:42:19PM +0200, Hannes Reinecke wrote:
->> Obsoleted by the next patch.
+On 05/11/2015 08:48 AM, Christoph Hellwig wrote:
+>> @@ -352,55 +315,42 @@ static int alua_check_tpgs(struct scsi_device =
+*sdev, struct alua_dh_data *h)
+>>  		sdev_printk(KERN_INFO, sdev, "%s: supports implicit TPGS\n",
+>>  			    ALUA_DH_NAME);
+>>  		break;
+>> -	default:
+>> -		h->tpgs =3D TPGS_MODE_NONE;
+>> +	case TPGS_MODE_NONE:
+>>  		sdev_printk(KERN_INFO, sdev, "%s: not supported\n",
+>>  			    ALUA_DH_NAME);
+>>  		err =3D SCSI_DH_DEV_UNSUPP;
+>>  		break;
+>> +	default:
+>> +		sdev_printk(KERN_INFO, sdev,
+>> +			    "%s: unsupported TPGS setting %d\n",
+>> +			    ALUA_DH_NAME, h->tpgs);
+>> +		h->tpgs =3D TPGS_MODE_NONE;
+>> +		err =3D SCSI_DH_DEV_UNSUPP;
+>> +		break;
 >=20
-> Please use a descriptive subject, and the mention the commit name in =
-the
-> message body in the canonical format:  commit a8e5a2 ("[SCSI] scsi_dh=
-_alua:
-> ALUA handler attach should succeed while TPG is transitioning");
+> Can you split this into a separate patch, please?
 >=20
-Okay.
+> Otherwise looks fine, so:
+>=20
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>=20
+> for both resulting patches.
+>=20
+Okay, will do.
 
 Cheers,
 
