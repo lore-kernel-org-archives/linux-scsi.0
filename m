@@ -1,67 +1,44 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
-Date: Tue, 12 May 2015 08:01:23 -0700
-Message-ID: <1431442883.2884.59.camel@perches.com>
-References: <1423233221-27069-1-git-send-email-linux@rasmusvillemoes.dk>
-	 <bb45ec6cfa94612741a2eb355d0de566@mail.gmail.com>
-	 <87iobx7uzv.fsf@rasmusvillemoes.dk> <1431442336.2884.57.camel@perches.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: hosts resets in SRP and the rest of the world, was: Re: [PATCH
+ 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
+Date: Tue, 12 May 2015 11:02:25 -0700
+Message-ID: <20150512180225.GA28898@infradead.org>
+References: <554204D7.9050204@dev.mellanox.co.il>
+ <55420AEA.10108@sandisk.com>
+ <20150430172516.GA19200@infradead.org>
+ <5549E600.9050208@sandisk.com>
+ <20150511075058.GA18483@infradead.org>
+ <55506E46.2060103@sandisk.com>
+ <20150511093130.GA30217@infradead.org>
+ <55508B3B.9080806@sandisk.com>
+ <20150511115029.GB32341@infradead.org>
+ <5551BEAB.5080803@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1431442336.2884.57.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux390 <linux390@de.ibm.com>
-Cc: Eugene Crosser <eugene.crosser@ru.ibm.com>, Frank Blaschka <frank.blaschka@de.ibm.com>, Ursula Braun <ursula.braun@de.ibm.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:39325 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932639AbbELSCn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2015 14:02:43 -0400
+Content-Disposition: inline
+In-Reply-To: <5551BEAB.5080803@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Doug Ledford <dledford@redhat.com>, James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Jens Axboe <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2015-05-12 at 07:52 -0700, Joe Perches wrote:
-> On Tue, 2015-05-12 at 16:04 +0200, Rasmus Villemoes wrote:
-> > On Tue, Feb 10 2015, Kashyap Desai <kashyap.desai@avagotech.com> wrote:
-> > 
-> > > Acked-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> > >
-> > >> -----Original Message-----
-> > >> From: Rasmus Villemoes [mailto:linux@rasmusvillemoes.dk]
-> > >> Sent: Friday, February 06, 2015 8:04 PM
-> > >> To: Kashyap Desai; Sumit Saxena; Uday Lingala; James E.J. Bottomley
-> > >> Cc: Rasmus Villemoes; megaraidlinux.pdl@avagotech.com; linux-
-> > >> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> > >> Subject: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
-> > >>
-> > >> There is currently no %po format extension, so currently the letters
-> > > "on" are
-> > >> simply skipped and the pointer is printed as expected (while missing the
-> > > word
-> > >> on). However, it is probably only a matter of time before someone comes
-> > > up
-> > >> with a %po extension, at which point this is likely to fail
-> > > spectacularly.
-> > >>
-> > >> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> > 
-> > Any chance either this minimal fix or Joe's more thorough cleanup could
-> > get applied? There's still no %po extension, but there's certainly a lot
-> > of proposals for more %p extensions flying around LKML, so I still think
-> > the "only a matter of time" holds.
-> 
-> There's also this one with %pM6:
+On Tue, May 12, 2015 at 10:49:47AM +0200, Bart Van Assche wrote:
+> Thanks for the feedback. However, I'm still wondering what will happen if
+> blk_abort_request() causes e.g. blk_rq_unmap_user() or blk_update_request()
+> to be called while mq_ops->queue_rq() or q->request_fn() is still in
+> progress ?
 
-And another with %ptail
----
- arch/s390/kernel/perf_cpum_sf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+We will never call the blk-mq ->timeout handler before the LLDD
+called blk_mq_start_request, which the driver should only call once it's
+ready to handle ->timeout.
 
-diff --git a/arch/s390/kernel/perf_cpum_sf.c b/arch/s390/kernel/perf_cpum_sf.c
-index e6a1578..c0a4b87 100644
---- a/arch/s390/kernel/perf_cpum_sf.c
-+++ b/arch/s390/kernel/perf_cpum_sf.c
-@@ -205,7 +205,7 @@ static int realloc_sampling_buffer(struct sf_buffer *sfb,
- 	 */
- 	if (sfb->sdbt != get_next_sdbt(tail)) {
- 		debug_sprintf_event(sfdbg, 3, "realloc_sampling_buffer: "
--				    "sampling buffer is not linked: origin=%p"
-+				    "sampling buffer is not linked: origin=%p "
- 				    "tail=%p\n",
- 				    (void *) sfb->sdbt, (void *) tail);
- 		return -EINVAL;
+For normal blk-mq drivers this works fine, but for SCSI we still have
+the problem that we need'd really need to move this into the
+->queuecommand function to be fully safe against the driver internal
+data structures, the current version only helps with the SCSI level
+structures.
