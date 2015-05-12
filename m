@@ -1,37 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: libsas and pci driver
-Date: Tue, 12 May 2015 07:10:26 -0700
-Message-ID: <1431439826.2214.15.camel@HansenPartnership.com>
-References: <FF9EFDB6B8B51C49B6C1EFD8F01AB4DEA69601@lhreml504-mbs>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
+Date: Tue, 12 May 2015 07:52:16 -0700
+Message-ID: <1431442336.2884.57.camel@perches.com>
+References: <1423233221-27069-1-git-send-email-linux@rasmusvillemoes.dk>
+	 <bb45ec6cfa94612741a2eb355d0de566@mail.gmail.com>
+	 <87iobx7uzv.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36253 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932920AbbELOKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 May 2015 10:10:38 -0400
-In-Reply-To: <FF9EFDB6B8B51C49B6C1EFD8F01AB4DEA69601@lhreml504-mbs>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87iobx7uzv.fsf@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Eugene Crosser <eugene.crosser@ru.ibm.com>, Frank Blaschka <frank.blaschka@de.ibm.com>, Ursula Braun <ursula.braun@de.ibm.com>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2015-05-12 at 13:56 +0000, John Garry wrote:
-> Hello,
+On Tue, 2015-05-12 at 16:04 +0200, Rasmus Villemoes wrote:
+> On Tue, Feb 10 2015, Kashyap Desai <kashyap.desai@avagotech.com> wrote:
 > 
-> I am looking to design an upstreamable driver for a custom SAS host
-> controller and I have a question on libsas: the documentation for
-> libsas states that the LLDD is a pci device driver - is this
-> necessary? Our HBA is connected on the system bus, so would require a
-> platform driver.
+> > Acked-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> >
+> >> -----Original Message-----
+> >> From: Rasmus Villemoes [mailto:linux@rasmusvillemoes.dk]
+> >> Sent: Friday, February 06, 2015 8:04 PM
+> >> To: Kashyap Desai; Sumit Saxena; Uday Lingala; James E.J. Bottomley
+> >> Cc: Rasmus Villemoes; megaraidlinux.pdl@avagotech.com; linux-
+> >> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> >> Subject: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
+> >>
+> >> There is currently no %po format extension, so currently the letters
+> > "on" are
+> >> simply skipped and the pointer is printed as expected (while missing the
+> > word
+> >> on). However, it is probably only a matter of time before someone comes
+> > up
+> >> with a %po extension, at which point this is likely to fail
+> > spectacularly.
+> >>
+> >> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> 
+> Any chance either this minimal fix or Joe's more thorough cleanup could
+> get applied? There's still no %po extension, but there's certainly a lot
+> of proposals for more %p extensions flying around LKML, so I still think
+> the "only a matter of time" holds.
 
-A quick look through the sources would tell you the answer to this:
-"no" (except there's one printk which might need fixing in
-sas_discover.c).  I think the docs date back to before the pcidev->dev
-conversion was done.
+There's also this one with %pM6:
+---
+ drivers/s390/net/qeth_l2_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-James
-
-
+diff --git a/drivers/s390/net/qeth_l2_main.c b/drivers/s390/net/qeth_l2_main.c
+index 0ea0869..dc783047 100644
+--- a/drivers/s390/net/qeth_l2_main.c
++++ b/drivers/s390/net/qeth_l2_main.c
+@@ -1420,8 +1420,8 @@ static void qeth_bridge_emit_host_event(struct qeth_card *card,
+ 			env[i] = str[i]; i++;
+ 		}
+ 		if (code & IPA_ADDR_CHANGE_CODE_MACADDR) {
+-			snprintf(str[i], sizeof(str[i]), "MAC=%pM6",
+-				&addr_lnid->mac);
++			snprintf(str[i], sizeof(str[i]), "MAC=%pM",
++				addr_lnid->mac);
+ 			env[i] = str[i]; i++;
+ 		}
+ 		snprintf(str[i], sizeof(str[i]), "NTOK_BUSID=%x.%x.%04x",
