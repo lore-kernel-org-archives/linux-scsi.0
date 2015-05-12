@@ -1,31 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 6/18] megaraid_sas : Use Block layer tag support for
- internal command indexing
-Date: Tue, 12 May 2015 00:19:36 -0700
-Message-ID: <20150512071936.GB16731@infradead.org>
-References: <201504231103.t3NB3e1u029800@palmhbs0.lsi.com>
- <20150511091805.GG28820@infradead.org>
- <5e1ce6ee219828a9d0d000be4836f973@mail.gmail.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH] ufs-qcom: Switch dependency to ARCH_QCOM
+Date: Tue, 12 May 2015 07:20:24 -0000
+Message-ID: <9e7a75b3e508f29e0fb350ef853ce229.squirrel@www.codeaurora.org>
+References: <1428707466-24526-5-git-send-email-sboyd@codeaurora.org>
+    <1730be19bac4946d9c15fa7c99cfbbc0.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33732 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbbELHTh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2015 03:19:37 -0400
-Content-Disposition: inline
-In-Reply-To: <5e1ce6ee219828a9d0d000be4836f973@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1730be19bac4946d9c15fa7c99cfbbc0.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: Stephen Boyd <sboyd@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, Yaniv Gardi <ygardi@codeaurora.org>, Dov Levenglick <dovl@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, David Brown <davidb@codeaurora.org>, Bryan Huntsman <bryanh@codeaurora.org>, Daniel Walker <dwalker@fifo99.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
 
-On Mon, May 11, 2015 at 03:27:19PM +0530, Sumit Saxena wrote:
-> Yes, it's not needed. I will remove this printk. If I resend only this
-> patch, then subsequent patches will be affected and needs to be recreated.
-> If you are Ok, then I can send a patch to remove this printk rebased on
-> top of this series.
+I'd change the tag to Reviewed-by.
 
-Sounds fine to me.  With that the series look ok to me:
+looks-good.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
+
+
+> looks good.
+>
+> Acked-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+>
+>> This device only exists on platforms under ARCH_QCOM, not
+>> ARCH_MSM.
+>>
+>> Cc: Yaniv Gardi <ygardi@codeaurora.org>
+>> Cc: Dov Levenglick <dovl@codeaurora.org>
+>> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+>> Cc: David Brown <davidb@codeaurora.org>
+>> Cc: Bryan Huntsman <bryanh@codeaurora.org>
+>> Cc: Daniel Walker <dwalker@fifo99.com>
+>> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/Kconfig | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+>> index 8a1f4b355416..e94538362536 100644
+>> --- a/drivers/scsi/ufs/Kconfig
+>> +++ b/drivers/scsi/ufs/Kconfig
+>> @@ -73,7 +73,7 @@ config SCSI_UFSHCD_PLATFORM
+>>
+>>  config SCSI_UFS_QCOM
+>>  	bool "QCOM specific hooks to UFS controller platform driver"
+>> -	depends on SCSI_UFSHCD_PLATFORM && ARCH_MSM
+>> +	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+>>  	select PHY_QCOM_UFS
+>>  	help
+>>  	  This selects the QCOM specific additions to UFSHCD platform driver.
+>> --
+>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+>> Forum,
+>> a Linux Foundation Collaborative Project
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
