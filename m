@@ -1,451 +1,739 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 08/12] target/pr: Change alloc_registration to avoid pr_reg_tg_pt_lun
-Date: Tue, 12 May 2015 09:25:32 +0000
-Message-ID: <1431422736-29125-9-git-send-email-nab@daterainc.com>
+Subject: [PATCH 09/12] target: Convert se_portal_group->tpg_lun_list[] to RCU hlist
+Date: Tue, 12 May 2015 09:25:33 +0000
+Message-ID: <1431422736-29125-10-git-send-email-nab@daterainc.com>
 References: <1431422736-29125-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1431422736-29125-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes __core_scsi3_do_alloc_registration() code to
-drop pr_reg->pr_reg_tg_pt_lun pointer usage in favor of a new
-pr_reg RPTI + existing target_lun.
+This patch converts the fixed size se_portal_group->tpg_lun_list[]
+to use modern RCU with hlist_head in order to support an arbitary
+number of se_lun ports per target endpoint.
 
-It also includes changes to REGISTER, REGISTER_AND_MOVE and APTPL
-feature bit codepaths.
+It includes dropping core_tpg_alloc_lun() from core_dev_add_lun(),
+and calling it directly from target_fabric_make_lun() to allocate
+a new se_lun.
+
+Also add a new target_fabric_port_release() configfs item callback
+to invoke call_rcu() to release memory during se_lun->lun_group
+shutdown.
+
+Also now that se_node_acl->lun_entry_hlist is using RCU, convert
+existing tpg_lun_lock to struct mutex so core_tpg_add_node_to_devs()
+can perform RCU updater logic without releasing ->tpg_lun_mutex.
+
+FIXME: Figure out how sbp-target se_lun usage should work
 
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   6 +-
- drivers/target/target_core_pr.c       | 110 +++++++++++++++-------------------
- include/target/target_core_base.h     |   4 +-
- 3 files changed, 53 insertions(+), 67 deletions(-)
+ drivers/target/iscsi/iscsi_target_tpg.c      |   2 -
+ drivers/target/sbp/sbp_target.c              |  16 ++--
+ drivers/target/target_core_device.c          |  92 ++----------------
+ drivers/target/target_core_fabric_configfs.c |  32 ++++---
+ drivers/target/target_core_internal.h        |   7 +-
+ drivers/target/target_core_tpg.c             | 135 +++++++--------------------
+ drivers/xen/xen-scsiback.c                   |  27 +++---
+ include/target/target_core_base.h            |   6 +-
+ include/target/target_core_fabric.h          |   1 -
+ 9 files changed, 88 insertions(+), 230 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 2768221..67d6d5f 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -817,7 +817,6 @@ static ssize_t target_core_dev_pr_show_attr_res_pr_holder_tg_port(
- 		struct se_device *dev, char *page)
- {
- 	struct se_node_acl *se_nacl;
--	struct se_lun *lun;
- 	struct se_portal_group *se_tpg;
- 	struct t10_pr_registration *pr_reg;
- 	const struct target_core_fabric_ops *tfo;
-@@ -832,7 +831,6 @@ static ssize_t target_core_dev_pr_show_attr_res_pr_holder_tg_port(
- 
- 	se_nacl = pr_reg->pr_reg_nacl;
- 	se_tpg = se_nacl->se_tpg;
--	lun = pr_reg->pr_reg_tg_pt_lun;
- 	tfo = se_tpg->se_tpg_tfo;
- 
- 	len += sprintf(page+len, "SPC-3 Reservation: %s"
-@@ -840,9 +838,9 @@ static ssize_t target_core_dev_pr_show_attr_res_pr_holder_tg_port(
- 		tfo->tpg_get_wwn(se_tpg));
- 	len += sprintf(page+len, "SPC-3 Reservation: Relative Port"
- 		" Identifier Tag: %hu %s Portal Group Tag: %hu"
--		" %s Logical Unit: %u\n", lun->lun_sep->sep_rtpi,
-+		" %s Logical Unit: %u\n", pr_reg->tg_pt_sep_rtpi,
- 		tfo->get_fabric_name(), tfo->tpg_get_tag(se_tpg),
--		tfo->get_fabric_name(), lun->unpacked_lun);
-+		tfo->get_fabric_name(), pr_reg->pr_aptpl_target_lun);
- 
- out_unlock:
- 	spin_unlock(&dev->dev_reservation_lock);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 491043d..518b4f3 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -44,11 +44,10 @@
-  * Used for Specify Initiator Ports Capable Bit (SPEC_I_PT)
-  */
- struct pr_transport_id_holder {
--	int dest_local_nexus;
- 	struct t10_pr_registration *dest_pr_reg;
- 	struct se_portal_group *dest_tpg;
- 	struct se_node_acl *dest_node_acl;
--	struct se_dev_entry __rcu *dest_se_deve;
-+	struct se_dev_entry *dest_se_deve;
- 	struct list_head dest_list;
- };
- 
-@@ -625,7 +624,9 @@ static u32 core_scsi3_pr_generation(struct se_device *dev)
- static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
- 	struct se_device *dev,
- 	struct se_node_acl *nacl,
-+	struct se_lun *lun,
- 	struct se_dev_entry *deve,
-+	u32 mapped_lun,
- 	unsigned char *isid,
- 	u64 sa_res_key,
- 	int all_tg_pt,
-@@ -647,12 +648,12 @@ static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
- 	atomic_set(&pr_reg->pr_res_holders, 0);
- 	pr_reg->pr_reg_nacl = nacl;
- 	pr_reg->pr_reg_deve = deve;
--	pr_reg->pr_res_mapped_lun = deve->mapped_lun;
--	pr_reg->pr_aptpl_target_lun = deve->se_lun->unpacked_lun;
-+	pr_reg->pr_res_mapped_lun = mapped_lun;
-+	pr_reg->pr_aptpl_target_lun = lun->unpacked_lun;
-+	pr_reg->tg_pt_sep_rtpi = lun->lun_sep->sep_rtpi;
- 	pr_reg->pr_res_key = sa_res_key;
- 	pr_reg->pr_reg_all_tg_pt = all_tg_pt;
- 	pr_reg->pr_reg_aptpl = aptpl;
--	pr_reg->pr_reg_tg_pt_lun = deve->se_lun;
- 	/*
- 	 * If an ISID value for this SCSI Initiator Port exists,
- 	 * save it to the registration now.
-@@ -676,7 +677,9 @@ static void core_scsi3_lunacl_undepend_item(struct se_dev_entry *);
- static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 	struct se_device *dev,
- 	struct se_node_acl *nacl,
-+	struct se_lun *lun,
- 	struct se_dev_entry *deve,
-+	u32 mapped_lun,
- 	unsigned char *isid,
- 	u64 sa_res_key,
- 	int all_tg_pt,
-@@ -692,8 +695,9 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 	 * Create a registration for the I_T Nexus upon which the
- 	 * PROUT REGISTER was received.
- 	 */
--	pr_reg = __core_scsi3_do_alloc_registration(dev, nacl, deve, isid,
--			sa_res_key, all_tg_pt, aptpl);
-+	pr_reg = __core_scsi3_do_alloc_registration(dev, nacl, lun, deve, mapped_lun,
-+						    isid, sa_res_key, all_tg_pt,
-+						    aptpl);
- 	if (!pr_reg)
- 		return NULL;
- 	/*
-@@ -765,8 +769,9 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 			 * __core_scsi3_add_registration()
- 			 */
- 			pr_reg_atp = __core_scsi3_do_alloc_registration(dev,
--						nacl_tmp, deve_tmp, NULL,
--						sa_res_key, all_tg_pt, aptpl);
-+						nacl_tmp, deve_tmp->se_lun,
-+						deve_tmp, deve_tmp->mapped_lun,
-+						NULL, sa_res_key, all_tg_pt, aptpl);
- 			if (!pr_reg_atp) {
- 				atomic_dec_mb(&port->sep_tg_pt_ref_cnt);
- 				core_scsi3_lunacl_undepend_item(deve_tmp);
-@@ -835,7 +840,6 @@ int core_scsi3_alloc_aptpl_registration(
- 	pr_reg->pr_res_key = sa_res_key;
- 	pr_reg->pr_reg_all_tg_pt = all_tg_pt;
- 	pr_reg->pr_reg_aptpl = 1;
--	pr_reg->pr_reg_tg_pt_lun = NULL;
- 	pr_reg->pr_res_scope = 0; /* Always LUN_SCOPE */
- 	pr_reg->pr_res_type = type;
- 	/*
-@@ -935,7 +939,7 @@ static int __core_scsi3_check_aptpl_registration(
- 		     (pr_reg->pr_aptpl_target_lun == target_lun)) {
- 
- 			pr_reg->pr_reg_nacl = nacl;
--			pr_reg->pr_reg_tg_pt_lun = lun;
-+			pr_reg->tg_pt_sep_rtpi = lun->lun_sep->sep_rtpi;
- 
- 			list_del(&pr_reg->pr_reg_aptpl_list);
- 			spin_unlock(&pr_tmpl->aptpl_reg_lock);
-@@ -1102,7 +1106,9 @@ static void __core_scsi3_add_registration(
- static int core_scsi3_alloc_registration(
- 	struct se_device *dev,
- 	struct se_node_acl *nacl,
-+	struct se_lun *lun,
- 	struct se_dev_entry *deve,
-+	u32 mapped_lun,
- 	unsigned char *isid,
- 	u64 sa_res_key,
- 	int all_tg_pt,
-@@ -1112,8 +1118,9 @@ static int core_scsi3_alloc_registration(
- {
- 	struct t10_pr_registration *pr_reg;
- 
--	pr_reg = __core_scsi3_alloc_registration(dev, nacl, deve, isid,
--			sa_res_key, all_tg_pt, aptpl);
-+	pr_reg = __core_scsi3_alloc_registration(dev, nacl, lun, deve, mapped_lun,
-+						 isid, sa_res_key, all_tg_pt,
-+						 aptpl);
- 	if (!pr_reg)
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 3af76e3..86f888e 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -281,8 +281,6 @@ int iscsit_tpg_del_portal_group(
  		return -EPERM;
- 
-@@ -1474,7 +1481,6 @@ static sense_reason_t
- core_scsi3_decode_spec_i_port(
- 	struct se_cmd *cmd,
- 	struct se_portal_group *tpg,
--	struct se_dev_entry *local_se_deve,
- 	unsigned char *l_isid,
- 	u64 sa_res_key,
- 	int all_tg_pt,
-@@ -1485,7 +1491,7 @@ core_scsi3_decode_spec_i_port(
- 	struct se_portal_group *dest_tpg = NULL, *tmp_tpg;
- 	struct se_session *se_sess = cmd->se_sess;
- 	struct se_node_acl *dest_node_acl = NULL;
--	struct se_dev_entry __rcu *dest_se_deve = NULL;
-+	struct se_dev_entry *dest_se_deve = NULL;
- 	struct t10_pr_registration *dest_pr_reg, *local_pr_reg, *pr_reg_e;
- 	struct t10_pr_registration *pr_reg_tmp, *pr_reg_tmp_safe;
- 	LIST_HEAD(tid_dest_list);
-@@ -1495,14 +1501,12 @@ core_scsi3_decode_spec_i_port(
- 	char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN];
- 	sense_reason_t ret;
- 	u32 tpdl, tid_len = 0;
--	int dest_local_nexus;
- 	u32 dest_rtpi = 0;
- 
- 	/*
- 	 * Allocate a struct pr_transport_id_holder and setup the
--	 * local_node_acl and local_se_deve pointers and add to
--	 * struct list_head tid_dest_list for add registration
--	 * processing in the loop of tid_dest_list below.
-+	 * local_node_acl pointer and add to struct list_head tid_dest_list
-+	 * for add registration processing in the loop of tid_dest_list below.
- 	 */
- 	tidh_new = kzalloc(sizeof(struct pr_transport_id_holder), GFP_KERNEL);
- 	if (!tidh_new) {
-@@ -1514,20 +1518,20 @@ core_scsi3_decode_spec_i_port(
- 	tidh_new->dest_node_acl = se_sess->se_node_acl;
- 
- 	local_pr_reg = __core_scsi3_alloc_registration(cmd->se_dev,
--				se_sess->se_node_acl, local_se_deve, l_isid,
-+				se_sess->se_node_acl, cmd->se_lun,
-+				NULL, cmd->orig_fe_lun, l_isid,
- 				sa_res_key, all_tg_pt, aptpl);
- 	if (!local_pr_reg) {
- 		kfree(tidh_new);
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
  	}
--	rcu_assign_pointer(tidh_new->dest_se_deve, local_se_deve);
- 	tidh_new->dest_pr_reg = local_pr_reg;
- 	/*
- 	 * The local I_T nexus does not hold any configfs dependances,
--	 * so we set tid_h->dest_local_nexus=1 to prevent the
-+	 * so we set tidh_new->dest_se_deve to NULL to prevent the
- 	 * configfs_undepend_item() calls in the tid_dest_list loops below.
- 	 */
--	tidh_new->dest_local_nexus = 1;
-+	tidh_new->dest_se_deve = NULL;
- 	list_add_tail(&tidh_new->dest_list, &tid_dest_list);
  
- 	if (cmd->data_length < 28) {
-@@ -1745,8 +1749,9 @@ core_scsi3_decode_spec_i_port(
- 		 * 2nd loop which will never fail.
- 		 */
- 		dest_pr_reg = __core_scsi3_alloc_registration(cmd->se_dev,
--				dest_node_acl, dest_se_deve, iport_ptr,
--				sa_res_key, all_tg_pt, aptpl);
-+					dest_node_acl, dest_se_deve->se_lun,
-+					dest_se_deve, dest_se_deve->mapped_lun,
-+					iport_ptr, sa_res_key, all_tg_pt, aptpl);
- 		if (!dest_pr_reg) {
- 			core_scsi3_lunacl_undepend_item(dest_se_deve);
- 			core_scsi3_nodeacl_undepend_item(dest_node_acl);
-@@ -1784,7 +1789,6 @@ core_scsi3_decode_spec_i_port(
- 		dest_node_acl = tidh->dest_node_acl;
- 		dest_se_deve = tidh->dest_se_deve;
- 		dest_pr_reg = tidh->dest_pr_reg;
--		dest_local_nexus = tidh->dest_local_nexus;
+-	core_tpg_clear_object_luns(&tpg->tpg_se_tpg);
+-
+ 	if (tpg->param_list) {
+ 		iscsi_release_param_list(tpg->param_list);
+ 		tpg->param_list = NULL;
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index 5d7755e..e5258d6 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -182,13 +182,13 @@ static struct se_lun *sbp_get_lun_from_tpg(struct sbp_tpg *tpg, int lun)
+ 	if (lun >= TRANSPORT_MAX_LUNS_PER_TPG)
+ 		return ERR_PTR(-EINVAL);
  
- 		list_del(&tidh->dest_list);
- 		kfree(tidh);
-@@ -1798,9 +1802,10 @@ core_scsi3_decode_spec_i_port(
- 		pr_debug("SPC-3 PR [%s] SPEC_I_PT: Successfully"
- 			" registered Transport ID for Node: %s%s Mapped LUN:"
- 			" %u\n", dest_tpg->se_tpg_tfo->get_fabric_name(),
--			dest_node_acl->initiatorname, i_buf, dest_se_deve->mapped_lun);
-+			dest_node_acl->initiatorname, i_buf, (dest_se_deve) ?
-+			dest_se_deve->mapped_lun : 0);
+-	spin_lock(&se_tpg->tpg_lun_lock);
++	mutex_lock(&se_tpg->tpg_lun_mutex);
+ 	se_lun = se_tpg->tpg_lun_list[lun];
  
--		if (dest_local_nexus)
-+		if (!dest_se_deve)
+ 	if (se_lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
+ 		se_lun = ERR_PTR(-ENODEV);
+ 
+-	spin_unlock(&se_tpg->tpg_lun_lock);
++	mutex_unlock(&se_tpg->tpg_lun_mutex);
+ 
+ 	return se_lun;
+ }
+@@ -1828,7 +1828,7 @@ static int sbp_count_se_tpg_luns(struct se_portal_group *tpg)
+ {
+ 	int i, count = 0;
+ 
+-	spin_lock(&tpg->tpg_lun_lock);
++	mutex_lock(&tpg->tpg_lun_mutex);
+ 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+ 		struct se_lun *se_lun = tpg->tpg_lun_list[i];
+ 
+@@ -1837,7 +1837,7 @@ static int sbp_count_se_tpg_luns(struct se_portal_group *tpg)
+ 
+ 		count++;
+ 	}
+-	spin_unlock(&tpg->tpg_lun_lock);
++	mutex_unlock(&tpg->tpg_lun_mutex);
+ 
+ 	return count;
+ }
+@@ -1906,7 +1906,7 @@ static int sbp_update_unit_directory(struct sbp_tport *tport)
+ 	/* unit unique ID (leaf is just after LUNs) */
+ 	data[idx++] = 0x8d000000 | (num_luns + 1);
+ 
+-	spin_lock(&tport->tpg->se_tpg.tpg_lun_lock);
++	mutex_lock(&tport->tpg->se_tpg.tpg_lun_mutex);
+ 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+ 		struct se_lun *se_lun = tport->tpg->se_tpg.tpg_lun_list[i];
+ 		struct se_device *dev;
+@@ -1915,8 +1915,6 @@ static int sbp_update_unit_directory(struct sbp_tport *tport)
+ 		if (se_lun->lun_status == TRANSPORT_LUN_STATUS_FREE)
  			continue;
  
- 		core_scsi3_lunacl_undepend_item(dest_se_deve);
-@@ -1821,7 +1826,6 @@ out:
- 		dest_node_acl = tidh->dest_node_acl;
- 		dest_se_deve = tidh->dest_se_deve;
- 		dest_pr_reg = tidh->dest_pr_reg;
--		dest_local_nexus = tidh->dest_local_nexus;
+-		spin_unlock(&tport->tpg->se_tpg.tpg_lun_lock);
+-
+ 		dev = se_lun->lun_se_dev;
+ 		type = dev->transport->get_device_type(dev);
  
- 		list_del(&tidh->dest_list);
- 		kfree(tidh);
-@@ -1839,7 +1843,7 @@ out:
+@@ -1924,10 +1922,8 @@ static int sbp_update_unit_directory(struct sbp_tport *tport)
+ 		data[idx++] = 0x14000000 |
+ 			((type << 16) & 0x1f0000) |
+ 			(se_lun->unpacked_lun & 0xffff);
+-
+-		spin_lock(&tport->tpg->se_tpg.tpg_lun_lock);
+ 	}
+-	spin_unlock(&tport->tpg->se_tpg.tpg_lun_lock);
++	mutex_unlock(&tport->tpg->se_tpg.tpg_lun_mutex);
  
- 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+ 	/* unit unique ID leaf */
+ 	data[idx++] = 2 << 16;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 430d3d6..cf52847a 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1212,22 +1212,17 @@ int se_dev_set_block_size(struct se_device *dev, u32 block_size)
+ }
+ EXPORT_SYMBOL(se_dev_set_block_size);
  
--		if (dest_local_nexus)
-+		if (!dest_se_deve)
- 			continue;
- 
- 		core_scsi3_lunacl_undepend_item(dest_se_deve);
-@@ -1854,7 +1858,6 @@ static int core_scsi3_update_aptpl_buf(
- 	unsigned char *buf,
- 	u32 pr_aptpl_buf_len)
+-struct se_lun *core_dev_add_lun(
++int core_dev_add_lun(
+ 	struct se_portal_group *tpg,
+ 	struct se_device *dev,
+-	u32 unpacked_lun)
++	struct se_lun *lun)
  {
 -	struct se_lun *lun;
- 	struct se_portal_group *tpg;
- 	struct t10_pr_registration *pr_reg;
- 	unsigned char tmp[512], isid_buf[32];
-@@ -1873,7 +1876,6 @@ static int core_scsi3_update_aptpl_buf(
- 		tmp[0] = '\0';
- 		isid_buf[0] = '\0';
- 		tpg = pr_reg->pr_reg_nacl->se_tpg;
--		lun = pr_reg->pr_reg_tg_pt_lun;
- 		/*
- 		 * Write out any ISID value to APTPL metadata that was included
- 		 * in the original registration.
-@@ -1925,7 +1927,8 @@ static int core_scsi3_update_aptpl_buf(
- 			" %d\n", tpg->se_tpg_tfo->get_fabric_name(),
- 			tpg->se_tpg_tfo->tpg_get_wwn(tpg),
- 			tpg->se_tpg_tfo->tpg_get_tag(tpg),
--			lun->lun_sep->sep_rtpi, lun->unpacked_lun, reg_count);
-+			pr_reg->tg_pt_sep_rtpi, pr_reg->pr_aptpl_target_lun,
-+			reg_count);
+ 	int rc;
  
- 		if ((len + strlen(tmp) >= pr_aptpl_buf_len)) {
- 			pr_err("Unable to update renaming APTPL metadata,"
-@@ -2035,9 +2038,7 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
- 		bool aptpl, bool all_tg_pt, bool spec_i_pt, enum register_type register_type)
- {
- 	struct se_session *se_sess = cmd->se_sess;
--	struct se_node_acl *nacl = se_sess->se_node_acl;
- 	struct se_device *dev = cmd->se_dev;
--	struct se_dev_entry *se_deve;
- 	struct se_lun *se_lun = cmd->se_lun;
- 	struct se_portal_group *se_tpg;
- 	struct t10_pr_registration *pr_reg, *pr_reg_p, *pr_reg_tmp;
-@@ -2052,14 +2053,6 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
+-	lun = core_tpg_alloc_lun(tpg, unpacked_lun);
+-	if (IS_ERR(lun))
+-		return lun;
+-
+ 	rc = core_tpg_add_lun(tpg, lun,
+ 				TRANSPORT_LUNFLAGS_READ_WRITE, dev);
+ 	if (rc < 0)
+-		return ERR_PTR(rc);
++		return rc;
+ 
+ 	pr_debug("%s_TPG[%u]_LUN[%u] - Activated %s Logical Unit from"
+ 		" CORE HBA: %u\n", tpg->se_tpg_tfo->get_fabric_name(),
+@@ -1252,7 +1247,7 @@ struct se_lun *core_dev_add_lun(
+ 		spin_unlock_irq(&tpg->acl_node_lock);
  	}
- 	se_tpg = se_sess->se_tpg;
  
--	rcu_read_lock();
--	se_deve = target_nacl_find_deve(nacl, cmd->orig_fe_lun);
--	if (!se_deve) {
--		pr_err("Unable to locate se_deve for PRO-REGISTER\n");
--		rcu_read_unlock();
--		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-	return lun;
++	return 0;
+ }
+ 
+ /*      core_dev_del_lun():
+@@ -1271,68 +1266,6 @@ void core_dev_del_lun(
+ 	core_tpg_remove_lun(tpg, lun);
+ }
+ 
+-struct se_lun *core_get_lun_from_tpg(struct se_portal_group *tpg, u32 unpacked_lun)
+-{
+-	struct se_lun *lun;
+-
+-	spin_lock(&tpg->tpg_lun_lock);
+-	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
+-		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS"
+-			"_PER_TPG-1: %u for Target Portal Group: %hu\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			TRANSPORT_MAX_LUNS_PER_TPG-1,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return NULL;
+-	}
+-	lun = tpg->tpg_lun_list[unpacked_lun];
+-
+-	if (lun->lun_status != TRANSPORT_LUN_STATUS_FREE) {
+-		pr_err("%s Logical Unit Number: %u is not free on"
+-			" Target Portal Group: %hu, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return NULL;
+-	}
+-	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return lun;
+-}
+-
+-/*      core_dev_get_lun():
+- *
+- *
+- */
+-static struct se_lun *core_dev_get_lun(struct se_portal_group *tpg, u32 unpacked_lun)
+-{
+-	struct se_lun *lun;
+-
+-	spin_lock(&tpg->tpg_lun_lock);
+-	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
+-		pr_err("%s LUN: %u exceeds TRANSPORT_MAX_LUNS_PER"
+-			"_TPG-1: %u for Target Portal Group: %hu\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			TRANSPORT_MAX_LUNS_PER_TPG-1,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return NULL;
+-	}
+-	lun = tpg->tpg_lun_list[unpacked_lun];
+-
+-	if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) {
+-		pr_err("%s Logical Unit Number: %u is not active on"
+-			" Target Portal Group: %hu, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return NULL;
+-	}
+-	spin_unlock(&tpg->tpg_lun_lock);
+-
+-	return lun;
+-}
+-
+ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(
+ 	struct se_portal_group *tpg,
+ 	struct se_node_acl *nacl,
+@@ -1366,22 +1299,11 @@ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(
+ int core_dev_add_initiator_node_lun_acl(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun_acl *lacl,
+-	u32 unpacked_lun,
++	struct se_lun *lun,
+ 	u32 lun_access)
+ {
+-	struct se_lun *lun;
+-	struct se_node_acl *nacl;
++	struct se_node_acl *nacl = lacl->se_lun_nacl;
+ 
+-	lun = core_dev_get_lun(tpg, unpacked_lun);
+-	if (!lun) {
+-		pr_err("%s Logical Unit Number: %u is not active on"
+-			" Target Portal Group: %hu, ignoring request.\n",
+-			tpg->se_tpg_tfo->get_fabric_name(), unpacked_lun,
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		return -EINVAL;
 -	}
 -
- 	if (se_tpg->se_tpg_tfo->sess_get_initiator_sid) {
- 		memset(&isid_buf[0], 0, PR_REG_ISID_LEN);
- 		se_tpg->se_tpg_tfo->sess_get_initiator_sid(se_sess, &isid_buf[0],
-@@ -2074,16 +2067,14 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
- 		if (res_key) {
- 			pr_warn("SPC-3 PR: Reservation Key non-zero"
- 				" for SA REGISTER, returning CONFLICT\n");
--			rcu_read_unlock();
- 			return TCM_RESERVATION_CONFLICT;
- 		}
- 		/*
- 		 * Do nothing but return GOOD status.
- 		 */
--		if (!sa_res_key) {
--			rcu_read_unlock();
-+		if (!sa_res_key)
- 			return 0;
--		}
-+
- 		if (!spec_i_pt) {
- 			/*
- 			 * Perform the Service Action REGISTER on the Initiator
-@@ -2091,12 +2082,12 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
- 			 * Logical Unit of the SCSI device server.
- 			 */
- 			if (core_scsi3_alloc_registration(cmd->se_dev,
--					se_sess->se_node_acl, se_deve, isid_ptr,
-+					se_sess->se_node_acl, cmd->se_lun,
-+					NULL, cmd->orig_fe_lun, isid_ptr,
- 					sa_res_key, all_tg_pt, aptpl,
- 					register_type, 0)) {
- 				pr_err("Unable to allocate"
- 					" struct t10_pr_registration\n");
--				rcu_read_unlock();
- 				return TCM_INVALID_PARAMETER_LIST;
- 			}
- 		} else {
-@@ -2108,17 +2099,13 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
- 			 * logic from of core_scsi3_alloc_registration() for
- 			 * each TransportID provided SCSI Initiator Port/Device
- 			 */
--			ret = core_scsi3_decode_spec_i_port(cmd, se_tpg, se_deve,
-+			ret = core_scsi3_decode_spec_i_port(cmd, se_tpg,
- 					isid_ptr, sa_res_key, all_tg_pt, aptpl);
--			if (ret != 0) {
--				rcu_read_unlock();
-+			if (ret != 0)
- 				return ret;
--			}
- 		}
--		rcu_read_unlock();
- 		return core_scsi3_update_and_write_aptpl(dev, aptpl);
+-	nacl = lacl->se_lun_nacl;
+ 	if (!nacl)
+ 		return -EINVAL;
+ 
+@@ -1402,7 +1324,7 @@ int core_dev_add_initiator_node_lun_acl(
+ 
+ 	pr_debug("%s_TPG[%hu]_LUN[%u->%u] - Added %s ACL for "
+ 		" InitiatorNode: %s\n", tpg->se_tpg_tfo->get_fabric_name(),
+-		tpg->se_tpg_tfo->tpg_get_tag(tpg), unpacked_lun, lacl->mapped_lun,
++		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun, lacl->mapped_lun,
+ 		(lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) ? "RW" : "RO",
+ 		lacl->initiatorname);
+ 	/*
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 0dab6d5..7fe69c4 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -81,7 +81,7 @@ static int target_fabric_mappedlun_link(
+ 			struct se_lun_acl, se_lun_group);
+ 	struct se_portal_group *se_tpg;
+ 	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
+-	int ret = 0, lun_access;
++	int lun_access;
+ 
+ 	if (lun->lun_link_magic != SE_LUN_LINK_MAGIC) {
+ 		pr_err("Bad lun->lun_link_magic, not a valid lun_ci pointer:"
+@@ -137,12 +137,9 @@ static int target_fabric_mappedlun_link(
+ 	 * Determine the actual mapped LUN value user wants..
+ 	 *
+ 	 * This value is what the SCSI Initiator actually sees the
+-	 * iscsi/$IQN/$TPGT/lun/lun_* as on their SCSI Initiator Ports.
++	 * $FABRIC/$WWPN/$TPGT/lun/lun_* as on their SCSI Initiator Ports.
+ 	 */
+-	ret = core_dev_add_initiator_node_lun_acl(se_tpg, lacl,
+-			lun->unpacked_lun, lun_access);
+-
+-	return (ret < 0) ? -EINVAL : 0;
++	return core_dev_add_initiator_node_lun_acl(se_tpg, lacl, lun, lun_access);
+ }
+ 
+ static int target_fabric_mappedlun_unlink(
+@@ -775,7 +772,6 @@ static int target_fabric_port_link(
+ 	struct config_item *tpg_ci;
+ 	struct se_lun *lun = container_of(to_config_group(lun_ci),
+ 				struct se_lun, lun_group);
+-	struct se_lun *lun_p;
+ 	struct se_portal_group *se_tpg;
+ 	struct se_device *dev =
+ 		container_of(to_config_group(se_dev_ci), struct se_device, dev_group);
+@@ -803,10 +799,9 @@ static int target_fabric_port_link(
+ 		return -EEXIST;
  	}
--	rcu_read_unlock();
  
- 	/* ok, existing registration */
+-	lun_p = core_dev_add_lun(se_tpg, dev, lun->unpacked_lun);
+-	if (IS_ERR(lun_p)) {
+-		pr_err("core_dev_add_lun() failed\n");
+-		ret = PTR_ERR(lun_p);
++	ret = core_dev_add_lun(se_tpg, dev, lun);
++	if (ret) {
++		pr_err("core_dev_add_lun() failed: %d\n", ret);
+ 		goto out;
+ 	}
  
-@@ -3465,9 +3452,10 @@ after_iport_check:
- 					iport_ptr);
- 	if (!dest_pr_reg) {
- 		spin_unlock(&dev->dev_reservation_lock);
--		if (core_scsi3_alloc_registration(cmd->se_dev,
--				dest_node_acl, dest_se_deve, iport_ptr,
--				sa_res_key, 0, aptpl, 2, 1)) {
-+		if (core_scsi3_alloc_registration(cmd->se_dev, dest_node_acl,
-+					dest_se_deve->se_lun, dest_se_deve,
-+					dest_se_deve->mapped_lun, iport_ptr,
-+					sa_res_key, 0, aptpl, 2, 1)) {
- 			ret = TCM_INVALID_PARAMETER_LIST;
- 			goto out;
- 		}
-@@ -4035,10 +4023,10 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 		 * IDENTIFIER field are not defined by this standard.
+@@ -846,9 +841,18 @@ static int target_fabric_port_unlink(
+ 	return 0;
+ }
+ 
++static void target_fabric_port_release(struct config_item *item)
++{
++	struct se_lun *lun = container_of(to_config_group(item),
++					  struct se_lun, lun_group);
++
++	call_rcu(&lun->rcu_head, target_lun_callrcu);
++}
++
+ static struct configfs_item_operations target_fabric_port_item_ops = {
+ 	.show_attribute		= target_fabric_port_attr_show,
+ 	.store_attribute	= target_fabric_port_attr_store,
++	.release		= target_fabric_port_release,
+ 	.allow_link		= target_fabric_port_link,
+ 	.drop_link		= target_fabric_port_unlink,
+ };
+@@ -907,15 +911,16 @@ static struct config_group *target_fabric_make_lun(
+ 	if (unpacked_lun > UINT_MAX)
+ 		return ERR_PTR(-EINVAL);
+ 
+-	lun = core_get_lun_from_tpg(se_tpg, unpacked_lun);
++	lun = core_tpg_alloc_lun(se_tpg, unpacked_lun);
+ 	if (!lun)
+-		return ERR_PTR(-EINVAL);
++		return ERR_PTR(-ENOMEM);
+ 
+ 	lun_cg = &lun->lun_group;
+ 	lun_cg->default_groups = kmalloc(sizeof(struct config_group *) * 2,
+ 				GFP_KERNEL);
+ 	if (!lun_cg->default_groups) {
+ 		pr_err("Unable to allocate lun_cg->default_groups\n");
++		kfree(lun);
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+@@ -932,6 +937,7 @@ static struct config_group *target_fabric_make_lun(
+ 	if (!port_stat_grp->default_groups) {
+ 		pr_err("Unable to allocate port_stat_grp->default_groups\n");
+ 		kfree(lun_cg->default_groups);
++		kfree(lun);
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	target_stat_setup_port_default_groups(lun);
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index f57bb61..3627299 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -23,13 +23,13 @@ int	core_dev_export(struct se_device *, struct se_portal_group *,
+ 		struct se_lun *);
+ void	core_dev_unexport(struct se_device *, struct se_portal_group *,
+ 		struct se_lun *);
+-struct se_lun *core_dev_add_lun(struct se_portal_group *, struct se_device *, u32);
++int	core_dev_add_lun(struct se_portal_group *, struct se_device *,
++		struct se_lun *lun);
+ void	core_dev_del_lun(struct se_portal_group *, struct se_lun *);
+-struct se_lun *core_get_lun_from_tpg(struct se_portal_group *, u32);
+ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(struct se_portal_group *,
+ 		struct se_node_acl *, u32, int *);
+ int	core_dev_add_initiator_node_lun_acl(struct se_portal_group *,
+-		struct se_lun_acl *, u32, u32);
++		struct se_lun_acl *, struct se_lun *lun, u32);
+ int	core_dev_del_initiator_node_lun_acl(struct se_portal_group *,
+ 		struct se_lun *, struct se_lun_acl *);
+ void	core_dev_free_initiator_node_lun_acl(struct se_portal_group *,
+@@ -69,6 +69,7 @@ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		u32, struct se_device *);
++void target_lun_callrcu(struct rcu_head *);
+ void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
+ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *tpg,
+ 		const char *initiatorname);
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index f9487e5..a256d89 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -124,19 +124,15 @@ void core_tpg_add_node_to_devs(
+ 	struct se_node_acl *acl,
+ 	struct se_portal_group *tpg)
+ {
+-	int i = 0;
+ 	u32 lun_access = 0;
+ 	struct se_lun *lun;
+ 	struct se_device *dev;
+ 
+-	spin_lock(&tpg->tpg_lun_lock);
+-	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+-		lun = tpg->tpg_lun_list[i];
++	mutex_lock(&tpg->tpg_lun_mutex);
++	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link) {
+ 		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
+ 			continue;
+ 
+-		spin_unlock(&tpg->tpg_lun_lock);
+-
+ 		dev = lun->lun_se_dev;
+ 		/*
+ 		 * By default in LIO-Target $FABRIC_MOD,
+@@ -163,7 +159,7 @@ void core_tpg_add_node_to_devs(
+ 			"READ-WRITE" : "READ-ONLY");
+ 
+ 		core_enable_device_list_for_node(lun, NULL, lun->unpacked_lun,
+-				lun_access, acl, tpg);
++						 lun_access, acl, tpg);
+ 		/*
+ 		 * Check to see if there are any existing persistent reservation
+ 		 * APTPL pre-registrations that need to be enabled for this dynamic
+@@ -171,9 +167,8 @@ void core_tpg_add_node_to_devs(
  		 */
- 		if (!pr_reg->pr_reg_all_tg_pt) {
--			struct se_port *port = pr_reg->pr_reg_tg_pt_lun->lun_sep;
-+			u16 sep_rtpi = pr_reg->tg_pt_sep_rtpi;
+ 		core_scsi3_check_aptpl_registration(dev, tpg, lun, acl,
+ 						    lun->unpacked_lun);
+-		spin_lock(&tpg->tpg_lun_lock);
+ 	}
+-	spin_unlock(&tpg->tpg_lun_lock);
++	mutex_unlock(&tpg->tpg_lun_mutex);
+ }
  
--			buf[off++] = ((port->sep_rtpi >> 8) & 0xff);
--			buf[off++] = (port->sep_rtpi & 0xff);
-+			buf[off++] = ((sep_rtpi >> 8) & 0xff);
-+			buf[off++] = (sep_rtpi & 0xff);
- 		} else
- 			off += 2; /* Skip over RELATIVE TARGET PORT IDENTIFIER */
+ /*      core_set_queue_depth_for_node():
+@@ -194,34 +189,6 @@ static int core_set_queue_depth_for_node(
+ 	return 0;
+ }
  
+-void array_free(void *array, int n)
+-{
+-	void **a = array;
+-	int i;
+-
+-	for (i = 0; i < n; i++)
+-		kfree(a[i]);
+-	kfree(a);
+-}
+-
+-static void *array_zalloc(int n, size_t size, gfp_t flags)
+-{
+-	void **a;
+-	int i;
+-
+-	a = kzalloc(n * sizeof(void*), flags);
+-	if (!a)
+-		return NULL;
+-	for (i = 0; i < n; i++) {
+-		a[i] = kzalloc(size, flags);
+-		if (!a[i]) {
+-			array_free(a, n);
+-			return NULL;
+-		}
+-	}
+-	return a;
+-}
+-
+ static struct se_node_acl *target_alloc_node_acl(struct se_portal_group *tpg,
+ 		const unsigned char *initiatorname)
+ {
+@@ -317,27 +284,6 @@ void core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *nacl)
+ 		cpu_relax();
+ }
+ 
+-void core_tpg_clear_object_luns(struct se_portal_group *tpg)
+-{
+-	int i;
+-	struct se_lun *lun;
+-
+-	spin_lock(&tpg->tpg_lun_lock);
+-	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+-		lun = tpg->tpg_lun_list[i];
+-
+-		if ((lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE) ||
+-		    (lun->lun_se_dev == NULL))
+-			continue;
+-
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		core_dev_del_lun(tpg, lun);
+-		spin_lock(&tpg->tpg_lun_lock);
+-	}
+-	spin_unlock(&tpg->tpg_lun_lock);
+-}
+-EXPORT_SYMBOL(core_tpg_clear_object_luns);
+-
+ struct se_node_acl *core_tpg_add_initiator_node_acl(
+ 	struct se_portal_group *tpg,
+ 	const char *initiatorname)
+@@ -601,30 +547,7 @@ int core_tpg_register(
+ 	struct se_portal_group *se_tpg,
+ 	int proto_id)
+ {
+-	struct se_lun *lun;
+-	u32 i;
+-
+-	se_tpg->tpg_lun_list = array_zalloc(TRANSPORT_MAX_LUNS_PER_TPG,
+-			sizeof(struct se_lun), GFP_KERNEL);
+-	if (!se_tpg->tpg_lun_list) {
+-		pr_err("Unable to allocate struct se_portal_group->"
+-				"tpg_lun_list\n");
+-		return -ENOMEM;
+-	}
+-
+-	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
+-		lun = se_tpg->tpg_lun_list[i];
+-		lun->unpacked_lun = i;
+-		lun->lun_link_magic = SE_LUN_LINK_MAGIC;
+-		lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+-		atomic_set(&lun->lun_acl_count, 0);
+-		init_completion(&lun->lun_shutdown_comp);
+-		INIT_LIST_HEAD(&lun->lun_acl_list);
+-		spin_lock_init(&lun->lun_acl_lock);
+-		spin_lock_init(&lun->lun_sep_lock);
+-		init_completion(&lun->lun_ref_comp);
+-	}
+-
++	INIT_HLIST_HEAD(&se_tpg->tpg_lun_hlist);
+ 	se_tpg->proto_id = proto_id;
+ 	se_tpg->se_tpg_tfo = tfo;
+ 	se_tpg->se_tpg_wwn = se_wwn;
+@@ -634,14 +557,11 @@ int core_tpg_register(
+ 	INIT_LIST_HEAD(&se_tpg->tpg_sess_list);
+ 	spin_lock_init(&se_tpg->acl_node_lock);
+ 	spin_lock_init(&se_tpg->session_lock);
+-	spin_lock_init(&se_tpg->tpg_lun_lock);
++	mutex_init(&se_tpg->tpg_lun_mutex);
+ 
+ 	if (se_tpg->proto_id >= 0) {
+-		if (core_tpg_setup_virtual_lun0(se_tpg) < 0) {
+-			array_free(se_tpg->tpg_lun_list,
+-				   TRANSPORT_MAX_LUNS_PER_TPG);
++		if (core_tpg_setup_virtual_lun0(se_tpg) < 0)
+ 			return -ENOMEM;
+-		}
+ 	}
+ 
+ 	spin_lock_bh(&tpg_lock);
+@@ -696,7 +616,6 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 	if (se_tpg->proto_id >= 0)
+ 		core_tpg_remove_lun(se_tpg, &se_tpg->tpg_virt_lun0);
+ 
+-	array_free(se_tpg->tpg_lun_list, TRANSPORT_MAX_LUNS_PER_TPG);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(core_tpg_deregister);
+@@ -716,17 +635,20 @@ struct se_lun *core_tpg_alloc_lun(
+ 		return ERR_PTR(-EOVERFLOW);
+ 	}
+ 
+-	spin_lock(&tpg->tpg_lun_lock);
+-	lun = tpg->tpg_lun_list[unpacked_lun];
+-	if (lun->lun_status == TRANSPORT_LUN_STATUS_ACTIVE) {
+-		pr_err("TPG Logical Unit Number: %u is already active"
+-			" on %s Target Portal Group: %u, ignoring request.\n",
+-			unpacked_lun, tpg->se_tpg_tfo->get_fabric_name(),
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg));
+-		spin_unlock(&tpg->tpg_lun_lock);
+-		return ERR_PTR(-EINVAL);
++	lun = kzalloc(sizeof(*lun), GFP_KERNEL);
++	if (!lun) {
++		pr_err("Unable to allocate se_lun memory\n");
++		return ERR_PTR(-ENOMEM);
+ 	}
+-	spin_unlock(&tpg->tpg_lun_lock);
++	lun->unpacked_lun = unpacked_lun;
++	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
++	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
++	atomic_set(&lun->lun_acl_count, 0);
++	init_completion(&lun->lun_shutdown_comp);
++	INIT_LIST_HEAD(&lun->lun_acl_list);
++	spin_lock_init(&lun->lun_acl_lock);
++	spin_lock_init(&lun->lun_sep_lock);
++	init_completion(&lun->lun_ref_comp);
+ 
+ 	return lun;
+ }
+@@ -750,14 +672,22 @@ int core_tpg_add_lun(
+ 		return ret;
+ 	}
+ 
+-	spin_lock(&tpg->tpg_lun_lock);
++	mutex_lock(&tpg->tpg_lun_mutex);
+ 	lun->lun_access = lun_access;
+ 	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
+-	spin_unlock(&tpg->tpg_lun_lock);
++	hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
++	mutex_unlock(&tpg->tpg_lun_mutex);
+ 
+ 	return 0;
+ }
+ 
++void target_lun_callrcu(struct rcu_head *head)
++{
++	struct se_lun *lun = container_of(head, struct se_lun, rcu_head);
++
++	kfree(lun);
++}
++
+ void core_tpg_remove_lun(
+ 	struct se_portal_group *tpg,
+ 	struct se_lun *lun)
+@@ -767,9 +697,10 @@ void core_tpg_remove_lun(
+ 
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+ 
+-	spin_lock(&tpg->tpg_lun_lock);
++	mutex_lock(&tpg->tpg_lun_mutex);
+ 	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+-	spin_unlock(&tpg->tpg_lun_lock);
++	hlist_del_rcu(&lun->link);
++	mutex_unlock(&tpg->tpg_lun_mutex);
+ 
+ 	percpu_ref_exit(&lun->lun_ref);
+ }
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 8b7dd47..555033b 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -866,7 +866,8 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	struct list_head *head = &(info->v2p_entry_lists);
+ 	unsigned long flags;
+ 	char *lunp;
+-	unsigned int lun;
++	unsigned int unpacked_lun;
++	struct se_lun *se_lun;
+ 	struct scsiback_tpg *tpg_entry, *tpg = NULL;
+ 	char *error = "doesn't exist";
+ 
+@@ -877,7 +878,7 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	}
+ 	*lunp = 0;
+ 	lunp++;
+-	if (kstrtouint(lunp, 10, &lun) || lun >= TRANSPORT_MAX_LUNS_PER_TPG) {
++	if (kstrtouint(lunp, 10, &unpacked_lun) || unpacked_lun >= TRANSPORT_MAX_LUNS_PER_TPG) {
+ 		pr_err("lun number not valid: %s\n", lunp);
+ 		return -EINVAL;
+ 	}
+@@ -886,15 +887,17 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	list_for_each_entry(tpg_entry, &scsiback_list, tv_tpg_list) {
+ 		if (!strcmp(phy, tpg_entry->tport->tport_name) ||
+ 		    !strcmp(phy, tpg_entry->param_alias)) {
+-			spin_lock(&tpg_entry->se_tpg.tpg_lun_lock);
+-			if (tpg_entry->se_tpg.tpg_lun_list[lun]->lun_status ==
+-			    TRANSPORT_LUN_STATUS_ACTIVE) {
+-				if (!tpg_entry->tpg_nexus)
+-					error = "nexus undefined";
+-				else
+-					tpg = tpg_entry;
++			mutex_lock(&tpg_entry->se_tpg.tpg_lun_mutex);
++			hlist_for_each_entry(se_lun, &tpg_entry->se_tpg.tpg_lun_hlist, link) {
++				if (se_lun->unpacked_lun == unpacked_lun) {
++					if (!tpg_entry->tpg_nexus)
++						error = "nexus undefined";
++					else
++						tpg = tpg_entry;
++					break;
++				}
+ 			}
+-			spin_unlock(&tpg_entry->se_tpg.tpg_lun_lock);
++			mutex_unlock(&tpg_entry->se_tpg.tpg_lun_mutex);
+ 			break;
+ 		}
+ 	}
+@@ -906,7 +909,7 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	mutex_unlock(&scsiback_mutex);
+ 
+ 	if (!tpg) {
+-		pr_err("%s:%d %s\n", phy, lun, error);
++		pr_err("%s:%d %s\n", phy, unpacked_lun, error);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -934,7 +937,7 @@ static int scsiback_add_translation_entry(struct vscsibk_info *info,
+ 	kref_init(&new->kref);
+ 	new->v = *v;
+ 	new->tpg = tpg;
+-	new->lun = lun;
++	new->lun = unpacked_lun;
+ 	list_add_tail(&new->l, head);
+ 
+ out:
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 2f0c830..a814063 100644
+index a814063..e342497 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -374,13 +374,14 @@ struct t10_pr_registration {
- 	bool isid_present_at_reg;
- 	u32 pr_res_mapped_lun;
- 	u32 pr_aptpl_target_lun;
-+	u16 tg_pt_sep_rtpi;
- 	u32 pr_res_generation;
- 	u64 pr_reg_bin_isid;
- 	u64 pr_res_key;
- 	atomic_t pr_res_holders;
- 	struct se_node_acl *pr_reg_nacl;
-+	/* Used by ALL_TG_PT=1 registration with deve->pr_ref taken */
- 	struct se_dev_entry *pr_reg_deve;
--	struct se_lun *pr_reg_tg_pt_lun;
- 	struct list_head pr_reg_list;
- 	struct list_head pr_reg_abort_list;
- 	struct list_head pr_reg_aptpl_list;
-@@ -500,7 +501,6 @@ struct se_cmd {
- 	struct list_head	se_delayed_node;
- 	struct list_head	se_qf_node;
- 	struct se_device      *se_dev;
--	struct se_dev_entry   *se_deve;
- 	struct se_lun		*se_lun;
- 	/* Only used for internal passthrough and legacy TCM fabric modules */
- 	struct se_session	*se_sess;
+@@ -725,6 +725,8 @@ struct se_lun {
+ 	struct se_port_stat_grps port_stat_grps;
+ 	struct completion	lun_ref_comp;
+ 	struct percpu_ref	lun_ref;
++	struct hlist_node	link;
++	struct rcu_head		rcu_head;
+ };
+ 
+ struct se_dev_stat_grps {
+@@ -877,11 +879,11 @@ struct se_portal_group {
+ 	spinlock_t		acl_node_lock;
+ 	/* Spinlock for adding/removing sessions */
+ 	spinlock_t		session_lock;
+-	spinlock_t		tpg_lun_lock;
++	struct mutex		tpg_lun_mutex;
+ 	struct list_head	se_tpg_node;
+ 	/* linked list for initiator ACL list */
+ 	struct list_head	acl_node_list;
+-	struct se_lun		**tpg_lun_list;
++	struct hlist_head	tpg_lun_hlist;
+ 	struct se_lun		tpg_virt_lun0;
+ 	/* List of TCM sessions associated wth this TPG */
+ 	struct list_head	tpg_sess_list;
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 55654c9..b1e00a7 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -157,7 +157,6 @@ struct se_node_acl *core_tpg_get_initiator_node_acl(struct se_portal_group *tpg,
+ 		unsigned char *);
+ struct se_node_acl *core_tpg_check_initiator_node_acl(struct se_portal_group *,
+ 		unsigned char *);
+-void	core_tpg_clear_object_luns(struct se_portal_group *);
+ int	core_tpg_set_initiator_node_queue_depth(struct se_portal_group *,
+ 		unsigned char *, u32, int);
+ int	core_tpg_set_initiator_node_tag(struct se_portal_group *,
 -- 
 1.9.1
