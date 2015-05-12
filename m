@@ -1,46 +1,71 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: mpt2sas DMA mask
-Date: Wed, 13 May 2015 08:10:27 +1000
-Message-ID: <1431468627.20218.64.camel@kernel.crashing.org>
-References: <555279A8.6060906@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 98171] New: [Regression] Marvell SE91xx SATA 3 controllers not
+ recognized correctly
+Date: Tue, 12 May 2015 22:22:08 +0000
+Message-ID: <bug-98171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36227 "EHLO gate.crashing.org"
+Received: from mail.kernel.org ([198.145.29.136]:43137 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753904AbbELWKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 May 2015 18:10:40 -0400
-In-Reply-To: <555279A8.6060906@linux.vnet.ibm.com>
+	id S1754079AbbELWWN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 May 2015 18:22:13 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E4600203F7
+	for <linux-scsi@vger.kernel.org>; Tue, 12 May 2015 22:22:10 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4442E203EC
+	for <linux-scsi@vger.kernel.org>; Tue, 12 May 2015 22:22:09 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, linux-scsi <linux-scsi@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2015-05-12 at 17:07 -0500, Brian King wrote:
-> The mpt2sas driver was changed late last year in that it now requests a 64 bit DMA
-> mask, then requests a 32 bit coherent DMA mask, then later requests a 64 bit coherent
-> DMA mask. This was 5fb1bf8aaa832e1e9ca3198de7bbecb8eff7db9c. This breaks 64 bit DMA
-> support for mpt2sas on Power and we always fall back to using 32 bit DMA. Looking
-> at the commit log, it looks like this was an intentional change.
-> 
-> Ben - you had a patch set you had posted to the list back in Feb of this year, but it
-> doesn't look like it got merged. 
+https://bugzilla.kernel.org/show_bug.cgi?id=98171
 
-Right, it was broken, we can't do that unfortunately. It's a hard
-problem to fix.
+            Bug ID: 98171
+           Summary: [Regression] Marvell SE91xx SATA 3 controllers not
+                    recognized correctly
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.15
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: nucrap@hotmail.com
+        Regression: No
 
-> https://lists.ozlabs.org/pipermail/linuxppc-dev/2015-February/125087.html
-> 
-> This would fix the issue I'm seeing on mpt2sas. Do you plan to dust that patch set
-> off and upstream it? Were there issues with it that still need to be resolved?
+Created attachment 176571
+  --> https://bugzilla.kernel.org/attachment.cgi?id=176571&action=edit
+full dmesg of my affected system
 
-No that patch doesn't actually work.
+Starting with kernel 3.15 Marvell SE91xx SATA 3 controllers are not getting
+recognized correctly. At early boot process, users get messages similar to
+this:
 
-What we need is essentially a new set of DMA ops that can route an
-individual map request via the iommu or the bypass window depending on
-what mask applies.
+kernel: ata16: EH complete
+kernel: ata16.00: configured for UDMA/66
+kernel: ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+kernel: ata16: hard resetting link
+kernel: ata16.00: cmd a0/01:00:00:00:01/00:00:00:00:00/a0 tag 2 dma 16640 in
+res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x3 (HSM violation)
+kernel: cdb[0]=0x12: 12 01 00 00 ff 00
+kernel: scsi 15:0:0:0: CDB:
+kernel: ata16.00: irq_stat 0x40000001
+kernel: ata16.00: exception Emask 0x1 SAct 0x0 SErr 0x0 action 0x6
+kernel: scsi 15:0:0:0: Processor Marvell 91xx Config 1.01 PQ: 0 ANSI: 5
+kernel: ata8: SATA link down (SStatus 0 SControl 300)
 
-Ben.
 
+There seems to be a high rate of users affected, and so far this issue can be
+reproduced with SE9129 and SE9130 chips, see
+https://bugs.archlinux.org/task/40776
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
