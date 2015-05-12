@@ -1,484 +1,355 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 01/12] target: Convert se_node_acl->device_list[] to RCU hlist
-Date: Tue, 12 May 2015 09:25:25 +0000
-Message-ID: <1431422736-29125-2-git-send-email-nab@daterainc.com>
-References: <1431422736-29125-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:33029 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932340AbbELJ17 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2015 05:27:59 -0400
-Received: by oica37 with SMTP id a37so1016013oic.0
-        for <linux-scsi@vger.kernel.org>; Tue, 12 May 2015 02:27:58 -0700 (PDT)
-In-Reply-To: <1431422736-29125-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH] mpt2sas: mpt3sas: Fix memory corruption during initialization
+Date: Tue, 12 May 2015 15:08:57 +0530
+Message-ID: <CAK=zhgqxCXoA_xSu2TViRwaTArv562OBKnRzF6HxKCrdof0ZcA@mail.gmail.com>
+References: <1430751931-14002-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<5548E355.2040606@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5548E355.2040606@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: calvinowens@fb.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@kernel.org" <jejb@kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Chaitra Basappa <chaitra.basappa@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+HI Tomas & Calvin,
 
-This patch converts se_node_acl->device_list[] table for mappedluns
-to modern RCU hlist_head usage in order to support an arbitrary number
-of node_acl lun mappings.
+Thanks for reviewing this patch.
 
-This includes changes to core_[enable,disable]_device_list_for_node()
-rcu_assign_pointer() and invokes call_rcu() for releasing memory, along
-with a number of RCU read path conversions in target_core_device.c code.
+There is some problem with this patch, In this patch as the driver is
+ignoring the device removal event (when ioc's
+discovered_device_addition_on flag and device's
+is_on_sas_device_init_list is one) so driver not freeing the
+sas_device structure from the sas_device_init_list list.
 
-Required for subsequent conversion of transport_lookup_cmd() to lock-less
-RCU read path.
+Due to this when ever same device is hot plugged then the device
+addition to the SML is not happing.
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c   | 218 +++++++++++++++++++---------------
- drivers/target/target_core_internal.h |   1 +
- drivers/target/target_core_tpg.c      |  23 ++--
- include/target/target_core_base.h     |   7 +-
- 4 files changed, 137 insertions(+), 112 deletions(-)
+I have one more patch to fix the original issue and I will post it today.
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 6e58976..1df14ce 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -198,12 +198,9 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
- 	struct se_lun *lun;
- 	struct se_port *port;
- 	struct se_portal_group *tpg = nacl->se_tpg;
--	u32 i;
--
--	spin_lock_irq(&nacl->device_list_lock);
--	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
- 
-+	rcu_read_lock();
-+	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
- 		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
- 			continue;
- 
-@@ -225,11 +222,11 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
- 			continue;
- 
- 		atomic_inc_mb(&deve->pr_ref_count);
--		spin_unlock_irq(&nacl->device_list_lock);
-+		rcu_read_unlock();
- 
- 		return deve;
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
-+	rcu_read_unlock();
- 
- 	return NULL;
- }
-@@ -240,18 +237,12 @@ int core_free_device_list_for_node(
- {
- 	struct se_dev_entry *deve;
- 	struct se_lun *lun;
--	u32 i;
--
--	if (!nacl->device_list)
--		return 0;
--
--	spin_lock_irq(&nacl->device_list_lock);
--	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
-+	u32 mapped_lun;
- 
-+	rcu_read_lock();
-+	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
- 		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
- 			continue;
--
- 		if (!deve->se_lun) {
- 			pr_err("%s device entries device pointer is"
- 				" NULL, but Initiator has access.\n",
-@@ -259,16 +250,14 @@ int core_free_device_list_for_node(
- 			continue;
- 		}
- 		lun = deve->se_lun;
-+		mapped_lun = deve->mapped_lun;
-+		rcu_read_unlock();
- 
--		spin_unlock_irq(&nacl->device_list_lock);
--		core_disable_device_list_for_node(lun, NULL, deve->mapped_lun,
--			TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
--		spin_lock_irq(&nacl->device_list_lock);
-+		core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
-+		rcu_read_lock();
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
--
--	array_free(nacl->device_list, TRANSPORT_MAX_LUNS_PER_TPG);
--	nacl->device_list = NULL;
-+	rcu_read_unlock();
- 
- 	return 0;
- }
-@@ -280,18 +269,44 @@ void core_update_device_list_access(
- {
- 	struct se_dev_entry *deve;
- 
--	spin_lock_irq(&nacl->device_list_lock);
--	deve = nacl->device_list[mapped_lun];
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	} else {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+	spin_lock_irq(&nacl->lun_entry_lock);
-+	deve = target_nacl_find_deve(nacl, mapped_lun);
-+	if (deve) {
-+		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
-+			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
-+			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+		} else {
-+			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
-+			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+		}
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
-+	spin_unlock_irq(&nacl->lun_entry_lock);
-+
-+	synchronize_rcu();
-+}
-+
-+static void target_nacl_deve_callrcu(struct rcu_head *head)
-+{
-+	struct se_dev_entry *deve = container_of(head, struct se_dev_entry,
-+						 rcu_head);
-+	kfree(deve);
- }
- 
-+/*
-+ * Called with rcu_read_lock or nacl->device_list_lock held.
-+ */
-+struct se_dev_entry *target_nacl_find_deve(struct se_node_acl *nacl, u32 mapped_lun)
-+{
-+	struct se_dev_entry *deve;
-+
-+	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link)
-+		if (deve->mapped_lun == mapped_lun)
-+			return deve;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(target_nacl_find_deve);
-+
- /*      core_enable_device_list_for_node():
-  *
-  *
-@@ -305,67 +320,61 @@ int core_enable_device_list_for_node(
- 	struct se_portal_group *tpg)
- {
- 	struct se_port *port = lun->lun_sep;
--	struct se_dev_entry *deve;
-+	struct se_dev_entry *orig, *new;
- 
--	spin_lock_irq(&nacl->device_list_lock);
-+	new = kzalloc(sizeof(*new), GFP_KERNEL);
-+	if (!new) {
-+		pr_err("Unable to allocate se_dev_entry memory\n");
-+		return -ENOMEM;
-+	}
- 
--	deve = nacl->device_list[mapped_lun];
-+	new->se_node_acl = nacl;
-+	atomic_set(&new->ua_count, 0);
-+	spin_lock_init(&new->ua_lock);
-+	INIT_LIST_HEAD(&new->alua_port_list);
-+	INIT_LIST_HEAD(&new->ua_list);
- 
--	/*
--	 * Check if the call is handling demo mode -> explicit LUN ACL
--	 * transition.  This transition must be for the same struct se_lun
--	 * + mapped_lun that was setup in demo mode..
--	 */
--	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
--		if (deve->se_lun_acl != NULL) {
--			pr_err("struct se_dev_entry->se_lun_acl"
--			       " already set for demo mode -> explicit"
--			       " LUN ACL transition\n");
--			spin_unlock_irq(&nacl->device_list_lock);
--			return -EINVAL;
--		}
--		if (deve->se_lun != lun) {
--			pr_err("struct se_dev_entry->se_lun does"
--			       " match passed struct se_lun for demo mode"
--			       " -> explicit LUN ACL transition\n");
--			spin_unlock_irq(&nacl->device_list_lock);
--			return -EINVAL;
--		}
--		deve->se_lun_acl = lun_acl;
-+	new->mapped_lun = mapped_lun;
-+	new->lun_flags |= TRANSPORT_LUNFLAGS_INITIATOR_ACCESS;
- 
--		if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--		} else {
--			deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--			deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
--		}
-+	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE)
-+		new->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-+	else
-+		new->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+
-+	new->creation_time = get_jiffies_64();
-+	new->attach_count++;
- 
-+	spin_lock_irq(&nacl->device_list_lock);
-+	orig = target_nacl_find_deve(nacl, mapped_lun);
-+	if (orig && orig->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
-+		BUG_ON(orig->se_lun_acl != NULL);
-+		BUG_ON(orig->se_lun != lun);
-+
-+		rcu_assign_pointer(new->se_lun, lun);
-+		rcu_assign_pointer(new->se_lun_acl, lun_acl);
-+		hlist_add_head_rcu(&new->link, &nacl->lun_entry_hlist);
- 		spin_unlock_irq(&nacl->device_list_lock);
--		return 0;
--	}
- 
--	deve->se_lun = lun;
--	deve->se_lun_acl = lun_acl;
--	deve->mapped_lun = mapped_lun;
--	deve->lun_flags |= TRANSPORT_LUNFLAGS_INITIATOR_ACCESS;
-+		spin_lock_bh(&port->sep_alua_lock);
-+		list_del(&orig->alua_port_list);
-+		list_add_tail(&new->alua_port_list, &port->sep_alua_list);
-+		spin_unlock_bh(&port->sep_alua_lock);
- 
--	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
--	} else {
--		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
--		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
-+		call_rcu(&orig->rcu_head, target_nacl_deve_callrcu);
-+		return 0;
- 	}
- 
--	deve->creation_time = get_jiffies_64();
--	deve->attach_count++;
-+	rcu_assign_pointer(new->se_lun, lun);
-+	rcu_assign_pointer(new->se_lun_acl, lun_acl);
-+	hlist_add_head_rcu(&new->link, &nacl->lun_entry_hlist);
- 	spin_unlock_irq(&nacl->device_list_lock);
- 
- 	spin_lock_bh(&port->sep_alua_lock);
--	list_add_tail(&deve->alua_port_list, &port->sep_alua_list);
-+	list_add_tail(&new->alua_port_list, &port->sep_alua_list);
- 	spin_unlock_bh(&port->sep_alua_lock);
- 
-+	synchronize_rcu();
- 	return 0;
- }
- 
-@@ -382,8 +391,14 @@ int core_disable_device_list_for_node(
- 	struct se_portal_group *tpg)
- {
- 	struct se_port *port = lun->lun_sep;
--	struct se_dev_entry *deve = nacl->device_list[mapped_lun];
-+	struct se_dev_entry *orig;
- 
-+	spin_lock_irq(&nacl->device_list_lock);
-+	orig = target_nacl_find_deve(nacl, mapped_lun);
-+	if (!orig) {
-+		spin_unlock_irq(&nacl->device_list_lock);
-+		return 0;
-+	}
- 	/*
- 	 * If the MappedLUN entry is being disabled, the entry in
- 	 * port->sep_alua_list must be removed now before clearing the
-@@ -398,27 +413,33 @@ int core_disable_device_list_for_node(
- 	 * MappedLUN *deve will be released below..
- 	 */
- 	spin_lock_bh(&port->sep_alua_lock);
--	list_del(&deve->alua_port_list);
-+	list_del(&orig->alua_port_list);
- 	spin_unlock_bh(&port->sep_alua_lock);
- 	/*
- 	 * Wait for any in process SPEC_I_PT=1 or REGISTER_AND_MOVE
- 	 * PR operation to complete.
- 	 */
--	while (atomic_read(&deve->pr_ref_count) != 0)
-+	while (atomic_read(&orig->pr_ref_count) != 0)
- 		cpu_relax();
- 
--	spin_lock_irq(&nacl->device_list_lock);
- 	/*
- 	 * Disable struct se_dev_entry LUN ACL mapping
- 	 */
--	core_scsi3_ua_release_all(deve);
--	deve->se_lun = NULL;
--	deve->se_lun_acl = NULL;
--	deve->lun_flags = 0;
--	deve->creation_time = 0;
--	deve->attach_count--;
-+	core_scsi3_ua_release_all(orig);
-+	rcu_assign_pointer(orig->se_lun, NULL);
-+	rcu_assign_pointer(orig->se_lun_acl, NULL);
-+	orig->lun_flags = 0;
-+	orig->creation_time = 0;
-+	orig->attach_count--;
-+	hlist_del_rcu(&orig->link);
- 	spin_unlock_irq(&nacl->device_list_lock);
- 
-+	/*
-+	 * Fire off RCU callback to wait for any in process SPEC_I_PT=1
-+	 * or REGISTER_AND_MOVE PR operation to complete.
-+	 */
-+	call_rcu(&orig->rcu_head, target_nacl_deve_callrcu);
-+
- 	core_scsi3_free_pr_reg_from_nacl(lun->lun_se_dev, nacl);
- 	return 0;
- }
-@@ -431,26 +452,25 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- {
- 	struct se_node_acl *nacl;
- 	struct se_dev_entry *deve;
--	u32 i;
-+	u32 mapped_lun;
- 
- 	spin_lock_irq(&tpg->acl_node_lock);
- 	list_for_each_entry(nacl, &tpg->acl_node_list, acl_list) {
- 		spin_unlock_irq(&tpg->acl_node_lock);
- 
--		spin_lock_irq(&nacl->device_list_lock);
--		for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--			deve = nacl->device_list[i];
-+		rcu_read_lock();
-+		hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
- 			if (lun != deve->se_lun)
- 				continue;
--			spin_unlock_irq(&nacl->device_list_lock);
- 
--			core_disable_device_list_for_node(lun, NULL,
--				deve->mapped_lun, TRANSPORT_LUNFLAGS_NO_ACCESS,
--				nacl, tpg);
-+			mapped_lun = deve->mapped_lun;
-+			rcu_read_unlock();
- 
--			spin_lock_irq(&nacl->device_list_lock);
-+			core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
-+			rcu_read_lock();
- 		}
--		spin_unlock_irq(&nacl->device_list_lock);
-+		rcu_read_unlock();
- 
- 		spin_lock_irq(&tpg->acl_node_lock);
- 	}
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index d0344ad..9c4bce0 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -12,6 +12,7 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(struct se_node_acl *, u16);
- int	core_free_device_list_for_node(struct se_node_acl *,
- 		struct se_portal_group *);
- void	core_update_device_list_access(u32, u32, struct se_node_acl *);
-+struct se_dev_entry *target_nacl_find_deve(struct se_node_acl *, u32);
- int	core_enable_device_list_for_node(struct se_lun *, struct se_lun_acl *,
- 		u32, u32, struct se_node_acl *, struct se_portal_group *);
- int	core_disable_device_list_for_node(struct se_lun *, struct se_lun_acl *,
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index c0c1f67..dbdd3e3 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -55,32 +55,29 @@ static void core_clear_initiator_node_from_tpg(
- 	struct se_node_acl *nacl,
- 	struct se_portal_group *tpg)
- {
--	int i;
- 	struct se_dev_entry *deve;
- 	struct se_lun *lun;
-+	u32 mapped_lun;
- 
--	spin_lock_irq(&nacl->device_list_lock);
--	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
--
-+	rcu_read_lock();
-+	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
- 		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
- 			continue;
--
- 		if (!deve->se_lun) {
- 			pr_err("%s device entries device pointer is"
- 				" NULL, but Initiator has access.\n",
- 				tpg->se_tpg_tfo->get_fabric_name());
- 			continue;
- 		}
--
- 		lun = deve->se_lun;
--		spin_unlock_irq(&nacl->device_list_lock);
--		core_disable_device_list_for_node(lun, NULL, deve->mapped_lun,
--			TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
-+		mapped_lun = deve->mapped_lun;
-+		rcu_read_unlock();
- 
--		spin_lock_irq(&nacl->device_list_lock);
-+		core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
-+		rcu_read_lock();
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
-+	rcu_read_unlock();
- }
- 
- /*	__core_tpg_get_initiator_node_acl():
-@@ -266,10 +263,12 @@ static struct se_node_acl *target_alloc_node_acl(struct se_portal_group *tpg,
- 
- 	INIT_LIST_HEAD(&acl->acl_list);
- 	INIT_LIST_HEAD(&acl->acl_sess_list);
-+	INIT_HLIST_HEAD(&acl->lun_entry_hlist);
- 	kref_init(&acl->acl_kref);
- 	init_completion(&acl->acl_free_comp);
- 	spin_lock_init(&acl->device_list_lock);
- 	spin_lock_init(&acl->nacl_sess_lock);
-+	spin_lock_init(&acl->lun_entry_lock);
- 	atomic_set(&acl->acl_pr_ref_count, 0);
- 	if (tpg->se_tpg_tfo->tpg_get_default_depth)
- 		acl->queue_depth = tpg->se_tpg_tfo->tpg_get_default_depth(tpg);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 042a734..6fb38df 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -584,10 +584,12 @@ struct se_node_acl {
- 	char			acl_tag[MAX_ACL_TAG_SIZE];
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	atomic_t		acl_pr_ref_count;
-+	struct hlist_head	lun_entry_hlist;
- 	struct se_dev_entry	**device_list;
- 	struct se_session	*nacl_sess;
- 	struct se_portal_group *se_tpg;
- 	spinlock_t		device_list_lock;
-+	spinlock_t		lun_entry_lock;
- 	spinlock_t		nacl_sess_lock;
- 	struct config_group	acl_group;
- 	struct config_group	acl_attrib_group;
-@@ -653,11 +655,14 @@ struct se_dev_entry {
- 	atomic_t		ua_count;
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	atomic_t		pr_ref_count;
--	struct se_lun_acl	*se_lun_acl;
-+	struct se_node_acl	*se_node_acl;
-+	struct se_lun_acl __rcu	*se_lun_acl;
- 	spinlock_t		ua_lock;
- 	struct se_lun		*se_lun;
- 	struct list_head	alua_port_list;
- 	struct list_head	ua_list;
-+	struct hlist_node	link;
-+	struct rcu_head		rcu_head;
- };
- 
- struct se_dev_attrib {
--- 
-1.9.1
+Regards,
+Sreekanth
 
+On Tue, May 5, 2015 at 9:05 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+>
+> On 05/04/2015 05:05 PM, Sreekanth Reddy wrote:
+> > I have applied this patch on the latest upstream mpt3sas driver, then I have compiled and loaded the driver.
+> > In the driver logs I didn't see any attached drives are added to the OS, 'fdisk -l' command also doesn't list
+> >  the drives which are actually attached to the HBA.
+> >
+> > When I debug this issue then I see that in '_scsih_target_alloc'
+> >  driver is searching for sas_device from the lists 'sas_device_init_list' & 'sas_device_list'
+> >  based on the device sas address using the function mpt3sas_scsih_sas_device_find_by_sas_address(),
+> >  since this device is not in the 'sas_device_init_list' (as it is moved it to head list) driver exit
+> >  from this function without updating the required device addition information.
+> >
+> > To solve the original problem (i.e memory corruption), here I have attached the patch,
+> >  in this patch I have added one atomic flag is_on_sas_device_init_list in _sas_device_structure
+> >  and I followed below algorithm.
+> >
+> > 1. when ever a device is added to sas_device_init_list then driver will set this atomic flag of this device to one.
+> >
+> > 2. And during the addition of this device to SCSI mid layer,
+> >         if the device is successfully added to the OS then driver will move this device list in to sas_device_list list from sas_device_init_list list and at this time driver will reset this flag to zero.
+> >         if device is failed to register with SCSI mid layer then also driver will reset this flag to zero in function _scsih_sas_device_remove and will remove the device entry from sas_device_init_list and will free the device structure.
+> >
+> > 3. Now when a device is removed then driver will receive target not responding event and in the function _scsih_device_remove_by_handle,
+> >          a. driver will check whether addition of discovered devices to SML process is currently running or not,
+> >                i. if addition (or registration) of discovered devices to SML process is running then driver will check whether device is in sas_device_init_list or not (by reading the atomic flag)?.
+> >                     if it is in a sas_device_init_list then driver will ignore this device removal event (since device registration with SML will fail and it is removed in function _scsih_sas_device_remove as mentioned in step 2).
+> >              ii. if the device is not in a sas_device_init_list or addition (or registration) of discovered devices to SML process is already completed then device structure is removed from this function and this device entry is removed from sas_device_list.
+> >
+> > 4. if the device removal event is received after device structure is freed due to failure of device registration with SML them in the function _scsih_device_remove_by_handle driver won't find this device in the sas_device_list or in a sas_device_init_list and so driver will ignore this  device removal event.
+> >
+> > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> > ---
+> >  drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 ++
+> >  drivers/scsi/mpt2sas/mpt2sas_scsih.c | 45 +++++++++++++++++++++++++++---------
+> >  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 ++
+> >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 43 ++++++++++++++++++++++++++--------
+> >  4 files changed, 71 insertions(+), 21 deletions(-)
+> >
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > index caff8d1..1aa10d2 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> > @@ -376,6 +376,7 @@ struct _sas_device {
+> >       u8      phy;
+> >       u8      responding;
+> >       u8      pfa_led_on;
+> > +     atomic_t is_on_sas_device_init_list;
+>
+> Hi Sreekanth,
+> when is_on_sas_device_init_list is used it's protected
+> by ioc->sas_device_lock - why do you need a atomic_t ?
+> There is one exception, but easily fixable.
+>
+> >  };
+> >
+> >  /**
+> > @@ -833,6 +834,7 @@ struct MPT2SAS_ADAPTER {
+> >       u8              broadcast_aen_busy;
+> >       u16             broadcast_aen_pending;
+> >       u8              shost_recovery;
+> > +     u8              discovered_device_addition_on;
+> >
+> >       struct mutex    reset_in_progress_mutex;
+> >       spinlock_t      ioc_reset_in_progress_lock;
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > index 3f26147..2a61286 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > @@ -590,13 +590,20 @@ _scsih_sas_device_remove(struct MPT2SAS_ADAPTER *ioc,
+> >      struct _sas_device *sas_device)
+> >  {
+> >       unsigned long flags;
+> > +     struct _sas_device *same_sas_device;
+> >
+> >       if (!sas_device)
+> >               return;
+> >
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> > -     list_del(&sas_device->list);
+> > -     kfree(sas_device);
+> > +     same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> > +                                             sas_device->handle);
+>
+> Is it possible that when same_sas_device is not null, that the
+> value is not the same as for the sas_device ?
+>
+> > +     if (same_sas_device) {
+> > +             list_del(&same_sas_device->list);
+> > +             if (atomic_read(&sas_device->is_on_sas_device_init_list))
+>
+> Seems easier to just set the variable without a test.
+>
+> > +                     atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> > +             kfree(same_sas_device);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >  }
+> >
+> > @@ -658,6 +664,7 @@ _scsih_sas_device_init_add(struct MPT2SAS_ADAPTER *ioc,
+> >           "(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
+> >           sas_device->handle, (unsigned long long)sas_device->sas_address));
+> >
+> > +     atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
+> >       _scsih_determine_boot_device(ioc, sas_device, 0);
+> > @@ -5364,8 +5371,14 @@ _scsih_device_remove_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+> >
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> > -     if (sas_device)
+> > -             list_del(&sas_device->list);
+> > +     if (sas_device) {
+> > +             if (ioc->discovered_device_addition_on &&
+> > +                 atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> > +                     spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> > +                     return;
+> > +             } else
+> > +                     list_del(&sas_device->list);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       if (sas_device)
+> >               _scsih_remove_device(ioc, sas_device);
+> > @@ -5391,8 +5404,14 @@ mpt2sas_device_remove_by_sas_address(struct MPT2SAS_ADAPTER *ioc,
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+> >           sas_address);
+> > -     if (sas_device)
+> > -             list_del(&sas_device->list);
+> > +     if (sas_device) {
+> > +             if (ioc->discovered_device_addition_on &&
+> > +                 atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> > +                     spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> > +                     return;
+> > +             } else
+> > +                     list_del(&sas_device->list);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       if (sas_device)
+> >               _scsih_remove_device(ioc, sas_device);
+> > @@ -7978,32 +7997,36 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
+> >       struct _sas_device *sas_device, *next;
+> >       unsigned long flags;
+> >
+> > +     ioc->discovered_device_addition_on = 1;
+> >       /* SAS Device List */
+> >       list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+> >           list) {
+> >
+> >               if (ioc->hide_drives)
+> >                       continue;
+> > -
+> > +
+> >               if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
+> >                   sas_device->sas_address_parent)) {
+> > -                     list_del(&sas_device->list);
+> > -                     kfree(sas_device);
+> > +                     mpt2sas_transport_port_remove(ioc,
+> > +                                     sas_device->sas_address,
+> > +                                     sas_device->sas_address_parent);
+> > +                     _scsih_sas_device_remove(ioc, sas_device);
+> >                       continue;
+> >               } else if (!sas_device->starget) {
+> >                       if (!ioc->is_driver_loading) {
+> >                               mpt2sas_transport_port_remove(ioc,
+> >                                       sas_device->sas_address,
+> >                                       sas_device->sas_address_parent);
+> > -                             list_del(&sas_device->list);
+> > -                             kfree(sas_device);
+> > +                             _scsih_sas_device_remove(ioc, sas_device);
+> >                               continue;
+> >                       }
+> >               }
+> >               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >               list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> > +             atomic_dec(&sas_device->is_on_sas_device_init_list);
+>
+> Why not 'atomic_set(&sas_device->is_on_sas_device_init_list, 0);' ?
+> There is no place where you set the value of is_on_sas_device_init_list
+> higher than '1'.
+>
+> Cheers,
+> Tomas
+>
+> >               spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       }
+> > +     ioc->discovered_device_addition_on = 0;
+> >  }
+> >
+> >  /**
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> > index afa8816..6188490 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> > @@ -315,6 +315,7 @@ struct _sas_device {
+> >       u8      responding;
+> >       u8      fast_path;
+> >       u8      pfa_led_on;
+> > +     atomic_t is_on_sas_device_init_list;
+> >  };
+> >
+> >  /**
+> > @@ -766,6 +767,7 @@ struct MPT3SAS_ADAPTER {
+> >       u8              broadcast_aen_busy;
+> >       u16             broadcast_aen_pending;
+> >       u8              shost_recovery;
+> > +     u8              discovered_device_addition_on;
+> >
+> >       struct mutex    reset_in_progress_mutex;
+> >       spinlock_t      ioc_reset_in_progress_lock;
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > index 5a97e32..53cc9ea 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > @@ -582,13 +582,20 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER *ioc,
+> >       struct _sas_device *sas_device)
+> >  {
+> >       unsigned long flags;
+> > +     struct _sas_device *same_sas_device;
+> >
+> >       if (!sas_device)
+> >               return;
+> >
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> > -     list_del(&sas_device->list);
+> > -     kfree(sas_device);
+> > +     same_sas_device = _scsih_sas_device_find_by_handle(ioc,
+> > +                                             sas_device->handle);
+> > +     if (same_sas_device) {
+> > +             list_del(&same_sas_device->list);
+> > +             if (atomic_read(&sas_device->is_on_sas_device_init_list))
+> > +                     atomic_set(&sas_device->is_on_sas_device_init_list, 0);
+> > +             kfree(same_sas_device);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >  }
+> >
+> > @@ -610,8 +616,14 @@ _scsih_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+> >
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> > -     if (sas_device)
+> > -             list_del(&sas_device->list);
+> > +     if (sas_device) {
+> > +             if (ioc->discovered_device_addition_on &&
+> > +                 atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> > +                     spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> > +                     return;
+> > +             } else
+> > +                     list_del(&sas_device->list);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       if (sas_device)
+> >               _scsih_remove_device(ioc, sas_device);
+> > @@ -637,8 +649,14 @@ mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
+> >           sas_address);
+> > -     if (sas_device)
+> > -             list_del(&sas_device->list);
+> > +     if (sas_device) {
+> > +             if (ioc->discovered_device_addition_on &&
+> > +                 atomic_read(&sas_device->is_on_sas_device_init_list)) {
+> > +                     spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> > +                     return;
+> > +             } else
+> > +                     list_del(&sas_device->list);
+> > +     }
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       if (sas_device)
+> >               _scsih_remove_device(ioc, sas_device);
+> > @@ -663,6 +681,7 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *ioc,
+> >               ioc->name, __func__, sas_device->handle,
+> >               (unsigned long long)sas_device->sas_address));
+> >
+> > +     atomic_set(&sas_device->is_on_sas_device_init_list, 1);
+> >       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >       list_add_tail(&sas_device->list, &ioc->sas_device_list);
+> >       spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> > @@ -7610,14 +7629,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+> >       struct _sas_device *sas_device, *next;
+> >       unsigned long flags;
+> >
+> > +     ioc->discovered_device_addition_on = 1;
+> >       /* SAS Device List */
+> >       list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
+> >           list) {
+> >
+> >               if (!mpt3sas_transport_port_add(ioc, sas_device->handle,
+> >                   sas_device->sas_address_parent)) {
+> > -                     list_del(&sas_device->list);
+> > -                     kfree(sas_device);
+> > +                     mpt3sas_transport_port_remove(ioc,
+> > +                                     sas_device->sas_address,
+> > +                                     sas_device->sas_address_parent);
+> > +                     _scsih_sas_device_remove(ioc, sas_device);
+> >                       continue;
+> >               } else if (!sas_device->starget) {
+> >                       /*
+> > @@ -7630,16 +7652,17 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
+> >                               mpt3sas_transport_port_remove(ioc,
+> >                                   sas_device->sas_address,
+> >                                   sas_device->sas_address_parent);
+> > -                             list_del(&sas_device->list);
+> > -                             kfree(sas_device);
+> > +                             _scsih_sas_device_remove(ioc, sas_device);
+> >                               continue;
+> >                       }
+> >               }
+> >
+> >               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+> >               list_move_tail(&sas_device->list, &ioc->sas_device_list);
+> > +             atomic_dec(&sas_device->is_on_sas_device_init_list);
+> >               spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> >       }
+> > +     ioc->discovered_device_addition_on = 0;
+> >  }
+> >
+> >  /**
+>
