@@ -1,92 +1,125 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH] mpt2sas: Fall back to 64 bit coherent mask if 64 bit DMA
- / 32 bit coherent mask not supported
-Date: Wed, 13 May 2015 22:14:14 +0530
-Message-ID: <CAK=zhgoXx4HJfpTuNAP0tAPnsU8BLmM7X3qGsFCzJfHOx55YCQ@mail.gmail.com>
-References: <555279A8.6060906@linux.vnet.ibm.com>
-	<2214146.EzgWBA6g23@wuerfel>
-	<5553505D.50102@linux.vnet.ibm.com>
-	<10045033.4fV0qQU90u@wuerfel>
-	<55535BDF.6020502@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 98261] New: Misleading indentation in
+ drivers/scsi/bfa/bfa_ioc.c: bfa_cb_sfp_state_query
+Date: Wed, 13 May 2015 18:26:55 +0000
+Message-ID: <bug-98261-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:34617 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbbEMQoQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2015 12:44:16 -0400
-Received: by wicmc15 with SMTP id mc15so83166411wic.1
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2015 09:44:15 -0700 (PDT)
-In-Reply-To: <55535BDF.6020502@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:58532 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752183AbbEMS07 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2015 14:26:59 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 7CD2F20437
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2015 18:26:57 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B9B512041C
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2015 18:26:55 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Daniel Kreling <kreling@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi Brain,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D98261
 
-We had a restriction from the firmware that the upper 32 bits of the
-RDPQ pool entries must be same. So to limit this restriction we
-initially set the consistent DMA mask to 32 and then after allocating
-the RDPQ pools we changed the consistent DMA mask to 64 before
-allocating remaining pools.
+            Bug ID: 98261
+           Summary: Misleading indentation in drivers/scsi/bfa/bfa_ioc.=
+c:
+                    bfa_cb_sfp_state_query
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.0.3
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: dmalcolm@redhat.com
+        Regression: No
 
-Regards,
-Sreekanth
+In linux-4.0.3/drivers/scsi/bfa/bfa_ioc.c: bfa_cb_sfp_state_query, the
+indentation doesn't reflect the actual block structure:
 
-On Wed, May 13, 2015 at 7:42 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
-> On 05/13/2015 08:31 AM, Arnd Bergmann wrote:
->> On Wednesday 13 May 2015 08:23:41 Brian King wrote:
->>> On 05/13/2015 03:10 AM, Arnd Bergmann wrote:
->>>> On Tuesday 12 May 2015 18:24:43 Brian King wrote:
->>>>>
->>>>> Commit 5fb1bf8aaa832e1e9ca3198de7bbecb8eff7db9c broke 64 bit DMA for mpt2sas on Power.
->>>>> That commit changed the sequence for setting up the DMA and coherent DMA masks so
->>>>> that during initialization the driver requests a 64 bit DMA mask and a 32 bit consistent
->>>>> DMA mask, then later requests a 64 bit consistent DMA mask. The Power architecture does
->>>>> not currently support this, which results in always falling back to a 32 bit DMA window,
->>>>> which has a negative impact on performance. Tweak this algorithm slightly so that
->>>>> if requesting a 32 bit consistent mask fails after we've successfully set a 64 bit
->>>>> DMA mask, just try to get a 64 bit consistent mask. This should preserve existing
->>>>> behavior on platforms that support mixed mask setting and restore previous functionality
->>>>> to those that do not.
->>>>>
->>>>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
->>>>
->>>> I believe the way the API is designed, it should guarantee that after dma_set_mask()
->>>> succeeds for a device, dma_set_coherent_mask() with the same mask will also succeed.
->>>>
->>>> Could you just call dma_set_mask_and_coherent() here to avoid that complex logic?
->>>
->>> I don't think that would work. The mpt2sas driver wants to set the dma mask to 64bits
->>> but set the coherent mask to 32 bits, then my change is to set the coherent mask to
->>> 64bits if setting it to 32bit fails. I'm not seeing how using dma_set_mask_and_coherent
->>> would simplify anything here.
->>
->> My question was more about why the driver would ask for a 32-bit coherent
->> mask to start with. Is this a limitation in the mpt2sas device that can
->> only have descriptors at low addresses, or is it trying to work around some
->> bug in a particular host system?
->
-> I'll need help from Sreekanth in answering that. All that is in the git commit log is:
->
->     2. Initially set the consistent DMA mask to 32 bit and then change it to 64 bit mask
->     after allocating RDPQ pools by calling the function _base_change_consistent_dma_mask.
->     This is to ensure that all the upper 32 bits of RDPQ entries's base address to be same.
->
-> So, I'm not sure my patch won't break something with mpt2sas... This commit also changed
-> how the RDPO pools are allocated, so its possible this won't work. However, I did load
-> it on Power box and I'm not seeing any major problems so far. I am seeing the following message
-> get logged on a regular basis, not sure if its related to this change or not:
->
-> mpt2sas3: log_info(0x31120303): originator(IOP), code(0x03), sub_code(0x3112)
->
-> -Brian
->
->
-> --
-> Brian King
-> Power Linux I/O
-> IBM Linux Technology Center
->
->
+  3659  static void
+  3660  bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+  3661  {
+  3662          bfa_trc(sfp, sfp->portspeed);
+  3663          if (sfp->media) {
+  3664                  bfa_sfp_media_get(sfp);
+  3665                  if (sfp->state_query_cbfn)
+  3666                          sfp->state_query_cbfn(sfp->state_query_=
+cbarg,
+  3667                                          sfp->status);
+  3668                          sfp->media =3D NULL;
+  3669                  }
+  3670 =20
+  3671                  if (sfp->portspeed) {
+  3672                          sfp->status =3D bfa_sfp_speed_valid(sfp=
+,
+sfp->portspeed);
+  3673                          if (sfp->state_query_cbfn)
+  3674                                =20
+sfp->state_query_cbfn(sfp->state_query_cbarg,
+  3675                                                  sfp->status);
+  3676                                  sfp->portspeed =3D
+BFA_PORT_SPEED_UNKNOWN;
+  3677                  }
+  3678 =20
+  3679                  sfp->state_query_lock =3D 0;
+  3680                  sfp->state_query_cbfn =3D NULL;
+  3681  }
+
+Note how the "if" at line 3665 does not have an opening brace.  Lines 3=
+666-3668
+are indented as if guarded by it, but only lines 3666-3667 are.  The cl=
+osing
+brace at line 3669 looks from the indentation as if it relates to line =
+3665,
+but it actually relates to line 3663.
+
+Hence although lines 3671 onwards are indented as if guarded by the "if=
+" at
+line 3663, they are not.
+
+There's also an issue at line 3676, which is indented as if guarded by =
+the "if"
+at line 3673, but isn't.
+
+Seen via an experimental new gcc warning I'm working on for gcc 6,
+-Wmisleading-indentation, using gcc r223098 adding
+-Werror=3Dmisleading-indentation" to KBUILD_CFLAGS in Makefile, where t=
+he
+experimental gcc emits these errors:
+
+drivers/scsi/bfa/bfa_ioc.c: In function =E2=80=98bfa_cb_sfp_state_query=
+=E2=80=99:
+drivers/scsi/bfa/bfa_ioc.c:3668:4: error: statement is indented as if i=
+t were
+guarded by... [-Werror=3Dmisleading-indentation]
+    sfp->media =3D NULL;
+    ^
+drivers/scsi/bfa/bfa_ioc.c:3665:3: note: ...this =E2=80=98if=E2=80=99 c=
+lause, but it is not
+   if (sfp->state_query_cbfn)
+   ^
+drivers/scsi/bfa/bfa_ioc.c:3676:5: error: statement is indented as if i=
+t were
+guarded by... [-Werror=3Dmisleading-indentation]
+     sfp->portspeed =3D BFA_PORT_SPEED_UNKNOWN;
+     ^
+drivers/scsi/bfa/bfa_ioc.c:3673:4: note: ...this =E2=80=98if=E2=80=99 c=
+lause, but it is not
+    if (sfp->state_query_cbfn)
+    ^
+
+--=20
+You are receiving this mail because:
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
