@@ -1,40 +1,88 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] mpt2sas: Fall back to 64 bit coherent mask if 64 bit DMA / 32 bit coherent mask not supported
-Date: Wed, 13 May 2015 10:10:50 +0200
-Message-ID: <2214146.EzgWBA6g23@wuerfel>
-References: <555279A8.6060906@linux.vnet.ibm.com> <1431468627.20218.64.camel@kernel.crashing.org> <55528BBB.3000809@linux.vnet.ibm.com>
+From: Mark Hounschell <markh@compro.net>
+Subject: Re: [PATCH] sd: Disable support for 256 byte/sector disks
+Date: Wed, 13 May 2015 08:55:30 -0400
+Message-ID: <555349C2.2020203@compro.net>
+References: <1431506949-11398-1-git-send-email-hare@suse.de>
+Reply-To: markh@compro.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:51784 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965066AbbEMMED (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2015 08:04:03 -0400
-In-Reply-To: <55528BBB.3000809@linux.vnet.ibm.com>
+Received: from smtp126.ord1c.emailsrvr.com ([108.166.43.126]:42077 "EHLO
+	smtp126.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933335AbbEMNBi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 May 2015 09:01:38 -0400
+In-Reply-To: <1431506949-11398-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Brian King <brking@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Daniel Kreling <kreling@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Mark Hounschell <dmarkh@cfl.rr.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Tuesday 12 May 2015 18:24:43 Brian King wrote:
-> 
-> Commit 5fb1bf8aaa832e1e9ca3198de7bbecb8eff7db9c broke 64 bit DMA for mpt2sas on Power.
-> That commit changed the sequence for setting up the DMA and coherent DMA masks so
-> that during initialization the driver requests a 64 bit DMA mask and a 32 bit consistent
-> DMA mask, then later requests a 64 bit consistent DMA mask. The Power architecture does
-> not currently support this, which results in always falling back to a 32 bit DMA window,
-> which has a negative impact on performance. Tweak this algorithm slightly so that
-> if requesting a 32 bit consistent mask fails after we've successfully set a 64 bit
-> DMA mask, just try to get a 64 bit consistent mask. This should preserve existing
-> behavior on platforms that support mixed mask setting and restore previous functionality
-> to those that do not.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+On 05/13/2015 04:49 AM, Hannes Reinecke wrote:
+> 256 bytes per sector support has been broken since 2.6.X,
+> and no-one stepped up to fix this.
+> So disable support for it.
+>
+> Signed-off-by: Mark Hounschell <dmarkh@cfl.rr.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/sd.c | 19 +++++--------------
+>   1 file changed, 5 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 79beebf..7f9d65f 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1600,6 +1600,7 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+>   {
+>   	u64 start_lba = blk_rq_pos(scmd->request);
+>   	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
+> +	u64 factor = scmd->device->sector_size / 512;
+>   	u64 bad_lba;
+>   	int info_valid;
+>   	/*
+> @@ -1621,16 +1622,9 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+>   	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
+>   		return 0;
+>
+> -	if (scmd->device->sector_size < 512) {
+> -		/* only legitimate sector_size here is 256 */
+> -		start_lba <<= 1;
+> -		end_lba <<= 1;
+> -	} else {
+> -		/* be careful ... don't want any overflows */
+> -		unsigned int factor = scmd->device->sector_size / 512;
+> -		do_div(start_lba, factor);
+> -		do_div(end_lba, factor);
+> -	}
+> +	/* be careful ... don't want any overflows */
+> +	do_div(start_lba, factor);
+> +	do_div(end_lba, factor);
+>
+>   	/* The bad lba was reported incorrectly, we have no idea where
+>   	 * the error is.
+> @@ -2188,8 +2182,7 @@ got_data:
+>   	if (sector_size != 512 &&
+>   	    sector_size != 1024 &&
+>   	    sector_size != 2048 &&
+> -	    sector_size != 4096 &&
+> -	    sector_size != 256) {
+> +	    sector_size != 4096) {
+>   		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
+>   			  sector_size);
+>   		/*
+> @@ -2244,8 +2237,6 @@ got_data:
+>   		sdkp->capacity <<= 2;
+>   	else if (sector_size == 1024)
+>   		sdkp->capacity <<= 1;
+> -	else if (sector_size == 256)
+> -		sdkp->capacity >>= 1;
+>
+>   	blk_queue_physical_block_size(sdp->request_queue,
+>   				      sdkp->physical_block_size);
+>
 
-I believe the way the API is designed, it should guarantee that after dma_set_mask()
-succeeds for a device, dma_set_coherent_mask() with the same mask will also succeed.
+Tested-by: Mark Hounschell <dmarkh@cfl.rr.com>
 
-Could you just call dma_set_mask_and_coherent() here to avoid that complex logic?
-
-	Arnd
+Mark
