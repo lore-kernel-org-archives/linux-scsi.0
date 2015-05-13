@@ -1,78 +1,60 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] sd: Disable support for 256 byte/sector disks
-Date: Wed, 13 May 2015 10:49:09 +0200
-Message-ID: <1431506949-11398-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 14/17] scsi_dh_alua: Use workqueue for RTPG
+Date: Wed, 13 May 2015 11:10:43 +0200
+Message-ID: <55531513.5080003@suse.de>
+References: <1430743343-47174-1-git-send-email-hare@suse.de> <1430743343-47174-15-git-send-email-hare@suse.de> <20150511134914.GA7795@lst.de> <5550B5B4.4070605@suse.de> <20150512081659.GB27168@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33890 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:35409 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515AbbEMItN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2015 04:49:13 -0400
+	id S1753574AbbEMJKp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 May 2015 05:10:45 -0400
+In-Reply-To: <20150512081659.GB27168@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Mark Hounschell <dmarkh@cfl.rr.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-256 bytes per sector support has been broken since 2.6.X,
-and no-one stepped up to fix this.
-So disable support for it.
+On 05/12/2015 10:16 AM, Christoph Hellwig wrote:
+> So how about the following idea for GTPG and STPG handling:
+>=20
+>  - we keep a single thread workqueue, but per target group instead
+>    of global to avoid concurrency issues hitting us too badly, after
+>    all workqueues are cheap these days.
 
-Signed-off-by: Mark Hounschell <dmarkh@cfl.rr.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/sd.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+Okay.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 79beebf..7f9d65f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1600,6 +1600,7 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
- {
- 	u64 start_lba = blk_rq_pos(scmd->request);
- 	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
-+	u64 factor = scmd->device->sector_size / 512;
- 	u64 bad_lba;
- 	int info_valid;
- 	/*
-@@ -1621,16 +1622,9 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
- 	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
- 		return 0;
- 
--	if (scmd->device->sector_size < 512) {
--		/* only legitimate sector_size here is 256 */
--		start_lba <<= 1;
--		end_lba <<= 1;
--	} else {
--		/* be careful ... don't want any overflows */
--		unsigned int factor = scmd->device->sector_size / 512;
--		do_div(start_lba, factor);
--		do_div(end_lba, factor);
--	}
-+	/* be careful ... don't want any overflows */
-+	do_div(start_lba, factor);
-+	do_div(end_lba, factor);
- 
- 	/* The bad lba was reported incorrectly, we have no idea where
- 	 * the error is.
-@@ -2188,8 +2182,7 @@ got_data:
- 	if (sector_size != 512 &&
- 	    sector_size != 1024 &&
- 	    sector_size != 2048 &&
--	    sector_size != 4096 &&
--	    sector_size != 256) {
-+	    sector_size != 4096) {
- 		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
- 			  sector_size);
- 		/*
-@@ -2244,8 +2237,6 @@ got_data:
- 		sdkp->capacity <<= 2;
- 	else if (sector_size == 1024)
- 		sdkp->capacity <<= 1;
--	else if (sector_size == 256)
--		sdkp->capacity >>= 1;
- 
- 	blk_queue_physical_block_size(sdp->request_queue,
- 				      sdkp->physical_block_size);
--- 
-1.8.5.2
+>  - GTPG keeps the per-group work_item, but instead of the separate
+>    lsit for STPG we just add the work item to the alua_queue_data
+>    structure, which at the point might also get a new name relecting
+>    the use a bit better.  STPG remains synchronous.
+>=20
+Well, I don't think that'll work.
+qdata is per sdev, and STPG is per port group.
 
+While it's true that we need to run STPG once a qdata item
+has been created, it's not necessarily true that we need to
+run STPG for _every_ qdata item; if we have more than one
+path per group we need to run STPG only for one of them.
+(Which is why there is a qdata structure in the first place.)
+
+What I can do, though, is to split off stpg and rtpg in two
+different routines, each with its own workqueue item.
+That way the actual implementation becomes easier to follow.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
