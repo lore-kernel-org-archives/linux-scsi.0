@@ -1,57 +1,92 @@
-From: Mark Hounschell <markh@compro.net>
-Subject: Re: [PATCH] sd: Disable support for 256 byte/sector disks
-Date: Wed, 13 May 2015 10:29:21 -0400
-Message-ID: <55535FC1.90304@compro.net>
-References: <1431506949-11398-1-git-send-email-hare@suse.de>	 <1431525655.2363.13.camel@HansenPartnership.com> <55535B30.8080602@suse.de> <1431526662.2363.22.camel@HansenPartnership.com>
-Reply-To: markh@compro.net
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH] mpt2sas: Fall back to 64 bit coherent mask if 64 bit DMA
+ / 32 bit coherent mask not supported
+Date: Wed, 13 May 2015 22:14:14 +0530
+Message-ID: <CAK=zhgoXx4HJfpTuNAP0tAPnsU8BLmM7X3qGsFCzJfHOx55YCQ@mail.gmail.com>
+References: <555279A8.6060906@linux.vnet.ibm.com>
+	<2214146.EzgWBA6g23@wuerfel>
+	<5553505D.50102@linux.vnet.ibm.com>
+	<10045033.4fV0qQU90u@wuerfel>
+	<55535BDF.6020502@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp94.ord1c.emailsrvr.com ([108.166.43.94]:45822 "EHLO
-	smtp94.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964925AbbEMO3X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2015 10:29:23 -0400
-In-Reply-To: <1431526662.2363.22.camel@HansenPartnership.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34617 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111AbbEMQoQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2015 12:44:16 -0400
+Received: by wicmc15 with SMTP id mc15so83166411wic.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2015 09:44:15 -0700 (PDT)
+In-Reply-To: <55535BDF.6020502@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
-Cc: Mark Hounschell <dmarkh@cfl.rr.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Daniel Kreling <kreling@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 05/13/2015 10:17 AM, James Bottomley wrote:
-> On Wed, 2015-05-13 at 16:09 +0200, Hannes Reinecke wrote:
->> On 05/13/2015 04:00 PM, James Bottomley wrote:
->>> On Wed, 2015-05-13 at 10:49 +0200, Hannes Reinecke wrote:
->>>> 256 bytes per sector support has been broken since 2.6.X,
->>>> and no-one stepped up to fix this.
->>>> So disable support for it.
+Hi Brain,
+
+We had a restriction from the firmware that the upper 32 bits of the
+RDPQ pool entries must be same. So to limit this restriction we
+initially set the consistent DMA mask to 32 and then after allocating
+the RDPQ pools we changed the consistent DMA mask to 64 before
+allocating remaining pools.
+
+Regards,
+Sreekanth
+
+On Wed, May 13, 2015 at 7:42 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+> On 05/13/2015 08:31 AM, Arnd Bergmann wrote:
+>> On Wednesday 13 May 2015 08:23:41 Brian King wrote:
+>>> On 05/13/2015 03:10 AM, Arnd Bergmann wrote:
+>>>> On Tuesday 12 May 2015 18:24:43 Brian King wrote:
+>>>>>
+>>>>> Commit 5fb1bf8aaa832e1e9ca3198de7bbecb8eff7db9c broke 64 bit DMA for mpt2sas on Power.
+>>>>> That commit changed the sequence for setting up the DMA and coherent DMA masks so
+>>>>> that during initialization the driver requests a 64 bit DMA mask and a 32 bit consistent
+>>>>> DMA mask, then later requests a 64 bit consistent DMA mask. The Power architecture does
+>>>>> not currently support this, which results in always falling back to a 32 bit DMA window,
+>>>>> which has a negative impact on performance. Tweak this algorithm slightly so that
+>>>>> if requesting a 32 bit consistent mask fails after we've successfully set a 64 bit
+>>>>> DMA mask, just try to get a 64 bit consistent mask. This should preserve existing
+>>>>> behavior on platforms that support mixed mask setting and restore previous functionality
+>>>>> to those that do not.
+>>>>>
+>>>>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+>>>>
+>>>> I believe the way the API is designed, it should guarantee that after dma_set_mask()
+>>>> succeeds for a device, dma_set_coherent_mask() with the same mask will also succeed.
+>>>>
+>>>> Could you just call dma_set_mask_and_coherent() here to avoid that complex logic?
 >>>
->>> I assume this should have a
->>>
->>> From: Mark Hounschell <dmarkh@cfl.rr.com>
->>>
->>> at the top?
->>>
->>> James
->>>
->> I wasn't sure, as I've pulled the patch off bugzilla.
->> But do whatever you see fit.
+>>> I don't think that would work. The mpt2sas driver wants to set the dma mask to 64bits
+>>> but set the coherent mask to 32 bits, then my change is to set the coherent mask to
+>>> 64bits if setting it to 32bit fails. I'm not seeing how using dma_set_mask_and_coherent
+>>> would simplify anything here.
+>>
+>> My question was more about why the driver would ask for a 32-bit coherent
+>> mask to start with. Is this a limitation in the mpt2sas device that can
+>> only have descriptors at low addresses, or is it trying to work around some
+>> bug in a particular host system?
 >
-> It needs authorship (From: field) of whoever wrote it and put it on
-> bugzilla in the first place.  According to the entry, it was him:
+> I'll need help from Sreekanth in answering that. All that is in the git commit log is:
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=16058#c18
+>     2. Initially set the consistent DMA mask to 32 bit and then change it to 64 bit mask
+>     after allocating RDPQ pools by calling the function _base_change_consistent_dma_mask.
+>     This is to ensure that all the upper 32 bits of RDPQ entries's base address to be same.
 >
-
-I am the author of that patch. What would you like me to do? My home 
-email address is what I used in bugzilla "dmarkh@cfl.rr.com" years back 
-when I originally submitted the bug. I'm sending this email from work.
-
-I am Mark Hounschell and am the author of that patch and you can do with 
-it whatever you see fit?
-
-Regards
-Mark
-
-
+> So, I'm not sure my patch won't break something with mpt2sas... This commit also changed
+> how the RDPO pools are allocated, so its possible this won't work. However, I did load
+> it on Power box and I'm not seeing any major problems so far. I am seeing the following message
+> get logged on a regular basis, not sure if its related to this change or not:
+>
+> mpt2sas3: log_info(0x31120303): originator(IOP), code(0x03), sub_code(0x3112)
+>
+> -Brian
+>
+>
+> --
+> Brian King
+> Power Linux I/O
+> IBM Linux Technology Center
+>
+>
