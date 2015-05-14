@@ -1,15 +1,17 @@
 From: <rajinikanth.pandurangan@pmcs.com>
-Subject: [PATCH 0/9] aacraid: Patchset for aacraid driver version 41010
-Date: Wed, 13 May 2015 17:12:49 -0700
-Message-ID: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+Subject: [PATCH 1/9] [SCSI] aacraid: Fix for logical device name and UID not exposed to the OS
+Date: Wed, 13 May 2015 17:12:50 -0700
+Message-ID: <1431562378-8514-2-git-send-email-rajinikanth.pandurangan@pmcs.com>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:53629 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:53656 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965447AbbENANw (ORCPT
+	by vger.kernel.org with ESMTP id S965549AbbENAOD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 May 2015 20:13:52 -0400
+	Wed, 13 May 2015 20:14:03 -0400
+In-Reply-To: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,32 +19,36 @@ Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, achim.leubn
 
 From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
-This patchset includes the following changes (bug fixes and new feature support)
-specific to aacraid driver.
+Description:
+	Driver sends the right size of the response buffer.
 
-Rajinikanth Pandurangan (9):
-  [SCSI] aacraid: Fix for logical device name and UID not exposed to the
-    OS
-  [SCSI] aacraid: Add Power Management support
-  [SCSI] aacraid: Enable MSI interrupt for series-6 controller
-  [SCSI] aacraid: Enable 64-bit write to controller register
-  [SCSI] aacraid: Tune response path if IsFastPath bit set
-  [SCSI] aacraid: Reset irq affinity hints before releasing irq
-  [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from
-    suspend
-  [SCSI] aacraid: Send commit-config to controller firmware
-  [SCSI] aacraid: Update driver version
+Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+---
+ drivers/scsi/aacraid/aachba.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/scsi/aacraid/aachba.c   | 263 +++++++++++++++++++++-------------------
- drivers/scsi/aacraid/aacraid.h  |  21 +++-
- drivers/scsi/aacraid/comminit.c | 155 ++++++++++++-----------
- drivers/scsi/aacraid/commsup.c  | 114 ++++++++++++-----
- drivers/scsi/aacraid/linit.c    | 140 +++++++++++++++------
- drivers/scsi/aacraid/rx.c       |   1 +
- drivers/scsi/aacraid/sa.c       |   1 +
- drivers/scsi/aacraid/src.c      |  64 +++-------
- 8 files changed, 443 insertions(+), 316 deletions(-)
-
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 9b3dd6e..fe59b00 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -570,7 +570,7 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
+ 
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_name),
++		  sizeof(struct aac_get_name_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback)get_container_name_callback,
+@@ -1052,7 +1052,7 @@ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
+ 
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_serial),
++		  sizeof(struct aac_get_serial_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback) get_container_serial_callback,
 -- 
 1.9.3
 
