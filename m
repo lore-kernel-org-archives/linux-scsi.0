@@ -1,79 +1,48 @@
-From: Rajat Jain <rajatja@google.com>
-Subject: Re: blk_requeue_request BUG_ON
-Date: Wed, 13 May 2015 17:07:14 -0700
-Message-ID: <CACK8Z6GJoxp0JBaE+gTNtWs7uvQwd3iYRHZ3qQb-Edk5Ew3WUA@mail.gmail.com>
-References: <5553D61A.9080502@linux.vnet.ibm.com>
+From: <rajinikanth.pandurangan@pmcs.com>
+Subject: [PATCH 0/9] aacraid: Patchset for aacraid driver version 41010
+Date: Wed, 13 May 2015 17:12:49 -0700
+Message-ID: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:35455 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754564AbbENAHO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2015 20:07:14 -0400
-Received: by igbyr2 with SMTP id yr2so153812618igb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2015 17:07:14 -0700 (PDT)
-In-Reply-To: <5553D61A.9080502@linux.vnet.ibm.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:53629 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965447AbbENANw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 May 2015 20:13:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, lnx1138@linux.vnet.ibm.com
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, achim.leubner@pmcs.com, murthy.bhat@pmcs.com, rajinikanth.pandurangan@pmcs.com
 
-Hello,
+From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
-On Wed, May 13, 2015 at 3:54 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
-> I've been chasing a BUG_ON in blk_requeue_request which seems to occur
-> in scenarios where we are seeing lots of SCSI aborts. As I've been digging
-> through the completion paths and abort paths, I've noticed if the following
-> sequence occurs, we are likely to hit this issue:
->
-> 1. scsi_cmd times out, async abort issued
-> 2. LLDD aborts command, LLDD calls scsi_done for the aborted command from interrupt handler
->    when aborted command comes back
-> 3. If result of the aborted command is something like DID_ERROR and we allow retries,
->    then in scsi_done processing, we'll call scsi_queue_insert which then calls blk_requeue_request
-> 4. Returning from the LLDD's eh_abort handler, scsi_error sees the abort was successful,
->    and then calls scsi_queue_insert for the aborted command, which also calls blk_requeue_request
->    where we hit the BUG_ON because the command has been queued again.
->
-> This is occurring for the non blk_rq_tagged case, for reference, so blk_requeue_request
-> doesn't call blk_queue_end_tag which might cause this to not be hit...
->
-> Should a LLDD NOT call scsi_done for commands it aborts?
+This patchset includes the following changes (bug fixes and new feature support)
+specific to aacraid driver.
 
-I think the right statement would be that the LLDD should not call
-scsi_done() AFTER the eh_abort_handler() has returned SUCCESS, because
-once SUCCESS is returned from the eh_abort_handler, the expectation is
-that the LLDD and the HW has completely forgotten about that command
-(and hence would not call scsi_done()). Also, from the time the
-eh_abort_handler returns, the mid level is free to do what it pleases
-with that scsi_cmnd (requeue it or free it or finish it) - thus LLDD
-cannot be holding a pointer to scsi_cmnd anymore as it could be
-pointing elsewhere than what LLD thinks.
+Rajinikanth Pandurangan (9):
+  [SCSI] aacraid: Fix for logical device name and UID not exposed to the
+    OS
+  [SCSI] aacraid: Add Power Management support
+  [SCSI] aacraid: Enable MSI interrupt for series-6 controller
+  [SCSI] aacraid: Enable 64-bit write to controller register
+  [SCSI] aacraid: Tune response path if IsFastPath bit set
+  [SCSI] aacraid: Reset irq affinity hints before releasing irq
+  [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from
+    suspend
+  [SCSI] aacraid: Send commit-config to controller firmware
+  [SCSI] aacraid: Update driver version
 
-Thanks,
+ drivers/scsi/aacraid/aachba.c   | 263 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/aacraid.h  |  21 +++-
+ drivers/scsi/aacraid/comminit.c | 155 ++++++++++++-----------
+ drivers/scsi/aacraid/commsup.c  | 114 ++++++++++++-----
+ drivers/scsi/aacraid/linit.c    | 140 +++++++++++++++------
+ drivers/scsi/aacraid/rx.c       |   1 +
+ drivers/scsi/aacraid/sa.c       |   1 +
+ drivers/scsi/aacraid/src.c      |  64 +++-------
+ 8 files changed, 443 insertions(+), 316 deletions(-)
 
-Rajat
+-- 
+1.9.3
 
-> We've seen the issue above on
-> both ibmvfc and mpt2sas, but I know there are other LLDDs that call scsi_done in this case,
-> but just do it before eh_abort returns. Or is it expected the LLDD will only ever return DID_ABORT
-> on the aborted command, which looks like it might prevent this issue as well, however, that seems
-> racy and then we'd also need to add some memory barriers around the checking / setting of scmd->eh_eflags
-> I would think.
->
-> Or am I missing something and headed down the wrong path?
->
-> Thanks,
->
-> Brian
->
-> --
-> Brian King
-> Power Linux I/O
-> IBM Linux Technology Center
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
