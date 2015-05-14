@@ -1,8 +1,8 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [RFC/PATCH v2] powerpc/iommu: Support "hybrid" iommu/direct DMA ops
+Subject: [RFC/PATCH v3] powerpc/iommu: Support "hybrid" iommu/direct DMA ops
  for coherent_mask < dma_mask
-Date: Fri, 15 May 2015 07:58:03 +1000
-Message-ID: <1431640683.4160.69.camel@kernel.crashing.org>
+Date: Fri, 15 May 2015 08:03:54 +1000
+Message-ID: <1431641034.4160.71.camel@kernel.crashing.org>
 References: <555279A8.6060906@linux.vnet.ibm.com>
 	 <2214146.EzgWBA6g23@wuerfel> <5553505D.50102@linux.vnet.ibm.com>
 	 <10045033.4fV0qQU90u@wuerfel> <55535BDF.6020502@linux.vnet.ibm.com>
@@ -13,10 +13,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36705 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:44208 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422769AbbENV6a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 May 2015 17:58:30 -0400
+	id S1422694AbbENWEP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 May 2015 18:04:15 -0400
 In-Reply-To: <5553C428.5090806@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -33,6 +33,8 @@ Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
 v2: Implement a custom dma_set_coherent_mask() to work around the fact
 that dma_supported() will fail otherwise.
+
+v3: Add missing symbol export
 
 diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
 index 22b0940..cd46474 100644
@@ -230,7 +232,7 @@ index 7359797..81b81cd 100644
  	.map_sg = swiotlb_map_sg_attrs,
  	.unmap_sg = swiotlb_unmap_sg_attrs,
 diff --git a/arch/powerpc/kernel/dma.c b/arch/powerpc/kernel/dma.c
-index 484b2d4..19941d5 100644
+index 484b2d4..b0c4faa 100644
 --- a/arch/powerpc/kernel/dma.c
 +++ b/arch/powerpc/kernel/dma.c
 @@ -16,6 +16,7 @@
@@ -360,7 +362,7 @@ index 484b2d4..19941d5 100644
  static u64 dma_direct_get_required_mask(struct device *dev)
  {
  	u64 end, mask;
-@@ -230,6 +286,24 @@ struct dma_map_ops dma_direct_ops = {
+@@ -230,6 +286,25 @@ struct dma_map_ops dma_direct_ops = {
  };
  EXPORT_SYMBOL(dma_direct_ops);
  
@@ -381,6 +383,7 @@ index 484b2d4..19941d5 100644
 +	dev->coherent_dma_mask = mask;
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(dma_set_coherent_mask);
 +
  #define PREALLOC_DMA_DEBUG_ENTRIES (1 << 16)
  
