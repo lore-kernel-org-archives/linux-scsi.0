@@ -1,41 +1,66 @@
-From: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: Re: [Open-FCoE] [PATCH] scsi: fix Wunused-but-set-variable
-	buildwarning
-Date: Fri, 15 May 2015 09:14:15 +0200
-Message-ID: <20150515071415.GC24293@opentech.at>
-References: <1431627166-12729-1-git-send-email-hofrat@osadl.org> <1488e7d0337944d98996c115cd0baefc@EX13-MBX-026.vmware.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: [ 45/48] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+Date: Fri, 15 May 2015 10:06:15 +0200
+Message-ID: <20150515080532.202226683@1wt.eu>
+References: <9c2783dfae10ef2d1e9b08bcc1e562c5@local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1488e7d0337944d98996c115cd0baefc@EX13-MBX-026.vmware.com>
+In-Reply-To: <9c2783dfae10ef2d1e9b08bcc1e562c5@local>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Prasad Gondi <pgondi@vmware.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>, Vasu Dev <vasu.dev@intel.com>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@fb.com>, Ben Hutchings <ben@decadent.org.uk>, Willy Tarreau <w@1wt.eu>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 14 May 2015, Prasad Gondi wrote:
+2.6.32-longterm review patch.  If anyone has any objections, please let me know.
 
-> It seems like     rpriv is used to set the fsp->tgt_flags originally
-> 
-> >   fsp->tgt_flags = rpriv->flags 
-> 
-> And fsp->tgt_flags are used in "fc_fcp_cmd_send" like this
-> 
->         setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
->         if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
->                 fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
-> 
-> Main purpose of this flags used is to set the correct TimeOut Value for fc_fcp_timer. 
-> 
-> So is the removal of the "fsp->tgt_flags = rpriv->flags" in fc_queuecommand() is intentional? Or by mistake?
-> 
-thats something I can't say - but the commit message indicated that the
-removal of tgt_flags was intentional.
+------------------
 
-> Once we clear that out we can see whether this change make sense?
->
-yup - many thanks !
+From: Jan Kara <jack@suse.cz>
 
-hofrat
+commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
+
+When sg_scsi_ioctl() fails to prepare request to submit in
+blk_rq_map_kern() we jump to a label where we just end up copying
+(luckily zeroed-out) kernel buffer to userspace instead of reporting
+error. Fix the problem by jumping to the right label.
+
+CC: Jens Axboe <axboe@kernel.dk>
+CC: linux-scsi@vger.kernel.org
+Coverity-id: 1226871
+Signed-off-by: Jan Kara <jack@suse.cz>
+
+Fixed up the, now unused, out label.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+(cherry picked from commit d73b032b63e8967462e1cf5763858ed89e97880f)
+
+Signed-off-by: Willy Tarreau <w@1wt.eu>
+---
+ block/scsi_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 123eb17..f5df2a8 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -503,7 +503,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
  
+ 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
+ 		err = DRIVER_ERROR << 24;
+-		goto out;
++		goto error;
+ 	}
+ 
+ 	memset(sense, 0, sizeof(sense));
+@@ -513,7 +513,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	blk_execute_rq(q, disk, rq, 0);
+ 
+-out:
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
+-- 
+1.7.12.2.21.g234cd45.dirty
