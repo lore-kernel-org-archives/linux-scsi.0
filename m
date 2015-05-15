@@ -1,59 +1,45 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] lpfc 8.2.7 : Rework the worker thread
-Date: Fri, 15 May 2015 12:49:34 +0300
-Message-ID: <20150515094934.GA23199@mwanda>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] megaraid_sas : Modify return value of megasas_issue_blocked_cmd()
+ and wait_and_poll() to consider command status returned by firmware
+Date: Fri, 15 May 2015 11:56:17 +0200
+Message-ID: <5555C2C1.2010804@redhat.com>
+References: <201505061333.t46DXdcM032441@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28124 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbbEOJtp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 05:49:45 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:35004 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754152AbbEOJ4U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 May 2015 05:56:20 -0400
+In-Reply-To: <201505061333.t46DXdcM032441@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
+Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-Hello James Smart,
+On 05/06/2015 03:31 PM, Sumit.Saxena@avagotech.com wrote:
+> This patch is rebased on top of recently sent 18 patches(submitted by me) for megaraid_sas driver.
+> 
+> Change the return value of wait_and_poll() and megsas_issue_blocked_cmd() based on MFI_STAT returned by firmware for that command. Earlier driver always
+> send return type based on command completion (but never check MFI_STAT_OK for that command), so even if command is failed by firmware still driver will
+> return SUCCESS status from these functions wait_and_poll() and megsas_issue_blocked_cmd() and if caller of these functions does not check command status
+> (MFI_STAT), then it may endup using invalid data returned in DMA buffers(one of the example is megasas_ld_list_query DCMD). Best thing to avoid this type
+> of issue is do error handling and set proper return type from caller function wait_and_poll() and megsas_issue_blocked_cmd().
+> 
+> The change proposed in this patch will fix the regression introduced in patch- "90dc9d9 megaraid_sas : MFI MPT linked list corruption fix" inside function
+> megasas_ld_list_query().
+> Prior to this MFI MPT linked list corruption fix patch, megasas_ld_list_query() function used to check DCMD status(returned by firmware) but with
+> this linked list corruption fix patch, DCMD status will not be checked inside function megasas_ld_list_query() and introduced this issue of wrong data
+> being used by function megasas_ld_list_query().
+> 
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+This patch fixes an issue spotted on my test system.
+Thanks for posting.
 
-The patch 5e9d9b827698: "[SCSI] lpfc 8.2.7 : Rework the worker
-thread" from Jun 14, 2008, leads to the following static checker
-warning:
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-	drivers/scsi/lpfc/lpfc_sli.c:9365 lpfc_sli_host_down()
-	warn: test_bit() takes a bit number
+Tomas
 
-drivers/scsi/lpfc/lpfc_sli.c
-  9357          spin_lock_irqsave(&phba->hbalock, flags);
-  9358          for (i = 0; i < psli->num_rings; i++) {
-  9359                  pring = &psli->ring[i];
-  9360                  prev_pring_flag = pring->flag;
-  9361                  /* Only slow rings */
-  9362                  if (pring->ringno == LPFC_ELS_RING) {
-  9363                          pring->flag |= LPFC_DEFERRED_RING_EVENT;
-  9364                          /* Set the lpfc data pending flag */
-  9365                          set_bit(LPFC_DATA_READY, &phba->data_flags);
-
-LPFC_DATA_READY is defined as:
-
-#define LPFC_DATA_READY         (1<<0)
-
-The intention seems to be that we use BIT(0) but because set_bit() has
-a shift built in it is using BIT(1).  In other words:
-
-Good:	set_bit(0, &phba->data_flags);
- Bad:   set_bit(BIT(0), &phba->data_flags);
-
-This seems to be used consistently so I think it's fine, but static
-checkers will complain.  I think this is the only ->data_flag that we
-use so it doesn't matter (I haven't looked very hard at this code).
-
-  9366                  }
-  9367                  /*
-  9368                   * Error everything on the txq since these iocbs have not been
-  9369                   * given to the FW yet.
-  9370                   */
-
-regards,
-dan carpenter
