@@ -1,59 +1,57 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH] lpfc: Revise maintainers for Avago Technologies ownership
- of Emulex
-Date: Fri, 15 May 2015 13:10:58 -0400
-Message-ID: <1431709858.27283.1.camel@myfc17>
-Reply-To: james.smart@emulex.com
+From: Prasad Gondi <pgondi@vmware.com>
+Subject: RE: [Open-FCoE] [PATCH] scsi: fix Wunused-but-set-variable
+ buildwarning
+Date: Fri, 15 May 2015 17:12:23 +0000
+Message-ID: <932e7755544949139f0d283358499bb8@EX13-MBX-026.vmware.com>
+References: <1431627166-12729-1-git-send-email-hofrat@osadl.org>
+	 <1488e7d0337944d98996c115cd0baefc@EX13-MBX-026.vmware.com>
+	 <20150515071415.GC24293@opentech.at>
+ <1431709773.4358.14.camel@lin-nd1-054.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:55650 "EHLO
-	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932810AbbEORLF (ORCPT
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:52248 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932810AbbEORMh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 May 2015 13:11:05 -0400
+	Fri, 15 May 2015 13:12:37 -0400
+In-Reply-To: <1431709773.4358.14.camel@lin-nd1-054.jf.intel.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "vasu.dev@linux.intel.com" <vasu.dev@linux.intel.com>, Nicholas Mc Guire <der.herr@hofr.at>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Mc Guire <hofrat@osadl.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>
 
-Revise maintainers for Avago Technologies ownership of Emulex
-
-The old email addresses will go away very soon. Revising with new addresses.
-
-Copyrights will be updated in a later patch.
-
--- james s
-
-
-Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
-Signed-off-by: James Smart <james.smart@avagotech.com>
-
----
- MAINTAINERS | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cb62576..8428bf4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3771,10 +3771,11 @@ M:	David Woodhouse <dwmw2@infradead.org>
- L:	linux-embedded@vger.kernel.org
- S:	Maintained
- 
--EMULEX LPFC FC SCSI DRIVER
--M:	James Smart <james.smart@emulex.com>
-+EMULEX/AVAGO LPFC FC/FCOE SCSI DRIVER
-+M:	James Smart <james.smart@avagotech.com>
-+M:	Dick Kennedy <dick.kennedy@avagotech.com>
- L:	linux-scsi@vger.kernel.org
--W:	http://sourceforge.net/projects/lpfcxxxx
-+W:	http://www.avagotech.com
- S:	Supported
- F:	drivers/scsi/lpfc/
- 
--- 
-1.7.11.7
-
-
-
+VGhhbmtzIFZhc3UgZm9yIHRoZSBkZXRhaWxzLg0KDQpJIGFncmVlIGN1cnJlbnQgcGF0Y2ggaXMg
+Z29vZCB0byBnby4gSSBoYXZlIG5vIG9iamVjdGlvbnMgYW5kIGl0IGlzIGFuIGV4dGVuc2lvbiB0
+byB0aGUgb2xkZXIgcGF0Y2ggd2hpY2ggcmVtb3ZlZCB0aGUgIiBmc3AtPnRndF9mbGFncyIgZmxh
+Z3MuDQoNClRoYW5rcywNClByYXNhZA0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
+IHZhc3UuZGV2QGxpbnV4LmludGVsLmNvbSBbbWFpbHRvOnZhc3UuZGV2QGxpbnV4LmludGVsLmNv
+bV0gDQpTZW50OiBGcmlkYXksIE1heSAxNSwgMjAxNSAxMDoxMCBBTQ0KVG86IE5pY2hvbGFzIE1j
+IEd1aXJlDQpDYzogUHJhc2FkIEdvbmRpOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgSmFt
+ZXMgRS5KLiBCb3R0b21sZXk7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IE5pY2hvbGFz
+IE1jIEd1aXJlOyBmY29lLWRldmVsQG9wZW4tZmNvZS5vcmcNClN1YmplY3Q6IFJlOiBbT3Blbi1G
+Q29FXSBbUEFUQ0hdIHNjc2k6IGZpeCBXdW51c2VkLWJ1dC1zZXQtdmFyaWFibGUgYnVpbGR3YXJu
+aW5nDQoNCk9uIEZyaSwgMjAxNS0wNS0xNSBhdCAwOToxNCArMDIwMCwgTmljaG9sYXMgTWMgR3Vp
+cmUgd3JvdGU6DQo+IE9uIFRodSwgMTQgTWF5IDIwMTUsIFByYXNhZCBHb25kaSB3cm90ZToNCj4g
+DQo+ID4gSXQgc2VlbXMgbGlrZSAgICAgcnByaXYgaXMgdXNlZCB0byBzZXQgdGhlIGZzcC0+dGd0
+X2ZsYWdzIG9yaWdpbmFsbHkNCj4gPiANCj4gPiA+ICAgZnNwLT50Z3RfZmxhZ3MgPSBycHJpdi0+
+ZmxhZ3MNCj4gPiANCj4gPiBBbmQgZnNwLT50Z3RfZmxhZ3MgYXJlIHVzZWQgaW4gImZjX2ZjcF9j
+bWRfc2VuZCIgbGlrZSB0aGlzDQo+ID4gDQo+ID4gICAgICAgICBzZXR1cF90aW1lcigmZnNwLT50
+aW1lciwgZmNfZmNwX3RpbWVvdXQsICh1bnNpZ25lZCBsb25nKWZzcCk7DQo+ID4gICAgICAgICBp
+ZiAocnByaXYtPmZsYWdzICYgRkNfUlBfRkxBR1NfUkVDX1NVUFBPUlRFRCkNCj4gPiAgICAgICAg
+ICAgICAgICAgZmNfZmNwX3RpbWVyX3NldChmc3AsIGdldF9mc3BfcmVjX3Rvdihmc3ApKTsNCj4g
+PiANCj4gPiBNYWluIHB1cnBvc2Ugb2YgdGhpcyBmbGFncyB1c2VkIGlzIHRvIHNldCB0aGUgY29y
+cmVjdCBUaW1lT3V0IFZhbHVlIGZvciBmY19mY3BfdGltZXIuIA0KPiA+IA0KPiA+IFNvIGlzIHRo
+ZSByZW1vdmFsIG9mIHRoZSAiZnNwLT50Z3RfZmxhZ3MgPSBycHJpdi0+ZmxhZ3MiIGluIGZjX3F1
+ZXVlY29tbWFuZCgpIGlzIGludGVudGlvbmFsPyBPciBieSBtaXN0YWtlPw0KPiA+IA0KPiB0aGF0
+cyBzb21ldGhpbmcgSSBjYW4ndCBzYXkgLSBidXQgdGhlIGNvbW1pdCBtZXNzYWdlIGluZGljYXRl
+ZCB0aGF0IA0KPiB0aGUgcmVtb3ZhbCBvZiB0Z3RfZmxhZ3Mgd2FzIGludGVudGlvbmFsLg0KPiAN
+Cg0KSXQgd2FzIGludGVudGlvbmFsIGFuZCBnb29kIGNsZWFudXAgc2luY2Ugbm93IHJwcml2LT5m
+bGFncyBpcyB1c2VkIGRpcmVjdGx5IHdpdGggdGhhdCBjaGFuZ2UgaW5zdGVhZCBvZiBzdG9yaW5n
+IGluIGZzcC0+dGd0X2ZsYWdzIGFzIGl0IHdhcyBiZWZvcmUuDQoNCj4gPiBPbmNlIHdlIGNsZWFy
+IHRoYXQgb3V0IHdlIGNhbiBzZWUgd2hldGhlciB0aGlzIGNoYW5nZSBtYWtlIHNlbnNlPw0KPiA+
+DQoNCkFueWNhc2UgdGhlIHBhdGNoIHVuZGVyIGRpc2N1c3Npb24gaXMgc3RyYWlnaHQgZm9yd2Fy
+ZCBjbGVhbiB1cCBwYXRjaCBzaW5jZSBpdCBqdXN0IHJlbW92ZXMgYSBsb2NhbCBzdGFjayB2YXJp
+YWJsZSB3aGljaCBpcyBub3QgdXNlZC4NCg0KVGhhbmtzLA0KVmFzdQ0KDQo=
