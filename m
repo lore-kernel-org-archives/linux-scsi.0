@@ -1,55 +1,31 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [RFC/PATCH v3] powerpc/iommu: Support "hybrid" iommu/direct DMA
- ops for coherent_mask < dma_mask
-Date: Fri, 15 May 2015 17:19:52 -0500
-Message-ID: <55567108.7020601@linux.vnet.ibm.com>
-References: <555279A8.6060906@linux.vnet.ibm.com> <2214146.EzgWBA6g23@wuerfel> <5553505D.50102@linux.vnet.ibm.com> <10045033.4fV0qQU90u@wuerfel> <55535BDF.6020502@linux.vnet.ibm.com> <CAK=zhgoXx4HJfpTuNAP0tAPnsU8BLmM7X3qGsFCzJfHOx55YCQ@mail.gmail.com> <1431550613.20218.88.camel@kernel.crashing.org> <5553C428.5090806@linux.vnet.ibm.com> <1431641034.4160.71.camel@kernel.crashing.org>
+From: Adamu Joel <joeladamu11@gmail.com>
+Subject: I Have a project for you
+Date: Sat, 16 May 2015 01:49:36 +0200
+Message-ID: <CACYMCzJW0F6P16wk79O5PpnJ+L=rv2gxke1QZJEX87arcQ+38w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:54247 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946101AbbEOWT5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 18:19:57 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 16:19:57 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id D3FAB1FF0023
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 16:11:04 -0600 (MDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FMHmDN35717146
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 15:17:48 -0700
-Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FMJrgT030421
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 16:19:54 -0600
-In-Reply-To: <1431641034.4160.71.camel@kernel.crashing.org>
+Received: from mail-ie0-f195.google.com ([209.85.223.195]:33533 "EHLO
+	mail-ie0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946224AbbEOXth (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 19:49:37 -0400
+Received: by ierx19 with SMTP id x19so6313404ier.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 16:49:37 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org, Daniel Kreling <kreling@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 05/14/2015 05:03 PM, Benjamin Herrenschmidt wrote:
-> This patch adds the ability to the DMA direct ops to fallback to the IOMMU
-> ops for coherent alloc/free if the coherent mask of the device isn't
-> suitable for accessing the direct DMA space and the device also happens
-> to have an active IOMMU table.
-> 
-> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> ---
-> 
+Good Morning,
 
-Thanks. This one works fine for me with mpt2sas.
+I am Mr. Adamu Joel a senior staff with a financial institution here
+in Burkina Faso. I want to let you know that the project is all about
+the transfer of the sum of US$3.7M which belongs to the late son of
+Libyan leader Mr.Mutassim Gaddafi, why I am contacting you so that you can
+act as his business partner and I will guide you on what to do for
+this fund to be approved and transfered to your own bank account in
+your country after which we will share it 50% each party.If you are
+interested Contact me through my private email address
+For more details.
 
-Tested-by: Brian King <brking@linux.vnet.ibm.com>
+  adamujoel@qq.com
 
--Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+Thanks,Mr.Adamu Joel
