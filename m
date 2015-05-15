@@ -1,7 +1,7 @@
 From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH 4/6] Add refcount to fw_event_work struct
-Date: Thu, 14 May 2015 20:42:00 -0700
-Message-ID: <1431661322-3097935-5-git-send-email-calvinowens@fb.com>
+Subject: [PATCH 1/6] Add refcount to sas_device struct
+Date: Thu, 14 May 2015 20:41:57 -0700
+Message-ID: <1431661322-3097935-2-git-send-email-calvinowens@fb.com>
 References: <20150506184852.GA1007288@mail.thefacebook.com>
  <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
 Mime-Version: 1.0
@@ -13,55 +13,43 @@ To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishna
 Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, calvinowens@fb.com, kernel-team@fb.com
 List-Id: linux-scsi@vger.kernel.org
 
-The fw_event_work struct is concurrently referenced at shutdown, so
-add a refcount to protect it.
+These objects can be referenced concurrently throughout the driver, we
+need a way to make sure threads can't delete them out from under each
+other.
 
 Signed-off-by: Calvin Owens <calvinowens@fb.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/scsi/mpt2sas/mpt2sas_base.h | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 9645055..611b34d 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -176,9 +176,37 @@ struct fw_event_work {
- 	u8			VP_ID;
- 	u8			ignore;
- 	u16			event;
-+	struct kref		refcount;
- 	char			event_data[0] __aligned(4);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index caff8d1..2e7dc33 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -376,8 +376,24 @@ struct _sas_device {
+ 	u8	phy;
+ 	u8	responding;
+ 	u8	pfa_led_on;
++	struct kref refcount;
  };
  
-+static void fw_event_work_free(struct kref *r)
++static inline void sas_device_get(struct _sas_device *s)
 +{
-+	kfree(container_of(r, struct fw_event_work, refcount));
++	kref_get(&s->refcount);
 +}
 +
-+static void fw_event_work_get(struct fw_event_work *fw_work)
++static inline void sas_device_free(struct kref *r)
 +{
-+	kref_get(&fw_work->refcount);
++	kfree(container_of(r, struct _sas_device, refcount));
 +}
 +
-+static void fw_event_work_put(struct fw_event_work *fw_work)
++static inline void sas_device_put(struct _sas_device *s)
 +{
-+	kref_put(&fw_work->refcount, fw_event_work_free);
++	kref_put(&s->refcount, sas_device_free);
 +}
 +
-+static struct fw_event_work *alloc_fw_event_work(int len)
-+{
-+	struct fw_event_work *fw_event;
-+
-+	fw_event = kzalloc(sizeof(*fw_event) + len, GFP_ATOMIC);
-+	if (!fw_event)
-+		return NULL;
-+
-+	kref_init(&fw_event->refcount);
-+	return fw_event;
-+}
-+
- /* raid transport support */
- static struct raid_template *mpt2sas_raid_template;
- 
+ /**
+  * struct _raid_device - raid volume link list
+  * @list: sas device list
 -- 
 1.8.1
