@@ -1,53 +1,53 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH 9/9] [SCSI] aacraid: Update driver version
-Date: Fri, 15 May 2015 02:58:07 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AB7F6AD2C@BBYEXM01.pmc-sierra.internal>
-References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <1431562378-8514-10-git-send-email-rajinikanth.pandurangan@pmcs.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH 0/6] Fixes for memory corruption in mpt2sas
+Date: Thu, 14 May 2015 20:41:56 -0700
+Message-ID: <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
+References: <20150506184852.GA1007288@mail.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:38785 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1423341AbbEOC6I convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 May 2015 22:58:08 -0400
-In-Reply-To: <1431562378-8514-10-git-send-email-rajinikanth.pandurangan@pmcs.com>
-Content-Language: en-US
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:39087 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932748AbbEODmm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 May 2015 23:42:42 -0400
+In-Reply-To: <20150506184852.GA1007288@mail.thefacebook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
+Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, calvinowens@fb.com, kernel-team@fb.com
 
-Reviewed-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Hello all,
 
------Original Message-----
-From: rajinikanth.pandurangan@pmcs.com [mailto:rajinikanth.pandurangan@pmcs.com] 
-Sent: Thursday, May 14, 2015 5:43 AM
-To: jbottomley@parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat; Rajinikanth Pandurangan
-Subject: [PATCH 9/9] [SCSI] aacraid: Update driver version
+This patchset attempts to address problems we've been having with
+panics due to memory corruption from the mpt2sas driver.
 
-From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+I will provide a similar set of fixes for mpt3sas, since we see
+similar issues there as well. "Porting" this to mpt3sas will be
+trivial since the part of the driver I'm touching is nearly identical
+between the two, so I thought it would be simpler to review a patch
+against mpt2sas alone at first.
 
-Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
----
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I've tested this for a few days on a big storage box that seemed to be
+very susceptible to the panics, and so far it seems to have eliminated
+them.
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index ec32a2bdd..7a73eca 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
---
-1.9.3
+Thanks,
+Calvin
 
+
+Total diffstat:
+
+ drivers/scsi/mpt2sas/mpt2sas_base.h      |  20 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 482 +++++++++++++++++++++----------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
+ 3 files changed, 359 insertions(+), 155 deletions(-)
+
+Patches:
+
+* [PATCH 1/6] Add refcount to sas_device struct
+* [PATCH 2/6] Refactor code to use new sas_device refcount
+* [PATCH 3/6] Fix unsafe sas_device_list usage
+* [PATCH 4/6] Add refcount to fw_event_work struct
+* [PATCH 5/6] Refactor code to use new fw_event refcount
+* [PATCH 6/6] Fix unsafe fw_event_list usage
