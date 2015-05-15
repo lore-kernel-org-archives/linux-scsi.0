@@ -1,87 +1,66 @@
-From: Prasad Gondi <pgondi@vmware.com>
-Subject: RE: [Open-FCoE] [PATCH] scsi: fix Wunused-but-set-variable
- buildwarning
-Date: Thu, 14 May 2015 23:24:28 +0000
-Message-ID: <1488e7d0337944d98996c115cd0baefc@EX13-MBX-026.vmware.com>
-References: <1431627166-12729-1-git-send-email-hofrat@osadl.org>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH 1/9] [SCSI] aacraid: Fix for logical device name and UID
+ not exposed to the OS
+Date: Fri, 15 May 2015 02:55:53 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AB7F6AC53@BBYEXM01.pmc-sierra.internal>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1431562378-8514-2-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1431627166-12729-1-git-send-email-hofrat@osadl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:38504 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423062AbbEOC4A convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 May 2015 22:56:00 -0400
+In-Reply-To: <1431562378-8514-2-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Mc Guire <hofrat@osadl.org>, Vasu Dev <vasu.dev@intel.com>
-Cc: "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
 
-It seems like     rpriv is used to set the fsp->tgt_flags originally
+Reviewed-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
->   fsp->tgt_flags = rpriv->flags 
-
-And fsp->tgt_flags are used in "fc_fcp_cmd_send" like this
-
-        setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
-        if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
-                fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
-
-Main purpose of this flags used is to set the correct TimeOut Value for fc_fcp_timer. 
-
-So is the removal of the "fsp->tgt_flags = rpriv->flags" in fc_queuecommand() is intentional? Or by mistake?
-
-Once we clear that out we can see whether this change make sense?
-
-Thanks,
-Prasad Gondi
-
-  
 -----Original Message-----
-From: fcoe-devel [mailto:fcoe-devel-bounces@open-fcoe.org] On Behalf Of Nicholas Mc Guire
-Sent: Thursday, May 14, 2015 11:13 AM
-To: Vasu Dev
-Cc: fcoe-devel@open-fcoe.org; James E.J. Bottomley; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Nicholas Mc Guire
-Subject: [Open-FCoE] [PATCH] scsi: fix Wunused-but-set-variable buildwarning
+From: rajinikanth.pandurangan@pmcs.com [mailto:rajinikanth.pandurangan@pmcs.com] 
+Sent: Thursday, May 14, 2015 5:43 AM
+To: jbottomley@parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat; Rajinikanth Pandurangan
+Subject: [PATCH 1/9] [SCSI] aacraid: Fix for logical device name and UID not exposed to the OS
 
-commit "[SCSI] libfc: remove tgt_flags from fc_fcp_pkt struct"
-removed the last usage of rpriv (rpriv->flags) but forgot to remove the unused rpriv struct resulting in:
-  drivers/scsi/libfc/fc_fcp.c: In function 'fc_queuecommand':
-  drivers/scsi/libfc/fc_fcp.c:1795:30: warning: variable 'rpriv' set
-  but not used [-Wunused-but-set-variable] so simply drop its declaration and setting.
+From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
-Patch was compile tested with x86_64_defconfig + SCSI_LOWLEVEL=y, CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m
+Description:
+	Driver sends the right size of the response buffer.
 
-Patch is against 4.1-rc3 (localversion-next is -next-20150514)
-
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 ---
+ drivers/scsi/aacraid/aachba.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/scsi/libfc/fc_fcp.c |    3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c index c438b81..fee6928 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1792,7 +1792,6 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
- 	struct fc_lport *lport = shost_priv(shost);
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
- 	struct fc_fcp_pkt *fsp;
--	struct fc_rport_libfc_priv *rpriv;
- 	int rval;
- 	int rc = 0;
- 	struct fc_stats *stats;
-@@ -1814,8 +1813,6 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
- 		goto out;
- 	}
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c index 9b3dd6e..fe59b00 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -570,7 +570,7 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
  
--	rpriv = rport->dd_data;
--
- 	if (!fc_fcp_lport_queue_ready(lport)) {
- 		if (lport->qfull)
- 			fc_fcp_can_queue_ramp_down(lport);
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_name),
++		  sizeof(struct aac_get_name_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback)get_container_name_callback,
+@@ -1052,7 +1052,7 @@ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
+ 
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_serial),
++		  sizeof(struct aac_get_serial_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback) get_container_serial_callback,
 --
-1.7.10.4
+1.9.3
 
-_______________________________________________
-fcoe-devel mailing list
-fcoe-devel@open-fcoe.org
-https://urldefense.proofpoint.com/v2/url?u=http-3A__lists.open-2Dfcoe.org_mailman_listinfo_fcoe-2Ddevel&d=AwICAg&c=Sqcl0Ez6M0X8aeM67LKIiDJAXVeAw-YihVMNtXt-uEs&r=wjT-lROQxgFnmIgeyNof2ACTY91g4HqkQGUkJo2HQ0k&m=CyBs5yDLeN-k1LsnaCsHCdi06s2NEU0XemK8ry1EDg0&s=8x44EVd0jYu65AU-LSkgpi49VN9OIj9P6sDqg9AmLVo&e= 
