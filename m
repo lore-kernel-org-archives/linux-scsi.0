@@ -1,159 +1,123 @@
 From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH 3/6] Fix unsafe sas_device_list usage
-Date: Thu, 14 May 2015 20:41:59 -0700
-Message-ID: <1431661322-3097935-4-git-send-email-calvinowens@fb.com>
+Subject: [PATCH 5/6] Refactor code to use new fw_event refcount
+Date: Thu, 14 May 2015 20:42:01 -0700
+Message-ID: <1431661322-3097935-6-git-send-email-calvinowens@fb.com>
 References: <20150506184852.GA1007288@mail.thefacebook.com>
  <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:8095 "EHLO
+	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933862AbbEODmp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 May 2015 23:42:45 -0400
 In-Reply-To: <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
 Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, calvinowens@fb.com, kernel-team@fb.com
-List-Id: linux-scsi@vger.kernel.org
 
-We cannot iterate over the list without holding a lock for the entire
-duration, or we risk corrupting random memory if items are added or
-deleted as we iterate.
-
-This refactors code such that it always holds the lock when iterating
-on or accessing the sas_device_list.
+This refactors the fw_event code to use the new refcount.
 
 Signed-off-by: Calvin Owens <calvinowens@fb.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 83 +++++++++++++++++++++++++++---------
- 1 file changed, 62 insertions(+), 21 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index ad6ceb7e..9645055 100644
+index 611b34d..8d8c814 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7104,6 +7104,7 @@ _scsih_remove_unresponding_sas_devices(struct MPT2SAS_ADAPTER *ioc)
- 	struct _raid_device *raid_device, *raid_device_next;
- 	struct list_head tmp_list;
+@@ -2863,6 +2863,7 @@ _scsih_fw_event_add(struct MPT2SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
++	fw_event_work_get(fw_event);
+ 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
+ 	INIT_DELAYED_WORK(&fw_event->delayed_work, _firmware_event_work);
+ 	queue_delayed_work(ioc->firmware_event_thread,
+@@ -2887,12 +2888,13 @@ _scsih_fw_event_free(struct MPT2SAS_ADAPTER *ioc, struct fw_event_work
  	unsigned long flags;
-+	LIST_HEAD(head);
  
- 	printk(MPT2SAS_INFO_FMT "removing unresponding devices: start\n",
- 	    ioc->name);
-@@ -7111,14 +7112,29 @@ _scsih_remove_unresponding_sas_devices(struct MPT2SAS_ADAPTER *ioc)
- 	/* removing unresponding end devices */
- 	printk(MPT2SAS_INFO_FMT "removing unresponding devices: end-devices\n",
- 	    ioc->name);
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+-	list_del(&fw_event->list);
+-	kfree(fw_event);
++	if (!list_empty(&fw_event->list))
++		list_del_init(&fw_event->list);
 +
-+	/*
-+	 * Iterate, pulling off devices marked as non-responding. We become the
-+	 * owner for the reference the list had on any object we prune.
-+	 */
-+	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_for_each_entry_safe(sas_device, sas_device_next,
--	    &ioc->sas_device_list, list) {
-+			&ioc->sas_device_list, list) {
- 		if (!sas_device->responding)
--			mpt2sas_device_remove_by_sas_address(ioc,
--				sas_device->sas_address);
-+			list_move_tail(&sas_device->list, &head);
- 		else
- 			sas_device->responding = 0;
- 	}
-+	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+
-+	/*
-+	 * Now, uninitialize and remove the unresponding devices we pruned.
-+	 */
-+	list_for_each_entry_safe(sas_device, sas_device_next, &head, list) {
-+		_scsih_remove_device(ioc, sas_device);
-+		list_del_init(&sas_device->list);
-+		sas_device_put(sas_device);
-+	}
- 
- 	/* removing unresponding volumes */
- 	if (ioc->ir_firmware) {
-@@ -8055,6 +8071,37 @@ _scsih_probe_raid(struct MPT2SAS_ADAPTER *ioc)
- 	}
++	fw_event_work_put(fw_event);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
  }
  
-+static struct _sas_device *dequeue_next_sas_device(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	struct _sas_device *sas_device = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+	if (!list_empty(&ioc->sas_device_init_list)) {
-+		sas_device = list_first_entry(&ioc->sas_device_init_list,
-+				struct _sas_device, list);
-+		list_del_init(&sas_device->list);
-+	}
-+	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+
-+	/*
-+	 * If an item was dequeued, the caller now owns the reference that was
-+	 * previously owned by the list
-+	 */
-+	return sas_device;
-+}
-+
-+static void sas_device_make_active(struct MPT2SAS_ADAPTER *ioc,
-+		struct _sas_device *sas_device)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+	sas_device_get(sas_device);
-+	list_add_tail(&sas_device->list, &ioc->sas_device_list);
-+	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+}
-+
- /**
-  * _scsih_probe_sas - reporting sas devices to sas transport
-  * @ioc: per adapter object
-@@ -8064,34 +8111,28 @@ _scsih_probe_raid(struct MPT2SAS_ADAPTER *ioc)
- static void
- _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
- {
--	struct _sas_device *sas_device, *next;
--	unsigned long flags;
 -
--	/* SAS Device List */
--	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
--	    list) {
-+	struct _sas_device *sas_device;
+ /**
+  * _scsih_error_recovery_delete_devices - remove devices not responding
+  * @ioc: per adapter object
+@@ -2907,13 +2909,14 @@ _scsih_error_recovery_delete_devices(struct MPT2SAS_ADAPTER *ioc)
+ 	if (ioc->is_driver_loading)
+ 		return;
  
--		if (ioc->hide_drives)
--			continue;
-+	if (ioc->hide_drives)
-+		return;
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
  
-+	while ((sas_device = dequeue_next_sas_device(ioc))) {
- 		if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
--		    sas_device->sas_address_parent)) {
--			list_del(&sas_device->list);
--			kfree(sas_device);
-+				sas_device->sas_address_parent)) {
-+			sas_device_put(sas_device);
- 			continue;
- 		} else if (!sas_device->starget) {
- 			if (!ioc->is_driver_loading) {
- 				mpt2sas_transport_port_remove(ioc,
--					sas_device->sas_address,
--					sas_device->sas_address_parent);
--				list_del(&sas_device->list);
--				kfree(sas_device);
-+						sas_device->sas_address,
-+						sas_device->sas_address_parent);
-+				sas_device_put(sas_device);
- 				continue;
- 			}
- 		}
--		spin_lock_irqsave(&ioc->sas_device_lock, flags);
--		list_move_tail(&sas_device->list, &ioc->sas_device_list);
--		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+
-+		sas_device_make_active(ioc, sas_device);
-+		sas_device_put(sas_device);
+ 	fw_event->event = MPT2SAS_REMOVE_UNRESPONDING_DEVICES;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -2927,12 +2930,13 @@ mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc)
+ {
+ 	struct fw_event_work *fw_event;
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT2SAS_PORT_ENABLE_COMPLETE;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -4439,13 +4443,14 @@ _scsih_send_event_to_turn_on_pfa_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ {
+ 	struct fw_event_work *fw_event;
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT2SAS_TURN_ON_PFA_LED;
+ 	fw_event->device_handle = handle;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -7740,7 +7745,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
  	}
+ 
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+-	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(sz);
+ 	if (!fw_event) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+@@ -7753,6 +7758,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 	fw_event->VP_ID = mpi_reply->VP_ID;
+ 	fw_event->event = event;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ 	return;
  }
  
 -- 
 1.8.1
+
