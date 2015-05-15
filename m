@@ -1,57 +1,55 @@
-From: Prasad Gondi <pgondi@vmware.com>
-Subject: RE: [Open-FCoE] [PATCH] scsi: fix Wunused-but-set-variable
- buildwarning
-Date: Fri, 15 May 2015 17:12:23 +0000
-Message-ID: <932e7755544949139f0d283358499bb8@EX13-MBX-026.vmware.com>
-References: <1431627166-12729-1-git-send-email-hofrat@osadl.org>
-	 <1488e7d0337944d98996c115cd0baefc@EX13-MBX-026.vmware.com>
-	 <20150515071415.GC24293@opentech.at>
- <1431709773.4358.14.camel@lin-nd1-054.jf.intel.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Let's get a File & Storage miniconf going at LPC2015!
+Date: Fri, 15 May 2015 13:58:25 -0700
+Message-ID: <20150515205825.GC24967@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:52248 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932810AbbEORMh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 May 2015 13:12:37 -0400
-In-Reply-To: <1431709773.4358.14.camel@lin-nd1-054.jf.intel.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "vasu.dev@linux.intel.com" <vasu.dev@linux.intel.com>, Nicholas Mc Guire <der.herr@hofr.at>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Mc Guire <hofrat@osadl.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>
 
-VGhhbmtzIFZhc3UgZm9yIHRoZSBkZXRhaWxzLg0KDQpJIGFncmVlIGN1cnJlbnQgcGF0Y2ggaXMg
-Z29vZCB0byBnby4gSSBoYXZlIG5vIG9iamVjdGlvbnMgYW5kIGl0IGlzIGFuIGV4dGVuc2lvbiB0
-byB0aGUgb2xkZXIgcGF0Y2ggd2hpY2ggcmVtb3ZlZCB0aGUgIiBmc3AtPnRndF9mbGFncyIgZmxh
-Z3MuDQoNClRoYW5rcywNClByYXNhZA0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
-IHZhc3UuZGV2QGxpbnV4LmludGVsLmNvbSBbbWFpbHRvOnZhc3UuZGV2QGxpbnV4LmludGVsLmNv
-bV0gDQpTZW50OiBGcmlkYXksIE1heSAxNSwgMjAxNSAxMDoxMCBBTQ0KVG86IE5pY2hvbGFzIE1j
-IEd1aXJlDQpDYzogUHJhc2FkIEdvbmRpOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgSmFt
-ZXMgRS5KLiBCb3R0b21sZXk7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IE5pY2hvbGFz
-IE1jIEd1aXJlOyBmY29lLWRldmVsQG9wZW4tZmNvZS5vcmcNClN1YmplY3Q6IFJlOiBbT3Blbi1G
-Q29FXSBbUEFUQ0hdIHNjc2k6IGZpeCBXdW51c2VkLWJ1dC1zZXQtdmFyaWFibGUgYnVpbGR3YXJu
-aW5nDQoNCk9uIEZyaSwgMjAxNS0wNS0xNSBhdCAwOToxNCArMDIwMCwgTmljaG9sYXMgTWMgR3Vp
-cmUgd3JvdGU6DQo+IE9uIFRodSwgMTQgTWF5IDIwMTUsIFByYXNhZCBHb25kaSB3cm90ZToNCj4g
-DQo+ID4gSXQgc2VlbXMgbGlrZSAgICAgcnByaXYgaXMgdXNlZCB0byBzZXQgdGhlIGZzcC0+dGd0
-X2ZsYWdzIG9yaWdpbmFsbHkNCj4gPiANCj4gPiA+ICAgZnNwLT50Z3RfZmxhZ3MgPSBycHJpdi0+
-ZmxhZ3MNCj4gPiANCj4gPiBBbmQgZnNwLT50Z3RfZmxhZ3MgYXJlIHVzZWQgaW4gImZjX2ZjcF9j
-bWRfc2VuZCIgbGlrZSB0aGlzDQo+ID4gDQo+ID4gICAgICAgICBzZXR1cF90aW1lcigmZnNwLT50
-aW1lciwgZmNfZmNwX3RpbWVvdXQsICh1bnNpZ25lZCBsb25nKWZzcCk7DQo+ID4gICAgICAgICBp
-ZiAocnByaXYtPmZsYWdzICYgRkNfUlBfRkxBR1NfUkVDX1NVUFBPUlRFRCkNCj4gPiAgICAgICAg
-ICAgICAgICAgZmNfZmNwX3RpbWVyX3NldChmc3AsIGdldF9mc3BfcmVjX3Rvdihmc3ApKTsNCj4g
-PiANCj4gPiBNYWluIHB1cnBvc2Ugb2YgdGhpcyBmbGFncyB1c2VkIGlzIHRvIHNldCB0aGUgY29y
-cmVjdCBUaW1lT3V0IFZhbHVlIGZvciBmY19mY3BfdGltZXIuIA0KPiA+IA0KPiA+IFNvIGlzIHRo
-ZSByZW1vdmFsIG9mIHRoZSAiZnNwLT50Z3RfZmxhZ3MgPSBycHJpdi0+ZmxhZ3MiIGluIGZjX3F1
-ZXVlY29tbWFuZCgpIGlzIGludGVudGlvbmFsPyBPciBieSBtaXN0YWtlPw0KPiA+IA0KPiB0aGF0
-cyBzb21ldGhpbmcgSSBjYW4ndCBzYXkgLSBidXQgdGhlIGNvbW1pdCBtZXNzYWdlIGluZGljYXRl
-ZCB0aGF0IA0KPiB0aGUgcmVtb3ZhbCBvZiB0Z3RfZmxhZ3Mgd2FzIGludGVudGlvbmFsLg0KPiAN
-Cg0KSXQgd2FzIGludGVudGlvbmFsIGFuZCBnb29kIGNsZWFudXAgc2luY2Ugbm93IHJwcml2LT5m
-bGFncyBpcyB1c2VkIGRpcmVjdGx5IHdpdGggdGhhdCBjaGFuZ2UgaW5zdGVhZCBvZiBzdG9yaW5n
-IGluIGZzcC0+dGd0X2ZsYWdzIGFzIGl0IHdhcyBiZWZvcmUuDQoNCj4gPiBPbmNlIHdlIGNsZWFy
-IHRoYXQgb3V0IHdlIGNhbiBzZWUgd2hldGhlciB0aGlzIGNoYW5nZSBtYWtlIHNlbnNlPw0KPiA+
-DQoNCkFueWNhc2UgdGhlIHBhdGNoIHVuZGVyIGRpc2N1c3Npb24gaXMgc3RyYWlnaHQgZm9yd2Fy
-ZCBjbGVhbiB1cCBwYXRjaCBzaW5jZSBpdCBqdXN0IHJlbW92ZXMgYSBsb2NhbCBzdGFjayB2YXJp
-YWJsZSB3aGljaCBpcyBub3QgdXNlZC4NCg0KVGhhbmtzLA0KVmFzdQ0KDQo=
+Hi again,
+
+Early registration for this summer's Plumbers in Seattle, Washington ends
+next Friday the 22nd.  With that in mind, I still don't have quite enough
+people listed on the File & Storage miniconf wiki page for the organizers
+to declare us an official miniconference, so if you're planning to go, or
+even think you might go, please take a look at the planning page[1] and
+add your name!
+
+At a bare minimum, it seems like we can continue the ongoing discussions
+around SMR exploration; the work going on with persistent memory and how to
+expose it to filesystems and user apps; I see a proposal for the refereed
+talks about the ongoing Open SSD work; and there have been prompts for more
+conversation about rich ACL integration and supporting RDMA in NFS and Samba.
+I think it would also be a good place to talk more about how to better
+accomodate userspace filesystems like Ceph, giving things like the recent
+O_NOMTIME thread, and other things like copy_file_range().
+
+We of course are not limited to just those topics -- if there's something
+you'd really like to discuss with everyone, please add that to the wiki.
+I realize that mid-August is family vacation time for many people, but
+those are the constraints the conference has to work with this year.
+There are fun things to do around Seattle, and that's probably the best
+time of year to visit.
+
+--Darrick
+
+[1] http://wiki.linuxplumbersconf.org/2015:file_and_storage_systems
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
