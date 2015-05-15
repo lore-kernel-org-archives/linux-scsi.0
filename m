@@ -1,55 +1,46 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Let's get a File & Storage miniconf going at LPC2015!
-Date: Fri, 15 May 2015 13:58:25 -0700
-Message-ID: <20150515205825.GC24967@birch.djwong.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH RFC 1/2] cxlflash: Base support for IBM CXL Flash Adapter
+Date: Fri, 15 May 2015 15:58:39 -0500
+Message-ID: <95CB3977-7373-463C-9A93-85D98922D612@linux.vnet.ibm.com>
+References: <1430110220-13268-1-git-send-email-mrochs@linux.vnet.ibm.com> <20150511090941.GD28820@infradead.org> <660CA342-479E-4DC4-9BC0-880A28760AAC@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:57987 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161033AbbEOU6q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 16:58:46 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 14:58:45 -0600
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id E95101FF0030
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 14:49:52 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FKwgv637421144
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 13:58:42 -0700
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FKweuB005733
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 14:58:42 -0600
+In-Reply-To: <660CA342-479E-4DC4-9BC0-880A28760AAC@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, Michael Neuling <mikey@neuling.org>, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Hi again,
+On May 11, 2015, at 11:11 PM, Matthew R. Ochs wrote:
+> On May 11, 2015, at 4:09 AM, Christoph Hellwig wrote:
+>> 
+>> Please drop all the code related to your weird direct access ioctls
+>> from this patch.  Without that it looks mostly mergeable.
+>> 
+> Could you expand more on your objection <to the second patch>? Are you generally opposed to a kernel bypass or is there something specific regarding our implementation to solving the problem (ioctls)?
+> 
+> One of the key features we were hoping to provide with this driver is a kernel bypass. This device has a very unique MMU interface that allows user applications and hardware to share memory directly. The problem we ran into is how to configure and manage that access. The device is very SCSI-like and since we were implementing a SCSI adapter driver to support filesystem access for traditional use cases, the ioctls seemed to be a reasonable solution.
 
-Early registration for this summer's Plumbers in Seattle, Washington ends
-next Friday the 22nd.  With that in mind, I still don't have quite enough
-people listed on the File & Storage miniconf wiki page for the organizers
-to declare us an official miniconference, so if you're planning to go, or
-even think you might go, please take a look at the planning page[1] and
-add your name!
+We're going to proceed with submitting the first patch that contains filesystem access while the discussion continues regarding how best to implement the kernel bypass feature.
 
-At a bare minimum, it seems like we can continue the ongoing discussions
-around SMR exploration; the work going on with persistent memory and how to
-expose it to filesystems and user apps; I see a proposal for the refereed
-talks about the ongoing Open SSD work; and there have been prompts for more
-conversation about rich ACL integration and supporting RDMA in NFS and Samba.
-I think it would also be a good place to talk more about how to better
-accomodate userspace filesystems like Ceph, giving things like the recent
-O_NOMTIME thread, and other things like copy_file_range().
 
-We of course are not limited to just those topics -- if there's something
-you'd really like to discuss with everyone, please add that to the wiki.
-I realize that mid-August is family vacation time for many people, but
-those are the constraints the conference has to work with this year.
-There are fun things to do around Seattle, and that's probably the best
-time of year to visit.
-
---Darrick
-
-[1] http://wiki.linuxplumbersconf.org/2015:file_and_storage_systems
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+-matt
