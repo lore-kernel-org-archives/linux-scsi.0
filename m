@@ -1,136 +1,59 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas : Modify return value of megasas_issue_blocked_cmd()
- and wait_and_poll() to consider command status returned by firmware
-Date: Fri, 15 May 2015 15:14:36 +0530
-Message-ID: <42c4a6dc48b0f8334f8b32e5f95c70ac@mail.gmail.com>
-References: <201505061333.t46DXdcM032441@palmhbs0.lsi.com> <5555BD8E.1@suse.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] lpfc 8.2.7 : Rework the worker thread
+Date: Fri, 15 May 2015 12:49:34 +0300
+Message-ID: <20150515094934.GA23199@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:32899 "EHLO
-	mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754922AbbEOJoi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 05:44:38 -0400
-Received: by qkp63 with SMTP id 63so29255870qkp.0
-        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2015 02:44:37 -0700 (PDT)
-In-Reply-To: <5555BD8E.1@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:28124 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbbEOJtp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 05:49:45 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, thenzl@redhat.com, Kashyap Desai <kashyap.desai@avagotech.com>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Hannes Reinecke [mailto:hare@suse.de]
->Sent: Friday, May 15, 2015 3:04 PM
->To: Sumit.Saxena@avagotech.com; linux-scsi@vger.kernel.org
->Cc: stable@vger.kernel.org; martin.petersen@oracle.com;
->hch@infradead.org; jbottomley@parallels.com; thenzl@redhat.com;
->kashyap.desai@avagotech.com
->Subject: Re: [PATCH] megaraid_sas : Modify return value of
->megasas_issue_blocked_cmd() and wait_and_poll() to consider command
->status returned by firmware
->
->On 05/06/2015 03:31 PM, Sumit.Saxena@avagotech.com wrote:
->> This patch is rebased on top of recently sent 18 patches(submitted b=
-y
-me)
->for megaraid_sas driver.
->>
->> Change the return value of wait_and_poll() and
->> megsas_issue_blocked_cmd() based on MFI_STAT returned by firmware fo=
-r
->> that command. Earlier driver always send return type based on comman=
-d
->> completion (but never check MFI_STAT_OK for that command), so even i=
-f
->> command is failed by firmware still driver will return SUCCESS statu=
-s
-from
->these functions wait_and_poll() and megsas_issue_blocked_cmd() and if
->caller of these functions does not check command status (MFI_STAT), th=
-en
-it
->may endup using invalid data returned in DMA buffers(one of the exampl=
-e
-is
->megasas_ld_list_query DCMD). Best thing to avoid this type of issue is=
- do
->error handling and set proper return type from caller function
-wait_and_poll()
->and megsas_issue_blocked_cmd().
->>
->> The change proposed in this patch will fix the regression introduced
->> in patch- "90dc9d9 megaraid_sas : MFI MPT linked list corruption fix=
-"
-inside
->function megasas_ld_list_query().
->> Prior to this MFI MPT linked list corruption fix patch,
->> megasas_ld_list_query() function used to check DCMD status(returned =
-by
->> firmware) but with this linked list corruption fix patch, DCMD statu=
-s
-will not
->be checked inside function megasas_ld_list_query() and introduced this
-issue
->of wrong data being used by function megasas_ld_list_query().
->>
->> Cc: <stable@vger.kernel.org>
->> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
->> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas.h        |    2 +-
->>  drivers/scsi/megaraid/megaraid_sas_base.c   |   67
-+++++++++++------------
->----
->>  drivers/scsi/megaraid/megaraid_sas_fusion.c |    3 +-
->>  3 files changed, 30 insertions(+), 42 deletions(-)
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->> b/drivers/scsi/megaraid/megaraid_sas.h
->> index 53a3c3f..20c3754 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas.h
->> +++ b/drivers/scsi/megaraid/megaraid_sas.h
->> @@ -1894,7 +1894,7 @@ struct megasas_cmd {
->>
->>  	u32 index;
->>  	u8 sync_cmd;
->> -	u8 cmd_status;
->> +	u8 cmd_status_drv;
->>  	u8 abort_aen;
->>  	u8 retry_for_fw_reset;
->>
->Can you please avoid the renaming here?
->It doesn't serve any purpose, and keeping it will make the diff smalle=
-r.
+Hello James Smart,
 
-=46or readability we make this "cmd_status_drv", since this is driver's
-internal structure(so drv suffix). Same name "cmd_status "is used in
-multiple structs(megasas_hdr, megasas_init_frame, megasas_io_frame) whi=
-ch
-are shared across driver and other components(firmware and applications=
-).
-Also, keeping it "cmd_status" will not make patch smaller since "ENODAT=
-A"
-is also replaced by "MFI_STAT_INVALID_STATUS" in most of lines, where
-"cmd_status_drv" is referenced.
+The patch 5e9d9b827698: "[SCSI] lpfc 8.2.7 : Rework the worker
+thread" from Jun 14, 2008, leads to the following static checker
+warning:
 
-Thanks,
-Sumit
->
->Cheers,
->
->Hannes
->--
->Dr. Hannes Reinecke		               zSeries & Storage
->hare@suse.de			               +49 911 74053 688
->SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
->GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton =
-HRB
-21284
->(AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	drivers/scsi/lpfc/lpfc_sli.c:9365 lpfc_sli_host_down()
+	warn: test_bit() takes a bit number
+
+drivers/scsi/lpfc/lpfc_sli.c
+  9357          spin_lock_irqsave(&phba->hbalock, flags);
+  9358          for (i = 0; i < psli->num_rings; i++) {
+  9359                  pring = &psli->ring[i];
+  9360                  prev_pring_flag = pring->flag;
+  9361                  /* Only slow rings */
+  9362                  if (pring->ringno == LPFC_ELS_RING) {
+  9363                          pring->flag |= LPFC_DEFERRED_RING_EVENT;
+  9364                          /* Set the lpfc data pending flag */
+  9365                          set_bit(LPFC_DATA_READY, &phba->data_flags);
+
+LPFC_DATA_READY is defined as:
+
+#define LPFC_DATA_READY         (1<<0)
+
+The intention seems to be that we use BIT(0) but because set_bit() has
+a shift built in it is using BIT(1).  In other words:
+
+Good:	set_bit(0, &phba->data_flags);
+ Bad:   set_bit(BIT(0), &phba->data_flags);
+
+This seems to be used consistently so I think it's fine, but static
+checkers will complain.  I think this is the only ->data_flag that we
+use so it doesn't matter (I haven't looked very hard at this code).
+
+  9366                  }
+  9367                  /*
+  9368                   * Error everything on the txq since these iocbs have not been
+  9369                   * given to the FW yet.
+  9370                   */
+
+regards,
+dan carpenter
