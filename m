@@ -1,77 +1,310 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH 6/6] Fix unsafe fw_event_list usage
-Date: Thu, 14 May 2015 20:42:02 -0700
-Message-ID: <1431661322-3097935-7-git-send-email-calvinowens@fb.com>
-References: <20150506184852.GA1007288@mail.thefacebook.com>
- <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, calvinowens@fb.com, kernel-team@fb.com
+From: Minh Tran <minhduc.tran@avagotech.com>
+Subject: [PATCH] be2iscsi change of ownership from Emulex to Avago Technologies recently.  We like to get the following updates in:   changed "Emulex" to "Avago Technologies",   changed email addresses from "emulex.com" to "avagotech.com",   updated MAINTAINER list for be2iscsi driver.
+Date: Thu, 14 May 2015 23:16:17 -0700
+Message-ID: <1431670577-4125-1-git-send-email-minh.tran@avagotech.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:33957 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933061AbbEOGRP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2015 02:17:15 -0400
+Received: by ieczm2 with SMTP id zm2so21734360iec.1
+        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2015 23:17:14 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Minh Tran <minh.tran@avagotech.com>, Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>
 
-Since the fw_event deletes itself from the list, cleanup_queue() can
-walk onto garbage pointers or walk off into freed memory.
-
-This refactors the code in _scsih_fw_event_cleanup_queue() to not
-iterate over the fw_event_list without a lock. 
-
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
+Signed-off-by: Minh Tran <minh.tran@avagotech.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+ MAINTAINERS                      |  6 ++++--
+ drivers/scsi/be2iscsi/be.h       |  6 +++---
+ drivers/scsi/be2iscsi/be_cmds.c  |  6 +++---
+ drivers/scsi/be2iscsi/be_cmds.h  |  6 +++---
+ drivers/scsi/be2iscsi/be_iscsi.c |  8 ++++----
+ drivers/scsi/be2iscsi/be_iscsi.h |  8 ++++----
+ drivers/scsi/be2iscsi/be_main.c  | 12 ++++++------
+ drivers/scsi/be2iscsi/be_main.h  | 10 +++++-----
+ drivers/scsi/be2iscsi/be_mgmt.c  |  8 ++++----
+ drivers/scsi/be2iscsi/be_mgmt.h  |  8 ++++----
+ 10 files changed, 40 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 8d8c814..f504e28 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2939,6 +2939,23 @@ mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc)
- 	fw_event_work_put(fw_event);
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 590304b..cdb38bf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8810,9 +8810,11 @@ F:	drivers/misc/phantom.c
+ F:	include/uapi/linux/phantom.h
  
-+static struct fw_event_work *dequeue_next_fw_event(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	unsigned long flags;
-+	struct fw_event_work *fw_event = NULL;
-+
-+	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	if (!list_empty(&ioc->fw_event_list)) {
-+		fw_event = list_first_entry(&ioc->fw_event_list,
-+				struct fw_event_work, list);
-+		list_del_init(&fw_event->list);
-+		fw_event_work_get(fw_event);
-+	}
-+	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
-+
-+	return fw_event;
-+}
-+
+ SERVER ENGINES 10Gbps iSCSI - BladeEngine 2 DRIVER
+-M:	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
++M:	Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>
++M:	Minh Tran <minh.tran@avagotech.com>
++M:	John Soni Jose <sony.john-n@avagotech.com>
+ L:	linux-scsi@vger.kernel.org
+-W:	http://www.emulex.com
++W:	http://www.avagotech.com
+ S:	Supported
+ F:	drivers/scsi/be2iscsi/
+ 
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 81e83a6..3207009 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -1,5 +1,5 @@
  /**
-  * _scsih_fw_event_cleanup_queue - cleanup event queue
-  * @ioc: per adapter object
-@@ -2951,17 +2968,18 @@ mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc)
- static void
- _scsih_fw_event_cleanup_queue(struct MPT2SAS_ADAPTER *ioc)
- {
--	struct fw_event_work *fw_event, *next;
-+	struct fw_event_work *fw_event;
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -8,9 +8,9 @@
+  * Public License is included in this distribution in the file called COPYING.
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 1028760..447cf7c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -8,9 +8,9 @@
+  * Public License is included in this distribution in the file called COPYING.
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 98897434..f11d325 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -8,9 +8,9 @@
+  * Public License is included in this distribution in the file called COPYING.
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index b7391a3..f38e46f 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies 
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index e0b3b2d..0c84e1c 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 923a2b5..1f74760 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+@@ -50,7 +50,7 @@ static unsigned int enable_msix = 1;
  
- 	if (list_empty(&ioc->fw_event_list) ||
- 	     !ioc->firmware_event_thread || in_interrupt())
- 		return;
+ MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
+ MODULE_VERSION(BUILD_STR);
+-MODULE_AUTHOR("Emulex Corporation");
++MODULE_AUTHOR("Avago Technologies");
+ MODULE_LICENSE("GPL");
+ module_param(be_iopoll_budget, int, 0);
+ module_param(enable_msix, int, 0);
+@@ -552,7 +552,7 @@ MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
  
--	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
-+	while ((fw_event = dequeue_next_fw_event(ioc))) {
- 		if (cancel_delayed_work_sync(&fw_event->delayed_work)) {
- 			_scsih_fw_event_free(ioc, fw_event);
- 			continue;
- 		}
-+		fw_event_work_put(fw_event);
- 	}
- }
+ static struct scsi_host_template beiscsi_sht = {
+ 	.module = THIS_MODULE,
+-	.name = "Emulex 10Gbe open-iscsi Initiator Driver",
++	.name = "Avago Technologies 10Gbe open-iscsi Initiator Driver",
+ 	.proc_name = DRV_NAME,
+ 	.queuecommand = iscsi_queuecommand,
+ 	.change_queue_depth = scsi_change_queue_depth,
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 7ee0ffc..e70ea26b 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+@@ -37,7 +37,7 @@
  
+ #define DRV_NAME		"be2iscsi"
+ #define BUILD_STR		"10.4.114.0"
+-#define BE_NAME			"Emulex OneConnect" \
++#define BE_NAME			"Avago Technologies OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
+ 
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 681d4e8..c2c4d69 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index bd81446..9356b9a 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -1,5 +1,5 @@
+ /**
+- * Copyright (C) 2005 - 2014 Emulex
++ * Copyright (C) 2005 - 2015 Avago Technologies
+  * All rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -7,12 +7,12 @@
+  * as published by the Free Software Foundation.  The full GNU General
+  * Public License is included in this distribution in the file called COPYING.
+  *
+- * Written by: Jayamohan Kallickal (jayamohan.kallickal@emulex.com)
++ * Written by: Jayamohan Kallickal (jayamohan.kallickal@avagotech.com)
+  *
+  * Contact Information:
+- * linux-drivers@emulex.com
++ * linux-drivers@avagotech.com
+  *
+- * Emulex
++ * Avago Technologies
+  * 3333 Susan Street
+  * Costa Mesa, CA 92626
+  */
 -- 
-1.8.1
+1.8.3.1
+
