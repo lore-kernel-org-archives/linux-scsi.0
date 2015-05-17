@@ -1,34 +1,37 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware
- files
-Date: Sun, 17 May 2015 02:04:04 +0200
-Message-ID: <5557DAF4.4010800@gmail.com>
-References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com> <D17D1DF4.8A989%himanshu.madhani@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f65.google.com ([74.125.82.65]:34011 "EHLO
-	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbbEQAEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 May 2015 20:04:07 -0400
-Received: by wggx12 with SMTP id x12so12039817wgg.1
-        for <linux-scsi@vger.kernel.org>; Sat, 16 May 2015 17:04:05 -0700 (PDT)
-In-Reply-To: <D17D1DF4.8A989%himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v1 00/10] *** introduce quirks for UFS host
+Date: Sun, 17 May 2015 18:54:56 +0300
+Message-ID: <1431878106-30579-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, dovl@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On 05/17/2015 01:26 AM, Himanshu Madhani wrote:
+This series of patches introduce additional quirks and also,
+their enabling in QUALCOMM Technologies specific code.
 
-> Please note that we will send firmware binaries soon for these files.
+Yaniv Gardi (10):
+  scsi: ufs: introduce the capability and quirk for interrupt
+    aggregation
+  scsi: ufs-qcom: don't enable interrupt aggregation
+  scsi: ufs: provide a quirk to disable the LCC
+  scsi: ufs-qcom: enable UFSHCD_QUIRK_BROKEN_LCC
+  scsi: ufs: introduce a broken PA_RXHSUNTERMCAP quirk
+  scsi: ufs-qcom: enable quirk to fix gear change to HS
+  scsi: ufs: introduce UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE quirk
+  scsi: ufs-qcom: enable UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE quirk
+  scsi: ufs: add quirk to handle broken UFS HCI version
+  scsi: ufs-qcom: enable UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION
 
-What does "soon" mean ?
+ drivers/scsi/ufs/ufs-qcom.c |  39 ++++++++++++++--
+ drivers/scsi/ufs/ufshcd.c   | 108 ++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h   |  53 +++++++++++++++++++++-
+ drivers/scsi/ufs/ufshci.h   |   8 +++-
+ 4 files changed, 199 insertions(+), 9 deletions(-)
 
-git blame shows:
-3a03eb797 (Andrew Vasquez         2009-01-05 11:18:11 -0800 5299) #define FW_FILE_ISP81XX       "ql8100_fw.bin"
-a9083016a (Giridhar Malavali      2010-04-12 17:59:55 -0700 5300) #define FW_FILE_ISP82XX       "ql8200_fw.bin"
-6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5301) #define FW_FILE_ISP2031       "ql2600_fw.bin"
-6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5302) #define FW_FILE_ISP8031       "ql8300_fw.bin"
-2c5bbbb25 (Joe Carnuccio          2014-04-11 16:54:13 -0400 5303) #define FW_FILE_ISP27XX       "ql2700_fw.bin"
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
