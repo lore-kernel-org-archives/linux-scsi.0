@@ -1,28 +1,117 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 01/12] target: Convert se_node_acl->device_list[] to
-	RCU hlist
-Date: Sun, 17 May 2015 18:51:42 +0200
-Message-ID: <20150517165142.GA17217@lst.de>
-References: <1431422736-29125-1-git-send-email-nab@daterainc.com> <1431422736-29125-2-git-send-email-nab@daterainc.com> <20150513063555.GA21770@lst.de> <1431506771.26897.78.camel@haakon3.risingtidesystems.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: [PATCH] qla2xxx: use t10_pi_tuple
+Date: Sun, 17 May 2015 23:35:06 +0200
+Message-ID: <20150517233506.00000268@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1431506771.26897.78.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.17.20]:57399 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751306AbbEQVfN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 May 2015 17:35:13 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: qla2xxx-upstream@qlogic.com, Sebastian Herbszt <herbszt@gmx.de>
 
-On Wed, May 13, 2015 at 01:46:11AM -0700, Nicholas A. Bellinger wrote:
-> Updated to use a mirror lun->lun_rtpi, with the assignment from sep_rtpi
-> occuring in core_dev_export() code.
+Drop unused scsi_dif_tuple and use t10_pi_tuple instead of own sd_dif_tuple copy.
 
->From looking at your current tree I suspect freeing the se_port structure
-using kfree_rcu might be a better idea.  Together with dropping the references
-to the se_device from call_rcu context this basically means all pointers
-in struct se_lun are rcu protected which is much safer if you want
-to access struct se_lun under rcu protection, as this avoids having to
-deal with special cases.  Additionally that basically allows you to
-replace lun_sep_lock with rcu_read_lock for anything remotely like
-a fast path.
+Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+
+diff -up linux/drivers/scsi/qla2xxx-orig/qla_def.h linux/drivers/scsi/qla2xxx/qla_def.h
+--- linux/drivers/scsi/qla2xxx-orig/qla_def.h	2015-04-15 06:18:24.681045138 +0200
++++ linux/drivers/scsi/qla2xxx/qla_def.h	2015-05-17 20:17:20.308810956 +0200
+@@ -25,6 +25,7 @@
+ #include <linux/firmware.h>
+ #include <linux/aer.h>
+ #include <linux/mutex.h>
++#include <linux/t10-pi.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -276,16 +277,6 @@
+ struct req_que;
+ 
+ /*
+- * (sd.h is not exported, hence local inclusion)
+- * Data Integrity Field tuple.
+- */
+-struct sd_dif_tuple {
+-	__be16 guard_tag;	/* Checksum */
+-	__be16 app_tag;		/* Opaque storage */
+-	__be32 ref_tag;		/* Target LBA or indirect LBA */
+-};
+-
+-/*
+  * SCSI Request Block
+  */
+ struct srb_cmd {
+diff -up linux/drivers/scsi/qla2xxx-orig/qla_isr.c linux/drivers/scsi/qla2xxx/qla_isr.c
+--- linux/drivers/scsi/qla2xxx-orig/qla_isr.c	2015-04-15 06:18:24.685045138 +0200
++++ linux/drivers/scsi/qla2xxx/qla_isr.c	2015-05-17 20:18:32.768814260 +0200
+@@ -1711,12 +1711,6 @@ qla2x00_handle_sense(srb_t *sp, uint8_t
+ 	}
+ }
+ 
+-struct scsi_dif_tuple {
+-	__be16 guard;       /* Checksum */
+-	__be16 app_tag;         /* APPL identifier */
+-	__be32 ref_tag;         /* Target LBA or indirect LBA */
+-};
+-
+ /*
+  * Checks the guard or meta-data for the type of error
+  * detected by the HBA. In case of errors, we set the
+@@ -1779,7 +1773,7 @@ qla2x00_handle_dif_error(srb_t *sp, stru
+ 		if (scsi_prot_sg_count(cmd)) {
+ 			uint32_t i, j = 0, k = 0, num_ent;
+ 			struct scatterlist *sg;
+-			struct sd_dif_tuple *spt;
++			struct t10_pi_tuple *pi;
+ 
+ 			/* Patch the corresponding protection tags */
+ 			scsi_for_each_prot_sg(cmd, sg,
+@@ -1801,12 +1795,12 @@ qla2x00_handle_dif_error(srb_t *sp, stru
+ 				return 1;
+ 			}
+ 
+-			spt = page_address(sg_page(sg)) + sg->offset;
+-			spt += j;
++			pi = page_address(sg_page(sg)) + sg->offset;
++			pi += j;
+ 
+-			spt->app_tag = 0xffff;
++			pi->app_tag = 0xffff;
+ 			if (scsi_get_prot_type(cmd) == SCSI_PROT_DIF_TYPE3)
+-				spt->ref_tag = 0xffffffff;
++				pi->ref_tag = 0xffffffff;
+ 		}
+ 
+ 		return 0;
+diff -up linux/drivers/scsi/qla2xxx-orig/qla_target.c linux/drivers/scsi/qla2xxx/qla_target.c
+--- linux/drivers/scsi/qla2xxx-orig/qla_target.c	2015-04-24 22:55:32.801528872 +0200
++++ linux/drivers/scsi/qla2xxx/qla_target.c	2015-05-17 20:20:16.440818988 +0200
+@@ -2591,17 +2591,17 @@ qlt_handle_dif_error(struct scsi_qla_hos
+ 			}
+ 
+ #if 0
+-			struct sd_dif_tuple *spt;
++			struct t10_pi_tuple *pi;
+ 			/* TODO:
+ 			 * This section came from initiator. Is it valid here?
+ 			 * should ulp be override with actual val???
+ 			 */
+-			spt = page_address(sg_page(sg)) + sg->offset;
+-			spt += j;
++			pi = page_address(sg_page(sg)) + sg->offset;
++			pi += j;
+ 
+-			spt->app_tag = 0xffff;
++			pi->app_tag = 0xffff;
+ 			if (cmd->se_cmd.prot_type == SCSI_PROT_DIF_TYPE3)
+-				spt->ref_tag = 0xffffffff;
++				pi->ref_tag = 0xffffffff;
+ #endif
+ 		}
+ 
