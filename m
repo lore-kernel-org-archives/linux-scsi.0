@@ -1,122 +1,51 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 03/10] scsi: ufs: provide a quirk to disable the LCC
-Date: Sun, 17 May 2015 18:54:59 +0300
-Message-ID: <1431878106-30579-4-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 08/10] scsi: ufs-qcom: enable UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE quirk
+Date: Sun, 17 May 2015 18:55:04 +0300
+Message-ID: <1431878106-30579-9-git-send-email-ygardi@codeaurora.org>
 References: <1431878106-30579-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52203 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbbEQPzs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2015 11:55:48 -0400
 In-Reply-To: <1431878106-30579-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, dovl@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-List-Id: linux-scsi@vger.kernel.org
 
-LCC (Line Control Command) are being used for communication between
-UFS host and UFS device.
-New commercial UFS devices don't have the issues with LCC processing
-but UFS host controller might still have the issue with LCC processing,
-hence, added a routine to disable TX LCC on the device.
+Current version of host controller on QUALCOMM Technologies requires
+this quirk to be enabled, as DME commands to device must be sent
+only in AUTO mode (SLOW AUTO or FAST AUTO).
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h |  8 ++++++++
- drivers/scsi/ufs/ufshci.h |  3 +++
- 3 files changed, 53 insertions(+)
+ drivers/scsi/ufs/ufs-qcom.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9641bcb..3e57cca 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2640,6 +2640,42 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	return 0;
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 6e5b183..de9cfb0 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -709,7 +709,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 
+ 	if (host->hw_ver.major == 0x01) {
+ 		hba->quirks |= UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS
+-			    | UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP;
++			    | UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP
++			    | UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE;
+ 
+ 		if (host->hw_ver.minor == 0x0001 && host->hw_ver.step == 0x0001)
+ 			hba->quirks |= UFSHCD_QUIRK_BROKEN_INTR_AGGR;
+@@ -721,6 +722,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 		if (!ufs_qcom_cap_qunipro(host))
+ 			/* Legacy UniPro mode still need following quirks */
+ 			hba->quirks |= (UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS
++				| UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE
+ 				| UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP);
+ 	}
  }
- 
-+static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
-+{
-+	int tx_lanes, i, err = 0;
-+
-+	if (!peer)
-+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
-+			       &tx_lanes);
-+	else
-+		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
-+				    &tx_lanes);
-+	for (i = 0; i < tx_lanes; i++) {
-+		if (!peer)
-+			err = ufshcd_dme_set(hba,
-+				UIC_ARG_MIB_SEL(TX_LCC_ENABLE,
-+					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(i)),
-+					0);
-+		else
-+			err = ufshcd_dme_peer_set(hba,
-+				UIC_ARG_MIB_SEL(TX_LCC_ENABLE,
-+					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(i)),
-+					0);
-+		if (err) {
-+			dev_err(hba->dev, "%s: TX LCC Disable failed, peer = %d, lane = %d, err = %d",
-+				__func__, peer, i, err);
-+			break;
-+		}
-+	}
-+
-+	return err;
-+}
-+
-+static inline int ufshcd_disable_device_tx_lcc(struct ufs_hba *hba)
-+{
-+	return ufshcd_disable_tx_lcc(hba, true);
-+}
-+
- /**
-  * ufshcd_link_startup - Initialize unipro link startup
-  * @hba: per adapter instance
-@@ -2677,6 +2713,12 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 		/* failed to get the link up... retire */
- 		goto out;
- 
-+	if (hba->quirks & UFSHCD_QUIRK_BROKEN_LCC) {
-+		ret = ufshcd_disable_device_tx_lcc(hba);
-+		if (ret)
-+			goto out;
-+	}
-+
- 	/* Include any host controller configuration via UIC commands */
- 	if (hba->vops && hba->vops->link_startup_notify) {
- 		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index fc8bec9..b845f15 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -426,6 +426,14 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS		UFS_BIT(1)
- 
-+	/*
-+	 * If UFS host controller is having issue in processing LCC (Line
-+	 * Control Command) coming from device then enable this quirk.
-+	 * When this quirk is enabled, host controller driver should disable
-+	 * the LCC transmission on UFS device (by clearing TX_LCC_ENABLE
-+	 * attribute of device to 0).
-+	 */
-+	#define UFSHCD_QUIRK_BROKEN_LCC				UFS_BIT(2)
- 
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index d572119..f8909ec 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -206,6 +206,9 @@ enum {
- #define CONFIG_RESULT_CODE_MASK		0xFF
- #define GENERIC_ERROR_CODE_MASK		0xFF
- 
-+/* GenSelectorIndex calculation macros for M-PHY attributes */
-+#define UIC_ARG_MPHY_TX_GEN_SEL_INDEX(lane) (lane)
-+
- #define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
- 					 ((sel) & 0xFFFF))
- #define UIC_ARG_MIB(attr)		UIC_ARG_MIB_SEL(attr, 0)
 -- 
 1.8.5.2
 
