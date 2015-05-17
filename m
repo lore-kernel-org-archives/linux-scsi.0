@@ -1,214 +1,34 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware
  files
-Date: Sat, 16 May 2015 23:26:24 +0000
-Message-ID: <D17D1DF4.8A989%himanshu.madhani@qlogic.com>
-References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
+Date: Sun, 17 May 2015 02:04:04 +0200
+Message-ID: <5557DAF4.4010800@gmail.com>
+References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com> <D17D1DF4.8A989%himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D17D1DF48A989himanshumadhaniqlogiccom_"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:19688 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750837AbbEPX00 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 May 2015 19:26:26 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t4GNOv5x012150
-	for <linux-scsi@vger.kernel.org>; Sat, 16 May 2015 16:26:25 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1udtwc0xta-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sat, 16 May 2015 16:26:25 -0700
-In-Reply-To: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
-Content-Language: en-US
+Received: from mail-wg0-f65.google.com ([74.125.82.65]:34011 "EHLO
+	mail-wg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbbEQAEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 May 2015 20:04:07 -0400
+Received: by wggx12 with SMTP id x12so12039817wgg.1
+        for <linux-scsi@vger.kernel.org>; Sat, 16 May 2015 17:04:05 -0700 (PDT)
+In-Reply-To: <D17D1DF4.8A989%himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
---_000_D17D1DF48A989himanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B80FFC966B9110499654180CC27C4ECC@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On 05/17/2015 01:26 AM, Himanshu Madhani wrote:
 
+> Please note that we will send firmware binaries soon for these files.
 
-On 5/16/15, 4:49 AM, "Xose Vazquez Perez" <xose.vazquez@gmail.com> wrote:
+What does "soon" mean ?
 
->There is no trace of these files in linux-firmware.git,
->kernel sources, linux distributions or vendor site [1] :
->ql8100_fw.bin ql8200_fw.bin ql2600_fw.bin ql8300_fw.bin ql2700_fw.bin
->
->[1] http://ldriver.qlogic.com/firmware/
->
->Cc: <qla2xxx-upstream@qlogic.com>
->Cc: James E.J. Bottomley <JBottomley@odin.com>
->Cc: <linux-scsi@vger.kernel.org>
->Cc: Linux Firmware Maintainers <linux-firmware@kernel.org>
->Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->---
-> drivers/scsi/qla2xxx/Kconfig  |  3 ---
-> drivers/scsi/qla2xxx/qla_os.c | 13 -------------
-> 2 files changed, 16 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
->index 33f60c9..113e6c9 100644
->--- a/drivers/scsi/qla2xxx/Kconfig
->+++ b/drivers/scsi/qla2xxx/Kconfig
->@@ -18,9 +18,6 @@ config SCSI_QLA_FC
-> 	2322, 6322        ql2322_fw.bin
-> 	24xx, 54xx        ql2400_fw.bin
-> 	25xx              ql2500_fw.bin
->-	2031              ql2600_fw.bin
->-	8031              ql8300_fw.bin
->-	27xx              ql2700_fw.bin
->=20
-> 	Upon request, the driver caches the firmware image until
-> 	the driver is unloaded.
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index 7462dd7..a9d0a82 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -5296,11 +5296,6 @@ qla2x00_timer(scsi_qla_host_t *vha)
-> #define FW_FILE_ISP2322	"ql2322_fw.bin"
-> #define FW_FILE_ISP24XX	"ql2400_fw.bin"
-> #define FW_FILE_ISP25XX	"ql2500_fw.bin"
->-#define FW_FILE_ISP81XX	"ql8100_fw.bin"
->-#define FW_FILE_ISP82XX	"ql8200_fw.bin"
->-#define FW_FILE_ISP2031	"ql2600_fw.bin"
->-#define FW_FILE_ISP8031	"ql8300_fw.bin"
->-#define FW_FILE_ISP27XX	"ql2700_fw.bin"
->=20
->=20
-> static DEFINE_MUTEX(qla_fw_lock);
->@@ -5312,11 +5307,6 @@ static struct fw_blob qla_fw_blobs[FW_BLOBS] =3D {
-> 	{ .name =3D FW_FILE_ISP2322, .segs =3D { 0x800, 0x1c000, 0x1e000, 0 }, }=
-,
-> 	{ .name =3D FW_FILE_ISP24XX, },
-> 	{ .name =3D FW_FILE_ISP25XX, },
->-	{ .name =3D FW_FILE_ISP81XX, },
->-	{ .name =3D FW_FILE_ISP82XX, },
->-	{ .name =3D FW_FILE_ISP2031, },
->-	{ .name =3D FW_FILE_ISP8031, },
->-	{ .name =3D FW_FILE_ISP27XX, },
-> };
->=20
-> struct fw_blob *
->@@ -5834,6 +5824,3 @@ MODULE_FIRMWARE(FW_FILE_ISP2300);
-> MODULE_FIRMWARE(FW_FILE_ISP2322);
-> MODULE_FIRMWARE(FW_FILE_ISP24XX);
-> MODULE_FIRMWARE(FW_FILE_ISP25XX);
->-MODULE_FIRMWARE(FW_FILE_ISP2031);
->-MODULE_FIRMWARE(FW_FILE_ISP8031);
->-MODULE_FIRMWARE(FW_FILE_ISP27XX);
->--=20
->2.1.0
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Please note that we will send firmware binaries soon for these files.
-
->
-
-
---_000_D17D1DF48A989himanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+ImQqAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADY1MTI2QTYz
-RkQ2RDkzNDRBMEI0RUI0NEY2Mjg4N0Y0ACsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBQAQABcA
-GgAYAAYASgEBIIADAA4AAADfBwUAEAAXABoAGAAGAEoBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEkAAABSZTogW1BBVENIIGZvci1uZXh0XSBxbGEyeHh4OiBkZWxldGUg
-cmVmZXJlbmNlcyB0byB1bnVzZWQgZmlybXdhcmUgZmlsZXMA+hkBA5AGABgTAAA0AAAAAgF/AAEA
-AAAtAAAAPEQxN0QxREY0LjhBOTg5JWhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4AAAAACwAf
-DgEAAAACAQkQAQAAAEwGAABIBgAAeg4AAExaRnX7/1uNYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0Pw
-dGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIK
-MhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQ
-IAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C
-4EVHSU59CvwB8QvyKmwLgGUKgE8DoDUvBDE2IkA1LCA0OiA0OSBBTSKgIlhDGRAZ4FZhenEKUHoM
-IFAEkCQAIiA8eMkjcS52I8RAZwDAAxDCLgWgbT4gdwNgECBGOiGVIZU+VGgkQSCxBAAgbm8cwBhw
-Yxng7xkwHMAnkCOBZgMQB5ELgGIgIaF1eC0pMBsAd0MKwCTgZ2l0LCcGa70EkWUDIBkgCHAocHMi
-oA0pwyAN4ShAaWJ1dP5pAiAEIAWxGjAdwAWxAJBBECAgWzFdICaGPghxbDgekV9mdy6fDcADoC9x
-AdAvyTI2L7t6MzCbNy+3JwYnBi6iaIECQHA6Ly9sZAUQVRoxLi9wbyqwYyXSL8UqJi8zzkNjOiSQ
-L3CIYTJ4OMAtdXAs8bBlYW1ANfg3q0o5YOEHkUUuSi4fsCZQGJCqbR5weSSQSju3QARwOwuAOf88
-KcQE8ACQQHZXGDA10Ct0LgWwZzerTP0sg0YqNQXQC3EBkCGxEfAbPlYqJkA/fydgU2lnCRhQZC0Z
-MGYtYnm/OFAjbyQQJK8ltScGLUjgpycGLMA1k3MvPtIvOIUML0sb4SkwZyAgfLlLYDMgSO9J/jiB
-XxkQuyXQS3ExS7NOyEwHMikl/RmUZCKgIlAswCuwEhAtYvgoLSkzzg3gASBLwSqx2CBhL0yfSrpi
-U+9Kqk8nBh2xEDBLoDNmMWBjkDkuLjFOkGU2WNDjToAeoDY0NEhpU89Wzz0nMytdEFW/W78nM0BA
-0UvAMTgsIvArX/FRQANfsUsFU0NTSV9R4ExBX0ZDTAcMglAQ6DMyMiKgNmLhS2BjdG8xMWLhM11i
-dTQ4wCKgNdtlsWN5NDM/YnU1Zihjl441Zw9L8GKTMDMxaL+7MWhqbDhrXzIbam03aJ+nMw9iQ2IL
-VXACICAJcP8j4R9gIqAo0UyFG9AA0Cjh33UTKiYn0ADAGdF1AjADEF9h/HUpJ+F3cAkAYQEAZH4u
-Uq9Tv01vXV9NjFesN0A0NjJkZDdY8GH6OQmQYTBwWY9an34/XK+Pgq9+vl+yDrA5NixZEH9gMIej
-YIM4gy+xLVAHgHKqKD7SX03iaBkQdIlAmCAqdhHQUhcgIwEBCyGxQTBXYcBJTEVfWElTUGLSYoMi
-Y/si44sPjBo0WFiNB2b4jj/djAs1kClpyJF3LZIfjKDfL5CQKC+ZlL+VyzKWqTCI/5f/jAtuIY0H
-MWibP5XLnRn3Mjmef4wLN5ApcjiReKUPTyvQAZAtUE5QREWMQE6BjHBNVVRFWChN4sUv4F8JAGNr
-KRYghvrvbjBjAIfzMkA3YHSmtSzx3HVjBUCoMQJgb2Kwp/UJq8JzW4wRQkxPQnpTLsA9AzAAAGIL
-raAgvC5uOxGtcYwdIqAuEgBGZwQgrYIgMHhuEDDzIqCxEDFjHqCxVApgsUP9AzB9IqCywa3Prt+P
-5LLv/7P/ktm1u2rktu+WN7iPuZ//mVm7X7xvnJm+L78/n9nA//fCD6MZtb19qLemGqtLGBD7hvoy
-MDRgcYggMHDKsEuwYV+xTU9EVYxhjEBSwE1XQVJFKIwbHqD/qKjLn4wdzZ/Or4/G0D/RT/uTBqio
-LdOPnGzVf9aPoAa/2B/ZL6NG2rmCICcGMlkAPi4hhkhZJwcoIHdwc3XbrLAFAWIpERyTaCfhIaD/
-H2A4UBIAHcB1EyGiI0Dgyt8+eCSAM6h1IgbgZDwwKKF0YSAHgXN3MhiQ5mBhvmoFsC4QBGA/HicG
-TQWw/xng5ycpgQIQgjAFQDT2Py3qL+cnLeoiLjUAPAAmnPpQHnBhI4EoEC5xKNDqcfZ3GeAD8Gwr
-weKSdocwEf8KwAiQBCAZIHRhGuEoynoGDzPNIZUVQvSQHwBCAAEAAAAiAAAASABpAG0AYQBuAHMA
-aAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwBlAAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAA
-AAACAUEAAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABN
-AGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAAEAAAABzAGkAcAA6AGgA
-aQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
-DAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAfDAEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
-AIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBz
-AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-APg/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfACNAAQAAADgA
-AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
-AAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBu
-AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADgA
-AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAA
-AwD9P+QEAAACAQswAQAAABAAAABlEmpj/W2TRKC060T2KIf0AwAXAAEAAABAADkAAFBGuS+Q0AFA
-AAgwzU2MuS+Q0AELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAA
-AAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBu
-AC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAJIAAABSAGUA
-OgAgAFsAUABBAFQAQwBIACAAZgBvAHIALQBuAGUAeAB0AF0AIABxAGwAYQAyAHgAeAB4ADoAIABk
-AGUAbABlAHQAZQAgAHIAZQBmAGUAcgBlAG4AYwBlAHMAIAB0AG8AIAB1AG4AdQBzAGUAZAAgAGYA
-aQByAG0AdwBhAHIAZQAgAGYAaQBsAGUAcwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2
-AAAAAAAfAEIQAQAAAHYAAAA8ADEANAAzADEANwA3ADYAOQA3ADgALQAyADMANQAxADAALQAxAC0A
-ZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AeABvAHMAZQAuAHYAYQB6AHEAdQBlAHoAQABn
-AG0AYQBpAGwALgBjAG8AbQA+AAAAAAACAXEAAQAAABsAAAABAdCPznjuAwgrWU/sQIPqDH8v93uR
-nX8/0wAAHwBwAAEAAACKAAAAWwBQAEEAVABDAEgAIABmAG8AcgAtAG4AZQB4AHQAXQAgAHEAbABh
-ADIAeAB4AHgAOgAgAGQAZQBsAGUAdABlACAAcgBlAGYAZQByAGUAbgBjAGUAcwAgAHQAbwAgAHUA
-bgB1AHMAZQBkACAAZgBpAHIAbQB3AGEAcgBlACAAZgBpAGwAZQBzAAAAAAAfADUQAQAAAFoAAAA8
-AEQAMQA3AEQAMQBEAEYANAAuADgAQQA5ADgAOQAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
-YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAAdgAAADwAMQA0ADMAMQA3
-ADcANgA5ADcAOAAtADIAMwA1ADEAMAAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwA
-LQB4AG8AcwBlAC4AdgBhAHoAcQB1AGUAegBAAGcAbQBhAGkAbAAuAGMAbwBtAD4AAAAAAAMA3j+f
-TgAAQAAHME3IgrkvkNABAwAmAAAAAAACAUcAAQAAAC0AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFW
-TUIzLTE1MDUxNjIzMjYyNFotNDI4MwAAAAAfABUQAQAAAFgAAABCADgAMABGAEYAQwA5ADYANgBC
-ADkAMQAxADAANAA5ADkANgA1ADQAMQA4ADAAQwBDADIANwBDADQARQBDAEMAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAzQAAACSC+5FPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBu
-AHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUA
-cwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBP
-AHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5C
-vnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBj
-AGsAaQBuAGcARQB4AAAAAQAAAEYBAABJAEkAPQAwADEAMAAxAEQAMAA5ADAAMgBGAEIAOQBDADkA
-QwAwADMAQQA2ADYAMgBGADIAOQAyAEYANAA5AEEAMwA2ADQAQwBGADQARAAyAEEAOAA4AEYANQBD
-AEUAOwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAAxADQAMwAxADcANwA2ADkANwA4AC0AMgAzADUA
-MQAwAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHgAbwBzAGUALgB2AGEAegBx
-AHUAZQB6AEAAZwBtAGEAaQBsAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkA
-bwBuACAAMQA0AC4AMwAgACgAQgB1AGkAbABkACAAMgAzADUALgAwACkALAAgAFMAdABhAGcAZQA9
-AEgAMgAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgA
-YQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAi
-AAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEA
-LgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBt
-AGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAeU8=
-
---_000_D17D1DF48A989himanshumadhaniqlogiccom_--
+git blame shows:
+3a03eb797 (Andrew Vasquez         2009-01-05 11:18:11 -0800 5299) #define FW_FILE_ISP81XX       "ql8100_fw.bin"
+a9083016a (Giridhar Malavali      2010-04-12 17:59:55 -0700 5300) #define FW_FILE_ISP82XX       "ql8200_fw.bin"
+6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5301) #define FW_FILE_ISP2031       "ql2600_fw.bin"
+6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5302) #define FW_FILE_ISP8031       "ql8300_fw.bin"
+2c5bbbb25 (Joe Carnuccio          2014-04-11 16:54:13 -0400 5303) #define FW_FILE_ISP27XX       "ql2700_fw.bin"
