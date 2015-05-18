@@ -1,119 +1,67 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 01/12] scsi_transport_srp: Introduce srp_wait_for_queuecommand()
-Date: Mon, 18 May 2015 13:22:19 +0200
-Message-ID: <5559CB6B.1090508@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH v2 02/12] scsi_transport_srp: Fix a race condition
+Date: Mon, 18 May 2015 13:22:44 +0200
+Message-ID: <5559CB84.7020506@sandisk.com>
 References: <5559CB3A.6060102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0095.outbound.protection.outlook.com ([65.55.169.95]:16171
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753669AbbERLW2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 May 2015 07:22:28 -0400
-In-Reply-To: <5559CB3A.6060102@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5559CB3A.6060102-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Introduce the helper function srp_wait_for_queuecommand().
-Move the definition of scsi_request_fn_active(). Add a comment
-above srp_wait_for_queuecommand() that support for scsi-mq needs
-to be added.
+Avoid that srp_terminate_io() can get invoked while srp_queuecommand()
+is in progress. This patch avoids that an I/O timeout can trigger the
+following kernel warning:
 
-This patch does not change any functionality. A second call to
-srp_wait_for_queuecommand() will be introduced in the next patch.
+WARNING: at drivers/infiniband/ulp/srp/ib_srp.c:1447 srp_terminate_io+0xef/0x100 [ib_srp]()
+Call Trace:
+ [<ffffffff814c65a2>] dump_stack+0x4e/0x68
+ [<ffffffff81051f71>] warn_slowpath_common+0x81/0xa0
+ [<ffffffff8105204a>] warn_slowpath_null+0x1a/0x20
+ [<ffffffffa075f51f>] srp_terminate_io+0xef/0x100 [ib_srp]
+ [<ffffffffa07495da>] __rport_fail_io_fast+0xba/0xc0 [scsi_transport_srp]
+ [<ffffffffa0749a90>] rport_fast_io_fail_timedout+0xe0/0xf0 [scsi_transport_srp]
+ [<ffffffff8106e09b>] process_one_work+0x1db/0x780
+ [<ffffffff8106e75b>] worker_thread+0x11b/0x450
+ [<ffffffff81073c64>] kthread+0xe4/0x100
+ [<ffffffff814cf26c>] ret_from_fork+0x7c/0xb0
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <JBottomley@Odin.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: <stable@vger.kernel.org> #v3.13
+See also patch "scsi_transport_srp: Add transport layer error
+handling" (commit ID 29c17324803c).
+
+Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #v3.13
 ---
- drivers/scsi/scsi_transport_srp.c | 54 ++++++++++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 23 deletions(-)
+ drivers/scsi/scsi_transport_srp.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index ae45bd9..e05cd7e 100644
+index e05cd7e..f115f67 100644
 --- a/drivers/scsi/scsi_transport_srp.c
 +++ b/drivers/scsi/scsi_transport_srp.c
-@@ -396,6 +396,36 @@ static void srp_reconnect_work(struct work_struct *work)
- 	}
+@@ -439,8 +439,10 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
+ 
+ 	/* Involve the LLD if possible to terminate all I/O on the rport. */
+ 	i = to_srp_internal(shost->transportt);
+-	if (i->f->terminate_rport_io)
++	if (i->f->terminate_rport_io) {
++		srp_wait_for_queuecommand(shost);
+ 		i->f->terminate_rport_io(rport);
++	}
  }
  
-+/**
-+ * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
-+ * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
-+ *
-+ * To do: add support for scsi-mq in this function.
-+ */
-+static int scsi_request_fn_active(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev;
-+	struct request_queue *q;
-+	int request_fn_active = 0;
-+
-+	shost_for_each_device(sdev, shost) {
-+		q = sdev->request_queue;
-+
-+		spin_lock_irq(q->queue_lock);
-+		request_fn_active += q->request_fn_active;
-+		spin_unlock_irq(q->queue_lock);
-+	}
-+
-+	return request_fn_active;
-+}
-+
-+/* Wait until ongoing shost->hostt->queuecommand() calls have finished. */
-+static void srp_wait_for_queuecommand(struct Scsi_Host *shost)
-+{
-+	while (scsi_request_fn_active(shost))
-+		msleep(20);
-+}
-+
- static void __rport_fail_io_fast(struct srp_rport *rport)
- {
- 	struct Scsi_Host *shost = rport_to_shost(rport);
-@@ -504,27 +534,6 @@ void srp_start_tl_fail_timers(struct srp_rport *rport)
- EXPORT_SYMBOL(srp_start_tl_fail_timers);
- 
  /**
-- * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
-- * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
-- */
--static int scsi_request_fn_active(struct Scsi_Host *shost)
--{
--	struct scsi_device *sdev;
--	struct request_queue *q;
--	int request_fn_active = 0;
--
--	shost_for_each_device(sdev, shost) {
--		q = sdev->request_queue;
--
--		spin_lock_irq(q->queue_lock);
--		request_fn_active += q->request_fn_active;
--		spin_unlock_irq(q->queue_lock);
--	}
--
--	return request_fn_active;
--}
--
--/**
-  * srp_reconnect_rport() - reconnect to an SRP target port
-  * @rport: SRP target port.
-  *
-@@ -559,8 +568,7 @@ int srp_reconnect_rport(struct srp_rport *rport)
- 	if (res)
- 		goto out;
- 	scsi_target_block(&shost->shost_gendev);
--	while (scsi_request_fn_active(shost))
--		msleep(20);
-+	srp_wait_for_queuecommand(shost);
- 	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
- 	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
- 		 dev_name(&shost->shost_gendev), rport->state, res);
 -- 
 2.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
