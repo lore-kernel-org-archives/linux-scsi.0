@@ -1,67 +1,88 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v2 07/12] scsi_transport_srp: Reduce failover time
-Date: Mon, 18 May 2015 13:24:38 +0200
-Message-ID: <5559CBF6.8000903@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v2 08/12] IB/srp: Remove superfluous casts
+Date: Mon, 18 May 2015 13:25:10 +0200
+Message-ID: <5559CC16.1060504@sandisk.com>
 References: <5559CB3A.6060102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5559CB3A.6060102-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0091.outbound.protection.outlook.com ([157.56.111.91]:59624
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753742AbbERLZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 May 2015 07:25:18 -0400
+In-Reply-To: <5559CB3A.6060102@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Unlike FC, there is no risk that SCSI devices will be offlined
-by the SCSI error handler if the SCSI error handler is started
-while a reconnect attempt is ongoing. Hence report timeout errors
-as soon as possible if a higher software layer (e.g. multipathd)
-needs to be informed about a timeout. It is assumed that if both
-fast_io_fail_tmo < 0 and rport->dev_loss_tmo < 0 that this means
-that there is no need to report timeouts quickly.
+A long time ago the data type int64_t was declared as long long
+on x86 systems and as long on PPC systems. Today that data type
+is declared as long long on all Linux architectures. This means
+that the casts from uint64_t into unsigned long long are
+superfluous. Remove these superfluous casts.
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
-Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
 ---
- drivers/scsi/scsi_transport_srp.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index f115f67..a85292b 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -61,6 +61,11 @@ static inline struct Scsi_Host *rport_to_shost(struct srp_rport *r)
- 	return dev_to_shost(r->dev.parent);
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 982e329..6025fb8 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -796,7 +796,7 @@ static int srp_send_req(struct srp_rdma_ch *ch, bool multich)
+ 		shost_printk(KERN_DEBUG, target->scsi_host,
+ 			     PFX "Topspin/Cisco initiator port ID workaround "
+ 			     "activated for target GUID %016llx\n",
+-			     (unsigned long long) be64_to_cpu(target->ioc_guid));
++			     be64_to_cpu(target->ioc_guid));
+ 		memset(req->priv.initiator_port_id, 0, 8);
+ 		memcpy(req->priv.initiator_port_id + 8,
+ 		       &target->srp_host->srp_dev->dev->node_guid, 8);
+@@ -2574,8 +2574,7 @@ static ssize_t show_id_ext(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct srp_target_port *target = host_to_target(class_to_shost(dev));
+ 
+-	return sprintf(buf, "0x%016llx\n",
+-		       (unsigned long long) be64_to_cpu(target->id_ext));
++	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->id_ext));
  }
  
-+static inline struct srp_rport *shost_to_rport(struct Scsi_Host *shost)
-+{
-+	return transport_class_to_srp_rport(&shost->shost_gendev);
-+}
-+
- /**
-  * srp_tmo_valid() - check timeout combination validity
-  * @reconnect_delay: Reconnect delay in seconds.
-@@ -628,9 +633,11 @@ static enum blk_eh_timer_return srp_timed_out(struct scsi_cmnd *scmd)
- 	struct scsi_device *sdev = scmd->device;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct srp_internal *i = to_srp_internal(shost->transportt);
-+	struct srp_rport *rport = shost_to_rport(shost);
+ static ssize_t show_ioc_guid(struct device *dev, struct device_attribute *attr,
+@@ -2583,8 +2582,7 @@ static ssize_t show_ioc_guid(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct srp_target_port *target = host_to_target(class_to_shost(dev));
  
- 	pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
--	return i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
-+	return rport->fast_io_fail_tmo < 0 && rport->dev_loss_tmo < 0 &&
-+		i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
- 		BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
+-	return sprintf(buf, "0x%016llx\n",
+-		       (unsigned long long) be64_to_cpu(target->ioc_guid));
++	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->ioc_guid));
  }
  
+ static ssize_t show_service_id(struct device *dev,
+@@ -2592,8 +2590,7 @@ static ssize_t show_service_id(struct device *dev,
+ {
+ 	struct srp_target_port *target = host_to_target(class_to_shost(dev));
+ 
+-	return sprintf(buf, "0x%016llx\n",
+-		       (unsigned long long) be64_to_cpu(target->service_id));
++	return sprintf(buf, "0x%016llx\n", be64_to_cpu(target->service_id));
+ }
+ 
+ static ssize_t show_pkey(struct device *dev, struct device_attribute *attr,
+@@ -2784,7 +2781,7 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
+ 
+ 	target->state = SRP_TARGET_SCANNING;
+ 	sprintf(target->target_name, "SRP.T10:%016llX",
+-		 (unsigned long long) be64_to_cpu(target->id_ext));
++		be64_to_cpu(target->id_ext));
+ 
+ 	if (scsi_add_host(target->scsi_host, host->srp_dev->dev->dma_device))
+ 		return -ENODEV;
 -- 
 2.1.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
