@@ -1,67 +1,24 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware files
-Date: Tue, 19 May 2015 11:50:39 +1000
-Message-ID: <CAGRGNgUBceGTd0ZMU+s3MopDGV8axWN5F0JsR+vwjjUg6Y6VTw@mail.gmail.com>
-References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
- <D17D1DF4.8A989%himanshu.madhani@qlogic.com> <5557DAF4.4010800@gmail.com> <D17F6747.8AE64%himanshu.madhani@qlogic.com>
+From: "Mssg" <o_0091@live.com>
+Subject: Transakce /
+Date: Mon, 18 May 2015 18:21:02 -0000
+Message-ID: <4bfaf5e8c59eaf5930717e16ed98dfa7.squirrel__30136.0681457028$1432010321$gmane$org@37.153.98.88>
+Reply-To: jg.chn1@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:35706 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbbESBvA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2015 21:51:00 -0400
-Received: by igbyr2 with SMTP id yr2so64315318igb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2015 18:51:00 -0700 (PDT)
-In-Reply-To: <D17F6747.8AE64%himanshu.madhani@qlogic.com>
+Received: from [37.153.98.88] ([37.153.98.88]:43655 "EHLO mail.vps.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750834AbbESEiW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 May 2015 00:38:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-Hi Himanshu,
 
-On Tue, May 19, 2015 at 3:00 AM, Himanshu Madhani
-<himanshu.madhani@qlogic.com> wrote:
->
-> On 5/16/15, 5:04 PM, "Xose Vazquez Perez" <xose.vazquez@gmail.com> wrote:
->
->>On 05/17/2015 01:26 AM, Himanshu Madhani wrote:
->>
->>> Please note that we will send firmware binaries soon for these files.
->>
->>What does "soon" mean ?
->>
->>git blame shows:
->>3a03eb797 (Andrew Vasquez         2009-01-05 11:18:11 -0800 5299) #define
->>FW_FILE_ISP81XX       "ql8100_fw.bin"
->>a9083016a (Giridhar Malavali      2010-04-12 17:59:55 -0700 5300) #define
->>FW_FILE_ISP82XX       "ql8200_fw.bin"
->>6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5301) #define
->>FW_FILE_ISP2031       "ql2600_fw.bin"
->>6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5302) #define
->>FW_FILE_ISP8031       "ql8300_fw.bin"
->>2c5bbbb25 (Joe Carnuccio          2014-04-11 16:54:13 -0400 5303) #define
->>FW_FILE_ISP27XX       "ql2700_fw.bin"
->
-> Hi,
->
-> Sorry for misleading response. The reason we would like to leave these
-> lines into mainline kernel is to facilitate us to debug
-> And triage issues which might involve firmware binaries.
 
-Declaring them with MODULE_FIRMWARE() means that some distro's scripts
-will check for these firmware files and warn if the files aren't
-available. Consequently Debian's kernel has what appears to be this
-exact patch applied.
 
-Do the devices these firmware files are for exist and is there any
-chance of the files being released?
+Mam vzajemne mit prospech podnik pro nas oba. pokud mate zajem, muzete mi
+dostat na e-mailovou adresu a podrobnosti vysv&#283;tlil po telefonu.
 
-Thanks,
+E-mail: jg.chn1@gmail.com
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
