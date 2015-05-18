@@ -1,54 +1,67 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 06/12] IB/srp: Fix reconnection failure handling
-Date: Mon, 18 May 2015 13:24:17 +0200
-Message-ID: <5559CBE1.9000202@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH v2 07/12] scsi_transport_srp: Reduce failover time
+Date: Mon, 18 May 2015 13:24:38 +0200
+Message-ID: <5559CBF6.8000903@sandisk.com>
 References: <5559CB3A.6060102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0079.outbound.protection.outlook.com ([207.46.100.79]:61207
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751870AbbERLY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 May 2015 07:24:27 -0400
-In-Reply-To: <5559CB3A.6060102@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5559CB3A.6060102-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Although it is possible to let SRP I/O continue if a reconnect
-results in a reduction of the number of channels, the current
-code does not handle this scenario correctly. Instead of making
-the reconnect code more complex, consider this as a reconnection
-failure.
+Unlike FC, there is no risk that SCSI devices will be offlined
+by the SCSI error handler if the SCSI error handler is started
+while a reconnect attempt is ongoing. Hence report timeout errors
+as soon as possible if a higher software layer (e.g. multipathd)
+needs to be informed about a timeout. It is assumed that if both
+fast_io_fail_tmo < 0 and rport->dev_loss_tmo < 0 that this means
+that there is no need to report timeouts quickly.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: <stable@vger.kernel.org> #v3.19
+Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <JBottomley-O3H1v1f1dlM@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_srp.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 83e4d8a..982e329 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1259,11 +1259,8 @@ static int srp_rport_reconnect(struct srp_rport *rport)
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f115f67..a85292b 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -61,6 +61,11 @@ static inline struct Scsi_Host *rport_to_shost(struct srp_rport *r)
+ 	return dev_to_shost(r->dev.parent);
+ }
  
- 	for (i = 0; i < target->ch_count; i++) {
- 		ch = &target->ch[i];
--		if (ret || !ch->target) {
--			if (i > 1)
--				ret = 0;
-+		if (ret || !ch->target)
- 			break;
--		}
- 		ret = srp_connect_ch(ch, multich);
- 		multich = true;
- 	}
++static inline struct srp_rport *shost_to_rport(struct Scsi_Host *shost)
++{
++	return transport_class_to_srp_rport(&shost->shost_gendev);
++}
++
+ /**
+  * srp_tmo_valid() - check timeout combination validity
+  * @reconnect_delay: Reconnect delay in seconds.
+@@ -628,9 +633,11 @@ static enum blk_eh_timer_return srp_timed_out(struct scsi_cmnd *scmd)
+ 	struct scsi_device *sdev = scmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct srp_internal *i = to_srp_internal(shost->transportt);
++	struct srp_rport *rport = shost_to_rport(shost);
+ 
+ 	pr_debug("timeout for sdev %s\n", dev_name(&sdev->sdev_gendev));
+-	return i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
++	return rport->fast_io_fail_tmo < 0 && rport->dev_loss_tmo < 0 &&
++		i->f->reset_timer_if_blocked && scsi_device_blocked(sdev) ?
+ 		BLK_EH_RESET_TIMER : BLK_EH_NOT_HANDLED;
+ }
+ 
 -- 
 2.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
