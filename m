@@ -1,7 +1,7 @@
 From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v2 09/12] IB/srp: Rearrange module description
-Date: Mon, 18 May 2015 13:25:27 +0200
-Message-ID: <5559CC27.8010106@sandisk.com>
+Subject: [PATCH v2 10/12] IB/srp: Remove a superfluous check from srp_free_req_data()
+Date: Mon, 18 May 2015 13:25:54 +0200
+Message-ID: <5559CC42.3000906@sandisk.com>
 References: <5559CB3A.6060102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,33 +13,29 @@ To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Move the module version and release date into separate fields.
-This makes the modinfo output easier to read.
+The function srp_free_req_data() does not use ch->target.
+Hence remove the ch->target != NULL check.
 
 Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 6025fb8..24b9d22 100644
+index 24b9d22..dd6f928 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -59,9 +59,10 @@
- #define DRV_RELDATE	"July 1, 2013"
+@@ -852,7 +852,7 @@ static void srp_free_req_data(struct srp_target_port *target,
+ 	struct srp_request *req;
+ 	int i;
  
- MODULE_AUTHOR("Roland Dreier");
--MODULE_DESCRIPTION("InfiniBand SCSI RDMA Protocol initiator "
--		   "v" DRV_VERSION " (" DRV_RELDATE ")");
-+MODULE_DESCRIPTION("InfiniBand SCSI RDMA Protocol initiator");
- MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_INFO(release_date, DRV_RELDATE);
+-	if (!ch->target || !ch->req_ring)
++	if (!ch->req_ring)
+ 		return;
  
- static unsigned int srp_sg_tablesize;
- static unsigned int cmd_sg_entries;
+ 	for (i = 0; i < target->req_ring_size; ++i) {
 -- 
 2.1.4
 
