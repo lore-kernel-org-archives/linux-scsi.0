@@ -1,186 +1,46 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 12/12] IB/srp: Add 64-bit LUN support
-Date: Mon, 18 May 2015 13:27:14 +0200
-Message-ID: <5559CC92.7020202@sandisk.com>
-References: <5559CB3A.6060102@sandisk.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: [BUG] hpsa: Controller lockup detected: 0x00150028
+Date: Mon, 18 May 2015 14:40:58 +0200
+Message-ID: <20150518124058.GH21418@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:59824
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753555AbbERL1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 May 2015 07:27:22 -0400
-In-Reply-To: <5559CB3A.6060102@sandisk.com>
+Received: from casper.infradead.org ([85.118.1.10]:45375 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942AbbERMlM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2015 08:41:12 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Yann Droneaud <ydroneaud@opteya.com>, Brian King <brking@linux.vnet.ibm.com>, Nathan Fontenot <nfont@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: don.brace@pmcs.com
+Cc: iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org
 
-The SCSI standard defines 64-bit values for LUNs. Large arrays
-employing large or hierarchical LUN numbers become more and more
-common. So update the SRP initiator to use 64-bit LUN numbers.
-See also Hannes Reinecke, commit 9cb78c16f5da ("scsi: use 64-bit LUNs"),
-June 2014.
+Hi,
 
-The largest LUN number that has been tested is 0xd2003fff00000000.
+On my HP-DL180-G6 with a HP Smart Array P212.
 
-Checked the following structure sizes with gdb:
-* sizeof(struct srp_cmd) = 48
-* sizeof(struct srp_tsk_mgmt) = 48
-* sizeof(struct srp_aer_req) = 36
+I can reliably trigger a controller lockup by running smartctl.
 
-The ibmvscsi changes have been compile tested only (on a PPC system).
+I'm trying to monitor my HDD temps using:
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
-Reviewed-by: Yann Droneaud <ydroneaud@opteya.com>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Nathan Fontenot <nfont@linux.vnet.ibm.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
- drivers/infiniband/ulp/srp/ib_srp.c | 12 ++++++------
- drivers/infiniband/ulp/srp/ib_srp.h |  1 -
- drivers/scsi/ibmvscsi/ibmvscsi.c    |  6 +++---
- include/scsi/srp.h                  |  7 ++++---
- 4 files changed, 13 insertions(+), 13 deletions(-)
+  for ((i=0; i<8; i++)) ; do
+	smartctl -d cciss,$i -a /dev/sg0 | grep ^194 ;
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index a0a2348..6b6f6e3 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1848,7 +1848,7 @@ static void srp_process_aer_req(struct srp_rdma_ch *ch,
- 	s32 delta = be32_to_cpu(req->req_lim_delta);
- 
- 	shost_printk(KERN_ERR, target->scsi_host, PFX
--		     "ignoring AER for LUN %llu\n", be64_to_cpu(req->lun));
-+		     "ignoring AER for LUN %llu\n", scsilun_to_int(&req->lun));
- 
- 	if (srp_response_common(ch, delta, &rsp, sizeof(rsp)))
- 		shost_printk(KERN_ERR, target->scsi_host, PFX
-@@ -2040,7 +2040,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	memset(cmd, 0, sizeof *cmd);
- 
- 	cmd->opcode = SRP_CMD;
--	cmd->lun    = cpu_to_be64((u64) scmnd->device->lun << 48);
-+	int_to_scsilun(scmnd->device->lun, &cmd->lun);
- 	cmd->tag    = tag;
- 	memcpy(cmd->cdb, scmnd->cmnd, scmnd->cmd_len);
- 
-@@ -2420,8 +2420,8 @@ srp_change_queue_depth(struct scsi_device *sdev, int qdepth)
- 	return scsi_change_queue_depth(sdev, qdepth);
- }
- 
--static int srp_send_tsk_mgmt(struct srp_rdma_ch *ch, u64 req_tag,
--			     unsigned int lun, u8 func)
-+static int srp_send_tsk_mgmt(struct srp_rdma_ch *ch, u64 req_tag, u64 lun,
-+			     u8 func)
- {
- 	struct srp_target_port *target = ch->target;
- 	struct srp_rport *rport = target->rport;
-@@ -2455,7 +2455,7 @@ static int srp_send_tsk_mgmt(struct srp_rdma_ch *ch, u64 req_tag,
- 	memset(tsk_mgmt, 0, sizeof *tsk_mgmt);
- 
- 	tsk_mgmt->opcode 	= SRP_TSK_MGMT;
--	tsk_mgmt->lun		= cpu_to_be64((u64) lun << 48);
-+	int_to_scsilun(lun, &tsk_mgmt->lun);
- 	tsk_mgmt->tag		= req_tag | SRP_TAG_TSK_MGMT;
- 	tsk_mgmt->tsk_mgmt_func = func;
- 	tsk_mgmt->task_tag	= req_tag;
-@@ -3150,7 +3150,7 @@ static ssize_t srp_create_target(struct device *dev,
- 	target_host->transportt  = ib_srp_transport_template;
- 	target_host->max_channel = 0;
- 	target_host->max_id      = 1;
--	target_host->max_lun     = SRP_MAX_LUN;
-+	target_host->max_lun     = -1LL;
- 	target_host->max_cmd_len = sizeof ((struct srp_cmd *) (void *) 0L)->cdb;
- 
- 	target = host_to_target(target_host);
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index e690847..17ee3f8 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.h
-+++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -54,7 +54,6 @@ enum {
- 	SRP_DLID_REDIRECT	= 2,
- 	SRP_STALE_CONN		= 3,
- 
--	SRP_MAX_LUN		= 512,
- 	SRP_DEF_SG_TABLESIZE	= 12,
- 
- 	SRP_DEFAULT_QUEUE_SIZE	= 1 << 6,
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index acea5d6..6a41c36 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1053,7 +1053,7 @@ static int ibmvscsi_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	memset(srp_cmd, 0x00, SRP_MAX_IU_LEN);
- 	srp_cmd->opcode = SRP_CMD;
- 	memcpy(srp_cmd->cdb, cmnd->cmnd, sizeof(srp_cmd->cdb));
--	srp_cmd->lun = cpu_to_be64(((u64)lun) << 48);
-+	int_to_scsilun(lun, &srp_cmd->lun);
- 
- 	if (!map_data_for_srp_cmd(cmnd, evt_struct, srp_cmd, hostdata->dev)) {
- 		if (!firmware_has_feature(FW_FEATURE_CMO))
-@@ -1529,7 +1529,7 @@ static int ibmvscsi_eh_abort_handler(struct scsi_cmnd *cmd)
- 		/* Set up an abort SRP command */
- 		memset(tsk_mgmt, 0x00, sizeof(*tsk_mgmt));
- 		tsk_mgmt->opcode = SRP_TSK_MGMT;
--		tsk_mgmt->lun = cpu_to_be64(((u64) lun) << 48);
-+		int_to_scsilun(lun, &tsk_mgmt->lun);
- 		tsk_mgmt->tsk_mgmt_func = SRP_TSK_ABORT_TASK;
- 		tsk_mgmt->task_tag = (u64) found_evt;
- 
-@@ -1652,7 +1652,7 @@ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 		/* Set up a lun reset SRP command */
- 		memset(tsk_mgmt, 0x00, sizeof(*tsk_mgmt));
- 		tsk_mgmt->opcode = SRP_TSK_MGMT;
--		tsk_mgmt->lun = cpu_to_be64(((u64) lun) << 48);
-+		int_to_scsilun(lun, &tsk_mgmt->lun);
- 		tsk_mgmt->tsk_mgmt_func = SRP_TSK_LUN_RESET;
- 
- 		evt->sync_srp = &srp_rsp;
-diff --git a/include/scsi/srp.h b/include/scsi/srp.h
-index 1ae84db..5be834d 100644
---- a/include/scsi/srp.h
-+++ b/include/scsi/srp.h
-@@ -42,6 +42,7 @@
-  */
- 
- #include <linux/types.h>
-+#include <scsi/scsi.h>
- 
- enum {
- 	SRP_LOGIN_REQ	= 0x00,
-@@ -179,7 +180,7 @@ struct srp_tsk_mgmt {
- 	u8	reserved1[6];
- 	u64	tag;
- 	u8	reserved2[4];
--	__be64	lun __attribute__((packed));
-+	struct scsi_lun	lun;
- 	u8	reserved3[2];
- 	u8	tsk_mgmt_func;
- 	u8	reserved4;
-@@ -200,7 +201,7 @@ struct srp_cmd {
- 	u8	data_in_desc_cnt;
- 	u64	tag;
- 	u8	reserved2[4];
--	__be64	lun __attribute__((packed));
-+	struct scsi_lun	lun;
- 	u8	reserved3;
- 	u8	task_attr;
- 	u8	reserved4;
-@@ -265,7 +266,7 @@ struct srp_aer_req {
- 	__be32	req_lim_delta;
- 	u64	tag;
- 	u32	reserved2;
--	__be64	lun;
-+	struct scsi_lun	lun;
- 	__be32	sense_data_len;
- 	u32	reserved3;
- 	u8	sense_data[0];
--- 
-2.1.4
+  done | awk '{t=$10; if (t > T) T = t;} END {print T}'
 
+After a few of those runs, I get:
+
+[ 1540.277776] hpsa 0000:06:00.0: Controller lockup detected: 0x00150028
+
+And my disks are gone.
+
+With linux 3.16 the whole kernel came down with NMI watchdog timeouts /
+RCU stalls in the detect_lockup() worklet.
+
+On linux 4.0 those appear to be gone, but the controller isn't coming
+back either.
+
+It this a known 'feature'; is there anything I can do to help
+diagnose/fix this issue?
+
+ ~ Peter
