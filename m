@@ -1,45 +1,76 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v2 10/12] IB/srp: Remove a superfluous check from srp_free_req_data()
-Date: Mon, 18 May 2015 13:25:54 +0200
-Message-ID: <5559CC42.3000906@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v2 11/12] IB/srp: Remove !ch->target tests from the reconnect
+ code
+Date: Mon, 18 May 2015 13:26:17 +0200
+Message-ID: <5559CC59.8@sandisk.com>
 References: <5559CB3A.6060102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5559CB3A.6060102-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: James Bottomley <jbottomley-wo1vFcy6AUs@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0066.outbound.protection.outlook.com ([65.55.169.66]:50062
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753724AbbERL0Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 May 2015 07:26:25 -0400
+In-Reply-To: <5559CB3A.6060102@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: James Bottomley <jbottomley@odin.com>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The function srp_free_req_data() does not use ch->target.
-Hence remove the ch->target != NULL check.
+Remove the !ch->target tests from the reconnect code. These
+tests are not needed: upon entry of srp_rport_reconnect()
+it is guaranteed that all ch->target pointers are non-NULL.
+None of the functions srp_new_cm_id(), srp_finish_req(),
+srp_create_ch_ib() nor srp_connect_ch() modifies this pointer.
+srp_free_ch_ib() is never called concurrently with
+srp_rport_reconnect().
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 24b9d22..dd6f928 100644
+index dd6f928..a0a2348 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -852,7 +852,7 @@ static void srp_free_req_data(struct srp_target_port *target,
- 	struct srp_request *req;
- 	int i;
+@@ -1226,14 +1226,10 @@ static int srp_rport_reconnect(struct srp_rport *rport)
+ 	 */
+ 	for (i = 0; i < target->ch_count; i++) {
+ 		ch = &target->ch[i];
+-		if (!ch->target)
+-			break;
+ 		ret += srp_new_cm_id(ch);
+ 	}
+ 	for (i = 0; i < target->ch_count; i++) {
+ 		ch = &target->ch[i];
+-		if (!ch->target)
+-			break;
+ 		for (j = 0; j < target->req_ring_size; ++j) {
+ 			struct srp_request *req = &ch->req_ring[j];
  
--	if (!ch->target || !ch->req_ring)
-+	if (!ch->req_ring)
- 		return;
+@@ -1242,8 +1238,6 @@ static int srp_rport_reconnect(struct srp_rport *rport)
+ 	}
+ 	for (i = 0; i < target->ch_count; i++) {
+ 		ch = &target->ch[i];
+-		if (!ch->target)
+-			break;
+ 		/*
+ 		 * Whether or not creating a new CM ID succeeded, create a new
+ 		 * QP. This guarantees that all completion callback function
+@@ -1260,7 +1254,7 @@ static int srp_rport_reconnect(struct srp_rport *rport)
  
- 	for (i = 0; i < target->req_ring_size; ++i) {
+ 	for (i = 0; i < target->ch_count; i++) {
+ 		ch = &target->ch[i];
+-		if (ret || !ch->target)
++		if (ret)
+ 			break;
+ 		ret = srp_connect_ch(ch, multich);
+ 		multich = true;
 -- 
 2.1.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
