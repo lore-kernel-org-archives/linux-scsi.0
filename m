@@ -1,32 +1,51 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch -next] target: double locking typo in
- core_clear_lun_from_tpg()
-Date: Tue, 19 May 2015 15:04:19 +0300
-Message-ID: <20150519120419.GA12107@mwanda>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] [RESEND] SCSI: ips: remove pointless #warning
+Date: Tue, 19 May 2015 15:33:28 +0200
+Message-ID: <3121960.dnOqT9LCth@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:58944 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbbESNeE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 09:34:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
 
-We accidentally deadlock instead of unlocking.
+The ips driver contains
 
-Fixes: 08d20ff62cde ('target: Acquire lun_entry_mutex during core_disable_device_list_for_node')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+ #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 2f4c8fa..20618df 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -433,7 +433,7 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+which gets printed by the compiler every time this driver gets
+build for something other than those three architectures. The same
+is true for most other drivers, but none of them prints a warning like
+this.
+
+Let's remove the warning now to reduce the amount of clutter.
+
+FWIW, I've reviewed the driver and found a few oddities, but nothing
+that needs to be fixed or that would be architecture specific.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+Submitted last in January, but got no reply
+
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 7542f11d3fcd..d86673a4cdb4 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -206,10 +206,6 @@ module_param(ips, charp, 0);
+ #define IPS_VERSION_HIGH        IPS_VER_MAJOR_STRING "." IPS_VER_MINOR_STRING
+ #define IPS_VERSION_LOW         "." IPS_VER_BUILD_STRING " "
  
- 			core_disable_device_list_for_node(lun, deve, nacl, tpg);
- 		}
--		mutex_lock(&nacl->lun_entry_mutex);
-+		mutex_unlock(&nacl->lun_entry_mutex);
- 	}
- 	mutex_unlock(&tpg->acl_node_mutex);
- }
+-#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
+-#warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+-#endif
+-
+ #define IPS_DMA_DIR(scb) ((!scb->scsi_cmd || ips_is_passthru(scb->scsi_cmd) || \
+                          DMA_NONE == scb->scsi_cmd->sc_data_direction) ? \
+                          PCI_DMA_BIDIRECTIONAL : \
+
