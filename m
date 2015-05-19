@@ -1,92 +1,119 @@
 From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [PATCH 2/2] cciss: correct the non-resettable board list
-Date: Tue, 19 May 2015 18:58:18 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB486AA29D@BBYEXM01.pmc-sierra.internal>
-References: <1424191222-30570-1-git-send-email-thenzl@redhat.com>
- <1424191222-30570-2-git-send-email-thenzl@redhat.com>
+Subject: RE: [PATCH] hpsa: dont meddle with hw which isn't ours (cciss)
+Date: Tue, 19 May 2015 19:00:37 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB486AA2AD@BBYEXM01.pmc-sierra.internal>
+References: <1427981154-27659-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55122 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752143AbbESTAj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 May 2015 15:00:39 -0400
+In-Reply-To: <1427981154-27659-1-git-send-email-thenzl@redhat.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Scott Teel <Scott.Teel@pmcs.com>, Justin Lindley <Justin.Lindley@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>
 
- -----Original Message-----
-> From: Don Brace
-> Sent: Tuesday, May 19, 2015 1:56 PM
-> To: 'Tomas Henzl'; linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org; axboe@kernel.dk
-> Subject: RE: [PATCH 2/2] cciss: correct the non-resettable board list
+
+
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Thursday, April 02, 2015 8:26 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Don Brace; Scott Teel; Justin Lindley; Kevin Barnett
+> Subject: [PATCH] hpsa: dont meddle with hw which isn't ours (cciss)
 > 
-> > -----Original Message-----
-> > From: Tomas Henzl [mailto:thenzl@redhat.com]
-> > Sent: Tuesday, February 17, 2015 10:40 AM
-> > To: linux-scsi@vger.kernel.org
-> > Cc: Don Brace; linux-kernel@vger.kernel.org; axboe@kernel.dk
-> > Subject: [PATCH 2/2] cciss: correct the non-resettable board list
-> >
-> > The hpsa driver carries a more recent version,
-> > copy the table from there.
-> >
-> > Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> > ---
-> >  drivers/block/cciss.c | 23 +++++++++++++++++++++--
-> >  1 file changed, 21 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> > index 48498220cd..0ca65b25ef 100644
-> > --- a/drivers/block/cciss.c
-> > +++ b/drivers/block/cciss.c
-> > @@ -582,12 +582,32 @@ static u32 unresettable_controller[] = {
-> >  	0x3215103C, /* Smart Array E200i */
-> >  	0x3237103C, /* Smart Array E500 */
-> >  	0x323D103C, /* Smart Array P700m */
-> > +	0x40800E11, /* Smart Array 5i */
-> >  	0x409C0E11, /* Smart Array 6400 */
-> >  	0x409D0E11, /* Smart Array 6400 EM */
-> > +	0x40700E11, /* Smart Array 5300 */
-> > +	0x40820E11, /* Smart Array 532 */
-> > +	0x40830E11, /* Smart Array 5312 */
-> > +	0x409A0E11, /* Smart Array 641 */
-> > +	0x409B0E11, /* Smart Array 642 */
-> > +	0x40910E11, /* Smart Array 6i */
-> >  };
-> >
-> >  /* List of controllers which cannot even be soft reset */
-> >  static u32 soft_unresettable_controller[] = {
-> > +	0x40800E11, /* Smart Array 5i */
-> > +	0x40700E11, /* Smart Array 5300 */
-> > +	0x40820E11, /* Smart Array 532 */
-> > +	0x40830E11, /* Smart Array 5312 */
-> > +	0x409A0E11, /* Smart Array 641 */
-> > +	0x409B0E11, /* Smart Array 642 */
-> > +	0x40910E11, /* Smart Array 6i */
-> > +	/* Exclude 640x boards.  These are two pci devices in one slot
-> > +	 * which share a battery backed cache module.  One controls the
-> > +	 * cache, the other accesses the cache through the one that controls
-> > +	 * it.  If we reset the one controlling the cache, the other will
-> > +	 * likely not be happy.  Just forbid resetting this conjoined mess.
-> > +	 */
-> >  	0x409C0E11, /* Smart Array 6400 */
-> >  	0x409D0E11, /* Smart Array 6400 EM */
-> >  };
-> > @@ -4663,8 +4683,7 @@ static int cciss_kdump_hard_reset_controller(struct
-> > pci_dev *pdev)
-> >  	 */
-> >  	cciss_lookup_board_id(pdev, &board_id);
-> >  	if (!ctlr_is_resettable(board_id)) {
-> > -		dev_warn(&pdev->dev, "Cannot reset Smart Array 640x "
-> > -				"due to shared cache module.");
-> > +		dev_warn(&pdev->dev, "Controller not resettable\n");
-> >  		return -ENODEV;
-> >  	}
-> >
-> > --
-> > 1.9.3
+> The hpsa driver touches the hardware before checking the pci-id table.
+> This way, especially in kdump, it may confuse the proper driver (cciss).
+> 
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c | 21 +++++++++++----------
+>  1 file changed, 11 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index bddb33d30f..c33a077636 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6737,7 +6737,7 @@ static int controller_reset_failed(struct CfgTable
+> __iomem *cfgtable)
+>  /* This does a hard reset of the controller using PCI power management
+>   * states or the using the doorbell register.
+>   */
+> -static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+> +static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32
+> board_id)
+>  {
+>  	u64 cfg_offset;
+>  	u32 cfg_base_addr;
+> @@ -6748,7 +6748,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+> pci_dev *pdev)
+>  	int rc;
+>  	struct CfgTable __iomem *cfgtable;
+>  	u32 use_doorbell;
+> -	u32 board_id;
+>  	u16 command_register;
+> 
+>  	/* For controllers as old as the P600, this is very nearly
+> @@ -6764,11 +6763,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+> pci_dev *pdev)
+>  	 * using the doorbell register.
+>  	 */
+> 
+> -	rc = hpsa_lookup_board_id(pdev, &board_id);
+> -	if (rc < 0) {
+> -		dev_warn(&pdev->dev, "Board ID not found\n");
+> -		return rc;
+> -	}
+>  	if (!ctlr_is_resettable(board_id)) {
+>  		dev_warn(&pdev->dev, "Controller not resettable\n");
+>  		return -ENODEV;
+> @@ -7413,7 +7407,7 @@ static void hpsa_hba_inquiry(struct ctlr_info *h)
+>  	}
+>  }
+> 
+> -static int hpsa_init_reset_devices(struct pci_dev *pdev)
+> +static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
+>  {
+>  	int rc, i;
+>  	void __iomem *vaddr;
+> @@ -7449,7 +7443,7 @@ static int hpsa_init_reset_devices(struct pci_dev
+> *pdev)
+>  	iounmap(vaddr);
+> 
+>  	/* Reset the controller with a PCI power-cycle or via doorbell */
+> -	rc = hpsa_kdump_hard_reset_controller(pdev);
+> +	rc = hpsa_kdump_hard_reset_controller(pdev, board_id);
+> 
+>  	/* -ENOTSUPP here means we cannot reset the controller
+>  	 * but it's already (and still) up and running in
+> @@ -7927,11 +7921,18 @@ static int hpsa_init_one(struct pci_dev *pdev, const
+> struct pci_device_id *ent)
+>  	struct ctlr_info *h;
+>  	int try_soft_reset = 0;
+>  	unsigned long flags;
+> +	u32 board_id;
+> 
+>  	if (number_of_controllers == 0)
+>  		printk(KERN_INFO DRIVER_NAME "\n");
+> 
+> -	rc = hpsa_init_reset_devices(pdev);
+> +	rc = hpsa_lookup_board_id(pdev, &board_id);
+> +	if (rc < 0) {
+> +		dev_warn(&pdev->dev, "Board ID not found\n");
+> +		return rc;
+> +	}
+> +
+> +	rc = hpsa_init_reset_devices(pdev, board_id);
+>  	if (rc) {
+>  		if (rc != -ENOTSUPP)
+>  			return rc;
+> --
+> 1.9.3
 
-Goofed on the last one. Sorry about that.
-
-Signed-off-by Don Brace <don.brace@pmcs.com>
+Signed-off-by: Don Brace <don.brace@pmcs.com>
