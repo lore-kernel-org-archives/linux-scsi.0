@@ -1,68 +1,44 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND] SCSI: initio: remove duplicate module device table
-Date: Tue, 19 May 2015 15:36:06 +0200
-Message-ID: <11814945.RJWVP7jqUX@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:49882 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbbESNgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 09:36:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v1 0/3] fixing building errors and warnings when components
+Date: Tue, 19 May 2015 16:47:08 +0300
+Message-ID: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, kishon@ti.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, dovl@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@odin.com, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-The initio driver has for many years had two copies of the
-same module device table. One of them is also used for registering
-the other driver, the other one is entirely useless after the
-large scale cleanup that Alan Cox did back in 2007.
+V1:
+The following combination of components, when SCSI_UFS_QCOM=y
+and PHY_QCOM_UFS=m is illegal and causes build errors.
+The 3rd patch in the series enables the SCSI_UFS_QCOM component to 
+be compiled as a module (by changing its configuration to tristate).
+So now, compiling SCSI_UFS_QCOM=m forces PHY_QCOM_UFS=m, and 
+SCSI_UFS_QCOM=y forces PHY_QCOM_UFS=y.
 
-The compiler warns about this whenever the driver is built-in:
+In addition, when PHY_QCOM_UFS=m, external functions in 
+phy-ufs-qcom.c should be exported. The 1st patch fixes it.
 
-drivers/scsi/initio.c:131:29: warning: 'i91u_pci_devices' defined but not used [-Wunused-variable]
+Another issue that we see when SCSI_UFS_QCOM=m is a warning that
+the 2nd patch fixes.
 
-This removes the extraneous table and the warning.
+notice:
+checkpatch gives an error on the commit message of patch 1/3
+in the series. Ignore as the commit message is the build errors
+that this patch fixes.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 72d39fea901 ("[SCSI] initio: Convert into a real Linux driver and update to modern style")
----
-Submitted in January, but got no reply.
+Yaniv Gardi (3):
+  phy: qcom-ufs: fix build error when the driver is built as a module
+  scsi: ufs-qcom: fix compilation warning if compiled as a module
+  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index e5dae7b54d9a..51063177f18e 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -110,11 +110,6 @@
- #define i91u_MAXQUEUE		2
- #define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
- 
--#define I950_DEVICE_ID	0x9500	/* Initio's inic-950 product ID   */
--#define I940_DEVICE_ID	0x9400	/* Initio's inic-940 product ID   */
--#define I935_DEVICE_ID	0x9401	/* Initio's inic-935 product ID   */
--#define I920_DEVICE_ID	0x0002	/* Initio's other product ID      */
--
- #ifdef DEBUG_i91u
- static unsigned int i91u_debug = DEBUG_DEFAULT;
- #endif
-@@ -127,17 +122,6 @@ static int setup_debug = 0;
- 
- static void i91uSCBPost(u8 * pHcb, u8 * pScb);
- 
--/* PCI Devices supported by this driver */
--static struct pci_device_id i91u_pci_devices[] = {
--	{ PCI_VENDOR_ID_INIT,  I950_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I940_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I935_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_DOMEX, I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, i91u_pci_devices);
--
- #define DEBUG_INTERRUPT 0
- #define DEBUG_QUEUE     0
- #define DEBUG_STATE     0
+ drivers/phy/phy-qcom-ufs.c  | 11 +++++++++++
+ drivers/scsi/ufs/Kconfig    |  2 +-
+ drivers/scsi/ufs/ufs-qcom.c |  2 +-
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
