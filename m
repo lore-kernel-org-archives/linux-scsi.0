@@ -1,32 +1,41 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] [RESEND] SCSI: ips: remove pointless #warning
-Date: Tue, 19 May 2015 20:42:34 +0200
-Message-ID: <17880859.7GjlLRguJk@wuerfel>
-References: <3121960.dnOqT9LCth@wuerfel> <2850783.725LtIIUFq@wuerfel> <1432060697.14737.1.camel@HansenPartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch -next] target: double locking typo in
+ core_clear_lun_from_tpg()
+Date: Tue, 19 May 2015 11:44:32 -0700
+Message-ID: <1432061072.19713.2.camel@haakon3.risingtidesystems.com>
+References: <20150519120419.GA12107@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:59169 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbbESSnB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 14:43:01 -0400
-In-Reply-To: <1432060697.14737.1.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20150519120419.GA12107@mwanda>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Tuesday 19 May 2015 11:38:17 James Bottomley wrote:
+On Tue, 2015-05-19 at 15:04 +0300, Dan Carpenter wrote:
+> We accidentally deadlock instead of unlocking.
 > 
-> Actually, no, that would cause problems if anyone is actually using this
-> driver on non-intel.  What about this?  It captures the intent of the
-> original but gets rid of the warning.
+> Fixes: 08d20ff62cde ('target: Acquire lun_entry_mutex during core_disable_device_list_for_node')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> 
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index 2f4c8fa..20618df 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -433,7 +433,7 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+>  
+>  			core_disable_device_list_for_node(lun, deve, nacl, tpg);
+>  		}
+> -		mutex_lock(&nacl->lun_entry_mutex);
+> +		mutex_unlock(&nacl->lun_entry_mutex);
+>  	}
+>  	mutex_unlock(&tpg->acl_node_mutex);
+>  }
 
-Good idea, thanks!
+Applied to for-next, and will squash into the original soon.
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Thanks Dan!
 
-	Arnd
+--nab
