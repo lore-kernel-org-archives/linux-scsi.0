@@ -1,42 +1,61 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] [RESEND] SCSI: ips: remove pointless #warning
-Date: Tue, 19 May 2015 12:25:37 -0700
-Message-ID: <1432063537.2870.203.camel@perches.com>
-References: <3121960.dnOqT9LCth@wuerfel>
-	 <1432043572.3007.14.camel@HansenPartnership.com>
-	 <2850783.725LtIIUFq@wuerfel>
-	 <1432060697.14737.1.camel@HansenPartnership.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Let's get a File & Storage miniconf going at LPC2015!
+Date: Tue, 19 May 2015 13:10:55 -0700
+Message-ID: <20150519201055.GD27115@birch.djwong.org>
+References: <20150515205825.GC24967@birch.djwong.org>
+	<20150519154200.GA2559@kmo-pixel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1432060697.14737.1.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20150519154200.GA2559@kmo-pixel>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2015-05-19 at 11:38 -0700, James Bottomley wrote:
-> On Tue, 2015-05-19 at 15:56 +0200, Arnd Bergmann wrote:
-> > On Tuesday 19 May 2015 06:52:52 James Bottomley wrote:
-> > > On Tue, 2015-05-19 at 15:33 +0200, Arnd Bergmann wrote:
-> > > > The ips driver contains
-> > > >  #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+On Tue, May 19, 2015 at 08:42:00AM -0700, Kent Overstreet wrote:
+> On Fri, May 15, 2015 at 01:58:25PM -0700, Darrick J. Wong wrote:
+> > We of course are not limited to just those topics -- if there's something
+> > you'd really like to discuss with everyone, please add that to the wiki.
+> > I realize that mid-August is family vacation time for many people, but
+> > those are the constraints the conference has to work with this year.
+> > There are fun things to do around Seattle, and that's probably the best
+> > time of year to visit.
+> 
+> It's getting near time for the big bcachefs announcement :)
+> 
+> Also, stable pages - what's been going on there? Last I heard you were talking
+> about using the page migration code to do COW, did anything come of that? I just
+> added data checksumming/compression to bcachefs, so that's been fresh on my
+> mind.
 
-trivial:
+Yeah.  I never figured out a sane way to migrate pages and keep everything
+else happy.  Daniel Phillips is having a go at page forking for tux3; let's
+see if the questions about that get resolved.
 
-> > My main interest here is to get a clean build of ARM 'allmodconfig'.
-[]
-> What about this?  It captures the intent of the
-> original but gets rid of the warning.
-[]
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-[]
-> @@ -6788,6 +6784,11 @@ ips_remove_device(struct pci_dev *pci_dev)
->  static int __init
->  ips_module_init(void)
->  {
-> +#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
-> +        printk(KERN_ERR, "ips: This driver has only been tested on the x86/ia64/x86_64 platforms\n");
+> Also, there's probably always going to be situations where we're reading or
+> writing to pages user space can stomp on (dio) - IMO we need to add a bio flag
+> to annotate this - "if you need this to be stable you have to bounce it".
+> Otherwise either filesystems/block drivers are going to be stuck bouncing
+> everything, or it'll just (continue to be) buggy.
 
-Bad comma after KERN_ERR, and KERN_ALERT might be better.
+Well, for now there's BIO_SNAP_STABLE that forces the block layer to bounce it,
+but right now ext3 is the last user of it, and afaict btrfs is the only other
+FS that takes care of stable pages on its own.
+
+--D
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
