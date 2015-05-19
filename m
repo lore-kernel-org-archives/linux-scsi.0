@@ -1,92 +1,129 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: debug: fix type mismatch warning for sg_pcopy_from_buffer
-Date: Tue, 19 May 2015 23:22:39 +0200
-Message-ID: <6309932.EjHf7uUo1X@wuerfel>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [BUG] iscsi-target: deadlock because of iscsit_get_tpg()
+Date: Tue, 19 May 2015 15:10:33 -0700
+Message-ID: <1432073433.19713.25.camel@haakon3.risingtidesystems.com>
+References: <555B9C3A.40106@ispras.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dave Gordon <david.s.gordon@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@odin.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:59628 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbbESWKf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 18:10:35 -0400
+In-Reply-To: <555B9C3A.40106@ispras.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org, Sagi Grimberg <sagig@mellanox.com>
 
-The recent change to mark the input argument of sg_pcopy_from_buffer
-had the unfortunate side-effect to cause a new warning in the
-scsi_debug code:
+Hi Alexey,
 
-drivers/scsi/scsi_debug.c: In function 'do_device_access':
-drivers/scsi/scsi_debug.c:2376:8: warning: assignment from incompatible pointer type [-Wincompatible-pointer-types]
-   func = sg_pcopy_from_buffer;
+On Tue, 2015-05-19 at 23:25 +0300, Alexey Khoroshilov wrote:
+> Hello,
+> 
+> Our tool reports a potential double lock because of quite strange code
+> in iscsit_get_tpg().
+> 
+> drivers/target/iscsi/iscsi_target_tpg.c:
+> int iscsit_get_tpg(
+> 	struct iscsi_portal_group *tpg)
+> {
+> 	int ret;
+> 
+> 	ret = mutex_lock_interruptible(&tpg->tpg_access_lock);
+> 	return ((ret != 0) || signal_pending(current)) ? -1 : 0;
+> }
+> 
+> If mutex_lock_interruptible() successfully acquires the mutex, but there
+> is a pending signal, the function returns error, but it leaves the mutex
+> held. Callers do not expect such behaviour that can lead to a deadlock.
+> 
+> Why the check for pending signal is needed here?
+> 
 
-This patch attempts to avoid that warning without adding
-evil type casts, but unfortunately makes the do_device_access
-function a lot uglier in the process.
+Once upon a time, this was an un-interruptible lock.  The signal pending
+was a check to allow userspace to break out of the operation with
+SIGINT.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 5250326459 ("lib/scatterlist: mark input buffer parameters as 'const'")
----
+AFAICT, there's no reason why this is necessary anymore.
 
-I can't decide if this is actually a good idea, or if we should rather drop
-the sg_pcopy_from_buffer() patch. Maybe someone else sees a better solution.
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> 
+> Similar dangerous pattern presents in a couple of other places:
+> 
+> drivers/target/iscsi/iscsi_target.c:
+> int iscsit_access_np(struct iscsi_np *np, struct iscsi_portal_group *tpg)
+> {
+> ...
+> 	ret = down_interruptible(&tpg->np_login_sem);
+> 	if ((ret != 0) || signal_pending(current))
+> 		return -1;
+> 
+> 
+> drivers/target/target_core_sbc.c:
+> static sense_reason_t
+> sbc_compare_and_write(struct se_cmd *cmd)
+> {
+> ...
+> 	rc = down_interruptible(&dev->caw_sem);
+> 	if ((rc != 0) || signal_pending(current)) {
+> 		cmd->transport_complete_callback = NULL;
+> 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> 	}
+> 
+> 
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1f8e2dc9c616..dd9f0d1574ef 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2363,17 +2363,13 @@ do_device_access(struct scsi_cmnd *scmd, u64 lba, u32 num, bool do_write)
- 	u64 block, rest = 0;
- 	struct scsi_data_buffer *sdb;
- 	enum dma_data_direction dir;
--	size_t (*func)(struct scatterlist *, unsigned int, void *, size_t,
--		       off_t);
+Ditto on these.
+
+Applying the following patch to target-pending/master.
+
+Thank you,
+
+--nab
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 34871a6..74e6114 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -230,7 +230,7 @@ int iscsit_access_np(struct iscsi_np *np, struct iscsi_portal_group *tpg)
+         * Here we serialize access across the TIQN+TPG Tuple.
+         */
+        ret = down_interruptible(&tpg->np_login_sem);
+-       if ((ret != 0) || signal_pending(current))
++       if (ret != 0)
+                return -1;
  
- 	if (do_write) {
- 		sdb = scsi_out(scmd);
- 		dir = DMA_TO_DEVICE;
--		func = sg_pcopy_to_buffer;
- 	} else {
- 		sdb = scsi_in(scmd);
- 		dir = DMA_FROM_DEVICE;
--		func = sg_pcopy_from_buffer;
- 	}
- 
- 	if (!sdb->length)
-@@ -2385,17 +2381,29 @@ do_device_access(struct scsi_cmnd *scmd, u64 lba, u32 num, bool do_write)
- 	if (block + num > sdebug_store_sectors)
- 		rest = block + num - sdebug_store_sectors;
- 
--	ret = func(sdb->table.sgl, sdb->table.nents,
--		   fake_storep + (block * scsi_debug_sector_size),
--		   (num - rest) * scsi_debug_sector_size, 0);
-+	if (do_write)
-+		ret = sg_pcopy_to_buffer(sdb->table.sgl, sdb->table.nents,
-+				fake_storep + (block * scsi_debug_sector_size),
-+				(num - rest) * scsi_debug_sector_size, 0);
-+	else
-+		ret = sg_pcopy_from_buffer(sdb->table.sgl, sdb->table.nents,
-+				fake_storep + (block * scsi_debug_sector_size),
-+				(num - rest) * scsi_debug_sector_size, 0);
-+
- 	if (ret != (num - rest) * scsi_debug_sector_size)
- 		return ret;
- 
--	if (rest) {
--		ret += func(sdb->table.sgl, sdb->table.nents,
--			    fake_storep, rest * scsi_debug_sector_size,
--			    (num - rest) * scsi_debug_sector_size);
--	}
-+	if (!rest)
-+		return ret;
-+
-+	if (do_write)
-+		ret += sg_pcopy_to_buffer(sdb->table.sgl, sdb->table.nents,
-+				fake_storep, rest * scsi_debug_sector_size,
-+				(num - rest) * scsi_debug_sector_size);
-+	else
-+		ret += sg_pcopy_from_buffer(sdb->table.sgl, sdb->table.nents,
-+				fake_storep, rest * scsi_debug_sector_size,
-+				(num - rest) * scsi_debug_sector_size);
- 
- 	return ret;
+        spin_lock_bh(&tpg->tpg_state_lock);
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.
+index e8a2408..5e3295f 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -161,10 +161,7 @@ struct iscsi_portal_group *iscsit_get_tpg_from_np(
+ int iscsit_get_tpg(
+        struct iscsi_portal_group *tpg)
+ {
+-       int ret;
+-
+-       ret = mutex_lock_interruptible(&tpg->tpg_access_lock);
+-       return ((ret != 0) || signal_pending(current)) ? -1 : 0;
++       return mutex_lock_interruptible(&tpg->tpg_access_lock);
  }
+ 
+ void iscsit_put_tpg(struct iscsi_portal_group *tpg)
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 8855781..733824e 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -568,7 +568,7 @@ sbc_compare_and_write(struct se_cmd *cmd)
+         * comparision using SGLs at cmd->t_bidi_data_sg..
+         */
+        rc = down_interruptible(&dev->caw_sem);
+-       if ((rc != 0) || signal_pending(current)) {
++       if (rc != 0) {
+                cmd->transport_complete_callback = NULL;
+                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+        }
+
+
