@@ -1,19 +1,24 @@
 From: Don Brace <Don.Brace@pmcs.com>
 Subject: RE: [PATCH 2/2] cciss: correct the non-resettable board list
-Date: Tue, 19 May 2015 18:55:31 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB486AA274@BBYEXM01.pmc-sierra.internal>
+Date: Tue, 19 May 2015 18:56:44 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB486AA28D@BBYEXM01.pmc-sierra.internal>
 References: <1424191222-30570-1-git-send-email-thenzl@redhat.com>
  <1424191222-30570-2-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:43027 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750914AbbESS4p convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 May 2015 14:56:45 -0400
 In-Reply-To: <1424191222-30570-2-git-send-email-thenzl@redhat.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
-List-Id: linux-scsi@vger.kernel.org
 
 > -----Original Message-----
 > From: Tomas Henzl [mailto:thenzl@redhat.com]
@@ -80,4 +85,4 @@ List-Id: linux-scsi@vger.kernel.org
 > 
 > --
 > 1.9.3
-correct the non-resettable board list
+Signed-off-by Don Brace <don.brace@pmcs.com>
