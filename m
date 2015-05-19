@@ -1,39 +1,36 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 2/3] scsi: ufs-qcom: fix compilation warning if compiled as a module
-Date: Tue, 19 May 2015 16:47:10 +0300
-Message-ID: <1432043231-31102-3-git-send-email-ygardi@codeaurora.org>
-References: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [RESEND] SCSI: ips: remove pointless #warning
+Date: Tue, 19 May 2015 06:52:52 -0700
+Message-ID: <1432043572.3007.14.camel@HansenPartnership.com>
+References: <3121960.dnOqT9LCth@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <3121960.dnOqT9LCth@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, kishon@ti.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, dovl@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This change fixes a compilation warning that happens if SCSI_UFS_QCOM
-is compiled as a module.
+On Tue, 2015-05-19 at 15:33 +0200, Arnd Bergmann wrote:
+> The ips driver contains
+> 
+>  #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+> 
+> which gets printed by the compiler every time this driver gets
+> build for something other than those three architectures. The same
+> is true for most other drivers, but none of them prints a warning like
+> this.
+> 
+> Let's remove the warning now to reduce the amount of clutter.
+> 
+> FWIW, I've reviewed the driver and found a few oddities, but nothing
+> that needs to be fixed or that would be architecture specific.
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+In principle I don't disagree.  However this warning was a specific
+request of the driver writers.  Since the driver is pretty much dead,
+I'm not sure anyone is going to check or fix it for non-intel any time
+soon.
 
----
- drivers/scsi/ufs/ufs-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 6652a81..2e4ad21 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -885,7 +885,7 @@ out:
- 
- #define	ANDROID_BOOT_DEV_MAX	30
- static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
--static int get_android_boot_dev(char *str)
-+static int __maybe_unused get_android_boot_dev(char *str)
- {
- 	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
- 	return 1;
--- 
-1.8.5.2
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+James
