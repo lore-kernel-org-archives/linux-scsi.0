@@ -1,41 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch -next] target: double locking typo in
- core_clear_lun_from_tpg()
-Date: Tue, 19 May 2015 11:44:32 -0700
-Message-ID: <1432061072.19713.2.camel@haakon3.risingtidesystems.com>
-References: <20150519120419.GA12107@mwanda>
+From: Don Brace <Don.Brace@pmcs.com>
+Subject: RE: [PATCH 1/2] cciss: remove duplicate entries from board_type
+ struct
+Date: Tue, 19 May 2015 18:52:38 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB486AA261@BBYEXM01.pmc-sierra.internal>
+References: <1424191222-30570-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150519120419.GA12107@mwanda>
-Sender: target-devel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53703 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751917AbbESSwk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 May 2015 14:52:40 -0400
+In-Reply-To: <1424191222-30570-1-git-send-email-thenzl@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-On Tue, 2015-05-19 at 15:04 +0300, Dan Carpenter wrote:
-> We accidentally deadlock instead of unlocking.
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Tuesday, February 17, 2015 10:40 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Don Brace; linux-kernel@vger.kernel.org; axboe@kernel.dk
+> Subject: [PATCH 1/2] cciss: remove duplicate entries from board_type struct
 > 
-> Fixes: 08d20ff62cde ('target: Acquire lun_entry_mutex during core_disable_device_list_for_node')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> and devices not supported by this driver from unresettable list
 > 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 2f4c8fa..20618df 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -433,7 +433,7 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
->  
->  			core_disable_device_list_for_node(lun, deve, nacl, tpg);
->  		}
-> -		mutex_lock(&nacl->lun_entry_mutex);
-> +		mutex_unlock(&nacl->lun_entry_mutex);
->  	}
->  	mutex_unlock(&tpg->acl_node_mutex);
->  }
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/block/cciss.c | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index ff20f192b0..48498220cd 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -139,8 +139,6 @@ static struct board_type products[] = {
+>  	{0x3214103C, "Smart Array E200i", &SA5_access},
+>  	{0x3215103C, "Smart Array E200i", &SA5_access},
+>  	{0x3237103C, "Smart Array E500", &SA5_access},
+> -	{0x3223103C, "Smart Array P800", &SA5_access},
+> -	{0x3234103C, "Smart Array P400", &SA5_access},
+>  	{0x323D103C, "Smart Array P700m", &SA5_access},
+>  };
+> 
+> @@ -574,8 +572,6 @@ static void cciss_procinit(ctlr_info_t *h)
+> 
+>  /* List of controllers which cannot be hard reset on kexec with reset_devices */
+>  static u32 unresettable_controller[] = {
+> -	0x324a103C, /* Smart Array P712m */
+> -	0x324b103C, /* SmartArray P711m */
+>  	0x3223103C, /* Smart Array P800 */
+>  	0x3234103C, /* Smart Array P400 */
+>  	0x3235103C, /* Smart Array P400i */
+> --
+> 1.9.3
 
-Applied to for-next, and will squash into the original soon.
-
-Thanks Dan!
-
---nab
+Signed-off-by Don Brace <don.brace@pmcs.com>
