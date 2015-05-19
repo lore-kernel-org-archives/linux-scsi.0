@@ -1,120 +1,67 @@
-From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [PATCH] hpsa: dont meddle with hw which isn't ours (cciss)
-Date: Mon, 18 May 2015 21:53:36 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB486A9D96@BBYEXM01.pmc-sierra.internal>
-References: <1427981154-27659-1-git-send-email-thenzl@redhat.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware files
+Date: Tue, 19 May 2015 11:50:39 +1000
+Message-ID: <CAGRGNgUBceGTd0ZMU+s3MopDGV8axWN5F0JsR+vwjjUg6Y6VTw@mail.gmail.com>
+References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
+ <D17D1DF4.8A989%himanshu.madhani@qlogic.com> <5557DAF4.4010800@gmail.com> <D17F6747.8AE64%himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:56648 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750801AbbERVxi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 May 2015 17:53:38 -0400
-In-Reply-To: <1427981154-27659-1-git-send-email-thenzl@redhat.com>
-Content-Language: en-US
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:35706 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbbESBvA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2015 21:51:00 -0400
+Received: by igbyr2 with SMTP id yr2so64315318igb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2015 18:51:00 -0700 (PDT)
+In-Reply-To: <D17F6747.8AE64%himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Scott Teel <Scott.Teel@pmcs.com>, Justin Lindley <Justin.Lindley@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-So, in the context of a kdump, you would like the hpsa driver to not manage kdump and allow the cciss driver to manage the kdump operation?
+Hi Himanshu,
 
-I.E. Is this for a controller managed by cciss in the normal kernel and the hpsa reference driver is managing kdump?
+On Tue, May 19, 2015 at 3:00 AM, Himanshu Madhani
+<himanshu.madhani@qlogic.com> wrote:
+>
+> On 5/16/15, 5:04 PM, "Xose Vazquez Perez" <xose.vazquez@gmail.com> wrote:
+>
+>>On 05/17/2015 01:26 AM, Himanshu Madhani wrote:
+>>
+>>> Please note that we will send firmware binaries soon for these files.
+>>
+>>What does "soon" mean ?
+>>
+>>git blame shows:
+>>3a03eb797 (Andrew Vasquez         2009-01-05 11:18:11 -0800 5299) #define
+>>FW_FILE_ISP81XX       "ql8100_fw.bin"
+>>a9083016a (Giridhar Malavali      2010-04-12 17:59:55 -0700 5300) #define
+>>FW_FILE_ISP82XX       "ql8200_fw.bin"
+>>6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5301) #define
+>>FW_FILE_ISP2031       "ql2600_fw.bin"
+>>6246b8a1d (Giridhar Malavali      2012-02-09 11:15:34 -0800 5302) #define
+>>FW_FILE_ISP8031       "ql8300_fw.bin"
+>>2c5bbbb25 (Joe Carnuccio          2014-04-11 16:54:13 -0400 5303) #define
+>>FW_FILE_ISP27XX       "ql2700_fw.bin"
+>
+> Hi,
+>
+> Sorry for misleading response. The reason we would like to leave these
+> lines into mainline kernel is to facilitate us to debug
+> And triage issues which might involve firmware binaries.
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Thursday, April 02, 2015 8:26 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: Don Brace; Scott Teel; Justin Lindley; Kevin Barnett
-> Subject: [PATCH] hpsa: dont meddle with hw which isn't ours (cciss)
-> 
-> The hpsa driver touches the hardware before checking the pci-id table.
-> This way, especially in kdump, it may confuse the proper driver (cciss).
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 21 +++++++++++----------
->  1 file changed, 11 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index bddb33d30f..c33a077636 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6737,7 +6737,7 @@ static int controller_reset_failed(struct CfgTable
-> __iomem *cfgtable)
->  /* This does a hard reset of the controller using PCI power management
->   * states or the using the doorbell register.
->   */
-> -static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
-> +static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32
-> board_id)
->  {
->  	u64 cfg_offset;
->  	u32 cfg_base_addr;
-> @@ -6748,7 +6748,6 @@ static int hpsa_kdump_hard_reset_controller(struct
-> pci_dev *pdev)
->  	int rc;
->  	struct CfgTable __iomem *cfgtable;
->  	u32 use_doorbell;
-> -	u32 board_id;
->  	u16 command_register;
-> 
->  	/* For controllers as old as the P600, this is very nearly
-> @@ -6764,11 +6763,6 @@ static int hpsa_kdump_hard_reset_controller(struct
-> pci_dev *pdev)
->  	 * using the doorbell register.
->  	 */
-> 
-> -	rc = hpsa_lookup_board_id(pdev, &board_id);
-> -	if (rc < 0) {
-> -		dev_warn(&pdev->dev, "Board ID not found\n");
-> -		return rc;
-> -	}
->  	if (!ctlr_is_resettable(board_id)) {
->  		dev_warn(&pdev->dev, "Controller not resettable\n");
->  		return -ENODEV;
-> @@ -7413,7 +7407,7 @@ static void hpsa_hba_inquiry(struct ctlr_info *h)
->  	}
->  }
-> 
-> -static int hpsa_init_reset_devices(struct pci_dev *pdev)
-> +static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
->  {
->  	int rc, i;
->  	void __iomem *vaddr;
-> @@ -7449,7 +7443,7 @@ static int hpsa_init_reset_devices(struct pci_dev
-> *pdev)
->  	iounmap(vaddr);
-> 
->  	/* Reset the controller with a PCI power-cycle or via doorbell */
-> -	rc = hpsa_kdump_hard_reset_controller(pdev);
-> +	rc = hpsa_kdump_hard_reset_controller(pdev, board_id);
-> 
->  	/* -ENOTSUPP here means we cannot reset the controller
->  	 * but it's already (and still) up and running in
-> @@ -7927,11 +7921,18 @@ static int hpsa_init_one(struct pci_dev *pdev, const
-> struct pci_device_id *ent)
->  	struct ctlr_info *h;
->  	int try_soft_reset = 0;
->  	unsigned long flags;
-> +	u32 board_id;
-> 
->  	if (number_of_controllers == 0)
->  		printk(KERN_INFO DRIVER_NAME "\n");
-> 
-> -	rc = hpsa_init_reset_devices(pdev);
-> +	rc = hpsa_lookup_board_id(pdev, &board_id);
-> +	if (rc < 0) {
-> +		dev_warn(&pdev->dev, "Board ID not found\n");
-> +		return rc;
-> +	}
-> +
-> +	rc = hpsa_init_reset_devices(pdev, board_id);
->  	if (rc) {
->  		if (rc != -ENOTSUPP)
->  			return rc;
-> --
-> 1.9.3
+Declaring them with MODULE_FIRMWARE() means that some distro's scripts
+will check for these firmware files and warn if the files aren't
+available. Consequently Debian's kernel has what appears to be this
+exact patch applied.
 
+Do the devices these firmware files are for exist and is there any
+chance of the files being released?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
