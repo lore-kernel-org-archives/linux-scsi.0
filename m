@@ -1,42 +1,41 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 0/3] fixing building errors and warnings when components
-Date: Tue, 19 May 2015 16:47:08 +0300
-Message-ID: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, kishon@ti.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, dovl@codeaurora.org
+Subject: [PATCH v1 3/3] scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
+Date: Tue, 19 May 2015 16:47:11 +0300
+Message-ID: <1432043231-31102-4-git-send-email-ygardi@codeaurora.org>
+References: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42239 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932261AbbESNrj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 09:47:39 -0400
+In-Reply-To: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, kishon@ti.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, dovl@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-V1:
-The following combination of components, when SCSI_UFS_QCOM=y
-and PHY_QCOM_UFS=m is illegal and causes build errors.
-The 3rd patch in the series enables the SCSI_UFS_QCOM component to 
-be compiled as a module (by changing its configuration to tristate).
-So now, compiling SCSI_UFS_QCOM=m forces PHY_QCOM_UFS=m, and 
-SCSI_UFS_QCOM=y forces PHY_QCOM_UFS=y.
+This change is required in order to be able to build the component
+as a module.
 
-In addition, when PHY_QCOM_UFS=m, external functions in 
-phy-ufs-qcom.c should be exported. The 1st patch fixes it.
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-Another issue that we see when SCSI_UFS_QCOM=m is a warning that
-the 2nd patch fixes.
+---
+ drivers/scsi/ufs/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-notice:
-checkpatch gives an error on the commit message of patch 1/3
-in the series. Ignore as the commit message is the build errors
-that this patch fixes.
-
-Yaniv Gardi (3):
-  phy: qcom-ufs: fix build error when the driver is built as a module
-  scsi: ufs-qcom: fix compilation warning if compiled as a module
-  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
-
- drivers/phy/phy-qcom-ufs.c  | 11 +++++++++++
- drivers/scsi/ufs/Kconfig    |  2 +-
- drivers/scsi/ufs/ufs-qcom.c |  2 +-
- 3 files changed, 13 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e945383..5f45307 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -72,7 +72,7 @@ config SCSI_UFSHCD_PLATFORM
+ 	  If unsure, say N.
+ 
+ config SCSI_UFS_QCOM
+-	bool "QCOM specific hooks to UFS controller platform driver"
++	tristate "QCOM specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+ 	select PHY_QCOM_UFS
+ 	help
 -- 
 1.8.5.2
 
