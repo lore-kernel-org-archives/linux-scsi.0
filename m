@@ -1,61 +1,63 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Let's get a File & Storage miniconf going at LPC2015!
-Date: Tue, 19 May 2015 13:10:55 -0700
-Message-ID: <20150519201055.GD27115@birch.djwong.org>
-References: <20150515205825.GC24967@birch.djwong.org>
-	<20150519154200.GA2559@kmo-pixel>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [BUG] iscsi-target: deadlock because of iscsit_get_tpg()
+Date: Tue, 19 May 2015 23:25:30 +0300
+Message-ID: <555B9C3A.40106@ispras.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <20150519154200.GA2559@kmo-pixel>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 19, 2015 at 08:42:00AM -0700, Kent Overstreet wrote:
-> On Fri, May 15, 2015 at 01:58:25PM -0700, Darrick J. Wong wrote:
-> > We of course are not limited to just those topics -- if there's something
-> > you'd really like to discuss with everyone, please add that to the wiki.
-> > I realize that mid-August is family vacation time for many people, but
-> > those are the constraints the conference has to work with this year.
-> > There are fun things to do around Seattle, and that's probably the best
-> > time of year to visit.
-> 
-> It's getting near time for the big bcachefs announcement :)
-> 
-> Also, stable pages - what's been going on there? Last I heard you were talking
-> about using the page migration code to do COW, did anything come of that? I just
-> added data checksumming/compression to bcachefs, so that's been fresh on my
-> mind.
+Hello,
 
-Yeah.  I never figured out a sane way to migrate pages and keep everything
-else happy.  Daniel Phillips is having a go at page forking for tux3; let's
-see if the questions about that get resolved.
+Our tool reports a potential double lock because of quite strange code
+in iscsit_get_tpg().
 
-> Also, there's probably always going to be situations where we're reading or
-> writing to pages user space can stomp on (dio) - IMO we need to add a bio flag
-> to annotate this - "if you need this to be stable you have to bounce it".
-> Otherwise either filesystems/block drivers are going to be stuck bouncing
-> everything, or it'll just (continue to be) buggy.
+drivers/target/iscsi/iscsi_target_tpg.c:
+int iscsit_get_tpg(
+	struct iscsi_portal_group *tpg)
+{
+	int ret;
 
-Well, for now there's BIO_SNAP_STABLE that forces the block layer to bounce it,
-but right now ext3 is the last user of it, and afaict btrfs is the only other
-FS that takes care of stable pages on its own.
+	ret = mutex_lock_interruptible(&tpg->tpg_access_lock);
+	return ((ret != 0) || signal_pending(current)) ? -1 : 0;
+}
 
---D
+If mutex_lock_interruptible() successfully acquires the mutex, but there
+is a pending signal, the function returns error, but it leaves the mutex
+held. Callers do not expect such behaviour that can lead to a deadlock.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Why the check for pending signal is needed here?
+
+Found by Linux Driver Verification project (linuxtesting.org).
+
+
+Similar dangerous pattern presents in a couple of other places:
+
+drivers/target/iscsi/iscsi_target.c:
+int iscsit_access_np(struct iscsi_np *np, struct iscsi_portal_group *tpg)
+{
+...
+	ret = down_interruptible(&tpg->np_login_sem);
+	if ((ret != 0) || signal_pending(current))
+		return -1;
+
+
+drivers/target/target_core_sbc.c:
+static sense_reason_t
+sbc_compare_and_write(struct se_cmd *cmd)
+{
+...
+	rc = down_interruptible(&dev->caw_sem);
+	if ((rc != 0) || signal_pending(current)) {
+		cmd->transport_complete_callback = NULL;
+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+	}
+
+
+--
+Alexey Khoroshilov
+Linux Verification Center, ISPRAS
