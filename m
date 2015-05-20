@@ -1,129 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [BUG] iscsi-target: deadlock because of iscsit_get_tpg()
-Date: Tue, 19 May 2015 15:10:33 -0700
-Message-ID: <1432073433.19713.25.camel@haakon3.risingtidesystems.com>
-References: <555B9C3A.40106@ispras.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59628 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884AbbESWKf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2015 18:10:35 -0400
-In-Reply-To: <555B9C3A.40106@ispras.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/12] treewide: Use DECLARE_BITMAP
+Date: Tue, 19 May 2015 18:37:48 -0700
+Message-ID: <cover.1432085659.git.joe@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-bcache@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, logfs@logfs.org
+Cc: dmaengine@vger.kernel.org, linux-raid@vger.kernel.org, linux-s390@vger.kernel.org, linux-nfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org, Sagi Grimberg <sagig@mellanox.com>
 
-Hi Alexey,
+Use the standard method to declare a bitmap array.
 
-On Tue, 2015-05-19 at 23:25 +0300, Alexey Khoroshilov wrote:
-> Hello,
-> 
-> Our tool reports a potential double lock because of quite strange code
-> in iscsit_get_tpg().
-> 
-> drivers/target/iscsi/iscsi_target_tpg.c:
-> int iscsit_get_tpg(
-> 	struct iscsi_portal_group *tpg)
-> {
-> 	int ret;
-> 
-> 	ret = mutex_lock_interruptible(&tpg->tpg_access_lock);
-> 	return ((ret != 0) || signal_pending(current)) ? -1 : 0;
-> }
-> 
-> If mutex_lock_interruptible() successfully acquires the mutex, but there
-> is a pending signal, the function returns error, but it leaves the mutex
-> held. Callers do not expect such behaviour that can lead to a deadlock.
-> 
-> Why the check for pending signal is needed here?
-> 
+Joe Perches (12):
+  ARM: mach-imx: iomux-imx31: Use DECLARE_BITMAP
+  dmaengine: rcar-dmac: Use DECLARE_BITMAP
+  drm/amdkfd: Use DECLARE_BITMAP
+  drm/radeon: Use DECLARE_BITMAP
+  IB/ehca: Use DECLARE_BITMAP
+  bcache: Use DECLARE_BITMAP
+  spider_net: Use DECLARE_BITMAP
+  s390/sclp: Use DECLARE_BITMAP
+  [SCSI] qla4xxx: Use DECLARE_BITMAP
+  scsi: Use DECLARE_BITMAP
+  logfs: Use DECLARE_BITMAP
+  sunrpc: Use DECLARE_BITMAP
 
-Once upon a time, this was an un-interruptible lock.  The signal pending
-was a check to allow userspace to break out of the operation with
-SIGINT.
+ arch/arm/mach-imx/iomux-imx31.c           | 2 +-
+ drivers/dma/sh/rcar-dmac.c                | 2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_priv.h     | 5 ++---
+ drivers/gpu/drm/radeon/radeon.h           | 2 +-
+ drivers/infiniband/hw/ehca/ipz_pt_fn.h    | 2 +-
+ drivers/md/bcache/journal.c               | 2 +-
+ drivers/net/ethernet/toshiba/spider_net.c | 3 +--
+ drivers/s390/char/sclp_cmd.c              | 2 +-
+ drivers/scsi/qla4xxx/ql4_def.h            | 2 +-
+ drivers/scsi/sr.c                         | 2 +-
+ fs/logfs/logfs.h                          | 2 +-
+ net/sunrpc/auth_gss/svcauth_gss.c         | 2 +-
+ 12 files changed, 13 insertions(+), 15 deletions(-)
 
-AFAICT, there's no reason why this is necessary anymore.
-
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> 
-> Similar dangerous pattern presents in a couple of other places:
-> 
-> drivers/target/iscsi/iscsi_target.c:
-> int iscsit_access_np(struct iscsi_np *np, struct iscsi_portal_group *tpg)
-> {
-> ...
-> 	ret = down_interruptible(&tpg->np_login_sem);
-> 	if ((ret != 0) || signal_pending(current))
-> 		return -1;
-> 
-> 
-> drivers/target/target_core_sbc.c:
-> static sense_reason_t
-> sbc_compare_and_write(struct se_cmd *cmd)
-> {
-> ...
-> 	rc = down_interruptible(&dev->caw_sem);
-> 	if ((rc != 0) || signal_pending(current)) {
-> 		cmd->transport_complete_callback = NULL;
-> 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> 	}
-> 
-> 
-
-Ditto on these.
-
-Applying the following patch to target-pending/master.
-
-Thank you,
-
---nab
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 34871a6..74e6114 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -230,7 +230,7 @@ int iscsit_access_np(struct iscsi_np *np, struct iscsi_portal_group *tpg)
-         * Here we serialize access across the TIQN+TPG Tuple.
-         */
-        ret = down_interruptible(&tpg->np_login_sem);
--       if ((ret != 0) || signal_pending(current))
-+       if (ret != 0)
-                return -1;
- 
-        spin_lock_bh(&tpg->tpg_state_lock);
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.
-index e8a2408..5e3295f 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -161,10 +161,7 @@ struct iscsi_portal_group *iscsit_get_tpg_from_np(
- int iscsit_get_tpg(
-        struct iscsi_portal_group *tpg)
- {
--       int ret;
--
--       ret = mutex_lock_interruptible(&tpg->tpg_access_lock);
--       return ((ret != 0) || signal_pending(current)) ? -1 : 0;
-+       return mutex_lock_interruptible(&tpg->tpg_access_lock);
- }
- 
- void iscsit_put_tpg(struct iscsi_portal_group *tpg)
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 8855781..733824e 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -568,7 +568,7 @@ sbc_compare_and_write(struct se_cmd *cmd)
-         * comparision using SGLs at cmd->t_bidi_data_sg..
-         */
-        rc = down_interruptible(&dev->caw_sem);
--       if ((rc != 0) || signal_pending(current)) {
-+       if (rc != 0) {
-                cmd->transport_complete_callback = NULL;
-                return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-        }
-
-
+-- 
+2.1.2
