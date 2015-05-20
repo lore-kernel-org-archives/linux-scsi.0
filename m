@@ -1,43 +1,44 @@
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Subject: Re: [PATCH kernel] commit 4fbdf9cb ("lpfc: Fix for lun discovery
- issue with saturn adapter.")
-Date: Wed, 20 May 2015 13:55:01 +1000
-Message-ID: <555C0595.9060507@ozlabs.ru>
-References: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>	<5548E2C1.3070209@emulex.com> <20150505234659.00003ab7@localhost>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 10/12] scsi: Use DECLARE_BITMAP
+Date: Wed, 20 May 2015 07:03:00 +0200
+Message-ID: <555C1584.7070802@sandisk.com>
+References: <cover.1432085659.git.joe@perches.com>
+ <8854fb0135507c40546bd0c9a7890efbb38a9c96.1432085659.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150505234659.00003ab7@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>, james.smart@emulex.com
-Cc: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0086.outbound.protection.outlook.com ([157.56.111.86]:55130
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751182AbbETFDJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 May 2015 01:03:09 -0400
+In-Reply-To: <8854fb0135507c40546bd0c9a7890efbb38a9c96.1432085659.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 05/06/2015 07:46 AM, Sebastian Herbszt wrote:
-> James Smart wrote:
->>
->> Reviewed-By: James Smart <james.smart@emulex.com>
->>
->>
->> Alexey, Sebastian,
->>
->> Yes - this section needs to be reverted.  This patch is good.
->>
->> -- james s
+On 05/20/15 03:37, Joe Perches wrote:
+> Use the generic mechanism to declare a bitmap instead of unsigned long.
 >
-> Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>   drivers/scsi/sr.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 8bd54a6..f40c957 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -99,7 +99,7 @@ static struct scsi_driver sr_template = {
+>   	.done			= sr_done,
+>   };
+>
+> -static unsigned long sr_index_bits[SR_DISKS / BITS_PER_LONG];
+> +static DECLARE_BITMAP(sr_index_bits, SR_DISKS);
+>   static DEFINE_SPINLOCK(sr_index_lock);
+>
+>   /* This semaphore is used to mediate the 0->1 reference get in the
 
-
-Unfortunately, just this revert is not enough, it fixed one of my machines 
-but I have another machine with "Emulex Corporation Saturn-X: LightPulse 
-Fibre Channel Host Adapter (rev 03)" which does not boot - the booting 
-process stops at "[  OK  ] Reached target Basic System."
-
-Any quick idea what else to revert between 4.0 and current upstream before 
-I dig further? Thanks!
-
-
-
--- 
-Alexey
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
