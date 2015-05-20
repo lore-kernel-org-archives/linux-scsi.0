@@ -1,42 +1,41 @@
-From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH] iscsi: Fix iscsi endpoints leak
-Date: Wed, 20 May 2015 12:38:58 +0300
-Message-ID: <1432114738-967-1-git-send-email-sagig@mellanox.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] mptsas: fix depth param in  scsi_track_queue_full
+Date: Wed, 20 May 2015 14:44:44 +0200
+Message-ID: <1432125884-467-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1327.ztomy.com ([193.47.165.129]:37715 "EHLO mellanox.co.il"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753007AbbETJjY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 May 2015 05:39:24 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51386 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751876AbbETMou (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 May 2015 08:44:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Or Gerlitz <ogerlitz@mellanox.com>, Alex Lyakas <alex@zadarastorage.com>
+Cc: sreekanth.reddy@avagotech.com
 
-When creating a new endpoint, we look for a free id
-for the new endpoint. We baisically loop on possible ids
-and use the first id that class_find_device() returns NULL.
-However, we are missing a reference put when class_find_device()
-does find an existing device for a given id.
+A user of scsi_track_queue_full should pass to the function
+a constant value untill the queue-depth changes, otherwise the
+internal logic in scsi_track_queue_full rejects the change.
+Other users of this function use a 'sdev->queue_depth - 1'
+as depth parameter, let's do the same.
 
-Reported-by: Alex Lyakas <alex@zadarastorage.com>
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/message/fusion/mptsas.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 67d43e3..55647aa 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -204,6 +204,8 @@ iscsi_create_endpoint(int dd_size)
- 					iscsi_match_epid);
- 		if (!dev)
- 			break;
-+		else
-+			put_device(dev);
- 	}
- 	if (id == ISCSI_MAX_EPID) {
- 		printk(KERN_ERR "Too many connections. Max supported %u\n",
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 551262e4b9..7a8eebd8ba 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -4096,7 +4096,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
+ 					continue;
+ 				}
+ 				depth = scsi_track_queue_full(sdev,
+-				    current_depth - 1);
++					sdev->queue_depth - 1);
+ 				if (depth > 0)
+ 					sdev_printk(KERN_INFO, sdev,
+ 					"Queue depth reduced to (%d)\n",
 -- 
-1.7.1
+1.9.3
 
