@@ -1,50 +1,92 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH v2 07/15] lpfc: Correct reporting of vport state on fdisc
- command failure.
-Date: Thu, 21 May 2015 13:55:22 -0400
-Message-ID: <555e1c0a.KKafFC5Tv0GZ+C37%james.smart@avagotech.com>
+Subject: [PATCH v2 09/15] lpfc: Fix to remove IRQF_SHARED flag for
+ MSI/MSI-X vectors.
+Date: Thu, 21 May 2015 13:55:25 -0400
+Message-ID: <555e1c0d.HWoqvIHDVpKyON+4%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:35681 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964784AbbEURz1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 13:55:27 -0400
-Received: by qgew3 with SMTP id w3so45153231qge.2
-        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 10:55:27 -0700 (PDT)
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35805 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964783AbbEURza (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 13:55:30 -0400
+Received: by qkdn188 with SMTP id n188so56767677qkd.2
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 10:55:29 -0700 (PDT)
 Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
-        by mx.google.com with ESMTPSA id r31sm13762682qkr.42.2015.05.21.10.55.26
+        by mx.google.com with ESMTPSA id 10sm13601532qhv.27.2015.05.21.10.55.28
         for <linux-scsi@vger.kernel.org>
         (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Thu, 21 May 2015 10:55:26 -0700 (PDT)
+        Thu, 21 May 2015 10:55:28 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Correct reporting of vport state on fdisc command failure.
+Fix to remove IRQF_SHARED flag for MSI/MSI-X vectors.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_init.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 724b61c..b490ef5 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8237,7 +8237,8 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		lpfc_do_scr_ns_plogi(phba, vport);
- 	goto out;
- fdisc_failed:
--	lpfc_vport_set_state(vport, FC_VPORT_FAILED);
-+	if (vport->fc_vport->vport_state != FC_VPORT_NO_FABRIC_RSCS)
-+		lpfc_vport_set_state(vport, FC_VPORT_FAILED);
- 	/* Cancel discovery timer */
- 	lpfc_can_disctmo(vport);
- 	lpfc_nlp_put(ndlp);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 15825f6..6ab8312 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8369,7 +8369,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 
+ 	/* vector-0 is associated to slow-path handler */
+ 	rc = request_irq(phba->msix_entries[0].vector,
+-			 &lpfc_sli_sp_intr_handler, IRQF_SHARED,
++			 &lpfc_sli_sp_intr_handler, 0,
+ 			 LPFC_SP_DRIVER_HANDLER_NAME, phba);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+@@ -8380,7 +8380,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+ 
+ 	/* vector-1 is associated to fast-path handler */
+ 	rc = request_irq(phba->msix_entries[1].vector,
+-			 &lpfc_sli_fp_intr_handler, IRQF_SHARED,
++			 &lpfc_sli_fp_intr_handler, 0,
+ 			 LPFC_FP_DRIVER_HANDLER_NAME, phba);
+ 
+ 	if (rc) {
+@@ -8489,7 +8489,7 @@ lpfc_sli_enable_msi(struct lpfc_hba *phba)
+ 	}
+ 
+ 	rc = request_irq(phba->pcidev->irq, lpfc_sli_intr_handler,
+-			 IRQF_SHARED, LPFC_DRIVER_NAME, phba);
++			 0, LPFC_DRIVER_NAME, phba);
+ 	if (rc) {
+ 		pci_disable_msi(phba->pcidev);
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+@@ -8946,13 +8946,13 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+ 		if (phba->cfg_fof && (index == (vectors - 1)))
+ 			rc = request_irq(
+ 				phba->sli4_hba.msix_entries[index].vector,
+-				 &lpfc_sli4_fof_intr_handler, IRQF_SHARED,
++				 &lpfc_sli4_fof_intr_handler, 0,
+ 				 (char *)&phba->sli4_hba.handler_name[index],
+ 				 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 		else
+ 			rc = request_irq(
+ 				phba->sli4_hba.msix_entries[index].vector,
+-				 &lpfc_sli4_hba_intr_handler, IRQF_SHARED,
++				 &lpfc_sli4_hba_intr_handler, 0,
+ 				 (char *)&phba->sli4_hba.handler_name[index],
+ 				 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 		if (rc) {
+@@ -9052,7 +9052,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *phba)
+ 	}
+ 
+ 	rc = request_irq(phba->pcidev->irq, lpfc_sli4_intr_handler,
+-			 IRQF_SHARED, LPFC_DRIVER_NAME, phba);
++			 0, LPFC_DRIVER_NAME, phba);
+ 	if (rc) {
+ 		pci_disable_msi(phba->pcidev);
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
 -- 
 1.7.11.7
 
