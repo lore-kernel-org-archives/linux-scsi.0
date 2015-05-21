@@ -1,62 +1,87 @@
-From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH v2 13/15] lpfc: Fix incorrect log message reported for
- empty FCF record.
-Date: Thu, 21 May 2015 13:55:29 -0400
-Message-ID: <555e1c11.Q6zoYETblypfLzLN%james.smart@avagotech.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 01/12] target: Convert se_node_acl->device_list[] to RCU
+ hlist
+Date: Thu, 21 May 2015 11:10:50 -0700
+Message-ID: <1432231850.5255.10.camel@haakon3.risingtidesystems.com>
+References: <1431422736-29125-1-git-send-email-nab@daterainc.com>
+	 <1431422736-29125-2-git-send-email-nab@daterainc.com>
+	 <20150513063555.GA21770@lst.de>
+	 <1431506771.26897.78.camel@haakon3.risingtidesystems.com>
+	 <20150517165142.GA17217@lst.de>
+	 <1431933444.24645.7.camel@haakon3.risingtidesystems.com>
+	 <20150518074102.GA6157@lst.de> <20150518080155.GA6451@lst.de>
+	 <1432015547.9093.76.camel@haakon3.risingtidesystems.com>
+	 <20150519062231.GB29468@lst.de> <20150521170309.GA1172@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:36801 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964804AbbEURze (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 13:55:34 -0400
-Received: by qget53 with SMTP id t53so45126308qge.3
-        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 10:55:33 -0700 (PDT)
-Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
-        by mx.google.com with ESMTPSA id p73sm13607835qha.20.2015.05.21.10.55.33
-        for <linux-scsi@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Thu, 21 May 2015 10:55:33 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20150521170309.GA1172@lst.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+On Thu, 2015-05-21 at 19:03 +0200, Christoph Hellwig wrote:
+> On Tue, May 19, 2015 at 08:22:31AM +0200, Christoph Hellwig wrote:
+> > On Mon, May 18, 2015 at 11:05:47PM -0700, Nicholas A. Bellinger wrote:
+> > > > [   12.830576] kernel BUG at ../drivers/target/target_core_device.c:337!
+> > > > 
+> > > 
+> > > How did you hit this..?
+> > 
+> > tcm_node --block iblock_0/array /dev/sda
+> > 
+> > line=$(tcm_loop --createnexus=0)
+> > wwn=$(echo $line | awk '{print $15}')
+> > tcm_loop --addlun=$wwn 0 0 iblock_0/array
+> 
+> And here is the fix.  Seems like anything using dynamic node ACLs was
+> broken the same way (I could reproduce it with vhost as well).
+> 
+> I don't really like how HBA_FLAGS_INTERNAL_USE means this is a virtual
+> lun0, so I'll send another patch to replace it with a per-device flag
+> eventually.
+> 
+> ---
+> From 9fd0e75cffde876b84b08952cc7f026d4e08d77a Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Thu, 21 May 2015 18:58:21 +0200
+> Subject: target: don't add lun0 to tpg_lun_hlist
+> 
+> We never want to find the virtual lun0 when looking up a lun on the TPG,
+> otherwise the core code gets really confused.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/target/target_core_tpg.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+> index b8c2a32..ced1dd6 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -647,7 +647,8 @@ int core_tpg_add_lun(
+>  
+>  	lun->lun_access = lun_access;
+>  	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
+> -	hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
+> +	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
+> +		hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
+>  
+>  	mutex_unlock(&tpg->tpg_lun_mutex);
+>  
+> @@ -687,7 +688,8 @@ void core_tpg_remove_lun(
+>  	}
+>  
+>  	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+> -	hlist_del_rcu(&lun->link);
+> +	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
+> +		hlist_del_rcu(&lun->link);
+>  	mutex_unlock(&tpg->tpg_lun_mutex);
+>  
+>  	percpu_ref_exit(&lun->lun_ref);
 
-Fix incorrect log message reported for empty FCF record.
+Applied to for-next, and will squash into the original series soon.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
-Signed-off-by: James Smart <james.smart@avagotech.com>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 88af258..72a69d4 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1777,7 +1777,7 @@ lpfc_sli4_fcf_rec_mbox_parse(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
- 	dma_addr_t phys_addr;
- 	struct lpfc_mbx_sge sge;
- 	struct lpfc_mbx_read_fcf_tbl *read_fcf;
--	uint32_t shdr_status, shdr_add_status;
-+	uint32_t shdr_status, shdr_add_status, if_type;
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	struct fcf_record *new_fcf_record;
- 
-@@ -1798,9 +1798,11 @@ lpfc_sli4_fcf_rec_mbox_parse(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
- 	lpfc_sli_pcimem_bcopy(shdr, shdr,
- 			      sizeof(union lpfc_sli4_cfg_shdr));
- 	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
-+	if_type = bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf);
- 	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
- 	if (shdr_status || shdr_add_status) {
--		if (shdr_status == STATUS_FCF_TABLE_EMPTY)
-+		if (shdr_status == STATUS_FCF_TABLE_EMPTY ||
-+					if_type == LPFC_SLI_INTF_IF_TYPE_2)
- 			lpfc_printf_log(phba, KERN_ERR, LOG_FIP,
- 					"2726 READ_FCF_RECORD Indicates empty "
- 					"FCF table.\n");
--- 
-1.7.11.7
-
+--nab
