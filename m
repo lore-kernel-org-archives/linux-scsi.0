@@ -1,56 +1,78 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 3/3] scsi: ufs-qcom: update configuration option of
- SCSI_UFS_QCOM component
-Date: Thu, 21 May 2015 17:18:10 -0000
-Message-ID: <4bb10330303f7911f480632ed26b1d03.squirrel@www.codeaurora.org>
-References: <1432043231-31102-1-git-send-email-ygardi@codeaurora.org>
-    <1432043231-31102-4-git-send-email-ygardi@codeaurora.org>
-    <1432106479.21715.33.camel@x220> <1432110155.21715.45.camel@x220>
-    <1432192570.21715.107.camel@x220>
-    <13293a67c19b0c18d2c99386dcf159ea.squirrel@www.codeaurora.org>
-    <1432203266.21715.148.camel@x220>
+From: james.smart@avagotech.com (James Smart)
+Subject: [PATCH v2 00/15] lpfc: Update to revision 10.6.0.1
+Date: Thu, 21 May 2015 13:55:15 -0400
+Message-ID: <555e1c03.Lo0g2qHl+o8QC42E%james.smart@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35457 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753081AbbEURSL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 13:18:11 -0400
-In-Reply-To: <1432203266.21715.148.camel@x220>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:33173 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755185AbbEURzU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 13:55:20 -0400
+Received: by qgfa63 with SMTP id a63so25673029qgf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 10:55:19 -0700 (PDT)
+Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
+        by mx.google.com with ESMTPSA id 69sm4970290qkv.22.2015.05.21.10.55.18
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Thu, 21 May 2015 10:55:19 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: ygardi@codeaurora.org, james.bottomley@hansenpartnership.com, kishon@ti.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, dovl@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+To: linux-scsi@vger.kernel.org
 
-> On Thu, 2015-05-21 at 10:09 +0000, ygardi@codeaurora.org wrote:
->> > On Wed, 2015-05-20 at 10:22 +0200, Paul Bolle wrote:
->> > Am I missing something obvious here? Because ufs-qcom currently looks
->> > pointless to me, and I actually see little reason to even have it in
->> the
->> > mainline tree.
->> >
->>
->> we haven't uploaded yet the patch that binds qcom vops to the driver,
->> but
->> we will soon.
->
-> Perhaps you could make that patch part of v2 of this series. I see
-> little point in this series without that patch. Perhaps someone else
-> still cares about it, but I'm not looking at it anymore.
->
 
-fair enough. i will upload a V2 series soon. thanks for your inputs.
+This patch set updates the lpfc driver to revision 10.6.0.1
 
-> Thanks,
->
->
-> Paul Bolle
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This is version 2.
 
+v2 changes:
+  Patch 3: Revised for review comments from Sebastian Herbszt
+           Replaced double spacing with single spacing 
+  Patch 6: Revised for review comments from Sebastian Herbszt
+           Replaced double spacing with single spacing 
+	   Revised LS_RJT codes for lpfc_els_rcv_rdp()
+
+The patches were cut against scsi-misc
+
+-- james
+
+
+James Smart (15):
+  The lpfc driver does not issue RFF_ID and RFT_ID in the correct
+    sequence
+  Correct loss of target discovery after cable swap.
+  Add support for ELS LCB.
+  Correct reference counting of rport
+  Fix ABORTs WQ selection in terminate_rport_io
+  Add support for RDP ELS command.
+  Correct reporting of vport state on fdisc command failure.
+  Fix discovery issue when changing from Pt2Pt to Fabric.
+  Fix to remove IRQF_SHARED flag for MSI/MSI-X vectors.
+  Fix crash in vport_delete.
+  Correct loss of RSCNs during array takeaway/giveback testing.
+  Fix rport leak.
+  Fix incorrect log message reported for empty FCF record.
+  Change buffer pool empty message to miscellaneous category
+  Update driver version for upstream patch set 10.6.0.1.
+
+ drivers/scsi/lpfc/lpfc.h           |   2 +
+ drivers/scsi/lpfc/lpfc_crtn.h      |   2 +
+ drivers/scsi/lpfc/lpfc_disc.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 686 ++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 168 ++++-----
+ drivers/scsi/lpfc/lpfc_hw.h        | 201 +++++++++++
+ drivers/scsi/lpfc/lpfc_hw4.h       | 228 +++++++++++-
+ drivers/scsi/lpfc/lpfc_init.c      |  22 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      | 152 ++++++++
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   8 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |  32 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |  21 ++
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   9 +-
+ 15 files changed, 1415 insertions(+), 124 deletions(-)
+
+-- 
+1.7.11.7
 
