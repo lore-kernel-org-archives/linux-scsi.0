@@ -1,87 +1,79 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 01/12] target: Convert se_node_acl->device_list[] to RCU
- hlist
-Date: Thu, 21 May 2015 11:10:50 -0700
-Message-ID: <1432231850.5255.10.camel@haakon3.risingtidesystems.com>
-References: <1431422736-29125-1-git-send-email-nab@daterainc.com>
-	 <1431422736-29125-2-git-send-email-nab@daterainc.com>
-	 <20150513063555.GA21770@lst.de>
-	 <1431506771.26897.78.camel@haakon3.risingtidesystems.com>
-	 <20150517165142.GA17217@lst.de>
-	 <1431933444.24645.7.camel@haakon3.risingtidesystems.com>
-	 <20150518074102.GA6157@lst.de> <20150518080155.GA6451@lst.de>
-	 <1432015547.9093.76.camel@haakon3.risingtidesystems.com>
-	 <20150519062231.GB29468@lst.de> <20150521170309.GA1172@lst.de>
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: Proposal for annotating _unstable_ pages
+Date: Thu, 21 May 2015 11:09:55 -0700
+Message-ID: <20150521180954.GA27397@kmo-pixel>
+References: <20150515205825.GC24967@birch.djwong.org>
+ <20150519154200.GA2559@kmo-pixel>
+ <20150519201055.GD27115@birch.djwong.org>
+ <20150521010440.GA17405@kmo-pixel>
+ <20150521165453.GK27863@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150521170309.GA1172@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150521165453.GK27863@quack.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-btrfs@vger.kernel.org, axboe@fb.com, zab@zabbo.net, neilb@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-05-21 at 19:03 +0200, Christoph Hellwig wrote:
-> On Tue, May 19, 2015 at 08:22:31AM +0200, Christoph Hellwig wrote:
-> > On Mon, May 18, 2015 at 11:05:47PM -0700, Nicholas A. Bellinger wrote:
-> > > > [   12.830576] kernel BUG at ../drivers/target/target_core_device.c:337!
-> > > > 
+On Thu, May 21, 2015 at 06:54:53PM +0200, Jan Kara wrote:
+> On Wed 20-05-15 18:04:40, Kent Overstreet wrote:
+> > > Yeah.  I never figured out a sane way to migrate pages and keep everything
+> > > else happy.  Daniel Phillips is having a go at page forking for tux3; let's
+> > > see if the questions about that get resolved.
+> > 
+> > That would be great, we need something.
+> > 
+> > I'd also be really curious what btrfs is doing today - is it just bouncing
+> > everything internally, or did they come up with something more clever?
+> 
+> Btrfs is just waiting for IO to complete.
+> 
+> > > > Also, there's probably always going to be situations where we're reading or
+> > > > writing to pages user space can stomp on (dio) - IMO we need to add a bio flag
+> > > > to annotate this - "if you need this to be stable you have to bounce it".
+> > > > Otherwise either filesystems/block drivers are going to be stuck bouncing
+> > > > everything, or it'll just (continue to be) buggy.
 > > > 
-> > > How did you hit this..?
+> > > Well, for now there's BIO_SNAP_STABLE that forces the block layer to bounce it,
+> > > but right now ext3 is the last user of it, and afaict btrfs is the only other
+> > > FS that takes care of stable pages on its own.
 > > 
-> > tcm_node --block iblock_0/array /dev/sda
+> > I have no idea what BIO_SNAP_STABLE was supposed to be for, but I don't see how
+> > it's useful for anything sane.
+> 
+> It's for the case where lower layer requests it needs stable pages but
+> upper layer isn't able to provide them (as is the case of ext3). Then block
+> layer bounces the data for the caller.
+> 
+> > But that's the complete opposite of the problem stable pages are supposed to
+> > solve: stable pages are for when the _lower_ layer (be it filesystem, bcache,
+> > md, lvm) needs the memory being either read to or written from (both, it's not
+> > just writes) to not be diddled over while the IO is in flight.
 > > 
-> > line=$(tcm_loop --createnexus=0)
-> > wwn=$(echo $line | awk '{print $15}')
-> > tcm_loop --addlun=$wwn 0 0 iblock_0/array
+> > Now, a point that I think has been missed is that stable pages are _not_ a
+> > complete solution, at least for consumers in the block layer.
+> > 
+> > The situation today is that if I'm in the block layer, and I get a handed a read
+> > or write bio, I _don't know_ if it's from something that's going to diddle over
+> > those pages or not. So if I require stable pages - be it for data checksumming
+> > or for other things - I've just got to bounce the bio myself.
+> > 
+> > And then the really annoying thing is that if you've got stacked things that all
+> > need stable pages (maybe btrfs on top of bcache on top of md) - they _all_ have
+> > to assume the pages aren't going to be stable, so if they need them they _all_
+> > have to bounce - even though once the first layer bounced the bio that made it
+> > stable for everything underneath it.
 > 
-> And here is the fix.  Seems like anything using dynamic node ACLs was
-> broken the same way (I could reproduce it with vhost as well).
-> 
-> I don't really like how HBA_FLAGS_INTERNAL_USE means this is a virtual
-> lun0, so I'll send another patch to replace it with a per-device flag
-> eventually.
-> 
-> ---
-> From 9fd0e75cffde876b84b08952cc7f026d4e08d77a Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Thu, 21 May 2015 18:58:21 +0200
-> Subject: target: don't add lun0 to tpg_lun_hlist
-> 
-> We never want to find the virtual lun0 when looking up a lun on the TPG,
-> otherwise the core code gets really confused.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/target/target_core_tpg.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-> index b8c2a32..ced1dd6 100644
-> --- a/drivers/target/target_core_tpg.c
-> +++ b/drivers/target/target_core_tpg.c
-> @@ -647,7 +647,8 @@ int core_tpg_add_lun(
->  
->  	lun->lun_access = lun_access;
->  	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
-> -	hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
-> +	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
-> +		hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
->  
->  	mutex_unlock(&tpg->tpg_lun_mutex);
->  
-> @@ -687,7 +688,8 @@ void core_tpg_remove_lun(
->  	}
->  
->  	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
-> -	hlist_del_rcu(&lun->link);
-> +	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
-> +		hlist_del_rcu(&lun->link);
->  	mutex_unlock(&tpg->tpg_lun_mutex);
->  
->  	percpu_ref_exit(&lun->lun_ref);
+> The current design is that if you need stable pages for your device, set
+> bdi capability BDI_CAP_STABLE_WRITES, fs then takes care of not scribbling
+> over your page while it is under writeback or uses BIO_SNAP_STABLE if it
+> cannot.
 
-Applied to for-next, and will squash into the original series soon.
+But if I need stable pages, I still have to bounce because that _does not_
+guarantee stable pages, it only gives me stable pages for some of the IOs and in
+the lower layers you can't tell which is which.
 
---nab
+Do you see the problem? What good is BDI_CAP_STABLE_WRITES if it's not a
+guarantee and I can't tell if I need to bounce or not?
