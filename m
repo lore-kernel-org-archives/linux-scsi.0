@@ -1,119 +1,92 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2] libsas: fix "sysfs group not found" warnings at port
- teardown time
-Date: Wed, 20 May 2015 19:00:53 -0400
-Message-ID: <20150520230012.15322.1013.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Proposal for annotating _unstable_ pages
+Date: Wed, 20 May 2015 18:04:40 -0700
+Message-ID: <20150521010440.GA17405@kmo-pixel>
+References: <20150515205825.GC24967@birch.djwong.org>
+ <20150519154200.GA2559@kmo-pixel>
+ <20150519201055.GD27115@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: JBottomley@odin.com, hch@lst.de
-Cc: luis.henriques@canonical.com, Praveen Murali <pmurali@logicube.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150519201055.GD27115@birch.djwong.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-btrfs@vger.kernel.org, axboe@fb.com, zab@zabbo.net, neilb@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-Praveen reports:
+On Tue, May 19, 2015 at 01:10:55PM -0700, Darrick J. Wong wrote:
+> On Tue, May 19, 2015 at 08:42:00AM -0700, Kent Overstreet wrote:
+> > Also, stable pages - what's been going on there? Last I heard you were talking
+> > about using the page migration code to do COW, did anything come of that? I just
+> > added data checksumming/compression to bcachefs, so that's been fresh on my
+> > mind.
+> 
+> Yeah.  I never figured out a sane way to migrate pages and keep everything
+> else happy.  Daniel Phillips is having a go at page forking for tux3; let's
+> see if the questions about that get resolved.
 
-    After some debugging this is what I have found
+That would be great, we need something.
 
-    sas_phye_loss_of_signal gets triggered on phy_event from mvsas
-        sas_phye_loss_of_signal calls sas_deform_port
-             sas_deform_port posts a DISCE_DESTRUCT event (sas_unregister_domain_devices-> sas_unregister_dev)
-             sas_deform_port calls sas_port_delete
-                     sas_port_delete calls sas_port_delete_link
-                             sysfs_remove_group: kobject 'port-X:Y'
-                     sas_port_delete calls device_del
-                             sysfs_remove_group: kobject 'port-X:Y'
+I'd also be really curious what btrfs is doing today - is it just bouncing
+everything internally, or did they come up with something more clever?
 
-    sas_destruct_devices gets triggered for the destruct event (DISCE_DESTRUCT)
-        sas_destruct_devices calls sas_rphy_delete
-            sas_rphy_delete calls scsi_remove_device
-                 scsi_remove_device calls __scsi_remove_device
-                         __scsi_remove_device calls bsg_unregister_queue
-                                 bsg_unregister_queue -> device_unregister -> device_del -> sysfs_remove_group: kobject 'X:0:0:0'
+> > Also, there's probably always going to be situations where we're reading or
+> > writing to pages user space can stomp on (dio) - IMO we need to add a bio flag
+> > to annotate this - "if you need this to be stable you have to bounce it".
+> > Otherwise either filesystems/block drivers are going to be stuck bouncing
+> > everything, or it'll just (continue to be) buggy.
+> 
+> Well, for now there's BIO_SNAP_STABLE that forces the block layer to bounce it,
+> but right now ext3 is the last user of it, and afaict btrfs is the only other
+> FS that takes care of stable pages on its own.
 
-    Since X:0:0:0 falls under port-X:Y (which got deleted during
-    sas_port_delete), this call results in the warning. All the later
-    warnings in the dmesg output I sent earlier are trying to delete objects
-    under port-X:Y. Since port-X:Y got recursively deleted, all these calls
-    result in warnings. Since, the PHY and DISC events are processed in two
-    different work queues (and one triggers the other), is there any way
-    other than checking if the object exists in sysfs (in device_del) before
-    deleting?
+I have no idea what BIO_SNAP_STABLE was supposed to be for, but I don't see how
+it's useful for anything sane.
 
-    ------------[ cut here ]------------
-    WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:219 device_del+0x40/0x1c0()
-    sysfs group ffffffff818b97e0 not found for kobject '2:0:4:0'
-    [..]
-    CPU: 2 PID: 6 Comm: kworker/u8:0 Tainted: P        W  O  3.16.7-ckt9-logicube-ng.3 #1
-    Hardware name: To be filled by O.E.M. To be filled by O.E.M./VT6085, BIOS 4.6.5 01/23/2015
-    Workqueue: scsi_wq_2 sas_destruct_devices [libsas]
-     0000000000000009 ffffffff8151cd18 ffff88011b35bcd8 ffffffff810687b7
-     ffff88011a661400 ffff88011b35bd28 ffff8800c6e5e968 ffff880000028810
-     ffff8800c89f2c00 ffffffff8106881c ffffffff81733b68 0000000000000028
-    Call Trace:
-     [<ffffffff8151cd18>] ? dump_stack+0x41/0x51
-     [<ffffffff810687b7>] ? warn_slowpath_common+0x77/0x90
-     [<ffffffff8106881c>] ? warn_slowpath_fmt+0x4c/0x50
-     [<ffffffff813ad2d0>] ? device_del+0x40/0x1c0
-     [<ffffffff813ad46a>] ? device_unregister+0x1a/0x70
-     [<ffffffff812a535e>] ? bsg_unregister_queue+0x5e/0xb0
-     [<ffffffffa00781a9>] ? __scsi_remove_device+0xa9/0xd0 [scsi_mod]
+I'm _guessing_ it's to get atomic snapshots? But if the upper layer is modifying
+the data being written while the write is in flight, the memcpy() for the bounce
+still isn't going to be atomic. If the upper layer cares about atomicity, it
+needs to not diddle over the memory its writing while the write is in flight.
 
-It appears we've always been double deleting the devices below sas_port,
-but recent sysfs changes now exposes this problem.  Libsas should delete
-all the devices from rphy down before deleting the parent port.
+But that's the complete opposite of the problem stable pages are supposed to
+solve: stable pages are for when the _lower_ layer (be it filesystem, bcache,
+md, lvm) needs the memory being either read to or written from (both, it's not
+just writes) to not be diddled over while the IO is in flight.
 
-Cc: <stable@vger.kernel.org>
-Reported-by: Praveen Murali <pmurali@logicube.com>
-Tested-by: Praveen Murali <pmurali@logicube.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+Now, a point that I think has been missed is that stable pages are _not_ a
+complete solution, at least for consumers in the block layer.
 
-v2: drop the "---" separators that will confuse git-am.  Thanks Luis!
+The situation today is that if I'm in the block layer, and I get a handed a read
+or write bio, I _don't know_ if it's from something that's going to diddle over
+those pages or not. So if I require stable pages - be it for data checksumming
+or for other things - I've just got to bounce the bio myself.
 
- drivers/scsi/libsas/sas_discover.c |    6 +++---
- drivers/scsi/libsas/sas_port.c     |    1 -
- 2 files changed, 3 insertions(+), 4 deletions(-)
+And then the really annoying thing is that if you've got stacked things that all
+need stable pages (maybe btrfs on top of bcache on top of md) - they _all_ have
+to assume the pages aren't going to be stable, so if they need them they _all_
+have to bounce - even though once the first layer bounced the bio that made it
+stable for everything underneath it.
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 60de66252fa2..a4db770fe8b0 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -362,11 +362,14 @@ static void sas_destruct_devices(struct work_struct *work)
- 	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
- 
- 	list_for_each_entry_safe(dev, n, &port->destroy_list, disco_list_node) {
-+		struct sas_port *sas_port = dev_to_sas_port(dev->rphy->dev.parent);
-+
- 		list_del_init(&dev->disco_list_node);
- 
- 		sas_remove_children(&dev->rphy->dev);
- 		sas_rphy_delete(dev->rphy);
- 		sas_unregister_common_dev(port, dev);
-+		sas_port_delete(sas_port);
- 	}
- }
- 
-@@ -400,9 +403,6 @@ void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
- 
- 	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
- 		sas_unregister_dev(port, dev);
--
--	port->port->rphy = NULL;
--
- }
- 
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port)
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index d3c5297c6c89..9a25ae3a52a4 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -219,7 +219,6 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 
- 	if (port->num_phys == 1) {
- 		sas_unregister_domain_devices(port, gone);
--		sas_port_delete(port->port);
- 		port->port = NULL;
- 	} else {
- 		sas_port_delete_phy(port->port, phy->phy);
+Stable pages for IO to/from the pagecache are _not_ going to solve this problem,
+because the page cache is not the only source of IO to non stable pages (Direct
+IO will always be, even if everything else gets fixed).
+
+So what I'm proposing is:
+
+ - Add a new bio flag: BIO_PAGES_NOT_STABLE
+
+ - Everything that submits a bio and _doesn't_ guarantee that the pages won't be
+   touched while the IO is in flight has to set that flag.  This flag will have
+   to be preserved when cloning a bio, but not when cloning a bio and its pages
+   (i.e. bouncing it).
+
+This is going to be a lot of not-fun work auditing code, but IMO it really needs
+to be done. As a bonus, once it's done everything that generates IO that must be
+expensively bounced will be nicely annotated.
+
+To verify that the annotations are correct, for writes we can add some debug
+code to the generic IO path that checksums the data before and after the IO and
+complains loudly if the checksums don't match. Dunno what we can do for reads.
+
+Thoughts?
