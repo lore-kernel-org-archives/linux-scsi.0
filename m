@@ -1,119 +1,59 @@
-From: Vinson Lee <vlee@twopensource.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Fri, 22 May 2015 12:19:16 -0700
-Message-ID: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
-	<54AC0A17.8020405@redhat.com>
-	<20150128001837.GE17677@kroah.com>
-	<CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
-	<552BC234.4020000@redhat.com>
-	<20150426092719.GA1460@kroah.com>
-	<553E28DC.1040100@redhat.com>
-	<20150427125529.GA18817@kroah.com>
-	<553E354B.90208@redhat.com>
-	<20150502175621.GA15525@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20150502175621.GA15525@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] scsi: add Synology to 1024 sector blacklist
+Date: Fri, 22 May 2015 14:22:52 -0500
+Message-ID: <1432322572-5879-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57229 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756676AbbEVTXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 May 2015 15:23:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On Sat, May 2, 2015 at 10:56 AM, Greg KH <greg@kroah.com> wrote:
-> On Mon, Apr 27, 2015 at 03:10:35PM +0200, Tomas Henzl wrote:
->> On 04/27/2015 02:55 PM, Greg KH wrote:
->> > On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
->> >> On 04/26/2015 11:27 AM, Greg KH wrote:
->> >>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
->> >>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
->> >>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
->> >>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
->> >>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
->> >>>>>>>> Dear stable maintainers,
->> >>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
->> >>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
->> >>>>>>>> earlier, if applicable)?
->> >>>>>>> Please do not apply this patch isolated from his friend, the
->> >>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
->> >>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
->> >>>>>>>
->> >>>>>>> In addition to that, after the original issue goes away you may notice sometimes
->> >>>>>>> an unhandled irq 16 message, to fix this a patch is posted
->> >>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
->> >>>>>>> This patch still awaits a maintainers review though.
->> >>>>>>>
->> >>>>>>> Probably the best idea is to wait until the issue is solved completely.
->> >>>>>> I'll wait, when it all gets worked out, please let stable@ know what
->> >>>>>> patches to apply where.
->> >>>>>>
->> >>>>>> thanks,
->> >>>>>>
->> >>>>>> greg k-h
->> >>>>>> --
->> >>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
->> >>>>>> the body of a message to majordomo@vger.kernel.org
->> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >>>>> Hi, Thomas.
->> >>>>>
->> >>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
->> >>>>> turn off interrupts when kdump starts".
->> >>>>>
->> >>>>> Are the following patches suitable for stable now?
->> >>>> Yes, I believe they are, just note that
->> >>>> 03741d9 hpsa: fix memory leak in kdump hard reset
->> >>>> is not a part of that group we discussed before, but it may be added
->> >>>> to stable too.
->> >>>>
->> >>>> Cheers,
->> >>>> Tomas
->> >>>>
->> >>>>> 3b74729 hpsa: turn off interrupts when kdump starts
->> >>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
->> >>>>> 859c75a hpsa: add missing pci_set_master in kdump path
->> >>>>> 132aa22 hpsa: refine the pci enable/disable handling
->> >>> So what order, and to what stable tree(s) do you want these applied to?
->> >>> They seem to span a number of kernel versions, so I'm not quite sure
->> >>> what you are wanting me to do.
->> >> Please add it in this order
->> >> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
->> >> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
->> >>    The first two patches create the fix Masoud has asked for originally to port to stable.
->> >> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
->> >>    The third should be added too, it fixes an issue made visible by the first patch
->> >>
->> >> The fourth patch
->> >> 03741d956e hpsa: fix memory leak in kdump hard reset
->> >> is completely unrelated to the first group, so it may be added after or before
->> >> or in the same sequence as it is in the mainline - that is before the third patch.
->> >> This patch is tiny error path fix - not sure if important enough for stable.
->> > Which stable tree(s) do you want these applied to?  As these "span"
->> > different kernel versions, I have no idea of what to do here.
->>
->> Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
->> I don't know much about stable so I can't decide to which tree(s) the series should be ported.
->
-> Ok, I'll wait for someone to clarify before doing anything here.
->
-> thanks,
->
-> greg k-h
+From: Mike Christie <michaelc@cs.wisc.edu>
 
+Another day another iSCSI target that cannot handle large IOs.
+The Synology iSCSI targets report:
 
-The first and second patches are from upstream 3.18. The third patch
-is from upstream 4.0.
+Block limits VPD page (SBC):
+  Write same no zero (WSNZ): 0
+  Maximum compare and write length: 0 blocks
+  Optimal transfer length granularity: 0 blocks
+  Maximum transfer length: 0 blocks
+  Optimal transfer length: 0 blocks
+  Maximum prefetch length: 0 blocks
+  Maximum unmap LBA count: 0
+  Maximum unmap block descriptor count: 0
+  Optimal unmap granularity: 0
+  Unmap granularity alignment valid: 0
+  Unmap granularity alignment: 0
+  Maximum write same length: 0x0 blocks
 
-Please use the following list of kernels and patches for backporting.
+and the size of the command it can handle seems to depend on how much
+memory it can allocate at the time. This results in IO errors when
+handling large IOs. This patch just has us use the old 1024 default
+sectors for this target by adding it to the scsi blacklist.
 
-3.18, 3.19
-3b74729878 hpsa: turn off interrupts when kdump starts
+Reported-by: Ancoron Luciferis <ancoron.luciferis@googlemail.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-<= 3.17
-132aa220b4 hpsa: refine the pci enable/disable handling
-859c75aba2 hpsa: add missing pci_set_master in kdump path
-3b74729878 hpsa: turn off interrupts when kdump starts
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 848c7ca..d2a8bdf 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -227,6 +227,7 @@ static struct {
+ 	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+ 	{"Promise", "", NULL, BLIST_SPARSELUN},
+ 	{"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024}, 
++	{"SYNOLOGY", "iSCSI Storage", NULL, BLIST_MAX_1024},
+ 	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
+ 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+ 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
+-- 
+1.8.3.1
 
-Cheers,
-Vinson
