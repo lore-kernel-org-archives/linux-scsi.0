@@ -1,61 +1,180 @@
 From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware files
-Date: Fri, 22 May 2015 10:03:02 +1000
-Message-ID: <CAGRGNgXr+2qjr9zXVYzB+LE2NJLzW97HYLdSBu9d36D=FtS+2A@mail.gmail.com>
-References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
- <D17D1DF4.8A989%himanshu.madhani@qlogic.com> <5557DAF4.4010800@gmail.com>
- <D17F6747.8AE64%himanshu.madhani@qlogic.com> <CAGRGNgUBceGTd0ZMU+s3MopDGV8axWN5F0JsR+vwjjUg6Y6VTw@mail.gmail.com>
- <D180A90B.8B410%himanshu.madhani@qlogic.com> <555DB685.7060005@gmail.com>
+Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
+Date: Fri, 22 May 2015 10:05:23 +1000
+Message-ID: <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
+References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:36948 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964928AbbEVADY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 20:03:24 -0400
-Received: by igbsb11 with SMTP id sb11so21373625igb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 17:03:23 -0700 (PDT)
-In-Reply-To: <555DB685.7060005@gmail.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:34111 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964928AbbEVAFo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 20:05:44 -0400
+Received: by igbhj9 with SMTP id hj9so24108865igb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 17:05:44 -0700 (PDT)
+In-Reply-To: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
+Cc: qla2xxx-upstream@qlogic.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-Hi All,
+Hi Xose,
 
-On Thu, May 21, 2015 at 8:42 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> On 05/19/2015 05:51 PM, Himanshu Madhani wrote:
->
->> On 5/18/15, 6:50 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
->
->>> Do the devices these firmware files are for exist and is there any
->>> chance of the files being released?
->>
->> Yes. These devices are available and we read firmware from FLASH on these
->> adapters.
->> At times when debugging/triaging involves firmware, we use binaries that
->> would be useful for quick triaging.
->
-> It looks like newer FW files were released on 4/29/2015 in:
-> http://ldriver.qlogic.com/firmware/rpms/qlogic-firmware-8.01.00-1.noarch.rpm
->
-> ql2400_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
-> ql2500_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
-> ql2600_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
-> ql2700_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
-> ql8300_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
->
->
-> Could you please send meaningful files to linux-firmware.git ?
-> And remove irrelevant code from qla_os.c/Kconfig
+Adding you to CC.
 
-Assuming that these files are actually sent to linux-firmware.git, the
-patch I just sent will hide the stuff for the missing firmware files
-behind a new Kconfig symbol, this way it's there for Qlogic, however
-hidden from people who don't have access to the files.
+On Fri, May 22, 2015 at 10:00 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Some qla2xxx devices have firmware stored in flash on the device,
+> however for debugging and triage purposes, Qlogic staff like to
+> be able to load known-good versions of these firmwares through
+> request_firmware().
+>
+> These firmware files were never distributed and are unlikely to ever
+> be released publically, so to hide these missing firmware files from
+> scripts which check such things, (e.g. Debian's initramfs-tools) put
+> them behind a new EXPERT Kconfig option.
+>
+> Cc: <qla2xxx-upstream@qlogic.com>
+> Cc: James E.J. Bottomley <JBottomley@odin.com>
+> Cc: Linux Firmware Maintainers <linux-firmware@kernel.org>
+> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+> ---
+>  drivers/scsi/qla2xxx/Kconfig  | 25 +++++++++++++++++++++++++
+>  drivers/scsi/qla2xxx/qla_os.c | 40 +++++++++++++++++++++++++++-------------
+>  2 files changed, 52 insertions(+), 13 deletions(-)
+>
+> This is against linux-next @next-20150520 and has been compile
+> tested only.
+>
+> diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+> index 33f60c9..31e9db4 100644
+> --- a/drivers/scsi/qla2xxx/Kconfig
+> +++ b/drivers/scsi/qla2xxx/Kconfig
+> @@ -31,6 +31,31 @@ config SCSI_QLA_FC
+>
+>         They are also included in the linux-firmware tree as well.
+>
+> +       This driver also supports some adapters with firmware stored
+> +       onboard in flash.
+> +
+> +config SCSI_QLA_FC_TRIAGE
+> +       bool "Firmware loading support for flash based adapters"
+> +       depends on SCSI_QLA_FC
+> +       depends on EXPERT
+> +       default n
+> +       ---help---
+> +       Add firmware definitions for adapters with firmware stored
+> +       onboard in flash.
+> +
+> +       This requires the following firmware files which are not
+> +       distributed:
+> +
+> +       ISP               Firmware Filename
+> +       ----------        -----------------
+> +       81xx              ql8100_fw.bin
+> +       82xx              ql8200_fw.bin
+> +
+> +       This option should only be enabled by Qlogic support staff
+> +       as these firmware files are not available publically.
+> +
+> +       If unsure say N.
+> +
+>  config TCM_QLA2XXX
+>         tristate "TCM_QLA2XXX fabric module for Qlogic 2xxx series target mode HBAs"
+>         depends on SCSI_QLA_FC && TARGET_CORE
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 7462dd7..da98d83 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -5284,11 +5284,14 @@ qla2x00_timer(scsi_qla_host_t *vha)
+>  #define FW_ISP2322     3
+>  #define FW_ISP24XX     4
+>  #define FW_ISP25XX     5
+> -#define FW_ISP81XX     6
+> -#define FW_ISP82XX     7
+> -#define FW_ISP2031     8
+> -#define FW_ISP8031     9
+> -#define FW_ISP27XX     10
+> +#define FW_ISP2031     6
+> +#define FW_ISP8031     7
+> +#define FW_ISP27XX     8
+> +
+> +#ifdef CONFIG_SCSI_QLA_FC_TRIAGE
+> +#define FW_ISP81XX     9
+> +#define FW_ISP82XX     10
+> +#endif
+>
+>  #define FW_FILE_ISP21XX        "ql2100_fw.bin"
+>  #define FW_FILE_ISP22XX        "ql2200_fw.bin"
+> @@ -5296,12 +5299,14 @@ qla2x00_timer(scsi_qla_host_t *vha)
+>  #define FW_FILE_ISP2322        "ql2322_fw.bin"
+>  #define FW_FILE_ISP24XX        "ql2400_fw.bin"
+>  #define FW_FILE_ISP25XX        "ql2500_fw.bin"
+> -#define FW_FILE_ISP81XX        "ql8100_fw.bin"
+> -#define FW_FILE_ISP82XX        "ql8200_fw.bin"
+>  #define FW_FILE_ISP2031        "ql2600_fw.bin"
+>  #define FW_FILE_ISP8031        "ql8300_fw.bin"
+>  #define FW_FILE_ISP27XX        "ql2700_fw.bin"
+>
+> +#ifdef CONFIG_SCSI_QLA_FC_TRIAGE
+> +#define FW_FILE_ISP81XX        "ql8100_fw.bin"
+> +#define FW_FILE_ISP82XX        "ql8200_fw.bin"
+> +#endif
+>
+>  static DEFINE_MUTEX(qla_fw_lock);
+>
+> @@ -5312,11 +5317,13 @@ static struct fw_blob qla_fw_blobs[FW_BLOBS] = {
+>         { .name = FW_FILE_ISP2322, .segs = { 0x800, 0x1c000, 0x1e000, 0 }, },
+>         { .name = FW_FILE_ISP24XX, },
+>         { .name = FW_FILE_ISP25XX, },
+> -       { .name = FW_FILE_ISP81XX, },
+> -       { .name = FW_FILE_ISP82XX, },
+>         { .name = FW_FILE_ISP2031, },
+>         { .name = FW_FILE_ISP8031, },
+>         { .name = FW_FILE_ISP27XX, },
+> +#ifdef CONFIG_SCSI_QLA_FC_TRIAGE
+> +       { .name = FW_FILE_ISP81XX, },
+> +       { .name = FW_FILE_ISP82XX, },
+> +#endif
+>  };
+>
+>  struct fw_blob *
+> @@ -5337,16 +5344,18 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+>                 blob = &qla_fw_blobs[FW_ISP24XX];
+>         } else if (IS_QLA25XX(ha)) {
+>                 blob = &qla_fw_blobs[FW_ISP25XX];
+> -       } else if (IS_QLA81XX(ha)) {
+> -               blob = &qla_fw_blobs[FW_ISP81XX];
+> -       } else if (IS_QLA82XX(ha)) {
+> -               blob = &qla_fw_blobs[FW_ISP82XX];
+>         } else if (IS_QLA2031(ha)) {
+>                 blob = &qla_fw_blobs[FW_ISP2031];
+>         } else if (IS_QLA8031(ha)) {
+>                 blob = &qla_fw_blobs[FW_ISP8031];
+>         } else if (IS_QLA27XX(ha)) {
+>                 blob = &qla_fw_blobs[FW_ISP27XX];
+> +#ifdef CONFIG_SCSI_QLA_FC_TRIAGE
+> +       } else if (IS_QLA81XX(ha)) {
+> +               blob = &qla_fw_blobs[FW_ISP81XX];
+> +       } else if (IS_QLA82XX(ha)) {
+> +               blob = &qla_fw_blobs[FW_ISP82XX];
+> +#endif
+>         } else {
+>                 return NULL;
+>         }
+> @@ -5837,3 +5846,8 @@ MODULE_FIRMWARE(FW_FILE_ISP25XX);
+>  MODULE_FIRMWARE(FW_FILE_ISP2031);
+>  MODULE_FIRMWARE(FW_FILE_ISP8031);
+>  MODULE_FIRMWARE(FW_FILE_ISP27XX);
+> +
+> +#ifdef CONFIG_SCSI_QLA_FC_TRIAGE
+> +MODULE_FIRMWARE(FW_FILE_ISP81XX);
+> +MODULE_FIRMWARE(FW_FILE_ISP82XX);
+> +#endif
+> --
+> 2.1.4
+>
 
-Thanks,
+
 
 -- 
 Julian Calaby
