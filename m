@@ -1,58 +1,84 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [BUG] hpsa: Controller lockup detected: 0x00150028
-Date: Fri, 22 May 2015 17:10:44 +0200
-Message-ID: <555F46F4.2090002@redhat.com>
-References: <20150518124058.GH21418@twins.programming.kicks-ass.net> <EC48209BE0009041A0D3C6A996EAD2AE27A7FAEE@G9W0754.americas.hpqcorp.net> <20150518152034.GC5404@twins.programming.kicks-ass.net> <20150518160345.GA18673@twins.programming.kicks-ass.net> <20150518161146.GB18673@twins.programming.kicks-ass.net>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: iscsi flashnode bus? Re: [RFC PATCH 2/4] iscsi: sysfs filtering
+ by network namespace
+Date: Fri, 22 May 2015 10:49:42 -0500
+Message-ID: <555F5016.60308@cs.wisc.edu>
+References: <1431555167-23995-1-git-send-email-cleech@redhat.com> <1431555167-23995-3-git-send-email-cleech@redhat.com> <20150521204906.GF17115@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56645 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756233AbbEVPLT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 May 2015 11:11:19 -0400
-In-Reply-To: <20150518161146.GB18673@twins.programming.kicks-ass.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRBHVA7WVAKGQEWBFIDIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20150521204906.GF17115-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Adheer Chandravanshi <adheer.chandravanshi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>, "Oelke, Mark" <mark.oelke@hp.com>
-Cc: "don.brace@pmcs.com" <don.brace@pmcs.com>, ISS StorageDev <iss_storagedev@hp.com>, "storagedev@pmcs.com" <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 05/18/2015 06:11 PM, Peter Zijlstra wrote:
-> On Mon, May 18, 2015 at 06:03:45PM +0200, Peter Zijlstra wrote:
->> On Mon, May 18, 2015 at 05:20:34PM +0200, Peter Zijlstra wrote:
->>> On Mon, May 18, 2015 at 01:57:39PM +0000, Oelke, Mark wrote:
->>>> The P212/P410/P411 firmware was recently spun to address an issue that sounds exactly like this problem.
->>>> Which version of controller firmware are you using?
->>>
->>> Smart Array P212 in Slot 1
->>>
->>>    Hardware Revision: C
->>>    Firmware Version: 6.60
->>
->> I've updated to 6.62 and it appears to be working now; or rather, it has
->> not locked up yet where I think it would've locked up by now earlier.
->>
->> I'll let it run for a few more hours before calling it fixed, I'll let
->> you know.
-> 
-> And right after sending this email it went...
-> 
-> [ 1119.052144] hpsa 0000:06:00.0: Controller lockup detected: 0x00150029
-> 
-> So sadly no dice.
-> 
-> Anything else I can do?
-An older issue for mptsas seems to handle a similar case
-2a1b7e575b [SCSI] mptsas: fix hangs caused by ATA pass-through
-that might be for hpsa -
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -1067,6 +1067,8 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
-        if (sd != NULL)
-                sdev->hostdata = sd;
-        spin_unlock_irqrestore(&h->devlock, flags);
-+
-+       blk_queue_dma_alignment (sdev->request_queue, 512 - 1);
-        return 0;
- }
--tm
+On 5/21/15, 3:49 PM, Chris Leech wrote:
+> On Wed, May 13, 2015 at 03:12:45PM -0700, Chris Leech wrote:
+>> This makes the iscsi_host, iscsi_session, iscsi_connection, and
+>> iscsi_endpoint transport class devices only visible in sysfs under a
+>> matching network namespace.  The network namespace for all of these
+>> objects is tracked in the iscsi_cls_host structure.
+>
+> I noticed that I didn't change iscsi_iface, but it should probably be
+> handled the same was as iscsi_endpoint.
+>
+> I had intentionally skipped over all the flashnode stuff, until I had a
+> chance to go back and take a closer look.
+>
+> Is there any particular reason why the flashnode support was implemented
+> as a bus?  Following the pattern of everything else in
+> scsi_transport_iscsi it should probably have been two classes
+> (iscsi_flash_session and iscsi_flash_conn).  It's an issue as sysfs
+> tagging only works on a per-class basis right now.
+>
+
+
+At some point upstream started telling us to stop using classes and use 
+buses instead. It was around the time the fcoe's fcoe_sysfs stuff was 
+being reviewed. In the middle of this mail is the comment about using 
+buses instead of classes for fcoe:
+
+http://www.spinics.net/lists/linux-scsi/msg58168.html
+
+> I can see a couple of ways forward.
+>
+> 1) Extend sysfs tagging to work with device_type as well as class, and
+>     use that for the two types on the flashnode "bus"
+
+If we are supposed to be using buses instead of classes then I think is 
+correct.
+
+>
+> 2) Change the flashnode code to use classes instead of a bus.
+>     Keeping a single iscsi_flashnode class and continuing to use the two
+>     device_types for sessions and connections should result in the only
+>     visible change being /sys/bus/iscsi_flashnode moving to
+>     /sys/class/iscsi_flashnode.
+
+If we can use classes, this is fine with me.
+
+>
+> I prefer #2, but it looks like the open-iscsi tools would need to be
+> updated (not all code paths follow the recommendations to ignore
+> bus/class differences and check all subsystem locations).  And I don't
+> know for sure that there aren't any other tools using this interface
+> (it's only implemented for qla4xxx).
+>
+
+Ccing qlogic. I do not think any tools use it. I do not even know if 
+anyone uses iscsiadm to manage it. Qlogic?
+
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
