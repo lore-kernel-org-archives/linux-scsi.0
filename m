@@ -1,66 +1,64 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: iscsi flashnode bus? Re: [RFC PATCH 2/4] iscsi: sysfs filtering by
- network namespace
-Date: Thu, 21 May 2015 13:49:06 -0700
-Message-ID: <20150521204906.GF17115@straylight.hirudinean.org>
-References: <1431555167-23995-1-git-send-email-cleech@redhat.com>
- <1431555167-23995-3-git-send-email-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH for-next] qla2xxx: delete references to unused firmware files
+Date: Fri, 22 May 2015 10:03:02 +1000
+Message-ID: <CAGRGNgXr+2qjr9zXVYzB+LE2NJLzW97HYLdSBu9d36D=FtS+2A@mail.gmail.com>
+References: <1431776978-23510-1-git-send-email-xose.vazquez@gmail.com>
+ <D17D1DF4.8A989%himanshu.madhani@qlogic.com> <5557DAF4.4010800@gmail.com>
+ <D17F6747.8AE64%himanshu.madhani@qlogic.com> <CAGRGNgUBceGTd0ZMU+s3MopDGV8axWN5F0JsR+vwjjUg6Y6VTw@mail.gmail.com>
+ <D180A90B.8B410%himanshu.madhani@qlogic.com> <555DB685.7060005@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBRMJ7GVAKGQES2P7SWI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1431555167-23995-3-git-send-email-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:36948 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964928AbbEVADY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2015 20:03:24 -0400
+Received: by igbsb11 with SMTP id sb11so21373625igb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2015 17:03:23 -0700 (PDT)
+In-Reply-To: <555DB685.7060005@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On Wed, May 13, 2015 at 03:12:45PM -0700, Chris Leech wrote:
-> This makes the iscsi_host, iscsi_session, iscsi_connection, and
-> iscsi_endpoint transport class devices only visible in sysfs under a
-> matching network namespace.  The network namespace for all of these
-> objects is tracked in the iscsi_cls_host structure.
+Hi All,
 
-I noticed that I didn't change iscsi_iface, but it should probably be
-handled the same was as iscsi_endpoint.
+On Thu, May 21, 2015 at 8:42 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> On 05/19/2015 05:51 PM, Himanshu Madhani wrote:
+>
+>> On 5/18/15, 6:50 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
+>
+>>> Do the devices these firmware files are for exist and is there any
+>>> chance of the files being released?
+>>
+>> Yes. These devices are available and we read firmware from FLASH on these
+>> adapters.
+>> At times when debugging/triaging involves firmware, we use binaries that
+>> would be useful for quick triaging.
+>
+> It looks like newer FW files were released on 4/29/2015 in:
+> http://ldriver.qlogic.com/firmware/rpms/qlogic-firmware-8.01.00-1.noarch.rpm
+>
+> ql2400_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
+> ql2500_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
+> ql2600_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
+> ql2700_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
+> ql8300_fw.bin:  COPYRIGHT 2015 QLOGIC CORPORATION   ISP24xx Firmware   Version   8.01.00  $
+>
+>
+> Could you please send meaningful files to linux-firmware.git ?
+> And remove irrelevant code from qla_os.c/Kconfig
 
-I had intentionally skipped over all the flashnode stuff, until I had a
-chance to go back and take a closer look.
+Assuming that these files are actually sent to linux-firmware.git, the
+patch I just sent will hide the stuff for the missing firmware files
+behind a new Kconfig symbol, this way it's there for Qlogic, however
+hidden from people who don't have access to the files.
 
-Is there any particular reason why the flashnode support was implemented
-as a bus?  Following the pattern of everything else in
-scsi_transport_iscsi it should probably have been two classes
-(iscsi_flash_session and iscsi_flash_conn).  It's an issue as sysfs
-tagging only works on a per-class basis right now.
-
-I can see a couple of ways forward.
-
-1) Extend sysfs tagging to work with device_type as well as class, and
-   use that for the two types on the flashnode "bus"
-
-2) Change the flashnode code to use classes instead of a bus.  
-   Keeping a single iscsi_flashnode class and continuing to use the two
-   device_types for sessions and connections should result in the only
-   visible change being /sys/bus/iscsi_flashnode moving to
-   /sys/class/iscsi_flashnode.
-
-I prefer #2, but it looks like the open-iscsi tools would need to be
-updated (not all code paths follow the recommendations to ignore
-bus/class differences and check all subsystem locations).  And I don't
-know for sure that there aren't any other tools using this interface
-(it's only implemented for qla4xxx).
-
-- Chris
+Thanks,
 
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
