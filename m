@@ -1,48 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH-v2 2/9] target/pr: Use atomic bitop for
-	se_dev_entry->pr_reg reservation check
-Date: Fri, 22 May 2015 13:34:04 +0200
-Message-ID: <20150522113404.GB28758@lst.de>
-References: <1432275071-28882-1-git-send-email-nab@daterainc.com> <1432275071-28882-3-git-send-email-nab@daterainc.com> <20150522082614.GA24640@lst.de> <1432285557.898.28.camel@haakon3.risingtidesystems.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH kernel] commit 4fbdf9cb ("lpfc: Fix for lun discovery
+ issue with saturn adapter.")
+Date: Fri, 22 May 2015 13:33:34 +0200
+Message-ID: <20150522133334.000064c9@localhost>
+References: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
+	<5548E2C1.3070209@emulex.com>
+	<20150505234659.00003ab7@localhost>
+	<555C0595.9060507@ozlabs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1432285557.898.28.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.17.20]:65513 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756961AbbEVLea (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 May 2015 07:34:30 -0400
+In-Reply-To: <555C0595.9060507@ozlabs.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: james.smart@emulex.com, linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
 
-On Fri, May 22, 2015 at 02:05:57AM -0700, Nicholas A. Bellinger wrote:
-> On Fri, 2015-05-22 at 10:26 +0200, Christoph Hellwig wrote:
-> > On Fri, May 22, 2015 at 06:11:04AM +0000, Nicholas A. Bellinger wrote:
-> > > +	clear_bit(1, &orig->pr_reg);
-> > 
-> > Can you call it ->flags and give the bit a meaningful name?
+Alexey Kardashevskiy wrote:
+> On 05/06/2015 07:46 AM, Sebastian Herbszt wrote:
+> > James Smart wrote:
+> >>
+> >> Reviewed-By: James Smart <james.smart@emulex.com>
+> >>
+> >>
+> >> Alexey, Sebastian,
+> >>
+> >> Yes - this section needs to be reverted.  This patch is good.
+> >>
+> >> -- james s
+> >
+> > Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
 > 
-> The bit is signaling if se_dev_entry has a PR registration active.
 > 
-> I don't see how ->flags is a more meaningful name without other bits
-> defined.
-
-It's pretty normal style: define a flags variable for any sort of
-bitops state that might show up, and then give the actual bits a meaningful
-name.  There's almost no users of using a magic numberic value with
-atomic bitops.
-
-Besides being the usual and thus easier to read style it's also good
-future proofing.
-
-> > It would be good to just sort out the registered and co variables
-> > here before the RCU changes, as in:
-> > 
-> > http://git.infradead.org/users/hch/scsi.git/commitdiff/6372d9f62c83acb30d051387c40deb4dbdcaa376
+> Unfortunately, just this revert is not enough, it fixed one of my machines 
+> but I have another machine with "Emulex Corporation Saturn-X: LightPulse 
+> Fibre Channel Host Adapter (rev 03)" which does not boot - the booting 
+> process stops at "[  OK  ] Reached target Basic System."
 > 
-> Why not just keep this patch squashed into the relevant commit in the
-> context of the larger RCU conversion..?
+> Any quick idea what else to revert between 4.0 and current upstream before 
+> I dig further? Thanks!
 
-Because the logic in and aroudn core_scsi3_pr_seq_non_holder right
-now is rather confusing.  So before doing changes to it it's better
-to clean it up first, document that cleanup in a standalon patch
-and then apply the logic change on top.
+Is the other machine also POWER7?
+I tested the revert on x86 and it fixed my issue:
+
+4.1-rc4 (lpfc 10.5.0.0) - broken
+4.0 + lpfc 10.5.0.0 - broken
+4.1-rc4 (lpfc 10.5.0.0) + revert - ok
+4.0 + lpfc 10.5.0.0 + revert - ok
+
+Sebastian
