@@ -1,225 +1,102 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 4/9] lpfc: Add support for using block multi-queue
-Date: Fri, 22 May 2015 10:42:38 -0400
-Message-ID: <555f405e.2o5/YwCIJ/19LVTb%james.smart@avagotech.com>
+Subject: [PATCH 3/9] lpfc: Devices are not discovered during
+ takeaway/giveback testing
+Date: Fri, 22 May 2015 10:42:37 -0400
+Message-ID: <555f405d.19aP4Ju4SItrRE4D%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:33202 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757153AbbEVOmt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 10:42:49 -0400
-Received: by qgfa63 with SMTP id a63so9116441qgf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 07:42:49 -0700 (PDT)
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:35747 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756757AbbEVOmp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 10:42:45 -0400
+Received: by qgew3 with SMTP id w3so9072662qge.2
+        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 07:42:44 -0700 (PDT)
 Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
-        by mx.google.com with ESMTPSA id n64sm1413241qkh.31.2015.05.22.07.42.47
+        by mx.google.com with ESMTPSA id f192sm1394322qhc.37.2015.05.22.07.42.43
         for <linux-scsi@vger.kernel.org>
         (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Fri, 22 May 2015 07:42:48 -0700 (PDT)
+        Fri, 22 May 2015 07:42:44 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Add support for using block multi-queue
+Devices are not discovered during takeaway/giveback testing
 
-With blk-mq support in the mid-layer, lpfc can do IO steering based
-on the information in the request tag.  This patch allows lpfc to use
-blk-mq if enabled. If not enabled, we fall back into the emulex-internal
-affinity mappings.
-
-This feature can be turned on via CONFIG_SCSI_MQ_DEFAULT or passing
-scsi_mod.use_blk_mq=Y as a parameter to the kernel.
+When a remote nport changes it's DID, a new ndlp is used.
+However, we left the old ndlp state unchanged and still in
+a discovery state. The may stall discovery resulting in some
+devices not being discovered.  Correct by swapping the state
+of the 2 ndlp's when a DID swap is detected.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |  4 ++-
- drivers/scsi/lpfc/lpfc_scsi.c | 43 +++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_scsi.h |  3 ++
- drivers/scsi/lpfc/lpfc_sli.c  | 74 ++++++++++++++-----------------------------
- 4 files changed, 72 insertions(+), 52 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 14424e6..f962118 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3303,6 +3303,7 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	shost->max_lun = vport->cfg_max_luns;
- 	shost->this_id = -1;
- 	shost->max_cmd_len = 16;
-+	shost->nr_hw_queues = phba->cfg_fcp_io_channel;
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		shost->dma_boundary =
- 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
-@@ -8980,7 +8981,8 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->cfg_fcp_io_channel = vectors;
- 	}
- 
--	lpfc_sli4_set_affinity(phba, vectors);
-+	if (!shost_use_blk_mq(lpfc_shost_from_vport(phba->pport)))
-+		lpfc_sli4_set_affinity(phba, vectors);
- 	return rc;
- 
- cfg_fail_out:
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 116df9c..4a2a818 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3846,6 +3846,49 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
- }
- 
- /**
-+ * lpfc_sli4_scmd_to_wqidx_distr - scsi command to SLI4 WQ index distribution
-+ * @phba: Pointer to HBA context object.
-+ *
-+ * This routine performs a roundrobin SCSI command to SLI4 FCP WQ index
-+ * distribution.  This is called by __lpfc_sli_issue_iocb_s4() with the hbalock
-+ * held.
-+ * If scsi-mq is enabled, get the default block layer mapping of software queues
-+ * to hardware queues. This information is saved in request tag.
-+ *
-+ * Return: index into SLI4 fast-path FCP queue index.
-+ **/
-+int lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba,
-+				  struct lpfc_scsi_buf *lpfc_cmd)
-+{
-+	struct scsi_cmnd *cmnd = lpfc_cmd->pCmd;
-+	struct lpfc_vector_map_info *cpup;
-+	int chann, cpu;
-+	uint32_t tag;
-+	uint16_t hwq;
-+
-+	if (shost_use_blk_mq(cmnd->device->host)) {
-+		tag = blk_mq_unique_tag(cmnd->request);
-+		hwq = blk_mq_unique_tag_to_hwq(tag);
-+
-+		return hwq;
-+	}
-+
-+	if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_CPU
-+	    && phba->cfg_fcp_io_channel > 1) {
-+		cpu = smp_processor_id();
-+		if (cpu < phba->sli4_hba.num_present_cpu) {
-+			cpup = phba->sli4_hba.cpu_map;
-+			cpup += cpu;
-+			return cpup->channel_id;
-+		}
-+	}
-+	chann = atomic_add_return(1, &phba->fcp_qidx);
-+	chann = (chann % phba->cfg_fcp_io_channel);
-+	return chann;
-+}
-+
-+
-+/**
-  * lpfc_scsi_cmd_iocb_cmpl - Scsi cmnd IOCB completion routine
-  * @phba: The Hba for which this call is being executed.
-  * @pIocbIn: The command IOCBQ for the scsi cmnd.
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
-index 474e30c..18b9260 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.h
-+++ b/drivers/scsi/lpfc/lpfc_scsi.h
-@@ -184,3 +184,6 @@ struct lpfc_scsi_buf {
- #define FIND_FIRST_OAS_LUN		 0
- #define NO_MORE_OAS_LUN			-1
- #define NOT_OAS_ENABLED_LUN		NO_MORE_OAS_LUN
-+
-+int lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba,
-+				  struct lpfc_scsi_buf *lpfc_cmd);
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 41d3370..07df296 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -8138,36 +8138,6 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq,
- }
- 
- /**
-- * lpfc_sli4_scmd_to_wqidx_distr - scsi command to SLI4 WQ index distribution
-- * @phba: Pointer to HBA context object.
-- *
-- * This routine performs a roundrobin SCSI command to SLI4 FCP WQ index
-- * distribution.  This is called by __lpfc_sli_issue_iocb_s4() with the hbalock
-- * held.
-- *
-- * Return: index into SLI4 fast-path FCP queue index.
-- **/
--static inline int
--lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba)
--{
--	struct lpfc_vector_map_info *cpup;
--	int chann, cpu;
--
--	if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_CPU
--	    && phba->cfg_fcp_io_channel > 1) {
--		cpu = smp_processor_id();
--		if (cpu < phba->sli4_hba.num_present_cpu) {
--			cpup = phba->sli4_hba.cpu_map;
--			cpup += cpu;
--			return cpup->channel_id;
--		}
--	}
--	chann = atomic_add_return(1, &phba->fcp_qidx);
--	chann = (chann % phba->cfg_fcp_io_channel);
--	return chann;
--}
--
--/**
-  * lpfc_sli_iocb2wqe - Convert the IOCB to a work queue entry.
-  * @phba: Pointer to HBA context object.
-  * @piocb: Pointer to command iocb.
-@@ -8807,27 +8777,29 @@ int
- lpfc_sli_calc_ring(struct lpfc_hba *phba, uint32_t ring_number,
- 		    struct lpfc_iocbq *piocb)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 30021f3..21c4a3d 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1509,12 +1509,14 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 			 struct lpfc_nodelist *ndlp)
  {
--	if (phba->sli_rev == LPFC_SLI_REV4) {
--		if (piocb->iocb_flag &  (LPFC_IO_FCP | LPFC_USE_FCPWQIDX)) {
--			if (!(phba->cfg_fof) ||
--			    (!(piocb->iocb_flag & LPFC_IO_FOF))) {
--				if (unlikely(!phba->sli4_hba.fcp_wq))
--					return LPFC_HBA_ERROR;
--				/*
--				 * for abort iocb fcp_wqidx should already
--				 * be setup based on what work queue we used.
--				 */
--				if (!(piocb->iocb_flag & LPFC_USE_FCPWQIDX))
--					piocb->fcp_wqidx =
--					    lpfc_sli4_scmd_to_wqidx_distr(phba);
--				ring_number = MAX_SLI3_CONFIGURED_RINGS +
--						piocb->fcp_wqidx;
--			} else {
--				if (unlikely(!phba->sli4_hba.oas_wq))
--					return LPFC_HBA_ERROR;
--				piocb->fcp_wqidx = 0;
--				ring_number =  LPFC_FCP_OAS_RING;
--			}
-+	if (phba->sli_rev < LPFC_SLI_REV4)
-+		return ring_number;
-+
-+	if (piocb->iocb_flag &  (LPFC_IO_FCP | LPFC_USE_FCPWQIDX)) {
-+		if (!(phba->cfg_fof) ||
-+				(!(piocb->iocb_flag & LPFC_IO_FOF))) {
-+			if (unlikely(!phba->sli4_hba.fcp_wq))
-+				return LPFC_HBA_ERROR;
-+			/*
-+			 * for abort iocb fcp_wqidx should already
-+			 * be setup based on what work queue we used.
-+			 */
-+			if (!(piocb->iocb_flag & LPFC_USE_FCPWQIDX))
-+				piocb->fcp_wqidx =
-+					lpfc_sli4_scmd_to_wqidx_distr(phba,
-+							      piocb->context1);
-+			ring_number = MAX_SLI3_CONFIGURED_RINGS +
-+				piocb->fcp_wqidx;
-+		} else {
-+			if (unlikely(!phba->sli4_hba.oas_wq))
-+				return LPFC_HBA_ERROR;
-+			piocb->fcp_wqidx = 0;
-+			ring_number =  LPFC_FCP_OAS_RING;
- 		}
- 	}
- 	return ring_number;
+ 	struct lpfc_vport    *vport = ndlp->vport;
++	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
+ 	struct lpfc_nodelist *new_ndlp;
+ 	struct lpfc_rport_data *rdata;
+ 	struct fc_rport *rport;
+ 	struct serv_parm *sp;
+ 	uint8_t  name[sizeof(struct lpfc_name)];
+ 	uint32_t rc, keepDID = 0, keep_nlp_flag = 0;
++	uint16_t keep_nlp_state;
+ 	int  put_node;
+ 	int  put_rport;
+ 	unsigned long *active_rrqs_xri_bitmap = NULL;
+@@ -1603,11 +1605,14 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 		       ndlp->active_rrqs_xri_bitmap,
+ 		       phba->cfg_rrq_xri_bitmap_sz);
+ 
++	spin_lock_irq(shost->host_lock);
+ 	keep_nlp_flag = new_ndlp->nlp_flag;
+ 	new_ndlp->nlp_flag = ndlp->nlp_flag;
+ 	ndlp->nlp_flag = keep_nlp_flag;
++	spin_unlock_irq(shost->host_lock);
+ 
+-	/* Set state will put new_ndlp on to node list if not already done */
++	/* Set nlp_states accordingly */
++	keep_nlp_state = new_ndlp->nlp_state;
+ 	lpfc_nlp_set_state(vport, new_ndlp, ndlp->nlp_state);
+ 
+ 	/* Move this back to NPR state */
+@@ -1668,20 +1673,13 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 			       active_rrqs_xri_bitmap,
+ 			       phba->cfg_rrq_xri_bitmap_sz);
+ 
+-		/* Since we are swapping the ndlp passed in with the new one
+-		 * and the did has already been swapped, copy over state.
+-		 * The new WWNs are already in new_ndlp since thats what
+-		 * we looked it up by in the begining of this routine.
+-		 */
+-		new_ndlp->nlp_state = ndlp->nlp_state;
+-
+-		/* Since we are switching over to the new_ndlp, the old
+-		 * ndlp should be put in the NPR state, unless we have
+-		 * already started re-discovery on it.
++		/* Since we are switching over to the new_ndlp,
++		 * reset the old ndlp state
+ 		 */
+ 		if ((ndlp->nlp_state == NLP_STE_UNMAPPED_NODE) ||
+ 		    (ndlp->nlp_state == NLP_STE_MAPPED_NODE))
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++			keep_nlp_state = NLP_STE_NPR_NODE;
++		lpfc_nlp_set_state(vport, ndlp, keep_nlp_state);
+ 
+ 		/* Fix up the rport accordingly */
+ 		rport = ndlp->rport;
 -- 
 1.7.11.7
 
