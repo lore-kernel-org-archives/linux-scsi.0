@@ -1,76 +1,53 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 7/9] lpfc: Fix scsi task management error message.
-Date: Fri, 22 May 2015 10:42:41 -0400
-Message-ID: <555f4061.JF1uAXJ3MNmJF4W9%james.smart@avagotech.com>
+Subject: [PATCH 6/9] lpfc: Fix cq_id masking problem.
+Date: Fri, 22 May 2015 10:42:40 -0400
+Message-ID: <555f4060.Uu2ZGqqAXkqDGUog%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:33860 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757237AbbEVOmz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 10:42:55 -0400
-Received: by qgez61 with SMTP id z61so9107701qge.1
-        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 07:42:55 -0700 (PDT)
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:36578 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757176AbbEVOmw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 10:42:52 -0400
+Received: by qget53 with SMTP id t53so9036299qge.3
+        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 07:42:51 -0700 (PDT)
 Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
-        by mx.google.com with ESMTPSA id e104sm1409727qgd.29.2015.05.22.07.42.54
+        by mx.google.com with ESMTPSA id r31sm1405382qkr.42.2015.05.22.07.42.51
         for <linux-scsi@vger.kernel.org>
         (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Fri, 22 May 2015 07:42:54 -0700 (PDT)
+        Fri, 22 May 2015 07:42:51 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix scsi task management error message.
+Fix cq_id masking problem.
 
-TMF's were getting error messages on FCP_RSP errors (underrun). Underruns
-aren't meaningful in the scenario. Change the error message to filter out
-these response check errors, and don't unconditionally mark the cmd as
-in error.
+The driver inadvertainly constrained the id space to 8 bits, when its
+a full 16 bits from hw. This resulted in bad id's being written to the
+hardware. Resulted in symptoms such as incomplete initialization, no
+detection of link events, etc.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index b3b195f..e5eb40d 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5011,13 +5011,16 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
- 					  iocbq, iocbqrsp, lpfc_cmd->timeout);
- 	if ((status != IOCB_SUCCESS) ||
- 	    (iocbqrsp->iocb.ulpStatus != IOSTAT_SUCCESS)) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--			 "0727 TMF %s to TGT %d LUN %llu failed (%d, %d) "
--			 "iocb_flag x%x\n",
--			 lpfc_taskmgmt_name(task_mgmt_cmd),
--			 tgt_id, lun_id, iocbqrsp->iocb.ulpStatus,
--			 iocbqrsp->iocb.un.ulpWord[4],
--			 iocbq->iocb_flag);
-+		if (status != IOCB_SUCCESS ||
-+		    iocbqrsp->iocb.ulpStatus != IOSTAT_FCP_RSP_ERROR)
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-+					 "0727 TMF %s to TGT %d LUN %llu "
-+					 "failed (%d, %d) iocb_flag x%x\n",
-+					 lpfc_taskmgmt_name(task_mgmt_cmd),
-+					 tgt_id, lun_id,
-+					 iocbqrsp->iocb.ulpStatus,
-+					 iocbqrsp->iocb.un.ulpWord[4],
-+					 iocbq->iocb_flag);
- 		/* if ulpStatus != IOCB_SUCCESS, then status == IOCB_SUCCESS */
- 		if (status == IOCB_SUCCESS) {
- 			if (iocbqrsp->iocb.ulpStatus == IOSTAT_FCP_RSP_ERROR)
-@@ -5031,7 +5034,6 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
- 		} else {
- 			ret = FAILED;
- 		}
--		lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
- 	} else
- 		ret = SUCCESS;
- 
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index b94fa46..33ec4fa 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -291,7 +291,7 @@ struct sli4_bls_rsp {
+ struct lpfc_eqe {
+ 	uint32_t word0;
+ #define lpfc_eqe_resource_id_SHIFT	16
+-#define lpfc_eqe_resource_id_MASK	0x000000FF
++#define lpfc_eqe_resource_id_MASK	0x0000FFFF
+ #define lpfc_eqe_resource_id_WORD	word0
+ #define lpfc_eqe_minor_code_SHIFT	4
+ #define lpfc_eqe_minor_code_MASK	0x00000FFF
 -- 
 1.7.11.7
 
