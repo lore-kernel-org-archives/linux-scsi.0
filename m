@@ -1,47 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFC 2/2] loopback: Enable TFO->complete_irq for fast-path ->scsi_done
-Date: Fri, 22 May 2015 07:57:26 +0000
-Message-ID: <1432281446-31080-3-git-send-email-nab@daterainc.com>
-References: <1432281446-31080-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:35136 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756869AbbEVIAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 04:00:07 -0400
-Received: by obcus9 with SMTP id us9so7847659obc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 01:00:06 -0700 (PDT)
-In-Reply-To: <1432281446-31080-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 4/4] target: Drop unnecessary core_tpg_register TFO parameter
+Date: Fri, 22 May 2015 10:00:13 +0200
+Message-ID: <555EE20D.1070307@suse.de>
+References: <1432278417-29994-1-git-send-email-nab@daterainc.com> <1432278417-29994-5-git-send-email-nab@daterainc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1432278417-29994-5-git-send-email-nab@daterainc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 05/22/2015 09:06 AM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>=20
+> This patch drops unnecessary target_core_fabric_ops parameter usage
+> for core_tpg_register() during fabric driver TFO->fabric_make_tpg()
+> se_portal_group creation callback execution.
+>=20
+> Instead, use the existing se_wwn->wwn_tf->tf_ops pointer to ensure
+> fabric driver is really using the same TFO provided at module_init
+> time.
+>=20
+> Also go ahead and drop the forward TFO declarations tree-wide, and
+> handling the special case for iscsi-target discovery TPG.
+>=20
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Go ahead and enable TFO->complete_irq for testing with loopback
-LLD code, and avoid the extra fast-path queue_work() context
-switch if no se_cmd special case handling requirements exist.
+Cheers,
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-CC: Sagi Grimberg <sagig@mellanox.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/loopback/tcm_loop.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index bd9d11a..562906a 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -1229,6 +1229,7 @@ static struct configfs_attribute *tcm_loop_wwn_attrs[] = {
- static const struct target_core_fabric_ops loop_ops = {
- 	.module				= THIS_MODULE,
- 	.name				= "loopback",
-+	.complete_irq			= true,
- 	.get_fabric_name		= tcm_loop_get_fabric_name,
- 	.tpg_get_wwn			= tcm_loop_get_endpoint_wwn,
- 	.tpg_get_tag			= tcm_loop_get_tag,
--- 
-1.9.1
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
