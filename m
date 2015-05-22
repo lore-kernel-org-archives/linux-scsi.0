@@ -1,73 +1,75 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH-v2 0/9] target: se_node_acl + se_lun RCU conversions
-Date: Fri, 22 May 2015 08:23:28 +0200
-Message-ID: <555ECB60.4090406@suse.de>
-References: <1432275071-28882-1-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1432275071-28882-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/4] target: Eliminate se_port + t10_alua_tg_pt_gp_member
+Date: Fri, 22 May 2015 07:06:53 +0000
+Message-ID: <1432278417-29994-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:33423 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbbEVHJh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2015 03:09:37 -0400
+Received: by oiww2 with SMTP id w2so7643537oiw.0
+        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2015 00:09:37 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On 05/22/2015 08:11 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> Hi all,
->=20
-> Here is -v2 series for converting LIO target se_node_acl + se_lun
-> mapping tables from fixed size arrays to dynamic RCU hlist_heads.
->=20
-> This turns fast-path I/O into a lock-less RCU reader using existing
-> percpu based se_lun->lun_ref logic, and converts the RCU updater
-> path to allow for an arbitrary number of LUNs for both types of
-> mappings within target-core.
->=20
-> This series also squashes a number of previous se_node_acl RCU
-> related changes into a single commit (#1) for easier review,
-> and to avoid potential bisect issues.
->=20
-> There have been a number of changes since -v1, including:
->=20
->   - Mirror port->sep_rtpi in lun->lun_rtpi for RCU
->   - Drop unnecessary synchronize_rcu() usage
->   - Convert call_rcu() to kfree_rcu() usage
->   - Move hlist_del_rcu head of rcu_assign_pointer in se_dev_entry
->   - Drop unnecessary lookup deve in target_fabric_mappedlun_unlink()
->   - Add target_lun_is_rdonly helper
->   - Acquire lun_entry_mutex during core_disable_device_list_for_node
->   - Drop TRANSPORT_LUNFLAGS_*_ACCESS usage
->   - Pass se_dev_entry directly to core_disable_device_list_for_node
->   - Convert sbp-target se_lun usage to use ->login_lun
->   - Fix se_session dereference in spc_emulate_report_luns=20
->   - Fix testing for NULL instead of IS_ERR in fabric_make_lun()
->   - Convert BUG_ON to EINVAL for wrong dynamic -> explicit ACL conver=
-sion=20
->   - Add missing hlist_del_rcu when swapping orig with new
->   - Add HBA_FLAGS_INTERNAL_USE checks in add/remove lun
->=20
-> Please review.
->=20
-Very nice.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi folks,
 
-Although it would be _perfect_ if you could move to full 64-bit
-LUNs; now that the LUN array is gone there is no need to have a
-limitation on the number of LUNs, and we can trivially support
-64-bit LUNs ...
+Here is a -v1 series with HCH's recent changes to go ahead and drop
+all se_port + t10_alua_tg_pt_gp_member usage within target-core in
+favor of direct se_lun pointer dereference.
 
-But then, I can easily send a patch once this one is in.
+This includes the original patch + minor fixes, along with two other
+improvements for killing off se_lun->lun_sep_lock via RCU pointer
+access, and converting the remaining se_lun->lun_active busy-wait
+special cases to existing percpu se_lun->lun_ref access.
 
-Cheers,
+Also included in the series is a recently discussed change to go
+ahead and drop an unnecessary core_tpg_register() parameter, and
+all associated target_core_fabric_ops forward declartions within
+fabric driver code.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Please review.
+
+--nab
+
+Christoph Hellwig (1):
+  target: Subsume se_port + t10_alua_tg_pt_gp_member into se_lun
+
+Nicholas Bellinger (3):
+  target: Drop lun_sep_lock for se_lun->lun_se_dev RCU usage
+  target: Drop se_lun->lun_active for existing percpu lun_ref
+  target: Drop unnecessary core_tpg_register TFO parameter
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |   4 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |   9 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |   3 +-
+ drivers/target/iscsi/iscsi_target_tpg.c      |   8 +-
+ drivers/target/loopback/tcm_loop.c           |   5 +-
+ drivers/target/sbp/sbp_target.c              |   2 +-
+ drivers/target/target_core_alua.c            | 393 ++++++++++-----------------
+ drivers/target/target_core_alua.h            |  14 +-
+ drivers/target/target_core_configfs.c        |  11 +-
+ drivers/target/target_core_device.c          | 180 ++----------
+ drivers/target/target_core_fabric_configfs.c |  32 +--
+ drivers/target/target_core_internal.h        |  12 +-
+ drivers/target/target_core_pr.c              |  50 ++--
+ drivers/target/target_core_spc.c             |  48 ++--
+ drivers/target/target_core_stat.c            | 305 +++++++--------------
+ drivers/target/target_core_tpg.c             | 111 +++++---
+ drivers/target/target_core_transport.c       |  46 +---
+ drivers/target/target_core_xcopy.c           |  17 +-
+ drivers/target/tcm_fc/tfc_conf.c             |   5 +-
+ drivers/usb/gadget/legacy/tcm_usb_gadget.c   |   5 +-
+ drivers/vhost/scsi.c                         |   4 +-
+ drivers/xen/xen-scsiback.c                   |   5 +-
+ include/target/target_core_base.h            |  75 +++--
+ include/target/target_core_fabric.h          |   3 +-
+ 24 files changed, 465 insertions(+), 882 deletions(-)
+
+-- 
+1.9.1
+
