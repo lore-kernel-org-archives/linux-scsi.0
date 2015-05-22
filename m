@@ -1,52 +1,159 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 5/9] target: Convert se_portal_group->tpg_lun_list[]
- to RCU hlist
-Date: Fri, 22 May 2015 01:48:18 -0700
-Message-ID: <1432284498.898.16.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH-v2 1/9] target: Convert se_node_acl->device_list[] to
+ RCU hlist
+Date: Fri, 22 May 2015 01:55:30 -0700
+Message-ID: <1432284930.898.19.camel@haakon3.risingtidesystems.com>
 References: <1432275071-28882-1-git-send-email-nab@daterainc.com>
-	 <1432275071-28882-6-git-send-email-nab@daterainc.com>
-	 <20150522083113.GC24640@lst.de>
+	 <1432275071-28882-2-git-send-email-nab@daterainc.com>
+	 <20150522082411.GB5384@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150522083113.GC24640@lst.de>
+In-Reply-To: <20150522082411.GB5384@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Chris Boot <bootc@bootc.net>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-05-22 at 10:31 +0200, Christoph Hellwig wrote:
-> > This patch converts the fixed size se_portal_group->tpg_lun_list[]
-> > to use modern RCU with hlist_head in order to support an arbitary
-> > number of se_lun ports per target endpoint.
-> > 
-> > It includes dropping core_tpg_alloc_lun() from core_dev_add_lun(),
-> > and calling it directly from target_fabric_make_lun() to allocate
-> > a new se_lun.
-> > 
-> > Also add a new target_fabric_port_release() configfs item callback
-> > to invoke kfree_rcu() to release memory during se_lun->lun_group
-> > shutdown.
-> > 
-> > Also now that se_node_acl->lun_entry_hlist is using RCU, convert
-> > existing tpg_lun_lock to struct mutex so core_tpg_add_node_to_devs()
-> > can perform RCU updater logic without releasing ->tpg_lun_mutex.
+(resending)
+
+On Fri, 2015-05-22 at 01:24 -0700, Christoph Hellwig wrote:
+> > -	spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
+> > -	se_cmd->se_deve = se_sess->se_node_acl->device_list[unpacked_lun];
+> > -	if (se_cmd->se_deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
+> > -		struct se_dev_entry *deve = se_cmd->se_deve;
+> > -
+> > +	rcu_read_lock();
+> > +	deve = target_nacl_find_deve(nacl, unpacked_lun);
+> > +	if (deve) {
+> >  		deve->total_cmds++;
 > 
-> Still doesn't explain why core_tpg_clear_object_luns also disappears.
+> This update will now be racy, ditto for the read/write_bytes update
+> later.
 
-It's duplicate logic in iscsi-target to delete active TPG LUNs.
-
-Adding a comment to clarify the removal.
+This should become an atomic_long_t increment, yes..?
 
 > 
-> > +	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link) {
-> >  		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
-> >  			continue;
+> > +bool target_lun_is_rdonly(struct se_cmd *cmd)
+> > +{
+> > +	struct se_session *se_sess = cmd->se_sess;
+> > +	struct se_dev_entry *deve;
+> > +	bool ret;
+> > +
+> > +	if (cmd->se_lun->lun_access & TRANSPORT_LUNFLAGS_READ_ONLY)
+> > +		return true;
+> > +
+> > +	rcu_read_lock();
+> > +	deve = target_nacl_find_deve(se_sess->se_node_acl, cmd->orig_fe_lun);
+> > +	ret = (deve && deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY);
+> > +	rcu_read_unlock();
+> > +
+> > +	return ret;
+> > +}
+> > +EXPORT_SYMBOL(target_lun_is_rdonly);
 > 
-> lun_status will always be active here as that's set and cleared at the
-> same time as the list addition / removal.  Which means that lun_status
-> should go away in this patch.
+> This should be a separate prep patch like, like it was in my original
+> version.  I also still think you want this whole patch:
+> 
+> http://git.infradead.org/users/hch/scsi.git/commitdiff/e9a71bda1a120e0488c5c4e4b2f17f14333e2dc6
+> 
+> as storing a pointer to the dev entry without a refcount is bound to
+> cause trouble.  I don't have a tree with all the patches applied
+> available, but I doubt it fully gets that right.
 > 
 
-Yes, thanks for the reminder.  Dropping lun_status now.
+Yes, this helper is from your patch above.
+
+Considering there is a single user of it here, and complexities involved
+for a RCU conversion + bisect, is it really work adding as a separate
+patch ahead of this one..?
+
+> > +void target_pr_kref_release(struct kref *kref)
+> > +{
+> > +	struct se_dev_entry *deve = container_of(kref, struct se_dev_entry,
+> > +						 pr_kref);
+> > +	complete(&deve->pr_comp);
+> >  }
+> >  
+> >  /*      core_enable_device_list_for_node():
+> 
+> > +		kref_put(&orig->pr_kref, target_pr_kref_release);
+> > +		wait_for_completion(&orig->pr_comp);
+> >  
+> 
+> > +	kref_put(&orig->pr_kref, target_pr_kref_release);
+> >  	/*
+> > -	 * Disable struct se_dev_entry LUN ACL mapping
+> > +	 * Before fireing off RCU callback, wait for any in process SPEC_I_PT=1
+> > +	 * or REGISTER_AND_MOVE PR operation to complete.
+> >  	 */
+> > +	wait_for_completion(&orig->pr_comp);
+> > +	kfree_rcu(orig, rcu_head);
+> 
+> The release callback should just call kfree_rcu, no need to wait for the
+> release in the caller.
+> 
+
+Why doesn't se_dev_entry release this need to wait for the special case
+references to drop..?
+
+> Also can you drop the _pr from the name?  It's a generic refcount now
+> even if the PR code is the only consumer so far.
+> 
+> > +void	target_pr_kref_release(struct kref *);
+> 
+> Instead of exporting the release function it would be much more obvious
+> to have a 
+> 
+> void target_deve_put(struct se_dev_entry *deve)
+> {
+> 	kref_put(&deve->pr_kref, target_deve_release);
+> }
+> 
+> helper.  Probably paired with one for the get side.
+> 
+
+Sure.  Adding this now.
+
+> >  static void core_scsi3_lunacl_undepend_item(struct se_dev_entry *se_deve)
+> >  {
+> > -	struct se_lun_acl *lun_acl = se_deve->se_lun_acl;
+> > +	struct se_lun_acl *lun_acl;
+> >  	struct se_node_acl *nacl;
+> >  	struct se_portal_group *tpg;
+> > +
+> > +	if (!se_deve) {
+> > +		pr_err("core_scsi3_lunacl_undepend_item passed NULL se_deve\n");
+> > +		dump_stack();
+> > +		return;
+> > +	}
+> 
+> How could this happen and how is it related to this patch?
+> 
+
+Dropped.
+
+> > -	if (!deve->se_lun || !deve->se_lun_acl) {
+> > -		spin_unlock_irq(&nacl->device_list_lock);
+> > +	rcu_read_lock();
+> > +	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
+> > +	if (!deve) {
+> > +		rcu_read_unlock();
+> >  		return -ENODEV;
+> 
+> So previously a lot of these files returned -ENODEV when not having
+> an explicit node ACL, and now they don't.  If that was intentional
+> it should be documented in the changelog, or preferably moved into
+> a preparation patch of its own.
+> 
+
+Ok, will update the changelog for this.
+
+> > +	struct se_node_acl	*se_node_acl;
+> 
+> Where is this field coming from?  It's not documented in the changelog
+> and doesn't seem to be actually used either.
+> 
+
+Nice catch.  Dropping this unused pointer now.
