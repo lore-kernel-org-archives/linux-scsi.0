@@ -1,136 +1,64 @@
-From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
-Subject: RE: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller
- register
-Date: Fri, 22 May 2015 23:52:52 +0000
-Message-ID: <E34C6B6293F0214497D0C55B92526C05B697A042@BBYEXM01.pmc-sierra.internal>
-References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <1431562378-8514-5-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <555F36E3.1010208@redhat.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH kernel] commit 4fbdf9cb ("lpfc: Fix for lun discovery
+ issue with saturn adapter.")
+Date: Sat, 23 May 2015 11:31:48 +0200
+Message-ID: <20150523113148.00002dfc@localhost>
+References: <1430209582-23925-1-git-send-email-aik@ozlabs.ru>
+	<5548E2C1.3070209@emulex.com>
+	<20150505234659.00003ab7@localhost>
+	<555C0595.9060507@ozlabs.ru>
+	<20150522133334.000064c9@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47625 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757376AbbEVXwx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 May 2015 19:52:53 -0400
-In-Reply-To: <555F36E3.1010208@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150522133334.000064c9@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <JBottomley@odin.com>
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, james.smart@emulex.com, linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Friday, May 22, 2015 7:02 AM
-To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat
-Subject: Re: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller register
-
-On 05/14/2015 02:12 AM, rajinikanth.pandurangan@pmcs.com wrote:
-> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+I wrote:
+> Alexey Kardashevskiy wrote:
+> > On 05/06/2015 07:46 AM, Sebastian Herbszt wrote:
+> > > James Smart wrote:
+> > >>
+> > >> Reviewed-By: James Smart <james.smart@emulex.com>
+> > >>
+> > >>
+> > >> Alexey, Sebastian,
+> > >>
+> > >> Yes - this section needs to be reverted.  This patch is good.
+> > >>
+> > >> -- james s
+> > >
+> > > Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+> > 
+> > 
+> > Unfortunately, just this revert is not enough, it fixed one of my machines 
+> > but I have another machine with "Emulex Corporation Saturn-X: LightPulse 
+> > Fibre Channel Host Adapter (rev 03)" which does not boot - the booting 
+> > process stops at "[  OK  ] Reached target Basic System."
+> > 
+> > Any quick idea what else to revert between 4.0 and current upstream before 
+> > I dig further? Thanks!
 > 
-> Description:
->         If writeq() not supported, then do atomic two 32bit write
+> Is the other machine also POWER7?
+> I tested the revert on x86 and it fixed my issue:
 > 
-> Signed-off-by: Rajinikanth Pandurangan 
-> <rajinikanth.pandurangan@pmcs.com>
-> ---
->  drivers/scsi/aacraid/aacraid.h  | 12 ++++++++++++  
-> drivers/scsi/aacraid/comminit.c |  1 +
->  drivers/scsi/aacraid/src.c      | 12 ++++++++++--
->  3 files changed, 23 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/aacraid/aacraid.h 
-> b/drivers/scsi/aacraid/aacraid.h index 62b0999..9e69e3e 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -719,6 +719,9 @@ struct sa_registers {
->  #define sa_readl(AEP, CSR)		readl(&((AEP)->regs.sa->CSR))
->  #define sa_writew(AEP, CSR, value)	writew(value, &((AEP)->regs.sa->CSR))
->  #define sa_writel(AEP, CSR, value)	writel(value, &((AEP)->regs.sa->CSR))
-> +#if defined(writeq)
-> +#define	sa_writeq(AEP, CSR, value)	writeq(value, &((AEP)->regs.sa->CSR))
-This^ is used nowhere, is it needed?
+> 4.1-rc4 (lpfc 10.5.0.0) - broken
+> 4.0 + lpfc 10.5.0.0 - broken
+> 4.1-rc4 (lpfc 10.5.0.0) + revert - ok
+> 4.0 + lpfc 10.5.0.0 + revert - ok
 
-[rajp] Yes, it's not needed.
+James,
 
-> +#endif
->  
->  /*
->   *	Rx Message Unit Registers
-> @@ -844,6 +847,10 @@ struct src_registers {
->  						&((AEP)->regs.src.bar0->CSR))
->  #define src_writel(AEP, CSR, value)	writel(value, \
->  						&((AEP)->regs.src.bar0->CSR))
-> +#if defined(writeq)
-> +#define	src_writeq(AEP, CSR, value)	writeq(value, \
-> +						&((AEP)->regs.src.bar0->CSR))
-> +#endif
->  
->  #define SRC_ODR_SHIFT		12
->  #define SRC_IDR_SHIFT		9
-> @@ -1163,6 +1170,11 @@ struct aac_dev
->  	struct fsa_dev_info	*fsa_dev;
->  	struct task_struct	*thread;
->  	int			cardtype;
-> +	/*
-> +	 *This lock will protect the two 32-bit
-> +	 *writes to the Inbound Queue
-> +	 */
-> +	spinlock_t		iq_lock;
->  
->  	/*
->  	 *	The following is the device specific extension.
-> diff --git a/drivers/scsi/aacraid/comminit.c 
-> b/drivers/scsi/aacraid/comminit.c index 45a0a04..4043245 100644
-> --- a/drivers/scsi/aacraid/comminit.c
-> +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -424,6 +424,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
->  	dev->management_fib_count = 0;
->  	spin_lock_init(&dev->manage_lock);
->  	spin_lock_init(&dev->sync_lock);
-> +	spin_lock_init(&dev->iq_lock);
->  	dev->max_fib_size = sizeof(struct hw_fib);
->  	dev->sg_tablesize = host->sg_tablesize = (dev->max_fib_size
->  		- sizeof(struct aac_fibhdr)
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c 
-> index ae494c5..109863a 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -447,6 +447,10 @@ static int aac_src_deliver_message(struct fib *fib)
->  	u32 fibsize;
->  	dma_addr_t address;
->  	struct aac_fib_xporthdr *pFibX;
-> +#if !defined(writeq)
-> +	unsigned long flags;
-> +#endif
-> +
->  	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
->  
->  	atomic_inc(&q->numpending);
-> @@ -511,10 +515,14 @@ static int aac_src_deliver_message(struct fib *fib)
->  			return -EINVAL;
->  		address |= fibsize;
->  	}
-> -
-> +#if defined(writeq)
-> +	src_writeq(dev, MUnit.IQ_L, (u64)address);
-What about just using the writeq directly without the macro ?
-	writeq(value, address); ?
+are you sending this revert to Linus any time soon?
 
-[Rajp] All other place we have macro. This is just for the uniformity.
+Support for SLI-3 adapters is broken on all platforms for more than
+a month now [1] and POWER7 doesn't seem to like it at all [2].
 
-> +#else
-> +	spin_lock_irqsave(&fib->dev->iq_lock, flags);
->  	src_writel(dev, MUnit.IQ_H, upper_32_bits(address) & 0xffffffff);
->  	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
-> -
-> +	spin_unlock_irqrestore(&fib->dev->iq_lock, flags); #endif
->  	return 0;
->  }
->  
-> 
+[1] http://marc.info/?l=linux-scsi&m=142938432414173
+[2] http://marc.info/?l=linux-scsi&m=143021737816241
 
+Sebastian
