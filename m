@@ -1,141 +1,83 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller
- register
-Date: Sun, 24 May 2015 21:31:43 +0200
-Message-ID: <5562271F.9000104@redhat.com>
-References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1431562378-8514-5-git-send-email-rajinikanth.pandurangan@pmcs.com> <555F36E3.1010208@redhat.com> <E34C6B6293F0214497D0C55B92526C05B697A042@BBYEXM01.pmc-sierra.internal>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH 1/9] lpfc: Check for active portpeerbeacon.
+Date: Sun, 24 May 2015 21:50:01 +0200
+Message-ID: <20150524215001.00003bac@localhost>
+References: <555f405b.edV1AAZPf7ciBGhe%james.smart@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59105 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.15.19]:60149 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751657AbbEXTbs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 May 2015 15:31:48 -0400
-In-Reply-To: <E34C6B6293F0214497D0C55B92526C05B697A042@BBYEXM01.pmc-sierra.internal>
+	id S1751584AbbEXTuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 May 2015 15:50:05 -0400
+In-Reply-To: <555f405b.edV1AAZPf7ciBGhe%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
+To: James Smart <james.smart@avagotech.com>
+Cc: linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
 
-On 05/23/2015 01:52 AM, Rajinikanth Pandurangan wrote:
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Friday, May 22, 2015 7:02 AM
-> To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
-> Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat
-> Subject: Re: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller register
+James Smart wrote:
 > 
-> On 05/14/2015 02:12 AM, rajinikanth.pandurangan@pmcs.com wrote:
->> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
->>
->> Description:
->>         If writeq() not supported, then do atomic two 32bit write
->>
->> Signed-off-by: Rajinikanth Pandurangan 
->> <rajinikanth.pandurangan@pmcs.com>
->> ---
->>  drivers/scsi/aacraid/aacraid.h  | 12 ++++++++++++  
->> drivers/scsi/aacraid/comminit.c |  1 +
->>  drivers/scsi/aacraid/src.c      | 12 ++++++++++--
->>  3 files changed, 23 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/aacraid/aacraid.h 
->> b/drivers/scsi/aacraid/aacraid.h index 62b0999..9e69e3e 100644
->> --- a/drivers/scsi/aacraid/aacraid.h
->> +++ b/drivers/scsi/aacraid/aacraid.h
->> @@ -719,6 +719,9 @@ struct sa_registers {
->>  #define sa_readl(AEP, CSR)		readl(&((AEP)->regs.sa->CSR))
->>  #define sa_writew(AEP, CSR, value)	writew(value, &((AEP)->regs.sa->CSR))
->>  #define sa_writel(AEP, CSR, value)	writel(value, &((AEP)->regs.sa->CSR))
->> +#if defined(writeq)
->> +#define	sa_writeq(AEP, CSR, value)	writeq(value, &((AEP)->regs.sa->CSR))
-> This^ is used nowhere, is it needed?
+> Check for active portpeerbeacon.
 > 
-> [rajp] Yes, it's not needed.
-> 
->> +#endif
->>  
->>  /*
->>   *	Rx Message Unit Registers
->> @@ -844,6 +847,10 @@ struct src_registers {
->>  						&((AEP)->regs.src.bar0->CSR))
->>  #define src_writel(AEP, CSR, value)	writel(value, \
->>  						&((AEP)->regs.src.bar0->CSR))
->> +#if defined(writeq)
->> +#define	src_writeq(AEP, CSR, value)	writeq(value, \
->> +						&((AEP)->regs.src.bar0->CSR))
->> +#endif
->>  
->>  #define SRC_ODR_SHIFT		12
->>  #define SRC_IDR_SHIFT		9
->> @@ -1163,6 +1170,11 @@ struct aac_dev
->>  	struct fsa_dev_info	*fsa_dev;
->>  	struct task_struct	*thread;
->>  	int			cardtype;
->> +	/*
->> +	 *This lock will protect the two 32-bit
->> +	 *writes to the Inbound Queue
->> +	 */
->> +	spinlock_t		iq_lock;
->>  
->>  	/*
->>  	 *	The following is the device specific extension.
->> diff --git a/drivers/scsi/aacraid/comminit.c 
->> b/drivers/scsi/aacraid/comminit.c index 45a0a04..4043245 100644
->> --- a/drivers/scsi/aacraid/comminit.c
->> +++ b/drivers/scsi/aacraid/comminit.c
->> @@ -424,6 +424,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
->>  	dev->management_fib_count = 0;
->>  	spin_lock_init(&dev->manage_lock);
->>  	spin_lock_init(&dev->sync_lock);
->> +	spin_lock_init(&dev->iq_lock);
->>  	dev->max_fib_size = sizeof(struct hw_fib);
->>  	dev->sg_tablesize = host->sg_tablesize = (dev->max_fib_size
->>  		- sizeof(struct aac_fibhdr)
->> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c 
->> index ae494c5..109863a 100644
->> --- a/drivers/scsi/aacraid/src.c
->> +++ b/drivers/scsi/aacraid/src.c
->> @@ -447,6 +447,10 @@ static int aac_src_deliver_message(struct fib *fib)
->>  	u32 fibsize;
->>  	dma_addr_t address;
->>  	struct aac_fib_xporthdr *pFibX;
->> +#if !defined(writeq)
->> +	unsigned long flags;
->> +#endif
->> +
->>  	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
->>  
->>  	atomic_inc(&q->numpending);
->> @@ -511,10 +515,14 @@ static int aac_src_deliver_message(struct fib *fib)
->>  			return -EINVAL;
->>  		address |= fibsize;
->>  	}
->> -
->> +#if defined(writeq)
->> +	src_writeq(dev, MUnit.IQ_L, (u64)address);
-> What about just using the writeq directly without the macro ?
-> 	writeq(value, address); ?
-> 
-> [Rajp] All other place we have macro. This is just for the uniformity.
-Okay,
-Tomas
-> 
->> +#else
->> +	spin_lock_irqsave(&fib->dev->iq_lock, flags);
->>  	src_writel(dev, MUnit.IQ_H, upper_32_bits(address) & 0xffffffff);
->>  	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
->> -
->> +	spin_unlock_irqrestore(&fib->dev->iq_lock, flags); #endif
->>  	return 0;
->>  }
->>  
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> LCB requests to set Beacon would fail if the beacon was already enabled
 
+beacon
+
+> internally as the mailbox command used to query the state failes with
+
+fails
+
+> an already-set status.
+> 
+> Correct by enhancing the check so we don't fail if if the already set
+
+if twice
+
+> status comes back.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
+> Signed-off-by: James Smart <james.smart@avagotech.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_els.c | 19 +++++++++++++++----
+>  drivers/scsi/lpfc/lpfc_hw4.h |  6 ++++++
+>  2 files changed, 21 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 011c8d8..3aad09f 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -5044,25 +5044,36 @@ lpfc_els_lcb_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+>  	struct lpfc_iocbq *elsiocb;
+>  	struct lpfc_nodelist *ndlp;
+>  	struct ls_rjt *stat;
+> +	union lpfc_sli4_cfg_shdr *shdr;
+>  	struct lpfc_lcb_context *lcb_context;
+>  	struct fc_lcb_res_frame *lcb_res;
+> -	uint32_t cmdsize;
+> +	uint32_t cmdsize, shdr_status, shdr_add_status;
+>  	int rc;
+>  
+>  	mb = &pmb->u.mb;
+> -
+>  	lcb_context = (struct lpfc_lcb_context *)pmb->context1;
+>  	ndlp = lcb_context->ndlp;
+>  	pmb->context1 = NULL;
+>  	pmb->context2 = NULL;
+>  
+> -	if (mb->mbxStatus) {
+> +	shdr = (union lpfc_sli4_cfg_shdr *)
+> +			&pmb->u.mqe.un.beacon_config.header.cfg_shdr;
+> +	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
+> +	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
+> +
+> +	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX,
+> +				"0194 SET_BEACON_CONFIG mailbox "
+> +				"completed with status x%x add_status x%x,"
+> +				" mbx status x%x\n",
+> +				shdr_status, shdr_add_status, mb->mbxStatus);
+
+checkpatch suggests to not split this user-visible string.
+
+Sebastian
