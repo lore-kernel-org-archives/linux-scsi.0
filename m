@@ -1,24 +1,51 @@
-From: "rasfpank" <ziqbal11@gmail.com>
-Subject: Hi
-Date: Sun, 24 May 2015 09:18:15 +0800
-Message-ID: <306730E77650B9F53112D2E57D6D985B@phg>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH v2 01/15] lpfc: The lpfc driver does not issue RFF_ID
+ and RFT_ID in the correct sequence
+Date: Sun, 24 May 2015 13:27:48 +0200
+Message-ID: <20150524132748.00006243@localhost>
+References: <555e1c04.iUZP5CxxteUR0DUk%james.smart@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f196.google.com ([209.85.223.196]:33090 "EHLO
-	mail-ie0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbbEXBSa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 May 2015 21:18:30 -0400
-Received: by ierx19 with SMTP id x19so4325081ier.0
-        for <linux-scsi@vger.kernel.org>; Sat, 23 May 2015 18:18:29 -0700 (PDT)
+Received: from mout.gmx.net ([212.227.15.18]:52708 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbbEXL3S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 May 2015 07:29:18 -0400
+In-Reply-To: <555e1c04.iUZP5CxxteUR0DUk%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: training@sustainableag.org
+To: James Smart <james.smart@avagotech.com>
+Cc: linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
 
-aGkNCnRoaXMgaXMgYSBnb29kIGNoYW5jZSBmb3IgeW91DQppcGFkLGlwaG9uZSxtb3RvLGNhbWVy
-YSxsYXRvcC4uLi4gdGhlIHNoaXBwaW5nIGlzIGZyZWUNCnNhbXN1bmcgczYsIDMyMGV1cm8NCncg
-ZSBiOiBvYXN3ZW9hLiBjb20NCg==
+James Smart wrote:
+> 
+> The lpfc driver does not issue RFF_ID and RFT_ID in the correct sequence
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
+> Signed-off-by: James Smart <james.smart@avagotech.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> index 2500f15..f2db89f 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -3868,11 +3868,11 @@ out:
+>  
+>  	if (vport->port_state < LPFC_VPORT_READY) {
+>  		/* Link up discovery requires Fabric registration. */
+> -		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0); /* Do this first! */
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RNN_ID, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RSNN_NN, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RSPN_ID, 0, 0);
+>  		lpfc_ns_cmd(vport, SLI_CTNS_RFT_ID, 0, 0);
+> +		lpfc_ns_cmd(vport, SLI_CTNS_RFF_ID, 0, 0);
+>  
+>  		/* Issue SCR just before NameServer GID_FT Query */
+>  		lpfc_issue_els_scr(vport, SCR_DID, 0);
 
+Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
 
+Sebastian
