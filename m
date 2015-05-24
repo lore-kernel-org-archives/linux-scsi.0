@@ -1,75 +1,136 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 3/9] [SCSI] aacraid: Enable MSI interrupt for series-6
- controller
-Date: Sun, 24 May 2015 21:31:19 +0200
-Message-ID: <55622707.405@redhat.com>
-References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1431562378-8514-4-git-send-email-rajinikanth.pandurangan@pmcs.com> <555F31B0.3090103@redhat.com> <E34C6B6293F0214497D0C55B92526C05B697A023@BBYEXM01.pmc-sierra.internal>
+Subject: Re: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller
+ register
+Date: Sun, 24 May 2015 21:31:43 +0200
+Message-ID: <5562271F.9000104@redhat.com>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1431562378-8514-5-git-send-email-rajinikanth.pandurangan@pmcs.com> <555F36E3.1010208@redhat.com> <E34C6B6293F0214497D0C55B92526C05B697A042@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43044 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59105 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258AbbEXTb0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 May 2015 15:31:26 -0400
-In-Reply-To: <E34C6B6293F0214497D0C55B92526C05B697A023@BBYEXM01.pmc-sierra.internal>
+	id S1751657AbbEXTbs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 May 2015 15:31:48 -0400
+In-Reply-To: <E34C6B6293F0214497D0C55B92526C05B697A042@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-On 05/23/2015 01:46 AM, Rajinikanth Pandurangan wrote:
-> Hello Tomas,
-> 
-> As the function aac_src_init() itself specific to Series-6 controller, change applicable only to series-6.
-The change removes a kernel option, which assumedly
-is used to control which kind of interrupt handling
-the driver may use. With aac_msi = 1 the driver
-might have used MSI -> the text "Enable MSI interrupt mode"
-is misleading.
-Let's say the text isn't precise - but i can accept it,
-so you don't have to repost.
-
-Tomas
-
-
-> Thanks,
-> -Raj P.
-> 
+On 05/23/2015 01:52 AM, Rajinikanth Pandurangan wrote:
 > -----Original Message-----
 > From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Friday, May 22, 2015 6:40 AM
+> Sent: Friday, May 22, 2015 7:02 AM
 > To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
 > Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat
-> Subject: Re: [PATCH 3/9] [SCSI] aacraid: Enable MSI interrupt for series-6 controller
+> Subject: Re: [PATCH 4/9] [SCSI] aacraid: Enable 64-bit write to controller register
 > 
 > On 05/14/2015 02:12 AM, rajinikanth.pandurangan@pmcs.com wrote:
 >> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 >>
 >> Description:
->> 	Enable MSI interrupt mode for series-6 controller.
-> aac_msi is a driver option, how is it related to series-6 controller?
-> Tomas
+>>         If writeq() not supported, then do atomic two 32bit write
 >>
 >> Signed-off-by: Rajinikanth Pandurangan 
 >> <rajinikanth.pandurangan@pmcs.com>
 >> ---
->>  drivers/scsi/aacraid/src.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>  drivers/scsi/aacraid/aacraid.h  | 12 ++++++++++++  
+>> drivers/scsi/aacraid/comminit.c |  1 +
+>>  drivers/scsi/aacraid/src.c      | 12 ++++++++++--
+>>  3 files changed, 23 insertions(+), 2 deletions(-)
 >>
+>> diff --git a/drivers/scsi/aacraid/aacraid.h 
+>> b/drivers/scsi/aacraid/aacraid.h index 62b0999..9e69e3e 100644
+>> --- a/drivers/scsi/aacraid/aacraid.h
+>> +++ b/drivers/scsi/aacraid/aacraid.h
+>> @@ -719,6 +719,9 @@ struct sa_registers {
+>>  #define sa_readl(AEP, CSR)		readl(&((AEP)->regs.sa->CSR))
+>>  #define sa_writew(AEP, CSR, value)	writew(value, &((AEP)->regs.sa->CSR))
+>>  #define sa_writel(AEP, CSR, value)	writel(value, &((AEP)->regs.sa->CSR))
+>> +#if defined(writeq)
+>> +#define	sa_writeq(AEP, CSR, value)	writeq(value, &((AEP)->regs.sa->CSR))
+> This^ is used nowhere, is it needed?
+> 
+> [rajp] Yes, it's not needed.
+> 
+>> +#endif
+>>  
+>>  /*
+>>   *	Rx Message Unit Registers
+>> @@ -844,6 +847,10 @@ struct src_registers {
+>>  						&((AEP)->regs.src.bar0->CSR))
+>>  #define src_writel(AEP, CSR, value)	writel(value, \
+>>  						&((AEP)->regs.src.bar0->CSR))
+>> +#if defined(writeq)
+>> +#define	src_writeq(AEP, CSR, value)	writeq(value, \
+>> +						&((AEP)->regs.src.bar0->CSR))
+>> +#endif
+>>  
+>>  #define SRC_ODR_SHIFT		12
+>>  #define SRC_IDR_SHIFT		9
+>> @@ -1163,6 +1170,11 @@ struct aac_dev
+>>  	struct fsa_dev_info	*fsa_dev;
+>>  	struct task_struct	*thread;
+>>  	int			cardtype;
+>> +	/*
+>> +	 *This lock will protect the two 32-bit
+>> +	 *writes to the Inbound Queue
+>> +	 */
+>> +	spinlock_t		iq_lock;
+>>  
+>>  	/*
+>>  	 *	The following is the device specific extension.
+>> diff --git a/drivers/scsi/aacraid/comminit.c 
+>> b/drivers/scsi/aacraid/comminit.c index 45a0a04..4043245 100644
+>> --- a/drivers/scsi/aacraid/comminit.c
+>> +++ b/drivers/scsi/aacraid/comminit.c
+>> @@ -424,6 +424,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+>>  	dev->management_fib_count = 0;
+>>  	spin_lock_init(&dev->manage_lock);
+>>  	spin_lock_init(&dev->sync_lock);
+>> +	spin_lock_init(&dev->iq_lock);
+>>  	dev->max_fib_size = sizeof(struct hw_fib);
+>>  	dev->sg_tablesize = host->sg_tablesize = (dev->max_fib_size
+>>  		- sizeof(struct aac_fibhdr)
 >> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c 
->> index b0204d0..ae494c5 100644
+>> index ae494c5..109863a 100644
 >> --- a/drivers/scsi/aacraid/src.c
 >> +++ b/drivers/scsi/aacraid/src.c
->> @@ -742,7 +742,7 @@ int aac_src_init(struct aac_dev *dev)
->>  	if (dev->comm_interface != AAC_COMM_MESSAGE_TYPE1)
->>  		goto error_iounmap;
+>> @@ -447,6 +447,10 @@ static int aac_src_deliver_message(struct fib *fib)
+>>  	u32 fibsize;
+>>  	dma_addr_t address;
+>>  	struct aac_fib_xporthdr *pFibX;
+>> +#if !defined(writeq)
+>> +	unsigned long flags;
+>> +#endif
+>> +
+>>  	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
 >>  
->> -	dev->msi = aac_msi && !pci_enable_msi(dev->pdev);
->> +	dev->msi = !pci_enable_msi(dev->pdev);
+>>  	atomic_inc(&q->numpending);
+>> @@ -511,10 +515,14 @@ static int aac_src_deliver_message(struct fib *fib)
+>>  			return -EINVAL;
+>>  		address |= fibsize;
+>>  	}
+>> -
+>> +#if defined(writeq)
+>> +	src_writeq(dev, MUnit.IQ_L, (u64)address);
+> What about just using the writeq directly without the macro ?
+> 	writeq(value, address); ?
+> 
+> [Rajp] All other place we have macro. This is just for the uniformity.
+Okay,
+Tomas
+> 
+>> +#else
+>> +	spin_lock_irqsave(&fib->dev->iq_lock, flags);
+>>  	src_writel(dev, MUnit.IQ_H, upper_32_bits(address) & 0xffffffff);
+>>  	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
+>> -
+>> +	spin_unlock_irqrestore(&fib->dev->iq_lock, flags); #endif
+>>  	return 0;
+>>  }
 >>  
->>  	dev->aac_msix[0].vector_no = 0;
->>  	dev->aac_msix[0].dev = dev;
 >>
 > 
 > --
