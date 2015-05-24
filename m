@@ -1,84 +1,80 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH v2 03/15] lpfc: Add support for ELS LCB.
-Date: Sun, 24 May 2015 14:28:03 +0200
-Message-ID: <20150524142803.000063f5@localhost>
-References: <555e1c06.2WPAB9vE6mCM5B9Z%james.smart@avagotech.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 3/9] [SCSI] aacraid: Enable MSI interrupt for series-6
+ controller
+Date: Sun, 24 May 2015 21:31:19 +0200
+Message-ID: <55622707.405@redhat.com>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1431562378-8514-4-git-send-email-rajinikanth.pandurangan@pmcs.com> <555F31B0.3090103@redhat.com> <E34C6B6293F0214497D0C55B92526C05B697A023@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:49584 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:43044 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751051AbbEXM2E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 May 2015 08:28:04 -0400
-In-Reply-To: <555e1c06.2WPAB9vE6mCM5B9Z%james.smart@avagotech.com>
+	id S1751258AbbEXTb0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 May 2015 15:31:26 -0400
+In-Reply-To: <E34C6B6293F0214497D0C55B92526C05B697A023@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
+To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-James Smart wrote:
+On 05/23/2015 01:46 AM, Rajinikanth Pandurangan wrote:
+> Hello Tomas,
 > 
-> Add support for ELS LCB.
+> As the function aac_src_init() itself specific to Series-6 controller, change applicable only to series-6.
+The change removes a kernel option, which assumedly
+is used to control which kind of interrupt handling
+the driver may use. With aac_msi = 1 the driver
+might have used MSI -> the text "Enable MSI interrupt mode"
+is misleading.
+Let's say the text isn't precise - but i can accept it,
+so you don't have to repost.
+
+Tomas
+
+
+> Thanks,
+> -Raj P.
 > 
-> Also has a little whitespace fixing.
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+> Sent: Friday, May 22, 2015 6:40 AM
+> To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+> Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat
+> Subject: Re: [PATCH 3/9] [SCSI] aacraid: Enable MSI interrupt for series-6 controller
 > 
-> Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
-> Signed-off-by: James Smart <james.smart@avagotech.com>
-> ---
->  drivers/scsi/lpfc/lpfc.h      |   1 +
->  drivers/scsi/lpfc/lpfc_els.c  | 239 +++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/lpfc/lpfc_hw.h   |  32 ++++++
->  drivers/scsi/lpfc/lpfc_hw4.h  |  27 ++++-
->  drivers/scsi/lpfc/lpfc_init.c |   2 +
->  drivers/scsi/lpfc/lpfc_sli4.h |  11 ++
->  6 files changed, 306 insertions(+), 6 deletions(-)
+> On 05/14/2015 02:12 AM, rajinikanth.pandurangan@pmcs.com wrote:
+>> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+>>
+>> Description:
+>> 	Enable MSI interrupt mode for series-6 controller.
+> aac_msi is a driver option, how is it related to series-6 controller?
+> Tomas
+>>
+>> Signed-off-by: Rajinikanth Pandurangan 
+>> <rajinikanth.pandurangan@pmcs.com>
+>> ---
+>>  drivers/scsi/aacraid/src.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c 
+>> index b0204d0..ae494c5 100644
+>> --- a/drivers/scsi/aacraid/src.c
+>> +++ b/drivers/scsi/aacraid/src.c
+>> @@ -742,7 +742,7 @@ int aac_src_init(struct aac_dev *dev)
+>>  	if (dev->comm_interface != AAC_COMM_MESSAGE_TYPE1)
+>>  		goto error_iounmap;
+>>  
+>> -	dev->msi = aac_msi && !pci_enable_msi(dev->pdev);
+>> +	dev->msi = !pci_enable_msi(dev->pdev);
+>>  
+>>  	dev->aac_msix[0].vector_no = 0;
+>>  	dev->aac_msix[0].dev = dev;
+>>
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-snip
-
-> +/**
-> + * lpfc_els_rcv_lcb - Process an unsolicited LCB
-> + * @vport: pointer to a host virtual N_Port data structure.
-> + * @cmdiocb: pointer to lpfc command iocb data structure.
-> + * @ndlp: pointer to a node-list data structure.
-> + *
-> + * This routine processes an unsolicited LCB(LINK CABLE BEACON) IOCB.
-> + * First, the payload of the unsolicited LCB is checked.
-> + * Then based on Subcommand beacon will either turn on or off.
-> + *
-> + * Return code
-> + * 0 - Sent the acc response
-> + * 1 - Sent the reject response.
-> + **/
-> +static int
-> +lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
-> +		 struct lpfc_nodelist *ndlp)
-> +{
-> +	struct lpfc_hba *phba = vport->phba;
-> +	struct lpfc_dmabuf *pcmd;
-> +	IOCB_t *icmd;
-> +	uint8_t *lp;
-> +	struct fc_lcb_request_frame *beacon;
-> +	struct lpfc_lcb_context *lcb_context;
-> +	uint8_t state, rjt_err;
-> +	struct ls_rjt stat;
-> +
-> +	icmd = &cmdiocb->iocb;
-> +	pcmd = (struct lpfc_dmabuf *)cmdiocb->context2;
-> +	lp = (uint8_t *)pcmd->virt;
-> +	beacon = (struct fc_lcb_request_frame *)pcmd->virt;
-> +
-> +	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-> +			"0192 ELS LCB Data x%x x%x x%x x%x sub x%x "
-> +			"type x%x frequency %x duration x%x\n",
-> +			lp[0], lp[1], lp[2],
-> +			beacon->lcb_command,
-> +			beacon->lcb_sub_command,
-> +			beacon->lcb_type,
-> +			beacon->lcb_frequency,
-> +			be16_to_cpu(beacon->lcb_duration));
-> +
-
-checkpatch suggests to not split this user-visible string.
-
-Sebastian
