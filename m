@@ -1,32 +1,28 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/9] lpfc: Check for active portpeerbeacon.
-Date: Mon, 25 May 2015 17:13:51 +0200
-Message-ID: <55633C2F.6060702@suse.de>
-References: <555f405b.edV1AAZPf7ciBGhe%james.smart@avagotech.com>
+Subject: Re: [PATCH 2/9] lpfc: Fix vport deletion failure.
+Date: Mon, 25 May 2015 17:14:27 +0200
+Message-ID: <55633C53.50007@suse.de>
+References: <555f405c.KmVvOAygQVUDcayN%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60112 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60125 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428AbbEYPNy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 May 2015 11:13:54 -0400
-In-Reply-To: <555f405b.edV1AAZPf7ciBGhe%james.smart@avagotech.com>
+	id S1751793AbbEYPO3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 May 2015 11:14:29 -0400
+In-Reply-To: <555f405c.KmVvOAygQVUDcayN%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
 On 05/22/2015 04:42 PM, James Smart wrote:
 >=20
-> Check for active portpeerbeacon.
+> Fix vport deletion failure.
 >=20
-> LCB requests to set Beacon would fail if the beacon was already enabl=
-ed
-> internally as the mailbox command used to query the state failes with
-> an already-set status.
->=20
-> Correct by enhancing the check so we don't fail if if the already set
-> status comes back.
+> If a vport was deleted while in the middle of discovery, we weren't
+> clearing the nport discovery flag. Correct by clearing the flag and
+> cancelling our discovery timeout timer.
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
