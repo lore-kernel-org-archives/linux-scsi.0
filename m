@@ -1,30 +1,32 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/9] lpfc: Fix cq_id masking problem.
-Date: Mon, 25 May 2015 17:19:23 +0200
-Message-ID: <55633D7B.1060609@suse.de>
-References: <555f4060.Uu2ZGqqAXkqDGUog%james.smart@avagotech.com>
+Subject: Re: [PATCH 7/9] lpfc: Fix scsi task management error message.
+Date: Mon, 25 May 2015 17:20:00 +0200
+Message-ID: <55633DA0.4020201@suse.de>
+References: <555f4061.JF1uAXJ3MNmJF4W9%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60818 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60869 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751087AbbEYPTZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 May 2015 11:19:25 -0400
-In-Reply-To: <555f4060.Uu2ZGqqAXkqDGUog%james.smart@avagotech.com>
+	id S1750835AbbEYPUB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 May 2015 11:20:01 -0400
+In-Reply-To: <555f4061.JF1uAXJ3MNmJF4W9%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
 On 05/22/2015 04:42 PM, James Smart wrote:
 >=20
-> Fix cq_id masking problem.
+> Fix scsi task management error message.
 >=20
-> The driver inadvertainly constrained the id space to 8 bits, when its
-> a full 16 bits from hw. This resulted in bad id's being written to th=
-e
-> hardware. Resulted in symptoms such as incomplete initialization, no
-> detection of link events, etc.
+> TMF's were getting error messages on FCP_RSP errors (underrun). Under=
+runs
+> aren't meaningful in the scenario. Change the error message to filter=
+ out
+> these response check errors, and don't unconditionally mark the cmd a=
+s
+> in error.
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
