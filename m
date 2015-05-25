@@ -1,28 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/9] lpfc: Fix vport deletion failure.
-Date: Mon, 25 May 2015 17:14:27 +0200
-Message-ID: <55633C53.50007@suse.de>
-References: <555f405c.KmVvOAygQVUDcayN%james.smart@avagotech.com>
+Subject: Re: [PATCH 3/9] lpfc: Devices are not discovered during takeaway/giveback
+ testing
+Date: Mon, 25 May 2015 17:15:39 +0200
+Message-ID: <55633C9B.7010000@suse.de>
+References: <555f405d.19aP4Ju4SItrRE4D%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60125 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60230 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751793AbbEYPO3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 May 2015 11:14:29 -0400
-In-Reply-To: <555f405c.KmVvOAygQVUDcayN%james.smart@avagotech.com>
+	id S1750908AbbEYPPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 May 2015 11:15:41 -0400
+In-Reply-To: <555f405d.19aP4Ju4SItrRE4D%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>, linux-scsi@vger.kernel.org
 
 On 05/22/2015 04:42 PM, James Smart wrote:
 >=20
-> Fix vport deletion failure.
+> Devices are not discovered during takeaway/giveback testing
 >=20
-> If a vport was deleted while in the middle of discovery, we weren't
-> clearing the nport discovery flag. Correct by clearing the flag and
-> cancelling our discovery timeout timer.
+> When a remote nport changes it's DID, a new ndlp is used.
+> However, we left the old ndlp state unchanged and still in
+> a discovery state. The may stall discovery resulting in some
+> devices not being discovered.  Correct by swapping the state
+> of the 2 ndlp's when a DID swap is detected.
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@avagotech.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
