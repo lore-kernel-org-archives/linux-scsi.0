@@ -1,48 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] be2iscsi change of ownership from Emulex to Avago
- Technologies recently.  We like to get the following updates in:   changed
- "Emulex" to "Avago Technologies",   changed email addresses from
- "emulex.com" to "avagotech.com",   updated MAINTAINER list for be2iscsi
- driver.
-Date: Mon, 25 May 2015 09:12:20 -0700
-Message-ID: <1432570340.2195.3.camel@HansenPartnership.com>
-References: <1431670577-4125-1-git-send-email-minh.tran@avagotech.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 2/9] target/pr: Use atomic bitop for
+ se_dev_entry->pr_reg reservation check
+Date: Mon, 25 May 2015 14:59:46 -0700
+Message-ID: <1432591186.722.5.camel@haakon3.risingtidesystems.com>
+References: <1432275071-28882-1-git-send-email-nab@daterainc.com>
+	 <1432275071-28882-3-git-send-email-nab@daterainc.com>
+	 <555F0107.6030102@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50215 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751546AbbEYQMW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 May 2015 12:12:22 -0400
-In-Reply-To: <1431670577-4125-1-git-send-email-minh.tran@avagotech.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54742 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbEYV74 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 May 2015 17:59:56 -0400
+In-Reply-To: <555F0107.6030102@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Minh Tran <minhduc.tran@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Minh Tran <minh.tran@avagotech.com>, Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 
-On Thu, 2015-05-14 at 23:16 -0700, Minh Tran wrote:
-> Signed-off-by: Minh Tran <minh.tran@avagotech.com>
-> Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>
-> ---
->  MAINTAINERS                      |  6 ++++--
->  drivers/scsi/be2iscsi/be.h       |  6 +++---
->  drivers/scsi/be2iscsi/be_cmds.c  |  6 +++---
->  drivers/scsi/be2iscsi/be_cmds.h  |  6 +++---
->  drivers/scsi/be2iscsi/be_iscsi.c |  8 ++++----
->  drivers/scsi/be2iscsi/be_iscsi.h |  8 ++++----
->  drivers/scsi/be2iscsi/be_main.c  | 12 ++++++------
->  drivers/scsi/be2iscsi/be_main.h  | 10 +++++-----
->  drivers/scsi/be2iscsi/be_mgmt.c  |  8 ++++----
->  drivers/scsi/be2iscsi/be_mgmt.h  |  8 ++++----
->  10 files changed, 40 insertions(+), 38 deletions(-)
+On Fri, 2015-05-22 at 12:12 +0200, Bart Van Assche wrote:
+> On 05/22/15 08:11, Nicholas A. Bellinger wrote:
+> > diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> > index e2c0eaf..def5bc8 100644
+> > --- a/include/target/target_core_base.h
+> > +++ b/include/target/target_core_base.h
+> > @@ -638,7 +638,6 @@ struct se_lun_acl {
+> >   };
+> >
+> >   struct se_dev_entry {
+> > -	bool			def_pr_registered;
+> >   	/* See transport_lunflags_table */
+> >   	u32			lun_flags;
+> >   	u32			mapped_lun;
+> > @@ -655,7 +654,8 @@ struct se_dev_entry {
+> >   	struct se_node_acl	*se_node_acl;
+> >   	struct se_lun_acl __rcu	*se_lun_acl;
+> >   	spinlock_t		ua_lock;
+> > -	struct se_lun		*se_lun;
+> > +	struct se_lun __rcu	*se_lun;
+> > +	unsigned long		pr_reg;
+> >   	struct list_head	alua_port_list;
+> >   	struct list_head	ua_list;
+> >   	struct hlist_node	link;
+> 
+> Hello Nic,
+> 
+> This change causes the "se_lun = deve->se_lun" assignment in 
+> transport_lookup_cmd_lun() to assign an RCU pointer to a non-RCU 
+> pointer. Shouldn't such an assignment be protected via rcu_dereference() ?
+> 
 
-This patch conflicts horribly with [PATCH V2 0/7] be2iscsi driver update
-to 10.6.0.0.  I fixed it up this time, but next time, just update
-MAINTAINERS on its own and sort out the rest during the usual merge
-window process.
+FYI, these assignments are done in patch #1.
 
-James
-
+This __rcu notation should be included there instead.
 
