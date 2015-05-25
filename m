@@ -1,59 +1,61 @@
-From: Cash-reincarnate USA <evelyn.cashreincarnate@zoho.com>
-Subject: 2015 Loan Program
-Date: Mon, 25 May 2015 04:45:31 +1000
-Message-ID: <20150524184646.70079117C2A@idea-sw.co.jp>
-Reply-To: info.cash@reincarnate.com
+From: chinsang835@gmail.com
+Subject: Ich warte auf Ihre dringende Antwort
+Date: Mon, 25 May 2015 16:09:33 +0200
+Message-ID: <20150525142320.2938C123591@mailserver7.inlinea.net>
+Reply-To: chinsang250@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [210.238.188.154] ([210.238.188.154]:54488 "EHLO idea-sw.co.jp"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbbEXWPB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 May 2015 18:15:01 -0400
+Received: from mailserver3.inlinea.net ([93.62.37.41]:49559 "EHLO
+	mailserver3.inlinea.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbbEYOcG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 May 2015 10:32:06 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mailserver3.inlinea.net (Postfix) with ESMTP id D6734320D97
+	for <linux-scsi@vger.kernel.org>; Mon, 25 May 2015 16:23:20 +0200 (CEST)
+Received: from mailserver3.inlinea.net ([127.0.0.1])
+	by localhost (mailserver3.inlinea.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id uKgD5pev89R7 for <linux-scsi@vger.kernel.org>;
+	Mon, 25 May 2015 16:23:20 +0200 (CEST)
+Received: from mailserver7.inlinea.net (unknown [192.168.10.245])
+	by mailserver3.inlinea.net (Postfix) with ESMTP id 601B0320D5E
+	for <linux-scsi@vger.kernel.org>; Mon, 25 May 2015 16:23:20 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mailserver7.inlinea.net (Postfix) with ESMTP id 2938C123591
+	for <linux-scsi@vger.kernel.org>; Mon, 25 May 2015 16:23:20 +0200 (CEST)
+Received: from mailserver7.inlinea.net ([127.0.0.1])
+	by localhost (mailserver7.inlinea.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ZHkptOOUmD_z for <linux-scsi@vger.kernel.org>;
+	Mon, 25 May 2015 16:23:19 +0200 (CEST)
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <evelyn.cashreincarnate@zoho.com>
+To: Recipients <chinsang835@gmail.com>
 
-=46orretnings- og personlig l=E5n p=E5 3% uten kredittsjekk og umiddelb=
-ar godkjenning,
-S=F8k n=E5!
 
-Programmet gjennom e-post;
+Ich warte auf Ihre dringende Antwort
 
-Evelyn s.
-Evelyn.Cash@reincarnate.com
 
-Mark Unrue.
-info.Cash@reincarnate.com,
+         Ich bin mit diesem Medium, um Sie =FCber die Transaktion zur A=
+bgabe von $ 21500000 (Einundzwanzig Millionen f=FCnfhunderttausend Euro=
+) in meiner Bank in China, Sie als Empf=E4nger zu informieren. Es wird =
+zu 100% sicher, dass der Finanzvorstand des verstorbenen Kunden.
 
-Kathy Ellis
-Kathy.Cash@reincarnate.com
 
-Takk og hilsen.
-Kontanter reinkarnerer Usa
-Woodbridge Lane Portage Michigan.
 
-Business and personal loan at 3% with no credit check and Instant appro=
-val,
-Apply now!!!
+         Bitte auf meine private E-Mail kontaktieren unter f=FCr Fragen=
+ und weitere Informationen.
 
-Application Through Email;
 
- Evelyn P.
- Evelyn.cash@reincarnate.com
 
- Mark Unrue.
- info.cash@reincarnate.com,
+         Mit freundlichen Gr=FC=DFen,
 
- Kathy Ellis
- Kathy.cash@reincarnate.com
 
-Thanks and Regards.
-Cash Reincarnate Usa
-Woodbridge Lane Portage Michigan.
 
+         sang Chin
+
+         e-mail:chinsang250@gmail.com
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
