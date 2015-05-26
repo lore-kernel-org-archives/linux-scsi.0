@@ -1,60 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH-v2 0/4] target: Eliminate se_port + t10_alua_tg_pt_gp_member
-Date: Tue, 26 May 2015 11:43:02 +0200
-Message-ID: <55644026.6010206@suse.de>
-References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Tue, 26 May 2015 13:02:57 +0200
+Message-ID: <556452E1.9020308@suse.cz>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>	<54AC0A17.8020405@redhat.com>	<20150128001837.GE17677@kroah.com>	<CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>	<552BC234.4020000@redhat.com>	<20150426092719.GA1460@kroah.com>	<553E28DC.1040100@redhat.com>	<20150427125529.GA18817@kroah.com>	<553E354B.90208@redhat.com>	<20150502175621.GA15525@kroah.com> <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1432623445-25776-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:35120 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbbEZMzY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2015 08:55:24 -0400
+In-Reply-To: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vinson Lee <vlee@twopensource.com>, Greg KH <greg@kroah.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-On 05/26/2015 08:57 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> Hi all,
->=20
-> Here is v2 series with HCH's recent changes to go ahead and drop
-> all se_port + t10_alua_tg_pt_gp_member usage within target-core in
-> favor of direct se_lun pointer dereference.
->=20
-> This includes the original patch + minor fixes, along with two other
-> improvements for killing off se_lun->lun_sep_lock via RCU pointer
-> access, and converting the remaining se_lun->lun_active busy-wait
-> special cases to existing percpu se_lun->lun_ref access.
->=20
-> Also included in the series is a recently discussed change to go
-> ahead and drop an unnecessary core_tpg_register() parameter, and
-> all associated target_core_fabric_ops forward declartions within
-> fabric driver code.
->=20
-> The changes since -v1 include:
->=20
->   - Move ->lun_se_dev assignments under se_device->se_port_lock
->   - All proper call_rcu() in backend drivers to allow for read-side
->     critical se_device RCU to complete
->   - Add se_device->hba_index to clean up RCU dereferences within
->     scsi_port_show_attr_inst() + scsi_tgt_port_show_attr_inst()
->   - Add various rcu_dereference and lockless_dereference RCU notation
->=20
-> Please review.
->=20
-> --nab
->=20
-=46or the whole series:
+On 05/22/2015, 09:19 PM, Vinson Lee wrote:
+> Please use the following list of kernels and patches for backporting.
+> 
+> 3.18, 3.19
+> 3b74729878 hpsa: turn off interrupts when kdump starts
+> 
+> <= 3.17
+> 132aa220b4 hpsa: refine the pci enable/disable handling
+> 859c75aba2 hpsa: add missing pci_set_master in kdump path
+> 3b74729878 hpsa: turn off interrupts when kdump starts
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Applied to 3.12. Thanks.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+-- 
+js
+suse labs
