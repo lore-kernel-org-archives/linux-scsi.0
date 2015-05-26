@@ -1,97 +1,94 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v3 10/10] target: Drop left-over se_lun->lun_status
-Date: Tue, 26 May 2015 06:40:30 +0000
-Message-ID: <1432622430-25253-11-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v3 09/10] target: Only reset specific dynamic entries during lun_group creation
+Date: Tue, 26 May 2015 06:40:29 +0000
+Message-ID: <1432622430-25253-10-git-send-email-nab@linux-iscsi.org>
 References: <1432622430-25253-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1432622430-25253-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Now that se_portal_group->tpg_lun_hlist is a RCU protected hlist,
-go ahead and drop the left-over lun->lun_status usage.
+This patch changes core_tpg_add_node_to_devs() to avoid unnecessarly
+resetting every se_dev_entry in se_node_acl->tpg_lun_hlist when the
+operation is driven by an explicit configfs se_lun->lun_group creation
+via core_dev_add_lun() to only update a single se_lun.
 
-Reported-by: Christoph Hellwig <hch@lst.de>
+Otherwise for the second core_tpg_check_initiator_node_acl() case, go
+ahead and continue to scan the full set of currently active se_lun in
+se_portal_group->tpg_lun_hlist.
+
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tpg.c  | 6 ------
- include/target/target_core_base.h | 8 --------
- 2 files changed, 14 deletions(-)
+ drivers/target/target_core_device.c   | 2 +-
+ drivers/target/target_core_internal.h | 3 ++-
+ drivers/target/target_core_tpg.c      | 7 +++++--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index c95d3cf..8eac502 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1193,7 +1193,7 @@ int core_dev_add_lun(
+ 			if (acl->dynamic_node_acl &&
+ 			    (!tpg->se_tpg_tfo->tpg_check_demo_mode_login_only ||
+ 			     !tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg))) {
+-				core_tpg_add_node_to_devs(acl, tpg);
++				core_tpg_add_node_to_devs(acl, tpg, lun);
+ 			}
+ 		}
+ 		mutex_unlock(&tpg->acl_node_mutex);
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 2c160ce..ce80ca7 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -64,7 +64,8 @@ extern struct se_device *g_lun0_dev;
+ 
+ struct se_node_acl *__core_tpg_get_initiator_node_acl(struct se_portal_group *tpg,
+ 		const char *);
+-void	core_tpg_add_node_to_devs(struct se_node_acl *, struct se_portal_group *);
++void	core_tpg_add_node_to_devs(struct se_node_acl *, struct se_portal_group *,
++				  struct se_lun *);
+ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u32);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
 diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index f66c208..91f8ddb 100644
+index 73c25bd..f66c208 100644
 --- a/drivers/target/target_core_tpg.c
 +++ b/drivers/target/target_core_tpg.c
-@@ -98,8 +98,6 @@ void core_tpg_add_node_to_devs(
- 
- 	mutex_lock(&tpg->tpg_lun_mutex);
+@@ -89,7 +89,8 @@ EXPORT_SYMBOL(core_tpg_get_initiator_node_acl);
+  */
+ void core_tpg_add_node_to_devs(
+ 	struct se_node_acl *acl,
+-	struct se_portal_group *tpg)
++	struct se_portal_group *tpg,
++	struct se_lun *lun_orig)
+ {
+ 	u32 lun_access = 0;
+ 	struct se_lun *lun;
+@@ -99,6 +100,8 @@ void core_tpg_add_node_to_devs(
  	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link) {
--		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
--			continue;
- 		if (lun_orig && lun != lun_orig)
+ 		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
  			continue;
++		if (lun_orig && lun != lun_orig)
++			continue;
  
-@@ -495,7 +493,6 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
- 	int ret;
+ 		dev = lun->lun_se_dev;
+ 		/*
+@@ -238,7 +241,7 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(
+ 	 */
+ 	if ((tpg->se_tpg_tfo->tpg_check_demo_mode_login_only == NULL) ||
+ 	    (tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg) != 1))
+-		core_tpg_add_node_to_devs(acl, tpg);
++		core_tpg_add_node_to_devs(acl, tpg, NULL);
  
- 	lun->unpacked_lun = 0;
--	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
- 	atomic_set(&lun->lun_acl_count, 0);
- 	init_completion(&lun->lun_shutdown_comp);
- 	spin_lock_init(&lun->lun_sep_lock);
-@@ -608,7 +605,6 @@ struct se_lun *core_tpg_alloc_lun(
- 	}
- 	lun->unpacked_lun = unpacked_lun;
- 	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
--	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
- 	atomic_set(&lun->lun_acl_count, 0);
- 	init_completion(&lun->lun_shutdown_comp);
- 	spin_lock_init(&lun->lun_sep_lock);
-@@ -638,7 +634,6 @@ int core_tpg_add_lun(
- 
- 	mutex_lock(&tpg->tpg_lun_mutex);
- 	lun->lun_access = lun_access;
--	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
- 	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
- 		hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
- 	mutex_unlock(&tpg->tpg_lun_mutex);
-@@ -658,7 +653,6 @@ void core_tpg_remove_lun(
- 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
- 
- 	mutex_lock(&tpg->tpg_lun_mutex);
--	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
- 	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
- 		hlist_del_rcu(&lun->link);
- 	mutex_unlock(&tpg->tpg_lun_mutex);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 7908d6d..78ed2a8 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -119,12 +119,6 @@ enum hba_flags_table {
- 	HBA_FLAGS_PSCSI_MODE	= 0x02,
- };
- 
--/* struct se_lun->lun_status */
--enum transport_lun_status_table {
--	TRANSPORT_LUN_STATUS_FREE = 0,
--	TRANSPORT_LUN_STATUS_ACTIVE = 1,
--};
--
- /* Special transport agnostic struct se_cmd->t_states */
- enum transport_state_table {
- 	TRANSPORT_NO_STATE	= 0,
-@@ -707,8 +701,6 @@ struct se_lun {
- 	u16			lun_rtpi;
- #define SE_LUN_LINK_MAGIC			0xffff7771
- 	u32			lun_link_magic;
--	/* See transport_lun_status_table */
--	enum transport_lun_status_table lun_status;
- 	u32			lun_access;
- 	u32			lun_flags;
- 	u32			unpacked_lun;
+ 	target_add_node_acl(acl);
+ 	return acl;
 -- 
 1.9.1
