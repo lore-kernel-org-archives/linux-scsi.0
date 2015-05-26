@@ -1,61 +1,59 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH-v2 2/4] target: Drop lun_sep_lock for se_lun->lun_se_dev
- RCU usage
-Date: Tue, 26 May 2015 16:30:12 +0200
-Message-ID: <55648374.80802@sandisk.com>
-References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
- <1432623445-25776-3-git-send-email-nab@daterainc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 12/15] lpfc: Fix rport leak.
+Date: Tue, 26 May 2015 07:31:37 -0700
+Message-ID: <1432650697.2189.7.camel@HansenPartnership.com>
+References: <555e1c10.+P+E84TfJG4E7Wsc%james.smart@avagotech.com>
+	 <20150524135636.00000f81@localhost> <5564755B.5030302@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1432623445-25776-3-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53420 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751597AbbEZObj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 May 2015 10:31:39 -0400
+In-Reply-To: <5564755B.5030302@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@avagotech.com>
+Cc: Sebastian Herbszt <herbszt@gmx.de>, linux-scsi@vger.kernel.org
 
-On 05/26/15 08:57, Nicholas A. Bellinger wrote:
-> @@ -625,6 +626,7 @@ int core_dev_add_initiator_node_lun_acl(
->   	u32 lun_access)
->   {
->   	struct se_node_acl *nacl = lacl->se_lun_nacl;
-> +	struct se_device *dev = lockless_dereference(lun->lun_se_dev);
->   
->   	if (!nacl)
->   		return -EINVAL;
+On Tue, 2015-05-26 at 09:30 -0400, James Smart wrote:
+> Sebastian,
+> 
+> Re: more than 1 space between a type declaration and a variable name - I 
+> do not believe that's a hard requirement. It fully passes checkpatch. 
+> Yes, consistent style use (aligning all variable names at same offset, 
+> or always 1) would be good - but code has been there so long with 
+> althernate styles it doesn't really matter at this point.  I did clean 
+> up those in your last review as I needed to do a mod for the LS_RJT 
+> behavior. But... this seems like a nit.   I did promise Christoph that I 
+> would pick a good point and retrofit the sources for all sparse warnings 
+> - and still owe him.
 
-An attempt to run this code on a system with RCU debugging enabled
-resulted in the following complaint:
+Checkpatch is a guideline rather than absolute.  It picks up a lot of
+useful stuff, but also whines about a lot of irrelevant things.  In
+general, errors have to be fixed but a lot of warnings are ignorable
+(some warnings, like space instead of tabs aren't, but a lot are).  In
+the case of warnings, it's up to the maintainer to judge if they match
+the current style of the driver.
 
-===============================
-[ INFO: suspicious RCU usage. ]
-4.1.0-rc1-lio-dbg+ #1 Not tainted
--------------------------------
-drivers/target/target_core_device.c:617 suspicious rcu_dereference_check() usage!
+> Re: Checkpatch and string splitting. I understand we aren't passing 
+> checkpatch for that rule, but joining them would have checkpatch 
+> flagging us for beyond 80 character lines. I'd much rather have the 
+> splits and keep the indenting for readability. We have also had this 
+> error quite a bit in the past and believe we have been grandfathered as 
+> there's a lot of this already.
 
-other info that might help us debug this:
+I consider the line over 80 characters one of the most bogus checkpatch
+warnings, so I would prefer not splitting strings, but it's only a
+warning, so well within the bounds of the maintainer to decide based on
+the internal style of the driver.
+
+James
+
+> James B - any comments on the above ?
 
 
-rcu_scheduler_active = 1, debug_locks = 1
-2 locks held by ln/1497:
- #0:  (sb_writers#11){.+.+.+}, at: [<ffffffff811d9ca4>] mnt_want_write+0x24/0x50
- #1:  (&sb->s_type->i_mutex_key#14/1){+.+.+.}, at: [<ffffffff811c4cdd>] filename_create+0xad/0x1a0
 
-stack backtrace:
-CPU: 0 PID: 1497 Comm: ln Not tainted 4.1.0-rc1-lio-dbg+ #1
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
- 0000000000000001 ffff88005955bd68 ffffffff814fa346 0000000000000011
- ffff880058bf1270 ffff88005955bd98 ffffffff810ab235 ffff880050db9a68
- ffff880058ae2e68 0000000000000002 ffff880058ae4120 ffff88005955be08
-Call Trace:
- [<ffffffff814fa346>] dump_stack+0x4f/0x7b
- [<ffffffff810ab235>] lockdep_rcu_suspicious+0xd5/0x110
- [<ffffffffa04324bc>] core_dev_add_initiator_node_lun_acl+0xec/0x190 [target_core_mod]
- [<ffffffff8108f871>] ? get_parent_ip+0x11/0x50
- [<ffffffffa04346f9>] target_fabric_mappedlun_link+0x129/0x240 [target_core_mod]
- [<ffffffffa043466c>] ? target_fabric_mappedlun_link+0x9c/0x240 [target_core_mod]
- [<ffffffffa035824d>] configfs_symlink+0x13d/0x360 [configfs]
- [<ffffffff811be8c8>] vfs_symlink+0x58/0xb0
- [<ffffffff811c75c5>] SyS_symlink+0x65/0xc0
- [<ffffffff81502eb2>] system_call_fastpath+0x16/0x7a
