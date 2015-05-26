@@ -1,36 +1,83 @@
-From: George Mendez <dpetkovic@mf.unze.ba>
-Subject: RE
-Date: Tue, 26 May 2015 07:21:52 +0200 (CEST)
-Message-ID: <1655930171.1038606.1432617712184.JavaMail.root__15276.1396057487$1432653344$gmane$org@mf.unze.ba>
-Reply-To: George Mendez <chveron@outlook.com>
+From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
+Subject: RE: [PATCH 1/9] [SCSI] aacraid: Fix for logical device name and UID
+ not exposed to the OS
+Date: Tue, 26 May 2015 18:06:32 +0000
+Message-ID: <E34C6B6293F0214497D0C55B92526C05B697A5D1@BBYEXM01.pmc-sierra.internal>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1431562378-8514-2-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <555F2CB8.60400@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zmail.unze.ba ([80.65.65.217]:36258 "EHLO zmail.unze.ba"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752401AbbEZPPP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2015 11:15:15 -0400
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:56748 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751445AbbEZSGi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 May 2015 14:06:38 -0400
+In-Reply-To: <555F2CB8.60400@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
+Hello Tomas,
 
+Yes, you are right.  The mentioned comment is right for some cases where as in some cases it should actually be the size of response buffer instead of request buffer.
 
+To "get logical device name", it request size of response buffer instead of size of the request.
 
-Attn; Brauchen Sie eine garantierte Darlehen der Zinssatz von 3 % Ihrer=
- Schulden oder Rechnungen zu bezahlen oder gesch=C3=A4ftliche Zwecke? W=
-enn ja, dann kontaktieren Sie uns heute per E-mail mit den folgenden In=
-formationen:
+Thanks,
+-Raj P.
 
-Vollst=C3=A4ndige Namen:=20
-Darlehensbetrag ben=C3=B6tigt:=20
-Darlehen-Dauer:=20
-Pers=C3=B6nliche Telefonnummer:=20
-monatliches Einkommen:=20
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Friday, May 22, 2015 6:19 AM
+To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Achim Leubner; Murthy Bhat
+Subject: Re: [PATCH 1/9] [SCSI] aacraid: Fix for logical device name and UID not exposed to the OS
 
-Danke,
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 05/14/2015 02:12 AM, rajinikanth.pandurangan@pmcs.com wrote:
+> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+> 
+> Description:
+> 	Driver sends the right size of the response buffer.
+> 
+> Signed-off-by: Rajinikanth Pandurangan 
+> <rajinikanth.pandurangan@pmcs.com>
+> ---
+>  drivers/scsi/aacraid/aachba.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/aacraid/aachba.c 
+> b/drivers/scsi/aacraid/aachba.c index 9b3dd6e..fe59b00 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -570,7 +570,7 @@ static int aac_get_container_name(struct scsi_cmnd 
+> * scsicmd)
+>  
+>  	status = aac_fib_send(ContainerCommand,
+>  		  cmd_fibcontext,
+> -		  sizeof (struct aac_get_name),
+> +		  sizeof(struct aac_get_name_resp),
+Hi Rajinikanth,
+in aac_fib_send the size parameter is used in just one place and a comment there says "Set the size of the Fib we want to send to the adapter"
+>From that^ it looks like it is the size of the command you sending, to the hw. Do I miss something?
+Cheers,
+Tomas
+>  		  FsaNormal,
+>  		  0, 1,
+>  		  (fib_callback)get_container_name_callback,
+> @@ -1052,7 +1052,7 @@ static int aac_get_container_serial(struct 
+> scsi_cmnd * scsicmd)
+>  
+>  	status = aac_fib_send(ContainerCommand,
+>  		  cmd_fibcontext,
+> -		  sizeof (struct aac_get_serial),
+> +		  sizeof(struct aac_get_serial_resp),
+>  		  FsaNormal,
+>  		  0, 1,
+>  		  (fib_callback) get_container_serial_callback,
+> 
+
