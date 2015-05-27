@@ -1,46 +1,53 @@
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Subject: [PATCH net-next] qla4xxx: add a missing include
-Date: Tue, 26 May 2015 21:43:44 -0700
-Message-ID: <1432701824.4060.346.camel@edumazet-glaptop2.roam.corp.google.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 0/4] target: Eliminate se_port +
+ t10_alua_tg_pt_gp_member
+Date: Tue, 26 May 2015 22:13:02 -0700
+Message-ID: <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
+References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
+	 <55646A9E.5050401@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:33718 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbbE0Enr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 00:43:47 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <55646A9E.5050401@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-From: Eric Dumazet <edumzet@google.com>
+On Tue, 2015-05-26 at 14:44 +0200, Bart Van Assche wrote:
+> On 05/26/15 08:57, Nicholas A. Bellinger wrote:
+> >    - Add various rcu_dereference and lockless_dereference RCU notation
+> 
+> Hello Nic,
+> 
+> Feedback from an RCU expert (which I'm not) would be appreciated here. 
+> But my understanding is that lockless_dereference(p) should be used for 
+> a pointer p that has *not* been annotated as an RCU pointer. I think in 
+> the for-next branch of the target repository that this macro is used to 
+> access RCU-annotated pointers. Is that why sparse complains about how 
+> lockless_dereference() is used in the target tree ?
+> 
 
-vmalloc.h used to be included from include/net/inet_hashtables.h
-but it is no longer the case.
+Was curious about this myself..  Thanks for raising the question!
 
-Fixes: 095dc8e0c368 ("tcp: fix/cleanup inet_ehash_locks_alloc()")
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Eric Dumazet <edumzet@google.com>
----
-Given its broken in David net-next tree, its probably simpler
-that David merges this fix directly ? Thanks !
+The intention of lockless_dereference() in both this and preceding
+series is for __rcu protected pointers that are accessed outside of
+rcu_read_lock() protection, and who's lifetime is controlled by a:
 
- drivers/scsi/qla4xxx/ql4_def.h |    1 +
- 1 file changed, 1 insertion(+)
+  - struct kref
+  - struct percpu_ref
+  - struct config_group symlink
+  - RCU updater path with some manner of mutex or spinlock held
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 8f6d0fb2cd807255a66e962c3cb7c4c8633d4d77..a7cfc270bd08a1f01867affc2dee0fc6b7611472 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -26,6 +26,7 @@
- #include <linux/mutex.h>
- #include <linux/aer.h>
- #include <linux/bsg-lib.h>
-+#include <linux/vmalloc.h>
- 
- #include <net/tcp.h>
- #include <scsi/scsi.h>
+This is supposed to be following Paul's comment in rcupdate.h:
 
+ * Similar to rcu_dereference(), but for situations where the pointed-to
+ * object's lifetime is managed by something other than RCU.  That
+ * "something other" might be reference counting or simple immortality.
 
+Paul, would you be to kind to clarify the intention for us..?
+
+Thank you,
+
+--nab
