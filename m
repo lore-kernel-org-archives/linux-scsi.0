@@ -1,72 +1,95 @@
 From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH-v2 0/4] target: Eliminate se_port +
- t10_alua_tg_pt_gp_member
-Date: Wed, 27 May 2015 13:36:50 -0700
-Message-ID: <20150527203650.GO5989@linux.vnet.ibm.com>
+Subject: Re: [PATCH-v2 2/4] target: Drop lun_sep_lock for se_lun->lun_se_dev
+ RCU usage
+Date: Wed, 27 May 2015 14:04:46 -0700
+Message-ID: <20150527210446.GP5989@linux.vnet.ibm.com>
 References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
- <55646A9E.5050401@sandisk.com>
- <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
+ <1432623445-25776-3-git-send-email-nab@daterainc.com>
+ <55648374.80802@sandisk.com>
+ <1432704585.26863.47.camel@haakon3.risingtidesystems.com>
 Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
+In-Reply-To: <1432704585.26863.47.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 26, 2015 at 10:13:02PM -0700, Nicholas A. Bellinger wrote:
-> On Tue, 2015-05-26 at 14:44 +0200, Bart Van Assche wrote:
+On Tue, May 26, 2015 at 10:29:45PM -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2015-05-26 at 16:30 +0200, Bart Van Assche wrote:
 > > On 05/26/15 08:57, Nicholas A. Bellinger wrote:
-> > >    - Add various rcu_dereference and lockless_dereference RCU notation
+> > > @@ -625,6 +626,7 @@ int core_dev_add_initiator_node_lun_acl(
+> > >   	u32 lun_access)
+> > >   {
+> > >   	struct se_node_acl *nacl = lacl->se_lun_nacl;
+> > > +	struct se_device *dev = lockless_dereference(lun->lun_se_dev);
+> > >   
+> > >   	if (!nacl)
+> > >   		return -EINVAL;
 > > 
-> > Hello Nic,
+> > An attempt to run this code on a system with RCU debugging enabled
+> > resulted in the following complaint:
 > > 
-> > Feedback from an RCU expert (which I'm not) would be appreciated here. 
-> > But my understanding is that lockless_dereference(p) should be used for 
-> > a pointer p that has *not* been annotated as an RCU pointer. I think in 
-> > the for-next branch of the target repository that this macro is used to 
-> > access RCU-annotated pointers. Is that why sparse complains about how 
-> > lockless_dereference() is used in the target tree ?
+> > ===============================
+> > [ INFO: suspicious RCU usage. ]
+> > 4.1.0-rc1-lio-dbg+ #1 Not tainted
+> > -------------------------------
+> > drivers/target/target_core_device.c:617 suspicious rcu_dereference_check() usage!
+> > 
+> > other info that might help us debug this:
+> > 
+> > 
+> > rcu_scheduler_active = 1, debug_locks = 1
+> > 2 locks held by ln/1497:
+> >  #0:  (sb_writers#11){.+.+.+}, at: [<ffffffff811d9ca4>] mnt_want_write+0x24/0x50
+> >  #1:  (&sb->s_type->i_mutex_key#14/1){+.+.+.}, at: [<ffffffff811c4cdd>] filename_create+0xad/0x1a0
+> > 
+> > stack backtrace:
+> > CPU: 0 PID: 1497 Comm: ln Not tainted 4.1.0-rc1-lio-dbg+ #1
+> > Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> >  0000000000000001 ffff88005955bd68 ffffffff814fa346 0000000000000011
+> >  ffff880058bf1270 ffff88005955bd98 ffffffff810ab235 ffff880050db9a68
+> >  ffff880058ae2e68 0000000000000002 ffff880058ae4120 ffff88005955be08
+> > Call Trace:
+> >  [<ffffffff814fa346>] dump_stack+0x4f/0x7b
+> >  [<ffffffff810ab235>] lockdep_rcu_suspicious+0xd5/0x110
+> >  [<ffffffffa04324bc>] core_dev_add_initiator_node_lun_acl+0xec/0x190 [target_core_mod]
+> >  [<ffffffff8108f871>] ? get_parent_ip+0x11/0x50
+> >  [<ffffffffa04346f9>] target_fabric_mappedlun_link+0x129/0x240 [target_core_mod]
+> >  [<ffffffffa043466c>] ? target_fabric_mappedlun_link+0x9c/0x240 [target_core_mod]
+> >  [<ffffffffa035824d>] configfs_symlink+0x13d/0x360 [configfs]
+> >  [<ffffffff811be8c8>] vfs_symlink+0x58/0xb0
+> >  [<ffffffff811c75c5>] SyS_symlink+0x65/0xc0
+> >  [<ffffffff81502eb2>] system_call_fastpath+0x16/0x7a
 > > 
 > 
-> Was curious about this myself..  Thanks for raising the question!
+> In this particular case, the se_device behind se_lun->lun_se_dev
+> __rcu protected pointer can't be released without first releasing the
+> pre-existing se_lun->lun_group reference to se_device->dev_group.
 > 
-> The intention of lockless_dereference() in both this and preceding
-> series is for __rcu protected pointers that are accessed outside of
-> rcu_read_lock() protection, and who's lifetime is controlled by a:
+> And since se_lun->lun_group is the source of a configfs symlink to
+> se_lun_acl->se_lun_group here, the se_lun associated RCU pointer and
+> underlying se_device can't be released out from under the above
+> target_fabric_mappedlun_link() code accessing a __rcu protected pointer.
 > 
->   - struct kref
->   - struct percpu_ref
->   - struct config_group symlink
->   - RCU updater path with some manner of mutex or spinlock held
-> 
-> This is supposed to be following Paul's comment in rcupdate.h:
-> 
->  * Similar to rcu_dereference(), but for situations where the pointed-to
->  * object's lifetime is managed by something other than RCU.  That
->  * "something other" might be reference counting or simple immortality.
-> 
-> Paul, would you be to kind to clarify the intention for us..?
+> Paul, is lockless_dereference the correct notation for this type of
+> use-case..?
 
-The lockless_dereference() primitive is to be used for pointers that
-are -not- marked with __rcu.  In fact, the sparse tool should yell
-at you if you use lockless_dereference() on an __rcu-marked pointer.
-You could use smp_store_release() to update the pointer when inserting
-new data.  If you are using one of the lists, then the _rcu variant of the
-list-insert macro should be used (list_add_rcu()), because that is needed
-to make sure that the reader sees a properly initialized new element.
+My guess is "no", but I don't claim to understand your use case.
 
-If you have a pointer that is sometimes protected by RCU and other times
-protected by something else, you still use one of the rcu_dereference()
-macros to access it.  For example, if a given RCU-protected pointer is
-protected either by RCU or by some lock, you might write common code
-that is called from either context as follows:
+The splat is against some other code than the patch, judging by the
+patch line numbers.
 
-	p = rcu_dereference_check(pointer, lockdep_is_held(&some_lock));
+The rule is that if a pointer points to something that is freed (or
+reused) after a grace period, you mark that pointer with __rcu.
+Any access to that pointer must then be accessed in an RCU read-side
+critical section, using one of the RCU list iterators or one of the
+rcu_dereference() macros.  No lockless_dereference() in this case.
 
-Does that help, or am I missing your point?
+You use lockless_dereference() when something other than RCU controls
+when the pointer target is freed.
 
 							Thanx, Paul
