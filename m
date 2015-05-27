@@ -1,35 +1,46 @@
-From: Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH] Documentation/scsi: Documentation about scsi_cmnd lifecycle
-Date: Tue, 26 May 2015 11:15:12 -0700
-Message-ID: <CACK8Z6HJ1kigCZ=DKuTVrDfDiwRLa49EVNJUPzDR_nqvog-B3Q@mail.gmail.com>
-References: <1431466426-15712-1-git-send-email-rajatja@google.com>
-	<20150513153652.1868bc3c@lwn.net>
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: [PATCH net-next] qla4xxx: add a missing include
+Date: Tue, 26 May 2015 21:43:44 -0700
+Message-ID: <1432701824.4060.346.camel@edumazet-glaptop2.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20150513153652.1868bc3c@lwn.net>
-Sender: linux-doc-owner@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-doc@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:33718 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867AbbE0Enr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 00:43:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hello James / linux-scsi folks,
+From: Eric Dumazet <edumzet@google.com>
 
-On Wed, May 13, 2015 at 12:36 PM, Jonathan Corbet <corbet@lwn.net> wrote:
-> On Tue, 12 May 2015 14:33:46 -0700
-> Rajat Jain <rajatja@google.com> wrote:
->
->> Add documentation to describe the various scenarios that the scsi_cmnd
->> may go through in its life time in the mid level driver - aborts,
->> failures, retries, error handling etc. The documentation has lots of
->> details including examples.
->
-> So this seems like useful stuff.  I'd be happy to take it through the
-> docs tree, but it definitely needs an ack or two from the SCSI camp first.
+vmalloc.h used to be included from include/net/inet_hashtables.h
+but it is no longer the case.
 
-I was wondering if someone could please help in reviewing this SCSI
-documentation?
+Fixes: 095dc8e0c368 ("tcp: fix/cleanup inet_ehash_locks_alloc()")
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Eric Dumazet <edumzet@google.com>
+---
+Given its broken in David net-next tree, its probably simpler
+that David merges this fix directly ? Thanks !
 
-Thanks,
+ drivers/scsi/qla4xxx/ql4_def.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-Rajat
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 8f6d0fb2cd807255a66e962c3cb7c4c8633d4d77..a7cfc270bd08a1f01867affc2dee0fc6b7611472 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -26,6 +26,7 @@
+ #include <linux/mutex.h>
+ #include <linux/aer.h>
+ #include <linux/bsg-lib.h>
++#include <linux/vmalloc.h>
+ 
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
+
+
