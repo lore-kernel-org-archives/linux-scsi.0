@@ -1,47 +1,47 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH v6 3/9] snic:Add meta request,  handling of meta requests.
-Date: Wed, 27 May 2015 00:19:36 -0700
-Message-ID: <1432711182-17530-4-git-send-email-nmusini@cisco.com>
+Subject: [PATCH v6 8/9] snic:Add event tracing to capture IO events.
+Date: Wed, 27 May 2015 00:19:41 -0700
+Message-ID: <1432711182-17530-9-git-send-email-nmusini@cisco.com>
 References: <1432711182-17530-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-5.cisco.com ([173.37.142.92]:56990 "EHLO
-	alln-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbbE0HYp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 03:24:45 -0400
+Received: from alln-iport-4.cisco.com ([173.37.142.91]:22986 "EHLO
+	alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbbE0HYr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 03:24:47 -0400
 In-Reply-To: <1432711182-17530-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-snic_io.h contains meta request structure definition
-meta request contains high level information about firmware requests.
-such as request information, size, SGLs.
+snic_trc.h contains global trace structure definitions for snic driver
 
-snic_io.c contains interfaces to handle meta request, firmware acknowledgment,
-and high level generic queueing interface.
+snic_trc.c adds tracing functionality to capture various IO events.
+It maintains global trace buffer to maintain recent history of IO events.
+It helps to understand the sequence of events prior to particular IO event,
+or hung, panic, etc,.
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
 * v6
-- Fixed bit width and endianness.
+- Fixed compilation issues on ppc64.
 
-* v3
-- Removed request alignment functionality.
+* v2
+- Added compile time macro SNIC_DEBUG_FS to handle debugfs dependent functionality.
 
- drivers/scsi/snic/snic_io.c | 518 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/snic/snic_io.h | 118 ++++++++++
- 2 files changed, 636 insertions(+)
- create mode 100644 drivers/scsi/snic/snic_io.c
- create mode 100644 drivers/scsi/snic/snic_io.h
+ drivers/scsi/snic/snic_trc.c | 181 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/snic/snic_trc.h | 121 +++++++++++++++++++++++++++++
+ 2 files changed, 302 insertions(+)
+ create mode 100644 drivers/scsi/snic/snic_trc.c
+ create mode 100644 drivers/scsi/snic/snic_trc.h
 
-diff --git a/drivers/scsi/snic/snic_io.c b/drivers/scsi/snic/snic_io.c
+diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
 new file mode 100644
-index 0000000..993db7d
+index 0000000..28a40a7
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_io.c
-@@ -0,0 +1,518 @@
++++ b/drivers/scsi/snic/snic_trc.c
+@@ -0,0 +1,181 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -59,513 +59,176 @@ index 0000000..993db7d
 + * SOFTWARE.
 + */
 +
-+#include <linux/errno.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+
-+#include <linux/interrupt.h>
-+#include <linux/workqueue.h>
-+#include <linux/spinlock.h>
++#include <linux/module.h>
 +#include <linux/mempool.h>
-+#include <scsi/scsi_tcq.h>
++#include <linux/errno.h>
++#include <linux/vmalloc.h>
 +
 +#include "snic_io.h"
 +#include "snic.h"
-+#include "cq_enet_desc.h"
-+#include "snic_fwint.h"
 +
-+static void
-+snic_wq_cmpl_frame_send(struct vnic_wq *wq,
-+			    struct cq_desc *cq_desc,
-+			    struct vnic_wq_buf *buf,
-+			    void *opaque)
++/*
++ * snic_get_trc_buf : Allocates a trace record and returns.
++ */
++struct snic_trc_data *
++snic_get_trc_buf(void)
 +{
-+	struct snic *snic = svnic_dev_priv(wq->vdev);
++	struct snic_trc *trc = &snic_glob->trc;
++	struct snic_trc_data *td = NULL;
++	unsigned long flags;
 +
-+	SNIC_BUG_ON(buf->os_buf == NULL);
++	spin_lock_irqsave(&trc->lock, flags);
++	td = &trc->buf[trc->wr_idx];
++	trc->wr_idx++;
 +
-+	if (snic_log_level & SNIC_DESC_LOGGING)
-+		SNIC_HOST_INFO(snic->shost,
-+			       "Ack received for snic_host_req %p.\n",
-+			       buf->os_buf);
++	if (trc->wr_idx == trc->max_idx)
++		trc->wr_idx = 0;
 +
-+	SNIC_TRC(snic->shost->host_no, 0, 0,
-+		 ((ulong)(buf->os_buf) - sizeof(struct snic_req_info)), 0, 0,
-+		 0);
-+	pci_unmap_single(snic->pdev, buf->dma_addr, buf->len, PCI_DMA_TODEVICE);
-+	buf->os_buf = NULL;
-+}
++	if (trc->wr_idx != trc->rd_idx) {
++		spin_unlock_irqrestore(&trc->lock, flags);
 +
++		goto end;
++	}
++
++	trc->rd_idx++;
++	if (trc->rd_idx == trc->max_idx)
++		trc->rd_idx = 0;
++
++	td->ts = 0;	/* Marker for checking the record, for complete data*/
++	spin_unlock_irqrestore(&trc->lock, flags);
++
++end:
++
++	return td;
++} /* end of snic_get_trc_buf */
++
++/*
++ * snic_fmt_trc_data : Formats trace data for printing.
++ */
 +static int
-+snic_wq_cmpl_handler_cont(struct vnic_dev *vdev,
-+			  struct cq_desc *cq_desc,
-+			  u8 type,
-+			  u16 q_num,
-+			  u16 cmpl_idx,
-+			  void *opaque)
++snic_fmt_trc_data(struct snic_trc_data *td, char *buf, int buf_sz)
 +{
-+	struct snic *snic = svnic_dev_priv(vdev);
-+	unsigned long flags;
++	int len = 0;
++	struct timespec tmspec;
 +
-+	SNIC_BUG_ON(q_num != 0);
++	jiffies_to_timespec(td->ts, &tmspec);
 +
-+	spin_lock_irqsave(&snic->wq_lock[q_num], flags);
-+	svnic_wq_service(&snic->wq[q_num],
-+			 cq_desc,
-+			 cmpl_idx,
-+			 snic_wq_cmpl_frame_send,
-+			 NULL);
-+	spin_unlock_irqrestore(&snic->wq_lock[q_num], flags);
++	len += snprintf(buf, buf_sz,
++			"%lu.%10lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
++			tmspec.tv_sec,
++			tmspec.tv_nsec,
++			td->fn,
++			td->hno,
++			td->tag,
++			td->data[0], td->data[1], td->data[2], td->data[3],
++			td->data[4]);
 +
-+	return 0;
-+} /* end of snic_cmpl_handler_cont */
++	return len;
++} /* end of snic_fmt_trc_data */
 +
++/*
++ * snic_get_trc_data : Returns a formatted trace buffer.
++ */
 +int
-+snic_wq_cmpl_handler(struct snic *snic, int work_to_do)
++snic_get_trc_data(char *buf, int buf_sz)
 +{
-+	unsigned int work_done = 0;
-+	unsigned int i;
-+
-+	snic->s_stats.misc.last_ack_time = jiffies;
-+	for (i = 0; i < snic->wq_count; i++) {
-+		work_done += svnic_cq_service(&snic->cq[i],
-+					      work_to_do,
-+					      snic_wq_cmpl_handler_cont,
-+					      NULL);
-+	}
-+
-+	return work_done;
-+} /* end of snic_wq_cmpl_handler */
-+
-+void
-+snic_free_wq_buf(struct vnic_wq *wq, struct vnic_wq_buf *buf)
-+{
-+
-+	struct snic_host_req *req = buf->os_buf;
-+	struct snic *snic = svnic_dev_priv(wq->vdev);
-+	struct snic_req_info *rqi = NULL;
++	struct snic_trc_data *td = NULL;
++	struct snic_trc *trc = &snic_glob->trc;
 +	unsigned long flags;
 +
-+	pci_unmap_single(snic->pdev, buf->dma_addr, buf->len, PCI_DMA_TODEVICE);
++	spin_lock_irqsave(&trc->lock, flags);
++	if (trc->rd_idx == trc->wr_idx) {
++		spin_unlock_irqrestore(&trc->lock, flags);
 +
-+	rqi = req_to_rqi(req);
-+	spin_lock_irqsave(&snic->spl_cmd_lock, flags);
-+	if (list_empty(&rqi->list)) {
-+		spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
-+		goto end;
++		return -1;
++	}
++	td = &trc->buf[trc->rd_idx];
++
++	if (td->ts == 0) {
++		/* write in progress. */
++		spin_unlock_irqrestore(&trc->lock, flags);
++
++		return -1;
 +	}
 +
-+	SNIC_BUG_ON(rqi->list.next == NULL); /* if not added to spl_cmd_list */
-+	list_del_init(&rqi->list);
-+	spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
++	trc->rd_idx++;
++	if (trc->rd_idx == trc->max_idx)
++		trc->rd_idx = 0;
++	spin_unlock_irqrestore(&trc->lock, flags);
 +
-+	if (rqi->sge_va) {
-+		snic_pci_unmap_rsp_buf(snic, rqi);
-+		kfree((void *)rqi->sge_va);
-+		rqi->sge_va = 0;
-+	}
-+	snic_req_free(snic, rqi);
-+	SNIC_HOST_INFO(snic->shost, "snic_free_wq_buf .. freed.\n");
++	return snic_fmt_trc_data(td, buf, buf_sz);
++} /* end of snic_get_trc_data */
 +
-+end:
-+	return;
-+}
-+
-+/* Criteria to select work queue in multi queue mode */
-+static int
-+snic_select_wq(struct snic *snic)
-+{
-+	/* No multi queue support for now */
-+	BUILD_BUG_ON(SNIC_WQ_MAX > 1);
-+
-+	return 0;
-+}
-+
++/*
++ * snic_trc_init() : Configures Trace Functionality for snic.
++ */
 +int
-+snic_queue_wq_desc(struct snic *snic, void *os_buf, u16 len)
++snic_trc_init(void)
 +{
-+	dma_addr_t pa = 0;
-+	unsigned long flags;
-+	struct snic_fw_stats *fwstats = &snic->s_stats.fw;
-+	long act_reqs;
-+	int q_num = 0;
++	struct snic_trc *trc = &snic_glob->trc;
++	void *tbuf = NULL;
++	int tbuf_sz = 0, ret;
 +
-+	snic_print_desc(__func__, os_buf, len);
++	tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
++	tbuf = vmalloc(tbuf_sz);
++	if (!tbuf) {
++		SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
++		SNIC_ERR("Trace Facility not enabled.\n");
++		ret = -ENOMEM;
 +
-+	/* Map request buffer */
-+	pa = pci_map_single(snic->pdev, os_buf, len, PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(snic->pdev, pa)) {
-+		SNIC_HOST_ERR(snic->shost, "qdesc: PCI DMA Mapping Fail.\n");
-+
-+		return -ENOMEM;
++		return ret;
 +	}
 +
-+	q_num = snic_select_wq(snic);
++	memset(tbuf, 0, tbuf_sz);
++	trc->buf = (struct snic_trc_data *) tbuf;
++	spin_lock_init(&trc->lock);
 +
-+	spin_lock_irqsave(&snic->wq_lock[q_num], flags);
-+	if (!svnic_wq_desc_avail(snic->wq)) {
-+		pci_unmap_single(snic->pdev, pa, len, PCI_DMA_TODEVICE);
-+		spin_unlock_irqrestore(&snic->wq_lock[q_num], flags);
-+		atomic64_inc(&snic->s_stats.misc.wq_alloc_fail);
-+		SNIC_DBG("host = %d, WQ is Full\n", snic->shost->host_no);
++	ret = snic_trc_debugfs_init();
++	if (ret) {
++		SNIC_ERR("Failed to create Debugfs Files.\n");
 +
-+		return -ENOMEM;
++		goto error;
 +	}
 +
-+	snic_queue_wq_eth_desc(&snic->wq[q_num], os_buf, pa, len, 0, 0, 1);
-+	spin_unlock_irqrestore(&snic->wq_lock[q_num], flags);
++	trc->max_idx = (tbuf_sz / SNIC_TRC_ENTRY_SZ);
++	trc->rd_idx = trc->wr_idx = 0;
++	trc->enable = 1;
++	SNIC_INFO("Trace Facility Enabled.\n Trace Buffer SZ %lu Pages.\n",
++		  tbuf_sz / PAGE_SIZE);
++	ret = 0;
 +
-+	/* Update stats */
-+	act_reqs = atomic64_inc_return(&fwstats->actv_reqs);
-+	if (act_reqs > atomic64_read(&fwstats->max_actv_reqs))
-+		atomic64_set(&fwstats->max_actv_reqs, act_reqs);
++	return ret;
 +
-+	return 0;
-+} /* end of snic_queue_wq_desc() */
++error:
++	snic_trc_free();
++
++	return ret;
++} /* end of snic_trc_init */
 +
 +/*
-+ * snic_handle_untagged_req: Adds snic specific requests to spl_cmd_list.
-+ * Purpose : Used during driver unload to clean up the requests.
++ * snic_trc_free : Releases the trace buffer and disables the tracing.
 + */
 +void
-+snic_handle_untagged_req(struct snic *snic, struct snic_req_info *rqi)
++snic_trc_free(void)
 +{
-+	unsigned long flags;
++	struct snic_trc *trc = &snic_glob->trc;
 +
-+	INIT_LIST_HEAD(&rqi->list);
++	trc->enable = 0;
++	snic_trc_debugfs_term();
 +
-+	spin_lock_irqsave(&snic->spl_cmd_lock, flags);
-+	list_add_tail(&rqi->list, &snic->spl_cmd_list);
-+	spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
-+}
-+
-+/*
-+ * snic_req_init:
-+ * Allocates snic_req_info + snic_host_req + sgl data, and initializes.
-+ */
-+struct snic_req_info *
-+snic_req_init(struct snic *snic, int sg_cnt)
-+{
-+	u8 typ;
-+	struct snic_req_info *rqi = NULL;
-+
-+	typ = (sg_cnt <= SNIC_REQ_CACHE_DFLT_SGL) ?
-+		SNIC_REQ_CACHE_DFLT_SGL : SNIC_REQ_CACHE_MAX_SGL;
-+
-+	rqi = mempool_alloc(snic->req_pool[typ], GFP_ATOMIC);
-+	if (!rqi) {
-+		atomic64_inc(&snic->s_stats.io.alloc_fail);
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Failed to allocate memory from snic req pool id = %d\n",
-+			      typ);
-+		return rqi;
++	if (trc->buf) {
++		vfree(trc->buf);
++		trc->buf = NULL;
 +	}
 +
-+	memset(rqi, 0, sizeof(*rqi));
-+	rqi->rq_pool_type = typ;
-+	rqi->start_time = jiffies;
-+	rqi->req = (struct snic_host_req *) (rqi + 1);
-+	rqi->req_len = sizeof(struct snic_host_req);
-+	rqi->snic = snic;
-+
-+	rqi->req = (struct snic_host_req *)(rqi + 1);
-+
-+	if (sg_cnt == 0)
-+		goto end;
-+
-+	rqi->req_len += (sg_cnt * sizeof(struct snic_sg_desc));
-+
-+	if (sg_cnt > atomic64_read(&snic->s_stats.io.max_sgl))
-+		atomic64_set(&snic->s_stats.io.max_sgl, sg_cnt);
-+
-+	SNIC_BUG_ON(sg_cnt > SNIC_MAX_SG_DESC_CNT);
-+	atomic64_inc(&snic->s_stats.io.sgl_cnt[sg_cnt - 1]);
-+
-+end:
-+	memset(rqi->req, 0, rqi->req_len);
-+
-+	/* pre initialization of init_ctx to support req_to_rqi */
-+	rqi->req->hdr.init_ctx = (ulong) rqi;
-+
-+	SNIC_SCSI_DBG(snic->shost, "Req_alloc:rqi = %p allocatd.\n", rqi);
-+
-+	return rqi;
-+} /* end of snic_req_init */
-+
-+/*
-+ * snic_abort_req_init : Inits abort request.
-+ */
-+struct snic_host_req *
-+snic_abort_req_init(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	struct snic_host_req *req = NULL;
-+
-+	SNIC_BUG_ON(!rqi);
-+
-+	/* If abort to be issued second time, then reuse */
-+	if (rqi->abort_req)
-+		return rqi->abort_req;
-+
-+
-+	req = mempool_alloc(snic->req_pool[SNIC_REQ_TM_CACHE], GFP_ATOMIC);
-+	if (!req) {
-+		SNIC_HOST_ERR(snic->shost, "abts:Failed to alloc tm req.\n");
-+		WARN_ON_ONCE(1);
-+
-+		return NULL;
-+	}
-+
-+	rqi->abort_req = req;
-+	memset(req, 0, sizeof(struct snic_host_req));
-+	/* pre initialization of init_ctx to support req_to_rqi */
-+	req->hdr.init_ctx = (ulong) rqi;
-+
-+	return req;
-+} /* end of snic_abort_req_init */
-+
-+/*
-+ * snic_dr_req_init : Inits device reset req
-+ */
-+struct snic_host_req *
-+snic_dr_req_init(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	struct snic_host_req *req = NULL;
-+
-+	SNIC_BUG_ON(!rqi);
-+
-+	req = mempool_alloc(snic->req_pool[SNIC_REQ_TM_CACHE], GFP_ATOMIC);
-+	if (!req) {
-+		SNIC_HOST_ERR(snic->shost, "dr:Failed to alloc tm req.\n");
-+		WARN_ON_ONCE(1);
-+
-+		return NULL;
-+	}
-+
-+	SNIC_BUG_ON(rqi->dr_req != NULL);
-+	rqi->dr_req = req;
-+	memset(req, 0, sizeof(struct snic_host_req));
-+	/* pre initialization of init_ctx to support req_to_rqi */
-+	req->hdr.init_ctx = (ulong) rqi;
-+
-+	return req;
-+} /* end of snic_dr_req_init */
-+
-+/* frees snic_req_info and snic_host_req */
-+void
-+snic_req_free(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	SNIC_BUG_ON(rqi->req == rqi->abort_req);
-+	SNIC_BUG_ON(rqi->req == rqi->dr_req);
-+	SNIC_BUG_ON(rqi->sge_va != 0);
-+
-+	SNIC_SCSI_DBG(snic->shost,
-+		      "Req_free:rqi %p:ioreq %p:abt %p:dr %p\n",
-+		      rqi, rqi->req, rqi->abort_req, rqi->dr_req);
-+
-+	if (rqi->abort_req)
-+		mempool_free(rqi->abort_req, snic->req_pool[SNIC_REQ_TM_CACHE]);
-+
-+	if (rqi->dr_req)
-+		mempool_free(rqi->dr_req, snic->req_pool[SNIC_REQ_TM_CACHE]);
-+
-+	mempool_free(rqi, snic->req_pool[rqi->rq_pool_type]);
-+}
-+
-+void
-+snic_pci_unmap_rsp_buf(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	struct snic_sg_desc *sgd;
-+
-+	sgd = req_to_sgl(rqi_to_req(rqi));
-+	SNIC_BUG_ON(sgd[0].addr == 0);
-+	pci_unmap_single(snic->pdev,
-+			 le64_to_cpu(sgd[0].addr),
-+			 le32_to_cpu(sgd[0].len),
-+			 PCI_DMA_FROMDEVICE);
-+}
-+
-+/*
-+ * snic_free_all_untagged_reqs: Walks through untagged reqs and frees them.
-+ */
-+void
-+snic_free_all_untagged_reqs(struct snic *snic)
-+{
-+	struct snic_req_info *rqi;
-+	struct list_head *cur, *nxt;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&snic->spl_cmd_lock, flags);
-+	list_for_each_safe(cur, nxt, &snic->spl_cmd_list) {
-+		rqi = list_entry(cur, struct snic_req_info, list);
-+		list_del_init(&rqi->list);
-+		if (rqi->sge_va) {
-+			snic_pci_unmap_rsp_buf(snic, rqi);
-+			kfree((void *)rqi->sge_va);
-+			rqi->sge_va = 0;
-+		}
-+
-+		snic_req_free(snic, rqi);
-+	}
-+	spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
-+}
-+
-+/*
-+ * snic_release_untagged_req : Unlinks the untagged req and frees it.
-+ */
-+void
-+snic_release_untagged_req(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&snic->snic_lock, flags);
-+	if (snic->in_remove) {
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		goto end;
-+	}
-+	spin_unlock_irqrestore(&snic->snic_lock, flags);
-+
-+	spin_lock_irqsave(&snic->spl_cmd_lock, flags);
-+	if (list_empty(&rqi->list)) {
-+		spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
-+		goto end;
-+	}
-+	list_del_init(&rqi->list);
-+	spin_unlock_irqrestore(&snic->spl_cmd_lock, flags);
-+	snic_req_free(snic, rqi);
-+
-+end:
-+	return;
-+}
-+
-+/* dump buf in hex fmt */
-+void
-+snic_hex_dump(char *pfx, char *data, int len)
-+{
-+	SNIC_INFO("%s Dumping Data of Len = %d\n", pfx, len);
-+	print_hex_dump_bytes(pfx, DUMP_PREFIX_NONE, data, len);
-+}
-+
-+#define	LINE_BUFSZ	128	/* for snic_print_desc fn */
-+static void
-+snic_dump_desc(const char *fn, char *os_buf, int len)
-+{
-+	struct snic_host_req *req = (struct snic_host_req *) os_buf;
-+	struct snic_fw_req *fwreq = (struct snic_fw_req *) os_buf;
-+	struct snic_req_info *rqi = NULL;
-+	char line[LINE_BUFSZ] = { '\0' };
-+	char *cmd_str = NULL;
-+
-+	if (req->hdr.type >= SNIC_RSP_REPORT_TGTS_CMPL)
-+		rqi = (struct snic_req_info *) fwreq->hdr.init_ctx;
-+	else
-+		rqi = (struct snic_req_info *) req->hdr.init_ctx;
-+
-+	SNIC_BUG_ON(rqi == NULL || rqi->req == NULL);
-+	switch (req->hdr.type) {
-+	case SNIC_REQ_REPORT_TGTS:
-+		cmd_str = "report-tgt : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_REQ_REPORT_TGTS :");
-+		break;
-+
-+	case SNIC_REQ_ICMND:
-+		cmd_str = "icmnd : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_REQ_ICMND : 0x%x :",
-+			 req->u.icmnd.cdb[0]);
-+		break;
-+
-+	case SNIC_REQ_ITMF:
-+		cmd_str = "itmf : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_REQ_ITMF :");
-+		break;
-+
-+	case SNIC_REQ_HBA_RESET:
-+		cmd_str = "hba reset :";
-+		snprintf(line, LINE_BUFSZ, "SNIC_REQ_HBA_RESET :");
-+		break;
-+
-+	case SNIC_REQ_EXCH_VER:
-+		cmd_str = "exch ver : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_REQ_EXCH_VER :");
-+		break;
-+
-+	case SNIC_REQ_TGT_INFO:
-+		cmd_str = "tgt info : ";
-+		break;
-+
-+	case SNIC_RSP_REPORT_TGTS_CMPL:
-+		cmd_str = "report tgt cmpl : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_RSP_REPORT_TGTS_CMPL :");
-+		break;
-+
-+	case SNIC_RSP_ICMND_CMPL:
-+		cmd_str = "icmnd_cmpl : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_RSP_ICMND_CMPL : 0x%x :",
-+			 rqi->req->u.icmnd.cdb[0]);
-+		break;
-+
-+	case SNIC_RSP_ITMF_CMPL:
-+		cmd_str = "itmf_cmpl : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_RSP_ITMF_CMPL :");
-+		break;
-+
-+	case SNIC_RSP_HBA_RESET_CMPL:
-+		cmd_str = "hba_reset_cmpl : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_RSP_HBA_RESET_CMPL :");
-+		break;
-+
-+	case SNIC_RSP_EXCH_VER_CMPL:
-+		cmd_str = "exch_ver_cmpl : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_RSP_EXCH_VER_CMPL :");
-+		break;
-+
-+	case SNIC_MSG_ACK:
-+		cmd_str = "msg ack : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_MSG_ACK :");
-+		break;
-+
-+	case SNIC_MSG_ASYNC_EVNOTIFY:
-+		cmd_str = "async notify : ";
-+		snprintf(line, LINE_BUFSZ, "SNIC_MSG_ASYNC_EVNOTIFY :");
-+		break;
-+
-+	default:
-+		cmd_str = "unknown : ";
-+		SNIC_BUG_ON(1);
-+		break;
-+	}
-+
-+	SNIC_INFO("%s:%s >>cmndid=%x:sg_cnt = %x:status = %x:ctx = %lx.\n",
-+		  fn, line, req->hdr.cmnd_id, req->hdr.sg_cnt, req->hdr.status,
-+		  req->hdr.init_ctx);
-+
-+	/* Enable it, to dump byte stream */
-+	if (snic_log_level & 0x20)
-+		snic_hex_dump(cmd_str, os_buf, len);
-+} /* end of __snic_print_desc */
-+
-+void
-+snic_print_desc(const char *fn, char *os_buf, int len)
-+{
-+	if (snic_log_level & SNIC_DESC_LOGGING)
-+		snic_dump_desc(fn, os_buf, len);
-+}
-+
-+void
-+snic_calc_io_process_time(struct snic *snic, struct snic_req_info *rqi)
-+{
-+	u64 duration;
-+
-+	duration = jiffies - rqi->start_time;
-+
-+	if (duration > atomic64_read(&snic->s_stats.io.max_time))
-+		atomic64_set(&snic->s_stats.io.max_time, duration);
-+}
-diff --git a/drivers/scsi/snic/snic_io.h b/drivers/scsi/snic/snic_io.h
++	SNIC_INFO("Trace Facility Disabled.\n");
++} /* end of snic_trc_free */
+diff --git a/drivers/scsi/snic/snic_trc.h b/drivers/scsi/snic/snic_trc.h
 new file mode 100644
-index 0000000..093d652
+index 0000000..99de384
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_io.h
-@@ -0,0 +1,118 @@
++++ b/drivers/scsi/snic/snic_trc.h
+@@ -0,0 +1,121 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -583,107 +246,110 @@ index 0000000..093d652
 + * SOFTWARE.
 + */
 +
-+#ifndef _SNIC_IO_H
-+#define _SNIC_IO_H
++#ifndef __SNIC_TRC_H
++#define __SNIC_TRC_H
 +
-+#define SNIC_DFLT_SG_DESC_CNT	32	/* Default descriptors for sgl */
-+#define SNIC_MAX_SG_DESC_CNT	60	/* Max descriptor for sgl */
-+#define SNIC_SG_DESC_ALIGN	16	/* Descriptor address alignment */
++#ifdef SNIC_DEBUG_FS
 +
-+/* SG descriptor for snic */
-+struct snic_sg_desc {
-+	__le64 addr;
-+	__le32 len;
-+	u32 _resvd;
++extern ssize_t simple_read_from_buffer(void __user *to,
++					size_t count,
++					loff_t *ppos,
++					const void *from,
++					size_t available);
++
++extern unsigned int snic_trace_max_pages;
++
++/* Global Data structure for trace to manage trace functionality */
++struct snic_trc_data {
++	u64	ts;		/* Time Stamp */
++	char	*fn;		/* Ptr to Function Name */
++	u32	hno;		/* SCSI Host ID */
++	u32	tag;		/* Command Tag */
++	u64 data[5];
++} __attribute__((__packed__));
++
++#define SNIC_TRC_ENTRY_SZ  64	/* in Bytes */
++
++struct snic_trc {
++	spinlock_t lock;
++	struct snic_trc_data *buf;	/* Trace Buffer */
++	u32	max_idx;		/* Max Index into trace buffer */
++	u32	rd_idx;
++	u32	wr_idx;
++	u32	enable;			/* Control Variable for Tracing */
++
++	struct dentry *trc_enable;	/* debugfs file object */
++	struct dentry *trc_file;
 +};
 +
-+struct snic_dflt_sgl {
-+	struct snic_sg_desc sg_desc[SNIC_DFLT_SG_DESC_CNT];
-+};
++int snic_trc_init(void);
++void snic_trc_free(void);
++int snic_trc_debugfs_init(void);
++void snic_trc_debugfs_term(void);
++struct snic_trc_data *snic_get_trc_buf(void);
++int snic_get_trc_data(char *buf, int buf_sz);
 +
-+struct snic_max_sgl {
-+	struct snic_sg_desc sg_desc[SNIC_MAX_SG_DESC_CNT];
-+};
++int snic_debugfs_init(void);
++void snic_debugfs_term(void);
 +
-+enum snic_req_cache_type {
-+	SNIC_REQ_CACHE_DFLT_SGL = 0,	/* cache with default size sgl */
-+	SNIC_REQ_CACHE_MAX_SGL,		/* cache with max size sgl */
-+	SNIC_REQ_TM_CACHE,		/* cache for task mgmt reqs contains
-+					   snic_host_req objects only*/
-+	SNIC_REQ_MAX_CACHES		/* number of sgl caches */
-+};
++static inline void
++snic_trace(char *fn, u16 hno, u32 tag, u64 d1, u64 d2, u64 d3, u64 d4, u64 d5)
++{
++	struct snic_trc_data *tr_rec = snic_get_trc_buf();
 +
-+/* Per IO internal state */
-+struct snic_internal_io_state {
-+	char	*rqi;
-+	u64	flags;
-+	u32	state;
-+	u32	abts_status;	/* Abort completion status */
-+	u32	lr_status;	/* device reset completion status */
-+};
++	if (!tr_rec)
++		return;
 +
-+/* IO state machine */
-+enum snic_ioreq_state {
-+	SNIC_IOREQ_NOT_INITED = 0,
-+	SNIC_IOREQ_PENDING,
-+	SNIC_IOREQ_ABTS_PENDING,
-+	SNIC_IOREQ_ABTS_COMPLETE,
-+	SNIC_IOREQ_LR_PENDING,
-+	SNIC_IOREQ_LR_COMPLETE,
-+	SNIC_IOREQ_COMPLETE,
-+};
++	tr_rec->fn = (char *)fn;
++	tr_rec->hno = hno;
++	tr_rec->tag = tag;
++	tr_rec->data[0] = d1;
++	tr_rec->data[1] = d2;
++	tr_rec->data[2] = d3;
++	tr_rec->data[3] = d4;
++	tr_rec->data[4] = d5;
++	tr_rec->ts = jiffies; /* Update time stamp at last */
++}
 +
-+struct snic;
-+struct snic_host_req;
++#define SNIC_TRC(_hno, _tag, d1, d2, d3, d4, d5)			\
++	do {								\
++		if (unlikely(snic_glob->trc.enable))			\
++			snic_trace((char *)__func__,			\
++				   (u16)(_hno),				\
++				   (u32)(_tag),				\
++				   (u64)(d1),				\
++				   (u64)(d2),				\
++				   (u64)(d3),				\
++				   (u64)(d4),				\
++				   (u64)(d5));				\
++	} while (0)
++#else
 +
-+/*
-+ * snic_req_info : Contains info about IO, one per scsi command.
-+ * Notes: Make sure that the structure is aligned to 16 B
-+ * this helps in easy access to snic_req_info from snic_host_req
-+ */
-+struct snic_req_info {
-+	struct list_head list;
-+	struct snic_host_req *req;
-+	u64	start_time;		/* start time in jiffies */
-+	u16	rq_pool_type;		/* noticion of request pool type */
-+	u16	req_len;		/* buf len passing to fw (req + sgl)*/
-+	u32	tgt_id;
++#define SNIC_TRC(_hno, _tag, d1, d2, d3, d4, d5)	\
++	do {						\
++		if (unlikely(snic_log_level & 0x2))	\
++			SNIC_DBG("SnicTrace: %s %2u %2u %llx %llx %llx %llx %llx", \
++				 (char *)__func__,	\
++				 (u16)(_hno),		\
++				 (u32)(_tag),		\
++				 (u64)(d1),		\
++				 (u64)(d2),		\
++				 (u64)(d3),		\
++				 (u64)(d4),		\
++				 (u64)(d5));		\
++	} while (0);
++#endif /* end of SNIC_DEBUG_FS */
 +
-+	u32	tm_tag;
-+	u8	io_cmpl:1;		/* sets to 1 when fw completes IO */
-+	u8	resvd[3];
-+	struct scsi_cmnd *sc;		/* Associated scsi cmd */
-+	struct snic	*snic;		/* Associated snic */
-+	ulong	sge_va;			/* Pointer to Resp Buffer */
-+	u64	snsbuf_va;
++#define SNIC_TRC_CMD(sc)	\
++	((u64)sc->cmnd[0] << 56 | (u64)sc->cmnd[7] << 40 |	\
++	 (u64)sc->cmnd[8] << 32 | (u64)sc->cmnd[2] << 24 |	\
++	 (u64)sc->cmnd[3] << 16 | (u64)sc->cmnd[4] << 8 |	\
++	 (u64)sc->cmnd[5])
 +
-+	struct snic_host_req *abort_req;
-+	struct completion *abts_done;
++#define SNIC_TRC_CMD_STATE_FLAGS(sc)	\
++	((u64) CMD_FLAGS(sc) << 32 | CMD_STATE(sc))
 +
-+	struct snic_host_req *dr_req;
-+	struct completion *dr_done;
-+};
-+
-+
-+#define rqi_to_req(rqi)	\
-+	((struct snic_host_req *) (((struct snic_req_info *)rqi)->req))
-+
-+#define req_to_rqi(req)	\
-+	((struct snic_req_info *) (((struct snic_host_req *)req)->hdr.init_ctx))
-+
-+#define req_to_sgl(req)	\
-+	((struct snic_sg_desc *) (((struct snic_host_req *)req)+1))
-+
-+struct snic_req_info *
-+snic_req_init(struct snic *, int sg_cnt);
-+void snic_req_free(struct snic *, struct snic_req_info *);
-+void snic_calc_io_process_time(struct snic *, struct snic_req_info *);
-+void snic_pci_unmap_rsp_buf(struct snic *, struct snic_req_info *);
-+struct snic_host_req *
-+snic_abort_req_init(struct snic *, struct snic_req_info *);
-+struct snic_host_req *
-+snic_dr_req_init(struct snic *, struct snic_req_info *);
-+#endif /* _SNIC_IO_H */
++#endif /* end of __SNIC_TRC_H */
 -- 
 1.8.5.4
 
