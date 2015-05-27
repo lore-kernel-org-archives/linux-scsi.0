@@ -1,28 +1,46 @@
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH net-next] qla4xxx: add a missing include
-Date: Wed, 27 May 2015 12:47:57 -0700
-Message-ID: <1432756077.4060.424.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <1432701824.4060.346.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <20150527.142117.1711665345600870663.davem@davemloft.net>
-	 <1432751594.2194.54.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1432751594.2194.54.camel@HansenPartnership.com>
-Sender: netdev-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] qla4xxx: pass timeout as HZ independent value
+Date: Wed, 27 May 2015 22:10:26 +0200
+Message-ID: <1432757426-6459-1-git-send-email-hofrat@osadl.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-05-27 at 11:33 -0700, James Bottomley wrote:
-> On Wed, 2015-05-27 at 14:21 -0400, David Miller wrote:
+schedule_timeout_* takes a timeout in jiffies but the code currently is
+passing in a constant which makes this timeout HZ dependent, so pass it
+through msecs_to_jiffies() to fix this up.
 
-> > Yeah it's easiest if I just apply this to net-next, which I've just done,
-> > thanks Eric.
-> 
-> Fine with me.  There's no point creating cross tree hassle for a simple
-> include problem.
+patch was compile tested with x86_64_defconfig + SCSI_LOWLEVEL=y,
+CONFIG_SCSI_QLA_ISCSI=m
 
-Note there are other drivers to fix, I'll try to submit patches for
-them.
+Patch is against 4.1-rc5 (localversion-next is -next-20150527)
+
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+
+As there is no documentation of the intended timeout it might be wrong
+to convert it with msecs_to_jiffies as this can reduces the actual
+jiffies value by at least a factor of 10 - so someone that knows this
+driver needs to check on the actual value - but in any case it needs
+to be passed in a HZ independent way.
+
+ drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 7c33658..7b53eab 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -1569,7 +1569,7 @@ static int qla4_82xx_cmdpeg_ready(struct scsi_qla_host *ha, int pegtune_val)
+ 			    (val == PHAN_INITIALIZE_ACK))
+ 				return 0;
+ 			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(500);
++			schedule_timeout(msecs_to_jiffies(500));
+ 
+ 		} while (--retries);
+ 
+-- 
+1.7.10.4
