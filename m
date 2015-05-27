@@ -1,67 +1,69 @@
-From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: [PATCH v6 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
-Date: Wed, 27 May 2015 14:25:11 +0300
-Message-ID: <5565A997.9070604@plexistor.com>
-References: <1432711182-17530-1-git-send-email-nmusini@cisco.com> <1432711182-17530-10-git-send-email-nmusini@cisco.com> <55658BAC.5000009@plexistor.com> <D18B9001.266AC%nmusini@cisco.com>
+From: yoma sophian <sophian.yoma@gmail.com>
+Subject: Re: possible race condition for usb_stor_port_reset and usb_reset_and_verify_device
+Date: Wed, 27 May 2015 20:41:08 +0800
+Message-ID: <CADUS3o=3R27qA3pYMWur0qugTuwTZLrrCpaaNd7CYgkXbB9S8w@mail.gmail.com>
+References: <CADUS3ok_63WuXBufTfnk1NeosmK7eT91k0vrAHZpWSjD5GqmHw@mail.gmail.com>
+	<Pine.LNX.4.44L0.1505061406230.1133-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34318 "EHLO
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:34877 "EHLO
 	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbbE0LZO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 07:25:14 -0400
-Received: by wicmc15 with SMTP id mc15so90561381wic.1
-        for <linux-scsi@vger.kernel.org>; Wed, 27 May 2015 04:25:13 -0700 (PDT)
-In-Reply-To: <D18B9001.266AC%nmusini@cisco.com>
+	with ESMTP id S1751620AbbE0MlJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2015 08:41:09 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1505061406230.1133-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
-Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
 
-On 05/27/2015 01:02 PM, Narsimhulu Musini (nmusini) wrote:
-<>
->>> +ifeq ($(CONFIG_SCSI_SNIC_DEBUG_FS), y)
->>> +ccflags-y +=3D -DSNIC_DEBUG_FS
->>
->> Why do you need an extra define here just use
->> CONFIG_SCSI_SNIC_DEBUG_FS in source code directly
-> Agree, I just want to use a shorter macro in the source.
+Hi alan:
 
-Don't do this. It is a convention that if a programmer
-sees a CONFIG_XXX he knows that this is settable by a
-Kconfig. By making it shorter the programmer will think that
-this is dead code because it is not set anywhere.
+2015-05-07 2:16 GMT+08:00 Alan Stern <stern@rowland.harvard.edu>:
+> On Thu, 7 May 2015, yoma sophian wrote:
+>
+>> > Besides, the kernel already contains a thread that calls
+>> > sd_check_events periodically.  Why do you need to write a new one?
+>> I create the thread since some buggy devices needs to periodically
+>> polling to let it not going to disconnection.
+>> Would you mind to let me know which kernel thread that calls
+>> sd_check_events periodically?
+>
+> There is not a dedicated thread.  Each block device has a workqueue
+> item that runs on the system_freezable_power_efficient_wq work queue.
+> For more information, see the "Disk events" section of block/genhd.c.
+> In particular, look at the disk_check_events() routine.
+>
+> For a typical USB storage device, the system will poll for media
+> changes by calling sd_check_events.
+>
+>> >> My questions are:
+>> >> a. is there any system flag such suspend/resume in scsi layer for
+>> >> checking before sending command to downlayer driver, such as usb.
+>> >
+>> > I don't know of any.  In general, the kernel is designed so that no
+>> > SCSI commands will be sent while the system is in suspend or
+>> > hibernation, so no checking is needed.
+>> which flag or callback function we used to determine the system is in
+>> suspend or hibernation?
+>> udev->state?
+>
+> You don't use any flags or callbacks, and you don't determine when the
+> system is in suspend or hibernation.  Instead you make your thread
+> freezable, so that it will get frozen automatically whenever the system
+> goes into suspend or hibernation.
+>
+After reading the kernel power document, freezing-of-tasks.txt , can I
+get the below conclusion:
+if I put my thread in freezable, it will get frozen automatically
+whenever the system goes in to suspend or hibernate.
+And automatically be waked up when all other thread finish their job?
+in my case, since I didn't put my own sd_check_events thread into
+freezable case.
+once the system resume, it will cause the race condition as I
+mentioned previously, right?
 
->>
->>> +snic-y +=3D snic_debugfs.o \
->>> +		snic_trc.o
->>> +endif
->>>
->>
->> snic-$(CONFIG_SCSI_SNIC_DEBUG_FS) +=3D snic_debugfs.o
-> If CONFIG_SCSI_SNIC_DEBUGFS is not set, then it leaves a build variab=
-le
-> =C2=B3snic-" in build system. ifeq() avoids such thing.
+if my conclusion is correct, would you mind to let me know where the
+kernel sequencially wake up normal then freezable threads?
 
-That is fine. This is done all over the Kernel Makefile.
-There are two tons of these "do nothing make variables"
-
-It the way we do it in the Kernel. (I actually like it)
-
->>
->> You do not the  ifeq () thing at all
->>
->> Cheers
->> Boaz
->>
-> Thanks
-> simha
->>
->=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+appreciate your kind help,
