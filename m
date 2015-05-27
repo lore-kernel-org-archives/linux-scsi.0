@@ -1,46 +1,72 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] qla4xxx: pass timeout as HZ independent value
-Date: Wed, 27 May 2015 22:10:26 +0200
-Message-ID: <1432757426-6459-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH-v2 0/4] target: Eliminate se_port +
+ t10_alua_tg_pt_gp_member
+Date: Wed, 27 May 2015 13:36:50 -0700
+Message-ID: <20150527203650.GO5989@linux.vnet.ibm.com>
+References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
+ <55646A9E.5050401@sandisk.com>
+ <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
+Reply-To: paulmck@linux.vnet.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-schedule_timeout_* takes a timeout in jiffies but the code currently is
-passing in a constant which makes this timeout HZ dependent, so pass it
-through msecs_to_jiffies() to fix this up.
+On Tue, May 26, 2015 at 10:13:02PM -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2015-05-26 at 14:44 +0200, Bart Van Assche wrote:
+> > On 05/26/15 08:57, Nicholas A. Bellinger wrote:
+> > >    - Add various rcu_dereference and lockless_dereference RCU notation
+> > 
+> > Hello Nic,
+> > 
+> > Feedback from an RCU expert (which I'm not) would be appreciated here. 
+> > But my understanding is that lockless_dereference(p) should be used for 
+> > a pointer p that has *not* been annotated as an RCU pointer. I think in 
+> > the for-next branch of the target repository that this macro is used to 
+> > access RCU-annotated pointers. Is that why sparse complains about how 
+> > lockless_dereference() is used in the target tree ?
+> > 
+> 
+> Was curious about this myself..  Thanks for raising the question!
+> 
+> The intention of lockless_dereference() in both this and preceding
+> series is for __rcu protected pointers that are accessed outside of
+> rcu_read_lock() protection, and who's lifetime is controlled by a:
+> 
+>   - struct kref
+>   - struct percpu_ref
+>   - struct config_group symlink
+>   - RCU updater path with some manner of mutex or spinlock held
+> 
+> This is supposed to be following Paul's comment in rcupdate.h:
+> 
+>  * Similar to rcu_dereference(), but for situations where the pointed-to
+>  * object's lifetime is managed by something other than RCU.  That
+>  * "something other" might be reference counting or simple immortality.
+> 
+> Paul, would you be to kind to clarify the intention for us..?
 
-patch was compile tested with x86_64_defconfig + SCSI_LOWLEVEL=y,
-CONFIG_SCSI_QLA_ISCSI=m
+The lockless_dereference() primitive is to be used for pointers that
+are -not- marked with __rcu.  In fact, the sparse tool should yell
+at you if you use lockless_dereference() on an __rcu-marked pointer.
+You could use smp_store_release() to update the pointer when inserting
+new data.  If you are using one of the lists, then the _rcu variant of the
+list-insert macro should be used (list_add_rcu()), because that is needed
+to make sure that the reader sees a properly initialized new element.
 
-Patch is against 4.1-rc5 (localversion-next is -next-20150527)
+If you have a pointer that is sometimes protected by RCU and other times
+protected by something else, you still use one of the rcu_dereference()
+macros to access it.  For example, if a given RCU-protected pointer is
+protected either by RCU or by some lock, you might write common code
+that is called from either context as follows:
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+	p = rcu_dereference_check(pointer, lockdep_is_held(&some_lock));
 
-As there is no documentation of the intended timeout it might be wrong
-to convert it with msecs_to_jiffies as this can reduces the actual
-jiffies value by at least a factor of 10 - so someone that knows this
-driver needs to check on the actual value - but in any case it needs
-to be passed in a HZ independent way.
+Does that help, or am I missing your point?
 
- drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 7c33658..7b53eab 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -1569,7 +1569,7 @@ static int qla4_82xx_cmdpeg_ready(struct scsi_qla_host *ha, int pegtune_val)
- 			    (val == PHAN_INITIALIZE_ACK))
- 				return 0;
- 			set_current_state(TASK_UNINTERRUPTIBLE);
--			schedule_timeout(500);
-+			schedule_timeout(msecs_to_jiffies(500));
- 
- 		} while (--retries);
- 
--- 
-1.7.10.4
+							Thanx, Paul
