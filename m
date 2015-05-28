@@ -1,66 +1,52 @@
-From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-Subject: Re: [PATCH v6 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
-Date: Thu, 28 May 2015 18:01:30 +0000
-Message-ID: <D18D5553.268B2%nmusini@cisco.com>
-References: <1432711182-17530-1-git-send-email-nmusini@cisco.com>
- <1432711182-17530-10-git-send-email-nmusini@cisco.com>
- <1432821316.2199.14.camel@HansenPartnership.com>
+From: James Smart <james.smart@avagotech.com>
+Subject: Re: [PATCH] lpfc: fix model description
+Date: Thu, 28 May 2015 16:28:53 -0400
+Message-ID: <55677A85.9070301@avagotech.com>
+References: <20150422231618.00005ec8@localhost> <20150527234009.0000472c@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:12074 "EHLO
-	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942AbbE1SBb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2015 14:01:31 -0400
-In-Reply-To: <1432821316.2199.14.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <368BC595FDC96848A26730099E30F4EF@emea.cisco.com>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:36232 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846AbbE1U25 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2015 16:28:57 -0400
+Received: by qcxw10 with SMTP id w10so19453031qcx.3
+        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2015 13:28:55 -0700 (PDT)
+In-Reply-To: <20150527234009.0000472c@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+To: Sebastian Herbszt <herbszt@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi James,
+Yes - this is acceptable. Not a big deal per-say, but good to be uniform.
 
-    Thank you for reviewing the patches.
-    Sure, I will incorporate your comments and suggestions in next patch
-submittal.
+Reviewed-By: James Smart <james.smart@avagotech.com>
+
+-- james s
 
 
-On 28/05/15 7:25 pm, "James Bottomley"
-<James.Bottomley@HansenPartnership.com> wrote:
-
->In general, patch is much better: it passes all the static checker tests
->for byte width and endianness issues.  However
+On 5/27/2015 5:40 PM, Sebastian Herbszt wrote:
+> I wrote:
+>> Remove trailing space from model description.
+>>
+>> Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+>>
+>> diff -up 4.0/drivers/scsi/lpfc.orig/lpfc_init.c 4.0/drivers/scsi/lpfc/lpfc_init.c
+>> --- 4.0/drivers/scsi/lpfc.orig/lpfc_init.c	2015-04-15 06:18:24.673045138 +0200
+>> +++ 4.0/drivers/scsi/lpfc/lpfc_init.c	2015-04-22 21:03:39.203230409 +0200
+>> @@ -2253,7 +2253,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba
+>>   				phba->Port);
+>>   		else if (max_speed == 0)
+>>   			snprintf(descp, 255,
+>> -				"Emulex %s %s %s ",
+>> +				"Emulex %s %s %s",
+>>   				m.name, m.bus, m.function);
+>>   		else
+>>   			snprintf(descp, 255,
+> James,
 >
->On Wed, 2015-05-27 at 00:19 -0700, Narsimhulu Musini wrote:
->> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->> index 9c92f41..8baab3f 100644
->> --- a/drivers/scsi/Kconfig
->> +++ b/drivers/scsi/Kconfig
->> @@ -634,6 +634,23 @@ config FCOE_FNIC
->>  	  <file:Documentation/scsi/scsi.txt>.
->>  	  The module will be called fnic.
->>  
->> +config SCSI_SNIC
->> +	tristate "Cisco SNIC Driver"
->> +	depends on PCI && SCSI && X86_64
+> any feedback?
 >
->Please don't restrict the compilation architecture in the Kconfig
->because that restricts the amount of build testing the driver gets.
->Instead you can put a runtime warning in the driver if you insist.
->Something like this
->
->http://thread.gmane.org/gmane.linux.scsi/101846
->
->Where you add a runtime taint is much better.
-Sure, I will add runtime taint. Thanks for suggesting it.
->
->James
->
->
-Thanks
-Narsimhulu
->
+> Sebastian
 
