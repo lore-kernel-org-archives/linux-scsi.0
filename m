@@ -1,124 +1,143 @@
 From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH-v2 0/4] target: Eliminate se_port +
- t10_alua_tg_pt_gp_member
-Date: Thu, 28 May 2015 08:48:02 -0700
-Message-ID: <20150528154802.GB5989@linux.vnet.ibm.com>
+Subject: Re: [PATCH-v2 2/4] target: Drop lun_sep_lock for se_lun->lun_se_dev
+ RCU usage
+Date: Thu, 28 May 2015 08:57:20 -0700
+Message-ID: <20150528155720.GC5989@linux.vnet.ibm.com>
 References: <1432623445-25776-1-git-send-email-nab@daterainc.com>
- <55646A9E.5050401@sandisk.com>
- <1432703582.26863.33.camel@haakon3.risingtidesystems.com>
- <20150527203650.GO5989@linux.vnet.ibm.com>
- <1432791697.26863.79.camel@haakon3.risingtidesystems.com>
+ <1432623445-25776-3-git-send-email-nab@daterainc.com>
+ <55648374.80802@sandisk.com>
+ <1432704585.26863.47.camel@haakon3.risingtidesystems.com>
+ <20150527210446.GP5989@linux.vnet.ibm.com>
+ <1432792930.26863.97.camel@haakon3.risingtidesystems.com>
 Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:51768 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932176AbbE1PsM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2015 11:48:12 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Thu, 28 May 2015 09:48:11 -0600
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1432791697.26863.79.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1432792930.26863.97.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 27, 2015 at 10:41:37PM -0700, Nicholas A. Bellinger wrote:
-> On Wed, 2015-05-27 at 13:36 -0700, Paul E. McKenney wrote:
-> > On Tue, May 26, 2015 at 10:13:02PM -0700, Nicholas A. Bellinger wrote:
-> > > On Tue, 2015-05-26 at 14:44 +0200, Bart Van Assche wrote:
+On Wed, May 27, 2015 at 11:02:10PM -0700, Nicholas A. Bellinger wrote:
+> On Wed, 2015-05-27 at 14:04 -0700, Paul E. McKenney wrote:
+> > On Tue, May 26, 2015 at 10:29:45PM -0700, Nicholas A. Bellinger wrote:
+> > > On Tue, 2015-05-26 at 16:30 +0200, Bart Van Assche wrote:
 > > > > On 05/26/15 08:57, Nicholas A. Bellinger wrote:
-> > > > >    - Add various rcu_dereference and lockless_dereference RCU notation
+> > > > > @@ -625,6 +626,7 @@ int core_dev_add_initiator_node_lun_acl(
+> > > > >   	u32 lun_access)
+> > > > >   {
+> > > > >   	struct se_node_acl *nacl = lacl->se_lun_nacl;
+> > > > > +	struct se_device *dev = lockless_dereference(lun->lun_se_dev);
+> > > > >   
+> > > > >   	if (!nacl)
+> > > > >   		return -EINVAL;
 > > > > 
-> > > > Hello Nic,
+> > > > An attempt to run this code on a system with RCU debugging enabled
+> > > > resulted in the following complaint:
 > > > > 
-> > > > Feedback from an RCU expert (which I'm not) would be appreciated here. 
-> > > > But my understanding is that lockless_dereference(p) should be used for 
-> > > > a pointer p that has *not* been annotated as an RCU pointer. I think in 
-> > > > the for-next branch of the target repository that this macro is used to 
-> > > > access RCU-annotated pointers. Is that why sparse complains about how 
-> > > > lockless_dereference() is used in the target tree ?
+> > > > ===============================
+> > > > [ INFO: suspicious RCU usage. ]
+> > > > 4.1.0-rc1-lio-dbg+ #1 Not tainted
+> > > > -------------------------------
+> > > > drivers/target/target_core_device.c:617 suspicious rcu_dereference_check() usage!
+> > > > 
+> > > > other info that might help us debug this:
+> > > > 
+> > > > 
+> > > > rcu_scheduler_active = 1, debug_locks = 1
+> > > > 2 locks held by ln/1497:
+> > > >  #0:  (sb_writers#11){.+.+.+}, at: [<ffffffff811d9ca4>] mnt_want_write+0x24/0x50
+> > > >  #1:  (&sb->s_type->i_mutex_key#14/1){+.+.+.}, at: [<ffffffff811c4cdd>] filename_create+0xad/0x1a0
+> > > > 
+> > > > stack backtrace:
+> > > > CPU: 0 PID: 1497 Comm: ln Not tainted 4.1.0-rc1-lio-dbg+ #1
+> > > > Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> > > >  0000000000000001 ffff88005955bd68 ffffffff814fa346 0000000000000011
+> > > >  ffff880058bf1270 ffff88005955bd98 ffffffff810ab235 ffff880050db9a68
+> > > >  ffff880058ae2e68 0000000000000002 ffff880058ae4120 ffff88005955be08
+> > > > Call Trace:
+> > > >  [<ffffffff814fa346>] dump_stack+0x4f/0x7b
+> > > >  [<ffffffff810ab235>] lockdep_rcu_suspicious+0xd5/0x110
+> > > >  [<ffffffffa04324bc>] core_dev_add_initiator_node_lun_acl+0xec/0x190 [target_core_mod]
+> > > >  [<ffffffff8108f871>] ? get_parent_ip+0x11/0x50
+> > > >  [<ffffffffa04346f9>] target_fabric_mappedlun_link+0x129/0x240 [target_core_mod]
+> > > >  [<ffffffffa043466c>] ? target_fabric_mappedlun_link+0x9c/0x240 [target_core_mod]
+> > > >  [<ffffffffa035824d>] configfs_symlink+0x13d/0x360 [configfs]
+> > > >  [<ffffffff811be8c8>] vfs_symlink+0x58/0xb0
+> > > >  [<ffffffff811c75c5>] SyS_symlink+0x65/0xc0
+> > > >  [<ffffffff81502eb2>] system_call_fastpath+0x16/0x7a
 > > > > 
 > > > 
-> > > Was curious about this myself..  Thanks for raising the question!
+> > > In this particular case, the se_device behind se_lun->lun_se_dev
+> > > __rcu protected pointer can't be released without first releasing the
+> > > pre-existing se_lun->lun_group reference to se_device->dev_group.
 > > > 
-> > > The intention of lockless_dereference() in both this and preceding
-> > > series is for __rcu protected pointers that are accessed outside of
-> > > rcu_read_lock() protection, and who's lifetime is controlled by a:
+> > > And since se_lun->lun_group is the source of a configfs symlink to
+> > > se_lun_acl->se_lun_group here, the se_lun associated RCU pointer and
+> > > underlying se_device can't be released out from under the above
+> > > target_fabric_mappedlun_link() code accessing a __rcu protected pointer.
 > > > 
-> > >   - struct kref
-> > >   - struct percpu_ref
-> > >   - struct config_group symlink
-> > >   - RCU updater path with some manner of mutex or spinlock held
-> > > 
-> > > This is supposed to be following Paul's comment in rcupdate.h:
-> > > 
-> > >  * Similar to rcu_dereference(), but for situations where the pointed-to
-> > >  * object's lifetime is managed by something other than RCU.  That
-> > >  * "something other" might be reference counting or simple immortality.
-> > > 
-> > > Paul, would you be to kind to clarify the intention for us..?
+> > > Paul, is lockless_dereference the correct notation for this type of
+> > > use-case..?
 > > 
-> > The lockless_dereference() primitive is to be used for pointers that
-> > are -not- marked with __rcu.  In fact, the sparse tool should yell
-> > at you if you use lockless_dereference() on an __rcu-marked pointer.
-> 
-> Yep, definitely wrong usage of lockless_dereference on my part.
-> 
-> Thanks for the clarification.
-> 
-> > You could use smp_store_release() to update the pointer when inserting
-> > new data.  If you are using one of the lists, then the _rcu variant of the
-> > list-insert macro should be used (list_add_rcu()), because that is needed
-> > to make sure that the reader sees a properly initialized new element.
+> > My guess is "no", but I don't claim to understand your use case.
 > > 
-> > If you have a pointer that is sometimes protected by RCU and other times
-> > protected by something else, you still use one of the rcu_dereference()
-> > macros to access it.  For example, if a given RCU-protected pointer is
-> > protected either by RCU or by some lock, you might write common code
-> > that is called from either context as follows:
+> > The splat is against some other code than the patch, judging by the
+> > patch line numbers.
 > > 
-> > 	p = rcu_dereference_check(pointer, lockdep_is_held(&some_lock));
+> > The rule is that if a pointer points to something that is freed (or
+> > reused) after a grace period, you mark that pointer with __rcu.
+> > Any access to that pointer must then be accessed in an RCU read-side
+> > critical section, using one of the RCU list iterators or one of the
+> > rcu_dereference() macros.  No lockless_dereference() in this case.
 > > 
-> > Does that help, or am I missing your point?
-> > 
+> > You use lockless_dereference() when something other than RCU controls
+> > when the pointer target is freed.
 > 
-> This makes more sense now.
+> For this case, there is a pointer with __rcu notation being
+> dereferenced, but given the way configfs parent/child config_group
+> reference counting works, it's impossible for this __rcu pointer to be
+> modified, and impossible for RCU updater path (-> kfree_rcu) of the
+> structure being dereferenced to run, while this particular code is
+> executed.
 > 
-> Ok, so for an updater path where a __rcu protected pointer is being
-> dereferenced with a lock held synchronizing modification of an
-> hlist_head or hlist_node, the rcu_dereference_check() usage is clear to
-> me..
-> 
-> What I'm still unclear about is other three cases above, where a __rcu
-> protected pointer is dereferenced outside of the updater path, but it's
-> release is protected by some external means; kref, percpu_ref, or a
-> configfs parent/child config_group reference.
-> 
-> For example, say a __rcu protected pointer is dereferenced under
-> rcu_read_lock().  The data structure itself contains a percpu_ref that
-> is incremented under rcu_read_lock(), and also contains a rcu_head.
-> rcu_read_unlock() happens immediately after the percpu_ref has been
-> incremented.
-> 
-> If this structure is then attempted to be released from an updater path,
-> it first blocks on a completion waiting for the percpu_ref count to
-> return to zero, before invoking the final kfree_rcu().
-> 
-> So the question I'm getting at is, what's the correct notation for
-> dereferencing a __rcu pointer outside of rcu_read_lock(), who's data
-> structure is protected by some manner of reference counting obtained
-> under rcu_read_lock(), that prevents kfree_rcu() from happening until
-> the reference count is dropped..?
+> So I was thinking this should be using something like
+> rcu_dereference_protected(), but from the comment it sounds like this is
+> intended only for RCU updater path code.
 
-If feasible, use rcu_dereference_check() with an expression checking for
-the reference being held.  If that does not work for whatever reason,
-use rcu_dereference_raw() with a comment indicating that you are relying
-on a kref, percpu_ref, or whatever.
+If something is preventing the pointer from changing, then it is OK
+to use rcu_dereference_protected().  If the pointer might change, then
+you are right, you absolutely cannot use rcu_dereference_protected(),
+as it does not protect against concurrent updates.
+
+If reasonably possible, you should pass a reference-held expression to
+rcu_dereference_protected().
+
+> Is there some other notation to use for this type of case where the RCU
+> updater path can't run due to external reference counting, or should
+> this not be using __rcu notation at all..?
+
+You should be OK with rcu_dereference_protected().  However, for
+rcu_dereference_protected() to work properly, it must be the case
+that the pointer it is reading doesn't change.
+
+So you do have to be a bit careful.  For example, if structure A has
+a reference held so that it cannot be removed at the moment, but if it
+points to some structure B that -can- be removed, then you cannot use
+rcu_dereference_protected() to access the pointer from A to B because
+that pointer could change.
+
+For another example, assume that structures C and D both have references
+held (and thus cannot be removed), and that structure C points to
+structure D.  But if a structure E could be inserted between C and D,
+we -cannot- use rcu_dereference_protected() because the pointer from
+C to D could change at any time, despite both C and D being nailed down.
+
+In other words, the distinction is whether or not a given pointer can
+change, not whether or not the enclosing structure is guaranteed to live.
+
+Make sense?
 
 							Thanx, Paul
-
