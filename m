@@ -1,40 +1,49 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH v6 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
-Date: Thu, 28 May 2015 15:42:48 +0200
-Message-ID: <20150528134248.GA29495@c203.arch.suse.de>
+Date: Thu, 28 May 2015 06:55:16 -0700
+Message-ID: <1432821316.2199.14.camel@HansenPartnership.com>
 References: <1432711182-17530-1-git-send-email-nmusini@cisco.com>
- <1432711182-17530-10-git-send-email-nmusini@cisco.com>
- <55658BAC.5000009@plexistor.com>
- <D18B9001.266AC%nmusini@cisco.com>
- <5565A997.9070604@plexistor.com>
- <D18CE1AF.26822%nmusini@cisco.com>
+	 <1432711182-17530-10-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50025 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752674AbbE1NnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 May 2015 09:43:02 -0400
-Content-Disposition: inline
-In-Reply-To: <D18CE1AF.26822%nmusini@cisco.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34071 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751556AbbE1NzS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 May 2015 09:55:18 -0400
+In-Reply-To: <1432711182-17530-10-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-Cc: Boaz Harrosh <boaz@plexistor.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+To: Narsimhulu Musini <nmusini@cisco.com>
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, Sesidhar Baddela <sebaddel@cisco.com>
 
-On Thu, May 28, 2015 at 09:49:08AM +0000, Narsimhulu Musini (nmusini) wrote:
-> Hi Boaz, 
-> 
->     Sure, I will incorporate the comments and suggestions in next patch
-> submittal.
-> 
-> Thanks
-> Narsimhulu
+In general, patch is much better: it passes all the static checker tests
+for byte width and endianness issues.  However
 
-As you're going to re-submit anyway, I have found several occurences of:
-[Insert appropriate license here when releasing outside of Cisco]
-in the patches.
+On Wed, 2015-05-27 at 00:19 -0700, Narsimhulu Musini wrote:
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 9c92f41..8baab3f 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -634,6 +634,23 @@ config FCOE_FNIC
+>  	  <file:Documentation/scsi/scsi.txt>.
+>  	  The module will be called fnic.
+>  
+> +config SCSI_SNIC
+> +	tristate "Cisco SNIC Driver"
+> +	depends on PCI && SCSI && X86_64
 
-Doesn't really look intentional.
+Please don't restrict the compilation architecture in the Kconfig
+because that restricts the amount of build testing the driver gets.
+Instead you can put a runtime warning in the driver if you insist.
+Something like this
 
-Johannes
+http://thread.gmane.org/gmane.linux.scsi/101846
+
+Where you add a runtime taint is much better.
+
+James
+
+
