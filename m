@@ -1,54 +1,66 @@
 From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
 Subject: Re: [PATCH v6 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
-Date: Thu, 28 May 2015 17:59:06 +0000
-Message-ID: <D18D540F.268A4%nmusini@cisco.com>
+Date: Thu, 28 May 2015 18:01:30 +0000
+Message-ID: <D18D5553.268B2%nmusini@cisco.com>
 References: <1432711182-17530-1-git-send-email-nmusini@cisco.com>
  <1432711182-17530-10-git-send-email-nmusini@cisco.com>
- <55658BAC.5000009@plexistor.com> <D18B9001.266AC%nmusini@cisco.com>
- <5565A997.9070604@plexistor.com> <D18CE1AF.26822%nmusini@cisco.com>
- <20150528134248.GA29495@c203.arch.suse.de>
+ <1432821316.2199.14.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-4.cisco.com ([173.37.86.75]:23420 "EHLO
-	rcdn-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbbE1R7I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2015 13:59:08 -0400
-In-Reply-To: <20150528134248.GA29495@c203.arch.suse.de>
+Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:12074 "EHLO
+	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942AbbE1SBb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2015 14:01:31 -0400
+In-Reply-To: <1432821316.2199.14.camel@HansenPartnership.com>
 Content-Language: en-US
-Content-ID: <E6FB416361BD8748ACAC148D2C5BE2C7@emea.cisco.com>
+Content-ID: <368BC595FDC96848A26730099E30F4EF@emea.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Boaz Harrosh <boaz@plexistor.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
-Hi Johannes,
+Hi James,
 
-     Thank you for reviewing the patches.
-     I will incorporate your comments in next patch submittal.
+    Thank you for reviewing the patches.
+    Sure, I will incorporate your comments and suggestions in next patch
+submittal.
 
 
-On 28/05/15 7:12 pm, "Johannes Thumshirn" <jthumshirn@suse.de> wrote:
+On 28/05/15 7:25 pm, "James Bottomley"
+<James.Bottomley@HansenPartnership.com> wrote:
 
->On Thu, May 28, 2015 at 09:49:08AM +0000, Narsimhulu Musini (nmusini)
->wrote:
->> Hi Boaz, 
->> 
->>     Sure, I will incorporate the comments and suggestions in next patch
->> submittal.
->> 
->> Thanks
->> Narsimhulu
+>In general, patch is much better: it passes all the static checker tests
+>for byte width and endianness issues.  However
 >
->As you're going to re-submit anyway, I have found several occurences of:
->[Insert appropriate license here when releasing outside of Cisco]
->in the patches.
-Thanks for pointing it.
+>On Wed, 2015-05-27 at 00:19 -0700, Narsimhulu Musini wrote:
+>> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+>> index 9c92f41..8baab3f 100644
+>> --- a/drivers/scsi/Kconfig
+>> +++ b/drivers/scsi/Kconfig
+>> @@ -634,6 +634,23 @@ config FCOE_FNIC
+>>  	  <file:Documentation/scsi/scsi.txt>.
+>>  	  The module will be called fnic.
+>>  
+>> +config SCSI_SNIC
+>> +	tristate "Cisco SNIC Driver"
+>> +	depends on PCI && SCSI && X86_64
 >
->Doesn't really look intentional.
+>Please don't restrict the compilation architecture in the Kconfig
+>because that restricts the amount of build testing the driver gets.
+>Instead you can put a runtime warning in the driver if you insist.
+>Something like this
 >
->Johannes
+>http://thread.gmane.org/gmane.linux.scsi/101846
+>
+>Where you add a runtime taint is much better.
+Sure, I will add runtime taint. Thanks for suggesting it.
+>
+>James
+>
+>
 Thanks
 Narsimhulu
+>
 
