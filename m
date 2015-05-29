@@ -1,49 +1,43 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH v7 4/9] snic:Add snic target discovery
-Date: Fri, 29 May 2015 01:04:04 -0700
-Message-ID: <1432886649-12034-5-git-send-email-nmusini@cisco.com>
+Subject: [PATCH v7 7/9] snic:Add sysfs entries to list stats and trace data
+Date: Fri, 29 May 2015 01:04:07 -0700
+Message-ID: <1432886649-12034-8-git-send-email-nmusini@cisco.com>
 References: <1432886649-12034-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-8.cisco.com ([173.37.142.95]:6815 "EHLO
-	alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755573AbbE2IJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 04:09:07 -0400
+Received: from alln-iport-7.cisco.com ([173.37.142.94]:17497 "EHLO
+	alln-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755696AbbE2IJI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 04:09:08 -0400
 In-Reply-To: <1432886649-12034-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de, boaz@plexistor.com, jthumshirn@suse.de
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-snic_disc.h contains snic target structure definition.
+snic_stats.h contains stats structre definitions for various events
+in snic driver.
 
-snic_disc.c contains target discovery, setup, lookup, and cleanup
-
-snic_ctl.c contains retrieval of snic capabilities includes
-max ios, size, SGs per request, and max concurrent requests.
+snic_debugfs.c contains setup and cleanup of sysfs entries for listing stats,
+resetting stats, enabling/disabling trace, and listing trace data.
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
-* v6
-- Fixed bit width and endianness.
+* v7
+- Removed SNIC_DEBUG_FS macro, and replaced it with CONFIG_SCSI_SNIC_DEBUG_FS
 
-* v3
-- Cleaned up redundant comment.
+ drivers/scsi/snic/snic_debugfs.c | 560 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/snic/snic_stats.h   | 123 +++++++++
+ 2 files changed, 683 insertions(+)
+ create mode 100644 drivers/scsi/snic/snic_debugfs.c
+ create mode 100644 drivers/scsi/snic/snic_stats.h
 
- drivers/scsi/snic/snic_ctl.c  | 279 +++++++++++++++++++++
- drivers/scsi/snic/snic_disc.c | 551 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/snic/snic_disc.h | 124 ++++++++++
- 3 files changed, 954 insertions(+)
- create mode 100644 drivers/scsi/snic/snic_ctl.c
- create mode 100644 drivers/scsi/snic/snic_disc.c
- create mode 100644 drivers/scsi/snic/snic_disc.h
-
-diff --git a/drivers/scsi/snic/snic_ctl.c b/drivers/scsi/snic/snic_ctl.c
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
 new file mode 100644
-index 0000000..aebe753
+index 0000000..82385eb
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_ctl.c
-@@ -0,0 +1,279 @@
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -0,0 +1,560 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -61,831 +55,555 @@ index 0000000..aebe753
 + * SOFTWARE.
 + */
 +
++#include <linux/module.h>
 +#include <linux/errno.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
++#include <linux/debugfs.h>
 +
-+#include <linux/interrupt.h>
-+#include <linux/workqueue.h>
-+#include <linux/spinlock.h>
-+#include <linux/mempool.h>
-+#include <scsi/scsi_tcq.h>
-+#include <linux/ctype.h>
-+
-+#include "snic_io.h"
 +#include "snic.h"
-+#include "cq_enet_desc.h"
-+#include "snic_fwint.h"
 +
 +/*
-+ * snic_handle_link : Handles link flaps.
++ * snic_debugfs_init - Initialize debugfs for snic debug logging
++ *
++ * Description:
++ * When Debugfs is configured this routine sets up fnic debugfs
++ * filesystem. If not already created. this routine will crate the
++ * fnic directory and statistics directory for trace buffer and
++ * stats logging
++ */
++
++int
++snic_debugfs_init(void)
++{
++	int rc = -1;
++	struct dentry *de = NULL;
++
++	de = debugfs_create_dir("snic", NULL);
++	if (!de) {
++		SNIC_DBG("Cannot create debugfs root\n");
++
++		return rc;
++	}
++	snic_glob->trc_root = de;
++
++	de = debugfs_create_dir("statistics", snic_glob->trc_root);
++	if (!de) {
++		SNIC_DBG("Cannot create Statistics directory\n");
++
++		return rc;
++	}
++	snic_glob->stats_root = de;
++
++	rc = 0;
++
++	return rc;
++} /* end of snic_debugfs_init */
++
++/*
++ * snic_debugfs_term - Tear down debugfs intrastructure
++ *
++ * Description:
++ * When Debufs is configured this routine removes debugfs file system
++ * elements that are specific to snic
 + */
 +void
-+snic_handle_link(struct work_struct *work)
++snic_debugfs_term(void)
 +{
-+	struct snic *snic = container_of(work, struct snic, link_work);
++	debugfs_remove(snic_glob->stats_root);
++	snic_glob->stats_root = NULL;
 +
-+	if (snic->config.xpt_type != SNIC_DAS) {
-+		SNIC_HOST_INFO(snic->shost, "Link Event Received.\n");
-+		SNIC_ASSERT_NOT_IMPL(1);
-+
-+		return;
-+	}
-+
-+	snic->link_status = svnic_dev_link_status(snic->vdev);
-+	snic->link_down_cnt = svnic_dev_link_down_cnt(snic->vdev);
-+	SNIC_HOST_INFO(snic->shost, "Link Event: Link %s.\n",
-+		       ((snic->link_status) ? "Up" : "Down"));
++	debugfs_remove(snic_glob->trc_root);
++	snic_glob->trc_root = NULL;
 +}
 +
-+
 +/*
-+ * snic_ver_enc : Encodes version str to int
-+ * version string is similar to netmask string
++ * snic_reset_stats_open - Open the reset_stats file
 + */
 +static int
-+snic_ver_enc(const char *s)
++snic_reset_stats_open(struct inode *inode, struct file *filp)
 +{
-+	int v[4] = {0};
-+	int  i = 0, x = 0;
-+	char c;
-+	const char *p = s;
++	SNIC_BUG_ON(!inode->i_private);
++	filp->private_data = inode->i_private;
 +
-+	/* validate version string */
-+	if ((strlen(s) > 15) || (strlen(s) < 7))
-+		goto end;
-+
-+	while ((c = *p++)) {
-+		if (c == '.') {
-+			i++;
-+			continue;
-+		}
-+
-+		if (i > 4 || !isdigit(c))
-+			goto end;
-+
-+		v[i] = v[i] * 10 + (c - '0');
-+	}
-+
-+	/* validate sub version numbers */
-+	for (i = 3; i >= 0; i--)
-+		if (v[i] > 0xff)
-+			goto end;
-+
-+	x |= (v[0] << 24) | v[1] << 16 | v[2] << 8 | v[3];
-+
-+end:
-+	if (x == 0) {
-+		SNIC_ERR("Invalid version string [%s].\n", s);
-+
-+		return -1;
-+	}
-+
-+	return x;
-+} /* end of snic_ver_enc */
++	return 0;
++}
 +
 +/*
-+ * snic_qeueue_exch_ver_req :
++ * snic_reset_stats_read - Read a reset_stats debugfs file
++ * @filp: The file pointer to read from.
++ * @ubuf: The buffer tocopy the data to.
++ * @cnt: The number of bytes to read.
++ * @ppos: The position in the file to start reading frm.
 + *
-+ * Queues Exchange Version Request, to communicate host information
-+ * in return, it gets firmware version details
-+ */
-+int
-+snic_queue_exch_ver_req(struct snic *snic)
-+{
-+	struct snic_req_info *rqi = NULL;
-+	struct snic_host_req *req = NULL;
-+	u32 ver = 0;
-+	int ret = 0;
-+
-+	SNIC_HOST_INFO(snic->shost, "Exch Ver Req Preparing...\n");
-+
-+	rqi = snic_req_init(snic, 0);
-+	if (!rqi) {
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Queuing Exch Ver Req failed, err = %d\n",
-+			      ret);
-+
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	req = rqi_to_req(rqi);
-+
-+	/* Initialize snic_host_req */
-+	snic_io_hdr_enc(&req->hdr, SNIC_REQ_EXCH_VER, 0, SCSI_NO_TAG,
-+			snic->config.hid, 0, (ulong)rqi);
-+	ver = snic_ver_enc(SNIC_DRV_VERSION);
-+	req->u.exch_ver.drvr_ver = cpu_to_le32(ver);
-+	req->u.exch_ver.os_type = cpu_to_le32(SNIC_OS_LINUX);
-+
-+	snic_handle_untagged_req(snic, rqi);
-+
-+	ret = snic_queue_wq_desc(snic, req, sizeof(*req));
-+	if (ret) {
-+		snic_release_untagged_req(snic, rqi);
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Queuing Exch Ver Req failed, err = %d\n",
-+			      ret);
-+		goto error;
-+	}
-+
-+	SNIC_HOST_INFO(snic->shost, "Exch Ver Req is issued. ret = %d\n", ret);
-+
-+error:
-+	return ret;
-+} /* end of snic_queue_exch_ver_req */
-+
-+/*
-+ * snic_io_exch_ver_cmpl_handler
-+ */
-+int
-+snic_io_exch_ver_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
-+{
-+	struct snic_req_info *rqi = NULL;
-+	struct snic_exch_ver_rsp *exv_cmpl = &fwreq->u.exch_ver_cmpl;
-+	u8 typ, hdr_stat;
-+	u32 cmnd_id, hid, max_sgs;
-+	ulong ctx = 0;
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	SNIC_HOST_INFO(snic->shost, "Exch Ver Compl Received.\n");
-+	snic_io_hdr_dec(&fwreq->hdr, &typ, &hdr_stat, &cmnd_id, &hid, &ctx);
-+	SNIC_BUG_ON(snic->config.hid != hid);
-+	rqi = (struct snic_req_info *) ctx;
-+
-+	if (hdr_stat) {
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Exch Ver Completed w/ err status %d\n",
-+			      hdr_stat);
-+
-+		goto exch_cmpl_end;
-+	}
-+
-+	spin_lock_irqsave(&snic->snic_lock, flags);
-+	snic->fwinfo.fw_ver = le32_to_cpu(exv_cmpl->version);
-+	snic->fwinfo.hid = le32_to_cpu(exv_cmpl->hid);
-+	snic->fwinfo.max_concur_ios = le32_to_cpu(exv_cmpl->max_concur_ios);
-+	snic->fwinfo.max_sgs_per_cmd = le32_to_cpu(exv_cmpl->max_sgs_per_cmd);
-+	snic->fwinfo.max_io_sz = le32_to_cpu(exv_cmpl->max_io_sz);
-+	snic->fwinfo.max_tgts = le32_to_cpu(exv_cmpl->max_tgts);
-+	snic->fwinfo.io_tmo = le16_to_cpu(exv_cmpl->io_timeout);
-+
-+	SNIC_HOST_INFO(snic->shost,
-+		       "vers %u hid %u max_concur_ios %u max_sgs_per_cmd %u max_io_sz %u max_tgts %u fw tmo %u\n",
-+		       snic->fwinfo.fw_ver,
-+		       snic->fwinfo.hid,
-+		       snic->fwinfo.max_concur_ios,
-+		       snic->fwinfo.max_sgs_per_cmd,
-+		       snic->fwinfo.max_io_sz,
-+		       snic->fwinfo.max_tgts,
-+		       snic->fwinfo.io_tmo);
-+
-+	SNIC_HOST_INFO(snic->shost,
-+		       "HBA Capabilities = 0x%x\n",
-+		       le32_to_cpu(exv_cmpl->hba_cap));
-+
-+	/* Updating SGList size */
-+	max_sgs = snic->fwinfo.max_sgs_per_cmd;
-+	if (max_sgs && max_sgs < SNIC_MAX_SG_DESC_CNT) {
-+		snic->shost->sg_tablesize = max_sgs;
-+		SNIC_HOST_INFO(snic->shost, "Max SGs set to %d\n",
-+			       snic->shost->sg_tablesize);
-+	} else if (max_sgs > snic->shost->sg_tablesize) {
-+		SNIC_HOST_INFO(snic->shost,
-+			       "Target type %d Supports Larger Max SGList %d than driver's Max SG List %d.\n",
-+			       snic->config.xpt_type, max_sgs,
-+			       snic->shost->sg_tablesize);
-+	}
-+
-+	if (snic->shost->can_queue > snic->fwinfo.max_concur_ios)
-+		snic->shost->can_queue = snic->fwinfo.max_concur_ios;
-+
-+	snic->shost->max_sectors = snic->fwinfo.max_io_sz >> 9;
-+	if (snic->fwinfo.wait)
-+		complete(snic->fwinfo.wait);
-+
-+	spin_unlock_irqrestore(&snic->snic_lock, flags);
-+
-+exch_cmpl_end:
-+	snic_release_untagged_req(snic, rqi);
-+
-+	SNIC_HOST_INFO(snic->shost, "Exch_cmpl Done, hdr_stat %d.\n", hdr_stat);
-+
-+	return ret;
-+} /* end of snic_io_exch_ver_cmpl_handler */
-+
-+/*
-+ * snic_get_conf
++ * Description:
++ * This routine reads value of variable reset_stats
++ * and stores into local @buf. It will start reading file @ppos and
++ * copy up to @cnt of data to @ubuf from @buf.
 + *
-+ * Synchronous call, and Retrieves snic params.
++ * Returns:
++ * This function returns the amount of data that was read.
 + */
-+int
-+snic_get_conf(struct snic *snic)
++static ssize_t
++snic_reset_stats_read(struct file *filp,
++		      char __user *ubuf,
++		      size_t cnt,
++		      loff_t *ppos)
 +{
-+	DECLARE_COMPLETION_ONSTACK(wait);
-+	unsigned long flags;
++	struct snic *snic = (struct snic *) filp->private_data;
++	char buf[64];
++	int len;
++
++	len = sprintf(buf, "%u\n", snic->reset_stats);
++
++	return simple_read_from_buffer(ubuf, cnt, ppos, buf, len);
++}
++
++/*
++ * snic_reset_stats_write - Write to reset_stats debugfs file
++ * @filp: The file pointer to write from
++ * @ubuf: The buffer to copy the data from.
++ * @cnt: The number of bytes to write.
++ * @ppos: The position in the file to start writing to.
++ *
++ * Description:
++ * This routine writes data from user buffer @ubuf to buffer @buf and
++ * resets cumulative stats of snic.
++ *
++ * Returns:
++ * This function returns the amount of data that was written.
++ */
++static ssize_t
++snic_reset_stats_write(struct file *filp,
++		       const char __user *ubuf,
++		       size_t cnt,
++		       loff_t *ppos)
++{
++	struct snic *snic = (struct snic *) filp->private_data;
++	struct snic_stats *stats = &snic->s_stats;
++	u64 *io_stats_p = (u64 *) &stats->io;
++	u64 *fw_stats_p = (u64 *) &stats->fw;
++	char buf[64];
++	unsigned long val;
 +	int ret;
-+	int nr_retries = 3;
 +
-+	SNIC_HOST_INFO(snic->shost, "Retrieving snic params.\n");
-+	spin_lock_irqsave(&snic->snic_lock, flags);
-+	memset(&snic->fwinfo, 0, sizeof(snic->fwinfo));
-+	snic->fwinfo.wait = &wait;
-+	spin_unlock_irqrestore(&snic->snic_lock, flags);
++	if (cnt >= sizeof(buf))
++		return -EINVAL;
 +
-+	/* Additional delay to handle HW Resource initialization. */
-+	msleep(50);
++	if (copy_from_user(&buf, ubuf, cnt))
++		return -EFAULT;
 +
-+	/*
-+	 * Exch ver req can be ignored by FW, if HW Resource initialization
-+	 * is in progress, Hence retry.
-+	 */
-+	do {
-+		ret = snic_queue_exch_ver_req(snic);
-+		if (ret)
-+			return ret;
++	buf[cnt] = '\0';
 +
-+		wait_for_completion_timeout(&wait, msecs_to_jiffies(2000));
-+		spin_lock_irqsave(&snic->snic_lock, flags);
-+		ret = (snic->fwinfo.fw_ver != 0) ? 0 : -ETIMEDOUT;
-+		if (ret)
-+			SNIC_HOST_ERR(snic->shost,
-+				      "Failed to retrieve snic params,\n");
++	ret = kstrtoul(buf, 10, &val);
++	if (ret < 0)
++		return ret;
 +
-+		/* Unset fwinfo.wait, on success or on last retry */
-+		if (ret == 0 || nr_retries == 1)
-+			snic->fwinfo.wait = NULL;
++	snic->reset_stats = val;
 +
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+	} while (ret && --nr_retries);
++	if (snic->reset_stats) {
++		/* Skip variable is used to avoid descrepancies to Num IOs
++		 * and IO Completions stats. Skip incrementing No IO Compls
++		 * for pending active IOs after reset_stats
++		 */
++		atomic64_set(&snic->io_cmpl_skip,
++			     atomic64_read(&stats->io.active));
++		memset(&stats->abts, 0, sizeof(struct snic_abort_stats));
++		memset(&stats->reset, 0, sizeof(struct snic_reset_stats));
++		memset(&stats->misc, 0, sizeof(struct snic_misc_stats));
++		memset(io_stats_p+1,
++			0,
++			sizeof(struct snic_io_stats) - sizeof(u64));
++		memset(fw_stats_p+1,
++			0,
++			sizeof(struct snic_fw_stats) - sizeof(u64));
++	}
 +
-+	return ret;
-+} /* end of snic_get_info */
-diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
-new file mode 100644
-index 0000000..5f63217
---- /dev/null
-+++ b/drivers/scsi/snic/snic_disc.c
-@@ -0,0 +1,551 @@
-+/*
-+ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
++	(*ppos)++;
 +
-+#include <linux/errno.h>
-+#include <linux/mempool.h>
++	SNIC_HOST_INFO(snic->shost, "Reset Op: Driver statistics.\n");
 +
-+#include <scsi/scsi_tcq.h>
-+
-+#include "snic_disc.h"
-+#include "snic.h"
-+#include "snic_io.h"
-+
-+
-+/* snic target types */
-+static const char * const snic_tgt_type_str[] = {
-+	[SNIC_TGT_DAS] = "DAS",
-+	[SNIC_TGT_SAN] = "SAN",
-+};
-+
-+static inline const char *
-+snic_tgt_type_to_str(int typ)
-+{
-+	return ((typ > SNIC_TGT_NONE && typ <= SNIC_TGT_SAN) ?
-+		 snic_tgt_type_str[typ] : "Unknown");
++	return cnt;
 +}
 +
-+static const char * const snic_tgt_state_str[] = {
-+	[SNIC_TGT_STAT_INIT]	= "INIT",
-+	[SNIC_TGT_STAT_ONLINE]	= "ONLINE",
-+	[SNIC_TGT_STAT_OFFLINE]	= "OFFLINE",
-+	[SNIC_TGT_STAT_DEL]	= "DELETION IN PROGRESS",
-+};
-+
-+const char *
-+snic_tgt_state_to_str(int state)
++static int
++snic_reset_stats_release(struct inode *inode, struct file *filp)
 +{
-+	return ((state >= SNIC_TGT_STAT_INIT && state <= SNIC_TGT_STAT_DEL) ?
-+		snic_tgt_state_str[state] : "UNKNOWN");
++	filp->private_data = NULL;
++
++	return 0;
 +}
 +
 +/*
-+ * Initiate report_tgt req desc
-+ */
-+static void
-+snic_report_tgt_init(struct snic_host_req *req, u32 hid, u8 *buf, u32 len,
-+		     dma_addr_t rsp_buf_pa, ulong ctx)
-+{
-+	struct snic_sg_desc *sgd = NULL;
-+
-+
-+	snic_io_hdr_enc(&req->hdr, SNIC_REQ_REPORT_TGTS, 0, SCSI_NO_TAG, hid,
-+			1, ctx);
-+
-+	req->u.rpt_tgts.sg_cnt = cpu_to_le16(1);
-+	sgd = req_to_sgl(req);
-+	sgd[0].addr = cpu_to_le64(rsp_buf_pa);
-+	sgd[0].len = cpu_to_le32(len);
-+	sgd[0]._resvd = 0;
-+	req->u.rpt_tgts.sg_addr = cpu_to_le64((ulong)sgd);
-+}
-+
-+/*
-+ * snic_queue_report_tgt_req: Queues report target request.
++ * snic_stats_show - Formats and prints per host specific driver stats.
 + */
 +static int
-+snic_queue_report_tgt_req(struct snic *snic)
++snic_stats_show(struct seq_file *sfp, void *data)
 +{
-+	struct snic_req_info *rqi = NULL;
-+	u32 ntgts, buf_len = 0;
-+	u8 *buf = NULL;
-+	dma_addr_t pa = 0;
-+	int ret = 0;
-+
-+	rqi = snic_req_init(snic, 1);
-+	if (!rqi) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	if (snic->fwinfo.max_tgts)
-+		ntgts = min_t(u32, snic->fwinfo.max_tgts, snic->shost->max_id);
-+	else
-+		ntgts = snic->shost->max_id;
-+
-+	/* Allocate Response Buffer */
-+	SNIC_BUG_ON(ntgts == 0);
-+	buf_len = ntgts * sizeof(struct snic_tgt_id) + SNIC_SG_DESC_ALIGN;
-+
-+	buf = kzalloc(buf_len, GFP_KERNEL|GFP_DMA);
-+	if (!buf) {
-+		snic_req_free(snic, rqi);
-+		SNIC_HOST_ERR(snic->shost, "Resp Buf Alloc Failed.\n");
-+
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	SNIC_BUG_ON((((unsigned long)buf) % SNIC_SG_DESC_ALIGN) != 0);
-+
-+	pa = pci_map_single(snic->pdev, buf, buf_len, PCI_DMA_FROMDEVICE);
-+	if (pci_dma_mapping_error(snic->pdev, pa)) {
-+		kfree(buf);
-+		snic_req_free(snic, rqi);
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Rpt-tgt rspbuf %p: PCI DMA Mapping Failed\n",
-+			      buf);
-+		ret = -EINVAL;
-+
-+		goto error;
-+	}
-+
-+
-+	SNIC_BUG_ON(pa == 0);
-+	rqi->sge_va = (ulong) buf;
-+
-+	snic_report_tgt_init(rqi->req,
-+			     snic->config.hid,
-+			     buf,
-+			     buf_len,
-+			     pa,
-+			     (ulong)rqi);
-+
-+	snic_handle_untagged_req(snic, rqi);
-+
-+	ret = snic_queue_wq_desc(snic, rqi->req, rqi->req_len);
-+	if (ret) {
-+		pci_unmap_single(snic->pdev, pa, buf_len, PCI_DMA_FROMDEVICE);
-+		kfree(buf);
-+		rqi->sge_va = 0;
-+		snic_release_untagged_req(snic, rqi);
-+		SNIC_HOST_ERR(snic->shost, "Queuing Report Tgts Failed.\n");
-+
-+		goto error;
-+	}
-+
-+	SNIC_DISC_DBG(snic->shost, "Report Targets Issued.\n");
-+
-+	return ret;
-+
-+error:
-+	SNIC_HOST_ERR(snic->shost,
-+		      "Queuing Report Targets Failed, err = %d\n",
-+		      ret);
-+	return ret;
-+} /* end of snic_queue_report_tgt_req */
-+
-+/* call into SML */
-+static void
-+snic_scsi_scan_tgt(struct work_struct *work)
-+{
-+	struct snic_tgt *tgt = container_of(work, struct snic_tgt, scan_work);
-+	struct Scsi_Host *shost = dev_to_shost(&tgt->dev);
-+	unsigned long flags;
-+
-+	SNIC_HOST_INFO(shost, "Scanning Target id 0x%x\n", tgt->id);
-+	scsi_scan_target(&tgt->dev,
-+			 tgt->channel,
-+			 tgt->scsi_tgt_id,
-+			 SCAN_WILD_CARD,
-+			 1);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	tgt->flags &= ~SNIC_TGT_SCAN_PENDING;
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+} /* end of snic_scsi_scan_tgt */
-+
-+/*
-+ * snic_tgt_lookup :
-+ */
-+static struct snic_tgt *
-+snic_tgt_lookup(struct snic *snic, struct snic_tgt_id *tgtid)
-+{
-+	struct list_head *cur, *nxt;
-+	struct snic_tgt *tgt = NULL;
-+
-+	list_for_each_safe(cur, nxt, &snic->disc.tgt_list) {
-+		tgt = list_entry(cur, struct snic_tgt, list);
-+		if (tgt->id == le32_to_cpu(tgtid->tgt_id))
-+			return tgt;
-+		tgt = NULL;
-+	}
-+
-+	return tgt;
-+} /* end of snic_tgt_lookup */
-+
-+/*
-+ * snic_tgt_dev_release : Called on dropping last ref for snic_tgt object
-+ */
-+void
-+snic_tgt_dev_release(struct device *dev)
-+{
-+	struct snic_tgt *tgt = dev_to_tgt(dev);
-+
-+	SNIC_HOST_INFO(snic_tgt_to_shost(tgt),
-+		       "Target Device ID %d (%s) Permanently Deleted.\n",
-+		       tgt->id,
-+		       dev_name(dev));
-+
-+	SNIC_BUG_ON(!list_empty(&tgt->list));
-+	kfree(tgt);
-+}
-+
-+/*
-+ * snic_tgt_del : work function to delete snic_tgt
-+ */
-+static void
-+snic_tgt_del(struct work_struct *work)
-+{
-+	struct snic_tgt *tgt = container_of(work, struct snic_tgt, del_work);
-+	struct Scsi_Host *shost = snic_tgt_to_shost(tgt);
-+
-+	if (tgt->flags & SNIC_TGT_SCAN_PENDING)
-+		scsi_flush_work(shost);
-+
-+	/* Block IOs on child devices, stops new IOs */
-+	scsi_target_block(&tgt->dev);
-+
-+	/* Cleanup IOs */
-+	snic_tgt_scsi_abort_io(tgt);
-+
-+	/* Unblock IOs now, to flush if there are any. */
-+	scsi_target_unblock(&tgt->dev, SDEV_TRANSPORT_OFFLINE);
-+
-+	/* Delete SCSI Target and sdevs */
-+	scsi_remove_target(&tgt->dev);  /* ?? */
-+	device_del(&tgt->dev);
-+	put_device(&tgt->dev);
-+} /* end of snic_tgt_del */
-+
-+/* snic_tgt_create: checks for existence of snic_tgt, if it doesn't
-+ * it creates one.
-+ */
-+static struct snic_tgt *
-+snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
-+{
-+	struct snic_tgt *tgt = NULL;
-+	unsigned long flags;
-+	int ret;
-+
-+	tgt = snic_tgt_lookup(snic, tgtid);
-+	if (tgt) {
-+		/* update the information if required */
-+		return tgt;
-+	}
-+
-+	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
-+	if (!tgt) {
-+		SNIC_HOST_ERR(snic->shost, "Failure to allocate snic_tgt.\n");
-+		ret = -ENOMEM;
-+
-+		return tgt;
-+	}
-+
-+	INIT_LIST_HEAD(&tgt->list);
-+	tgt->id = le32_to_cpu(tgtid->tgt_id);
-+	tgt->channel = 0;
-+
-+	SNIC_BUG_ON(le16_to_cpu(tgtid->tgt_type) > SNIC_TGT_SAN);
-+	tgt->tdata.typ = le16_to_cpu(tgtid->tgt_type);
-+
-+	/*
-+	 * Plugging into SML Device Tree
-+	 */
-+	tgt->tdata.disc_id = 0;
-+	tgt->state = SNIC_TGT_STAT_INIT;
-+	device_initialize(&tgt->dev);
-+	tgt->dev.parent = get_device(&snic->shost->shost_gendev);
-+	tgt->dev.release = snic_tgt_dev_release;
-+	INIT_WORK(&tgt->scan_work, snic_scsi_scan_tgt);
-+	INIT_WORK(&tgt->del_work, snic_tgt_del);
-+	switch (tgt->tdata.typ) {
-+	case SNIC_TGT_DAS:
-+		dev_set_name(&tgt->dev, "snic_das_tgt:%d:%d-%d",
-+			     snic->shost->host_no, tgt->channel, tgt->id);
-+		break;
-+
-+	case SNIC_TGT_SAN:
-+		dev_set_name(&tgt->dev, "snic_san_tgt:%d:%d-%d",
-+			     snic->shost->host_no, tgt->channel, tgt->id);
-+		break;
-+
-+	default:
-+		SNIC_HOST_INFO(snic->shost, "Target type Unknown Detected.\n");
-+		dev_set_name(&tgt->dev, "snic_das_tgt:%d:%d-%d",
-+			     snic->shost->host_no, tgt->channel, tgt->id);
-+		break;
-+	}
-+
-+	spin_lock_irqsave(snic->shost->host_lock, flags);
-+	list_add_tail(&tgt->list, &snic->disc.tgt_list);
-+	tgt->scsi_tgt_id = snic->disc.nxt_tgt_id++;
-+	tgt->state = SNIC_TGT_STAT_ONLINE;
-+	spin_unlock_irqrestore(snic->shost->host_lock, flags);
-+
-+	SNIC_HOST_INFO(snic->shost,
-+		       "Tgt %d, type = %s detected. Adding..\n",
-+		       tgt->id, snic_tgt_type_to_str(tgt->tdata.typ));
-+
-+	ret = device_add(&tgt->dev);
-+	if (ret) {
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Snic Tgt: device_add, with err = %d\n",
-+			      ret);
-+
-+		put_device(&snic->shost->shost_gendev);
-+		kfree(tgt);
-+		tgt = NULL;
-+
-+		return tgt;
-+	}
-+
-+	SNIC_HOST_INFO(snic->shost, "Scanning %s.\n", dev_name(&tgt->dev));
-+
-+	scsi_queue_work(snic->shost, &tgt->scan_work);
-+
-+	return tgt;
-+} /* end of snic_tgt_create */
-+
-+/* Handler for discovery */
-+void
-+snic_handle_tgt_disc(struct work_struct *work)
-+{
-+	struct snic *snic = container_of(work, struct snic, tgt_work);
-+	struct snic_tgt_id *tgtid = NULL;
-+	struct snic_tgt *tgt = NULL;
-+	unsigned long flags;
++	struct snic *snic = (struct snic *) sfp->private;
++	struct snic_stats *stats = &snic->s_stats;
++	struct timespec last_isr_tms, last_ack_tms;
++	u64 maxio_tm;
 +	int i;
 +
-+	spin_lock_irqsave(&snic->snic_lock, flags);
-+	if (snic->in_remove) {
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		kfree(snic->disc.rtgt_info);
++	/* Dump IO Stats */
++	seq_printf(sfp,
++		   "------------------------------------------\n"
++		   "\t\t IO Statistics\n"
++		   "------------------------------------------\n");
 +
-+		return;
-+	}
-+	spin_unlock_irqrestore(&snic->snic_lock, flags);
++	maxio_tm = (u64) atomic64_read(&stats->io.max_time);
++	seq_printf(sfp,
++		   "Active IOs                  : %lld\n"
++		   "Max Active IOs              : %lld\n"
++		   "Total IOs                   : %lld\n"
++		   "IOs Completed               : %lld\n"
++		   "IOs Failed                  : %lld\n"
++		   "IOs Not Found               : %lld\n"
++		   "Memory Alloc Failures       : %lld\n"
++		   "REQs Null                   : %lld\n"
++		   "SCSI Cmd Pointers Null      : %lld\n"
++		   "Max SGL for any IO          : %lld\n"
++		   "Max IO Size                 : %lld Sectors\n"
++		   "Max Queuing Time            : %lld\n"
++		   "Max Completion Time         : %lld\n"
++		   "Max IO Process Time(FW)     : %lld (%u msec)\n",
++		   (u64) atomic64_read(&stats->io.active),
++		   (u64) atomic64_read(&stats->io.max_active),
++		   (u64) atomic64_read(&stats->io.num_ios),
++		   (u64) atomic64_read(&stats->io.compl),
++		   (u64) atomic64_read(&stats->io.fail),
++		   (u64) atomic64_read(&stats->io.io_not_found),
++		   (u64) atomic64_read(&stats->io.alloc_fail),
++		   (u64) atomic64_read(&stats->io.req_null),
++		   (u64) atomic64_read(&stats->io.sc_null),
++		   (u64) atomic64_read(&stats->io.max_sgl),
++		   (u64) atomic64_read(&stats->io.max_io_sz),
++		   (u64) atomic64_read(&stats->io.max_qtime),
++		   (u64) atomic64_read(&stats->io.max_cmpl_time),
++		   maxio_tm,
++		   jiffies_to_msecs(maxio_tm));
 +
-+	mutex_lock(&snic->disc.mutex);
-+	/* Discover triggered during disc in progress */
-+	if (snic->disc.req_cnt) {
-+		snic->disc.state = SNIC_DISC_DONE;
-+		snic->disc.req_cnt = 0;
-+		mutex_unlock(&snic->disc.mutex);
-+		kfree(snic->disc.rtgt_info);
-+		snic->disc.rtgt_info = NULL;
++	seq_puts(sfp, "\nSGL Counters\n");
 +
-+		SNIC_HOST_INFO(snic->shost, "tgt_disc: Discovery restart.\n");
-+		/* Start Discovery Again */
-+		snic_disc_start(snic);
++	for (i = 0; i < SNIC_MAX_SG_DESC_CNT; i++) {
++		seq_printf(sfp,
++			   "%10lld ",
++			   (u64) atomic64_read(&stats->io.sgl_cnt[i]));
 +
-+		return;
-+	}
-+
-+	tgtid = (struct snic_tgt_id *)snic->disc.rtgt_info;
-+
-+	SNIC_BUG_ON(snic->disc.rtgt_cnt == 0 || tgtid == NULL);
-+
-+	for (i = 0; i < snic->disc.rtgt_cnt; i++) {
-+		tgt = snic_tgt_create(snic, &tgtid[i]);
-+		if (!tgt) {
-+			int buf_sz = snic->disc.rtgt_cnt * sizeof(*tgtid);
-+
-+			SNIC_HOST_ERR(snic->shost, "Failed to create tgt.\n");
-+			snic_hex_dump("rpt_tgt_rsp", (char *)tgtid, buf_sz);
-+			break;
-+		}
-+	}
-+
-+	snic->disc.rtgt_info = NULL;
-+	snic->disc.state = SNIC_DISC_DONE;
-+	mutex_unlock(&snic->disc.mutex);
-+
-+	SNIC_HOST_INFO(snic->shost, "Discovery Completed.\n");
-+
-+	kfree(tgtid);
-+} /* end of snic_handle_tgt_disc */
-+
-+
-+int
-+snic_report_tgt_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
-+{
-+
-+	u8 typ, cmpl_stat;
-+	u32 cmnd_id, hid, tgt_cnt = 0;
-+	ulong ctx;
-+	struct snic_req_info *rqi = NULL;
-+	struct snic_tgt_id *tgtid;
-+	int i, ret = 0;
-+
-+	snic_io_hdr_dec(&fwreq->hdr, &typ, &cmpl_stat, &cmnd_id, &hid, &ctx);
-+	rqi = (struct snic_req_info *) ctx;
-+	tgtid = (struct snic_tgt_id *) rqi->sge_va;
-+
-+	tgt_cnt = le32_to_cpu(fwreq->u.rpt_tgts_cmpl.tgt_cnt);
-+	if (tgt_cnt == 0) {
-+		SNIC_HOST_ERR(snic->shost, "No Targets Found on this host.\n");
-+		ret = 1;
-+
-+		goto end;
++		if ((i + 1) % 8 == 0)
++			seq_puts(sfp, "\n");
 +	}
 +
-+	/* printing list of targets here */
-+	SNIC_HOST_INFO(snic->shost, "Target Count = %d\n", tgt_cnt);
++	/* Dump Abort Stats */
++	seq_printf(sfp,
++		   "\n-------------------------------------------\n"
++		   "\t\t Abort Statistics\n"
++		   "---------------------------------------------\n");
 +
-+	SNIC_BUG_ON(tgt_cnt > snic->fwinfo.max_tgts);
++	seq_printf(sfp,
++		   "Aborts                      : %lld\n"
++		   "Aborts Fail                 : %lld\n"
++		   "Aborts Driver Timeout       : %lld\n"
++		   "Abort FW Timeout            : %lld\n"
++		   "Abort IO NOT Found          : %lld\n",
++		   (u64) atomic64_read(&stats->abts.num),
++		   (u64) atomic64_read(&stats->abts.fail),
++		   (u64) atomic64_read(&stats->abts.drv_tmo),
++		   (u64) atomic64_read(&stats->abts.fw_tmo),
++		   (u64) atomic64_read(&stats->abts.io_not_found));
 +
-+	for (i = 0; i < tgt_cnt; i++)
-+		SNIC_HOST_INFO(snic->shost,
-+			       "Tgt id = 0x%x\n",
-+			       le32_to_cpu(tgtid[i].tgt_id));
++	/* Dump Reset Stats */
++	seq_printf(sfp,
++		   "\n-------------------------------------------\n"
++		   "\t\t Reset Statistics\n"
++		   "---------------------------------------------\n");
 +
-+	/*
-+	 * Queue work for further processing,
-+	 * Response Buffer Memory is freed after creating targets
-+	 */
-+	snic->disc.rtgt_cnt = tgt_cnt;
-+	snic->disc.rtgt_info = (u8 *) tgtid;
-+	queue_work(snic_glob->event_q, &snic->tgt_work);
-+	ret = 0;
++	seq_printf(sfp,
++		   "HBA Resets                  : %lld\n"
++		   "HBA Reset Cmpls             : %lld\n"
++		   "HBA Reset Fail              : %lld\n",
++		   (u64) atomic64_read(&stats->reset.hba_resets),
++		   (u64) atomic64_read(&stats->reset.hba_reset_cmpl),
++		   (u64) atomic64_read(&stats->reset.hba_reset_fail));
 +
-+end:
-+	/* Unmap Response Buffer */
-+	snic_pci_unmap_rsp_buf(snic, rqi);
-+	if (ret)
-+		kfree(tgtid);
++	/* Dump Firmware Stats */
++	seq_printf(sfp,
++		   "\n-------------------------------------------\n"
++		   "\t\t Firmware Statistics\n"
++		   "---------------------------------------------\n");
 +
-+	rqi->sge_va = 0;
-+	snic_release_untagged_req(snic, rqi);
++	seq_printf(sfp,
++		"Active FW Requests             : %lld\n"
++		"Max FW Requests                : %lld\n"
++		"FW Out Of Resource Errs        : %lld\n"
++		"FW IO Errors                   : %lld\n"
++		"FW SCSI Errors                 : %lld\n",
++		(u64) atomic64_read(&stats->fw.actv_reqs),
++		(u64) atomic64_read(&stats->fw.max_actv_reqs),
++		(u64) atomic64_read(&stats->fw.out_of_res),
++		(u64) atomic64_read(&stats->fw.io_errs),
++		(u64) atomic64_read(&stats->fw.scsi_errs));
 +
-+	return ret;
-+} /* end of snic_report_tgt_cmpl_handler */
 +
-+/* Discovery init fn */
-+void
-+snic_disc_init(struct snic_disc *disc)
-+{
-+	INIT_LIST_HEAD(&disc->tgt_list);
-+	mutex_init(&disc->mutex);
-+	disc->disc_id = 0;
-+	disc->nxt_tgt_id = 0;
-+	disc->state = SNIC_DISC_INIT;
-+	disc->req_cnt = 0;
-+	disc->rtgt_cnt = 0;
-+	disc->rtgt_info = NULL;
-+	disc->cb = NULL;
-+} /* end of snic_disc_init */
++	/* Dump Miscellenous Stats */
++	seq_printf(sfp,
++		   "\n---------------------------------------------\n"
++		   "\t\t Other Statistics\n"
++		   "\n---------------------------------------------\n");
 +
-+/* Discovery, uninit fn */
-+void
-+snic_disc_term(struct snic *snic)
-+{
-+	struct snic_disc *disc = &snic->disc;
++	jiffies_to_timespec(stats->misc.last_isr_time, &last_isr_tms);
++	jiffies_to_timespec(stats->misc.last_ack_time, &last_ack_tms);
 +
-+	mutex_lock(&disc->mutex);
-+	if (disc->req_cnt) {
-+		disc->req_cnt = 0;
-+		SNIC_SCSI_DBG(snic->shost, "Terminating Discovery.\n");
-+	}
-+	mutex_unlock(&disc->mutex);
++	seq_printf(sfp,
++		   "Last ISR Time               : %llu (%8lu.%8lu)\n"
++		   "Last Ack Time               : %llu (%8lu.%8lu)\n"
++		   "ISRs                        : %llu\n"
++		   "Max CQ Entries              : %lld\n"
++		   "Data Count Mismatch         : %lld\n"
++		   "IOs w/ Timeout Status       : %lld\n"
++		   "IOs w/ Aborted Status       : %lld\n"
++		   "IOs w/ SGL Invalid Stat     : %lld\n"
++		   "WQ Desc Alloc Fail          : %lld\n"
++		   "Queue Full                  : %lld\n"
++		   "Target Not Ready            : %lld\n",
++		   (u64) stats->misc.last_isr_time,
++		   last_isr_tms.tv_sec, last_isr_tms.tv_nsec,
++		   (u64)stats->misc.last_ack_time,
++		   last_ack_tms.tv_sec, last_ack_tms.tv_nsec,
++		   (u64) atomic64_read(&stats->misc.isr_cnt),
++		   (u64) atomic64_read(&stats->misc.max_cq_ents),
++		   (u64) atomic64_read(&stats->misc.data_cnt_mismat),
++		   (u64) atomic64_read(&stats->misc.io_tmo),
++		   (u64) atomic64_read(&stats->misc.io_aborted),
++		   (u64) atomic64_read(&stats->misc.sgl_inval),
++		   (u64) atomic64_read(&stats->misc.wq_alloc_fail),
++		   (u64) atomic64_read(&stats->misc.qfull),
++		   (u64) atomic64_read(&stats->misc.tgt_not_rdy));
++
++	return 0;
 +}
 +
 +/*
-+ * snic_disc_start: Discovery Start ...
++ * snic_stats_open - Open the stats file for specific host
++ *
++ * Description:
++ * This routine opens a debugfs file stats of specific host
++ */
++static int
++snic_stats_open(struct inode *inode, struct file *filp)
++{
++	return single_open(filp, snic_stats_show, inode->i_private);
++}
++
++static const struct file_operations snic_stats_fops __read_mostly = {
++	.owner	= THIS_MODULE,
++	.open	= snic_stats_open,
++	.read	= seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++};
++
++static const struct file_operations snic_reset_stats_fops __read_mostly = {
++	.owner = THIS_MODULE,
++	.open = snic_reset_stats_open,
++	.read = snic_reset_stats_read,
++	.write = snic_reset_stats_write,
++	.release = snic_reset_stats_release,
++};
++
++/*
++ * snic_stats_init - Initialize stats struct and create stats file
++ * per snic
++ *
++ * Description:
++ * When debugfs is cofigured this routine sets up the stats file per snic
++ * It will create file stats and reset_stats under statistics/host# directory
++ * to log per snic stats
 + */
 +int
-+snic_disc_start(struct snic *snic)
++snic_stats_debugfs_init(struct snic *snic)
 +{
-+	struct snic_disc *disc = &snic->disc;
-+	int ret = 0;
++	int rc = -1;
++	char name[16];
++	struct dentry *de = NULL;
 +
-+	SNIC_SCSI_DBG(snic->shost, "Discovery Start.\n");
++	snprintf(name, sizeof(name), "host%d", snic->shost->host_no);
++	if (!snic_glob->stats_root) {
++		SNIC_DBG("snic_stats root doesn't exist\n");
 +
-+	mutex_lock(&disc->mutex);
-+	if (disc->state == SNIC_DISC_PENDING) {
-+		disc->req_cnt++;
-+		mutex_unlock(&disc->mutex);
++		return rc;
++	}
++
++	de = debugfs_create_dir(name, snic_glob->stats_root);
++	if (!de) {
++		SNIC_DBG("Cannot create host directory\n");
++
++		return rc;
++	}
++	snic->stats_host = de;
++
++	de = debugfs_create_file("stats",
++				S_IFREG|S_IRUGO,
++				snic->stats_host,
++				snic,
++				&snic_stats_fops);
++	if (!de) {
++		SNIC_DBG("Cannot create host's stats file\n");
++
++		return rc;
++	}
++	snic->stats_file = de;
++
++	de = debugfs_create_file("reset_stats",
++				S_IFREG|S_IRUGO|S_IWUSR,
++				snic->stats_host,
++				snic,
++				&snic_reset_stats_fops);
++
++	if (!de) {
++		SNIC_DBG("Cannot create host's reset_stats file\n");
++
++		return rc;
++	}
++	snic->reset_stats_file = de;
++	rc = 0;
++
++	return rc;
++} /* end of snic_stats_debugfs_init */
++
++/*
++ * snic_stats_debugfs_remove - Tear down debugfs infrastructure of stats
++ *
++ * Description:
++ * When Debufs is configured this routine removes debugfs file system
++ * elements that are specific to to snic stats
++ */
++void
++snic_stats_debugfs_remove(struct snic *snic)
++{
++	debugfs_remove(snic->stats_file);
++	snic->stats_file = NULL;
++
++	debugfs_remove(snic->reset_stats_file);
++	snic->reset_stats_file = NULL;
++
++	debugfs_remove(snic->stats_host);
++	snic->stats_host = NULL;
++}
++
++/* Trace Facility related API */
++static void *
++snic_trc_seq_start(struct seq_file *sfp, loff_t *pos)
++{
++	return &snic_glob->trc;
++}
++
++static void *
++snic_trc_seq_next(struct seq_file *sfp, void *data, loff_t *pos)
++{
++	return NULL;
++}
++
++static void
++snic_trc_seq_stop(struct seq_file *sfp, void *data)
++{
++}
++
++#define SNIC_TRC_PBLEN	256
++static int
++snic_trc_seq_show(struct seq_file *sfp, void *data)
++{
++	char buf[SNIC_TRC_PBLEN];
++
++	if (snic_get_trc_data(buf, SNIC_TRC_PBLEN) > 0)
++		seq_printf(sfp, "%s\n", buf);
++
++	return 0;
++}
++
++static const struct seq_operations snic_trc_seq_ops __read_mostly = {
++	.start	= snic_trc_seq_start,
++	.next	= snic_trc_seq_next,
++	.stop	= snic_trc_seq_stop,
++	.show	= snic_trc_seq_show,
++};
++
++static int
++snic_trc_open(struct inode *inode, struct file *filp)
++{
++	return seq_open(filp, &snic_trc_seq_ops);
++}
++
++static const struct file_operations snic_trc_fops __read_mostly = {
++	.owner	= THIS_MODULE,
++	.open	= snic_trc_open,
++	.read	= seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release,
++};
++
++/*
++ * snic_trc_debugfs_init : creates trace/tracing_enable files for trace
++ * under debugfs
++ */
++int
++snic_trc_debugfs_init(void)
++{
++	struct dentry *de = NULL;
++	int ret = -1;
++
++	if (!snic_glob->trc_root) {
++		SNIC_ERR("Debugfs root directory for snic doesn't exist.\n");
 +
 +		return ret;
 +	}
-+	disc->state = SNIC_DISC_PENDING;
-+	mutex_unlock(&disc->mutex);
 +
-+	ret = snic_queue_report_tgt_req(snic);
-+	if (ret)
-+		SNIC_HOST_INFO(snic->shost, "Discovery Failed, err=%d.\n", ret);
++	de = debugfs_create_bool("tracing_enable",
++				 S_IFREG | S_IRUGO | S_IWUSR,
++				 snic_glob->trc_root,
++				 &snic_glob->trc.enable);
++
++	if (!de) {
++		SNIC_ERR("Can't create trace_enable file.\n");
++
++		return ret;
++	}
++	snic_glob->trc.trc_enable = de;
++
++	de = debugfs_create_file("trace",
++				 S_IFREG | S_IRUGO | S_IWUSR,
++				 snic_glob->trc_root,
++				 NULL,
++				 &snic_trc_fops);
++
++	if (!de) {
++		SNIC_ERR("Cann't create trace file.\n");
++
++		return ret;
++	}
++	snic_glob->trc.trc_file = de;
++	ret = 0;
 +
 +	return ret;
-+} /* end of snic_disc_start */
++} /* end of snic_trc_debugfs_init */
 +
 +/*
-+ * snic_disc_work :
++ * snic_trc_debugfs_term : cleans up the files created for trace under debugfs
 + */
 +void
-+snic_handle_disc(struct work_struct *work)
++snic_trc_debugfs_term(void)
 +{
-+	struct snic *snic = container_of(work, struct snic, disc_work);
-+	int ret = 0;
++	debugfs_remove(snic_glob->trc.trc_file);
++	snic_glob->trc.trc_file = NULL;
 +
-+	SNIC_HOST_INFO(snic->shost, "disc_work: Discovery\n");
-+
-+	ret = snic_disc_start(snic);
-+	if (ret)
-+		goto disc_err;
-+
-+disc_err:
-+	SNIC_HOST_ERR(snic->shost,
-+		      "disc_work: Discovery Failed w/ err = %d\n",
-+		      ret);
-+} /* end of snic_disc_work */
-+
-+/*
-+ * snic_tgt_del_all : cleanup all snic targets
-+ * Called on unbinding the interface
-+ */
-+void
-+snic_tgt_del_all(struct snic *snic)
-+{
-+	struct snic_tgt *tgt = NULL;
-+	struct list_head *cur, *nxt;
-+	unsigned long flags;
-+
-+	mutex_lock(&snic->disc.mutex);
-+	spin_lock_irqsave(snic->shost->host_lock, flags);
-+
-+	list_for_each_safe(cur, nxt, &snic->disc.tgt_list) {
-+		tgt = list_entry(cur, struct snic_tgt, list);
-+		tgt->state = SNIC_TGT_STAT_DEL;
-+		list_del_init(&tgt->list);
-+		SNIC_HOST_INFO(snic->shost, "Tgt %d q'ing for del\n", tgt->id);
-+		queue_work(snic_glob->event_q, &tgt->del_work);
-+		tgt = NULL;
-+	}
-+	spin_unlock_irqrestore(snic->shost->host_lock, flags);
-+
-+	scsi_flush_work(snic->shost);
-+	mutex_unlock(&snic->disc.mutex);
-+} /* end of snic_tgt_del_all */
-diff --git a/drivers/scsi/snic/snic_disc.h b/drivers/scsi/snic/snic_disc.h
++	debugfs_remove(snic_glob->trc.trc_enable);
++	snic_glob->trc.trc_enable = NULL;
++}
+diff --git a/drivers/scsi/snic/snic_stats.h b/drivers/scsi/snic/snic_stats.h
 new file mode 100644
-index 0000000..97fa3f5
+index 0000000..11e6148
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_disc.h
-@@ -0,0 +1,124 @@
++++ b/drivers/scsi/snic/snic_stats.h
+@@ -0,0 +1,123 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -903,113 +621,112 @@ index 0000000..97fa3f5
 + * SOFTWARE.
 + */
 +
-+#ifndef __SNIC_DISC_H
-+#define __SNIC_DISC_H
++#ifndef __SNIC_STATS_H
++#define __SNIC_STATS_H
 +
-+#include "snic_fwint.h"
-+
-+enum snic_disc_state {
-+	SNIC_DISC_NONE,
-+	SNIC_DISC_INIT,
-+	SNIC_DISC_PENDING,
-+	SNIC_DISC_DONE
++struct snic_io_stats {
++	atomic64_t active;		/* Active IOs */
++	atomic64_t max_active;		/* Max # active IOs */
++	atomic64_t max_sgl;		/* Max # SGLs for any IO */
++	atomic64_t max_time;		/* Max time to process IO */
++	atomic64_t max_qtime;		/* Max time to Queue the IO */
++	atomic64_t max_cmpl_time;	/* Max time to complete the IO */
++	atomic64_t sgl_cnt[SNIC_MAX_SG_DESC_CNT]; /* SGL Counters */
++	atomic64_t max_io_sz;		/* Max IO Size */
++	atomic64_t compl;		/* IO Completions */
++	atomic64_t fail;		/* IO Failures */
++	atomic64_t req_null;		/* req or req info is NULL */
++	atomic64_t alloc_fail;		/* Alloc Failures */
++	atomic64_t sc_null;
++	atomic64_t io_not_found;	/* IO Not Found */
++	atomic64_t num_ios;		/* Number of IOs */
 +};
 +
-+struct snic;
-+struct snic_disc {
-+	struct list_head tgt_list;
-+	enum snic_disc_state state;
-+	struct mutex mutex;
-+	u16	disc_id;
-+	u8	req_cnt;
-+	u32	nxt_tgt_id;
-+	u32	rtgt_cnt;
-+	u8	*rtgt_info;
-+	struct delayed_work disc_timeout;
-+	void (*cb)(struct snic *);
++struct snic_abort_stats {
++	atomic64_t num;		/* Abort counter */
++	atomic64_t fail;	/* Abort Failure Counter */
++	atomic64_t drv_tmo;	/* Abort Driver Timeouts */
++	atomic64_t fw_tmo;	/* Abort Firmware Timeouts */
++	atomic64_t io_not_found;/* Abort IO Not Found */
 +};
 +
-+#define SNIC_TGT_NAM_LEN	16
-+
-+enum snic_tgt_state {
-+	SNIC_TGT_STAT_NONE,
-+	SNIC_TGT_STAT_INIT,
-+	SNIC_TGT_STAT_ONLINE,	/* Target is Online */
-+	SNIC_TGT_STAT_OFFLINE,	/* Target is Offline */
-+	SNIC_TGT_STAT_DEL,
++struct snic_reset_stats {
++	atomic64_t dev_resets;		/* Device Reset Counter */
++	atomic64_t dev_reset_fail;	/* Device Reset Failures */
++	atomic64_t dev_reset_aborts;	/* Device Reset Aborts */
++	atomic64_t dev_reset_tmo;	/* Device Reset Timeout */
++	atomic64_t dev_reset_terms;	/* Device Reset terminate */
++	atomic64_t hba_resets;		/* hba/firmware resets */
++	atomic64_t hba_reset_cmpl;	/* hba/firmware reset completions */
++	atomic64_t hba_reset_fail;	/* hba/firmware failures */
++	atomic64_t snic_resets;		/* snic resets */
++	atomic64_t snic_reset_compl;	/* snic reset completions */
++	atomic64_t snic_reset_fail;	/* snic reset failures */
 +};
 +
-+struct snic_tgt_priv {
-+	struct list_head list;
-+	enum snic_tgt_type typ;
-+	u16 disc_id;
-+	char *name[SNIC_TGT_NAM_LEN];
-+
-+	union {
-+		/*DAS Target specific info */
-+		/*SAN Target specific info */
-+		u8 dummmy;
-+	} u;
++struct snic_fw_stats {
++	atomic64_t actv_reqs;		/* Active Requests */
++	atomic64_t max_actv_reqs;	/* Max Active Requests */
++	atomic64_t out_of_res;		/* Firmware Out Of Resources */
++	atomic64_t io_errs;		/* Firmware IO Firmware Errors */
++	atomic64_t scsi_errs;		/* Target hits check condition */
 +};
 +
-+/* snic tgt flags */
-+#define SNIC_TGT_SCAN_PENDING	0x01
-+
-+struct snic_tgt {
-+	struct list_head list;
-+	u16	id;
-+	u16	channel;
-+	u32	flags;
-+	u32	scsi_tgt_id;
-+	enum snic_tgt_state state;
-+	struct device dev;
-+	struct work_struct scan_work;
-+	struct work_struct del_work;
-+	struct snic_tgt_priv tdata;
++struct snic_misc_stats {
++	u64	last_isr_time;
++	u64	last_ack_time;
++	atomic64_t isr_cnt;
++	atomic64_t max_cq_ents;		/* Max CQ Entries */
++	atomic64_t data_cnt_mismat;	/* Data Count Mismatch */
++	atomic64_t io_tmo;
++	atomic64_t io_aborted;
++	atomic64_t sgl_inval;		/* SGL Invalid */
++	atomic64_t abts_wq_alloc_fail;	/* Abort Path WQ desc alloc failure */
++	atomic64_t devrst_wq_alloc_fail;/* Device Reset - WQ desc alloc fail */
++	atomic64_t wq_alloc_fail;	/* IO WQ desc alloc failure */
++	atomic64_t no_icmnd_itmf_cmpls;
++	atomic64_t io_under_run;
++	atomic64_t qfull;
++	atomic64_t tgt_not_rdy;
 +};
 +
++struct snic_stats {
++	struct snic_io_stats io;
++	struct snic_abort_stats abts;
++	struct snic_reset_stats reset;
++	struct snic_fw_stats fw;
++	struct snic_misc_stats misc;
++	atomic64_t io_cmpl_skip;
++};
 +
-+struct snic_fw_req;
++int snic_stats_debugfs_init(struct snic *);
++void snic_stats_debugfs_remove(struct snic *);
 +
-+void snic_disc_init(struct snic_disc *);
-+int snic_disc_start(struct snic *);
-+void snic_disc_term(struct snic *);
-+int snic_report_tgt_cmpl_handler(struct snic *, struct snic_fw_req *);
-+int snic_tgtinfo_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq);
-+void snic_process_report_tgts_rsp(struct work_struct *);
-+void snic_handle_tgt_disc(struct work_struct *);
-+void snic_handle_disc(struct work_struct *);
-+void snic_tgt_dev_release(struct device *);
-+void snic_tgt_del_all(struct snic *);
-+
-+#define dev_to_tgt(d) \
-+	container_of(d, struct snic_tgt, dev)
-+
-+static inline int
-+is_snic_target(struct device *dev)
++/* Auxillary function to update active IO counter */
++static inline void
++snic_stats_update_active_ios(struct snic_stats *s_stats)
 +{
-+	return dev->release == snic_tgt_dev_release;
++	struct snic_io_stats *io = &s_stats->io;
++	u32 nr_active_ios;
++
++	nr_active_ios = atomic64_inc_return(&io->active);
++	if (atomic64_read(&io->max_active) < nr_active_ios)
++		atomic64_set(&io->max_active, nr_active_ios);
++
++	atomic64_inc(&io->num_ios);
 +}
 +
-+#define starget_to_tgt(st)	\
-+	(is_snic_target(((struct scsi_target *) st)->dev.parent) ? \
-+		dev_to_tgt(st->dev.parent) : NULL)
-+
-+#define snic_tgt_to_shost(t)	\
-+	dev_to_shost(t->dev.parent)
-+
-+static inline int
-+snic_tgt_chkready(struct snic_tgt *tgt)
++/* Auxillary function to update IO completion counter */
++static inline void
++snic_stats_update_io_cmpl(struct snic_stats *s_stats)
 +{
-+	if (tgt->state == SNIC_TGT_STAT_ONLINE)
-+		return 0;
++	atomic64_dec(&s_stats->io.active);
++	if (unlikely(atomic64_read(&s_stats->io_cmpl_skip)))
++		atomic64_dec(&s_stats->io_cmpl_skip);
 +	else
-+		return DID_NO_CONNECT << 16;
++		atomic64_inc(&s_stats->io.compl);
 +}
-+
-+const char *snic_tgt_state_to_str(int);
-+int snic_tgt_scsi_abort_io(struct snic_tgt *);
-+#endif /* end of  __SNIC_DISC_H */
++#endif /* __SNIC_STATS_H */
 -- 
 1.8.5.4
 
