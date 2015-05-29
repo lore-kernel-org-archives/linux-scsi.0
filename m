@@ -1,41 +1,62 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [RFC][PATCH] x86: remove vmalloc.h from asm/io.h
-Date: Fri, 29 May 2015 11:21:05 +0200
-Message-ID: <20150529092105.GA30603@gmail.com>
-References: <20150529191847.2d4cb3a7@canb.auug.org.au>
+From: Sumit Saxena <sumitsaxena86@gmail.com>
+Subject: Re: [PATCH] megaraid_sas : Modify return value of megasas_issue_blocked_cmd()
+ and wait_and_poll() to consider command status returned by firmware
+Date: Fri, 29 May 2015 15:52:07 +0530
+Message-ID: <CAKYY47UR7JYmtRYvRYpiBZ3Jkk6DC3M2uHjC2HGHqL_hLCOc7w@mail.gmail.com>
+References: <201505061333.t46DXdcM032441@palmhbs0.lsi.com>
+	<5555C2C1.2010804@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150529191847.2d4cb3a7@canb.auug.org.au>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>, Anton Vorontsov <anton@enomsg.org>, Colin Cross <ccross@android.com>, Kees Cook <keescook@chromium.org>, Tony Luck <tony.luck@intel.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Kristen Carlson Accardi <kristen@linux.intel.com>, Viresh Kumar <viresh.kumar@linaro.org>, Vinod Koul <vinod.koul@intel.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.d>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vn0-f54.google.com ([209.85.216.54]:36050 "EHLO
+	mail-vn0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754549AbbE2KWJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 06:22:09 -0400
+In-Reply-To: <5555C2C1.2010804@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: sumit saxena <Sumit.Saxena@avagotech.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
+James,
 
-* Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-
-> Nothing in asm/io.h uses anything from vmalloc.h, so remove the include
-> and fix up the build problems in an allmodconfig (64 bit and 32 bit)
-> build.
-> 
-> This may be the place where x86 builds get vmalloc.h implicitly included
-> and that tends to hide places where vmalloc() et al are added to files
-> but the include of vmalloc.h is forgotten.
-
-Good idea.
-
-Acked-by: Ingo Molnar <mingo@kernel.org>
-
-> Based in Linus' tree of today.
-> 
-> There are probably more places that need vmalloc.h included, but this passes 64 
-> bit and 32 bit allmodconfig builds, so is a place to start.
-
-Please also test x86 allnoconfig and defconfig 32/64, that tends to unearth the 
-remaining places. People doing randconfig testing will find the rest.
+Gentle reminder. Can we consider this patch.
 
 Thanks,
+Sumit
 
-	Ingo
+On Fri, May 15, 2015 at 3:26 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> On 05/06/2015 03:31 PM, Sumit.Saxena@avagotech.com wrote:
+>> This patch is rebased on top of recently sent 18 patches(submitted by me) for megaraid_sas driver.
+>>
+>> Change the return value of wait_and_poll() and megsas_issue_blocked_cmd() based on MFI_STAT returned by firmware for that command. Earlier driver always
+>> send return type based on command completion (but never check MFI_STAT_OK for that command), so even if command is failed by firmware still driver will
+>> return SUCCESS status from these functions wait_and_poll() and megsas_issue_blocked_cmd() and if caller of these functions does not check command status
+>> (MFI_STAT), then it may endup using invalid data returned in DMA buffers(one of the example is megasas_ld_list_query DCMD). Best thing to avoid this type
+>> of issue is do error handling and set proper return type from caller function wait_and_poll() and megsas_issue_blocked_cmd().
+>>
+>> The change proposed in this patch will fix the regression introduced in patch- "90dc9d9 megaraid_sas : MFI MPT linked list corruption fix" inside function
+>> megasas_ld_list_query().
+>> Prior to this MFI MPT linked list corruption fix patch, megasas_ld_list_query() function used to check DCMD status(returned by firmware) but with
+>> this linked list corruption fix patch, DCMD status will not be checked inside function megasas_ld_list_query() and introduced this issue of wrong data
+>> being used by function megasas_ld_list_query().
+>>
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+>> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> This patch fixes an issue spotted on my test system.
+> Thanks for posting.
+>
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+>
+> Tomas
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Sumit
