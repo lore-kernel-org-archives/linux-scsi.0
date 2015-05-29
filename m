@@ -1,111 +1,123 @@
-From: =?Windows-1252?Q?Str=F6sser=2C_Bodo?=
-	<bodo.stroesser@ts.fujitsu.com>
-Subject: RE: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_tablesize
-Date: Fri, 29 May 2015 16:12:02 +0200
-Message-ID: <8B06D1E6480A6747B23FEC34909D2B5EAFC6B5D7E3@ABGEX70E.FSC.NET>
-References: <10f4d2$5t7km8@dgate20u.abg.fsc.net>
- <55687215.4050300@avagotech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Narsimhulu Musini <nmusini@cisco.com>
+Subject: [PATCH v7 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
+Date: Fri, 29 May 2015 07:58:06 -0700
+Message-ID: <1432911486-12724-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate10.ts.fujitsu.com ([80.70.172.49]:44171 "EHLO
-	dgate10.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755119AbbE2OWF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 10:22:05 -0400
-In-Reply-To: <55687215.4050300@avagotech.com>
-Content-Language: de-DE
+Received: from rcdn-iport-6.cisco.com ([173.37.86.77]:57442 "EHLO
+	rcdn-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362AbbE2PDF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 11:03:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de, boaz@plexistor.com, jthumshirn@suse.de
+Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-Yes, we normally use 128, as this is the value best suited
-for our RAID systems. After upgrading the software we saw
-a clear performance reduction that was caused by the bug.
+Kconfig for kbuild
+Makefile to build snic module
 
-With the fix everything works fine again.
+Updated MAINTAINERS file
 
-Thank you,
-Bodo
+Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+---
+* v7
+- Removed SNIC_DEBUG_FS macro, and replaced it with CONFIG_SCSI_SNIC_DEBUG_FS
 
-> -----Original Message-----
-> From: James Smart [mailto:james.smart@avagotech.com]
-> Sent: Friday, May 29, 2015 4:05 PM
-> To: Str=F6sser, Bodo; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_t=
-ablesize
->=20
-> Bodo,
->=20
-> This is a valid fix.  Thank you.
->=20
-> I assume you were changing the driver module parameter to up the SG
-> count ?  without the fix we would have been capped at 64 sges.
->=20
-> -- james
->=20
-> Reviewed-By: James Smart <james.smart@avagotech.com>
->=20
->=20
->=20
-> On 5/29/2015 8:22 AM, bstroesser@ts.fujitsu.com wrote:
-> > Hi James,
-> >
-> > We had some performance problems with RAID systems connected to LPe=
-12k.
-> > AFAICS, the reason is a small bug in lpfc.ko, causing the IO-size t=
-o
-> > be smaller than expected.
-> >
-> > The patch below fixes it for us.
-> >
-> > Please CC me, I'm not on the list.
-> >
-> > Best regards
-> > Bodo
-> >
-> >
-> > ------------------------------------------------------
-> >
-> > From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-> > Date: Fri, 29 May 2015 13:34:19 +0200
-> > Subject: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_tab=
-lesize
-> >
-> > Currently the module parameter lpfc_sg_seg_count does not have effe=
-ct
-> > for sli3 devices.
-> >
-> > In lpfc_sli_driver_resource_setup(), which is used for sli3, the co=
-de
-> > writes the configured sg_seg_cnt into lpfc_template.sg_tablesize.
-> > But lpfc_template is the template used for sli4 only. Thus the valu=
-e should
-> > correctly be written to lpfc_template_s3->sg_tablesize.
-> >
-> > This patch is for kernel 4.1-rc5, but is tested with lpfc 10.2.405.=
-26 only.
-> >
-> > Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-> > ---
-> >
-> > --- a/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:02.000000000 +=
-0200
-> > +++ b/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:56.000000000 +=
-0200
-> > @@ -4988,7 +4988,7 @@ lpfc_sli_driver_resource_setup(struct lp
-> >
-> >   	/* Initialize the host templates the configured values. */
-> >   	lpfc_vport_template.sg_tablesize =3D phba->cfg_sg_seg_cnt;
-> > -	lpfc_template.sg_tablesize =3D phba->cfg_sg_seg_cnt;
-> > +	lpfc_template_s3.sg_tablesize =3D phba->cfg_sg_seg_cnt;
-> >
-> >   	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp=
- */
-> >   	if (phba->cfg_enable_bg) {
+* v3
+- Added additional config section (CONFIG_SNIC_DEBUG_FS) for enabling debugging
+  functionality.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* v2
+- Added compile time flags for debugfs dependent functionality.
+
+ MAINTAINERS                |  7 +++++++
+ drivers/scsi/Kconfig       | 17 +++++++++++++++++
+ drivers/scsi/Makefile      |  1 +
+ drivers/scsi/snic/Makefile | 17 +++++++++++++++++
+ 4 files changed, 42 insertions(+)
+ create mode 100644 drivers/scsi/snic/Makefile
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2a97e05..368fb76 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2536,6 +2536,13 @@ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/fnic/
+ 
++CISCO SCSI HBA DRIVER
++M:	Narsimhulu Musini <nmusini@cisco.com>
++M:	Sesidhar Baddela <sebaddel@cisco.com>
++L:	linux-scsi@vger.kernel.org
++S:	Supported
++F:	drivers/scsi/snic/
++
+ CMPC ACPI DRIVER
+ M:	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ M:	Daniel Oliveira Nascimento <don@syst.com.br>
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9c92f41..353d550 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -634,6 +634,23 @@ config FCOE_FNIC
+ 	  <file:Documentation/scsi/scsi.txt>.
+ 	  The module will be called fnic.
+ 
++config SCSI_SNIC
++	tristate "Cisco SNIC Driver"
++	depends on PCI && SCSI
++	help
++	  This is support for the Cisco PCI-Express SCSI HBA.
++
++	  To compile this driver as a module, choose M here and read
++	  <file:Documentation/scsi/scsi.txt>.
++	  The module will be called snic.
++
++config SCSI_SNIC_DEBUG_FS
++	bool "Cisco SNIC Driver Debugfs Support"
++	depends on SCSI_SNIC && DEBUG_FS
++	help
++	  This enables to list debugging information from SNIC Driver
++	  available via debugfs file system
++
+ config SCSI_DMX3191D
+ 	tristate "DMX3191D SCSI support"
+ 	depends on PCI && SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 58158f1..f643942 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -39,6 +39,7 @@ obj-$(CONFIG_LIBFC)		+= libfc/
+ obj-$(CONFIG_LIBFCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE_FNIC)		+= fnic/
++obj-$(CONFIG_SCSI_SNIC)		+= snic/
+ obj-$(CONFIG_SCSI_BNX2X_FCOE)	+= libfc/ fcoe/ bnx2fc/
+ obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	libiscsi_tcp.o iscsi_tcp.o
+ obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+diff --git a/drivers/scsi/snic/Makefile b/drivers/scsi/snic/Makefile
+new file mode 100644
+index 0000000..ef7c0dd
+--- /dev/null
++++ b/drivers/scsi/snic/Makefile
+@@ -0,0 +1,17 @@
++obj-$(CONFIG_SCSI_SNIC) += snic.o
++
++snic-y := \
++	snic_attrs.o \
++	snic_main.o \
++	snic_res.o \
++	snic_isr.o \
++	snic_ctl.o \
++	snic_io.o \
++	snic_scsi.o \
++	snic_disc.o \
++	vnic_cq.o \
++	vnic_intr.o \
++	vnic_dev.o \
++	vnic_wq.o
++
++snic-$(CONFIG_SCSI_SNIC_DEBUG_FS) += snic_debugfs.o snic_trc.o
+-- 
+1.8.5.4
+
