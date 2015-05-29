@@ -1,8 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 4/6] scsi: storvsc: use correct defaults for values determined
- by protocol negotiation
-Date: Fri, 29 May 2015 13:29:17 -0700
-Message-ID: <1432931359-14473-4-git-send-email-kys@microsoft.com>
+Subject: [PATCH 6/6] scsi: storvsc: Allow write_same when host is windows 10
+Date: Fri, 29 May 2015 13:29:19 -0700
+Message-ID: <1432931359-14473-6-git-send-email-kys@microsoft.com>
 References: <1432931336-14434-1-git-send-email-kys@microsoft.com>
  <1432931359-14473-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -25,80 +24,38 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: keith.mange@microsoft.com <keith.mange@microsoft.com>
 
-Use correct defaults for values determined by protocol negotiation,
-instead of resetting them with every scsi controller.
+Allow WRITE_SAME for Windows10 and above hosts.
 
 Tested-by: Alex Ng <alexng@microsoft.com>
 Signed-off-by: Keith Mange <keith.mange@microsoft.com>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/scsi/storvsc_drv.c |   33 +++++++++++++++++++--------------
- 1 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/scsi/storvsc_drv.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index f29871e..6f38cdf 100644
+index 58fa47a..021cbdf 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -151,19 +151,17 @@ struct hv_fc_wwn_packet {
+@@ -1488,7 +1488,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
  
- /*
-  * Sense buffer size changed in win8; have a run-time
-- * variable to track the size we should use.
-+ * variable to track the size we should use.  This value will
-+ * likely change during protocol negotiation but it is valid
-+ * to start by assuming pre-Win8.
-  */
--static int sense_buffer_size;
-+static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
- 
- /*
-- * The size of the vmscsi_request has changed in win8. The
-- * additional size is because of new elements added to the
-- * structure. These elements are valid only when we are talking
-- * to a win8 host.
-- * Track the correction to size we need to apply.
-- */
--
--static int vmscsi_size_delta;
-+ * The storage protocol version is determined during the
-+ * initial exchange with the host.  It will indicate which
-+ * storage functionality is available in the host.
-+*/
- static int vmstor_proto_version;
- 
- struct vmscsi_win8_extension {
-@@ -209,6 +207,17 @@ struct vmscsi_request {
- 
- 
- /*
-+ * The size of the vmscsi_request has changed in win8. The
-+ * additional size is because of new elements added to the
-+ * structure. These elements are valid only when we are talking
-+ * to a win8 host.
-+ * Track the correction to size we need to apply. This value
-+ * will likely change during protocol negotiation but it is
-+ * valid to start by assuming pre-Win8.
-+ */
-+static int vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
-+
-+/*
-  * The list of storage protocols in order of preference.
-  */
- struct vmstor_protocol {
-@@ -1810,14 +1819,10 @@ static int storvsc_probe(struct hv_device *device,
+ 	/*
+ 	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
+-	 * if the device is a MSFT virtual device.
++	 * if the device is a MSFT virtual device.  If the host is
++	 * WIN10 or newer, allow write_same.
  	 */
+ 	if (!strncmp(sdevice->vendor, "Msft", 4)) {
+ 		switch (vmstor_proto_version) {
+@@ -1497,6 +1498,9 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 			sdevice->scsi_level = SCSI_SPC_3;
+ 			break;
+ 		}
++
++		if (vmstor_proto_version >= VMSTOR_PROTO_VERSION_WIN10)
++			sdevice->no_write_same = 0;
+ 	}
  
- 	if (vmbus_proto_version < VERSION_WIN8) {
--		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
--		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
- 		max_luns_per_target = STORVSC_IDE_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_IDE_MAX_TARGETS;
- 		max_channels = STORVSC_IDE_MAX_CHANNELS;
- 	} else {
--		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
--		vmscsi_size_delta = 0;
- 		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_MAX_TARGETS;
- 		max_channels = STORVSC_MAX_CHANNELS;
+ 	return 0;
 -- 
 1.7.4.1
