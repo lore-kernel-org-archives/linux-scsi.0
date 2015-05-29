@@ -1,65 +1,111 @@
-From: James Smart <james.smart@avagotech.com>
-Subject: Re: [PATCH v2 12/15] lpfc: Fix rport leak.
-Date: Fri, 29 May 2015 10:08:09 -0400
-Message-ID: <556872C9.20606@avagotech.com>
-References: <555e1c10.+P+E84TfJG4E7Wsc%james.smart@avagotech.com>	<20150524135636.00000f81@localhost>	<5564755B.5030302@avagotech.com> <20150527233200.00006352@localhost>
+From: =?Windows-1252?Q?Str=F6sser=2C_Bodo?=
+	<bodo.stroesser@ts.fujitsu.com>
+Subject: RE: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_tablesize
+Date: Fri, 29 May 2015 16:12:02 +0200
+Message-ID: <8B06D1E6480A6747B23FEC34909D2B5EAFC6B5D7E3@ABGEX70E.FSC.NET>
+References: <10f4d2$5t7km8@dgate20u.abg.fsc.net>
+ <55687215.4050300@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:36339 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134AbbE2OIM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 10:08:12 -0400
-Received: by qgf2 with SMTP id 2so29552251qgf.3
-        for <linux-scsi@vger.kernel.org>; Fri, 29 May 2015 07:08:12 -0700 (PDT)
-In-Reply-To: <20150527233200.00006352@localhost>
+Received: from dgate10.ts.fujitsu.com ([80.70.172.49]:44171 "EHLO
+	dgate10.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755119AbbE2OWF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 10:22:05 -0400
+In-Reply-To: <55687215.4050300@avagotech.com>
+Content-Language: de-DE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-That's good to know.  We have a fair amount of existing strings that are 
-split, so I don't want to retrofit those. But, on future submits, we'll 
-keep the string on a single line.
+Yes, we normally use 128, as this is the value best suited
+for our RAID systems. After upgrading the software we saw
+a clear performance reduction that was caused by the bug.
 
-Thanks
+With the fix everything works fine again.
 
--- james
+Thank you,
+Bodo
 
+> -----Original Message-----
+> From: James Smart [mailto:james.smart@avagotech.com]
+> Sent: Friday, May 29, 2015 4:05 PM
+> To: Str=F6sser, Bodo; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_t=
+ablesize
+>=20
+> Bodo,
+>=20
+> This is a valid fix.  Thank you.
+>=20
+> I assume you were changing the driver module parameter to up the SG
+> count ?  without the fix we would have been capped at 64 sges.
+>=20
+> -- james
+>=20
+> Reviewed-By: James Smart <james.smart@avagotech.com>
+>=20
+>=20
+>=20
+> On 5/29/2015 8:22 AM, bstroesser@ts.fujitsu.com wrote:
+> > Hi James,
+> >
+> > We had some performance problems with RAID systems connected to LPe=
+12k.
+> > AFAICS, the reason is a small bug in lpfc.ko, causing the IO-size t=
+o
+> > be smaller than expected.
+> >
+> > The patch below fixes it for us.
+> >
+> > Please CC me, I'm not on the list.
+> >
+> > Best regards
+> > Bodo
+> >
+> >
+> > ------------------------------------------------------
+> >
+> > From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> > Date: Fri, 29 May 2015 13:34:19 +0200
+> > Subject: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_tab=
+lesize
+> >
+> > Currently the module parameter lpfc_sg_seg_count does not have effe=
+ct
+> > for sli3 devices.
+> >
+> > In lpfc_sli_driver_resource_setup(), which is used for sli3, the co=
+de
+> > writes the configured sg_seg_cnt into lpfc_template.sg_tablesize.
+> > But lpfc_template is the template used for sli4 only. Thus the valu=
+e should
+> > correctly be written to lpfc_template_s3->sg_tablesize.
+> >
+> > This patch is for kernel 4.1-rc5, but is tested with lpfc 10.2.405.=
+26 only.
+> >
+> > Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> > ---
+> >
+> > --- a/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:02.000000000 +=
+0200
+> > +++ b/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:56.000000000 +=
+0200
+> > @@ -4988,7 +4988,7 @@ lpfc_sli_driver_resource_setup(struct lp
+> >
+> >   	/* Initialize the host templates the configured values. */
+> >   	lpfc_vport_template.sg_tablesize =3D phba->cfg_sg_seg_cnt;
+> > -	lpfc_template.sg_tablesize =3D phba->cfg_sg_seg_cnt;
+> > +	lpfc_template_s3.sg_tablesize =3D phba->cfg_sg_seg_cnt;
+> >
+> >   	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp=
+ */
+> >   	if (phba->cfg_enable_bg) {
 
-On 5/27/2015 5:32 PM, Sebastian Herbszt wrote:
-> James Smart wrote:
->> Sebastian,
->>
->> Re: more than 1 space between a type declaration and a variable name - I
->> do not believe that's a hard requirement. It fully passes checkpatch.
->> Yes, consistent style use (aligning all variable names at same offset,
->> or always 1) would be good - but code has been there so long with
->> althernate styles it doesn't really matter at this point.  I did clean
->> up those in your last review as I needed to do a mod for the LS_RJT
->> behavior. But... this seems like a nit.   I did promise Christoph that I
->> would pick a good point and retrofit the sources for all sparse warnings
->> - and still owe him.
->>
->> Re: Checkpatch and string splitting. I understand we aren't passing
->> checkpatch for that rule, but joining them would have checkpatch
->> flagging us for beyond 80 character lines.
-> checkpatch seems to just follow what's mentioned in CodingStyle "Chapter 2:
-> Breaking long lines and strings":
->
-> "However, never break user-visible strings such as printk messages, because
-> that breaks the ability to grep for them."
->
-> The tool is actually smart enough to not flag such lines as LONG_LINE.
->
->> I'd much rather have the
->> splits and keep the indenting for readability. We have also had this
->> error quite a bit in the past and believe we have been grandfathered as
->> there's a lot of this already.
->>
->> James B - any comments on the above ?
->>
->> -- james s
-> Sebastian
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
