@@ -1,14 +1,15 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/6] scsi: storvsc: Rather than look for sets of specific
- protocol versions, make decisions based on ranges.
-Date: Fri, 29 May 2015 13:29:14 -0700
-Message-ID: <1432931359-14473-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH 3/6] hv:scsi:Untangle the storage protocol negotiation from
+ the vmbus protocol negotiation.
+Date: Fri, 29 May 2015 13:29:16 -0700
+Message-ID: <1432931359-14473-3-git-send-email-kys@microsoft.com>
 References: <1432931336-14434-1-git-send-email-kys@microsoft.com>
+ <1432931359-14473-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1432931336-14434-1-git-send-email-kys@microsoft.com>
+In-Reply-To: <1432931359-14473-1-git-send-email-kys@microsoft.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -24,59 +25,188 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: keith.mange@microsoft.com <keith.mange@microsoft.com>
 
-Rather than look for sets of specific protocol versions,
-make decisions based on ranges. This will be safer and require fewer changes
-going forward as we add more storage protocol versions.
+Currently we are making decisions based on vmbus protocol versions
+that have been negotiated; use storage potocol versions instead.
 
 Tested-by: Alex Ng <alexng@microsoft.com>
 Signed-off-by: Keith Mange <keith.mange@microsoft.com>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/scsi/storvsc_drv.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+ drivers/scsi/storvsc_drv.c |  109 +++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 87 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3c6584f..582f3b5 100644
+index 5f9d133..f29871e 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -988,8 +988,7 @@ static int storvsc_channel_init(struct hv_device *device)
- 	 * support multi-channel.
- 	 */
- 	max_chns = vstor_packet->storage_channel_properties.max_channel_cnt;
--	if ((vmbus_proto_version != VERSION_WIN7) &&
--	   (vmbus_proto_version != VERSION_WS2008))  {
-+	if (vmbus_proto_version >= VERSION_WIN8) {
- 		if (vstor_packet->storage_channel_properties.flags &
- 		    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
- 			process_sub_channels = true;
-@@ -1758,9 +1757,7 @@ static int storvsc_probe(struct hv_device *device,
- 	 * set state to properly communicate with the host.
- 	 */
+@@ -56,14 +56,18 @@
+  * V1 RC > 2008/1/31:  2.0
+  * Win7: 4.2
+  * Win8: 5.1
++ * Win8.1: 6.0
++ * Win10: 6.2
+  */
  
--	switch (vmbus_proto_version) {
--	case VERSION_WS2008:
--	case VERSION_WIN7:
-+	if (vmbus_proto_version < VERSION_WIN8) {
+ #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
+ 						(((MINOR_) & 0xff)))
+ 
++#define VMSTOR_PROTO_VERSION_WIN6	VMSTOR_PROTO_VERSION(2, 0)
+ #define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
+ #define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
+-
++#define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
++#define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
+ 
+ /*  Packet structure describing virtual storage requests. */
+ enum vstor_packet_operation {
+@@ -205,6 +209,46 @@ struct vmscsi_request {
+ 
+ 
+ /*
++ * The list of storage protocols in order of preference.
++ */
++struct vmstor_protocol {
++	int protocol_version;
++	int sense_buffer_size;
++	int vmscsi_size_delta;
++};
++
++#define VMSTOR_NUM_PROTOCOLS    5
++
++const struct vmstor_protocol vmstor_protocols[VMSTOR_NUM_PROTOCOLS] = {
++	{
++		VMSTOR_PROTO_VERSION_WIN10,
++		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
++		0
++	},
++	{
++		VMSTOR_PROTO_VERSION_WIN8_1,
++		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
++		0
++	},
++	{
++		VMSTOR_PROTO_VERSION_WIN8,
++		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
++		0
++	},
++	{
++		VMSTOR_PROTO_VERSION_WIN7,
++		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
++		sizeof(struct vmscsi_win8_extension),
++	},
++	{
++		VMSTOR_PROTO_VERSION_WIN6,
++		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
++		sizeof(struct vmscsi_win8_extension),
++	}
++};
++
++
++/*
+  * This structure is sent during the intialization phase to get the different
+  * properties of the channel.
+  */
+@@ -871,7 +915,7 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	struct storvsc_device *stor_device;
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+-	int ret, t;
++	int ret, t, i;
+ 	int max_chns;
+ 	bool process_sub_channels = false;
+ 
+@@ -911,36 +955,59 @@ static int storvsc_channel_init(struct hv_device *device)
+ 		goto cleanup;
+ 
+ 
+-	/* reuse the packet for version range supported */
+-	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+-	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
+-	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
++	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
++		/* reuse the packet for version range supported */
++		memset(vstor_packet, 0, sizeof(struct vstor_packet));
++		vstor_packet->operation =
++			VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
++		vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
+-	vstor_packet->version.major_minor = vmstor_proto_version;
++		vstor_packet->version.major_minor =
++			vmstor_protocols[i].protocol_version;
+ 
+-	/*
+-	 * The revision number is only used in Windows; set it to 0.
+-	 */
+-	vstor_packet->version.revision = 0;
++		/*
++		 * The revision number is only used in Windows; set it to 0.
++		 */
++		vstor_packet->version.revision = 0;
+ 
+-	ret = vmbus_sendpacket(device->channel, vstor_packet,
++		ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+ 			       (unsigned long)request,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (ret != 0)
+-		goto cleanup;
++		if (ret != 0)
++			goto cleanup;
+ 
+-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+-	if (t == 0) {
+-		ret = -ETIMEDOUT;
+-		goto cleanup;
++		t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
++		if (t == 0) {
++			ret = -ETIMEDOUT;
++			goto cleanup;
++		}
++
++		if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO) {
++			ret = -EINVAL;
++			goto cleanup;
++		}
++
++		if (vstor_packet->status == 0) {
++			vmstor_proto_version =
++				vmstor_protocols[i].protocol_version;
++
++			sense_buffer_size =
++				vmstor_protocols[i].sense_buffer_size;
++
++			vmscsi_size_delta =
++				vmstor_protocols[i].vmscsi_size_delta;
++
++			break;
++		}
+ 	}
+ 
+-	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	if (vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 
+ 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
+@@ -1745,14 +1812,12 @@ static int storvsc_probe(struct hv_device *device,
+ 	if (vmbus_proto_version < VERSION_WIN8) {
  		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
  		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
- 		vmstor_current_major = VMSTOR_WIN7_MAJOR;
-@@ -1768,8 +1765,7 @@ static int storvsc_probe(struct hv_device *device,
+-		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN7;
  		max_luns_per_target = STORVSC_IDE_MAX_LUNS_PER_TARGET;
  		max_targets = STORVSC_IDE_MAX_TARGETS;
  		max_channels = STORVSC_IDE_MAX_CHANNELS;
--		break;
--	default:
-+	} else {
+ 	} else {
  		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
  		vmscsi_size_delta = 0;
- 		vmstor_current_major = VMSTOR_WIN8_MAJOR;
-@@ -1783,7 +1779,6 @@ static int storvsc_probe(struct hv_device *device,
- 		 * VCPUs in the guest.
- 		 */
- 		max_sub_channels = (num_cpus / storvsc_vcpus_per_sub_channel);
--		break;
- 	}
- 
- 	scsi_driver.can_queue = (max_outstanding_req_per_channel *
+-		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN8;
+ 		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
+ 		max_targets = STORVSC_MAX_TARGETS;
+ 		max_channels = STORVSC_MAX_CHANNELS;
 -- 
 1.7.4.1
