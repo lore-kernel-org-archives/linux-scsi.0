@@ -1,127 +1,67 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 2/6] scsi: storvsc: Use a single value to track protocol
- versions
-Date: Fri, 29 May 2015 13:29:15 -0700
-Message-ID: <1432931359-14473-2-git-send-email-kys@microsoft.com>
-References: <1432931336-14434-1-git-send-email-kys@microsoft.com>
- <1432931359-14473-1-git-send-email-kys@microsoft.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v3] fusion: remove dead MTRR code
+Date: Fri, 29 May 2015 13:23:25 -0700
+Message-ID: <CAB=NE6VVcaZ2v8VbSThcT3Kv_FkcB3nqbQLTjrhNPYyLvfd2PQ@mail.gmail.com>
+References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6V8bVPofvcaGhUebqZckvEAvbYrSdv1EJU52M-4vrFQ8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1432931359-14473-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
-Cc: "keith.mange@microsoft.com" <keith.mange@microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:33697 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756266AbbE2UXq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 16:23:46 -0400
+In-Reply-To: <CAB=NE6V8bVPofvcaGhUebqZckvEAvbYrSdv1EJU52M-4vrFQ8g@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Sumit.Saxena@avagotech.com, kashyap.desai@avagotech.com, JBottomley@odin.com
+Cc: Andy Lutomirski <luto@amacapital.net>, "Michael S. Tsirkin" <mst@redhat.com>, "Luis R. Rodriguez" <mcgrof@suse.com>, Toshi Kani <toshi.kani@hp.com>, Christoph Hellwig <hch@infradead.org>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: keith.mange@microsoft.com <keith.mange@microsoft.com>
+On Wed, Apr 29, 2015 at 12:50 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Tue, Apr 21, 2015 at 1:46 PM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+>> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>>
+>> If and when this gets enabled the driver could should split
+>> up IO memory space properly and that is quite a bit of work.
+>> Just remove the uncommented dead MTRR code then.
+>>
+>> There are a few motivations for this:
+>>
+>> a) Take advantage of PAT when available
+>>
+>> b) Help bury MTRR code away, MTRR is architecture specific and on
+>>    x86 its replaced by PAT
+>>
+>> c) Help with the goal of eventually using _PAGE_CACHE_UC over
+>>    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+>>    de33c442e titled "x86 PAT: fix performance drop for glx,
+>>    use UC minus for ioremap(), ioremap_nocache() and
+>>    pci_mmap_page_range()")
+>
+> Hey folks, who's tree should this go through if agreeable?
 
-Use a single value to track protocol versions to simplify
-comparisons and to be consistent with vmbus version tracking.
+OK its been over 1 month without any replies on this patch which just
+removes commented out code.
 
-Tested-by: Alex Ng <alexng@microsoft.com>
-Signed-off-by: Keith Mange <keith.mange@microsoft.com>
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   35 +++++++++--------------------------
- 1 files changed, 9 insertions(+), 26 deletions(-)
+All the maintainers below bounce and the only e-mail not bouncing is
+for Sreekanth Reddy <sreekanth.reddy@avagotech.com>, he hasn't been
+seen active on linux-next since Jan 12 2015 when he did a driver bump
+for mpt2sas to 20.100.00.00.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 582f3b5..5f9d133 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -58,12 +58,11 @@
-  * Win8: 5.1
-  */
- 
-+#define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
-+						(((MINOR_) & 0xff)))
- 
--#define VMSTOR_WIN7_MAJOR 4
--#define VMSTOR_WIN7_MINOR 2
--
--#define VMSTOR_WIN8_MAJOR 5
--#define VMSTOR_WIN8_MINOR 1
-+#define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
-+#define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
- 
- 
- /*  Packet structure describing virtual storage requests. */
-@@ -161,8 +160,7 @@ static int sense_buffer_size;
-  */
- 
- static int vmscsi_size_delta;
--static int vmstor_current_major;
--static int vmstor_current_minor;
-+static int vmstor_proto_version;
- 
- struct vmscsi_win8_extension {
- 	/*
-@@ -481,18 +479,6 @@ done:
- 	kfree(wrk);
- }
- 
--/*
-- * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
-- * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
-- */
--
--static inline u16 storvsc_get_version(u8 major, u8 minor)
--{
--	u16 version;
--
--	version = ((major << 8) | minor);
--	return version;
--}
- 
- /*
-  * We can get incoming messages from the host that are not in response to
-@@ -930,8 +916,7 @@ static int storvsc_channel_init(struct hv_device *device)
- 	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 
--	vstor_packet->version.major_minor =
--		storvsc_get_version(vmstor_current_major, vmstor_current_minor);
-+	vstor_packet->version.major_minor = vmstor_proto_version;
- 
- 	/*
- 	 * The revision number is only used in Windows; set it to 0.
-@@ -1562,7 +1547,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	u32 payload_sz;
- 	u32 length;
- 
--	if (vmstor_current_major <= VMSTOR_WIN8_MAJOR) {
-+	if (vmstor_proto_version <= VMSTOR_PROTO_VERSION_WIN8) {
- 		/*
- 		 * On legacy hosts filter unimplemented commands.
- 		 * Future hosts are expected to correctly handle
-@@ -1760,16 +1745,14 @@ static int storvsc_probe(struct hv_device *device,
- 	if (vmbus_proto_version < VERSION_WIN8) {
- 		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
--		vmstor_current_major = VMSTOR_WIN7_MAJOR;
--		vmstor_current_minor = VMSTOR_WIN7_MINOR;
-+		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN7;
- 		max_luns_per_target = STORVSC_IDE_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_IDE_MAX_TARGETS;
- 		max_channels = STORVSC_IDE_MAX_CHANNELS;
- 	} else {
- 		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = 0;
--		vmstor_current_major = VMSTOR_WIN8_MAJOR;
--		vmstor_current_minor = VMSTOR_WIN8_MINOR;
-+		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN8;
- 		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_MAX_TARGETS;
- 		max_channels = STORVSC_MAX_CHANNELS;
--- 
-1.7.4.1
+What's going on folks? And can this patch go in?
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aca2886..73dbc02 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6205,10 +6205,7 @@ S:       Maintained
+ F:     arch/arm/mach-lpc32xx/
+
+ LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
+-M:     Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+-M:     Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
+ M:     Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+-M:     Abhijit Mahajan <abhijit.mahajan@avagotech.com>
+ L:     MPT-FusionLinux.pdl@avagotech.com
+ L:     linux-scsi@vger.kernel.org
+ W:     http://www.lsilogic.com/support
