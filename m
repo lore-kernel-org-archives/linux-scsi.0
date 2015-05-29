@@ -1,29 +1,27 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v7 4/9] snic:Add snic target discovery
-Date: Fri, 29 May 2015 15:57:52 +0200
-Message-ID: <55687060.3080404@suse.de>
-References: <1432886649-12034-1-git-send-email-nmusini@cisco.com> <1432886649-12034-5-git-send-email-nmusini@cisco.com>
+Subject: Re: [PATCH v7 5/9] snic:add SCSI handling, AEN, and fwreset handling
+Date: Fri, 29 May 2015 16:03:57 +0200
+Message-ID: <556871CD.9030001@suse.de>
+References: <1432886649-12034-1-git-send-email-nmusini@cisco.com> <1432886649-12034-6-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60264 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60531 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbbE2N5z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 May 2015 09:57:55 -0400
-In-Reply-To: <1432886649-12034-5-git-send-email-nmusini@cisco.com>
+	id S1753234AbbE2OEA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 May 2015 10:04:00 -0400
+In-Reply-To: <1432886649-12034-6-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Narsimhulu Musini <nmusini@cisco.com>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, boaz@plexistor.com, jthumshirn@suse.de
 Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
 On 05/29/2015 10:04 AM, Narsimhulu Musini wrote:
-> snic_disc.h contains snic target structure definition.
->=20
-> snic_disc.c contains target discovery, setup, lookup, and cleanup
->=20
-> snic_ctl.c contains retrieval of snic capabilities includes
-> max ios, size, SGs per request, and max concurrent requests.
+> snic_scsi.c contains scsi handling, includes queuing io, abort, lun r=
+eset,
+> and host reset. Also it handles asynchronous event notifications from=
+ FW.
 >=20
 > Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 > Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
