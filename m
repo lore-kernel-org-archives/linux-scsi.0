@@ -1,67 +1,108 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v3] fusion: remove dead MTRR code
-Date: Fri, 29 May 2015 13:23:25 -0700
-Message-ID: <CAB=NE6VVcaZ2v8VbSThcT3Kv_FkcB3nqbQLTjrhNPYyLvfd2PQ@mail.gmail.com>
-References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6V8bVPofvcaGhUebqZckvEAvbYrSdv1EJU52M-4vrFQ8g@mail.gmail.com>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH 1/6] scsi: storvsc: Rather than look for sets of specific
+ protocol versions, make decisions based on ranges.
+Date: Fri, 29 May 2015 20:33:34 +0000
+Message-ID: <DM2PR03MB416988E42919F0534C0A073CEC90@DM2PR03MB416.namprd03.prod.outlook.com>
+References: <1432931336-14434-1-git-send-email-kys@microsoft.com>
+ <1432931359-14473-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:33697 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756266AbbE2UXq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 16:23:46 -0400
-In-Reply-To: <CAB=NE6V8bVPofvcaGhUebqZckvEAvbYrSdv1EJU52M-4vrFQ8g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1432931359-14473-1-git-send-email-kys@microsoft.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Cc: Keith Mange <Keith.Mange@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Sumit.Saxena@avagotech.com, kashyap.desai@avagotech.com, JBottomley@odin.com
-Cc: Andy Lutomirski <luto@amacapital.net>, "Michael S. Tsirkin" <mst@redhat.com>, "Luis R. Rodriguez" <mcgrof@suse.com>, Toshi Kani <toshi.kani@hp.com>, Christoph Hellwig <hch@infradead.org>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Apr 29, 2015 at 12:50 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Tue, Apr 21, 2015 at 1:46 PM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->>
->> If and when this gets enabled the driver could should split
->> up IO memory space properly and that is quite a bit of work.
->> Just remove the uncommented dead MTRR code then.
->>
->> There are a few motivations for this:
->>
->> a) Take advantage of PAT when available
->>
->> b) Help bury MTRR code away, MTRR is architecture specific and on
->>    x86 its replaced by PAT
->>
->> c) Help with the goal of eventually using _PAGE_CACHE_UC over
->>    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
->>    de33c442e titled "x86 PAT: fix performance drop for glx,
->>    use UC minus for ioremap(), ioremap_nocache() and
->>    pci_mmap_page_range()")
->
-> Hey folks, who's tree should this go through if agreeable?
 
-OK its been over 1 month without any replies on this patch which just
-removes commented out code.
 
-All the maintainers below bounce and the only e-mail not bouncing is
-for Sreekanth Reddy <sreekanth.reddy@avagotech.com>, he hasn't been
-seen active on linux-next since Jan 12 2015 when he did a driver bump
-for mpt2sas to 20.100.00.00.
-
-What's going on folks? And can this patch go in?
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aca2886..73dbc02 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6205,10 +6205,7 @@ S:       Maintained
- F:     arch/arm/mach-lpc32xx/
-
- LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
--M:     Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
--M:     Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
- M:     Sreekanth Reddy <sreekanth.reddy@avagotech.com>
--M:     Abhijit Mahajan <abhijit.mahajan@avagotech.com>
- L:     MPT-FusionLinux.pdl@avagotech.com
- L:     linux-scsi@vger.kernel.org
- W:     http://www.lsilogic.com/support
+> -----Original Message-----
+> From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
+> Behalf Of K. Y. Srinivasan
+> Sent: Friday, May 29, 2015 1:29 PM
+> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com; jbottomley@parallels.com;
+> hch@infradead.org; linux-scsi@vger.kernel.org; apw@canonical.com;
+> vkuznets@redhat.com; jasowang@redhat.com
+> Cc: Keith Mange
+> Subject: [PATCH 1/6] scsi: storvsc: Rather than look for sets of specific protocol
+> versions, make decisions based on ranges.
+> 
+> From: keith.mange@microsoft.com <keith.mange@microsoft.com>
+> 
+> Rather than look for sets of specific protocol versions, make decisions based on
+> ranges. This will be safer and require fewer changes going forward as we add
+> more storage protocol versions.
+> 
+Reviewed-by: Long Li <longli@microsoft.com>
+> Tested-by: Alex Ng <alexng@microsoft.com>
+> Signed-off-by: Keith Mange <keith.mange@microsoft.com>
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c |   11 +++--------
+>  1 files changed, 3 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
+> 3c6584f..582f3b5 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -988,8 +988,7 @@ static int storvsc_channel_init(struct hv_device *device)
+>  	 * support multi-channel.
+>  	 */
+>  	max_chns = vstor_packet-
+> >storage_channel_properties.max_channel_cnt;
+> -	if ((vmbus_proto_version != VERSION_WIN7) &&
+> -	   (vmbus_proto_version != VERSION_WS2008))  {
+> +	if (vmbus_proto_version >= VERSION_WIN8) {
+>  		if (vstor_packet->storage_channel_properties.flags &
+>  		    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
+>  			process_sub_channels = true;
+> @@ -1758,9 +1757,7 @@ static int storvsc_probe(struct hv_device *device,
+>  	 * set state to properly communicate with the host.
+>  	 */
+> 
+> -	switch (vmbus_proto_version) {
+> -	case VERSION_WS2008:
+> -	case VERSION_WIN7:
+> +	if (vmbus_proto_version < VERSION_WIN8) {
+>  		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
+>  		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
+>  		vmstor_current_major = VMSTOR_WIN7_MAJOR; @@ -
+> 1768,8 +1765,7 @@ static int storvsc_probe(struct hv_device *device,
+>  		max_luns_per_target =
+> STORVSC_IDE_MAX_LUNS_PER_TARGET;
+>  		max_targets = STORVSC_IDE_MAX_TARGETS;
+>  		max_channels = STORVSC_IDE_MAX_CHANNELS;
+> -		break;
+> -	default:
+> +	} else {
+>  		sense_buffer_size =
+> POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
+>  		vmscsi_size_delta = 0;
+>  		vmstor_current_major = VMSTOR_WIN8_MAJOR; @@ -
+> 1783,7 +1779,6 @@ static int storvsc_probe(struct hv_device *device,
+>  		 * VCPUs in the guest.
+>  		 */
+>  		max_sub_channels = (num_cpus /
+> storvsc_vcpus_per_sub_channel);
+> -		break;
+>  	}
+> 
+>  	scsi_driver.can_queue = (max_outstanding_req_per_channel *
+> --
+> 1.7.4.1
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
