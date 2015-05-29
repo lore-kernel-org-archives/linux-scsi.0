@@ -1,12 +1,12 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH v7 8/9] snic:Add event tracing to capture IO events.
-Date: Fri, 29 May 2015 01:04:08 -0700
-Message-ID: <1432886649-12034-9-git-send-email-nmusini@cisco.com>
+Subject: [PATCH v7 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
+Date: Fri, 29 May 2015 01:04:09 -0700
+Message-ID: <1432886649-12034-10-git-send-email-nmusini@cisco.com>
 References: <1432886649-12034-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-8.cisco.com ([173.37.142.95]:4090 "EHLO
-	alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755697AbbE2IJJ (ORCPT
+Received: from alln-iport-7.cisco.com ([173.37.142.94]:17504 "EHLO
+	alln-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755698AbbE2IJJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2015 04:09:09 -0400
 In-Reply-To: <1432886649-12034-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,345 +14,109 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de, boaz@plexistor.com, jthumshirn@suse.de
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-snic_trc.h contains global trace structure definitions for snic driver
+Kconfig for kbuild
+Makefile to build snic module
 
-snic_trc.c adds tracing functionality to capture various IO events.
-It maintains global trace buffer to maintain recent history of IO events.
-It helps to understand the sequence of events prior to particular IO event,
-or hung, panic, etc,.
+Updated MAINTAINERS file
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
-* v7
-- Removed SNIC_DEBUG_FS macro, and replaced it with CONFIG_SCSI_SNIC_DEBUG_FS
-
-* v6
-- Fixed compilation issues on ppc64.
+* v3
+- Added additional config section (CONFIG_SNIC_DEBUG_FS) for enabling debugging
+  functionality.
 
 * v2
-- Added compile time macro SNIC_DEBUG_FS to handle debugfs dependent functionality.
+- Added compile time flags for debugfs dependent functionality.
 
- drivers/scsi/snic/snic_trc.c | 181 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/snic/snic_trc.h | 121 +++++++++++++++++++++++++++++
- 2 files changed, 302 insertions(+)
- create mode 100644 drivers/scsi/snic/snic_trc.c
- create mode 100644 drivers/scsi/snic/snic_trc.h
+ MAINTAINERS                |  7 +++++++
+ drivers/scsi/Kconfig       | 17 +++++++++++++++++
+ drivers/scsi/Makefile      |  1 +
+ drivers/scsi/snic/Makefile | 17 +++++++++++++++++
+ 4 files changed, 42 insertions(+)
+ create mode 100644 drivers/scsi/snic/Makefile
 
-diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2a97e05..368fb76 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2536,6 +2536,13 @@ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/fnic/
+ 
++CISCO SCSI HBA DRIVER
++M:	Narsimhulu Musini <nmusini@cisco.com>
++M:	Sesidhar Baddela <sebaddel@cisco.com>
++L:	linux-scsi@vger.kernel.org
++S:	Supported
++F:	drivers/scsi/snic/
++
+ CMPC ACPI DRIVER
+ M:	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ M:	Daniel Oliveira Nascimento <don@syst.com.br>
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9c92f41..353d550 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -634,6 +634,23 @@ config FCOE_FNIC
+ 	  <file:Documentation/scsi/scsi.txt>.
+ 	  The module will be called fnic.
+ 
++config SCSI_SNIC
++	tristate "Cisco SNIC Driver"
++	depends on PCI && SCSI
++	help
++	  This is support for the Cisco PCI-Express SCSI HBA.
++
++	  To compile this driver as a module, choose M here and read
++	  <file:Documentation/scsi/scsi.txt>.
++	  The module will be called snic.
++
++config SCSI_SNIC_DEBUG_FS
++	bool "Cisco SNIC Driver Debugfs Support"
++	depends on SCSI_SNIC && DEBUG_FS
++	help
++	  This enables to list debugging information from SNIC Driver
++	  available via debugfs file system
++
+ config SCSI_DMX3191D
+ 	tristate "DMX3191D SCSI support"
+ 	depends on PCI && SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 58158f1..f643942 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -39,6 +39,7 @@ obj-$(CONFIG_LIBFC)		+= libfc/
+ obj-$(CONFIG_LIBFCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE_FNIC)		+= fnic/
++obj-$(CONFIG_SCSI_SNIC)		+= snic/
+ obj-$(CONFIG_SCSI_BNX2X_FCOE)	+= libfc/ fcoe/ bnx2fc/
+ obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	libiscsi_tcp.o iscsi_tcp.o
+ obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+diff --git a/drivers/scsi/snic/Makefile b/drivers/scsi/snic/Makefile
 new file mode 100644
-index 0000000..28a40a7
+index 0000000..ef7c0dd
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_trc.c
-@@ -0,0 +1,181 @@
-+/*
-+ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
++++ b/drivers/scsi/snic/Makefile
+@@ -0,0 +1,17 @@
++obj-$(CONFIG_SCSI_SNIC) += snic.o
 +
-+#include <linux/module.h>
-+#include <linux/mempool.h>
-+#include <linux/errno.h>
-+#include <linux/vmalloc.h>
++snic-y := \
++	snic_attrs.o \
++	snic_main.o \
++	snic_res.o \
++	snic_isr.o \
++	snic_ctl.o \
++	snic_io.o \
++	snic_scsi.o \
++	snic_disc.o \
++	vnic_cq.o \
++	vnic_intr.o \
++	vnic_dev.o \
++	vnic_wq.o
 +
-+#include "snic_io.h"
-+#include "snic.h"
-+
-+/*
-+ * snic_get_trc_buf : Allocates a trace record and returns.
-+ */
-+struct snic_trc_data *
-+snic_get_trc_buf(void)
-+{
-+	struct snic_trc *trc = &snic_glob->trc;
-+	struct snic_trc_data *td = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&trc->lock, flags);
-+	td = &trc->buf[trc->wr_idx];
-+	trc->wr_idx++;
-+
-+	if (trc->wr_idx == trc->max_idx)
-+		trc->wr_idx = 0;
-+
-+	if (trc->wr_idx != trc->rd_idx) {
-+		spin_unlock_irqrestore(&trc->lock, flags);
-+
-+		goto end;
-+	}
-+
-+	trc->rd_idx++;
-+	if (trc->rd_idx == trc->max_idx)
-+		trc->rd_idx = 0;
-+
-+	td->ts = 0;	/* Marker for checking the record, for complete data*/
-+	spin_unlock_irqrestore(&trc->lock, flags);
-+
-+end:
-+
-+	return td;
-+} /* end of snic_get_trc_buf */
-+
-+/*
-+ * snic_fmt_trc_data : Formats trace data for printing.
-+ */
-+static int
-+snic_fmt_trc_data(struct snic_trc_data *td, char *buf, int buf_sz)
-+{
-+	int len = 0;
-+	struct timespec tmspec;
-+
-+	jiffies_to_timespec(td->ts, &tmspec);
-+
-+	len += snprintf(buf, buf_sz,
-+			"%lu.%10lu %-25s %3d %4x %16llx %16llx %16llx %16llx %16llx\n",
-+			tmspec.tv_sec,
-+			tmspec.tv_nsec,
-+			td->fn,
-+			td->hno,
-+			td->tag,
-+			td->data[0], td->data[1], td->data[2], td->data[3],
-+			td->data[4]);
-+
-+	return len;
-+} /* end of snic_fmt_trc_data */
-+
-+/*
-+ * snic_get_trc_data : Returns a formatted trace buffer.
-+ */
-+int
-+snic_get_trc_data(char *buf, int buf_sz)
-+{
-+	struct snic_trc_data *td = NULL;
-+	struct snic_trc *trc = &snic_glob->trc;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&trc->lock, flags);
-+	if (trc->rd_idx == trc->wr_idx) {
-+		spin_unlock_irqrestore(&trc->lock, flags);
-+
-+		return -1;
-+	}
-+	td = &trc->buf[trc->rd_idx];
-+
-+	if (td->ts == 0) {
-+		/* write in progress. */
-+		spin_unlock_irqrestore(&trc->lock, flags);
-+
-+		return -1;
-+	}
-+
-+	trc->rd_idx++;
-+	if (trc->rd_idx == trc->max_idx)
-+		trc->rd_idx = 0;
-+	spin_unlock_irqrestore(&trc->lock, flags);
-+
-+	return snic_fmt_trc_data(td, buf, buf_sz);
-+} /* end of snic_get_trc_data */
-+
-+/*
-+ * snic_trc_init() : Configures Trace Functionality for snic.
-+ */
-+int
-+snic_trc_init(void)
-+{
-+	struct snic_trc *trc = &snic_glob->trc;
-+	void *tbuf = NULL;
-+	int tbuf_sz = 0, ret;
-+
-+	tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
-+	tbuf = vmalloc(tbuf_sz);
-+	if (!tbuf) {
-+		SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
-+		SNIC_ERR("Trace Facility not enabled.\n");
-+		ret = -ENOMEM;
-+
-+		return ret;
-+	}
-+
-+	memset(tbuf, 0, tbuf_sz);
-+	trc->buf = (struct snic_trc_data *) tbuf;
-+	spin_lock_init(&trc->lock);
-+
-+	ret = snic_trc_debugfs_init();
-+	if (ret) {
-+		SNIC_ERR("Failed to create Debugfs Files.\n");
-+
-+		goto error;
-+	}
-+
-+	trc->max_idx = (tbuf_sz / SNIC_TRC_ENTRY_SZ);
-+	trc->rd_idx = trc->wr_idx = 0;
-+	trc->enable = 1;
-+	SNIC_INFO("Trace Facility Enabled.\n Trace Buffer SZ %lu Pages.\n",
-+		  tbuf_sz / PAGE_SIZE);
-+	ret = 0;
-+
-+	return ret;
-+
-+error:
-+	snic_trc_free();
-+
-+	return ret;
-+} /* end of snic_trc_init */
-+
-+/*
-+ * snic_trc_free : Releases the trace buffer and disables the tracing.
-+ */
-+void
-+snic_trc_free(void)
-+{
-+	struct snic_trc *trc = &snic_glob->trc;
-+
-+	trc->enable = 0;
-+	snic_trc_debugfs_term();
-+
-+	if (trc->buf) {
-+		vfree(trc->buf);
-+		trc->buf = NULL;
-+	}
-+
-+	SNIC_INFO("Trace Facility Disabled.\n");
-+} /* end of snic_trc_free */
-diff --git a/drivers/scsi/snic/snic_trc.h b/drivers/scsi/snic/snic_trc.h
-new file mode 100644
-index 0000000..30ade03
---- /dev/null
-+++ b/drivers/scsi/snic/snic_trc.h
-@@ -0,0 +1,121 @@
-+/*
-+ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you may redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; version 2 of the License.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#ifndef __SNIC_TRC_H
-+#define __SNIC_TRC_H
-+
-+#ifdef CONFIG_SCSI_SNIC_DEBUG_FS
-+
-+extern ssize_t simple_read_from_buffer(void __user *to,
-+					size_t count,
-+					loff_t *ppos,
-+					const void *from,
-+					size_t available);
-+
-+extern unsigned int snic_trace_max_pages;
-+
-+/* Global Data structure for trace to manage trace functionality */
-+struct snic_trc_data {
-+	u64	ts;		/* Time Stamp */
-+	char	*fn;		/* Ptr to Function Name */
-+	u32	hno;		/* SCSI Host ID */
-+	u32	tag;		/* Command Tag */
-+	u64 data[5];
-+} __attribute__((__packed__));
-+
-+#define SNIC_TRC_ENTRY_SZ  64	/* in Bytes */
-+
-+struct snic_trc {
-+	spinlock_t lock;
-+	struct snic_trc_data *buf;	/* Trace Buffer */
-+	u32	max_idx;		/* Max Index into trace buffer */
-+	u32	rd_idx;
-+	u32	wr_idx;
-+	u32	enable;			/* Control Variable for Tracing */
-+
-+	struct dentry *trc_enable;	/* debugfs file object */
-+	struct dentry *trc_file;
-+};
-+
-+int snic_trc_init(void);
-+void snic_trc_free(void);
-+int snic_trc_debugfs_init(void);
-+void snic_trc_debugfs_term(void);
-+struct snic_trc_data *snic_get_trc_buf(void);
-+int snic_get_trc_data(char *buf, int buf_sz);
-+
-+int snic_debugfs_init(void);
-+void snic_debugfs_term(void);
-+
-+static inline void
-+snic_trace(char *fn, u16 hno, u32 tag, u64 d1, u64 d2, u64 d3, u64 d4, u64 d5)
-+{
-+	struct snic_trc_data *tr_rec = snic_get_trc_buf();
-+
-+	if (!tr_rec)
-+		return;
-+
-+	tr_rec->fn = (char *)fn;
-+	tr_rec->hno = hno;
-+	tr_rec->tag = tag;
-+	tr_rec->data[0] = d1;
-+	tr_rec->data[1] = d2;
-+	tr_rec->data[2] = d3;
-+	tr_rec->data[3] = d4;
-+	tr_rec->data[4] = d5;
-+	tr_rec->ts = jiffies; /* Update time stamp at last */
-+}
-+
-+#define SNIC_TRC(_hno, _tag, d1, d2, d3, d4, d5)			\
-+	do {								\
-+		if (unlikely(snic_glob->trc.enable))			\
-+			snic_trace((char *)__func__,			\
-+				   (u16)(_hno),				\
-+				   (u32)(_tag),				\
-+				   (u64)(d1),				\
-+				   (u64)(d2),				\
-+				   (u64)(d3),				\
-+				   (u64)(d4),				\
-+				   (u64)(d5));				\
-+	} while (0)
-+#else
-+
-+#define SNIC_TRC(_hno, _tag, d1, d2, d3, d4, d5)	\
-+	do {						\
-+		if (unlikely(snic_log_level & 0x2))	\
-+			SNIC_DBG("SnicTrace: %s %2u %2u %llx %llx %llx %llx %llx", \
-+				 (char *)__func__,	\
-+				 (u16)(_hno),		\
-+				 (u32)(_tag),		\
-+				 (u64)(d1),		\
-+				 (u64)(d2),		\
-+				 (u64)(d3),		\
-+				 (u64)(d4),		\
-+				 (u64)(d5));		\
-+	} while (0);
-+#endif /* end of CONFIG_SCSI_SNIC_DEBUG_FS */
-+
-+#define SNIC_TRC_CMD(sc)	\
-+	((u64)sc->cmnd[0] << 56 | (u64)sc->cmnd[7] << 40 |	\
-+	 (u64)sc->cmnd[8] << 32 | (u64)sc->cmnd[2] << 24 |	\
-+	 (u64)sc->cmnd[3] << 16 | (u64)sc->cmnd[4] << 8 |	\
-+	 (u64)sc->cmnd[5])
-+
-+#define SNIC_TRC_CMD_STATE_FLAGS(sc)	\
-+	((u64) CMD_FLAGS(sc) << 32 | CMD_STATE(sc))
-+
-+#endif /* end of __SNIC_TRC_H */
++snic-$(CONFIG_SCSI_SNIC_DEBUG_FS) += snic_debugfs.o snic_trc.o
 -- 
 1.8.5.4
 
