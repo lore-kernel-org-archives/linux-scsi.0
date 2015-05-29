@@ -1,30 +1,25 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v7 7/9] snic:Add sysfs entries to list stats and trace
- data
-Date: Fri, 29 May 2015 16:05:29 +0200
-Message-ID: <55687229.8060500@suse.de>
-References: <1432886649-12034-1-git-send-email-nmusini@cisco.com> <1432886649-12034-8-git-send-email-nmusini@cisco.com>
+Subject: Re: [PATCH v7 6/9] snic:Add low level queuing interfaces
+Date: Fri, 29 May 2015 16:05:03 +0200
+Message-ID: <5568720F.6090001@suse.de>
+References: <1432886649-12034-1-git-send-email-nmusini@cisco.com> <1432886649-12034-7-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60611 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60589 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753184AbbE2OFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 May 2015 10:05:31 -0400
-In-Reply-To: <1432886649-12034-8-git-send-email-nmusini@cisco.com>
+	id S1754917AbbE2OFF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 May 2015 10:05:05 -0400
+In-Reply-To: <1432886649-12034-7-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Narsimhulu Musini <nmusini@cisco.com>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, boaz@plexistor.com, jthumshirn@suse.de
 Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
 On 05/29/2015 10:04 AM, Narsimhulu Musini wrote:
-> snic_stats.h contains stats structre definitions for various events
-> in snic driver.
->=20
-> snic_debugfs.c contains setup and cleanup of sysfs entries for listin=
-g stats,
-> resetting stats, enabling/disabling trace, and listing trace data.
+> These files contain low level queueing interfaces includes
+> hardware queues, and management of hardware features.
 >=20
 > Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 > Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
