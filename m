@@ -1,112 +1,119 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [RFC 02/24] scsi/atari_scsi: Dont select CONFIG_NVRAM
-Date: Sun, 31 May 2015 11:01:34 +1000
-Message-ID: <20150531010132.799505414@telegraphics.com.au>
+Subject: [RFC 04/24] m68k/atari: Replace nvram_{read,
+ write}_byte with arch_nvram_ops
+Date: Sun, 31 May 2015 11:01:36 +1000
+Message-ID: <20150531010133.389476177@telegraphics.com.au>
 References: <20150531010132.289674310@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari-nvram-disable
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-Disposition: inline; filename=atari_scsi-convert-to-nvram_ops
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On powerpc, setting CONFIG_NVRAM=n builds a kernel with no NVRAM support.
-Setting CONFIG_NVRAM=m enables the /dev/nvram misc device module without
-enabling NVRAM support in drivers. Setting CONFIG_NVRAM=y enables the
-misc device (built-in) and also enables NVRAM support in drivers.
-
-m68k shares the valkyriefb driver with powerpc, and since that driver uses
-NVRAM, it is affected by CONFIG_ATARI_SCSI, because of the use of
-"select NVRAM".
-
-Adopt the powerpc convention on m68k to avoid surprises.
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
-
-This patch temporarily disables CONFIG_NVRAM on Atari, to prevent build
-failures when bisecting the rest of this patch series. It gets enabled
-again with the introduction of CONFIG_HAVE_ARCH_NVRAM_OPS, once the
-nvram_* global functions have been moved to an ops struct.
-
-The removal of "select NVRAM" may mean that some kernel configs (such
-as Debian/m68k) may need tweaking.
-
----
- drivers/char/Kconfig      |    5 +----
- drivers/scsi/Kconfig      |    6 +++---
- drivers/scsi/atari_scsi.c |    8 ++++----
- 3 files changed, 8 insertions(+), 11 deletions(-)
-
-Index: linux/drivers/char/Kconfig
-===================================================================
---- linux.orig/drivers/char/Kconfig	2015-05-31 11:00:59.000000000 +1000
-+++ linux/drivers/char/Kconfig	2015-05-31 11:01:00.000000000 +1000
-@@ -247,7 +247,7 @@ source "drivers/char/hw_random/Kconfig"
- 
- config NVRAM
- 	tristate "/dev/nvram support"
--	depends on ATARI || X86 || (ARM && RTC_DRV_CMOS) || GENERIC_NVRAM
-+	depends on X86 || (ARM && RTC_DRV_CMOS) || GENERIC_NVRAM
- 	---help---
- 	  If you say Y here and create a character special file /dev/nvram
- 	  with major number 10 and minor number 144 using mknod ("man mknod"),
-@@ -265,9 +265,6 @@ config NVRAM
- 	  should NEVER idly tamper with it. See Ralf Brown's interrupt list
- 	  for a guide to the use of CMOS bytes by your BIOS.
- 
--	  On Atari machines, /dev/nvram is always configured and does not need
--	  to be selected.
--
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called nvram.
- 
-Index: linux/drivers/scsi/Kconfig
-===================================================================
---- linux.orig/drivers/scsi/Kconfig	2015-05-31 11:00:59.000000000 +1000
-+++ linux/drivers/scsi/Kconfig	2015-05-31 11:01:00.000000000 +1000
-@@ -1592,14 +1592,14 @@ config ATARI_SCSI
- 	tristate "Atari native SCSI support"
- 	depends on ATARI && SCSI
- 	select SCSI_SPI_ATTRS
--	select NVRAM
- 	---help---
- 	  If you have an Atari with built-in NCR5380 SCSI controller (TT,
- 	  Falcon, ...) say Y to get it supported. Of course also, if you have
- 	  a compatible SCSI controller (e.g. for Medusa).
- 
--	  To compile this driver as a module, choose M here: the
--	  module will be called atari_scsi.
-+	  To compile this driver as a module, choose M here: the module will
-+	  be called atari_scsi. If you also enable NVRAM support, the SCSI
-+	  host's ID is taken from the setting in TT RTC NVRAM.
- 
- 	  This driver supports both styles of NCR integration into the
- 	  system: the TT style (separate DMA), and the Falcon style (via
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-05-31 11:00:59.000000000 +1000
-+++ linux/drivers/scsi/atari_scsi.c	2015-05-31 11:01:00.000000000 +1000
-@@ -875,9 +875,10 @@ static int __init atari_scsi_probe(struc
- 	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
- 		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
- 
--	if (setup_hostid >= 0) {
-+	if (setup_hostid >= 0)
- 		atari_scsi_template.this_id = setup_hostid & 7;
--	} else {
-+#ifdef CONFIG_NVRAM
-+	else
- 		/* Test if a host id is set in the NVRam */
- 		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
- 			unsigned char b = nvram_read_byte(14);
-@@ -888,8 +889,7 @@ static int __init atari_scsi_probe(struc
- 			if (b & 0x80)
- 				atari_scsi_template.this_id = b & 7;
- 		}
--	}
--
-+#endif
- 
- #ifdef REAL_DMA
- 	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
+QnkgaW1wbGVtZW50aW5nIGFuIGFyY2hfbnZyYW1fb3BzIHN0cnVjdCwgYW55IHBsYXRmb3JtIGNh
+biByZS11c2UgdGhlCmRyaXZlcnMvY2hhci9udnJhbSBtb2R1bGUgd2l0aG91dCBuZWVkaW5nIGFu
+eSBhcmNoLXNwZWNpZmljIGNvZGUKaW4gdGhhdCBtb2R1bGUuIEF0YXJpIGRvZXMgc28gaGVyZS4K
+CkF0YXJpIGhhcyBvbmUgdXNlciBvZiBudnJhbV9jaGVja19jaGVja3N1bSgpIHdoZXJlYXMgdGhl
+IG90aGVyIHBsYXRmb3JtcwooaS5lLiB4ODYgYW5kIEFSTSBwbGF0Zm9ybXMpIGhhdmUgbm9uZSBh
+dCBhbGwuIFJlcGxhY2UgdGhpcwp2YWxpZGF0ZS1jaGVja3N1bS1hbmQtcmVhZC1ieXRlIHNlcXVl
+bmNlIHdpdGggdGhlIGVxdWl2YWxlbnQKcnRjX252cmFtX29wcy5yZWFkKCkgY2FsbCBhbmQgcmVt
+b3ZlIHRoZSBub3cgdW51c2VkIGZ1bmN0aW9ucy4KClNpZ25lZC1vZmYtYnk6IEZpbm4gVGhhaW4g
+PGZ0aGFpbkB0ZWxlZ3JhcGhpY3MuY29tLmF1PgoKLS0tCgpUaGUgYWR2YW50YWdlIG9mIHRoZSBu
+ZXcgb3BzIHN0cnVjdCBvdmVyIHRoZSBvbGQgZ2xvYmFsIG52cmFtXyogZnVuY3Rpb25zCmlzIHRo
+YXQgdGhlIG1pc2MgZGV2aWNlIG1vZHVsZSBjYW4gYmUgc2hhcmVkIGJ5IGRpZmZlcmVudCBwbGF0
+Zm9ybXMKd2l0aG91dCByZXF1aXJpbmcgZXZlcnkgcGxhdGZvcm0gdG8gaW1wbGVtZW50IGV2ZXJ5
+IG52cmFtXyogZnVuY3Rpb24uCkUuZy4gb25seSBSVEMgIkNNT1MiIE5WUkFNcyBoYXZlIGEgY2hl
+Y2tzdW0gYW5kIG9ubHkgUG93ZXJQQyBwbGF0Zm9ybXMKaGF2ZSBhICJzeW5jIiBpb2N0bC4KCi0t
+LQogYXJjaC9tNjhrL2F0YXJpL252cmFtLmMgICB8ICAgODkgKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLQogZHJpdmVycy9zY3NpL2F0YXJpX3Njc2kuYyB8ICAg
+IDggKystLQogaW5jbHVkZS9saW51eC9udnJhbS5oICAgICB8ICAgIDkgKysrKwogMyBmaWxlcyBj
+aGFuZ2VkLCA3MCBpbnNlcnRpb25zKCspLCAzNiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC9h
+cmNoL202OGsvYXRhcmkvbnZyYW0uYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2FyY2gvbTY4
+ay9hdGFyaS9udnJhbS5jCTIwMTUtMDUtMzEgMTE6MDE6MDEuMDAwMDAwMDAwICsxMDAwCisrKyBs
+aW51eC9hcmNoL202OGsvYXRhcmkvbnZyYW0uYwkyMDE1LTA1LTMxIDExOjAxOjAzLjAwMDAwMDAw
+MCArMTAwMApAQCAtMzgsMzMgKzM4LDEyIEBAIHVuc2lnbmVkIGNoYXIgX19udnJhbV9yZWFkX2J5
+dGUoaW50IGkpCiAJcmV0dXJuIENNT1NfUkVBRChOVlJBTV9GSVJTVF9CWVRFICsgaSk7CiB9CiAK
+LXVuc2lnbmVkIGNoYXIgbnZyYW1fcmVhZF9ieXRlKGludCBpKQotewotCXVuc2lnbmVkIGxvbmcg
+ZmxhZ3M7Ci0JdW5zaWduZWQgY2hhciBjOwotCi0Jc3Bpbl9sb2NrX2lycXNhdmUoJnJ0Y19sb2Nr
+LCBmbGFncyk7Ci0JYyA9IF9fbnZyYW1fcmVhZF9ieXRlKGkpOwotCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoJnJ0Y19sb2NrLCBmbGFncyk7Ci0JcmV0dXJuIGM7Ci19Ci1FWFBPUlRfU1lNQk9MKG52
+cmFtX3JlYWRfYnl0ZSk7Ci0KIC8qIFRoaXMgcmFjZXMgbmljZWx5IHdpdGggdHJ5aW5nIHRvIHJl
+YWQgd2l0aCBjaGVja3N1bSBjaGVja2luZyAqLwogdm9pZCBfX252cmFtX3dyaXRlX2J5dGUodW5z
+aWduZWQgY2hhciBjLCBpbnQgaSkKIHsKIAlDTU9TX1dSSVRFKGMsIE5WUkFNX0ZJUlNUX0JZVEUg
+KyBpKTsKIH0KIAotdm9pZCBudnJhbV93cml0ZV9ieXRlKHVuc2lnbmVkIGNoYXIgYywgaW50IGkp
+Ci17Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKLQotCXNwaW5fbG9ja19pcnFzYXZlKCZydGNfbG9j
+aywgZmxhZ3MpOwotCV9fbnZyYW1fd3JpdGVfYnl0ZShjLCBpKTsKLQlzcGluX3VubG9ja19pcnFy
+ZXN0b3JlKCZydGNfbG9jaywgZmxhZ3MpOwotfQotCiAvKiBPbiBBdGFyaXMsIHRoZSBjaGVja3N1
+bSBpcyBvdmVyIGFsbCBieXRlcyBleGNlcHQgdGhlIGNoZWNrc3VtIGJ5dGVzCiAgKiB0aGVtc2Vs
+dmVzOyB0aGVzZSBhcmUgYXQgdGhlIHZlcnkgZW5kLgogICovCkBAIC04MywxOCArNjIsNiBAQCBp
+bnQgX19udnJhbV9jaGVja19jaGVja3N1bSh2b2lkKQogCSAgICAgICAoX19udnJhbV9yZWFkX2J5
+dGUoQVRBUklfQ0tTX0xPQyArIDEpID09IChzdW0gJiAweGZmKSk7CiB9CiAKLWludCBudnJhbV9j
+aGVja19jaGVja3N1bSh2b2lkKQotewotCXVuc2lnbmVkIGxvbmcgZmxhZ3M7Ci0JaW50IHJ2Owot
+Ci0Jc3Bpbl9sb2NrX2lycXNhdmUoJnJ0Y19sb2NrLCBmbGFncyk7Ci0JcnYgPSBfX252cmFtX2No
+ZWNrX2NoZWNrc3VtKCk7Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcnRjX2xvY2ssIGZsYWdz
+KTsKLQlyZXR1cm4gcnY7Ci19Ci1FWFBPUlRfU1lNQk9MKG52cmFtX2NoZWNrX2NoZWNrc3VtKTsK
+LQogc3RhdGljIHZvaWQgX19udnJhbV9zZXRfY2hlY2tzdW0odm9pZCkKIHsKIAlpbnQgaTsKQEAg
+LTEwNiw2ICs3Myw2MiBAQCBzdGF0aWMgdm9pZCBfX252cmFtX3NldF9jaGVja3N1bSh2b2lkKQog
+CV9fbnZyYW1fd3JpdGVfYnl0ZShzdW0sIEFUQVJJX0NLU19MT0MgKyAxKTsKIH0KIAorc3RhdGlj
+IHNzaXplX3QgbnZyYW1fcmVhZChjaGFyICpidWYsIHNpemVfdCBjb3VudCwgbG9mZl90ICpwcG9z
+KQoreworCWNoYXIgKnAgPSBidWY7CisJbG9mZl90IGk7CisKKwlzcGluX2xvY2tfaXJxKCZydGNf
+bG9jayk7CisKKwlpZiAoIV9fbnZyYW1fY2hlY2tfY2hlY2tzdW0oKSkgeworCQlzcGluX3VubG9j
+a19pcnEoJnJ0Y19sb2NrKTsKKwkJcmV0dXJuIC1FSU87CisJfQorCisJZm9yIChpID0gKnBwb3M7
+IGNvdW50ID4gMCAmJiBpIDwgTlZSQU1fQllURVM7IC0tY291bnQsICsraSwgKytwKQorCQkqcCA9
+IF9fbnZyYW1fcmVhZF9ieXRlKGkpOworCisJc3Bpbl91bmxvY2tfaXJxKCZydGNfbG9jayk7CisK
+KwkqcHBvcyA9IGk7CisJcmV0dXJuIHAgLSBidWY7Cit9CisKK3N0YXRpYyBzc2l6ZV90IG52cmFt
+X3dyaXRlKGNoYXIgKmJ1Ziwgc2l6ZV90IGNvdW50LCBsb2ZmX3QgKnBwb3MpCit7CisJY2hhciAq
+cCA9IGJ1ZjsKKwlsb2ZmX3QgaTsKKworCXNwaW5fbG9ja19pcnEoJnJ0Y19sb2NrKTsKKworCWlm
+ICghX19udnJhbV9jaGVja19jaGVja3N1bSgpKSB7CisJCXNwaW5fdW5sb2NrX2lycSgmcnRjX2xv
+Y2spOworCQlyZXR1cm4gLUVJTzsKKwl9CisKKwlmb3IgKGkgPSAqcHBvczsgY291bnQgPiAwICYm
+IGkgPCBOVlJBTV9CWVRFUzsgLS1jb3VudCwgKytpLCArK3ApCisJCV9fbnZyYW1fd3JpdGVfYnl0
+ZSgqcCwgaSk7CisKKwlfX252cmFtX3NldF9jaGVja3N1bSgpOworCisJc3Bpbl91bmxvY2tfaXJx
+KCZydGNfbG9jayk7CisKKwkqcHBvcyA9IGk7CisJcmV0dXJuIHAgLSBidWY7Cit9CisKK3N0YXRp
+YyBzc2l6ZV90IG52cmFtX2dldF9zaXplKHZvaWQpCit7CisJcmV0dXJuIE5WUkFNX0JZVEVTOwor
+fQorCitjb25zdCBzdHJ1Y3QgbnZyYW1fb3BzIGFyY2hfbnZyYW1fb3BzID0geworCS5yZWFkICAg
+ICAgICAgICA9IG52cmFtX3JlYWQsCisJLndyaXRlICAgICAgICAgID0gbnZyYW1fd3JpdGUsCisJ
+LmdldF9zaXplICAgICAgID0gbnZyYW1fZ2V0X3NpemUsCit9OworRVhQT1JUX1NZTUJPTChhcmNo
+X252cmFtX29wcyk7CisKICNpZmRlZiBDT05GSUdfUFJPQ19GUwogc3RhdGljIHN0cnVjdCB7CiAJ
+dW5zaWduZWQgY2hhciB2YWw7CkluZGV4OiBsaW51eC9kcml2ZXJzL3Njc2kvYXRhcmlfc2NzaS5j
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KLS0tIGxpbnV4Lm9yaWcvZHJpdmVycy9zY3NpL2F0YXJpX3Njc2kuYwkyMDE1
+LTA1LTMxIDExOjAxOjAwLjAwMDAwMDAwMCArMTAwMAorKysgbGludXgvZHJpdmVycy9zY3NpL2F0
+YXJpX3Njc2kuYwkyMDE1LTA1LTMxIDExOjAxOjAzLjAwMDAwMDAwMCArMTAwMApAQCAtODgwLDEz
+ICs4ODAsMTUgQEAgc3RhdGljIGludCBfX2luaXQgYXRhcmlfc2NzaV9wcm9iZShzdHJ1YwogI2lm
+ZGVmIENPTkZJR19OVlJBTQogCWVsc2UKIAkJLyogVGVzdCBpZiBhIGhvc3QgaWQgaXMgc2V0IGlu
+IHRoZSBOVlJhbSAqLwotCQlpZiAoQVRBUklIV19QUkVTRU5UKFRUX0NMSykgJiYgbnZyYW1fY2hl
+Y2tfY2hlY2tzdW0oKSkgewotCQkJdW5zaWduZWQgY2hhciBiID0gbnZyYW1fcmVhZF9ieXRlKDE0
+KTsKKwkJaWYgKEFUQVJJSFdfUFJFU0VOVChUVF9DTEspKSB7CisJCQl1bnNpZ25lZCBjaGFyIGI7
+CisJCQlsb2ZmX3Qgb2Zmc2V0ID0gMTQ7CisJCQlzc2l6ZV90IGNvdW50ID0gYXJjaF9udnJhbV9v
+cHMucmVhZCgmYiwgMSwgJm9mZnNldCk7CiAKIAkJCS8qIEFyYml0cmF0aW9uIGVuYWJsZWQ/IChm
+b3IgVE9TKQogCQkJICogSWYgeWVzLCB1c2UgY29uZmlndXJlZCBob3N0IElECiAJCQkgKi8KLQkJ
+CWlmIChiICYgMHg4MCkKKwkJCWlmICgoY291bnQgPT0gMSkgJiYgKGIgJiAweDgwKSkKIAkJCQlh
+dGFyaV9zY3NpX3RlbXBsYXRlLnRoaXNfaWQgPSBiICYgNzsKIAkJfQogI2VuZGlmCkluZGV4OiBs
+aW51eC9pbmNsdWRlL2xpbnV4L252cmFtLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgub3JpZy9pbmNs
+dWRlL2xpbnV4L252cmFtLmgJMjAxNS0wNS0zMSAxMTowMDo1OS4wMDAwMDAwMDAgKzEwMDAKKysr
+IGxpbnV4L2luY2x1ZGUvbGludXgvbnZyYW0uaAkyMDE1LTA1LTMxIDExOjAxOjAzLjAwMDAwMDAw
+MCArMTAwMApAQCAtMTAsNCArMTAsMTMgQEAgZXh0ZXJuIHZvaWQgX19udnJhbV93cml0ZV9ieXRl
+KHVuc2lnbmVkCiBleHRlcm4gdm9pZCBudnJhbV93cml0ZV9ieXRlKHVuc2lnbmVkIGNoYXIgYywg
+aW50IGkpOwogZXh0ZXJuIGludCBfX252cmFtX2NoZWNrX2NoZWNrc3VtKHZvaWQpOwogZXh0ZXJu
+IGludCBudnJhbV9jaGVja19jaGVja3N1bSh2b2lkKTsKKworc3RydWN0IG52cmFtX29wcyB7CisJ
+c3NpemVfdCAgICAgICAgICgqcmVhZCkoY2hhciAqLCBzaXplX3QsIGxvZmZfdCAqKTsKKwlzc2l6
+ZV90ICAgICAgICAgKCp3cml0ZSkoY2hhciAqLCBzaXplX3QsIGxvZmZfdCAqKTsKKwlzc2l6ZV90
+ICAgICAgICAgKCpnZXRfc2l6ZSkodm9pZCk7Cit9OworCitleHRlcm4gY29uc3Qgc3RydWN0IG52
+cmFtX29wcyBhcmNoX252cmFtX29wczsKKwogI2VuZGlmICAvKiBfTElOVVhfTlZSQU1fSCAqLwoK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4cHBj
+LWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9s
+aXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
