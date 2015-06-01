@@ -1,630 +1,82 @@
-From: "Seymour, Shane M" <shane.seymour@hp.com>
-Subject: [PATCH v9] st: implement tape statistics
-Date: Mon, 1 Jun 2015 06:43:53 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB3BFC42AA@G9W0748.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:31450 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891AbbFAGoc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2015 02:44:32 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v4 00/10] target: se_node_acl + se_lun RCU conversions
+Date: Mon,  1 Jun 2015 08:07:35 +0000
+Message-ID: <1433146066-19798-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Laurence Oberman (loberman@redhat.com)" <loberman@redhat.com>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>
 
-st: implement tape statistics
-    
-This patch implements tape statistics in the st module via
-sysfs. Current no statistics are available for tape I/O and there
-is no easy way to reuse the block layer statistics for tape
-as tape is a character device and does not have perform I/O in
-sector sized chunks (the size of the data written to tape
-can change). For tapes we also need extra stats related to
-things like tape movement (via other I/O).
-    
-There have been multiple end users requesting statistics
-including AT&T (and some HP customers who have not given
-permission to be named). It is impossible for them
-to investigate any issues related to tape performance
-in a non-invasive way.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Signed-off-by: Shane Seymour <shane.seymour@hp.com>
-Tested-by: Shane Seymour <shane.seymour@hp.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-Changes from v8
-- Fixed warnings when printing statistics information in 32bit mode
-by providing a PRId64 definition for 64 and 32 kernels. Used
-PRId64 so if someone introduces those defines they will be able
-to find this code and remove this definition of it.
-- Updated kernel version given in sysfs ABI doco from ?? to 4.2.
-Changes from v7
-- Changed name of patch added colon
-- Added better description of patch
-- Removed tested by (myself) line
-Changes from v6
-- Removed tested by Laurence Oberman since the code has changed
-significantly.
-- Changed code to use ktime so time resolution is now in ns (Robert
-Elliot) for virtual tape drives that may be able to submit and
-complete an I/O within a jiffy.
-- Changed code to use atomic64_t types for statistics to ensure
-consistency between being updated and being read via sysfs (Robert
-Elliot). This should help ensure that we do not have MP or
-multi-threaded issues when accessing the data.
-- Some tape stats structure members changed names after they
-changed types to make their usage clearer.
-- Sysfs stats files that changed from ms to ns changed names to
-indicate that they were in ns now.
-- Fixed typo in incremnented in sysfs description (Robert Elliot)
-- Shorten statistics directory name to stats (Robert Elliot)
-- Moved the update of in_flight so it's incremenented before we update
-any statstics and decrememented after we're done.
-- Missing braces between if/else added to more clearly show where
-the if/else is.
-- Tested on 4.0.0-next-20150423+
---- a/drivers/scsi/st.c	2015-04-22 18:13:13.097855752 -0500
-+++ b/drivers/scsi/st.c	2015-05-31 17:52:08.891204751 -0500
-@@ -471,6 +471,47 @@ static void st_release_request(struct st
- 	kfree(streq);
- }
- 
-+static void st_do_stats(struct scsi_tape *STp, struct request *req)
-+{
-+	ktime_t now;
-+
-+	now = ktime_get();
-+	if (req->cmd[0] == WRITE_6) {
-+		now = ktime_sub(now, STp->stats->write_time);
-+		atomic64_add(ktime_to_ns(now), &STp->stats->tot_write_time);
-+		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
-+		atomic64_inc(&STp->stats->write_cnt);
-+		if (req->errors) {
-+			atomic64_add(atomic_read(&STp->stats->last_write_size)
-+				- STp->buffer->cmdstat.residual,
-+				&STp->stats->write_byte_cnt);
-+			if (STp->buffer->cmdstat.residual > 0)
-+				atomic64_inc(&STp->stats->resid_cnt);
-+		} else
-+			atomic64_add(atomic_read(&STp->stats->last_write_size),
-+				&STp->stats->write_byte_cnt);
-+	} else if (req->cmd[0] == READ_6) {
-+		now = ktime_sub(now, STp->stats->read_time);
-+		atomic64_add(ktime_to_ns(now), &STp->stats->tot_read_time);
-+		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
-+		atomic64_inc(&STp->stats->read_cnt);
-+		if (req->errors) {
-+			atomic64_add(atomic_read(&STp->stats->last_read_size)
-+				- STp->buffer->cmdstat.residual,
-+				&STp->stats->read_byte_cnt);
-+			if (STp->buffer->cmdstat.residual > 0)
-+				atomic64_inc(&STp->stats->resid_cnt);
-+		} else
-+			atomic64_add(atomic_read(&STp->stats->last_read_size),
-+				&STp->stats->read_byte_cnt);
-+	} else {
-+		now = ktime_sub(now, STp->stats->other_time);
-+		atomic64_add(ktime_to_ns(now), &STp->stats->tot_io_time);
-+		atomic64_inc(&STp->stats->other_cnt);
-+	}
-+	atomic64_dec(&STp->stats->in_flight);
-+}
-+
- static void st_scsi_execute_end(struct request *req, int uptodate)
- {
- 	struct st_request *SRpnt = req->end_io_data;
-@@ -480,6 +521,8 @@ static void st_scsi_execute_end(struct r
- 	STp->buffer->cmdstat.midlevel_result = SRpnt->result = req->errors;
- 	STp->buffer->cmdstat.residual = req->resid_len;
- 
-+	st_do_stats(STp, req);
-+
- 	tmp = SRpnt->bio;
- 	if (SRpnt->waiting)
- 		complete(SRpnt->waiting);
-@@ -496,6 +539,7 @@ static int st_scsi_execute(struct st_req
- 	struct rq_map_data *mdata = &SRpnt->stp->buffer->map_data;
- 	int err = 0;
- 	int write = (data_direction == DMA_TO_DEVICE);
-+	struct scsi_tape *STp = SRpnt->stp;
- 
- 	req = blk_get_request(SRpnt->stp->device->request_queue, write,
- 			      GFP_KERNEL);
-@@ -516,6 +560,17 @@ static int st_scsi_execute(struct st_req
- 		}
- 	}
- 
-+	atomic64_inc(&STp->stats->in_flight);
-+	if (cmd[0] == WRITE_6) {
-+		atomic_set(&STp->stats->last_write_size, bufflen);
-+		STp->stats->write_time = ktime_get();
-+	} else if (cmd[0] == READ_6) {
-+		atomic_set(&STp->stats->last_read_size, bufflen);
-+		STp->stats->read_time = ktime_get();
-+	} else {
-+		STp->stats->other_time = ktime_get();
-+	}
-+
- 	SRpnt->bio = req->bio;
- 	req->cmd_len = COMMAND_SIZE(cmd[0]);
- 	memset(req->cmd, 0, BLK_MAX_CDB);
-@@ -4222,6 +4277,12 @@ static int st_probe(struct device *dev)
- 	}
- 	tpnt->index = error;
- 	sprintf(disk->disk_name, "st%d", tpnt->index);
-+	tpnt->stats = kzalloc(sizeof(struct scsi_tape_stats), GFP_KERNEL);
-+	if (tpnt->stats == NULL) {
-+		sdev_printk(KERN_ERR, SDp,
-+			    "st: Can't allocate statistics.\n");
-+		goto out_idr_remove;
-+	}
- 
- 	dev_set_drvdata(dev, tpnt);
- 
-@@ -4241,6 +4302,8 @@ static int st_probe(struct device *dev)
- 
- out_remove_devs:
- 	remove_cdevs(tpnt);
-+	kfree(tpnt->stats);
-+out_idr_remove:
- 	spin_lock(&st_index_lock);
- 	idr_remove(&st_index_idr, tpnt->index);
- 	spin_unlock(&st_index_lock);
-@@ -4298,6 +4361,7 @@ static void scsi_tape_release(struct kre
- 
- 	disk->private_data = NULL;
- 	put_disk(disk);
-+	kfree(tpnt->stats);
- 	kfree(tpnt);
- 	return;
- }
-@@ -4513,6 +4577,190 @@ options_show(struct device *dev, struct
- }
- static DEVICE_ATTR_RO(options);
- 
-+/* Support for tape stats */
-+
-+#if (BITS_PER_LONG == 64)
-+#define PRId64 "ld"
-+#else
-+#define PRId64 "lld"
-+#endif
-+
-+/**
-+ * read_cnt_show - return read count - count of reads made from tape drive
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t read_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->read_cnt));
-+}
-+static DEVICE_ATTR_RO(read_cnt);
-+
-+/**
-+ * read_byte_cnt_show - return read byte count - tape drives
-+ * may use blocks less than 512 bytes this gives the raw byte count of
-+ * of data read from the tape drive.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t read_byte_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->read_byte_cnt));
-+}
-+static DEVICE_ATTR_RO(read_byte_cnt);
-+
-+/**
-+ * read_us_show - return read us - overall time spent waiting on reads in ns.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t read_ns_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->tot_read_time));
-+}
-+static DEVICE_ATTR_RO(read_ns);
-+
-+/**
-+ * write_cnt_show - write count - number of user calls
-+ * to write(2) that have written data to tape.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t write_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->write_cnt));
-+}
-+static DEVICE_ATTR_RO(write_cnt);
-+
-+/**
-+ * write_byte_cnt_show - write byte count - raw count of
-+ * bytes written to tape.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t write_byte_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->write_byte_cnt));
-+}
-+static DEVICE_ATTR_RO(write_byte_cnt);
-+
-+/**
-+ * write_ns_show - write ns - number of nanoseconds waiting on write
-+ * requests to complete.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t write_ns_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->tot_write_time));
-+}
-+static DEVICE_ATTR_RO(write_ns);
-+
-+/**
-+ * in_flight_show - number of I/Os currently in flight -
-+ * in most cases this will be either 0 or 1. It may be higher if someone
-+ * has also issued other SCSI commands such as via an ioctl.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t in_flight_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->in_flight));
-+}
-+static DEVICE_ATTR_RO(in_flight);
-+
-+/**
-+ * io_ns_show - io wait ns - this is the number of ns spent
-+ * waiting on all I/O to complete. This includes tape movement commands
-+ * such as rewinding, seeking to end of file or tape, it also includes
-+ * read and write. To determine the time spent on tape movement
-+ * subtract the read and write ns from this value.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t io_ns_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->tot_io_time));
-+}
-+static DEVICE_ATTR_RO(io_ns);
-+
-+/**
-+ * other_cnt_show - other io count - this is the number of
-+ * I/O requests other than read and write requests.
-+ * Typically these are tape movement requests but will include driver
-+ * tape movement. This includes only requests issued by the st driver.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t other_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->other_cnt));
-+}
-+static DEVICE_ATTR_RO(other_cnt);
-+
-+/**
-+ * resid_cnt_show - A count of the number of times we get a residual
-+ * count - this should indicate someone issuing reads larger than the
-+ * block size on tape.
-+ * @dev: struct device
-+ * @attr: attribute structure
-+ * @buf: buffer to return formatted data in
-+ */
-+static ssize_t resid_cnt_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct st_modedef *STm = dev_get_drvdata(dev);
-+
-+	return sprintf(buf, "%"PRId64,
-+		atomic64_read(&STm->tape->stats->resid_cnt));
-+}
-+static DEVICE_ATTR_RO(resid_cnt);
-+
- static struct attribute *st_dev_attrs[] = {
- 	&dev_attr_defined.attr,
- 	&dev_attr_default_blksize.attr,
-@@ -4521,7 +4769,35 @@ static struct attribute *st_dev_attrs[]
- 	&dev_attr_options.attr,
- 	NULL,
- };
--ATTRIBUTE_GROUPS(st_dev);
-+
-+static struct attribute *st_stats_attrs[] = {
-+	&dev_attr_read_cnt.attr,
-+	&dev_attr_read_byte_cnt.attr,
-+	&dev_attr_read_ns.attr,
-+	&dev_attr_write_cnt.attr,
-+	&dev_attr_write_byte_cnt.attr,
-+	&dev_attr_write_ns.attr,
-+	&dev_attr_in_flight.attr,
-+	&dev_attr_io_ns.attr,
-+	&dev_attr_other_cnt.attr,
-+	&dev_attr_resid_cnt.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group stats_group = {
-+	.name = "stats",
-+	.attrs = st_stats_attrs,
-+};
-+
-+static struct attribute_group st_group = {
-+	.attrs = st_dev_attrs,
-+};
-+
-+static const struct attribute_group *st_dev_groups[] = {
-+	&st_group,
-+	&stats_group,
-+	NULL,
-+};
- 
- /* The following functions may be useful for a larger audience. */
- static int sgl_map_user_pages(struct st_buffer *STbp,
---- a/drivers/scsi/st.h	2015-04-22 18:13:13.097855752 -0500
-+++ b/drivers/scsi/st.h	2015-04-22 18:15:58.238844505 -0500
-@@ -92,6 +92,27 @@ struct st_partstat {
- 	int drv_file;
- };
- 
-+/* Tape statistics */
-+struct scsi_tape_stats {
-+	atomic64_t read_byte_cnt;  /* bytes read */
-+	atomic64_t write_byte_cnt; /* bytes written */
-+	atomic64_t in_flight;      /* Number of I/Os in flight */
-+	atomic64_t read_cnt;       /* Count of read requests */
-+	atomic64_t write_cnt;      /* Count of write requests */
-+	atomic64_t other_cnt;      /* Count of other requests either
-+				    * implicit or from user space
-+				    * ioctl. */
-+	atomic64_t resid_cnt;      /* Count of resid_len > 0 */
-+	atomic64_t tot_read_time;  /* ktime spent completing reads */
-+	atomic64_t tot_write_time; /* ktime spent completing writes */
-+	atomic64_t tot_io_time;    /* ktime spent doing any I/O */
-+	ktime_t read_time;         /* holds ktime request was queued */
-+	ktime_t write_time;        /* holds ktime request was queued */
-+	ktime_t other_time;        /* holds ktime request was queued */
-+	atomic_t last_read_size;   /* Number of bytes issued for last read */
-+	atomic_t last_write_size;  /* Number of bytes issued for last write */
-+};
-+
- #define ST_NBR_PARTITIONS 4
- 
- /* The tape drive descriptor */
-@@ -171,6 +192,7 @@ struct scsi_tape {
- #endif
- 	struct gendisk *disk;
- 	struct kref     kref;
-+	struct scsi_tape_stats *stats;
- };
- 
- /* Bit masks for use_pf */
---- a/Documentation/scsi/st.txt	2015-04-22 18:13:09.496855998 -0500
-+++ b/Documentation/scsi/st.txt	2015-04-22 18:15:58.239844505 -0500
-@@ -151,6 +151,65 @@ A link named 'tape' is made from the SCS
- directory corresponding to the mode 0 auto-rewind device (e.g., st0). 
- 
- 
-+SYSFS AND STATISTICS FOR TAPE DEVICES
-+
-+The st driver maintains statistics for tape drives inside the sysfs filesystem.
-+The following method can be used to locate the statistics that are
-+available (assuming that sysfs is mounted at /sys):
-+
-+1. Use opendir(3) on the directory /sys/class/scsi_tape
-+2. Use readdir(3) to read the directory contents
-+3. Use regcomp(3)/regexec(3) to match directory entries to the extended
-+        regular expression "^st[0-9]+$"
-+4. Access the statistics from the /sys/class/scsi_tape/<match>/stats
-+        directory (where <match> is a directory entry from /sys/class/scsi_tape
-+        that matched the extended regular expression)
-+
-+The reason for using this approach is that all the character devices
-+pointing to the same tape drive use the same statistics. That means
-+that st0 would have the same statistics as nst0.
-+
-+The directory contains the following statistics files:
-+
-+1.  in_flight - The number of I/Os currently outstanding to this device.
-+2.  io_ns - The amount of time spent waiting (in nanoseconds) for all I/O
-+        to complete (including read and write). This includes tape movement
-+        commands such as seeking between file or set marks and implicit tape
-+        movement such as when rewind on close tape devices are used.
-+3.  other_cnt - The number of I/Os issued to the tape drive other than read or
-+        write commands. The time taken to complete these commands uses the
-+        following calculation io_ms-read_ms-write_ms.
-+4.  read_byte_cnt - The number of bytes read from the tape drive.
-+5.  read_cnt - The number of read requests issued to the tape drive.
-+6.  read_ns - The amount of time (in nanoseconds) spent waiting for read
-+        requests to complete.
-+7.  write_byte_cnt - The number of bytes written to the tape drive.
-+8.  write_cnt - The number of write requests issued to the tape drive.
-+9.  write_ns - The amount of time (in nanoseconds) spent waiting for write
-+        requests to complete.
-+10. resid_cnt - The number of times during a read or write we found
-+	the residual amount to be non-zero. This should mean that a program
-+	is issuing a read larger thean the block size on tape. For write
-+	not all data made it to tape.
-+
-+Note: The in_flight value is incremented when an I/O starts the I/O
-+itself is not added to the statistics until it completes.
-+
-+The total of read_cnt, write_cnt, and other_cnt may not total to the same
-+value as iodone_cnt at the device level. The tape statistics only count
-+I/O issued via the st module.
-+
-+When read the statistics may not be temporally consistent while I/O is in
-+progress. The individual values are read and written to atomically however
-+when reading them back via sysfs they may be in the process of being
-+updated when starting an I/O or when it is completed.
-+
-+The value shown in in_flight is incremented before any statstics are
-+updated and decremented when an I/O completes after updating statistics.
-+The value of in_flight is 0 when there are no I/Os outstanding that are
-+issued by the st driver. Tape statistics do not take into account any
-+I/O performed via the sg device.
-+
- BSD AND SYS V SEMANTICS
- 
- The user can choose between these two behaviours of the tape driver by
---- a/Documentation/ABI/testing/sysfs-class-scsi_tape	1969-12-31 18:00:00.000000000 -0600
-+++ b/Documentation/ABI/testing/sysfs-class-scsi_tape	2015-05-31 17:55:10.045192413 -0500
-@@ -0,0 +1,109 @@
-+What:           /sys/class/scsi_tape/*/stats/in_flight
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Show the number of I/Os currently in-flight between the st
-+		module and the SCSI mid-layer.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/io_ns
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total amount of time spent waiting for all I/O
-+                to and from the tape drive to complete. This includes all
-+                reads, writes, and other SCSI commands issued to the tape
-+                drive. An example of other SCSI commands would be tape
-+                movement such as a rewind when a rewind tape device is
-+                closed. This item is measured in nanoseconds.
-+
-+                To determine the amount of time spent waiting for other I/O
-+                to complete subtract read_ns and write_ns from this value.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/other_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		The number of I/O requests issued to the tape drive other
-+		than SCSI read/write requests.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/read_byte_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total number of bytes requested from the tape drive.
-+		This value is presented in bytes because tape drives support
-+		variable length block sizes.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/read_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total number of read requests issued to the tape
-+		drive.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/read_ns
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total amount of time in nanoseconds waiting for
-+		read I/O requests to complete.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/write_byte_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total number of bytes written to the tape drive.
-+		This value is presented in bytes because tape drives support
-+		variable length block sizes.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/write_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total number of write requests issued to the tape
-+		drive.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/write_ms
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the total amount of time in nanoseconds waiting for
-+		write I/O requests to complete.
-+Users:
-+
-+
-+What:           /sys/class/scsi_tape/*/stats/resid_cnt
-+Date:           Apr 2015
-+KernelVersion:  4.2
-+Contact:        Shane Seymour <shane.seymour@hp.com>
-+Description:
-+		Shows the number of times we found that a residual >0
-+		was found when the SCSI midlayer indicated that there was
-+		an error. For reads this may be a case of someone issuing
-+		reads greater than the block size.
-+Users:
+Hi all,
+
+Here is -v4 series for converting LIO target se_node_acl + se_lun
+mapping tables from fixed size arrays to dynamic RCU (read-copy-update)
+hlist_heads.
+
+This turns fast-path I/O into a lock-less RCU reader using existing
+percpu based se_lun->lun_ref logic, and converts the RCU updater
+path to allow for an arbitrary number of LUNs for both types of
+mappings within target-core.
+
+The series has been updated to follow Paul's recent comments for
+RCU notiation using rcu_dereference_check() for cases where a
+dereference occurs outside of rcu_read_lock(), with an external
+lock or reference already held.  The code is now sparse clean.
+
+This includes the following changes since -v3:
+
+  - Convert se_dev_entry->se_lun usage in se_dev_entry updater path
+    to use rcu_dereference_check() w/ se_node_acl->lun_entry_mutex
+  - Convert se_dev_entry->se_lun_acl in ALUA for do_transition_tg_pt_work()
+    to use rcu_dereference_check() w/ se_lun->lun_deve_lock
+  - Convert se_dev_entry->se_lun in PR ALL_TG_PT=1 special case to
+    use rcu_dereference_check() w/ se_dev_entry->pr_kref.refcount
+  - Convert se_dev_entry->se_lun_acl in PR for lun_acl_*depend_item()
+    to use rcu_dereference_check() w/ se_dev_entry->pr_kref.refcount
+
+Please review.
+
+--nab
+
+Christoph Hellwig (1):
+  target/pr: cleanup core_scsi3_pr_seq_non_holder
+
+Nicholas Bellinger (9):
+  target: Convert se_node_acl->device_list[] to RCU hlist
+  target/pr: Use atomic bitop for se_dev_entry->deve_flags reservation
+    check
+  target/pr: Change alloc_registration to avoid pr_reg_tg_pt_lun
+  target: Convert se_portal_group->tpg_lun_list[] to RCU hlist
+  target: Convert se_tpg->acl_node_lock to ->acl_node_mutex
+  target: Convert core_tpg_deregister to use list splice
+  target: Drop unused se_lun->lun_acl_list
+  target: Only reset specific dynamic entries during lun_group creation
+  target: Drop left-over se_lun->lun_status
+
+ drivers/target/iscsi/iscsi_target_tpg.c      |   2 -
+ drivers/target/sbp/sbp_target.c              |  97 +++---
+ drivers/target/sbp/sbp_target.h              |   2 +-
+ drivers/target/target_core_alua.c            |   3 +-
+ drivers/target/target_core_configfs.c        |   6 +-
+ drivers/target/target_core_device.c          | 480 +++++++++++----------------
+ drivers/target/target_core_fabric_configfs.c |  75 ++---
+ drivers/target/target_core_internal.h        |  17 +-
+ drivers/target/target_core_pr.c              | 231 +++++++------
+ drivers/target/target_core_pscsi.c           |   7 +-
+ drivers/target/target_core_spc.c             |  18 +-
+ drivers/target/target_core_stat.c            | 197 +++++------
+ drivers/target/target_core_tpg.c             | 271 ++++-----------
+ drivers/target/target_core_transport.c       |  20 +-
+ drivers/target/target_core_ua.c              |  51 ++-
+ drivers/target/tcm_fc/tfc_conf.c             |   4 +-
+ drivers/xen/xen-scsiback.c                   |  27 +-
+ include/target/target_core_backend.h         |   2 +-
+ include/target/target_core_base.h            |  53 ++-
+ include/target/target_core_fabric.h          |   1 -
+ 20 files changed, 680 insertions(+), 884 deletions(-)
+
+-- 
+1.9.1
