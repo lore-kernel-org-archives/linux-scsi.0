@@ -1,61 +1,90 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 3/6] hv:scsi:Untangle the storage protocol negotiation
- from the vmbus protocol negotiation.
-Date: Mon, 1 Jun 2015 19:17:58 +0000
-Message-ID: <BY2PR0301MB165421CF61BAF41BD420BFC1A0B60@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1432931336-14434-1-git-send-email-kys@microsoft.com>
- <1432931359-14473-1-git-send-email-kys@microsoft.com>
- <1432931359-14473-3-git-send-email-kys@microsoft.com>
- <20150601104237.GU28762@mwanda>
+From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
+Subject: RE: [PATCH 2/9] [SCSI] aacraid: Add Power Management support
+Date: Mon, 1 Jun 2015 21:16:47 +0000
+Message-ID: <E34C6B6293F0214497D0C55B92526C05B697BE88@BBYEXM01.pmc-sierra.internal>
+References: <1431562378-8514-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+	 <1431562378-8514-3-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1433171695.2174.4.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150601104237.GU28762@mwanda>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:38255 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753726AbbFAVQv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2015 17:16:51 -0400
+In-Reply-To: <1433171695.2174.4.camel@HansenPartnership.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, Keith Mange <Keith.Mange@microsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-
-
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Monday, June 1, 2015 3:43 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com; Keith
-> Mange
-> Subject: Re: [PATCH 3/6] hv:scsi:Untangle the storage protocol negotiation
-> from the vmbus protocol negotiation.
-> 
-> On Fri, May 29, 2015 at 01:29:16PM -0700, K. Y. Srinivasan wrote:
-> > -	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO
-> ||
-> > -	    vstor_packet->status != 0)
-> > +	if (vstor_packet->status != 0) {
-> > +		ret = -EINVAL;
-> >  		goto cleanup;
-> > +	}
-> 
-> There is not actually any cleanup, goto cleanup is just a do-nothing
-> goto.
-> 
-> In the original code, we returned success here.  That always looked like
-> a "forgot to set the error code" bug to me, but do-nothing labels always
-> introduce ambiguous looking "forgot to set the error code" bugs so I can
-> never be positive.
-> 
-> Could you take a look at the other "goto cleanup;" places in this
-> function and maybe add a comment, change it to something more clear like
-> "return 0;" or fix the error code?
-
-Thanks Dan; will do.
-
-K. Y
-> 
-> regards,
-> dan carpenter
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRv
+OkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0KU2VudDogTW9uZGF5LCBK
+dW5lIDAxLCAyMDE1IDg6MTUgQU0NClRvOiBSYWppbmlrYW50aCBQYW5kdXJhbmdhbg0KQ2M6IGxp
+bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBhYWNyYWlkQHBtYy1zaWVycmEuY29tOyBIYXJyeSBZ
+YW5nOyBSaWNoIEJvbm87IEFjaGltIExldWJuZXI7IE11cnRoeSBCaGF0DQpTdWJqZWN0OiBSZTog
+W1BBVENIIDIvOV0gW1NDU0ldIGFhY3JhaWQ6IEFkZCBQb3dlciBNYW5hZ2VtZW50IHN1cHBvcnQN
+Cg0KT24gV2VkLCAyMDE1LTA1LTEzIGF0IDE3OjEyIC0wNzAwLCByYWppbmlrYW50aC5wYW5kdXJh
+bmdhbkBwbWNzLmNvbQ0Kd3JvdGU6DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9saW5pdC5jIA0KPiBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMgaW5kZXggOWVlYzAy
+Ny4uYmUzMGU0MyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYw0K
+PiArKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jDQo+IEBAIC0xMzE3LDYgKzEzMTcs
+MTQ5IEBAIHN0YXRpYyBpbnQgYWFjX3Byb2JlX29uZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29u
+c3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgKmlkKQ0KPiAgCXJldHVybiBlcnJvcjsNCj4gIH0NCj4g
+IA0KPiArI2lmIChkZWZpbmVkKENPTkZJR19QTSkpDQo+ICt2b2lkIGFhY19yZWxlYXNlX3Jlc291
+cmNlcyhzdHJ1Y3QgYWFjX2RldiAqYWFjKSB7DQo+ICsJaW50IGk7DQo+ICsNCj4gKwlhYWNfYWRh
+cHRlcl9kaXNhYmxlX2ludChhYWMpOw0KPiArCWlmIChhYWMtPnBkZXYtPmRldmljZSA9PSBQTUNf
+REVWSUNFX1M2IHx8DQo+ICsJICAgIGFhYy0+cGRldi0+ZGV2aWNlID09IFBNQ19ERVZJQ0VfUzcg
+fHwNCj4gKwkgICAgYWFjLT5wZGV2LT5kZXZpY2UgPT0gUE1DX0RFVklDRV9TOCB8fA0KPiArCSAg
+ICBhYWMtPnBkZXYtPmRldmljZSA9PSBQTUNfREVWSUNFX1M5KSB7DQo+ICsJCWlmIChhYWMtPm1h
+eF9tc2l4ID4gMSkgew0KPiArCQkJZm9yIChpID0gMDsgaSA8IGFhYy0+bWF4X21zaXg7IGkrKykN
+Cj4gKwkJCQlmcmVlX2lycShhYWMtPm1zaXhlbnRyeVtpXS52ZWN0b3IsDQo+ICsJCQkJCSYoYWFj
+LT5hYWNfbXNpeFtpXSkpOw0KPiArCQl9IGVsc2Ugew0KPiArCQkJZnJlZV9pcnEoYWFjLT5wZGV2
+LT5pcnEsICYoYWFjLT5hYWNfbXNpeFswXSkpOw0KPiArCQl9DQo+ICsJfSBlbHNlIHsNCj4gKwkJ
+ZnJlZV9pcnEoYWFjLT5wZGV2LT5pcnEsIGFhYyk7DQo+ICsJfQ0KPiArCWlmIChhYWMtPm1zaSkN
+Cj4gKwkJcGNpX2Rpc2FibGVfbXNpKGFhYy0+cGRldik7DQo+ICsJZWxzZSBpZiAoYWFjLT5tYXhf
+bXNpeCA+IDEpDQo+ICsJCXBjaV9kaXNhYmxlX21zaXgoYWFjLT5wZGV2KTsNCj4gKw0KPiArfQ0K
+PiArDQo+ICtzdGF0aWMgaW50IGFhY19hY3F1aXJlX3Jlc291cmNlcyhzdHJ1Y3QgYWFjX2RldiAq
+ZGV2KSB7DQo+ICsJaW50IGksIGo7DQo+ICsJaW50IGluc3RhbmNlID0gZGV2LT5pZDsNCj4gKwlj
+b25zdCBjaGFyICpuYW1lID0gZGV2LT5uYW1lOw0KPiArCXVuc2lnbmVkIGxvbmcgc3RhdHVzOw0K
+PiArCS8qDQo+ICsJICoJRmlyc3QgY2xlYXIgb3V0IGFsbCBpbnRlcnJ1cHRzLiAgVGhlbiBlbmFi
+bGUgdGhlIG9uZSdzIHRoYXQgd2UNCj4gKwkgKgljYW4gaGFuZGxlLg0KPiArCSAqLw0KPiArCXdo
+aWxlICghKChzdGF0dXMgPSBzcmNfcmVhZGwoZGV2LCBNVW5pdC5PTVIpKSAmIEtFUk5FTF9VUF9B
+TkRfUlVOTklORykNCj4gKwkJfHwgc3RhdHVzID09IDB4ZmZmZmZmZmYpDQo+ICsJCQltc2xlZXAo
+MSk7DQoNCmNoZWNrcGF0Y2ggd291bGQgd2FybiB5b3Ugbm90IHRvIGRvIHRoaXMuICBVc2UgbXNs
+ZWVwKDIwKSB0byBrZWVwIGl0IHF1aWV0Lg0KDQpbUmFqUF0gWWVzLCB3aWxsIGNoYW5nZSBhbmQg
+bWFrZSBpdCBwYXJ0IG9mIG5leHQgcGF0Y2hzZXQuDQoNCj4gKw0KPiArCWFhY19hZGFwdGVyX2Rp
+c2FibGVfaW50KGRldik7DQo+ICsJYWFjX2FkYXB0ZXJfZW5hYmxlX2ludChkZXYpOw0KPiArDQo+
+ICsNCj4gKwlpZiAoKGRldi0+cGRldi0+ZGV2aWNlID09IFBNQ19ERVZJQ0VfUzcgfHwNCj4gKwkg
+ICAgIGRldi0+cGRldi0+ZGV2aWNlID09IFBNQ19ERVZJQ0VfUzggfHwNCj4gKwkgICAgIGRldi0+
+cGRldi0+ZGV2aWNlID09IFBNQ19ERVZJQ0VfUzkpKQ0KPiArCQlhYWNfZGVmaW5lX2ludF9tb2Rl
+KGRldik7DQo+ICsNCj4gKwlpZiAoZGV2LT5tc2lfZW5hYmxlZCkNCj4gKwkJYWFjX3NyY19hY2Nl
+c3NfZGV2cmVnKGRldiwgQUFDX0VOQUJMRV9NU0lYKTsNCj4gKw0KPiArCWlmICghZGV2LT5zeW5j
+X21vZGUgJiYgZGV2LT5tc2lfZW5hYmxlZCAmJiBkZXYtPm1heF9tc2l4ID4gMSkgew0KPiArCQlm
+b3IgKGkgPSAwOyBpIDwgZGV2LT5tYXhfbXNpeDsgaSsrKSB7DQo+ICsJCQlkZXYtPmFhY19tc2l4
+W2ldLnZlY3Rvcl9ubyA9IGk7DQo+ICsJCQlkZXYtPmFhY19tc2l4W2ldLmRldiA9IGRldjsNCj4g
+Kw0KPiArCQkJaWYgKHJlcXVlc3RfaXJxKGRldi0+bXNpeGVudHJ5W2ldLnZlY3RvciwNCj4gKwkJ
+CQkJZGV2LT5hX29wcy5hZGFwdGVyX2ludHIsDQo+ICsJCQkJCTAsICJhYWNyYWlkIiwgJihkZXYt
+PmFhY19tc2l4W2ldKSkpIHsNCj4gKwkJCQlwcmludGsoS0VSTl9FUlIgIiVzJWQ6IEZhaWxlZCB0
+byByZWdpc3RlciBJUlEgZm9yIHZlY3RvciAlZC5cbiIsDQo+ICsJCQkJCQluYW1lLCBpbnN0YW5j
+ZSwgaSk7DQo+ICsJCQkJZm9yIChqID0gMCA7IGogPCBpIDsgaisrKQ0KPiArCQkJCQlmcmVlX2ly
+cShkZXYtPm1zaXhlbnRyeVtqXS52ZWN0b3IsDQo+ICsJCQkJCQkgJihkZXYtPmFhY19tc2l4W2pd
+KSk7DQo+ICsJCQkJcGNpX2Rpc2FibGVfbXNpeChkZXYtPnBkZXYpOw0KPiArCQkJCWdvdG8gZXJy
+b3JfaW91bm1hcDsNCj4gKwkJCX0NCj4gKwkJfQ0KPiArCX0gZWxzZSB7DQo+ICsJCWRldi0+YWFj
+X21zaXhbMF0udmVjdG9yX25vID0gMDsNCj4gKwkJZGV2LT5hYWNfbXNpeFswXS5kZXYgPSBkZXY7
+DQo+ICsNCj4gKwkJaWYgKHJlcXVlc3RfaXJxKGRldi0+cGRldi0+aXJxLCBkZXYtPmFfb3BzLmFk
+YXB0ZXJfaW50ciwNCj4gKwkJCUlSUUZfU0hBUkVEfElSUUZfRElTQUJMRUQsICJhYWNyYWlkIiwN
+Cj4gKwkJCSYoZGV2LT5hYWNfbXNpeFswXSkpIDwgMCkgew0KDQpBbmQgdGhpcyB3b24ndCBjb21w
+aWxlOg0KDQpkcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jOiBJbiBmdW5jdGlvbiDigJhhYWNf
+YWNxdWlyZV9yZXNvdXJjZXPigJk6DQpkcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jOjEzOTU6
+MTY6IGVycm9yOiDigJhJUlFGX0RJU0FCTEVE4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0
+aGlzIGZ1bmN0aW9uKQ0KICAgIElSUUZfU0hBUkVEfElSUUZfRElTQUJMRUQsICJhYWNyYWlkIiwN
+Cg0KUGxlYXNlIHJ1biBjaGVja3BhdGNoIGFuZCBjb21waWxlIGFnYWluc3QgdGhlIGtlcm5lbCB5
+b3UncmUgc3VibWl0dGluZyBmb3IuICBUaGUgcmVhc29uIGZvciB0aGlzIGZhaWx1cmUgaXMgdGhh
+dCBJUlFGX0RJU0FCTEVEIGdvdCBlbGltaW5hdGVkIGZyb20gdGhlIGtlcm5lbCBzb21ld2hlcmUg
+aW4gdGhlIDMueCBzZXJpZXMuDQoNCltSYWpQXSBZZXMsIEkgaGFkIGNvbXBpbGVkIGFnYWluc3Qg
+dGhlIGtlcm5lbCA0LjAuMC1yYzIrIGFuZCBkaWQgbm90IGdldCBhbnkgY29tcGlsZSBlcnJvci4g
+IEluIGZhY3QsIGNoZWNrcGF0Y2ggZGlkbid0IHdhcm4gZWl0aGVyLiAgQW0gSSBtaXNzaW5nIHNv
+bWV0aGluZz8NCg0KSmFtZXMNCg0KDQo=
