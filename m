@@ -1,70 +1,98 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 07/10] target: Convert core_tpg_deregister to use list splice
-Date: Mon,  1 Jun 2015 08:07:42 +0000
-Message-ID: <1433146066-19798-8-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 10/10] target: Drop left-over se_lun->lun_status
+Date: Mon,  1 Jun 2015 08:07:45 +0000
+Message-ID: <1433146066-19798-11-git-send-email-nab@daterainc.com>
 References: <1433146066-19798-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1433146066-19798-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts core_tpg_deregister() to perform a list splice
-for any remaining dynamically generated se_node_acls attached to
-se_tpg, before calling kfree(nacl) to free memory.
+Now that se_portal_group->tpg_lun_hlist is a RCU protected hlist,
+go ahead and drop the left-over lun->lun_status usage.
 
+Reported-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tpg.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/target/target_core_tpg.c  | 6 ------
+ include/target/target_core_base.h | 8 --------
+ 2 files changed, 14 deletions(-)
 
 diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 229e827..e7745d2 100644
+index f66c208..91f8ddb 100644
 --- a/drivers/target/target_core_tpg.c
 +++ b/drivers/target/target_core_tpg.c
-@@ -547,6 +547,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
- {
- 	const struct target_core_fabric_ops *tfo = se_tpg->se_tpg_tfo;
- 	struct se_node_acl *nacl, *nacl_tmp;
-+	LIST_HEAD(node_list);
+@@ -98,8 +98,6 @@ void core_tpg_add_node_to_devs(
  
- 	pr_debug("TARGET_CORE[%s]: Deallocating portal_group for endpoint: %s, "
- 		 "Proto: %d, Portal Tag: %u\n", tfo->get_fabric_name(),
-@@ -560,25 +561,22 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
- 	while (atomic_read(&se_tpg->tpg_pr_ref_count) != 0)
- 		cpu_relax();
+ 	mutex_lock(&tpg->tpg_lun_mutex);
+ 	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link) {
+-		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
+-			continue;
+ 		if (lun_orig && lun != lun_orig)
+ 			continue;
  
-+	mutex_lock(&se_tpg->acl_node_mutex);
-+	list_splice_init(&se_tpg->acl_node_list, &node_list);
-+	mutex_unlock(&se_tpg->acl_node_mutex);
- 	/*
- 	 * Release any remaining demo-mode generated se_node_acl that have
- 	 * not been released because of TFO->tpg_check_demo_mode_cache() == 1
- 	 * in transport_deregister_session().
- 	 */
--	mutex_lock(&se_tpg->acl_node_mutex);
--	list_for_each_entry_safe(nacl, nacl_tmp, &se_tpg->acl_node_list,
--			acl_list) {
-+	list_for_each_entry_safe(nacl, nacl_tmp, &node_list, acl_list) {
- 		list_del(&nacl->acl_list);
- 		se_tpg->num_node_acls--;
--		mutex_unlock(&se_tpg->acl_node_mutex);
+@@ -495,7 +493,6 @@ static int core_tpg_setup_virtual_lun0(struct se_portal_group *se_tpg)
+ 	int ret;
  
- 		core_tpg_wait_for_nacl_pr_ref(nacl);
- 		core_free_device_list_for_node(nacl, se_tpg);
- 		kfree(nacl);
--
--		mutex_lock(&se_tpg->acl_node_mutex);
+ 	lun->unpacked_lun = 0;
+-	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	atomic_set(&lun->lun_acl_count, 0);
+ 	init_completion(&lun->lun_shutdown_comp);
+ 	spin_lock_init(&lun->lun_sep_lock);
+@@ -608,7 +605,6 @@ struct se_lun *core_tpg_alloc_lun(
  	}
--	mutex_unlock(&se_tpg->acl_node_mutex);
+ 	lun->unpacked_lun = unpacked_lun;
+ 	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
+-	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	atomic_set(&lun->lun_acl_count, 0);
+ 	init_completion(&lun->lun_shutdown_comp);
+ 	spin_lock_init(&lun->lun_sep_lock);
+@@ -638,7 +634,6 @@ int core_tpg_add_lun(
  
- 	if (se_tpg->proto_id >= 0)
- 		core_tpg_remove_lun(se_tpg, &se_tpg->tpg_virt_lun0);
+ 	mutex_lock(&tpg->tpg_lun_mutex);
+ 	lun->lun_access = lun_access;
+-	lun->lun_status = TRANSPORT_LUN_STATUS_ACTIVE;
+ 	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
+ 		hlist_add_head_rcu(&lun->link, &tpg->tpg_lun_hlist);
+ 	mutex_unlock(&tpg->tpg_lun_mutex);
+@@ -658,7 +653,6 @@ void core_tpg_remove_lun(
+ 	core_dev_unexport(lun->lun_se_dev, tpg, lun);
+ 
+ 	mutex_lock(&tpg->tpg_lun_mutex);
+-	lun->lun_status = TRANSPORT_LUN_STATUS_FREE;
+ 	if (!(dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
+ 		hlist_del_rcu(&lun->link);
+ 	mutex_unlock(&tpg->tpg_lun_mutex);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 7908d6d..78ed2a8 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -119,12 +119,6 @@ enum hba_flags_table {
+ 	HBA_FLAGS_PSCSI_MODE	= 0x02,
+ };
+ 
+-/* struct se_lun->lun_status */
+-enum transport_lun_status_table {
+-	TRANSPORT_LUN_STATUS_FREE = 0,
+-	TRANSPORT_LUN_STATUS_ACTIVE = 1,
+-};
+-
+ /* Special transport agnostic struct se_cmd->t_states */
+ enum transport_state_table {
+ 	TRANSPORT_NO_STATE	= 0,
+@@ -707,8 +701,6 @@ struct se_lun {
+ 	u16			lun_rtpi;
+ #define SE_LUN_LINK_MAGIC			0xffff7771
+ 	u32			lun_link_magic;
+-	/* See transport_lun_status_table */
+-	enum transport_lun_status_table lun_status;
+ 	u32			lun_access;
+ 	u32			lun_flags;
+ 	u32			unpacked_lun;
 -- 
 1.9.1
