@@ -1,133 +1,103 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 04/10] target/pr: cleanup core_scsi3_pr_seq_non_holder
-Date: Mon,  1 Jun 2015 08:07:39 +0000
-Message-ID: <1433146066-19798-5-git-send-email-nab@daterainc.com>
-References: <1433146066-19798-1-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 0/4] target: Eliminate se_port + t10_alua_tg_pt_gp_member
+Date: Mon,  1 Jun 2015 08:21:12 +0000
+Message-ID: <1433146876-20188-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1433146066-19798-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Clean up the mess of registered variables, and pass the isid mismatch
-flag explicitly instead of overloading the registration type.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_pr.c | 44 +++++++++++++++++------------------------
- 1 file changed, 18 insertions(+), 26 deletions(-)
+Here is v3 series with HCH's recent changes to go ahead and drop
+all se_port + t10_alua_tg_pt_gp_member usage within target-core in
+favor of direct se_lun pointer dereference.
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 48ed5d2..1e89679 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -312,34 +312,31 @@ out:
-  * This function is called by those initiator ports who are *NOT*
-  * the active PR reservation holder when a reservation is present.
-  */
--static int core_scsi3_pr_seq_non_holder(
--	struct se_cmd *cmd,
--	u32 pr_reg_type)
-+static int core_scsi3_pr_seq_non_holder(struct se_cmd *cmd, u32 pr_reg_type,
-+					bool isid_mismatch)
- {
- 	unsigned char *cdb = cmd->t_task_cdb;
--	struct se_dev_entry *se_deve;
- 	struct se_session *se_sess = cmd->se_sess;
- 	struct se_node_acl *nacl = se_sess->se_node_acl;
--	int other_cdb = 0, ignore_reg;
-+	int other_cdb = 0;
- 	int registered_nexus = 0, ret = 1; /* Conflict by default */
- 	int all_reg = 0, reg_only = 0; /* ALL_REG, REG_ONLY */
- 	int we = 0; /* Write Exclusive */
- 	int legacy = 0; /* Act like a legacy device and return
- 			 * RESERVATION CONFLICT on some CDBs */
--	bool registered = false;
- 
--	rcu_read_lock();
--	se_deve = target_nacl_find_deve(nacl, cmd->orig_fe_lun);
--	if (se_deve)
--		registered = test_bit(DEF_PR_REG_ACTIVE, &se_deve->deve_flags);
--	rcu_read_unlock();
--	/*
--	 * Determine if the registration should be ignored due to
--	 * non-matching ISIDs in target_scsi3_pr_reservation_check().
--	 */
--	ignore_reg = (pr_reg_type & 0x80000000);
--	if (ignore_reg)
--		pr_reg_type &= ~0x80000000;
-+	if (isid_mismatch) {
-+		registered_nexus = 0;
-+	} else {
-+		struct se_dev_entry *se_deve;
-+
-+		rcu_read_lock();
-+		se_deve = target_nacl_find_deve(nacl, cmd->orig_fe_lun);
-+		if (se_deve)
-+			registered_nexus = test_bit(DEF_PR_REG_ACTIVE,
-+						    &se_deve->deve_flags);
-+		rcu_read_unlock();
-+	}
- 
- 	switch (pr_reg_type) {
- 	case PR_TYPE_WRITE_EXCLUSIVE:
-@@ -349,8 +346,6 @@ static int core_scsi3_pr_seq_non_holder(
- 		 * Some commands are only allowed for the persistent reservation
- 		 * holder.
- 		 */
--		if ((registered) && !(ignore_reg))
--			registered_nexus = 1;
- 		break;
- 	case PR_TYPE_WRITE_EXCLUSIVE_REGONLY:
- 		we = 1;
-@@ -359,8 +354,6 @@ static int core_scsi3_pr_seq_non_holder(
- 		 * Some commands are only allowed for registered I_T Nexuses.
- 		 */
- 		reg_only = 1;
--		if ((registered) && !(ignore_reg))
--			registered_nexus = 1;
- 		break;
- 	case PR_TYPE_WRITE_EXCLUSIVE_ALLREG:
- 		we = 1;
-@@ -369,8 +362,6 @@ static int core_scsi3_pr_seq_non_holder(
- 		 * Each registered I_T Nexus is a reservation holder.
- 		 */
- 		all_reg = 1;
--		if ((registered) && !(ignore_reg))
--			registered_nexus = 1;
- 		break;
- 	default:
- 		return -EINVAL;
-@@ -576,6 +567,7 @@ target_scsi3_pr_reservation_check(struct se_cmd *cmd)
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_session *sess = cmd->se_sess;
- 	u32 pr_reg_type;
-+	bool isid_mismatch = false;
- 
- 	if (!dev->dev_pr_res_holder)
- 		return 0;
-@@ -588,7 +580,7 @@ target_scsi3_pr_reservation_check(struct se_cmd *cmd)
- 	if (dev->dev_pr_res_holder->isid_present_at_reg) {
- 		if (dev->dev_pr_res_holder->pr_reg_bin_isid !=
- 		    sess->sess_bin_isid) {
--			pr_reg_type |= 0x80000000;
-+			isid_mismatch = true;
- 			goto check_nonholder;
- 		}
- 	}
-@@ -596,7 +588,7 @@ target_scsi3_pr_reservation_check(struct se_cmd *cmd)
- 	return 0;
- 
- check_nonholder:
--	if (core_scsi3_pr_seq_non_holder(cmd, pr_reg_type))
-+	if (core_scsi3_pr_seq_non_holder(cmd, pr_reg_type, isid_mismatch))
- 		return TCM_RESERVATION_CONFLICT;
- 	return 0;
- }
+This includes the original patch + minor fixes, along with two other
+improvements for killing off se_lun->lun_sep_lock via RCU pointer
+access, and converting the remaining se_lun->lun_active busy-wait
+special cases to existing percpu se_lun->lun_ref access.
+
+Also included in the series is a recently discussed change to go
+ahead and drop an unnecessary core_tpg_register() parameter, and
+all associated target_core_fabric_ops forward declartions within
+fabric driver code.
+
+The series has been updated to follow Paul's recent comments for
+RCU notiation using rcu_dereference_check() + rcu_dereference_raw()
+for cases where dereference occurs outside of rcu_read_lock(),
+with an external lock or reference already held.
+
+The code is now sparse clean.
+
+The changes since -v2 include:
+
+  - Convert tpg_virt_lun0->lun_se_dev in spc_emulate_inquiry()
+    to use rcu_access_pointer()
+  - Convert se_lun->lun_se_dev in ALUA attribute code to use
+    rcu_dereference_raw() w/ configfs reference comment
+  - Convert se_lun->lun_se_dev in TPG remove lun code to use
+    rcu_dereference_raw() w/ configfs reference comment
+  - Convert se_lun->lun_se_dev in TPG add_node_to_devs() code to use
+    rcu_dereference_check() w/ se_portal_gorup->tpg_lun_mutex
+  - Convert se_lun->lun_se_dev in transport_lookup_cmd_lun() to use
+    rcu_dereference_raw() w/ configfs reference comment
+  - Convert se_lun->lun_se_dev in transport_lookup_tmr_lun() to use
+    rcu_dereference_raw() w/ lun_ref FIXME
+  - Convert se_lun->lun_se_dev in core_disable_device_list_for_node()
+    to use rcu_dereference_raw() w/ configfs reference comment
+  - Convert se_lun->lun_se_dev in core_dev_add_initiator_node_lun_acl()
+    to use rcu_dereference_raw() w/ configfs reference comment
+  - Convert se_lun->lun_se_dev in sbp_update_unit_directory() to use
+    rcu_dereference_raw() w/ configfs reference comment
+  - Adding missing sanity check in core_tpg_register() for
+    se_tpg->se_tpg_tfo check + special case discovery usage comment
+
+Please review.
+
+--nab
+
+Christoph Hellwig (1):
+  target: Subsume se_port + t10_alua_tg_pt_gp_member into se_lun
+
+Nicholas Bellinger (3):
+  target: Drop lun_sep_lock for se_lun->lun_se_dev RCU usage
+  target: Drop se_lun->lun_active for existing percpu lun_ref
+  target: Drop unnecessary core_tpg_register TFO parameter
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |   4 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |   9 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |   3 +-
+ drivers/target/iscsi/iscsi_target_tpg.c      |   8 +-
+ drivers/target/loopback/tcm_loop.c           |   5 +-
+ drivers/target/sbp/sbp_target.c              |   9 +-
+ drivers/target/target_core_alua.c            | 403 +++++++++++----------------
+ drivers/target/target_core_alua.h            |  14 +-
+ drivers/target/target_core_configfs.c        |  11 +-
+ drivers/target/target_core_device.c          | 226 ++++-----------
+ drivers/target/target_core_fabric_configfs.c |  32 +--
+ drivers/target/target_core_file.c            |  11 +-
+ drivers/target/target_core_iblock.c          |  10 +-
+ drivers/target/target_core_internal.h        |  12 +-
+ drivers/target/target_core_pr.c              |  57 ++--
+ drivers/target/target_core_pscsi.c           |  11 +-
+ drivers/target/target_core_rd.c              |  10 +-
+ drivers/target/target_core_spc.c             |  48 ++--
+ drivers/target/target_core_stat.c            | 374 ++++++++++---------------
+ drivers/target/target_core_tpg.c             | 132 ++++++---
+ drivers/target/target_core_transport.c       |  46 +--
+ drivers/target/target_core_user.c            |  11 +-
+ drivers/target/target_core_xcopy.c           |  17 +-
+ drivers/target/tcm_fc/tfc_conf.c             |   5 +-
+ drivers/usb/gadget/legacy/tcm_usb_gadget.c   |   5 +-
+ drivers/vhost/scsi.c                         |   4 +-
+ drivers/xen/xen-scsiback.c                   |   5 +-
+ include/target/target_core_base.h            |  77 +++--
+ include/target/target_core_fabric.h          |   3 +-
+ 29 files changed, 638 insertions(+), 924 deletions(-)
+
 -- 
 1.9.1
