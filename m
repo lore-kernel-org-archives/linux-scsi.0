@@ -1,143 +1,76 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 3/4] target: Drop se_lun->lun_active for existing percpu lun_ref
-Date: Mon,  1 Jun 2015 08:21:15 +0000
-Message-ID: <1433146876-20188-4-git-send-email-nab@daterainc.com>
-References: <1433146876-20188-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1433146876-20188-1-git-send-email-nab@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v3 00/10] target: se_node_acl + se_lun RCU conversions
+Date: Mon, 01 Jun 2015 01:32:27 -0700
+Message-ID: <1433147547.3170.29.camel@haakon3.risingtidesystems.com>
+References: <1432621530-24171-1-git-send-email-nab@daterainc.com>
+	 <55643FB6.1080301@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:49387 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752976AbbFAIc3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2015 04:32:29 -0400
+In-Reply-To: <55643FB6.1080301@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 2015-05-26 at 11:41 +0200, Hannes Reinecke wrote:
+> On 05/26/2015 08:25 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Hi all,
+> > 
+> > Here is -v3 series for converting LIO target se_node_acl + se_lun
+> > mapping tables from fixed size arrays to dynamic RCU hlist_heads.
+> > 
+> > This turns fast-path I/O into a lock-less RCU reader using existing
+> > percpu based se_lun->lun_ref logic, and converts the RCU updater
+> > path to allow for an arbitrary number of LUNs for both types of
+> > mappings within target-core.
+> > 
+> > As per this afternoon's email thread, the se_dev_entry->pr_comp
+> > has been left in place for se_dev_entry shutdown within patch #1.
+> > This completion is still required in order to prevent the configfs
+> > se_lun_acl->se_lun_group from being removed from out below the
+> > core_scsi3_lunacl_depend_item() caller during the special-case PR
+> > ALL_TG_PT=1 registration handling.
+> > 
+> > The changes based on -v2 series feedback from HCH & Co include:
+> > 
+> >   - Remove unused se_dev_entry->se_node_acl
+> >   - Drop unnecessary check in lunacl_undepend_item
+> >   - target: Drop bogus mutex_unlock in core_disable_device_list_for_node
+> >   - Drop left-over se_lun->lun_status
+> >   - target: Rename ->pr_regs to ->deve_flags + add bit definitions
+> >   - target: Convert se_dev_entry stats to atomic_long_t
+> >   - Avoid unnecessary PR target_nacl_find_deve() lookup in registration
+> >   - Add se_lun->lun_index for RCU dev->dev_index usage in stat.c
+> >   - Add various rcu_dereference and lockless_dereference RCU notation
+> > 
+> > Please review.
+> > 
+> > --nab
+> > 
+> For the whole series:
+> 
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-With se_port_t and t10_alua_tg_pt_gp_member being absored into se_lun,
-there is no need for an extra atomic_t based reference count for PR
-ALL_TG_PT=1 and ALUA access state transition.
+Thanks for reviewing.  8-)
 
-Go ahead and use the existing percpu se_lun->lun_ref instead, and
-convert the two special cases to percpu_ref_tryget_live() to avoid
-se_lun if transport_clear_lun_ref() has already been invoked to
-shutdown the se_lun.
+> 
+> Do you have a git tree for these changes?
+> As mentioned earlier, it should be fairly trivial to convert
+> LIO target to use 64-bit LUNs with this patchset.
+> 
 
-Cc: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_alua.c |  5 +++--
- drivers/target/target_core_pr.c   |  9 +++++----
- drivers/target/target_core_tpg.c  | 10 ++++++----
- include/target/target_core_base.h |  1 -
- 4 files changed, 14 insertions(+), 11 deletions(-)
+The latest -v4 + -v3 series changes from this morning have been pushed
+to target-pending/for-next.
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 0a00873..02d8e1a 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -969,7 +969,8 @@ static void core_alua_do_transition_tg_pt_work(struct work_struct *work)
- 		 * every I_T nexus other than the I_T nexus on which the SET
- 		 * TARGET PORT GROUPS command
- 		 */
--		atomic_inc_mb(&lun->lun_active);
-+		if (!percpu_ref_tryget_live(&lun->lun_ref))
-+			continue;
- 		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
- 
- 		spin_lock_bh(&lun->lun_deve_lock);
-@@ -998,7 +999,7 @@ static void core_alua_do_transition_tg_pt_work(struct work_struct *work)
- 		spin_unlock_bh(&lun->lun_deve_lock);
- 
- 		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
--		atomic_dec_mb(&lun->lun_active);
-+		percpu_ref_put(&lun->lun_ref);
- 	}
- 	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
- 	/*
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 60624bb..94935ea 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -704,7 +704,8 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 	 */
- 	spin_lock(&dev->se_port_lock);
- 	list_for_each_entry_safe(lun_tmp, next, &dev->dev_sep_list, lun_dev_link) {
--		atomic_inc_mb(&lun_tmp->lun_active);
-+		if (!percpu_ref_tryget_live(&lun_tmp->lun_ref))
-+			continue;
- 		spin_unlock(&dev->se_port_lock);
- 
- 		spin_lock_bh(&lun_tmp->lun_deve_lock);
-@@ -751,7 +752,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 			if (ret < 0) {
- 				pr_err("core_scsi3_lunacl_depend"
- 						"_item() failed\n");
--				atomic_dec_mb(&lun->lun_active);
-+				percpu_ref_put(&lun_tmp->lun_ref);
- 				kref_put(&deve_tmp->pr_kref, target_pr_kref_release);
- 				goto out;
- 			}
-@@ -770,7 +771,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 						deve_tmp->mapped_lun, NULL,
- 						sa_res_key, all_tg_pt, aptpl);
- 			if (!pr_reg_atp) {
--				atomic_dec_mb(&lun_tmp->lun_active);
-+				percpu_ref_put(&lun_tmp->lun_ref);
- 				core_scsi3_lunacl_undepend_item(deve_tmp);
- 				goto out;
- 			}
-@@ -782,7 +783,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 		spin_unlock_bh(&lun_tmp->lun_deve_lock);
- 
- 		spin_lock(&dev->se_port_lock);
--		atomic_dec_mb(&lun_tmp->lun_active);
-+		percpu_ref_put(&lun_tmp->lun_ref);
- 	}
- 	spin_unlock(&dev->se_port_lock);
- 
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 5b30940..b9fcf2c 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -607,7 +607,6 @@ struct se_lun *core_tpg_alloc_lun(
- 	mutex_init(&lun->lun_tg_pt_md_mutex);
- 	INIT_LIST_HEAD(&lun->lun_tg_pt_gp_link);
- 	spin_lock_init(&lun->lun_tg_pt_gp_lock);
--	atomic_set(&lun->lun_active, 0);
- 	lun->lun_tpg = tpg;
- 
- 	return lun;
-@@ -667,13 +666,16 @@ void core_tpg_remove_lun(
- 	struct se_device *dev = rcu_dereference_raw(lun->lun_se_dev);
- 
- 	core_clear_lun_from_tpg(lun, tpg);
-+	/*
-+	 * Wait for any active I/O references to percpu se_lun->lun_ref to
-+	 * be released.  Also, se_lun->lun_ref is now used by PR and ALUA
-+	 * logic when referencing a remote target port during ALL_TGT_PT=1
-+	 * and generating UNIT_ATTENTIONs for ALUA access state transition.
-+	 */
- 	transport_clear_lun_ref(lun);
- 
- 	mutex_lock(&tpg->tpg_lun_mutex);
- 	if (lun->lun_se_dev) {
--		while (atomic_read(&lun->lun_active))
--			cpu_relax();
--
- 		target_detach_tg_pt_gp(lun);
- 
- 		spin_lock(&dev->se_port_lock);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index b82a989..eefc2b0 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -721,7 +721,6 @@ struct se_lun {
- 	struct t10_alua_tg_pt_gp *lun_tg_pt_gp;
- 	spinlock_t		lun_tg_pt_gp_lock;
- 
--	atomic_t		lun_active;
- 	struct se_portal_group	*lun_tpg;
- 	struct scsi_port_stats	lun_stats;
- 	struct config_group	lun_group;
--- 
-1.9.1
+Thank you,
+
+--nab
+
