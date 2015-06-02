@@ -1,185 +1,149 @@
-From: vaibhavkhanduja-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Subject: Re: [RFC PATCH 0/4] Make iSCSI network namespace aware
-Date: Sun, 31 May 2015 20:43:57 -0700 (PDT)
-Message-ID: <6c292826-4217-4e9e-aab4-4451a1460c3f@googlegroups.com>
-References: <1431555167-23995-1-git-send-email-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 00/14] qla2xxx: Patches for scsi "misc" branch.
+Date: Tue, 2 Jun 2015 19:52:15 +0000
+Message-ID: <D1935340.8FEC0%himanshu.madhani@qlogic.com>
+References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
+ <5527655C.7030603@sandisk.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_279_1560941177.1433130237684"
-Return-path: <open-iscsi+bncBD65NQGTVQGBBWGPW6VQKGQEPC5YS7A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1431555167-23995-1-git-send-email-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+	boundary="_000_D19353408FEC0himanshumadhaniqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:15080 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750756AbbFBTwS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2015 15:52:18 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t52JmGuo010452
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Jun 2015 12:52:17 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1upbapnx7m-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2015 12:52:17 -0700
+In-Reply-To: <5527655C.7030603@sandisk.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>
+Cc: "hch@lst.de" <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-------=_Part_279_1560941177.1433130237684
-Content-Type: multipart/alternative;
-	boundary="----=_Part_280_1078130087.1433130237684"
-
-------=_Part_280_1078130087.1433130237684
-Content-Type: text/plain; charset=UTF-8
-
-Are there any plans to get it upstream? if yes which kernel version?
-
-On Wednesday, May 13, 2015 at 3:13:18 PM UTC-7, Chris Leech wrote:
->
-> I've had a few reports of people trying to run iscsid in a container, 
-> which 
-> doesn't work at all when using network namespaces.  This is the start of 
-> me 
-> looking at what it would take to make that work, and if it makes sense at 
-> all. 
->
-> The first issue is that the kernel side of the iSCSI netlink control 
-> protocol 
-> only operates in the initial network namespace.  But beyond that, if we 
-> allow 
-> iSCSI to be managed within a namespace we need to decide what that means. 
->  I 
-> think it makes the most sense to isolate the iSCSI host, along with it's 
-> associated endpoints, connections, and sessions, to a network namespace 
-> and 
-> allow multiple instances of the userspace tools to exist in separate 
-> namespaces 
-> managing separate hosts. 
->
-> It works well for iscsi_tcp, which creates a host per session.  There's no 
-> attempt to manage sessions on offloading hosts independently, although 
-> future 
-> work could include the ability to move an entire host to a new namespace 
-> like 
-> is supported for network devices. 
->
-> This is only about the structures and functionality involved in 
-> maintaining the 
-> iSCSI session, the SCSI host along with it's discovered targets and 
-> devices has 
-> no association with network namespaces. 
->
-> These patches are functional, but not complete.  There's no isolation 
-> enforced 
-> in the kernel just yet, so it relies on well behaved userspace.  I plan on 
-> fixing that, but wanted some feedback on the idea and approach so far. 
->
-> Thanks, 
->         Chris 
->
-> Chris Leech (4): 
->   iscsi: create per-net iscsi nl kernel sockets 
->   iscsi: sysfs filtering by network namespace 
->   iscsi: make all netlink multicast namespace aware 
->   iscsi: set netns for iscsi_tcp hosts 
->
->  drivers/scsi/iscsi_tcp.c            |   7 + 
->  drivers/scsi/scsi_transport_iscsi.c | 264 
-> +++++++++++++++++++++++++++++------- 
->  include/scsi/scsi_transport_iscsi.h |   2 + 
->  3 files changed, 222 insertions(+), 51 deletions(-) 
->
-> -- 
-> 2.1.0 
->
->
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
-
-------=_Part_280_1078130087.1433130237684
-Content-Type: text/html; charset=UTF-8
+--_000_D19353408FEC0himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <758A4F8857267E4C8F09BC5C84C1B2BA@qlogic.com>
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr">Are there any plans to get it upstream? if yes which kerne=
-l version?<br><br>On Wednesday, May 13, 2015 at 3:13:18 PM UTC-7, Chris Lee=
-ch wrote:<blockquote class=3D"gmail_quote" style=3D"margin: 0;margin-left: =
-0.8ex;border-left: 1px #ccc solid;padding-left: 1ex;">I've had a few report=
-s of people trying to run iscsid in a container, which
-<br>doesn't work at all when using network namespaces. &nbsp;This is the st=
-art of me
-<br>looking at what it would take to make that work, and if it makes sense =
-at all.
-<br>
-<br>The first issue is that the kernel side of the iSCSI netlink control pr=
-otocol
-<br>only operates in the initial network namespace. &nbsp;But beyond that, =
-if we allow
-<br>iSCSI to be managed within a namespace we need to decide what that mean=
-s. &nbsp;I
-<br>think it makes the most sense to isolate the iSCSI host, along with it'=
-s
-<br>associated endpoints, connections, and sessions, to a network namespace=
- and
-<br>allow multiple instances of the userspace tools to exist in separate na=
-mespaces
-<br>managing separate hosts.
-<br>
-<br>It works well for iscsi_tcp, which creates a host per session. &nbsp;Th=
-ere's no
-<br>attempt to manage sessions on offloading hosts independently, although =
-future
-<br>work could include the ability to move an entire host to a new namespac=
-e like
-<br>is supported for network devices.
-<br>
-<br>This is only about the structures and functionality involved in maintai=
-ning the
-<br>iSCSI session, the SCSI host along with it's discovered targets and dev=
-ices has
-<br>no association with network namespaces.
-<br>
-<br>These patches are functional, but not complete. &nbsp;There's no isolat=
-ion enforced
-<br>in the kernel just yet, so it relies on well behaved userspace. &nbsp;I=
- plan on
-<br>fixing that, but wanted some feedback on the idea and approach so far.
-<br>
-<br>Thanks,
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chris
-<br>
-<br>Chris Leech (4):
-<br>&nbsp; iscsi: create per-net iscsi nl kernel sockets
-<br>&nbsp; iscsi: sysfs filtering by network namespace
-<br>&nbsp; iscsi: make all netlink multicast namespace aware
-<br>&nbsp; iscsi: set netns for iscsi_tcp hosts
-<br>
-<br>&nbsp;drivers/scsi/iscsi_tcp.c &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp=
-;| &nbsp; 7 +
-<br>&nbsp;drivers/scsi/scsi_transport_<wbr>iscsi.c | 264 ++++++++++++++++++=
-+++++++++++-<wbr>------
-<br>&nbsp;include/scsi/scsi_transport_<wbr>iscsi.h | &nbsp; 2 +
-<br>&nbsp;3 files changed, 222 insertions(+), 51 deletions(-)
-<br>
-<br>--=20
-<br>2.1.0
-<br>
-<br></blockquote></div>
 
-<p></p>
+On 4/9/15, 10:53 PM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
 
--- <br />
-You received this message because you are subscribed to the Google Groups &=
-quot;open-iscsi&quot; group.<br />
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to <a href=3D"mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org">open-isc=
-si+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org</a>.<br />
-To post to this group, send email to <a href=3D"mailto:open-iscsi@googlegro=
-ups.com">open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org</a>.<br />
-Visit this group at <a href=3D"http://groups.google.com/group/open-iscsi">h=
-ttp://groups.google.com/group/open-iscsi</a>.<br />
-For more options, visit <a href=3D"https://groups.google.com/d/optout">http=
-s://groups.google.com/d/optout</a>.<br />
+>On 04/09/15 20:59, Himanshu Madhani wrote:
+>> Hi James,
+>>
+>> Please apply the following patches to the scsi tree at your earliest
+>> convenience for inclusion in the next mainline merge window.
+>>
+>> Thanks,
+>> Himanshu
+>
+>Hello Himanshu,
+>
+>Since you are posting a new patch series for the qla2xxx driver, does
+>that mean that the qla2xxx patches I posted three months ago have passed
+>the QLogic 12 week regression cycle ? See also
+>http://thread.gmane.org/gmane.linux.scsi/98759/focus=3D99429.
+>
+>Thanks,
+>
+>Bart.
 
-------=_Part_280_1078130087.1433130237684--
+Hello Bart,=20
 
-------=_Part_279_1560941177.1433130237684--
+We have finished validation of the patch series.
+
+Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
+
+Thanks,
+Himanshu
+>
+
+
+--_000_D19353408FEC0himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+ItY5AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEYyNjExQkNG
+RDBFQTBDNEZBRUZCNTFFMTdDQjI2NzI4AHEHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBgACABMA
+NAAPAAIARgEBIIADAA4AAADfBwYAAgATADQADwACAEYBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADsAAABSZTogW1BBVENIIDAwLzE0XSBxbGEyeHh4OiBQYXRjaGVzIGZv
+ciBzY3NpICJtaXNjIiBicmFuY2guAGwSAQOQBgCcDwAANAAAAAIBfwABAAAALQAAADxEMTkzNTM0
+MC44RkVDMCVoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+AAAAAAsAHw4BAAAAAgEJEAEAAAAs
+AwAAKAMAAPUEAABMWkZ1H0IgYWEACmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARj
+aArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAE
+kGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQ
+IheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8ips
+C4BlCoBPA6A0L0A5LzE1LCAekDogNTMgUE0ikCJCNR+CVgORQQQQEcBlIkggPGIfgS52AHBhmSQD
+QHMAcA3hay4FoLBtPiB3A2AQIDohlVUhlT4iATAiMDAiUiBrAdAi0DkikEgHcABxaFJ1BdBhZBmh
+aSY8PqMmICjAIEphB4EsKjedKjhQHnAlABngYXALUP55HMAkMBxwBvAJAAPwGcD6IAqwdCQhBCAY
+kC1TBPBfAJAcwAnRLPAFQHkIYSDtLLByIaAHkHQqOBvjAwDdCfBjLYIFwAuAYwpAAJDfAiAyYS1T
+GFAQQCAAwAuAXyGiM8AEkBnRLfFkLeAu+ytvJiBUGaEfUCtYKLcnFnknFkhlLcEotytXJxZTfzJx
+GeAwASzwCXAuMBkQdP0uAmEzcQfgLkMvIAZxB5FLMjItYnELYDJ4PjAg/mQFEBoxIpA08AeQJxYt
+YL8v0QeAA5E/sz26LkZJO7NfHFEtYC+SBGACMGgEIGH+Zy7QEdAaMC4xBBAJgD84YRngUUxvZw5Q
+IqAy8yYwCeBrIAlwCcEEEDLSbGN5MpAZ4D8GUSzhbAsZICcWaAJAcDovL5NCcilgLmcDgWUuBbCM
+Zy9I9CGhdXguLzKpIkA4NyiALwIQYzKwwD05OTQyOTUnJxb/Nm0nFiNiNSYhlTj0I2IikO0mrFcZ
+4EODZguABAAkMPccYCTQIaBkGIAy0hkwLVMjPKpOfUFjawmALUKseToovyRgaCjVLgDA/SlzQD3w
+RRIl4yasNmw3fwcmuxVCXEAfAEIAAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEA
+bgBpAAAAAAAfAGUAAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAA
+AACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABT
+AE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfAAJdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAQAAAAHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4A
+bQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBh
+AG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUA
+LgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBU
+AFAAAAAAAAIBGQwBAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgA
+dQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABh
+AG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUA
+LgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBt
+AGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgH5PwEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMA
+aAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABo
+AGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgA
+dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAA
+ABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAA
+EAAAAPJhG8/Q6gxPrvtR4XyyZygDABcAAQAAAEAAOQCAQbKfbZ3QAUAACDBoaPyfbZ3QAQsAAIAI
+IAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEA
+YwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAG
+AAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAdgAAAFIAZQA6ACAAWwBQAEEAVABDAEgA
+IAAwADAALwAxADQAXQAgAHEAbABhADIAeAB4AHgAOgAgAFAAYQB0AGMAaABlAHMAIABmAG8AcgAg
+AHMAYwBzAGkAIAAiAG0AaQBzAGMAIgAgAGIAcgBhAG4AYwBoAC4AAAAAAB8APQABAAAACgAAAFIA
+ZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAA1ADUAMgA3ADYANQA1AEMALgA3ADAAMwAw
+ADYAMAAzAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AAAAAAAIBcQABAAAAGwAAAAEB0HNSs/Un
+Jn1UGOFBsv2YtkYhhrWdmfSVgAAfAHAAAQAAAG4AAABbAFAAQQBUAEMASAAgADAAMAAvADEANABd
+ACAAcQBsAGEAMgB4AHgAeAA6ACAAUABhAHQAYwBoAGUAcwAgAGYAbwByACAAcwBjAHMAaQAgACIA
+bQBpAHMAYwAiACAAYgByAGEAbgBjAGgALgAAAAAAHwA1EAEAAABaAAAAPABEADEAOQAzADUAMwA0
+ADAALgA4AEYARQBDADAAJQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQA+AAAAAAAfADkQAQAAAL4AAAA8ADEANAAyADgANgAwADYAMAAwADgALQAx
+ADQAOQA3ADYALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMA
+aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwANQA1ADIANwA2
+ADUANQBDAC4ANwAwADMAMAA2ADAAMwBAAHMAYQBuAGQAaQBzAGsALgBjAG8AbQA+AAAAAAADAN4/
+n04AAEAABzDo4vKfbZ3QAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1B
+Vk1CMy0xNTA2MDIxOTUyMTVaLTE0MTg4AAAAHwAVEAEAAABYAAAANwA1ADgAQQA0AEYAOAA4ADUA
+NwAyADYANwBFADQAQwA4AEYAMAA5AEIAQwA1AEMAOAA0AEMAMQBCADIAQgBBAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAIBFDABAAAADAAAAFgAAADK5B6eTwAAAB8A+j8BAAAAIgAAAEgAaQBtAGEA
+bgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1
+AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMA
+TwB1AHQAbABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHou
+Qr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEA
+YwBrAGkAbgBnAEUAeAAAAAEAAAAQAQAASQBJAD0AMAAxADAAMQBEADAAOQBEADYARAA5AEYARAAy
+AEYAQgA4AEUANQBEADMAQgAyADMAMQAxADQARQA5ADgAMQA2ADYANgA4ADAARgBFADcAMwBEAEQA
+MQAzADsAUwBCAE0ASQBEAD0AMgAxADsAUwAxAD0APAA1ADUAMgA3ADYANQA1AEMALgA3ADAAMwAw
+ADYAMAAzAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIA
+cwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBn
+AGUAPQBIADIAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0A
+aABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+ACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAHAAAAFsAMQAwAC4A
+MgA5AC4AMgAuADEANAA2AF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBs
+AGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAA5uk=
+
+--_000_D19353408FEC0himanshumadhaniqlogiccom_--
