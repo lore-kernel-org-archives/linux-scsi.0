@@ -1,48 +1,69 @@
-From: Rajat Jain <rajatja@google.com>
-Subject: A bad LLD can impact other good LLD(s) if eh_timed_out repeatedly
- returns BLK_EH_RESET_TIMER?
-Date: Tue, 2 Jun 2015 14:01:20 -0700
-Message-ID: <CACK8Z6EGrSKCc3efUs3mG6PKA4HDi9Tgyo=jRL-bHVhq=Ji1NQ@mail.gmail.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for
+ sg_tablesize
+Date: Tue, 2 Jun 2015 23:09:29 +0200
+Message-ID: <20150602230929.000025a4@localhost>
+References: <fe5b2b$6sl0ed@dgate10u.abg.fsc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:33852 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbbFBVBV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2015 17:01:21 -0400
-Received: by ieczm2 with SMTP id zm2so142906144iec.1
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2015 14:01:20 -0700 (PDT)
+Received: from mout.gmx.net ([212.227.17.20]:54250 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbbFBVJy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jun 2015 17:09:54 -0400
+In-Reply-To: <fe5b2b$6sl0ed@dgate10u.abg.fsc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: bstroesser@ts.fujitsu.com
+Cc: james.smart@avagotech.com, linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
 
-Hello,
+bstroesser@ts.fujitsu.com wrote:
+> Hi James,
+> 
+> We had some performance problems with RAID systems connected to LPe12k.
+> AFAICS, the reason is a small bug in lpfc.ko, causing the IO-size to
+> be smaller than expected.
+> 
+> The patch below fixes it for us.
+> 
+> Please CC me, I'm not on the list.
+> 
+> Best regards
+> Bodo
+> 
+> 
+> ------------------------------------------------------
+> 
+> From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Date: Fri, 29 May 2015 13:34:19 +0200
+> Subject: [PATCH] lpfc: in sli3 use configured sg_seg_cnt for sg_tablesize
+> 
+> Currently the module parameter lpfc_sg_seg_count does not have effect
+> for sli3 devices.
+> 
+> In lpfc_sli_driver_resource_setup(), which is used for sli3, the code
+> writes the configured sg_seg_cnt into lpfc_template.sg_tablesize.
+> But lpfc_template is the template used for sli4 only. Thus the value should
+> correctly be written to lpfc_template_s3->sg_tablesize.
+> 
+> This patch is for kernel 4.1-rc5, but is tested with lpfc 10.2.405.26 only.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> ---
+> 
+> --- a/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:02.000000000 +0200
+> +++ b/drivers/scsi/lpfc/lpfc_init.c	2015-05-29 10:19:56.000000000 +0200
+> @@ -4988,7 +4988,7 @@ lpfc_sli_driver_resource_setup(struct lp
+>  
+>  	/* Initialize the host templates the configured values. */
+>  	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+> -	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+> +	lpfc_template_s3.sg_tablesize = phba->cfg_sg_seg_cnt;
+>  
+>  	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp */
+>  	if (phba->cfg_enable_bg) {
 
-I was trying to test some failover and reliability features, and had
-instrumented the iscsi low level driver to simulate failures when some
-one tries to read the disk. I observed that* iscsi disk is discovered
-and sd_probe_async() is called that ultimately tries to read the
-partition table using READ10 command. Now due to simulation of
-failures, the iscsi LLD never completes the command which results in a
-timeout. The iscsi driver provides an eh_timed_out() function, which
-is called and decides what can be done about it.
+Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
 
-Now, it seems to me that an LLD (that has provided eh_timed_out() func
-ptr, such as iscsi) , can impact all the other SCSI disks if it keeps
-on returning BLK_EH_RESET_TIMER from its timeout handler.
-
-Specifically, no SCSI disk (even handled by other LLDs) in the system
-can be removed. I tried removing multiple disks and pretty soon ended
-up with multiple threads deadlocked, because sd_remove() for the "good
-disks" is waiting on
-async_synchronize_full_domain(&scsi_sd_probe_domain). This never
-completes because the sd_probe_async() for the "bad disk" is trying to
-read the parition table, and the "bad" LLD keeps on timing out, always
-asking for more time (BLK_EH_RESET_TIMER).
-
-My question is have I identified this problem correctly, or if I am
-missing something here?
-
-Thanks,
-
-Rajat
+Sebastian
