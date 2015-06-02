@@ -1,152 +1,48 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 0/10] qla2xxx: Fix various warnings reported by static
- source code analysis tools
-Date: Tue, 2 Jun 2015 20:08:35 +0000
-Message-ID: <D1935AAF.8FF12%himanshu.madhani@qlogic.com>
-References: <54C75AF8.90102@sandisk.com>
- <F5D084D6342F9B479C34599BB0A03E4D012858B38C@AVMB1.qlogic.org>
- <54EAE9A0.3090205@sandisk.com>
+From: Rajat Jain <rajatja@google.com>
+Subject: A bad LLD can impact other good LLD(s) if eh_timed_out repeatedly
+ returns BLK_EH_RESET_TIMER?
+Date: Tue, 2 Jun 2015 14:01:20 -0700
+Message-ID: <CACK8Z6EGrSKCc3efUs3mG6PKA4HDi9Tgyo=jRL-bHVhq=Ji1NQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D1935AAF8FF12himanshumadhaniqlogiccom_"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:41999 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751378AbbFBUIi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2015 16:08:38 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t52K8MXt004836
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Jun 2015 13:08:37 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1upbapnxsu-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2015 13:08:36 -0700
-In-Reply-To: <54EAE9A0.3090205@sandisk.com>
-Content-Language: en-US
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:33852 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbbFBVBV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2015 17:01:21 -0400
+Received: by ieczm2 with SMTP id zm2so142906144iec.1
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2015 14:01:20 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_D1935AAF8FF12himanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <69231B345A18AE4597616BF6EFF519C6@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-On 2/23/15, 12:49 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
+I was trying to test some failover and reliability features, and had
+instrumented the iscsi low level driver to simulate failures when some
+one tries to read the disk. I observed that* iscsi disk is discovered
+and sd_probe_async() is called that ultimately tries to read the
+partition table using READ10 command. Now due to simulation of
+failures, the iscsi LLD never completes the command which results in a
+timeout. The iscsi driver provides an eh_timed_out() function, which
+is called and decides what can be done about it.
 
+Now, it seems to me that an LLD (that has provided eh_timed_out() func
+ptr, such as iscsi) , can impact all the other SCSI disks if it keeps
+on returning BLK_EH_RESET_TIMER from its timeout handler.
 
->On 02/02/15 05:52, Saurav Kashyap wrote:
->> Thanks for the patches. We will run regression with these changes and
->>ack
->> if everything goes through fine.
->
->Hello Saurav,
->
->That sounds great. Are there perhaps already any results available from
->the regression tests ?
+Specifically, no SCSI disk (even handled by other LLDs) in the system
+can be removed. I tried removing multiple disks and pretty soon ended
+up with multiple threads deadlocked, because sd_remove() for the "good
+disks" is waiting on
+async_synchronize_full_domain(&scsi_sd_probe_domain). This never
+completes because the sd_probe_async() for the "bad disk" is trying to
+read the parition table, and the "bad" LLD keeps on timing out, always
+asking for more time (BLK_EH_RESET_TIMER).
 
-Hello Bart,=20
+My question is have I identified this problem correctly, or if I am
+missing something here?
 
-Replying to correct email thread. We have concluded our regression cycle.
-The series looks good.
+Thanks,
 
-Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-
->
->Thanks,
->
->Bart.
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---_000_D1935AAF8FF12himanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IrFvAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADRFODNCNzc5
-RENERDRGNEFBOUI1MDQzRkVDQjc4MTAzAGYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBgACABQA
-CAAjAAIALwEBIIADAA4AAADfBwYAAgAUAAgAIwACAC8BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAF0AAABSZTogW1BBVENIIDAvMTBdIHFsYTJ4eHg6IEZpeCB2YXJpb3Vz
-IHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHN0YXRpYyBzb3VyY2UgY29kZSBhbmFseXNpcyB0b29scwCt
-IAEDkAYAhBAAADQAAAACAX8AAQAAAC0AAAA8RDE5MzVBQUYuOEZGMTIlaGltYW5zaHUubWFkaGFu
-aUBxbG9naWMuY29tPgAAAAALAB8OAQAAAAIBCRABAAAASwMAAEcDAADiBAAATFpGdS4ovKVhAApm
-YmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQC
-gJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBd
-BlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdw
-MApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EEIE8DoDIvMjMvEDE1LCAOkDo0OUggQU0i
-QCJCH4JWDQORQQQQEcBlIiA8UmIfgS52AHBhI7NAJnMAcA3hay4FoG0+jCB3A2AQIDpcbAuA1mUK
-gSZrPiGhMCHQJ+HzIiAn0DU6DrAiQAYQCHAQYXYgSySwaHlh6nAl7D4l0FQZoR9QHHBVBbF0I+Ag
-CrB0I9FzWC4gVxngA/BsAyBy3nUDoAlwCcEEEGkCICxx/yuAK3ISABvQGaMEICUxKjdNANBrKjgG
-kCBlGjF5wyuAC4BnIGdvB5ErgKkDYHVnLfBmJnEuJzapJzZIZSygbyjVLDKO7yrRBUAZICzgZAQg
-CcEYgN8sMAcQGeArgTaRcASQEdDKcC7RbDYhZHku4TgA8S1BdWx0LtEkgAMQAaD/HnAccyc2K4It
-GRAgH2AEID4/JlwzhCMSIkAmXFJlXQtQeTEiGJAb0XIJcGP9BUBlAMADETGxN9EsMxHQ+xowG9Jj
-CkABABxgCGEtCvxjeUDwMmcq0BngEgAIgfsEIAkAbysRMWAEcDJ2JlUGQS/ACYAtYnk6IOZIB3AA
-cWh1BdA34BmhbmkkEDEQRiQuAMBGs0D6cQkAZw5QJZMmzTTZKwHnNE8jEjJ3LS001zPALOD1OIBi
-BPJiOWQrcQQAQ8D9BAB0ReASAB3AK3MmYiLw401qJmF1eC0E8ACQJAC/C4E52QbgN/EZMC7gIAeB
-ryUgGdE+sQDAagWwZANwyG9Adhgwci5FgASg1TOQLgWwZyc2TQWwGeB/U8dRgQIQLuAFQEBgAkBw
-qDovL1RtL1PHLVbCei5XUG0JUCZrFUJbEAAfAEIAAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABN
-AGEAZABoAGEAbgBpAAAAAAAfAGUAAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
-bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQAB
-AAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgA
-YQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
-bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAQAAAAHMAaQBwADoAaABpAG0AYQBu
-AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAACIA
-AABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAB8MAQAAADgAAABoAGkAbQBh
-AG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAA
-CgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBt
-AGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4A
-bQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADgAAABoAGkAbQBh
-AG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAA
-IgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AI0ABAAAAOAAAAGgAaQBt
-AGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEA
-AAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABp
-AG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUA
-LgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAAOAAAAGgAaQBt
-AGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEA
-AAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQA
-AAIBCzABAAAAEAAAAE6Dt3nc3U9KqbUEP+y3gQMDABcAAQAAAEAAOQCAY9Lnb53QAUAACDBowf7n
-b53QAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMA
-AAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAugAAAFIAZQA6ACAAWwBQ
-AEEAVABDAEgAIAAwAC8AMQAwAF0AIABxAGwAYQAyAHgAeAB4ADoAIABGAGkAeAAgAHYAYQByAGkA
-bwB1AHMAIAB3AGEAcgBuAGkAbgBnAHMAIAByAGUAcABvAHIAdABlAGQAIABiAHkAIABzAHQAYQB0
-AGkAYwAgAHMAbwB1AHIAYwBlACAAYwBvAGQAZQAgAGEAbgBhAGwAeQBzAGkAcwAgAHQAbwBvAGwA
-cwAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAD4AAAA8ADUANABF
-AEEARQA5AEEAMAAuADMAMAA5ADAAMgAwADUAQABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAAA
-AgFxAAEAAAAlAAAAAQHQOhQYLufUMHSSzESf1nGkTPfdCZzdWgyAgCFDNQCAm85gAAAAAB8AcAAB
-AAAAsgAAAFsAUABBAFQAQwBIACAAMAAvADEAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAARgBpAHgA
-IAB2AGEAcgBpAG8AdQBzACAAdwBhAHIAbgBpAG4AZwBzACAAcgBlAHAAbwByAHQAZQBkACAAYgB5
-ACAAcwB0AGEAdABpAGMAIABzAG8AdQByAGMAZQAgAGMAbwBkAGUAIABhAG4AYQBsAHkAcwBpAHMA
-IAB0AG8AbwBsAHMAAAAAAB8ANRABAAAAWgAAADwARAAxADkAMwA1AEEAQQBGAC4AOABGAEYAMQAy
-ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-PgAAAAAAHwA5EAEAAAD0AAAAPAA1ADQAQwA3ADUAQQBGADgALgA5ADAAMQAwADIAQABzAGEAbgBk
-AGkAcwBrAC4AYwBvAG0APgAgADwARgA1AEQAMAA4ADQARAA2ADMANAAyAEYAOQBCADQANwA5AEMA
-MwA0ADUAOQA5AEIAQgAwAEEAMAAzAEUANABEADAAMQAyADgANQA4AEIAMwA4AEMAQABBAFYATQBC
-ADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADUANABFAEEARQA5AEEAMAAuADMAMAA5ADAA
-MgAwADUAQABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMOg79edvndABAwAm
-AAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDYwMjIwMDgzNVot
-MTQxOTYAAAAfABUQAQAAAFgAAAA2ADkAMgAzADEAQgAzADQANQBBADEAOABBAEUANAA1ADkANwA2
-ADEANgBCAEYANgBFAEYARgA1ADEAOQBDADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEA
-AAAMAAAAVgAAAN86xGBPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABh
-AG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQA
-AAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0
-AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMA
-bwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAA
-AA4BAABJAEkAPQAwADEAMAAxAEQAMAA5AEQANgBGAEUANwBBADcAOQA2ADYAQwA1AEQAQQAxAEUA
-OAAxADgANAAxAEIAOQA2AEMANQBBADMAQgA3AEUANgA3AEIAOABFADAAOwBTAEIATQBJAEQAPQA4
-ADsAUwAxAD0APAA1ADQARQBBAEUAOQBBADAALgAzADAAOQAwADIAMAA1AEAAcwBhAG4AZABpAHMA
-awAuAGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAo
-AEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBo
-AAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkA
-bgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAcAAAAWwAxADAALgAyADkALgAyAC4AMQA0ADYAXQAA
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAA
-DgAAAGIAeQBwAGEAcwBzAAAAAABgHg==
-
---_000_D1935AAF8FF12himanshumadhaniqlogiccom_--
+Rajat
