@@ -1,61 +1,102 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] advansys: fix compilation errors and warnings when CONFIG_PCI is not set
-Date: Wed,  3 Jun 2015 09:56:42 +0200
-Message-ID: <1433318202-1455-1-git-send-email-jthumshirn@suse.de>
-References: <CA+r1ZhgMztLi-9E6cV=W1xJkMYG_rTtaJFj4Bv0TFPHmjSU+oQ@mail.gmail.com>
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <CA+r1ZhgMztLi-9E6cV=W1xJkMYG_rTtaJFj4Bv0TFPHmjSU+oQ@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Jim Davis <jim.epost@gmail.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Hannes Reinecke <hare@suse.de>, JBottomley@odin.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: bisected regression: qla2xxx endianness on sparc64
+Date: Wed, 3 Jun 2015 11:20:35 +0300 (EEST)
+Message-ID: <alpine.LRH.2.11.1506031116120.16353@math.ut.ee>
+References: <alpine.DEB.2.03.1411022004230.3979@cyber.ee> <alpine.OSX.2.00.1411031508560.1960@administrators-macbook-pro.local> <20141110141519.GA12347@infradead.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.it.da.ut.ee ([193.40.5.66]:56550 "EHLO smtp1.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752910AbbFCIRm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Jun 2015 04:17:42 -0400
+In-Reply-To: <20141110141519.GA12347@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 
-Fix compilation errors on forgotten #include <linux/dmapool.h> and warnings when
-CONFIG_PCI is not set.
+On Mon, 10 Nov 2014, Christoph Hellwig wrote:
 
-Reported-by: Jim Davis <jim.epost@gmail.com>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/advansys.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> On Mon, Nov 03, 2014 at 03:09:47PM -0500, Chad Dupuis wrote:
+> > We should revert that change. What were some of the other failures you were
+> > seeing?
+> 
+> Can you please send me the revert ASAP?
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 14d3aa5..4305178 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -37,6 +37,7 @@
- #include <linux/spinlock.h>
- #include <linux/dma-mapping.h>
- #include <linux/firmware.h>
-+#include <linux/dmapool.h>
+Since QLogic is still silent on this one, I will send it to you:
+
+Revert change that breaks QLA2XXX on big-endian systems, 
+__constant_cpu_to_le16() is still needed.
+
+Signed-off-by: Meelis Roos <mroos@linux.ee>
+
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 42bb357..88d3143 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -91,7 +91,7 @@ struct nvram_24xx {
+ 	/* Firmware Initialization Control Block. */
+ 	uint16_t version;
+ 	uint16_t reserved_1;
+-	__le16 frame_payload_size;
++	uint16_t frame_payload_size;
+ 	uint16_t execution_throttle;
+ 	uint16_t exchange_count;
+ 	uint16_t hard_address;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 285cb20..ed973a1 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2658,18 +2658,18 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 			nv->firmware_options[1] = BIT_7 | BIT_5;
+ 			nv->add_firmware_options[0] = BIT_5;
+ 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = 2048;
++			nv->frame_payload_size = __constant_cpu_to_le16(2048);
+ 			nv->special_options[1] = BIT_7;
+ 		} else if (IS_QLA2200(ha)) {
+ 			nv->firmware_options[0] = BIT_2 | BIT_1;
+ 			nv->firmware_options[1] = BIT_7 | BIT_5;
+ 			nv->add_firmware_options[0] = BIT_5;
+ 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = 1024;
++			nv->frame_payload_size = __constant_cpu_to_le16(1024);
+ 		} else if (IS_QLA2100(ha)) {
+ 			nv->firmware_options[0] = BIT_3 | BIT_1;
+ 			nv->firmware_options[1] = BIT_5;
+-			nv->frame_payload_size = 1024;
++			nv->frame_payload_size = __constant_cpu_to_le16(1024);
+ 		}
  
- #include <asm/io.h>
- #include <asm/dma.h>
-@@ -9435,6 +9436,7 @@ static int AscInitSetConfig(struct pci_dev *pdev, struct Scsi_Host *shost)
-  * on big-endian platforms so char fields read as words are actually being
-  * unswapped on big-endian platforms.
-  */
-+#ifdef CONFIG_PCI
- static ADVEEP_3550_CONFIG Default_3550_EEPROM_Config = {
- 	ADV_EEPROM_BIOS_ENABLE,	/* cfg_lsw */
- 	0x0000,			/* cfg_msw */
-@@ -9771,7 +9773,6 @@ static ADVEEP_38C1600_CONFIG ADVEEP_38C1600_Config_Field_IsChar = {
- 	0			/* 63 reserved */
- };
- 
--#ifdef CONFIG_PCI
- /*
-  * Wait for EEPROM command to complete
-  */
-@@ -11385,7 +11386,9 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
-  err_unmap:
- 	if (boardp->ioremap_addr)
- 		iounmap(boardp->ioremap_addr);
-+#ifdef CONFIG_PCI
-  err_shost:
-+#endif
- 	return ret;
- }
- 
+ 		nv->max_iocb_allocation = __constant_cpu_to_le16(256);
+@@ -2705,7 +2705,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 	 * are valid.
+ 	 */
+ 	if (ia64_platform_is("sn2")) {
+-		nv->frame_payload_size = 2048;
++		nv->frame_payload_size = __constant_cpu_to_le16(2048);
+ 		if (IS_QLA23XX(ha))
+ 			nv->special_options[1] = BIT_7;
+ 	}
+@@ -5022,7 +5022,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
+ 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = 2048;
++		nv->frame_payload_size = __constant_cpu_to_le16(2048);
+ 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = __constant_cpu_to_le16(0);
+ 		nv->hard_address = __constant_cpu_to_le16(124);
+@@ -5969,7 +5969,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
+ 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = 2048;
++		nv->frame_payload_size = __constant_cpu_to_le16(2048);
+ 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = __constant_cpu_to_le16(0);
+ 		nv->port_name[0] = 0x21;
+
 -- 
-1.8.5.2
+Meelis Roos (mroos@linux.ee)
