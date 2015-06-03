@@ -1,171 +1,61 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 0/10] qla2xxx: Fix various warnings reported by static
- source code analysis tools
-Date: Wed, 3 Jun 2015 05:45:42 +0000
-Message-ID: <D193D19F.9003C%himanshu.madhani@qlogic.com>
-References: <54C75AF8.90102@sandisk.com>
- <F5D084D6342F9B479C34599BB0A03E4D012858B38C@AVMB1.qlogic.org>
- <54EAE9A0.3090205@sandisk.com> <D1935AAF.8FF12%himanshu.madhani@qlogic.com>
- <556E31CD.5020407@sandisk.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D193D19F9003Chimanshumadhaniqlogiccom_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14343 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751945AbbFCFpo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2015 01:45:44 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t535iICA012668
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Jun 2015 22:45:44 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1upbappdxu-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2015 22:45:43 -0700
-In-Reply-To: <556E31CD.5020407@sandisk.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] advansys: fix compilation errors and warnings when CONFIG_PCI is not set
+Date: Wed,  3 Jun 2015 09:56:42 +0200
+Message-ID: <1433318202-1455-1-git-send-email-jthumshirn@suse.de>
+References: <CA+r1ZhgMztLi-9E6cV=W1xJkMYG_rTtaJFj4Bv0TFPHmjSU+oQ@mail.gmail.com>
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <CA+r1ZhgMztLi-9E6cV=W1xJkMYG_rTtaJFj4Bv0TFPHmjSU+oQ@mail.gmail.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Jim Davis <jim.epost@gmail.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Hannes Reinecke <hare@suse.de>, JBottomley@odin.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_D193D19F9003Chimanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <DD6C709C287F4441A61125313F16E2EC@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Fix compilation errors on forgotten #include <linux/dmapool.h> and warnings when
+CONFIG_PCI is not set.
 
+Reported-by: Jim Davis <jim.epost@gmail.com>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/advansys.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-On 6/2/15, 3:44 PM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
-
->On 06/02/2015 01:09 PM, Himanshu Madhani wrote:
->> On 2/23/15, 12:49 AM, "Bart Van Assche" <bart.vanassche@sandisk.com>
->>wrote:
->>> On 02/02/15 05:52, Saurav Kashyap wrote:
->>>> Thanks for the patches. We will run regression with these changes and
->>>> ack
->>>> if everything goes through fine.
->>>
->>> Hello Saurav,
->>>
->>> That sounds great. Are there perhaps already any results available from
->>> the regression tests ?
->>
->> Hello Bart,
->>
->> Replying to correct email thread. We have concluded our regression
->>cycle.
->> The series looks good.
->>
->> Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
->
->Hello Himanshu,
->
->Thank you for the feedback. Since other qla2xxx driver patches have been
->accepted upstream after my patch series had been posted I think the
->patches should be reposted. Would you prefer to do that or do you
->perhaps prefer that I repost that series ?
->
->Bart.
-
-Hello Bart,=20
-
-Please repost that Series.
-
-Thanks,
-Himanshu
->
-
-
---_000_D193D19F9003Chimanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Ivh4AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADJGQzUwMkQw
-NDhGQjNCNEU4REJCNkIyQkRDN0VERDg3AI4HAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBgADAAUA
-LQAqAAMATgEBIIADAA4AAADfBwYAAwAFAC0AKgADAE4BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAF0AAABSZTogW1BBVENIIDAvMTBdIHFsYTJ4eHg6IEZpeCB2YXJpb3Vz
-IHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHN0YXRpYyBzb3VyY2UgY29kZSBhbmFseXNpcyB0b29scwCt
-IAEDkAYAlBEAADQAAAACAX8AAQAAAC0AAAA8RDE5M0QxOUYuOTAwM0MlaGltYW5zaHUubWFkaGFu
-aUBxbG9naWMuY29tPgAAAAALAB8OAQAAAAIBCRABAAAAvwMAALsDAABZBgAATFpGdZdhGq9hAApm
-YmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQC
-gJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBd
-BlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdw
-MApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/JabAuAZQqBIaRPA6A2AC8yLzE1LCAzQDo0
-NCBQTSMAImpCH4JWA5FBBBARwGWQIiA8Yh+BLnYAcDJhJGNAcwBwDeFrLmEFoG0+IHcDYBAgOtUh
-nD4icTAioDAiwAHQQyLgKBAxOjA5I2NIkwdwAHFodQXQYWQZobppJpw+JoAicShhMyLT9w6QIzAp
-EEEjjySfJa0q558qjStjKFEoUSiiNToOsIcjAAYQCHBhdiBLLpCwaHlhcCp+K1FUGaFXH1AccAWx
-dC3AIAqwdGEtsXMuIFcZ4APwbHkDIHJ1A6AJcAnBBBBp/wIgNkE1UDVCEgAb0BmjBCA3JeEz6gDQ
-azPqBpAgZQ0aMXk1UAuAZyBnb6cHkTVQA2B1ZzfAZiGxpi4wuDC5SGU2cG8yhb4sPK80ZQVAGSA2
-sGQEIH8JwRiANgAHEBngNVFBUXArBJAR0HA4oWxA4WR5xzixQsA3EXVsdDihLmD/AxABoB5wHHMw
-uTVSNukQIPsfYAQgPyrnKug99CzyPrjpKuhSZQtQeTtCGJAb0epyCXBjBUBlAMADETvR30KRNgMR
-0BowG9JjCkABAM8cYAhhNtkq52N5THA8ib80kRngEgAIgQQgCQBvNOFvO4AEcDyYKuhBOcAJgC14
-Ynk6KW8t8DswKZQu0wDAKiNAcQkAZw5QL3s/J3Y99FKGPrcndjSjIHnrCGA1B2YJ4GQuEDnANgC6
-UwuAYxngJsBBkSBUsMhhMnhbECBkBRAaMfs1hkvkYgnhJ3YA0FpABTC1HFF1QjB0QOEcsGEBgP0b
-sW1CwDWTT4YR0BxgXJL3NYAZEBxCSTVBC4BYkDVR7yd2W8YpwAhgbF/yNtFgZPc2AWKjWLJwCXBZ
-cDUxPjD+ZD4wNVBAMQWxZQFYsWGH/0H1ZGZAImDQYyRlJE+VRod/J3Ys8jyWIZVHyQMwIatQ/x5w
-LpBjBmUkBmI14SGcNKQ/PrZShlVtIZUVQnKAAB8AQgABAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAg
-AE0AYQBkAGgAYQBuAGkAAAAAAB8AZQABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
-YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFB
-AAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQA
-aABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
-YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAABAAAAAcwBpAHAAOgBoAGkAbQBh
-AG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAA
-IgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AHwwBAAAAOAAAAGgAaQBt
-AGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEA
-AAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABp
-AG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUA
-LgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOAAAAGgAaQBt
-AGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEA
-AAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAjQAEAAAA4AAAAaABp
-AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJA
-AQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBI
-AGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgA
-dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA4AAAAaABp
-AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6
-AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/k
-BAAAAgELMAEAAAAQAAAAL8UC0Ej7O06Nu2sr3H7dhwMAFwABAAAAQAA5AABHH4fAndABQAAIMJ2G
-bIfAndABCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAA
-RgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUA
-UwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAC6AAAAUgBlADoAIABb
-AFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEYAaQB4ACAAdgBhAHIA
-aQBvAHUAcwAgAHcAYQByAG4AaQBuAGcAcwAgAHIAZQBwAG8AcgB0AGUAZAAgAGIAeQAgAHMAdABh
-AHQAaQBjACAAcwBvAHUAcgBjAGUAIABjAG8AZABlACAAYQBuAGEAbAB5AHMAaQBzACAAdABvAG8A
-bABzAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAPgAAADwANQA1
-ADYARQAzADEAQwBEAC4ANQAwADIAMAA0ADAANwBAAHMAYQBuAGQAaQBzAGsALgBjAG8AbQA+AAAA
-AAACAXEAAQAAAC8AAAABAdA6FBgu59QwdJLMRJ/WcaRM990JnN1aDICAIUM1AICbzmAAgACg7oCA
-AABTgAAfAHAAAQAAALIAAABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgA
-OgAgAEYAaQB4ACAAdgBhAHIAaQBvAHUAcwAgAHcAYQByAG4AaQBuAGcAcwAgAHIAZQBwAG8AcgB0
-AGUAZAAgAGIAeQAgAHMAdABhAHQAaQBjACAAcwBvAHUAcgBjAGUAIABjAG8AZABlACAAYQBuAGEA
-bAB5AHMAaQBzACAAdABvAG8AbABzAAAAAAAfADUQAQAAAFoAAAA8AEQAMQA5ADMARAAxADkARgAu
-ADkAMAAwADMAQwAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAD4AAAAAAB8AORABAAAAjAEAADwANQA0AEMANwA1AEEARgA4AC4AOQAwADEAMAAy
-AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AIAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkA
-QgA0ADcAOQBDADMANAA1ADkAOQBCAEIAMABBADAAMwBFADQARAAwADEAMgA4ADUAOABCADMAOABD
-AEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBvAHIAZwA+ACAAPAA1ADQARQBBAEUAOQBBADAA
-LgAzADAAOQAwADIAMAA1AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AIAA8AEQAMQA5ADMANQBB
-AEEARgAuADgARgBGADEAMgAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAD4AIAA8ADUANQA2AEUAMwAxAEMARAAuADUAMAAyADAANAAwADcAQABz
-AGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMH1iZYfAndABAwAmAAAAAAACAUcA
-AQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDYwMzA1NDU0MlotMTQ1MjAAAAAf
-ABUQAQAAAFgAAABEAEQANgBDADcAMAA5AEMAMgA4ADcARgA0ADQANAAxAEEANgAxADEAMgA1ADMA
-MQAzAEYAMQA2AEUAMgBFAEMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAhgAA
-AFjHkvtPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABG
-AAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADkA
-LgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQBy
-AHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAA4BAABJAEkA
-PQAwADEAMAAxAEQAMAA5AEQAQwAwADgANwAxAEEAQwBFADUAQgA3ADQARQAwADkANQBCAEMANABE
-ADkANQBBAEQARgA1ADcAMQBEADYAQQBEADQARgA3AEEAOwBTAEIATQBJAEQAPQAyADsAUwAxAD0A
-PAA1ADUANgBFADMAMQBDAEQALgA1ADAAMgAwADQAMAA3AEAAcwBhAG4AZABpAHMAawAuAGMAbwBt
-AD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwA
-ZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAA
-AAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIA
-AAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBu
-AGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBz
-AHMAAAAAAD5q
-
---_000_D193D19F9003Chimanshumadhaniqlogiccom_--
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 14d3aa5..4305178 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -37,6 +37,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/firmware.h>
++#include <linux/dmapool.h>
+ 
+ #include <asm/io.h>
+ #include <asm/dma.h>
+@@ -9435,6 +9436,7 @@ static int AscInitSetConfig(struct pci_dev *pdev, struct Scsi_Host *shost)
+  * on big-endian platforms so char fields read as words are actually being
+  * unswapped on big-endian platforms.
+  */
++#ifdef CONFIG_PCI
+ static ADVEEP_3550_CONFIG Default_3550_EEPROM_Config = {
+ 	ADV_EEPROM_BIOS_ENABLE,	/* cfg_lsw */
+ 	0x0000,			/* cfg_msw */
+@@ -9771,7 +9773,6 @@ static ADVEEP_38C1600_CONFIG ADVEEP_38C1600_Config_Field_IsChar = {
+ 	0			/* 63 reserved */
+ };
+ 
+-#ifdef CONFIG_PCI
+ /*
+  * Wait for EEPROM command to complete
+  */
+@@ -11385,7 +11386,9 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
+  err_unmap:
+ 	if (boardp->ioremap_addr)
+ 		iounmap(boardp->ioremap_addr);
++#ifdef CONFIG_PCI
+  err_shost:
++#endif
+ 	return ret;
+ }
+ 
+-- 
+1.8.5.2
