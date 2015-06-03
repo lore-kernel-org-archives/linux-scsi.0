@@ -1,138 +1,70 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC 0/2] target: Add TFO->complete_irq queue_work bypass
-Date: Wed, 3 Jun 2015 14:57:56 +0200
-Message-ID: <20150603125756.GA19696@lst.de>
-References: <1432281446-31080-1-git-send-email-nab@daterainc.com>
+From: James Bottomley <jbottomley@odin.com>
+Subject: Re: Patch "sd: Disable support for 256 byte/sector disks" has been
+ added to the 4.0-stable tree
+Date: Wed, 3 Jun 2015 13:37:03 +0000
+Message-ID: <1433338620.2251.57.camel@Odin.com>
+References: <14333133244847@kroah.com> <556EC8F4.7030507@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1432281446-31080-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <556EC8F4.7030507@suse.cz>
+Content-Language: en-US
+Content-ID: <4E8880A1D044AC4B89FD9DADFF4AF1E2@sw.swsoft.com>
+Sender: stable-owner@vger.kernel.org
+To: "jslaby@suse.cz" <jslaby@suse.cz>
+Cc: "geert@linux-m68k.org" <geert@linux-m68k.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dmarkh@cfl.rr.com" <dmarkh@cfl.rr.com>, "hare@suse.de" <hare@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "stable-commits@vger.kernel.org" <stable-commits@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This makes lockdep very unhappy, rightly so.  If you execute
-one end_io function inside another you bas=D1=96cally nest every possib=
-le
-lock taken in the I/O completion path.  Also adding more work
-to the hardirq path generally isn't a smart idea.  Can you explain
-what issues you were seeing and how much this helps?  Note that
-the workqueue usage in the target core so far is fairly basic, so
-there should some low hanging fruit.
-
-[   21.119148]=20
-[   21.119382] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D
-[   21.120012] [ INFO: possible recursive locking detected ]
-[   21.120639] 4.1.0-rc1+ #489 Not tainted
-[   21.121131] ---------------------------------------------
-[   21.121754] swapper/0/0 is trying to acquire lock:
-[   21.122324]  (&(&fq->mq_flush_lock)->rlock){-.....}, at: [<ffffffff8=
-17b0256>] flush_end_io+0x66/0x220
-[   21.122451]=20
-[   21.122451] but task is already holding lock:
-[   21.122451]  (&(&fq->mq_flush_lock)->rlock){-.....}, at: [<ffffffff8=
-17b0256>] flush_end_io+0x66/0x220
-[   21.122451]=20
-[   21.122451] other info that might help us debug this:
-[   21.122451]  Possible unsafe locking scenario:
-[   21.122451]=20
-[   21.122451]        CPU0
-[   21.122451]        ----
-[   21.122451]   lock(&(&fq->mq_flush_lock)->rlock);
-[   21.122451]   lock(&(&fq->mq_flush_lock)->rlock);
-[   21.122451]=20
-[   21.122451]  *** DEADLOCK ***
-[   21.122451]=20
-[   21.122451]  May be due to missing lock nesting notation
-[   21.122451]=20
-[   21.122451] 3 locks held by swapper/0/0:
-[   21.122451]  #0:  (&(&vp_dev->lock)->rlock){-.-...}, at: [<ffffffff8=
-187c87c>] vp_vring_interrupt+0x2c/0x90
-[   21.122451]  #1:  (&(&virtscsi_vq->vq_lock)->rlock){-.-...}, at: [<f=
-fffffff81ad2796>] virtscsi_vq_done+0x26/0x90
-[   21.122451]  #2:  (&(&fq->mq_flush_lock)->rlock){-.....}, at: [<ffff=
-ffff817b0256>] flush_end_io+0x66/0x220
-[   21.122451]=20
-[   21.122451] stack backtrace:
-[   21.122451] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.1.0-rc1+ #48=
-9
-[   21.122451] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
-[   21.122451]  ffffffff82c34820 ffff88007fc03618 ffffffff81e3396f 0000=
-000000000000
-[   21.122451]  ffffffff82445500 ffff88007fc036c8 ffffffff811209a9 ffff=
-88007fc17d18
-[   21.122451]  0000000000000000 0000000000000000 ffffffff82c34820 ffff=
-88007fc17d18
-[   21.122451] Call Trace:
-[   21.122451]  <IRQ>  [<ffffffff81e3396f>] dump_stack+0x45/0x57
-[   21.122451]  [<ffffffff811209a9>] validate_chain.isra.37+0xd39/0x116=
-0
-[   21.122451]  [<ffffffff811219b8>] __lock_acquire+0x488/0xd40
-[   21.122451]  [<ffffffff810f6b28>] ? __kernel_text_address+0x58/0x80
-[   21.122451]  [<ffffffff8112285f>] lock_acquire+0xaf/0x130
-[   21.122451]  [<ffffffff817b0256>] ? flush_end_io+0x66/0x220
-[   21.122451]  [<ffffffff81e3d859>] _raw_spin_lock_irqsave+0x49/0x60
-[   21.122451]  [<ffffffff817b0256>] ? flush_end_io+0x66/0x220
-[   21.122451]  [<ffffffff817b0256>] flush_end_io+0x66/0x220
-[   21.122451]  [<ffffffff817b5d0f>] __blk_mq_end_request+0x2f/0x70
-[   21.122451]  [<ffffffff81a088ad>] scsi_end_request+0x7d/0x1e0
-[   21.122451]  [<ffffffff81a0a3e0>] scsi_io_completion+0x110/0x610
-[   21.122451]  [<ffffffff811219b8>] ? __lock_acquire+0x488/0xd40
-[   21.122451]  [<ffffffff81a00e5b>] scsi_finish_command+0xdb/0x140
-[   21.122451]  [<ffffffff81a09b66>] scsi_softirq_done+0x136/0x150
-[   21.122451]  [<ffffffff817b7f6e>] __blk_mq_complete_request+0x8e/0x1=
-30
-[   21.122451]  [<ffffffff817b8039>] blk_mq_complete_request+0x29/0x30
-[   21.122451]  [<ffffffff81a078d8>] scsi_mq_done+0x28/0x60
-[   21.122451]  [<ffffffff81b43fbb>] tcm_loop_queue_status+0x3b/0xb0
-[   21.122451]  [<ffffffff81b318da>] target_complete_irq+0x8a/0x250
-[   21.122451]  [<ffffffff81b335ea>] target_complete_cmd+0x1fa/0x2a0
-[   21.122451]  [<ffffffff81b3f6da>] iblock_end_io_flush+0x2a/0x60
-[   21.122451]  [<ffffffff817a3a93>] bio_endio+0x53/0x90
-[   21.122451]  [<ffffffff817acd58>] blk_update_request+0x98/0x360
-[   21.122451]  [<ffffffff817b752e>] blk_mq_end_request+0x1e/0x80
-[   21.122451]  [<ffffffff817affb4>] blk_flush_complete_seq+0xe4/0x320
-[   21.122451]  [<ffffffff817b0328>] flush_end_io+0x138/0x220
-[   21.122451]  [<ffffffff817b5d0f>] __blk_mq_end_request+0x2f/0x70
-[   21.122451]  [<ffffffff81a088ad>] scsi_end_request+0x7d/0x1e0
-[   21.122451]  [<ffffffff81a0a3e0>] scsi_io_completion+0x110/0x610
-[   21.122451]  [<ffffffff8111dcdd>] ? trace_hardirqs_off+0xd/0x10
-[   21.122451]  [<ffffffff81a00e5b>] scsi_finish_command+0xdb/0x140
-[   21.122451]  [<ffffffff81a09b66>] scsi_softirq_done+0x136/0x150
-[   21.122451]  [<ffffffff817b7f6e>] __blk_mq_complete_request+0x8e/0x1=
-30
-[   21.122451]  [<ffffffff817b8039>] blk_mq_complete_request+0x29/0x30
-[   21.122451]  [<ffffffff81a078d8>] scsi_mq_done+0x28/0x60
-[   21.122451]  [<ffffffff81ad29af>] virtscsi_complete_cmd+0x10f/0x1e0
-[   21.122451]  [<ffffffff81ad28a0>] ? virtscsi_ctrl_done+0x30/0x30
-[   21.122451]  [<ffffffff81ad27b9>] virtscsi_vq_done+0x49/0x90
-[   21.122451]  [<ffffffff81ad2839>] virtscsi_req_done+0x39/0x40
-[   21.122451]  [<ffffffff8187a470>] vring_interrupt+0x30/0x60
-[   21.122451]  [<ffffffff8187c8ab>] vp_vring_interrupt+0x5b/0x90
-[   21.122451]  [<ffffffff811348a0>] handle_irq_event_percpu+0x60/0x1d0
-[   21.122451]  [<ffffffff81134a53>] handle_irq_event+0x43/0x70
-[   21.122451]  [<ffffffff811376d6>] handle_edge_irq+0x96/0x110
-[   21.122451]  [<ffffffff81063fe8>] handle_irq+0x58/0x130
-[   21.122451]  [<ffffffff810f96a1>] ? atomic_notifier_call_chain+0x11/=
-0x20
-[   21.122451]  [<ffffffff810638d7>] do_IRQ+0x57/0x100
-[   21.122451]  [<ffffffff81e3eeb3>] common_interrupt+0x73/0x73
-[   21.122451]  <EOI>  [<ffffffff810a3726>] ? native_safe_halt+0x6/0x10
-[   21.122451]  [<ffffffff811233fd>] ? trace_hardirqs_on+0xd/0x10
-[   21.122451]  [<ffffffff8106c8ae>] default_idle+0x1e/0xc0
-[   21.122451]  [<ffffffff8106d26a>] arch_cpu_idle+0xa/0x10
-[   21.122451]  [<ffffffff81118073>] cpu_startup_entry+0x383/0x430
-[   21.122451]  [<ffffffff81e29788>] rest_init+0x128/0x130
-[   21.122451]  [<ffffffff81e29660>] ? csum_partial_copy_generic+0x170/=
-0x170
-[   21.122451]  [<ffffffff825d21a6>] start_kernel+0x54a/0x557
-[   21.122451]  [<ffffffff825d1a49>] ? set_init_arg+0x58/0x58
-[   21.122451]  [<ffffffff825d1117>] ? early_idt_handlers+0x117/0x120
-[   21.122451]  [<ffffffff825d15f0>] x86_64_start_reservations+0x2a/0x2=
-c
-[   21.122451]  [<ffffffff825d1730>] x86_64_start_kernel+0x13e/0x14d
+T24gV2VkLCAyMDE1LTA2LTAzIGF0IDExOjI5ICswMjAwLCBKaXJpIFNsYWJ5IHdyb3RlOg0KPiBP
+biAwNi8wMy8yMDE1LCAwODozNSBBTSwgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmcgd3JvdGU6
+DQo+ID4gRnJvbSA3NDg1NmZiZjQ0MTkyOTkxOGM0OWZmMjYyYWNlOTgzNTA0OGU0ZTZhIE1vbiBT
+ZXAgMTcgMDA6MDA6MDAgMjAwMQ0KPiA+IEZyb206IE1hcmsgSG91bnNjaGVsbCA8ZG1hcmtoQGNm
+bC5yci5jb20+DQo+ID4gRGF0ZTogV2VkLCAxMyBNYXkgMjAxNSAxMDo0OTowOSArMDIwMA0KPiA+
+IFN1YmplY3Q6IHNkOiBEaXNhYmxlIHN1cHBvcnQgZm9yIDI1NiBieXRlL3NlY3RvciBkaXNrcw0K
+PiA+IA0KPiA+IEZyb206IE1hcmsgSG91bnNjaGVsbCA8ZG1hcmtoQGNmbC5yci5jb20+DQo+ID4g
+DQo+ID4gY29tbWl0IDc0ODU2ZmJmNDQxOTI5OTE4YzQ5ZmYyNjJhY2U5ODM1MDQ4ZTRlNmEgdXBz
+dHJlYW0uDQo+ID4gDQo+ID4gMjU2IGJ5dGVzIHBlciBzZWN0b3Igc3VwcG9ydCBoYXMgYmVlbiBi
+cm9rZW4gc2luY2UgMi42LlgsDQo+ID4gYW5kIG5vLW9uZSBzdGVwcGVkIHVwIHRvIGZpeCB0aGlz
+Lg0KPiA+IFNvIGRpc2FibGUgc3VwcG9ydCBmb3IgaXQuDQo+ID4gDQo+ID4gU2lnbmVkLW9mZi1i
+eTogTWFyayBIb3Vuc2NoZWxsIDxkbWFya2hAY2ZsLnJyLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBKYW1l
+cyBCb3R0b21sZXkgPEpCb3R0b21sZXlAT2Rpbi5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogR3Jl
+ZyBLcm9haC1IYXJ0bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz4NCj4gPiANCj4gPiAt
+LS0NCj4gPiAgZHJpdmVycy9zY3NpL3NkLmMgfCAgIDE5ICsrKysrLS0tLS0tLS0tLS0tLS0NCj4g
+PiAgMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMTQgZGVsZXRpb25zKC0pDQo+ID4g
+DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3NkLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc2Qu
+Yw0KPiA+IEBAIC0xNjI0LDYgKzE2MjQsNyBAQCBzdGF0aWMgdW5zaWduZWQgaW50IHNkX2NvbXBs
+ZXRlZF9ieXRlcyhzDQo+ID4gIHsNCj4gPiAgCXU2NCBzdGFydF9sYmEgPSBibGtfcnFfcG9zKHNj
+bWQtPnJlcXVlc3QpOw0KPiA+ICAJdTY0IGVuZF9sYmEgPSBibGtfcnFfcG9zKHNjbWQtPnJlcXVl
+c3QpICsgKHNjc2lfYnVmZmxlbihzY21kKSAvIDUxMik7DQo+ID4gKwl1NjQgZmFjdG9yID0gc2Nt
+ZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6ZSAvIDUxMjsNCj4gPiAgCXU2NCBiYWRfbGJhOw0KPiA+ICAJ
+aW50IGluZm9fdmFsaWQ7DQo+ID4gIAkvKg0KPiA+IEBAIC0xNjQ1LDE2ICsxNjQ2LDkgQEAgc3Rh
+dGljIHVuc2lnbmVkIGludCBzZF9jb21wbGV0ZWRfYnl0ZXMocw0KPiA+ICAJaWYgKHNjc2lfYnVm
+ZmxlbihzY21kKSA8PSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplKQ0KPiA+ICAJCXJldHVybiAw
+Ow0KPiA+ICANCj4gPiAtCWlmIChzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplIDwgNTEyKSB7DQo+
+ID4gLQkJLyogb25seSBsZWdpdGltYXRlIHNlY3Rvcl9zaXplIGhlcmUgaXMgMjU2ICovDQo+ID4g
+LQkJc3RhcnRfbGJhIDw8PSAxOw0KPiA+IC0JCWVuZF9sYmEgPDw9IDE7DQo+ID4gLQl9IGVsc2Ug
+ew0KPiA+IC0JCS8qIGJlIGNhcmVmdWwgLi4uIGRvbid0IHdhbnQgYW55IG92ZXJmbG93cyAqLw0K
+PiA+IC0JCXVuc2lnbmVkIGludCBmYWN0b3IgPSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplIC8g
+NTEyOw0KPiA+IC0JCWRvX2RpdihzdGFydF9sYmEsIGZhY3Rvcik7DQo+ID4gLQkJZG9fZGl2KGVu
+ZF9sYmEsIGZhY3Rvcik7DQo+ID4gLQl9DQo+IA0KPiBIbW0sIHlvdSBkbyAndW5zaWduZWQgaW50
+JyAtPiAndTY0JyBzd2l0Y2ggb2YgZmFjdG9yIHR5cGUgaGVyZS4gQnV0IHRoaXMNCj4gY29tbWl0
+Og0KPiBjb21taXQgZWY4MGQxZTE4YjAxNGFmMDg3NDFjZjY4OGUzZmRkYTFmYjcxMzYzZg0KPiBB
+dXRob3I6IEdlZXJ0IFV5dHRlcmhvZXZlbiA8Z2VlcnRAbGludXgtbTY4ay5vcmc+DQo+IERhdGU6
+ICAgTW9uIE5vdiA0IDEwOjIxOjA1IDIwMTMgKzAxMDANCj4gDQo+ICAgICBbU0NTSV0gc2Q6IERv
+IG5vdCBjYWxsIGRvX2RpdigpIHdpdGggYSA2NC1iaXQgZGl2aXNvcg0KPiANCj4gZGlkIHRoZSBz
+d2l0Y2ggaW4gdGhlIG9wcG9zaXRlIGRpcmVjdGlvbiBkZWxpYmVyYXRlbHkuDQo+IA0KPiBTbyB3
+aHkgZGlkIHlvdSBkbyB0aGUgY2hhbmdlLCBnaXZlbiBzZWN0b3Jfc2l6ZSBpcyB1aW50Pw0KDQpQ
+cmltYXJpbHkgYmVjYXVzZSBuby1vbmUgc3BvdHRlZCB0aGUgcmV2ZXJzYWwgYW5kIG5vbmUgb2Yg
+dGhlIHN0YXRpYw0KY2hlY2tlcnMgd2FybnMgYWJvdXQgaXQuDQoNClRoaXMgaXMgdGhlIHRyaXZp
+YWwgZml4LCBidXQgd2Ugc2hvdWxkIGRvIHNvbWV0aGluZyBhYm91dCB0aGUgY2hlY2tlcnMuDQoN
+CkphbWVzDQoNCi0tLQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJz
+L3Njc2kvc2QuYw0KaW5kZXggM2IyZmNiNC4uM2UxMzdkZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
+c2NzaS9zZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvc2QuYw0KQEAgLTE2MDAsNyArMTYwMCw3IEBA
+IHN0YXRpYyB1bnNpZ25lZCBpbnQgc2RfY29tcGxldGVkX2J5dGVzKHN0cnVjdCBzY3NpX2NtbmQg
+KnNjbWQpDQogew0KIAl1NjQgc3RhcnRfbGJhID0gYmxrX3JxX3BvcyhzY21kLT5yZXF1ZXN0KTsN
+CiAJdTY0IGVuZF9sYmEgPSBibGtfcnFfcG9zKHNjbWQtPnJlcXVlc3QpICsgKHNjc2lfYnVmZmxl
+bihzY21kKSAvIDUxMik7DQotCXU2NCBmYWN0b3IgPSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXpl
+IC8gNTEyOw0KKwl1bnNpZ25lZCBpbnQgZmFjdG9yID0gc2NtZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6
+ZSAvIDUxMjsNCiAJdTY0IGJhZF9sYmE7DQogCWludCBpbmZvX3ZhbGlkOw0KIAkvKg0KDQo=
