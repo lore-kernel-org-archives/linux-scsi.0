@@ -1,7 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH V2 6/7] scsi: storvsc: Allow write_same when host is windows 10
-Date: Wed,  3 Jun 2015 15:34:31 -0700
-Message-ID: <1433370872-3302-6-git-send-email-kys@microsoft.com>
+Subject: [PATCH V2 7/7] scsi: storvsc: Set the error code correctly in failure
+ conditions
+Date: Wed,  3 Jun 2015 15:34:32 -0700
+Message-ID: <1433370872-3302-7-git-send-email-kys@microsoft.com>
 References: <1433370839-3240-1-git-send-email-kys@microsoft.com>
  <1433370872-3302-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -19,43 +20,56 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
-Cc: Keith Mange <keith.mange@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Keith Mange <keith.mange@microsoft.com>
+In the function storvsc_channel_init(), error code was not getting
+set correctly in some of the failure cases. Fix this issue.
 
-Allow WRITE_SAME for Windows10 and above hosts.
-
-Tested-by: Alex Ng <alexng@microsoft.com>
-Signed-off-by: Keith Mange <keith.mange@microsoft.com>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/scsi/storvsc_drv.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/storvsc_drv.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 58fa47a..021cbdf 100644
+index 021cbdf..aac8297 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1488,7 +1488,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 
- 	/*
- 	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
--	 * if the device is a MSFT virtual device.
-+	 * if the device is a MSFT virtual device.  If the host is
-+	 * WIN10 or newer, allow write_same.
- 	 */
- 	if (!strncmp(sdevice->vendor, "Msft", 4)) {
- 		switch (vmstor_proto_version) {
-@@ -1497,6 +1498,9 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 			sdevice->scsi_level = SCSI_SPC_3;
- 			break;
- 		}
-+
-+		if (vmstor_proto_version >= VMSTOR_PROTO_VERSION_WIN10)
-+			sdevice->no_write_same = 0;
+@@ -960,8 +960,10 @@ static int storvsc_channel_init(struct hv_device *device)
  	}
  
- 	return 0;
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	    vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 
+ 	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
+@@ -1040,8 +1042,10 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	}
+ 
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	    vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 	/*
+ 	 * Check to see if multi-channel support is there.
+@@ -1078,8 +1082,10 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	}
+ 
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	    vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 	if (process_sub_channels)
+ 		handle_multichannel_storage(device, max_chns);
 -- 
 1.7.4.1
