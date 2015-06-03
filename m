@@ -1,52 +1,52 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH v2] mptsas: fix depth param in  scsi_track_queue_full
-Date: Wed,  3 Jun 2015 17:37:02 +0200
-Message-ID: <1433345822-14113-1-git-send-email-thenzl@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44075 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752992AbbFCPhF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Jun 2015 11:37:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] [trivial] scsi:fcoe: Fix typo "a ethernet" in fcoe_transport.c
+Date: Thu,  4 Jun 2015 00:54:34 +0900
+Message-ID: <1433346874-11261-1-git-send-email-standby24x7@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, trivial@kernel.org, vasu.dev@intel.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
+Cc: Masanari Iida <standby24x7@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sreekanth.reddy@avagotech.com
 
-v2: use debug log level to silence the unsurprising information
+This patch fix some "a ethernet" in MODULE_DESCRIPTIONS in
+fcoe_transport.c
 
-v1: A user of scsi_track_queue_full should pass to the function
-a constant value untill the queue-depth changes, otherwise the
-internal logic in scsi_track_queue_full rejects the change.
-Other users of this function use a 'sdev->queue_depth - 1'
-as depth parameter, let's do the same.
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- drivers/message/fusion/mptsas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_transport.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 551262e4b9..fe8f277567 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4096,7 +4096,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
- 					continue;
- 				}
- 				depth = scsi_track_queue_full(sdev,
--				    current_depth - 1);
-+					sdev->queue_depth - 1);
- 				if (depth > 0)
- 					sdev_printk(KERN_INFO, sdev,
- 					"Queue depth reduced to (%d)\n",
-@@ -4106,7 +4106,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
- 					"Tagged Command Queueing is being "
- 					"disabled\n");
- 				else if (depth == 0)
--					sdev_printk(KERN_INFO, sdev,
-+					sdev_printk(KERN_DEBUG, sdev,
- 					"Queue depth not changed yet\n");
- 			}
- 		}
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index bdc8989..d7597c0 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -58,7 +58,7 @@ MODULE_PARM_DESC(show, " Show attached FCoE transports");
+ module_param_call(create, fcoe_transport_create, NULL,
+ 		  (void *)FIP_MODE_FABRIC, S_IWUSR);
+ __MODULE_PARM_TYPE(create, "string");
+-MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
++MODULE_PARM_DESC(create, " Creates fcoe instance on an ethernet interface");
+ 
+ module_param_call(create_vn2vn, fcoe_transport_create, NULL,
+ 		  (void *)FIP_MODE_VN2VN, S_IWUSR);
+@@ -68,15 +68,15 @@ MODULE_PARM_DESC(create_vn2vn, " Creates a VN_node to VN_node FCoE instance "
+ 
+ module_param_call(destroy, fcoe_transport_destroy, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(destroy, "string");
+-MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet interface");
++MODULE_PARM_DESC(destroy, " Destroys fcoe instance on an ethernet interface");
+ 
+ module_param_call(enable, fcoe_transport_enable, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(enable, "string");
+-MODULE_PARM_DESC(enable, " Enables fcoe on a ethernet interface.");
++MODULE_PARM_DESC(enable, " Enables fcoe on an ethernet interface.");
+ 
+ module_param_call(disable, fcoe_transport_disable, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(disable, "string");
+-MODULE_PARM_DESC(disable, " Disables fcoe on a ethernet interface.");
++MODULE_PARM_DESC(disable, " Disables fcoe on an ethernet interface.");
+ 
+ /* notification function for packets from net device */
+ static struct notifier_block libfcoe_notifier = {
 -- 
-1.9.3
-
+2.4.2.387.gf86f31a
