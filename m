@@ -1,70 +1,101 @@
-From: James Bottomley <jbottomley@odin.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: Patch "sd: Disable support for 256 byte/sector disks" has been
  added to the 4.0-stable tree
-Date: Wed, 3 Jun 2015 13:37:03 +0000
-Message-ID: <1433338620.2251.57.camel@Odin.com>
+Date: Wed, 03 Jun 2015 06:54:29 -0700
+Message-ID: <1433339669.2251.61.camel@HansenPartnership.com>
 References: <14333133244847@kroah.com> <556EC8F4.7030507@suse.cz>
+	 <1433338620.2251.57.camel@Odin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <556EC8F4.7030507@suse.cz>
-Content-Language: en-US
-Content-ID: <4E8880A1D044AC4B89FD9DADFF4AF1E2@sw.swsoft.com>
-Sender: stable-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55215 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754414AbbFCNyb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2015 09:54:31 -0400
+In-Reply-To: <1433338620.2251.57.camel@Odin.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "jslaby@suse.cz" <jslaby@suse.cz>
 Cc: "geert@linux-m68k.org" <geert@linux-m68k.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dmarkh@cfl.rr.com" <dmarkh@cfl.rr.com>, "hare@suse.de" <hare@suse.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "stable-commits@vger.kernel.org" <stable-commits@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE1LTA2LTAzIGF0IDExOjI5ICswMjAwLCBKaXJpIFNsYWJ5IHdyb3RlOg0KPiBP
-biAwNi8wMy8yMDE1LCAwODozNSBBTSwgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmcgd3JvdGU6
-DQo+ID4gRnJvbSA3NDg1NmZiZjQ0MTkyOTkxOGM0OWZmMjYyYWNlOTgzNTA0OGU0ZTZhIE1vbiBT
-ZXAgMTcgMDA6MDA6MDAgMjAwMQ0KPiA+IEZyb206IE1hcmsgSG91bnNjaGVsbCA8ZG1hcmtoQGNm
-bC5yci5jb20+DQo+ID4gRGF0ZTogV2VkLCAxMyBNYXkgMjAxNSAxMDo0OTowOSArMDIwMA0KPiA+
-IFN1YmplY3Q6IHNkOiBEaXNhYmxlIHN1cHBvcnQgZm9yIDI1NiBieXRlL3NlY3RvciBkaXNrcw0K
-PiA+IA0KPiA+IEZyb206IE1hcmsgSG91bnNjaGVsbCA8ZG1hcmtoQGNmbC5yci5jb20+DQo+ID4g
-DQo+ID4gY29tbWl0IDc0ODU2ZmJmNDQxOTI5OTE4YzQ5ZmYyNjJhY2U5ODM1MDQ4ZTRlNmEgdXBz
-dHJlYW0uDQo+ID4gDQo+ID4gMjU2IGJ5dGVzIHBlciBzZWN0b3Igc3VwcG9ydCBoYXMgYmVlbiBi
-cm9rZW4gc2luY2UgMi42LlgsDQo+ID4gYW5kIG5vLW9uZSBzdGVwcGVkIHVwIHRvIGZpeCB0aGlz
-Lg0KPiA+IFNvIGRpc2FibGUgc3VwcG9ydCBmb3IgaXQuDQo+ID4gDQo+ID4gU2lnbmVkLW9mZi1i
-eTogTWFyayBIb3Vuc2NoZWxsIDxkbWFya2hAY2ZsLnJyLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBKYW1l
-cyBCb3R0b21sZXkgPEpCb3R0b21sZXlAT2Rpbi5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogR3Jl
-ZyBLcm9haC1IYXJ0bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz4NCj4gPiANCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9zY3NpL3NkLmMgfCAgIDE5ICsrKysrLS0tLS0tLS0tLS0tLS0NCj4g
-PiAgMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMTQgZGVsZXRpb25zKC0pDQo+ID4g
-DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3NkLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc2Qu
-Yw0KPiA+IEBAIC0xNjI0LDYgKzE2MjQsNyBAQCBzdGF0aWMgdW5zaWduZWQgaW50IHNkX2NvbXBs
-ZXRlZF9ieXRlcyhzDQo+ID4gIHsNCj4gPiAgCXU2NCBzdGFydF9sYmEgPSBibGtfcnFfcG9zKHNj
-bWQtPnJlcXVlc3QpOw0KPiA+ICAJdTY0IGVuZF9sYmEgPSBibGtfcnFfcG9zKHNjbWQtPnJlcXVl
-c3QpICsgKHNjc2lfYnVmZmxlbihzY21kKSAvIDUxMik7DQo+ID4gKwl1NjQgZmFjdG9yID0gc2Nt
-ZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6ZSAvIDUxMjsNCj4gPiAgCXU2NCBiYWRfbGJhOw0KPiA+ICAJ
-aW50IGluZm9fdmFsaWQ7DQo+ID4gIAkvKg0KPiA+IEBAIC0xNjQ1LDE2ICsxNjQ2LDkgQEAgc3Rh
-dGljIHVuc2lnbmVkIGludCBzZF9jb21wbGV0ZWRfYnl0ZXMocw0KPiA+ICAJaWYgKHNjc2lfYnVm
-ZmxlbihzY21kKSA8PSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplKQ0KPiA+ICAJCXJldHVybiAw
-Ow0KPiA+ICANCj4gPiAtCWlmIChzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplIDwgNTEyKSB7DQo+
-ID4gLQkJLyogb25seSBsZWdpdGltYXRlIHNlY3Rvcl9zaXplIGhlcmUgaXMgMjU2ICovDQo+ID4g
-LQkJc3RhcnRfbGJhIDw8PSAxOw0KPiA+IC0JCWVuZF9sYmEgPDw9IDE7DQo+ID4gLQl9IGVsc2Ug
-ew0KPiA+IC0JCS8qIGJlIGNhcmVmdWwgLi4uIGRvbid0IHdhbnQgYW55IG92ZXJmbG93cyAqLw0K
-PiA+IC0JCXVuc2lnbmVkIGludCBmYWN0b3IgPSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplIC8g
-NTEyOw0KPiA+IC0JCWRvX2RpdihzdGFydF9sYmEsIGZhY3Rvcik7DQo+ID4gLQkJZG9fZGl2KGVu
-ZF9sYmEsIGZhY3Rvcik7DQo+ID4gLQl9DQo+IA0KPiBIbW0sIHlvdSBkbyAndW5zaWduZWQgaW50
-JyAtPiAndTY0JyBzd2l0Y2ggb2YgZmFjdG9yIHR5cGUgaGVyZS4gQnV0IHRoaXMNCj4gY29tbWl0
-Og0KPiBjb21taXQgZWY4MGQxZTE4YjAxNGFmMDg3NDFjZjY4OGUzZmRkYTFmYjcxMzYzZg0KPiBB
-dXRob3I6IEdlZXJ0IFV5dHRlcmhvZXZlbiA8Z2VlcnRAbGludXgtbTY4ay5vcmc+DQo+IERhdGU6
-ICAgTW9uIE5vdiA0IDEwOjIxOjA1IDIwMTMgKzAxMDANCj4gDQo+ICAgICBbU0NTSV0gc2Q6IERv
-IG5vdCBjYWxsIGRvX2RpdigpIHdpdGggYSA2NC1iaXQgZGl2aXNvcg0KPiANCj4gZGlkIHRoZSBz
-d2l0Y2ggaW4gdGhlIG9wcG9zaXRlIGRpcmVjdGlvbiBkZWxpYmVyYXRlbHkuDQo+IA0KPiBTbyB3
-aHkgZGlkIHlvdSBkbyB0aGUgY2hhbmdlLCBnaXZlbiBzZWN0b3Jfc2l6ZSBpcyB1aW50Pw0KDQpQ
-cmltYXJpbHkgYmVjYXVzZSBuby1vbmUgc3BvdHRlZCB0aGUgcmV2ZXJzYWwgYW5kIG5vbmUgb2Yg
-dGhlIHN0YXRpYw0KY2hlY2tlcnMgd2FybnMgYWJvdXQgaXQuDQoNClRoaXMgaXMgdGhlIHRyaXZp
-YWwgZml4LCBidXQgd2Ugc2hvdWxkIGRvIHNvbWV0aGluZyBhYm91dCB0aGUgY2hlY2tlcnMuDQoN
-CkphbWVzDQoNCi0tLQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJz
-L3Njc2kvc2QuYw0KaW5kZXggM2IyZmNiNC4uM2UxMzdkZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-c2NzaS9zZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvc2QuYw0KQEAgLTE2MDAsNyArMTYwMCw3IEBA
-IHN0YXRpYyB1bnNpZ25lZCBpbnQgc2RfY29tcGxldGVkX2J5dGVzKHN0cnVjdCBzY3NpX2NtbmQg
-KnNjbWQpDQogew0KIAl1NjQgc3RhcnRfbGJhID0gYmxrX3JxX3BvcyhzY21kLT5yZXF1ZXN0KTsN
-CiAJdTY0IGVuZF9sYmEgPSBibGtfcnFfcG9zKHNjbWQtPnJlcXVlc3QpICsgKHNjc2lfYnVmZmxl
-bihzY21kKSAvIDUxMik7DQotCXU2NCBmYWN0b3IgPSBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXpl
-IC8gNTEyOw0KKwl1bnNpZ25lZCBpbnQgZmFjdG9yID0gc2NtZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6
-ZSAvIDUxMjsNCiAJdTY0IGJhZF9sYmE7DQogCWludCBpbmZvX3ZhbGlkOw0KIAkvKg0KDQo=
+On Wed, 2015-06-03 at 13:37 +0000, James Bottomley wrote:
+> On Wed, 2015-06-03 at 11:29 +0200, Jiri Slaby wrote:
+> > On 06/03/2015, 08:35 AM, gregkh@linuxfoundation.org wrote:
+> > > From 74856fbf441929918c49ff262ace9835048e4e6a Mon Sep 17 00:00:00 2001
+> > > From: Mark Hounschell <dmarkh@cfl.rr.com>
+> > > Date: Wed, 13 May 2015 10:49:09 +0200
+> > > Subject: sd: Disable support for 256 byte/sector disks
+> > > 
+> > > From: Mark Hounschell <dmarkh@cfl.rr.com>
+> > > 
+> > > commit 74856fbf441929918c49ff262ace9835048e4e6a upstream.
+> > > 
+> > > 256 bytes per sector support has been broken since 2.6.X,
+> > > and no-one stepped up to fix this.
+> > > So disable support for it.
+> > > 
+> > > Signed-off-by: Mark Hounschell <dmarkh@cfl.rr.com>
+> > > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > > Signed-off-by: James Bottomley <JBottomley@Odin.com>
+> > > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > 
+> > > ---
+> > >  drivers/scsi/sd.c |   19 +++++--------------
+> > >  1 file changed, 5 insertions(+), 14 deletions(-)
+> > > 
+> > > --- a/drivers/scsi/sd.c
+> > > +++ b/drivers/scsi/sd.c
+> > > @@ -1624,6 +1624,7 @@ static unsigned int sd_completed_bytes(s
+> > >  {
+> > >  	u64 start_lba = blk_rq_pos(scmd->request);
+> > >  	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
+> > > +	u64 factor = scmd->device->sector_size / 512;
+> > >  	u64 bad_lba;
+> > >  	int info_valid;
+> > >  	/*
+> > > @@ -1645,16 +1646,9 @@ static unsigned int sd_completed_bytes(s
+> > >  	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
+> > >  		return 0;
+> > >  
+> > > -	if (scmd->device->sector_size < 512) {
+> > > -		/* only legitimate sector_size here is 256 */
+> > > -		start_lba <<= 1;
+> > > -		end_lba <<= 1;
+> > > -	} else {
+> > > -		/* be careful ... don't want any overflows */
+> > > -		unsigned int factor = scmd->device->sector_size / 512;
+> > > -		do_div(start_lba, factor);
+> > > -		do_div(end_lba, factor);
+> > > -	}
+> > 
+> > Hmm, you do 'unsigned int' -> 'u64' switch of factor type here. But this
+> > commit:
+> > commit ef80d1e18b014af08741cf688e3fdda1fb71363f
+> > Author: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Date:   Mon Nov 4 10:21:05 2013 +0100
+> > 
+> >     [SCSI] sd: Do not call do_div() with a 64-bit divisor
+> > 
+> > did the switch in the opposite direction deliberately.
+> > 
+> > So why did you do the change, given sector_size is uint?
+> 
+> Primarily because no-one spotted the reversal and none of the static
+> checkers warns about it.
+> 
+> This is the trivial fix, but we should do something about the checkers.
+
+Actually, I think there's no problem: all the architectures now have the
+correct conversion of the base argument.
+
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Fri Aug 9 15:14:08 2013 +0200
+
+    m68k: Truncate base in do_div()
+
+Fixed this in m68k, which was the last one, so it looks like there's no
+issue and ef80d1e18b014af08741cf688e3fdda1fb71363f was pointless.
+
+James
+
