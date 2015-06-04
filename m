@@ -1,67 +1,107 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH v2] mptsas: fix depth param in scsi_track_queue_full
-Date: Thu, 4 Jun 2015 14:23:19 +0530
-Message-ID: <CAK=zhgqeHZbNyciBgAm8dQAz-CKB73K8USR1W2-iTUWW+fxc3g@mail.gmail.com>
-References: <1433345822-14113-1-git-send-email-thenzl@redhat.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
+ the platform device
+Date: Thu, 04 Jun 2015 16:07:13 +0200
+Message-ID: <1433426833.15728.15.camel@x220>
+References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
+	 <1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:36080 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbbFDIxU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2015 04:53:20 -0400
-Received: by wgbgq6 with SMTP id gq6so28117959wgb.3
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2015 01:53:19 -0700 (PDT)
-In-Reply-To: <1433345822-14113-1-git-send-email-thenzl@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-James,
+On Wed, 2015-06-03 at 12:37 +0300, Yaniv Gardi wrote:
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
 
-This patch looks good, please consider this patch as Acked-by:
-"Sreekanth Reddy" <Sreekanth.reddy@avagotech.com>.
+>  EXPORT_SYMBOL(ufs_hba_qcom_vops);
 
-Regards,
-Sreekanth
+Nothing uses this export. It's still a (static) symbol that is not
+included in any header. I think this export serves no purpose. Am I
+missing something subtle here?
 
-On Wed, Jun 3, 2015 at 9:07 PM, Tomas Henzl <thenzl@redhat.com> wrote:
-> v2: use debug log level to silence the unsurprising information
->
-> v1: A user of scsi_track_queue_full should pass to the function
-> a constant value untill the queue-depth changes, otherwise the
-> internal logic in scsi_track_queue_full rejects the change.
-> Other users of this function use a 'sdev->queue_depth - 1'
-> as depth parameter, let's do the same.
->
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/message/fusion/mptsas.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-> index 551262e4b9..fe8f277567 100644
-> --- a/drivers/message/fusion/mptsas.c
-> +++ b/drivers/message/fusion/mptsas.c
-> @@ -4096,7 +4096,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
->                                         continue;
->                                 }
->                                 depth = scsi_track_queue_full(sdev,
-> -                                   current_depth - 1);
-> +                                       sdev->queue_depth - 1);
->                                 if (depth > 0)
->                                         sdev_printk(KERN_INFO, sdev,
->                                         "Queue depth reduced to (%d)\n",
-> @@ -4106,7 +4106,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
->                                         "Tagged Command Queueing is being "
->                                         "disabled\n");
->                                 else if (depth == 0)
-> -                                       sdev_printk(KERN_INFO, sdev,
-> +                                       sdev_printk(KERN_DEBUG, sdev,
->                                         "Queue depth not changed yet\n");
->                         }
->                 }
-> --
-> 1.9.3
->
+> +/**
+> + * ufs_qcom_probe - probe routine of the driver
+> + * @pdev: pointer to Platform device handle
+> + *
+> + * Always return 0
+> + */
+> +static int ufs_qcom_probe(struct platform_device *pdev)
+> +{
+> +	dev_set_drvdata(&pdev->dev, (void *)&ufs_hba_qcom_vops);
+
+(Cast to void * should not be needed.)
+
+> +	return 0;
+> +}
+> +
+> +/**
+> + * ufs_qcom_remove - set driver_data of the device to NULL
+> + * @pdev: pointer to platform device handle
+> + *
+> + * Always return 0
+> + */
+> +static int ufs_qcom_remove(struct platform_device *pdev)
+> +{
+> +	dev_set_drvdata(&pdev->dev, NULL);
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id ufs_qcom_of_match[] = {
+> +	{ .compatible = "qcom,ufs_variant"},
+> +	{},
+> +};
+> +
+> +static struct platform_driver ufs_qcom_pltform = {
+> +	.probe	= ufs_qcom_probe,
+> +	.remove	= ufs_qcom_remove,
+> +	.driver	= {
+> +		.name	= "ufs_qcom",
+> +		.owner	= THIS_MODULE,
+> +		.of_match_table = of_match_ptr(ufs_qcom_of_match),
+> +	},
+> +};
+> +module_platform_driver(ufs_qcom_pltform);
+
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+
+> +	struct device_node *node = pdev->dev.of_node;
+> +	struct device_node *ufs_variant_node;
+> +	struct platform_device *ufs_variant_pdev;
+ 
+> -	hba->vops = get_variant_ops(&pdev->dev);
+> +	err = of_platform_populate(node, NULL, NULL, &pdev->dev);
+> +	if (err)
+> +		dev_err(&pdev->dev,
+> +			"%s: of_platform_populate() failed\n", __func__);
+> +
+> +	ufs_variant_node = of_get_next_available_child(node, NULL);
+> +
+> +	if (!ufs_variant_node) {
+> +		dev_dbg(&pdev->dev, "failed to find ufs_variant_node child\n");
+> +	} else {
+> +		ufs_variant_pdev = of_find_device_by_node(ufs_variant_node);
+> +
+> +		if (ufs_variant_pdev)
+> +			hba->vops = (struct ufs_hba_variant_ops *)
+> +				dev_get_drvdata(&ufs_variant_pdev->dev);
+
+(Another cast that I think is not needed.)
+
+> +	}
+
+If I scanned this correctly, the dev_set_drvdata() and dev_get_drvdata()
+pair adds an actual user of ufs_hba_qcom_vops. So that ends the obvious
+issue I think the code currently has. And I gladly defer to the scsi
+people to determine whether that is done the right way.
+
+Thanks,
+
+
+Paul Bolle
