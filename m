@@ -1,86 +1,126 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: Avoid potential infinite eh_timeout_handler() loop
-Date: Thu, 04 Jun 2015 13:27:21 -0700
-Message-ID: <1433449641.1571.50.camel@HansenPartnership.com>
-References: <1433443222-8260-1-git-send-email-rajatja@google.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
+ the platform device
+Date: Thu, 4 Jun 2015 20:42:58 -0000
+Message-ID: <27c2bccc1e1824de1e930bfe0df6caf7.squirrel@www.codeaurora.org>
+References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
+    <1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
+    <1433426833.15728.15.camel@x220>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33099 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932139AbbFDU1Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2015 16:27:24 -0400
-In-Reply-To: <1433443222-8260-1-git-send-email-rajatja@google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1433426833.15728.15.camel@x220>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Rajat Jain <rajatja@google.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, rajatxjain@gmail.com
 
-On Thu, 2015-06-04 at 11:40 -0700, Rajat Jain wrote:
-> Each cmd timeout should result in scmd->retries++. Currently it happens
-> just only before a command is requeued back. However, if the LLD
-> eh_timed_out() handler asks to reset timer back again, then also it should
-> be incremented because effectively LLD will be given a full time period
-> (SD_TIMEOUT = 30 secs!) to attempt to complete the command.
-> 
-> Why this is a problem:
-> 
->   => Currently the SCSI low level transport drivers can provide
->      eh_timeout_handler() calls (for e.g. iscsi provides this) to deal
->      with command timeouts.
-> 
->   => The eh_timeout_handler() can return BLK_EH_RESET_TIMER that causes the
->      SCSI / block layer to reset the timer, thus giving more time to the
->      LLD.
-> 
->   => Currently a LLD can potentially loop infinitely on a command if it
->      always keeps on returning BLK_EH_RESET_TIMER.
-> 
-> * => Other than choking its own devices, if the command that is stuck is a
->      command issued during sd_probe_async() (e.g. a partition table scan),
->      then it impacts all the disks because no other disks can be removed
->      from the system until sd_probe_async() returns. (sd_remove waits on
->      async_synchronize_full_domain(...))
-> 
->   => This problem actually resulted in the situation mentioned above,
->      whereby no disks in the system (on other scsi hosts) could be removed,
->      because of a stuck scsi command to read the partition tables of an
->      unrelated problematic disk during probe. The threads were stuck at:
-> 
-> 	 schedule+0x312/0x7a0
-> 	 async_synchronize_cookie_domain+0xb8/0x115
-> 	 ? __wake_up_bit+0x40/0x40
-> 	 async_synchronize_full_domain+0x15/0x17
-> 	 sd_remove+0x5f/0x135
-> 	 __device_release_driver+0x8a/0xe0
-> 	 device_release_driver+0x23/0x30
-> 	 bus_remove_device+0x10f/0x123
-> 	 device_del+0x132/0x18e
-> 	 __scsi_remove_device+0x56/0xb6
-> 	 scsi_remove_device+0x26/0x33
-> 	 scsi_remove_target+0x12d/0x1a0
-> 	 ...
-> 
-> What this patch does:
->   => Ensure that any quests to reset the timer are accounted for, so that
->      there is a finite upper bound on the time that a command is tried.
->      Once allowed number of retries is reached, we proceed to standard
->      error handling procedure (abort etc.) by scheduling the command
->      for EH.
-> 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
+> On Wed, 2015-06-03 at 12:37 +0300, Yaniv Gardi wrote:
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>
+>>  EXPORT_SYMBOL(ufs_hba_qcom_vops);
+>
+> Nothing uses this export. It's still a (static) symbol that is not
+> included in any header. I think this export serves no purpose. Am I
+> missing something subtle here?
+>
 
-This is actually wrong.  Originally the code you're suggesting did exist
-and it used to cause us to time out far too early on some conditions.
-Now scmd->retries is for specific things that shouldn't be retried too
-often.  Anything else appears to retry forever but in fact there's a
-specific check (in the softirq  and io_completion) to check that a
-retryable failure hasn't taken longer than  (cmd->allowed + 1) *
-req->timeout.
-
-This means effectively that nothing in SCSI is allowed to retry forever.
-
-James
+correct Paul. I will remove it.
 
 
+>> +/**
+>> + * ufs_qcom_probe - probe routine of the driver
+>> + * @pdev: pointer to Platform device handle
+>> + *
+>> + * Always return 0
+>> + */
+>> +static int ufs_qcom_probe(struct platform_device *pdev)
+>> +{
+>> +	dev_set_drvdata(&pdev->dev, (void *)&ufs_hba_qcom_vops);
+>
+> (Cast to void * should not be needed.)
+>
+>> +	return 0;
+>> +}
+>> +
+>> +/**
+>> + * ufs_qcom_remove - set driver_data of the device to NULL
+>> + * @pdev: pointer to platform device handle
+>> + *
+>> + * Always return 0
+>> + */
+>> +static int ufs_qcom_remove(struct platform_device *pdev)
+>> +{
+>> +	dev_set_drvdata(&pdev->dev, NULL);
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct of_device_id ufs_qcom_of_match[] = {
+>> +	{ .compatible = "qcom,ufs_variant"},
+>> +	{},
+>> +};
+>> +
+>> +static struct platform_driver ufs_qcom_pltform = {
+>> +	.probe	= ufs_qcom_probe,
+>> +	.remove	= ufs_qcom_remove,
+>> +	.driver	= {
+>> +		.name	= "ufs_qcom",
+>> +		.owner	= THIS_MODULE,
+>> +		.of_match_table = of_match_ptr(ufs_qcom_of_match),
+>> +	},
+>> +};
+>> +module_platform_driver(ufs_qcom_pltform);
+>
+>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>
+>> +	struct device_node *node = pdev->dev.of_node;
+>> +	struct device_node *ufs_variant_node;
+>> +	struct platform_device *ufs_variant_pdev;
+>
+>> -	hba->vops = get_variant_ops(&pdev->dev);
+>> +	err = of_platform_populate(node, NULL, NULL, &pdev->dev);
+>> +	if (err)
+>> +		dev_err(&pdev->dev,
+>> +			"%s: of_platform_populate() failed\n", __func__);
+>> +
+>> +	ufs_variant_node = of_get_next_available_child(node, NULL);
+>> +
+>> +	if (!ufs_variant_node) {
+>> +		dev_dbg(&pdev->dev, "failed to find ufs_variant_node child\n");
+>> +	} else {
+>> +		ufs_variant_pdev = of_find_device_by_node(ufs_variant_node);
+>> +
+>> +		if (ufs_variant_pdev)
+>> +			hba->vops = (struct ufs_hba_variant_ops *)
+>> +				dev_get_drvdata(&ufs_variant_pdev->dev);
+>
+> (Another cast that I think is not needed.)
+>
+>> +	}
+>
+> If I scanned this correctly, the dev_set_drvdata() and dev_get_drvdata()
+> pair adds an actual user of ufs_hba_qcom_vops. So that ends the obvious
+> issue I think the code currently has. And I gladly defer to the scsi
+> people to determine whether that is done the right way.
+>
+
+yes, you got it right.
+these 2 routines use the vops structure, that binds the driver and the
+variant (in our case qcom)
+
+thanks for your time, Paul
+
+
+> Thanks,
+>
+>
+> Paul Bolle
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
