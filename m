@@ -1,109 +1,135 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 09/10] qla2xxx: Comment out unreachable code
-Date: Thu, 4 Jun 2015 15:57:20 -0700
-Message-ID: <5570D7D0.80500@sandisk.com>
+Subject: [PATCH 10/10] qla2xxx: Fix indentation
+Date: Thu, 4 Jun 2015 15:58:09 -0700
+Message-ID: <5570D801.5090703@sandisk.com>
 References: <5570D656.9050704@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0096.outbound.protection.outlook.com ([65.55.169.96]:45952
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0087.outbound.protection.outlook.com ([157.56.110.87]:32256
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752616AbbFDW5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Jun 2015 18:57:25 -0400
+	id S1752184AbbFDW6U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Jun 2015 18:58:20 -0400
 In-Reply-To: <5570D656.9050704@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@odin.com>
 Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Comment out the code that is never reached in qla83xx_idc_unlock()
-and also in qlt_set_data_offset() to avoid that static source code
-analysis tools report warnings for this code.
+Detected by smatch.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Cc: Quinn Tran <quinn.tran@qlogic.com>
 Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c     |  7 ++++++-
- drivers/scsi/qla2xxx/qla_target.c | 16 +++++++++-------
- 2 files changed, 15 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |  2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |  8 ++++----
+ drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c   |  2 +-
+ drivers/scsi/qla2xxx/qla_nx2.c  | 13 ++++++-------
+ 5 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 0ababd5..5a5166b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4417,7 +4417,10 @@ retry_lock2:
- void
- qla83xx_idc_unlock(scsi_qla_host_t *base_vha, uint16_t requester_id)
- {
--	uint16_t options = (requester_id << 15) | BIT_7, retry;
-+#if 0
-+	uint16_t options = (requester_id << 15) | BIT_7;
-+#endif
-+	uint16_t retry;
- 	uint32_t data;
- 	struct qla_hw_data *ha = base_vha->hw;
- 
-@@ -4453,6 +4456,7 @@ retry_unlock:
- 
- 	return;
- 
-+#if 0
- 	/* XXX: IDC-unlock implementation using access-control mbx */
- 	retry = 0;
- retry_unlock2:
-@@ -4468,6 +4472,7 @@ retry_unlock2:
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 33cb3f6..5a5ca43 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -708,7 +708,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 		if (rval != QLA_SUCCESS) {
+ 			ql_log(ql_log_warn, vha, 0x00d4,
+ 			    "Unable to initialize ISP84XX.\n");
+-		qla84xx_put_chip(vha);
++			qla84xx_put_chip(vha);
+ 		}
  	}
  
- 	return;
-+#endif
- }
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 21d6f3f..524b5bc 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2763,10 +2763,10 @@ qla2x00_start_bidir(srb_t *sp, struct scsi_qla_host *vha, uint32_t tot_dsds)
+ 	handle = req->current_outstanding_cmd;
+ 	for (index = 1; index < req->num_outstanding_cmds; index++) {
+ 		handle++;
+-	if (handle == req->num_outstanding_cmds)
+-		handle = 1;
+-	if (!req->outstanding_cmds[handle])
+-		break;
++		if (handle == req->num_outstanding_cmds)
++			handle = 1;
++		if (!req->outstanding_cmds[handle])
++			break;
+ 	}
  
- int
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 59a0897..22a91a3 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3699,6 +3699,14 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 	if (index == req->num_outstanding_cmds) {
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 79f6989..b70af1f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1579,7 +1579,7 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
+ 			ql_log(ql_log_warn, fcport->vha, 0x503c,
+ 			    "Async-%s error - hdl=%x response(%x).\n",
+ 			    type, sp->handle, sts->data[3]);
+-		iocb->u.tmf.data = QLA_FUNCTION_FAILED;
++			iocb->u.tmf.data = QLA_FUNCTION_FAILED;
+ 		}
+ 	}
  
- static int qlt_set_data_offset(struct qla_tgt_cmd *cmd, uint32_t offset)
- {
-+#if 1
-+	/*
-+	 * FIXME: Reject non zero SRR relative offset until we can test
-+	 * this code properly.
-+	 */
-+	pr_debug("Rejecting non zero SRR rel_offs: %u\n", offset);
-+	return -1;
-+#else
- 	struct scatterlist *sg, *sgp, *sg_srr, *sg_srr_start = NULL;
- 	size_t first_offset = 0, rem_offset = offset, tmp = 0;
- 	int i, sg_srr_cnt, bufflen = 0;
-@@ -3708,13 +3716,6 @@ static int qlt_set_data_offset(struct qla_tgt_cmd *cmd, uint32_t offset)
- 	    "cmd->sg_cnt: %u, direction: %d\n",
- 	    cmd, cmd->sg, cmd->sg_cnt, cmd->dma_data_direction);
+@@ -1978,7 +1978,7 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
+ 		rval = EXT_STATUS_ERR;
+ 		break;
+ 	}
+-		bsg_job->reply->reply_payload_rcv_len = 0;
++	bsg_job->reply->reply_payload_rcv_len = 0;
  
--	/*
--	 * FIXME: Reject non zero SRR relative offset until we can test
--	 * this code properly.
--	 */
--	pr_debug("Rejecting non zero SRR rel_offs: %u\n", offset);
--	return -1;
--
- 	if (!cmd->sg || !cmd->sg_cnt) {
- 		ql_dbg(ql_dbg_tgt, cmd->vha, 0xe055,
- 		    "Missing cmd->sg or zero cmd->sg_cnt in"
-@@ -3797,6 +3798,7 @@ static int qlt_set_data_offset(struct qla_tgt_cmd *cmd, uint32_t offset)
- 		BUG();
+ done:
+ 	/* Return the vendor specific reply to API */
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index b359a83..bb0ee7c 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1835,7 +1835,7 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
  
- 	return 0;
-+#endif
- }
+ 	ptab_desc = qla82xx_get_table_desc(unirom,
+ 		 QLA82XX_URI_DIR_SECT_PRODUCT_TBL);
+-       if (!ptab_desc)
++	if (!ptab_desc)
+ 		return -1;
  
- static inline int qlt_srr_adjust_data(struct qla_tgt_cmd *cmd,
+ 	entries = cpu_to_le32(ptab_desc->num_entries);
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index b8ceb82..007192d 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -397,11 +397,11 @@ qla8044_idc_lock(struct qla_hw_data *ha)
+ 				 * has the lock, wait for 2secs
+ 				 * and retry
+ 				 */
+-				 ql_dbg(ql_dbg_p3p, vha, 0xb08a,
+-				     "%s: IDC lock Recovery by %d "
+-				     "failed, Retrying timeout\n", __func__,
+-				     ha->portnum);
+-				 timeout = 0;
++				ql_dbg(ql_dbg_p3p, vha, 0xb08a,
++				       "%s: IDC lock Recovery by %d "
++				       "failed, Retrying timeout\n", __func__,
++				       ha->portnum);
++				timeout = 0;
+ 			}
+ 		}
+ 		msleep(QLA8044_DRV_LOCK_MSLEEP);
+@@ -3138,8 +3138,7 @@ qla8044_minidump_process_rdmdio(struct scsi_qla_host *vha,
+ 			goto error;
+ 
+ 		addr7 = addr2 - (4 * stride1);
+-			data = qla8044_ipmdio_rd_reg(vha, addr1, addr3,
+-			    mask, addr7);
++		data = qla8044_ipmdio_rd_reg(vha, addr1, addr3, mask, addr7);
+ 		if (data == -1)
+ 			goto error;
+ 
 -- 
 2.1.4
 
