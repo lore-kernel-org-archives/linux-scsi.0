@@ -1,45 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 0/2] target: Add TFO->complete_irq queue_work bypass
-Date: Thu, 04 Jun 2015 00:06:09 -0700
-Message-ID: <1433401569.18125.112.camel@haakon3.risingtidesystems.com>
-References: <1432281446-31080-1-git-send-email-nab@daterainc.com>
-	 <20150603125756.GA19696@lst.de>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH v2] mptsas: fix depth param in scsi_track_queue_full
+Date: Thu, 4 Jun 2015 14:23:19 +0530
+Message-ID: <CAK=zhgqeHZbNyciBgAm8dQAz-CKB73K8USR1W2-iTUWW+fxc3g@mail.gmail.com>
+References: <1433345822-14113-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150603125756.GA19696@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:36080 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbbFDIxU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2015 04:53:20 -0400
+Received: by wgbgq6 with SMTP id gq6so28117959wgb.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2015 01:53:19 -0700 (PDT)
+In-Reply-To: <1433345822-14113-1-git-send-email-thenzl@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2015-06-03 at 14:57 +0200, Christoph Hellwig wrote:
-> This makes lockdep very unhappy, rightly so.  If you execute
-> one end_io function inside another you bas=D1=96cally nest every poss=
-ible
-> lock taken in the I/O completion path.  Also adding more work
-> to the hardirq path generally isn't a smart idea.  Can you explain
-> what issues you were seeing and how much this helps?  Note that
-> the workqueue usage in the target core so far is fairly basic, so
-> there should some low hanging fruit.
+James,
 
-So I've been using tcm_loop + RAMDISK backends for prototyping, but thi=
-s
-patch is intended for vhost-scsi so it can avoid the unnecessary
-queue_work() context switch within target_complete_cmd() for all backen=
-d
-driver types.
+This patch looks good, please consider this patch as Acked-by:
+"Sreekanth Reddy" <Sreekanth.reddy@avagotech.com>.
 
-This is because vhost_work_queue() is just updating vhost_dev->work_lis=
-t
-and immediately wake_up_process() into a different vhost_worker()
-process context.  For heavy small block workloads into fast IBLOCK
-backends, avoiding this extra context switch should be a nice efficienc=
-y
-win.
+Regards,
+Sreekanth
 
-Also, AFAIK RDMA fabrics are allowed to do ib_post_send() response
-callbacks directly from IRQ context as well.
-
-Perhaps tcm_loop LLD code should just be limited to RAMDISK here..?
+On Wed, Jun 3, 2015 at 9:07 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> v2: use debug log level to silence the unsurprising information
+>
+> v1: A user of scsi_track_queue_full should pass to the function
+> a constant value untill the queue-depth changes, otherwise the
+> internal logic in scsi_track_queue_full rejects the change.
+> Other users of this function use a 'sdev->queue_depth - 1'
+> as depth parameter, let's do the same.
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/message/fusion/mptsas.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+> index 551262e4b9..fe8f277567 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -4096,7 +4096,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
+>                                         continue;
+>                                 }
+>                                 depth = scsi_track_queue_full(sdev,
+> -                                   current_depth - 1);
+> +                                       sdev->queue_depth - 1);
+>                                 if (depth > 0)
+>                                         sdev_printk(KERN_INFO, sdev,
+>                                         "Queue depth reduced to (%d)\n",
+> @@ -4106,7 +4106,7 @@ mptsas_handle_queue_full_event(struct fw_event_work *fw_event)
+>                                         "Tagged Command Queueing is being "
+>                                         "disabled\n");
+>                                 else if (depth == 0)
+> -                                       sdev_printk(KERN_INFO, sdev,
+> +                                       sdev_printk(KERN_DEBUG, sdev,
+>                                         "Queue depth not changed yet\n");
+>                         }
+>                 }
+> --
+> 1.9.3
+>
