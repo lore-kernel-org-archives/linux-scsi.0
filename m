@@ -1,65 +1,41 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [RFC 0/2] target: Add TFO->complete_irq queue_work bypass
-Date: Thu, 04 Jun 2015 20:01:09 +0300
-Message-ID: <55708455.2080500@dev.mellanox.co.il>
-References: <1432281446-31080-1-git-send-email-nab@daterainc.com>	 <20150603125756.GA19696@lst.de> <1433401569.18125.112.camel@haakon3.risingtidesystems.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v3] fusion: remove dead MTRR code
+Date: Thu, 4 Jun 2015 19:41:34 +0200
+Message-ID: <20150604174134.GQ23057@wotan.suse.de>
+References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAK=zhgqU7+Dm1ZUhVpGF_QMPAPnnaSbdh18GLajDvJBAXrGCQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:32837 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752058AbbFDRAs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2015 13:00:48 -0400
-Received: by wgez8 with SMTP id z8so38465046wge.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2015 10:00:47 -0700 (PDT)
-In-Reply-To: <1433401569.18125.112.camel@haakon3.risingtidesystems.com>
+Received: from cantor2.suse.de ([195.135.220.15]:58727 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752617AbbFDRli (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Jun 2015 13:41:38 -0400
+Content-Disposition: inline
+In-Reply-To: <CAK=zhgqU7+Dm1ZUhVpGF_QMPAPnnaSbdh18GLajDvJBAXrGCQg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <JBottomley@Parallels.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Borislav Petkov <bp@suse.de>, Bjorn Helgaas <bhelgaas@google.com>, Andy Lutomirski <luto@amacapital.net>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, mst@redhat.com, Toshi Kani <toshi.kani@hp.com>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 6/4/2015 10:06 AM, Nicholas A. Bellinger wrote:
-> On Wed, 2015-06-03 at 14:57 +0200, Christoph Hellwig wrote:
->> This makes lockdep very unhappy, rightly so.  If you execute
->> one end_io function inside another you bas=D1=96cally nest every pos=
-sible
->> lock taken in the I/O completion path.  Also adding more work
->> to the hardirq path generally isn't a smart idea.  Can you explain
->> what issues you were seeing and how much this helps?  Note that
->> the workqueue usage in the target core so far is fairly basic, so
->> there should some low hanging fruit.
+On Thu, Jun 04, 2015 at 10:20:23AM +0530, Sreekanth Reddy wrote:
+> Hi Luis,
+> 
+> Sorry for delay in response. Actually I was looking for the history of
+> this section of code but I couldn't find it. Anyway this is dead code
+> and we are fine with removing this dead code.
+> 
+> James,
+> 
+> Please consider this patch as:
 >
-> So I've been using tcm_loop + RAMDISK backends for prototyping, but t=
-his
-> patch is intended for vhost-scsi so it can avoid the unnecessary
-> queue_work() context switch within target_complete_cmd() for all back=
-end
-> driver types.
->
-> This is because vhost_work_queue() is just updating vhost_dev->work_l=
-ist
-> and immediately wake_up_process() into a different vhost_worker()
-> process context.  For heavy small block workloads into fast IBLOCK
-> backends, avoiding this extra context switch should be a nice efficie=
-ncy
-> win.
+> Acked-by: Sreekanth Reddy <ureekanth.reddy@avagotech.com>
 
-I can see that, did you get a chance to measure the expected latency
-improvement?
+Great thanks, now who's tree should this patch go through? Last patch for this
+driver was in 2014 and went through Christoph, but if Christoph doesn't want to
+take it can it go through Andrew's tree?
 
->
-> Also, AFAIK RDMA fabrics are allowed to do ib_post_send() response
-> callbacks directly from IRQ context as well.
+Sreekanth, can you also update the MAINTAINERS file to reflect recent changes
+at your company ?
 
-This is correct in general, ib_post_send is not allowed to schedule.
-isert/srpt might benefit here in latency, but it would require the
-the drivers to pre-allocate the sgls (ib_sge's) and use a worst-case
-approach (or use GFP_ATOMIC allocations - I'm not sure which is
-better...)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
