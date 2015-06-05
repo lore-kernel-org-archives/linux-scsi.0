@@ -1,135 +1,50 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 10/10] qla2xxx: Fix indentation
-Date: Thu, 4 Jun 2015 15:58:09 -0700
-Message-ID: <5570D801.5090703@sandisk.com>
-References: <5570D656.9050704@sandisk.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH v3] fusion: remove dead MTRR code
+Date: Fri, 5 Jun 2015 17:17:08 +0530
+Message-ID: <CAK=zhgqM3YM45=jYvhJkmFC-9TFBXDaeGXq1gcjERbFjmTxWVg@mail.gmail.com>
+References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
+	<CAK=zhgqU7+Dm1ZUhVpGF_QMPAPnnaSbdh18GLajDvJBAXrGCQg@mail.gmail.com>
+	<20150604174134.GQ23057@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0087.outbound.protection.outlook.com ([157.56.110.87]:32256
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752184AbbFDW6U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Jun 2015 18:58:20 -0400
-In-Reply-To: <5570D656.9050704@sandisk.com>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:33267 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483AbbFELrJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2015 07:47:09 -0400
+Received: by wgez8 with SMTP id z8so54757340wge.0
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2015 04:47:08 -0700 (PDT)
+In-Reply-To: <20150604174134.GQ23057@wotan.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@odin.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <JBottomley@parallels.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Borislav Petkov <bp@suse.de>, Bjorn Helgaas <bhelgaas@google.com>, Andy Lutomirski <luto@amacapital.net>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, mst@redhat.com, Toshi Kani <toshi.kani@hp.com>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.c>
 
-Detected by smatch.
+On Thu, Jun 4, 2015 at 11:11 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Thu, Jun 04, 2015 at 10:20:23AM +0530, Sreekanth Reddy wrote:
+>> Hi Luis,
+>>
+>> Sorry for delay in response. Actually I was looking for the history of
+>> this section of code but I couldn't find it. Anyway this is dead code
+>> and we are fine with removing this dead code.
+>>
+>> James,
+>>
+>> Please consider this patch as:
+>>
+>> Acked-by: Sreekanth Reddy <ureekanth.reddy@avagotech.com>
+>
+> Great thanks, now who's tree should this patch go through? Last patch for this
+> driver was in 2014 and went through Christoph, but if Christoph doesn't want to
+> take it can it go through Andrew's tree?
+>
+> Sreekanth, can you also update the MAINTAINERS file to reflect recent changes
+> at your company ?
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_init.c |  2 +-
- drivers/scsi/qla2xxx/qla_iocb.c |  8 ++++----
- drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
- drivers/scsi/qla2xxx/qla_nx.c   |  2 +-
- drivers/scsi/qla2xxx/qla_nx2.c  | 13 ++++++-------
- 5 files changed, 14 insertions(+), 15 deletions(-)
+Sure I will do this.
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 33cb3f6..5a5ca43 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -708,7 +708,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
- 		if (rval != QLA_SUCCESS) {
- 			ql_log(ql_log_warn, vha, 0x00d4,
- 			    "Unable to initialize ISP84XX.\n");
--		qla84xx_put_chip(vha);
-+			qla84xx_put_chip(vha);
- 		}
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 21d6f3f..524b5bc 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2763,10 +2763,10 @@ qla2x00_start_bidir(srb_t *sp, struct scsi_qla_host *vha, uint32_t tot_dsds)
- 	handle = req->current_outstanding_cmd;
- 	for (index = 1; index < req->num_outstanding_cmds; index++) {
- 		handle++;
--	if (handle == req->num_outstanding_cmds)
--		handle = 1;
--	if (!req->outstanding_cmds[handle])
--		break;
-+		if (handle == req->num_outstanding_cmds)
-+			handle = 1;
-+		if (!req->outstanding_cmds[handle])
-+			break;
- 	}
- 
- 	if (index == req->num_outstanding_cmds) {
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 79f6989..b70af1f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1579,7 +1579,7 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 			ql_log(ql_log_warn, fcport->vha, 0x503c,
- 			    "Async-%s error - hdl=%x response(%x).\n",
- 			    type, sp->handle, sts->data[3]);
--		iocb->u.tmf.data = QLA_FUNCTION_FAILED;
-+			iocb->u.tmf.data = QLA_FUNCTION_FAILED;
- 		}
- 	}
- 
-@@ -1978,7 +1978,7 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
- 		rval = EXT_STATUS_ERR;
- 		break;
- 	}
--		bsg_job->reply->reply_payload_rcv_len = 0;
-+	bsg_job->reply->reply_payload_rcv_len = 0;
- 
- done:
- 	/* Return the vendor specific reply to API */
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index b359a83..bb0ee7c 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -1835,7 +1835,7 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
- 
- 	ptab_desc = qla82xx_get_table_desc(unirom,
- 		 QLA82XX_URI_DIR_SECT_PRODUCT_TBL);
--       if (!ptab_desc)
-+	if (!ptab_desc)
- 		return -1;
- 
- 	entries = cpu_to_le32(ptab_desc->num_entries);
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index b8ceb82..007192d 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -397,11 +397,11 @@ qla8044_idc_lock(struct qla_hw_data *ha)
- 				 * has the lock, wait for 2secs
- 				 * and retry
- 				 */
--				 ql_dbg(ql_dbg_p3p, vha, 0xb08a,
--				     "%s: IDC lock Recovery by %d "
--				     "failed, Retrying timeout\n", __func__,
--				     ha->portnum);
--				 timeout = 0;
-+				ql_dbg(ql_dbg_p3p, vha, 0xb08a,
-+				       "%s: IDC lock Recovery by %d "
-+				       "failed, Retrying timeout\n", __func__,
-+				       ha->portnum);
-+				timeout = 0;
- 			}
- 		}
- 		msleep(QLA8044_DRV_LOCK_MSLEEP);
-@@ -3138,8 +3138,7 @@ qla8044_minidump_process_rdmdio(struct scsi_qla_host *vha,
- 			goto error;
- 
- 		addr7 = addr2 - (4 * stride1);
--			data = qla8044_ipmdio_rd_reg(vha, addr1, addr3,
--			    mask, addr7);
-+		data = qla8044_ipmdio_rd_reg(vha, addr1, addr3, mask, addr7);
- 		if (data == -1)
- 			goto error;
- 
--- 
-2.1.4
+>
+>   Luis
 
+Thanks,
+Sreekanth
