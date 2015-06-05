@@ -1,53 +1,92 @@
-From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH 0/3] libfc patches for kernel v4.2
-Date: Fri, 05 Jun 2015 14:28:29 -0700
-Message-ID: <1433539709.4179.155.camel@lin-nd1-054.jf.intel.com>
-References: <20150605212003.6054.15351.stgit@lin-nd1-054.jf.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20150605212003.6054.15351.stgit-CpQRhGjq1eVJhAXLHP3yBbvm/XP+8Wra@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v4] IBM CXL Flash Adapter
+Date: Fri,  5 Jun 2015 16:45:59 -0500
+Message-ID: <1433540759-15237-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:52807 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbbFEVrd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2015 17:47:33 -0400
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 5 Jun 2015 15:47:33 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 2DD4419D8040
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2015 15:38:32 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t55LktE133882256
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Jun 2015 14:46:55 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t55LlTnr013657
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Jun 2015 15:47:30 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, hch@infradead.org
+Cc: mikey@neuling.org, imunsie@au1.ibm.com
 
-On Fri, 2015-06-05 at 14:20 -0700, Vasu Dev wrote:
-> These libfc fixes are for kernel 4.2 and with two patches CCed for stable
-> kernel also, those two could be picked for current 4.1 cycle now but in case
-> too late for current 4.1 then anyway should get picked up by 4.1 stable
-> kernel later.
-> 
-> These patches were posted by Bart Van Assche at open-fcoe.org and then 
-> I updated them per discussion on original patches to pick revised patch
-> and add related comments at:
-> 
-> http://lists.open-fcoe.org/pipermail/fcoe-devel/2015-May/012467.html
-> 
-> 
-> Bart Van Assche (3):
->       libfc: Fix fc_fcp_cleanup_each_cmd()
->       libfc: Fix fc_exch_recv_req() error path
->       libfc: Fix a typo in a source code comment
-> 
-> 
->  drivers/scsi/libfc/fc_exch.c |    8 ++++----
->  drivers/scsi/libfc/fc_fcp.c  |   21 ++++++++++++++++++---
->  2 files changed, 22 insertions(+), 7 deletions(-)
-> 
+This patch adds support for the IBM CXL flash (cxlflash) adapter. The device
+is presented to the system as a SCSI adapter and may be accessed and used via
+the normal filesystem paths.
 
-Adding Bart to CC list, I thought stg --auto would CC to original patch
-author but that is not the case, sorry for another email for this.
+Note that the patch is dependent on support that has not yet been merged
+in with the mainline (upstream process started).
 
+In the interim, this code may be found on Github:
 
-Thanks,
-Vasu
+ https://github.com/mikey/linux/tree/cxl/kernelapi
+
+v4 Changes:
+- Incorporate followup comments from Brian King
+- Re-introduce wait queue with serialization for TMF commands
+- Revise updating of AFU room to limit MMIO reads
+- Add proper cleanup in paths where send_cmd() fails
+- Don't set DID_ERROR when sense data is valid
+
+v3 Changes:
+- Incorporate Brian King review comments
+- Update to latest candidate upstream CXL APIs
+- Add several clarification comments
+- Use debug facilities in linux/bug.h
+- Correct a potential command corruption bug
+- Refine SCSI error handling/reporting
+- Serialize TMF events
+- Remove unnecessary debug prints, parenthesis, and volatile keywords
+- Update afu->room where appropriate
+- Sleep instead of busy-wait for command completion
+- Serialize AFU sync events, ensure process context only
+- Pack structures shared with hardware
+
+v2 Changes:
+- Incorporate Mikey Neuling review comments
+- Update to candidate upstream CXL APIs
+- Add several clarification comments
+- Renamed some structures for clarity
+- Removed the 'cxlflash' prefix from internal functions
+- Address endianness concerns/issues
+- Remove unused code
+- Revert to using pr_*/dev_* print services
+- Remove unneeded locking and barrier instructions
+
+Matthew R. Ochs (1):
+  cxlflash: Base support for IBM CXL Flash Adapter
+
+ drivers/scsi/Kconfig            |    1 +
+ drivers/scsi/Makefile           |    1 +
+ drivers/scsi/cxlflash/Kconfig   |   11 +
+ drivers/scsi/cxlflash/Makefile  |    2 +
+ drivers/scsi/cxlflash/common.h  |  180 ++++
+ drivers/scsi/cxlflash/main.c    | 2263 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/main.h    |  104 ++
+ drivers/scsi/cxlflash/sislite.h |  465 ++++++++
+ 8 files changed, 3027 insertions(+)
+ create mode 100644 drivers/scsi/cxlflash/Kconfig
+ create mode 100644 drivers/scsi/cxlflash/Makefile
+ create mode 100644 drivers/scsi/cxlflash/common.h
+ create mode 100644 drivers/scsi/cxlflash/main.c
+ create mode 100644 drivers/scsi/cxlflash/main.h
+ create mode 100755 drivers/scsi/cxlflash/sislite.h
+
+-- 
+2.1.0
+
