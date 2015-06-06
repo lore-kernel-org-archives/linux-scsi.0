@@ -1,49 +1,59 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v3] fusion: remove dead MTRR code
-Date: Sat, 6 Jun 2015 00:11:17 +0200
-Message-ID: <20150605221117.GR23057@wotan.suse.de>
-References: <1429649166-18294-1-git-send-email-mcgrof@do-not-panic.com>
- <CAK=zhgqU7+Dm1ZUhVpGF_QMPAPnnaSbdh18GLajDvJBAXrGCQg@mail.gmail.com>
- <20150604174134.GQ23057@wotan.suse.de>
- <CAK=zhgqM3YM45=jYvhJkmFC-9TFBXDaeGXq1gcjERbFjmTxWVg@mail.gmail.com>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: [PATCH] [SCSI] qla4xxx: Convert __constant_cpu_to_le16 to cpu_to_le16
+Date: Sat, 6 Jun 2015 05:45:03 +0530
+Message-ID: <20150606001503.GA7996@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49803 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750869AbbFEWLV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Jun 2015 18:11:21 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAK=zhgqM3YM45=jYvhJkmFC-9TFBXDaeGXq1gcjERbFjmTxWVg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <JBottomley@parallels.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Borislav Petkov <bp@suse.de>, Bjorn Helgaas <bhelgaas@google.com>, Andy Lutomirski <luto@amacapital.net>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, mst@redhat.com, Toshi Kani <toshi.kani@hp.com>, Suresh Siddha <sbsiddha@gmail.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Juergen Gross <jgross@suse.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Dave Airlie <airlied@redhat.com>, Antonino Daplas <adaplas@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Jun 05, 2015 at 05:17:08PM +0530, Sreekanth Reddy wrote:
-> On Thu, Jun 4, 2015 at 11:11 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> > On Thu, Jun 04, 2015 at 10:20:23AM +0530, Sreekanth Reddy wrote:
-> >> Hi Luis,
-> >>
-> >> Sorry for delay in response. Actually I was looking for the history of
-> >> this section of code but I couldn't find it. Anyway this is dead code
-> >> and we are fine with removing this dead code.
-> >>
-> >> James,
-> >>
-> >> Please consider this patch as:
-> >>
-> >> Acked-by: Sreekanth Reddy <ureekanth.reddy@avagotech.com>
-> >
-> > Great thanks, now who's tree should this patch go through? Last patch for this
-> > driver was in 2014 and went through Christoph, but if Christoph doesn't want to
-> > take it can it go through Andrew's tree?
-> >
-> > Sreekanth, can you also update the MAINTAINERS file to reflect recent changes
-> > at your company ?
-> 
-> Sure I will do this.
+In big endian cases, macro cpu_to_le16 unfolds to __swab16 which
+provides special case for constants. In little endian cases,
+__constant_cpu_to_le16 and cpu_to_le16 expand directly to the
+same expression. So, replace __constant_cpu_to_le16 with
+cpu_to_le16 with the goal of getting rid of the definition of
+__constant_cpu_to_le16 completely.
 
-Christoph, do you mind this going through Andrew's tree? Or do you want to take it?
+The semantic patch that performs this transformation is as follows:
 
-  Luis
+@@expression x;@@
+
+- __constant_cpu_to_le16(x)
++ cpu_to_le16(x)
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+ drivers/scsi/qla4xxx/ql4_nx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 7c33658..06d6cce 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3741,9 +3741,9 @@ qla4_8xxx_get_flt_info(struct scsi_qla_host *ha, uint32_t flt_addr)
+ 			goto no_flash_data;
+ 	}
+ 
+-	if (*wptr == __constant_cpu_to_le16(0xffff))
++	if (*wptr == cpu_to_le16(0xffff))
+ 		goto no_flash_data;
+-	if (flt->version != __constant_cpu_to_le16(1)) {
++	if (flt->version != cpu_to_le16(1)) {
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "Unsupported FLT detected: "
+ 			"version=0x%x length=0x%x checksum=0x%x.\n",
+ 			le16_to_cpu(flt->version), le16_to_cpu(flt->length),
+@@ -3846,7 +3846,7 @@ qla4_82xx_get_fdt_info(struct scsi_qla_host *ha)
+ 	qla4_82xx_read_optrom_data(ha, (uint8_t *)ha->request_ring,
+ 	    hw->flt_region_fdt << 2, OPTROM_BURST_SIZE);
+ 
+-	if (*wptr == __constant_cpu_to_le16(0xffff))
++	if (*wptr == cpu_to_le16(0xffff))
+ 		goto no_flash_data;
+ 
+ 	if (fdt->sig[0] != 'Q' || fdt->sig[1] != 'L' || fdt->sig[2] != 'I' ||
+-- 
+1.9.1
