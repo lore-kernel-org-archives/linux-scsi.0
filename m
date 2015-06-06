@@ -1,7 +1,8 @@
 From: Vaishali Thakkar <vthakkar1994@gmail.com>
-Subject: [PATCH] [SCSI] qla4xxx: Convert __constant_cpu_to_le16 to cpu_to_le16
-Date: Sat, 6 Jun 2015 05:45:03 +0530
-Message-ID: <20150606001503.GA7996@vaishali-Ideapad-Z570>
+Subject: [PATCH v2] [SCSI] qla4xxx: Replace __constant_cpu_to_le16 with
+ cpu_to_le16
+Date: Sat, 6 Jun 2015 06:15:12 +0530
+Message-ID: <20150606004512.GA8197@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -26,6 +27,9 @@ The semantic patch that performs this transformation is as follows:
 + cpu_to_le16(x)
 
 Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+Changes since v1:
+	- Make subject more concise
 ---
  drivers/scsi/qla4xxx/ql4_nx.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
