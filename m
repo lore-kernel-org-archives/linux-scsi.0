@@ -1,59 +1,57 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 0/4] fixing building errors and warnings when components
-Date: Sun,  7 Jun 2015 19:27:00 +0300
-Message-ID: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, akinobu.mita@gmail.com, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, pebolle@tiscali.nl, gbroner@codeaurora.org
+Subject: [PATCH v3 2/4] scsi: ufs-qcom: fix compilation warning if compiled as a module
+Date: Sun,  7 Jun 2015 19:27:02 +0300
+Message-ID: <1433694425-23478-3-git-send-email-ygardi@codeaurora.org>
+References: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52297 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751783AbbFGQ1f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2015 12:27:35 -0400
+In-Reply-To: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, akinobu.mita@gmail.com, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, pebolle@tiscali.nl, gbroner@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-V3:
-In this version, in ufshcd-pltfrm.c probe and remove function, added:
-__module_get(ufs_variant_pdev->dev.driver->owner);
-module_put(ufs_variant_pdev->dev.driver->owner);
-in order to maintain a reference counter to prevent unloading
-ufs-qcom component if it is the variant that ufshcd-pltfrm is using.
+This change fixes a compilation warning that happens if SCSI_UFS_QCOM
+is compiled as a module.
+Also this patch fixes an error happens when insmod the module:
+"ufs_qcom: module license 'unspecified' taints kernel."
 
-V2:
-In this Version, comments from reviewers were addressed
-and also, added another change: PATCH v2 4/4
-In this change we glue the variant attributes (vops, etc)
-at the time of the platform probing, so they can be used
-by the driver when it doing its initialization phase.
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V1:
-The following combination of components, when SCSI_UFS_QCOM=y
-and PHY_QCOM_UFS=m is illegal and causes build errors.
-The 3rd patch in the series enables the SCSI_UFS_QCOM component to 
-be compiled as a module (by changing its configuration to tristate).
-So now, compiling SCSI_UFS_QCOM=m forces PHY_QCOM_UFS=m, and 
-SCSI_UFS_QCOM=y forces PHY_QCOM_UFS=y.
+---
+ drivers/scsi/ufs/ufs-qcom.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-In addition, when PHY_QCOM_UFS=m, external functions in 
-phy-ufs-qcom.c should be exported. The 1st patch fixes it.
-
-Another issue that we see when SCSI_UFS_QCOM=m is a warning that
-the 2nd patch fixes.
-
-notice:
-checkpatch gives an error on the commit message of patch 1/3
-in the series. Ignore as the commit message is the build errors
-that this patch fixes.
-
-Yaniv Gardi (4):
-  phy: qcom-ufs: fix build error when the component is built as a module
-  scsi: ufs-qcom: fix compilation warning if compiled as a module
-  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
-  scsi: ufs: probe and init of variant driver from the platform device
-
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  8 ++++
- drivers/phy/phy-qcom-ufs.c                         | 11 +++++
- drivers/scsi/ufs/Kconfig                           |  2 +-
- drivers/scsi/ufs/ufs-qcom.c                        | 48 +++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd-pltfrm.c                   | 45 ++++++++++++++------
- 5 files changed, 98 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 6652a81..6671a8e 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -885,12 +885,15 @@ out:
+ 
+ #define	ANDROID_BOOT_DEV_MAX	30
+ static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+-static int get_android_boot_dev(char *str)
++
++#ifndef MODULE
++static int __init get_android_boot_dev(char *str)
+ {
+ 	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
+ 	return 1;
+ }
+ __setup("androidboot.bootdevice=", get_android_boot_dev);
++#endif
+ 
+ /**
+  * ufs_qcom_init - bind phy with controller
+@@ -1014,3 +1017,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.resume			= ufs_qcom_resume,
+ };
+ EXPORT_SYMBOL(ufs_hba_qcom_vops);
++
++MODULE_LICENSE("GPL v2");
 -- 
 1.8.5.2
 
