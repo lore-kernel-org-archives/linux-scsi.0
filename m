@@ -1,128 +1,61 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
- the platform device
-Date: Sun, 7 Jun 2015 15:32:02 -0000
-Message-ID: <68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
-References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
-    <1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyis6HU06KU-aSGoy6mCt-u+5Pz16nDk1qHrcsTnFo_2hA@mail.gmail.com>
-    <763dbc7b708b5d5b18ce0b5adcc41016.squirrel@www.codeaurora.org>
-    <CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51683 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414AbbFGPcE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2015 11:32:04 -0400
-In-Reply-To: <CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v3 0/4] fixing building errors and warnings when components
+Date: Sun,  7 Jun 2015 19:27:00 +0300
+Message-ID: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, akinobu.mita@gmail.com, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, pebolle@tiscali.nl, gbroner@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, merez@qti.qualcomm.com, dovl@qti.qualcomm.com, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Paul Bolle <pebolle@tiscali.nl>, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili
 
-> 2015-06-05 5:53 GMT+09:00  <ygardi@codeaurora.org>:
->>> Hi Yaniv,
->>>
->>> 2015-06-03 18:37 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->>>> @@ -321,7 +313,22 @@ static int ufshcd_pltfrm_probe(struct
->>>> platform_device *pdev)
->>>>                 goto out;
->>>>         }
->>>>
->>>> -       hba->vops = get_variant_ops(&pdev->dev);
->>>> +       err = of_platform_populate(node, NULL, NULL, &pdev->dev);
->>>> +       if (err)
->>>> +               dev_err(&pdev->dev,
->>>> +                       "%s: of_platform_populate() failed\n",
->>>> __func__);
->>>> +
->>>> +       ufs_variant_node = of_get_next_available_child(node, NULL);
->>>> +
->>>> +       if (!ufs_variant_node) {
->>>> +               dev_dbg(&pdev->dev, "failed to find ufs_variant_node
->>>> child\n");
->>>> +       } else {
->>>> +               ufs_variant_pdev =
->>>> of_find_device_by_node(ufs_variant_node);
->>>> +
->>>> +               if (ufs_variant_pdev)
->>>> +                       hba->vops = (struct ufs_hba_variant_ops *)
->>>> +
->>>> dev_get_drvdata(&ufs_variant_pdev->dev);
->>>> +       }
->>>
->>> I have no strong objection to 'ufs_variant' sub-node.  But why can't we
->>> simply add an of_device_id to ufs_of_match, like below:
->>>
->>> static const struct of_device_id ufs_of_match[] = {
->>>         { .compatible = "jedec,ufs-1.1"},
->>> #if IS_ENABLED(SCSI_UFS_QCOM)
->>>         { .compatible = "qcom,ufs", .data = &ufs_hba_qcom_vops },
->>> #neidf
->>>         {},
->>> };
->>>
->>> and get hba->vops by get_variant_ops()?
->>>
->>
->> Hi Mita,
->> thanks for your comments.
->>
->> The whole idea, of having a sub-node which includes all variant specific
->> attributes is to separate the UFS Platform device component, from the
->> need
->> to know "qcom" or any other future variant.
->> I believe it keeps the code more modular, and clean - meaning - no
->> #ifdef's and no need to include all variant attributes inside the driver
->> DT node.
->> in that case, we simply have a DT node that is compatible to the Jdec
->> standard, and sub-node to include variant info.
->>
->> I hope you agree with this new design, since it provides a good answer
->> to every future variant that will be added, without the need to change
->> the
->> platform file.
->
-> Thanks for your explanation, I agree with it.
->
-> I found two problems in the current code, but both can be fixed
-> relatively easily as described below:
->
-> 1) If ufshcd-pltfrm driver is loaded before ufs-qcom driver,
-> ufshcd_pltfrm_probe() can't find a ufs_variant device.
->
-> In order to trigger re-probing ufs device when ufs-qcom driver has
-> been loaded, ufshcd_pltfrm_probe() should return -EPROBE_DEFER in
-> case 'ufs_variant' sub-node exists and no hba->vops found.
->
-> 2) Nothing prevents ufs-qcom module from being unloaded while the
-> variant_ops is referenced by ufshcd-pltfrm.
->
-> It can be fixed by incrementing module refcount of ufs_variant module
-> by __module_get(ufs_variant_pdev->dev.driver->owener) in
-> ufshcd_pltfrm_probe(), and module_put() in ufshcd_pltfrm_remove()
-> to descrement the refcount.
->
+V3:
+In this version, in ufshcd-pltfrm.c probe and remove function, added:
+__module_get(ufs_variant_pdev->dev.driver->owner);
+module_put(ufs_variant_pdev->dev.driver->owner);
+in order to maintain a reference counter to prevent unloading
+ufs-qcom component if it is the variant that ufshcd-pltfrm is using.
 
-again, Mita, your comments are very appreciated.
+V2:
+In this Version, comments from reviewers were addressed
+and also, added another change: PATCH v2 4/4
+In this change we glue the variant attributes (vops, etc)
+at the time of the platform probing, so they can be used
+by the driver when it doing its initialization phase.
 
-1)
-If ufshcd-pltfrm driver is loaded before ufs-qcom, (what actually happens
-always), then the calling to of_platform_populate() which is added,
-guarantees that ufs-qcom probe will be called and finish, before
-ufshcd_pltfrm probe continues.
-so ufs_variant device is always there, and ready.
-I think it means we are safe - since either way, we make sure ufs-qcom
-probe will be called and finish before dealing with ufs_variant device in
-ufshcd_pltfrm probe.
+V1:
+The following combination of components, when SCSI_UFS_QCOM=y
+and PHY_QCOM_UFS=m is illegal and causes build errors.
+The 3rd patch in the series enables the SCSI_UFS_QCOM component to 
+be compiled as a module (by changing its configuration to tristate).
+So now, compiling SCSI_UFS_QCOM=m forces PHY_QCOM_UFS=m, and 
+SCSI_UFS_QCOM=y forces PHY_QCOM_UFS=y.
 
-2) you are right. the fix added as you suggested.
+In addition, when PHY_QCOM_UFS=m, external functions in 
+phy-ufs-qcom.c should be exported. The 1st patch fixes it.
 
-let us know your thoughts about the V3 once it's uploaded
+Another issue that we see when SCSI_UFS_QCOM=m is a warning that
+the 2nd patch fixes.
 
-thanks
+notice:
+checkpatch gives an error on the commit message of patch 1/3
+in the series. Ignore as the commit message is the build errors
+that this patch fixes.
 
+Yaniv Gardi (4):
+  phy: qcom-ufs: fix build error when the component is built as a module
+  scsi: ufs-qcom: fix compilation warning if compiled as a module
+  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
+  scsi: ufs: probe and init of variant driver from the platform device
 
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  8 ++++
+ drivers/phy/phy-qcom-ufs.c                         | 11 +++++
+ drivers/scsi/ufs/Kconfig                           |  2 +-
+ drivers/scsi/ufs/ufs-qcom.c                        | 48 +++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 45 ++++++++++++++------
+ 5 files changed, 98 insertions(+), 16 deletions(-)
 
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
