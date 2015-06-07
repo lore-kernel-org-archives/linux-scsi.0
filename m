@@ -1,142 +1,128 @@
-From: ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
+From: ygardi@codeaurora.org
 Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
  the platform device
-Date: Sun, 7 Jun 2015 15:22:18 -0000
-Message-ID: <9e35d6a7cdfd3d53510d41b0ff0a22fc.squirrel@www.codeaurora.org>
+Date: Sun, 7 Jun 2015 15:32:02 -0000
+Message-ID: <68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
 References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
     <1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
-    <1433426833.15728.15.camel@x220>
+    <CAC5umyis6HU06KU-aSGoy6mCt-u+5Pz16nDk1qHrcsTnFo_2hA@mail.gmail.com>
+    <763dbc7b708b5d5b18ce0b5adcc41016.squirrel@www.codeaurora.org>
+    <CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1433426833.15728.15.camel@x220>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Paul Bolle <pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org>
-Cc: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jbottomley-wo1vFcy6AUs@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sahitya Tummala <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:OPEN FIRMWARE AND..." <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51683 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414AbbFGPcE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2015 11:32:04 -0400
+In-Reply-To: <CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, merez@qti.qualcomm.com, dovl@qti.qualcomm.com, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Paul Bolle <pebolle@tiscali.nl>, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili
 
-Thanks Paul for the review and comments.
-please see inline.
-
-
-
-> On Wed, 2015-06-03 at 12:37 +0300, Yaniv Gardi wrote:
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> 2015-06-05 5:53 GMT+09:00  <ygardi@codeaurora.org>:
+>>> Hi Yaniv,
+>>>
+>>> 2015-06-03 18:37 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+>>>> @@ -321,7 +313,22 @@ static int ufshcd_pltfrm_probe(struct
+>>>> platform_device *pdev)
+>>>>                 goto out;
+>>>>         }
+>>>>
+>>>> -       hba->vops = get_variant_ops(&pdev->dev);
+>>>> +       err = of_platform_populate(node, NULL, NULL, &pdev->dev);
+>>>> +       if (err)
+>>>> +               dev_err(&pdev->dev,
+>>>> +                       "%s: of_platform_populate() failed\n",
+>>>> __func__);
+>>>> +
+>>>> +       ufs_variant_node = of_get_next_available_child(node, NULL);
+>>>> +
+>>>> +       if (!ufs_variant_node) {
+>>>> +               dev_dbg(&pdev->dev, "failed to find ufs_variant_node
+>>>> child\n");
+>>>> +       } else {
+>>>> +               ufs_variant_pdev =
+>>>> of_find_device_by_node(ufs_variant_node);
+>>>> +
+>>>> +               if (ufs_variant_pdev)
+>>>> +                       hba->vops = (struct ufs_hba_variant_ops *)
+>>>> +
+>>>> dev_get_drvdata(&ufs_variant_pdev->dev);
+>>>> +       }
+>>>
+>>> I have no strong objection to 'ufs_variant' sub-node.  But why can't we
+>>> simply add an of_device_id to ufs_of_match, like below:
+>>>
+>>> static const struct of_device_id ufs_of_match[] = {
+>>>         { .compatible = "jedec,ufs-1.1"},
+>>> #if IS_ENABLED(SCSI_UFS_QCOM)
+>>>         { .compatible = "qcom,ufs", .data = &ufs_hba_qcom_vops },
+>>> #neidf
+>>>         {},
+>>> };
+>>>
+>>> and get hba->vops by get_variant_ops()?
+>>>
+>>
+>> Hi Mita,
+>> thanks for your comments.
+>>
+>> The whole idea, of having a sub-node which includes all variant specific
+>> attributes is to separate the UFS Platform device component, from the
+>> need
+>> to know "qcom" or any other future variant.
+>> I believe it keeps the code more modular, and clean - meaning - no
+>> #ifdef's and no need to include all variant attributes inside the driver
+>> DT node.
+>> in that case, we simply have a DT node that is compatible to the Jdec
+>> standard, and sub-node to include variant info.
+>>
+>> I hope you agree with this new design, since it provides a good answer
+>> to every future variant that will be added, without the need to change
+>> the
+>> platform file.
 >
->>  EXPORT_SYMBOL(ufs_hba_qcom_vops);
+> Thanks for your explanation, I agree with it.
 >
-> Nothing uses this export. It's still a (static) symbol that is not
-> included in any header. I think this export serves no purpose. Am I
-> missing something subtle here?
+> I found two problems in the current code, but both can be fixed
+> relatively easily as described below:
 >
-
-you are correct. it will be removed.
-
->> +/**
->> + * ufs_qcom_probe - probe routine of the driver
->> + * @pdev: pointer to Platform device handle
->> + *
->> + * Always return 0
->> + */
->> +static int ufs_qcom_probe(struct platform_device *pdev)
->> +{
->> +	dev_set_drvdata(&pdev->dev, (void *)&ufs_hba_qcom_vops);
+> 1) If ufshcd-pltfrm driver is loaded before ufs-qcom driver,
+> ufshcd_pltfrm_probe() can't find a ufs_variant device.
 >
-> (Cast to void * should not be needed.)
+> In order to trigger re-probing ufs device when ufs-qcom driver has
+> been loaded, ufshcd_pltfrm_probe() should return -EPROBE_DEFER in
+> case 'ufs_variant' sub-node exists and no hba->vops found.
 >
-
-when removing the cast there is compilation error:
-ufs-qcom.c: warning: passing argument 2 of =91dev_set_drvdata=92 discar=
-ds
-=91const=92 qualifier from pointer target type
-error, forbidden warning: ufs-qcom.c
-
-
->> +	return 0;
->> +}
->> +
->> +/**
->> + * ufs_qcom_remove - set driver_data of the device to NULL
->> + * @pdev: pointer to platform device handle
->> + *
->> + * Always return 0
->> + */
->> +static int ufs_qcom_remove(struct platform_device *pdev)
->> +{
->> +	dev_set_drvdata(&pdev->dev, NULL);
->> +	return 0;
->> +}
->> +
->> +static const struct of_device_id ufs_qcom_of_match[] =3D {
->> +	{ .compatible =3D "qcom,ufs_variant"},
->> +	{},
->> +};
->> +
->> +static struct platform_driver ufs_qcom_pltform =3D {
->> +	.probe	=3D ufs_qcom_probe,
->> +	.remove	=3D ufs_qcom_remove,
->> +	.driver	=3D {
->> +		.name	=3D "ufs_qcom",
->> +		.owner	=3D THIS_MODULE,
->> +		.of_match_table =3D of_match_ptr(ufs_qcom_of_match),
->> +	},
->> +};
->> +module_platform_driver(ufs_qcom_pltform);
+> 2) Nothing prevents ufs-qcom module from being unloaded while the
+> variant_ops is referenced by ufshcd-pltfrm.
 >
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->
->> +	struct device_node *node =3D pdev->dev.of_node;
->> +	struct device_node *ufs_variant_node;
->> +	struct platform_device *ufs_variant_pdev;
->
->> -	hba->vops =3D get_variant_ops(&pdev->dev);
->> +	err =3D of_platform_populate(node, NULL, NULL, &pdev->dev);
->> +	if (err)
->> +		dev_err(&pdev->dev,
->> +			"%s: of_platform_populate() failed\n", __func__);
->> +
->> +	ufs_variant_node =3D of_get_next_available_child(node, NULL);
->> +
->> +	if (!ufs_variant_node) {
->> +		dev_dbg(&pdev->dev, "failed to find ufs_variant_node child\n");
->> +	} else {
->> +		ufs_variant_pdev =3D of_find_device_by_node(ufs_variant_node);
->> +
->> +		if (ufs_variant_pdev)
->> +			hba->vops =3D (struct ufs_hba_variant_ops *)
->> +				dev_get_drvdata(&ufs_variant_pdev->dev);
->
-> (Another cast that I think is not needed.)
-
-here you are right - this one can be removed and will be
->
->> +	}
->
-> If I scanned this correctly, the dev_set_drvdata() and dev_get_drvdat=
-a()
-> pair adds an actual user of ufs_hba_qcom_vops. So that ends the obvio=
-us
-> issue I think the code currently has. And I gladly defer to the scsi
-> people to determine whether that is done the right way.
->
-> Thanks,
->
->
-> Paul Bolle
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It can be fixed by incrementing module refcount of ufs_variant module
+> by __module_get(ufs_variant_pdev->dev.driver->owener) in
+> ufshcd_pltfrm_probe(), and module_put() in ufshcd_pltfrm_remove()
+> to descrement the refcount.
 >
 
+again, Mita, your comments are very appreciated.
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1)
+If ufshcd-pltfrm driver is loaded before ufs-qcom, (what actually happens
+always), then the calling to of_platform_populate() which is added,
+guarantees that ufs-qcom probe will be called and finish, before
+ufshcd_pltfrm probe continues.
+so ufs_variant device is always there, and ready.
+I think it means we are safe - since either way, we make sure ufs-qcom
+probe will be called and finish before dealing with ufs_variant device in
+ufshcd_pltfrm probe.
+
+2) you are right. the fix added as you suggested.
+
+let us know your thoughts about the V3 once it's uploaded
+
+thanks
+
+
+
