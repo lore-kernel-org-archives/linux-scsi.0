@@ -1,37 +1,44 @@
-From: "Practice Trinity (NHS SOUTH SEFTON CCG)" <trinitypractice@nhs.net>
-Subject: RE:
-Date: Mon, 8 Jun 2015 12:09:39 +0100
-Message-ID: <20150608110945.3B19E458125@nhs-pd1e-esg108.ad1.nhs.net>
-References: <132D0DB4B968F242BE373429794F35C22559D38329@NHS-PCLI-MBC011.AD1.NHS.NET>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
+ the platform device
+Date: Mon, 8 Jun 2015 23:47:36 +0900
+Message-ID: <CAC5umyiUYYsQpc3mzx=87it+3vgxDDT+=_Y70rwac7k1Rs3eoQ@mail.gmail.com>
+References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
+	<1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
+	<CAC5umyis6HU06KU-aSGoy6mCt-u+5Pz16nDk1qHrcsTnFo_2hA@mail.gmail.com>
+	<763dbc7b708b5d5b18ce0b5adcc41016.squirrel@www.codeaurora.org>
+	<CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
+	<68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.nhs.uk ([62.208.144.128]:38971 "EHLO relay.nhs.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbbFHLJv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2015 07:09:51 -0400
-In-Reply-To: <132D0DB4B968F242BE373429794F35C22559D38329@NHS-PCLI-MBC011.AD1.NHS.NET>
-Content-Language: en-GB
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: merez@qti.qualcomm.com, dovl@qti.qualcomm.com, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Paul Bolle <pebolle@tiscali.nl>, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Practice Trinity (NHS SOUTH SEFTON CCG)" <trinitypractice@nhs.net>
 
+2015-06-08 0:32 GMT+09:00  <ygardi@codeaurora.org>:
+> 1)
+> If ufshcd-pltfrm driver is loaded before ufs-qcom, (what actually happens
+> always), then the calling to of_platform_populate() which is added,
+> guarantees that ufs-qcom probe will be called and finish, before
+> ufshcd_pltfrm probe continues.
 
+I'm worrying the case ufshcd_pltfrm_probe() is called when ufshcd-pltfrm
+module is installed but ufs-qcom module is _not_ installed yet, where
+ufshcd-pltfrm and ufs-qcom are both built as loadable modules.
 
-$1.5 C.A.D for you email ( leonh2800@gmail.com )  for info
+In this case, of_platform_populate() in ufshcd_pltfrm_probe() doesn't
+invoke ufs-qcom probe, does it?  So I suggested using deferred probe
+infrastructure by returning -EPROBE_DEFER.
 
-********************************************************************************************************************
+> so ufs_variant device is always there, and ready.
+> I think it means we are safe - since either way, we make sure ufs-qcom
+> probe will be called and finish before dealing with ufs_variant device in
+> ufshcd_pltfrm probe.
+>
+> 2) you are right. the fix added as you suggested.
 
-This message may contain confidential information. If you are not the intended recipient please inform the
-sender that you have received the message in error before deleting it.
-Please do not disclose, copy or distribute information in this e-mail or take any action in reliance on its contents:
-to do so is strictly prohibited and may be unlawful.
-
-Thank you for your co-operation.
-
-NHSmail is the secure email and directory service available for all NHS staff in England and Scotland
-NHSmail is approved for exchanging patient data and other sensitive information with NHSmail and GSi recipients
-NHSmail provides an email address for your career in the NHS and can be accessed anywhere
-
-********************************************************************************************************************
+Thanks for fixing it.  But a little more work is needed in v3,
+I'll leave a comment to v3.
