@@ -1,60 +1,99 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4] cxlflash: Base support for IBM CXL Flash Adapter
-Date: Mon, 08 Jun 2015 16:45:58 -0500
-Message-ID: <55760D16.1040203@linux.vnet.ibm.com>
-References: <1433540782-15276-1-git-send-email-mrochs@linux.vnet.ibm.com> <5575D6C6.5080808@linux.vnet.ibm.com> <55760BF2.4010408@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v5] IBM CXL Flash Adapter
+Date: Mon,  8 Jun 2015 17:30:36 -0500
+Message-ID: <1433802636-7358-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:34669 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422AbbFHVqD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2015 17:46:03 -0400
+Received: from e39.co.us.ibm.com ([32.97.110.160]:49031 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbbFHWcP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2015 18:32:15 -0400
 Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Mon, 8 Jun 2015 15:46:03 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 93A873E4003E
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jun 2015 15:46:01 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t58LhiB534078916
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2015 14:43:44 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t58Lk0PG016485
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2015 15:46:01 -0600
-In-Reply-To: <55760BF2.4010408@linux.vnet.ibm.com>
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Mon, 8 Jun 2015 16:32:14 -0600
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2C0346E8047
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jun 2015 18:23:59 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t58MWCg960031160
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2015 22:32:12 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t58MWA1d028883
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2015 18:32:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: manoj@linux.vnet.ibm.com, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, hch@infradead.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, hch@infradead.org
 Cc: mikey@neuling.org, imunsie@au1.ibm.com
 
-On 06/08/2015 04:41 PM, Manoj Kumar wrote:
-> On 6/8/2015 12:54 PM, Brian King wrote:
-> 
->>> +
->>> +    rcr = send_tmf(afu, scp, TMF_LUN_RESET);
->>> +    if (unlikely(rcr))
->>> +        rc = FAILED;
->>
->> Do you need to wait for all commands to the LUN to be returned before returning from
->> here? You could put a simple loop here, polling until there are no ops outstanding
->> to this LUN, if needed...
-> 
-> Brian:
-> 
-> Good suggestion. Would it be acceptable to add this capability in a future patch?
+This patch adds support for the IBM CXL flash (cxlflash) adapter. The device
+is presented to the system as a SCSI adapter and may be accessed and used via
+the normal filesystem paths.
 
-That's fine with me. 
+Note that the patch is dependent on support that has not yet been merged in
+with the mainline. The core cxl changes needed for this are in mpe's powerpc
+next branch queued up for 4.2. They are in linux next-20150605. To compile
+this you'll need to pull in mpe's powerpc tree from:
 
-Thanks,
+ git://git.kernel.org/pub/scm/linux/kernel/git/mpe/linux.git next
 
-Brian
+v5 Changes:
+- Incorporate review comments from Mikey Neuling and Brian King
+- Add PCI and SCSI dependencies
+- Fix error code to -ENODEV when cxl_get_phys_dev() fails
+- Revise TMF handling in queuecommand() to not sleep
+- Revise afu->room atomic strategy to avoid possible race condition
+
+v4 Changes:
+- Incorporate followup comments from Brian King
+- Re-introduce wait queue with serialization for TMF commands
+- Revise updating of AFU room to limit MMIO reads
+- Add proper cleanup in paths where send_cmd() fails
+- Don't set DID_ERROR when sense data is valid
+
+v3 Changes:
+- Incorporate Brian King review comments
+- Update to latest candidate upstream CXL APIs
+- Add several clarification comments
+- Use debug facilities in linux/bug.h
+- Correct a potential command corruption bug
+- Refine SCSI error handling/reporting
+- Serialize TMF events
+- Remove unnecessary debug prints, parenthesis, and volatile keywords
+- Update afu->room where appropriate
+- Sleep instead of busy-wait for command completion
+- Serialize AFU sync events, ensure process context only
+- Pack structures shared with hardware
+
+v2 Changes:
+- Incorporate Mikey Neuling review comments
+- Update to candidate upstream CXL APIs
+- Add several clarification comments
+- Renamed some structures for clarity
+- Removed the 'cxlflash' prefix from internal functions
+- Address endianness concerns/issues
+- Remove unused code
+- Revert to using pr_*/dev_* print services
+- Remove unneeded locking and barrier instructions
+
+Matthew R. Ochs (1):
+  cxlflash: Base support for IBM CXL Flash Adapter
+
+ drivers/scsi/Kconfig            |    2 +-
+ drivers/scsi/Makefile           |    1 +
+ drivers/scsi/cxlflash/Kconfig   |   11 +
+ drivers/scsi/cxlflash/Makefile  |    2 +
+ drivers/scsi/cxlflash/common.h  |  180 ++++
+ drivers/scsi/cxlflash/main.c    | 2279 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/main.h    |  104 ++
+ drivers/scsi/cxlflash/sislite.h |  465 ++++++++
+ 8 files changed, 3043 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/cxlflash/Kconfig
+ create mode 100644 drivers/scsi/cxlflash/Makefile
+ create mode 100644 drivers/scsi/cxlflash/common.h
+ create mode 100644 drivers/scsi/cxlflash/main.c
+ create mode 100644 drivers/scsi/cxlflash/main.h
+ create mode 100755 drivers/scsi/cxlflash/sislite.h
 
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+2.1.0
 
