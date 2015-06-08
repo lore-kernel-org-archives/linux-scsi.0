@@ -1,190 +1,170 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 4/4] scsi: ufs: probe and init of variant driver from the platform device
-Date: Sun,  7 Jun 2015 19:27:04 +0300
-Message-ID: <1433694425-23478-5-git-send-email-ygardi@codeaurora.org>
-References: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+From: Nilesh Javali <nilesh.javali@qlogic.com>
+Subject: RE: [PATCH] qla4xxx: pass timeout as HZ independent value
+Date: Mon, 8 Jun 2015 06:22:17 +0000
+Message-ID: <058691E078642A44B7C96BB0B1DB4F2481C9EA26@avmb2.qlogic.org>
+References: <1432757426-6459-1-git-send-email-hofrat@osadl.org>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_058691E078642A44B7C96BB0B1DB4F2481C9EA26avmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52319 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066AbbFGQ1r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2015 12:27:47 -0400
-In-Reply-To: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:39168 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750872AbbFHGWW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2015 02:22:22 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t586JIu4011767
+	for <linux-scsi@vger.kernel.org>; Sun, 7 Jun 2015 23:22:22 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1utsc1461n-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Sun, 07 Jun 2015 23:22:21 -0700
+In-Reply-To: <1432757426-6459-1-git-send-email-hofrat@osadl.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, akinobu.mita@gmail.com, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, pebolle@tiscali.nl, gbroner@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-It does so by adding the following changes:
-1. Introducing SCSI_UFS_QCOM as a platform device. Its probe
-   function registers a set of vops to its driver_data.
-2. Adding an optional device tree sub-node, under SCSI_UFSHCD_PLATFORM.
-   Now, the probe function of SCSI_UFSHCD_PLATFORM invokes the probe
-   function of its sub-node (if it exists), by calling
-   of_platform_populate(). It ensures that vops are set, and ready to
-   be used, by the time the UFSHCD driver starts its initialization
-   procedure.
+--_000_058691E078642A44B7C96BB0B1DB4F2481C9EA26avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
----
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  8 ++++
- drivers/scsi/ufs/ufs-qcom.c                        | 41 +++++++++++++++++++-
- drivers/scsi/ufs/ufshcd-pltfrm.c                   | 45 +++++++++++++++-------
- 3 files changed, 80 insertions(+), 14 deletions(-)
+> -----Original Message-----
+> From: Nicholas Mc Guire [mailto:hofrat@osadl.org]
+> Sent: Thursday, May 28, 2015 1:40 AM
+> To: Dept-Eng QLogic Storage Upstream
+> Cc: James E.J. Bottomley; linux-scsi; linux-kernel; Nicholas Mc Guire
+> Subject: [PATCH] qla4xxx: pass timeout as HZ independent value
+>=20
+> schedule_timeout_* takes a timeout in jiffies but the code currently is
+> passing in a constant which makes this timeout HZ dependent, so pass it
+> through msecs_to_jiffies() to fix this up.
+>=20
+> patch was compile tested with x86_64_defconfig + SCSI_LOWLEVEL=3Dy,
+> CONFIG_SCSI_QLA_ISCSI=3Dm
+>=20
+> Patch is against 4.1-rc5 (localversion-next is -next-20150527)
+>=20
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>=20
+> As there is no documentation of the intended timeout it might be wrong to
+> convert it with msecs_to_jiffies as this can reduces the actual jiffies v=
+alue by
+> at least a factor of 10 - so someone that knows this driver needs to chec=
+k on
+> the actual value - but in any case it needs to be passed in a HZ independ=
+ent
+> way.
+>=20
+>  drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.=
+c
+> index 7c33658..7b53eab 100644
+> --- a/drivers/scsi/qla4xxx/ql4_nx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
+> @@ -1569,7 +1569,7 @@ static int qla4_82xx_cmdpeg_ready(struct
+> scsi_qla_host *ha, int pegtune_val)
+>  			    (val =3D=3D PHAN_INITIALIZE_ACK))
+>  				return 0;
+>  			set_current_state(TASK_UNINTERRUPTIBLE);
+> -			schedule_timeout(500);
+> +			schedule_timeout(msecs_to_jiffies(500));
+>=20
+>  		} while (--retries);
+>=20
+> --
+> 1.7.10.4
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index 5357919..e2f3058 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -55,3 +55,11 @@ Example:
- 		clock-names = "core_clk", "ref_clk", "iface_clk";
- 		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
- 	};
-+
-+This is an example to a variant sub-node of ufshc:
-+	ufs_variant {
-+		compatible = "qcom,ufs_variant";
-+	};
-+
-+This sub-node holds various specific information that is not defined in the
-+standard and that may differ between platforms.
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 6671a8e..4391f1e 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1016,6 +1016,45 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.suspend		= ufs_qcom_suspend,
- 	.resume			= ufs_qcom_resume,
- };
--EXPORT_SYMBOL(ufs_hba_qcom_vops);
-+
-+/**
-+ * ufs_qcom_probe - probe routine of the driver
-+ * @pdev: pointer to Platform device handle
-+ *
-+ * Always return 0
-+ */
-+static int ufs_qcom_probe(struct platform_device *pdev)
-+{
-+	dev_set_drvdata(&pdev->dev, (void *)&ufs_hba_qcom_vops);
-+	return 0;
-+}
-+
-+/**
-+ * ufs_qcom_remove - set driver_data of the device to NULL
-+ * @pdev: pointer to platform device handle
-+ *
-+ * Always return 0
-+ */
-+static int ufs_qcom_remove(struct platform_device *pdev)
-+{
-+	dev_set_drvdata(&pdev->dev, NULL);
-+	return 0;
-+}
-+
-+static const struct of_device_id ufs_qcom_of_match[] = {
-+	{ .compatible = "qcom,ufs_variant"},
-+	{},
-+};
-+
-+static struct platform_driver ufs_qcom_pltform = {
-+	.probe	= ufs_qcom_probe,
-+	.remove	= ufs_qcom_remove,
-+	.driver	= {
-+		.name	= "ufs_qcom",
-+		.owner	= THIS_MODULE,
-+		.of_match_table = of_match_ptr(ufs_qcom_of_match),
-+	},
-+};
-+module_platform_driver(ufs_qcom_pltform);
- 
- MODULE_LICENSE("GPL v2");
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 7db9564..a3f0a61 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -36,22 +36,11 @@
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
- #include <linux/of.h>
-+#include <linux/of_platform.h>
- 
- #include "ufshcd.h"
- 
- static const struct of_device_id ufs_of_match[];
--static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
--{
--	if (dev->of_node) {
--		const struct of_device_id *match;
--
--		match = of_match_node(ufs_of_match, dev->of_node);
--		if (match)
--			return (struct ufs_hba_variant_ops *)match->data;
--	}
--
--	return NULL;
--}
- 
- static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- {
-@@ -300,6 +289,9 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 	struct resource *mem_res;
- 	int irq, err;
- 	struct device *dev = &pdev->dev;
-+	struct device_node *node = pdev->dev.of_node;
-+	struct device_node *ufs_variant_node;
-+	struct platform_device *ufs_variant_pdev;
- 
- 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	mmio_base = devm_ioremap_resource(dev, mem_res);
-@@ -321,7 +313,23 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
- 
--	hba->vops = get_variant_ops(&pdev->dev);
-+	err = of_platform_populate(node, NULL, NULL, &pdev->dev);
-+	if (err)
-+		dev_err(&pdev->dev,
-+			"%s: of_platform_populate() failed\n", __func__);
-+
-+	ufs_variant_node = of_get_next_available_child(node, NULL);
-+
-+	if (!ufs_variant_node) {
-+		dev_dbg(&pdev->dev, "failed to find ufs_variant_node child\n");
-+	} else {
-+		ufs_variant_pdev = of_find_device_by_node(ufs_variant_node);
-+
-+		if (ufs_variant_pdev) {
-+			__module_get(ufs_variant_pdev->dev.driver->owner);
-+			hba->vops = dev_get_drvdata(&ufs_variant_pdev->dev);
-+		}
-+	}
- 
- 	err = ufshcd_parse_clock_info(hba);
- 	if (err) {
-@@ -365,9 +373,20 @@ out:
- static int ufshcd_pltfrm_remove(struct platform_device *pdev)
- {
- 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-+	struct device_node *node = pdev->dev.of_node;
-+	struct device_node *ufs_variant_node;
-+	struct platform_device *ufs_variant_pdev;
-+
-+	ufs_variant_node = of_get_next_available_child(node, NULL);
-+
-+	if (!ufs_variant_node)
-+		dev_dbg(&pdev->dev, "no ufs_variant_node found\n");
-+	else
-+		ufs_variant_pdev = of_find_device_by_node(ufs_variant_node);
- 
- 	pm_runtime_get_sync(&(pdev)->dev);
- 	ufshcd_remove(hba);
-+	module_put(ufs_variant_pdev->dev.driver->owner);
- 	return 0;
- }
- 
--- 
-1.8.5.2
+Acked-by: Nilesh Javali <nilesh.javali@qlogic.com>
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+--_000_058691E078642A44B7C96BB0B1DB4F2481C9EA26avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+onAAAB8AQgABAAAAHAAAAE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAAAfAGUAAQAAADIAAABu
+AGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEA
+AAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACATgBp
+AGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEA
+bABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBh
+AHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAADoAAABzAGkAcAA6AG4A
+aQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAA
+ABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAHwAfDAEAAAAyAAAAbgBpAGwAZQBzAGgA
+LgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBU
+AFAAAAAAAAIBGQwBAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAA
+SgBhAHYAYQBsAGkAAABTAE0AVABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAcAAAATgBpAGwAZQBzAGgAIABKAGEAdgBh
+AGwAaQAAAB8AI0ABAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHAAAAAAAAAAgSsf
+pL6jEBmdbgDdAQ9UAgAAAIBOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAUwBNAFQAUAAAAG4A
+aQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAy
+AAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAAsA
+QDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9
+P+QEAAACAQswAQAAABAAAACRvqe7AufhS57ZVY6wi3JWAwAXAAEAAABAADkAgHKCd7Oh0AFAAAgw
+fFAOeLOh0AELACkAAAAAAAsAIwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
+AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
+AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAdAAAAFIARQA6ACAAWwBQAEEAVABDAEgAXQAg
+AHEAbABhADQAeAB4AHgAOgAgAHAAYQBzAHMAIAB0AGkAbQBlAG8AdQB0ACAAYQBzACAASABaACAA
+aQBuAGQAZQBwAGUAbgBkAGUAbgB0ACAAdgBhAGwAdQBlAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAA
+AAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAaAAAADwAMQA0ADMAMgA3ADUANwA0ADIANgAtADYA
+NAA1ADkALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABvAGYAcgBhAHQAQABv
+AHMAYQBkAGwALgBvAHIAZwA+AAAAAgFxAAEAAAAbAAAAAQHQmLpVdQ+HnmkIJUC454yZQ2/gmJ2i
+NPfQAB8AcAABAAAAbAAAAFsAUABBAFQAQwBIAF0AIABxAGwAYQA0AHgAeAB4ADoAIABwAGEAcwBz
+ACAAdABpAG0AZQBvAHUAdAAgAGEAcwAgAEgAWgAgAGkAbgBkAGUAcABlAG4AZABlAG4AdAAgAHYA
+YQBsAHUAZQAAAB8ANRABAAAAeAAAADwAMAA1ADgANgA5ADEARQAwADcAOAA2ADQAMgBBADQANABC
+ADcAQwA5ADYAQgBCADAAQgAxAEQAQgA0AEYAMgA0ADgAMQBDADkARQBBADIANgBAAGEAdgBtAGIA
+MgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAaAAAADwAMQA0ADMAMgA3ADUANwA0
+ADIANgAtADYANAA1ADkALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABvAGYA
+cgBhAHQAQABvAHMAYQBkAGwALgBvAHIAZwA+AAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAA
+RgAAAAADhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcw
+3zsNd7Oh0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFM
+b2dpYztsPUFWTUIyLTE1MDYwODA2MjIxN1otMTI3OTAAAAACARAwAQAAAEYAAAAAAAAAgqc0rY6x
+/kS2Wxuo6bh73AcAzTs2Ijp7n0Cm/muqxOLaYQAAAGx4FQAAdI0nmS6jZkyYdyYbqJkFWwB0fThy
+JQAAAAAfAPo/AQAAABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAAwAJWQEAAAADAACA
+CCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAA
+AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAA
+AACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBv
+AHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgA
+YQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAi
+AAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEA
+LgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBt
+AGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAkJI=
+
+--_000_058691E078642A44B7C96BB0B1DB4F2481C9EA26avmb2qlogicorg_--
