@@ -1,44 +1,46 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 4/4] scsi: ufs: probe and init of variant driver from
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 4/4] scsi: ufs: probe and init of variant driver from
  the platform device
-Date: Mon, 8 Jun 2015 23:47:36 +0900
-Message-ID: <CAC5umyiUYYsQpc3mzx=87it+3vgxDDT+=_Y70rwac7k1Rs3eoQ@mail.gmail.com>
-References: <1433324255-27510-1-git-send-email-ygardi@codeaurora.org>
-	<1433324255-27510-5-git-send-email-ygardi@codeaurora.org>
-	<CAC5umyis6HU06KU-aSGoy6mCt-u+5Pz16nDk1qHrcsTnFo_2hA@mail.gmail.com>
-	<763dbc7b708b5d5b18ce0b5adcc41016.squirrel@www.codeaurora.org>
-	<CAC5umyhWTLe_K+q9U=4M4N4Yu4Hp7hUxy4QiL=ch=JmYEiMBnQ@mail.gmail.com>
-	<68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
+Date: Mon, 8 Jun 2015 23:51:45 +0900
+Message-ID: <CAC5umyhBHh=Wu=yXwUz9HxCXyPFofzYBu2AmekqaU=o5VRYMZw@mail.gmail.com>
+References: <1433694425-23478-1-git-send-email-ygardi@codeaurora.org>
+	<1433694425-23478-5-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <68c91f08f2be6c84055a303ca8aa3fe0.squirrel@www.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: merez@qti.qualcomm.com, dovl@qti.qualcomm.com, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Paul Bolle <pebolle@tiscali.nl>, Gilad Broner <gbroner@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1433694425-23478-5-git-send-email-ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: Jej B <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Santosh Y <santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Paul Bolle <pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-wo1vFcy6AUs@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sahitya Tummala <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vge>
 List-Id: linux-scsi@vger.kernel.org
 
-2015-06-08 0:32 GMT+09:00  <ygardi@codeaurora.org>:
-> 1)
-> If ufshcd-pltfrm driver is loaded before ufs-qcom, (what actually happens
-> always), then the calling to of_platform_populate() which is added,
-> guarantees that ufs-qcom probe will be called and finish, before
-> ufshcd_pltfrm probe continues.
-
-I'm worrying the case ufshcd_pltfrm_probe() is called when ufshcd-pltfrm
-module is installed but ufs-qcom module is _not_ installed yet, where
-ufshcd-pltfrm and ufs-qcom are both built as loadable modules.
-
-In this case, of_platform_populate() in ufshcd_pltfrm_probe() doesn't
-invoke ufs-qcom probe, does it?  So I suggested using deferred probe
-infrastructure by returning -EPROBE_DEFER.
-
-> so ufs_variant device is always there, and ready.
-> I think it means we are safe - since either way, we make sure ufs-qcom
-> probe will be called and finish before dealing with ufs_variant device in
-> ufshcd_pltfrm probe.
+2015-06-08 1:27 GMT+09:00 Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>:
+>  static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+>  {
+>         struct ufs_hba *hba =  platform_get_drvdata(pdev);
+> +       struct device_node *node = pdev->dev.of_node;
+> +       struct device_node *ufs_variant_node;
+> +       struct platform_device *ufs_variant_pdev;
+> +
+> +       ufs_variant_node = of_get_next_available_child(node, NULL);
+> +
+> +       if (!ufs_variant_node)
+> +               dev_dbg(&pdev->dev, "no ufs_variant_node found\n");
+> +       else
+> +               ufs_variant_pdev = of_find_device_by_node(ufs_variant_node);
 >
-> 2) you are right. the fix added as you suggested.
+>         pm_runtime_get_sync(&(pdev)->dev);
+>         ufshcd_remove(hba);
+> +       module_put(ufs_variant_pdev->dev.driver->owner);
 
-Thanks for fixing it.  But a little more work is needed in v3,
-I'll leave a comment to v3.
+module_put() should only be called when ufs_variant sub-node exists
+and hba->vops was found.
+If ufs->vops == NULL or no ufs_variant sub-node exists, this line
+causes uninitialized pointer dereference.
+
+>         return 0;
+>  }
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
