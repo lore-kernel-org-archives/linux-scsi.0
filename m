@@ -1,65 +1,41 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5] cxlflash: Base support for IBM CXL Flash Adapter
-Date: Tue, 09 Jun 2015 09:37:44 -0500
-Message-ID: <5576FA38.5010501@linux.vnet.ibm.com>
-References: <1433802653-7476-1-git-send-email-mrochs@linux.vnet.ibm.com> <55761DAF.9030203@linux.vnet.ibm.com> <55762437.6060607@linux.vnet.ibm.com> <5576CE22.1060409@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] megaraid_sas: insert missing space in kernel message
+Date: Tue,  9 Jun 2015 16:53:43 +0100
+Message-ID: <1433865223-15310-1-git-send-email-colin.king@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:47565 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034AbbFIOhs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2015 10:37:48 -0400
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Tue, 9 Jun 2015 08:37:46 -0600
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id D10B919D803F
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jun 2015 08:28:45 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t59EbiKj36372660
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Jun 2015 07:37:44 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t59Ebht4015073
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Jun 2015 08:37:44 -0600
-In-Reply-To: <5576CE22.1060409@linux.vnet.ibm.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:50848 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbbFIPzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2015 11:55:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, hch@infradead.org
-Cc: mikey@neuling.org, imunsie@au1.ibm.com
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On 6/9/2015 6:29 AM, Brian King wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
->> Pulled out going to sleep in the queuecommand path.
->
-> udelay doesn't sleep, its a busy wait, so you can still use it in queuecommand,
-> just don't spend too much time, and its probably better to udelay then to
-> just re-read in a tight loop.
+The printk format specifier string is missing a space between
+the %p format specifier and the "on the defer" text. Minor fix,
+add the missing space.
 
-Thanks for the clarification. Will update in the next patch (v6).
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->>
->> This was the optimization to avoid the MMIO for both threads. The other thread that raced should do the atomic set of afu->room to a positive value.
->
-> Let's take the simpler scenario of just one thread.
->
-> Let's start with afu->room = 1
-> We call atomic64_dec_if_positive, which results in afu->room going to zero and 0 being returned,
-> so we go into the if leg.
->
-> If afu->room is zero every time we read it from the adapter and we exhaust our retries,
-> we return SCSI_MLQUEUE_HOST_BUSY. However, the next time we enter cxlflash_send_cmd,
-> since afu->cmd is now 0, it will no longer get decremented, but the return value will
-> be -1, so we'll go down the else if leg. We'll never get into the if leg again to
-> re-read afu->room from the AFU. The simplest fix might just be to set afu->room = 1
-> if you ever leave the if leg without having room.
-
-Good suggestion. Will atomic64_set(&afu->room, 1), if we exhaust retries 
-in both legs.
-
-
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 890637f..4889ef6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3148,7 +3148,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance)
+ 		cmd = instance->cmd_list[i];
+ 		if (cmd->sync_cmd == 1 || cmd->scmd) {
+ 			printk(KERN_NOTICE "megasas: moving cmd[%d]:%p:%d:%p"
+-					"on the defer queue as internal\n",
++					" on the defer queue as internal\n",
+ 				defer_index, cmd, cmd->sync_cmd, cmd->scmd);
+ 
+ 			if (!list_empty(&cmd->list)) {
+-- 
+2.1.4
 
