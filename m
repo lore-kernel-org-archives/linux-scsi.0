@@ -1,43 +1,39 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: lpfc: Fix rport leak.
-Date: Wed, 10 Jun 2015 18:48:20 +0300
-Message-ID: <20150610154820.GI10549@mwanda>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH 0/2] target: 64-bit LUN support
+Date: Wed, 10 Jun 2015 09:45:17 -0700
+Message-ID: <5578699D.6090405@redhat.com>
+References: <1433918483-46849-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36618 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965923AbbFJPse (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2015 11:48:34 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1433918483-46849-1-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@avagotech.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+On 06/09/2015 11:41 PM, Hannes Reinecke wrote:
+> Hi Nic,
+>
+> here's now the patchset for making LIO-target support 64-bit LUNs.
+> Pretty straightforward, plus an additional patch to remove the
+> now obsolete limitation on 256 LUNs per TPG. There had been a
+> comment in the header that REPORT LUN emulation would only support
+> up to one page in payload, but I couldn't find any evidence for
+> this in the code.
+>
+> As usual, comments and reviews are welcome.
 
-This is a semi-automatic email about new static checker warnings.
+Hi Hannes,
 
-The patch 466e840b7809: "lpfc: Fix rport leak." from May 21, 2015, 
-leads to the following Smatch complaint:
+I think we also need to take care of how we report LUNs in spc.c 
+spc_emulate_report_luns(). From reading SAM-5 4.7.7 (addressing methods) 
+it looks like we're currently using the simple addressing format 
+(address method = 0) and if we want to report more than 14 bits we would 
+need to report the luns with a different addressing format.
 
-drivers/scsi/lpfc/lpfc_hbadisc.c:3905 lpfc_register_remote_port()
-	 error: we previously assumed 'rdata' could be null (see line 3903)
+I'm wondering if this could be seen as a bug in int_to_scsilun, but in 
+any case I hope you'll take a look and make sure we're ok?
 
-drivers/scsi/lpfc/lpfc_hbadisc.c
-  3902			ndlp->rport = NULL;
-  3903			if (rdata && rdata->pnode == ndlp)
-                            ^^^^^
-Patch introduces a new check.
-
-  3904				lpfc_nlp_put(ndlp);
-  3905			rdata->pnode = NULL;
-                        ^^^^^^^^^^^^
-Unchecked dereference.
-
-  3906			/* drop reference for earlier registeration */
-  3907			put_device(&rport->dev);
-
-regards,
-dan carpenter
+Thanks -- Regards -- Andy
