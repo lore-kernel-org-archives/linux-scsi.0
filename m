@@ -1,78 +1,50 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 17/20 v1] [SCSI] mpt3sas: Use alloc_ordered_workqueue()
- API instead of create_singlethread_workqueue() API
-Date: Thu, 18 Jun 2015 17:36:36 -0400
-Message-ID: <558339E4.6010705@stratus.com>
-References: <1434433027-40682-1-git-send-email-Sreekanth.Reddy@avagotech.com>	<5582B51C.8070700@stratus.com> <CAK=zhgoGUC74U6RxxALv=1Y3jbKSAZ+_Ahfa1wLsaMDvin92qg@mail.gmail.com>
+From: SUN EAST FEDERAL CREDIT UNION <rocio.suarez@dpss.gob.ec>
+Subject: =?utf-8?Q?l=C3=A5netilbud?=
+Date: Wed, 10 Jun 2015 05:32:36 -0500 (ECT)
+Message-ID: <2071783449.3818027.1433932356982.JavaMail.root__4767.25316043503$1434680502$gmane$org@dpss.gob.ec>
+Reply-To: "suneastf@gmail.com" <suneastf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o149.mxlogic.net ([208.65.145.82]:51887 "EHLO
-	p02c12o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbbFRVoT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2015 17:44:19 -0400
-In-Reply-To: <CAK=zhgoGUC74U6RxxALv=1Y3jbKSAZ+_Ahfa1wLsaMDvin92qg@mail.gmail.com>
+Received: from server.dpss.gob.ec ([190.152.151.93]:38312 "EHLO
+	mail.dpss.gob.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505AbbFSCVJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2015 22:21:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On 06/18/2015 09:06 AM, Sreekanth Reddy wrote:
-> On Thu, Jun 18, 2015 at 5:40 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
->> On 06/16/2015 01:37 AM, Sreekanth Reddy wrote:
->>> Created a thread using alloc_ordered_workqueue() API in order to process
->>> the works from firmware Work-queue sequentially instead of
->>> create_singlethread_workqueue() API.
->>>
->>> Changes in v1:
->>>     No need to check for backport compatibility in the upstream kernel.
->>> so removing the else section where driver use
->>> create_singlethread_workqueue() API if alloc_ordered_workqueue() API is
->>> not defined, This else section is not required since in the latest upstream
->>> kernel this alloc_ordered_workqueue() API is always defined.
->>>
->>> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
->>> ---
->>>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->>> index b848458..7e5926c 100644
->>> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->>> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->>> @@ -8085,8 +8085,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->>>       /* event thread */
->>>       snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
->>>           "fw_event%d", ioc->id);
->>> -     ioc->firmware_event_thread = create_singlethread_workqueue(
->>> -         ioc->firmware_event_name);
->>> +     ioc->firmware_event_thread = alloc_ordered_workqueue(
->>> +         ioc->firmware_event_name, WQ_MEM_RECLAIM);
->>>       if (!ioc->firmware_event_thread) {
->>>               pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
->>>                   ioc->name, __FILE__, __LINE__, __func__);
->>>
->>
->> Hi Sreekanth,
->>
->> Is this change still needed after e09c2c2954684 workqueue: apply
->> __WQ_ORDERED to create_singlethread_workqueue() ?  (3.17+)
-> 
-> I won't say that it is compulsory required, but I feel it is better if
-> these changes are included. since initially we thought that thread
-> created by using create_singlethread_workqueue() will process the
-> works sequentially but in-between  it has broken and then it is fixed
-> by Tejun.  So I thought it is better to directly use the
-> alloc_ordered_workqueue() as create_singlethead_workqueue() API also
-> invoked the same API.
 
-Ok, I was just wondering if maybe create_singlethread_workqueue was
-fixed after this patch was initially written.  Since it's effectively
-the same...
 
-Reviewed-by: Joe Lawrence <joe.lawrence@stratus.com>
 
-Regards,
+Hallo
 
--- Joe
+Hilsen fra SUN EAST Federal Credit Union, er vi godt etablert og godkje=
+nt britiske l=C3=A5n selskaper, i l=C3=B8pet av =C3=A5rene har vi utvik=
+let en god forst=C3=A5else av dine behov og individuelle behov. vi forp=
+liktet oss til =C3=A5 behandle v=C3=A5re kunder rettferdig og tilbyr en=
+ tjeneste som er profesjonell og vennlig, vi er i en unik posisjon til =
+=C3=A5 tilby alle typer l=C3=A5n til alle personer s=C3=A5 lavt som 1.5=
+% rente, s=C3=A5 hvis du har noen =C3=B8konomiske vanskeligheter og du =
+trenger l=C3=A5net, kan du kontakte oss hvis du er interessert V=C3=A5r=
+ e-post: suneastf@gmail.com
+
+* Ditt fulle navn:
+* Ditt land og hjemmeadresse:
+* Telefonnummer:
+* Antall l=C3=A5n som trengs:
+* Varighet:
+* Form=C3=A5l:
+* Kj=C3=B8nn og alder:
+* Yrke:
+
+Vi venter p=C3=A5 svar ang=C3=A5ende fylte formen selv om v=C3=A5re e-p=
+oster.
+Takk for svar.
+
+Susane.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
