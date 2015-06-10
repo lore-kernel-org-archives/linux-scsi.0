@@ -1,14 +1,14 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 8/9] qla2xxx: Enable Target counters in DebugFS.
-Date: Wed, 10 Jun 2015 11:05:24 -0400
-Message-ID: <1433948725-4073-9-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 3/9] qla2xxx: Add flush after updating ATIOQ consumer index.
+Date: Wed, 10 Jun 2015 11:05:19 -0400
+Message-ID: <1433948725-4073-4-git-send-email-himanshu.madhani@qlogic.com>
 References: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:12686 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965988AbbFJPtL (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:48559 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965989AbbFJPtL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 10 Jun 2015 11:49:11 -0400
 In-Reply-To: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
@@ -17,231 +17,29 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Following counters are added in target mode to help debugging efforts.
+From: Quinn Tran <quinn.tran@qlogic.com>
 
-Target Counters
+After updating the consumer index of ATIO Q, a read is
+required to flush the write to the adapter register.
 
-qla_core_sbt_cmd = 0
-qla_core_ret_sta_ctio = 0
-qla_core_ret_ctio = 0
-core_qla_que_buf = 0
-core_qla_snd_status = 0
-core_qla_free_cmd = 0
-num alloc iocb failed = 0
-num term exchange sent = 0
-num Q full sent = 0
-
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h     |   15 +++++++++
- drivers/scsi/qla2xxx/qla_dfs.c     |   56 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_iocb.c    |    1 +
- drivers/scsi/qla2xxx/qla_target.c  |    7 ++++
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |    4 ++
- 5 files changed, 83 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 787f901..a87e42b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3316,6 +3316,8 @@ struct qla_hw_data {
- 	uint32_t	chain_offset;
- 	struct dentry *dfs_dir;
- 	struct dentry *dfs_fce;
-+        struct dentry *dfs_tgt_counters;
-+
- 	dma_addr_t	fce_dma;
- 	void		*fce;
- 	uint32_t	fce_bufs;
-@@ -3473,6 +3475,18 @@ struct qla_hw_data {
- 	int	allow_cna_fw_dump;
- };
- 
-+struct qla_tgt_counters {
-+	uint64_t qla_core_sbt_cmd;
-+	uint64_t core_qla_que_buf;
-+	uint64_t qla_core_ret_ctio;
-+	uint64_t core_qla_snd_status;
-+	uint64_t qla_core_ret_sta_ctio;
-+	uint64_t core_qla_free_cmd;
-+	uint64_t num_q_full_sent;
-+	uint64_t num_alloc_iocb_failed;
-+	uint64_t num_term_xchg_sent;
-+};
-+
- /*
-  * Qlogic scsi host structure
-  */
-@@ -3615,6 +3629,7 @@ typedef struct scsi_qla_host {
- 
- 	atomic_t	vref_count;
- 	struct qla8044_reset_template reset_tmplt;
-+	struct qla_tgt_counters tgt_counters;
- } scsi_qla_host_t;
- 
- #define SET_VP_IDX	1
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 15cf074..2f50c08 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -13,6 +13,48 @@ static struct dentry *qla2x00_dfs_root;
- static atomic_t qla2x00_dfs_root_count;
- 
- static int
-+qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
-+{
-+        struct scsi_qla_host *vha = s->private;
-+
-+	seq_puts(s, "Target Counters\n");
-+	seq_printf(s, "qla_core_sbt_cmd = %lld\n",
-+		vha->tgt_counters.qla_core_sbt_cmd);
-+	seq_printf(s, "qla_core_ret_sta_ctio = %lld\n",
-+		vha->tgt_counters.qla_core_ret_sta_ctio);
-+	seq_printf(s, "qla_core_ret_ctio = %lld\n",
-+		vha->tgt_counters.qla_core_ret_ctio);
-+	seq_printf(s, "core_qla_que_buf = %lld\n",
-+		vha->tgt_counters.core_qla_que_buf);
-+	seq_printf(s, "core_qla_snd_status = %lld\n",
-+		vha->tgt_counters.core_qla_snd_status);
-+	seq_printf(s, "core_qla_free_cmd = %lld\n",
-+		vha->tgt_counters.core_qla_free_cmd);
-+	seq_printf(s, "num alloc iocb failed = %lld\n",
-+		vha->tgt_counters.num_alloc_iocb_failed);
-+	seq_printf(s, "num term exchange sent = %lld\n",
-+		vha->tgt_counters.num_term_xchg_sent);
-+	seq_printf(s, "num Q full sent = %lld\n",
-+		vha->tgt_counters.num_q_full_sent);
-+
-+	return 0;
-+}
-+
-+static int
-+qla_dfs_tgt_counters_open(struct inode *inode, struct file *file)
-+{
-+	struct scsi_qla_host *vha = inode->i_private;
-+	return single_open(file, qla_dfs_tgt_counters_show, vha);
-+}
-+
-+static const struct file_operations dfs_tgt_counters_ops = {
-+	.open           = qla_dfs_tgt_counters_open,
-+	.read           = seq_read,
-+	.llseek         = seq_lseek,
-+	.release        = single_release,
-+};
-+
-+static int
- qla2x00_dfs_fce_show(struct seq_file *s, void *unused)
- {
- 	scsi_qla_host_t *vha = s->private;
-@@ -146,6 +188,14 @@ create_dir:
- 	atomic_inc(&qla2x00_dfs_root_count);
- 
- create_nodes:
-+	ha->dfs_tgt_counters = debugfs_create_file("tgt_counters", S_IRUSR,
-+	    ha->dfs_dir, vha, &dfs_tgt_counters_ops);
-+	if (!ha->dfs_tgt_counters) {
-+		ql_log(ql_log_warn, vha, 0x00fc,
-+		    "Unable to create debugFS tgt_counters node.\n");
-+		goto out;
-+	}
-+
- 	ha->dfs_fce = debugfs_create_file("fce", S_IRUSR, ha->dfs_dir, vha,
- 	    &dfs_fce_ops);
- 	if (!ha->dfs_fce) {
-@@ -161,6 +211,12 @@ int
- qla2x00_dfs_remove(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
-+
-+	if (ha->dfs_tgt_counters) {
-+		debugfs_remove(ha->dfs_tgt_counters);
-+		ha->dfs_tgt_counters = NULL;
-+	}
-+
- 	if (ha->dfs_fce) {
- 		debugfs_remove(ha->dfs_fce);
- 		ha->dfs_fce = NULL;
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index a1ab25f..333910e 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -1892,6 +1892,7 @@ skip_cmd_array:
- 	}
- 
- queuing_error:
-+	vha->tgt_counters.num_alloc_iocb_failed++;
- 	return pkt;
- }
- 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 7c43cf8..ec76da4 100644
+index c70754b..1f9a41a 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2317,6 +2317,11 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+@@ -5550,6 +5550,7 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
  
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
-+	if (xmit_type == QLA_TGT_XMIT_STATUS)
-+		vha->tgt_counters.core_qla_snd_status++;
-+	else
-+		vha->tgt_counters.core_qla_que_buf++;
-+
- 	if (qla2x00_reset_active(vha) || cmd->reset_count != ha->chip_reset) {
- 		/*
- 		 * Either a chip reset is active or this request was from
-@@ -2681,6 +2686,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
- 			ret = 1;
- 	}
- 
-+	vha->tgt_counters.num_term_xchg_sent++;
- 	pkt->entry_count = 1;
- 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
- 
-@@ -4319,6 +4325,7 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
- 		return -ENOMEM;
- 	}
- 
-+	vha->tgt_counters.num_q_full_sent++;
- 	pkt->entry_count = 1;
- 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index e9893e7..8c39edb 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -401,6 +401,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
- 
- 	WARN_ON(cmd->cmd_flags &  BIT_16);
- 
-+	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
- 	cmd->cmd_flags |= BIT_16;
- 	transport_generic_free_cmd(&cmd->se_cmd, 0);
+ 	/* Adjust ring index */
+ 	WRT_REG_DWORD(ISP_ATIO_Q_OUT(vha), ha->tgt.atio_ring_index);
++	RD_REG_DWORD_RELAXED(ISP_ATIO_Q_OUT(vha));
  }
-@@ -412,6 +413,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
-  */
- static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
- {
-+        cmd->vha->tgt_counters.core_qla_free_cmd++;
- 	cmd->cmd_in_wq = 1;
- 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
- 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
-@@ -578,6 +580,7 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 		return -EINVAL;
- 	}
  
-+	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
- 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
- 				cmd->unpacked_lun, data_length, fcp_task_attr,
- 				data_dir, flags);
-@@ -593,6 +596,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
- 	 */
- 	cmd->cmd_in_wq = 0;
- 	cmd->cmd_flags |= BIT_11;
-+	cmd->vha->tgt_counters.qla_core_ret_ctio++;
- 	if (!cmd->write_data_transferred) {
- 		/*
- 		 * Check if se_cmd has already been aborted via LUN_RESET, and
+ void
 -- 
 1.7.7
 
