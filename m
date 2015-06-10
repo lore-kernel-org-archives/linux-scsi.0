@@ -1,55 +1,52 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] megaraid_sas: insert missing space in kernel message
-Date: Wed, 10 Jun 2015 08:30:16 +0200
-Message-ID: <20150610063016.GA2780@c203.arch.suse.de>
-References: <1433865223-15310-1-git-send-email-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1433865223-15310-1-git-send-email-colin.king@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/2] target: 64-bit LUN support
+Date: Wed, 10 Jun 2015 08:41:21 +0200
+Message-ID: <1433918483-46849-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48064 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751431AbbFJGl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jun 2015 02:41:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-On Tue, Jun 09, 2015 at 04:53:43PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->=20
-> The printk format specifier string is missing a space between
-> the %p format specifier and the "on the defer" text. Minor fix,
-> add the missing space.
->=20
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
-/megaraid/megaraid_sas_base.c
-> index 890637f..4889ef6 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -3148,7 +3148,7 @@ megasas_internal_reset_defer_cmds(struct megasa=
-s_instance *instance)
->  		cmd =3D instance->cmd_list[i];
->  		if (cmd->sync_cmd =3D=3D 1 || cmd->scmd) {
->  			printk(KERN_NOTICE "megasas: moving cmd[%d]:%p:%d:%p"
-> -					"on the defer queue as internal\n",
-> +					" on the defer queue as internal\n",
->  				defer_index, cmd, cmd->sync_cmd, cmd->scmd);
-> =20
->  			if (!list_empty(&cmd->list)) {
-> --=20
-> 2.1.4
->=20
+Hi Nic,
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+here's now the patchset for making LIO-target support 64-bit LUNs.
+Pretty straightforward, plus an additional patch to remove the
+now obsolete limitation on 256 LUNs per TPG. There had been a
+comment in the header that REPORT LUN emulation would only support
+up to one page in payload, but I couldn't find any evidence for
+this in the code.
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+As usual, comments and reviews are welcome.
+
+Patchset is relative to the 'for-next' branch of target-pending.
+
+Hannes Reinecke (2):
+  target: use 64-bit LUNs
+  target: Remove TARGET_MAX_LUNS_PER_TRANSPORT
+
+ drivers/target/iscsi/iscsi_target_tmr.c      |  4 +--
+ drivers/target/loopback/tcm_loop.c           |  4 +--
+ drivers/target/target_core_alua.c            |  2 +-
+ drivers/target/target_core_configfs.c        | 12 ++++----
+ drivers/target/target_core_device.c          | 39 ++++++++++---------------
+ drivers/target/target_core_fabric_configfs.c | 24 ++++------------
+ drivers/target/target_core_internal.h        | 10 +++----
+ drivers/target/target_core_pr.c              | 43 ++++++++++++++--------------
+ drivers/target/target_core_pr.h              |  6 ++--
+ drivers/target/target_core_tpg.c             | 13 ++-------
+ drivers/target/target_core_transport.c       |  6 ++--
+ drivers/target/target_core_ua.c              |  8 +++---
+ drivers/target/target_core_ua.h              |  2 +-
+ drivers/xen/xen-scsiback.c                   |  7 +++--
+ include/target/target_core_base.h            | 22 +++++++-------
+ include/target/target_core_fabric.h          | 10 +++----
+ 16 files changed, 90 insertions(+), 122 deletions(-)
+
+-- 
+1.8.5.2
+
