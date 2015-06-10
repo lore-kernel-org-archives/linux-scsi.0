@@ -1,89 +1,68 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [dm-devel] ALUA - rescan device capacity on zero sized block
- devices
-Date: Wed, 10 Jun 2015 11:02:10 -0400
-Message-ID: <1433948530.27387.92.camel@localhost.localdomain>
-References: <1887682221.152035.1428939145196.JavaMail.zimbra@kangaroot.net>
-	 <552C008A.9070201@sandisk.com>
-	 <987831457.156812.1428996031503.JavaMail.zimbra@kangaroot.net>
-	 <552CCC77.9040703@suse.de>	<552CE2C2.8000809@sandisk.com>
-	 <CABr-GnefEhc_dOKs360Hox7asbvO5qN8BqPczqC+V8CQ6Myh8w@mail.gmail.com>
-	 <55349580.1040205@suse.de>
-Reply-To: emilne@redhat.com
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: lpfc: Add support for RDP ELS command.
+Date: Wed, 10 Jun 2015 18:43:26 +0300
+Message-ID: <20150610154326.GG10549@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34525 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933644AbbFJPCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2015 11:02:12 -0400
-In-Reply-To: <55349580.1040205@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:43239 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965578AbbFJPnj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2015 11:43:39 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>, Hannes Reinecke <hare@suse.de>
+To: james.smart@avagotech.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2015-04-20 at 07:58 +0200, Hannes Reinecke wrote:
-> On 04/19/2015 12:56 AM, Christophe Varoqui wrote:
-> > About five years ago, we faced a somewhat simular issue with
-> > Symmetrix arrays, where the replicated LU of a SRDF pair (R2) was
-> > flagged read-only by the kernel upon discovery. Splitting the pair
-> > with a symcli command  made the LU read-write from the array
-> > controller point of view, but the Linux kernel would not promote it
-> > read-write dynamically.
-> >=20
-> > I don't know if the Symmetrix array also use a unit attention to
-> > signal the change to the initiators. If it does, it might be worth
-> > trying to address both the 3par peer persistance and the Symmetrix
-> > SRDF situations.
-> >=20
-> > On the other hand, if the SRDF R2 rw promotion issue has been fixed
-> > since, the patch might give guidance about where/how to plug the
-> > 3par peer persistance ghost path rescans.
-> >=20
-> It's not only that; if you are faced with LUNs in standby even the
-> kernel wouldn't detect them properly.
->=20
-> I'm currently debugging this issue and will have an update soon(-ish)=
-=2E
+Hello James Smart,
 
-I have a patch set to have the kernel automatically rescan the device
-when the ALUA state changes to an ACTIVE state, if it couldn't read
-capacity when the device was initially probed.  I've had it for a while=
-,
-but I haven't had *any* response from the vendor if it actually works
-with their product, so I haven't posted it to the list for review yet.
+The patch 86478875eb4d: "lpfc: Add support for RDP ELS command." from
+May 21, 2015, leads to the following static checker warning:
 
-I did point out to them that the T10 spec does not *prohibit* supportin=
-g
-the READ CAPACITY command in the ALUA standby state, which would avoid
-the problem, and is what other vendors seem to do.  However, they then
-raised the issue that if the capacity changes in the standby state then
-they should be generating the capacity changed UA, etc and you can sort
-of see their point of why this gets complicated.
+	drivers/scsi/lpfc/lpfc_mbox.c:2307 lpfc_mbx_cmpl_rdp_page_a2()
+	error: dereferencing freed memory 'mp'
 
--Ewan
-
->=20
-> Cheers,
->=20
-> Hannes
-> --=20
-> Dr. Hannes Reinecke		               zSeries & Storage
-> hare@suse.de			               +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> HRB 21284 (AG N=C3=BCrnberg)
->=20
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+drivers/scsi/lpfc/lpfc_mbox.c
+  2279  void
+  2280  lpfc_mbx_cmpl_rdp_page_a2(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+  2281  {
+  2282          struct lpfc_dmabuf *mp = (struct lpfc_dmabuf *) mbox->context1;
+  2283          struct lpfc_rdp_context *rdp_context =
+  2284                          (struct lpfc_rdp_context *)(mbox->context2);
+  2285  
+  2286          if (bf_get(lpfc_mqe_status, &mbox->u.mqe))
+  2287                  goto error;
+  2288  
+  2289          lpfc_sli_bemem_bcopy(mp->virt, &rdp_context->page_a2,
+  2290                                  DMP_SFF_PAGE_A2_SIZE);
+  2291  
+  2292          /* We don't need dma buffer for link stat. */
+  2293          lpfc_mbuf_free(phba, mp->virt, mp->phys);
+  2294          kfree(mp);
+                ^^^^^^^^
+  2295  
+  2296          memset(mbox, 0, sizeof(*mbox));
+  2297          lpfc_read_lnk_stat(phba, mbox);
+  2298          mbox->vport = rdp_context->ndlp->vport;
+  2299          mbox->mbox_cmpl = lpfc_mbx_cmpl_rdp_link_stat;
+  2300          mbox->context2 = (struct lpfc_rdp_context *) rdp_context;
+  2301          if (lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT) == MBX_NOT_FINISHED)
+  2302                  goto error;
+                        ^^^^^^^^^^
+  2303  
+  2304          return;
+  2305  
+  2306  error:
+  2307          lpfc_mbuf_free(phba, mp->virt, mp->phys);
+                                     ^^^^^^^^
+  2308          kfree(mp);
+                ^^^^^^^^^
+  2309          lpfc_sli4_mbox_cmd_free(phba, mbox);
+  2310          rdp_context->cmpl(phba, rdp_context, FAILURE);
+  2311  }
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+regards,
+dan carpenter
