@@ -1,15 +1,17 @@
 From: <rajinikanth.pandurangan@pmcs.com>
 Subject: [Patch V2 0/9] [SCSI] aacraid: Patchset for aacraid driver version 41010
-Date: Wed, 10 Jun 2015 18:42:21 -0700
-Message-ID: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+Date: Wed, 10 Jun 2015 18:42:22 -0700
+Message-ID: <1433986951-9033-2-git-send-email-rajinikanth.pandurangan@pmcs.com>
+References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:34365 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:34373 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751834AbbFKBmp (ORCPT
+	by vger.kernel.org with ESMTP id S1751991AbbFKBmv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jun 2015 21:42:45 -0400
+	Wed, 10 Jun 2015 21:42:51 -0400
+In-Reply-To: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -30,7 +32,7 @@ Rajinikanth Pandurangan (9):
   [SCSI] aacraid: Fix for logical device name and UID not exposed to the OS
   [SCSI] aacraid: Add Power Management support
   [SCSI] aacraid: Enable MSI interrupt for series-6 controller
-  [SCSI] aacraid: Enable 64-bit write to controller register
+  [SCSI] aacraid: Enable 64-bit write to controller      register
   [SCSI] aacraid: Tune response path if IsFastPath bit set
   [SCSI] aacraid: Reset irq affinity hints before releasing irq
   [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from suspend
