@@ -1,135 +1,164 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 09/10] qla2xxx: Comment out unreachable code
-Date: Thu, 11 Jun 2015 04:43:51 +0000
-Message-ID: <D19E5F33.922D9%himanshu.madhani@qlogic.com>
-References: <5570D656.9050704@sandisk.com> <5570D7D0.80500@sandisk.com>
+Subject: Re: [PATCH 10/10] qla2xxx: Fix indentation
+Date: Thu, 11 Jun 2015 04:45:11 +0000
+Message-ID: <D19E602D.922DF%himanshu.madhani@qlogic.com>
+References: <5570D656.9050704@sandisk.com> <5570D801.5090703@sandisk.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="_000_D19E5F33922D9himanshumadhaniqlogiccom_"
+	boundary="_000_D19E602D922DFhimanshumadhaniqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:12075 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:35519 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750715AbbFKEnx (ORCPT
+	by vger.kernel.org with ESMTP id S1750715AbbFKEpP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2015 00:43:53 -0400
+	Thu, 11 Jun 2015 00:45:15 -0400
 Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t5B4aasW009287
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2015 21:43:53 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1uy1j60306-1
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t5B4YBGY007954
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2015 21:45:14 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1uy1j60318-1
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2015 21:43:53 -0700
-In-Reply-To: <5570D7D0.80500@sandisk.com>
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2015 21:45:14 -0700
+In-Reply-To: <5570D801.5090703@sandisk.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@odin.com>
 Cc: Quinn Tran <quinn.tran@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_D19E5F33922D9himanshumadhaniqlogiccom_
+--_000_D19E602D922DFhimanshumadhaniqlogiccom_
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <FF9A71481D981D4E8C32E131B3210C62@qlogic.com>
+Content-ID: <9483AE79D0463745A7FCEA5FF2B0FB16@qlogic.com>
 Content-Transfer-Encoding: quoted-printable
 
 
+On 6/4/15, 3:58 PM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
 
-On 6/4/15, 3:57 PM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
-
->Comment out the code that is never reached in qla83xx_idc_unlock()
->and also in qlt_set_data_offset() to avoid that static source code
->analysis tools report warnings for this code.
+>Detected by smatch.
 >
->Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 >Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
 >Cc: Quinn Tran <quinn.tran@qlogic.com>
 >Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>
 >---
-> drivers/scsi/qla2xxx/qla_os.c     |  7 ++++++-
-> drivers/scsi/qla2xxx/qla_target.c | 16 +++++++++-------
-> 2 files changed, 15 insertions(+), 8 deletions(-)
+> drivers/scsi/qla2xxx/qla_init.c |  2 +-
+> drivers/scsi/qla2xxx/qla_iocb.c |  8 ++++----
+> drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
+> drivers/scsi/qla2xxx/qla_nx.c   |  2 +-
+> drivers/scsi/qla2xxx/qla_nx2.c  | 13 ++++++-------
+> 5 files changed, 14 insertions(+), 15 deletions(-)
 >
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index 0ababd5..5a5166b 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -4417,7 +4417,10 @@ retry_lock2:
-> void
-> qla83xx_idc_unlock(scsi_qla_host_t *base_vha, uint16_t requester_id)
-> {
->-	uint16_t options =3D (requester_id << 15) | BIT_7, retry;
->+#if 0
->+	uint16_t options =3D (requester_id << 15) | BIT_7;
->+#endif
->+	uint16_t retry;
-> 	uint32_t data;
-> 	struct qla_hw_data *ha =3D base_vha->hw;
->=20
->@@ -4453,6 +4456,7 @@ retry_unlock:
->=20
-> 	return;
->=20
->+#if 0
-> 	/* XXX: IDC-unlock implementation using access-control mbx */
-> 	retry =3D 0;
-> retry_unlock2:
->@@ -4468,6 +4472,7 @@ retry_unlock2:
+>diff --git a/drivers/scsi/qla2xxx/qla_init.c
+>b/drivers/scsi/qla2xxx/qla_init.c
+>index 33cb3f6..5a5ca43 100644
+>--- a/drivers/scsi/qla2xxx/qla_init.c
+>+++ b/drivers/scsi/qla2xxx/qla_init.c
+>@@ -708,7 +708,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+> 		if (rval !=3D QLA_SUCCESS) {
+> 			ql_log(ql_log_warn, vha, 0x00d4,
+> 			    "Unable to initialize ISP84XX.\n");
+>-		qla84xx_put_chip(vha);
+>+			qla84xx_put_chip(vha);
+> 		}
 > 	}
 >=20
-> 	return;
->+#endif
-> }
+>diff --git a/drivers/scsi/qla2xxx/qla_iocb.c
+>b/drivers/scsi/qla2xxx/qla_iocb.c
+>index 21d6f3f..524b5bc 100644
+>--- a/drivers/scsi/qla2xxx/qla_iocb.c
+>+++ b/drivers/scsi/qla2xxx/qla_iocb.c
+>@@ -2763,10 +2763,10 @@ qla2x00_start_bidir(srb_t *sp, struct
+>scsi_qla_host *vha, uint32_t tot_dsds)
+> 	handle =3D req->current_outstanding_cmd;
+> 	for (index =3D 1; index < req->num_outstanding_cmds; index++) {
+> 		handle++;
+>-	if (handle =3D=3D req->num_outstanding_cmds)
+>-		handle =3D 1;
+>-	if (!req->outstanding_cmds[handle])
+>-		break;
+>+		if (handle =3D=3D req->num_outstanding_cmds)
+>+			handle =3D 1;
+>+		if (!req->outstanding_cmds[handle])
+>+			break;
+> 	}
 >=20
-> int
->diff --git a/drivers/scsi/qla2xxx/qla_target.c
->b/drivers/scsi/qla2xxx/qla_target.c
->index 59a0897..22a91a3 100644
->--- a/drivers/scsi/qla2xxx/qla_target.c
->+++ b/drivers/scsi/qla2xxx/qla_target.c
->@@ -3699,6 +3699,14 @@ static int qlt_24xx_handle_els(struct
+> 	if (index =3D=3D req->num_outstanding_cmds) {
+>diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+>b/drivers/scsi/qla2xxx/qla_isr.c
+>index 79f6989..b70af1f 100644
+>--- a/drivers/scsi/qla2xxx/qla_isr.c
+>+++ b/drivers/scsi/qla2xxx/qla_isr.c
+>@@ -1579,7 +1579,7 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct
+>req_que *req, void *tsk)
+> 			ql_log(ql_log_warn, fcport->vha, 0x503c,
+> 			    "Async-%s error - hdl=3D%x response(%x).\n",
+> 			    type, sp->handle, sts->data[3]);
+>-		iocb->u.tmf.data =3D QLA_FUNCTION_FAILED;
+>+			iocb->u.tmf.data =3D QLA_FUNCTION_FAILED;
+> 		}
+> 	}
+>=20
+>@@ -1978,7 +1978,7 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t
+>*vha, void *pkt,
+> 		rval =3D EXT_STATUS_ERR;
+> 		break;
+> 	}
+>-		bsg_job->reply->reply_payload_rcv_len =3D 0;
+>+	bsg_job->reply->reply_payload_rcv_len =3D 0;
+>=20
+> done:
+> 	/* Return the vendor specific reply to API */
+>diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+>index b359a83..bb0ee7c 100644
+>--- a/drivers/scsi/qla2xxx/qla_nx.c
+>+++ b/drivers/scsi/qla2xxx/qla_nx.c
+>@@ -1835,7 +1835,7 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
+>=20
+> 	ptab_desc =3D qla82xx_get_table_desc(unirom,
+> 		 QLA82XX_URI_DIR_SECT_PRODUCT_TBL);
+>-       if (!ptab_desc)
+>+	if (!ptab_desc)
+> 		return -1;
+>=20
+> 	entries =3D cpu_to_le32(ptab_desc->num_entries);
+>diff --git a/drivers/scsi/qla2xxx/qla_nx2.c
+>b/drivers/scsi/qla2xxx/qla_nx2.c
+>index b8ceb82..007192d 100644
+>--- a/drivers/scsi/qla2xxx/qla_nx2.c
+>+++ b/drivers/scsi/qla2xxx/qla_nx2.c
+>@@ -397,11 +397,11 @@ qla8044_idc_lock(struct qla_hw_data *ha)
+> 				 * has the lock, wait for 2secs
+> 				 * and retry
+> 				 */
+>-				 ql_dbg(ql_dbg_p3p, vha, 0xb08a,
+>-				     "%s: IDC lock Recovery by %d "
+>-				     "failed, Retrying timeout\n", __func__,
+>-				     ha->portnum);
+>-				 timeout =3D 0;
+>+				ql_dbg(ql_dbg_p3p, vha, 0xb08a,
+>+				       "%s: IDC lock Recovery by %d "
+>+				       "failed, Retrying timeout\n", __func__,
+>+				       ha->portnum);
+>+				timeout =3D 0;
+> 			}
+> 		}
+> 		msleep(QLA8044_DRV_LOCK_MSLEEP);
+>@@ -3138,8 +3138,7 @@ qla8044_minidump_process_rdmdio(struct
 >scsi_qla_host *vha,
+> 			goto error;
 >=20
-> static int qlt_set_data_offset(struct qla_tgt_cmd *cmd, uint32_t offset)
-> {
->+#if 1
->+	/*
->+	 * FIXME: Reject non zero SRR relative offset until we can test
->+	 * this code properly.
->+	 */
->+	pr_debug("Rejecting non zero SRR rel_offs: %u\n", offset);
->+	return -1;
->+#else
-> 	struct scatterlist *sg, *sgp, *sg_srr, *sg_srr_start =3D NULL;
-> 	size_t first_offset =3D 0, rem_offset =3D offset, tmp =3D 0;
-> 	int i, sg_srr_cnt, bufflen =3D 0;
->@@ -3708,13 +3716,6 @@ static int qlt_set_data_offset(struct qla_tgt_cmd
->*cmd, uint32_t offset)
-> 	    "cmd->sg_cnt: %u, direction: %d\n",
-> 	    cmd, cmd->sg, cmd->sg_cnt, cmd->dma_data_direction);
+> 		addr7 =3D addr2 - (4 * stride1);
+>-			data =3D qla8044_ipmdio_rd_reg(vha, addr1, addr3,
+>-			    mask, addr7);
+>+		data =3D qla8044_ipmdio_rd_reg(vha, addr1, addr3, mask, addr7);
+> 		if (data =3D=3D -1)
+> 			goto error;
 >=20
->-	/*
->-	 * FIXME: Reject non zero SRR relative offset until we can test
->-	 * this code properly.
->-	 */
->-	pr_debug("Rejecting non zero SRR rel_offs: %u\n", offset);
->-	return -1;
->-
-> 	if (!cmd->sg || !cmd->sg_cnt) {
-> 		ql_dbg(ql_dbg_tgt, cmd->vha, 0xe055,
-> 		    "Missing cmd->sg or zero cmd->sg_cnt in"
->@@ -3797,6 +3798,7 @@ static int qlt_set_data_offset(struct qla_tgt_cmd
->*cmd, uint32_t offset)
-> 		BUG();
->=20
-> 	return 0;
->+#endif
-> }
->=20
-> static inline int qlt_srr_adjust_data(struct qla_tgt_cmd *cmd,
 >--=20
 >2.1.4
 >
 
-Looks good.=20
+Looks good.
 
 Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 
@@ -137,101 +166,110 @@ Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 >
 
 
---_000_D19E5F33922D9himanshumadhaniqlogiccom_
+--_000_D19E602D922DFhimanshumadhaniqlogiccom_
 Content-Disposition: attachment; filename="winmail.dat"
 Content-Transfer-Encoding: base64
 Content-Type: application/ms-tnef; name="winmail.dat"
 
-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
-HnADoIH6vZrzN5NQXSCUEJugN0mA/3cBnD+ib6N/Xxekr6W9qTP9RaEipGF1ILpxwkG0IiMA/w3g
-CXCycQIgtCELMLRyyj+/G9DI8stlzufCNMtjZADA/y3EzHe1KHX3ZSSoeGUkqX//qo+rn6yv09qu
-f6+I1AaAp/9lJLGfsq+zv7TOZSS2L2UR88CcjOAoIctlReBF8ONmf8IyLpBkiHDzamNfsC3AYp/c
-8OZEpBLO5WJDMHgKYP41IvDlL8sEGNAEEH8i43bvBbHVs8tpKpEiw1yTcJtz/+0whJCFM8VPxl/H
-b8h/yY/x5YpCVUcr8NHviGuCCX+Jz4rfoWkhou6ou0E6EGo/fwAttPAvpHZCmHX3Mi5sMS6UhyGc
-TDHQH1Agsmcx0GQudfYhlUEr0P81QTWyOX86j0HfIef+3yGzAxVCB9AfAEIAAQAAACIAAABIAGkA
-bQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAGUAAQAAADgAAABoAGkAbQBhAG4AcwBo
-AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMA
-TQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBz
-AGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQA
-aABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADgAAABoAGkAbQBhAG4AcwBo
-AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAQAAAAHMA
-aQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAB8M
-AQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAfAAAAAAAAACBKx+kvqMQGZ1u
-AN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABp
-AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
-AQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8A
-I0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB8AAAAAAAAAIErH6S+oxAZ
-nW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABo
-AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
-CV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAA
-CwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAACJZ6wpFeQxFqSSLRSsvbxIDABcAAQAAAEAAOQCA
-nX82AaTQAUAACDDoTL02AaTQAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYD
-AgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAA
-AAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAA
-cAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAwADkALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAg
-AEMAbwBtAG0AZQBuAHQAIABvAHUAdAAgAHUAbgByAGUAYQBjAGgAYQBiAGwAZQAgAGMAbwBkAGUA
-AAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAOgAAADwANQA1ADcAMABE
-ADcARAAwAC4AOAAwADUAMAAwAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AAAAAAAIBcQABAAAA
-GwAAAAEB0J8Z1BFr68ag16hNjzsOj2z4XwydpsQ1AAAfAHAAAQAAAGgAAABbAFAAQQBUAEMASAAg
-ADAAOQAvADEAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAAQwBvAG0AbQBlAG4AdAAgAG8AdQB0ACAA
-dQBuAHIAZQBhAGMAaABhAGIAbABlACAAYwBvAGQAZQAAAB8ANRABAAAAWgAAADwARAAxADkARQA1
-AEYAMwAzAC4AOQAyADIARAA5ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0APgAAAAAAHwA5EAEAAAB4AAAAPAA1ADUANwAwAEQANgA1ADYALgA5
-ADAANQAwADcAMAA0AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AIAA8ADUANQA3ADAARAA3AEQA
-MAAuADgAMAA1ADAAMABAAHMAYQBuAGQAaQBzAGsALgBjAG8AbQA+AAAAAwDeP59OAABAAAcwyCi2
-NgGk0AEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTUwNjEx
-MDQ0MzUxWi0xOTc5NQAAAB8AFRABAAAAWAAAAEYARgA5AEEANwAxADQAOAAxAEQAOQA4ADEARAA0
-AEUAOABDADMAMgBFADEAMwAxAEIAMwAyADEAMABDADYAMgBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAACARQwAQAAAAwAAAAHAQAAZgyAC08AAAAfAPo/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABN
-AGEAZABoAGEAbgBpAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEA
-ZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBv
-AGsALwAxADQALgAzAC4AOQAuADEAMwAxADAAMwAwAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEA
-AAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBF
-AHgAAAABAAAACgEAAEkASQA9ADAAMQAwADEARAAwAEEANAAwADEAMwA2ADkARABBADUAOAAyADMA
-RgBEADMAQwAxADAANwA0ADUAOQBCADMAMgA2AEIARQBFAEIAQwA1AEYAMgBCADMAMAA7AFMAQgBN
-AEkARAA9ADUAOwBTADEAPQA8ADUANQA3ADAARAA3AEQAMAAuADgAMAA1ADAAMABAAHMAYQBuAGQA
-aQBzAGsALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAz
-ACAAKABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00
-/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABh
-AGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkA
-ZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAA
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAA
-DgAAAGIAeQBwAGEAcwBzAAAAAABAew==
+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
+AB8AZQABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB8AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAA
+AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AB8AAl0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwDlXwEAAABAAAAAcwBpAHAAOgBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABo
+AGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAIgAAAEgAaQBtAGEAbgBzAGgA
+dQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AHwwBAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBk
+AGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAA
+AgEZDAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBh
+AGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAA
+cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBk
+AGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAiAAAASABpAG0AYQBuAHMA
+aAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAjQAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
+AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAA
+AAACAfk/AQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABN
+AGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
+AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkA
+UABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA3Cfj
+id86oUuZvjJjAkEMeAMAFwABAAAAQAA5AIClLmYBpNABQAAIMKiPXWYBpNABCwAAgAggBgAAAAAA
+wAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBw
+AHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAA
+AAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABWAAAAUgBlADoAIABbAFAAQQBUAEMASAAgADEAMAAv
+ADEAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAARgBpAHgAIABpAG4AZABlAG4AdABhAHQAaQBvAG4A
+AAAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAAA+AAAAPAA1ADUANwAw
+AEQAOAAwADEALgA1ADAAOQAwADcAMAAzAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AAAAAAAIB
+cQABAAAAGwAAAAEB0J8Z9K0qT6IL8dpBk+Gw05y6cZedpsSTgAAfAHAAAQAAAE4AAABbAFAAQQBU
+AEMASAAgADEAMAAvADEAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAARgBpAHgAIABpAG4AZABlAG4A
+dABhAHQAaQBvAG4AAAAAAB8ANRABAAAAWgAAADwARAAxADkARQA2ADAAMgBEAC4AOQAyADIARABG
+ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+PgAAAAAAHwA5EAEAAAB8AAAAPAA1ADUANwAwAEQANgA1ADYALgA5ADAANQAwADcAMAA0AEAAcwBh
+AG4AZABpAHMAawAuAGMAbwBtAD4AIAA8ADUANQA3ADAARAA4ADAAMQAuADUAMAA5ADAANwAwADMA
+QABzAGEAbgBkAGkAcwBrAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMIhrVmYBpNABAwAmAAAAAAAC
+AUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDYxMTA0NDUxMVotMTk3OTYA
+AAAfABUQAQAAAFgAAAA5ADQAOAAzAEEARQA3ADkARAAwADQANgAzADcANAA1AEEANwBGAEMARQBB
+ADUARgBGADIAQgAwAEYAQgAxADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAA
+FQEAAAbbJZZPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAA
+AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEA
+AABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAu
+ADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYA
+ZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAA4BAABJ
+AEkAPQAwADEAMAAxAEQAMABBADQAMAAxADYANgAxADkAMQAzADAAQQAxAEYAQgAxADMAMgBBAEEA
+NAAzAEIARQBDADYANABGAEMAQQAyAEQAOQA1ADkAMABEADUAOwBTAEIATQBJAEQAPQAxADsAUwAx
+AD0APAA1ADUANwAwAEQAOAAwADEALgA1ADAAOQAwADcAMAAzAEAAcwBhAG4AZABpAHMAawAuAGMA
+bwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBp
+AGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAA
+AAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQA
+aQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAA
+AAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAA
+YQBzAHMAAAAAACN0
 
---_000_D19E5F33922D9himanshumadhaniqlogiccom_--
+--_000_D19E602D922DFhimanshumadhaniqlogiccom_--
