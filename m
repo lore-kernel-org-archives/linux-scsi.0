@@ -1,149 +1,49 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] megaraid_sas : Pass driver version to firmware inside
- IOC init frame
-Date: Thu, 11 Jun 2015 15:55:56 +0200
-Message-ID: <5579936C.6010002@redhat.com>
-References: <201506101028.t5AASaRN030984@palmhbs0.lsi.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 0/2] target: 64-bit LUN support
+Date: Thu, 11 Jun 2015 07:38:04 -0700
+Message-ID: <55799D4C.6070505@sandisk.com>
+References: <1433918483-46849-1-git-send-email-hare@suse.de>
+ <5578699D.6090405@redhat.com> <55792317.5020500@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39577 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbbFKNz6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2015 09:55:58 -0400
-In-Reply-To: <201506101028.t5AASaRN030984@palmhbs0.lsi.com>
+Received: from mail-bn1on0089.outbound.protection.outlook.com ([157.56.110.89]:31944
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751133AbbFKOif (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jun 2015 10:38:35 -0400
+In-Reply-To: <55792317.5020500@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+To: Hannes Reinecke <hare@suse.de>, Andy Grover <agrover@redhat.com>, Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On 06/10/2015 12:22 PM, Sumit.Saxena@avagotech.com wrote:
+On 06/10/15 22:56, Hannes Reinecke wrote:
+> Actually, I've been thinking about this. Currently I'm not sure if
+> we should fully embrace this route; after all, 'scsilun_to_int' is
+> meant to be a conversion from the (abstract) LUN number into our
+> internal representation.
+> And as it's internal we're free to use whatever we like.
+>
+> Where we need to fix up things is in reporting; whenever we display
+> LUN numbers to userspace (printk or sysfs-wise) we probably should
+> use the appropriate format.
+>
+> I'll see if I can whip up a printk format for this.
+> Never liked the '%llu' format for LUNs anyway.
 
-Here should be an explanation why is this needed.
+Hello Hannes,
 
-The driver knows the fw version and can adapt to it.
-When sending the version to firmware fails, the driver
-just logs it and is able to continue.
-Why is the information needed for the fw ?
+Making how LUNs are displayed dependent on the LUN addressing method 
+sounds like a good idea to me. One step further would be to ensure that 
+the format in which LUNs are entered through configfs matches the format 
+used to display LUNs. This may require to add an additional 
+configuration parameter in configfs for the LUN addressing format. E.g. 
+for users who connect an AIX initiator system to LIO it would be much 
+more convenient to use LUN numbers like 1, 2, 3 instead of the raw LUN 
+numbers 256, 512, 768.
 
-I fear that after several iterations we will have a table
-of corresponding driver/fw versions that driver will
-send down to fw make it work...
+Thanks,
 
-Tomas
-
-
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h        |   10 +++++++---
->  drivers/scsi/megaraid/megaraid_sas_base.c   |   18 ++++++++++++++++++
->  drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +++++++
->  3 files changed, 32 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 20c3754..5bd4d30 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -1038,6 +1038,7 @@ struct megasas_ctrl_info {
->  #define MEGASAS_MAX_LD_IDS			(MEGASAS_MAX_LD_CHANNELS * \
->  						MEGASAS_MAX_DEV_PER_CHANNEL)
->  
-> +#define MEGASAS_MAX_NAME                        32
->  #define MEGASAS_MAX_SECTORS                    (2*1024)
->  #define MEGASAS_MAX_SECTORS_IEEE		(2*128)
->  #define MEGASAS_DBG_LVL				1
-> @@ -1264,17 +1265,18 @@ struct megasas_init_frame {
->  	__le32 pad_0;		/*0Ch */
->  
->  	__le16 flags;		/*10h */
-> -	__le16 reserved_3;		/*12h */
-> +	__le16 reserved_2;		/*12h */
->  	__le32 data_xfer_len;	/*14h */
->  
->  	__le32 queue_info_new_phys_addr_lo;	/*18h */
->  	__le32 queue_info_new_phys_addr_hi;	/*1Ch */
->  	__le32 queue_info_old_phys_addr_lo;	/*20h */
->  	__le32 queue_info_old_phys_addr_hi;	/*24h */
-> -	__le32 reserved_4[2];	/*28h */
-> +	__le32 driver_ver_lo;      /*28h */
-> +	__le32 driver_ver_hi;      /*2Ch */
->  	__le32 system_info_lo;      /*30h */
->  	__le32 system_info_hi;      /*34h */
-> -	__le32 reserved_5[2];	/*38h */
-> +	__le32 reserved_3[2];	/*38h */
->  
->  } __attribute__ ((packed));
->  
-> @@ -1665,6 +1667,8 @@ struct megasas_instance {
->  	dma_addr_t producer_h;
->  	__le32 *consumer;
->  	dma_addr_t consumer_h;
-> +	__le32 *verbuf;
-> +	dma_addr_t verbuf_h;
->  	struct MR_DRV_SYSTEM_INFO *system_info_buf;
->  	dma_addr_t system_info_h;
->  	struct MR_LD_VF_AFFILIATION *vf_affiliation;
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index a022c39..6bfb3eb 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4252,6 +4252,14 @@ megasas_issue_init_mfi(struct megasas_instance *instance)
->  
->  	init_frame->cmd = MFI_CMD_INIT;
->  	init_frame->cmd_status = MFI_STAT_INVALID_STATUS;
-> +
-> +	if (instance->verbuf) {
-> +		snprintf((char *)instance->verbuf, strlen(MEGASAS_VERSION) + 2, "%s\n",
-> +			MEGASAS_VERSION);
-> +		init_frame->driver_ver_lo = cpu_to_le32(instance->verbuf_h);
-> +		init_frame->driver_ver_hi = 0;
-> +	}
-> +
->  	init_frame->queue_info_new_phys_addr_lo =
->  		cpu_to_le32(lower_32_bits(initq_info_h));
->  	init_frame->queue_info_new_phys_addr_hi =
-> @@ -5257,6 +5265,12 @@ static int megasas_probe_one(struct pci_dev *pdev,
->  		break;
->  	}
->  
-> +	instance->verbuf = pci_alloc_consistent(pdev,
-> +						MEGASAS_MAX_NAME * sizeof(u32),
-> +						&instance->verbuf_h);
-> +	if (!instance->verbuf)
-> +		dev_info(&instance->pdev->dev, "Can't allocate version buffer\n");
-> +
->  	instance->system_info_buf = pci_zalloc_consistent(pdev,
->  					sizeof(struct MR_DRV_SYSTEM_INFO),
->  					&instance->system_info_h);
-> @@ -5838,6 +5852,10 @@ static void megasas_detach_one(struct pci_dev *pdev)
->  		pci_free_consistent(pdev, sizeof(struct MR_DRV_SYSTEM_INFO),
->  				    instance->system_info_buf, instance->system_info_h);
->  
-> +	if (instance->verbuf)
-> +		pci_free_consistent(pdev, MEGASAS_MAX_NAME * sizeof(u32),
-> +				instance->verbuf, instance->verbuf_h);
-> +
->  	scsi_host_put(host);
->  
->  	pci_disable_device(pdev);
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 0637f42..359d605 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -671,6 +671,13 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
->  	/* Convert capability to LE32 */
->  	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
->  
-> +	if (instance->verbuf) {
-> +		snprintf((char *)instance->verbuf, strlen(MEGASAS_VERSION) + 2, "%s\n",
-> +			MEGASAS_VERSION);
-> +		init_frame->driver_ver_lo = cpu_to_le32(instance->verbuf_h);
-> +		init_frame->driver_ver_hi = 0;
-> +	}
-> +
->  	sys_info = dmi_get_system_info(DMI_PRODUCT_UUID);
->  	if (instance->system_info_buf && sys_info) {
->  		memcpy(instance->system_info_buf->systemId, sys_info,
-> 
-
+Bart.
