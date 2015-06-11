@@ -1,62 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/2] target: 64-bit LUN support
-Date: Thu, 11 Jun 2015 07:56:39 +0200
-Message-ID: <55792317.5020500@suse.de>
-References: <1433918483-46849-1-git-send-email-hare@suse.de> <5578699D.6090405@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH 0/6] target: Update UA handling
+Date: Thu, 11 Jun 2015 10:01:23 +0200
+Message-ID: <1434009689-112909-1-git-send-email-hare@suse.de>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5578699D.6090405@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, Nic Bellinger <nab@daterainc.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/10/2015 06:45 PM, Andy Grover wrote:
-> On 06/09/2015 11:41 PM, Hannes Reinecke wrote:
->> Hi Nic,
->>
->> here's now the patchset for making LIO-target support 64-bit LUNs.
->> Pretty straightforward, plus an additional patch to remove the
->> now obsolete limitation on 256 LUNs per TPG. There had been a
->> comment in the header that REPORT LUN emulation would only support
->> up to one page in payload, but I couldn't find any evidence for
->> this in the code.
->>
->> As usual, comments and reviews are welcome.
->=20
-> Hi Hannes,
->=20
-> I think we also need to take care of how we report LUNs in spc.c
-> spc_emulate_report_luns(). From reading SAM-5 4.7.7 (addressing
-> methods) it looks like we're currently using the simple addressing
-> format (address method =3D 0) and if we want to report more than 14
-> bits we would need to report the luns with a different addressing
-> format.
->=20
-> I'm wondering if this could be seen as a bug in int_to_scsilun, but
-> in any case I hope you'll take a look and make sure we're ok?
->=20
-Actually, I've been thinking about this. Currently I'm not sure if
-we should fully embrace this route; after all, 'scsilun_to_int' is
-meant to be a conversion from the (abstract) LUN number into our
-internal representation.
-And as it's internal we're free to use whatever we like.
+Hi Nic,
 
-Where we need to fix up things is in reporting; whenever we display
-LUN numbers to userspace (printk or sysfs-wise) we probably should
-use the appropriate format.
+lio-target is very minimalistic when it comes to generate UAs;
+primarily they are generated for persistent reservations, but
+generic changes tend to be ignored.
 
-I'll see if I can whip up a printk format for this.
-Never liked the '%llu' format for LUNs anyway.
+This patchset updates the UA handling and generates UA for internal
+state changes (REPORTED LUNS DATA CHANGED, INQUIRY DATA CHANGED,
+and LUN RESET OCCURRED).
 
-Cheers,
+Funnily enough this triggers some issues with the SCSI stack;
+I'll be sending out patches for that, too.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Hannes Reinecke (6):
+  target_core_alua: Correct UA handling when switching states
+  target: Remove 'ua_nacl' pointer from se_ua structure
+  target: use 'se_dev_entry' when allocating UAs
+  target: Send UA on ALUA target port group change
+  target: Send UA upon LUN RESET tmr completion
+  target: Send UA when changing LUN inventory
+
+ drivers/target/target_core_alua.c      | 56 +++++++++++++++++++++++++---------
+ drivers/target/target_core_device.c    | 26 +++++++++++++++-
+ drivers/target/target_core_pr.c        | 31 +++++++++++++++----
+ drivers/target/target_core_transport.c | 29 ++++++++++++++----
+ drivers/target/target_core_ua.c        | 24 ++-------------
+ drivers/target/target_core_ua.h        |  5 ++-
+ include/target/target_core_base.h      |  1 -
+ 7 files changed, 121 insertions(+), 51 deletions(-)
+
+-- 
+1.8.5.2
