@@ -1,77 +1,155 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi: Add ALUA state change UA handling
-Date: Thu, 11 Jun 2015 13:07:02 +0200
-Message-ID: <1434020822-42029-1-git-send-email-hare@suse.de>
+From: Josh Boyer <jwboyer@fedoraproject.org>
+Subject: Re: [PATCH] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
+Date: Thu, 11 Jun 2015 08:32:33 -0400
+Message-ID: <CA+5PVA5tghb=ZhUHwt7A6+yK1hmcFzPbwYL1BN2wkd76p=o54Q@mail.gmail.com>
+References: <1395425313.8462.1254.camel@arvindkumar-dev1.eng.vmware.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38372 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752064AbbFKLHF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jun 2015 07:07:05 -0400
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:34401 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751910AbbFKMce (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2015 08:32:34 -0400
+Received: by igbhj9 with SMTP id hj9so53829843igb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2015 05:32:33 -0700 (PDT)
+In-Reply-To: <1395425313.8462.1254.camel@arvindkumar-dev1.eng.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Nic Bellinger <nab@daterainc.com>, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: James Bottomley <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, VMware PV-Drivers <pv-drivers@vmware.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Log the ALUA state change unit attention correctly with
-the message log and emit an event to allow user-space
-tools to react to it.
+On Fri, Mar 21, 2014 at 2:08 PM, Arvind Kumar <arvindkumar@vmware.com> wrote:
+> The driver is missing calls to pci_dma_mapping_error() after
+> performing the DMA mapping, which caused DMA-API warning to
+> show up in dmesg's output. Though that happens only when
+> DMA_API_DEBUG option is enabled. This change fixes the issue
+> and makes pvscsi_map_buffers() function more robust.
+>
+> Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
+> Cc: Josh Boyer <jwboyer@fedoraproject.org>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_error.c  | 4 ++++
- drivers/scsi/scsi_lib.c    | 4 ++++
- include/scsi/scsi_device.h | 1 +
- 3 files changed, 9 insertions(+)
+This patch has been sent and pinged for 3 months now.  It's gotten no
+comments at all.  Should we send it to Linus so it actually gets
+picked up?
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c95a4e9..ad32bc0 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -421,6 +421,10 @@ static void scsi_report_sense(struct scsi_device *sdev,
- 			evt_type = SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED;
- 			sdev_printk(KERN_WARNING, sdev,
- 				    "Mode parameters changed");
-+		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x06) {
-+			evt_type = SDEV_EVT_ALUA_STATE_CHANGE_REPORTED;
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "ALUA state has changed");
- 		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x09) {
- 			evt_type = SDEV_EVT_CAPACITY_CHANGE_REPORTED;
- 			sdev_printk(KERN_WARNING, sdev,
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b1a2631..2428d96 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2698,6 +2698,9 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
- 		envp[idx++] = "SDEV_UA=CAPACITY_DATA_HAS_CHANGED";
- 		break;
-+	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
-+		envp[idx++] = "SDEV_UA=ALUA_STATE_HAS_CHANGED";
-+		break;
- 	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
- 	       envp[idx++] = "SDEV_UA=THIN_PROVISIONING_SOFT_THRESHOLD_REACHED";
- 		break;
-@@ -2807,6 +2810,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 	case SDEV_EVT_MEDIA_CHANGE:
- 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
- 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
-+	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
- 	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
- 	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
- 	case SDEV_EVT_LUN_CHANGE_REPORTED:
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a4c9336..5d7553f 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -53,6 +53,7 @@ enum scsi_device_state {
- enum scsi_device_event {
- 	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
- 	SDEV_EVT_INQUIRY_CHANGE_REPORTED,		/* 3F 03  UA reported */
-+	SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,		/* 2A 06  UA reported */
- 	SDEV_EVT_CAPACITY_CHANGE_REPORTED,		/* 2A 09  UA reported */
- 	SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED,	/* 38 07  UA reported */
- 	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,	/* 2A 01  UA reported */
--- 
-1.8.5.2
+josh
 
+> ---
+>  drivers/scsi/vmw_pvscsi.c |   45 +++++++++++++++++++++++++++++++++++++++------
+>  drivers/scsi/vmw_pvscsi.h |    2 +-
+>  2 files changed, 40 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+> index c88e146..9478a00 100644
+> --- a/drivers/scsi/vmw_pvscsi.c
+> +++ b/drivers/scsi/vmw_pvscsi.c
+> @@ -349,9 +349,9 @@ static void pvscsi_create_sg(struct pvscsi_ctx *ctx,
+>   * Map all data buffers for a command into PCI space and
+>   * setup the scatter/gather list if needed.
+>   */
+> -static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> -                              struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
+> -                              struct PVSCSIRingReqDesc *e)
+> +static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> +                             struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
+> +                             struct PVSCSIRingReqDesc *e)
+>  {
+>         unsigned count;
+>         unsigned bufflen = scsi_bufflen(cmd);
+> @@ -360,18 +360,30 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>         e->dataLen = bufflen;
+>         e->dataAddr = 0;
+>         if (bufflen == 0)
+> -               return;
+> +               return 0;
+>
+>         sg = scsi_sglist(cmd);
+>         count = scsi_sg_count(cmd);
+>         if (count != 0) {
+>                 int segs = scsi_dma_map(cmd);
+> -               if (segs > 1) {
+> +
+> +               if (segs == -ENOMEM) {
+> +                       scmd_printk(KERN_ERR, cmd,
+> +                                   "vmw_pvscsi: Failed to map cmd sglist for DMA.\n");
+> +                       return -1;
+> +               } else if (segs > 1) {
+>                         pvscsi_create_sg(ctx, sg, segs);
+>
+>                         e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+>                         ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
+>                                                     SGL_SIZE, PCI_DMA_TODEVICE);
+> +                       if (pci_dma_mapping_error(adapter->dev, ctx->sglPA)) {
+> +                               scmd_printk(KERN_ERR, cmd,
+> +                                           "vmw_pvscsi: Failed to map ctx sglist for DMA.\n");
+> +                               scsi_dma_unmap(cmd);
+> +                               ctx->sglPA = 0;
+> +                               return -1;
+> +                       }
+>                         e->dataAddr = ctx->sglPA;
+>                 } else
+>                         e->dataAddr = sg_dma_address(sg);
+> @@ -382,8 +394,15 @@ static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>                  */
+>                 ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
+>                                              cmd->sc_data_direction);
+> +               if (pci_dma_mapping_error(adapter->dev, ctx->dataPA)) {
+> +                       scmd_printk(KERN_ERR, cmd,
+> +                                   "vmw_pvscsi: Failed to map direct data buffer for DMA.\n");
+> +                       return -1;
+> +               }
+>                 e->dataAddr = ctx->dataPA;
+>         }
+> +
+> +       return 0;
+>  }
+>
+>  static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+> @@ -712,6 +731,12 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+>                 ctx->sensePA = pci_map_single(adapter->dev, cmd->sense_buffer,
+>                                               SCSI_SENSE_BUFFERSIZE,
+>                                               PCI_DMA_FROMDEVICE);
+> +               if (pci_dma_mapping_error(adapter->dev, ctx->sensePA)) {
+> +                       scmd_printk(KERN_ERR, cmd,
+> +                                   "vmw_pvscsi: Failed to map sense buffer for DMA.\n");
+> +                       ctx->sensePA = 0;
+> +                       return -1;
+> +               }
+>                 e->senseAddr = ctx->sensePA;
+>                 e->senseLen = SCSI_SENSE_BUFFERSIZE;
+>         } else {
+> @@ -737,7 +762,15 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+>         else
+>                 e->flags = 0;
+>
+> -       pvscsi_map_buffers(adapter, ctx, cmd, e);
+> +       if (pvscsi_map_buffers(adapter, ctx, cmd, e) != 0) {
+> +               if (cmd->sense_buffer) {
+> +                       pci_unmap_single(adapter->dev, ctx->sensePA,
+> +                                        SCSI_SENSE_BUFFERSIZE,
+> +                                        PCI_DMA_FROMDEVICE);
+> +                       ctx->sensePA = 0;
+> +               }
+> +               return -1;
+> +       }
+>
+>         e->context = pvscsi_map_context(adapter, ctx);
+>
+> diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+> index ce45888..fe3b759 100644
+> --- a/drivers/scsi/vmw_pvscsi.h
+> +++ b/drivers/scsi/vmw_pvscsi.h
+> @@ -26,7 +26,7 @@
+>
+>  #include <linux/types.h>
+>
+> -#define PVSCSI_DRIVER_VERSION_STRING   "1.0.5.0-k"
+> +#define PVSCSI_DRIVER_VERSION_STRING   "1.0.6.0-k"
+>
+>  #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
+>
+> --
+> 1.7.9.5
+>
+>
+>
