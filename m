@@ -1,189 +1,64 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas : Pass driver version to firmware inside IOC
- init frame
-Date: Fri, 12 Jun 2015 12:05:52 +0530
-Message-ID: <1566c5d9687140d625b18a4ea751a912@mail.gmail.com>
-References: <201506101028.t5AASaRN030984@palmhbs0.lsi.com> <5579936C.6010002@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH 00/20] mpt3sas: driver update
+Date: Fri, 12 Jun 2015 15:12:12 +0530
+Message-ID: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:36330 "EHLO
-	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773AbbFLGfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 02:35:55 -0400
-Received: by qkx62 with SMTP id 62so13299626qkx.3
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2015 23:35:54 -0700 (PDT)
-In-Reply-To: <5579936C.6010002@redhat.com>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:32832 "EHLO
+	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458AbbFLJmu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 05:42:50 -0400
+Received: by qkhg32 with SMTP id g32so14873928qkh.0
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2015 02:42:49 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
->-----Original Message-----
->From: Tomas Henzl [mailto:thenzl@redhat.com]
->Sent: Thursday, June 11, 2015 7:26 PM
->To: Sumit.Saxena@avagotech.com; linux-scsi@vger.kernel.org
->Cc: martin.petersen@oracle.com; hch@infradead.org;
->jbottomley@parallels.com; kashyap.desai@avagotech.com
->Subject: Re: [PATCH] megaraid_sas : Pass driver version to firmware
-inside
->IOC init frame
->
->On 06/10/2015 12:22 PM, Sumit.Saxena@avagotech.com wrote:
->
->Here should be an explanation why is this needed.
->
->The driver knows the fw version and can adapt to it.
->When sending the version to firmware fails, the driver just logs it and
-is able to
->continue.
->Why is the information needed for the fw ?
+This patch set contains all the features and defect fixes from Phase4 to Phase8.
+Please review this patch set and consider these patches for next kernel release.
 
-Intent here is to have driver version string in firmware logs and it can
-help to align driver and firmware logs during debugging. One of Avago's
-customer has requested driver version to be displayed in firmware logs.
-This code has been part of inhouse driver for long time but was missed to
-be submitted to upstream. Since this is helpful for debugging not a fatal
-in functional area so if memory allocation for version buffer fails still
-driver continues.
+Sreekanth Reddy (20):
+  [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96
+    MSIX vector support
+  [SCSI] mpt3sas: Get IOC_FACTS information using handshake protocol
+    only after HBA card gets into READY or Operational state.
+  [SCSI] mpt3sas: Don't block the drive when drive addition under the
+    control of SML
+  [SCSI] mpt3sas: Remove redundancy code while freeing the controller
+    resources.
+  [SCSI] mpt3sas: MPI 2.5 Rev I (2.5.4) specifications.
+  [SCSI] mpt3sas: Provides the physical location of sas drives
+  [SCSI] mpt3sas: Bump mpt3sas Driver version to v5.100.00.00
+  [SCSI] mpt3sas: Update MPI2 strings to MPI2.5
+  [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and 2.00.34 header
+    files
+  [SCSI] mpt3sas: Add branding string support for OEM's HBA
+  [SCSI] mpt3sas: Add branding string support for OEM custom HBA
+  [SCSI] mpt3sas: Bump mpt3sas driver version to v6.100.00.00
+  [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6) specifications
+  [SCSI] mpt3sas: Complete the SCSI command with  DID_RESET status for
+    log_info value 0x0x32010081
+  [SCSI] mpt3sas: Return host busy error status to SML when DMA mapping
+    of scatter gather list fails for a SCSI command
+  [SCSI] mpt3sas: Added support for customer specific branding
+  [SCSI] mpt3sas: Use alloc_ordered_workqueue() API instead of
+    create_singlethread_workqueue() API
+  [SCSI] mpt3sas: Call dma_mapping_error() API after mapping an address
+    with dma_map_single() API
+  [SCSI] mpt3sas: When device is blocked followed by unblock fails,
+    unfreeze the I/Os
+  [SCSI] mpt3sas : Bump mpt3sas driver version to 9.100.00.00
 
->
->I fear that after several iterations we will have a table of
-corresponding
->driver/fw versions that driver will send down to fw make it work...
->
->Tomas
->
->
->> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas.h        |   10 +++++++---
->>  drivers/scsi/megaraid/megaraid_sas_base.c   |   18 ++++++++++++++++++
->>  drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +++++++
->>  3 files changed, 32 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->> b/drivers/scsi/megaraid/megaraid_sas.h
->> index 20c3754..5bd4d30 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas.h
->> +++ b/drivers/scsi/megaraid/megaraid_sas.h
->> @@ -1038,6 +1038,7 @@ struct megasas_ctrl_info {
->>  #define MEGASAS_MAX_LD_IDS
->	(MEGASAS_MAX_LD_CHANNELS * \
->>
->	MEGASAS_MAX_DEV_PER_CHANNEL)
->>
->> +#define MEGASAS_MAX_NAME                        32
->>  #define MEGASAS_MAX_SECTORS                    (2*1024)
->>  #define MEGASAS_MAX_SECTORS_IEEE		(2*128)
->>  #define MEGASAS_DBG_LVL				1
->> @@ -1264,17 +1265,18 @@ struct megasas_init_frame {
->>  	__le32 pad_0;		/*0Ch */
->>
->>  	__le16 flags;		/*10h */
->> -	__le16 reserved_3;		/*12h */
->> +	__le16 reserved_2;		/*12h */
->>  	__le32 data_xfer_len;	/*14h */
->>
->>  	__le32 queue_info_new_phys_addr_lo;	/*18h */
->>  	__le32 queue_info_new_phys_addr_hi;	/*1Ch */
->>  	__le32 queue_info_old_phys_addr_lo;	/*20h */
->>  	__le32 queue_info_old_phys_addr_hi;	/*24h */
->> -	__le32 reserved_4[2];	/*28h */
->> +	__le32 driver_ver_lo;      /*28h */
->> +	__le32 driver_ver_hi;      /*2Ch */
->>  	__le32 system_info_lo;      /*30h */
->>  	__le32 system_info_hi;      /*34h */
->> -	__le32 reserved_5[2];	/*38h */
->> +	__le32 reserved_3[2];	/*38h */
->>
->>  } __attribute__ ((packed));
->>
->> @@ -1665,6 +1667,8 @@ struct megasas_instance {
->>  	dma_addr_t producer_h;
->>  	__le32 *consumer;
->>  	dma_addr_t consumer_h;
->> +	__le32 *verbuf;
->> +	dma_addr_t verbuf_h;
->>  	struct MR_DRV_SYSTEM_INFO *system_info_buf;
->>  	dma_addr_t system_info_h;
->>  	struct MR_LD_VF_AFFILIATION *vf_affiliation; diff --git
->> a/drivers/scsi/megaraid/megaraid_sas_base.c
->> b/drivers/scsi/megaraid/megaraid_sas_base.c
->> index a022c39..6bfb3eb 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->> @@ -4252,6 +4252,14 @@ megasas_issue_init_mfi(struct megasas_instance
->> *instance)
->>
->>  	init_frame->cmd = MFI_CMD_INIT;
->>  	init_frame->cmd_status = MFI_STAT_INVALID_STATUS;
->> +
->> +	if (instance->verbuf) {
->> +		snprintf((char *)instance->verbuf,
->strlen(MEGASAS_VERSION) + 2, "%s\n",
->> +			MEGASAS_VERSION);
->> +		init_frame->driver_ver_lo = cpu_to_le32(instance-
->>verbuf_h);
->> +		init_frame->driver_ver_hi = 0;
->> +	}
->> +
->>  	init_frame->queue_info_new_phys_addr_lo =
->>  		cpu_to_le32(lower_32_bits(initq_info_h));
->>  	init_frame->queue_info_new_phys_addr_hi = @@ -5257,6 +5265,12
->@@
->> static int megasas_probe_one(struct pci_dev *pdev,
->>  		break;
->>  	}
->>
->> +	instance->verbuf = pci_alloc_consistent(pdev,
->> +						MEGASAS_MAX_NAME *
->sizeof(u32),
->> +						&instance->verbuf_h);
->> +	if (!instance->verbuf)
->> +		dev_info(&instance->pdev->dev, "Can't allocate version
->buffer\n");
->> +
->>  	instance->system_info_buf = pci_zalloc_consistent(pdev,
->>  					sizeof(struct
->MR_DRV_SYSTEM_INFO),
->>  					&instance->system_info_h);
->> @@ -5838,6 +5852,10 @@ static void megasas_detach_one(struct pci_dev
->*pdev)
->>  		pci_free_consistent(pdev, sizeof(struct
->MR_DRV_SYSTEM_INFO),
->>  				    instance->system_info_buf, instance-
->>system_info_h);
->>
->> +	if (instance->verbuf)
->> +		pci_free_consistent(pdev, MEGASAS_MAX_NAME *
->sizeof(u32),
->> +				instance->verbuf, instance->verbuf_h);
->> +
->>  	scsi_host_put(host);
->>
->>  	pci_disable_device(pdev);
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> index 0637f42..359d605 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> @@ -671,6 +671,13 @@ megasas_ioc_init_fusion(struct megasas_instance
->*instance)
->>  	/* Convert capability to LE32 */
->>  	cpu_to_le32s((u32
->> *)&init_frame->driver_operations.mfi_capabilities);
->>
->> +	if (instance->verbuf) {
->> +		snprintf((char *)instance->verbuf,
->strlen(MEGASAS_VERSION) + 2, "%s\n",
->> +			MEGASAS_VERSION);
->> +		init_frame->driver_ver_lo = cpu_to_le32(instance-
->>verbuf_h);
->> +		init_frame->driver_ver_hi = 0;
->> +	}
->> +
->>  	sys_info = dmi_get_system_info(DMI_PRODUCT_UUID);
->>  	if (instance->system_info_buf && sys_info) {
->>  		memcpy(instance->system_info_buf->systemId, sys_info,
->>
+ drivers/scsi/mpt3sas/mpi/mpi2.h          |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  52 ++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |   4 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   4 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 284 ++++++++++++++++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  48 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 344 ++++++++++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  22 +-
+ 8 files changed, 662 insertions(+), 104 deletions(-)
+
+-- 
+2.0.2
+
