@@ -1,39 +1,38 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [dm-devel] ALUA - rescan device capacity on zero sized block
- devices
-Date: Fri, 12 Jun 2015 12:59:57 -0400
-Message-ID: <1434128397.22842.102.camel@localhost.localdomain>
-References: <1887682221.152035.1428939145196.JavaMail.zimbra@kangaroot.net>
-	 <552C008A.9070201@sandisk.com>
-	 <987831457.156812.1428996031503.JavaMail.zimbra@kangaroot.net>
-	 <552CCC77.9040703@suse.de>	<552CE2C2.8000809@sandisk.com>
-	 <CABr-GnefEhc_dOKs360Hox7asbvO5qN8BqPczqC+V8CQ6Myh8w@mail.gmail.com>
-	 <55349580.1040205@suse.de>
-	 <1433948530.27387.92.camel@localhost.localdomain>
-	 <55792206.3090505@suse.de>
-	 <1434122272.22842.80.camel@localhost.localdomain>
-Reply-To: emilne@redhat.com
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [PATCH 17/20] [SCSI] mpt3sas: Use alloc_ordered_workqueue() API
+ instead of create_singlethread_workqueue() API
+Date: Fri, 12 Jun 2015 17:03:31 -0400
+Message-ID: <557B4923.1020608@stratus.com>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com> <1434102153-38581-18-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34037 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755626AbbFLQ76 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jun 2015 12:59:58 -0400
-In-Reply-To: <1434122272.22842.80.camel@localhost.localdomain>
+Received: from p01c11o141.mxlogic.net ([208.65.144.64]:60250 "EHLO
+	p01c11o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856AbbFLVLo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 17:11:44 -0400
+In-Reply-To: <1434102153-38581-18-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, Christophe Varoqui <christophe.varoqui@opensvc.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 
-On Fri, 2015-06-12 at 11:17 -0400, Ewan Milne wrote:
-> There's an interesting, somewhat-related issue I've come across with
-> iSCSI storage, when an event happens while the connection is not
-> established (i.e. link down, or logged out for some reason).  The T10
-> spec says that UAs are supposed to be reported on the I-T nexuses,
+On 06/12/2015 05:42 AM, Sreekanth Reddy wrote:
+...
+> +#if defined(alloc_ordered_workqueue)
+> +	ioc->firmware_event_thread = alloc_ordered_workqueue(
+> +		ioc->firmware_event_name, WQ_MEM_RECLAIM);
+> +#else
+> +		ioc->firmware_event_thread = create_singlethread_workqueue(
+>  	    ioc->firmware_event_name);
+> +#endif
 
-... but if the I-T nexus doesn't exist when the event occurs, it
-doesn't get reported when the nexus is re-established, and it does
-not seem like there is any requirement to do so.
+Hi Sreekanth,
 
+I think the upstream version of this code can safely assume
+alloc_ordered_workqueue is defined, no?
+
+Regards,
+
+-- Joe
