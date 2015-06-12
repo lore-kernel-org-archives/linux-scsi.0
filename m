@@ -1,38 +1,68 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 17/20] [SCSI] mpt3sas: Use alloc_ordered_workqueue() API
- instead of create_singlethread_workqueue() API
-Date: Fri, 12 Jun 2015 17:03:31 -0400
-Message-ID: <557B4923.1020608@stratus.com>
-References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com> <1434102153-38581-18-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Subject: [PATCH] mpt2sas: Abort initialization if no memory I/O resources,
+ detected
+Date: Fri, 12 Jun 2015 17:05:01 -0500
+Message-ID: <557B578D.50706@raptorengineeringinc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o141.mxlogic.net ([208.65.144.64]:60250 "EHLO
-	p01c11o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbbFLVLo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 17:11:44 -0400
-In-Reply-To: <1434102153-38581-18-git-send-email-Sreekanth.Reddy@avagotech.com>
+Received: from pearsoncomputing.net ([192.119.205.242]:64137 "EHLO
+	mail.pearsoncomputing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818AbbFLWNF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 18:13:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+To: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
 
-On 06/12/2015 05:42 AM, Sreekanth Reddy wrote:
-...
-> +#if defined(alloc_ordered_workqueue)
-> +	ioc->firmware_event_thread = alloc_ordered_workqueue(
-> +		ioc->firmware_event_name, WQ_MEM_RECLAIM);
-> +#else
-> +		ioc->firmware_event_thread = create_singlethread_workqueue(
->  	    ioc->firmware_event_name);
-> +#endif
+The mpt2sas driver crashes if the BIOS does not set up at least one
+memory I/O resource.  This failure can happen if the device is too
+slow to respond during POST and is missed by the BIOS, but Linux
+then detects the device later in the boot process.
 
-Hi Sreekanth,
+This patch aborts initialization and prints a warning if no memory I/O
+resources are found.
 
-I think the upstream version of this code can safely assume
-alloc_ordered_workqueue is defined, no?
+Signed-off-by: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Tested-by: Timothy Pearson <tpearson@raptorengineeringinc.com>
+---
+  drivers/scsi/mpt2sas/mpt2sas_base.c |    9 +++++++++
+  1 file changed, 9 insertions(+)
 
-Regards,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c 
+b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 11248de..15c9504 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -6,6 +6,8 @@
+   * Copyright (C) 2007-2014  LSI Corporation
+   * Copyright (C) 20013-2014 Avago Technologies
+   *  (mailto: MPT-FusionLinux.pdl@avagotech.com)
++ * Copyright (C) 2015 Raptor Engineering
++ *  (mailto: support@araptorengineeringinc.com)
+   *
+   * This program is free software; you can redistribute it and/or
+   * modify it under the terms of the GNU General Public License
+@@ -1582,6 +1584,13 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER 
+*ioc)
+  		}
+  	}
 
--- Joe
++	if (ioc->chip == NULL) {
++		printk(MPT2SAS_ERR_FMT "unable to map "
++			"adapter memory (resource not found)!\n", ioc->name);
++		r = -EINVAL;
++		goto out_fail;
++	}
++
+  	_base_mask_interrupts(ioc);
+
+  	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
+-- 
+1.7.9.5
+
+-- 
+Timothy Pearson
+Raptor Engineering
++1 (415) 727-8645
+http://www.raptorengineeringinc.com
