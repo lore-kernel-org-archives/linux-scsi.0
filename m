@@ -1,169 +1,106 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 19/20] [SCSI] mpt3sas: When device is blocked followed by unblock fails, unfreeze the I/Os
-Date: Fri, 12 Jun 2015 15:12:31 +0530
-Message-ID: <1434102153-38581-20-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 13/20] [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6) specifications
+Date: Fri, 12 Jun 2015 15:12:25 +0530
+Message-ID: <1434102153-38581-14-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:34994 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932720AbbFLJoZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 05:44:25 -0400
-Received: by qkhq76 with SMTP id q76so14840232qkh.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2015 02:44:24 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Issue: When the disks are getting discovered and assigned device
-handles by the kernel, a device block followed by an unblock
-(due to broadcast primitives) issued by the driver is
-interspersed by the kernel changing the state of the device.
-Therefore the unblock by the driver results in a no operation
-within the kernel API.
-
-To fix this one, the below patch checks the return of the unblock API
-and performs a block followed by an unblock to unfreeze the block
-layer's I/O queue. Sufficient checks and prints are also added in the
-driver to identify this condition caused by the kernel.
+Below are the new changes to MPI 2.5 Rev K(2.5.6) specification and 2.00.35 header files
+1) Added a minimum size requirement for target mode command buffers.
+2) Added MinMSIxIndex and MaxMSIxIndex fields to CommandBufferPostBase Request.
+3) For BIOS Page 1, added SSUTimeout field, and added Product Name String Format bits to the BiosOptions field
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 89 ++++++++++++++++++++++++++++++------
- 1 file changed, 75 insertions(+), 14 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 17 ++++++++++++++---
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 42bb731..5405a2f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2605,6 +2605,75 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-+ * _scsih_internal_device_block - block the sdev device
-+ * @sdev: per device object
-+ * @sas_device_priv_data : per device driver private data
-+ *
-+ * make sure device is blocked without error, if not
-+ * print an error
-+ */
-+static void
-+_scsih_internal_device_block(struct scsi_device *sdev,
-+			struct MPT3SAS_DEVICE *sas_device_priv_data)
-+{
-+	int r = 0;
-+
-+	sdev_printk(KERN_INFO, sdev, "device_block, handle(0x%04x)\n",
-+	    sas_device_priv_data->sas_target->handle);
-+	sas_device_priv_data->block = 1;
-+
-+	r = scsi_internal_device_block(sdev);
-+	if (r == -EINVAL)
-+		sdev_printk(KERN_WARNING, sdev,
-+		    "device_block failed with return(%d) for handle(0x%04x)\n",
-+		    sas_device_priv_data->sas_target->handle, r);
-+}
-+
-+/**
-+ * _scsih_internal_device_unblock - unblock the sdev device
-+ * @sdev: per device object
-+ * @sas_device_priv_data : per device driver private data
-+ * make sure device is unblocked without error, if not retry
-+ * by blocking and then unblocking
-+ */
-+
-+static void
-+_scsih_internal_device_unblock(struct scsi_device *sdev,
-+			struct MPT3SAS_DEVICE *sas_device_priv_data)
-+{
-+	int r = 0;
-+
-+	sdev_printk(KERN_WARNING, sdev, "device_unblock and setting to running, "
-+	    "handle(0x%04x)\n", sas_device_priv_data->sas_target->handle);
-+	sas_device_priv_data->block = 0;
-+	r = scsi_internal_device_unblock(sdev, SDEV_RUNNING);
-+	if (r == -EINVAL) {
-+		/* The device has been set to SDEV_RUNNING by SD layer during
-+		 * device addition but the request queue is still stopped by
-+		 * our earlier block call. We need to perform a block again
-+		 * to get the device to SDEV_BLOCK and then to SDEV_RUNNING */
-+
-+		sdev_printk(KERN_WARNING, sdev,
-+		    "device_unblock failed with return(%d) for handle(0x%04x) "
-+		    "performing a block followed by an unblock\n",
-+		    sas_device_priv_data->sas_target->handle, r);
-+		sas_device_priv_data->block = 1;
-+		r = scsi_internal_device_block(sdev);
-+		if (r)
-+			sdev_printk(KERN_WARNING, sdev, "retried device_block "
-+			    "failed with return(%d) for handle(0x%04x)\n",
-+			    sas_device_priv_data->sas_target->handle, r);
-+
-+		sas_device_priv_data->block = 0;
-+		r = scsi_internal_device_unblock(sdev, SDEV_RUNNING);
-+		if (r)
-+			sdev_printk(KERN_WARNING, sdev, "retried device_unblock"
-+			    " failed with return(%d) for handle(0x%04x)\n",
-+			    sas_device_priv_data->sas_target->handle, r);
-+	}
-+}
-+
-+/**
-  * _scsih_ublock_io_all_device - unblock every device
-  * @ioc: per adapter object
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index c2d127c..ec27ad2 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
   *
-@@ -2623,11 +2692,10 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPTER *ioc)
- 		if (!sas_device_priv_data->block)
- 			continue;
+- * mpi2.h Version:  02.00.34
++ * mpi2.h Version:  02.00.35
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -91,6 +91,7 @@
+  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
++ * 06-13-14  02.00.35  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
+  */
  
--		sas_device_priv_data->block = 0;
- 		dewtprintk(ioc, sdev_printk(KERN_INFO, sdev,
- 			"device_running, handle(0x%04x)\n",
- 		    sas_device_priv_data->sas_target->handle));
--		scsi_internal_device_unblock(sdev, SDEV_RUNNING);
-+		_scsih_internal_device_unblock(sdev, sas_device_priv_data);
- 	}
- }
+@@ -124,7 +125,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
  
-@@ -2652,10 +2720,9 @@ _scsih_ublock_io_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
- 		if (sas_device_priv_data->sas_target->sas_address
- 		    != sas_address)
- 			continue;
--		if (sas_device_priv_data->block) {
--			sas_device_priv_data->block = 0;
--			scsi_internal_device_unblock(sdev, SDEV_RUNNING);
--		}
-+		if (sas_device_priv_data->block)
-+			_scsih_internal_device_unblock(sdev,
-+				sas_device_priv_data);
- 	}
- }
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x22)
++#define MPI2_HEADER_VERSION_UNIT            (0x23)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 66f2cc1..c337a85 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.28
++ *   mpi2_cnfg.h Version:  02.00.29
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -177,6 +177,8 @@
+  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
+  * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
+  *		       MPI2_CONFIG_PAGE_BIOS_1.
++ * 06-13-14  02.00.29  Added SSUTimeout field to MPI2_CONFIG_PAGE_BIOS_1, and
++ *		       more defines for the BiosOptions field..
+  * --------------------------------------------------------------------------
+  */
  
-@@ -2678,10 +2745,7 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAPTER *ioc)
- 			continue;
- 		if (sas_device_priv_data->block)
- 			continue;
--		sas_device_priv_data->block = 1;
--		scsi_internal_device_block(sdev);
--		sdev_printk(KERN_INFO, sdev, "device_blocked, handle(0x%04x)\n",
--		    sas_device_priv_data->sas_target->handle);
-+		_scsih_internal_device_block(sdev, sas_device_priv_data);
- 	}
- }
+@@ -1324,7 +1326,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ 	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
+ 	U32                     BiosOptions;                /*0x04 */
+ 	U32                     IOCSettings;                /*0x08 */
+-	U32                     Reserved1;                  /*0x0C */
++	U8                      SSUTimeout;                 /*0x0C */
++	U8                      Reserved1;                  /*0x0D */
++	U16                     Reserved2;                  /*0x0E */
+ 	U32                     DeviceSettings;             /*0x10 */
+ 	U16                     NumberOfDevices;            /*0x14 */
+ 	U16                     UEFIVersion;                /*0x16 */
+@@ -1336,9 +1340,16 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
+ 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
  
-@@ -2713,10 +2777,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 			continue;
- 		if (sas_device->pend_sas_rphy_add)
- 			continue;
--		sas_device_priv_data->block = 1;
--		scsi_internal_device_block(sdev);
--		sdev_printk(KERN_INFO, sdev,
--			"device_blocked, handle(0x%04x)\n", handle);
-+		_scsih_internal_device_block(sdev, sas_device_priv_data);
- 	}
- }
+-#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
++#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x07)
  
+ /*values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_MASK                         (0x00003800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_PBDHL                        (0x00000000)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_ENCSLOSURE                   (0x00000800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_LWWID                        (0x00001000)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_PSENS                        (0x00001800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_ESPHY                        (0x00002000)
++
+ #define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		    (0x00000400)
+ 
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
 -- 
 2.0.2
-
