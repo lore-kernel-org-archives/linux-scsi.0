@@ -1,64 +1,189 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 00/20] mpt3sas: driver update
-Date: Fri, 12 Jun 2015 15:12:12 +0530
-Message-ID: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:32832 "EHLO
-	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbbFLJmu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jun 2015 05:42:50 -0400
-Received: by qkhg32 with SMTP id g32so14873928qkh.0
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2015 02:42:49 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96 MSIX vector support
+Date: Fri, 12 Jun 2015 15:12:13 +0530
+Message-ID: <1434102153-38581-2-git-send-email-Sreekanth.Reddy@avagotech.com>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch set contains all the features and defect fixes from Phase4 to Phase8.
-Please review this patch set and consider these patches for next kernel release.
+In this patch, increased the number of MSIX vector support for SAS3 C0 HBAs to up-to 96.
 
-Sreekanth Reddy (20):
-  [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96
-    MSIX vector support
-  [SCSI] mpt3sas: Get IOC_FACTS information using handshake protocol
-    only after HBA card gets into READY or Operational state.
-  [SCSI] mpt3sas: Don't block the drive when drive addition under the
-    control of SML
-  [SCSI] mpt3sas: Remove redundancy code while freeing the controller
-    resources.
-  [SCSI] mpt3sas: MPI 2.5 Rev I (2.5.4) specifications.
-  [SCSI] mpt3sas: Provides the physical location of sas drives
-  [SCSI] mpt3sas: Bump mpt3sas Driver version to v5.100.00.00
-  [SCSI] mpt3sas: Update MPI2 strings to MPI2.5
-  [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and 2.00.34 header
-    files
-  [SCSI] mpt3sas: Add branding string support for OEM's HBA
-  [SCSI] mpt3sas: Add branding string support for OEM custom HBA
-  [SCSI] mpt3sas: Bump mpt3sas driver version to v6.100.00.00
-  [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6) specifications
-  [SCSI] mpt3sas: Complete the SCSI command with  DID_RESET status for
-    log_info value 0x0x32010081
-  [SCSI] mpt3sas: Return host busy error status to SML when DMA mapping
-    of scatter gather list fails for a SCSI command
-  [SCSI] mpt3sas: Added support for customer specific branding
-  [SCSI] mpt3sas: Use alloc_ordered_workqueue() API instead of
-    create_singlethread_workqueue() API
-  [SCSI] mpt3sas: Call dma_mapping_error() API after mapping an address
-    with dma_map_single() API
-  [SCSI] mpt3sas: When device is blocked followed by unblock fails,
-    unfreeze the I/Os
-  [SCSI] mpt3sas : Bump mpt3sas driver version to 9.100.00.00
+Following are changes that are done in this patch
+1. Support this feature only for SAS3 C0 cards and also only when reply post free queue count is greater than 8.
+2. Instead of using single ReplyPostHostIndex system interface, here 12 ReplyPostHostIndex system interfaces are used. reply post free queues numbered from 0 to 7 use the first ReplyPostHostIndex system interface to update its corresponding ReplyPostHostIndex values, reply post free queues numbered from 8 to 15 will use the second ReplyPostHostIndex system interface and so on. These 12 ReplyPostHostIndex system interfaces address are saved in the array replyPostRegisterIndex[].
+3. Update the ReplyPostHostIndex value of corresponding reply post free queue in the (its msix_index/8)th entry of replyPostRegisterIndex[] array after processing the reply post descriptor.
 
- drivers/scsi/mpt3sas/mpi/mpi2.h          |   8 +-
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  52 ++++-
- drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |   4 +-
- drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   4 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 284 ++++++++++++++++++++++---
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  48 ++++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 344 ++++++++++++++++++++++++++-----
- drivers/scsi/mpt3sas/mpt3sas_transport.c |  22 +-
- 8 files changed, 662 insertions(+), 104 deletions(-)
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 70 +++++++++++++++++++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  7 +++-
+ 2 files changed, 69 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 14a781b..c13a365 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -83,7 +83,7 @@ static int msix_disable = -1;
+ module_param(msix_disable, int, 0);
+ MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+ 
+-static int max_msix_vectors = 8;
++static int max_msix_vectors = -1;
+ module_param(max_msix_vectors, int, 0);
+ MODULE_PARM_DESC(max_msix_vectors,
+ 	" max msix vectors - (default=8)");
+@@ -1009,8 +1009,15 @@ _base_interrupt(int irq, void *bus_id)
+ 	}
+ 
+ 	wmb();
+-	writel(reply_q->reply_post_host_index | (msix_index <<
+-	    MPI2_RPHI_MSIX_INDEX_SHIFT), &ioc->chip->ReplyPostHostIndex);
++	if (ioc->msix96_vector) {
++		writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
++			MPI2_RPHI_MSIX_INDEX_SHIFT),
++				ioc->replyPostRegisterIndex[msix_index/8]);
++	} else {
++		writel(reply_q->reply_post_host_index | (msix_index <<
++			MPI2_RPHI_MSIX_INDEX_SHIFT),
++				&ioc->chip->ReplyPostHostIndex);
++	}
+ 	atomic_dec(&reply_q->busy);
+ 	return IRQ_HANDLED;
+ }
+@@ -1560,8 +1567,6 @@ _base_check_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	pci_read_config_word(ioc->pdev, base + 2, &message_control);
+ 	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
+-	if (ioc->msix_vector_count > 8)
+-		ioc->msix_vector_count = 8;
+ 	dinitprintk(ioc, pr_info(MPT3SAS_FMT
+ 		"msix is supported, vector_count(%d)\n",
+ 		ioc->name, ioc->msix_vector_count));
+@@ -1880,6 +1885,31 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	if (r)
+ 		goto out_fail;
+ 
++	/* Use the Combined reply queue feature only for SAS3 C0 HBAs and
++	 * also only when reply queue count is greater than 8
++	 */
++	if (ioc->msix96_vector && ioc->reply_queue_count > 8) {
++		/* If this is an 96 vector supported device,
++		set up ReplyPostIndex addresses */
++		ioc->replyPostRegisterIndex = kcalloc(12,
++			sizeof(resource_size_t *), GFP_KERNEL);
++		if (!ioc->replyPostRegisterIndex) {
++			dfailprintk(ioc, printk(MPT3SAS_FMT
++			"allocation for reply Post Register Index failed!!!\n",
++								   ioc->name));
++			r = -ENOMEM;
++			goto out_fail;
++		}
++
++		for (i = 0; i < 12; i++) {
++			ioc->replyPostRegisterIndex[i] = (resource_size_t *)
++				((u8 *)&ioc->chip->Doorbell +
++				MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
++				(i * 0x10));
++		}
++	} else
++		ioc->msix96_vector = 0;
++
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
+ 		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
+ 		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
+@@ -1901,6 +1931,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	pci_release_selected_regions(ioc->pdev, ioc->bars);
+ 	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
++	if (ioc->msix96_vector)
++		kfree(ioc->replyPostRegisterIndex);
+ 	return r;
+ }
+ 
+@@ -4522,8 +4554,16 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+ 
+ 	/* initialize reply post host index */
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+-		writel(reply_q->msix_index << MPI2_RPHI_MSIX_INDEX_SHIFT,
+-		    &ioc->chip->ReplyPostHostIndex);
++		if (ioc->msix96_vector) {
++			writel((reply_q->msix_index & 7)<<
++			   MPI2_RPHI_MSIX_INDEX_SHIFT,
++			   ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
++		} else {
++			writel(reply_q->msix_index <<
++				MPI2_RPHI_MSIX_INDEX_SHIFT,
++					&ioc->chip->ReplyPostHostIndex);
++		}
++
+ 		if (!_base_is_controller_msix_enabled(ioc))
+ 			goto skip_init_reply_post_host_index;
+ 	}
+@@ -4577,6 +4617,9 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	_base_free_irq(ioc);
+ 	_base_disable_msix(ioc);
+ 
++	if (ioc->msix96_vector)
++		kfree(ioc->replyPostRegisterIndex);
++
+ 	if (ioc->chip_phys && ioc->chip)
+ 		iounmap(ioc->chip);
+ 	ioc->chip_phys = 0;
+@@ -4600,6 +4643,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	int r, i;
+ 	int cpu_id, last_cpu_id = 0;
++	u8 revision;
+ 
+ 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -4618,6 +4662,18 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		r = -ENOMEM;
+ 		goto out_free_resources;
+ 	}
++	/* Check whether the controller revision is C0 or above.
++	    C0 and above revision controllers support 96 vectors */
++	revision = ioc->pdev->revision;
++
++	if ((ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3004 ||
++	     ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3008 ||
++	     ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3108_1 ||
++	     ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3108_2 ||
++	     ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3108_5 ||
++	     ioc->pdev->device == MPI25_MFGPAGE_DEVID_SAS3108_6) &&
++	     (revision >= 0x02))
++		ioc->msix96_vector = 1;
+ 
+ 	ioc->rdpq_array_enable_assigned = 0;
+ 	ioc->dma_mask = 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index afa8816..6b8d8f1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -728,7 +728,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  *				is assigned only ones
+  * @reply_queue_count: number of reply queue's
+  * @reply_queue_list: link list contaning the reply queue info
+- * @reply_post_host_index: head index in the pool where FW completes IO
++ * @msix96_vector: 96 MSI-X vector support
++ * @replyPostRegisterIndex: index of next position in Reply Desc Post Queue
+  * @delayed_tr_list: target reset link list
+  * @delayed_tr_volume_list: volume target reset link list
+  * @@temp_sensors_count: flag to carry the number of temperature sensors
+@@ -937,6 +938,10 @@ struct MPT3SAS_ADAPTER {
+ 	u8		reply_queue_count;
+ 	struct list_head reply_queue_list;
+ 
++	u8		msix96_vector;
++	/* reply post register index */
++	resource_size_t	**replyPostRegisterIndex;
++
+ 	struct list_head delayed_tr_list;
+ 	struct list_head delayed_tr_volume_list;
+ 	u8		temp_sensors_count;
 -- 
 2.0.2
-
