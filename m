@@ -1,91 +1,78 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: retry MODE SENSE on unit attention
-Date: Fri, 12 Jun 2015 10:08:25 -0400
-Message-ID: <1434118105.22842.8.camel@localhost.localdomain>
-References: <1434020506-41897-1-git-send-email-hare@suse.de>
-	 <1434035231.27387.111.camel@localhost.localdomain>
-	 <557A7BD3.7040607@suse.de>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: Add ALUA state change UA handling
+Date: Fri, 12 Jun 2015 16:12:13 +0200
+Message-ID: <1434118333-100476-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40175 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:38726 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713AbbFLOI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:08:27 -0400
-In-Reply-To: <557A7BD3.7040607@suse.de>
+	id S1755544AbbFLOMW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jun 2015 10:12:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Nic Bellinger <nab@daterainc.com>
+To: James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Nic Bellinger <nab@daterainc.com>, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On Fri, 2015-06-12 at 08:27 +0200, Hannes Reinecke wrote:
-> On 06/11/2015 05:07 PM, Ewan Milne wrote:
-> > On Thu, 2015-06-11 at 13:01 +0200, Hannes Reinecke wrote:
-> >> The 'sd' driver is calling scsi_mode_sense() to figure out
-> >> internal details. But scsi_mode_sense() never checks for
-> >> any pending unit attentions, so we're getting annoying error
-> >> messages like:
-> >>
-> >> MODE SENSE: unimplemented page/subpage: 0x00/0x00
-> >>
-> >> and a possible wrong decision for device cache handling.
-> >>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >> ---
-> >>  drivers/scsi/scsi_lib.c | 7 ++++++-
-> >>  1 file changed, 6 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> >> index 2428d96..d7915c8 100644
-> >> --- a/drivers/scsi/scsi_lib.c
-> >> +++ b/drivers/scsi/scsi_lib.c
-> >> @@ -2423,7 +2423,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-> >>  	unsigned char cmd[12];
-> >>  	int use_10_for_ms;
-> >>  	int header_length;
-> >> -	int result;
-> >> +	int result, retry_count = retries;
-> >>  	struct scsi_sense_hdr my_sshdr;
-> >>  
-> >>  	memset(data, 0, sizeof(*data));
-> >> @@ -2502,6 +2502,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-> >>  			data->block_descriptor_length = buffer[3];
-> >>  		}
-> >>  		data->header_length = header_length;
-> >> +	} else if ((status_byte(result) == CHECK_CONDITION) &&
-> >> +		   scsi_sense_valid(sshdr) &&
-> >> +		   sshdr->sense_key == UNIT_ATTENTION && retry_count) {
-> >> +		retry_count--;
-> >> +		goto retry;
-> >>  	}
-> >>  
-> >>  	return result;
-> > 
-> > Great, but shouldn't we be doing this more generally?  What about
-> > scsi_mode_select()?
-> > 
-> I haven't seen any issues with scsi_mode_select() as of now, so I
-> didn't do anything about this :-)
-> 
-> > (And, with the number of status changes that can get reported by
-> >  UAs, we might want to think about increasing the retry count on
-> >  these commands up from 3 at some point.)
-> > 
-> Hmm. _Actually_, we're not getting _more_ UAs (neither the number
-> nor the situation at which UAs are being send has changed).
-> It's just that we're trying to _use_ UAs so these things pop up.
-> But yeah, raising the number or retries to eg 5 is probably a good idea.
+Log the ALUA state change unit attention correctly with
+the message log and emit an event to allow user-space
+tools to react to it.
 
-Yeah, or maybe add a time limit to we don't drag out the boot time.
-We can do this later, though, I'm fine with your patch as it is.
+Reviewed-by: Ewan Milne <emilne@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c  | 4 ++++
+ drivers/scsi/scsi_lib.c    | 4 ++++
+ include/scsi/scsi_device.h | 1 +
+ 3 files changed, 9 insertions(+)
 
-> 
-> > Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> > 
-> Cheers,
-> 
-> Hannes
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c95a4e9..dc57980 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -421,6 +421,10 @@ static void scsi_report_sense(struct scsi_device *sdev,
+ 			evt_type = SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED;
+ 			sdev_printk(KERN_WARNING, sdev,
+ 				    "Mode parameters changed");
++		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x06) {
++			evt_type = SDEV_EVT_ALUA_STATE_CHANGE_REPORTED;
++			sdev_printk(KERN_WARNING, sdev,
++				    "Asymmetic access state changed");
+ 		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x09) {
+ 			evt_type = SDEV_EVT_CAPACITY_CHANGE_REPORTED;
+ 			sdev_printk(KERN_WARNING, sdev,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b1a2631..f04be65 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2698,6 +2698,9 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
+ 		envp[idx++] = "SDEV_UA=CAPACITY_DATA_HAS_CHANGED";
+ 		break;
++	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
++		envp[idx++] = "SDEV_UA=ASYMMETRIC_ACCESS_STATE_HAS_CHANGED";
++		break;
+ 	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
+ 	       envp[idx++] = "SDEV_UA=THIN_PROVISIONING_SOFT_THRESHOLD_REACHED";
+ 		break;
+@@ -2807,6 +2810,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+ 	case SDEV_EVT_MEDIA_CHANGE:
+ 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
+ 	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
++	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
+ 	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
+ 	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
+ 	case SDEV_EVT_LUN_CHANGE_REPORTED:
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a4c9336..5d7553f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -53,6 +53,7 @@ enum scsi_device_state {
+ enum scsi_device_event {
+ 	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
+ 	SDEV_EVT_INQUIRY_CHANGE_REPORTED,		/* 3F 03  UA reported */
++	SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,		/* 2A 06  UA reported */
+ 	SDEV_EVT_CAPACITY_CHANGE_REPORTED,		/* 2A 09  UA reported */
+ 	SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED,	/* 38 07  UA reported */
+ 	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,	/* 2A 01  UA reported */
+-- 
+1.8.5.2
 
