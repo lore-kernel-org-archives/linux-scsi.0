@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 03/20] [SCSI] mpt3sas: Don't block the drive when drive addition under the control of SML
-Date: Fri, 12 Jun 2015 15:12:15 +0530
-Message-ID: <1434102153-38581-4-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 05/20] [SCSI] mpt3sas: MPI 2.5 Rev I (2.5.4) specifications.
+Date: Fri, 12 Jun 2015 15:12:17 +0530
+Message-ID: <1434102153-38581-6-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,118 +10,173 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-During hot-plugging of a disk(having a flaky link), the disk addition
-stops and any further disk addition or removal doesn't happen on that
-controller.
+Update MPI 2.5 Release: MPI 2.5 Rev I (2.5.4) specification and 2.00.33 header files
 
-This is because, when driver receives DELAY_NOT_RESPONDING event for a disk
-while it is undergoing addition at the SCSI Transport layer, the driver
-would block the I/O to that disk resulting in a deadlock. i.e the disk
-addition work couldn't be completed at the SCSI Transport Layer as it
-can't send any I/Os (such as Inquiry, Report LUNs etc) to the disk as
-I/Os are blocked to this drive. Also any subsequent device removal
-(TARGET_NOT_RESPONDING) or link update(RC_PHY_CHANGED) event couldn't be
-processed as they are in the queue to get processed after disk addition
-event.
+Below is the change set from the MPI specification for I Rev
 
-Description of Change:
-Don't block the drive when drive addition is under the control of SML.
-So that SML won't be blocked of issuing the device dicovery commands
-(such as Inquiry, Report LUNs etc).
+1) Added Base Enclosure Level bit to the Flags field of Manufacturing Page 7.
+2) Updated description of the MaxTargetPortConnectTime field of SAS IO Unit Page 1.
+3) Added EnclosureLevel and ConnectorName fields to SAS Device Page 0. Also, added EnclosureLevel and ConnectorName Valid bit to the Flags field.
+4) Added EnclosureLevel field to SAS Enclosure Page 0. Also, added EnclosureLevel Valid bit to the Flags field.
+5) Added value for BIOS image to HashImageType.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  4 +++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  7 +++++++
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 18 ++++++++++++++++++
- 3 files changed, 28 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  6 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 27 +++++++++++++++++++++------
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  |  4 +++-
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 6b8d8f1..b79ad4f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -294,7 +294,8 @@ struct _internal_cmd {
-  * @responding: used in _scsih_sas_device_mark_responding
-  * @fast_path: fast path feature enable bit
-  * @pfa_led_on: flag for PFA LED status
-- *
-+ * @pend_sas_rphy_add: flag to check if device is in sas_rphy_add()
-+ *	addition routine.
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index c34c115..d730c5c 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.31
++ * mpi2.h Version:  02.00.33
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -88,6 +88,8 @@
+  *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
+  * 04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
   */
- struct _sas_device {
- 	struct list_head list;
-@@ -315,6 +316,7 @@ struct _sas_device {
- 	u8	responding;
- 	u8	fast_path;
- 	u8	pfa_led_on;
-+	u8	pend_sas_rphy_add;
- };
  
- /**
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5a97e32..d457dba 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2644,6 +2644,11 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	struct MPT3SAS_DEVICE *sas_device_priv_data;
- 	struct scsi_device *sdev;
-+	struct _sas_device *sas_device;
-+
-+	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-+	if (!sas_device)
-+		return;
+@@ -121,7 +123,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
  
- 	shost_for_each_device(sdev, ioc->shost) {
- 		sas_device_priv_data = sdev->hostdata;
-@@ -2653,6 +2658,8 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 			continue;
- 		if (sas_device_priv_data->block)
- 			continue;
-+		if (sas_device->pend_sas_rphy_add)
-+			continue;
- 		sas_device_priv_data->block = 1;
- 		scsi_internal_device_block(sdev);
- 		sdev_printk(KERN_INFO, sdev,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index efb98af..7a7aa68 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -649,6 +649,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	unsigned long flags;
- 	struct _sas_node *sas_node;
- 	struct sas_rphy *rphy;
-+	struct _sas_device *sas_device = NULL;
- 	int i;
- 	struct sas_port *port;
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x1F)
++#define MPI2_HEADER_VERSION_UNIT            (0x21)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index e261a31..62dfbf6 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.26
++ *   mpi2_cnfg.h Version:  02.00.27
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -165,6 +165,16 @@
+  *                     match the specification.
+  * 08-19-13  02.00.26  Added reserved words to MPI2_CONFIG_PAGE_IO_UNIT_7 for
+  *			future use.
++ * 12-05-13  02.00.27  Added MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL for
++ *		       MPI2_CONFIG_PAGE_MAN_7.
++ *		       Added EnclosureLevel and ConnectorName fields to
++ *		       MPI2_CONFIG_PAGE_SAS_DEV_0.
++ *		       Added MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID for
++ *		       MPI2_CONFIG_PAGE_SAS_DEV_0.
++ *		       Added EnclosureLevel field to
++ *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
++ *		       Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
++ *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
+  * --------------------------------------------------------------------------
+  */
  
-@@ -731,10 +732,27 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		    mpt3sas_port->remote_identify.device_type);
+@@ -724,6 +734,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7 {
+ #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
  
- 	rphy->identify = mpt3sas_port->remote_identify;
-+
-+	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
-+		sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
-+				    mpt3sas_port->remote_identify.sas_address);
-+		if (!sas_device) {
-+			dfailprintk(ioc, printk(MPT3SAS_FMT
-+				"failure at %s:%d/%s()!\n",
-+				ioc->name, __FILE__, __LINE__, __func__));
-+			goto out_fail;
-+		}
-+		sas_device->pend_sas_rphy_add = 1;
-+	}
-+
- 	if ((sas_rphy_add(rphy))) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 	}
-+
-+	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE)
-+		sas_device->pend_sas_rphy_add = 0;
-+
- 	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
- 		dev_printk(KERN_INFO, &rphy->dev,
- 			"add: handle(0x%04x), sas_addr(0x%016llx)\n",
+ /*defines for the Flags field */
++#define MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL         (0x00000008)
+ #define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
+ #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+ 
+@@ -2633,9 +2644,9 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
+ 	U8
+ 		ControlGroup;           /*0x2E */
+ 	U8
+-		Reserved1;              /*0x2F */
++		EnclosureLevel;		/*0x2F */
+ 	U32
+-		Reserved2;              /*0x30 */
++		ConnectorName[4];	/*0x30 */
+ 	U32
+ 		Reserved3;              /*0x34 */
+ } MPI2_CONFIG_PAGE_SAS_DEV_0,
+@@ -2643,7 +2654,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
+ 	Mpi2SasDevicePage0_t,
+ 	*pMpi2SasDevicePage0_t;
+ 
+-#define MPI2_SASDEVICE0_PAGEVERSION         (0x08)
++#define MPI2_SASDEVICE0_PAGEVERSION         (0x09)
+ 
+ /*values for SAS Device Page 0 AccessStatus field */
+ #define MPI2_SAS_DEVICE0_ASTATUS_NO_ERRORS                  (0x00)
+@@ -2683,6 +2694,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
+ #define MPI2_SAS_DEVICE0_FLAGS_SATA_NCQ_SUPPORTED           (0x0020)
+ #define MPI2_SAS_DEVICE0_FLAGS_SATA_FUA_SUPPORTED           (0x0010)
+ #define MPI2_SAS_DEVICE0_FLAGS_PORT_SELECTOR_ATTACH         (0x0008)
++#define MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID             (0x0002)
+ #define MPI2_SAS_DEVICE0_FLAGS_DEVICE_PRESENT               (0x0001)
+ 
+ 
+@@ -3019,8 +3031,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
+ 		NumSlots;                   /*0x18 */
+ 	U16
+ 		StartSlot;                  /*0x1A */
+-	U16
++	U8
+ 		Reserved2;                  /*0x1C */
++	U8
++		EnclosureLevel;		    /*0x1D */
+ 	U16
+ 		SEPDevHandle;               /*0x1E */
+ 	U32
+@@ -3031,9 +3045,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
+ 	*PTR_MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
+ 	Mpi2SasEnclosurePage0_t, *pMpi2SasEnclosurePage0_t;
+ 
+-#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x03)
++#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x04)
+ 
+ /*values for SAS Enclosure Page 0 Flags field */
++#define MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID      (0x0010)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_MASK              (0x000F)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_UNKNOWN           (0x0000)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_IOC_SES           (0x0001)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+index 4908309..d7598cc 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  * Creation Date:  October 11, 2006
+  *
+- * mpi2_ioc.h Version:  02.00.23
++ * mpi2_ioc.h Version:  02.00.24
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -132,6 +132,7 @@
+  *			Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
+  *			Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
+  *			Added Encrypted Hash Extended Image.
++ * 12-05-13  02.00.24  Added MPI25_HASH_IMAGE_TYPE_BIOS.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -1598,6 +1599,7 @@ Mpi25EncryptedHashEntry_t, *pMpi25EncryptedHashEntry_t;
+ /* values for HashImageType */
+ #define MPI25_HASH_IMAGE_TYPE_UNUSED		(0x00)
+ #define MPI25_HASH_IMAGE_TYPE_FIRMWARE		(0x01)
++#define MPI25_HASH_IMAGE_TYPE_BIOS              (0x02)
+ 
+ /* values for HashAlgorithm */
+ #define MPI25_HASH_ALGORITHM_UNUSED		(0x00)
 -- 
 2.0.2
