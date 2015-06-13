@@ -1,33 +1,51 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [BUG ?] pmcraid: condition with no effect
-Date: Sat, 13 Jun 2015 12:39:25 +0200
-Message-ID: <1434191965-5780-1-git-send-email-hofrat@osadl.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v6] cxlflash: Base support for IBM CXL Flash Adapter
+Date: Sat, 13 Jun 2015 08:59:47 -0700
+Message-ID: <1434211187.2208.2.camel@HansenPartnership.com>
+References: <1433888152-7360-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:60771 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750853AbbFMKsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Jun 2015 06:48:04 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35300 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750832AbbFMP7t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Jun 2015 11:59:49 -0400
+In-Reply-To: <1433888152-7360-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+
+On Tue, 2015-06-09 at 17:15 -0500, Matthew R. Ochs wrote:
+> SCSI device driver to support filesystem access on the IBM CXL Flash adapter.
+> 
+> Supported-by: Stephen Bates <stephen.bates@pmcs.com>
+> Reviewed-by: Michael Neuling <mikey@neuling.org>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/Kconfig            |    1 +
+>  drivers/scsi/Makefile           |    1 +
+>  drivers/scsi/cxlflash/Kconfig   |   11 +
+>  drivers/scsi/cxlflash/Makefile  |    2 +
+>  drivers/scsi/cxlflash/common.h  |  181 +++
+>  drivers/scsi/cxlflash/main.c    | 2294 +++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/cxlflash/main.h    |  104 ++
+>  drivers/scsi/cxlflash/sislite.h |  465 ++++++++
+>  8 files changed, 3059 insertions(+)
+>  create mode 100644 drivers/scsi/cxlflash/Kconfig
+>  create mode 100644 drivers/scsi/cxlflash/Makefile
+>  create mode 100644 drivers/scsi/cxlflash/common.h
+>  create mode 100644 drivers/scsi/cxlflash/main.c
+>  create mode 100644 drivers/scsi/cxlflash/main.h
+>  create mode 100755 drivers/scsi/cxlflash/sislite.h
+
+That last one shows execute permission on a header file, which is a big
+no-no.  checkpatch would have given you an error for this ... please use
+it next time.  I fixed this up when applying.
+
+James
 
 
-scanning for trivial bug-patters with coccinelle spatches returned:
-./drivers/scsi/pmcraid.c:1603
-        WARNING: condition with no effect (if branch == else)
-
-introduced in 'commit c20c426732a5 ("[SCSI] pmcraid: MSI-X support and other changes")'
-
-drivers/scsi/pmcraid.c - line numbers from 4.1-rc7
-1603         if (fw_version <= PMCRAID_FW_VERSION_1)
-1604                 hidden_entry = (cfg_entry->unique_flags1 & 0x80) != 0;
-1605         else            
-1606                 hidden_entry = (cfg_entry->unique_flags1 & 0x80) != 0;
-
-As "hidden_entry = (cfg_entry->unique_flags1 & 0x80) != 0;" is probing the
-bit the if condition simply looks unnecessary - if this "fix" would do is
-not clear though without knowing details of the driver.
-
-thx!
-hofrat
