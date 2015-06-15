@@ -1,77 +1,108 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 14/20] [SCSI] mpt3sas: Complete the SCSI command with
-  DID_RESET status for log_info value 0x0x32010081
-Date: Mon, 15 Jun 2015 12:01:56 +0200
-Message-ID: <20150615100156.GL5660@c203.arch.suse.de>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH 04/20] [SCSI] mpt3sas: Remove redundancy code while
+ freeing the controller resources.
+Date: Mon, 15 Jun 2015 15:56:56 +0530
+Message-ID: <CAK=zhgqsSWUOGU+cjrwPtagu5tCCtM4jeD67+Xm5r1kTKx5T6A@mail.gmail.com>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <1434102153-38581-15-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1434102153-38581-5-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<20150612112826.GC2812@c203.arch.suse.de>
+	<CAK=zhgoUDDgmC8iDOqCkONNm-u4B3sNWYLRXJNTgXfqWs9nbPw@mail.gmail.com>
+	<20150612124024.GB16614@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1434102153-38581-15-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:34738 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbbFOK06 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2015 06:26:58 -0400
+Received: by wgv5 with SMTP id 5so64937204wgv.1
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2015 03:26:57 -0700 (PDT)
+In-Reply-To: <20150612124024.GB16614@c203.arch.suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 03:12:26PM +0530, Sreekanth Reddy wrote:
-> For any SCSI command, if the driver receives
-> IOC status =3D SCSI_IOC_TERMINATED and log info =3D 0x32010081 then
-> that command will be completed with DID_RESET host status.
->=20
-> The definition of this log info value is
-> "Virtual IO has failed and has to be retried".
->=20
-> Firmware will provide this log info value with IOC Status
-> "SCSI_IOC_TERMINATED", whenever a drive (with is a part of a volume)
-> is pulled and pushed back within some minimal delay.
-> With this log info value, firmware informs the driver to retry the
-> failed IO command infinite times, so to provide some time for the
-> firmware to discover the reinserted drive successfully instated of
-> just retrying failed command for five times(doesn't giving enough
-> time for firmware to complete the drive discovery) and failing the
-> IO permanently even though drive came back successfully.
->=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
-sas/mpt3sas_scsih.c
-> index 64dd90b..837c22a 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -4241,6 +4241,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16=
- smid, u8 msix_index, u32 reply)
->  				scmd->device->expecting_cc_ua =3D 1;
->  			}
->  			break;
-> +		} else if (log_info =3D=3D 0x32010081) {
-> +			scmd->result =3D DID_RESET << 16;
-> +			break;
+On Fri, Jun 12, 2015 at 6:10 PM, Johannes Thumshirn <jthumshirn@suse.de=
+> wrote:
+> On Fri, Jun 12, 2015 at 05:48:56PM +0530, Sreekanth Reddy wrote:
+>> On Fri, Jun 12, 2015 at 4:58 PM, Johannes Thumshirn <jthumshirn@suse=
+=2Ede> wrote:
+>> > On Fri, Jun 12, 2015 at 03:12:16PM +0530, Sreekanth Reddy wrote:
+>> >> Removed the redundancy code while freeing the controller resource=
+s.
+>> >>
+>> >> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+>> >> ---
+>> >>  drivers/scsi/mpt3sas/mpt3sas_base.c | 57 +++++++++++++++++++++--=
+--------------
+> [...]
+>> >> +     _base_free_irq(ioc);
+>> >> +     _base_disable_msix(ioc);
+>> >> +
+>> >> +     if (ioc->msix96_vector)
+>> >> +             kfree(ioc->replyPostRegisterIndex);
+>> >
+>> > kfree() already checks for zero or a NULL pointer.
+>>
+>> Sorry Johannes, I didn't get you. If I understand this correctly, yo=
+u
+>> are suggesting to check for NULL pointer before calling kree() API a=
+s
+>> shown below,
+>>
+>> if (ioc->msix96_vector && (ioc->replyPostRegisterIndex !=3D NULL))
+>>         kfree(ioc->replyPostRegisterIndex);
+>
+> Correct me if I'm wrong, but I thought you don't need the if
+> (ioc->msix96_vector) before the kfree(). ioc->replyPostRegisterIndex =
+should be
+> NULL if ioc->msix96_vector is 0, as far as I can see.
+>
+> In _scsih_probe() you have:
+> shost =3D scsi_host_alloc(&scsih_driver_template,
+>             sizeof(struct MPT3SAS_ADAPTER));
+> if (!shost)
+>            return -ENODEV;
+>
+> /* init local params */
+> ioc =3D shost_priv(shost);
+>
+> and scsi_host_alloc() does a kzalloc() for shost.
+>
+> so ioc->replyPortRegisterIndex is NULL.
+>
+> Or am I thinking wrong here?
 
-Could you make that a #define instead of some magic vlaue, so everyone =
-can see
-what is happening when reading the source?
+Yes, ioc->replyPostRegisterIndex will be NULL if ioc->msix96_vector is =
+0,
+We have added this checks as a precautionary. since calling this
+function (i.e kfree()) on memory not previously allocated with
+kmalloc(), or on memory which has already been freed, may results in
+very bad things, such as freeing memory belonging to another part of
+the kernel.
 
->  		}
->  		scmd->result =3D DID_SOFT_ERROR << 16;
->  		break;
-> --=20
-> 2.0.2
->=20
+>
+>>
+>> Regards,
+>> Sreekanth
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Johannes Thumshirn                                       Storage
+> jthumshirn@suse.de                             +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+
+
 
 --=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+
+Regards,
+Sreekanth
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
