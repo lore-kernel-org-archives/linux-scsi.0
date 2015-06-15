@@ -1,81 +1,151 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: Re: [PATCH 1/4] ipr: Fix locking for unit attention handling
-Date: Mon, 15 Jun 2015 10:44:20 -0400
-Message-ID: <20150615104420.Horde.R1C8QcwnDQUPFtuoGeHRJw1@ltc.linux.ibm.com>
-References: <201506120145.t5C1jFQW016709@d01av04.pok.ibm.com>
+Subject: Re: [PATCH 3/4] ipr: Endian / sparse fixes
+Date: Mon, 15 Jun 2015 10:50:34 -0400
+Message-ID: <20150615105034.Horde.x95hAAC4-2vcRbbpHDDACA2@ltc.linux.ibm.com>
+References: <201506120145.t5C1jK1N019458@d03av01.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:44872 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755525AbbFOOo0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2015 10:44:26 -0400
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:52092 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221AbbFOOuk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2015 10:50:40 -0400
 Received: from /spool/local
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Mon, 15 Jun 2015 10:44:24 -0400
-In-Reply-To: <201506120145.t5C1jFQW016709@d01av04.pok.ibm.com>
+	Mon, 15 Jun 2015 10:50:39 -0400
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 4B645C90045
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2015 10:41:43 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5FEoaEX57802990
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2015 14:50:36 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5FEoZsX012708
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2015 10:50:35 -0400
+In-Reply-To: <201506120145.t5C1jK1N019458@d03av01.boulder.ibm.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, gbertazi@linux.vnet.ibm.com, stable@vger.kernel.org
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, gbertazi@linux.vnet.ibm.com
 
-We have done stress test for a week with the patch and works fine.
 
 Reviewed-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
 Thanks,
 Wendy
-
 Quoting Brian King <brking@linux.vnet.ibm.com>:
 
-> Make sure we have the host lock held when calling  
-> scsi_report_bus_reset. Fixes
-> a crash seen as the __devices list in the scsi host was changing as we were
-> iterating through it.
+> Some misc fixes for endianness checking with sparse so sparse with
+> endian checking now runs clean. Fixes a minor bug in the process
+> which was uncovered by sparse which would result in unnecessary
+> error recovery for check conditions.
 >
-> Cc: <stable@vger.kernel.org>
 > Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 > ---
 >
->  drivers/scsi/ipr.c |   12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
+>  drivers/scsi/ipr.c |   13 +++++++------
+>  drivers/scsi/ipr.h |   13 ++++++-------
+>  2 files changed, 13 insertions(+), 13 deletions(-)
 >
-> diff -puN drivers/scsi/ipr.c~ipr_erp_start_locking drivers/scsi/ipr.c
-> --- linux/drivers/scsi/ipr.c~ipr_erp_start_locking	2015-06-11  
-> 20:18:13.806674185 -0500
-> +++ linux-bjking1/drivers/scsi/ipr.c	2015-06-11 20:18:13.814674115 -0500
-> @@ -6263,21 +6263,23 @@ static void ipr_scsi_done(struct ipr_cmn
->  	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
->  	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
->  	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
-> -	unsigned long hrrq_flags;
-> +	unsigned long lock_flags;
+> diff -puN drivers/scsi/ipr.h~ipr_endian_fixes drivers/scsi/ipr.h
+> --- linux/drivers/scsi/ipr.h~ipr_endian_fixes	2015-06-11  
+> 20:18:29.102541573 -0500
+> +++ linux-bjking1/drivers/scsi/ipr.h	2015-06-11 20:18:29.112541485 -0500
+> @@ -1007,13 +1007,13 @@ struct ipr_hostrcb_type_24_error {
+>  struct ipr_hostrcb_type_07_error {
+>  	u8 failure_reason[64];
+>  	struct ipr_vpd vpd;
+> -	u32 data[222];
+> +	__be32 data[222];
+>  }__attribute__((packed, aligned (4)));
 >
->  	scsi_set_resid(scsi_cmd,  
-> be32_to_cpu(ipr_cmd->s.ioasa.hdr.residual_data_len));
+>  struct ipr_hostrcb_type_17_error {
+>  	u8 failure_reason[64];
+>  	struct ipr_ext_vpd vpd;
+> -	u32 data[476];
+> +	__be32 data[476];
+>  }__attribute__((packed, aligned (4)));
 >
->  	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
->  		scsi_dma_unmap(scsi_cmd);
+>  struct ipr_hostrcb_config_element {
+> @@ -1291,18 +1291,17 @@ struct ipr_resource_entry {
+>  	(((res)->bus << 24) | ((res)->target << 8) | (res)->lun)
 >
-> -		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
-> +		spin_lock_irqsave(ipr_cmd->hrrq->lock, lock_flags);
->  		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  		scsi_cmd->scsi_done(scsi_cmd);
-> -		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
-> +		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, lock_flags);
->  	} else {
-> -		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
-> +		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-> +		spin_lock(&ipr_cmd->hrrq->_lock);
->  		ipr_erp_start(ioa_cfg, ipr_cmd);
-> -		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
-> +		spin_unlock(&ipr_cmd->hrrq->_lock);
-> +		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  	u8 ata_class;
+> -
+> -	u8 flags;
+> -	__be16 res_flags;
+> -
+>  	u8 type;
+>
+> +	u16 flags;
+> +	u16 res_flags;
+> +
+>  	u8 qmodel;
+>  	struct ipr_std_inq_data std_inq_data;
+>
+>  	__be32 res_handle;
+>  	__be64 dev_id;
+> -	__be64 lun_wwn;
+> +	u64 lun_wwn;
+>  	struct scsi_lun dev_lun;
+>  	u8 res_path[8];
+>
+> diff -puN drivers/scsi/ipr.c~ipr_endian_fixes drivers/scsi/ipr.c
+> --- linux/drivers/scsi/ipr.c~ipr_endian_fixes	2015-06-11  
+> 20:18:29.107541529 -0500
+> +++ linux-bjking1/drivers/scsi/ipr.c	2015-06-11 20:18:29.121541408 -0500
+> @@ -1159,7 +1159,8 @@ static void ipr_init_res_entry(struct ip
+>
+>  	if (ioa_cfg->sis64) {
+>  		proto = cfgtew->u.cfgte64->proto;
+> -		res->res_flags = cfgtew->u.cfgte64->res_flags;
+> +		res->flags = be16_to_cpu(cfgtew->u.cfgte64->flags);
+> +		res->res_flags = be16_to_cpu(cfgtew->u.cfgte64->res_flags);
+>  		res->qmodel = IPR_QUEUEING_MODEL64(res);
+>  		res->type = cfgtew->u.cfgte64->res_type;
+>
+> @@ -1307,8 +1308,8 @@ static void ipr_update_res_entry(struct
+>  	int new_path = 0;
+>
+>  	if (res->ioa_cfg->sis64) {
+> -		res->flags = cfgtew->u.cfgte64->flags;
+> -		res->res_flags = cfgtew->u.cfgte64->res_flags;
+> +		res->flags = be16_to_cpu(cfgtew->u.cfgte64->flags);
+> +		res->res_flags = be16_to_cpu(cfgtew->u.cfgte64->res_flags);
+>  		res->type = cfgtew->u.cfgte64->res_type;
+>
+>  		memcpy(&res->std_inq_data, &cfgtew->u.cfgte64->std_inq_data,
+> @@ -1894,7 +1895,7 @@ static void ipr_log_array_error(struct i
+>   * Return value:
+>   * 	none
+>   **/
+> -static void ipr_log_hex_data(struct ipr_ioa_cfg *ioa_cfg, u32  
+> *data, int len)
+> +static void ipr_log_hex_data(struct ipr_ioa_cfg *ioa_cfg, __be32  
+> *data, int len)
+>  {
+>  	int i;
+>
+> @@ -2264,7 +2265,7 @@ static void ipr_log_fabric_error(struct
+>  			((unsigned long)fabric + be16_to_cpu(fabric->length));
 >  	}
+>
+> -	ipr_log_hex_data(ioa_cfg, (u32 *)fabric, add_len);
+> +	ipr_log_hex_data(ioa_cfg, (__be32 *)fabric, add_len);
 >  }
 >
+>  /**
+> @@ -2358,7 +2359,7 @@ static void ipr_log_sis64_fabric_error(s
+>  			((unsigned long)fabric + be16_to_cpu(fabric->length));
+>  	}
+>
+> -	ipr_log_hex_data(ioa_cfg, (u32 *)fabric, add_len);
+> +	ipr_log_hex_data(ioa_cfg, (__be32 *)fabric, add_len);
+>  }
+>
+>  /**
 > _
 
 
