@@ -1,33 +1,63 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Mon, 15 Jun 2015 11:33:32 +0800
-Message-ID: <557E478C.7070205@huawei.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com> <54AC0A17.8020405@redhat.com> <20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com> <552BC234.4020000@redhat.com> <20150426092719.GA1460@kroah.com> <553E28DC.1040100@redhat.com> <20150427125529.GA18817@kroah.com> <553E354B.90208@redhat.com> <20150502175621.GA15525@kroah.com> <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
+From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
+Subject: Re: [PATCH v7 7/9] snic:Add sysfs entries to list stats and trace
+ data
+Date: Mon, 15 Jun 2015 04:18:18 +0000
+Message-ID: <D1A44F99.27904%nmusini@cisco.com>
+References: <1432886649-12034-1-git-send-email-nmusini@cisco.com>
+ <1432886649-12034-8-git-send-email-nmusini@cisco.com>
+ <1434212252.2208.4.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Vinson Lee <vlee@twopensource.com>
-Cc: Greg KH <greg@kroah.com>, Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from alln-iport-7.cisco.com ([173.37.142.94]:3616 "EHLO
+	alln-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbbFOESV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2015 00:18:21 -0400
+In-Reply-To: <1434212252.2208.4.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <544621C20CEDB34BAF62B6FD9F4EA3AE@emea.cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "boaz@plexistor.com" <boaz@plexistor.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
-> The first and second patches are from upstream 3.18. The third patch
-> is from upstream 4.0.
-> 
-> Please use the following list of kernels and patches for backporting.
-> 
-> 3.18, 3.19
-> 3b74729878 hpsa: turn off interrupts when kdump starts
-> 
-> <= 3.17
-> 132aa220b4 hpsa: refine the pci enable/disable handling
-> 859c75aba2 hpsa: add missing pci_set_master in kdump path
-> 3b74729878 hpsa: turn off interrupts when kdump starts
-> 
+Hi James,=20
 
-I've queued up the above 3 commits for 3.4, and this one:
+      Thanks for fixing the errors. the check patch that I used didn=B9=
+t
+list them as error, probably a lower version.
 
-03741d956e hpsa: fix memory leak in kdump hard reset
+Thank you very much for mentoring.
+
+Thanks
+Narsimhulu
+
+On 13/06/15 9:47 pm, "James Bottomley"
+<James.Bottomley@HansenPartnership.com> wrote:
+
+>On Fri, 2015-05-29 at 01:04 -0700, Narsimhulu Musini wrote:
+>> +static const struct file_operations snic_stats_fops __read_mostly =3D=
+ {
+>> +	.owner	=3D THIS_MODULE,
+>> +	.open	=3D snic_stats_open,
+>> +	.read	=3D seq_read,
+>> +	.llseek =3D seq_lseek,
+>> +	.release =3D single_release,
+>> +};
+>
+>Checkpatch hates this for obvious reasons: a const structure has to be
+>read only, not read mostly, so it's a section conflict.  I fixed it up=
+,
+>but running the code through checkpatch would have flagged it as an
+>error.
+>
+>James
+>
+>
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
