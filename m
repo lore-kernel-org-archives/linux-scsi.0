@@ -1,51 +1,33 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] [RFC] block: Add blk_max_rw_sectors attribute
-Date: Sun, 14 Jun 2015 20:28:32 -0400
-Message-ID: <yq1oakhhl1r.fsf@sermon.lab.mkp.net>
-References: <201506121612.t5CGCiTa004134@d01av05.pok.ibm.com>
+From: Zefan Li <lizefan@huawei.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Mon, 15 Jun 2015 11:33:32 +0800
+Message-ID: <557E478C.7070205@huawei.com>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com> <54AC0A17.8020405@redhat.com> <20150128001837.GE17677@kroah.com> <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com> <552BC234.4020000@redhat.com> <20150426092719.GA1460@kroah.com> <553E28DC.1040100@redhat.com> <20150427125529.GA18817@kroah.com> <553E354B.90208@redhat.com> <20150502175621.GA15525@kroah.com> <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26843 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806AbbFOA3R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Jun 2015 20:29:17 -0400
-In-Reply-To: <201506121612.t5CGCiTa004134@d01av05.pok.ibm.com> (Brian King's
-	message of "Fri, 12 Jun 2015 11:12:42 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Vinson Lee <vlee@twopensource.com>
+Cc: Greg KH <greg@kroah.com>, Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, axboe@kernel.dk
 
->>>>> "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
+> The first and second patches are from upstream 3.18. The third patch
+> is from upstream 4.0.
+> 
+> Please use the following list of kernels and patches for backporting.
+> 
+> 3.18, 3.19
+> 3b74729878 hpsa: turn off interrupts when kdump starts
+> 
+> <= 3.17
+> 132aa220b4 hpsa: refine the pci enable/disable handling
+> 859c75aba2 hpsa: add missing pci_set_master in kdump path
+> 3b74729878 hpsa: turn off interrupts when kdump starts
+> 
 
-Brian,
+I've queued up the above 3 commits for 3.4, and this one:
 
-Brian> As defined in the transfer limit table in the block limits VPD
-Brian> page section of SBC4, this value is only supposed to apply to a
-Brian> small subset of SCSI opcodes. However, we are using that value
-Brian> for all SCSI commands.
-
-Well, I guess the real issue here is that we use the same constraint for
-FS and BLOCK_PC commands. It's not really the kernel's business to
-enforce target device preferences on sg/bsg callers.
-
-The main headache here is that max_sectors_kb in sysfs is widely used by
-users that want to tweak their read/write I/O size. So we can't really
-change the meaning of that knob, nor do I think it's necessarily a good
-idea to introduce a max_rw_sectors_kb (which I agree would have been a
-better name for the sysfs knob in the first place).
-
-So I think my preference would be to have an internal max_rw_sectors
-queue limit that sd can set based on the VPD. And use that as the limit
-for REQ_TYPE_FS requests. I.e. max_sectors and max_sectors_kb need to be
-constrained by min_not_zero(max_rw_sectors, max_hw_sectors).
-
-max_hw_sectors would then only indicate the HBA hardware request size
-limit which is what BLOCK_PC callers should be constrained by
-exclusively.
-
-That way you don't get into having to parse the CDB and other evils.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+03741d956e hpsa: fix memory leak in kdump hard reset
