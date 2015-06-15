@@ -1,46 +1,60 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 20/20] [SCSI] mpt3sas : Bump mpt3sas driver version to
- 9.100.00.00
-Date: Mon, 15 Jun 2015 11:56:10 +0200
-Message-ID: <20150615095610.GJ5660@c203.arch.suse.de>
+Subject: Re: [PATCH 18/20] [SCSI] mpt3sas: Call dma_mapping_error() API after
+ mapping an address with dma_map_single() API
+Date: Mon, 15 Jun 2015 11:55:46 +0200
+Message-ID: <20150615095546.GI5660@c203.arch.suse.de>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <1434102153-38581-21-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <1434102153-38581-19-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1434102153-38581-21-git-send-email-Sreekanth.Reddy@avagotech.com>
+In-Reply-To: <1434102153-38581-19-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 12, 2015 at 03:12:32PM +0530, Sreekanth Reddy wrote:
-> Bump mpt3sas driver version to 9.100.00.00
+On Fri, Jun 12, 2015 at 03:12:30PM +0530, Sreekanth Reddy wrote:
+> Added dma_mapping_error() API after mapping an address with dma_map_s=
+ingle() API.
+> Otherwise when CONFIG_DMA_API_DEBUG is enabled in the kernel, then it=
+ complains
+> about mpt3sas driver not calling dma_mapping_error after mapping an a=
+ddress with
+> dma_map_single
 >=20
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c | 4 ++--
 >  1 file changed, 2 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
-as/mpt3sas_base.h
-> index b97039b..0ffe763 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -71,8 +71,8 @@
->  #define MPT3SAS_DRIVER_NAME		"mpt3sas"
->  #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avag=
-otech.com>"
->  #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
-> -#define MPT3SAS_DRIVER_VERSION		"06.100.00.00"
-> -#define MPT3SAS_MAJOR_VERSION		6
-> +#define MPT3SAS_DRIVER_VERSION		"09.100.00.00"
-> +#define MPT3SAS_MAJOR_VERSION		9
->  #define MPT3SAS_MINOR_VERSION		100
->  #define MPT3SAS_BUILD_VERSION		0
->  #define MPT3SAS_RELEASE_VERSION	00
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/=
+mpt3sas/mpt3sas_transport.c
+> index 7a7aa68..70fd019 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> @@ -1964,7 +1964,7 @@ _transport_smp_handler(struct Scsi_Host *shost,=
+ struct sas_rphy *rphy,
+>  	} else {
+>  		dma_addr_out =3D pci_map_single(ioc->pdev, bio_data(req->bio),
+>  		    blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
+> -		if (!dma_addr_out) {
+> +		if (pci_dma_mapping_error(ioc->pdev, dma_addr_out)) {
+>  			pr_info(MPT3SAS_FMT "%s(): DMA Addr out =3D NULL\n",
+>  			    ioc->name, __func__);
+>  			rc =3D -ENOMEM;
+> @@ -1986,7 +1986,7 @@ _transport_smp_handler(struct Scsi_Host *shost,=
+ struct sas_rphy *rphy,
+>  	} else {
+>  		dma_addr_in =3D  pci_map_single(ioc->pdev, bio_data(rsp->bio),
+>  		    blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
+> -		if (!dma_addr_in) {
+> +		if (pci_dma_mapping_error(ioc->pdev, dma_addr_in)) {
+>  			pr_info(MPT3SAS_FMT "%s(): DMA Addr in =3D NULL\n",
+>  			    ioc->name, __func__);
+>  			rc =3D -ENOMEM;
 > --=20
 > 2.0.2
 >=20
