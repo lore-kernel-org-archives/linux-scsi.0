@@ -1,52 +1,66 @@
-From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: RE: [PATCH 0/3] csiostor:Debugfs support update.
-Date: Tue, 16 Jun 2015 01:20:25 +0000
-Message-ID: <24C222ADD7729F4FB5113B41FF0028A1C6ECF9@nice.asicdesigners.com>
-References: <1433855686-15768-1-git-send-email-praveenm@chelsio.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH 17/20] [SCSI] mpt3sas: Use alloc_ordered_workqueue() API
+ instead of create_singlethread_workqueue() API
+Date: Tue, 16 Jun 2015 10:33:51 +0530
+Message-ID: <CAK=zhgop56=3qNxJgbvaFvt5RWjdbC+54CcNXfW_B-vDuzyvrw@mail.gmail.com>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1434102153-38581-18-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<557B4923.1020608@stratus.com>
+	<CAK=zhgrUh-Xcz2kqJRsdxmTKXE-hdLE52ya+5PDTTuNqN_Pwjw@mail.gmail.com>
+	<1434402300.2170.84.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1433855686-15768-1-git-send-email-praveenm@chelsio.com>
-Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "davem@davemloft.net" <davem@davemloft.net>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Hariprasad S <hariprasad@chelsio.com>, Varun Prakash <varun@chelsio.com>, Rajesh Kumar <rajesh.kumar@chelsio.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1434402300.2170.84.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Davem,
-Can you please apply this patch series against net-next ?
+On Tue, Jun 16, 2015 at 2:35 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Mon, 2015-06-15 at 16:26 +0530, Sreekanth Reddy wrote:
+>> On Sat, Jun 13, 2015 at 2:33 AM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
+>> > On 06/12/2015 05:42 AM, Sreekanth Reddy wrote:
+>> > ...
+>> >> +#if defined(alloc_ordered_workqueue)
+>> >> +     ioc->firmware_event_thread = alloc_ordered_workqueue(
+>> >> +             ioc->firmware_event_name, WQ_MEM_RECLAIM);
+>> >> +#else
+>> >> +             ioc->firmware_event_thread = create_singlethread_workqueue(
+>> >>           ioc->firmware_event_name);
+>> >> +#endif
+>> >
+>> > Hi Sreekanth,
+>> >
+>> > I think the upstream version of this code can safely assume
+>> > alloc_ordered_workqueue is defined, no?
+>>
+>> yes, upstream version of this code can safely assume that
+>> alloc_ordered_workqueue is defined.
+>>
+>> While working in-house, I observed that some of the older kernels
+>> doesn't defined this macro, so I have added this else section.
+>
+> The driver has to be defined for the current kernel.  If you maintain a
+> backport, that's fine, but not in the upstream driver.  The reasons are
+> fairly pragmatic: this code in the #else clause can't be compiled so
+> it's just junk to the upstream driver and the static checkers will find
+> it and you'll attract a flock of patches removing dead code.
+>
+Accepted. I will post next version of this patch by removing the else section.
 
-Thanks
-Praveen
-________________________________________
-From: Praveen Madhavan [praveenm@chelsio.com]
-Sent: Tuesday, June 09, 2015 6:44 PM
-To: netdev@vger.kernel.org; linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net; JBottomley@parallels.com; Hariprasad S; Praveen Madhavan; Varun Prakash; Rajesh Kumar
-Subject: [PATCH 0/3] csiostor:Debugfs support update.
+Thanks,
+Sreekanth
 
-This patch series adds debugfs functionality to dump adapter log,
-adapter queues and fcoe DDP stats.
 
-This patch has been created against net-next.
+> James
+>
+>
 
-Praveen Madhavan (3):
-  csiostor:Add devlog mailbox support.
-  csiostor:Cleanup debugfs.
-  csiostor:Adds debugfs support.
 
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h |    1 +
- drivers/scsi/csiostor/Makefile               |    2 +-
- drivers/scsi/csiostor/csio_debugfs.c         | 1100 ++++++++++++++++++++++++++
- drivers/scsi/csiostor/csio_hw.c              |   72 +-
- drivers/scsi/csiostor/csio_hw.h              |   12 +
- drivers/scsi/csiostor/csio_init.c            |  132 ----
- drivers/scsi/csiostor/csio_init.h            |    4 +
- drivers/scsi/csiostor/csio_mb.c              |   60 +-
- drivers/scsi/csiostor/csio_mb.h              |   17 +-
- 9 files changed, 1237 insertions(+), 163 deletions(-)
- create mode 100644 drivers/scsi/csiostor/csio_debugfs.c
 
---
-2.0.2
+-- 
+
+Regards,
+Sreekanth
