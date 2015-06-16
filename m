@@ -1,45 +1,82 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: how to "decode" SG_IO: bad/missing sense data?
-Date: Tue, 16 Jun 2015 13:24:23 +0200
-Message-ID: <55800767.4080601@interlog.com>
-References: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [Patch V2 1/9] [SCSI] aacraid: Fix for logical device name and
+ UID not exposed to the OS
+Date: Tue, 16 Jun 2015 13:27:42 +0200
+Message-ID: <20150616112742.GB2883@c203.arch.suse.de>
+References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1433986951-9033-3-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36842 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751465AbbFPL1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Jun 2015 07:27:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1433986951-9033-3-git-send-email-rajinikanth.pandurangan@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: rajinikanth.pandurangan@pmcs.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com, harry.yang@pmcs.com, mahesh.rajashekhara@pmcs.com, rich.bono@pmcs.com, achim.leubner@pmcs.com, murthy.bhat@pmcs.com
 
-On 15-06-16 01:05 PM, Tom Yan wrote:
-> When I "ATA Secure Erase" a USB Flash Drive, I got:
->
-> SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 00 0a 00 00 00
-> 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->
-> While the erase seems to work without bricking the device (multiple
-> trials with shred and hexdump), this message still bothers me a bit.
-> So is there anyway I could "decode" it so that I can know what it
-> actually means?
+On Wed, Jun 10, 2015 at 06:42:23PM -0700, rajinikanth.pandurangan@pmcs.=
+com wrote:
+> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+>=20
+> Description:
+> 	Driver sends the right size of the response buffer.
+>=20
+> Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.=
+com>
+> ---
+>  drivers/scsi/aacraid/aachba.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aac=
+hba.c
+> index 9b3dd6e..fe59b00 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -570,7 +570,7 @@ static int aac_get_container_name(struct scsi_cmn=
+d * scsicmd)
+> =20
+>  	status =3D aac_fib_send(ContainerCommand,
+>  		  cmd_fibcontext,
+> -		  sizeof (struct aac_get_name),
+> +		  sizeof(struct aac_get_name_resp),
+>  		  FsaNormal,
+>  		  0, 1,
+>  		  (fib_callback)get_container_name_callback,
+> @@ -1052,7 +1052,7 @@ static int aac_get_container_serial(struct scsi=
+_cmnd * scsicmd)
+> =20
+>  	status =3D aac_fib_send(ContainerCommand,
+>  		  cmd_fibcontext,
+> -		  sizeof (struct aac_get_serial),
+> +		  sizeof(struct aac_get_serial_resp),
+>  		  FsaNormal,
+>  		  0, 1,
+>  		  (fib_callback) get_container_serial_callback,
+> --=20
+> 1.9.3
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hi,
-Install the sg3_utils package then copy that hex sequence and place
-it after the sg_decode_sense command. In this case:
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-$ sg_decode_sense f0 00 01 00 50 40 00 0a 00 00 00 00 00 1d 00 00 00 00 00 00 00 
-00 00 00 00 00 00 00 00 00 00 00
-  Fixed format, current;  Sense key: Recovered Error
-  Additional sense: ATA pass through information available
-   error=0x0, status=0x50, device=0x40, sector_count(7:0)=0x0
-   extend=0, log_index=0x0, lba_high,mid,low(7:0)=0x0,0x0,0x0
-
-So that ATA Secure Erase command is sending a SCSI error back
-through the SAT mechanism. Check the SAT standard (at www.t10.org)
-for details.
-
-Doug Gilbert
-
-
-
+--=20
+Johannes Thumshirn                                       Storage
+jthumshirn@suse.de                             +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
