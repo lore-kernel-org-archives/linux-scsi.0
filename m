@@ -1,41 +1,87 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/4] ipr: Fix locking for unit attention handling
-Date: Tue, 16 Jun 2015 11:40:29 -0300
-Message-ID: <87bngfogwy.fsf@linux.vnet.ibm.com>
-References: <201506120145.t5C1jFQW016709@d01av04.pok.ibm.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: how to "decode" SG_IO: bad/missing sense data?
+Date: Tue, 16 Jun 2015 23:58:39 +0800
+Message-ID: <CAGnHSEnqPFyfZxg6-CXxhUHAg=TcNy7qxjbPaSV1qJaGsSOPew@mail.gmail.com>
+References: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
+	<55800767.4080601@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp02.br.ibm.com ([32.104.18.86]:55297 "EHLO
-	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbbFPOki (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2015 10:40:38 -0400
-Received: from /spool/local
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-	Tue, 16 Jun 2015 11:40:33 -0300
-In-Reply-To: <201506120145.t5C1jFQW016709@d01av04.pok.ibm.com> (Brian King's
-	message of "Thu, 11 Jun 2015 20:45:15 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <55800767.4080601@interlog.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, gbertazi@linux.vnet.ibm.com, stable@vger.kernel.org
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+I knew both sg_decode_sense and the SAT spec, but I didn't think of
+using them together to decode this. (Didn't bother to download the
+spec as well because it requires a bit of "registration" :P) Thanks
+for the pointer.
 
-> Make sure we have the host lock held when calling scsi_report_bus_reset. Fixes
-> a crash seen as the __devices list in the scsi host was changing as we were
-> iterating through it.
+According to the latest draft, if "CK_COND" is set to 1, the sense
+data returned will be:
 
-Brian,
+"No error, successful completion or command in progress. The SATL shall
+terminate the command with CHECK CONDITION status with the sense key
+set to RECOVERED ERROR with the additional sense code set to ATA
+PASS-THROUGH INFORMATION AVAILABLE (see SPC-4)."
 
-The patch series look good to me as a whole, thanks for doing that.
-Please add the tag:
+though I do not find anything useful to further decode the additional
+fields like "status=0x50". (Some google results did tell me that 50
+means success.)
 
-Reviewed-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+The man page of sg_sat_identify also mentioned a bit about it:
 
-Thanks,
+       -c, --ck_cond
+              sets  the CK_COND bit in the ATA PASS-THROUGH SCSI cdb.
+The default setting is clear (i.e. 0). When set the SATL should yield
+a sense buffer containing a ATA Result descriptor irrespective of
+              whether the command succeeded or failed. When clear the
+SATL should only yield a sense buffer containing a ATA Result
+descriptor if the command failed.
 
--- 
-Gabriel Krisman Bertazi
+When I run `sg_sat_identify` with `-c` to my different drives, the
+drive which makes hdparm gives the SG_IO error seems to be the only
+one actually respond to the "CK_COND" bit:
 
+[tom@localhost ~]$ sudo sg_sat_identify -c /dev/sdb
+expected descriptor sense format, response code=0xf0
+
+others simply reacts as if the bit is not set.
+
+Anyway the SG_IO error is given by hdparm, so I guess I should talk to
+the hdparm guys now.
+
+On 16 June 2015 at 19:24, Douglas Gilbert <dgilbert@interlog.com> wrote:
+> On 15-06-16 01:05 PM, Tom Yan wrote:
+>>
+>> When I "ATA Secure Erase" a USB Flash Drive, I got:
+>>
+>> SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 00 0a 00 00 00
+>> 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>>
+>> While the erase seems to work without bricking the device (multiple
+>> trials with shred and hexdump), this message still bothers me a bit.
+>> So is there anyway I could "decode" it so that I can know what it
+>> actually means?
+>
+>
+> Hi,
+> Install the sg3_utils package then copy that hex sequence and place
+> it after the sg_decode_sense command. In this case:
+>
+> $ sg_decode_sense f0 00 01 00 50 40 00 0a 00 00 00 00 00 1d 00 00 00 00 00
+> 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  Fixed format, current;  Sense key: Recovered Error
+>  Additional sense: ATA pass through information available
+>   error=0x0, status=0x50, device=0x40, sector_count(7:0)=0x0
+>   extend=0, log_index=0x0, lba_high,mid,low(7:0)=0x0,0x0,0x0
+>
+> So that ATA Secure Erase command is sending a SCSI error back
+> through the SAT mechanism. Check the SAT standard (at www.t10.org)
+> for details.
+>
+> Doug Gilbert
+>
+>
+>
