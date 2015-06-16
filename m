@@ -1,87 +1,129 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: how to "decode" SG_IO: bad/missing sense data?
-Date: Tue, 16 Jun 2015 23:58:39 +0800
-Message-ID: <CAGnHSEnqPFyfZxg6-CXxhUHAg=TcNy7qxjbPaSV1qJaGsSOPew@mail.gmail.com>
-References: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-	<55800767.4080601@interlog.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 02/20] [SCSI] mpt3sas: Get IOC_FACTS information using
+ handshake protocol only after HBA card gets into READY or Operational state.
+Date: Tue, 16 Jun 2015 17:59:35 +0200
+Message-ID: <558047E7.6000901@redhat.com>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com> <1434102153-38581-3-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <55800767.4080601@interlog.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34761 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752973AbbFPP7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Jun 2015 11:59:39 -0400
+In-Reply-To: <1434102153-38581-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 
-I knew both sg_decode_sense and the SAT spec, but I didn't think of
-using them together to decode this. (Didn't bother to download the
-spec as well because it requires a bit of "registration" :P) Thanks
-for the pointer.
+On 06/12/2015 11:42 AM, Sreekanth Reddy wrote:
+> Driver initialization fails if driver tries to send IOC facts request message when the IOC is in reset or in a fault state.
+> 
+> This patch will make sure that
+>  1.Driver to send IOC facts request message only if HBA is in operational or ready state.
+>  2.If IOC is in fault state, a diagnostic reset would be issued.
+>  3.If IOC is in reset state then driver will wait for 10 seconds to exit out of reset state.
+>    If the HBA continues to be in reset state, then the HBA wouldn't be claimed by the driver.
+> 
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 65 +++++++++++++++++++++++++++++++++++++
+>  1 file changed, 65 insertions(+)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index c13a365..ce57320 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -3169,6 +3169,9 @@ _base_wait_on_iocstate(struct MPT3SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
+>   * Notes: MPI2_HIS_IOC2SYS_DB_STATUS - set to one when IOC writes to doorbell.
+>   */
+>  static int
+> +_base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag);
+> +
+> +static int
+>  _base_wait_for_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout,
+>  	int sleep_flag)
+>  {
+> @@ -3711,6 +3714,61 @@ _base_get_port_facts(struct MPT3SAS_ADAPTER *ioc, int port, int sleep_flag)
+>  }
+>  
+>  /**
+> + * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
+> + * @ioc: per adapter object
+> + * @timeout:
+> + * @sleep_flag: CAN_SLEEP or NO_SLEEP
+> + *
+> + * Returns 0 for success, non-zero for failure.
+> + */
+> +static int
+> +_base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout,
+> +	int sleep_flag)
+> +{
+> +	u32 ioc_state;
+> +	int rc;
+> +
+> +	dinitprintk(ioc, printk(MPT3SAS_FMT "%s\n", ioc->name,
+> +	    __func__));
+> +
+> +	if (ioc->pci_error_recovery)
+> +		return 0;
+Hi Sreekanth, isn't that^ an error condition - 'return -EFAULT;'
+would be better?
+Tomas
+> +
+> +	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> +	dhsprintk(ioc, printk(MPT3SAS_FMT "%s: ioc_state(0x%08x)\n",
+> +	    ioc->name, __func__, ioc_state));
+> +
+> +	if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
+> +	    (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
+> +		return 0;
+> +
+> +	if (ioc_state & MPI2_DOORBELL_USED) {
+> +		dhsprintk(ioc, printk(MPT3SAS_FMT
+> +		    "unexpected doorbell active!\n", ioc->name));
+> +		goto issue_diag_reset;
+> +	}
+> +
+> +	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
+> +		mpt3sas_base_fault_info(ioc, ioc_state &
+> +		    MPI2_DOORBELL_DATA_MASK);
+> +		goto issue_diag_reset;
+> +	}
+> +
+> +	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
+> +	    timeout, sleep_flag);
+> +	if (ioc_state) {
+> +		dfailprintk(ioc, printk(MPT3SAS_FMT
+> +		    "%s: failed going to ready state (ioc_state=0x%x)\n",
+> +		    ioc->name, __func__, ioc_state));
+> +		return -EFAULT;
+> +	}
+> +
+> + issue_diag_reset:
+> +	rc = _base_diag_reset(ioc, sleep_flag);
+> +	return rc;
+> +}
+> +
+> +/**
+>   * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
+>   * @ioc: per adapter object
+>   * @sleep_flag: CAN_SLEEP or NO_SLEEP
+> @@ -3728,6 +3786,13 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+>  	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+>  	    __func__));
+>  
+> +	r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
+> +	if (r) {
+> +		dfailprintk(ioc, printk(MPT3SAS_FMT
+> +		    "%s: failed getting to correct state\n",
+> +		    ioc->name, __func__));
+> +		return r;
+> +	}
+>  	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
+>  	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
+>  	memset(&mpi_request, 0, mpi_request_sz);
+> 
 
-According to the latest draft, if "CK_COND" is set to 1, the sense
-data returned will be:
-
-"No error, successful completion or command in progress. The SATL shall
-terminate the command with CHECK CONDITION status with the sense key
-set to RECOVERED ERROR with the additional sense code set to ATA
-PASS-THROUGH INFORMATION AVAILABLE (see SPC-4)."
-
-though I do not find anything useful to further decode the additional
-fields like "status=0x50". (Some google results did tell me that 50
-means success.)
-
-The man page of sg_sat_identify also mentioned a bit about it:
-
-       -c, --ck_cond
-              sets  the CK_COND bit in the ATA PASS-THROUGH SCSI cdb.
-The default setting is clear (i.e. 0). When set the SATL should yield
-a sense buffer containing a ATA Result descriptor irrespective of
-              whether the command succeeded or failed. When clear the
-SATL should only yield a sense buffer containing a ATA Result
-descriptor if the command failed.
-
-When I run `sg_sat_identify` with `-c` to my different drives, the
-drive which makes hdparm gives the SG_IO error seems to be the only
-one actually respond to the "CK_COND" bit:
-
-[tom@localhost ~]$ sudo sg_sat_identify -c /dev/sdb
-expected descriptor sense format, response code=0xf0
-
-others simply reacts as if the bit is not set.
-
-Anyway the SG_IO error is given by hdparm, so I guess I should talk to
-the hdparm guys now.
-
-On 16 June 2015 at 19:24, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> On 15-06-16 01:05 PM, Tom Yan wrote:
->>
->> When I "ATA Secure Erase" a USB Flash Drive, I got:
->>
->> SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 00 0a 00 00 00
->> 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->> While the erase seems to work without bricking the device (multiple
->> trials with shred and hexdump), this message still bothers me a bit.
->> So is there anyway I could "decode" it so that I can know what it
->> actually means?
->
->
-> Hi,
-> Install the sg3_utils package then copy that hex sequence and place
-> it after the sg_decode_sense command. In this case:
->
-> $ sg_decode_sense f0 00 01 00 50 40 00 0a 00 00 00 00 00 1d 00 00 00 00 00
-> 00 00 00 00 00 00 00 00 00 00 00 00 00
->  Fixed format, current;  Sense key: Recovered Error
->  Additional sense: ATA pass through information available
->   error=0x0, status=0x50, device=0x40, sector_count(7:0)=0x0
->   extend=0, log_index=0x0, lba_high,mid,low(7:0)=0x0,0x0,0x0
->
-> So that ATA Secure Erase command is sending a SCSI error back
-> through the SAT mechanism. Check the SAT standard (at www.t10.org)
-> for details.
->
-> Doug Gilbert
->
->
->
