@@ -1,128 +1,42 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v1 02/20] [SCSI] mpt3sas: Get IOC_FACTS information using  handshake protocol only after HBA card gets into READY or Operational state.
-Date: Wed, 17 Jun 2015 14:40:51 +0530
-Message-ID: <1434532251-6897-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Ying Xue <ying.xue@windriver.com>
+Subject: [PATCH] cxgb4i: Fix neigh entry leak
+Date: Wed, 17 Jun 2015 17:17:16 +0800
+Message-ID: <1434532636-32274-1-git-send-email-ying.xue@windriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34378 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbFQJLI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2015 05:11:08 -0400
-Received: by pacgb13 with SMTP id gb13so31279595pac.1
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2015 02:11:07 -0700 (PDT)
+Received: from mail.windriver.com ([147.11.1.11]:33531 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbbFQJRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2015 05:17:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@kernel.org, thenzl@redhat.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, jthumshirn@suse.de, joe.lawrence@stratus.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+To: kxie@chelsio.com
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-Driver initialization fails if driver tries to send IOC facts request message when the IOC is in reset or in a fault state.
+When csk->atid returned by cxgb4_alloc_atid() is less than zero,
+init_act_open() directly returns with -EINVAL. But as init_act_open()
+ever invokes dst_neigh_lookup() before it calls cxgb4_alloc_atid(),
+this leads to the leak of neigh entry searched by dst_neigh_lookup().
 
-This patch will make sure that
- 1.Driver to send IOC facts request message only if HBA is in operational or ready state.
- 2.If IOC is in fault state, a diagnostic reset would be issued.
- 3.If IOC is in reset state then driver will wait for 10 seconds to exit out of reset state.
-   If the HBA continues to be in reset state, then the HBA wouldn't be claimed by the driver.
-
-Changes in v1:
-   If PCI Recovery is on then return with -EFAULT in the function _base_wait_for_iocstate().
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Signed-off-by: Ying Xue <ying.xue@windriver.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 68 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index fe82092..2386e4b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3287,6 +3287,9 @@ _base_wait_on_iocstate(struct MPT3SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
-  * Notes: MPI2_HIS_IOC2SYS_DB_STATUS - set to one when IOC writes to doorbell.
-  */
- static int
-+_base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag);
-+
-+static int
- _base_wait_for_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout,
- 	int sleep_flag)
- {
-@@ -3829,6 +3832,64 @@ _base_get_port_facts(struct MPT3SAS_ADAPTER *ioc, int port, int sleep_flag)
- }
- 
- /**
-+ * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
-+ * @ioc: per adapter object
-+ * @timeout:
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout,
-+	int sleep_flag)
-+{
-+	u32 ioc_state;
-+	int rc;
-+
-+	dinitprintk(ioc, printk(MPT3SAS_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	if (ioc->pci_error_recovery) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: host in pci error recovery\n", ioc->name, __func__));
-+		return -EFAULT;
-+	}
-+
-+	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
-+	dhsprintk(ioc, printk(MPT3SAS_FMT "%s: ioc_state(0x%08x)\n",
-+	    ioc->name, __func__, ioc_state));
-+
-+	if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
-+	    (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-+		return 0;
-+
-+	if (ioc_state & MPI2_DOORBELL_USED) {
-+		dhsprintk(ioc, printk(MPT3SAS_FMT
-+		    "unexpected doorbell active!\n", ioc->name));
-+		goto issue_diag_reset;
-+	}
-+
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-+		mpt3sas_base_fault_info(ioc, ioc_state &
-+		    MPI2_DOORBELL_DATA_MASK);
-+		goto issue_diag_reset;
-+	}
-+
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
-+	    timeout, sleep_flag);
-+	if (ioc_state) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: failed going to ready state (ioc_state=0x%x)\n",
-+		    ioc->name, __func__, ioc_state));
-+		return -EFAULT;
-+	}
-+
-+ issue_diag_reset:
-+	rc = _base_diag_reset(ioc, sleep_flag);
-+	return rc;
-+}
-+
-+/**
-  * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
-  * @ioc: per adapter object
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
-@@ -3846,6 +3907,13 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
- 
-+	r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
-+	if (r) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: failed getting to correct state\n",
-+		    ioc->name, __func__));
-+		return r;
-+	}
- 	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
- 	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
- 	memset(&mpi_request, 0, mpi_request_sz);
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index dd00e5f..c449d2a 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1393,7 +1393,7 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	csk->atid = cxgb4_alloc_atid(lldi->tids, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("%s, NO atid available.\n", ndev->name);
+-		return -EINVAL;
++		goto rel_resource;
+ 	}
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
 -- 
-2.0.2
+1.7.9.5
 
