@@ -1,113 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: OOPS: unplugging western digital passport drive
-Date: Wed, 17 Jun 2015 15:09:34 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1506171505050.1343-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1503181045230.1497-100000@iolanthe.rowland.org>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [RFC PATCH 1/2] lpfc: add target infrastructure
+Date: Thu, 18 Jun 2015 00:28:13 +0200
+Message-ID: <20150618002813.000038a7@localhost>
+References: <20150614172045.0000184d@localhost>
+	<558126FC.9030207@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55096 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752046AbbFQTJf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2015 15:09:35 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1503181045230.1497-100000@iolanthe.rowland.org>
+Received: from mout.gmx.net ([212.227.17.20]:62069 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933008AbbFQW2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2015 18:28:48 -0400
+In-Reply-To: <558126FC.9030207@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: =?UTF-8?B?U3RhbmlzxYJhdyBQaXR1Y2hh?= <viraptor@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, James Smart <james.smart@avagotech.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-Joe or Stanis=EF=BE=85^=EF=BE=82aw:
+Hannes Reinecke wrote:
+> On 06/14/2015 05:20 PM, Sebastian Herbszt wrote:
+> > Add target infrastructure.
+> > 
+> > Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+> > ---
+> Hmm. And that hooks into _which_ target mode infrastructure?
 
-I never heard anything back about this.  Does the patch fix the crash?
+Currently it is SCST with the lpfc_scst module. I still need to figure out
+how to plug it into LIO/TCM.
+ 
+> Cheers,
+> 
+> Hannes
 
-Alan Stern
-
-
-On Wed, 18 Mar 2015, Alan Stern wrote:
-
-> On Wed, 18 Mar 2015, Alan Stern wrote:
->=20
-> > On Tue, 17 Mar 2015, Joe Lawrence wrote:
-> >=20
-> > > On 03/11/2015 12:25 AM, Stanis=C3=85=E2=80=9Aaw Pitucha wrote:
-> > > > Hi linux-scsi,
-> > > > I've got another case of reproducible crash when unplugging wes=
-tern
-> > > > digital passport drives. This was mentioned before in
-> > > > http://www.spinics.net/lists/linux-scsi/msg82603.html
-> >=20
-> > Like it says in that thread, the problem is somehow related to the =
-ses
-> > driver.  If you remove or blacklist that driver, there won't be any
-> > more crashes.
->=20
-> Looks like I spoke too soon.  I think the patch below will fix the=20
-> problem.  Let me know what happens.
->=20
-> Alan Stern
->=20
->=20
->=20
->=20
-> Index: usb-4.0/drivers/scsi/scsi_pm.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- usb-4.0.orig/drivers/scsi/scsi_pm.c
-> +++ usb-4.0/drivers/scsi/scsi_pm.c
-> @@ -217,14 +217,18 @@ static int sdev_runtime_suspend(struct d
->  {
->  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
-L;
->  	struct scsi_device *sdev =3D to_scsi_device(dev);
-> -	int err;
-> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
-> +	int err =3D 0;
-> =20
-> -	err =3D blk_pre_runtime_suspend(sdev->request_queue);
-> -	if (err)
-> -		return err;
-> +	if (blk_rpm_dev) {
-> +		err =3D blk_pre_runtime_suspend(sdev->request_queue);
-> +		if (err)
-> +			return err;
-> +	}
->  	if (pm && pm->runtime_suspend)
->  		err =3D pm->runtime_suspend(dev);
-> -	blk_post_runtime_suspend(sdev->request_queue, err);
-> +	if (blk_rpm_dev)
-> +		blk_post_runtime_suspend(sdev->request_queue, err);
-> =20
->  	return err;
->  }
-> @@ -246,12 +250,15 @@ static int sdev_runtime_resume(struct de
->  {
->  	struct scsi_device *sdev =3D to_scsi_device(dev);
->  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
-L;
-> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
->  	int err =3D 0;
-> =20
-> -	blk_pre_runtime_resume(sdev->request_queue);
-> +	if (blk_rpm_dev)
-> +		blk_pre_runtime_resume(sdev->request_queue);
->  	if (pm && pm->runtime_resume)
->  		err =3D pm->runtime_resume(dev);
-> -	blk_post_runtime_resume(sdev->request_queue, err);
-> +	if (blk_rpm_dev)
-> +		blk_post_runtime_resume(sdev->request_queue, err);
-> =20
->  	return err;
->  }
->=20
->=20
->=20
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sebastian
