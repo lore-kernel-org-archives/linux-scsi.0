@@ -1,117 +1,113 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] iSCSI: let session recovery_tmo sysfs writes persist
- across recovery
-Date: Wed, 17 Jun 2015 10:40:00 -0500
-Message-ID: <558194D0.4000509@cs.wisc.edu>
-References: <1434496033-4601-1-git-send-email-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: OOPS: unplugging western digital passport drive
+Date: Wed, 17 Jun 2015 15:09:34 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1506171505050.1343-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1503181045230.1497-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBV5JQ2WAKGQE7IJTAIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1434496033-4601-1-git-send-email-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55096 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752046AbbFQTJf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2015 15:09:35 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1503181045230.1497-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: =?UTF-8?B?U3RhbmlzxYJhdyBQaXR1Y2hh?= <viraptor@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 06/16/2015 06:07 PM, Chris Leech wrote:
-> The iSCSI session recovery_tmo setting is writeable in sysfs, but it's
-> also set every time a connection is established when parameters are set
-> from iscsid over netlink.  That results in the timeout being reset to
-> the default value after every recovery.
-> 
-> The DM multipath tools want to use the sysfs interface to lower the
-> default timeout when there are multiple paths to fail over.  It has
-> caused confusion that we have a writeable sysfs value that seem to keep
-> resetting itself.
-> 
-> This patch adds an in-kernel flag that gets set once a sysfs write
-> occurs, and then ignores netlink parameter setting once it's been
-> modified via the sysfs interface.  My thinking here is that the sysfs
-> interface is much simpler for external tools to influence the session
-> timeout, but if we're going to allow it to be modified directly we
-> should ensure that setting is maintained.
-> 
-> Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 11 ++++++++---
->  include/scsi/scsi_transport_iscsi.h |  1 +
->  2 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 67d43e3..35ef55f 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2040,6 +2040,7 @@ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
->  	session->transport = transport;
->  	session->creator = -1;
->  	session->recovery_tmo = 120;
-> +	session->recovery_tmo_sysfs_override = false;
->  	session->state = ISCSI_SESSION_FREE;
->  	INIT_DELAYED_WORK(&session->recovery_work, session_recovery_timedout);
->  	INIT_LIST_HEAD(&session->sess_list);
-> @@ -2784,7 +2785,8 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
->  	switch (ev->u.set_param.param) {
->  	case ISCSI_PARAM_SESS_RECOVERY_TMO:
->  		sscanf(data, "%d", &value);
-> -		session->recovery_tmo = value;
-> +		if (!session->recovery_tmo_sysfs_override)
-> +			session->recovery_tmo = value;
->  		break;
->  	default:
->  		err = transport->set_param(conn, ev->u.set_param.param,
-> @@ -4047,13 +4049,15 @@ store_priv_session_##field(struct device *dev,				\
->  	if ((session->state == ISCSI_SESSION_FREE) ||			\
->  	    (session->state == ISCSI_SESSION_FAILED))			\
->  		return -EBUSY;						\
-> -	if (strncmp(buf, "off", 3) == 0)				\
-> +	if (strncmp(buf, "off", 3) == 0) {				\
->  		session->field = -1;					\
-> -	else {								\
-> +		session->field##_sysfs_override = true;			\
-> +	} else {							\
->  		val = simple_strtoul(buf, &cp, 0);			\
->  		if (*cp != '\0' && *cp != '\n')				\
->  			return -EINVAL;					\
->  		session->field = val;					\
-> +		session->field##_sysfs_override = true;			\
->  	}								\
->  	return count;							\
+Joe or Stanis=EF=BE=85^=EF=BE=82aw:
+
+I never heard anything back about this.  Does the patch fix the crash?
+
+Alan Stern
+
+
+On Wed, 18 Mar 2015, Alan Stern wrote:
+
+> On Wed, 18 Mar 2015, Alan Stern wrote:
+>=20
+> > On Tue, 17 Mar 2015, Joe Lawrence wrote:
+> >=20
+> > > On 03/11/2015 12:25 AM, Stanis=C3=85=E2=80=9Aaw Pitucha wrote:
+> > > > Hi linux-scsi,
+> > > > I've got another case of reproducible crash when unplugging wes=
+tern
+> > > > digital passport drives. This was mentioned before in
+> > > > http://www.spinics.net/lists/linux-scsi/msg82603.html
+> >=20
+> > Like it says in that thread, the problem is somehow related to the =
+ses
+> > driver.  If you remove or blacklist that driver, there won't be any
+> > more crashes.
+>=20
+> Looks like I spoke too soon.  I think the patch below will fix the=20
+> problem.  Let me know what happens.
+>=20
+> Alan Stern
+>=20
+>=20
+>=20
+>=20
+> Index: usb-4.0/drivers/scsi/scsi_pm.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- usb-4.0.orig/drivers/scsi/scsi_pm.c
+> +++ usb-4.0/drivers/scsi/scsi_pm.c
+> @@ -217,14 +217,18 @@ static int sdev_runtime_suspend(struct d
+>  {
+>  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+>  	struct scsi_device *sdev =3D to_scsi_device(dev);
+> -	int err;
+> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
+> +	int err =3D 0;
+> =20
+> -	err =3D blk_pre_runtime_suspend(sdev->request_queue);
+> -	if (err)
+> -		return err;
+> +	if (blk_rpm_dev) {
+> +		err =3D blk_pre_runtime_suspend(sdev->request_queue);
+> +		if (err)
+> +			return err;
+> +	}
+>  	if (pm && pm->runtime_suspend)
+>  		err =3D pm->runtime_suspend(dev);
+> -	blk_post_runtime_suspend(sdev->request_queue, err);
+> +	if (blk_rpm_dev)
+> +		blk_post_runtime_suspend(sdev->request_queue, err);
+> =20
+>  	return err;
 >  }
-> @@ -4064,6 +4068,7 @@ store_priv_session_##field(struct device *dev,				\
->  static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
->  			show_priv_session_##field,			\
->  			store_priv_session_##field)
-> +
->  iscsi_priv_session_rw_attr(recovery_tmo, "%d");
->  
->  static struct attribute *iscsi_session_attrs[] = {
-> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index 2555ee5..6183d20 100644
-> --- a/include/scsi/scsi_transport_iscsi.h
-> +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -241,6 +241,7 @@ struct iscsi_cls_session {
->  
->  	/* recovery fields */
->  	int recovery_tmo;
-> +	bool recovery_tmo_sysfs_override;
->  	struct delayed_work recovery_work;
->  
->  	unsigned int target_id;
-> 
+> @@ -246,12 +250,15 @@ static int sdev_runtime_resume(struct de
+>  {
+>  	struct scsi_device *sdev =3D to_scsi_device(dev);
+>  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NUL=
+L;
+> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
+>  	int err =3D 0;
+> =20
+> -	blk_pre_runtime_resume(sdev->request_queue);
+> +	if (blk_rpm_dev)
+> +		blk_pre_runtime_resume(sdev->request_queue);
+>  	if (pm && pm->runtime_resume)
+>  		err =3D pm->runtime_resume(dev);
+> -	blk_post_runtime_resume(sdev->request_queue, err);
+> +	if (blk_rpm_dev)
+> +		blk_post_runtime_resume(sdev->request_queue, err);
+> =20
+>  	return err;
+>  }
+>=20
+>=20
+>=20
 
-Looks ok to me.
 
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
