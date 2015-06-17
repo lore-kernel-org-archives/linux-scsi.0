@@ -1,222 +1,419 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/6] target: use 'se_dev_entry' when allocating UAs
-Date: Tue, 16 Jun 2015 23:06:04 -0700
-Message-ID: <1434521164.7916.182.camel@haakon3.risingtidesystems.com>
-References: <1434009689-112909-1-git-send-email-hare@suse.de>
-	 <1434009689-112909-4-git-send-email-hare@suse.de>
+From: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+Subject: [PATCH] mpt2sas: setpci reset kernel panic fix
+Date: Wed, 17 Jun 2015 11:37:53 +0530
+Message-ID: <CADcZ=zoCMwCPAp9PQi8cVYKrzBak4vhSqHTcT9j2fcL1H9ZOVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1434009689-112909-4-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-00003501.pphosted.com ([67.231.144.15]:18751 "EHLO
+	mx0a-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756804AbbFQGHz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jun 2015 02:07:55 -0400
+Received: from pps.filterd (m0075552.ppops.net [127.0.0.1])
+	by mx0a-00003501.pphosted.com (8.14.5/8.14.5) with SMTP id t5H63hxV015379
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2015 02:07:55 -0400
+Received: from mail-wi0-f177.google.com (mail-wi0-f177.google.com [209.85.212.177])
+	by mx0a-00003501.pphosted.com with ESMTP id 1v32mqg5d5-3
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2015 02:07:54 -0400
+Received: by mail-wi0-f177.google.com with SMTP id a1so128145048wig.0
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2015 23:07:54 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hey Hannes,
+Problem Description:
 
-Apologies for the delayed follow-up on these, one comment below.
+https://bugzilla.kernel.org/show_bug.cgi?id=95101
 
-On Thu, 2015-06-11 at 10:01 +0200, Hannes Reinecke wrote:
-> We need to use 'se_dev_entry' as argument when allocating
-> UAs, otherwise we'll never see any UAs for an implicit
-> ALUA state transition triggered from userspace.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/target/target_core_alua.c      | 27 ++++++++++++++++++---------
->  drivers/target/target_core_pr.c        | 31 +++++++++++++++++++++++++------
->  drivers/target/target_core_transport.c | 18 ++++++++++++------
->  drivers/target/target_core_ua.c        | 23 +++--------------------
->  drivers/target/target_core_ua.h        |  2 +-
->  5 files changed, 59 insertions(+), 42 deletions(-)
-> 
+Due to lack of synchronization between ioctl, BRM status access, pci
+resource removal kernel oops happen as ioctl path and BRM status
+access path still tries to access the removed resources
 
-<SNIP>
+kernel: BUG: unable to handle kernel paging request at ffffc900171e0000
 
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> index 436e30b..bb28a97 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -125,6 +125,25 @@ static struct t10_pr_registration *core_scsi3_locate_pr_reg(struct se_device *,
->  					struct se_node_acl *, struct se_session *);
->  static void core_scsi3_put_pr_reg(struct t10_pr_registration *);
->  
-> +static void core_scsi3_pr_ua_allocate(struct se_node_acl *nacl,
-> +				      u32 unpacked_lun, u8 asc, u8 ascq)
-> +{
-> +	struct se_dev_entry *deve;
-> +
-> +	if (!nacl)
-> +		return;
-> +
-> +	rcu_read_lock();
-> +	deve = target_nacl_find_deve(nacl, unpacked_lun);
-> +	if (!deve) {
-> +		rcu_read_unlock();
-> +		return;
-> +	}
-> +
-> +	core_scsi3_ua_allocate(deve, asc, ascq);
-> +	rcu_read_unlock();
-> +}
-> +
+Oops: 0000 [#1] SMP
 
-This should be common for TCM_RESERVATION_CONFLICT case outside of PR
-code too.
 
-Any objections for squashing the following into your original patch..?
+Patch Description:
 
-Thank you,
+Two locks added to provide syncrhonization
 
---nab
+1. pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
+pci resource handling. PCI resource freeing will lead to free
+vital hardware/memory resource, which might be in use by cli/sysfs
+path functions resulting in Null pointer reference followed by kernel
+crash. To avoid the above race condition we use mutex syncrhonization
+which ensures the syncrhonization between cli/sysfs_show path
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index bb28a97..0bb3292 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -125,25 +125,6 @@ static struct t10_pr_registration *core_scsi3_locate_pr_reg(struct se_device *,
- 					struct se_node_acl *, struct se_session *);
- static void core_scsi3_put_pr_reg(struct t10_pr_registration *);
- 
--static void core_scsi3_pr_ua_allocate(struct se_node_acl *nacl,
--				      u32 unpacked_lun, u8 asc, u8 ascq)
--{
--	struct se_dev_entry *deve;
--
--	if (!nacl)
--		return;
--
--	rcu_read_lock();
--	deve = target_nacl_find_deve(nacl, unpacked_lun);
--	if (!deve) {
--		rcu_read_unlock();
--		return;
--	}
--
--	core_scsi3_ua_allocate(deve, asc, ascq);
--	rcu_read_unlock();
--}
--
- static int target_check_scsi2_reservation_conflict(struct se_cmd *cmd)
+2. spinlock on list operations over IOCs
+
+Case: when multiple warpdrive cards(IOCs) are in use
+Each IOC will added to the ioc list stucture on initialization.
+Watchdog threads run at regular intervals to check IOC for any
+fault conditions which will trigger the dead_ioc thread to
+deallocate pci resource, resulting deleting the IOC netry from list,
+this deletion need to protected by spinlock to enusre that
+ioc removal is syncrhonized, if not synchronized it might lead to
+list_del corruption as the ioc list is traversed in cli path
+
+
+
+please find the patch to apply on scsi/mpt2sas driver
+
+http://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+
+
+>From ba692140278e6e2b660896c32206b26dac98d215 Mon Sep 17 00:00:00 2001
+From: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+Date: Thu, 19 Mar 2015 12:02:07 +0530
+Subject: [PATCH] mpt2sas setpci kernel oops fix
+
+Signed-off-by: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |   10 +++++++
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |   20 +++++++++++++-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c   |   48 +++++++++++++++++++++++++++++----
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   32 ++++++++++++++++++++++-
+ 4 files changed, 102 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 11248de..d2a498c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -108,13 +108,18 @@ _scsih_set_fwfault_debug(const char *val, struct
+kernel_param *kp)
  {
- 	struct se_session *se_sess = cmd->se_sess;
-@@ -2216,7 +2197,7 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
- 					&pr_tmpl->registration_list,
- 					pr_reg_list) {
- 
--				core_scsi3_pr_ua_allocate(
-+				target_ua_allocate_lun(
- 					pr_reg_p->pr_reg_nacl,
- 					pr_reg_p->pr_res_mapped_lun,
- 					0x2A,
-@@ -2643,7 +2624,7 @@ core_scsi3_emulate_pro_release(struct se_cmd *cmd, int type, int scope,
- 		if (pr_reg_p == pr_reg)
- 			continue;
- 
--		core_scsi3_pr_ua_allocate(pr_reg_p->pr_reg_nacl,
-+		target_ua_allocate_lun(pr_reg_p->pr_reg_nacl,
- 				pr_reg_p->pr_res_mapped_lun,
- 				0x2A, ASCQ_2AH_RESERVATIONS_RELEASED);
- 	}
-@@ -2728,7 +2709,7 @@ core_scsi3_emulate_pro_clear(struct se_cmd *cmd, u64 res_key)
- 		 *    additional sense code set to RESERVATIONS PREEMPTED.
- 		 */
- 		if (!calling_it_nexus)
--			core_scsi3_pr_ua_allocate(pr_reg_nacl, pr_res_mapped_lun,
-+			target_ua_allocate_lun(pr_reg_nacl, pr_res_mapped_lun,
- 				0x2A, ASCQ_2AH_RESERVATIONS_PREEMPTED);
- 	}
- 	spin_unlock(&pr_tmpl->registration_lock);
-@@ -2937,7 +2918,7 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 						NULL, 0);
- 			}
- 			if (!calling_it_nexus)
--				core_scsi3_pr_ua_allocate(pr_reg_nacl,
-+				target_ua_allocate_lun(pr_reg_nacl,
- 					pr_res_mapped_lun, 0x2A,
- 					ASCQ_2AH_REGISTRATIONS_PREEMPTED);
- 		}
-@@ -3043,7 +3024,7 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 		 *    persistent reservation and/or registration, with the
- 		 *    additional sense code set to REGISTRATIONS PREEMPTED;
- 		 */
--		core_scsi3_pr_ua_allocate(pr_reg_nacl, pr_res_mapped_lun, 0x2A,
-+		target_ua_allocate_lun(pr_reg_nacl, pr_res_mapped_lun, 0x2A,
- 				ASCQ_2AH_REGISTRATIONS_PREEMPTED);
- 	}
- 	spin_unlock(&pr_tmpl->registration_lock);
-@@ -3076,7 +3057,7 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 			if (calling_it_nexus)
- 				continue;
- 
--			core_scsi3_pr_ua_allocate(pr_reg->pr_reg_nacl,
-+			target_ua_allocate_lun(pr_reg->pr_reg_nacl,
- 					pr_reg->pr_res_mapped_lun, 0x2A,
- 					ASCQ_2AH_RESERVATIONS_RELEASED);
- 		}
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index bd63254..201c33c 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1678,15 +1678,9 @@ void transport_generic_request_failure(struct se_cmd *cmd,
- 		 */
- 		if (cmd->se_sess &&
- 		    cmd->se_dev->dev_attrib.emulate_ua_intlck_ctrl == 2) {
--			struct se_dev_entry *deve;
--
--			rcu_read_lock();
--			deve = target_nacl_find_deve(cmd->se_sess->se_node_acl,
--						     cmd->orig_fe_lun);
--			if (deve)
--				core_scsi3_ua_allocate(deve, 0x2C,
-+			target_ua_allocate_lun(cmd->se_sess->se_node_acl,
-+					       cmd->orig_fe_lun, 0x2C,
- 					ASCQ_2CH_PREVIOUS_RESERVATION_CONFLICT_STATUS);
--			rcu_read_unlock();
- 		}
- 		trace_target_cmd_complete(cmd);
- 		ret = cmd->se_tfo->queue_status(cmd);
-diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-index e97a708..fc095ae 100644
---- a/drivers/target/target_core_ua.c
-+++ b/drivers/target/target_core_ua.c
-@@ -169,6 +169,25 @@ int core_scsi3_ua_allocate(
- 	return 0;
+  int ret = param_set_int(val, kp);
+  struct MPT2SAS_ADAPTER *ioc;
++ unsigned long flags;
+
+  if (ret)
+  return ret;
+
++ /* global ioc spinlock to protect controller list on list operations */
++ mpt2sas_initialize_gioc_lock();
+  printk(KERN_INFO "setting fwfault_debug(%d)\n", mpt2sas_fwfault_debug);
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
+  ioc->fwfault_debug = mpt2sas_fwfault_debug;
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  return 0;
  }
- 
-+void target_ua_allocate_lun(struct se_node_acl *nacl,
-+			    u32 unpacked_lun, u8 asc, u8 ascq)
+
+@@ -4436,6 +4441,9 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+     __func__));
+
+  if (ioc->chip_phys && ioc->chip) {
++ /* synchronizing freeing resource with pci_access_mutex lock */
++ if (ioc->is_warpdrive)
++ mutex_lock(&ioc->pci_access_mutex);
+  _base_mask_interrupts(ioc);
+  ioc->shost_recovery = 1;
+  _base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
+@@ -4454,6 +4462,8 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+  pci_disable_pcie_error_reporting(pdev);
+  pci_disable_device(pdev);
+  }
++ if (ioc->is_warpdrive)
++ mutex_unlock(&ioc->pci_access_mutex);
+  return;
+ }
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
+b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index caff8d1..a0d26f0 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -799,6 +799,12 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct
+MPT2SAS_ADAPTER *ioc);
+  * @delayed_tr_list: target reset link list
+  * @delayed_tr_volume_list: volume target reset link list
+  * @@temp_sensors_count: flag to carry the number of temperature sensors
++ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
++ * pci resource handling. PCI resource freeing will lead to free
++ * vital hardware/memory resource, which might be in use by cli/sysfs
++ * path functions resulting in Null pointer reference followed by kernel
++ * crash. To avoid the above race condition we use mutex syncrhonization
++ * which ensures the syncrhonization between cli/sysfs_show path
+  */
+ struct MPT2SAS_ADAPTER {
+  struct list_head list;
+@@ -1015,6 +1021,7 @@ struct MPT2SAS_ADAPTER {
+  u8 mfg_pg10_hide_flag;
+  u8 hide_drives;
+
++ struct mutex pci_access_mutex;
+ };
+
+ typedef u8 (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8
+msix_index,
+@@ -1023,6 +1030,17 @@ typedef u8 (*MPT_CALLBACK)(struct
+MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+
+ /* base shared API */
+ extern struct list_head mpt2sas_ioc_list;
++/* spinlock on list operations over IOCs
+++ * Case: when multiple warpdrive cards(IOCs) are in use
+++ * Each IOC will added to the ioc list stucture on initialization.
+++ * Watchdog threads run at regular intervals to check IOC for any
+++ * fault conditions which will trigger the dead_ioc thread to
+++ * deallocate pci resource, resulting deleting the IOC netry from list,
+++ * this deletion need to protected by spinlock to enusre that
+++ * ioc removal is syncrhonized, if not synchronized it might lead to
+++ * list_del corruption as the ioc list is traversed in cli path
+++ */
++extern spinlock_t gioc_lock;
+ void mpt2sas_base_start_watchdog(struct MPT2SAS_ADAPTER *ioc);
+ void mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc);
+
+@@ -1099,7 +1117,7 @@ struct _sas_device
+*mpt2sas_scsih_sas_device_find_by_sas_address(
+     struct MPT2SAS_ADAPTER *ioc, u64 sas_address);
+
+ void mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc);
+-
++void mpt2sas_initialize_gioc_lock(void);
+ void mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase);
+
+ /* config shared API */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 4e50960..5345368 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -427,13 +427,17 @@ static int
+ _ctl_verify_adapter(int ioc_number, struct MPT2SAS_ADAPTER **iocpp)
+ {
+  struct MPT2SAS_ADAPTER *ioc;
+-
++ unsigned long flags;
++ /* global ioc lock to protect controller on list operations */
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_for_each_entry(ioc, &mpt2sas_ioc_list, list) {
+  if (ioc->id != ioc_number)
+  continue;
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  *iocpp = ioc;
+  return ioc_number;
+  }
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  *iocpp = NULL;
+  return -1;
+ }
+@@ -519,13 +523,19 @@ static unsigned int
+ _ctl_poll(struct file *filep, poll_table *wait)
+ {
+  struct MPT2SAS_ADAPTER *ioc;
++ unsigned long flags;
+
+  poll_wait(filep, &ctl_poll_wait, wait);
+
++ /* global ioc lock to protect controller on list operations */
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_for_each_entry(ioc, &mpt2sas_ioc_list, list) {
+- if (ioc->aen_event_read_flag)
++ if (ioc->aen_event_read_flag) {
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  return POLLIN | POLLRDNORM;
++ }
+  }
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  return 0;
+ }
+
+@@ -2168,15 +2178,30 @@ _ctl_ioctl_main(struct file *file, unsigned
+int cmd, void __user *arg,
+
+  if (_ctl_verify_adapter(ioctl_header.ioc_number, &ioc) == -1 || !ioc)
+  return -ENODEV;
+- if (ioc->shost_recovery || ioc->pci_error_recovery ||
+-    ioc->is_driver_loading)
+- return -EAGAIN;
++ if (!ioc->is_warpdrive) {
++ if (ioc->shost_recovery || ioc->pci_error_recovery ||
++ ioc->is_driver_loading)
++ return -EAGAIN;
++ } else {
++ /* pci_access_mutex lock acquired by ioctl path */
++ mutex_lock(&ioc->pci_access_mutex);
++ if (ioc->shost_recovery || ioc->pci_error_recovery ||
++ ioc->is_driver_loading || ioc->remove_host) {
++ mutex_unlock(&ioc->pci_access_mutex);
++ return -EAGAIN;
++ }
++ }
+
+  state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+  if (state == NON_BLOCKING) {
+- if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++ if (!mutex_trylock(&ioc->ctl_cmds.mutex)) {
++ if (ioc->is_warpdrive)
++ mutex_unlock(&ioc->pci_access_mutex);
+  return -EAGAIN;
++ }
+  } else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex)) {
++ if (ioc->is_warpdrive)
++ mutex_unlock(&ioc->pci_access_mutex);
+  return -ERESTARTSYS;
+  }
+
+@@ -2258,6 +2283,8 @@ _ctl_ioctl_main(struct file *file, unsigned int
+cmd, void __user *arg,
+  }
+
+  mutex_unlock(&ioc->ctl_cmds.mutex);
++ if (ioc->is_warpdrive)
++ mutex_unlock(&ioc->pci_access_mutex);
+  return ret;
+ }
+
+@@ -2710,6 +2737,13 @@ _ctl_BRM_status_show(struct device *cdev,
+struct device_attribute *attr,
+  printk(MPT2SAS_ERR_FMT "%s: BRM attribute is only for"\
+     "warpdrive\n", ioc->name, __func__);
+  goto out;
++ } else {
++ /* pci_access_mutex lock acquired by sysfs show path */
++ mutex_lock(&ioc->pci_access_mutex);
++ if (ioc->pci_error_recovery || ioc->remove_host) {
++ mutex_unlock(&ioc->pci_access_mutex);
++ return 0;
++ }
+  }
+
+  /* allocate upto GPIOVal 36 entries */
+@@ -2749,6 +2783,8 @@ _ctl_BRM_status_show(struct device *cdev, struct
+device_attribute *attr,
+
+  out:
+  kfree(io_unit_pg3);
++ if (ioc->is_warpdrive)
++ mutex_unlock(&ioc->pci_access_mutex);
+  return rc;
+ }
+ static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 3f26147..ef20ed3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -79,7 +79,8 @@ static int _scsih_scan_finished(struct Scsi_Host
+*shost, unsigned long time);
+
+ /* global parameters */
+ LIST_HEAD(mpt2sas_ioc_list);
+-
++/* global ioc lock for list operations */
++spinlock_t gioc_lock;
+ /* local parameters */
+ static u8 scsi_io_cb_idx = -1;
+ static u8 tm_cb_idx = -1;
+@@ -279,6 +280,20 @@ static struct pci_device_id scsih_pci_table[] = {
+ MODULE_DEVICE_TABLE(pci, scsih_pci_table);
+
+ /**
++ * mpt2sas_initialize_gioc_lock - initialize the gobal ioc lock
++ */
++void
++mpt2sas_initialize_gioc_lock(void)
 +{
-+	struct se_dev_entry *deve;
++ static int gioc_lock_initialize;
 +
-+	if (!nacl)
-+		return;
-+
-+	rcu_read_lock();
-+	deve = target_nacl_find_deve(nacl, unpacked_lun);
-+	if (!deve) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	core_scsi3_ua_allocate(deve, asc, ascq);
-+	rcu_read_unlock();
++ if (!gioc_lock_initialize) {
++ spin_lock_init(&gioc_lock);
++ gioc_lock_initialize = 1;
++ }
 +}
 +
- void core_scsi3_ua_release_all(
- 	struct se_dev_entry *deve)
++/**
+  * _scsih_set_debug_level - global setting of ioc->logging_level.
+  *
+  * Note: The logging levels are defined in mpt2sas_debug.h.
+@@ -288,13 +303,17 @@ _scsih_set_debug_level(const char *val, struct
+kernel_param *kp)
  {
-diff --git a/drivers/target/target_core_ua.h b/drivers/target/target_core_ua.h
-index 45e3b6d..bd6e78b 100644
---- a/drivers/target/target_core_ua.h
-+++ b/drivers/target/target_core_ua.h
-@@ -32,6 +32,7 @@ extern struct kmem_cache *se_ua_cache;
- 
- extern sense_reason_t target_scsi3_ua_check(struct se_cmd *);
- extern int core_scsi3_ua_allocate(struct se_dev_entry *, u8, u8);
-+extern void target_ua_allocate_lun(struct se_node_acl *, u32, u8, u8);
- extern void core_scsi3_ua_release_all(struct se_dev_entry *);
- extern void core_scsi3_ua_for_check_condition(struct se_cmd *, u8 *, u8 *);
- extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *,
+  int ret = param_set_int(val, kp);
+  struct MPT2SAS_ADAPTER *ioc;
++ unsigned long flags;
+
+  if (ret)
+  return ret;
+
++ mpt2sas_initialize_gioc_lock();
+  printk(KERN_INFO "setting logging_level(0x%08x)\n", logging_level);
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
+  ioc->logging_level = logging_level;
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  return 0;
+ }
+ module_param_call(logging_level, _scsih_set_debug_level, param_get_int,
+@@ -7867,7 +7886,9 @@ _scsih_remove(struct pci_dev *pdev)
+  sas_remove_host(shost);
+  scsi_remove_host(shost);
+  mpt2sas_base_detach(ioc);
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_del(&ioc->list);
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  scsi_host_put(shost);
+ }
+
+@@ -8132,6 +8153,7 @@ _scsih_probe(struct pci_dev *pdev, const struct
+pci_device_id *id)
+  struct MPT2SAS_ADAPTER *ioc;
+  struct Scsi_Host *shost;
+  int rv;
++ unsigned long flags;
+
+  shost = scsi_host_alloc(&scsih_driver_template,
+     sizeof(struct MPT2SAS_ADAPTER));
+@@ -8142,7 +8164,9 @@ _scsih_probe(struct pci_dev *pdev, const struct
+pci_device_id *id)
+  ioc = shost_priv(shost);
+  memset(ioc, 0, sizeof(struct MPT2SAS_ADAPTER));
+  INIT_LIST_HEAD(&ioc->list);
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_add_tail(&ioc->list, &mpt2sas_ioc_list);
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  ioc->shost = shost;
+  ioc->id = mpt_ids++;
+  sprintf(ioc->name, "%s%d", MPT2SAS_DRIVER_NAME, ioc->id);
+@@ -8167,6 +8191,9 @@ _scsih_probe(struct pci_dev *pdev, const struct
+pci_device_id *id)
+  ioc->schedule_dead_ioc_flush_running_cmds = &_scsih_flush_running_cmds;
+  /* misc semaphores and spin locks */
+  mutex_init(&ioc->reset_in_progress_mutex);
++ /* initializing pci_access_mutex lock */
++ if (ioc->is_warpdrive)
++ mutex_init(&ioc->pci_access_mutex);
+  spin_lock_init(&ioc->ioc_reset_in_progress_lock);
+  spin_lock_init(&ioc->scsi_lookup_lock);
+  spin_lock_init(&ioc->sas_device_lock);
+@@ -8269,7 +8296,9 @@ _scsih_probe(struct pci_dev *pdev, const struct
+pci_device_id *id)
+  out_attach_fail:
+  destroy_workqueue(ioc->firmware_event_thread);
+  out_thread_fail:
++ spin_lock_irqsave(&gioc_lock, flags);
+  list_del(&ioc->list);
++ spin_unlock_irqrestore(&gioc_lock, flags);
+  scsi_host_put(shost);
+  return rv;
+ }
+@@ -8506,6 +8535,7 @@ _scsih_init(void)
+  return -ENODEV;
+  }
+
++ mpt2sas_initialize_gioc_lock();
+  mpt2sas_base_initialize_callback_handler();
+
+  /* queuecommand callback hander */
+-- 
+1.7.1
+
+
+Regards,
+Nagarajkumar Narayanan
