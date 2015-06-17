@@ -1,16 +1,14 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 Subject: Re: [PATCH] iSCSI: let session recovery_tmo sysfs writes persist
  across recovery
-Date: Wed, 17 Jun 2015 08:31:07 -0700
-Message-ID: <20150617153107.GB4996@straylight.hirudinean.org>
+Date: Wed, 17 Jun 2015 10:40:00 -0500
+Message-ID: <558194D0.4000509@cs.wisc.edu>
 References: <1434496033-4601-1-git-send-email-cleech@redhat.com>
- <55818520.7030800@cs.wisc.edu>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBPVFQ2WAKGQEJX6MXSQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <55818520.7030800-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRBV5JQ2WAKGQE7IJTAIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1434496033-4601-1-git-send-email-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/open-iscsi
@@ -18,40 +16,98 @@ Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
  <http://groups.google.com/group/open-iscsi/subscribe>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 17, 2015 at 09:33:04AM -0500, Mike Christie wrote:
-> On 06/16/2015 06:07 PM, Chris Leech wrote:
-> > The iSCSI session recovery_tmo setting is writeable in sysfs, but it's
-> > also set every time a connection is established when parameters are set
-> > from iscsid over netlink.  That results in the timeout being reset to
-> > the default value after every recovery.
-> > 
-> > The DM multipath tools want to use the sysfs interface to lower the
-> > default timeout when there are multiple paths to fail over.  It has
-> > caused confusion that we have a writeable sysfs value that seem to keep
-> > resetting itself.
-> > 
-> > This patch adds an in-kernel flag that gets set once a sysfs write
-> > occurs, and then ignores netlink parameter setting once it's been
-> > modified via the sysfs interface.  My thinking here is that the sysfs
-> > interface is much simpler for external tools to influence the session
-> > timeout, but if we're going to allow it to be modified directly we
-> > should ensure that setting is maintained.
-> > 
+On 06/16/2015 06:07 PM, Chris Leech wrote:
+> The iSCSI session recovery_tmo setting is writeable in sysfs, but it's
+> also set every time a connection is established when parameters are set
+> from iscsid over netlink.  That results in the timeout being reset to
+> the default value after every recovery.
 > 
-> What happened? Why didn't you make it more generic so all future iscsi
-> sysfs settings work the same way like when I reviewed it in the bz? Did
-> it get too messy when we only have the one writeable attr?
+> The DM multipath tools want to use the sysfs interface to lower the
+> default timeout when there are multiple paths to fail over.  It has
+> caused confusion that we have a writeable sysfs value that seem to keep
+> resetting itself.
+> 
+> This patch adds an in-kernel flag that gets set once a sysfs write
+> occurs, and then ignores netlink parameter setting once it's been
+> modified via the sysfs interface.  My thinking here is that the sysfs
+> interface is much simpler for external tools to influence the session
+> timeout, but if we're going to allow it to be modified directly we
+> should ensure that setting is maintained.
+> 
+> Signed-off-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c | 11 ++++++++---
+>  include/scsi/scsi_transport_iscsi.h |  1 +
+>  2 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 67d43e3..35ef55f 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -2040,6 +2040,7 @@ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
+>  	session->transport = transport;
+>  	session->creator = -1;
+>  	session->recovery_tmo = 120;
+> +	session->recovery_tmo_sysfs_override = false;
+>  	session->state = ISCSI_SESSION_FREE;
+>  	INIT_DELAYED_WORK(&session->recovery_work, session_recovery_timedout);
+>  	INIT_LIST_HEAD(&session->sess_list);
+> @@ -2784,7 +2785,8 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+>  	switch (ev->u.set_param.param) {
+>  	case ISCSI_PARAM_SESS_RECOVERY_TMO:
+>  		sscanf(data, "%d", &value);
+> -		session->recovery_tmo = value;
+> +		if (!session->recovery_tmo_sysfs_override)
+> +			session->recovery_tmo = value;
+>  		break;
+>  	default:
+>  		err = transport->set_param(conn, ev->u.set_param.param,
+> @@ -4047,13 +4049,15 @@ store_priv_session_##field(struct device *dev,				\
+>  	if ((session->state == ISCSI_SESSION_FREE) ||			\
+>  	    (session->state == ISCSI_SESSION_FAILED))			\
+>  		return -EBUSY;						\
+> -	if (strncmp(buf, "off", 3) == 0)				\
+> +	if (strncmp(buf, "off", 3) == 0) {				\
+>  		session->field = -1;					\
+> -	else {								\
+> +		session->field##_sysfs_override = true;			\
+> +	} else {							\
+>  		val = simple_strtoul(buf, &cp, 0);			\
+>  		if (*cp != '\0' && *cp != '\n')				\
+>  			return -EINVAL;					\
+>  		session->field = val;					\
+> +		session->field##_sysfs_override = true;			\
+>  	}								\
+>  	return count;							\
+>  }
+> @@ -4064,6 +4068,7 @@ store_priv_session_##field(struct device *dev,				\
+>  static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
+>  			show_priv_session_##field,			\
+>  			store_priv_session_##field)
+> +
+>  iscsi_priv_session_rw_attr(recovery_tmo, "%d");
+>  
+>  static struct attribute *iscsi_session_attrs[] = {
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index 2555ee5..6183d20 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -241,6 +241,7 @@ struct iscsi_cls_session {
+>  
+>  	/* recovery fields */
+>  	int recovery_tmo;
+> +	bool recovery_tmo_sysfs_override;
+>  	struct delayed_work recovery_work;
+>  
+>  	unsigned int target_id;
+> 
 
-I kept the macro declaration, previous revision had that removed, and
-modified it so that it could be used for future rw attrs in the same
-manner.  It's possible something could be done for the override check in
-iscsi_set_param, but there's not a lot of code to share here.
+Looks ok to me.
 
-- Chris
+Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
 -- 
 You received this message because you are subscribed to the Google Groups "open-iscsi" group.
