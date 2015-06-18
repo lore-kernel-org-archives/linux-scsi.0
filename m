@@ -1,139 +1,138 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 02/20] [SCSI] mpt3sas: Get IOC_FACTS information using
- handshake protocol only after HBA card gets into READY or Operational state.
-Date: Thu, 18 Jun 2015 15:30:00 +0530
-Message-ID: <CAK=zhgrxXvDVGHMyiSaHq_=HgXcu7rbWjtc2n6QOeRuEzopfkA@mail.gmail.com>
-References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<1427723723-12676-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 04/20] [SCSI] mpt3sas: Remove redundancy code while
+ freeing the controller resources.
+Date: Thu, 18 Jun 2015 12:08:48 +0200
+Message-ID: <20150618100848.GC12717@c203.arch.suse.de>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <1434102153-38581-5-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427723723-12676-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+Content-Disposition: inline
+In-Reply-To: <1434102153-38581-5-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-Any review comments on this patch. please let us known if any changes
-are required.
-
-Thanks,
-Sreekanth
-
-On Mon, Mar 30, 2015 at 7:25 PM, Sreekanth Reddy
-<sreekanth.reddy@avagotech.com> wrote:
-> Driver initialization fails if driver tries to send IOC facts request message when the IOC is in reset or in a fault state.
->
-> This patch will make sure that
->  1.Driver to send IOC facts request message only if HBA is in operational or ready state.
->  2.If IOC is in fault state, a diagnostic reset would be issued.
->  3.If IOC is in reset state then driver will wait for 10 seconds to exit out of reset state.
->    If the HBA continues to be in reset state, then the HBA wouldn't be claimed by the driver.
->
+On Fri, Jun 12, 2015 at 03:12:16PM +0530, Sreekanth Reddy wrote:
+> Removed the redundancy code while freeing the controller resources.
+>=20
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 65 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 65 insertions(+)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index c13a365..ce57320 100644
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 57 +++++++++++++++++++++------=
+----------
+>  1 file changed, 32 insertions(+), 25 deletions(-)
+>=20
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3s=
+as/mpt3sas_base.c
+> index ce57320..32b86bf 100644
 > --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -3169,6 +3169,9 @@ _base_wait_on_iocstate(struct MPT3SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
->   * Notes: MPI2_HIS_IOC2SYS_DB_STATUS - set to one when IOC writes to doorbell.
->   */
->  static int
-> +_base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag);
-> +
-> +static int
->  _base_wait_for_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout,
->         int sleep_flag)
->  {
-> @@ -3711,6 +3714,61 @@ _base_get_port_facts(struct MPT3SAS_ADAPTER *ioc, int port, int sleep_flag)
+> @@ -1798,6 +1798,36 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
 >  }
->
+> =20
 >  /**
-> + * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
+> + * mpt3sas_base_unmap_resources - free controller resources
 > + * @ioc: per adapter object
-> + * @timeout:
-> + * @sleep_flag: CAN_SLEEP or NO_SLEEP
-> + *
-> + * Returns 0 for success, non-zero for failure.
 > + */
-> +static int
-> +_base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout,
-> +       int sleep_flag)
+> +void
+> +mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
 > +{
-> +       u32 ioc_state;
-> +       int rc;
+> +	struct pci_dev *pdev =3D ioc->pdev;
 > +
-> +       dinitprintk(ioc, printk(MPT3SAS_FMT "%s\n", ioc->name,
-> +           __func__));
+> +	dexitprintk(ioc, printk(MPT3SAS_FMT "%s\n",
+> +		ioc->name, __func__));
 > +
-> +       if (ioc->pci_error_recovery)
-> +               return 0;
+> +	_base_free_irq(ioc);
+> +	_base_disable_msix(ioc);
 > +
-> +       ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
-> +       dhsprintk(ioc, printk(MPT3SAS_FMT "%s: ioc_state(0x%08x)\n",
-> +           ioc->name, __func__, ioc_state));
+> +	if (ioc->msix96_vector)
+> +		kfree(ioc->replyPostRegisterIndex);
 > +
-> +       if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
-> +           (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-> +               return 0;
+> +	if (ioc->chip_phys) {
+> +		iounmap(ioc->chip);
+> +		ioc->chip_phys =3D 0;
+> +	}
 > +
-> +       if (ioc_state & MPI2_DOORBELL_USED) {
-> +               dhsprintk(ioc, printk(MPT3SAS_FMT
-> +                   "unexpected doorbell active!\n", ioc->name));
-> +               goto issue_diag_reset;
-> +       }
-> +
-> +       if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-> +               mpt3sas_base_fault_info(ioc, ioc_state &
-> +                   MPI2_DOORBELL_DATA_MASK);
-> +               goto issue_diag_reset;
-> +       }
-> +
-> +       ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
-> +           timeout, sleep_flag);
-> +       if (ioc_state) {
-> +               dfailprintk(ioc, printk(MPT3SAS_FMT
-> +                   "%s: failed going to ready state (ioc_state=0x%x)\n",
-> +                   ioc->name, __func__, ioc_state));
-> +               return -EFAULT;
-> +       }
-> +
-> + issue_diag_reset:
-> +       rc = _base_diag_reset(ioc, sleep_flag);
-> +       return rc;
+> +	if (pci_is_enabled(pdev)) {
+> +		pci_release_selected_regions(ioc->pdev, ioc->bars);
+> +		pci_disable_pcie_error_reporting(pdev);
+> +		pci_disable_device(pdev);
+> +	}
 > +}
 > +
 > +/**
->   * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
+>   * mpt3sas_base_map_resources - map in controller resources (io/irq/=
+memap)
 >   * @ioc: per adapter object
->   * @sleep_flag: CAN_SLEEP or NO_SLEEP
-> @@ -3728,6 +3786,13 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
->         dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
->             __func__));
->
-> +       r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
-> +       if (r) {
-> +               dfailprintk(ioc, printk(MPT3SAS_FMT
-> +                   "%s: failed getting to correct state\n",
-> +                   ioc->name, __func__));
-> +               return r;
-> +       }
->         mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
->         mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
->         memset(&mpi_request, 0, mpi_request_sz);
-> --
+>   *
+> @@ -1925,14 +1955,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAP=
+TER *ioc)
+>  	return 0;
+> =20
+>   out_fail:
+> -	if (ioc->chip_phys)
+> -		iounmap(ioc->chip);
+> -	ioc->chip_phys =3D 0;
+> -	pci_release_selected_regions(ioc->pdev, ioc->bars);
+> -	pci_disable_pcie_error_reporting(pdev);
+> -	pci_disable_device(pdev);
+> -	if (ioc->msix96_vector)
+> -		kfree(ioc->replyPostRegisterIndex);
+> +	mpt3sas_base_unmap_resources(ioc);
+>  	return r;
+>  }
+> =20
+> @@ -4667,8 +4690,6 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPT=
+ER *ioc, int sleep_flag)
+>  void
+>  mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+>  {
+> -	struct pci_dev *pdev =3D ioc->pdev;
+> -
+>  	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+>  	    __func__));
+> =20
+> @@ -4679,21 +4700,7 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADA=
+PTER *ioc)
+>  		ioc->shost_recovery =3D 0;
+>  	}
+> =20
+> -	_base_free_irq(ioc);
+> -	_base_disable_msix(ioc);
+> -
+> -	if (ioc->msix96_vector)
+> -		kfree(ioc->replyPostRegisterIndex);
+> -
+> -	if (ioc->chip_phys && ioc->chip)
+> -		iounmap(ioc->chip);
+> -	ioc->chip_phys =3D 0;
+> -
+> -	if (pci_is_enabled(pdev)) {
+> -		pci_release_selected_regions(ioc->pdev, ioc->bars);
+> -		pci_disable_pcie_error_reporting(pdev);
+> -		pci_disable_device(pdev);
+> -	}
+> +	mpt3sas_base_unmap_resources(ioc);
+>  	return;
+>  }
+> =20
+> --=20
 > 2.0.2
->
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-
--- 
-
-Regards,
-Sreekanth
+--=20
+Johannes Thumshirn                                       Storage
+jthumshirn@suse.de                             +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
