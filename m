@@ -1,56 +1,91 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/8] tcm_loop updates
-Date: Thu, 18 Jun 2015 11:43:34 +0200
-Message-ID: <1434620622-65391-1-git-send-email-hare@suse.de>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH 1/8] tcm_loop: Hook into SAS transport class
+Date: Thu, 18 Jun 2015 11:43:35 +0200
+Message-ID: <1434620622-65391-2-git-send-email-hare@suse.de>
+References: <1434620622-65391-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54711 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754041AbbFRJnp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2015 05:43:45 -0400
+In-Reply-To: <1434620622-65391-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Nic Bellinger <nab@daterainc.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
-List-Id: linux-scsi@vger.kernel.org
 
-Hi Nic,
+If tcm_loop emulates a SAS HBA it should hook into the SAS
+transport class, too.
 
-As tcm_loop claims to be a SAS HBA I thought it a good idea to
-hook it into the SAS transport class, so that we have the entire
-(virtual) SAS topology in sysfs now.
-And even lsscsi is happy:
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/target/loopback/tcm_loop.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-# lsscsi -H -t
-[10]    tcm_loopback  sas:0x6001405cc9332c5a
-# lsscsi -t
-[10:0:0:0]   disk    sas:0x6001405e41925ad3          /dev/sdf 
-[10:0:1:0]   disk    sas:0x6001405e41925ad3          /dev/sdg 
-
-I've also included some pending fixes / updates I did for
-LIO target, mostly done to reproduce issues I've been facing:
-- Disallow READ CAPACITY in standby
-  This is a long-standing issue with the linux SCSI stack and
-  multipathing, both assuming that READ CAPACITY will always
-  succeed. With that patch we can finally debug and fix this.
-- Export the 'write_protect' attribute for demo-mode LUNs
-- Some more UAs to be issued
-
-As usual, reviews and comments are welcome.
-
-Hannes Reinecke (8):
-  tcm_loop: Hook into SAS transport class
-  tcm_loop: Add SAS transport topology
-  tcm_loop: Remove SAS vestigies
-  tcm_loop: Send I_T_NEXUS_LOSS_OCCURRED UA
-  tcm_loop: Rescan SCSI target on transport online
-  target: Issue Power-On/Reset UA upon LUN instantiation
-  target_core_alua: disallow READ_CAPACITY when in standby
-  target: display 'write_protect' attribute for demo-mode LUNs
-
- drivers/target/loopback/tcm_loop.c           | 186 +++++++++++++++++++++++----
- drivers/target/loopback/tcm_loop.h           |   3 +
- drivers/target/target_core_alua.c            |   9 --
- drivers/target/target_core_device.c          |  43 ++++++-
- drivers/target/target_core_fabric_configfs.c |  42 ++++++
- drivers/target/target_core_internal.h        |   1 +
- drivers/target/target_core_tpg.c             |  17 +++
- include/target/target_core_fabric.h          |   1 +
- 8 files changed, 261 insertions(+), 41 deletions(-)
-
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index a556bde..45ae3e4 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_transport_sas.h>
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_fabric.h>
+@@ -42,7 +43,7 @@
+ 
+ static struct workqueue_struct *tcm_loop_workqueue;
+ static struct kmem_cache *tcm_loop_cmd_cache;
+-
++static struct scsi_transport_template *tcm_loop_sas_transport_template;
+ static int tcm_loop_hba_no_cnt;
+ 
+ static int tcm_loop_queue_status(struct se_cmd *se_cmd);
+@@ -360,6 +361,9 @@ static int tcm_loop_slave_alloc(struct scsi_device *sd)
+ 	return 0;
+ }
+ 
++struct sas_function_template tcm_loop_sas_transport_functions = {
++};
++
+ static struct scsi_host_template tcm_loop_driver_template = {
+ 	.show_info		= tcm_loop_show_info,
+ 	.proc_name		= "tcm_loopback",
+@@ -408,6 +412,8 @@ static int tcm_loop_driver_probe(struct device *dev)
+ 	sh->max_lun = 0;
+ 	sh->max_channel = 0;
+ 	sh->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
++	if (tl_hba->tl_proto_id == SCSI_PROTOCOL_SAS)
++		sh->transportt = tcm_loop_sas_transport_template;
+ 
+ 	host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+ 		    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
+@@ -1290,8 +1296,15 @@ static int __init tcm_loop_fabric_init(void)
+ 	if (ret)
+ 		goto out_release_core_bus;
+ 
++	tcm_loop_sas_transport_template =
++		sas_attach_transport(&tcm_loop_sas_transport_functions);
++	if (!tcm_loop_sas_transport_template)
++		goto out_unregister_template;
++
+ 	return 0;
+ 
++out_unregister_template:
++	target_unregister_template(&loop_ops);
+ out_release_core_bus:
+ 	tcm_loop_release_core_bus();
+ out_destroy_cache:
+@@ -1304,6 +1317,7 @@ out:
+ 
+ static void __exit tcm_loop_fabric_exit(void)
+ {
++	sas_release_transport(tcm_loop_sas_transport_template);
+ 	target_unregister_template(&loop_ops);
+ 	tcm_loop_release_core_bus();
+ 	kmem_cache_destroy(tcm_loop_cmd_cache);
 -- 
 1.8.5.2
+
