@@ -1,83 +1,50 @@
-From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [patch] hpsa: fix an sprintf() overflow in the reset handler
-Date: Thu, 18 Jun 2015 13:35:45 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB486B305D@BBYEXM01.pmc-sierra.internal>
-References: <20150604144756.GA8897@mwanda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 7/8] target_core_alua: disallow READ_CAPACITY when in
+ standby
+Date: Thu, 18 Jun 2015 16:32:54 +0200
+Message-ID: <5582D696.4010507@suse.de>
+References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-8-git-send-email-hare@suse.de> <5582AE3D.3010006@bootc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20150604144756.GA8897@mwanda>
-Content-Language: en-US
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5582AE3D.3010006@bootc.net>
+Sender: target-devel-owner@vger.kernel.org
+To: Chris Boot <bootc@bootc.net>, Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Thursday, June 04, 2015 9:48 AM
-> To: Don Brace
-> Cc: James E.J. Bottomley; iss_storagedev@hp.com; dl Team ESD Storage Dev
-> Support; linux-scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [patch] hpsa: fix an sprintf() overflow in the reset handler
-> 
-> The string "cmd %d RESET FAILED, new lockup detected" is not quite
-> large enough so the sprintf() will overflow.  I have increased the size
-> of the buffer and also changed the sprintf calls to snprintf.
-> 
-> Fixes: 73153fe533bc ('hpsa: use block layer tag for command allocation')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 1dafeb4..cab4e98 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -5104,7 +5104,7 @@ static int hpsa_eh_device_reset_handler(struct
-> scsi_cmnd *scsicmd)
->  	int rc;
->  	struct ctlr_info *h;
->  	struct hpsa_scsi_dev_t *dev;
-> -	char msg[40];
-> +	char msg[48];
-> 
->  	/* find the controller to which the command to be aborted was sent */
->  	h = sdev_to_hba(scsicmd->device);
-> @@ -5122,16 +5122,18 @@ static int hpsa_eh_device_reset_handler(struct
-> scsi_cmnd *scsicmd)
-> 
->  	/* if controller locked up, we can guarantee command won't complete
-> */
->  	if (lockup_detected(h)) {
-> -		sprintf(msg, "cmd %d RESET FAILED, lockup detected",
-> -				hpsa_get_cmd_index(scsicmd));
-> +		snprintf(msg, sizeof(msg),
-> +			 "cmd %d RESET FAILED, lockup detected",
-> +			 hpsa_get_cmd_index(scsicmd));
->  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
->  		return FAILED;
->  	}
-> 
->  	/* this reset request might be the result of a lockup; check */
->  	if (detect_controller_lockup(h)) {
-> -		sprintf(msg, "cmd %d RESET FAILED, new lockup detected",
-> -				hpsa_get_cmd_index(scsicmd));
-> +		snprintf(msg, sizeof(msg),
-> +			 "cmd %d RESET FAILED, new lockup detected",
-> +			 hpsa_get_cmd_index(scsicmd));
->  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
->  		return FAILED;
->  	}
-> @@ -5145,7 +5147,8 @@ static int hpsa_eh_device_reset_handler(struct
-> scsi_cmnd *scsicmd)
->  	/* send a reset to the SCSI LUN which the command was sent to */
->  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
->  			   DEFAULT_REPLY_QUEUE);
-> -	sprintf(msg, "reset %s", rc == 0 ? "completed successfully" : "failed");
-> +	snprintf(msg, sizeof(msg), "reset %s",
-> +		 rc == 0 ? "completed successfully" : "failed");
->  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
->  	return rc == 0 ? SUCCESS : FAILED;
->  }
+On 06/18/2015 01:40 PM, Chris Boot wrote:
+> On 18/06/15 10:43, Hannes Reinecke wrote:
+>> Strictly speaking SPC doesn't require READ CAPACITY and friends
+>> to be supported while in the port is in standby.
+>=20
+> Hi Hannes,
+>=20
+> I'd really rather this didn't go away. Yes, strictly speaking SPC
+> doesn't require these commands but Linux in practice does, and ISTR t=
+his
+> was added at my request too.
+>=20
+> We need it on our storage setups to prevent the Linux SCSI stack from
+> exploding. If this is removed here, they'll start exploding again unt=
+il
+> the fix goes in and the initiators are updated.
+>=20
 
-Signed-off-by: Don Brace <don.brace@pmcs.com>
+This was exactly why I added it, so that one could go about and fix
+the linux SCSI stack :-)
+
+> Could this please be kept as an option or something?
+>=20
+Yeah, I see what I can do.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
