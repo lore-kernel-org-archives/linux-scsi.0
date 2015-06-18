@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/8] tcm_loop: Rescan SCSI target on transport online
-Date: Thu, 18 Jun 2015 11:43:39 +0200
-Message-ID: <1434620622-65391-6-git-send-email-hare@suse.de>
+Subject: [PATCH 6/8] target: Issue Power-On/Reset UA upon LUN instantiation
+Date: Thu, 18 Jun 2015 11:43:40 +0200
+Message-ID: <1434620622-65391-7-git-send-email-hare@suse.de>
 References: <1434620622-65391-1-git-send-email-hare@suse.de>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1434620622-65391-1-git-send-email-hare@suse.de>
@@ -10,35 +10,47 @@ To: Nic Bellinger <nab@daterainc.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Setting the transport status to 'online' needs to rescan the
-target, as some devices might have been added while the transport
-has been offline.
+Whenever a LUN is being assigned we should be sending out an
+Power-On/Reset UA.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/target/loopback/tcm_loop.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/target/target_core_device.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 6c724dd..7db31f3 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -1082,7 +1082,16 @@ static ssize_t tcm_loop_tpg_store_transport_status(
- 			struct tcm_loop_tpg, tl_se_tpg);
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 52676a0..88d6070 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -363,9 +363,11 @@ int core_enable_device_list_for_node(
+ 		rcu_read_lock();
+ 		hlist_for_each_entry_rcu(tmp, &nacl->lun_entry_hlist, link) {
+ 			if (tmp == new)
+-				continue;
+-			core_scsi3_ua_allocate(tmp, 0x3F,
+-				ASCQ_3FH_REPORTED_LUNS_DATA_HAS_CHANGED);
++				core_scsi3_ua_allocate(tmp, 0x29,
++					ASCQ_29H_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURED);
++			else
++				core_scsi3_ua_allocate(tmp, 0x3F,
++					ASCQ_3FH_REPORTED_LUNS_DATA_HAS_CHANGED);
+ 		}
+ 		rcu_read_unlock();
  
- 	if (!strncmp(page, "online", 6)) {
-+		int status = tl_tpg->tl_transport_status;
-+
- 		tl_tpg->tl_transport_status = TCM_TRANSPORT_ONLINE;
-+		if (status != tl_tpg->tl_transport_status &&
-+		    tl_tpg->tl_hba->tl_proto_id == SCSI_PROTOCOL_SAS) {
-+			struct sas_rphy *rphy = tl_tpg->sas_rphy;
-+
-+			scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id,
-+					 SCAN_WILD_CARD, 0);
-+		}
- 		return count;
+@@ -385,9 +387,11 @@ int core_enable_device_list_for_node(
+ 	rcu_read_lock();
+ 	hlist_for_each_entry_rcu(tmp, &nacl->lun_entry_hlist, link) {
+ 		if (tmp == new)
+-			continue;
+-		core_scsi3_ua_allocate(tmp, 0x3F,
+-			ASCQ_3FH_REPORTED_LUNS_DATA_HAS_CHANGED);
++			core_scsi3_ua_allocate(tmp, 0x29,
++				ASCQ_29H_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURED);
++		else
++			core_scsi3_ua_allocate(tmp, 0x3F,
++				ASCQ_3FH_REPORTED_LUNS_DATA_HAS_CHANGED);
  	}
- 	if (!strncmp(page, "offline", 7)) {
+ 	rcu_read_unlock();
+ 	return 0;
 -- 
 1.8.5.2
