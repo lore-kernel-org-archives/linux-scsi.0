@@ -1,139 +1,71 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 10/20] [SCSI] mpt3sas: Add branding string support for
- OEM's HBA
-Date: Thu, 18 Jun 2015 12:09:32 +0200
-Message-ID: <20150618100932.GD12717@c203.arch.suse.de>
-References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <1434102153-38581-11-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Chris Boot <bootc@bootc.net>
+Subject: Re: [PATCH 7/8] target_core_alua: disallow READ_CAPACITY when in
+ standby
+Date: Thu, 18 Jun 2015 12:40:45 +0100
+Message-ID: <5582AE3D.3010006@bootc.net>
+References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-8-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56690 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754646AbbFRKJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2015 06:09:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1434102153-38581-11-git-send-email-Sreekanth.Reddy@avagotech.com>
+Received: from kamaji.grokhost.net ([87.117.218.43]:37534 "EHLO
+	kamaji.grokhost.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755200AbbFRLsq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2015 07:48:46 -0400
+In-Reply-To: <1434620622-65391-8-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>
 
-On Fri, Jun 12, 2015 at 03:12:22PM +0530, Sreekanth Reddy wrote:
-> Added the following Dell branding to the mpt3sas driver.
->=20
-> "VendorID"   "DeviceID"  "SubsystemVendor ID"  "SubsystemDevice ID"  =
-Dell Branding String
-> 0x1000        0x0097          0x1028                 0x1F46          =
-  DELL 12Gbps HBA
->=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+On 18/06/15 10:43, Hannes Reinecke wrote:
+> Strictly speaking SPC doesn't require READ CAPACITY and friends
+> to be supported while in the port is in standby.
+
+Hi Hannes,
+
+I'd really rather this didn't go away. Yes, strictly speaking SPC
+doesn't require these commands but Linux in practice does, and ISTR this
+was added at my request too.
+
+We need it on our storage setups to prevent the Linux SCSI stack from
+exploding. If this is removed here, they'll start exploding again until
+the fix goes in and the initiators are updated.
+
+Could this please be kept as an option or something?
+
+Cheers,
+Chris
+
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 36 +++++++++++++++++++++++++++=
-+++++++++
->  drivers/scsi/mpt3sas/mpt3sas_base.h | 11 +++++++++++
->  2 files changed, 47 insertions(+)
->=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3s=
-as/mpt3sas_base.c
-> index 6739c0a..db362cb 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -2345,6 +2345,41 @@ _base_display_intel_branding(struct MPT3SAS_AD=
-APTER *ioc)
-> =20
-> =20
->  /**
-> + * _base_display_dell_branding - Display branding string
-> + * @ioc: per adapter object
-> + *
-> + * Return nothing.
-> + */
-> +static void
-> +_base_display_dell_branding(struct MPT3SAS_ADAPTER *ioc)
-> +{
-> +	if (ioc->pdev->subsystem_vendor !=3D PCI_VENDOR_ID_DELL)
-> +		return;
-> +
-> +	switch (ioc->pdev->device) {
-> +	case MPI25_MFGPAGE_DEVID_SAS3008:
-> +		switch (ioc->pdev->subsystem_device) {
-> +		case MPT3SAS_DELL_12G_HBA_SSDID:
-> +			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-> +				MPT3SAS_DELL_12G_HBA_BRANDING);
-> +			break;
-> +		default:
-> +			pr_info(MPT3SAS_FMT
-> +			   "Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
-> +			   ioc->pdev->subsystem_device);
-> +			break;
-> +		}
-> +		break;
-> +	default:
-> +		pr_info(MPT3SAS_FMT
-> +			"Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
-> +			ioc->pdev->subsystem_device);
-> +		break;
-> +	}
-> +}
-> +
-> +
-> +/**
->   * _base_display_ioc_capabilities - Disply IOC's capabilities.
->   * @ioc: per adapter object
->   *
-> @@ -2374,6 +2409,7 @@ _base_display_ioc_capabilities(struct MPT3SAS_A=
-DAPTER *ioc)
->  	    bios_version & 0x000000FF);
-> =20
->  	_base_display_intel_branding(ioc);
-> +	_base_display_dell_branding(ioc);
-> =20
->  	pr_info(MPT3SAS_FMT "Protocol=3D(", ioc->name);
-> =20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
-as/mpt3sas_base.h
-> index 2318ef8..c4780c7 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -152,6 +152,17 @@
->  #define MPT3SAS_INTEL_RS3UC080_SSDID    0x3524
-> =20
->  /*
-> + * Dell HBA branding
-> + */
-> +#define MPT3SAS_DELL_12G_HBA_BRANDING       \
-> +	"Dell 12Gbps HBA"
-> +
-> +/*
-> + * Dell HBA SSDIDs
-> + */
-> +#define MPT3SAS_DELL_12G_HBA_SSDID	0x1F46
-> +
-> +/*
->   * status bits for ioc->diag_buffer_status
->   */
->  #define MPT3_DIAG_BUFFER_IS_REGISTERED	(0x01)
-> --=20
-> 2.0.2
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/target/target_core_alua.c | 9 ---------
+>  1 file changed, 9 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+> index edaf1b9..a62e58b 100644
+> --- a/drivers/target/target_core_alua.c
+> +++ b/drivers/target/target_core_alua.c
+> @@ -561,16 +561,7 @@ static inline int core_alua_state_standby(
+>  	case REPORT_LUNS:
+>  	case RECEIVE_DIAGNOSTIC:
+>  	case SEND_DIAGNOSTIC:
+> -	case READ_CAPACITY:
+>  		return 0;
+> -	case SERVICE_ACTION_IN_16:
+> -		switch (cdb[1] & 0x1f) {
+> -		case SAI_READ_CAPACITY_16:
+> -			return 0;
+> -		default:
+> -			set_ascq(cmd, ASCQ_04H_ALUA_TG_PT_STANDBY);
+> -			return 1;
+> -		}
+>  	case MAINTENANCE_IN:
+>  		switch (cdb[1] & 0x1f) {
+>  		case MI_REPORT_TARGET_PGS:
+> 
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Chris Boot
+bootc@bootc.net
