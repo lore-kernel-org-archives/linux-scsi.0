@@ -1,79 +1,106 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 17/20 v1] [SCSI] mpt3sas: Use alloc_ordered_workqueue()
- API instead of create_singlethread_workqueue() API
-Date: Thu, 18 Jun 2015 18:36:29 +0530
-Message-ID: <CAK=zhgoGUC74U6RxxALv=1Y3jbKSAZ+_Ahfa1wLsaMDvin92qg@mail.gmail.com>
-References: <1434433027-40682-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<5582B51C.8070700@stratus.com>
+From: Don Brace <Don.Brace@pmcs.com>
+Subject: RE: [patch] hpsa: fix an sprintf() overflow in the reset handler
+Date: Thu, 18 Jun 2015 13:35:07 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB486B304E@BBYEXM01.pmc-sierra.internal>
+References: <20150604144756.GA8897@mwanda> <55706D41.9090803@bfs.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5582B51C.8070700@stratus.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47322 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753887AbbFRNfK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Jun 2015 09:35:10 -0400
+In-Reply-To: <55706D41.9090803@bfs.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "wharms@bfs.de" <wharms@bfs.de>, Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 5:40 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> On 06/16/2015 01:37 AM, Sreekanth Reddy wrote:
->> Created a thread using alloc_ordered_workqueue() API in order to process
->> the works from firmware Work-queue sequentially instead of
->> create_singlethread_workqueue() API.
->>
->> Changes in v1:
->>     No need to check for backport compatibility in the upstream kernel.
->> so removing the else section where driver use
->> create_singlethread_workqueue() API if alloc_ordered_workqueue() API is
->> not defined, This else section is not required since in the latest upstream
->> kernel this alloc_ordered_workqueue() API is always defined.
->>
->> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->> index b848458..7e5926c 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->> @@ -8085,8 +8085,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->>       /* event thread */
->>       snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
->>           "fw_event%d", ioc->id);
->> -     ioc->firmware_event_thread = create_singlethread_workqueue(
->> -         ioc->firmware_event_name);
->> +     ioc->firmware_event_thread = alloc_ordered_workqueue(
->> +         ioc->firmware_event_name, WQ_MEM_RECLAIM);
->>       if (!ioc->firmware_event_thread) {
->>               pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
->>                   ioc->name, __FILE__, __LINE__, __func__);
->>
->
-> Hi Sreekanth,
->
-> Is this change still needed after e09c2c2954684 workqueue: apply
-> __WQ_ORDERED to create_singlethread_workqueue() ?  (3.17+)
+> -----Original Message-----
+> From: walter harms [mailto:wharms@bfs.de]
+> Sent: Thursday, June 04, 2015 10:23 AM
+> To: Dan Carpenter
+> Cc: Don Brace; James E.J. Bottomley; iss_storagedev@hp.com; dl Team ESD
+> Storage Dev Support; linux-scsi@vger.kernel.org; kernel-
+> janitors@vger.kernel.org
+> Subject: Re: [patch] hpsa: fix an sprintf() overflow in the reset handler
+> 
+> 
+> 
+> Am 04.06.2015 16:47, schrieb Dan Carpenter:
+> > The string "cmd %d RESET FAILED, new lockup detected" is not quite
+> > large enough so the sprintf() will overflow.  I have increased the size
+> > of the buffer and also changed the sprintf calls to snprintf.
+> >
+> > Fixes: 73153fe533bc ('hpsa: use block layer tag for command allocation')
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> >
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 1dafeb4..cab4e98 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -5104,7 +5104,7 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+> >  	int rc;
+> >  	struct ctlr_info *h;
+> >  	struct hpsa_scsi_dev_t *dev;
+> > -	char msg[40];
+> > +	char msg[48];
+> >
+> >  	/* find the controller to which the command to be aborted was sent */
+> >  	h = sdev_to_hba(scsicmd->device);
+> > @@ -5122,16 +5122,18 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+> >
+> >  	/* if controller locked up, we can guarantee command won't complete
+> */
+> >  	if (lockup_detected(h)) {
+> > -		sprintf(msg, "cmd %d RESET FAILED, lockup detected",
+> > -				hpsa_get_cmd_index(scsicmd));
+> > +		snprintf(msg, sizeof(msg),
+> > +			 "cmd %d RESET FAILED, lockup detected",
+> > +			 hpsa_get_cmd_index(scsicmd));
+> >  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> >  		return FAILED;
+> >  	}
+> >
+> >  	/* this reset request might be the result of a lockup; check */
+> >  	if (detect_controller_lockup(h)) {
+> > -		sprintf(msg, "cmd %d RESET FAILED, new lockup detected",
+> > -				hpsa_get_cmd_index(scsicmd));
+> > +		snprintf(msg, sizeof(msg),
+> > +			 "cmd %d RESET FAILED, new lockup detected",
+> > +			 hpsa_get_cmd_index(scsicmd));
+> >  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> >  		return FAILED;
+> >  	}
+> > @@ -5145,7 +5147,8 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+> >  	/* send a reset to the SCSI LUN which the command was sent to */
+> >  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+> >  			   DEFAULT_REPLY_QUEUE);
+> > -	sprintf(msg, "reset %s", rc == 0 ? "completed successfully" : "failed");
+> > +	snprintf(msg, sizeof(msg), "reset %s",
+> > +		 rc == 0 ? "completed successfully" : "failed");
+> >  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> >  	return rc == 0 ? SUCCESS : FAILED;
+> >  }
+> 
+> 
+> there is something called dev_printk_emit() what seems the varg version of
+> dev_printk()
+> (what is behind psa_show_dev_msg()) maybe it would be better to redefine the
+> interface
+> to use varargs ?
+> 
+> Its up to the maintainer to decide, i do not know how often
+> hpsa_show_dev_msg is actualy used.
+> 
+> just my 2 cents,
+>  wh
+> 
 
-I won't say that it is compulsory required, but I feel it is better if
-these changes are included. since initially we thought that thread
-created by using create_singlethread_workqueue() will process the
-works sequentially but in-between  it has broken and then it is fixed
-by Tejun.  So I thought it is better to directly use the
-alloc_ordered_workqueue() as create_singlethead_workqueue() API also
-invoked the same API.
-
->
-> In upstream, this change looks cosmetic (unless Tejun has a preference
-> for one over the other), but maybe converting to alloc_ordered_workqueue
-> keeps your in house version in closer sync?
->
-> Thanks,
->
-> -- Joe
-
-
-
--- 
-
-Regards,
-Sreekanth
+Thanks. I'll check into this and add it in as an update if necessary.
