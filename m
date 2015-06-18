@@ -1,71 +1,23 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: [PATCH 7/8] target_core_alua: disallow READ_CAPACITY when in
- standby
-Date: Thu, 18 Jun 2015 12:40:45 +0100
-Message-ID: <5582AE3D.3010006@bootc.net>
-References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-8-git-send-email-hare@suse.de>
+From: yoma sophian <sophian.yoma@gmail.com>
+Subject: some question about scsi cdb security code
+Date: Thu, 18 Jun 2015 20:06:15 +0800
+Message-ID: <CADUS3onsoRtRFbQ2Cb20iR-=eo3Qs3WL1yc+BFB2OzepsEguuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kamaji.grokhost.net ([87.117.218.43]:37534 "EHLO
-	kamaji.grokhost.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbbFRLsq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2015 07:48:46 -0400
-In-Reply-To: <1434620622-65391-8-git-send-email-hare@suse.de>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:35018 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594AbbFRMGQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2015 08:06:16 -0400
+Received: by wgbhy7 with SMTP id hy7so61914528wgb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2015 05:06:15 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Nic Bellinger <nab@daterainc.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-On 18/06/15 10:43, Hannes Reinecke wrote:
-> Strictly speaking SPC doesn't require READ CAPACITY and friends
-> to be supported while in the port is in standby.
+hi all:
+is so far SCSI support security cdb out/in commands?
+if YES, how could I trigger these 2 scsi commands?
+Could I trigger these commands by usb devices?
 
-Hi Hannes,
-
-I'd really rather this didn't go away. Yes, strictly speaking SPC
-doesn't require these commands but Linux in practice does, and ISTR this
-was added at my request too.
-
-We need it on our storage setups to prevent the Linux SCSI stack from
-exploding. If this is removed here, they'll start exploding again until
-the fix goes in and the initiators are updated.
-
-Could this please be kept as an option or something?
-
-Cheers,
-Chris
-
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/target/target_core_alua.c | 9 ---------
->  1 file changed, 9 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-> index edaf1b9..a62e58b 100644
-> --- a/drivers/target/target_core_alua.c
-> +++ b/drivers/target/target_core_alua.c
-> @@ -561,16 +561,7 @@ static inline int core_alua_state_standby(
->  	case REPORT_LUNS:
->  	case RECEIVE_DIAGNOSTIC:
->  	case SEND_DIAGNOSTIC:
-> -	case READ_CAPACITY:
->  		return 0;
-> -	case SERVICE_ACTION_IN_16:
-> -		switch (cdb[1] & 0x1f) {
-> -		case SAI_READ_CAPACITY_16:
-> -			return 0;
-> -		default:
-> -			set_ascq(cmd, ASCQ_04H_ALUA_TG_PT_STANDBY);
-> -			return 1;
-> -		}
->  	case MAINTENANCE_IN:
->  		switch (cdb[1] & 0x1f) {
->  		case MI_REPORT_TARGET_PGS:
-> 
-
-
--- 
-Chris Boot
-bootc@bootc.net
+appreciate your help in advance,
