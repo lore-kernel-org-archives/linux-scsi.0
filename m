@@ -1,95 +1,56 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 14/20 v1] [SCSI] mpt3sas: Complete the SCSI command with
- DID_RESET status for log_info value 0x0x32010081
-Date: Thu, 18 Jun 2015 10:36:20 +0200
-Message-ID: <20150618083620.GB12717@c203.arch.suse.de>
-References: <1434432924-40632-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50111 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752954AbbFRIg0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Jun 2015 04:36:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1434432924-40632-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/8] tcm_loop updates
+Date: Thu, 18 Jun 2015 11:43:34 +0200
+Message-ID: <1434620622-65391-1-git-send-email-hare@suse.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Nic Bellinger <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 
-On Tue, Jun 16, 2015 at 11:05:24AM +0530, Sreekanth Reddy wrote:
-> For any SCSI command, if the driver receives
-> IOC status =3D SCSI_IOC_TERMINATED and log info =3D 0x32010081 then
-> that command will be completed with DID_RESET host status.
->=20
-> The definition of this log info value is
-> "Virtual IO has failed and has to be retried".
->=20
-> Firmware will provide this log info value with IOC Status
-> "SCSI_IOC_TERMINATED", whenever a drive (with is a part of a volume)
-> is pulled and pushed back within some minimal delay.
-> With this log info value, firmware informs the driver to retry the
-> failed IO command infinite times, so to provide some time for the
-> firmware to discover the reinserted drive successfully instated of
-> just retrying failed command for five times(doesn't giving enough
-> time for firmware to complete the drive discovery) and failing the
-> IO permanently even though drive came back successfully.
->=20
-> Changes in v1:
->    Defined macro VIRTUAL_IO_FAILED_RETRY for magic a value 0x32010081
->=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h  | 2 ++
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
->  2 files changed, 5 insertions(+)
->=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
-as/mpt3sas_base.h
-> index 0ffe763..f3f79be 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -203,6 +203,8 @@
->  #define MFG10_GF0_SSD_DATA_SCRUB_DISABLE       (0x00000008)
->  #define MFG10_GF0_SINGLE_DRIVE_R0              (0x00000010)
-> =20
-> +#define VIRTUAL_IO_FAILED_RETRY			(0x32010081)
-> +
->  /* OEM Specific Flags will come from OEM specific header files */
->  struct Mpi2ManufacturingPage10_t {
->  	MPI2_CONFIG_PAGE_HEADER	Header;		/* 00h */
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
-sas/mpt3sas_scsih.c
-> index 7060c8b..7587f77 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -4302,6 +4302,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16=
- smid, u8 msix_index, u32 reply)
->  				scmd->device->expecting_cc_ua =3D 1;
->  			}
->  			break;
-> +		} else if (log_info =3D=3D VIRTUAL_IO_FAILED_RETRY) {
-> +			scmd->result =3D DID_RESET << 16;
-> +			break;
->  		}
->  		scmd->result =3D DID_SOFT_ERROR << 16;
->  		break;
-> --=20
-> 2.0.2
->
+Hi Nic,
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+As tcm_loop claims to be a SAS HBA I thought it a good idea to
+hook it into the SAS transport class, so that we have the entire
+(virtual) SAS topology in sysfs now.
+And even lsscsi is happy:
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# lsscsi -H -t
+[10]    tcm_loopback  sas:0x6001405cc9332c5a
+# lsscsi -t
+[10:0:0:0]   disk    sas:0x6001405e41925ad3          /dev/sdf 
+[10:0:1:0]   disk    sas:0x6001405e41925ad3          /dev/sdg 
+
+I've also included some pending fixes / updates I did for
+LIO target, mostly done to reproduce issues I've been facing:
+- Disallow READ CAPACITY in standby
+  This is a long-standing issue with the linux SCSI stack and
+  multipathing, both assuming that READ CAPACITY will always
+  succeed. With that patch we can finally debug and fix this.
+- Export the 'write_protect' attribute for demo-mode LUNs
+- Some more UAs to be issued
+
+As usual, reviews and comments are welcome.
+
+Hannes Reinecke (8):
+  tcm_loop: Hook into SAS transport class
+  tcm_loop: Add SAS transport topology
+  tcm_loop: Remove SAS vestigies
+  tcm_loop: Send I_T_NEXUS_LOSS_OCCURRED UA
+  tcm_loop: Rescan SCSI target on transport online
+  target: Issue Power-On/Reset UA upon LUN instantiation
+  target_core_alua: disallow READ_CAPACITY when in standby
+  target: display 'write_protect' attribute for demo-mode LUNs
+
+ drivers/target/loopback/tcm_loop.c           | 186 +++++++++++++++++++++++----
+ drivers/target/loopback/tcm_loop.h           |   3 +
+ drivers/target/target_core_alua.c            |   9 --
+ drivers/target/target_core_device.c          |  43 ++++++-
+ drivers/target/target_core_fabric_configfs.c |  42 ++++++
+ drivers/target/target_core_internal.h        |   1 +
+ drivers/target/target_core_tpg.c             |  17 +++
+ include/target/target_core_fabric.h          |   1 +
+ 8 files changed, 261 insertions(+), 41 deletions(-)
+
+-- 
+1.8.5.2
