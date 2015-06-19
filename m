@@ -1,28 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 8/8] target: display 'write_protect' attribute for
-	demo-mode LUNs
-Date: Fri, 19 Jun 2015 08:51:44 +0200
-Message-ID: <20150619065143.GD1183@lst.de>
-References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-9-git-send-email-hare@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Merging se_dev_entry and se_lun?
+Date: Thu, 18 Jun 2015 23:56:24 -0700
+Message-ID: <20150619065624.GA3601@infradead.org>
+References: <5583B957.20200@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58893 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbbFSG42 (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 19 Jun 2015 02:56:28 -0400
 Content-Disposition: inline
-In-Reply-To: <1434620622-65391-9-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>
+In-Reply-To: <5583B957.20200@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
-On Thu, Jun 18, 2015 at 11:43:42AM +0200, Hannes Reinecke wrote:
-> When LUNs are mapped with a demo-mode initiator we're missing
-> the 'write_protect' attribute to set a LUN read-only.
+On Fri, Jun 19, 2015 at 08:40:23AM +0200, Hannes Reinecke wrote:
+> Having a list here implies that 'se_lun' can have _several_
+> se_dev_entry structure attached to it, which I found rather curious.
+> 
+> Can you give me an example where this might be the case?
+> Or can we replace the list with a simple pointer or even merge both?
 
-I don't think it's a good idea as-is.  The target core clearly
-differenciates between demo mode and production mode read only, and some
-drivers already expose attributes for these.
+Each initiator has it's own dev entry.
 
-I have a big series in progress to clean the mess around this area
-up.  So for now please don't add anything here, it should become much
-simpler after my changes, and I might be able to incorporate something
-like this after the main series.
+What might make sense with the new list-based dev entry handling is to
+merge the se_lun_acl and se_dev_entry, but it would be a fair amount of
+work.
