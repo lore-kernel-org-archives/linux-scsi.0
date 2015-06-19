@@ -1,44 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 5/6] target: Send UA upon LUN RESET tmr completion
-Date: Fri, 19 Jun 2015 15:06:01 +0200
-Message-ID: <20150619130601.GB7783@lst.de>
-References: <1434009689-112909-1-git-send-email-hare@suse.de> <1434009689-112909-6-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: integrate scsi_dh better into the scsi core V2
+Date: Fri, 19 Jun 2015 15:06:46 +0200
+Message-ID: <558413E6.7010503@suse.de>
+References: <1431283260-13406-1-git-send-email-hch@lst.de> <20150518172851.GA8964@infradead.org> <555A2320.8090105@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1434009689-112909-6-git-send-email-hare@suse.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48226 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbbFSNGt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 09:06:49 -0400
+In-Reply-To: <555A2320.8090105@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, Jun 11, 2015 at 10:01:28AM +0200, Hannes Reinecke wrote:
-> SAM mandates that an BUS DEVICE RESET FUNCTION OCCURRED
-> UA needs to be send after a LUN RESET tmr has completed.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/target/target_core_transport.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index a0e0d3a..bb60c0c4 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -3064,6 +3064,17 @@ static void target_tmr_work(struct work_struct *work)
->  		ret = core_tmr_lun_reset(dev, tmr, NULL, NULL);
->  		tmr->response = (!ret) ? TMR_FUNCTION_COMPLETE :
->  					 TMR_FUNCTION_REJECTED;
-> +		if (tmr->response == TMR_FUNCTION_COMPLETE) {
-> +			struct se_dev_entry *deve;
-> +
-> +			rcu_read_lock();
-> +			deve = target_nacl_find_deve(cmd->se_sess->se_node_acl,
-> +						     cmd->orig_fe_lun);
-> +			if (deve)
-> +				core_scsi3_ua_allocate(deve, 0x29,
-> +					ASCQ_29H_BUS_DEVICE_RESET_FUNCTION_OCCURRED);
-> +			rcu_read_unlock();
+On 05/18/2015 07:36 PM, Hannes Reinecke wrote:
+> On 05/18/2015 07:28 PM, Christoph Hellwig wrote:
+>> Any chance to get reviews for the updated patch 1 and the new patch =
+3
+>> so that the whole series is in reviewed state?
+>>
+> Working on it.
+>=20
+> There had been issues with v1 where multipath wouldn't start up prope=
+rly
+> if no hardware handlers were attached which I need to check before
+> sending out the review.
+>=20
+So, I've been looking into it.
+While the principle is okay, there are some issues with the current
+state (eg sdev->handler is never assigned).
+Do you have an updated patchset or should I send some incremental
+patches?
 
-This should use the target_ua_allocate_lun helper.
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
