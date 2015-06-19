@@ -1,235 +1,476 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v1 01/20] [SCSI] mpt3sas: Added Combined Reply Queue
- feature to extend up-to 96 MSIX vector support
-Date: Fri, 19 Jun 2015 13:04:10 +0200
-Message-ID: <20150619110410.GA10784@c203.arch.suse.de>
-References: <1434711346-9970-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: Re: [PATCH v1 06/20] [SCSI] mpt3sas: Provides the physical location
+ of sas drives
+Date: Fri, 19 Jun 2015 13:04:34 +0200
+Message-ID: <20150619110434.GB10784@c203.arch.suse.de>
+References: <1434711391-10016-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41972 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750999AbbFSLES (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2015 07:04:18 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1434711346-9970-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1434711391-10016-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 19, 2015 at 04:25:46PM +0530, Sreekanth Reddy wrote:
-> In this patch, increased the number of MSIX vector support for SAS3 C=
-0 HBAs to up-to 96.
+On Fri, Jun 19, 2015 at 04:26:31PM +0530, Sreekanth Reddy wrote:
+> This Patch will provide more details of the devices such as slot numb=
+er, enclosure logical id, enclosure level & connector name in the follo=
+wing scenarios,
 >=20
-> Following are changes that are done in this patch
-> 1. Support this feature only for SAS3 C0 cards and also only when rep=
-ly post free queue count is greater than 8.
-> 2. Instead of using single ReplyPostHostIndex system interface, here =
-12 ReplyPostHostIndex system interfaces are used. reply post free queue=
-s numbered from 0 to 7 use the first ReplyPostHostIndex system interfac=
-e to update its corresponding ReplyPostHostIndex values, reply post fre=
-e queues numbered from 8 to 15 will use the second ReplyPostHostIndex s=
-ystem interface and so on. These 12 ReplyPostHostIndex system interface=
-s address are saved in the array replyPostRegisterIndex[].
-> 3. Update the ReplyPostHostIndex value of corresponding reply post fr=
-ee queue in the (its msix_index/8)th entry of replyPostRegisterIndex[] =
-array after processing the reply post descriptor.
+> - When end device is added in the topology,
+> - When the end device is removed from the setup,
+> - When the SCSI mid layer issues TASK ABORT/ DEVICE RESET/ TARGET RES=
+ET during error handling,
+> - When any command to the device fails with Sense key Hardware error =
+or Medium error or Unit Attention,
+> - When firmware returns device error or device not ready status for t=
+he end device,
+> - When a Predicted fault is detected on an end device.
 >=20
-> Changes in v1:
->  Updated the description of module parameter max_msix_vectors
+> This information can be used by the user to identify the location of =
+the desired drive in the topology.
+>=20
+> Driver will get these information by reading the sas device page0.
 >=20
 > Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 72 +++++++++++++++++++++++++++=
-+++++-----
->  drivers/scsi/mpt3sas/mpt3sas_base.h |  7 +++-
->  2 files changed, 70 insertions(+), 9 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 238 +++++++++++++++++++++++++=
+++++------
+>  2 files changed, 201 insertions(+), 39 deletions(-)
 >=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3s=
-as/mpt3sas_base.c
-> index 14a781b..7d0ec5c 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -83,10 +83,10 @@ static int msix_disable =3D -1;
->  module_param(msix_disable, int, 0);
->  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (def=
-ault=3D0)");
-> =20
-> -static int max_msix_vectors =3D 8;
-> +static int max_msix_vectors =3D -1;
->  module_param(max_msix_vectors, int, 0);
->  MODULE_PARM_DESC(max_msix_vectors,
-> -	" max msix vectors - (default=3D8)");
-> +	" max msix vectors");
-> =20
->  static int mpt3sas_fwfault_debug;
->  MODULE_PARM_DESC(mpt3sas_fwfault_debug,
-> @@ -1009,8 +1009,15 @@ _base_interrupt(int irq, void *bus_id)
->  	}
-> =20
->  	wmb();
-> -	writel(reply_q->reply_post_host_index | (msix_index <<
-> -	    MPI2_RPHI_MSIX_INDEX_SHIFT), &ioc->chip->ReplyPostHostIndex);
-> +	if (ioc->msix96_vector) {
-> +		writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
-> +			MPI2_RPHI_MSIX_INDEX_SHIFT),
-> +				ioc->replyPostRegisterIndex[msix_index/8]);
-> +	} else {
-> +		writel(reply_q->reply_post_host_index | (msix_index <<
-> +			MPI2_RPHI_MSIX_INDEX_SHIFT),
-> +				&ioc->chip->ReplyPostHostIndex);
-> +	}
->  	atomic_dec(&reply_q->busy);
->  	return IRQ_HANDLED;
->  }
-> @@ -1560,8 +1567,6 @@ _base_check_enable_msix(struct MPT3SAS_ADAPTER =
-*ioc)
-> =20
->  	pci_read_config_word(ioc->pdev, base + 2, &message_control);
->  	ioc->msix_vector_count =3D (message_control & 0x3FF) + 1;
-> -	if (ioc->msix_vector_count > 8)
-> -		ioc->msix_vector_count =3D 8;
->  	dinitprintk(ioc, pr_info(MPT3SAS_FMT
->  		"msix is supported, vector_count(%d)\n",
->  		ioc->name, ioc->msix_vector_count));
-> @@ -1880,6 +1885,31 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAP=
-TER *ioc)
->  	if (r)
->  		goto out_fail;
-> =20
-> +	/* Use the Combined reply queue feature only for SAS3 C0 HBAs and
-> +	 * also only when reply queue count is greater than 8
-> +	 */
-> +	if (ioc->msix96_vector && ioc->reply_queue_count > 8) {
-> +		/* If this is an 96 vector supported device,
-> +		set up ReplyPostIndex addresses */
-> +		ioc->replyPostRegisterIndex =3D kcalloc(12,
-> +			sizeof(resource_size_t *), GFP_KERNEL);
-> +		if (!ioc->replyPostRegisterIndex) {
-> +			dfailprintk(ioc, printk(MPT3SAS_FMT
-> +			"allocation for reply Post Register Index failed!!!\n",
-> +								   ioc->name));
-> +			r =3D -ENOMEM;
-> +			goto out_fail;
-> +		}
-> +
-> +		for (i =3D 0; i < 12; i++) {
-> +			ioc->replyPostRegisterIndex[i] =3D (resource_size_t *)
-> +				((u8 *)&ioc->chip->Doorbell +
-> +				MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
-> +				(i * 0x10));
-> +		}
-> +	} else
-> +		ioc->msix96_vector =3D 0;
-> +
->  	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
->  		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
->  		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
-> @@ -1901,6 +1931,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPT=
-ER *ioc)
->  	pci_release_selected_regions(ioc->pdev, ioc->bars);
->  	pci_disable_pcie_error_reporting(pdev);
->  	pci_disable_device(pdev);
-> +	if (ioc->msix96_vector)
-> +		kfree(ioc->replyPostRegisterIndex);
->  	return r;
->  }
-> =20
-> @@ -4522,8 +4554,16 @@ _base_make_ioc_operational(struct MPT3SAS_ADAP=
-TER *ioc, int sleep_flag)
-> =20
->  	/* initialize reply post host index */
->  	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-> -		writel(reply_q->msix_index << MPI2_RPHI_MSIX_INDEX_SHIFT,
-> -		    &ioc->chip->ReplyPostHostIndex);
-> +		if (ioc->msix96_vector) {
-> +			writel((reply_q->msix_index & 7)<<
-> +			   MPI2_RPHI_MSIX_INDEX_SHIFT,
-> +			   ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
-> +		} else {
-> +			writel(reply_q->msix_index <<
-> +				MPI2_RPHI_MSIX_INDEX_SHIFT,
-> +					&ioc->chip->ReplyPostHostIndex);
-> +		}
-> +
->  		if (!_base_is_controller_msix_enabled(ioc))
->  			goto skip_init_reply_post_host_index;
->  	}
-> @@ -4577,6 +4617,9 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAP=
-TER *ioc)
->  	_base_free_irq(ioc);
->  	_base_disable_msix(ioc);
-> =20
-> +	if (ioc->msix96_vector)
-> +		kfree(ioc->replyPostRegisterIndex);
-> +
->  	if (ioc->chip_phys && ioc->chip)
->  		iounmap(ioc->chip);
->  	ioc->chip_phys =3D 0;
-> @@ -4600,6 +4643,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc=
-)
->  {
->  	int r, i;
->  	int cpu_id, last_cpu_id =3D 0;
-> +	u8 revision;
-> =20
->  	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
->  	    __func__));
-> @@ -4618,6 +4662,18 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *io=
-c)
->  		r =3D -ENOMEM;
->  		goto out_free_resources;
->  	}
-> +	/* Check whether the controller revision is C0 or above.
-> +	    C0 and above revision controllers support 96 vectors */
-> +	revision =3D ioc->pdev->revision;
-> +
-> +	if ((ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3004 ||
-> +	     ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3008 ||
-> +	     ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3108_1 ||
-> +	     ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3108_2 ||
-> +	     ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3108_5 ||
-> +	     ioc->pdev->device =3D=3D MPI25_MFGPAGE_DEVID_SAS3108_6) &&
-> +	     (revision >=3D 0x02))
-> +		ioc->msix96_vector =3D 1;
-> =20
->  	ioc->rdpq_array_enable_assigned =3D 0;
->  	ioc->dma_mask =3D 0;
 > diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
 as/mpt3sas_base.h
-> index afa8816..6b8d8f1 100644
+> index b79ad4f..fc694f1 100644
 > --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -728,7 +728,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct=
- MPT3SAS_ADAPTER *ioc);
->   *				is assigned only ones
->   * @reply_queue_count: number of reply queue's
->   * @reply_queue_list: link list contaning the reply queue info
-> - * @reply_post_host_index: head index in the pool where FW completes=
- IO
-> + * @msix96_vector: 96 MSI-X vector support
-> + * @replyPostRegisterIndex: index of next position in Reply Desc Pos=
-t Queue
->   * @delayed_tr_list: target reset link list
->   * @delayed_tr_volume_list: volume target reset link list
->   * @@temp_sensors_count: flag to carry the number of temperature sen=
-sors
-> @@ -937,6 +938,10 @@ struct MPT3SAS_ADAPTER {
->  	u8		reply_queue_count;
->  	struct list_head reply_queue_list;
+> @@ -317,6 +317,8 @@ struct _sas_device {
+>  	u8	fast_path;
+>  	u8	pfa_led_on;
+>  	u8	pend_sas_rphy_add;
+> +	u8	enclosure_level;
+> +	u8	connector_name[4];
+>  };
 > =20
-> +	u8		msix96_vector;
-> +	/* reply post register index */
-> +	resource_size_t	**replyPostRegisterIndex;
+>  /**
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
+sas/mpt3sas_scsih.c
+> index d457dba..64dd90b 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -585,6 +585,22 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER =
+*ioc,
+> =20
+>  	if (!sas_device)
+>  		return;
+> +	pr_info(MPT3SAS_FMT
+> +	    "removing handle(0x%04x), sas_addr(0x%016llx)\n",
+> +	    ioc->name, sas_device->handle,
+> +	    (unsigned long long) sas_device->sas_address);
 > +
->  	struct list_head delayed_tr_list;
->  	struct list_head delayed_tr_volume_list;
->  	u8		temp_sensors_count;
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		pr_info(MPT3SAS_FMT
+> +		   "removing enclosure logical id(0x%016llx), slot(%d)\n",
+> +		   ioc->name, (unsigned long long)
+> +		   sas_device->enclosure_logical_id, sas_device->slot);
+> +
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		pr_info(MPT3SAS_FMT
+> +		   "removing enclosure level(0x%04x), connector name( %s)\n",
+> +		   ioc->name, sas_device->enclosure_level,
+> +		   sas_device->connector_name);
+> =20
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_del(&sas_device->list);
+> @@ -663,6 +679,18 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *io=
+c,
+>  		ioc->name, __func__, sas_device->handle,
+>  		(unsigned long long)sas_device->sas_address));
+> =20
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
+> +		    ioc->name, __func__, (unsigned long long)
+> +		    sas_device->enclosure_logical_id, sas_device->slot));
+> +
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: enclosure level(0x%04x), connector name( %s)\n",
+> +		    ioc->name, __func__,
+> +		    sas_device->enclosure_level, sas_device->connector_name));
+> +
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_list);
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> @@ -704,6 +732,18 @@ _scsih_sas_device_init_add(struct MPT3SAS_ADAPTE=
+R *ioc,
+>  		__func__, sas_device->handle,
+>  		(unsigned long long)sas_device->sas_address));
+> =20
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
+> +		    ioc->name, __func__, (unsigned long long)
+> +		    sas_device->enclosure_logical_id, sas_device->slot));
+> +
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: enclosure level(0x%04x), connector name( %s)\n",
+> +		    ioc->name, __func__, sas_device->enclosure_level,
+> +		    sas_device->connector_name));
+> +
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
+>  	_scsih_determine_boot_device(ioc, sas_device, 0);
+> @@ -1772,10 +1812,16 @@ _scsih_slave_configure(struct scsi_device *sd=
+ev)
+>  	    "sas_addr(0x%016llx), phy(%d), device_name(0x%016llx)\n",
+>  	    ds, handle, (unsigned long long)sas_device->sas_address,
+>  	    sas_device->phy, (unsigned long long)sas_device->device_name);
+> -	sdev_printk(KERN_INFO, sdev,
+> -		"%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
+> -		ds, (unsigned long long)
+> -	    sas_device->enclosure_logical_id, sas_device->slot);
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		sdev_printk(KERN_INFO, sdev,
+> +		     "%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
+> +		     ds, (unsigned long long)
+> +		     sas_device->enclosure_logical_id, sas_device->slot);
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		sdev_printk(KERN_INFO, sdev,
+> +		     "%s: enclosure level(0x%04x), connector name( %s)\n",
+> +		     ds, sas_device->enclosure_level,
+> +		     sas_device->connector_name);
+> =20
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> =20
+> @@ -2189,10 +2235,17 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER=
+ *ioc, struct scsi_cmnd *scmd)
+>  			    sas_device->handle,
+>  			    (unsigned long long)sas_device->sas_address,
+>  			    sas_device->phy);
+> -			starget_printk(KERN_INFO, starget,
+> -			    "enclosure_logical_id(0x%016llx), slot(%d)\n",
+> -			   (unsigned long long)sas_device->enclosure_logical_id,
+> -			    sas_device->slot);
+> +			if (sas_device->enclosure_handle !=3D 0)
+> +				starget_printk(KERN_INFO, starget,
+> +				 "enclosure_logical_id(0x%016llx), slot(%d)\n",
+> +				 (unsigned long long)
+> +				 sas_device->enclosure_logical_id,
+> +				 sas_device->slot);
+> +			if (sas_device->connector_name)
+> +				starget_printk(KERN_INFO, starget,
+> +				"enclosure level(0x%04x),connector name(%s)\n",
+> +				 sas_device->enclosure_level,
+> +				 sas_device->connector_name);
+>  		}
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> @@ -2813,6 +2866,18 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc,=
+ u16 handle)
+>  			"setting delete flag: handle(0x%04x), sas_addr(0x%016llx)\n",
+>  			ioc->name, handle,
+>  		    (unsigned long long)sas_address));
+> +		if (sas_device->enclosure_handle !=3D 0)
+> +			dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +			 "setting delete flag:enclosure logical id(0x%016llx),"
+> +			 " slot(%d)\n", ioc->name, (unsigned long long)
+> +			  sas_device->enclosure_logical_id,
+> +			  sas_device->slot));
+> +		if (sas_device->connector_name)
+> +			dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +			 "setting delete flag: enclosure level(0x%04x),"
+> +			 " connector name( %s)\n", ioc->name,
+> +			  sas_device->enclosure_level,
+> +			  sas_device->connector_name));
+>  		_scsih_ublock_io_device(ioc, sas_address);
+>  		sas_target_priv_data->handle =3D MPT3SAS_INVALID_DEVICE_HANDLE;
+>  	}
+> @@ -3828,10 +3893,19 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *=
+ioc, struct scsi_cmnd *scmd,
+>  				"\tsas_address(0x%016llx), phy(%d)\n",
+>  				ioc->name, (unsigned long long)
+>  			    sas_device->sas_address, sas_device->phy);
+> -			pr_warn(MPT3SAS_FMT
+> -			    "\tenclosure_logical_id(0x%016llx), slot(%d)\n",
+> -			    ioc->name, (unsigned long long)
+> -			    sas_device->enclosure_logical_id, sas_device->slot);
+> +			if (sas_device->enclosure_handle !=3D 0)
+> +				pr_warn(MPT3SAS_FMT
+> +				  "\tenclosure_logical_id(0x%016llx),"
+> +				  "slot(%d)\n", ioc->name,
+> +				  (unsigned long long)
+> +				  sas_device->enclosure_logical_id,
+> +				  sas_device->slot);
+> +			if (sas_device->connector_name[0])
+> +				pr_warn(MPT3SAS_FMT
+> +				  "\tenclosure level(0x%04x),"
+> +				  " connector name( %s)\n", ioc->name,
+> +				  sas_device->enclosure_level,
+> +				  sas_device->connector_name);
+>  		}
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  	}
+> @@ -4006,7 +4080,16 @@ _scsih_smart_predicted_fault(struct MPT3SAS_AD=
+APTER *ioc, u16 handle)
+>  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>  		return;
+>  	}
+> -	starget_printk(KERN_WARNING, starget, "predicted fault\n");
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		starget_printk(KERN_INFO, starget, "predicted fault, "
+> +			"enclosure logical id(0x%016llx), slot(%d)\n",
+> +			(unsigned long long)sas_device->enclosure_logical_id,
+> +			sas_device->slot);
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		starget_printk(KERN_WARNING, starget, "predicted fault, "
+> +			"enclosure level(0x%04x), connector name( %s)\n",
+> +			sas_device->enclosure_level,
+> +			sas_device->connector_name);
+>  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> =20
+>  	if (ioc->pdev->subsystem_vendor =3D=3D PCI_VENDOR_ID_IBM)
+> @@ -4126,8 +4209,13 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u1=
+6 smid, u8 msix_index, u32 reply)
+>  			_scsih_smart_predicted_fault(ioc,
+>  			    le16_to_cpu(mpi_reply->DevHandle));
+>  		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
+> -	}
+> =20
+> +		if (!(ioc->logging_level & MPT_DEBUG_REPLY) &&
+> +		     ((scmd->sense_buffer[2] =3D=3D UNIT_ATTENTION) ||
+> +		     (scmd->sense_buffer[2] =3D=3D MEDIUM_ERROR) ||
+> +		     (scmd->sense_buffer[2] =3D=3D HARDWARE_ERROR)))
+> +			_scsih_scsi_ioc_info(ioc, scmd, mpi_reply, smid);
+> +		}
+>  	switch (ioc_status) {
+>  	case MPI2_IOCSTATUS_BUSY:
+>  	case MPI2_IOCSTATUS_INSUFFICIENT_RESOURCES:
+> @@ -4795,6 +4883,16 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *io=
+c,
+>  			sas_device->handle, handle);
+>  		sas_target_priv_data->handle =3D handle;
+>  		sas_device->handle =3D handle;
+> +		if (sas_device_pg0.Flags &
+> +		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+> +			sas_device->enclosure_level =3D
+> +				le16_to_cpu(sas_device_pg0.EnclosureLevel);
+> +			memcpy(&sas_device->connector_name[0],
+> +				&sas_device_pg0.ConnectorName[0], 4);
+> +		} else {
+> +			sas_device->enclosure_level =3D 0;
+> +			sas_device->connector_name[0] =3D '\0';
+> +		}
+>  	}
+> =20
+>  	/* check if device is present */
+> @@ -4901,14 +4999,24 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc=
+, u16 handle, u8 phy_num,
+>  		    ioc->name, __FILE__, __LINE__, __func__);
+>  	sas_device->enclosure_handle =3D
+>  	    le16_to_cpu(sas_device_pg0.EnclosureHandle);
+> -	sas_device->slot =3D
+> -	    le16_to_cpu(sas_device_pg0.Slot);
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		sas_device->slot =3D
+> +		    le16_to_cpu(sas_device_pg0.Slot);
+>  	sas_device->device_info =3D device_info;
+>  	sas_device->sas_address =3D sas_address;
+>  	sas_device->phy =3D sas_device_pg0.PhyNum;
+>  	sas_device->fast_path =3D (le16_to_cpu(sas_device_pg0.Flags) &
+>  	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
+> =20
+> +	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID)=
+ {
+> +		sas_device->enclosure_level =3D
+> +			le16_to_cpu(sas_device_pg0.EnclosureLevel);
+> +		memcpy(&sas_device->connector_name[0],
+> +			&sas_device_pg0.ConnectorName[0], 4);
+> +	} else {
+> +		sas_device->enclosure_level =3D 0;
+> +		sas_device->connector_name[0] =3D '\0';
+> +	}
+>  	/* get enclosure_logical_id */
+>  	if (sas_device->enclosure_handle && !(mpt3sas_config_get_enclosure_=
+pg0(
+>  	   ioc, &mpi_reply, &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDL=
+E,
+> @@ -4950,6 +5058,18 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *i=
+oc,
+>  		ioc->name, __func__,
+>  	    sas_device->handle, (unsigned long long)
+>  	    sas_device->sas_address));
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: enter: enclosure logical id(0x%016llx), slot(%d)\n",
+> +		    ioc->name, __func__,
+> +		    (unsigned long long)sas_device->enclosure_logical_id,
+> +		    sas_device->slot));
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		  "%s: enter: enclosure level(0x%04x), connector name( %s)\n",
+> +		  ioc->name, __func__,
+> +		  sas_device->enclosure_level,
+> +		  sas_device->connector_name));
+> =20
+>  	if (sas_device->starget && sas_device->starget->hostdata) {
+>  		sas_target_priv_data =3D sas_device->starget->hostdata;
+> @@ -4966,12 +5086,34 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *=
+ioc,
+>  		"removing handle(0x%04x), sas_addr(0x%016llx)\n",
+>  		ioc->name, sas_device->handle,
+>  	    (unsigned long long) sas_device->sas_address);
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		pr_info(MPT3SAS_FMT
+> +		  "removing : enclosure logical id(0x%016llx), slot(%d)\n",
+> +		  ioc->name,
+> +		  (unsigned long long)sas_device->enclosure_logical_id,
+> +		  sas_device->slot);
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		pr_info(MPT3SAS_FMT
+> +		  "removing enclosure level(0x%04x), connector name( %s)\n",
+> +		  ioc->name, sas_device->enclosure_level,
+> +		  sas_device->connector_name);
+> =20
+>  	dewtprintk(ioc, pr_info(MPT3SAS_FMT
+>  		"%s: exit: handle(0x%04x), sas_addr(0x%016llx)\n",
+>  		ioc->name, __func__,
+> -	    sas_device->handle, (unsigned long long)
+> -	    sas_device->sas_address));
+> +		sas_device->handle, (unsigned long long)
+> +		sas_device->sas_address));
+> +	if (sas_device->enclosure_handle !=3D 0)
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: exit: enclosure logical id(0x%016llx), slot(%d)\n",
+> +		    ioc->name, __func__,
+> +		    (unsigned long long)sas_device->enclosure_logical_id,
+> +		    sas_device->slot));
+> +	if (sas_device->connector_name[0] !=3D '\0')
+> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
+> +		    "%s: exit: enclosure level(0x%04x), connector name(%s)\n",
+> +		    ioc->name, __func__, sas_device->enclosure_level,
+> +		    sas_device->connector_name));
+> =20
+>  	kfree(sas_device);
+>  }
+> @@ -6364,9 +6506,7 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER =
+*ioc)
+>  /**
+>   * _scsih_mark_responding_sas_device - mark a sas_devices as respond=
+ing
+>   * @ioc: per adapter object
+> - * @sas_address: sas address
+> - * @slot: enclosure slot id
+> - * @handle: device handle
+> + * @sas_device_pg0: SAS Device page 0
+>   *
+>   * After host reset, find out whether devices are still responding.
+>   * Used in _scsih_remove_unresponsive_sas_devices.
+> @@ -6374,8 +6514,8 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER =
+*ioc)
+>   * Return nothing.
+>   */
+>  static void
+> -_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc, u64 s=
+as_address,
+> -	u16 slot, u16 handle)
+> +_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc,
+> +Mpi2SasDevicePage0_t *sas_device_pg0)
+>  {
+>  	struct MPT3SAS_TARGET *sas_target_priv_data =3D NULL;
+>  	struct scsi_target *starget;
+> @@ -6384,8 +6524,8 @@ _scsih_mark_responding_sas_device(struct MPT3SA=
+S_ADAPTER *ioc, u64 sas_address,
+> =20
+>  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>  	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
+> -		if (sas_device->sas_address =3D=3D sas_address &&
+> -		    sas_device->slot =3D=3D slot) {
+> +		if ((sas_device->sas_address =3D=3D sas_device_pg0->SASAddress) &&
+> +			(sas_device->slot =3D=3D sas_device_pg0->Slot)) {
+>  			sas_device->responding =3D 1;
+>  			starget =3D sas_device->starget;
+>  			if (starget && starget->hostdata) {
+> @@ -6394,22 +6534,40 @@ _scsih_mark_responding_sas_device(struct MPT3=
+SAS_ADAPTER *ioc, u64 sas_address,
+>  				sas_target_priv_data->deleted =3D 0;
+>  			} else
+>  				sas_target_priv_data =3D NULL;
+> -			if (starget)
+> +			if (starget) {
+>  				starget_printk(KERN_INFO, starget,
+> -				    "handle(0x%04x), sas_addr(0x%016llx), "
+> -				    "enclosure logical id(0x%016llx), "
+> -				    "slot(%d)\n", handle,
+> -				    (unsigned long long)sas_device->sas_address,
+> +				    "handle(0x%04x), sas_addr(0x%016llx)\n",
+> +				    sas_device_pg0->DevHandle,
+>  				    (unsigned long long)
+> -				    sas_device->enclosure_logical_id,
+> -				    sas_device->slot);
+> -			if (sas_device->handle =3D=3D handle)
+> +				    sas_device->sas_address);
+> +
+> +				if (sas_device->enclosure_handle !=3D 0)
+> +					starget_printk(KERN_INFO, starget,
+> +					 "enclosure logical id(0x%016llx),"
+> +					 " slot(%d)\n",
+> +					 (unsigned long long)
+> +					 sas_device->enclosure_logical_id,
+> +					 sas_device->slot);
+> +			}
+> +			if (sas_device_pg0->Flags &
+> +			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+> +				sas_device->enclosure_level =3D
+> +				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
+> +				memcpy(&sas_device->connector_name[0],
+> +					&sas_device_pg0->ConnectorName[0], 4);
+> +			} else {
+> +				sas_device->enclosure_level =3D 0;
+> +				sas_device->connector_name[0] =3D '\0';
+> +			}
+> +
+> +			if (sas_device->handle =3D=3D sas_device_pg0->DevHandle)
+>  				goto out;
+>  			pr_info("\thandle changed from(0x%04x)!!!\n",
+>  			    sas_device->handle);
+> -			sas_device->handle =3D handle;
+> +			sas_device->handle =3D sas_device_pg0->DevHandle;
+>  			if (sas_target_priv_data)
+> -				sas_target_priv_data->handle =3D handle;
+> +				sas_target_priv_data->handle =3D
+> +					sas_device_pg0->DevHandle;
+>  			goto out;
+>  		}
+>  	}
+> @@ -6448,13 +6606,15 @@ _scsih_search_responding_sas_devices(struct M=
+PT3SAS_ADAPTER *ioc)
+>  		    MPI2_IOCSTATUS_MASK;
+>  		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
+>  			break;
+> -		handle =3D le16_to_cpu(sas_device_pg0.DevHandle);
+> +		handle =3D sas_device_pg0.DevHandle =3D
+> +				le16_to_cpu(sas_device_pg0.DevHandle);
+>  		device_info =3D le32_to_cpu(sas_device_pg0.DeviceInfo);
+>  		if (!(_scsih_is_end_device(device_info)))
+>  			continue;
+> -		_scsih_mark_responding_sas_device(ioc,
+> -		    le64_to_cpu(sas_device_pg0.SASAddress),
+> -		    le16_to_cpu(sas_device_pg0.Slot), handle);
+> +		sas_device_pg0.SASAddress =3D
+> +				le64_to_cpu(sas_device_pg0.SASAddress);
+> +		sas_device_pg0.Slot =3D le16_to_cpu(sas_device_pg0.Slot);
+> +		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
+>  	}
+> =20
+>   out:
 > --=20
 > 2.0.2
->
+>=20
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
@@ -239,6 +480,3 @@ jthumshirn@suse.de                             +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
