@@ -1,36 +1,29 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: Merging se_dev_entry and se_lun?
-Date: Fri, 19 Jun 2015 15:21:27 +0200
-Message-ID: <55841757.1090904@suse.de>
-References: <5583B957.20200@suse.de> <20150619065624.GA3601@infradead.org>
+Date: Fri, 19 Jun 2015 06:58:01 -0700
+Message-ID: <20150619135801.GA20951@infradead.org>
+References: <5583B957.20200@suse.de>
+ <20150619065624.GA3601@infradead.org>
+ <55841757.1090904@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150619065624.GA3601@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:36579 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879AbbFSN6D (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 19 Jun 2015 09:58:03 -0400
+Content-Disposition: inline
+In-Reply-To: <55841757.1090904@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
-On 06/19/2015 08:56 AM, Christoph Hellwig wrote:
-> On Fri, Jun 19, 2015 at 08:40:23AM +0200, Hannes Reinecke wrote:
->> Having a list here implies that 'se_lun' can have _several_
->> se_dev_entry structure attached to it, which I found rather curious.
->>
->> Can you give me an example where this might be the case?
->> Or can we replace the list with a simple pointer or even merge both?
->=20
-> Each initiator has it's own dev entry.
->=20
-But isn't 'se_lun' per initiator, too?
+On Fri, Jun 19, 2015 at 03:21:27PM +0200, Hannes Reinecke wrote:
+> > Each initiator has it's own dev entry.
+> > 
+> But isn't 'se_lun' per initiator, too?
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+No.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
