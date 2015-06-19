@@ -1,45 +1,34 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 8/8] target: display 'write_protect' attribute for demo-mode
- LUNs
-Date: Fri, 19 Jun 2015 09:05:58 +0200
-Message-ID: <5583BF56.6090708@suse.de>
-References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-9-git-send-email-hare@suse.de> <20150619065143.GD1183@lst.de>
+Subject: Re: [PATCH 7/8] target_core_alua: disallow READ_CAPACITY when in
+ standby
+Date: Fri, 19 Jun 2015 09:07:47 +0200
+Message-ID: <5583BFC3.4020207@suse.de>
+References: <1434620622-65391-1-git-send-email-hare@suse.de> <1434620622-65391-8-git-send-email-hare@suse.de> <20150619064951.GC1183@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51905 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51960 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751484AbbFSHGA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2015 03:06:00 -0400
-In-Reply-To: <20150619065143.GD1183@lst.de>
+	id S1751380AbbFSHHt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 03:07:49 -0400
+In-Reply-To: <20150619064951.GC1183@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-On 06/19/2015 08:51 AM, Christoph Hellwig wrote:
-> On Thu, Jun 18, 2015 at 11:43:42AM +0200, Hannes Reinecke wrote:
->> When LUNs are mapped with a demo-mode initiator we're missing
->> the 'write_protect' attribute to set a LUN read-only.
+On 06/19/2015 08:49 AM, Christoph Hellwig wrote:
+> On Thu, Jun 18, 2015 at 11:43:41AM +0200, Hannes Reinecke wrote:
+>> Strictly speaking SPC doesn't require READ CAPACITY and friends
+>> to be supported while in the port is in standby.
 >=20
-> I don't think it's a good idea as-is.  The target core clearly
-> differenciates between demo mode and production mode read only, and s=
-ome
-> drivers already expose attributes for these.
+> But it does allow it.  We should always aim to implement the best
+> possible behavior instead of aiming for the worst.
 >=20
-> I have a big series in progress to clean the mess around this area
-> up.  So for now please don't add anything here, it should become much
-> simpler after my changes, and I might be able to incorporate somethin=
-g
-> like this after the main series.
->=20
-I've done this particular patch to simulate write-protected LUNs via
-tcm_loop. As the hooks already had been there I thought this to be
-the 'cleanest' approach.
-
-Of course, if you have other suggestions on how this should be
-achieved I'm happy to try this.
+Right. As mentioned in my other mail this patch was primarily to
+fixup READ CAPACITY issues in the linux kernel.
+I'll be updating the patch to make it optional.
 
 Cheers,
 
