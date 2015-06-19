@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 12/20] [SCSI] mpt3sas: Bump mpt3sas driver version to v6.100.00.00
-Date: Fri, 19 Jun 2015 16:35:28 -0400
-Message-ID: <yq11th7bfn3.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 13/20] [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6) specifications
+Date: Fri, 19 Jun 2015 16:36:42 -0400
+Message-ID: <yq1wpyza10l.fsf@sermon.lab.mkp.net>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<1434102153-38581-13-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1434102153-38581-14-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17994 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480AbbFSUgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2015 16:36:00 -0400
-In-Reply-To: <1434102153-38581-13-git-send-email-Sreekanth.Reddy@avagotech.com>
-	(Sreekanth Reddy's message of "Fri, 12 Jun 2015 15:12:24 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1434102153-38581-14-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Fri, 12 Jun 2015 15:12:25 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 >>>>> Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-> Bump mpt3sas driver version to v6.100.00.00.
+> Below are the new changes to MPI 2.5 Rev K(2.5.6) specification and
+> 2.00.35 header files 1) Added a minimum size requirement for target
+> mode command buffers.  2) Added MinMSIxIndex and MaxMSIxIndex fields
+> to CommandBufferPostBase Request.  3) For BIOS Page 1, added
+> SSUTimeout field, and added Product Name String Format bits to the
+> BiosOptions field
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
