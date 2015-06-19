@@ -1,70 +1,70 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature
- to extend up-to 96 MSIX vector support
-Date: Fri, 19 Jun 2015 11:14:43 +0200
-Message-ID: <20150619091443.GB7462@c203.arch.suse.de>
+Subject: Re: [PATCH 06/20] [SCSI] mpt3sas: Provides the physical location of
+ sas drives
+Date: Fri, 19 Jun 2015 11:19:46 +0200
+Message-ID: <20150619091946.GC7462@c203.arch.suse.de>
 References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <1434102153-38581-2-git-send-email-Sreekanth.Reddy@avagotech.com>
- <20150612110915.GB2812@c203.arch.suse.de>
- <CAK=zhgqDYpNQvUVmjMDxhVrGWBw6zzidewPg3fe1cUSdpRnjqw@mail.gmail.com>
- <CAK=zhgpqRNE00ygoC3J-QKJwUPeYW=2j0TAcz4Q0t3ie7uSfOw@mail.gmail.com>
+ <1434102153-38581-7-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36187 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:36799 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754465AbbFSJOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2015 05:14:47 -0400
+	id S1754654AbbFSJTt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 05:19:49 -0400
 Content-Disposition: inline
-In-Reply-To: <CAK=zhgpqRNE00ygoC3J-QKJwUPeYW=2j0TAcz4Q0t3ie7uSfOw@mail.gmail.com>
+In-Reply-To: <1434102153-38581-7-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 
-On Thu, Jun 18, 2015 at 03:27:26PM +0530, Sreekanth Reddy wrote:
-> Hi,
+On Fri, Jun 12, 2015 at 03:12:18PM +0530, Sreekanth Reddy wrote:
+> This Patch will provide more details of the devices such as slot numb=
+er, enclosure logical id, enclosure level & connector name in the follo=
+wing scenarios,
 >=20
-> Any other review comments on this patch. please let us known if any
-> changes are required.
+> - When end device is added in the topology,
+> - When the end device is removed from the setup,
+> - When the SCSI mid layer issues TASK ABORT/ DEVICE RESET/ TARGET RES=
+ET during error handling,
+> - When any command to the device fails with Sense key Hardware error =
+or Medium error or Unit Attention,
+> - When firmware returns device error or device not ready status for t=
+he end device,
+> - When a Predicted fault is detected on an end device.
 >=20
-> Thanks,
-> Sreekanth
+> This information can be used by the user to identify the location of =
+the desired drive in the topology.
 >=20
+> Driver will get these information by reading the sas device page0.
+>=20
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 238 +++++++++++++++++++++++++=
+++++------
+>  2 files changed, 201 insertions(+), 39 deletions(-)
+>=20
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
+as/mpt3sas_base.h
+> index b79ad4f..293ad23 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -317,6 +317,8 @@ struct _sas_device {
+>  	u8	fast_path;
+>  	u8	pfa_led_on;
+>  	u8	pend_sas_rphy_add;
+> +	u8   enclosure_level;
+> +	u8   connector_name[4];
 
-Have you sent a follow up on this I may have missed?
+Minor nit of different indent here, don't know if it is worth re-sendin=
+g?
 
-> On Fri, Jun 12, 2015 at 4:46 PM, Sreekanth Reddy
-> <sreekanth.reddy@avagotech.com> wrote:
-> > Thanks Johannes, we will take care of this point in our current
-> > on-development mpt2sas/mpt3sas merging activity.
-> >>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/m=
-pt3sas/mpt3sas_base.c
+Other than that:
 
-[...]
-
-> >>> index 14a781b..c13a365 100644
-> >>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >>> @@ -83,7 +83,7 @@ static int msix_disable =3D -1;
-> >>>  module_param(msix_disable, int, 0);
-> >>>  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts =
-(default=3D0)");
-> >>>
-> >>> -static int max_msix_vectors =3D 8;
-> >>> +static int max_msix_vectors =3D -1;
-> >>>  module_param(max_msix_vectors, int, 0);
-> >>>  MODULE_PARM_DESC(max_msix_vectors,
-> >>>       " max msix vectors - (default=3D8)");
-                                 ^^^^^^^^^^^
-> >>
-> >> When changing the default value, please also update the descriptio=
-n reflecting
-> >> this change.
-> >>
-
-Thanks
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 --=20
 Johannes Thumshirn                                       Storage
