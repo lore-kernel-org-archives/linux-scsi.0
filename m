@@ -1,64 +1,46 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH resend] mpt2sas: setpci reset kernel panic fix
-Date: Fri, 19 Jun 2015 13:39:11 +0200
-Message-ID: <20150619113911.GD10784@c203.arch.suse.de>
-References: <20150619111644.GA25830@nagalsi.ban.indi.seagate.com>
- <20150619111512.GA12992@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/6] target: Send UA on ALUA target port group change
+Date: Fri, 19 Jun 2015 15:05:19 +0200
+Message-ID: <20150619130519.GA7783@lst.de>
+References: <1434009689-112909-1-git-send-email-hare@suse.de> <1434009689-112909-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43561 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:60723 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750707AbbFSLjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2015 07:39:14 -0400
+	id S1751779AbbFSNFV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 09:05:21 -0400
 Content-Disposition: inline
-In-Reply-To: <20150619111512.GA12992@infradead.org>
+In-Reply-To: <1434009689-112909-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Fri, Jun 19, 2015 at 04:15:12AM -0700, Christoph Hellwig wrote:
-> > @@ -79,7 +79,8 @@ static int _scsih_scan_finished(struct Scsi_Host =
-*shost, unsigned long time);
-> > =20
-> >  /* global parameters */
-> >  LIST_HEAD(mpt2sas_ioc_list);
-> > -
-> > +/* global ioc lock for list operations */
-> > +spinlock_t gioc_lock;
-> >  /* local parameters */
-> >  static u8 scsi_io_cb_idx =3D -1;
-> >  static u8 tm_cb_idx =3D -1;
-> > @@ -279,6 +280,20 @@ static struct pci_device_id scsih_pci_table[] =
-=3D {
-> >  MODULE_DEVICE_TABLE(pci, scsih_pci_table);
-> > =20
-> >  /**
-> > + * mpt2sas_initialize_gioc_lock - initialize the gobal ioc lock
-> > + */
-> > +void
-> > +mpt2sas_initialize_gioc_lock(void)
-> > +{
-> > +	static int gioc_lock_initialize;
-> > +
-> > +	if (!gioc_lock_initialize) {
-> > +		spin_lock_init(&gioc_lock);
-> > +		gioc_lock_initialize =3D 1;
-> > +	}
-> > +}
->=20
-> Just use DEFINE_SPINLOCK() to initialize the lock at compile time.
+> --- a/drivers/target/target_core_alua.c
+> +++ b/drivers/target/target_core_alua.c
+> @@ -1880,12 +1880,19 @@ static void core_alua_put_tg_pt_gp_from_name(
+>  static void __target_attach_tg_pt_gp(struct se_lun *lun,
+>  		struct t10_alua_tg_pt_gp *tg_pt_gp)
+>  {
+> +	struct se_dev_entry *se_deve;
+> +
+>  	assert_spin_locked(&lun->lun_tg_pt_gp_lock);
+>  
+>  	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+>  	lun->lun_tg_pt_gp = tg_pt_gp;
+>  	list_add_tail(&lun->lun_tg_pt_gp_link, &tg_pt_gp->tg_pt_gp_lun_list);
+>  	tg_pt_gp->tg_pt_gp_members++;
+> +	spin_lock_bh(&lun->lun_deve_lock);
+> +	list_for_each_entry(se_deve, &lun->lun_deve_list, lun_link)
+> +		core_scsi3_ua_allocate(se_deve, 0x3f,
+> +				       ASCQ_3FH_INQUIRY_DATA_HAS_CHANGED);
+> +	spin_unlock_bh(&lun->lun_deve_lock);
+>  	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
 
-Or yes, even better.
+Taking a _bh lock inside a regular spinlock is completely broken.
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Fortunately I don't think lun_deve_lock needs to disable bottom halves,
+but this needs to be fixed first.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
