@@ -1,482 +1,376 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v1 06/20] [SCSI] mpt3sas: Provides the physical location
- of sas drives
-Date: Fri, 19 Jun 2015 13:04:34 +0200
-Message-ID: <20150619110434.GB10784@c203.arch.suse.de>
-References: <1434711391-10016-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+Subject: [PATCH resend] mpt2sas: setpci reset kernel panic fix
+Date: Fri, 19 Jun 2015 16:46:44 +0530
+Message-ID: <20150619111644.GA25830@nagalsi.ban.indi.seagate.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-00003501.pphosted.com ([67.231.144.15]:30335 "EHLO
+	mx0a-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750857AbbFSLMQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 07:12:16 -0400
+Received: from pps.filterd (m0075551.ppops.net [127.0.0.1])
+	by mx0a-00003501.pphosted.com (8.14.5/8.14.5) with SMTP id t5JB8eCS016516
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2015 07:12:15 -0400
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-00003501.pphosted.com with ESMTP id 1v4hdg86m0-1
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2015 07:12:15 -0400
+Received: from m0075551.ppops.net (m0075551.ppops.net [127.0.0.1])
+	by pps.reinject (8.14.5/8.14.5) with SMTP id t5JB98jg016939
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2015 07:12:14 -0400
 Content-Disposition: inline
-In-Reply-To: <1434711391-10016-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: nagarajkumar.narayanan@seagate.com
 
-On Fri, Jun 19, 2015 at 04:26:31PM +0530, Sreekanth Reddy wrote:
-> This Patch will provide more details of the devices such as slot numb=
-er, enclosure logical id, enclosure level & connector name in the follo=
-wing scenarios,
->=20
-> - When end device is added in the topology,
-> - When the end device is removed from the setup,
-> - When the SCSI mid layer issues TASK ABORT/ DEVICE RESET/ TARGET RES=
-ET during error handling,
-> - When any command to the device fails with Sense key Hardware error =
-or Medium error or Unit Attention,
-> - When firmware returns device error or device not ready status for t=
-he end device,
-> - When a Predicted fault is detected on an end device.
->=20
-> This information can be used by the user to identify the location of =
-the desired drive in the topology.
->=20
-> Driver will get these information by reading the sas device page0.
->=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 238 +++++++++++++++++++++++++=
-++++------
->  2 files changed, 201 insertions(+), 39 deletions(-)
->=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3s=
-as/mpt3sas_base.h
-> index b79ad4f..fc694f1 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -317,6 +317,8 @@ struct _sas_device {
->  	u8	fast_path;
->  	u8	pfa_led_on;
->  	u8	pend_sas_rphy_add;
-> +	u8	enclosure_level;
-> +	u8	connector_name[4];
->  };
-> =20
->  /**
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
-sas/mpt3sas_scsih.c
-> index d457dba..64dd90b 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -585,6 +585,22 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER =
-*ioc,
-> =20
->  	if (!sas_device)
->  		return;
-> +	pr_info(MPT3SAS_FMT
-> +	    "removing handle(0x%04x), sas_addr(0x%016llx)\n",
-> +	    ioc->name, sas_device->handle,
-> +	    (unsigned long long) sas_device->sas_address);
-> +
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		pr_info(MPT3SAS_FMT
-> +		   "removing enclosure logical id(0x%016llx), slot(%d)\n",
-> +		   ioc->name, (unsigned long long)
-> +		   sas_device->enclosure_logical_id, sas_device->slot);
-> +
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		pr_info(MPT3SAS_FMT
-> +		   "removing enclosure level(0x%04x), connector name( %s)\n",
-> +		   ioc->name, sas_device->enclosure_level,
-> +		   sas_device->connector_name);
-> =20
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_del(&sas_device->list);
-> @@ -663,6 +679,18 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *io=
-c,
->  		ioc->name, __func__, sas_device->handle,
->  		(unsigned long long)sas_device->sas_address));
-> =20
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
-> +		    ioc->name, __func__, (unsigned long long)
-> +		    sas_device->enclosure_logical_id, sas_device->slot));
-> +
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: enclosure level(0x%04x), connector name( %s)\n",
-> +		    ioc->name, __func__,
-> +		    sas_device->enclosure_level, sas_device->connector_name));
-> +
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_add_tail(&sas_device->list, &ioc->sas_device_list);
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> @@ -704,6 +732,18 @@ _scsih_sas_device_init_add(struct MPT3SAS_ADAPTE=
-R *ioc,
->  		__func__, sas_device->handle,
->  		(unsigned long long)sas_device->sas_address));
-> =20
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
-> +		    ioc->name, __func__, (unsigned long long)
-> +		    sas_device->enclosure_logical_id, sas_device->slot));
-> +
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: enclosure level(0x%04x), connector name( %s)\n",
-> +		    ioc->name, __func__, sas_device->enclosure_level,
-> +		    sas_device->connector_name));
-> +
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
->  	_scsih_determine_boot_device(ioc, sas_device, 0);
-> @@ -1772,10 +1812,16 @@ _scsih_slave_configure(struct scsi_device *sd=
-ev)
->  	    "sas_addr(0x%016llx), phy(%d), device_name(0x%016llx)\n",
->  	    ds, handle, (unsigned long long)sas_device->sas_address,
->  	    sas_device->phy, (unsigned long long)sas_device->device_name);
-> -	sdev_printk(KERN_INFO, sdev,
-> -		"%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
-> -		ds, (unsigned long long)
-> -	    sas_device->enclosure_logical_id, sas_device->slot);
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		sdev_printk(KERN_INFO, sdev,
-> +		     "%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
-> +		     ds, (unsigned long long)
-> +		     sas_device->enclosure_logical_id, sas_device->slot);
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		sdev_printk(KERN_INFO, sdev,
-> +		     "%s: enclosure level(0x%04x), connector name( %s)\n",
-> +		     ds, sas_device->enclosure_level,
-> +		     sas_device->connector_name);
-> =20
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> =20
-> @@ -2189,10 +2235,17 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER=
- *ioc, struct scsi_cmnd *scmd)
->  			    sas_device->handle,
->  			    (unsigned long long)sas_device->sas_address,
->  			    sas_device->phy);
-> -			starget_printk(KERN_INFO, starget,
-> -			    "enclosure_logical_id(0x%016llx), slot(%d)\n",
-> -			   (unsigned long long)sas_device->enclosure_logical_id,
-> -			    sas_device->slot);
-> +			if (sas_device->enclosure_handle !=3D 0)
-> +				starget_printk(KERN_INFO, starget,
-> +				 "enclosure_logical_id(0x%016llx), slot(%d)\n",
-> +				 (unsigned long long)
-> +				 sas_device->enclosure_logical_id,
-> +				 sas_device->slot);
-> +			if (sas_device->connector_name)
-> +				starget_printk(KERN_INFO, starget,
-> +				"enclosure level(0x%04x),connector name(%s)\n",
-> +				 sas_device->enclosure_level,
-> +				 sas_device->connector_name);
->  		}
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	}
-> @@ -2813,6 +2866,18 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc,=
- u16 handle)
->  			"setting delete flag: handle(0x%04x), sas_addr(0x%016llx)\n",
->  			ioc->name, handle,
->  		    (unsigned long long)sas_address));
-> +		if (sas_device->enclosure_handle !=3D 0)
-> +			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +			 "setting delete flag:enclosure logical id(0x%016llx),"
-> +			 " slot(%d)\n", ioc->name, (unsigned long long)
-> +			  sas_device->enclosure_logical_id,
-> +			  sas_device->slot));
-> +		if (sas_device->connector_name)
-> +			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +			 "setting delete flag: enclosure level(0x%04x),"
-> +			 " connector name( %s)\n", ioc->name,
-> +			  sas_device->enclosure_level,
-> +			  sas_device->connector_name));
->  		_scsih_ublock_io_device(ioc, sas_address);
->  		sas_target_priv_data->handle =3D MPT3SAS_INVALID_DEVICE_HANDLE;
->  	}
-> @@ -3828,10 +3893,19 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *=
-ioc, struct scsi_cmnd *scmd,
->  				"\tsas_address(0x%016llx), phy(%d)\n",
->  				ioc->name, (unsigned long long)
->  			    sas_device->sas_address, sas_device->phy);
-> -			pr_warn(MPT3SAS_FMT
-> -			    "\tenclosure_logical_id(0x%016llx), slot(%d)\n",
-> -			    ioc->name, (unsigned long long)
-> -			    sas_device->enclosure_logical_id, sas_device->slot);
-> +			if (sas_device->enclosure_handle !=3D 0)
-> +				pr_warn(MPT3SAS_FMT
-> +				  "\tenclosure_logical_id(0x%016llx),"
-> +				  "slot(%d)\n", ioc->name,
-> +				  (unsigned long long)
-> +				  sas_device->enclosure_logical_id,
-> +				  sas_device->slot);
-> +			if (sas_device->connector_name[0])
-> +				pr_warn(MPT3SAS_FMT
-> +				  "\tenclosure level(0x%04x),"
-> +				  " connector name( %s)\n", ioc->name,
-> +				  sas_device->enclosure_level,
-> +				  sas_device->connector_name);
->  		}
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  	}
-> @@ -4006,7 +4080,16 @@ _scsih_smart_predicted_fault(struct MPT3SAS_AD=
-APTER *ioc, u16 handle)
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
->  		return;
->  	}
-> -	starget_printk(KERN_WARNING, starget, "predicted fault\n");
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		starget_printk(KERN_INFO, starget, "predicted fault, "
-> +			"enclosure logical id(0x%016llx), slot(%d)\n",
-> +			(unsigned long long)sas_device->enclosure_logical_id,
-> +			sas_device->slot);
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		starget_printk(KERN_WARNING, starget, "predicted fault, "
-> +			"enclosure level(0x%04x), connector name( %s)\n",
-> +			sas_device->enclosure_level,
-> +			sas_device->connector_name);
->  	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> =20
->  	if (ioc->pdev->subsystem_vendor =3D=3D PCI_VENDOR_ID_IBM)
-> @@ -4126,8 +4209,13 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u1=
-6 smid, u8 msix_index, u32 reply)
->  			_scsih_smart_predicted_fault(ioc,
->  			    le16_to_cpu(mpi_reply->DevHandle));
->  		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
-> -	}
-> =20
-> +		if (!(ioc->logging_level & MPT_DEBUG_REPLY) &&
-> +		     ((scmd->sense_buffer[2] =3D=3D UNIT_ATTENTION) ||
-> +		     (scmd->sense_buffer[2] =3D=3D MEDIUM_ERROR) ||
-> +		     (scmd->sense_buffer[2] =3D=3D HARDWARE_ERROR)))
-> +			_scsih_scsi_ioc_info(ioc, scmd, mpi_reply, smid);
-> +		}
->  	switch (ioc_status) {
->  	case MPI2_IOCSTATUS_BUSY:
->  	case MPI2_IOCSTATUS_INSUFFICIENT_RESOURCES:
-> @@ -4795,6 +4883,16 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *io=
-c,
->  			sas_device->handle, handle);
->  		sas_target_priv_data->handle =3D handle;
->  		sas_device->handle =3D handle;
-> +		if (sas_device_pg0.Flags &
-> +		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-> +			sas_device->enclosure_level =3D
-> +				le16_to_cpu(sas_device_pg0.EnclosureLevel);
-> +			memcpy(&sas_device->connector_name[0],
-> +				&sas_device_pg0.ConnectorName[0], 4);
-> +		} else {
-> +			sas_device->enclosure_level =3D 0;
-> +			sas_device->connector_name[0] =3D '\0';
-> +		}
->  	}
-> =20
->  	/* check if device is present */
-> @@ -4901,14 +4999,24 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc=
-, u16 handle, u8 phy_num,
->  		    ioc->name, __FILE__, __LINE__, __func__);
->  	sas_device->enclosure_handle =3D
->  	    le16_to_cpu(sas_device_pg0.EnclosureHandle);
-> -	sas_device->slot =3D
-> -	    le16_to_cpu(sas_device_pg0.Slot);
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		sas_device->slot =3D
-> +		    le16_to_cpu(sas_device_pg0.Slot);
->  	sas_device->device_info =3D device_info;
->  	sas_device->sas_address =3D sas_address;
->  	sas_device->phy =3D sas_device_pg0.PhyNum;
->  	sas_device->fast_path =3D (le16_to_cpu(sas_device_pg0.Flags) &
->  	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
-> =20
-> +	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID)=
+Issue Descrition: 
+Lack of syncrhonization between  ioctl, BRM status access, PCI resource handling results in kernel oops
+please refer bugzilla ID: 95101
+
+Patch Descrition:
+
+To provide syncrhonization locks were introduced
+
+1. pci_access_mutex: mutex to sycnronize ioctl, sysfs show path and pci resource handling
+
+
+2. gioc_lock : global spin lock over mulitple warp drive controllers to protect list operations on ioc(controller) list
+
+
+>From ba692140278e6e2b660896c32206b26dac98d215 Mon Sep 17 00:00:00 2001
+From: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+Date: Thu, 19 Mar 2015 12:02:07 +0530
+Subject: [PATCH] mpt2sas setpci kernel oops fix
+
+Signed-off-by: Nagarajkumar Narayanan <nagarajkumar.narayanan@seagate.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |   10 +++++++
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |   20 +++++++++++++-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c   |   48 +++++++++++++++++++++++++++++----
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   32 ++++++++++++++++++++++-
+ 4 files changed, 102 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 11248de..d2a498c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -108,13 +108,18 @@ _scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
  {
-> +		sas_device->enclosure_level =3D
-> +			le16_to_cpu(sas_device_pg0.EnclosureLevel);
-> +		memcpy(&sas_device->connector_name[0],
-> +			&sas_device_pg0.ConnectorName[0], 4);
-> +	} else {
-> +		sas_device->enclosure_level =3D 0;
-> +		sas_device->connector_name[0] =3D '\0';
-> +	}
->  	/* get enclosure_logical_id */
->  	if (sas_device->enclosure_handle && !(mpt3sas_config_get_enclosure_=
-pg0(
->  	   ioc, &mpi_reply, &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDL=
-E,
-> @@ -4950,6 +5058,18 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *i=
-oc,
->  		ioc->name, __func__,
->  	    sas_device->handle, (unsigned long long)
->  	    sas_device->sas_address));
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: enter: enclosure logical id(0x%016llx), slot(%d)\n",
-> +		    ioc->name, __func__,
-> +		    (unsigned long long)sas_device->enclosure_logical_id,
-> +		    sas_device->slot));
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		  "%s: enter: enclosure level(0x%04x), connector name( %s)\n",
-> +		  ioc->name, __func__,
-> +		  sas_device->enclosure_level,
-> +		  sas_device->connector_name));
-> =20
->  	if (sas_device->starget && sas_device->starget->hostdata) {
->  		sas_target_priv_data =3D sas_device->starget->hostdata;
-> @@ -4966,12 +5086,34 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *=
-ioc,
->  		"removing handle(0x%04x), sas_addr(0x%016llx)\n",
->  		ioc->name, sas_device->handle,
->  	    (unsigned long long) sas_device->sas_address);
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		pr_info(MPT3SAS_FMT
-> +		  "removing : enclosure logical id(0x%016llx), slot(%d)\n",
-> +		  ioc->name,
-> +		  (unsigned long long)sas_device->enclosure_logical_id,
-> +		  sas_device->slot);
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		pr_info(MPT3SAS_FMT
-> +		  "removing enclosure level(0x%04x), connector name( %s)\n",
-> +		  ioc->name, sas_device->enclosure_level,
-> +		  sas_device->connector_name);
-> =20
->  	dewtprintk(ioc, pr_info(MPT3SAS_FMT
->  		"%s: exit: handle(0x%04x), sas_addr(0x%016llx)\n",
->  		ioc->name, __func__,
-> -	    sas_device->handle, (unsigned long long)
-> -	    sas_device->sas_address));
-> +		sas_device->handle, (unsigned long long)
-> +		sas_device->sas_address));
-> +	if (sas_device->enclosure_handle !=3D 0)
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: exit: enclosure logical id(0x%016llx), slot(%d)\n",
-> +		    ioc->name, __func__,
-> +		    (unsigned long long)sas_device->enclosure_logical_id,
-> +		    sas_device->slot));
-> +	if (sas_device->connector_name[0] !=3D '\0')
-> +		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-> +		    "%s: exit: enclosure level(0x%04x), connector name(%s)\n",
-> +		    ioc->name, __func__, sas_device->enclosure_level,
-> +		    sas_device->connector_name));
-> =20
->  	kfree(sas_device);
->  }
-> @@ -6364,9 +6506,7 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER =
-*ioc)
->  /**
->   * _scsih_mark_responding_sas_device - mark a sas_devices as respond=
-ing
->   * @ioc: per adapter object
-> - * @sas_address: sas address
-> - * @slot: enclosure slot id
-> - * @handle: device handle
-> + * @sas_device_pg0: SAS Device page 0
->   *
->   * After host reset, find out whether devices are still responding.
->   * Used in _scsih_remove_unresponsive_sas_devices.
-> @@ -6374,8 +6514,8 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER =
-*ioc)
->   * Return nothing.
->   */
->  static void
-> -_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc, u64 s=
-as_address,
-> -	u16 slot, u16 handle)
-> +_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc,
-> +Mpi2SasDevicePage0_t *sas_device_pg0)
->  {
->  	struct MPT3SAS_TARGET *sas_target_priv_data =3D NULL;
->  	struct scsi_target *starget;
-> @@ -6384,8 +6524,8 @@ _scsih_mark_responding_sas_device(struct MPT3SA=
-S_ADAPTER *ioc, u64 sas_address,
-> =20
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
->  	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
-> -		if (sas_device->sas_address =3D=3D sas_address &&
-> -		    sas_device->slot =3D=3D slot) {
-> +		if ((sas_device->sas_address =3D=3D sas_device_pg0->SASAddress) &&
-> +			(sas_device->slot =3D=3D sas_device_pg0->Slot)) {
->  			sas_device->responding =3D 1;
->  			starget =3D sas_device->starget;
->  			if (starget && starget->hostdata) {
-> @@ -6394,22 +6534,40 @@ _scsih_mark_responding_sas_device(struct MPT3=
-SAS_ADAPTER *ioc, u64 sas_address,
->  				sas_target_priv_data->deleted =3D 0;
->  			} else
->  				sas_target_priv_data =3D NULL;
-> -			if (starget)
-> +			if (starget) {
->  				starget_printk(KERN_INFO, starget,
-> -				    "handle(0x%04x), sas_addr(0x%016llx), "
-> -				    "enclosure logical id(0x%016llx), "
-> -				    "slot(%d)\n", handle,
-> -				    (unsigned long long)sas_device->sas_address,
-> +				    "handle(0x%04x), sas_addr(0x%016llx)\n",
-> +				    sas_device_pg0->DevHandle,
->  				    (unsigned long long)
-> -				    sas_device->enclosure_logical_id,
-> -				    sas_device->slot);
-> -			if (sas_device->handle =3D=3D handle)
-> +				    sas_device->sas_address);
-> +
-> +				if (sas_device->enclosure_handle !=3D 0)
-> +					starget_printk(KERN_INFO, starget,
-> +					 "enclosure logical id(0x%016llx),"
-> +					 " slot(%d)\n",
-> +					 (unsigned long long)
-> +					 sas_device->enclosure_logical_id,
-> +					 sas_device->slot);
-> +			}
-> +			if (sas_device_pg0->Flags &
-> +			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-> +				sas_device->enclosure_level =3D
-> +				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
-> +				memcpy(&sas_device->connector_name[0],
-> +					&sas_device_pg0->ConnectorName[0], 4);
-> +			} else {
-> +				sas_device->enclosure_level =3D 0;
-> +				sas_device->connector_name[0] =3D '\0';
-> +			}
-> +
-> +			if (sas_device->handle =3D=3D sas_device_pg0->DevHandle)
->  				goto out;
->  			pr_info("\thandle changed from(0x%04x)!!!\n",
->  			    sas_device->handle);
-> -			sas_device->handle =3D handle;
-> +			sas_device->handle =3D sas_device_pg0->DevHandle;
->  			if (sas_target_priv_data)
-> -				sas_target_priv_data->handle =3D handle;
-> +				sas_target_priv_data->handle =3D
-> +					sas_device_pg0->DevHandle;
->  			goto out;
->  		}
->  	}
-> @@ -6448,13 +6606,15 @@ _scsih_search_responding_sas_devices(struct M=
-PT3SAS_ADAPTER *ioc)
->  		    MPI2_IOCSTATUS_MASK;
->  		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
->  			break;
-> -		handle =3D le16_to_cpu(sas_device_pg0.DevHandle);
-> +		handle =3D sas_device_pg0.DevHandle =3D
-> +				le16_to_cpu(sas_device_pg0.DevHandle);
->  		device_info =3D le32_to_cpu(sas_device_pg0.DeviceInfo);
->  		if (!(_scsih_is_end_device(device_info)))
->  			continue;
-> -		_scsih_mark_responding_sas_device(ioc,
-> -		    le64_to_cpu(sas_device_pg0.SASAddress),
-> -		    le16_to_cpu(sas_device_pg0.Slot), handle);
-> +		sas_device_pg0.SASAddress =3D
-> +				le64_to_cpu(sas_device_pg0.SASAddress);
-> +		sas_device_pg0.Slot =3D le16_to_cpu(sas_device_pg0.Slot);
-> +		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
->  	}
-> =20
->   out:
-> --=20
-> 2.0.2
->=20
+ 	int ret = param_set_int(val, kp);
+ 	struct MPT2SAS_ADAPTER *ioc;
++	unsigned long flags;
+ 
+ 	if (ret)
+ 		return ret;
+ 
++	/* global ioc spinlock to protect controller list on list operations */
++	mpt2sas_initialize_gioc_lock();
+ 	printk(KERN_INFO "setting fwfault_debug(%d)\n", mpt2sas_fwfault_debug);
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
+ 		ioc->fwfault_debug = mpt2sas_fwfault_debug;
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	return 0;
+ }
+ 
+@@ -4436,6 +4441,9 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	    __func__));
+ 
+ 	if (ioc->chip_phys && ioc->chip) {
++		/* synchronizing freeing resource with pci_access_mutex lock */
++		if (ioc->is_warpdrive)
++			mutex_lock(&ioc->pci_access_mutex);
+ 		_base_mask_interrupts(ioc);
+ 		ioc->shost_recovery = 1;
+ 		_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
+@@ -4454,6 +4462,8 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		pci_disable_pcie_error_reporting(pdev);
+ 		pci_disable_device(pdev);
+ 	}
++	if (ioc->is_warpdrive)
++		mutex_unlock(&ioc->pci_access_mutex);
+ 	return;
+ }
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index caff8d1..a0d26f0 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -799,6 +799,12 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct MPT2SAS_ADAPTER *ioc);
+  * @delayed_tr_list: target reset link list
+  * @delayed_tr_volume_list: volume target reset link list
+  * @@temp_sensors_count: flag to carry the number of temperature sensors
++ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
++ * pci resource handling. PCI resource freeing will lead to free
++ * vital hardware/memory resource, which might be in use by cli/sysfs
++ * path functions resulting in Null pointer reference followed by kernel
++ * crash. To avoid the above race condition we use mutex syncrhonization
++ * which ensures the syncrhonization between cli/sysfs_show path
+  */
+ struct MPT2SAS_ADAPTER {
+ 	struct list_head list;
+@@ -1015,6 +1021,7 @@ struct MPT2SAS_ADAPTER {
+ 	u8		mfg_pg10_hide_flag;
+ 	u8		hide_drives;
+ 
++	struct mutex pci_access_mutex;
+ };
+ 
+ typedef u8 (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+@@ -1023,6 +1030,17 @@ typedef u8 (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 
+ /* base shared API */
+ extern struct list_head mpt2sas_ioc_list;
++/* spinlock on list operations over IOCs
+++ * Case: when multiple warpdrive cards(IOCs) are in use
+++ * Each IOC will added to the ioc list stucture on initialization.
+++ * Watchdog threads run at regular intervals to check IOC for any
+++ * fault conditions which will trigger the dead_ioc thread to
+++ * deallocate pci resource, resulting deleting the IOC netry from list,
+++ * this deletion need to protected by spinlock to enusre that
+++ * ioc removal is syncrhonized, if not synchronized it might lead to
+++ * list_del corruption as the ioc list is traversed in cli path
+++ */
++extern spinlock_t gioc_lock;
+ void mpt2sas_base_start_watchdog(struct MPT2SAS_ADAPTER *ioc);
+ void mpt2sas_base_stop_watchdog(struct MPT2SAS_ADAPTER *ioc);
+ 
+@@ -1099,7 +1117,7 @@ struct _sas_device *mpt2sas_scsih_sas_device_find_by_sas_address(
+     struct MPT2SAS_ADAPTER *ioc, u64 sas_address);
+ 
+ void mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc);
+-
++void mpt2sas_initialize_gioc_lock(void);
+ void mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase);
+ 
+ /* config shared API */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 4e50960..5345368 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -427,13 +427,17 @@ static int
+ _ctl_verify_adapter(int ioc_number, struct MPT2SAS_ADAPTER **iocpp)
+ {
+ 	struct MPT2SAS_ADAPTER *ioc;
+-
++	unsigned long flags;
++	/* global ioc lock to protect controller on list operations */
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list) {
+ 		if (ioc->id != ioc_number)
+ 			continue;
++		spin_unlock_irqrestore(&gioc_lock, flags);
+ 		*iocpp = ioc;
+ 		return ioc_number;
+ 	}
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	*iocpp = NULL;
+ 	return -1;
+ }
+@@ -519,13 +523,19 @@ static unsigned int
+ _ctl_poll(struct file *filep, poll_table *wait)
+ {
+ 	struct MPT2SAS_ADAPTER *ioc;
++	unsigned long flags;
+ 
+ 	poll_wait(filep, &ctl_poll_wait, wait);
+ 
++	/* global ioc lock to protect controller on list operations */
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list) {
+-		if (ioc->aen_event_read_flag)
++		if (ioc->aen_event_read_flag) {
++			spin_unlock_irqrestore(&gioc_lock, flags);
+ 			return POLLIN | POLLRDNORM;
++		}
+ 	}
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	return 0;
+ }
+ 
+@@ -2168,15 +2178,30 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 
+ 	if (_ctl_verify_adapter(ioctl_header.ioc_number, &ioc) == -1 || !ioc)
+ 		return -ENODEV;
+-	if (ioc->shost_recovery || ioc->pci_error_recovery ||
+-	    ioc->is_driver_loading)
+-		return -EAGAIN;
++	if (!ioc->is_warpdrive) {
++		if (ioc->shost_recovery || ioc->pci_error_recovery ||
++			ioc->is_driver_loading)
++			return -EAGAIN;
++	} else {
++		/* pci_access_mutex lock acquired by ioctl path */
++		mutex_lock(&ioc->pci_access_mutex);
++		if (ioc->shost_recovery || ioc->pci_error_recovery ||
++			ioc->is_driver_loading || ioc->remove_host) {
++			mutex_unlock(&ioc->pci_access_mutex);
++			return -EAGAIN;
++		}
++	}
+ 
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+ 	if (state == NON_BLOCKING) {
+-		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex)) {
++			if (ioc->is_warpdrive)
++				mutex_unlock(&ioc->pci_access_mutex);
+ 			return -EAGAIN;
++		}
+ 	} else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex)) {
++		if (ioc->is_warpdrive)
++			mutex_unlock(&ioc->pci_access_mutex);
+ 		return -ERESTARTSYS;
+ 	}
+ 
+@@ -2258,6 +2283,8 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 	}
+ 
+ 	mutex_unlock(&ioc->ctl_cmds.mutex);
++	if (ioc->is_warpdrive)
++		mutex_unlock(&ioc->pci_access_mutex);
+ 	return ret;
+ }
+ 
+@@ -2710,6 +2737,13 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 		printk(MPT2SAS_ERR_FMT "%s: BRM attribute is only for"\
+ 		    "warpdrive\n", ioc->name, __func__);
+ 		goto out;
++	} else {
++		/* pci_access_mutex lock acquired by sysfs show path */
++		mutex_lock(&ioc->pci_access_mutex);
++		if (ioc->pci_error_recovery || ioc->remove_host) {
++			mutex_unlock(&ioc->pci_access_mutex);
++			return 0;
++		}
+ 	}
+ 
+ 	/* allocate upto GPIOVal 36 entries */
+@@ -2749,6 +2783,8 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 
+  out:
+ 	kfree(io_unit_pg3);
++	if (ioc->is_warpdrive)
++		mutex_unlock(&ioc->pci_access_mutex);
+ 	return rc;
+ }
+ static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 3f26147..ef20ed3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -79,7 +79,8 @@ static int _scsih_scan_finished(struct Scsi_Host *shost, unsigned long time);
+ 
+ /* global parameters */
+ LIST_HEAD(mpt2sas_ioc_list);
+-
++/* global ioc lock for list operations */
++spinlock_t gioc_lock;
+ /* local parameters */
+ static u8 scsi_io_cb_idx = -1;
+ static u8 tm_cb_idx = -1;
+@@ -279,6 +280,20 @@ static struct pci_device_id scsih_pci_table[] = {
+ MODULE_DEVICE_TABLE(pci, scsih_pci_table);
+ 
+ /**
++ * mpt2sas_initialize_gioc_lock - initialize the gobal ioc lock
++ */
++void
++mpt2sas_initialize_gioc_lock(void)
++{
++	static int gioc_lock_initialize;
++
++	if (!gioc_lock_initialize) {
++		spin_lock_init(&gioc_lock);
++		gioc_lock_initialize = 1;
++	}
++}
++
++/**
+  * _scsih_set_debug_level - global setting of ioc->logging_level.
+  *
+  * Note: The logging levels are defined in mpt2sas_debug.h.
+@@ -288,13 +303,17 @@ _scsih_set_debug_level(const char *val, struct kernel_param *kp)
+ {
+ 	int ret = param_set_int(val, kp);
+ 	struct MPT2SAS_ADAPTER *ioc;
++	unsigned long flags;
+ 
+ 	if (ret)
+ 		return ret;
+ 
++	mpt2sas_initialize_gioc_lock();
+ 	printk(KERN_INFO "setting logging_level(0x%08x)\n", logging_level);
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
+ 		ioc->logging_level = logging_level;
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	return 0;
+ }
+ module_param_call(logging_level, _scsih_set_debug_level, param_get_int,
+@@ -7867,7 +7886,9 @@ _scsih_remove(struct pci_dev *pdev)
+ 	sas_remove_host(shost);
+ 	scsi_remove_host(shost);
+ 	mpt2sas_base_detach(ioc);
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_del(&ioc->list);
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	scsi_host_put(shost);
+ }
+ 
+@@ -8132,6 +8153,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct MPT2SAS_ADAPTER *ioc;
+ 	struct Scsi_Host *shost;
+ 	int rv;
++	unsigned long flags;
+ 
+ 	shost = scsi_host_alloc(&scsih_driver_template,
+ 	    sizeof(struct MPT2SAS_ADAPTER));
+@@ -8142,7 +8164,9 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc = shost_priv(shost);
+ 	memset(ioc, 0, sizeof(struct MPT2SAS_ADAPTER));
+ 	INIT_LIST_HEAD(&ioc->list);
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_add_tail(&ioc->list, &mpt2sas_ioc_list);
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	ioc->shost = shost;
+ 	ioc->id = mpt_ids++;
+ 	sprintf(ioc->name, "%s%d", MPT2SAS_DRIVER_NAME, ioc->id);
+@@ -8167,6 +8191,9 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->schedule_dead_ioc_flush_running_cmds = &_scsih_flush_running_cmds;
+ 	/* misc semaphores and spin locks */
+ 	mutex_init(&ioc->reset_in_progress_mutex);
++	/* initializing pci_access_mutex lock */
++	if (ioc->is_warpdrive)
++		mutex_init(&ioc->pci_access_mutex);
+ 	spin_lock_init(&ioc->ioc_reset_in_progress_lock);
+ 	spin_lock_init(&ioc->scsi_lookup_lock);
+ 	spin_lock_init(&ioc->sas_device_lock);
+@@ -8269,7 +8296,9 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+  out_attach_fail:
+ 	destroy_workqueue(ioc->firmware_event_thread);
+  out_thread_fail:
++	spin_lock_irqsave(&gioc_lock, flags);
+ 	list_del(&ioc->list);
++	spin_unlock_irqrestore(&gioc_lock, flags);
+ 	scsi_host_put(shost);
+ 	return rv;
+ }
+@@ -8506,6 +8535,7 @@ _scsih_init(void)
+ 		return -ENODEV;
+ 	}
+ 
++	mpt2sas_initialize_gioc_lock();
+ 	mpt2sas_base_initialize_callback_handler();
+ 
+ 	 /* queuecommand callback hander */
+-- 
+1.7.1
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
