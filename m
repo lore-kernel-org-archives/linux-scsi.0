@@ -1,29 +1,96 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Merging se_dev_entry and se_lun?
-Date: Fri, 19 Jun 2015 06:58:01 -0700
-Message-ID: <20150619135801.GA20951@infradead.org>
-References: <5583B957.20200@suse.de>
- <20150619065624.GA3601@infradead.org>
- <55841757.1090904@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v1 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96 MSIX vector support
+Date: Fri, 19 Jun 2015 10:57:44 -0400
+Message-ID: <yq1vbejd9uf.fsf@sermon.lab.mkp.net>
+References: <1434711346-9970-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36579 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879AbbFSN6D (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 19 Jun 2015 09:58:03 -0400
-Content-Disposition: inline
-In-Reply-To: <55841757.1090904@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37455 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbbFSO6e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2015 10:58:34 -0400
+In-Reply-To: <1434711346-9970-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Fri, 19 Jun 2015 16:25:46 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, hch@infradead.org, jthumshirn@suse.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org
 
-On Fri, Jun 19, 2015 at 03:21:27PM +0200, Hannes Reinecke wrote:
-> > Each initiator has it's own dev entry.
-> > 
-> But isn't 'se_lun' per initiator, too?
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-No.
+Sreekanth,
+
+It's fine that you outline the 96 / 12 = 8 layout in the patch
+description. But that relationship is not made clear when reading the
+code. Please add a comment describing why things are set up this way.
+
+> @@ -1009,8 +1009,15 @@ _base_interrupt(int irq, void *bus_id)
+>  	}
+>  
+>  	wmb();
+> -	writel(reply_q->reply_post_host_index | (msix_index <<
+> -	    MPI2_RPHI_MSIX_INDEX_SHIFT), &ioc->chip->ReplyPostHostIndex);
+> +	if (ioc->msix96_vector) {
+> +		writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
+> +			MPI2_RPHI_MSIX_INDEX_SHIFT),
+> +				ioc->replyPostRegisterIndex[msix_index/8]);
+> +	} else {
+> +		writel(reply_q->reply_post_host_index | (msix_index <<
+> +			MPI2_RPHI_MSIX_INDEX_SHIFT),
+> +				&ioc->chip->ReplyPostHostIndex);
+> +	}
+
+Too many brackets. Why don't you do:
+
+	index = reply_q->reply_post_host_index |
+		((msix_index & 7) << MPI_RPHI_MSIX_INDEX_SHIFT);
+
+	if (ioc->msix96_vector)
+		writel(index, ioc->replyPostRegisterIndex[msix_index / 8]);
+	else
+        	writel(index, &ioc->chip->ReplyPostHostIndex);
+
+> +	if (ioc->msix96_vector && ioc->reply_queue_count > 8) {
+> +		/* If this is an 96 vector supported device,
+> +		set up ReplyPostIndex addresses */
+
+Bad comment formatting.
+
+> +		ioc->replyPostRegisterIndex = kcalloc(12,
+> +			sizeof(resource_size_t *), GFP_KERNEL);
+[...]
+> +		for (i = 0; i < 12; i++) {
+
+Make 12 a constant or at the very least a variable with a comment.
+
+> +			ioc->replyPostRegisterIndex[i] = (resource_size_t *)
+> +				((u8 *)&ioc->chip->Doorbell +
+> +				MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
+> +				(i * 0x10));
+
+0x10 - Another magic constant.
+
+> @@ -4522,8 +4554,16 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+>  
+>  	/* initialize reply post host index */
+>  	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+> -		writel(reply_q->msix_index << MPI2_RPHI_MSIX_INDEX_SHIFT,
+> -		    &ioc->chip->ReplyPostHostIndex);
+> +		if (ioc->msix96_vector) {
+> +			writel((reply_q->msix_index & 7)<<
+> +			   MPI2_RPHI_MSIX_INDEX_SHIFT,
+> +			   ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
+> +		} else {
+> +			writel(reply_q->msix_index <<
+> +				MPI2_RPHI_MSIX_INDEX_SHIFT,
+> +					&ioc->chip->ReplyPostHostIndex);
+> +		}
+> +
+
+Too many brackets.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
