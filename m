@@ -1,32 +1,79 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: hpsa static checker issues
-Date: Fri, 19 Jun 2015 10:46:08 +0300
-Message-ID: <20150619074608.GM28762@mwanda>
-References: <07F70BBF6832E34FA1C923241E8833AB486B33CF@BBYEXM01.pmc-sierra.internal>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature
+ to extend up-to 96 MSIX vector support
+Date: Fri, 19 Jun 2015 11:14:43 +0200
+Message-ID: <20150619091443.GB7462@c203.arch.suse.de>
+References: <1434102153-38581-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <1434102153-38581-2-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <20150612110915.GB2812@c203.arch.suse.de>
+ <CAK=zhgqDYpNQvUVmjMDxhVrGWBw6zzidewPg3fe1cUSdpRnjqw@mail.gmail.com>
+ <CAK=zhgpqRNE00ygoC3J-QKJwUPeYW=2j0TAcz4Q0t3ie7uSfOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36187 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754465AbbFSJOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jun 2015 05:14:47 -0400
 Content-Disposition: inline
-In-Reply-To: <07F70BBF6832E34FA1C923241E8833AB486B33CF@BBYEXM01.pmc-sierra.internal>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Don Brace <Don.Brace@pmcs.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+In-Reply-To: <CAK=zhgpqRNE00ygoC3J-QKJwUPeYW=2j0TAcz4Q0t3ie7uSfOw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 06:42:14PM +0000, Don Brace wrote:
-> Dan,
-> 
-> You had noted three concerns covering: mutex_unlock, decode sense data, and a goto label issue, that were detected during
-> your static checker run. 
-> 
-> I have patches that address these issues. 
-> 
-> I am thinking that I need to post these three patches linux-scsi.
-> 
-> Is that correct?
+On Thu, Jun 18, 2015 at 03:27:26PM +0530, Sreekanth Reddy wrote:
+> Hi,
+>=20
+> Any other review comments on this patch. please let us known if any
+> changes are required.
+>=20
+> Thanks,
+> Sreekanth
+>=20
 
-Yes.  That's right.
+Have you sent a follow up on this I may have missed?
 
-regards,
-dan carpenter
+> On Fri, Jun 12, 2015 at 4:46 PM, Sreekanth Reddy
+> <sreekanth.reddy@avagotech.com> wrote:
+> > Thanks Johannes, we will take care of this point in our current
+> > on-development mpt2sas/mpt3sas merging activity.
+> >>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/m=
+pt3sas/mpt3sas_base.c
 
+[...]
+
+> >>> index 14a781b..c13a365 100644
+> >>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> >>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> >>> @@ -83,7 +83,7 @@ static int msix_disable =3D -1;
+> >>>  module_param(msix_disable, int, 0);
+> >>>  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts =
+(default=3D0)");
+> >>>
+> >>> -static int max_msix_vectors =3D 8;
+> >>> +static int max_msix_vectors =3D -1;
+> >>>  module_param(max_msix_vectors, int, 0);
+> >>>  MODULE_PARM_DESC(max_msix_vectors,
+> >>>       " max msix vectors - (default=3D8)");
+                                 ^^^^^^^^^^^
+> >>
+> >> When changing the default value, please also update the descriptio=
+n reflecting
+> >> this change.
+> >>
+
+Thanks
+
+--=20
+Johannes Thumshirn                                       Storage
+jthumshirn@suse.de                             +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
