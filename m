@@ -1,51 +1,105 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/8] tcm_loop updates
-Date: Fri, 19 Jun 2015 09:13:27 +0200
-Message-ID: <5583C117.4030103@suse.de>
-References: <1434620622-65391-1-git-send-email-hare@suse.de> <20150619064855.GB1183@lst.de>
+From: "Seymour, Shane M" <shane.seymour@hp.com>
+Subject: RE: [patch] hpsa: fix an sprintf() overflow in the reset handler
+Date: Fri, 19 Jun 2015 07:13:47 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB3BFF5E58@G9W0766.americas.hpqcorp.net>
+References: <20150604144756.GA8897@mwanda>
+ <07F70BBF6832E34FA1C923241E8833AB486B305D@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52270 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751178AbbFSHN3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jun 2015 03:13:29 -0400
-In-Reply-To: <20150619064855.GB1183@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <07F70BBF6832E34FA1C923241E8833AB486B305D@BBYEXM01.pmc-sierra.internal>
+Content-Language: en-US
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Don Brace <Don.Brace@pmcs.com>, Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, ISS StorageDev <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-On 06/19/2015 08:48 AM, Christoph Hellwig wrote:
-> What's the benefit of the SAS transport class writeout?  I honestly
-> always saw tcm_loop as a simple loopback driver, with the different
-> transport IDs in the PR code as a gimmick.  Note that vhost and
-> xen-blkback copies that style and I did plan to consolidate it
-> in common code.
->=20
-The benefit is that tcm_loop will show up in the system as a 'real'
-SAS hba; long-term goal is to simulate SAS multipathing here.
-I was even planning on adding simlated FC infrastructure, too;
-with that we could simulate FC multipathing, too, and our QA would
-be _so_ happy...
+With a size of 48 while it won't overflow since you're using snprintf the string with a maximum value in %d:
 
-Again, these patches are mainly a collection of patches I've done to
-test various scenarios, in the hope others might find them useful,
-too. So I can easily hold off these patches until you've posted your
-rework.
+echo -n "cmd 2147483647 RESET FAILED, new lockup detected" |wc -c
+48
 
-Cheers,
+is 48 characters long without a null terminator on the string (and in the unlikely event that it's somehow a the largest possible negative value it would be 49 characters after including the minus sign without a null terminator). If you always want a complete message no matter what the value formatted as %d will be I believe it needs to have a length of 50. The worst that will happen now though because you're using snprintf is you'll drop the trailing "d" or "ed" in the message with very large positive or negative numbers.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+My somewhat sketchy memory of the hpsa driver is that the nr_cmds member of the struct ctlr_info is never more than 1040 (?) anyway. If things are working correctly I don't think it should ever happen but I thought I should point out that msg isn't large enough to contain the complete contents of the longest possible character string.
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Don Brace
+Sent: Thursday, June 18, 2015 11:36 PM
+To: Dan Carpenter
+Cc: James E.J. Bottomley; ISS StorageDev; dl Team ESD Storage Dev Support; linux-scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
+Subject: RE: [patch] hpsa: fix an sprintf() overflow in the reset handler
+
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Thursday, June 04, 2015 9:48 AM
+> To: Don Brace
+> Cc: James E.J. Bottomley; iss_storagedev@hp.com; dl Team ESD Storage 
+> Dev Support; linux-scsi@vger.kernel.org; 
+> kernel-janitors@vger.kernel.org
+> Subject: [patch] hpsa: fix an sprintf() overflow in the reset handler
+> 
+> The string "cmd %d RESET FAILED, new lockup detected" is not quite 
+> large enough so the sprintf() will overflow.  I have increased the 
+> size of the buffer and also changed the sprintf calls to snprintf.
+> 
+> Fixes: 73153fe533bc ('hpsa: use block layer tag for command 
+> allocation')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c index 
+> 1dafeb4..cab4e98 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -5104,7 +5104,7 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+>  	int rc;
+>  	struct ctlr_info *h;
+>  	struct hpsa_scsi_dev_t *dev;
+> -	char msg[40];
+> +	char msg[48];
+> 
+>  	/* find the controller to which the command to be aborted was sent */
+>  	h = sdev_to_hba(scsicmd->device);
+> @@ -5122,16 +5122,18 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+> 
+>  	/* if controller locked up, we can guarantee command won't complete 
+> */
+>  	if (lockup_detected(h)) {
+> -		sprintf(msg, "cmd %d RESET FAILED, lockup detected",
+> -				hpsa_get_cmd_index(scsicmd));
+> +		snprintf(msg, sizeof(msg),
+> +			 "cmd %d RESET FAILED, lockup detected",
+> +			 hpsa_get_cmd_index(scsicmd));
+>  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+>  		return FAILED;
+>  	}
+> 
+>  	/* this reset request might be the result of a lockup; check */
+>  	if (detect_controller_lockup(h)) {
+> -		sprintf(msg, "cmd %d RESET FAILED, new lockup detected",
+> -				hpsa_get_cmd_index(scsicmd));
+> +		snprintf(msg, sizeof(msg),
+> +			 "cmd %d RESET FAILED, new lockup detected",
+> +			 hpsa_get_cmd_index(scsicmd));
+>  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+>  		return FAILED;
+>  	}
+> @@ -5145,7 +5147,8 @@ static int hpsa_eh_device_reset_handler(struct
+> scsi_cmnd *scsicmd)
+>  	/* send a reset to the SCSI LUN which the command was sent to */
+>  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+>  			   DEFAULT_REPLY_QUEUE);
+> -	sprintf(msg, "reset %s", rc == 0 ? "completed successfully" : "failed");
+> +	snprintf(msg, sizeof(msg), "reset %s",
+> +		 rc == 0 ? "completed successfully" : "failed");
+>  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+>  	return rc == 0 ? SUCCESS : FAILED;
+>  }
+
+Signed-off-by: Don Brace <don.brace@pmcs.com>
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
