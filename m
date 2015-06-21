@@ -1,47 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.1
-Date: Sat, 20 Jun 2015 16:08:08 -0700
-Message-ID: <1434841688.7460.11.camel@haakon3.risingtidesystems.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: optimal io size / custom alignment
+Date: Sat, 20 Jun 2015 20:12:43 -0400
+Message-ID: <yq1k2ux9ax0.fsf@sermon.lab.mkp.net>
+References: <CAGnHSE=gtd2WVcxOBoyfqnp3QtT4RHfK356GHastBbiK5mtmFA@mail.gmail.com>
+	<20150615133154.GV1992@ws.net.home>
+	<CAGnHSEm6wDq_EjJXYwqV2Tt2868DbR0bNRYvevhN1AM4qJpaPw@mail.gmail.com>
+	<yq1zj3zfuna.fsf@sermon.lab.mkp.net>
+	<CAGnHSEkBXevNmrL7NFO=nKekZdZE6KtzjGvA8sM=onjUfd8KHQ@mail.gmail.com>
+	<yq1d20vfimj.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnMgivXU_0gDaOkHFkbc=Ve8PaPR0ho8+VhdcUuNu89Gw@mail.gmail.com>
+	<yq1a8vwenog.fsf@sermon.lab.mkp.net>
+	<CAGnHSE=DGa24TPox8wp4k264jnXjMOq7kzf-tCRf1eJt9kN0ZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54742 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbbFTXIU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Jun 2015 19:08:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAGnHSE=DGa24TPox8wp4k264jnXjMOq7kzf-tCRf1eJt9kN0ZQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+	(Tom Yan's message of "Sun, 21 Jun 2015 00:01:34 +0800")
+Sender: util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Karel Zak <kzak-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, util-linux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hi Linus,
+>>>>> "Tom" == Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
 
-Apologies for the late PULL request.
+Tom> I know they all use VPDs, but the main point is whether those
+Tom> hardware RAIDs or so are handled by sd_mod, and whether those
+Tom> "transfer lengths" info are still important when it's just a simple
+Tom> drive. To me they look like to be of different nature.
 
-Here are the outstanding target-pending fixes for v4.1 code.
+We don't know whether a discovered device is "a simple drive".
 
-Please pull from:
+And once again: The whole point of the queue limit is to have an common
+abstraction for all block devices.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-The series contains three patches from Sagi + Co that address a few
-iser-target issues that have been uncovered during recent testing at
-Mellanox.
-
-Patch #1 has a v3.16+ stable tag, and #2-3 have v3.10+ stable tags.
-
-Thank you,
-
---nab
-
-Sagi Grimberg (3):
-  iser-target: Fix variable-length response error completion
-  iser-target: release stale iser connections
-  iser-target: Fix possible use-after-free
-
- drivers/infiniband/ulp/isert/ib_isert.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe util-linux" in
