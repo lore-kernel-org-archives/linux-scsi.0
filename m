@@ -1,47 +1,28 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Tom Yan <tom.ty89@gmail.com>
 Subject: Re: configurable discard parameters
-Date: Sat, 20 Jun 2015 20:20:54 -0400
-Message-ID: <yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+Date: Sun, 21 Jun 2015 15:03:31 +0800
+Message-ID: <CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
 References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38324 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbFUAU6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Jun 2015 20:20:58 -0400
-In-Reply-To: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	(Tom Yan's message of "Sun, 21 Jun 2015 01:12:10 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+On 21 June 2015 at 08:20, Martin K. Petersen <martin.petersen@oracle.com> wrote:
+> It is a SATA-attached drive, it has no block limits VPD. What you are
+> seeing is information prepared by libata's SATL.
+>
+> Because if the vendor got these trivial values wrong there is little to
+> no chance that they implemented discard correctly in their firmware.
 
-Tom> Today I check if blkdiscard really does a full device trim/wipe for
-Tom> my Intel 530 SSD (240gb) with hexdump. I end up found that it fail
-Tom> to do so because it report garbage info on its block limits VPD.
-
-It is a SATA-attached drive, it has no block limits VPD. What you are
-seeing is information prepared by libata's SATL.
-
-Tom> The fact is, in each iteration, for this drive, blkdiscard can only
-Tom> trim a maximum of 65528 sectors, which is the largest multiple of 8
-Tom> sectors, which is the minimum possible.
-
-  Maximum write same length: 0x3fffc0 blocks
-
-That's 2GB-e per request for a drive with 512-byte logical blocks.
-
-Tom> but still I would like to know why the kernel doesn't allow
-Tom> "discard_granularity" and "discard_max_bytes" to be configurable
-Tom> for users.
-
-Because if the vendor got these trivial values wrong there is little to
-no chance that they implemented discard correctly in their firmware.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I don't get it. So there's a chance that the VPDs is not purely from
+the hardware? Then how can I differentiate them? But then you said
+"the vendor got these trivial values wrong", so were you talking about
+this drive or just for real SCSI drives?
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
