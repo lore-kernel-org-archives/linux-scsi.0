@@ -1,70 +1,49 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ipr: Fix incorrect trace indexing
-Date: Mon, 22 Jun 2015 17:33:50 -0500
-Message-ID: <201506222233.t5MMXpZR011546@d03av04.boulder.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PULL] SCSI updates for the 4.0+ merge window
+Date: Mon, 22 Jun 2015 16:03:59 -0700
+Message-ID: <1435014239.2237.173.camel@HansenPartnership.com>
+References: <1435008664.2237.144.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:48916 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbbFVWd4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2015 18:33:56 -0400
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Mon, 22 Jun 2015 16:33:56 -0600
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34002 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751989AbbFVXEB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Jun 2015 19:04:01 -0400
+In-Reply-To: <1435008664.2237.144.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, krisman@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, stable@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
+On Mon, 2015-06-22 at 14:31 -0700, James Bottomley wrote:
+> This is the usual grab bag of driver updates (lpfc, hpsa, megaraid_sas,
+> cxgbi, be2iscsi) plus an assortment of minor updates.  There are also
+> two new drivers: the Cisco snic and the IBM cxlflash; the advansys
+> driver has been rewritten to get rid of the warning about converting it
+> to the DMA API, the tape statistics patch got in and finally, there's a
+> resuffle of SCSI header files to separate more cleanly initiator from
+> target mode (and better share the common definitions).
+> 
+> The patch is available here:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-James,
+Hold off on this, please.  It looks like there's a powerpc regression
+with the cxl driver.  Since the cxl commits are the top two on the tree,
+I'm just going to drop them and resend the pull request starting from
+the existing commit:
 
-One more ipr patch to go on top of my previous series I sent. This one fixes
-a pretty nasty bug that can cause us to go writing in memory that is not ours.
+commit c8806b6c9e824f47726f2a9b7fbbe7ebf19306fa
+Author: Narsimhulu Musini <nmusini@cisco.com>
+Date:   Fri May 29 01:04:01 2015 -0700
 
-8<
+    snic: driver for Cisco SCSI HBA
 
-When ipr's internal driver trace was changed to an atomic, a signed/unsigned
-bug slipped in which results in us indexing backwards in our memory buffer
-writing on memory that does not below to us. This patch fixes this by removing
-the modulo and instead just mask off the low bits.
+James
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |    5 +++--
- drivers/scsi/ipr.h |    1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_trace_index_fix drivers/scsi/ipr.h
---- linux/drivers/scsi/ipr.h~ipr_trace_index_fix	2015-06-22 16:52:15.649018937 -0500
-+++ linux-bjking1/drivers/scsi/ipr.h	2015-06-22 16:52:31.895895037 -0500
-@@ -1487,6 +1487,7 @@ struct ipr_ioa_cfg {
- 
- #define IPR_NUM_TRACE_INDEX_BITS	8
- #define IPR_NUM_TRACE_ENTRIES		(1 << IPR_NUM_TRACE_INDEX_BITS)
-+#define IPR_TRACE_INDEX_MASK		(IPR_NUM_TRACE_ENTRIES - 1)
- #define IPR_TRACE_SIZE	(sizeof(struct ipr_trace_entry) * IPR_NUM_TRACE_ENTRIES)
- 	char trace_start[8];
- #define IPR_TRACE_START_LABEL			"trace"
-diff -puN drivers/scsi/ipr.c~ipr_trace_index_fix drivers/scsi/ipr.c
---- linux/drivers/scsi/ipr.c~ipr_trace_index_fix	2015-06-22 16:52:17.800002537 -0500
-+++ linux-bjking1/drivers/scsi/ipr.c	2015-06-22 16:53:17.327548285 -0500
-@@ -599,9 +599,10 @@ static void ipr_trc_hook(struct ipr_cmnd
- {
- 	struct ipr_trace_entry *trace_entry;
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+	unsigned int trace_index;
- 
--	trace_entry = &ioa_cfg->trace[atomic_add_return
--			(1, &ioa_cfg->trace_index)%IPR_NUM_TRACE_ENTRIES];
-+	trace_index = atomic_add_return(1, &ioa_cfg->trace_index) & IPR_TRACE_INDEX_MASK;
-+	trace_entry = &ioa_cfg->trace[trace_index];
- 	trace_entry->time = jiffies;
- 	trace_entry->op_code = ipr_cmd->ioarcb.cmd_pkt.cdb[0];
- 	trace_entry->type = type;
-_
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
