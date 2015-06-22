@@ -1,60 +1,85 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: configurable discard parameters
-Date: Mon, 22 Jun 2015 16:57:27 -0400
-Message-ID: <yq1616f796w.fsf@sermon.lab.mkp.net>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
-	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH] USB: storage: add "no SYNCHRONIZE CACHE" quirk
+Date: Mon, 22 Jun 2015 14:22:57 -0700
+Message-ID: <1435008177.2237.137.camel@HansenPartnership.com>
+References: <Pine.LNX.4.44L0.1506221340180.1799-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20607 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771AbbFVU5b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2015 16:57:31 -0400
-In-Reply-To: <CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-	(Tom Yan's message of "Mon, 22 Jun 2015 04:30:00 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1506221340180.1799-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, Jun Itou <itou_jun-6LX5ZuzTTw53+QwDJ9on6Q@public.gmane.org>, Markus Rathgeb <maggu2810-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matt <vickm78-PkbjNfxxIARBDgjK7y7TUQ@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+On Mon, 2015-06-22 at 13:48 -0400, Alan Stern wrote:
+> On Mon, 22 Jun 2015, James Bottomley wrote:
+> 
+> > On Mon, 2015-06-22 at 13:30 -0400, Alan Stern wrote:
+> > > On Mon, 22 Jun 2015, James Bottomley wrote:
+> > > 
+> > > > I'm not sure I entirely like this:  we are back again treating data
+> > > > corruption problems silently.
+> > > > 
+> > > > However, I also believe treating a single flush failure as a critical
+> > > > filesystem error is also wrong:  The data's all there correctly; all it
+> > > > does is introduce a potential window were the FS could get corrupted in
+> > > > the unlikely event the system crashed.
+> > > > 
+> > > > Obviously, for a disk with a writeback cache that can't do flush, that
+> > > > window is much wider and the real solution should be to try to switch
+> > > > the cache to write through.
+> > > 
+> > > I agree.  Doing the switch manually (by writing to the "cache_type" 
+> > > attribute file) works, but it's a nuisance to do this when you have a 
+> > > portable USB drive that gets moved among a bunch of machines.
+> > 
+> > Perhaps it might be wise to do this to every USB device ... for external
+> > devices, the small performance gain doesn't really make up for the
+> > potential data loss.
+> > 
+> > > > How about something like this patch?  It transforms FS FLUSH into a log
+> > > > warning from an error but preserves the error on any other path.  You'll
+> > > > still get a fairly continuous dump of warnings for one of these devices,
+> > > > though ... do they respond to mode selects turning off the writeback?
+> > > 
+> > > I would be very surprised if any of those drives support MODE SELECT at 
+> > > all.
+> > 
+> > I assume the cache type attribute file you refer to above is just
+> > pretending their cache is write through rather than actually setting it
+> > to be so?
+> 
+> Yes; I'm referring to cache_type_store() in sd.c, and writing
+> "temporary write through", which does not issue a MODE SELECT command.  
+> It would be easy enough for people to try leaving out the "temporary", 
+> but I don't expect it to work.
+> 
+> >  The original IDE device had no way of turning their cache
+> > types to write through either, but the manufacturers were eventually
+> > convinced of the error of their ways.
+> 
+> In this case the stupidity resides in the USB-ATA bridge.  You can see 
+> the gory details at
+> 
+> 	https://bugzilla.kernel.org/show_bug.cgi?id=89511#c19
 
-Tom> However, I am curious what is the meaning of "Our current TRIM
-Tom> payload is a single sector that can accommodate 64 * 65535 blocks
-Tom> being unmapped. Report this value in the Block Limits Maximum Unmap
-Tom> LBA count field." in the commit message. What does the value
-Tom> actually mean/affect? Could it cause trouble to certain drives?
+OK, so that says the SAT in the bridge doesn't know what to do with
+MODE_SELECT (probably unsurprising given that it's a usb bridge).  the
+SATA disk should respond to the ATA command SET FEATURES, though.
+Presuming we can get it through the bridge.
 
-DSM Trim takes a payload of <block nr, block count> ranges. The block
-count is constrained to 65535 by virtue of being 16 bits. We can fit 64
-8-byte range descriptors in a single 512-byte sector payload. That's why
-we set the limit for a single, contiguous discard request to
-0x3fffc0. That results in 2GB minus change for a single command.
+You can try it with
 
-Tom> By the way I think I got the answer for my USB TRIM question.
-Tom> Basically for USB->SATA drives the SATL is implemented in the
-Tom> bridges, so it must be able to "SAT" one of the three SCSI unmap
-Tom> methods to ATA TRIM, just like libata does,
+hdparm -W 0 <dev>
 
-Yep. I have set to see one that gets that right, though. There are even
-many enterprise SAS/RAID controllers that don't support UNMAP-TRIM
-translation.
+optionally with --prefer_ata_12 to do the 12 instead of 16 byte
+encapsulation and see if that makes a difference.
 
-Linux' libata was one of the first implementations of SCSI-ATA
-translation for TRIM. Initially we bent the rules for UNMAP a bit. When
-the standards caught up we switched to WRITE SAME.
+James
 
-Tom> So it actually tells. And I hope that the kernel wouldn't "falsify"
-Tom> anything for devices which do provide some VPD(s). : \
 
-SATA doesn't have VPDs.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
