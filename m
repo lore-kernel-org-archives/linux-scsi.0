@@ -1,22 +1,22 @@
 From: Vaishali Thakkar <vthakkar1994@gmail.com>
-Subject: [PATCH] [SCSI] fnic: Replace memset with eth_broadcast_addr
-Date: Mon, 22 Jun 2015 08:18:06 +0530
-Message-ID: <20150622024806.GA4736@vaishali-Ideapad-Z570>
+Subject: [PATCH v2] [SCSI] fnic: Replace memset with eth_broadcast_addr
+Date: Mon, 22 Jun 2015 08:27:04 +0530
+Message-ID: <20150622025704.GA4784@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35545 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922AbbFVCsO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2015 22:48:14 -0400
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:35334 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbbFVC5L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2015 22:57:11 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hiral Patel <hiralpat@cisco.com>
 Cc: Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Use eth_zero_addr to assign the zero address to the given address
-array instead of memset when second argument is a broadcast
+Use eth_broadcast_addr to assign the broadcast address to the given
+address array instead of memset when second argument is a broadcast
 address 0xff.
 
 The Coccinelle semantic patch that makes this change is as follows:
@@ -31,6 +31,9 @@ identifier e;
 // </smpl>
 
 Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+Change since v1:
+	- Fix mistake in commit log
 ---
  drivers/scsi/fnic/fnic_scsi.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
