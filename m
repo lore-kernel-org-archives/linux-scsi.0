@@ -1,129 +1,118 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v1 09/20] [PATCH 09/20] [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and  2.00.34 header files
-Date: Mon, 22 Jun 2015 18:12:54 +0530
-Message-ID: <1434976974-1143-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: OOPS: unplugging western digital passport drive
+Date: Mon, 22 Jun 2015 09:14:15 -0400
+Message-ID: <55880A27.2000008@stratus.com>
+References: <Pine.LNX.4.44L0.1506171505050.1343-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p01c11o145.mxlogic.net ([208.65.144.68]:38724 "EHLO
+	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754291AbbFVNOU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2015 09:14:20 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1506171505050.1343-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: =?UTF-8?B?U3RhbmlzxYJhdyBQaXR1Y2hh?= <viraptor@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Following is the change set,
+Hi Alan -- last I heard from Stan on this bug was April 14 -- he was on
+"long holidays" at that time :)
 
-1. Added more defines for the BiosOptions field of MPI2_CONFIG_PAGE_BIOS_1.
-2. Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC definition.
+-- Joe
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
- drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 14 ++++++++++++--
- drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  4 +++-
- 3 files changed, 18 insertions(+), 5 deletions(-)
----
- drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 14 ++++++++++++--
- drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  4 +++-
- 3 files changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index d730c5c..c2d127c 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                 scatter/gather formats.
-  * Creation Date:  June 21, 2006
-  *
-- * mpi2.h Version:  02.00.33
-+ * mpi2.h Version:  02.00.34
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -90,6 +90,7 @@
-  * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
-+ * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -123,7 +124,7 @@
- #define MPI2_VERSION_02_05                  (0x0205)
- 
- /*Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x21)
-+#define MPI2_HEADER_VERSION_UNIT            (0x22)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 62dfbf6..66f2cc1 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Configuration messages and pages
-  * Creation Date:  November 10, 2006
-  *
-- *   mpi2_cnfg.h Version:  02.00.27
-+ *   mpi2_cnfg.h Version:  02.00.28
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -175,6 +175,8 @@
-  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-  *		       Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
-  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
-+ *		       MPI2_CONFIG_PAGE_BIOS_1.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -1334,9 +1336,17 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
- 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
- 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
- 
--#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
-+#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
- 
- /*values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		(0x00000400)
-+
-+#define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
-+#define MPI2_BIOSPAGE1_OPTIONS_USE_BIT0_REGISTRATION_UEFI_BSD	(0x00000000)
-+#define MPI2_BIOSPAGE1_OPTIONS_FULL_REGISTRATION_UEFI_BSD	(0x00000100)
-+#define MPI2_BIOSPAGE1_OPTIONS_ADAPTER_REGISTRATION_UEFI_BSD	(0x00000200)
-+#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_REGISTRATION_UEFI_BSD	(0x00000300)
-+
- #define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
- #define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
- 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-index 904910d..1629e5b 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI diagnostic tool structures and definitions
-  * Creation Date:  March 26, 2007
-  *
-- *   mpi2_tool.h Version:  02.00.11
-+ *   mpi2_tool.h Version:  02.00.12
-  *
-  * Version History
-  * ---------------
-@@ -33,6 +33,7 @@
-  * 07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
-  *                     it uses MPI Chain SGE as well as MPI Simple SGE.
-  * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
-+ * 01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -100,6 +101,7 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST {
- #define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
- #define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
- #define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
-+#define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
- #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
- #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
- #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
--- 
-2.0.2
+On 06/17/2015 03:09 PM, Alan Stern wrote:
+> Joe or Stanis=EF=BE=85^=EF=BE=82aw:
+>=20
+> I never heard anything back about this.  Does the patch fix the crash=
+?
+>=20
+> Alan Stern
+>=20
+>=20
+> On Wed, 18 Mar 2015, Alan Stern wrote:
+>=20
+>> On Wed, 18 Mar 2015, Alan Stern wrote:
+>>
+>>> On Tue, 17 Mar 2015, Joe Lawrence wrote:
+>>>
+>>>> On 03/11/2015 12:25 AM, Stanis=C3=85=E2=80=9Aaw Pitucha wrote:
+>>>>> Hi linux-scsi,
+>>>>> I've got another case of reproducible crash when unplugging weste=
+rn
+>>>>> digital passport drives. This was mentioned before in
+>>>>> http://www.spinics.net/lists/linux-scsi/msg82603.html
+>>>
+>>> Like it says in that thread, the problem is somehow related to the =
+ses
+>>> driver.  If you remove or blacklist that driver, there won't be any
+>>> more crashes.
+>>
+>> Looks like I spoke too soon.  I think the patch below will fix the=20
+>> problem.  Let me know what happens.
+>>
+>> Alan Stern
+>>
+>>
+>>
+>>
+>> Index: usb-4.0/drivers/scsi/scsi_pm.c
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> --- usb-4.0.orig/drivers/scsi/scsi_pm.c
+>> +++ usb-4.0/drivers/scsi/scsi_pm.c
+>> @@ -217,14 +217,18 @@ static int sdev_runtime_suspend(struct d
+>>  {
+>>  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NU=
+LL;
+>>  	struct scsi_device *sdev =3D to_scsi_device(dev);
+>> -	int err;
+>> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
+>> +	int err =3D 0;
+>> =20
+>> -	err =3D blk_pre_runtime_suspend(sdev->request_queue);
+>> -	if (err)
+>> -		return err;
+>> +	if (blk_rpm_dev) {
+>> +		err =3D blk_pre_runtime_suspend(sdev->request_queue);
+>> +		if (err)
+>> +			return err;
+>> +	}
+>>  	if (pm && pm->runtime_suspend)
+>>  		err =3D pm->runtime_suspend(dev);
+>> -	blk_post_runtime_suspend(sdev->request_queue, err);
+>> +	if (blk_rpm_dev)
+>> +		blk_post_runtime_suspend(sdev->request_queue, err);
+>> =20
+>>  	return err;
+>>  }
+>> @@ -246,12 +250,15 @@ static int sdev_runtime_resume(struct de
+>>  {
+>>  	struct scsi_device *sdev =3D to_scsi_device(dev);
+>>  	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NU=
+LL;
+>> +	struct device *blk_rpm_dev =3D sdev->request_queue->dev;
+>>  	int err =3D 0;
+>> =20
+>> -	blk_pre_runtime_resume(sdev->request_queue);
+>> +	if (blk_rpm_dev)
+>> +		blk_pre_runtime_resume(sdev->request_queue);
+>>  	if (pm && pm->runtime_resume)
+>>  		err =3D pm->runtime_resume(dev);
+>> -	blk_post_runtime_resume(sdev->request_queue, err);
+>> +	if (blk_rpm_dev)
+>> +		blk_post_runtime_resume(sdev->request_queue, err);
+>> =20
+>>  	return err;
+>>  }
+>>
+>>
+>>
+>=20
+>=20
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
