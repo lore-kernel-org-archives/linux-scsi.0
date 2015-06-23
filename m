@@ -1,69 +1,60 @@
-From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH] [trivial] scsi:fcoe: Fix typo "a ethernet"
- in fcoe_transport.c
-Date: Tue, 23 Jun 2015 10:00:07 -0700
-Message-ID: <1435078807.4179.173.camel@lin-nd1-054.jf.intel.com>
-References: <1433346874-11261-1-git-send-email-standby24x7@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: configurable discard parameters
+Date: Tue, 23 Jun 2015 13:03:00 -0400
+Message-ID: <yq1mvzq4at7.fsf@sermon.lab.mkp.net>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	<yq1616f796w.fsf@sermon.lab.mkp.net>
+	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
+	<yq1bng65te8.fsf@sermon.lab.mkp.net>
+	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1433346874-11261-1-git-send-email-standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
+	(Tom Yan's message of "Wed, 24 Jun 2015 00:41:20 +0800")
+Sender: linux-ide-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-06-04 at 00:54 +0900, Masanari Iida wrote:
-> This patch fix some "a ethernet" in MODULE_DESCRIPTIONS in
-> fcoe_transport.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/scsi/fcoe/fcoe_transport.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-> index bdc8989..d7597c0 100644
-> --- a/drivers/scsi/fcoe/fcoe_transport.c
-> +++ b/drivers/scsi/fcoe/fcoe_transport.c
-> @@ -58,7 +58,7 @@ MODULE_PARM_DESC(show, " Show attached FCoE transports");
->  module_param_call(create, fcoe_transport_create, NULL,
->  		  (void *)FIP_MODE_FABRIC, S_IWUSR);
->  __MODULE_PARM_TYPE(create, "string");
-> -MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
-> +MODULE_PARM_DESC(create, " Creates fcoe instance on an ethernet interface");
->  
->  module_param_call(create_vn2vn, fcoe_transport_create, NULL,
->  		  (void *)FIP_MODE_VN2VN, S_IWUSR);
-> @@ -68,15 +68,15 @@ MODULE_PARM_DESC(create_vn2vn, " Creates a VN_node to VN_node FCoE instance "
->  
->  module_param_call(destroy, fcoe_transport_destroy, NULL, NULL, S_IWUSR);
->  __MODULE_PARM_TYPE(destroy, "string");
-> -MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet interface");
-> +MODULE_PARM_DESC(destroy, " Destroys fcoe instance on an ethernet interface");
->  
->  module_param_call(enable, fcoe_transport_enable, NULL, NULL, S_IWUSR);
->  __MODULE_PARM_TYPE(enable, "string");
-> -MODULE_PARM_DESC(enable, " Enables fcoe on a ethernet interface.");
-> +MODULE_PARM_DESC(enable, " Enables fcoe on an ethernet interface.");
->  
->  module_param_call(disable, fcoe_transport_disable, NULL, NULL, S_IWUSR);
->  __MODULE_PARM_TYPE(disable, "string");
-> -MODULE_PARM_DESC(disable, " Disables fcoe on a ethernet interface.");
-> +MODULE_PARM_DESC(disable, " Disables fcoe on an ethernet interface.");
->  
->  /* notification function for packets from net device */
->  static struct notifier_block libfcoe_notifier = {
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-I don't this patch applied yet, Looks good.
+Tom> Currently what the kernel does is assume all devices support 1
+Tom> sector granularity.
 
-Acked-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+The ATA Command Set does not allow for any other granularity than 1
+sector.
+
+Bigger granularity reporting is supported in SCSI SBC to allow for
+thinly provisioned disk arrays with a bigger allocation unit. It is
+common for disk arrays to provision LUN space in units of 1MB or more.
+
+Tom> For my Intel SSD, which actually has a lower limit of 8 sectors, it
+Tom> shows: Data Set Management TRIM supported (limit 1 block) while for
+Tom> the SanDisk Extreme USB, which actually has a lower limit of 256
+Tom> sectors, it shows: Data Set Management TRIM supported (limit 8
+Tom> blocks)
+
+It don't know what these "lower limits" you are talking about are.
+
+What hdparm tells you is that DSM TRIM on the Intel drive supports 1
+block (512 bytes) of range payload data. Whereas the SanDisk drive
+supports a full 4KB page of range payload data (8 * 512 bytes).
+
+We did try to enable payloads bigger than 512 bytes back in the day but
+most drives that reported supporting the bigger payload actually didn't
+and all hell broke loose. So we reverted to a single sector payload for
+libata.
+
+I still have the payload patch in my SSD test branch and regularly test
+with it. But there are still drives that fail in mysterious ways with it
+in place and so far I haven't felt compelled to maintain yet another
+blacklist.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
