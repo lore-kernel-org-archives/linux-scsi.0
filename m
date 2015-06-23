@@ -1,198 +1,721 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] mpt2sas: Abort initialization if no memory I/O
- resources, detected
-Date: Tue, 23 Jun 2015 11:19:45 -0700
-Message-ID: <1435083585.2251.125.camel@HansenPartnership.com>
-References: <557B578D.50706@raptorengineeringinc.com>
-				 <55804E9C.2030802@raptorengineeringinc.com>
-		 <55805FE8.7000806@stratus.com>
-				 <55806FB0.7070706@raptorengineeringinc.com>
-				 <55870668.4070405@raptorengineeringinc.com>
-		 <5588D884.7030804@stratus.com>
-				 <CAK=zhgoRJ+Naae9sms0TJtaD86KJ7cOkL75jKGh2eO7V_trRpw@mail.gmail.com>
-			 <1435066507.2251.10.camel@HansenPartnership.com>
-			 <55899867.3010400@raptorengineeringinc.com>
-		 <1435081516.2251.118.camel@HansenPartnership.com>
-		 <55899BBA.5030509@raptorengineeringinc.com>
-	 <1435082169.2251.120.camel@HansenPartnership.com>
-	 <55899E79.1010208@raptorengineeringinc.com>
+From: Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH RESEND] Documentation/scsi: Documentation about scsi_cmnd lifecycle
+Date: Tue, 23 Jun 2015 11:24:01 -0700
+Message-ID: <CACK8Z6F5pe66wVnb=wy+2apCnRwmqWP4ZUh+8U-Vf8NzD3zk1Q@mail.gmail.com>
+References: <1433871829-10459-1-git-send-email-rajatja@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36870 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932369AbbFWSTr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Jun 2015 14:19:47 -0400
-In-Reply-To: <55899E79.1010208@raptorengineeringinc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <1433871829-10459-1-git-send-email-rajatja@google.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
+Cc: Rajat Jain <rajatxjain@gmail.com>, linux-kernel@vger.kernel.org, Rajat Jain <rajatja@google.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Timothy Pearson <tpearson@raptorengineeringinc.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "Support (LSI)" <support@lsi.com>, DL-MPTFusionLinux@lsi.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2015-06-23 at 12:59 -0500, Timothy Pearson wrote:
-> On 06/23/2015 12:56 PM, James Bottomley wrote:
-> > On Tue, 2015-06-23 at 12:47 -0500, Timothy Pearson wrote:
-> >> On 06/23/2015 12:45 PM, James Bottomley wrote:
-> >>> On Tue, 2015-06-23 at 12:33 -0500, Timothy Pearson wrote:
-> >>>> On 06/23/2015 08:35 AM, James Bottomley wrote:
-> >>>>> On Tue, 2015-06-23 at 18:06 +0530, Sreekanth Reddy wrote:
-> >>>>>> Hi,
-> >>>>>>
-> >>>>>> Upstream contributor should not add copyright to this driver code.
-> >>>>>
-> >>>>> I can't agree with that as a general rule: it depends on the
-> >>>>> significance of the contribution.  The somewhat ill defined standard for
-> >>>>> this is the contribution must be "an original work of authorship".
-> >>>>>
-> >>>>> I can agree that a trivial bug fix like this is not an original work of
-> >>>>> authorship, so in this case adding copyright isn't appropriate.
-> >>>>>
-> >>>>> James
-> >>>>>
-> >>>>>> Regards,
-> >>>>>> Sreekanth
-> >>>>>>
-> >>>>>> On Tue, Jun 23, 2015 at 9:24 AM, Joe Lawrence<joe.lawrence@stratus.com>    wrote:
-> >>>>>>>
-> >>>>>>>
-> >>>>>>> On 06/21/2015 02:46 PM, Timothy Pearson wrote:
-> >>>>>>>> On 06/16/2015 01:49 PM, Timothy Pearson wrote:
-> >>>>>>>>> On 06/16/2015 12:42 PM, Joe Lawrence wrote:
-> >>>>>>>>>> On 06/16/2015 12:28 PM, Timothy Pearson wrote:
-> >>>>>>>>>>> On 06/12/2015 05:05 PM, Timothy Pearson wrote:
-> >>>>>>>>>>>> The mpt2sas driver crashes if the BIOS does not set up at least one
-> >>>>>>>>>>>> memory I/O resource. This failure can happen if the device is too
-> >>>>>>>>>>>> slow to respond during POST and is missed by the BIOS, but Linux
-> >>>>>>>>>>>> then detects the device later in the boot process.
-> >>>>>>>>>>>>
-> >>>>>>>>>>>> This patch aborts initialization and prints a warning if no memory I/O
-> >>>>>>>>>>>> resources are found.
-> >>>>>>>>>>>>
-> >>>>>>>>>>>> Signed-off-by: Timothy Pearson<tpearson@raptorengineeringinc.com>
-> >>>>>>>>>>>> Tested-by: Timothy Pearson<tpearson@raptorengineeringinc.com>
-> >>>>>>>>>>>> ---
-> >>>>>>>>>>>> drivers/scsi/mpt2sas/mpt2sas_base.c | 9 +++++++++
-> >>>>>>>>>>>> 1 file changed, 9 insertions(+)
-> >>>>>>>>>>>>
-> >>>>>>>>>>>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >>>>>>>>>>>> b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >>>>>>>>>>>> index 11248de..15c9504 100644
-> >>>>>>>>>>>> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >>>>>>>>>>>> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >>>>>>>>>>>> @@ -6,6 +6,8 @@
-> >>>>>>>>>>>> * Copyright (C) 2007-2014 LSI Corporation
-> >>>>>>>>>>>> * Copyright (C) 20013-2014 Avago Technologies
-> >>>>>>>>>>>> * (mailto: MPT-FusionLinux.pdl@avagotech.com)
-> >>>>>>>>>>>> + * Copyright (C) 2015 Raptor Engineering
-> >>>>>>>>>>>> + * (mailto: support@araptorengineeringinc.com)
-> >>>>>>>>>>>> *
-> >>>>>>>>>>>> * This program is free software; you can redistribute it and/or
-> >>>>>>>>>>>> * modify it under the terms of the GNU General Public License
-> >>>>>>>>>>>> @@ -1582,6 +1584,13 @@ mpt2sas_base_map_resources(struct
-> >>>>>>>>>>>> MPT2SAS_ADAPTER
-> >>>>>>>>>>>> *ioc)
-> >>>>>>>>>>>> }
-> >>>>>>>>>>>> }
-> >>>>>>>>>>>>
-> >>>>>>>>>>>> + if (ioc->chip == NULL) {
-> >>>>>>>>>>>> + printk(MPT2SAS_ERR_FMT "unable to map "
-> >>>>>>>>>>>> + "adapter memory (resource not found)!\n", ioc->name);
-> >>>>>>>>>>>> + r = -EINVAL;
-> >>>>>>>>>>>> + goto out_fail;
-> >>>>>>>>>>>> + }
-> >>>>>>>>>>>> +
-> >>>>>>>>>>>> _base_mask_interrupts(ioc);
-> >>>>>>>>>>>>
-> >>>>>>>>>>>> r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-> >>>>>>>>>>>
-> >>>>>>>>>>> Just following up on this patch as I have not yet received any
-> >>>>>>>>>>> response.
-> >>>>>>>>>>>
-> >>>>>>>>>>> Thanks!
-> >>>>>>>>>>
-> >>>>>>>>>> Hi Tim -- just curious, why was the similar check on ioc->chip just a
-> >>>>>>>>>> few lines above the one added by the patch insufficient?
-> >>>>>>>>>>
-> >>>>>>>>>> That loop block sets memap_sz when it finds an IORESOURCE_MEM so that it
-> >>>>>>>>>> only sets ioc->chip once. I wonder if the fix might be simpler if the
-> >>>>>>>>>> existing ioc->chip check relocated entirely to where you put it (maybe
-> >>>>>>>>>> also pulling the entire error text onto one line for easier grepping).
-> >>>>>>>>>>
-> >>>>>>>>>> Regards,
-> >>>>>>>>>>
-> >>>>>>>>>> -- Joe
-> >>>>>>>>>
-> >>>>>>>>> If there are no IORESOURCE_MEM resources allocated by the BIOS (i.e. if
-> >>>>>>>>> the BIOS does not run resource allocation on the mpt2sas device) then
-> >>>>>>>>> the check you are referring to is not executed, and the driver attempts
-> >>>>>>>>> to perform operations on a null ioc->chip pointer.
-> >>>>>>>>>
-> >>>>>>>>> I can relocate the check if desired.
-> >>>>>>>>>
-> >>>>>>>>
-> >>>>>>>> On looking more closely at the code I think having the two separate
-> >>>>>>>> checks is useful for debugging.  The first error message is triggered if
-> >>>>>>>> the resource exists but Linux cannot map it for some reason, and the
-> >>>>>>>> second error message is triggered if the resource does not exist at all
-> >>>>>>>> (buggy BIOS).
-> >>>>>>>
-> >>>>>>> Fair enough.  The two error messages are unique, so grepping will lead
-> >>>>>>> to the correct check.
-> >>>>>>>
-> >>>>>>> Only other nits would be the addition of a copyright (up to Avago I
-> >>>>>>> guess) and an mpt3sas version (these drivers are 99% the same code).
-> >>>>>>>
-> >>>>>>> Acked-by: Joe Lawrence<joe.lawrence@stratus.com>
-> >>>>>>>
-> >>>>>>> -- Joe
-> >>>>>>
-> >>>>>>
-> >>>>>>
-> >>>>>
-> >>>>
-> >>>> Thank you for clarifying the guidelines on copyright lines.  I wasn't
-> >>>> sure if this was significant enough of a contribution to justify the
-> >>>> line or not.
-> >>>>
-> >>>> Do I need to re-send or can I just state here that the patch can be
-> >>>> merged without the copyright line?
-> >>>
-> >>> It's easier if you send a clean copy rather than risk me botching
-> >>> something in the hand edit.
-> >>
-> >> OK, will do.
-> >>
-> >>>> I don't have any mpt3sas hardware to test with; should I just send in a
-> >>>> patch anyway without a Tested-by line?
-> >>>
-> >>> Well, if you haven't actually tested it, adding a tested-by line
-> >>> wouldn't be correct.
-> >>
-> >> Of course not.  My question was, should I send in a patch anyway (with
-> >> appropriate commit message fields) even though it has not been tested?
-> >
-> > You mean do you need to retest for a non-material change to a patch
-> > still to have a tested-by on it?  Ideally, yes, but as long as there are
-> > no actual code changes, I don't think it's required.
-> >
-> > James
-> 
-> I guess I'm being somewhat confusing today, my apologies for that.  I 
-> understand there is no real need to re-test when removing the copyright 
-> line for the mpt2sas driver patch.
-> 
-> My question is related to your earlier comment about the mpt3sas driver, 
-> which apparently uses mostly the same codebase as the mpt2sas driver. 
-> Specifically, when referring to the mpt3sas driver (which I cannot 
-> directly test), should I send in an untested patch for the mpt3sas 
-> driver, which would be based on the tested / working patch for the 
-> mpt2sas driver?
+Hello James,
 
-You can send untested patches, yes.  The maintainer will review them and
-decide on inclusion.
+I haven't heard any feedback on this patch, so I was wondering if this
+documentation patch is something you're considering to review?
 
-James
+Many thanks in advance,
 
+Rajat
 
+On Tue, Jun 9, 2015 at 10:43 AM, Rajat Jain <rajatja@google.com> wrote:
+> Add documentation to describe the various scenarios that the scsi_cmnd
+> may go through in its life time in the mid level driver - aborts,
+> failures, retries, error handling etc. The documentation has lots of
+> details including examples.
+>
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> ---
+> Hello James / linux-scsi,
+>
+> Resending the patch since it couldn't get any attention in a month. I'd
+> appreciate if you could please review it and provide your valuable feedback.
+>
+> Thanks,
+>
+> Rajat
+>
+>
+>  Documentation/scsi/life_of_a_scsi_cmnd.txt | 667 +++++++++++++++++++++++++++++
+>  1 file changed, 667 insertions(+)
+>  create mode 100644 Documentation/scsi/life_of_a_scsi_cmnd.txt
+>
+> diff --git a/Documentation/scsi/life_of_a_scsi_cmnd.txt b/Documentation/scsi/life_of_a_scsi_cmnd.txt
+> new file mode 100644
+> index 0000000..b09b2a2
+> --- /dev/null
+> +++ b/Documentation/scsi/life_of_a_scsi_cmnd.txt
+> @@ -0,0 +1,667 @@
+> +                 ==================================
+> +                 Life of a SCSI Command (scsi_cmnd)
+> +                 ==================================
+> +
+> +              Rajat Jain <rajatja@google.com> on 12-May-2015
+> +
+> +(This document roughly matches the Linux kernel 4.0)
+> +
+> +This documents describes the various phases of a SCSI command (struct scsi_cmnd)
+> +lifecycle, as it flows though different parts of the SCSI mid level driver. It
+> +describes under what conditions and how a scsi_cmnd may be aborted, or retried,
+> +or scheduled for error handling, and how is it recovered, and in general how a
+> +block request is handled by the SCSI mid level driver. It goes into detail about
+> +what functions get called and the purpose for each one of them etc.
+> +
+> +To help explain with an example, it takes example of a scsi_cmnd that goes
+> +through it all - timeout, abort, error handling, retry (also results in
+> +CHECK_CONDITION and gets sense info). The last section traces the path taken by
+> +this example scsi_cmnd in its lifetime.
+> +
+> +TABLE OF CONTENTS
+> +
+> +[1] Lifecycle of a scsi_cmnd
+> +[2] How does a scsi_cmnd get queued to the LLD for processing?
+> +[3] How does a scsi_cmnd complete?
+> +    [3.1] Command completing via scsi_softirq_done()
+> +    [3.2] Command completing via scsi_times_out()$
+> +[4] SCSI Error Handling
+> +    [4.1] How did we Get here?
+> +    [4.2] When does Error Handling actually run?
+> +    [4.3] SCSI Error Handler thread
+> +[5] SCSI Commands can be "hijacked"
+> +[6] SCSI Command Aborts
+> +    [6.1] When would mid level try to abort a command?
+> +    [6.2] How SCSI command abort works?
+> +    [6.3] Aborts can fail too
+> +[7] SCSI command Retries
+> +    [7.1] When would mid level retry a command?
+> +    [7.2] Eligibility criteria for Retry
+> +[8] Example: Following a scsi_cmnd (that results in CHECK_CONDITION)
+> +    [8.1] High level view of path taken by example scsi_cmnd
+> +    [8.2] Actual Path taken
+> +[9] References
+> +
+> +1. Lifecycle of a scsi_cmnd
+> +   ========================
+> +   SCSI Mid level interfaces with the block layer just like any other block
+> +   driver. For each block device that SCSI ML adds to the system, it indicates
+> +   a bunch of functions to serve the corresponding request queue.
+> +
+> +   The following functions are relevant to the scsi_cmnd in its lifetime. Note
+> +   that depending on the situations, it may not go thourgh some of these
+> +   stages, or may have to go through some stages multiple times.
+> +
+> +   scsi_prep_fn()
+> +     is called by the blocklayer to prepare the request. This
+> +     function actually allocates a new scsi_cmnd for the request (from
+> +     scsi_host->cmd_pool) and sets it up. This is where a scsi_smnd is "born".
+> +     Note, a new scsi_cmnd is allocated only if the blk req did not already have
+> +     one associated with it (req->special != NULL). A req may already have a
+> +     scsi_cmnd if the req was tried by SCSI earlier, and it resulted in a
+> +     decision to retry later (and hence req was put back on the queue).
+> +
+> +   scsi_request_fn()
+> +     is the actual function to serve the request queue. It basically checks
+> +     whether the host is ready for new commands, and if so, it submits it to the
+> +     LLD:
+> +     scsi_request_fn()
+> +       ->scsi_dispatch_cmd()
+> +           ->hostt->queue_command()
+> +     In case a scsi_cmnd could not be queued to LLD for some reason, the req
+> +     is put back on the original request queue (for retry later).
+> +
+> +   scsi_softirq_done()
+> +     is the handler that gets called once the LLD indicates command completed.
+> +     scsi_done()
+> +       ->blk_complete_request()
+> +           ->causes softirq
+> +               ->blk_done_softirq()
+> +                   ->scsi_softirq_done()
+> +     The most important goal of this function is to determine the course of
+> +     further action for this req (based on the scsi_cmnd->result and sense data
+> +     if present), and take that course. The options could be to finish off the
+> +     request to block layer, requeue it to block layer, or schedule it for error
+> +     handling (if that is deemed necessary). This is discussed in much detail
+> +     later.
+> +
+> +   scsi_times_out()
+> +     is the function that gets called if the LLD does not respond with the
+> +     result of a scsi_cmnd for a long time, and a time out happens. It tries
+> +     to see if the situation can be fixed by LLD timeout handlers (if available)
+> +     or aborting the commands. If not, it schedules the commands for EH
+> +     (discussed at length later).
+> +
+> +   scsi_unprep_fn()
+> +     is the function that gets called to unprepare the request. It is supposed
+> +     to undo whatever scsi_prep_fn() does.
+> +
+> +2. How does a scsi_cmnd get queued to the LLD for processing?
+> +   ==========================================================
+> +   The submission part is very simple. Once the scsi_request_fn() gets called
+> +   for a block request and it picks up a new block request via
+> +   blk_peek_request(), the scsi_cmnd has already been setup and is ready to be
+> +   sent to the LLD:
+> +    scsi_request_fn()
+> +        ->scsi_dispatch_cmd()
+> +              ->hostt->queue_command()
+> +
+> +3. How does a scsi_cmnd complete?
+> +   ==============================
+> +   Once a scsi_cmnd is submitted to the LLD, there are only 2 ways it can get
+> +   completed:
+> +
+> +   a. Either the LLD responds in time.
+> +      (i.e. resulting in scsi_softirq_done() for the command)
+> +
+> +   b. Or, the LLD does not respond in time and a timeout out occurred
+> +      (i.e. resulting in scsi_times_out() for the command)
+> +
+> +   We discuss both these cases below.
+> +
+> +   Note 1: There may be scsi_cmnd(s) that are re-tried. But completion of a
+> +      re-tried scsi_cmnd is not any different than the completion of a new
+> +      scsi_cmnd. Thus irrespective of retries, the scsi_cmnds will always end up
+> +      in using one of the above 2 scenarios.
+> +
+> +   Note 2: A scsi_cmnd may be "highjacked" during error handling in
+> +      scsi_send_eh_cmnd(), to send one of the EH commands (TUR / STU /
+> +      REQUEST_SENSE). However, the completion of these EH commands does not land up
+> +      in the above two scenarios. This is the only exception. Once the scsi_cmnd is
+> +      "un-hijacked", the result of this original scsi_cmnd will still go through
+> +      the same 2 scenarios.
+> +
+> +3.1 Command completing via scsi_softirq_done()
+> +    ==========================================
+> +    This is the case when the LLD responded in time i.e. completed the command.
+> +    Note that here "completed" does not mean that the command was successfully
+> +    completed. In fact it could have been the case, that the SCSI host hardware
+> +    may have failed without even accepting the command. However, the fact that
+> +    scsi_softir_done() was called, indicates that there is a "result" available
+> +    in a timely fashion. And we'll have to examine this result in order to
+> +    decide the next course of action.
+> +
+> +    scsi_softirq_done()
+> +    |
+> +    +---> scsi_decide_disposition()
+> +    |      Takes a look at the scsi_cmnd->result and sense data to determine
+> +    |      what is the best course of action to take. While reading this
+> +    |      function code, one should not confuse SUCCESS as meaning the command
+> +    |      was successful, or FAILED to mean the command failed etc. The return
+> +    |      value of this function merely indicates the course of action to take
+> +    |
+> +    +---> case SUCCESS:
+> +    |      (Finish off the command to block layer. For e.g, the device may be
+> +    |      offline, and hence complete the command - the block layer may retry
+> +    |      on its own later, but that doesn't concern the SCSI ML)
+> +    |      |
+> +    |      +---> scsi_finish_command()
+> +    |            |
+> +    |            +---> scsi_io_completion() (*see note below)
+> +    |                  |
+> +    |                  +---> blk_finish_request()
+> +    |
+> +    +---> case RETRY/ADD_TO_MLQUEUE:
+> +    |     (Requeue the command to request queue. For e.g. the device HW was
+> +    |      busy, and thus SCSI ML knows that retrying may help)
+> +    |      |
+> +    |      +---> scsi_queue_insert()
+> +    |            |
+> +    |            +---> blk_requeue_request()
+> +    |
+> +    +---> case FAILED/default:
+> +          (Schedule the scsi_cmnd for EH. For e.g. there was a bus error that
+> +          might need bus reset. Or we got CHECK_CONDITION and we need to issue
+> +          REQ_SENSE to get more info about the failure. etc)
+> +          |
+> +          +---> scsi_eh_scmd_add()
+> +                Add scsi_cmnd to the host EH queue
+> +                    scsi_eh_wakeup()
+> +
+> +    Note 3:
+> +       The scsi_io_completion() has a secondary logic similar to
+> +       scsi_decide_disposition() in that it also looks at result and sense data
+> +       and figures out what to do with request. It makes similar choices on the
+> +       course of action to take. There is a special case in this function that
+> +       involves "unprepping" a scsi_cmnd before requeuing it, and we'll discuss
+> +       it in sections below.
+> +
+> +3.2 Command completing via scsi_times_out()
+> +    =======================================
+> +    This happens when the LLD does not repond in time, the block layer times
+> +    out, and as a result calls the timeout function for the request queue for
+> +    the SCSI device in question.
+> +
+> +    scsi_times_out()
+> +    |
+> +    +---> scsi_transport_template->eh_timed_out() - Successful? If not...
+> +    |     (Gives transportt a chance to deal with it)
+> +    |
+> +    +---> scsi_host_template->eh_timed_out() - Successful? If not...
+> +    |     (Gives hostt a chance to deal with it)
+> +    |
+> +    +---> scsi_abort_command() - Successful? If not...
+> +    |     (Schedule an ABORT of the scsi_cmnd. The abort handler will also
+> +    |      requeue it if needed)
+> +    |
+> +    +---> scsi_eh_scmd_add()
+> +          (Schedule the scsi_cmnd for EH. This'll definitely work. Because if it
+> +           doesn't work, the EH handler will mark the device as offline, which
+> +           counts as a good fix :-))
+> +
+> +4. SCSI Error Handling
+> +   ===================
+> +
+> +   SCSI Error handling should be thought of the action the mid level decides to
+> +   take when it knows that merely retrying a request may not help, and it needs
+> +   to do something else (possibly disruptive) in order to fix the issue. For
+> +   e.g. a stalled host may require a host reset, and only after that a retry of
+> +   the request may complete.
+> +
+> +   Note 4:
+> +      (Random thoughts): Contrast the "Error Handling" with "Retries". A Retry
+> +      is a normal thing to do, when the mid level believes that it has seen an
+> +      error which is transient in nature, and will go away on its own without
+> +      explicitly doing anything. Thus a retry of a request again makes sense in
+> +      this case. (On the other hand a cmnd is scheduled for EH, when it knows
+> +      that it needs to do "something" before a retrying a cmnd can give good
+> +      results).
+> +
+> +   Note 5:
+> +      The SCSI mid level maintains a (per-host) list of all the scsi_cmnd(s)
+> +      that have been scheduled for EH at that host using scsi_host->eh_cmd_q.
+> +      This is the list that gets processed by the EH thread, when it runs.
+> +
+> +4.1 How did we Get here?
+> +    --------------------
+> +
+> +    A scsi_cmnd could be marked for EH in the following cases:
+> +
+> +    * The command "error completed" i.e. scsi_decide_disposition() returned
+> +      FAILED or something that indicates a failure that requires some sort of
+> +      error recovery. E.g. device hardware failed, or we have a CHECK_CONDITION.
+> +      scsi_softirq_done()
+> +        ->scsi_decide_disposition = FAILED
+> +            ->scsi_eh_scmd_add()
+> +
+> +    * A scsi_cmnd timed out, and attempt to abort it fails.
+> +      scsi_times_out()
+> +        ->scsi_abort_command() != SUCCESS
+> +            ->scsi_eh_scmd_add()
+> +
+> +4.2 When does Error Handling actually run?
+> +    -------------------------------------
+> +
+> +    A SCSI error handler thread is scheduled whenever there is a scsi_smnd that
+> +    is marked for EH (inserted in the Scsi_Host->eh_cmd_q). Once a scsi_cmnd is
+> +    marked for EH, the ML does not accept any more scsi_cmnds for that
+> +    particular Scsi_Host. However, the EH thread does not actually run until all
+> +    the pending IOs to the LLD for that particular Scsi_Host have either
+> +    completed or failed. In other words, the only commands pending at the LLD
+> +    for that host are the ones that need EH (host_busy == host_failed).
+> +
+> +    The idea is to quiesce the bus, so that EH thread can recover the devices,
+> +    as it may require to reset different components in order to do its job.
+> +
+> +4.3 SCSI Error Handler thread
+> +    -------------------------
+> +
+> +    scsi_error_handler()
+> +    |
+> +    +---> transportt->eh_strategy_handler() if exists, else...
+> +    |     (Use transportt's own error recovery handler, if available)
+> +    |
+> +    +---> scsi_unjam_host()
+> +    |     (The SCSI ML error handler described below. Also described in
+> +    |      Documentation/scsi/scsi_eh.txt. Basic goal is to do whatever
+> +    |      needs to recover from the current error condition. And requeue the
+> +    |      eligible commands after recovery)
+> +    |
+> +    +---> scsi_restart_operations()
+> +          (Restart the operations of the SCSI request queue)
+> +          |
+> +          +---> scsi_run_host_queues()
+> +                |
+> +                +---> scsi_run_queue()
+> +                      |
+> +                      +---> blk_run_queue()
+> +
+> +    scsi_unjam_host()
+> +    -----------------
+> +    The idea is to create 2 lists: work_q, done_q.
+> +    Initially, work_q = <All EH scsi cmds>, done_q = NULL
+> +    And then error handle all the requests in work_q by taking sequentially
+> +    higher severity action items that may recover the cmnd or device. Keep
+> +    moving the requests from work_q to done_q and in the end finish them all
+> +    in one go rather than individually finishing them up.
+> +
+> +    scsi_unjam_host()
+> +    |
+> +    +--> Create 2 lists: work_q, done_q
+> +    |    work_q = <All EH scsi cmds>, done_q = NULL
+> +    |
+> +    +--> scsi_eh_get_sense() - Are we done? if not...
+> +    |   (For the commands that have CHECK_CONDITION, get sense_info)
+> +    |    |
+> +    |    +--> scsi_request_sense()
+> +    |    |   (Use scsi_send_eh_cmnd() to send a "hijacked" REQ_SENSE cmnd)
+> +    |    |
+> +    |    +--> scsi_decide_disposition()
+> +    |    |
+> +    |    +--> Arrange to finish the scsi_cmnd if SUCCESS (by setting
+> +    |         retries=allowed)
+> +    |
+> +    +--> scsi_eh_abort_cmds() - Are we done? If not...
+> +    |   (Abort the commands that had timed out)
+> +    |    |
+> +    |    +--> scsi_try_to_abort_cmd()
+> +    |    |    (Results in call to hostt->eh_abort_handler() which is responsible
+> +    |    |     making the LLD and the HW forget about the scsi_cmnd)
+> +    |    |
+> +    |    +--> scsi_eh_test_devices()
+> +    |         (Test if the device is responding now by sending appropriate EH
+> +    |          commands (STU / TEST_UNIT_READY). Again, sending these EH
+> +    |          commands involves highjacking the original scsi_cmnd, and later
+> +    |          restoring the context)
+> +    |
+> +    +--> scsi_eh_ready_devs() - Are we done? if not...
+> +    |   (Take increasing order of higher severity actions in order to recover)
+> +    |    |
+> +    |    +--> scsi_eh_bus_device_reset()
+> +    |    |   (Reset the scsi_device. Results in call to
+> +    |    |    hostt->eh_device_reset_handler())
+> +    |    |
+> +    |    +--> scsi_eh_target_reset()
+> +    |    |   (Reset the scsi_target. Results in call to
+> +    |    |    hostt->eh_target_reset_handler())
+> +    |    |
+> +    |    +--> scsi_eh_bus_reset()
+> +    |    |   (Reset the scsi_device. Results in call to
+> +    |    |    hostt->eh_bus_reset_handler())
+> +    |    |
+> +    |    +--> scsi_eh_host_reset()
+> +    |    |   (Reset the Scsi_Host. Results in call to
+> +    |    |    hostt->eh_host_reset_handler())
+> +    |    |
+> +    |    +--> If nothing has worked - scsi_eh_offline_sdevs()
+> +    |         (The device is not recoverable, put it offline)
+> +    |
+> +    +--> scsi_eh_flush_done_q()
+> +        (For all the EH commands on the done_q, either requeue them (via
+> +         scsi_queue_insert()) if eligible, or finish them up to block layer
+> +         (via scsi_finish_command())
+> +
+> +   Note 6:
+> +      At each recovery stage we test if we are done (using
+> +      scsi_eh_test_devices()), and take the next severity action only if needed.
+> +
+> +   Note 7:
+> +      The error handler takes care that for multiple scsi_cmnds that can be
+> +      recovered by resetting the same component (e.g. same scsi_device), the
+> +      device is reset only once.
+> +
+> +5. SCSI Commands can be "hijacked"
+> +   ===============================
+> +
+> +   As seen above, the EH thread may need to send some EH commands in order to
+> +   check the health and responsiveness of the SCSI device:
+> +   * TUR - Test Unit Ready
+> +   * STU - Start / Stop Unit
+> +   * REQUEST_SENSE - To get the Sense data in response to CHECK_CONDITION
+> +
+> +   However instead of allocating and setting up a new scsi_cmnd for such
+> +   temporary purposes, the EH thread hijacks- the current scsi_cmnd that it is
+> +   trying to recover, in order to send the EH commands. This whole process is
+> +   done in scsi_send_eh_cmnd().
+> +
+> +   The scsi_send_eh_cmnd saves a context of the current command before hijacking
+> +   it, replaces the scsi_done ptr with its own before dipatching it to the LLD,
+> +   and restores the context later once it is done. The EH commands sent in this
+> +   manner are subject to the same problems of timeouts / abort failures /
+> +   completions - but they do not take the route taken by normal commands (i.e.
+> +   don't take the scsi_softirq_done() or scsi_times_out() route). Every
+> +   thing is handled within scsi_send_eh_cmnd(). This is discussed in following
+> +   sections.
+> +
+> +6. SCSI Command Aborts
+> +   ===================
+> +
+> +   It refers to the scenario where the SCSI mid level wants to have the LLD
+> +   driver and the hardware below it forget everything about a scsi_cmnd that
+> +   was given to the LLD earlier. The most common reason is that the LLD failed
+> +   to respond in time.
+> +
+> +6.1 When would mid level try to abort a command?
+> +    --------------------------------------------
+> +    The SCSI ML may try to abort a scsi_cmnd in the following conditions:
+> +
+> +    1. SCSI mid layer times out on a command, and tried to abort it.
+> +       scsi_times_out()
+> +         -> scsi_abort_command()
+> +        What happens if this abort fails? Schedule the command for EH.
+> +
+> +    2. The EH thread tried to abort all the pending commands while trying to
+> +       unjam a host.
+> +       scsi_unjam_host()
+> +         -> scsi_eh_abort_cmds()
+> +
+> +       What happens if this abort fails? We move to higher severity recovery
+> +       steps (start resetting HW components etc) because that is likely to cause
+> +       both LLD and the HW forget aout those commands.
+> +
+> +    3. This is a nasty one. During error recovery, the EH thread may "hijack"
+> +       a scsi_cmnd to send a EH command (TUR/STU/REQ_SENSE) to LLD using
+> +       scsi_send_eh_cmnd(). If such a "hijacked" EH command times out, the SCSI
+> +       EH thread will try to abort it.
+> +       scsi_send_eh_cmnd()
+> +         -> scsi_abort_eh_cmnd()
+> +              -> scsi_try_to_abort_cmd()
+> +
+> +       What happens if this abort fails? Similar to the previous case, the
+> +       scsi_abort_eh_cmnd() will try to take higher severity actions (reset bus
+> +       etc) but will not send EH commands such as TUR etc again in order to
+> +       verify if the devices started to respond.
+> +
+> +6.2 How SCSI command abort works?
+> +    -----------------------------
+> +    Unlike EH command like TUR, the ABORT is not a SCSI command that mid layer
+> +    driver sends to LLD. The LLD provides an eh_abort_handler() function
+> +    pointer that is used to abort the command. It is up to the LLD to do
+> +    whatever is needed to abort the command. It may require to send some
+> +    proprietary command to the HW, or fiddle some bits, or do whatever magic
+> +    is necessary.
+> +
+> +6.3 Aborts can fail too
+> +    --------------------
+> +
+> +    As with other things, abort attempts can also fail. The SCSI mid layer does
+> +    the right thing in such situations as depicted in the section above.
+> +
+> +    Note 8:
+> +       Once a block layer hands off a command to the SCSI subsystem, there is no
+> +       way currently for the block layer to cancel / abort a request. This needs
+> +       some work.
+> +
+> +7. SCSI command Retries
+> +   ====================
+> +
+> +   The SCSI mid level maintains no queues for the SCSI commands it is processing
+> +   (other than the EH command queue). Thus whenever the SCSI ML thinks it needs
+> +   to retry a command, it requeues the request back to the corresponding request
+> +   queue, so that the retries will be made "naturally" when the request function
+> +   picks up the next request for processing.
+> +
+> +   When requing such requests back to the request queue, they are put at the
+> +   head so that they go before the other (existing) requests in that request
+> +   queue.
+> +
+> +7.1 When would mid level retry a command?
+> +    -------------------------------------
+> +
+> +    Following are the conditions that will cause a SCSI command to be retried
+> +    (by putting the blk request back at the request queue):
+> +
+> +    1. Mid layer times out on a scsi_cmnd, aborts it successfully, and requeues
+> +       it.
+> +       scsi_times_out()
+> +         -> scsi_abort_command()
+> +              -> schedules scmd_eh_abort_handler()
+> +                   -> scsi_queue_insert()
+> +                        -> blk_requeue_request()
+> +
+> +    2. EH thread, after recovering a host, requeues back all the scsi_cmnds that
+> +       are eligible for a retry:
+> +       scsi_error_handler()
+> +         -> scsi_unjam_host()
+> +              -> scsi_eh_flush_done_q()
+> +                   -> scsi_queue_insert()
+> +                        -> blk_requeue_request()
+> +
+> +    3. LLD completes the scsi_cmnd, and scsi_decide_disposition() looks at the
+> +       scsi_cmnd->result and thinks it needs to be retried (For e.g. because the
+> +       bus was busy).
+> +       scsi_softirq_done()
+> +         -> scsi_decide_disposition() returns NEEDS_RETRY
+> +              -> scsi_queue_insert()
+> +                   -> blk_requeue_request()
+> +
+> +    4. In the scsi_request_fn(), the SCSI ML finds out that the host is busy and
+> +       the scsi_cmnd could not be sent to the LLD, hence it requeues the req
+> +       back on the queue.
+> +       scsi_request_fn()
+> +         -> case note_ready:
+> +              -> blk_requeue_request()
+> +
+> +    5. scsi_finish_command() that is called from a variety of places to finish
+> +       off a request to the block level. However, it calls scsi_io_completion()
+> +       that may look at the request and decide to retry it (if it qualifies).
+> +       scsi_finish_command()
+> +         -> scsi_io_completion()
+> +              -> __scsi_queue_insert()
+> +                   -> blk_requeue_request()
+> +
+> +    Note 9:
+> +       The case 5 above has a very special case. There may be some cases where
+> +       the scsi_io_completion() decides that a blk request has to be retried,
+> +       however the scsi_cmnd for this req should be relased and instead a new
+> +       scsi_cmnd should be allocated and used for this request at the next
+> +       retry. This can be the case for e.g. if it sees an ILLEGAL REQUEST as a
+> +       response to a READ10 command, and thinks that it may be because the
+> +       device supports only READ6. Thus it may make sense to switch to READ6
+> +       (hence a new scsi_cmnd) at the time of next retry.
+> +
+> +7.2 Eligibility criteria for Retry
+> +    ------------------------------
+> +
+> +    Note that SCSI mid level always checks for retry eligibility before it goes
+> +    ahead and requeues the command for retries. The eligibility criteria for a
+> +    scsi_cmnd includes (some of these may not apply in all situations described
+> +    above):
+> +
+> +    * retries < allowed (Num of retries should be less than allowed retries)
+> +    * no more than host->eh_deadline jiffies spent in EH.
+> +    * scsi_noretry_cmd() should return 0 for the command.
+> +    * scsi_device must be online
+> +    * req->timeout must not have expired
+> +    * etc.
+> +
+> +8. Example: Following a scsi_cmnd
+> +   ==============================
+> +
+> +8.1 High level view of path taken by example scsi_cmnd
+> +    --------------------------------------------------
+> +    We take the example of a block request that for example wants to read a
+> +    block off a scsi disk, how ever the LBA address is out of range for the
+> +    current device (hypothetically). The ML submits it to LLD, but the HW takes
+> +    the command and chokes on it (again hypothetically to trace through the
+> +    abort sequence). So the timeout happens and the ML aborts the
+> +    command, and requeues it. In the next run, the LLD completes the command
+> +    with CHECK_CONDITION.  We assume that the SCSI host does not automatically
+> +    get the sense info. The ML schedules the cmnd for EH. The EH thread sends
+> +    the REQUEST_SENSE to get sense info ILLEGAL_REQUEST, and based on it
+> +    completes the request to the block layer.
+> +
+> +8.2 Actual Path taken
+> +    -----------------
+> +
+> +    Dispatched:
+> +
+> +    scsi_request_fn()
+> +    |
+> +    +---> blk_peek_request()
+> +    |     |
+> +    |     +---> scsi_prep_fn()
+> +    |           (Allocate and setup scsi_cmnd)
+> +    |
+> +    +---> scsi_dispatch_cmd()
+> +          |
+> +          +---> hostt->queue_command()
+> +
+> +    Times out:
+> +
+> +    scsi_times_out()
+> +    |
+> +    +---> scsi_abort_command() - returns SUCCESS
+> +          |
+> +          +---> queue_delayed_work(abort_work)
+> +
+> +    Abort Handler:
+> +
+> +    scmd_eh_abort_handler()
+> +    |
+> +    +---> scsi_try_to_abort_cmd() - returns SUCCESS
+> +    |     |
+> +    |     +---> hostt->eh_abort_handler()
+> +    |
+> +    +---> scsi_queue_insert()
+> +          |
+> +          +---> __scsi_queue_insert()
+> +                |
+> +                +---> blk_requeue_request()
+> +                      (the req is requeued, with req->special pointing
+> +                       to scsi_cmnd)
+> +
+> +    Request picked up again:
+> +
+> +    scsi_request_fn()
+> +    |
+> +    +---> blk_peek_request()
+> +    |     (req->cmd_flags has REQ_DONTPREP set, so does not call
+> +    |      scsi_prep_fn() again)
+> +    |
+> +    +---> scsi_dispatch_cmd()
+> +          |
+> +          +---> hostt->queue_command()
+> +
+> +    Command is completed with a CHECK_CONDITION:
+> +
+> +    scsi_softirq_done()
+> +    |
+> +    +---> scsi_decide_disposition()
+> +    |     (Sees the CHECK_CONDITION)
+> +    |     |
+> +    |     +---> scsi_check_sense() - returns FAILED
+> +    |           |
+> +    |           +---> scsi_command_normalize_sense()
+> +    |                 (Fails to find a valid sense data)
+> +    |
+> +    +---> case FAILED:
+> +          |
+> +          +---> scsi_eh_scmd_add()
+> +                Add scsi_cmnd to the host EH queue
+> +                |
+> +                +---> scsi_eh_wakeup()
+> +
+> +    The SCSI Error handler thread runs to get the sense info, and completes the
+> +    request once it is done.
+> +
+> +    scsi_error_handler()
+> +    |
+> +    +---> scsi_unjam_host()
+> +          |
+> +          +---> scsi_eh_get_sense()
+> +          |     |
+> +          |     +---> scsi_request_sense()
+> +          |     |     |
+> +          |     |     +---> scsi_send_eh_cmnd()
+> +          |     |          (Highjacks the smnd to send EH command)
+> +          |     |           |
+> +          |     |           +--> scsi_eh_prep_cmnd()
+> +          |     |           |    (save context of the existing scsi_cmndi,
+> +          |     |           |    allocates a sense buffer, and sets up the
+> +          |     |           |    scsi_cmnd for REQUEST_SENSE)
+> +          |     |           |
+> +          |     |           +--> hostt->queuecommand(), and then wait...
+> +          |     |           |    (gets the sense data for the cmnd)
+> +          |     |           |
+> +          |     |           +--> scsi_eh_completed_normally() - returns SUCCESS
+> +          |     |           |
+> +          |     |           +--> scsi_eh_restore_cmnd()
+> +          |     |                (restores the context of original scsi_cmnd)
+> +          |     |
+> +          |     +---> scsi_decide_disposition() - returns SUCCESS
+> +          |     |      (This time can see the sense info)
+> +          |     |
+> +          |     +---> Set scmd->retries = scmd->allowed (to avoid retries)
+> +          |     |
+> +          |     +---> scsi_eh_finish_cmd()
+> +          |           (Puts the scsi_cmnd on the done_q)
+> +          |
+> +          +---> scsi_eh_flush_done_q()
+> +                (Sees that scsi_cmnd is not eligible for retries)
+> +                |
+> +                +---> scsi_finish_command()
+> +                      |
+> +                      +---> scsi_io_completion()
+> +                            |
+> +                            +---> scsi_end_request()
+> +                                  |
+> +                                  +---> scsi_put_command()
+> +                                       (Releases the scsi_cmnd)
+> +
+> +9. References
+> +   ==========
+> +   The following are excellent sources of references:
+> +   Documentation/scsi/scsi_eh.txt
+> +   http://events.linuxfoundation.org/sites/events/files/slides/SCSI-EH.pdf
+> +--
+> --
+> 2.2.0.rc0.207.ga3a616c
+>
