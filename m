@@ -1,48 +1,57 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: configurable discard parameters
-Date: Tue, 23 Jun 2015 14:26:18 -0400
-Message-ID: <yq1egl246yd.fsf@sermon.lab.mkp.net>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
-	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-	<yq1616f796w.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
-	<yq1bng65te8.fsf@sermon.lab.mkp.net>
-	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
-	<yq1mvzq4at7.fsf@sermon.lab.mkp.net>
-	<CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
+From: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Subject: [PATCH v2] mpt2sas: Abort initialization if no memory I/O resources
+ detected
+Date: Tue, 23 Jun 2015 14:28:44 -0500 (CDT)
+Message-ID: <1752241556.3143.1435087724484.JavaMail.zimbra@raptorengineeringinc.com>
+References: <557B578D.50706@raptorengineeringinc.com> <1435066507.2251.10.camel@HansenPartnership.com> <55899867.3010400@raptorengineeringinc.com> <1435081516.2251.118.camel@HansenPartnership.com> <55899BBA.5030509@raptorengineeringinc.com> <1435082169.2251.120.camel@HansenPartnership.com> <55899E79.1010208@raptorengineeringinc.com> <1435083585.2251.125.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26171 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933116AbbFWS0W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 14:26:22 -0400
-In-Reply-To: <CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
-	(Tom Yan's message of "Wed, 24 Jun 2015 01:24:12 +0800")
+Received: from pearsoncomputing.net ([192.119.205.242]:47343 "EHLO
+	mail.pearsoncomputing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754877AbbFWT2s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 15:28:48 -0400
+In-Reply-To: <421649124.3142.1435087707382.JavaMail.zimbra@raptorengineeringinc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, "Support (LSI)" <support@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+The mpt2sas driver crashes if the BIOS does not set up at least one
+memory I/O resource.  This failure can happen if the device is too
+slow to respond during POST and is missed by the BIOS, but Linux
+then detects the device later in the boot process.
 
-Tom> So when libata issue ATA commands with ranges of 65535 sectors,
-Tom> only 65535-(65535%8) = 65528 sectors are discarded,
+Signed-off-by: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Tested-by: Timothy Pearson <tpearson@raptorengineeringinc.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-That's unfortunate but TRIM is advisory so the drive is free to ignore
-all or parts of the request.
-
-What happens if you discard sectors 0-6 and then sector 7?
-
-Tom> I can workaround this by specifying --step in blkdiscard, but I
-Tom> think the kernel should have a param configurable for general.
-
-This is on the Intel 530? What does the drive report in
-/sys/block/sdN/queue/discard_zeroes_data?
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 11248de..b70fa5a 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1582,6 +1582,13 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		}
+ 	}
+ 
++	if (ioc->chip == NULL) {
++		printk(MPT2SAS_ERR_FMT "unable to map "
++			"adapter memory (resource not found)!\n", ioc->name);
++		r = -EINVAL;
++		goto out_fail;
++	}
++
+ 	_base_mask_interrupts(ioc);
+ 
+ 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
+-- 
+1.7.9.5
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Timothy Pearson
+Raptor Engineering
++1 (415) 727-8645
+http://www.raptorengineeringinc.com 
