@@ -1,129 +1,48 @@
-From: "Seymour, Shane M" <shane.seymour@hp.com>
-Subject: [PATCH] st: convert to using driver attr groups for sysfs
-Date: Tue, 23 Jun 2015 08:11:00 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB3BFF68D9@G9W0766.americas.hpqcorp.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/8] tcm_loop updates
+Date: Tue, 23 Jun 2015 01:29:03 -0700
+Message-ID: <1435048143.7460.50.camel@haakon3.risingtidesystems.com>
+References: <1434620622-65391-1-git-send-email-hare@suse.de>
+	 <20150619064855.GB1183@lst.de> <5583C117.4030103@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:55559 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932213AbbFWIMC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 04:12:02 -0400
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:57272 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752500AbbFWI3F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 04:29:05 -0400
+In-Reply-To: <5583C117.4030103@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>
-Cc: "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-This patch changes the st driver to use attribute groups so
-driver sysfs files are created automatically. See the
-following for reference:
+On Fri, 2015-06-19 at 09:13 +0200, Hannes Reinecke wrote:
+> On 06/19/2015 08:48 AM, Christoph Hellwig wrote:
+> > What's the benefit of the SAS transport class writeout?  I honestly
+> > always saw tcm_loop as a simple loopback driver, with the different
+> > transport IDs in the PR code as a gimmick.  Note that vhost and
+> > xen-blkback copies that style and I did plan to consolidate it
+> > in common code.
+> > 
+> The benefit is that tcm_loop will show up in the system as a 'real'
+> SAS hba; long-term goal is to simulate SAS multipathing here.
+> I was even planning on adding simlated FC infrastructure, too;
+> with that we could simulate FC multipathing, too, and our QA would
+> be _so_ happy...
+> 
 
-http://kroah.com/log/blog/2013/06/26/how-to-create-a-sysfs-file-correctly/
+Sounds like a reasonable use-case to support for loopback testing.
 
-Signed-off-by: Shane Seymour <shane.seymour@hp.com>
----
---- a/drivers/scsi/st.c	2015-06-22 14:20:40.829612661 -0500
-+++ b/drivers/scsi/st.c	2015-06-22 15:49:49.357248393 -0500
-@@ -85,6 +85,7 @@ static int debug_flag;
- 
- static struct class st_sysfs_class;
- static const struct attribute_group *st_dev_groups[];
-+static const struct attribute_group *st_drv_groups[];
- 
- MODULE_AUTHOR("Kai Makisara");
- MODULE_DESCRIPTION("SCSI tape (st) driver");
-@@ -198,15 +199,13 @@ static int sgl_unmap_user_pages(struct s
- static int st_probe(struct device *);
- static int st_remove(struct device *);
- 
--static int do_create_sysfs_files(void);
--static void do_remove_sysfs_files(void);
--
- static struct scsi_driver st_template = {
- 	.gendrv = {
- 		.name		= "st",
- 		.owner		= THIS_MODULE,
- 		.probe		= st_probe,
- 		.remove		= st_remove,
-+		.groups		= st_drv_groups,
- 	},
- };
- 
-@@ -4404,14 +4403,8 @@ static int __init init_st(void)
- 	if (err)
- 		goto err_chrdev;
- 
--	err = do_create_sysfs_files();
--	if (err)
--		goto err_scsidrv;
--
- 	return 0;
- 
--err_scsidrv:
--	scsi_unregister_driver(&st_template.gendrv);
- err_chrdev:
- 	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
- 				 ST_MAX_TAPE_ENTRIES);
-@@ -4422,7 +4415,6 @@ err_class:
- 
- static void __exit exit_st(void)
- {
--	do_remove_sysfs_files();
- 	scsi_unregister_driver(&st_template.gendrv);
- 	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
- 				 ST_MAX_TAPE_ENTRIES);
-@@ -4459,44 +4451,14 @@ static ssize_t st_version_show(struct de
- }
- static DRIVER_ATTR(version, S_IRUGO, st_version_show, NULL);
- 
--static int do_create_sysfs_files(void)
--{
--	struct device_driver *sysfs = &st_template.gendrv;
--	int err;
--
--	err = driver_create_file(sysfs, &driver_attr_try_direct_io);
--	if (err)
--		return err;
--	err = driver_create_file(sysfs, &driver_attr_fixed_buffer_size);
--	if (err)
--		goto err_try_direct_io;
--	err = driver_create_file(sysfs, &driver_attr_max_sg_segs);
--	if (err)
--		goto err_attr_fixed_buf;
--	err = driver_create_file(sysfs, &driver_attr_version);
--	if (err)
--		goto err_attr_max_sg;
--
--	return 0;
--
--err_attr_max_sg:
--	driver_remove_file(sysfs, &driver_attr_max_sg_segs);
--err_attr_fixed_buf:
--	driver_remove_file(sysfs, &driver_attr_fixed_buffer_size);
--err_try_direct_io:
--	driver_remove_file(sysfs, &driver_attr_try_direct_io);
--	return err;
--}
--
--static void do_remove_sysfs_files(void)
--{
--	struct device_driver *sysfs = &st_template.gendrv;
--
--	driver_remove_file(sysfs, &driver_attr_version);
--	driver_remove_file(sysfs, &driver_attr_max_sg_segs);
--	driver_remove_file(sysfs, &driver_attr_fixed_buffer_size);
--	driver_remove_file(sysfs, &driver_attr_try_direct_io);
--}
-+static struct attribute *st_drv_attrs[] = {
-+	&driver_attr_try_direct_io.attr,
-+	&driver_attr_fixed_buffer_size.attr,
-+	&driver_attr_max_sg_segs.attr,
-+	&driver_attr_version.attr,
-+	NULL,
-+};
-+ATTRIBUTE_GROUPS(st_drv);
- 
- /* The sysfs simple class interface */
- static ssize_t
+> Again, these patches are mainly a collection of patches I've done to
+> test various scenarios, in the hope others might find them useful,
+> too. So I can easily hold off these patches until you've posted your
+> rework.
+> 
+
+How different do you expect sas, fc, and iscsi transports to be..?
+
+Do you think this would this be better served by a simple tcm_loop LLD
+specific API for different multipath transports..?
+
