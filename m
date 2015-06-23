@@ -1,66 +1,61 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Fix maximum I/O size for BLOCK_PC requests
-Date: Tue, 23 Jun 2015 12:13:59 -0400
-Message-ID: <1435076039-26940-1-git-send-email-martin.petersen@oracle.com>
-References: <5581759A.4080009@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] sd: Sanity check the optimal I/O size
+Date: Tue, 23 Jun 2015 12:22:20 -0400
+Message-ID: <1435076541-27253-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <5581759A.4080009@linux.vnet.ibm.com>
 Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: brking@linux.vnet.ibm.com, hch@lst.de, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org.#.3.17+
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit bcdb247c6b6a ("sd: Limit transfer length") clamped the maximum
-size of an I/O request to the MAXIMUM TRANSFER LENGTH field in the BLOCK
-LIMITS VPD. This had the unfortunate effect of also limiting the maximum
-size of non-filesystem requests sent to the device through sg/bsg.
+We have come across a couple of devices that report unreasonable values
+in the optimal I/O size in the Block Limits VPD page. Since this is a
+32-bit entity that gets multiplied by the logical block size we can get
+disproportionately large values reported to the block layer.
 
-Avoid using blk_queue_max_hw_sectors() and set the max_sectors queue
-limit directly.
-
-Also update the comment in blk_limits_max_hw_sectors() to clarify that
-max_hw_sectors defines the limit for the I/O controller only.
+Cap io_opt at 256 MB.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-Tested-by: Brian King <brking@linux.vnet.ibm.com>
-Cc: stable@vger.kernel.org # 3.17+
+Reported-by: Chris Friesen <chris.friesen@windriver.com>
+Cc: stable@vger.kernel.org
 ---
- block/blk-settings.c | 4 ++--
- drivers/scsi/sd.c    | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/sd.c | 3 ++-
+ drivers/scsi/sd.h | 9 +++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 12600bfffca9..e0057d035200 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -241,8 +241,8 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
-  * Description:
-  *    Enables a low level driver to set a hard upper limit,
-  *    max_hw_sectors, on the size of requests.  max_hw_sectors is set by
-- *    the device driver based upon the combined capabilities of I/O
-- *    controller and storage device.
-+ *    the device driver based upon the capabilities of the I/O
-+ *    controller.
-  *
-  *    max_sectors is a soft limit imposed by the block layer for
-  *    filesystem type requests.  This value can be overridden on a
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3b2fcb4fada0..a20da8c25b4f 100644
+index a20da8c25b4f..118b336e0ddf 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2770,9 +2770,9 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	max_xfer = sdkp->max_xfer_blocks;
- 	max_xfer <<= ilog2(sdp->sector_size) - 9;
+@@ -2560,7 +2560,8 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_min(sdkp->disk->queue,
+ 			 get_unaligned_be16(&buffer[6]) * sector_sz);
+ 	blk_queue_io_opt(sdkp->disk->queue,
+-			 get_unaligned_be32(&buffer[12]) * sector_sz);
++			 min_t(unsigned int, SD_MAX_IO_OPT_BYTES,
++			       get_unaligned_be32(&buffer[12]) * sector_sz));
  
--	max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
--				max_xfer);
--	blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
-+	sdkp->disk->queue->limits.max_sectors =
-+		min_not_zero(queue_max_hw_sectors(sdkp->disk->queue), max_xfer);
-+
- 	set_capacity(disk, sdkp->capacity);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
+ 	if (buffer[3] == 0x3c) {
+ 		unsigned int lba_count, desc_count;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 63ba5ca7f9a1..f175a3f2944a 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -44,10 +44,11 @@ enum {
+ };
+ 
+ enum {
+-	SD_DEF_XFER_BLOCKS = 0xffff,
+-	SD_MAX_XFER_BLOCKS = 0xffffffff,
+-	SD_MAX_WS10_BLOCKS = 0xffff,
+-	SD_MAX_WS16_BLOCKS = 0x7fffff,
++	SD_DEF_XFER_BLOCKS	= 0xffff,
++	SD_MAX_XFER_BLOCKS	= 0xffffffff,
++	SD_MAX_WS10_BLOCKS	= 0xffff,
++	SD_MAX_WS16_BLOCKS	= 0x7fffff,
++	SD_MAX_IO_OPT_BYTES	= 256 * 1024 * 1024,
+ };
+ 
+ enum {
 -- 
 2.4.3
