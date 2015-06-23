@@ -1,43 +1,58 @@
-From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
-Subject: RE: [PATCH] USB: storage: add "no SYNCHRONIZE CACHE" quirk
-Date: Tue, 23 Jun 2015 14:15:14 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CB55366@AcuExch.aculab.com>
-References: <Pine.LNX.4.44L0.1506221324110.1799-100000@iolanthe.rowland.org>
- <1434994588.2237.90.camel@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: configurable discard parameters
+Date: Tue, 23 Jun 2015 11:36:15 -0400
+Message-ID: <yq1bng65te8.fsf@sermon.lab.mkp.net>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	<yq1616f796w.fsf@sermon.lab.mkp.net>
+	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1434994588.2237.90.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Content-Language: en-US
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: 'James Bottomley' <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <JBottomley-MU7nAjRaF3makBO8gow8eQ@public.gmane.org>, Jun Itou <itou_jun-6LX5ZuzTTw53+QwDJ9on6Q@public.gmane.org>, Markus Rathgeb <maggu2810-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matt <vickm78-PkbjNfxxIARBDgjK7y7TUQ@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:44119 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754154AbbFWPgS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 11:36:18 -0400
+In-Reply-To: <CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
+	(Tom Yan's message of "Tue, 23 Jun 2015 22:16:22 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-RnJvbTogT2YgSmFtZXMgQm90dG9tbGV5DQo+IFNlbnQ6IDIyIEp1bmUgMjAxNSAxODozNg0KPiBU
-bzogQWxhbiBTdGVybg0KLi4uDQo+ID4gPiBPYnZpb3VzbHksIGZvciBhIGRpc2sgd2l0aCBhIHdy
-aXRlYmFjayBjYWNoZSB0aGF0IGNhbid0IGRvIGZsdXNoLCB0aGF0DQo+ID4gPiB3aW5kb3cgaXMg
-bXVjaCB3aWRlciBhbmQgdGhlIHJlYWwgc29sdXRpb24gc2hvdWxkIGJlIHRvIHRyeSB0byBzd2l0
-Y2gNCj4gPiA+IHRoZSBjYWNoZSB0byB3cml0ZSB0aHJvdWdoLg0KPiA+DQo+ID4gSSBhZ3JlZS4g
-IERvaW5nIHRoZSBzd2l0Y2ggbWFudWFsbHkgKGJ5IHdyaXRpbmcgdG8gdGhlICJjYWNoZV90eXBl
-Ig0KPiA+IGF0dHJpYnV0ZSBmaWxlKSB3b3JrcywgYnV0IGl0J3MgYSBudWlzYW5jZSB0byBkbyB0
-aGlzIHdoZW4geW91IGhhdmUgYQ0KPiA+IHBvcnRhYmxlIFVTQiBkcml2ZSB0aGF0IGdldHMgbW92
-ZWQgYW1vbmcgYSBidW5jaCBvZiBtYWNoaW5lcy4NCj4gDQo+IFBlcmhhcHMgaXQgbWlnaHQgYmUg
-d2lzZSB0byBkbyB0aGlzIHRvIGV2ZXJ5IFVTQiBkZXZpY2UgLi4uIGZvciBleHRlcm5hbA0KPiBk
-ZXZpY2VzLCB0aGUgc21hbGwgcGVyZm9ybWFuY2UgZ2FpbiBkb2Vzbid0IHJlYWxseSBtYWtlIHVw
-IGZvciB0aGUNCj4gcG90ZW50aWFsIGRhdGEgbG9zcy4NCg0KV2hhdCBhYm91dCBzeXN0ZW1zIHJ1
-bm5pbmcgZnJvbSBVU0IgbWVtb3J5L2Rpc2sgZGlyZWN0bHkgcGx1Z2dlZCBpbnRvIHRoZQ0KbW90
-aGVyYm9hcmQgYW5kIHNodXQgaW5zaWRlIHRoZSBjYXNlPw0KDQpTaW5jZSB0aGV5IHNob3VsZG4n
-dCBiZSByZW1vdmVkIHlvdSBkb24ndCB3YW50IHRvIGJ5cGFzcyBhbnkgd3JpdGUgY2FjaGUuDQoo
-QW55IG1vcmUgdGhhbiB5b3UnZCB3YW50IHRvIG9uIGEgcmVhbCBkaXNrLikNCg0KVGhlcmUgaXMg
-YW4gYWRkaXRpb25hbCBwcm9ibGVtIGNhdXNlZCBieSB2ZXJ5IHRlbXBvcmFyeSBVU0IgZGlzY29u
-bmVjdHMNCihlYXNpbHkgY2F1c2VkIGJ5IGVsZWN0cmljYWwgbm9pc2UgY2F1c2luZyAocHJvYmFi
-bHkpIFZidXMgdG8gYm91bmNlKS4NCkluIHRoZXNlIGNvbmRpdGlvbnMgeW91IGRvbid0IHdhbnQg
-dG8gc2lnbmFsIGEgVVNCIHJlbW92ZSBhdCBhbGwgLSBhdA0KbGVhc3Qgbm90IHRvIHRoZSBmaWxl
-c3lzdGVtIC0gdW50aWwgdGhlIGRldmljZSBoYXMgcmVtYWluZWQgZGlzY29ubmVjdGVkDQpmb3Ig
-YSBzaG9ydCB0aW1lLg0KDQoJRGF2aWQNCg0K
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+
+Tom> I don't know whether the USB bridging or the way hdparm does TRIM
+Tom> matters, but it seems that some devices can't really handle limit
+Tom> like 0x3fffc0 blocks.
+
+The 0x3fffc0 limit is for SATA devices connected through Linux' libata
+SCSI ATA translation. This number corresponds to the biggest range we
+can discard while maintaining a 1:1 mapping between the SCSI command and
+the ATA ditto.
+
+If you connect the SATA drive to a USB/UAS bridge you are entirely at
+the bridge's whim when it comes to translation of WRITE SAME(10/16) w/
+UNMAP or the UNMAP command to DSM TRIM. libata is not involved and
+neither is the 0x3fffc0 limit (although chances are that the drive has
+the same limit internally). Even when using hdparm the bridge device
+still needs to correctly translate the ATA PASSTHROUGH commands.
+
+Tom> So I still think that the kernel should allow users to configure
+Tom> limits that can make libata send reliable ATA TRIM commands.
+
+You haven't given us any reason to. We are not aware of any ATA drives
+that put constraints on the range block count.
+
+Again, if you want to help please focus on your bridge devices and what,
+if anything, can be done to uniquely identify them and override any
+incorrect values they might report to the SCSI stack. Up to and
+including us disabling discard entirely on these devices if their
+translation isn't verifiable and bullet proof.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
