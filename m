@@ -1,26 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96 MSIX vector support
-Date: Tue, 23 Jun 2015 12:26:19 -0400
-Message-ID: <yq1381i5r2s.fsf@sermon.lab.mkp.net>
-References: <1434976858-1086-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: Re: [PATCH v1 09/20] [PATCH 09/20] [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and  2.00.34 header files
+Date: Tue, 23 Jun 2015 12:27:14 -0400
+Message-ID: <yq1vbee4cgt.fsf@sermon.lab.mkp.net>
+References: <1434976974-1143-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48080 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbbFWQ1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 12:27:09 -0400
-In-Reply-To: <1434976858-1086-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	(Sreekanth Reddy's message of "Mon, 22 Jun 2015 18:10:58 +0530")
+Received: from userp1040.oracle.com ([156.151.31.81]:18501 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596AbbFWQ1x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 12:27:53 -0400
+In-Reply-To: <1434976974-1143-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Mon, 22 Jun 2015 18:12:54 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+>>>>> Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Sreekanth> In this patch, increased the number of MSIX vector support
-Sreekanth> for SAS3 C0 HBAs to up-to 96.
+> Following is the change set, 1. Added more defines for the BiosOptions
+> field of MPI2_CONFIG_PAGE_BIOS_1.  2. Added
+> MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC definition.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
