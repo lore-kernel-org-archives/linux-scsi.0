@@ -1,40 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/2] scsi: Remove VPD quirk for Seagate drives
-Date: Tue, 23 Jun 2015 12:22:21 -0400
-Message-ID: <1435076541-27253-2-git-send-email-martin.petersen@oracle.com>
-References: <1435076541-27253-1-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 01/20] [SCSI] mpt3sas: Added Combined Reply Queue feature to extend up-to 96 MSIX vector support
+Date: Tue, 23 Jun 2015 12:26:19 -0400
+Message-ID: <yq1381i5r2s.fsf@sermon.lab.mkp.net>
+References: <1434976858-1086-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44593 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:48080 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933624AbbFWQWd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 12:22:33 -0400
-In-Reply-To: <1435076541-27253-1-git-send-email-martin.petersen@oracle.com>
+	with ESMTP id S1751055AbbFWQ1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 12:27:09 -0400
+In-Reply-To: <1434976858-1086-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Mon, 22 Jun 2015 18:10:58 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de
 
-Now that we sanity check the optimal I/O size reported by the device we
-no longer need to blacklist the VPD pages on certain Seagate drives.
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/scsi_devinfo.c | 1 -
- 1 file changed, 1 deletion(-)
+Sreekanth> In this patch, increased the number of MSIX vector support
+Sreekanth> for SAS3 C0 HBAs to up-to 96.
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 9f77d23239a2..f04f1b672962 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -232,7 +232,6 @@ static struct {
- 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
- 	{"SEAGATE", "ST34555N", "0930", BLIST_NOTQ},	/* Chokes on tagged INQUIRY */
- 	{"SEAGATE", "ST3390N", "9546", BLIST_NOTQ},
--	{"SEAGATE", "ST900MM0006", NULL, BLIST_SKIP_VPD_PAGES},
- 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
- 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
- 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
 -- 
-2.4.3
-
+Martin K. Petersen	Oracle Linux Engineering
