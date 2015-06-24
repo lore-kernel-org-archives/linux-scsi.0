@@ -1,74 +1,69 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid:Make functions static in the file megaraid_sas_base.c
-Date: Wed, 24 Jun 2015 11:27:22 +0530
-Message-ID: <05b203753393a523dfc3873996c3760c@mail.gmail.com>
-References: <1435104805-11346-1-git-send-email-xerofoify@gmail.com>
+From: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+Subject: st: convert DRIVER_ATTR macros to DRIVER_ATTR_RO
+Date: Wed, 24 Jun 2015 06:02:12 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB3F8E9D88@G4W3219.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1435104805-11346-1-git-send-email-xerofoify@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>, Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Uday Lingala <uday.lingala@avagotech.com>, JBottomley@odin.com, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> (gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org)" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: "Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org" <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
------Original Message-----
-From: Nicholas Krause [mailto:xerofoify@gmail.com]
-Sent: Wednesday, June 24, 2015 5:43 AM
-To: kashyap.desai@avagotech.com
-Cc: sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
-JBottomley@odin.com; megaraidlinux.pdl@avagotech.com;
-linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH] megaraid:Make functions static in the file
-megaraid_sas_base.c
 
-This makes various functions that have no external callers outside their
-definition/declaration in the file megaraid_sas_base.c to be declared as
-static now.
+Convert DRIVER_ATTR macros to DRIVER_ATTR_RO as requested by
+Greg KH. Also switched to using sprintf as nothing printed should
+exceed PAGE_SIZE - based on feedback from Greg when implementing
+show functions for tape stats.
 
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+Suggested-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Signed-off-by: Shane Seymour <shane.seymour-VXdhtT5mjnY@public.gmane.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 4c3fc0e..dad2393 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -190,7 +190,7 @@ static int megasas_get_ld_vf_affiliation(struct
-megasas_instance *instance,  int megasas_check_mpio_paths(struct
-megasas_instance *instance,
- 			     struct scsi_cmnd *scmd);
-
--void
-+static void
- megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd
-*cmd)  {
- 	instance->instancet->fire_cmd(instance,
-@@ -1698,7 +1698,7 @@ static int megasas_slave_alloc(struct scsi_device
-*sdev)
- * @instance:				Adapter soft state
- *
- */
--void megasas_complete_outstanding_ioctls(struct megasas_instance
-*instance)
-+static void megasas_complete_outstanding_ioctls(struct megasas_instance
-+*instance)
+This patch was implemented on top of the previous patch to
+convert to using driver attr groups.
+--- a/drivers/scsi/st.c	2015-06-22 20:38:16.061386739 -0500
++++ b/drivers/scsi/st.c	2015-06-23 17:29:03.547867682 -0500
+@@ -4427,29 +4427,29 @@ module_exit(exit_st);
+ 
+ 
+ /* The sysfs driver interface. Read-only at the moment */
+-static ssize_t st_try_direct_io_show(struct device_driver *ddp, char *buf)
++static ssize_t try_direct_io_show(struct device_driver *ddp, char *buf)
  {
- 	int i;
- 	struct megasas_cmd *cmd_mfi;
-@@ -1856,7 +1856,7 @@ megasas_internal_reset_defer_cmds(struct
-megasas_instance *instance);  static void
-process_fw_state_change_wq(struct work_struct *work);
-
--void megasas_do_ocr(struct megasas_instance *instance)
-+static void megasas_do_ocr(struct megasas_instance *instance)
+-	return snprintf(buf, PAGE_SIZE, "%d\n", try_direct_io);
++	return sprintf(buf, "%d\n", try_direct_io);
+ }
+-static DRIVER_ATTR(try_direct_io, S_IRUGO, st_try_direct_io_show, NULL);
++static DRIVER_ATTR_RO(try_direct_io);
+ 
+-static ssize_t st_fixed_buffer_size_show(struct device_driver *ddp, char *buf)
++static ssize_t fixed_buffer_size_show(struct device_driver *ddp, char *buf)
  {
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
- 	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
-
-Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
-
---
-2.1.4
+-	return snprintf(buf, PAGE_SIZE, "%d\n", st_fixed_buffer_size);
++	return sprintf(buf, "%d\n", st_fixed_buffer_size);
+ }
+-static DRIVER_ATTR(fixed_buffer_size, S_IRUGO, st_fixed_buffer_size_show, NULL);
++static DRIVER_ATTR_RO(fixed_buffer_size);
+ 
+-static ssize_t st_max_sg_segs_show(struct device_driver *ddp, char *buf)
++static ssize_t max_sg_segs_show(struct device_driver *ddp, char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%d\n", st_max_sg_segs);
++	return sprintf(buf, "%d\n", st_max_sg_segs);
+ }
+-static DRIVER_ATTR(max_sg_segs, S_IRUGO, st_max_sg_segs_show, NULL);
++static DRIVER_ATTR_RO(max_sg_segs);
+ 
+-static ssize_t st_version_show(struct device_driver *ddd, char *buf)
++static ssize_t version_show(struct device_driver *ddd, char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "[%s]\n", verstr);
++	return sprintf(buf, "[%s]\n", verstr);
+ }
+-static DRIVER_ATTR(version, S_IRUGO, st_version_show, NULL);
++static DRIVER_ATTR_RO(version);
+ 
+ static struct attribute *st_drv_attrs[] = {
+ 	&driver_attr_try_direct_io.attr,
