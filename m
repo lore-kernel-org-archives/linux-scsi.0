@@ -1,142 +1,262 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: configurable discard parameters
-Date: Tue, 23 Jun 2015 22:55:57 -0400
-Message-ID: <yq1616d4xxe.fsf@sermon.lab.mkp.net>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
-	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-	<yq1616f796w.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
-	<yq1bng65te8.fsf@sermon.lab.mkp.net>
-	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
-	<yq1mvzq4at7.fsf@sermon.lab.mkp.net>
-	<CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
-	<yq1egl246yd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
+From: "linux" <linux@highpoint-tech.com>
+Subject: [PATCH][SCSI] hptiop: Support HighPoint RR36xx HBAs and Support SAS tape and SAS media changer
+Date: Wed, 24 Jun 2015 11:41:17 +0800
+Message-ID: <004e01d0ae2f$a44e3870$eceaa950$@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
-	(Tom Yan's message of "Wed, 24 Jun 2015 05:25:20 +0800")
-Sender: linux-ide-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: zh-cn
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+Support HighPoint RR36xx HBAs which are based on Marvell Frey.
+Support SAS tape and SAS media changer.
 
-Tom> total untrimmed sectors: (310635 - 1 - 2410) / 32 = 9632 total
-Tom> ranges: (43 GiB * (1024 ^ 3) / 512) / 65535 ~= 1376 average
-Tom> untrimmed sectors per range: (9632 / 1376) = 7 = (65535 % 8)
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
 
-Every type of drive has its own internal restrictions. Unless the drive
-guarantees zero after TRIM it is perfectly normal for heads, tails or
-random pieces in-between to be left untouched.
+ drivers/scsi/hptiop.c |  104
++++++++++++++++++++++++++++++++++++++++------------------------
+ drivers/scsi/hptiop.h |    6 +--
+ 2 files changed, 69 insertions(+), 41 deletions(-)
 
-I am surprised that the common case of contiguous range entries was not
-handled properly by your drive. Most of them deal with that just fine
-(regardless of their internal granularity and alignment constraints). It
-is normally only the partial block tracking between command invocations
-that causes grief.
-
-In any case. Unless discard_zeroes_data is 1 (and that requires
-guarantees above and beyond what can be discovered via the ATA Command
-Set) all bets are off wrt. dependable behavior.
-
-The code below is an untested proof of concept to see what it would take
-to alleviate your particular issue. I am, however, not at all convinced
-that introducing such a change is worth the risk. I know of at least a
-couple of devices that would blow up as a result of this patch...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3131adcc1f87..9c270a303f0b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2238,8 +2238,24 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	 * with the unmap bit set.
- 	 */
- 	if (ata_id_has_trim(args->id)) {
--		put_unaligned_be64(65535 * 512 / 8, &rbuf[36]);
--		put_unaligned_be32(1, &rbuf[28]);
-+		/*
-+		 * If the drive supports reliable zero after trim we set
-+		 * the granularity to 1 and the blocks per range to
-+		 * 0xffff. Otherwise we set set the granularity to 8 and
-+		 * restrict the blocks per range to 0xfff8. This is done
-+		 * to accommodate older drives which prefer 4K-alignment.
-+		 */
+diff -urN linux.git/drivers/scsi/hptiop.c linux/drivers/scsi/hptiop.c
+--- linux.git/drivers/scsi/hptiop.c	2015-06-08 01:48:38.093750000 -0400
++++ linux/drivers/scsi/hptiop.c	2015-06-08 02:45:33.234375000 -0400
+@@ -1,6 +1,6 @@
+ /*
+  * HighPoint RR3xxx/4xxx controller driver for Linux
+- * Copyright (C) 2006-2012 HighPoint Technologies, Inc. All Rights
+Reserved.
++ * Copyright (C) 2006-2015 HighPoint Technologies, Inc. All Rights
+Reserved.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -42,7 +42,7 @@
+ 
+ static char driver_name[] = "hptiop";
+ static const char driver_name_long[] = "RocketRAID 3xxx/4xxx Controller
+driver";
+-static const char driver_ver[] = "v1.8";
++static const char driver_ver[] = "v1.10.0";
+ 
+ static int iop_send_sync_msg(struct hptiop_hba *hba, u32 msg, u32
+millisec);
+ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
+@@ -764,9 +764,7 @@
+ 		scsi_set_resid(scp,
+ 			scsi_bufflen(scp) -
+le32_to_cpu(req->dataxfer_length));
+ 		scp->result = SAM_STAT_CHECK_CONDITION;
+-		memcpy(scp->sense_buffer, &req->sg_list,
+-				min_t(size_t, SCSI_SENSE_BUFFERSIZE,
+-					le32_to_cpu(req->dataxfer_length)));
++		memcpy(scp->sense_buffer, &req->sg_list,
+SCSI_SENSE_BUFFERSIZE);
+ 		goto skip_resid;
+ 		break;
+ 
+@@ -1036,9 +1034,10 @@
+ 			_req->index, _req->req_virt);
+ 
+ 	scp->result = 0;
+-
+-	if (scp->device->channel || scp->device->lun ||
+-			scp->device->id > hba->max_devices) {
++	
++	if (scp->device->channel ||
++			(scp->device->id > hba->max_devices) ||
++			((scp->device->id == (hba->max_devices-1)) &&
+scp->device->lun)) {
+ 		scp->result = DID_BAD_TARGET << 16;
+ 		free_req(hba, _req);
+ 		goto cmd_done;
+@@ -1168,6 +1167,14 @@
+ 	NULL
+ };
+ 
++static int hptiop_slave_config(struct scsi_device *sdev)
++{
++	if (sdev->type == TYPE_TAPE)
++		blk_queue_max_hw_sectors(sdev->request_queue, 8192);
 +
-+		if (ata_id_has_zero_after_trim(args->id) &&
-+		    args->dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
-+			put_unaligned_be64(ATA_MAX_TRIM_RANGE * 512 / 8,
-+					   &rbuf[36]);
-+			put_unaligned_be32(1, &rbuf[28]);
-+		} else {
-+			put_unaligned_be64(ATA_ALIGNED_TRIM_RANGE * 512 / 8,
-+					   &rbuf[36]);
-+			put_unaligned_be32(8, &rbuf[28]);
++	return 0;
++}
++
+ static struct scsi_host_template driver_template = {
+ 	.module                     = THIS_MODULE,
+ 	.name                       = driver_name,
+@@ -1179,6 +1186,7 @@
+ 	.use_clustering             = ENABLE_CLUSTERING,
+ 	.proc_name                  = driver_name,
+ 	.shost_attrs                = hptiop_attrs,
++	.slave_configure            = hptiop_slave_config,
+ 	.this_id                    = -1,
+ 	.change_queue_depth         = hptiop_adjust_disk_queue_depth,
+ };
+@@ -1323,7 +1331,8 @@
+ 	}
+ 
+ 	hba = (struct hptiop_hba *)host->hostdata;
+-
++	memset(hba, 0, sizeof(struct hptiop_hba));
++	
+ 	hba->ops = iop_ops;
+ 	hba->pcidev = pcidev;
+ 	hba->host = host;
+@@ -1336,7 +1345,7 @@
+ 	init_waitqueue_head(&hba->reset_wq);
+ 	init_waitqueue_head(&hba->ioctl_wq);
+ 
+-	host->max_lun = 1;
++	host->max_lun = 128;
+ 	host->max_channel = 0;
+ 	host->io_port = 0;
+ 	host->n_io_port = 0;
+@@ -1428,34 +1437,33 @@
+ 	dprintk("req_size=%d, max_requests=%d\n", req_size,
+hba->max_requests);
+ 
+ 	hba->req_size = req_size;
+-	start_virt = dma_alloc_coherent(&pcidev->dev,
+-				hba->req_size*hba->max_requests + 0x20,
+-				&start_phy, GFP_KERNEL);
+-
+-	if (!start_virt) {
+-		printk(KERN_ERR "scsi%d: fail to alloc request mem\n",
+-					hba->host->host_no);
+-		goto free_request_irq;
+-	}
+-
+-	hba->dma_coherent = start_virt;
+-	hba->dma_coherent_handle = start_phy;
+-
+-	if ((start_phy & 0x1f) != 0) {
+-		offset = ((start_phy + 0x1f) & ~0x1f) - start_phy;
+-		start_phy += offset;
+-		start_virt += offset;
+-	}
+-
+ 	hba->req_list = NULL;
++	
+ 	for (i = 0; i < hba->max_requests; i++) {
++		start_virt = dma_alloc_coherent(&pcidev->dev,
++					hba->req_size + 0x20,
++					&start_phy, GFP_KERNEL);
++
++		if (!start_virt) {
++			printk(KERN_ERR "scsi%d: fail to alloc request
+mem\n",
++						hba->host->host_no);
++			goto free_request_mem;
 +		}
- 	}
- 
- 	return 0;
-@@ -3168,7 +3184,14 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 		goto invalid_fld;
- 
- 	buf = page_address(sg_page(scsi_sglist(scmd)));
--	size = ata_set_lba_range_entries(buf, 512, block, n_block);
 +
-+	if (ata_id_has_zero_after_trim(dev->id) &&
-+	    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM)
-+		size = ata_set_lba_range_entries(buf, 512, block, n_block,
-+						 ATA_MAX_TRIM_RANGE);
-+	else
-+		size = ata_set_lba_range_entries(buf, 512, block, n_block,
-+						 ATA_ALIGNED_TRIM_RANGE);
- 
- 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
- 		/* Newer devices support queued TRIM commands */
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index fed36418dd1c..8a17fa22cdbe 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -47,6 +47,8 @@ enum {
- 	ATA_MAX_SECTORS		= 256,
- 	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
- 	ATA_MAX_SECTORS_TAPE	= 65535,
-+	ATA_MAX_TRIM_RANGE	= 0xffff,
-+	ATA_ALIGNED_TRIM_RANGE	= 0xfff8,
- 
- 	ATA_ID_WORDS		= 256,
- 	ATA_ID_CONFIG		= 0,
-@@ -1012,19 +1014,20 @@ static inline void ata_id_to_hd_driveid(u16 *id)
-  * TO NV CACHE PINNED SET.
-  */
- static inline unsigned ata_set_lba_range_entries(void *_buffer,
--		unsigned buf_size, u64 sector, unsigned long count)
-+		unsigned buf_size, u64 sector, unsigned long count,
-+		u16 bpe)
- {
- 	__le64 *buffer = _buffer;
- 	unsigned i = 0, used_bytes;
- 
- 	while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry */
- 		u64 entry = sector |
--			((u64)(count > 0xffff ? 0xffff : count) << 48);
-+			((u64)(count > bpe ? bpe : count) << 48);
- 		buffer[i++] = __cpu_to_le64(entry);
--		if (count <= 0xffff)
-+		if (count <= bpe)
- 			break;
--		count -= 0xffff;
--		sector += 0xffff;
-+		count -= bpe;
-+		sector += bpe;
++		hba->dma_coherent[i] = start_virt;
++		hba->dma_coherent_handle[i] = start_phy;
++
++		if ((start_phy & 0x1f) != 0) {
++			offset = ((start_phy + 0x1f) & ~0x1f) - start_phy;
++			start_phy += offset;
++			start_virt += offset;
++		}
++		
+ 		hba->reqs[i].next = NULL;
+ 		hba->reqs[i].req_virt = start_virt;
+ 		hba->reqs[i].req_shifted_phy = start_phy >> 5;
+ 		hba->reqs[i].index = i;
+ 		free_req(hba, &hba->reqs[i]);
+-		start_virt = (char *)start_virt + hba->req_size;
+-		start_phy = start_phy + hba->req_size;
  	}
  
- 	used_bytes = ALIGN(i * 8, 512);
+ 	/* Enable Interrupt and start background task */
+@@ -1474,9 +1482,15 @@
+ 	return 0;
+ 
+ free_request_mem:
+-	dma_free_coherent(&hba->pcidev->dev,
+-			hba->req_size * hba->max_requests + 0x20,
+-			hba->dma_coherent, hba->dma_coherent_handle);
++	for (i = 0; i < hba->max_requests; i++) {
++		if (hba->dma_coherent[i] && hba->dma_coherent_handle[i])
++			dma_free_coherent(&hba->pcidev->dev,
++					hba->req_size + 0x20,
++					hba->dma_coherent[i], 
++					hba->dma_coherent_handle[i]);
++		else
++			break;
++	}
+ 
+ free_request_irq:
+ 	free_irq(hba->pcidev->irq, hba);
+@@ -1546,6 +1560,7 @@
+ {
+ 	struct Scsi_Host *host = pci_get_drvdata(pcidev);
+ 	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++	u32 i;
+ 
+ 	dprintk("scsi%d: hptiop_remove\n", hba->host->host_no);
+ 
+@@ -1555,10 +1570,15 @@
+ 
+ 	free_irq(hba->pcidev->irq, hba);
+ 
+-	dma_free_coherent(&hba->pcidev->dev,
+-			hba->req_size * hba->max_requests + 0x20,
+-			hba->dma_coherent,
+-			hba->dma_coherent_handle);
++	for (i = 0; i < hba->max_requests; i++) {
++		if (hba->dma_coherent[i] && hba->dma_coherent_handle[i])
++			dma_free_coherent(&hba->pcidev->dev,
++					hba->req_size + 0x20,
++					hba->dma_coherent[i], 
++					hba->dma_coherent_handle[i]);
++		else
++			break;
++	}
+ 
+ 	hba->ops->internal_memfree(hba);
+ 
+@@ -1653,6 +1673,14 @@
+ 	{ PCI_VDEVICE(TTI, 0x3020), (kernel_ulong_t)&hptiop_mv_ops },
+ 	{ PCI_VDEVICE(TTI, 0x4520), (kernel_ulong_t)&hptiop_mvfrey_ops },
+ 	{ PCI_VDEVICE(TTI, 0x4522), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3610), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3611), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3620), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3622), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3640), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3660), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3680), (kernel_ulong_t)&hptiop_mvfrey_ops },
++	{ PCI_VDEVICE(TTI, 0x3690), (kernel_ulong_t)&hptiop_mvfrey_ops },
+ 	{},
+ };
+ 
+diff -urN linux.git/drivers/scsi/hptiop.h linux/drivers/scsi/hptiop.h
+--- linux.git/drivers/scsi/hptiop.h	2015-06-08 01:49:36.734375000 -0400
++++ linux/drivers/scsi/hptiop.h	2015-06-08 02:15:44.421875000 -0400
+@@ -1,6 +1,6 @@
+ /*
+  * HighPoint RR3xxx/4xxx controller driver for Linux
+- * Copyright (C) 2006-2012 HighPoint Technologies, Inc. All Rights
+Reserved.
++ * Copyright (C) 2006-2015 HighPoint Technologies, Inc. All Rights
+Reserved.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -327,8 +327,8 @@
+ 	struct hptiop_request reqs[HPTIOP_MAX_REQUESTS];
+ 
+ 	/* used to free allocated dma area */
+-	void        *dma_coherent;
+-	dma_addr_t  dma_coherent_handle;
++	void        *dma_coherent[HPTIOP_MAX_REQUESTS];
++	dma_addr_t  dma_coherent_handle[HPTIOP_MAX_REQUESTS];
+ 
+ 	atomic_t    reset_count;
+ 	atomic_t    resetting;
