@@ -1,67 +1,74 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [Patch V2 9/9] [SCSI] aacraid: Update driver version
-Date: Wed, 24 Jun 2015 05:42:32 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AB7F788DB@BBYEXM01.pmc-sierra.internal>
-References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <1433986951-9033-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
+Subject: RE: [PATCH] megaraid:Make functions static in the file megaraid_sas_base.c
+Date: Wed, 24 Jun 2015 11:27:22 +0530
+Message-ID: <05b203753393a523dfc3873996c3760c@mail.gmail.com>
+References: <1435104805-11346-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:59892 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750953AbbFXFme convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Jun 2015 01:42:34 -0400
-In-Reply-To: <1433986951-9033-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1435104805-11346-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>, Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Uday Lingala <uday.lingala@avagotech.com>, JBottomley@odin.com, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
-
-Reviewed-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-
 
 -----Original Message-----
-From: Rajinikanth Pandurangan 
-Sent: Thursday, June 11, 2015 7:13 AM
-To: jbottomley@parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Mahesh Rajashekhara; Rich Bono; Achim Leubner; Murthy Bhat; Rajinikanth Pandurangan
-Subject: [Patch V2 9/9] [SCSI] aacraid: Update driver version
+From: Nicholas Krause [mailto:xerofoify@gmail.com]
+Sent: Wednesday, June 24, 2015 5:43 AM
+To: kashyap.desai@avagotech.com
+Cc: sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
+JBottomley@odin.com; megaraidlinux.pdl@avagotech.com;
+linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCH] megaraid:Make functions static in the file
+megaraid_sas_base.c
 
-From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+This makes various functions that have no external callers outside their
+definition/declaration in the file megaraid_sas_base.c to be declared as
+static now.
 
-Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- drivers/scsi/aacraid/linit.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 7b95227..73c3384 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c index 3df0dfb..1627928 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -56,7 +56,7 @@
- 
- #include "aacraid.h"
- 
--#define AAC_DRIVER_VERSION		"1.2-1"
-+#define AAC_DRIVER_VERSION		"1.2-2"
- #ifndef AAC_DRIVER_BRANCH
- #define AAC_DRIVER_BRANCH		""
- #endif
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 4c3fc0e..dad2393 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -190,7 +190,7 @@ static int megasas_get_ld_vf_affiliation(struct
+megasas_instance *instance,  int megasas_check_mpio_paths(struct
+megasas_instance *instance,
+ 			     struct scsi_cmnd *scmd);
+
+-void
++static void
+ megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd
+*cmd)  {
+ 	instance->instancet->fire_cmd(instance,
+@@ -1698,7 +1698,7 @@ static int megasas_slave_alloc(struct scsi_device
+*sdev)
+ * @instance:				Adapter soft state
+ *
+ */
+-void megasas_complete_outstanding_ioctls(struct megasas_instance
+*instance)
++static void megasas_complete_outstanding_ioctls(struct megasas_instance
++*instance)
+ {
+ 	int i;
+ 	struct megasas_cmd *cmd_mfi;
+@@ -1856,7 +1856,7 @@ megasas_internal_reset_defer_cmds(struct
+megasas_instance *instance);  static void
+process_fw_state_change_wq(struct work_struct *work);
+
+-void megasas_do_ocr(struct megasas_instance *instance)
++static void megasas_do_ocr(struct megasas_instance *instance)
+ {
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
+ 	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
+
+Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+
 --
-1.9.3
-
+2.1.4
