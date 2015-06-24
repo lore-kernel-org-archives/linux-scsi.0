@@ -1,63 +1,52 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] SCSI: Delete unnecessary checks before the function call
- "put_device"
-Date: Wed, 24 Jun 2015 19:28:53 +0200
-Message-ID: <558AE8D5.1020106@users.sourceforge.net>
+Subject: [PATCH] SCSI-fnic: Delete an unnecessary check before the function
+ call "vfree"
+Date: Wed, 24 Jun 2015 20:45:07 +0200
+Message-ID: <558AFAB3.2020108@users.sourceforge.net>
 References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <546E2B02.5090902@users.sourceforge.net>
+ urceforge.net> <546EFBBB.7000409@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <546E2B02.5090902@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.web.de ([212.227.17.12]:51808 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752418AbbFXSpR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Jun 2015 14:45:17 -0400
+In-Reply-To: <546EFBBB.7000409@users.sourceforge.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian Uchino <buchino@cisco.com>, Hiral Patel <hiralpat@cisco.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, Suma Ramars <sramars@cisco.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 24 Jun 2015 19:24:01 +0200
+Date: Wed, 24 Jun 2015 20:40:35 +0200
 
-The put_device() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+The vfree() function performs also input parameter validation.
+Thus the test around the call is not needed.
 
 This issue was detected by using the Coccinelle software.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/scsi/hosts.c      | 4 +---
- drivers/scsi/scsi_sysfs.c | 4 +---
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/fnic/fnic_debugfs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..84c8565 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -336,9 +336,7 @@ static void scsi_host_dev_release(struct device *dev)
- 	}
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index d6498fa..855d382 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -102,9 +102,7 @@ void fnic_debugfs_terminate(void)
  
- 	kfree(shost->shost_data);
+ 	debugfs_remove(fnic_trace_debugfs_root);
+ 	fnic_trace_debugfs_root = NULL;
 -
--	if (parent)
--		put_device(parent);
-+	put_device(parent);
- 	kfree(shost);
+-	if (fc_trc_flag)
+-		vfree(fc_trc_flag);
++	vfree(fc_trc_flag);
  }
  
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 1ac38e7..9ed5391 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -425,9 +425,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	kfree(sdev->vpd_pg80);
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
--
--	if (parent)
--		put_device(parent);
-+	put_device(parent);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
+ /*
 -- 
 2.4.4
+
