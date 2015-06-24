@@ -1,52 +1,38 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] SCSI-fnic: Delete an unnecessary check before the function
- call "vfree"
-Date: Wed, 24 Jun 2015 20:45:07 +0200
-Message-ID: <558AFAB3.2020108@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <546EFBBB.7000409@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:51808 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752418AbbFXSpR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Jun 2015 14:45:17 -0400
-In-Reply-To: <546EFBBB.7000409@users.sourceforge.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: =?utf-8?Q?=22Kai_M=C3=A4kisara_=28Kolumbus=29=22?=
+	<kai.makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>
+Subject: Re: [PATCH v2] st: convert DRIVER_ATTR macros to DRIVER_ATTR_RO
+Date: Wed, 24 Jun 2015 23:15:26 +0300
+Message-ID: <374DC3D5-CA5E-48B8-838A-D95962C39275@kolumbus.fi>
+References: <DDB9C85B850785449757F9914A034FCB3F8E9E02@G4W3219.americas.hpqcorp.net>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3F8E9E02-MCKW7lC+H9ISZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> (gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org)" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian Uchino <buchino@cisco.com>, Hiral Patel <hiralpat@cisco.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, Suma Ramars <sramars@cisco.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 24 Jun 2015 20:40:35 +0200
 
-The vfree() function performs also input parameter validation.
-Thus the test around the call is not needed.
+> On 24.6.2015, at 9.54, Seymour, Shane M <shane.seymour-VXdhtT5mjnY@public.gmane.org> wrote:
+>=20
+>=20
+> Convert DRIVER_ATTR macros to DRIVER_ATTR_RO requested by
+> Greg KH. Also switched to using scnprintf instead of snprintf
+> per Documentation/filesystems/sysfs.txt.
+>=20
+> Suggested-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+> Signed-off-by: Shane Seymour <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+> ---
+> This patch was implemented on top of the previous patch to
+> convert to using driver attr groups.
+>=20
+> Changes from v1:
+> - switched to scnprintf from sprintf after feedback from Sergey
+> Senozhatsky.
 
-This issue was detected by using the Coccinelle software.
+Acked-by: Kai M=C3=A4kisara <kai.makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/fnic/fnic_debugfs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index d6498fa..855d382 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -102,9 +102,7 @@ void fnic_debugfs_terminate(void)
- 
- 	debugfs_remove(fnic_trace_debugfs_root);
- 	fnic_trace_debugfs_root = NULL;
--
--	if (fc_trc_flag)
--		vfree(fc_trc_flag);
-+	vfree(fc_trc_flag);
- }
- 
- /*
--- 
-2.4.4
-
+Thanks,
+Kai
