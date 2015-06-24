@@ -1,93 +1,142 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] st: convert to using driver attr groups for sysfs
-Date: Tue, 23 Jun 2015 19:37:55 -0700
-Message-ID: <20150624023755.GB18357@kroah.com>
-References: <DDB9C85B850785449757F9914A034FCB3BFF68D9@G9W0766.americas.hpqcorp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: configurable discard parameters
+Date: Tue, 23 Jun 2015 22:55:57 -0400
+Message-ID: <yq1616d4xxe.fsf@sermon.lab.mkp.net>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	<yq1616f796w.fsf@sermon.lab.mkp.net>
+	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
+	<yq1bng65te8.fsf@sermon.lab.mkp.net>
+	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
+	<yq1mvzq4at7.fsf@sermon.lab.mkp.net>
+	<CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
+	<yq1egl246yd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38960 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752467AbbFXCh5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2015 22:37:57 -0400
-Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BFF68D9@G9W0766.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
+	(Tom Yan's message of "Wed, 24 Jun 2015 05:25:20 +0800")
+Sender: linux-ide-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>
 
-On Tue, Jun 23, 2015 at 08:11:00AM +0000, Seymour, Shane M wrote:
-> This patch changes the st driver to use attribute groups so
-> driver sysfs files are created automatically. See the
-> following for reference:
-> 
-> http://kroah.com/log/blog/2013/06/26/how-to-create-a-sysfs-file-correctly/
-> 
-> Signed-off-by: Shane Seymour <shane.seymour@hp.com>
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-Very nice, thanks for doing this.
+Tom> total untrimmed sectors: (310635 - 1 - 2410) / 32 = 9632 total
+Tom> ranges: (43 GiB * (1024 ^ 3) / 512) / 65535 ~= 1376 average
+Tom> untrimmed sectors per range: (9632 / 1376) = 7 = (65535 % 8)
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Every type of drive has its own internal restrictions. Unless the drive
+guarantees zero after TRIM it is perfectly normal for heads, tails or
+random pieces in-between to be left untouched.
 
-> ---
-> --- a/drivers/scsi/st.c	2015-06-22 14:20:40.829612661 -0500
-> +++ b/drivers/scsi/st.c	2015-06-22 15:49:49.357248393 -0500
-> @@ -85,6 +85,7 @@ static int debug_flag;
->  
->  static struct class st_sysfs_class;
->  static const struct attribute_group *st_dev_groups[];
-> +static const struct attribute_group *st_drv_groups[];
->  
->  MODULE_AUTHOR("Kai Makisara");
->  MODULE_DESCRIPTION("SCSI tape (st) driver");
-> @@ -198,15 +199,13 @@ static int sgl_unmap_user_pages(struct s
->  static int st_probe(struct device *);
->  static int st_remove(struct device *);
->  
-> -static int do_create_sysfs_files(void);
-> -static void do_remove_sysfs_files(void);
-> -
->  static struct scsi_driver st_template = {
->  	.gendrv = {
->  		.name		= "st",
->  		.owner		= THIS_MODULE,
->  		.probe		= st_probe,
->  		.remove		= st_remove,
-> +		.groups		= st_drv_groups,
->  	},
->  };
->  
-> @@ -4404,14 +4403,8 @@ static int __init init_st(void)
->  	if (err)
->  		goto err_chrdev;
->  
-> -	err = do_create_sysfs_files();
-> -	if (err)
-> -		goto err_scsidrv;
-> -
->  	return 0;
->  
-> -err_scsidrv:
-> -	scsi_unregister_driver(&st_template.gendrv);
->  err_chrdev:
->  	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
->  				 ST_MAX_TAPE_ENTRIES);
-> @@ -4422,7 +4415,6 @@ err_class:
->  
->  static void __exit exit_st(void)
->  {
-> -	do_remove_sysfs_files();
->  	scsi_unregister_driver(&st_template.gendrv);
->  	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
->  				 ST_MAX_TAPE_ENTRIES);
-> @@ -4459,44 +4451,14 @@ static ssize_t st_version_show(struct de
->  }
->  static DRIVER_ATTR(version, S_IRUGO, st_version_show, NULL);
+I am surprised that the common case of contiguous range entries was not
+handled properly by your drive. Most of them deal with that just fine
+(regardless of their internal granularity and alignment constraints). It
+is normally only the partial block tracking between command invocations
+that causes grief.
 
-For a future patch, you might want to convert these type of declarations
-to use DRIVER_ATTR_RO() and friends.
+In any case. Unless discard_zeroes_data is 1 (and that requires
+guarantees above and beyond what can be discovered via the ATA Command
+Set) all bets are off wrt. dependable behavior.
 
-thanks,
+The code below is an untested proof of concept to see what it would take
+to alleviate your particular issue. I am, however, not at all convinced
+that introducing such a change is worth the risk. I know of at least a
+couple of devices that would blow up as a result of this patch...
 
-greg k-h
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3131adcc1f87..9c270a303f0b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2238,8 +2238,24 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	 * with the unmap bit set.
+ 	 */
+ 	if (ata_id_has_trim(args->id)) {
+-		put_unaligned_be64(65535 * 512 / 8, &rbuf[36]);
+-		put_unaligned_be32(1, &rbuf[28]);
++		/*
++		 * If the drive supports reliable zero after trim we set
++		 * the granularity to 1 and the blocks per range to
++		 * 0xffff. Otherwise we set set the granularity to 8 and
++		 * restrict the blocks per range to 0xfff8. This is done
++		 * to accommodate older drives which prefer 4K-alignment.
++		 */
++
++		if (ata_id_has_zero_after_trim(args->id) &&
++		    args->dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
++			put_unaligned_be64(ATA_MAX_TRIM_RANGE * 512 / 8,
++					   &rbuf[36]);
++			put_unaligned_be32(1, &rbuf[28]);
++		} else {
++			put_unaligned_be64(ATA_ALIGNED_TRIM_RANGE * 512 / 8,
++					   &rbuf[36]);
++			put_unaligned_be32(8, &rbuf[28]);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3168,7 +3184,14 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;
+ 
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512, block, n_block);
++
++	if (ata_id_has_zero_after_trim(dev->id) &&
++	    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM)
++		size = ata_set_lba_range_entries(buf, 512, block, n_block,
++						 ATA_MAX_TRIM_RANGE);
++	else
++		size = ata_set_lba_range_entries(buf, 512, block, n_block,
++						 ATA_ALIGNED_TRIM_RANGE);
+ 
+ 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
+ 		/* Newer devices support queued TRIM commands */
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index fed36418dd1c..8a17fa22cdbe 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -47,6 +47,8 @@ enum {
+ 	ATA_MAX_SECTORS		= 256,
+ 	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
+ 	ATA_MAX_SECTORS_TAPE	= 65535,
++	ATA_MAX_TRIM_RANGE	= 0xffff,
++	ATA_ALIGNED_TRIM_RANGE	= 0xfff8,
+ 
+ 	ATA_ID_WORDS		= 256,
+ 	ATA_ID_CONFIG		= 0,
+@@ -1012,19 +1014,20 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+  * TO NV CACHE PINNED SET.
+  */
+ static inline unsigned ata_set_lba_range_entries(void *_buffer,
+-		unsigned buf_size, u64 sector, unsigned long count)
++		unsigned buf_size, u64 sector, unsigned long count,
++		u16 bpe)
+ {
+ 	__le64 *buffer = _buffer;
+ 	unsigned i = 0, used_bytes;
+ 
+ 	while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry */
+ 		u64 entry = sector |
+-			((u64)(count > 0xffff ? 0xffff : count) << 48);
++			((u64)(count > bpe ? bpe : count) << 48);
+ 		buffer[i++] = __cpu_to_le64(entry);
+-		if (count <= 0xffff)
++		if (count <= bpe)
+ 			break;
+-		count -= 0xffff;
+-		sector += 0xffff;
++		count -= bpe;
++		sector += bpe;
+ 	}
+ 
+ 	used_bytes = ALIGN(i * 8, 512);
