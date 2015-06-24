@@ -1,81 +1,49 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] SCSI-OSD: Delete an unnecessary check before the
- function call "put_disk"
-Date: Wed, 24 Jun 2015 16:32:23 +0200
-Message-ID: <20150624143223.GA24848@c203.arch.suse.de>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
- <546E238A.5050606@users.sourceforge.net>
- <558ABBC2.8080304@users.sourceforge.net>
+From: "Greg KH <gregkh@linuxfoundation.org> (gregkh@linuxfoundation.org)"
+	<gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] st: convert DRIVER_ATTR macros to DRIVER_ATTR_RO
+Date: Wed, 24 Jun 2015 08:08:24 -0700
+Message-ID: <20150624150824.GB7925@kroah.com>
+References: <DDB9C85B850785449757F9914A034FCB3F8E9DA4@G4W3219.americas.hpqcorp.net>
+ <20150624062557.GA10808@swordfish>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42506 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752765AbbFXOca (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Jun 2015 10:32:30 -0400
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54024 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658AbbFXPIZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jun 2015 11:08:25 -0400
 Content-Disposition: inline
-In-Reply-To: <558ABBC2.8080304@users.sourceforge.net>
+In-Reply-To: <20150624062557.GA10808@swordfish>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Benny Halevy <bhalevy@primarydata.com>, Boaz Harrosh <openosd@gmail.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Cc: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>
 
-On Wed, Jun 24, 2015 at 04:16:34PM +0200, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 24 Jun 2015 16:06:21 +0200
->=20
-> The put_disk() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
->=20
-> This issue was detected by using the Coccinelle software.
->=20
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/scsi/osd/osd_uld.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->=20
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index 243eab3..e2075522 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -407,9 +407,7 @@ static void __remove(struct device *dev)
-> =20
->  	OSD_INFO("osd_remove %s\n",
->  		 oud->disk ? oud->disk->disk_name : NULL);
-> -
-> -	if (oud->disk)
-> -		put_disk(oud->disk);
-> +	put_disk(oud->disk);
->  	ida_remove(&osd_minor_ida, oud->minor);
-> =20
->  	kfree(oud);
-> --=20
-> 2.4.4
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, Jun 24, 2015 at 03:25:57PM +0900, Sergey Senozhatsky wrote:
+> On (06/24/15 06:10), Seymour, Shane M wrote:
+> [..]
+> >  
+> >  /* The sysfs driver interface. Read-only at the moment */
+> > -static ssize_t st_try_direct_io_show(struct device_driver *ddp, char *buf)
+> > +static ssize_t try_direct_io_show(struct device_driver *ddp, char *buf)
+> >  {
+> > -	return snprintf(buf, PAGE_SIZE, "%d\n", try_direct_io);
+> > +	return sprintf(buf, "%d\n", try_direct_io);
+> >  }
+> 
+> a nitpick,
+> 
+> per Documentation/filesystems/sysfs.txt
+> 
+> :
+> : - show() should always use scnprintf().
+> :
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Don't believe everything you read, this change is just fine.
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But, you are doing something here that you did not say you were doing in
+the changelog, so for that reason, the patch should be redone.
+
+thanks,
+
+greg k-h
