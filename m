@@ -1,503 +1,385 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [Patch V2 2/9] [SCSI] aacraid: Add Power Management support
-Date: Thu, 25 Jun 2015 19:52:40 +0200
-Message-ID: <558C3FE8.6030705@redhat.com>
-References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1433986951-9033-4-git-send-email-rajinikanth.pandurangan@pmcs.com> <558C2172.7010307@redhat.com> <E34C6B6293F0214497D0C55B92526C05B69824CE@BBYEXM01.pmc-sierra.internal>
+Subject: Re: [Patch V2 5/9] [SCSI] aacraid: Tune response path if IsFastPath
+ bit set
+Date: Thu, 25 Jun 2015 20:05:26 +0200
+Message-ID: <558C42E6.80603@redhat.com>
+References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com> <1433986951-9033-7-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48685 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44418 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595AbbFYRwo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jun 2015 13:52:44 -0400
-In-Reply-To: <E34C6B6293F0214497D0C55B92526C05B69824CE@BBYEXM01.pmc-sierra.internal>
+	id S1751651AbbFYSF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Jun 2015 14:05:29 -0400
+In-Reply-To: <1433986951-9033-7-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
+To: rajinikanth.pandurangan@pmcs.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, mahesh.rajashekhara@pmcs.com, rich.bono@pmcs.com, achim.leubner@pmcs.com, murthy.bhat@pmcs.com
 
-On 06/25/2015 06:54 PM, Rajinikanth Pandurangan wrote:
-> Hello Tomas,
+On 06/11/2015 03:42 AM, rajinikanth.pandurangan@pmcs.com wrote:
+> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 > 
-> Please see my response below.
+> Description:
+>         If 'IsFastPath' bit is set, then response path assumes no error
+>         and skips error check.
 > 
-> Thanks,
-> -Raj P.
+> Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+> ---
+>  drivers/scsi/aacraid/aachba.c | 259 ++++++++++++++++++++++--------------------
+>  1 file changed, 137 insertions(+), 122 deletions(-)
 > 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Thursday, June 25, 2015 8:43 AM
-> To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
-> Cc: aacraid@pmc-sierra.com; Harry Yang; Mahesh Rajashekhara; Rich Bono; Achim Leubner; Murthy Bhat
-> Subject: Re: [Patch V2 2/9] [SCSI] aacraid: Add Power Management support
-> 
-> On 06/11/2015 03:42 AM, rajinikanth.pandurangan@pmcs.com wrote:
->> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
->>
->> Description:
->> 	* .suspend() and .resume() routines implemented in the driver
->> 	* aac_release_resources() initiates firmware shutdown
->> 	* aac_acquire_resources re-initializes the host interface
->>
->> Signed-off-by: Rajinikanth Pandurangan 
->> <rajinikanth.pandurangan@pmcs.com>
->> ---
->>  drivers/scsi/aacraid/aacraid.h  |   5 ++
->>  drivers/scsi/aacraid/comminit.c | 154 ++++++++++++++++++++--------------------
->>  drivers/scsi/aacraid/linit.c    | 147 ++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/aacraid/rx.c       |   1 +
->>  drivers/scsi/aacraid/sa.c       |   1 +
->>  drivers/scsi/aacraid/src.c      |   2 +
->>  6 files changed, 232 insertions(+), 78 deletions(-)
->>
->> diff --git a/drivers/scsi/aacraid/aacraid.h 
->> b/drivers/scsi/aacraid/aacraid.h index 40fe65c..62b0999 100644
->> --- a/drivers/scsi/aacraid/aacraid.h
->> +++ b/drivers/scsi/aacraid/aacraid.h
->> @@ -547,6 +547,7 @@ struct adapter_ops
->>  	int  (*adapter_sync_cmd)(struct aac_dev *dev, u32 command, u32 p1, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 *status, u32 *r1, u32 *r2, u32 *r3, u32 *r4);
->>  	int  (*adapter_check_health)(struct aac_dev *dev);
->>  	int  (*adapter_restart)(struct aac_dev *dev, int bled);
->> +	void (*adapter_start)(struct aac_dev *dev);
->>  	/* Transport operations */
->>  	int  (*adapter_ioremap)(struct aac_dev * dev, u32 size);
->>  	irq_handler_t adapter_intr;
->> @@ -1247,6 +1248,9 @@ struct aac_dev
->>  #define aac_adapter_restart(dev,bled) \
->>  	(dev)->a_ops.adapter_restart(dev,bled)
->>  
->> +#define aac_adapter_start(dev) \
->> +	((dev)->a_ops.adapter_start(dev))
->> +
->>  #define aac_adapter_ioremap(dev, size) \
->>  	(dev)->a_ops.adapter_ioremap(dev, size)
->>  
->> @@ -2127,6 +2131,7 @@ int aac_sa_init(struct aac_dev *dev);  int 
->> aac_src_init(struct aac_dev *dev);  int aac_srcv_init(struct aac_dev 
->> *dev);  int aac_queue_get(struct aac_dev * dev, u32 * index, u32 qid, 
->> struct hw_fib * hw_fib, int wait, struct fib * fibptr, unsigned long 
->> *nonotify);
->> +void aac_define_int_mode(struct aac_dev *dev);
->>  unsigned int aac_response_normal(struct aac_queue * q);  unsigned int 
->> aac_command_normal(struct aac_queue * q);  unsigned int 
->> aac_intr_normal(struct aac_dev *dev, u32 Index, diff --git 
->> a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c 
->> index 45db84a..e0a76d5 100644
->> --- a/drivers/scsi/aacraid/comminit.c
->> +++ b/drivers/scsi/aacraid/comminit.c
->> @@ -43,8 +43,6 @@
->>  
->>  #include "aacraid.h"
->>  
->> -static void aac_define_int_mode(struct aac_dev *dev);
->> -
->>  struct aac_common aac_config = {
->>  	.irq_mod = 1
->>  };
->> @@ -338,6 +336,82 @@ static int aac_comm_init(struct aac_dev * dev)
->>  	return 0;
->>  }
->>  
->> +void aac_define_int_mode(struct aac_dev *dev) {
->> +	int i, msi_count;
->> +
->> +	msi_count = i = 0;
->> +	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
->> +	if (dev->max_msix == 0 ||
->> +	    dev->pdev->device == PMC_DEVICE_S6 ||
->> +	    dev->sync_mode) {
->> +		dev->max_msix = 1;
->> +		dev->vector_cap =
->> +			dev->scsi_host_ptr->can_queue +
->> +			AAC_NUM_MGT_FIB;
->> +		return;
->> +	}
->> +
->> +	/* Don't bother allocating more MSI-X vectors than cpus */
->> +	msi_count = min(dev->max_msix,
->> +		(unsigned int)num_online_cpus());
->> +
->> +	dev->max_msix = msi_count;
->> +
->> +	if (msi_count > AAC_MAX_MSIX)
->> +		msi_count = AAC_MAX_MSIX;
->> +
->> +	for (i = 0; i < msi_count; i++)
->> +		dev->msixentry[i].entry = i;
->> +
->> +	if (msi_count > 1 &&
->> +	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
->> +		i = pci_enable_msix_exact(dev->pdev,
->> +				    dev->msixentry,
->> +				    msi_count);
->> +		 /* Che
-> Hi,
-> pci_enable_msix_exact returns either an error value or 0.
-> Maybe what you wanted is pci_enable_msix_range (...., 1, msi_count);
-> 
-> Please do not make silent changes like this, without describing it - it looks like only a whole code block was moved.
-> Also there is a rule which should be followed, that is that every single functional change need it's own patch.
-> 
-> When you send a new version of any patch add a description what is new in that newer version.
-> 
-> [RajP] Yes, original intention was just to move the whole code block up.  But when you reviewed my V1, you suggested to change pci_enable_msix() as it's deprecated.  So I made this change in my V2, and I included the following in my description but missed in this particular.
-Yes, I found the description in 0/9 later, if you place
-the description in each patch even distracted people
-like me will find it :)
 
-And I suggested the switch to the newer functions, but not
-as a one to one replacement. Please in a new version keep in this patch
-the 'pci_enable_msix' and add to the series a new patch
-which will replace it with pci_enable_msix_exact or pci_enable_msix_range.
-The way how you use it now is wrong.
+With this patch applied we get :
+        if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) {
+                /* fast response */
+                srbreply->srb_status = cpu_to_le32(SRB_STATUS_SUCCESS);
+                srbreply->scsi_status = cpu_to_le32(SAM_STAT_GOOD);
+        } else {
+                /*
+                 *      Calculate resid for sg
+                 */
+....
+	}
 
-> 
-> ======================
-> V2:
-> * Removed IRQF_DISABLED
-> * Removed unwanted macro definition "sa_writeq"
-> * Replaced pci_enable_msix()with "pci_enable_msix_exact()"
-> ================
-> Thanks,
-> -Raj P
-> 
-> Cheers,
-> Tomas
-> 
-> ck how many MSIX vectors are allocated */
->> +		if (i >= 0) {
->> +			dev->msi_enabled = 1;
->> +			if (i) {
->> +				msi_count = i;
->> +				if (pci_enable_msix_exact(dev->pdev,
->> +				    dev->msixentry,
->> +				    msi_count)) {
->> +					dev->msi_enabled = 0;
->> +					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->> +							dev->name, dev->id, i);
->> +				}
->> +			}
->> +		} else {
->> +			dev->msi_enabled = 0;
->> +			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->> +					dev->name, dev->id, i);
->> +		}
->> +	}
->> +
->> +	if (!dev->msi_enabled) {
->> +		msi_count = 1;
->> +		i = pci_enable_msi(dev->pdev);
->> +
->> +		if (!i) {
->> +			dev->msi_enabled = 1;
->> +			dev->msi = 1;
->> +		} else {
->> +			printk(KERN_ERR "%s%d: MSI not supported!! Will try INTx 0x%x.\n",
->> +					dev->name, dev->id, i);
->> +		}
->> +	}
->> +
->> +	if (!dev->msi_enabled)
->> +		dev->max_msix = msi_count = 1;
->> +	else {
->> +		if (dev->max_msix > msi_count)
->> +			dev->max_msix = msi_count;
->> +	}
->> +	dev->vector_cap =
->> +		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) /
->> +		msi_count;
->> +}
->>  struct aac_dev *aac_init_adapter(struct aac_dev *dev)  {
->>  	u32 status[5];
->> @@ -508,79 +582,3 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
->>  	return dev;
->>  }
->>  
->> -static void aac_define_int_mode(struct aac_dev *dev) -{
->> -
->> -	int i, msi_count;
->> -
->> -	msi_count = i = 0;
->> -	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
->> -	if (dev->max_msix == 0 ||
->> -	    dev->pdev->device == PMC_DEVICE_S6 ||
->> -	    dev->sync_mode) {
->> -		dev->max_msix = 1;
->> -		dev->vector_cap =
->> -			dev->scsi_host_ptr->can_queue +
->> -			AAC_NUM_MGT_FIB;
->> -		return;
->> -	}
->> -
->> -	msi_count = min(dev->max_msix,
->> -		(unsigned int)num_online_cpus());
->> -
->> -	dev->max_msix = msi_count;
->> -
->> -	if (msi_count > AAC_MAX_MSIX)
->> -		msi_count = AAC_MAX_MSIX;
->> -
->> -	for (i = 0; i < msi_count; i++)
->> -		dev->msixentry[i].entry = i;
->> -
->> -	if (msi_count > 1 &&
->> -	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
->> -		i = pci_enable_msix(dev->pdev,
->> -				    dev->msixentry,
->> -				    msi_count);
->> -		 /* Check how many MSIX vectors are allocated */
->> -		if (i >= 0) {
->> -			dev->msi_enabled = 1;
->> -			if (i) {
->> -				msi_count = i;
->> -				if (pci_enable_msix(dev->pdev,
->> -				    dev->msixentry,
->> -				    msi_count)) {
->> -					dev->msi_enabled = 0;
->> -					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->> -							dev->name, dev->id, i);
->> -				}
->> -			}
->> -		} else {
->> -			dev->msi_enabled = 0;
->> -			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->> -					dev->name, dev->id, i);
->> -		}
->> -	}
->> -
->> -	if (!dev->msi_enabled) {
->> -		msi_count = 1;
->> -		i = pci_enable_msi(dev->pdev);
->> -
->> -		if (!i) {
->> -			dev->msi_enabled = 1;
->> -			dev->msi = 1;
->> -		} else {
->> -			printk(KERN_ERR "%s%d: MSI not supported!! Will try INTx 0x%x.\n",
->> -					dev->name, dev->id, i);
->> -		}
->> -	}
->> -
->> -	if (!dev->msi_enabled)
->> -		dev->max_msix = msi_count = 1;
->> -	else {
->> -		if (dev->max_msix > msi_count)
->> -			dev->max_msix = msi_count;
->> -	}
->> -	dev->vector_cap =
->> -		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) /
->> -		msi_count;
->> -}
->> diff --git a/drivers/scsi/aacraid/linit.c 
->> b/drivers/scsi/aacraid/linit.c index 9eec027..8020348 100644
->> --- a/drivers/scsi/aacraid/linit.c
->> +++ b/drivers/scsi/aacraid/linit.c
->> @@ -1317,6 +1317,149 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->>  	return error;
->>  }
->>  
->> +#if (defined(CONFIG_PM))
->> +void aac_release_resources(struct aac_dev *aac) {
->> +	int i;
->> +
->> +	aac_adapter_disable_int(aac);
->> +	if (aac->pdev->device == PMC_DEVICE_S6 ||
->> +	    aac->pdev->device == PMC_DEVICE_S7 ||
->> +	    aac->pdev->device == PMC_DEVICE_S8 ||
->> +	    aac->pdev->device == PMC_DEVICE_S9) {
->> +		if (aac->max_msix > 1) {
->> +			for (i = 0; i < aac->max_msix; i++)
->> +				free_irq(aac->msixentry[i].vector,
->> +					&(aac->aac_msix[i]));
->> +		} else {
->> +			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
->> +		}
->> +	} else {
->> +		free_irq(aac->pdev->irq, aac);
->> +	}
->> +	if (aac->msi)
->> +		pci_disable_msi(aac->pdev);
->> +	else if (aac->max_msix > 1)
->> +		pci_disable_msix(aac->pdev);
->> +
->> +}
->> +
->> +static int aac_acquire_resources(struct aac_dev *dev) {
->> +	int i, j;
->> +	int instance = dev->id;
->> +	const char *name = dev->name;
->> +	unsigned long status;
->> +	/*
->> +	 *	First clear out all interrupts.  Then enable the one's that we
->> +	 *	can handle.
->> +	 */
->> +	while (!((status = src_readl(dev, MUnit.OMR)) & KERNEL_UP_AND_RUNNING)
->> +		|| status == 0xffffffff)
->> +			msleep(1);
->> +
->> +	aac_adapter_disable_int(dev);
->> +	aac_adapter_enable_int(dev);
->> +
->> +
->> +	if ((dev->pdev->device == PMC_DEVICE_S7 ||
->> +	     dev->pdev->device == PMC_DEVICE_S8 ||
->> +	     dev->pdev->device == PMC_DEVICE_S9))
->> +		aac_define_int_mode(dev);
->> +
->> +	if (dev->msi_enabled)
->> +		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
->> +
->> +	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
->> +		for (i = 0; i < dev->max_msix; i++) {
->> +			dev->aac_msix[i].vector_no = i;
->> +			dev->aac_msix[i].dev = dev;
->> +
->> +			if (request_irq(dev->msixentry[i].vector,
->> +					dev->a_ops.adapter_intr,
->> +					0, "aacraid", &(dev->aac_msix[i]))) {
->> +				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
->> +						name, instance, i);
->> +				for (j = 0 ; j < i ; j++)
->> +					free_irq(dev->msixentry[j].vector,
->> +						 &(dev->aac_msix[j]));
->> +				pci_disable_msix(dev->pdev);
->> +				goto error_iounmap;
->> +			}
->> +		}
->> +	} else {
->> +		dev->aac_msix[0].vector_no = 0;
->> +		dev->aac_msix[0].dev = dev;
->> +
->> +		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
->> +			IRQF_SHARED, "aacraid",
->> +			&(dev->aac_msix[0])) < 0) {
->> +			if (dev->msi)
->> +				pci_disable_msi(dev->pdev);
->> +			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
->> +					name, instance);
->> +			goto error_iounmap;
->> +		}
->> +	}
->> +
->> +	aac_adapter_enable_int(dev);
->> +
->> +	if (!dev->sync_mode)
->> +		aac_adapter_start(dev);
->> +	return 0;
->> +
->> +error_iounmap:
->> +	return -1;
->> +
->> +}
->> +static int aac_suspend(struct pci_dev *pdev, pm_message_t state) {
->> +
->> +	struct Scsi_Host *shost = pci_get_drvdata(pdev);
->> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
->> +
->> +	scsi_block_requests(shost);
->> +	aac_send_shutdown(aac);
->> +
->> +	aac_release_resources(aac);
->> +
->> +	pci_set_drvdata(pdev, shost);
->> +	pci_save_state(pdev);
->> +	pci_disable_device(pdev);
->> +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
->> +
->> +	return 0;
->> +}
->> +
->> +static int aac_resume(struct pci_dev *pdev) {
->> +	struct Scsi_Host *shost = pci_get_drvdata(pdev);
->> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
->> +	int r;
->> +
->> +	pci_set_power_state(pdev, PCI_D0);
->> +	pci_enable_wake(pdev, PCI_D0, 0);
->> +	pci_restore_state(pdev);
->> +	r = pci_enable_device(pdev);
->> +
->> +	if (r)
->> +		goto fail_device;
->> +
->> +	pci_set_master(pdev);
->> +	if (aac_acquire_resources(aac))
->> +		goto fail_device;
->> +	scsi_unblock_requests(shost);
->> +
->> +	return 0;
->> +
->> +fail_device:
->> +	printk(KERN_INFO "%s%d: resume failed.\n", aac->name, aac->id);
->> +	scsi_host_put(shost);
->> +	pci_disable_device(pdev);
->> +	return -ENODEV;
->> +}
->> +#endif
->> +
->>  static void aac_shutdown(struct pci_dev *dev)  {
->>  	struct Scsi_Host *shost = pci_get_drvdata(dev); @@ -1356,6 +1499,10 
->> @@ static struct pci_driver aac_pci_driver = {
->>  	.id_table	= aac_pci_tbl,
->>  	.probe		= aac_probe_one,
->>  	.remove		= aac_remove_one,
->> +#if (defined(CONFIG_PM))
->> +	.suspend	= aac_suspend,
->> +	.resume		= aac_resume,
->> +#endif
->>  	.shutdown	= aac_shutdown,
->>  };
->>  
->> diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c 
->> index 9570612..ac16380 100644
->> --- a/drivers/scsi/aacraid/rx.c
->> +++ b/drivers/scsi/aacraid/rx.c
->> @@ -623,6 +623,7 @@ int _aac_rx_init(struct aac_dev *dev)
->>  	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
->>  	dev->a_ops.adapter_check_health = aac_rx_check_health;
->>  	dev->a_ops.adapter_restart = aac_rx_restart_adapter;
->> +	dev->a_ops.adapter_start = aac_rx_start_adapter;
->>  
->>  	/*
->>  	 *	First clear out all interrupts.  Then enable the one's that we
->> diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c 
->> index e66477c..869aea2 100644
->> --- a/drivers/scsi/aacraid/sa.c
->> +++ b/drivers/scsi/aacraid/sa.c
->> @@ -372,6 +372,7 @@ int aac_sa_init(struct aac_dev *dev)
->>  	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
->>  	dev->a_ops.adapter_check_health = aac_sa_check_health;
->>  	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
->> +	dev->a_ops.adapter_start = aac_sa_start_adapter;
->>  	dev->a_ops.adapter_intr = aac_sa_intr;
->>  	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
->>  	dev->a_ops.adapter_ioremap = aac_sa_ioremap; diff --git 
->> a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c index 
->> e63cf9f..b147341 100644
->> --- a/drivers/scsi/aacraid/src.c
->> +++ b/drivers/scsi/aacraid/src.c
->> @@ -726,6 +726,7 @@ int aac_src_init(struct aac_dev *dev)
->>  	dev->a_ops.adapter_sync_cmd = src_sync_cmd;
->>  	dev->a_ops.adapter_check_health = aac_src_check_health;
->>  	dev->a_ops.adapter_restart = aac_src_restart_adapter;
->> +	dev->a_ops.adapter_start = aac_src_start_adapter;
->>  
->>  	/*
->>  	 *	First clear out all interrupts.  Then enable the one's that we
->> @@ -892,6 +893,7 @@ int aac_srcv_init(struct aac_dev *dev)
->>  	dev->a_ops.adapter_sync_cmd = src_sync_cmd;
->>  	dev->a_ops.adapter_check_health = aac_src_check_health;
->>  	dev->a_ops.adapter_restart = aac_src_restart_adapter;
->> +	dev->a_ops.adapter_start = aac_src_start_adapter;
->>  
->>  	/*
->>  	 *	First clear out all interrupts.  Then enable the one's that we
->>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+       /*
+         * OR in the scsi status (already shifted up a bit)
+         */
+        scsicmd->result |= le32_to_cpu(srbreply->scsi_status);
+
+        aac_fib_complete(fibptr);
+        aac_fib_free(fibptr);
+        scsicmd->scsi_done(scsicmd);
+}
+>From that it looks like you do not need set
+srbreply->srb_status = cpu_to_le32(SRB_STATUS_SUCCESS);
+because it's never used later.
+
+You could you rearrange it to :
+        if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) {
+                /* fast response */
+                srbreply->scsi_status = cpu_to_le32(SAM_STAT_GOOD);
+		goto done;
+        }
+           /*
+            *      Calculate resid for sg
+            */
+....
+
+done:
+       /*
+         * OR in the scsi status (already shifted up a bit)
+         */
+        scsicmd->result |= le32_to_cpu(srbreply->scsi_status);
+
+        aac_fib_complete(fibptr);
+        aac_fib_free(fibptr);
+        scsicmd->scsi_done(scsicmd);
+The advantage is that you don't need move ~150 lines one tab to
+the right and don't have to wrap lines because of the 80 char limit.
+
+
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+> index fe59b00..864e9f6 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -2977,11 +2977,16 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+>  		return;
+>  
+>  	BUG_ON(fibptr == NULL);
+> -
+>  	dev = fibptr->dev;
+>  
+> -	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
+> +	scsi_dma_unmap(scsicmd);
+>  
+> +	/* expose physical device if expose_physicald flag is on */
+> +	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
+> +	  && expose_physicals > 0)
+> +		aac_expose_phy_device(scsicmd);
+> +
+> +	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
+>  	scsicmd->sense_buffer[0] = '\0';  /* Initialize sense valid flag to false */
+>  
+>  	if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) {
+> @@ -2994,147 +2999,157 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+>  		 */
+>  		scsi_set_resid(scsicmd, scsi_bufflen(scsicmd)
+>  				   - le32_to_cpu(srbreply->data_xfer_length));
+> -	}
+> -
+> -	scsi_dma_unmap(scsicmd);
+> -
+> -	/* expose physical device if expose_physicald flag is on */
+> -	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
+> -	  && expose_physicals > 0)
+> -		aac_expose_phy_device(scsicmd);
+> +		/*
+> +		 * First check the fib status
+> +		 */
+>  
+> -	/*
+> -	 * First check the fib status
+> -	 */
+> +		if (le32_to_cpu(srbreply->status) != ST_OK) {
+> +			int len;
+>  
+> -	if (le32_to_cpu(srbreply->status) != ST_OK){
+> -		int len;
+> -		printk(KERN_WARNING "aac_srb_callback: srb failed, status = %d\n", le32_to_cpu(srbreply->status));
+> -		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+> -			    SCSI_SENSE_BUFFERSIZE);
+> -		scsicmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_CHECK_CONDITION;
+> -		memcpy(scsicmd->sense_buffer, srbreply->sense_data, len);
+> -	}
+> +			printk(KERN_WARNING "aac_srb_callback: srb failed, status = %d\n", le32_to_cpu(srbreply->status));
+> +			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+> +				    SCSI_SENSE_BUFFERSIZE);
+> +			scsicmd->result = DID_ERROR << 16
+> +						| COMMAND_COMPLETE << 8
+> +						| SAM_STAT_CHECK_CONDITION;
+> +			memcpy(scsicmd->sense_buffer,
+> +					srbreply->sense_data, len);
+> +		}
+>  
+> -	/*
+> -	 * Next check the srb status
+> -	 */
+> -	switch( (le32_to_cpu(srbreply->srb_status))&0x3f){
+> -	case SRB_STATUS_ERROR_RECOVERY:
+> -	case SRB_STATUS_PENDING:
+> -	case SRB_STATUS_SUCCESS:
+> -		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> -		break;
+> -	case SRB_STATUS_DATA_OVERRUN:
+> -		switch(scsicmd->cmnd[0]){
+> -		case  READ_6:
+> -		case  WRITE_6:
+> -		case  READ_10:
+> -		case  WRITE_10:
+> -		case  READ_12:
+> -		case  WRITE_12:
+> -		case  READ_16:
+> -		case  WRITE_16:
+> -			if (le32_to_cpu(srbreply->data_xfer_length) < scsicmd->underflow) {
+> -				printk(KERN_WARNING"aacraid: SCSI CMD underflow\n");
+> -			} else {
+> -				printk(KERN_WARNING"aacraid: SCSI CMD Data Overrun\n");
+> +		/*
+> +		 * Next check the srb status
+> +		 */
+> +		switch ((le32_to_cpu(srbreply->srb_status))&0x3f) {
+> +		case SRB_STATUS_ERROR_RECOVERY:
+> +		case SRB_STATUS_PENDING:
+> +		case SRB_STATUS_SUCCESS:
+> +			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +			break;
+> +		case SRB_STATUS_DATA_OVERRUN:
+> +			switch (scsicmd->cmnd[0]) {
+> +			case  READ_6:
+> +			case  WRITE_6:
+> +			case  READ_10:
+> +			case  WRITE_10:
+> +			case  READ_12:
+> +			case  WRITE_12:
+> +			case  READ_16:
+> +			case  WRITE_16:
+> +				if (le32_to_cpu(srbreply->data_xfer_length)
+> +							< scsicmd->underflow)
+> +					printk(KERN_WARNING"aacraid: SCSI CMD underflow\n");
+> +				else
+> +					printk(KERN_WARNING"aacraid: SCSI CMD Data Overrun\n");
+> +				scsicmd->result = DID_ERROR << 16
+> +							| COMMAND_COMPLETE << 8;
+> +				break;
+> +			case INQUIRY: {
+> +				scsicmd->result = DID_OK << 16
+> +							| COMMAND_COMPLETE << 8;
+> +				break;
+> +			}
+> +			default:
+> +				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +				break;
+>  			}
+> -			scsicmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+>  			break;
+> -		case INQUIRY: {
+> -			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		case SRB_STATUS_ABORTED:
+> +			scsicmd->result = DID_ABORT << 16 | ABORT << 8;
+>  			break;
+> -		}
+> -		default:
+> -			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		case SRB_STATUS_ABORT_FAILED:
+> +			/*
+> +			 * Not sure about this one - but assuming the
+> +			 * hba was trying to abort for some reason
+> +			 */
+> +			scsicmd->result = DID_ERROR << 16 | ABORT << 8;
+> +			break;
+> +		case SRB_STATUS_PARITY_ERROR:
+> +			scsicmd->result = DID_PARITY << 16
+> +						| MSG_PARITY_ERROR << 8;
+> +			break;
+> +		case SRB_STATUS_NO_DEVICE:
+> +		case SRB_STATUS_INVALID_PATH_ID:
+> +		case SRB_STATUS_INVALID_TARGET_ID:
+> +		case SRB_STATUS_INVALID_LUN:
+> +		case SRB_STATUS_SELECTION_TIMEOUT:
+> +			scsicmd->result = DID_NO_CONNECT << 16
+> +						| COMMAND_COMPLETE << 8;
+>  			break;
+> -		}
+> -		break;
+> -	case SRB_STATUS_ABORTED:
+> -		scsicmd->result = DID_ABORT << 16 | ABORT << 8;
+> -		break;
+> -	case SRB_STATUS_ABORT_FAILED:
+> -		// Not sure about this one - but assuming the hba was trying to abort for some reason
+> -		scsicmd->result = DID_ERROR << 16 | ABORT << 8;
+> -		break;
+> -	case SRB_STATUS_PARITY_ERROR:
+> -		scsicmd->result = DID_PARITY << 16 | MSG_PARITY_ERROR << 8;
+> -		break;
+> -	case SRB_STATUS_NO_DEVICE:
+> -	case SRB_STATUS_INVALID_PATH_ID:
+> -	case SRB_STATUS_INVALID_TARGET_ID:
+> -	case SRB_STATUS_INVALID_LUN:
+> -	case SRB_STATUS_SELECTION_TIMEOUT:
+> -		scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
+> -		break;
+>  
+> -	case SRB_STATUS_COMMAND_TIMEOUT:
+> -	case SRB_STATUS_TIMEOUT:
+> -		scsicmd->result = DID_TIME_OUT << 16 | COMMAND_COMPLETE << 8;
+> -		break;
+> +		case SRB_STATUS_COMMAND_TIMEOUT:
+> +		case SRB_STATUS_TIMEOUT:
+> +			scsicmd->result = DID_TIME_OUT << 16
+> +						| COMMAND_COMPLETE << 8;
+> +			break;
+>  
+> -	case SRB_STATUS_BUSY:
+> -		scsicmd->result = DID_BUS_BUSY << 16 | COMMAND_COMPLETE << 8;
+> -		break;
+> +		case SRB_STATUS_BUSY:
+> +			scsicmd->result = DID_BUS_BUSY << 16
+> +						| COMMAND_COMPLETE << 8;
+> +			break;
+>  
+> -	case SRB_STATUS_BUS_RESET:
+> -		scsicmd->result = DID_RESET << 16 | COMMAND_COMPLETE << 8;
+> -		break;
+> +		case SRB_STATUS_BUS_RESET:
+> +			scsicmd->result = DID_RESET << 16
+> +						| COMMAND_COMPLETE << 8;
+> +			break;
+>  
+> -	case SRB_STATUS_MESSAGE_REJECTED:
+> -		scsicmd->result = DID_ERROR << 16 | MESSAGE_REJECT << 8;
+> -		break;
+> -	case SRB_STATUS_REQUEST_FLUSHED:
+> -	case SRB_STATUS_ERROR:
+> -	case SRB_STATUS_INVALID_REQUEST:
+> -	case SRB_STATUS_REQUEST_SENSE_FAILED:
+> -	case SRB_STATUS_NO_HBA:
+> -	case SRB_STATUS_UNEXPECTED_BUS_FREE:
+> -	case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
+> -	case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
+> -	case SRB_STATUS_DELAYED_RETRY:
+> -	case SRB_STATUS_BAD_FUNCTION:
+> -	case SRB_STATUS_NOT_STARTED:
+> -	case SRB_STATUS_NOT_IN_USE:
+> -	case SRB_STATUS_FORCE_ABORT:
+> -	case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
+> -	default:
+> +		case SRB_STATUS_MESSAGE_REJECTED:
+> +			scsicmd->result = DID_ERROR << 16
+> +						| MESSAGE_REJECT << 8;
+> +			break;
+> +		case SRB_STATUS_REQUEST_FLUSHED:
+> +		case SRB_STATUS_ERROR:
+> +		case SRB_STATUS_INVALID_REQUEST:
+> +		case SRB_STATUS_REQUEST_SENSE_FAILED:
+> +		case SRB_STATUS_NO_HBA:
+> +		case SRB_STATUS_UNEXPECTED_BUS_FREE:
+> +		case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
+> +		case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
+> +		case SRB_STATUS_DELAYED_RETRY:
+> +		case SRB_STATUS_BAD_FUNCTION:
+> +		case SRB_STATUS_NOT_STARTED:
+> +		case SRB_STATUS_NOT_IN_USE:
+> +		case SRB_STATUS_FORCE_ABORT:
+> +		case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
+> +		default:
+>  #ifdef AAC_DETAILED_STATUS_INFO
+> -		printk("aacraid: SRB ERROR(%u) %s scsi cmd 0x%x - scsi status 0x%x\n",
+> -			le32_to_cpu(srbreply->srb_status) & 0x3F,
+> -			aac_get_status_string(
+> -				le32_to_cpu(srbreply->srb_status) & 0x3F),
+> -			scsicmd->cmnd[0],
+> -			le32_to_cpu(srbreply->scsi_status));
+> +			printk(KERN_INFO "aacraid: SRB ERROR(%u) %s scsi cmd 0x%x - scsi status 0x%x\n",
+> +				le32_to_cpu(srbreply->srb_status) & 0x3F,
+> +				aac_get_status_string(
+> +					le32_to_cpu(srbreply->srb_status) & 0x3F),
+> +				scsicmd->cmnd[0],
+> +				le32_to_cpu(srbreply->scsi_status));
+>  #endif
+> -		if ((scsicmd->cmnd[0] == ATA_12)
+> -		  || (scsicmd->cmnd[0] == ATA_16)) {
+> -			if (scsicmd->cmnd[2] & (0x01 << 5)) {
+> -				scsicmd->result = DID_OK << 16
+> -						| COMMAND_COMPLETE << 8;
+> +			if ((scsicmd->cmnd[0] == ATA_12)
+> +				|| (scsicmd->cmnd[0] == ATA_16)) {
+> +					if (scsicmd->cmnd[2] & (0x01 << 5)) {
+> +						scsicmd->result = DID_OK << 16
+> +							| COMMAND_COMPLETE << 8;
+>  				break;
+> +				} else {
+> +					scsicmd->result = DID_ERROR << 16
+> +						| COMMAND_COMPLETE << 8;
+> +					break;
+> +				}
+>  			} else {
+>  				scsicmd->result = DID_ERROR << 16
+> -						| COMMAND_COMPLETE << 8;
+> +					| COMMAND_COMPLETE << 8;
+>  				break;
+>  			}
+> -		} else {
+> -			scsicmd->result = DID_ERROR << 16
+> -					| COMMAND_COMPLETE << 8;
+> -			break;
+>  		}
+> -	}
+> -	if (le32_to_cpu(srbreply->scsi_status) == SAM_STAT_CHECK_CONDITION) {
+> -		int len;
+> -		scsicmd->result |= SAM_STAT_CHECK_CONDITION;
+> -		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+> -			    SCSI_SENSE_BUFFERSIZE);
+> +		if (le32_to_cpu(srbreply->scsi_status)
+> +				== SAM_STAT_CHECK_CONDITION) {
+> +			int len;
+> +
+> +			scsicmd->result |= SAM_STAT_CHECK_CONDITION;
+> +			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+> +				    SCSI_SENSE_BUFFERSIZE);
+>  #ifdef AAC_DETAILED_STATUS_INFO
+> -		printk(KERN_WARNING "aac_srb_callback: check condition, status = %d len=%d\n",
+> -					le32_to_cpu(srbreply->status), len);
+> +			printk(KERN_WARNING "aac_srb_callback: check condition, status = %d len=%d\n",
+> +						le32_to_cpu(srbreply->status), len);
+>  #endif
+> -		memcpy(scsicmd->sense_buffer, srbreply->sense_data, len);
+> +			memcpy(scsicmd->sense_buffer,
+> +					srbreply->sense_data, len);
+> +		}
+>  	}
+>  	/*
+>  	 * OR in the scsi status (already shifted up a bit)
 > 
 
