@@ -1,50 +1,43 @@
-From: Maninder Singh <maninder1.s@samsung.com>
-Subject: [PATCH 1/1] scsi/snic: fixing the error print
-Date: Thu, 25 Jun 2015 15:22:16 +0530
-Message-ID: <1435225936-10250-1-git-send-email-maninder1.s@samsung.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:44077 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbbFYJyS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2015 05:54:18 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] SCSI-wd33c93: Deletion of a check before the function
+ call "wd33c93_setup"
+Date: Thu, 25 Jun 2015 12:55:00 +0300
+Message-ID: <20150625095500.GZ28762@mwanda>
+References: <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <558ACDDE.5090403@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <558ACDDE.5090403@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: "James E. J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: nmusini@cisco.com, sebaddel@cisco.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: pankaj.m@samsung.com, Maninder Singh <maninder1.s@samsung.com>
 
-Currently SNIC_HOST_ERR is called in both cases
-whether snic_disc_start returns zero or non-zero.
+On Wed, Jun 24, 2015 at 05:33:50PM +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Wed, 24 Jun 2015 17:15:17 +0200
+> 
+> The wd33c93_setup() function performs also input parameter validation.
+> Thus the test around the call is not needed.
+> 
 
->From the code it looks like it has to print only if
-snic_disc_start return non-zero value, So calling
-SNIC_HOST_ERR only for non-zero return from snic_disc_start.
+Guys, you should be aware that Markus auto generates his patches and he
+doesn't even do a cursory review.
 
-Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
-Reviewed-by: Rohit Thapliyal <r.thapliyal@samsung.com>
----
- drivers/scsi/snic/snic_disc.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+"I find it acceptable that some of my update suggestions do not fit
+to your quality expectations at the moment." -- Markus Elfring
+(https://lkml.org/lkml/2015/1/22/446)
 
-diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
-index 5f63217..8c29d5e 100644
---- a/drivers/scsi/snic/snic_disc.c
-+++ b/drivers/scsi/snic/snic_disc.c
-@@ -514,12 +514,9 @@ snic_handle_disc(struct work_struct *work)
- 
- 	ret = snic_disc_start(snic);
- 	if (ret)
--		goto disc_err;
--
--disc_err:
--	SNIC_HOST_ERR(snic->shost,
--		      "disc_work: Discovery Failed w/ err = %d\n",
--		      ret);
-+		SNIC_HOST_ERR(snic->shost,
-+			      "disc_work: Discovery Failed w/ err = %d\n",
-+			      ret);
- } /* end of snic_disc_work */
- 
- /*
--- 
-1.7.9.5
+regards,
+dan carpenter
 
