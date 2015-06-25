@@ -1,294 +1,108 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 01/11] qla2xxx: kill sessions/log out initiator on RSCN and port down events
-Date: Thu, 25 Jun 2015 12:33:41 -0400
-Message-ID: <1435250031-20525-2-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 07/11] qla2xxx: drop cmds/tmrs arrived while session is being deleted
+Date: Thu, 25 Jun 2015 12:33:47 -0400
+Message-ID: <1435250031-20525-8-git-send-email-himanshu.madhani@qlogic.com>
 References: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:9396 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752661AbbFYRSL (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:53626 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752694AbbFYRSM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jun 2015 13:18:11 -0400
+	Thu, 25 Jun 2015 13:18:12 -0400
 In-Reply-To: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Roland Dreier <roland@purestorage.com>
+From: Alexei Potashnik <alexei@purestorage.com>
 
-To fix some issues talking to ESX, this patch modifies the qla2xxx driver
-so that it never logs into remote ports.  This has the side effect of
-getting rid of the "rports" entirely, which means we never log out of
-initiators and never tear down sessions when an initiator goes away.
+If a new initiator (different WWN) shows up on the same fcport, old
+initiator's session is scheduled for deletion. But there is a small
+window between it being marked with QLA_SESS_DELETION_IN_PROGRESS
+and qlt_unret_sess getting called when new session's commands will
+keep finding old session in the fcport map.
 
-This is mostly OK, except that we can run into trouble if we have
-initiator A assigned FC address X:Y:Z by the fabric talking to us, and
-then initiator A goes away.  Some time (could be a long time) later,
-initiator B comes along and also gets FC address X:Y:Z (which is
-available again, because initiator A is gone).  If initiator B starts
-talking to us, then we'll still have the session for initiator A, and
-since we look up incoming IO based on the FC address X:Y:Z, initiator B
-will end up using ACLs for initiator A.
-
-Fix this by:
-
- 1. Handling RSCN events somewhat differently; instead of completely
-    skipping the processing of fcports, we look through the list, and if
-    an fcport disappears, we tell the target code the tear down the
-    session and tell the HBA FW to release the N_Port handle.
-
- 2. Handling "port down" events by flushing all of our sessions.  The
-    firmware was already releasing the N_Port handle but we want the
-    target code to drop all the sessions too.
+This patch drops cmds/tmrs if they find session in the progress of
+being deleted.
 
 Cc: <stable@vger.kernel.org>
-Signed-off-by: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
 Acked-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
- drivers/scsi/qla2xxx/qla_init.c   |  137 ++++++++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_target.c |    9 ++-
- 3 files changed, 117 insertions(+), 31 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 0e6ee3c..e9ae6b9 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -68,7 +68,7 @@
-  * |                              |                    | 0xd101-0xd1fe	|
-  * |                              |                    | 0xd214-0xd2fe	|
-  * | Target Mode		  |	  0xe079       |		|
-- * | Target Mode Management	  |	  0xf072       | 0xf002		|
-+ * | Target Mode Management	  |	  0xf080       | 0xf002		|
-  * |                              |                    | 0xf046-0xf049  |
-  * | Target Mode Task Management  |	  0x1000b      |		|
-  * ----------------------------------------------------------------------
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 766fdfc..4895a4a 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3462,20 +3462,43 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
- 				continue;
- 
--			if (fcport->scan_state == QLA_FCPORT_SCAN &&
--			    atomic_read(&fcport->state) == FCS_ONLINE) {
--				qla2x00_mark_device_lost(vha, fcport,
--				    ql2xplogiabsentdevice, 0);
--				if (fcport->loop_id != FC_NO_LOOP_ID &&
--				    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
--				    fcport->port_type != FCT_INITIATOR &&
--				    fcport->port_type != FCT_BROADCAST) {
--					ha->isp_ops->fabric_logout(vha,
--					    fcport->loop_id,
--					    fcport->d_id.b.domain,
--					    fcport->d_id.b.area,
--					    fcport->d_id.b.al_pa);
--					qla2x00_clear_loop_id(fcport);
-+			if (fcport->scan_state == QLA_FCPORT_SCAN) {
-+				if (qla_ini_mode_enabled(base_vha) &&
-+				    atomic_read(&fcport->state) == FCS_ONLINE) {
-+					qla2x00_mark_device_lost(vha, fcport,
-+					    ql2xplogiabsentdevice, 0);
-+					if (fcport->loop_id != FC_NO_LOOP_ID &&
-+					    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
-+					    fcport->port_type != FCT_INITIATOR &&
-+					    fcport->port_type != FCT_BROADCAST) {
-+						ha->isp_ops->fabric_logout(vha,
-+						    fcport->loop_id,
-+						    fcport->d_id.b.domain,
-+						    fcport->d_id.b.area,
-+						    fcport->d_id.b.al_pa);
-+						qla2x00_clear_loop_id(fcport);
-+					}
-+				} else if (!qla_ini_mode_enabled(base_vha)) {
-+					/*
-+					 * In target mode, explicitly kill
-+					 * sessions and log out of devices
-+					 * that are gone, so that we don't
-+					 * end up with an initiator using the
-+					 * wrong ACL (if the fabric recycles
-+					 * an FC address and we have a stale
-+					 * session around) and so that we don't
-+					 * report initiators that are no longer
-+					 * on the fabric.
-+					 */
-+					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf077,
-+					    "port gone, logging out/killing session: "
-+					    "%8phC state 0x%x flags 0x%x fc4_type 0x%x "
-+					    "scan_state %d\n",
-+					    fcport->port_name,
-+					    atomic_read(&fcport->state),
-+					    fcport->flags, fcport->fc4_type,
-+					    fcport->scan_state);
-+					qlt_fc_port_deleted(vha, fcport);
- 				}
- 			}
- 		}
-@@ -3496,6 +3519,28 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
- 				continue;
- 
-+			/*
-+			 * If we're not an initiator, skip looking for devices
-+			 * and logging in.  There's no reason for us to do it,
-+			 * and it seems to actively cause problems in target
-+			 * mode if we race with the initiator logging into us
-+			 * (we might get the "port ID used" status back from
-+			 * our login command and log out the initiator, which
-+			 * seems to cause havoc).
-+			 */
-+			if (!qla_ini_mode_enabled(base_vha)) {
-+				if (fcport->scan_state == QLA_FCPORT_FOUND) {
-+					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf078,
-+					    "port %8phC state 0x%x flags 0x%x fc4_type 0x%x "
-+					    "scan_state %d (initiator mode disabled; skipping "
-+					    "login)\n", fcport->port_name,
-+					    atomic_read(&fcport->state),
-+					    fcport->flags, fcport->fc4_type,
-+					    fcport->scan_state);
-+				}
-+				continue;
-+			}
-+
- 			if (fcport->loop_id == FC_NO_LOOP_ID) {
- 				fcport->loop_id = next_loopid;
- 				rval = qla2x00_find_new_loop_id(
-@@ -3522,16 +3567,38 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
- 				break;
- 
--			/* Find a new loop ID to use. */
--			fcport->loop_id = next_loopid;
--			rval = qla2x00_find_new_loop_id(base_vha, fcport);
--			if (rval != QLA_SUCCESS) {
--				/* Ran out of IDs to use */
--				break;
--			}
-+			/*
-+			 * If we're not an initiator, skip looking for devices
-+			 * and logging in.  There's no reason for us to do it,
-+			 * and it seems to actively cause problems in target
-+			 * mode if we race with the initiator logging into us
-+			 * (we might get the "port ID used" status back from
-+			 * our login command and log out the initiator, which
-+			 * seems to cause havoc).
-+			 */
-+			if (qla_ini_mode_enabled(base_vha)) {
-+				/* Find a new loop ID to use. */
-+				fcport->loop_id = next_loopid;
-+				rval = qla2x00_find_new_loop_id(base_vha,
-+				    fcport);
-+				if (rval != QLA_SUCCESS) {
-+					/* Ran out of IDs to use */
-+					break;
-+				}
- 
--			/* Login and update database */
--			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
-+				/* Login and update database */
-+				qla2x00_fabric_dev_login(vha, fcport,
-+				    &next_loopid);
-+			} else {
-+				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf079,
-+					"new port %8phC state 0x%x flags 0x%x fc4_type "
-+					"0x%x scan_state %d (initiator mode disabled; "
-+					"skipping login)\n",
-+					fcport->port_name,
-+					atomic_read(&fcport->state),
-+					fcport->flags, fcport->fc4_type,
-+					fcport->scan_state);
-+			}
- 
- 			list_move_tail(&fcport->list, &vha->vp_fcports);
- 		}
-@@ -3727,11 +3794,12 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 			fcport->fp_speed = new_fcport->fp_speed;
- 
- 			/*
--			 * If address the same and state FCS_ONLINE, nothing
--			 * changed.
-+			 * If address the same and state FCS_ONLINE
-+			 * (or in target mode), nothing changed.
- 			 */
- 			if (fcport->d_id.b24 == new_fcport->d_id.b24 &&
--			    atomic_read(&fcport->state) == FCS_ONLINE) {
-+			    (atomic_read(&fcport->state) == FCS_ONLINE ||
-+			     !qla_ini_mode_enabled(base_vha))) {
- 				break;
- 			}
- 
-@@ -3751,6 +3819,22 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 			 * Log it out if still logged in and mark it for
- 			 * relogin later.
- 			 */
-+			if (!qla_ini_mode_enabled(base_vha)) {
-+				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf080,
-+					 "port changed FC ID, %8phC"
-+					 " old %x:%x:%x (loop_id 0x%04x)-> new %x:%x:%x\n",
-+					 fcport->port_name,
-+					 fcport->d_id.b.domain,
-+					 fcport->d_id.b.area,
-+					 fcport->d_id.b.al_pa,
-+					 fcport->loop_id,
-+					 new_fcport->d_id.b.domain,
-+					 new_fcport->d_id.b.area,
-+					 new_fcport->d_id.b.al_pa);
-+				fcport->d_id.b24 = new_fcport->d_id.b24;
-+				break;
-+			}
-+
- 			fcport->d_id.b24 = new_fcport->d_id.b24;
- 			fcport->flags |= FCF_LOGIN_NEEDED;
- 			if (fcport->loop_id != FC_NO_LOOP_ID &&
-@@ -3770,6 +3854,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 		if (found)
- 			continue;
- 		/* If device was not in our fcports list, then add it. */
-+		new_fcport->scan_state = QLA_FCPORT_FOUND;
- 		list_add_tail(&new_fcport->list, new_fcports);
- 
- 		/* Allocate a new replacement fcport. */
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 3cbf5c6..e5e255a 100644
+index b14623c..ed9fdd7 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -113,6 +113,7 @@ static void qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha,
- static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
- 	struct atio_from_isp *atio, uint16_t status, int qfull);
- static void qlt_disable_vha(struct scsi_qla_host *vha);
-+static void qlt_clear_tgt_db(struct qla_tgt *tgt);
- /*
-  * Global Variables
-  */
-@@ -431,10 +432,10 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- 
- 	loop_id = le16_to_cpu(n->u.isp24.nport_handle);
- 	if (loop_id == 0xFFFF) {
--#if 0 /* FIXME: Re-enable Global event handling.. */
- 		/* Global event */
--		atomic_inc(&ha->tgt.qla_tgt->tgt_global_resets_count);
--		qlt_clear_tgt_db(ha->tgt.qla_tgt);
-+		atomic_inc(&vha->vha_tgt.qla_tgt->tgt_global_resets_count);
-+		qlt_clear_tgt_db(vha->vha_tgt.qla_tgt);
-+#if 0 /* FIXME: do we need to choose a session here? */
- 		if (!list_empty(&ha->tgt.qla_tgt->sess_list)) {
- 			sess = list_entry(ha->tgt.qla_tgt->sess_list.next,
- 			    typeof(*sess), sess_list_entry);
-@@ -788,7 +789,7 @@ void qlt_fc_port_deleted(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	if (!vha->hw->tgt.tgt_ops)
+@@ -1477,6 +1477,11 @@ static void qlt_24xx_handle_abts(struct scsi_qla_host *vha,
  		return;
+ 	}
  
--	if (!tgt || (fcport->port_type != FCT_INITIATOR))
-+	if (!tgt)
- 		return;
++	if (sess->deleted == QLA_SESS_DELETION_IN_PROGRESS) {
++		qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_REJECTED, false);
++		return;
++	}
++
+ 	rc = __qlt_24xx_handle_abts(vha, abts, sess);
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf054,
+@@ -3776,6 +3781,16 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+ 		queue_work(qla_tgt_wq, &op->work);
+ 		return 0;
+ 	}
++
++	/* Another WWN used to have our s_id. Our PLOGI scheduled its
++	 * session deletion, but it's still in sess_del_work wq */
++	if (sess->deleted == QLA_SESS_DELETION_IN_PROGRESS) {
++		ql_dbg(ql_dbg_io, vha, 0x3061,
++		    "New command while old session %p is being deleted\n",
++		    sess);
++		return -EFAULT;
++	}
++
+ 	/*
+ 	 * Do kref_get() before returning + dropping qla_hw_data->hardware_lock.
+ 	 */
+@@ -3939,6 +3954,9 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
+ 		    sizeof(struct atio_from_isp));
+ 	}
  
- 	if (tgt->tgt_stop) {
++	if (sess->deleted == QLA_SESS_DELETION_IN_PROGRESS)
++		return -EFAULT;
++
+ 	return qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
+ }
+ 
+@@ -5616,6 +5634,11 @@ static void qlt_abort_work(struct qla_tgt *tgt,
+ 		if (!sess)
+ 			goto out_term;
+ 	} else {
++		if (sess->deleted == QLA_SESS_DELETION_IN_PROGRESS) {
++			sess = NULL;
++			goto out_term;
++		}
++
+ 		kref_get(&sess->se_sess->sess_kref);
+ 	}
+ 
+@@ -5670,6 +5693,11 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 		if (!sess)
+ 			goto out_term;
+ 	} else {
++		if (sess->deleted == QLA_SESS_DELETION_IN_PROGRESS) {
++			sess = NULL;
++			goto out_term;
++		}
++
+ 		kref_get(&sess->se_sess->sess_kref);
+ 	}
+ 
 -- 
 1.7.7
 
