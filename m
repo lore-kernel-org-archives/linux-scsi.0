@@ -1,36 +1,37 @@
-From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-Subject: Re: [PATCH 1/1] scsi/snic: fixing the error print
-Date: Thu, 25 Jun 2015 10:23:23 +0000
-Message-ID: <D1B1D42E.28756%nmusini@cisco.com>
-References: <1435225936-10250-1-git-send-email-maninder1.s@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Narsimhulu Musini <nmusini@cisco.com>
+Subject: [PATCH 1/1] snic: Fixing duplicate cache names
+Date: Thu, 25 Jun 2015 03:34:50 -0700
+Message-ID: <1435228490-3996-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-2.cisco.com ([173.37.142.89]:7742 "EHLO
-	alln-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655AbbFYKXZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2015 06:23:25 -0400
-In-Reply-To: <1435225936-10250-1-git-send-email-maninder1.s@samsung.com>
-Content-Language: en-US
-Content-ID: <7E2069CFBF3F474BBD3D0992B4F577EB@emea.cisco.com>
+Received: from alln-iport-5.cisco.com ([173.37.142.92]:50900 "EHLO
+	alln-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbbFYKkl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2015 06:40:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maninder Singh <maninder1.s@samsung.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "JBottomley@odin.com" <JBottomley@odin.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "pankaj.m@samsung.com" <pankaj.m@samsung.com>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, hare@suse.de
+Cc: Narsimhulu Musini <nmusini@cisco.com>
 
+This patch fixes duplicate cache names.
 
-On 25/06/15 3:22 pm, "Maninder Singh" <maninder1.s@samsung.com> wrote:
+Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+---
+ drivers/scsi/snic/snic_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->Currently SNIC_HOST_ERR is called in both cases
->whether snic_disc_start returns zero or non-zero.
->
->From the code it looks like it has to print only if
->snic_disc_start return non-zero value, So calling
->SNIC_HOST_ERR only for non-zero return from snic_disc_start.
->
->Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
->Reviewed-by: Rohit Thapliyal <r.thapliyal@samsung.com>
-
-Acked-by: Narsimhulu Musini <nmusini@cisco.com>
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index b2b87ce..47ed593 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -919,7 +919,7 @@ snic_global_data_init(void)
+ 	snic_glob->req_cache[SNIC_REQ_CACHE_MAX_SGL] = cachep;
+ 
+ 	len = sizeof(struct snic_host_req);
+-	cachep = kmem_cache_create("snic_req_maxsgl", len, SNIC_SG_DESC_ALIGN,
++	cachep = kmem_cache_create("snic_tm_req", len, SNIC_SG_DESC_ALIGN,
+ 				   SLAB_HWCACHE_ALIGN, NULL);
+ 	if (!cachep) {
+ 		SNIC_ERR("Failed to create snic tm req slab\n");
+-- 
+1.8.5.4
 
