@@ -1,64 +1,490 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: [PATCH] scsi: storvsc: be more picky about scmnd->sc_data_direction
-Date: Thu, 25 Jun 2015 18:12:11 +0200
-Message-ID: <1435248731-29085-1-git-send-email-vkuznets@redhat.com>
+From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
+Subject: RE: [Patch V2 2/9] [SCSI] aacraid: Add Power Management support
+Date: Thu, 25 Jun 2015 16:54:42 +0000
+Message-ID: <E34C6B6293F0214497D0C55B92526C05B69824CE@BBYEXM01.pmc-sierra.internal>
+References: <1433986951-9033-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1433986951-9033-4-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <558C2172.7010307@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54901 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750988AbbFYQMP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jun 2015 12:12:15 -0400
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:58790 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752654AbbFYQyo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Jun 2015 12:54:44 -0400
+In-Reply-To: <558C2172.7010307@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>
+To: Tomas Henzl <thenzl@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-Under the 'default' case in scmnd->sc_data_direction we have 3 options:
-- DMA_NONE which we handle correctly.
-- DMA_BIDIRECTIONAL which is never supposed to be set by SCSI stack.
-- Garbage value.
+Hello Tomas,
 
-Do WARN() and return -EINVAL in the last two cases. virtio_scsi does
-BUG_ON() here but it looks like an overkill.
+Please see my response below.
 
-Reported-by: Radim Kr=C4=8Dm=C3=A1=C5=99 <rkrcmar@redhat.com>
-Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
----
- drivers/scsi/storvsc_drv.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+Thanks,
+-Raj P.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3c6584f..61f4855 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1598,10 +1598,18 @@ static int storvsc_queuecommand(struct Scsi_Hos=
-t *host, struct scsi_cmnd *scmnd)
- 		vm_srb->data_in =3D READ_TYPE;
- 		vm_srb->win8_extension.srb_flags |=3D SRB_FLAGS_DATA_IN;
- 		break;
--	default:
-+	case DMA_NONE:
- 		vm_srb->data_in =3D UNKNOWN_TYPE;
- 		vm_srb->win8_extension.srb_flags |=3D SRB_FLAGS_NO_DATA_TRANSFER;
- 		break;
-+	default:
-+		/*
-+		 * This is DMA_BIDIRECTIONAL or something else we are never
-+		 * supposed to see here.
-+		 */
-+		WARN(1, "Unexpected data direction: %d\n",
-+		     scmnd->sc_data_direction);
-+		return -EINVAL;
- 	}
-=20
-=20
---=20
-2.4.3
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Thursday, June 25, 2015 8:43 AM
+To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Mahesh Rajashekhara; Rich Bono; Achim Leubner; Murthy Bhat
+Subject: Re: [Patch V2 2/9] [SCSI] aacraid: Add Power Management support
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 06/11/2015 03:42 AM, rajinikanth.pandurangan@pmcs.com wrote:
+> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+> 
+> Description:
+> 	* .suspend() and .resume() routines implemented in the driver
+> 	* aac_release_resources() initiates firmware shutdown
+> 	* aac_acquire_resources re-initializes the host interface
+> 
+> Signed-off-by: Rajinikanth Pandurangan 
+> <rajinikanth.pandurangan@pmcs.com>
+> ---
+>  drivers/scsi/aacraid/aacraid.h  |   5 ++
+>  drivers/scsi/aacraid/comminit.c | 154 ++++++++++++++++++++--------------------
+>  drivers/scsi/aacraid/linit.c    | 147 ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/aacraid/rx.c       |   1 +
+>  drivers/scsi/aacraid/sa.c       |   1 +
+>  drivers/scsi/aacraid/src.c      |   2 +
+>  6 files changed, 232 insertions(+), 78 deletions(-)
+> 
+> diff --git a/drivers/scsi/aacraid/aacraid.h 
+> b/drivers/scsi/aacraid/aacraid.h index 40fe65c..62b0999 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -547,6 +547,7 @@ struct adapter_ops
+>  	int  (*adapter_sync_cmd)(struct aac_dev *dev, u32 command, u32 p1, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 *status, u32 *r1, u32 *r2, u32 *r3, u32 *r4);
+>  	int  (*adapter_check_health)(struct aac_dev *dev);
+>  	int  (*adapter_restart)(struct aac_dev *dev, int bled);
+> +	void (*adapter_start)(struct aac_dev *dev);
+>  	/* Transport operations */
+>  	int  (*adapter_ioremap)(struct aac_dev * dev, u32 size);
+>  	irq_handler_t adapter_intr;
+> @@ -1247,6 +1248,9 @@ struct aac_dev
+>  #define aac_adapter_restart(dev,bled) \
+>  	(dev)->a_ops.adapter_restart(dev,bled)
+>  
+> +#define aac_adapter_start(dev) \
+> +	((dev)->a_ops.adapter_start(dev))
+> +
+>  #define aac_adapter_ioremap(dev, size) \
+>  	(dev)->a_ops.adapter_ioremap(dev, size)
+>  
+> @@ -2127,6 +2131,7 @@ int aac_sa_init(struct aac_dev *dev);  int 
+> aac_src_init(struct aac_dev *dev);  int aac_srcv_init(struct aac_dev 
+> *dev);  int aac_queue_get(struct aac_dev * dev, u32 * index, u32 qid, 
+> struct hw_fib * hw_fib, int wait, struct fib * fibptr, unsigned long 
+> *nonotify);
+> +void aac_define_int_mode(struct aac_dev *dev);
+>  unsigned int aac_response_normal(struct aac_queue * q);  unsigned int 
+> aac_command_normal(struct aac_queue * q);  unsigned int 
+> aac_intr_normal(struct aac_dev *dev, u32 Index, diff --git 
+> a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c 
+> index 45db84a..e0a76d5 100644
+> --- a/drivers/scsi/aacraid/comminit.c
+> +++ b/drivers/scsi/aacraid/comminit.c
+> @@ -43,8 +43,6 @@
+>  
+>  #include "aacraid.h"
+>  
+> -static void aac_define_int_mode(struct aac_dev *dev);
+> -
+>  struct aac_common aac_config = {
+>  	.irq_mod = 1
+>  };
+> @@ -338,6 +336,82 @@ static int aac_comm_init(struct aac_dev * dev)
+>  	return 0;
+>  }
+>  
+> +void aac_define_int_mode(struct aac_dev *dev) {
+> +	int i, msi_count;
+> +
+> +	msi_count = i = 0;
+> +	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
+> +	if (dev->max_msix == 0 ||
+> +	    dev->pdev->device == PMC_DEVICE_S6 ||
+> +	    dev->sync_mode) {
+> +		dev->max_msix = 1;
+> +		dev->vector_cap =
+> +			dev->scsi_host_ptr->can_queue +
+> +			AAC_NUM_MGT_FIB;
+> +		return;
+> +	}
+> +
+> +	/* Don't bother allocating more MSI-X vectors than cpus */
+> +	msi_count = min(dev->max_msix,
+> +		(unsigned int)num_online_cpus());
+> +
+> +	dev->max_msix = msi_count;
+> +
+> +	if (msi_count > AAC_MAX_MSIX)
+> +		msi_count = AAC_MAX_MSIX;
+> +
+> +	for (i = 0; i < msi_count; i++)
+> +		dev->msixentry[i].entry = i;
+> +
+> +	if (msi_count > 1 &&
+> +	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
+> +		i = pci_enable_msix_exact(dev->pdev,
+> +				    dev->msixentry,
+> +				    msi_count);
+> +		 /* Che
+Hi,
+pci_enable_msix_exact returns either an error value or 0.
+Maybe what you wanted is pci_enable_msix_range (...., 1, msi_count);
+
+Please do not make silent changes like this, without describing it - it looks like only a whole code block was moved.
+Also there is a rule which should be followed, that is that every single functional change need it's own patch.
+
+When you send a new version of any patch add a description what is new in that newer version.
+
+[RajP] Yes, original intention was just to move the whole code block up.  But when you reviewed my V1, you suggested to change pci_enable_msix() as it's deprecated.  So I made this change in my V2, and I included the following in my description but missed in this particular.
+
+======================
+V2:
+* Removed IRQF_DISABLED
+* Removed unwanted macro definition "sa_writeq"
+* Replaced pci_enable_msix()with "pci_enable_msix_exact()"
+================
+Thanks,
+-Raj P
+
+Cheers,
+Tomas
+
+ck how many MSIX vectors are allocated */
+> +		if (i >= 0) {
+> +			dev->msi_enabled = 1;
+> +			if (i) {
+> +				msi_count = i;
+> +				if (pci_enable_msix_exact(dev->pdev,
+> +				    dev->msixentry,
+> +				    msi_count)) {
+> +					dev->msi_enabled = 0;
+> +					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+> +							dev->name, dev->id, i);
+> +				}
+> +			}
+> +		} else {
+> +			dev->msi_enabled = 0;
+> +			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+> +					dev->name, dev->id, i);
+> +		}
+> +	}
+> +
+> +	if (!dev->msi_enabled) {
+> +		msi_count = 1;
+> +		i = pci_enable_msi(dev->pdev);
+> +
+> +		if (!i) {
+> +			dev->msi_enabled = 1;
+> +			dev->msi = 1;
+> +		} else {
+> +			printk(KERN_ERR "%s%d: MSI not supported!! Will try INTx 0x%x.\n",
+> +					dev->name, dev->id, i);
+> +		}
+> +	}
+> +
+> +	if (!dev->msi_enabled)
+> +		dev->max_msix = msi_count = 1;
+> +	else {
+> +		if (dev->max_msix > msi_count)
+> +			dev->max_msix = msi_count;
+> +	}
+> +	dev->vector_cap =
+> +		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) /
+> +		msi_count;
+> +}
+>  struct aac_dev *aac_init_adapter(struct aac_dev *dev)  {
+>  	u32 status[5];
+> @@ -508,79 +582,3 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+>  	return dev;
+>  }
+>  
+> -static void aac_define_int_mode(struct aac_dev *dev) -{
+> -
+> -	int i, msi_count;
+> -
+> -	msi_count = i = 0;
+> -	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
+> -	if (dev->max_msix == 0 ||
+> -	    dev->pdev->device == PMC_DEVICE_S6 ||
+> -	    dev->sync_mode) {
+> -		dev->max_msix = 1;
+> -		dev->vector_cap =
+> -			dev->scsi_host_ptr->can_queue +
+> -			AAC_NUM_MGT_FIB;
+> -		return;
+> -	}
+> -
+> -	msi_count = min(dev->max_msix,
+> -		(unsigned int)num_online_cpus());
+> -
+> -	dev->max_msix = msi_count;
+> -
+> -	if (msi_count > AAC_MAX_MSIX)
+> -		msi_count = AAC_MAX_MSIX;
+> -
+> -	for (i = 0; i < msi_count; i++)
+> -		dev->msixentry[i].entry = i;
+> -
+> -	if (msi_count > 1 &&
+> -	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
+> -		i = pci_enable_msix(dev->pdev,
+> -				    dev->msixentry,
+> -				    msi_count);
+> -		 /* Check how many MSIX vectors are allocated */
+> -		if (i >= 0) {
+> -			dev->msi_enabled = 1;
+> -			if (i) {
+> -				msi_count = i;
+> -				if (pci_enable_msix(dev->pdev,
+> -				    dev->msixentry,
+> -				    msi_count)) {
+> -					dev->msi_enabled = 0;
+> -					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+> -							dev->name, dev->id, i);
+> -				}
+> -			}
+> -		} else {
+> -			dev->msi_enabled = 0;
+> -			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+> -					dev->name, dev->id, i);
+> -		}
+> -	}
+> -
+> -	if (!dev->msi_enabled) {
+> -		msi_count = 1;
+> -		i = pci_enable_msi(dev->pdev);
+> -
+> -		if (!i) {
+> -			dev->msi_enabled = 1;
+> -			dev->msi = 1;
+> -		} else {
+> -			printk(KERN_ERR "%s%d: MSI not supported!! Will try INTx 0x%x.\n",
+> -					dev->name, dev->id, i);
+> -		}
+> -	}
+> -
+> -	if (!dev->msi_enabled)
+> -		dev->max_msix = msi_count = 1;
+> -	else {
+> -		if (dev->max_msix > msi_count)
+> -			dev->max_msix = msi_count;
+> -	}
+> -	dev->vector_cap =
+> -		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) /
+> -		msi_count;
+> -}
+> diff --git a/drivers/scsi/aacraid/linit.c 
+> b/drivers/scsi/aacraid/linit.c index 9eec027..8020348 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -1317,6 +1317,149 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	return error;
+>  }
+>  
+> +#if (defined(CONFIG_PM))
+> +void aac_release_resources(struct aac_dev *aac) {
+> +	int i;
+> +
+> +	aac_adapter_disable_int(aac);
+> +	if (aac->pdev->device == PMC_DEVICE_S6 ||
+> +	    aac->pdev->device == PMC_DEVICE_S7 ||
+> +	    aac->pdev->device == PMC_DEVICE_S8 ||
+> +	    aac->pdev->device == PMC_DEVICE_S9) {
+> +		if (aac->max_msix > 1) {
+> +			for (i = 0; i < aac->max_msix; i++)
+> +				free_irq(aac->msixentry[i].vector,
+> +					&(aac->aac_msix[i]));
+> +		} else {
+> +			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
+> +		}
+> +	} else {
+> +		free_irq(aac->pdev->irq, aac);
+> +	}
+> +	if (aac->msi)
+> +		pci_disable_msi(aac->pdev);
+> +	else if (aac->max_msix > 1)
+> +		pci_disable_msix(aac->pdev);
+> +
+> +}
+> +
+> +static int aac_acquire_resources(struct aac_dev *dev) {
+> +	int i, j;
+> +	int instance = dev->id;
+> +	const char *name = dev->name;
+> +	unsigned long status;
+> +	/*
+> +	 *	First clear out all interrupts.  Then enable the one's that we
+> +	 *	can handle.
+> +	 */
+> +	while (!((status = src_readl(dev, MUnit.OMR)) & KERNEL_UP_AND_RUNNING)
+> +		|| status == 0xffffffff)
+> +			msleep(1);
+> +
+> +	aac_adapter_disable_int(dev);
+> +	aac_adapter_enable_int(dev);
+> +
+> +
+> +	if ((dev->pdev->device == PMC_DEVICE_S7 ||
+> +	     dev->pdev->device == PMC_DEVICE_S8 ||
+> +	     dev->pdev->device == PMC_DEVICE_S9))
+> +		aac_define_int_mode(dev);
+> +
+> +	if (dev->msi_enabled)
+> +		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
+> +
+> +	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
+> +		for (i = 0; i < dev->max_msix; i++) {
+> +			dev->aac_msix[i].vector_no = i;
+> +			dev->aac_msix[i].dev = dev;
+> +
+> +			if (request_irq(dev->msixentry[i].vector,
+> +					dev->a_ops.adapter_intr,
+> +					0, "aacraid", &(dev->aac_msix[i]))) {
+> +				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
+> +						name, instance, i);
+> +				for (j = 0 ; j < i ; j++)
+> +					free_irq(dev->msixentry[j].vector,
+> +						 &(dev->aac_msix[j]));
+> +				pci_disable_msix(dev->pdev);
+> +				goto error_iounmap;
+> +			}
+> +		}
+> +	} else {
+> +		dev->aac_msix[0].vector_no = 0;
+> +		dev->aac_msix[0].dev = dev;
+> +
+> +		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+> +			IRQF_SHARED, "aacraid",
+> +			&(dev->aac_msix[0])) < 0) {
+> +			if (dev->msi)
+> +				pci_disable_msi(dev->pdev);
+> +			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+> +					name, instance);
+> +			goto error_iounmap;
+> +		}
+> +	}
+> +
+> +	aac_adapter_enable_int(dev);
+> +
+> +	if (!dev->sync_mode)
+> +		aac_adapter_start(dev);
+> +	return 0;
+> +
+> +error_iounmap:
+> +	return -1;
+> +
+> +}
+> +static int aac_suspend(struct pci_dev *pdev, pm_message_t state) {
+> +
+> +	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+> +
+> +	scsi_block_requests(shost);
+> +	aac_send_shutdown(aac);
+> +
+> +	aac_release_resources(aac);
+> +
+> +	pci_set_drvdata(pdev, shost);
+> +	pci_save_state(pdev);
+> +	pci_disable_device(pdev);
+> +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+> +
+> +	return 0;
+> +}
+> +
+> +static int aac_resume(struct pci_dev *pdev) {
+> +	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+> +	int r;
+> +
+> +	pci_set_power_state(pdev, PCI_D0);
+> +	pci_enable_wake(pdev, PCI_D0, 0);
+> +	pci_restore_state(pdev);
+> +	r = pci_enable_device(pdev);
+> +
+> +	if (r)
+> +		goto fail_device;
+> +
+> +	pci_set_master(pdev);
+> +	if (aac_acquire_resources(aac))
+> +		goto fail_device;
+> +	scsi_unblock_requests(shost);
+> +
+> +	return 0;
+> +
+> +fail_device:
+> +	printk(KERN_INFO "%s%d: resume failed.\n", aac->name, aac->id);
+> +	scsi_host_put(shost);
+> +	pci_disable_device(pdev);
+> +	return -ENODEV;
+> +}
+> +#endif
+> +
+>  static void aac_shutdown(struct pci_dev *dev)  {
+>  	struct Scsi_Host *shost = pci_get_drvdata(dev); @@ -1356,6 +1499,10 
+> @@ static struct pci_driver aac_pci_driver = {
+>  	.id_table	= aac_pci_tbl,
+>  	.probe		= aac_probe_one,
+>  	.remove		= aac_remove_one,
+> +#if (defined(CONFIG_PM))
+> +	.suspend	= aac_suspend,
+> +	.resume		= aac_resume,
+> +#endif
+>  	.shutdown	= aac_shutdown,
+>  };
+>  
+> diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c 
+> index 9570612..ac16380 100644
+> --- a/drivers/scsi/aacraid/rx.c
+> +++ b/drivers/scsi/aacraid/rx.c
+> @@ -623,6 +623,7 @@ int _aac_rx_init(struct aac_dev *dev)
+>  	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
+>  	dev->a_ops.adapter_check_health = aac_rx_check_health;
+>  	dev->a_ops.adapter_restart = aac_rx_restart_adapter;
+> +	dev->a_ops.adapter_start = aac_rx_start_adapter;
+>  
+>  	/*
+>  	 *	First clear out all interrupts.  Then enable the one's that we
+> diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c 
+> index e66477c..869aea2 100644
+> --- a/drivers/scsi/aacraid/sa.c
+> +++ b/drivers/scsi/aacraid/sa.c
+> @@ -372,6 +372,7 @@ int aac_sa_init(struct aac_dev *dev)
+>  	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
+>  	dev->a_ops.adapter_check_health = aac_sa_check_health;
+>  	dev->a_ops.adapter_restart = aac_sa_restart_adapter;
+> +	dev->a_ops.adapter_start = aac_sa_start_adapter;
+>  	dev->a_ops.adapter_intr = aac_sa_intr;
+>  	dev->a_ops.adapter_deliver = aac_rx_deliver_producer;
+>  	dev->a_ops.adapter_ioremap = aac_sa_ioremap; diff --git 
+> a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c index 
+> e63cf9f..b147341 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -726,6 +726,7 @@ int aac_src_init(struct aac_dev *dev)
+>  	dev->a_ops.adapter_sync_cmd = src_sync_cmd;
+>  	dev->a_ops.adapter_check_health = aac_src_check_health;
+>  	dev->a_ops.adapter_restart = aac_src_restart_adapter;
+> +	dev->a_ops.adapter_start = aac_src_start_adapter;
+>  
+>  	/*
+>  	 *	First clear out all interrupts.  Then enable the one's that we
+> @@ -892,6 +893,7 @@ int aac_srcv_init(struct aac_dev *dev)
+>  	dev->a_ops.adapter_sync_cmd = src_sync_cmd;
+>  	dev->a_ops.adapter_check_health = aac_src_check_health;
+>  	dev->a_ops.adapter_restart = aac_src_restart_adapter;
+> +	dev->a_ops.adapter_start = aac_src_start_adapter;
+>  
+>  	/*
+>  	 *	First clear out all interrupts.  Then enable the one's that we
+> 
+
