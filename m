@@ -1,16 +1,16 @@
 From: "Seymour, Shane M" <shane.seymour@hp.com>
-Subject: scsi_dh: convert __ATTR macro to DEVICE_ATTR_RW and snprintf show
- method cleanup
-Date: Fri, 26 Jun 2015 06:28:04 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB3F8EAA11@G4W3219.americas.hpqcorp.net>
+Subject: [PATCH] scsi_dh: convert __ATTR macro to DEVICE_ATTR_RW and
+ snprintf show method cleanup
+Date: Fri, 26 Jun 2015 06:38:36 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB3F8EAA39@G4W3219.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:34805 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbbFZG3R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2015 02:29:17 -0400
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:50565 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878AbbFZGjs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2015 02:39:48 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
