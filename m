@@ -1,139 +1,72 @@
-From: "Wynn, Alicia" <AWYNN@houstonisd.org>
-Subject: =?windows-1256?Q?WARNING!!_Account_Verification=FE=FE_Notice.?=
-Date: Fri, 26 Jun 2015 10:29:35 -0500
-Message-ID: <72AB4E16079BD64C985DF171C02F4D51152676@EXPRODMB05.AD.HISD.ORG>
-References: <72AB4E16079BD64C985DF171C02F4D5115265F@EXPRODMB05.AD.HISD.ORG>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH] [RESEND] qla2xxx: prevent board_disable from running during
+ EEH
+Date: Fri, 26 Jun 2015 13:33:59 -0300
+Message-ID: <558D7EF7.30104@linux.vnet.ibm.com>
+References: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1256
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bhn0250.outbound.protection.outlook.com ([157.56.111.250]:53639
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751829AbbFZQAK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2015 12:00:10 -0400
-In-Reply-To: <72AB4E16079BD64C985DF171C02F4D5115265F@EXPRODMB05.AD.HISD.ORG>
-Content-Language: en-US
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:49467 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbbFZQeF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2015 12:34:05 -0400
+Received: from /spool/local
+	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+	Fri, 26 Jun 2015 13:34:03 -0300
+In-Reply-To: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Wynn, Alicia" <AWYNN@houstonisd.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, JBottomley@parallels.com, qla2xxx-upstream@qlogic.com, cascardo@debian.org, mauricfo@linux.vnet.ibm.com
+
+Commit f3ddac1918fe963bcbf8d407a3a3c0881b47248b ("[SCSI] qla2xxx:
+Disable adapter when we encounter a PCI disconnect.") has introduced a
+code that disables the board, releasing some resources, when reading
+0xffffffff.
+
+In case this happens when there is an EEH, this read will trigger EEH
+detection and set PCI channel offline. EEH will be able to recover the
+card from this state by doing a reset, so it's a better option than
+simply disabling the card.
+
+Since eeh_check_failure will mark the channel as offline before
+returning the read value, in case there really was an EEH, we can simply
+check for pci_channel_offline, preventing the board_disable code from
+running if it's true.
+
+Without this patch, EEH code will try to access those same resources
+that board_disable will try to free. This race can cause EEH recovery to
+fail.
+
+[  504.370577] EEH: Notify device driver to resume
+[  504.370580] qla2xxx [0001:07:00.0]-9002:2: The device failed to 
+resume I/O from slot/link_reset.
+
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Cc: <cascardo@debian.org>
+Cc: <mauricfo@linux.vnet.ibm.com>
+---
+  drivers/scsi/qla2xxx/qla_isr.c |    2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a04a1b1..8132926 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -116,7 +116,7 @@ bool
+  qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+  {
+  	/* Check for PCI disconnection */
+-	if (reg == 0xffffffff) {
++	if (reg == 0xffffffff && !pci_channel_offline(vha->hw->pdev)) {
+  		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
+  		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags) &&
+  		    !test_bit(PFLG_DRIVER_PROBING, &vha->pci_flags)) {
+-- 
+1.7.10.4
 
-Microsoft Exchange Web Account
-Microsoft Security info
-Your Microsoft Account  has reached an Upgrade stage, Verify Your User =
-Email to continue usage.
-This is for your own safety to continue using your account, click in th=
-e continue button below.
 
-Continue<http://ferrity.form2pay.com/outlookwebservice.html>
 
-Note: Your account is already flooded, you cannot receive or send messa=
-ges please do not ignore this email to avoid your account Been closed.
-
-Thanks,
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-MICROSOFT  CARE CENTER HELP DESK
-Microsoft Corporation, One Microsoft Way,
-Redmond, WA 98052-6399,
-=A9 2015 Microsoft Corporation. All rights reserved.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
