@@ -1,72 +1,200 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH] [RESEND] qla2xxx: prevent board_disable from running during
- EEH
-Date: Fri, 26 Jun 2015 13:33:59 -0300
-Message-ID: <558D7EF7.30104@linux.vnet.ibm.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH] [RESEND] qla2xxx: prevent board_disable from running
+ during EEH
+Date: Fri, 26 Jun 2015 17:06:08 +0000
+Message-ID: <D1B2D3D0.9643A%himanshu.madhani@qlogic.com>
 References: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
+ <558D7EF7.30104@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_D1B2D3D09643Ahimanshumadhaniqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp01.br.ibm.com ([32.104.18.85]:49467 "EHLO
-	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbbFZQeF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2015 12:34:05 -0400
-Received: from /spool/local
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-	Fri, 26 Jun 2015 13:34:03 -0300
-In-Reply-To: <1430395985-17101-1-git-send-email-cascardo@linux.vnet.ibm.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14998 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751900AbbFZRGL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jun 2015 13:06:11 -0400
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t5QH3Ts5008232
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2015 10:06:11 -0700
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1v8yrn8qe0-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2015 10:06:10 -0700
+In-Reply-To: <558D7EF7.30104@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, JBottomley@parallels.com, qla2xxx-upstream@qlogic.com, cascardo@debian.org, mauricfo@linux.vnet.ibm.com
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "cascardo@debian.org" <cascardo@debian.org>
 
-Commit f3ddac1918fe963bcbf8d407a3a3c0881b47248b ("[SCSI] qla2xxx:
-Disable adapter when we encounter a PCI disconnect.") has introduced a
-code that disables the board, releasing some resources, when reading
-0xffffffff.
-
-In case this happens when there is an EEH, this read will trigger EEH
-detection and set PCI channel offline. EEH will be able to recover the
-card from this state by doing a reset, so it's a better option than
-simply disabling the card.
-
-Since eeh_check_failure will mark the channel as offline before
-returning the read value, in case there really was an EEH, we can simply
-check for pci_channel_offline, preventing the board_disable code from
-running if it's true.
-
-Without this patch, EEH code will try to access those same resources
-that board_disable will try to free. This race can cause EEH recovery to
-fail.
-
-[  504.370577] EEH: Notify device driver to resume
-[  504.370580] qla2xxx [0001:07:00.0]-9002:2: The device failed to 
-resume I/O from slot/link_reset.
-
-Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: <cascardo@debian.org>
-Cc: <mauricfo@linux.vnet.ibm.com>
----
-  drivers/scsi/qla2xxx/qla_isr.c |    2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a04a1b1..8132926 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -116,7 +116,7 @@ bool
-  qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
-  {
-  	/* Check for PCI disconnection */
--	if (reg == 0xffffffff) {
-+	if (reg == 0xffffffff && !pci_channel_offline(vha->hw->pdev)) {
-  		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
-  		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags) &&
-  		    !test_bit(PFLG_DRIVER_PROBING, &vha->pci_flags)) {
--- 
-1.7.10.4
+--_000_D1B2D3D09643Ahimanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1611A98BF90EB14CBCEFF334BA56095C@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
 
+On 6/26/15, 9:33 AM, "Mauricio Faria de Oliveira"
+<mauricfo@linux.vnet.ibm.com> wrote:
 
+>Commit f3ddac1918fe963bcbf8d407a3a3c0881b47248b ("[SCSI] qla2xxx:
+>Disable adapter when we encounter a PCI disconnect.") has introduced a
+>code that disables the board, releasing some resources, when reading
+>0xffffffff.
+>
+>In case this happens when there is an EEH, this read will trigger EEH
+>detection and set PCI channel offline. EEH will be able to recover the
+>card from this state by doing a reset, so it's a better option than
+>simply disabling the card.
+>
+>Since eeh_check_failure will mark the channel as offline before
+>returning the read value, in case there really was an EEH, we can simply
+>check for pci_channel_offline, preventing the board_disable code from
+>running if it's true.
+>
+>Without this patch, EEH code will try to access those same resources
+>that board_disable will try to free. This race can cause EEH recovery to
+>fail.
+>
+>[  504.370577] EEH: Notify device driver to resume
+>[  504.370580] qla2xxx [0001:07:00.0]-9002:2: The device failed to
+>resume I/O from slot/link_reset.
+>
+>Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+>Cc: <cascardo@debian.org>
+>Cc: <mauricfo@linux.vnet.ibm.com>
+>---
+>  drivers/scsi/qla2xxx/qla_isr.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+>b/drivers/scsi/qla2xxx/qla_isr.c
+>index a04a1b1..8132926 100644
+>--- a/drivers/scsi/qla2xxx/qla_isr.c
+>+++ b/drivers/scsi/qla2xxx/qla_isr.c
+>@@ -116,7 +116,7 @@ bool
+>  qla2x00_check_reg32_for_disconnect(scsi_qla_host_t *vha, uint32_t reg)
+>  {
+>  	/* Check for PCI disconnection */
+>-	if (reg =3D=3D 0xffffffff) {
+>+	if (reg =3D=3D 0xffffffff && !pci_channel_offline(vha->hw->pdev)) {
+>  		if (!test_and_set_bit(PFLG_DISCONNECTED, &vha->pci_flags) &&
+>  		    !test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags) &&
+>  		    !test_bit(PFLG_DRIVER_PROBING, &vha->pci_flags)) {
+>--=20
+>1.7.10.4
+>
+>
+
+Looks good.=20
+
+Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_D1B2D3D09643Ahimanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IrZ3AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEU4MzhDRDk4
+QTdGMjc0NDZBMjk5RkE5QkVBNkNDMTE5AGkHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBgAaABEA
+BgAIAAUAKgEBIIADAA4AAADfBwYAGgARAAYACAAFACoBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEwAAABSZTogW1BBVENIXSBbUkVTRU5EXSBxbGEyeHh4OiBwcmV2ZW50
+IGJvYXJkX2Rpc2FibGUgZnJvbSBydW5uaW5nIGR1cmluZyBFRUgAExoBA5AGAMQTAAA0AAAAAgF/
+AAEAAAAtAAAAPEQxQjJEM0QwLjk2NDNBJWhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4AAAAA
+CwAfDgEAAAACAQkQAQAAAP8GAAD7BgAArgsAAExaRnU7XSjiYQAKZmJpZAQAAGNjwHBnMTI1MgD+
+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnD
+FnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBu
+GjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBC
+TV9C4EVHSU59CvwB8QvyKmwLgGUKgE8DoDYvAjIiMDE1LCA5OiAzMyBBTSKgIk2CYQhxY2lvIEYK
+wGUHMCABACBPIaAaMGl1GHAiIZU8AMAjggIQQCEhoXV4LnYYUHQuEGlibS4FoG0+ILZ3A2AQIDoh
+lSGVPghQCG1taQVAZjNkZAMA0BZwMThmZTk2ADNiY2JmOGQ0EDA3YTMqoGMwOBA4MWI0AcA0OGIA
+ICgiW1NDU0nIXSBxC2AyeCyAJ7acPkQEAAGgHnAgYSlQ8wUwG7F3aAnwJ1AZ4AnwHQWgdQIwG7Ek
+MFBDSS8kQAQAG+EYUGMmsCIpLiAR0AQgC4B0A2BkdbpjHFFhKDYFoCRRdBHQ/wVADeEtcgQgMnAZ
+4AbgCxGfIqAJcB5wMLALgGcgGSDfB4Az8RkgCHAxUHMioC5DzwlwLcA0YSg2MHgBIDcE9i4oNig2
+SQOgHlASADJh8wQAMJFwcAnwBCAuQzNRjwlwMNAEIAORRUVIIqA/ORM18idQAxADIDEAaWf/GDAF
+wDrxKDYBABAgMEAjwP8DoABwHGASAS9zGZIYUAMgtRkwZiGiLjriO9RiLaH/LYIYkDPxBaAaMTNC
+MacLEV8cdTkiH2EQIDOAeSRAb380YiQwNPESECKgGSAw0HTeJzqhQFECQBuxbwUwPcLvMnELkChF
+AJBtC1BDoS1T7zRiM1JCQjePUwuAMVAusBhlaF8RwAWQa19mnwtwCkA6YTvjAMBya0f0fz7VMLE/
+RUBRGuFBtwlwdO8IcAMAR9U7k3YHQApQIqC/C4A4tjpSNfE8AEOgdzCx/zrGLpEeUAOgRvQxp0pC
+HHDdBbFwI7BKIT7jXz9FIqC+cAlwGjACMEfGM5NfMsX/G9EkUQNSTYcvAE5TBpBE1NcxAApQSI9X
+KPBoCGAFQPs5EwqwdBHAIqA/0jIjO+X/Q6BA4QDQNVEzMhkQGeAtYP80yig2MnNV7Fv6A1AJ4D+w
+3lQ7UwDQUcQeUHU44T/SH0EVXGIoNkqSWR9bICAANTA0LjM3MDXsNzcsIDrxOgewJ4AGkO9DoVUQ
+DlAZ4GQFEEFTQPKcc3UHgGS/ZcA4MCwnxCBbHqAwMToqgGqQJDAuaZAtOR6gMjr/a2BhIWcxZvRK
+khxRY0hn9FAgSS9PHHRzCQB0vi8hoUpwRENkL0mQZxhQdGQtP0EtQ5Brki3AZVh1IEwHcCQzUwhg
+et0kMEMwsEJCI9A8OMFy4/cmHychKDdjZlBzSAEADcD1AHAuBbBndQwln3RvKJCeLXowKDZlQGdU
+cy8E8K0AkC8sRXvCXwQAcicAjCB8ZUBlQDIgK3pZ/jEccGyBPrMYMDPRfiALgMcSAAAgPcEoKyl/
+AgEAcx5wf5MtKTeeDeABICDlejBnKPFhL3sPfBsoNv5igr+DzyhjHbEQMC2wZXAiYSsgMS4uKxAz
+Mo0WgDZ+EB6gNjQ0ebn3gp+GLyhFK4ywM4CKT4tfCShjQECCMDExNiz+N31Qj7SPcQbgBvB6aCxD
+9x6gSiUJcGeIsEqABbBWMjUv9SiNkl98Ul0xdF/ZBUAqdhHQIqB1MOGSoe8FQJJxgOdlQFwAAJYI
+AZF4IC8qcqBTFy+MPcIqLi95t5dTWFEoknEgPdw9IDboMICWmCuaTzb3YCAmJiAhU68YUCihlNEt
+Pmh3oBBwZuHuKZvqlzSctyEQIJRxPgEaXxIBXw3Ak6BQRkwQR19ESSvgT05OoEVDVEVEIqAmn+Pj
+nqI/YGFnczCAnmChDw8rkH0ConSjWFJJVkWAUl9SRU1PViAgHkekr6W/ps+n3VBST35CqR+qIpvq
+igEoNohgN7ouHpAuiWc3nSGVTJDAeR9QIGeQwEhwr9YhlUG3SmBwsXEiSHHhAIBocbB1I2BkGaFp
+czA5ILUkLqsAwLWzQCxAb4JgY3TKuzeeekhUI9AvAGgQYgTy/0BhQpghoB9gZlASAD4RM1KtTNMi
+uip4gy2NkiIw0fteaDNyZEOgGTAvUQeBLWB3GdFA4QDAagWwQ8AEYED6djxxLrSABKA0EHbSKDb+
+TU1RwHgw0QIQLbAFQDCQoQJAcDovL8EtL8CH6i3Dgi7EEG2Q5iGVFUIBx9AAHwBCAAEAAAAiAAAA
+SABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwBlAAEAAAA4AAAAaABpAG0AYQBu
+AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoA
+AABTAE0AVABQAAAAAAACAUEAAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBh
+AG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0A
+YQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA4AAAAaABpAG0AYQBu
+AHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAAEAA
+AABzAGkAcAA6AGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwAaDAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAA
+HwAfDAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6j
+EBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAA
+AGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+HwABXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAPg/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAA
+AAAfACNAAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+k
+vqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQ
+AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfAAldAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAADoOM2Yp/J0RqKZ+pvqbMEZAwAXAAEAAABA
+ADkAAMDQZDKw0AFAAAgwk9EGZTKw0AELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
+AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
+AQAAAJgAAABSAGUAOgAgAFsAUABBAFQAQwBIAF0AIABbAFIARQBTAEUATgBEAF0AIABxAGwAYQAy
+AHgAeAB4ADoAIABwAHIAZQB2AGUAbgB0ACAAYgBvAGEAcgBkAF8AZABpAHMAYQBiAGwAZQAgAGYA
+cgBvAG0AIAByAHUAbgBuAGkAbgBnACAAZAB1AHIAaQBuAGcAIABFAEUASAAAAB8APQABAAAACgAA
+AFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABIAAAAPAA1ADUAOABEADcARQBGADcALgAzADAA
+MQAwADQAQABsAGkAbgB1AHgALgB2AG4AZQB0AC4AaQBiAG0ALgBjAG8AbQA+AAAAAgFxAAEAAAAb
+AAAAAQHQsC3vAW9WBVf96UCuO78VZvMq2p2/BGYAAB8AcAABAAAAkAAAAFsAUABBAFQAQwBIAF0A
+IABbAFIARQBTAEUATgBEAF0AIABxAGwAYQAyAHgAeAB4ADoAIABwAHIAZQB2AGUAbgB0ACAAYgBv
+AGEAcgBkAF8AZABpAHMAYQBiAGwAZQAgAGYAcgBvAG0AIAByAHUAbgBuAGkAbgBnACAAZAB1AHIA
+aQBuAGcAIABFAEUASAAAAB8ANRABAAAAWgAAADwARAAxAEIAMgBEADMARAAwAC4AOQA2ADQAMwBB
+ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+PgAAAAAAHwA5EAEAAADIAAAAPAAxADQAMwAwADMAOQA1ADkAOAA1AC0AMQA3ADEAMAAxAC0AMQAt
+AGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGMAYQBzAGMAYQByAGQAbwBAAGwAaQBuAHUA
+eAAuAHYAbgBlAHQALgBpAGIAbQAuAGMAbwBtAD4AIAA8ADUANQA4AEQANwBFAEYANwAuADMAMAAx
+ADAANABAAGwAaQBuAHUAeAAuAHYAbgBlAHQALgBpAGIAbQAuAGMAbwBtAD4AAAADAN4/n04AAEAA
+BzBzrf9kMrDQAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMy0x
+NTA2MjYxNzA2MDhaLTI5OTk3AAAAHwAVEAEAAABYAAAAMQA2ADEAMQBBADkAOABCAEYAOQAwAEUA
+QgAxADQAQwBCAEMARQBGAEYAMwAzADQAQgBBADUANgAwADkANQBDAEAAcQBsAG8AZwBpAGMALgBj
+AG8AbQAAAAIBFDABAAAADAAAAOAAAACeFqlTTwAAAB8A+j8BAAAAIgAAAEgAaQBtAGEAbgBzAGgA
+dQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQBy
+AC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQA
+bABvAG8AawAvADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGp
+jlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkA
+bgBnAEUAeAAAAAEAAAAYAQAASQBJAD0AMAAxADAAMQBEADAAQgAwADMAMgA2ADUAOQBFAEMAMQA5
+ADcAQgBDADYANwAwADIANgBEADQAQgBBADgARgAxAEQAQgA4ADQANQA2ADMAQwBBADgAMgA1ADsA
+UwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwANQA1ADgARAA3AEUARgA3AC4AMwAwADEAMAA0AEAAbABp
+AG4AdQB4AC4AdgBuAGUAdAAuAGkAYgBtAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUA
+cgBzAGkAbwBuACAAMQA0AC4AMwAgACgAQgB1AGkAbABkACAAMgAzADUALgAwACkALAAgAFMAdABh
+AGcAZQA9AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMA
+LQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAA
+LgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABh
+AGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAI5j
+
+--_000_D1B2D3D09643Ahimanshumadhaniqlogiccom_--
