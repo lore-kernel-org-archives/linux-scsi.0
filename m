@@ -1,50 +1,55 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: be more picky about
- scmnd->sc_data_direction
-Date: Sun, 28 Jun 2015 02:36:22 +0000
-Message-ID: <BY2PR0301MB16548730485D11B010D6C4F1A0AB0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1435248731-29085-1-git-send-email-vkuznets@redhat.com>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH] SCSI-OSD: Delete an unnecessary check before the function
+ call "put_disk"
+Date: Sun, 28 Jun 2015 12:39:59 +0300
+Message-ID: <558FC0EF.1080904@electrozaur.com>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net> <546E238A.5050606@users.sourceforge.net> <558ABBC2.8080304@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1435248731-29085-1-git-send-email-vkuznets@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Long Li <longli@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, =?utf-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:35389 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245AbbF1JkD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2015 05:40:03 -0400
+In-Reply-To: <558ABBC2.8080304@users.sourceforge.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, Benny Halevy <bhalevy@primarydata.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVml0YWx5IEt1em5ldHNv
-diBbbWFpbHRvOnZrdXpuZXRzQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBKdW5lIDI1
-LCAyMDE1IDk6MTIgQU0NCj4gVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+IENjOiBM
-b25nIExpOyBLWSBTcmluaXZhc2FuOyBIYWl5YW5nIFpoYW5nOyBKYW1lcyBFLkouIEJvdHRvbWxl
-eTsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZzsgUmFkaW0gS3LEjW3DocWZDQo+IFN1YmplY3Q6IFtQQVRDSF0gc2NzaTogc3RvcnZz
-YzogYmUgbW9yZSBwaWNreSBhYm91dCBzY21uZC0NCj4gPnNjX2RhdGFfZGlyZWN0aW9uDQo+IA0K
-PiBVbmRlciB0aGUgJ2RlZmF1bHQnIGNhc2UgaW4gc2NtbmQtPnNjX2RhdGFfZGlyZWN0aW9uIHdl
-IGhhdmUgMyBvcHRpb25zOg0KPiAtIERNQV9OT05FIHdoaWNoIHdlIGhhbmRsZSBjb3JyZWN0bHku
-DQo+IC0gRE1BX0JJRElSRUNUSU9OQUwgd2hpY2ggaXMgbmV2ZXIgc3VwcG9zZWQgdG8gYmUgc2V0
-IGJ5IFNDU0kgc3RhY2suDQo+IC0gR2FyYmFnZSB2YWx1ZS4NCj4gDQo+IERvIFdBUk4oKSBhbmQg
-cmV0dXJuIC1FSU5WQUwgaW4gdGhlIGxhc3QgdHdvIGNhc2VzLiB2aXJ0aW9fc2NzaSBkb2VzDQo+
-IEJVR19PTigpIGhlcmUgYnV0IGl0IGxvb2tzIGxpa2UgYW4gb3ZlcmtpbGwuDQo+IA0KPiBSZXBv
-cnRlZC1ieTogUmFkaW0gS3LEjW3DocWZIDxya3JjbWFyQHJlZGhhdC5jb20+DQo+IFNpZ25lZC1v
-ZmYtYnk6IFZpdGFseSBLdXpuZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+DQpTaWduZWQtb2Zm
-LWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4gLS0tDQo+ICBkcml2
-ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDEwICsrKysrKysrKy0NCj4gIDEgZmlsZSBjaGFuZ2Vk
-LCA5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IGlu
-ZGV4IDNjNjU4NGYuLjYxZjQ4NTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zdG9ydnNj
-X2Rydi5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IEBAIC0xNTk4LDEw
-ICsxNTk4LDE4IEBAIHN0YXRpYyBpbnQgc3RvcnZzY19xdWV1ZWNvbW1hbmQoc3RydWN0DQo+IFNj
-c2lfSG9zdCAqaG9zdCwgc3RydWN0IHNjc2lfY21uZCAqc2NtbmQpDQo+ICAJCXZtX3NyYi0+ZGF0
-YV9pbiA9IFJFQURfVFlQRTsNCj4gIAkJdm1fc3JiLT53aW44X2V4dGVuc2lvbi5zcmJfZmxhZ3Mg
-fD0NCj4gU1JCX0ZMQUdTX0RBVEFfSU47DQo+ICAJCWJyZWFrOw0KPiAtCWRlZmF1bHQ6DQo+ICsJ
-Y2FzZSBETUFfTk9ORToNCj4gIAkJdm1fc3JiLT5kYXRhX2luID0gVU5LTk9XTl9UWVBFOw0KPiAg
-CQl2bV9zcmItPndpbjhfZXh0ZW5zaW9uLnNyYl9mbGFncyB8PQ0KPiBTUkJfRkxBR1NfTk9fREFU
-QV9UUkFOU0ZFUjsNCj4gIAkJYnJlYWs7DQo+ICsJZGVmYXVsdDoNCj4gKwkJLyoNCj4gKwkJICog
-VGhpcyBpcyBETUFfQklESVJFQ1RJT05BTCBvciBzb21ldGhpbmcgZWxzZSB3ZSBhcmUNCj4gbmV2
-ZXINCj4gKwkJICogc3VwcG9zZWQgdG8gc2VlIGhlcmUuDQo+ICsJCSAqLw0KPiArCQlXQVJOKDEs
-ICJVbmV4cGVjdGVkIGRhdGEgZGlyZWN0aW9uOiAlZFxuIiwNCj4gKwkJICAgICBzY21uZC0+c2Nf
-ZGF0YV9kaXJlY3Rpb24pOw0KPiArCQlyZXR1cm4gLUVJTlZBTDsNCj4gIAl9DQo+IA0KPiANCj4g
-LS0NCj4gMi40LjMNCg0K
+On 06/24/2015 05:16 PM, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Wed, 24 Jun 2015 16:06:21 +0200
+> 
+> The put_disk() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+
+ACK-by: Boaz Harrosh <ooo@electrozaur.com>
+
+> ---
+>  drivers/scsi/osd/osd_uld.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+> index 243eab3..e2075522 100644
+> --- a/drivers/scsi/osd/osd_uld.c
+> +++ b/drivers/scsi/osd/osd_uld.c
+> @@ -407,9 +407,7 @@ static void __remove(struct device *dev)
+>  
+>  	OSD_INFO("osd_remove %s\n",
+>  		 oud->disk ? oud->disk->disk_name : NULL);
+> -
+> -	if (oud->disk)
+> -		put_disk(oud->disk);
+> +	put_disk(oud->disk);
+>  	ida_remove(&osd_minor_ida, oud->minor);
+>  
+>  	kfree(oud);
+> 
+
