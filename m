@@ -1,118 +1,50 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [RFC v3 01/24] scsi/atari_scsi: Dont select CONFIG_NVRAM
-Date: Sun, 28 Jun 2015 11:42:00 +1000
-Message-ID: <20150628014159.982575089@telegraphics.com.au>
-References: <20150628014159.732792697@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:43571 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821AbbF1Bul (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2015 21:50:41 -0400
-Content-Disposition: inline; filename=atari-nvram-disable
-Sender: linux-scsi-owner@vger.kernel.org
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] scsi: storvsc: be more picky about
+ scmnd->sc_data_direction
+Date: Sun, 28 Jun 2015 02:36:22 +0000
+Message-ID: <BY2PR0301MB16548730485D11B010D6C4F1A0AB0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1435248731-29085-1-git-send-email-vkuznets@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1435248731-29085-1-git-send-email-vkuznets@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vitaly Kuznetsov <vkuznets@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Long Li <longli@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, =?utf-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
 
-On powerpc, setting CONFIG_NVRAM=n builds a kernel with no NVRAM support.
-Setting CONFIG_NVRAM=m enables the /dev/nvram misc device module without
-enabling NVRAM support in drivers. Setting CONFIG_NVRAM=y enables the
-misc device (built-in) and also enables NVRAM support in drivers.
-
-m68k shares the valkyriefb driver with powerpc, and since that driver uses
-NVRAM, it is affected by CONFIG_ATARI_SCSI, because of the use of
-"select NVRAM".
-
-Adopt the powerpc convention on m68k to avoid surprises.
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
-
-This patch temporarily disables CONFIG_NVRAM on Atari, to prevent build
-failures when bisecting the rest of this patch series. It gets enabled
-again with the introduction of CONFIG_HAVE_ARCH_NVRAM_OPS, once the
-nvram_* global functions have been moved to an ops struct.
-
-The removal of "select NVRAM" may mean that some kernel configs (such
-as Debian/m68k) may need tweaking.
-
----
- drivers/char/Kconfig      |    5 +----
- drivers/scsi/Kconfig      |    6 +++---
- drivers/scsi/atari_scsi.c |    8 ++++----
- 3 files changed, 8 insertions(+), 11 deletions(-)
-
-Index: linux/drivers/char/Kconfig
-===================================================================
---- linux.orig/drivers/char/Kconfig	2015-06-28 11:41:28.000000000 +1000
-+++ linux/drivers/char/Kconfig	2015-06-28 11:41:28.000000000 +1000
-@@ -247,7 +247,7 @@ source "drivers/char/hw_random/Kconfig"
- 
- config NVRAM
- 	tristate "/dev/nvram support"
--	depends on ATARI || X86 || (ARM && RTC_DRV_CMOS) || GENERIC_NVRAM
-+	depends on X86 || (ARM && RTC_DRV_CMOS) || GENERIC_NVRAM
- 	---help---
- 	  If you say Y here and create a character special file /dev/nvram
- 	  with major number 10 and minor number 144 using mknod ("man mknod"),
-@@ -265,9 +265,6 @@ config NVRAM
- 	  should NEVER idly tamper with it. See Ralf Brown's interrupt list
- 	  for a guide to the use of CMOS bytes by your BIOS.
- 
--	  On Atari machines, /dev/nvram is always configured and does not need
--	  to be selected.
--
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called nvram.
- 
-Index: linux/drivers/scsi/Kconfig
-===================================================================
---- linux.orig/drivers/scsi/Kconfig	2015-06-28 11:41:28.000000000 +1000
-+++ linux/drivers/scsi/Kconfig	2015-06-28 11:41:28.000000000 +1000
-@@ -1592,14 +1592,14 @@ config ATARI_SCSI
- 	tristate "Atari native SCSI support"
- 	depends on ATARI && SCSI
- 	select SCSI_SPI_ATTRS
--	select NVRAM
- 	---help---
- 	  If you have an Atari with built-in NCR5380 SCSI controller (TT,
- 	  Falcon, ...) say Y to get it supported. Of course also, if you have
- 	  a compatible SCSI controller (e.g. for Medusa).
- 
--	  To compile this driver as a module, choose M here: the
--	  module will be called atari_scsi.
-+	  To compile this driver as a module, choose M here: the module will
-+	  be called atari_scsi. If you also enable NVRAM support, the SCSI
-+	  host's ID is taken from the setting in TT RTC NVRAM.
- 
- 	  This driver supports both styles of NCR integration into the
- 	  system: the TT style (separate DMA), and the Falcon style (via
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-06-28 11:41:28.000000000 +1000
-+++ linux/drivers/scsi/atari_scsi.c	2015-06-28 11:41:28.000000000 +1000
-@@ -875,9 +875,10 @@ static int __init atari_scsi_probe(struc
- 	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
- 		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
- 
--	if (setup_hostid >= 0) {
-+	if (setup_hostid >= 0)
- 		atari_scsi_template.this_id = setup_hostid & 7;
--	} else {
-+#ifdef CONFIG_NVRAM
-+	else
- 		/* Test if a host id is set in the NVRam */
- 		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
- 			unsigned char b = nvram_read_byte(14);
-@@ -888,8 +889,7 @@ static int __init atari_scsi_probe(struc
- 			if (b & 0x80)
- 				atari_scsi_template.this_id = b & 7;
- 		}
--	}
--
-+#endif
- 
- #ifdef REAL_DMA
- 	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVml0YWx5IEt1em5ldHNv
+diBbbWFpbHRvOnZrdXpuZXRzQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBKdW5lIDI1
+LCAyMDE1IDk6MTIgQU0NCj4gVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+IENjOiBM
+b25nIExpOyBLWSBTcmluaXZhc2FuOyBIYWl5YW5nIFpoYW5nOyBKYW1lcyBFLkouIEJvdHRvbWxl
+eTsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
+bmVsLm9yZzsgUmFkaW0gS3LEjW3DocWZDQo+IFN1YmplY3Q6IFtQQVRDSF0gc2NzaTogc3RvcnZz
+YzogYmUgbW9yZSBwaWNreSBhYm91dCBzY21uZC0NCj4gPnNjX2RhdGFfZGlyZWN0aW9uDQo+IA0K
+PiBVbmRlciB0aGUgJ2RlZmF1bHQnIGNhc2UgaW4gc2NtbmQtPnNjX2RhdGFfZGlyZWN0aW9uIHdl
+IGhhdmUgMyBvcHRpb25zOg0KPiAtIERNQV9OT05FIHdoaWNoIHdlIGhhbmRsZSBjb3JyZWN0bHku
+DQo+IC0gRE1BX0JJRElSRUNUSU9OQUwgd2hpY2ggaXMgbmV2ZXIgc3VwcG9zZWQgdG8gYmUgc2V0
+IGJ5IFNDU0kgc3RhY2suDQo+IC0gR2FyYmFnZSB2YWx1ZS4NCj4gDQo+IERvIFdBUk4oKSBhbmQg
+cmV0dXJuIC1FSU5WQUwgaW4gdGhlIGxhc3QgdHdvIGNhc2VzLiB2aXJ0aW9fc2NzaSBkb2VzDQo+
+IEJVR19PTigpIGhlcmUgYnV0IGl0IGxvb2tzIGxpa2UgYW4gb3ZlcmtpbGwuDQo+IA0KPiBSZXBv
+cnRlZC1ieTogUmFkaW0gS3LEjW3DocWZIDxya3JjbWFyQHJlZGhhdC5jb20+DQo+IFNpZ25lZC1v
+ZmYtYnk6IFZpdGFseSBLdXpuZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+DQpTaWduZWQtb2Zm
+LWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4gLS0tDQo+ICBkcml2
+ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDEwICsrKysrKysrKy0NCj4gIDEgZmlsZSBjaGFuZ2Vk
+LCA5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IGlu
+ZGV4IDNjNjU4NGYuLjYxZjQ4NTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zdG9ydnNj
+X2Rydi5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+IEBAIC0xNTk4LDEw
+ICsxNTk4LDE4IEBAIHN0YXRpYyBpbnQgc3RvcnZzY19xdWV1ZWNvbW1hbmQoc3RydWN0DQo+IFNj
+c2lfSG9zdCAqaG9zdCwgc3RydWN0IHNjc2lfY21uZCAqc2NtbmQpDQo+ICAJCXZtX3NyYi0+ZGF0
+YV9pbiA9IFJFQURfVFlQRTsNCj4gIAkJdm1fc3JiLT53aW44X2V4dGVuc2lvbi5zcmJfZmxhZ3Mg
+fD0NCj4gU1JCX0ZMQUdTX0RBVEFfSU47DQo+ICAJCWJyZWFrOw0KPiAtCWRlZmF1bHQ6DQo+ICsJ
+Y2FzZSBETUFfTk9ORToNCj4gIAkJdm1fc3JiLT5kYXRhX2luID0gVU5LTk9XTl9UWVBFOw0KPiAg
+CQl2bV9zcmItPndpbjhfZXh0ZW5zaW9uLnNyYl9mbGFncyB8PQ0KPiBTUkJfRkxBR1NfTk9fREFU
+QV9UUkFOU0ZFUjsNCj4gIAkJYnJlYWs7DQo+ICsJZGVmYXVsdDoNCj4gKwkJLyoNCj4gKwkJICog
+VGhpcyBpcyBETUFfQklESVJFQ1RJT05BTCBvciBzb21ldGhpbmcgZWxzZSB3ZSBhcmUNCj4gbmV2
+ZXINCj4gKwkJICogc3VwcG9zZWQgdG8gc2VlIGhlcmUuDQo+ICsJCSAqLw0KPiArCQlXQVJOKDEs
+ICJVbmV4cGVjdGVkIGRhdGEgZGlyZWN0aW9uOiAlZFxuIiwNCj4gKwkJICAgICBzY21uZC0+c2Nf
+ZGF0YV9kaXJlY3Rpb24pOw0KPiArCQlyZXR1cm4gLUVJTlZBTDsNCj4gIAl9DQo+IA0KPiANCj4g
+LS0NCj4gMi40LjMNCg0K
