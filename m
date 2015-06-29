@@ -1,43 +1,51 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [RFC 1/2] target: Add support for fabric IRQ completion
-Date: Mon, 29 Jun 2015 12:51:31 +0300
-Message-ID: <55911523.2090307@dev.mellanox.co.il>
-References: <1432281446-31080-1-git-send-email-nab@daterainc.com>
- <1432281446-31080-2-git-send-email-nab@daterainc.com>
- <20150609072720.GA10758@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh: convert __ATTR macro to DEVICE_ATTR_RW and snprintf
+ show method cleanup
+Date: Mon, 29 Jun 2015 13:40:03 +0200
+Message-ID: <55912E93.1000403@suse.de>
+References: <DDB9C85B850785449757F9914A034FCB3F8EAA39@G4W3219.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:34170 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbbF2JvS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2015 05:51:18 -0400
-Received: by wicnd19 with SMTP id nd19so93842979wic.1
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 02:51:17 -0700 (PDT)
-In-Reply-To: <20150609072720.GA10758@lst.de>
+Received: from cantor2.suse.de ([195.135.220.15]:48197 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752352AbbF2LkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2015 07:40:05 -0400
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3F8EAA39@G4W3219.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James Bottomley (JBottomley@Odin.com)" <JBottomley@Odin.com>
 
-On 6/9/2015 10:27 AM, Christoph Hellwig wrote:
->> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
->> index 3fbb0d4..aa08d6b 100644
->> --- a/drivers/target/target_core_tpg.c
->> +++ b/drivers/target/target_core_tpg.c
->> @@ -37,6 +37,7 @@
->>
->>   #include <target/target_core_base.h>
->>   #include <target/target_core_backend.h>
->> +#include <target/target_core_configfs.h>
->>   #include <target/target_core_fabric.h>
->>
->>   #include "target_core_internal.h"
->
-> This hunk look unrelated.
+On 06/26/2015 08:38 AM, Seymour, Shane M wrote:
+>=20
+> Converted dh_state to use DEVICE_ATTR_RW macro
+> instead of __ATTR.  That forced a change to the associated
+> show/store function names and the name of the attribute.
+>=20
+> Changed usage of snprintf in show function to scnprintf per
+> Documentation/filesystems/sysfs.txt.
+>=20
+> Signed-off-by: Shane Seymour <shane.seymour@hp.com>
+> ---
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Nic, can you remove that - it breaks compilation...
+Note that I'm currently preparing a device handler update, based
+upon an earlier patchset from hch.
 
-Thanks,
-Sagi.
+I'll be folding this patch into it, unless it'll be picked up earlier.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
