@@ -1,51 +1,69 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh: convert __ATTR macro to DEVICE_ATTR_RW and snprintf
- show method cleanup
-Date: Mon, 29 Jun 2015 13:40:03 +0200
-Message-ID: <55912E93.1000403@suse.de>
-References: <DDB9C85B850785449757F9914A034FCB3F8EAA39@G4W3219.americas.hpqcorp.net>
+From: "Dov Levenglick" <dovl@codeaurora.org>
+Subject: [RFC] implementaion of ufs variant
+Date: Mon, 29 Jun 2015 12:38:07 -0000
+Message-ID: <6634186b2777982ffb7944222d7ce1ad.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48197 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbbF2LkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jun 2015 07:40:05 -0400
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3F8EAA39@G4W3219.americas.hpqcorp.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51925 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752321AbbF2MiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2015 08:38:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James Bottomley (JBottomley@Odin.com)" <JBottomley@Odin.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Rob Herring <robherring2@gmail.com>
 
-On 06/26/2015 08:38 AM, Seymour, Shane M wrote:
->=20
-> Converted dh_state to use DEVICE_ATTR_RW macro
-> instead of __ATTR.  That forced a change to the associated
-> show/store function names and the name of the attribute.
->=20
-> Changed usage of snprintf in show function to scnprintf per
-> Documentation/filesystems/sysfs.txt.
->=20
-> Signed-off-by: Shane Seymour <shane.seymour@hp.com>
-> ---
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi James et. al,
+We had a lively discussion in the thread titled "Re: [PATCH v2 4/4] scsi:
+ufs: probe and init of variant driver from the platform device" regarding
+the proper implementation of a UFS controller variant.
+After further consideration, we propose to go with what Rob initially
+suggested - i.e. "you should do like many other common *HCIs do and make
+the base UFS driver a set of library functions that drivers can use or
+call".
 
-Note that I'm currently preparing a device handler update, based
-upon an earlier patchset from hch.
+The implementation of such a change would incur the following changes:
+1. Moving a few generic functions from ufs/ufshcd-pltfrm.c to ufs/ufshcd.c
+2. Having a ufs/ufshcd-pltfrm.c file per implementation (e.g.
+ufs/ufs-qcom.c) and removing the existing generic file from the code base
+3. Externalizing multiple functions from the ufs/ufshcd.c file to be used
+by multiple variants
 
-I'll be folding this patch into it, unless it'll be picked up earlier.
+The initialization flow would be:
+1. The variant probe is called
+2. The variant would call the necessary initialization functions from the
+generic ufs/ufshcd.c file
+3. Since the event-driven mechanism is implemented in the generic
+implementation - during runtime ufs/ufshcd.c would call upon variant
+operations (vops) in the variant implementation using a set of callback
+provided during the probe/init phase.
 
-Cheers,
+The pros of such an approach are:
+1. A generic set of library functions that implement the UFS standard to
+be called by each variant
+2. Will be easy to add other UFS hosts in the future
+3. Similar approach to other memory solutions such as the mmc driver
+4. Keeps the runtime code centralized and therefore maintainable
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The con to such an approach:
+1. It is not backward compatible to existing (deployed) code
+
+Our feeling is that, since UFS does not have great market penetration yet,
+now would be the time to introduce a change such as we are proposing.
+
+As a side-effect to this solution, we are considering removing
+ufs/ufshcd-pci.c from the community's code. Our understanding is that this
+was used for initial bring ups on emulation platforms. Since each
+controller would have to generate its own variant implementation - should
+a pci based solution be required in the future, it could be reimplemented
+based on the new paradigm.
+
+Please let us know whether you agree with this approach.
+
+
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
