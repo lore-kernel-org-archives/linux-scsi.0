@@ -1,51 +1,71 @@
-From: Vasu Dev <vasu.dev@linux.intel.com>
-Subject: Re: [PATCH 0/3] libfc patches for kernel v4.2
-Date: Mon, 29 Jun 2015 13:29:35 -0700
-Message-ID: <1435609775.20022.10.camel@lin-nd1-054.jf.intel.com>
-References: <20150605212003.6054.15351.stgit@lin-nd1-054.jf.intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
+ recognized correctly
+Date: Mon, 29 Jun 2015 22:27:33 +0000
+Message-ID: <bug-98171-11613-ENzQpmuA1w@https.bugzilla.kernel.org/>
+References: <bug-98171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:21818 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:49065 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753191AbbF2U3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jun 2015 16:29:36 -0400
-In-Reply-To: <20150605212003.6054.15351.stgit@lin-nd1-054.jf.intel.com>
+	id S1752442AbbF2W1h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2015 18:27:37 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A645220600
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 22:27:36 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 9FC9B20609
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 22:27:33 +0000 (UTC)
+In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@intel.com>, JamesBottomley <JBottomley@Odin.com>, "Christoph Hellwig <hch"@lst.de
-Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, target-devel <target-devel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2015-06-05 at 14:20 -0700, Vasu Dev wrote:
-> These libfc fixes are for kernel 4.2 and with two patches CCed for stable
-> kernel also, those two could be picked for current 4.1 cycle now but in case
-> too late for current 4.1 then anyway should get picked up by 4.1 stable
-> kernel later.
+https://bugzilla.kernel.org/show_bug.cgi?id=98171
+
+--- Comment #1 from nucrap@hotmail.com ---
+> This is a regression against 3.14? There was only one change affecting
+> mvsas between those kernels and that was the libsas change:
 > 
-> These patches were posted by Bart Van Assche at open-fcoe.org and then 
-> I updated them per discussion on original patches to pick revised patch
-> and add related comments at:
+> commit bc6e7c4b0d1a1f742d96556f63d68f17f4e232c3
+> Author: Dan Williams <dan.j.williams@intel.com>
+> Date: Fri Mar 14 13:52:48 2014 -0700
 > 
-> http://lists.open-fcoe.org/pipermail/fcoe-devel/2015-May/012467.html
+> libata, libsas: kill pm_result and related cleanup
 > 
-> 
-> Bart Van Assche (3):
->       libfc: Fix fc_fcp_cleanup_each_cmd()
->       libfc: Fix fc_exch_recv_req() error path
->       libfc: Fix a typo in a source code comment
-> 
-> 
->  drivers/scsi/libfc/fc_exch.c |    8 ++++----
->  drivers/scsi/libfc/fc_fcp.c  |   21 ++++++++++++++++++---
->  2 files changed, 22 insertions(+), 7 deletions(-)
+> Does reverting that make the problem go away?
 > 
 
-Hello James and Christoph,
+It's a regression starting with linux 3.15, meaning everything still worked
+with linux 3.14.
+I have tried reverting that patch from linux-3.15.10 vanilla sources but it
+fails... I don't know why, maybe I'm just not leet enough:
 
-This patch series is not applied as of now, so can you apply the patch
-series ?
+Hunk #1 succeeded at 5364 (offset 13 lines).
+Hunk #2 succeeded at 5388 (offset 13 lines).
+Hunk #3 FAILED at 5390.
+Hunk #4 succeeded at 5506 (offset 13 lines).
+Hunk #5 succeeded at 5532 (offset 13 lines).
+1 out of 5 hunks FAILED -- saving rejects to file drivers/ata/libata-core.c.rej
+patching file drivers/ata/libata-eh.c
+patching file drivers/scsi/libsas/sas_ata.c
+patching file include/linux/libata.h
+Hunk #1 succeeded at 850 (offset 2 lines).
+Hunk #2 FAILED at 1140.
+1 out of 2 hunks FAILED -- saving rejects to file include/linux/libata.h.rej
+patching file include/scsi/libsas.h
+patch unexpectedly ends in middle of line
+Hunk #1 succeeded at 172 with fuzz 1.
 
-Thanks,
-Vasu
 
+What shall I do?
+
+Regards,
+
+Philip
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
