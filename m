@@ -1,55 +1,84 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH] SCSI-eata_pio: Deletion of an unnecessary check before
- the function call "pci_dev_put"
-Date: Tue, 30 Jun 2015 14:52:35 +0200
-Message-ID: <55929113.8070206@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <546E441B.7040004@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH] libiscsi: Fix iscsi_check_transport_timeouts possible infinite loop
+Date: Tue, 30 Jun 2015 17:55:53 +0300
+Message-ID: <1435676153-27822-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:64552 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184AbbF3Mwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jun 2015 08:52:49 -0400
-In-Reply-To: <546E441B.7040004@users.sourceforge.net>
+Received: from [193.47.165.129] ([193.47.165.129]:32777 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753063AbbF3O4V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jun 2015 10:56:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ariel Nahum <arieln@mellanox.com>
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Thu, 20 Nov 2014 20:37:30 +0100
-> 
-> The pci_dev_put() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/scsi/eata_pio.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
-> index 8319d2b..707f64d 100644
-> --- a/drivers/scsi/eata_pio.c
-> +++ b/drivers/scsi/eata_pio.c
-> @@ -122,8 +122,7 @@ static int eata_pio_release(struct Scsi_Host *sh)
->  			release_region(sh->io_port, sh->n_io_port);
->  	}
->  	/* At this point the PCI reference can go */
-> -	if (hd->pdev)
-> -		pci_dev_put(hd->pdev);
-> +	pci_dev_put(hd->pdev);
->  	return 1;
->  }
->  
-> 
+From: Ariel Nahum <arieln@mellanox.com>
 
-Would you like to integrate this update suggestion
-into another source code repository?
+Connection last_ping is not being updated when iscsi_send_nopout fails.
+Not updating the last_ping will cause firing a timer to a past time
+(last_ping + ping_tmo < current_time) which triggers an infinite loop of
+iscsi_check_transport_timeouts() and hogs the cpu.
 
-Regards,
-Markus
+Fix this issue by checking the return value of iscsi_send_nopout.
+If it fails set the next_timeout to one second later.
+
+Signed-off-by: Ariel Nahum <arieln@mellanox.com>
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+---
+ drivers/scsi/libiscsi.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 8053f24..1ea4213 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -979,13 +979,13 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 	wake_up(&conn->ehwait);
+ }
+ 
+-static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
++static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ {
+         struct iscsi_nopout hdr;
+ 	struct iscsi_task *task;
+ 
+ 	if (!rhdr && conn->ping_task)
+-		return;
++		return -EINVAL;
+ 
+ 	memset(&hdr, 0, sizeof(struct iscsi_nopout));
+ 	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
+@@ -999,13 +999,16 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 		hdr.ttt = RESERVED_ITT;
+ 
+ 	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
+-	if (!task)
++	if (!task) {
+ 		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
++		return -EIO;
++	}
+ 	else if (!rhdr) {
+ 		/* only track our nops */
+ 		conn->ping_task = task;
+ 		conn->last_ping = jiffies;
+ 	}
++	return 0;
+ }
+ 
+ static int iscsi_nop_out_rsp(struct iscsi_task *task,
+@@ -2095,8 +2098,10 @@ static void iscsi_check_transport_timeouts(unsigned long data)
+ 	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
+ 		/* send a ping to try to provoke some traffic */
+ 		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
+-		iscsi_send_nopout(conn, NULL);
+-		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
++		if (iscsi_send_nopout(conn, NULL))
++			next_timeout = jiffies + (1 * HZ);
++		else
++			next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
+ 	} else
+ 		next_timeout = last_recv + recv_timeout;
+ 
+-- 
+1.7.1
+
