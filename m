@@ -1,34 +1,25 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 14/20] [SCSI] mpt3sas: Complete the SCSI  command with DID_RESET  status for log_info value 0x0x32010081
-Date: Tue, 30 Jun 2015 12:25:00 +0530
-Message-ID: <1435647306-36956-15-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 13/20] [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6)  specifications
+Date: Tue, 30 Jun 2015 12:24:59 +0530
+Message-ID: <1435647306-36956-14-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:33294 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649AbbF3G4W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2015 02:56:22 -0400
+Received: by pdjd13 with SMTP id d13so821756pdj.0
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 23:56:21 -0700 (PDT)
 In-Reply-To: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-For any SCSI command, if the driver receives
-IOC status = SCSI_IOC_TERMINATED and log info = 0x32010081 then
-that command will be completed with DID_RESET host status.
-
-The definition of this log info value is
-"Virtual IO has failed and has to be retried".
-
-Firmware will provide this log info value with IOC Status
-"SCSI_IOC_TERMINATED", whenever a drive (with is a part of a volume)
-is pulled and pushed back within some minimal delay.
-With this log info value, firmware informs the driver to retry the
-failed IO command infinite times, so to provide some time for the
-firmware to discover the reinserted drive successfully instated of
-just retrying failed command for five times(doesn't giving enough
-time for firmware to complete the drive discovery) and failing the
-IO permanently even though drive came back successfully.
-
-Changes in v1:
-   Defined macro VIRTUAL_IO_FAILED_RETRY for magic a value 0x32010081
+Below are the new changes to MPI 2.5 Rev K(2.5.6) specification and 2.00.35 header files
+1) Added a minimum size requirement for target mode command buffers.
+2) Added MinMSIxIndex and MaxMSIxIndex fields to CommandBufferPostBase Request.
+3) For BIOS Page 1, added SSUTimeout field, and added Product Name String Format bits to the BiosOptions field
 
 Changes in v2:
 	Patch version change only.
@@ -37,36 +28,91 @@ Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  | 2 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
- 2 files changed, 5 insertions(+)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 17 ++++++++++++++---
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 4196fbb..3b03639 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -202,6 +202,8 @@
- #define MFG10_GF0_SSD_DATA_SCRUB_DISABLE       (0x00000008)
- #define MFG10_GF0_SINGLE_DRIVE_R0              (0x00000010)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index c2d127c..ec27ad2 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.34
++ * mpi2.h Version:  02.00.35
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -91,6 +91,7 @@
+  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
++ * 06-13-14  02.00.35  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
+  */
  
-+#define VIRTUAL_IO_FAILED_RETRY			(0x32010081)
+@@ -124,7 +125,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
+ 
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x22)
++#define MPI2_HEADER_VERSION_UNIT            (0x23)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index cf2b6bf..581fdb3 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.28
++ *   mpi2_cnfg.h Version:  02.00.29
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -177,6 +177,8 @@
+  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
+  * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
+  *		       MPI2_CONFIG_PAGE_BIOS_1.
++ * 06-13-14  02.00.29  Added SSUTimeout field to MPI2_CONFIG_PAGE_BIOS_1, and
++ *		       more defines for the BiosOptions field..
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -1324,7 +1326,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ 	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
+ 	U32                     BiosOptions;                /*0x04 */
+ 	U32                     IOCSettings;                /*0x08 */
+-	U32                     Reserved1;                  /*0x0C */
++	U8                      SSUTimeout;                 /*0x0C */
++	U8                      Reserved1;                  /*0x0D */
++	U16                     Reserved2;                  /*0x0E */
+ 	U32                     DeviceSettings;             /*0x10 */
+ 	U16                     NumberOfDevices;            /*0x14 */
+ 	U16                     UEFIVersion;                /*0x16 */
+@@ -1336,9 +1340,16 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
+ 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
+ 
+-#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
++#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x07)
+ 
+ /*values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_MASK                         (0x00003800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_PBDHL                        (0x00000000)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_ENCSLOSURE                   (0x00000800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_LWWID                        (0x00001000)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_PSENS                        (0x00001800)
++#define MPI2_BIOSPAGE1_OPTIONS_PNS_ESPHY                        (0x00002000)
 +
- /* OEM Specific Flags will come from OEM specific header files */
- struct Mpi2ManufacturingPage10_t {
- 	MPI2_CONFIG_PAGE_HEADER	Header;		/* 00h */
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 64dd90b..49c412b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4241,6 +4241,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 				scmd->device->expecting_cc_ua = 1;
- 			}
- 			break;
-+		} else if (log_info == VIRTUAL_IO_FAILED_RETRY) {
-+			scmd->result = DID_RESET << 16;
-+			break;
- 		}
- 		scmd->result = DID_SOFT_ERROR << 16;
- 		break;
+ #define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		(0x00000400)
+ 
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
 -- 
 2.0.2
+
