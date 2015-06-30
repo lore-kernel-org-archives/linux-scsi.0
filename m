@@ -1,442 +1,55 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 06/20] [SCSI] mpt3sas: Provides the physical location of sas  drives
-Date: Tue, 30 Jun 2015 12:24:52 +0530
-Message-ID: <1435647306-36956-7-git-send-email-Sreekanth.Reddy@avagotech.com>
-References: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+From: "Qatar Foundation" <qatarfund@qf.org.qa>
+Subject: =?utf-8?q?Claim_=E2=82=AC950=2C000=2E00_EURO_?=
+Date: Tue, 30 Jun 2015 05:04:20 +0100
+Message-ID: <20150630035709.E877F2748C8E__47720.7880271182$1435650659$gmane$org@mail.kaltimpost.net>
+Reply-To: qfoundation63@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [119.47.88.6] ([119.47.88.6]:44959 "EHLO mail.kaltimpost.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751124AbbF3Hub convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2015 03:50:31 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <qatarfund@qf.org.qa>
 
-This Patch will provide more details of the devices such as slot number, enclosure logical id, enclosure level & connector name in the following scenarios,
+Lieber Beg=C3=BCnstigte,
 
-- When end device is added in the topology,
-- When the end device is removed from the setup,
-- When the SCSI mid layer issues TASK ABORT/ DEVICE RESET/ TARGET RESET during error handling,
-- When any command to the device fails with Sense key Hardware error or Medium error or Unit Attention,
-- When firmware returns device error or device not ready status for the end device,
-- When a Predicted fault is detected on an end device.
+Sie wurden ausgew=C3=A4hlt, um =E2=82=AC 950.000,00 EURO als Charity-Sp=
+enden / Hilfe der Qatar Foundation erhalten. Antworten zur=C3=BCck f=C3=
+=BCr weitere Informationen.
 
-This information can be used by the user to identify the location of the desired drive in the topology.
+Mit freundlichen Gr=C3=BC=C3=9Fen,
+Ingenieur Saad Al Muhannadi.
+Beantworten: qfoundation63@gmail.com
 
-Driver will get these information by reading the sas device page0.
+Pr=C3=A4sident der Qatar Foundation.
 
-Changes in v2:
-     Fixed the undefined scsih_scsi_ioc_info() function compilation errors which we observe 
-only if CONFIG_SCSI_MPT3SAS_LOGGING flag is disabled.
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Dear Beneficiary,
+
+You have been selected to receive =E2=82=AC950,000.00 EURO as charity d=
+onations / aid of the Qatar Foundation. Reply back for more information=
+=2E
+
+Yours sincerely,
+Engineer Saad Al Muhannadi.
+Reply to: qfoundation63@gmail.com
+
+President of the Qatar Foundation.
+
+
+
+
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 240 +++++++++++++++++++++++++++++------
- 2 files changed, 203 insertions(+), 39 deletions(-)
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 01d92db..da82a97 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -324,6 +324,8 @@ struct _sas_device {
- 	u8	fast_path;
- 	u8	pfa_led_on;
- 	u8	pend_sas_rphy_add;
-+	u8	enclosure_level;
-+	u8	connector_name[4];
- };
- 
- /**
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index d457dba..ec3b3d3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -585,6 +585,22 @@ _scsih_sas_device_remove(struct MPT3SAS_ADAPTER *ioc,
- 
- 	if (!sas_device)
- 		return;
-+	pr_info(MPT3SAS_FMT
-+	    "removing handle(0x%04x), sas_addr(0x%016llx)\n",
-+	    ioc->name, sas_device->handle,
-+	    (unsigned long long) sas_device->sas_address);
-+
-+	if (sas_device->enclosure_handle != 0)
-+		pr_info(MPT3SAS_FMT
-+		   "removing enclosure logical id(0x%016llx), slot(%d)\n",
-+		   ioc->name, (unsigned long long)
-+		   sas_device->enclosure_logical_id, sas_device->slot);
-+
-+	if (sas_device->connector_name[0] != '\0')
-+		pr_info(MPT3SAS_FMT
-+		   "removing enclosure level(0x%04x), connector name( %s)\n",
-+		   ioc->name, sas_device->enclosure_level,
-+		   sas_device->connector_name);
- 
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_del(&sas_device->list);
-@@ -663,6 +679,18 @@ _scsih_sas_device_add(struct MPT3SAS_ADAPTER *ioc,
- 		ioc->name, __func__, sas_device->handle,
- 		(unsigned long long)sas_device->sas_address));
- 
-+	if (sas_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
-+		    ioc->name, __func__, (unsigned long long)
-+		    sas_device->enclosure_logical_id, sas_device->slot));
-+
-+	if (sas_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enclosure level(0x%04x), connector name( %s)\n",
-+		    ioc->name, __func__,
-+		    sas_device->enclosure_level, sas_device->connector_name));
-+
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_add_tail(&sas_device->list, &ioc->sas_device_list);
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-@@ -704,6 +732,18 @@ _scsih_sas_device_init_add(struct MPT3SAS_ADAPTER *ioc,
- 		__func__, sas_device->handle,
- 		(unsigned long long)sas_device->sas_address));
- 
-+	if (sas_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enclosure logical id(0x%016llx), slot( %d)\n",
-+		    ioc->name, __func__, (unsigned long long)
-+		    sas_device->enclosure_logical_id, sas_device->slot));
-+
-+	if (sas_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enclosure level(0x%04x), connector name( %s)\n",
-+		    ioc->name, __func__, sas_device->enclosure_level,
-+		    sas_device->connector_name));
-+
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_add_tail(&sas_device->list, &ioc->sas_device_init_list);
- 	_scsih_determine_boot_device(ioc, sas_device, 0);
-@@ -1772,10 +1812,16 @@ _scsih_slave_configure(struct scsi_device *sdev)
- 	    "sas_addr(0x%016llx), phy(%d), device_name(0x%016llx)\n",
- 	    ds, handle, (unsigned long long)sas_device->sas_address,
- 	    sas_device->phy, (unsigned long long)sas_device->device_name);
--	sdev_printk(KERN_INFO, sdev,
--		"%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
--		ds, (unsigned long long)
--	    sas_device->enclosure_logical_id, sas_device->slot);
-+	if (sas_device->enclosure_handle != 0)
-+		sdev_printk(KERN_INFO, sdev,
-+		     "%s: enclosure_logical_id(0x%016llx), slot(%d)\n",
-+		     ds, (unsigned long long)
-+		     sas_device->enclosure_logical_id, sas_device->slot);
-+	if (sas_device->connector_name[0] != '\0')
-+		sdev_printk(KERN_INFO, sdev,
-+		     "%s: enclosure level(0x%04x), connector name( %s)\n",
-+		     ds, sas_device->enclosure_level,
-+		     sas_device->connector_name);
- 
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 
-@@ -2189,10 +2235,17 @@ _scsih_tm_display_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
- 			    sas_device->handle,
- 			    (unsigned long long)sas_device->sas_address,
- 			    sas_device->phy);
--			starget_printk(KERN_INFO, starget,
--			    "enclosure_logical_id(0x%016llx), slot(%d)\n",
--			   (unsigned long long)sas_device->enclosure_logical_id,
--			    sas_device->slot);
-+			if (sas_device->enclosure_handle != 0)
-+				starget_printk(KERN_INFO, starget,
-+				 "enclosure_logical_id(0x%016llx), slot(%d)\n",
-+				 (unsigned long long)
-+				 sas_device->enclosure_logical_id,
-+				 sas_device->slot);
-+			if (sas_device->connector_name)
-+				starget_printk(KERN_INFO, starget,
-+				"enclosure level(0x%04x),connector name(%s)\n",
-+				 sas_device->enclosure_level,
-+				 sas_device->connector_name);
- 		}
- 		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 	}
-@@ -2813,6 +2866,18 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 			"setting delete flag: handle(0x%04x), sas_addr(0x%016llx)\n",
- 			ioc->name, handle,
- 		    (unsigned long long)sas_address));
-+		if (sas_device->enclosure_handle != 0)
-+			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+			 "setting delete flag:enclosure logical id(0x%016llx),"
-+			 " slot(%d)\n", ioc->name, (unsigned long long)
-+			  sas_device->enclosure_logical_id,
-+			  sas_device->slot));
-+		if (sas_device->connector_name)
-+			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+			 "setting delete flag: enclosure level(0x%04x),"
-+			 " connector name( %s)\n", ioc->name,
-+			  sas_device->enclosure_level,
-+			  sas_device->connector_name));
- 		_scsih_ublock_io_device(ioc, sas_address);
- 		sas_target_priv_data->handle = MPT3SAS_INVALID_DEVICE_HANDLE;
- 	}
-@@ -3828,10 +3893,19 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 				"\tsas_address(0x%016llx), phy(%d)\n",
- 				ioc->name, (unsigned long long)
- 			    sas_device->sas_address, sas_device->phy);
--			pr_warn(MPT3SAS_FMT
--			    "\tenclosure_logical_id(0x%016llx), slot(%d)\n",
--			    ioc->name, (unsigned long long)
--			    sas_device->enclosure_logical_id, sas_device->slot);
-+			if (sas_device->enclosure_handle != 0)
-+				pr_warn(MPT3SAS_FMT
-+				  "\tenclosure_logical_id(0x%016llx),"
-+				  "slot(%d)\n", ioc->name,
-+				  (unsigned long long)
-+				  sas_device->enclosure_logical_id,
-+				  sas_device->slot);
-+			if (sas_device->connector_name[0])
-+				pr_warn(MPT3SAS_FMT
-+				  "\tenclosure level(0x%04x),"
-+				  " connector name( %s)\n", ioc->name,
-+				  sas_device->enclosure_level,
-+				  sas_device->connector_name);
- 		}
- 		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 	}
-@@ -4006,7 +4080,16 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 		return;
- 	}
--	starget_printk(KERN_WARNING, starget, "predicted fault\n");
-+	if (sas_device->enclosure_handle != 0)
-+		starget_printk(KERN_INFO, starget, "predicted fault, "
-+			"enclosure logical id(0x%016llx), slot(%d)\n",
-+			(unsigned long long)sas_device->enclosure_logical_id,
-+			sas_device->slot);
-+	if (sas_device->connector_name[0] != '\0')
-+		starget_printk(KERN_WARNING, starget, "predicted fault, "
-+			"enclosure level(0x%04x), connector name( %s)\n",
-+			sas_device->enclosure_level,
-+			sas_device->connector_name);
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 
- 	if (ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_IBM)
-@@ -4126,8 +4209,15 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 			_scsih_smart_predicted_fault(ioc,
- 			    le16_to_cpu(mpi_reply->DevHandle));
- 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
--	}
- 
-+#ifdef CONFIG_SCSI_MPT3SAS_LOGGING
-+		if (!(ioc->logging_level & MPT_DEBUG_REPLY) &&
-+		     ((scmd->sense_buffer[2] == UNIT_ATTENTION) ||
-+		     (scmd->sense_buffer[2] == MEDIUM_ERROR) ||
-+		     (scmd->sense_buffer[2] == HARDWARE_ERROR)))
-+			_scsih_scsi_ioc_info(ioc, scmd, mpi_reply, smid);
-+#endif
-+	}
- 	switch (ioc_status) {
- 	case MPI2_IOCSTATUS_BUSY:
- 	case MPI2_IOCSTATUS_INSUFFICIENT_RESOURCES:
-@@ -4795,6 +4885,16 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 			sas_device->handle, handle);
- 		sas_target_priv_data->handle = handle;
- 		sas_device->handle = handle;
-+		if (sas_device_pg0.Flags &
-+		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-+			sas_device->enclosure_level =
-+				le16_to_cpu(sas_device_pg0.EnclosureLevel);
-+			memcpy(&sas_device->connector_name[0],
-+				&sas_device_pg0.ConnectorName[0], 4);
-+		} else {
-+			sas_device->enclosure_level = 0;
-+			sas_device->connector_name[0] = '\0';
-+		}
- 	}
- 
- 	/* check if device is present */
-@@ -4901,14 +5001,24 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 	sas_device->enclosure_handle =
- 	    le16_to_cpu(sas_device_pg0.EnclosureHandle);
--	sas_device->slot =
--	    le16_to_cpu(sas_device_pg0.Slot);
-+	if (sas_device->enclosure_handle != 0)
-+		sas_device->slot =
-+		    le16_to_cpu(sas_device_pg0.Slot);
- 	sas_device->device_info = device_info;
- 	sas_device->sas_address = sas_address;
- 	sas_device->phy = sas_device_pg0.PhyNum;
- 	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
- 	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
- 
-+	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-+		sas_device->enclosure_level =
-+			le16_to_cpu(sas_device_pg0.EnclosureLevel);
-+		memcpy(&sas_device->connector_name[0],
-+			&sas_device_pg0.ConnectorName[0], 4);
-+	} else {
-+		sas_device->enclosure_level = 0;
-+		sas_device->connector_name[0] = '\0';
-+	}
- 	/* get enclosure_logical_id */
- 	if (sas_device->enclosure_handle && !(mpt3sas_config_get_enclosure_pg0(
- 	   ioc, &mpi_reply, &enclosure_pg0, MPI2_SAS_ENCLOS_PGAD_FORM_HANDLE,
-@@ -4950,6 +5060,18 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *ioc,
- 		ioc->name, __func__,
- 	    sas_device->handle, (unsigned long long)
- 	    sas_device->sas_address));
-+	if (sas_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: enter: enclosure logical id(0x%016llx), slot(%d)\n",
-+		    ioc->name, __func__,
-+		    (unsigned long long)sas_device->enclosure_logical_id,
-+		    sas_device->slot));
-+	if (sas_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		  "%s: enter: enclosure level(0x%04x), connector name( %s)\n",
-+		  ioc->name, __func__,
-+		  sas_device->enclosure_level,
-+		  sas_device->connector_name));
- 
- 	if (sas_device->starget && sas_device->starget->hostdata) {
- 		sas_target_priv_data = sas_device->starget->hostdata;
-@@ -4966,12 +5088,34 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *ioc,
- 		"removing handle(0x%04x), sas_addr(0x%016llx)\n",
- 		ioc->name, sas_device->handle,
- 	    (unsigned long long) sas_device->sas_address);
-+	if (sas_device->enclosure_handle != 0)
-+		pr_info(MPT3SAS_FMT
-+		  "removing : enclosure logical id(0x%016llx), slot(%d)\n",
-+		  ioc->name,
-+		  (unsigned long long)sas_device->enclosure_logical_id,
-+		  sas_device->slot);
-+	if (sas_device->connector_name[0] != '\0')
-+		pr_info(MPT3SAS_FMT
-+		  "removing enclosure level(0x%04x), connector name( %s)\n",
-+		  ioc->name, sas_device->enclosure_level,
-+		  sas_device->connector_name);
- 
- 	dewtprintk(ioc, pr_info(MPT3SAS_FMT
- 		"%s: exit: handle(0x%04x), sas_addr(0x%016llx)\n",
- 		ioc->name, __func__,
--	    sas_device->handle, (unsigned long long)
--	    sas_device->sas_address));
-+		sas_device->handle, (unsigned long long)
-+		sas_device->sas_address));
-+	if (sas_device->enclosure_handle != 0)
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: exit: enclosure logical id(0x%016llx), slot(%d)\n",
-+		    ioc->name, __func__,
-+		    (unsigned long long)sas_device->enclosure_logical_id,
-+		    sas_device->slot));
-+	if (sas_device->connector_name[0] != '\0')
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "%s: exit: enclosure level(0x%04x), connector name(%s)\n",
-+		    ioc->name, __func__, sas_device->enclosure_level,
-+		    sas_device->connector_name));
- 
- 	kfree(sas_device);
- }
-@@ -6364,9 +6508,7 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER *ioc)
- /**
-  * _scsih_mark_responding_sas_device - mark a sas_devices as responding
-  * @ioc: per adapter object
-- * @sas_address: sas address
-- * @slot: enclosure slot id
-- * @handle: device handle
-+ * @sas_device_pg0: SAS Device page 0
-  *
-  * After host reset, find out whether devices are still responding.
-  * Used in _scsih_remove_unresponsive_sas_devices.
-@@ -6374,8 +6516,8 @@ _scsih_prep_device_scan(struct MPT3SAS_ADAPTER *ioc)
-  * Return nothing.
-  */
- static void
--_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
--	u16 slot, u16 handle)
-+_scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc,
-+Mpi2SasDevicePage0_t *sas_device_pg0)
- {
- 	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
- 	struct scsi_target *starget;
-@@ -6384,8 +6526,8 @@ _scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
--		if (sas_device->sas_address == sas_address &&
--		    sas_device->slot == slot) {
-+		if ((sas_device->sas_address == sas_device_pg0->SASAddress) &&
-+			(sas_device->slot == sas_device_pg0->Slot)) {
- 			sas_device->responding = 1;
- 			starget = sas_device->starget;
- 			if (starget && starget->hostdata) {
-@@ -6394,22 +6536,40 @@ _scsih_mark_responding_sas_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 				sas_target_priv_data->deleted = 0;
- 			} else
- 				sas_target_priv_data = NULL;
--			if (starget)
-+			if (starget) {
- 				starget_printk(KERN_INFO, starget,
--				    "handle(0x%04x), sas_addr(0x%016llx), "
--				    "enclosure logical id(0x%016llx), "
--				    "slot(%d)\n", handle,
--				    (unsigned long long)sas_device->sas_address,
-+				    "handle(0x%04x), sas_addr(0x%016llx)\n",
-+				    sas_device_pg0->DevHandle,
- 				    (unsigned long long)
--				    sas_device->enclosure_logical_id,
--				    sas_device->slot);
--			if (sas_device->handle == handle)
-+				    sas_device->sas_address);
-+
-+				if (sas_device->enclosure_handle != 0)
-+					starget_printk(KERN_INFO, starget,
-+					 "enclosure logical id(0x%016llx),"
-+					 " slot(%d)\n",
-+					 (unsigned long long)
-+					 sas_device->enclosure_logical_id,
-+					 sas_device->slot);
-+			}
-+			if (sas_device_pg0->Flags &
-+			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-+				sas_device->enclosure_level =
-+				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
-+				memcpy(&sas_device->connector_name[0],
-+					&sas_device_pg0->ConnectorName[0], 4);
-+			} else {
-+				sas_device->enclosure_level = 0;
-+				sas_device->connector_name[0] = '\0';
-+			}
-+
-+			if (sas_device->handle == sas_device_pg0->DevHandle)
- 				goto out;
- 			pr_info("\thandle changed from(0x%04x)!!!\n",
- 			    sas_device->handle);
--			sas_device->handle = handle;
-+			sas_device->handle = sas_device_pg0->DevHandle;
- 			if (sas_target_priv_data)
--				sas_target_priv_data->handle = handle;
-+				sas_target_priv_data->handle =
-+					sas_device_pg0->DevHandle;
- 			goto out;
- 		}
- 	}
-@@ -6448,13 +6608,15 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 		    MPI2_IOCSTATUS_MASK;
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
--		handle = le16_to_cpu(sas_device_pg0.DevHandle);
-+		handle = sas_device_pg0.DevHandle =
-+				le16_to_cpu(sas_device_pg0.DevHandle);
- 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
- 		if (!(_scsih_is_end_device(device_info)))
- 			continue;
--		_scsih_mark_responding_sas_device(ioc,
--		    le64_to_cpu(sas_device_pg0.SASAddress),
--		    le16_to_cpu(sas_device_pg0.Slot), handle);
-+		sas_device_pg0.SASAddress =
-+				le64_to_cpu(sas_device_pg0.SASAddress);
-+		sas_device_pg0.Slot = le16_to_cpu(sas_device_pg0.Slot);
-+		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
- 	}
- 
-  out:
--- 
-2.0.2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
