@@ -1,127 +1,86 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Mon, 29 Jun 2015 17:09:31 -0700
-Message-ID: <20150630000931.GE29763@kroah.com>
-References: <54AC0A17.8020405@redhat.com>
- <20150128001837.GE17677@kroah.com>
- <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
- <552BC234.4020000@redhat.com>
- <20150426092719.GA1460@kroah.com>
- <553E28DC.1040100@redhat.com>
- <20150427125529.GA18817@kroah.com>
- <553E354B.90208@redhat.com>
- <20150502175621.GA15525@kroah.com>
- <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH] virtio scsi: fix unused variable warning
+Date: Tue, 30 Jun 2015 10:59:04 +1000
+Message-ID: <20150630105904.4c3d46b1@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Vinson Lee <vlee@twopensource.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/bf/MqTt3Qc1uDFShG7Fam9/"; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:56401 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752633AbbF3A7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jun 2015 20:59:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@Odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>
 
-On Fri, May 22, 2015 at 12:19:16PM -0700, Vinson Lee wrote:
-> On Sat, May 2, 2015 at 10:56 AM, Greg KH <greg@kroah.com> wrote:
-> > On Mon, Apr 27, 2015 at 03:10:35PM +0200, Tomas Henzl wrote:
-> >> On 04/27/2015 02:55 PM, Greg KH wrote:
-> >> > On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
-> >> >> On 04/26/2015 11:27 AM, Greg KH wrote:
-> >> >>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
-> >> >>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
-> >> >>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
-> >> >>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
-> >> >>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
-> >> >>>>>>>> Dear stable maintainers,
-> >> >>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
-> >> >>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
-> >> >>>>>>>> earlier, if applicable)?
-> >> >>>>>>> Please do not apply this patch isolated from his friend, the
-> >> >>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
-> >> >>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
-> >> >>>>>>>
-> >> >>>>>>> In addition to that, after the original issue goes away you may notice sometimes
-> >> >>>>>>> an unhandled irq 16 message, to fix this a patch is posted
-> >> >>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
-> >> >>>>>>> This patch still awaits a maintainers review though.
-> >> >>>>>>>
-> >> >>>>>>> Probably the best idea is to wait until the issue is solved completely.
-> >> >>>>>> I'll wait, when it all gets worked out, please let stable@ know what
-> >> >>>>>> patches to apply where.
-> >> >>>>>>
-> >> >>>>>> thanks,
-> >> >>>>>>
-> >> >>>>>> greg k-h
-> >> >>>>>> --
-> >> >>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
-> >> >>>>>> the body of a message to majordomo@vger.kernel.org
-> >> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> >>>>> Hi, Thomas.
-> >> >>>>>
-> >> >>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
-> >> >>>>> turn off interrupts when kdump starts".
-> >> >>>>>
-> >> >>>>> Are the following patches suitable for stable now?
-> >> >>>> Yes, I believe they are, just note that
-> >> >>>> 03741d9 hpsa: fix memory leak in kdump hard reset
-> >> >>>> is not a part of that group we discussed before, but it may be added
-> >> >>>> to stable too.
-> >> >>>>
-> >> >>>> Cheers,
-> >> >>>> Tomas
-> >> >>>>
-> >> >>>>> 3b74729 hpsa: turn off interrupts when kdump starts
-> >> >>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
-> >> >>>>> 859c75a hpsa: add missing pci_set_master in kdump path
-> >> >>>>> 132aa22 hpsa: refine the pci enable/disable handling
-> >> >>> So what order, and to what stable tree(s) do you want these applied to?
-> >> >>> They seem to span a number of kernel versions, so I'm not quite sure
-> >> >>> what you are wanting me to do.
-> >> >> Please add it in this order
-> >> >> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
-> >> >> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
-> >> >>    The first two patches create the fix Masoud has asked for originally to port to stable.
-> >> >> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
-> >> >>    The third should be added too, it fixes an issue made visible by the first patch
-> >> >>
-> >> >> The fourth patch
-> >> >> 03741d956e hpsa: fix memory leak in kdump hard reset
-> >> >> is completely unrelated to the first group, so it may be added after or before
-> >> >> or in the same sequence as it is in the mainline - that is before the third patch.
-> >> >> This patch is tiny error path fix - not sure if important enough for stable.
-> >> > Which stable tree(s) do you want these applied to?  As these "span"
-> >> > different kernel versions, I have no idea of what to do here.
-> >>
-> >> Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
-> >> I don't know much about stable so I can't decide to which tree(s) the series should be ported.
-> >
-> > Ok, I'll wait for someone to clarify before doing anything here.
-> >
-> > thanks,
-> >
-> > greg k-h
-> 
-> 
-> The first and second patches are from upstream 3.18. The third patch
-> is from upstream 4.0.
-> 
-> Please use the following list of kernels and patches for backporting.
-> 
-> 3.18, 3.19
-> 3b74729878 hpsa: turn off interrupts when kdump starts
-> 
-> <= 3.17
-> 132aa220b4 hpsa: refine the pci enable/disable handling
-> 859c75aba2 hpsa: add missing pci_set_master in kdump path
+--Sig_/bf/MqTt3Qc1uDFShG7Fam9/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-These two worked for 3.10 and 3.14-stable.
+Fixes:
 
-> 3b74729878 hpsa: turn off interrupts when kdump starts
+drivers/scsi/virtio_scsi.c: In function 'virtscsi_probe':
+drivers/scsi/virtio_scsi.c:952:11: warning: unused variable 'host_prot' [-W=
+unused-variable]
+  int err, host_prot;
+           ^
 
-This one did not apply, so I can't add it.
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ drivers/scsi/virtio_scsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 285f77544c36..7dbbb29d24c6 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -949,7 +949,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ {
+ 	struct Scsi_Host *shost;
+ 	struct virtio_scsi *vscsi;
+-	int err, host_prot;
++	int err;
+ 	u32 sg_elems, num_targets;
+ 	u32 cmd_per_lun;
+ 	u32 num_queues;
+@@ -1009,6 +1009,8 @@ static int virtscsi_probe(struct virtio_device *vdev)
+=20
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
++		int host_prot;
++
+ 		host_prot =3D SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+ 			    SHOST_DIF_TYPE3_PROTECTION | SHOST_DIX_TYPE1_PROTECTION |
+ 			    SHOST_DIX_TYPE2_PROTECTION | SHOST_DIX_TYPE3_PROTECTION;
+--=20
+2.1.4
 
-greg k-h
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Sig_/bf/MqTt3Qc1uDFShG7Fam9/
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJVkendAAoJEMDTa8Ir7ZwVskIP/1oRCHoeDiz4Fs8h/pqBg6/L
+Vm4OUTZtRXDyNYSd2HDauqc23+jy6CKDcb6S9EMm8iCoAvLYrZxrEzsBT5YJ2CHC
+inONSDSqesD+U6vsXjwqxIWdrq7SP0PoMa+eoMdAELCJf6pJV4Tt2LpdwIEGw28T
+kohfHes+DvBQ9gRa7xaFXj+6Hy1G44faBO+oq1OP6qbgfGqacoWJCtOd3xtarmzN
+Z3jc3MGXdQZk2adoWvrrIjmOgJp9dZesD7YtDfEBPm/hyzJZ5wX5T+4P9UFiBgYo
+7ytftk6eNZoJEm0ChVGJXYXqcY8PVIdPjsjzi+f6WMb9D3wQXxaFEzCasEQCSA8Q
+kQDHWr8XQNPE3cwAaziw18E/ArT9+2cEkDLPQE/6drE2jvfTVYBcfn04SmnFdgJm
+vsk4+XaoLBidA4iUkMdvyIpqOKbK8YqmSy+OJ9qkjBKFUDyMPqvI3nF+78+stcXq
+Qh8d+0JrQAPAmqVP2KQGChcjHRBKmfhEr9YPXuQFKGHIexeSdQTNNpyroaOZNhnM
+zphXbSGppC/62LUlrJ5CM9EJgOJnIAFjy8EuVA47FhQIo44zyFXb8smsPZTl+ktE
+NuIdm1gsQSoqO7qvTnfelAS2PPoODzWXv8Ohr16IA2WUpJWOjH/AC0zSnUyK3Tut
+os2R9HSR66zrS8w589kI
+=q0Xc
+-----END PGP SIGNATURE-----
+
+--Sig_/bf/MqTt3Qc1uDFShG7Fam9/--
