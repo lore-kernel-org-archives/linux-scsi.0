@@ -1,47 +1,54 @@
-From: Rudhresh Kumar J <rudhresh.jk@gmail.com>
-Subject: [PATCH] SCSI: DTC: Adding KERN_ facility level
-Date: Tue, 30 Jun 2015 21:59:16 +0530
-Message-ID: <1435681756-5508-1-git-send-email-rudhreshj@cdac.in>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36448 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbbF3Q3q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2015 12:29:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] hpsa: convert DEVICE_ATTR to RO|WO|RW and show methods
+ must use scnprintf
+Date: Tue, 30 Jun 2015 09:38:03 -0700
+Message-ID: <20150630163803.GC30564@kroah.com>
+References: <DDB9C85B850785449757F9914A034FCB3F8EC219@G4W3219.americas.hpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3F8EC219-MCKW7lC+H9ISZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+Cc: ISS StorageDev <iss_storagedev-VXdhtT5mjnY@public.gmane.org>, "James Bottomley (JBottomley-O3H1v1f1dlM@public.gmane.org)" <JBottomley-O3H1v1f1dlM@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: fthain@telegraphics.com.au
-Cc: schmitzmic@gmail.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rudhresh Kumar J <rudhreshj@cdac.in>, Rudhresh Kumar J <rudhresh.jk@gmail.com>
 
-Fixed coding style issue by adding KERN_ facility level to some of
-the printk functions.
+On Tue, Jun 30, 2015 at 05:22:20AM +0000, Seymour, Shane M wrote:
+> 
+> Changed DEVICE_ATTR macro usage to DEVICE_ATTR_RO|WO|RW.
+> This also forced some show/store function names to change.
+> 
+> Changed all show method sprint/snprintf usage to scnprintf per
+> Documentation/filesystems/sysfs.txt.
 
-Signed-off-by: Rudhresh Kumar J <rudhresh.jk@gmail.com>
----
- drivers/scsi/dtc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There's no need to change sprintf() to scnprintf() at all, that's just
+useless churn.
 
-diff --git a/drivers/scsi/dtc.c b/drivers/scsi/dtc.c
-index 4c74c7b..a3a2a71 100644
---- a/drivers/scsi/dtc.c
-+++ b/drivers/scsi/dtc.c
-@@ -156,7 +156,7 @@ static int __init dtc_setup(char *str)
- 
- 	get_options(str, ARRAY_SIZE(ints), ints);
- 	if (ints[0] != 2)
--		printk("dtc_setup: usage dtc=address,irq\n");
-+		printk(KERN_DEBUG "dtc_setup: usage dtc=address,irq\n");
- 	else if (commandline_current < NO_OVERRIDES) {
- 		overrides[commandline_current].address = ints[1];
- 		overrides[commandline_current].irq = ints[2];
-@@ -272,7 +272,7 @@ found:
- 		instance->irq = NO_IRQ;
- #endif
- #if defined(DTCDEBUG) && (DTCDEBUG & DTCDEBUG_INIT)
--		printk("scsi%d : irq = %d\n", instance->host_no, instance->irq);
-+		printk(KERN_DEBUG "scsi%d : irq = %d\n", instance->host_no, instance->irq);
- #endif
- 
- 		++current_override;
--- 
-1.8.4
+> 
+> Signed-off-by: Shane Seymour <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+> ---
+> --- a/drivers/scsi/hpsa.c	2015-06-25 15:52:15.633031319 -0500
+> +++ b/drivers/scsi/hpsa.c	2015-06-29 17:28:24.628475369 -0500
+> @@ -376,7 +376,7 @@ static int check_for_busy(struct ctlr_in
+>  }
+>  
+>  static u32 lockup_detected(struct ctlr_info *h);
+> -static ssize_t host_show_lockup_detected(struct device *dev,
+> +static ssize_t lockup_detected_show(struct device *dev,
+>  		struct device_attribute *attr, char *buf)
+>  {
+>  	int ld;
+> @@ -386,10 +386,10 @@ static ssize_t host_show_lockup_detected
+>  	h = shost_to_hba(shost);
+>  	ld = lockup_detected(h);
+>  
+> -	return sprintf(buf, "ld=%d\n", ld);
+> +	return scnprintf(buf, PAGE_SIZE, "ld=%d\n", ld);
 
+Like here, it's obvious that the original will never overflow, so don't
+even worry about checking, it's pointless.
+
+So please don't change this.
+
+greg k-h
