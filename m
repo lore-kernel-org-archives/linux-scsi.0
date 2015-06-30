@@ -1,34 +1,66 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
- recognized correctly
-Date: Tue, 30 Jun 2015 10:51:15 +0000
-Message-ID: <bug-98171-11613-qGNZIxhShy@https.bugzilla.kernel.org/>
-References: <bug-98171-11613@https.bugzilla.kernel.org/>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: [PATCH] SCSI-bfa: Deletion of an unnecessary check before the
+ function call "vfree"
+Date: Tue, 30 Jun 2015 14:38:39 +0200
+Message-ID: <55928DCF.9000708@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net> <546E6F5C.6050604@users.sourceforge.net> <20B1A3CBD98F3845B3F5F56D8597EF59FD4B5D@avmb2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49314 "EHLO mail.kernel.org"
+Received: from mout.web.de ([212.227.15.14]:49173 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752453AbbF3KvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jun 2015 06:51:18 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 313D1205E5
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2015 10:51:17 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 4CFB5205BE
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2015 10:51:16 +0000 (UTC)
-In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
+	id S1753623AbbF3Miy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jun 2015 08:38:54 -0400
+In-Reply-To: <20B1A3CBD98F3845B3F5F56D8597EF59FD4B5D@avmb2.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=98171
+> Patch looks good. 
+> Thanks!
+> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> 
+> -----Original Message-----
+> From: SF Markus Elfring [mailto:elfring@users.sourceforge.net] 
+> Sent: 21 November 2014 04:17
+> To: Anil Gurumurthy; James E. J. Bottomley; Sudarsana Kalluru; linux-scsi
+> Cc: linux-kernel; kernel-janitors@vger.kernel.org; Julia Lawall
+> Subject: [PATCH 1/1] SCSI-bfa: Deletion of an unnecessary check before the function call "vfree"
+> 
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Thu, 20 Nov 2014 23:43:17 +0100
+> 
+> The vfree() function performs also input parameter validation. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/scsi/bfa/bfad_debugfs.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c index 8e83d04..a72170f 100644
+> --- a/drivers/scsi/bfa/bfad_debugfs.c
+> +++ b/drivers/scsi/bfa/bfad_debugfs.c
+> @@ -399,8 +399,7 @@ bfad_debugfs_release_fwtrc(struct inode *inode, struct file *file)
+>  	if (!fw_debug)
+>  		return 0;
+>  
+> -	if (fw_debug->debug_buffer)
+> -		vfree(fw_debug->debug_buffer);
+> +	vfree(fw_debug->debug_buffer);
+>  
+>  	file->private_data = NULL;
+>  	kfree(fw_debug);
+> --
+> 2.1.3
+> 
 
---- Comment #3 from Tom Yan <tom.ty89@gmail.com> ---
-By the way why would it be related to mvsas/libsas? Aren't those controllers
-SATA ones which use the ahci driver?
+Would you like to integrate this update suggestion
+into another source code repository?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Regards,
+Markus
