@@ -1,128 +1,67 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 02/20] [SCSI] mpt3sas: Get IOC_FACTS  information using  handshake protocol only after HBA card gets into READY or Operational state.
-Date: Tue, 30 Jun 2015 12:24:48 +0530
-Message-ID: <1435647306-36956-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 08/20] [SCSI] mpt3sas: Update MPI2 strings to  MPI2.5
+Date: Tue, 30 Jun 2015 12:24:54 +0530
+Message-ID: <1435647306-36956-9-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:36640 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752733AbbF3G4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2015 02:56:00 -0400
+Received: by pdcu2 with SMTP id u2so746604pdc.3
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 23:55:59 -0700 (PDT)
 In-Reply-To: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Driver initialization fails if driver tries to send IOC facts request message when the IOC is in reset or in a fault state.
-
-This patch will make sure that
- 1.Driver to send IOC facts request message only if HBA is in operational or ready state.
- 2.If IOC is in fault state, a diagnostic reset would be issued.
- 3.If IOC is in reset state then driver will wait for 10 seconds to exit out of reset state.
-   If the HBA continues to be in reset state, then the HBA wouldn't be claimed by the driver.
-
-Changes in v1:
-   If PCI Recovery is on then return with -EFAULT in the function _base_wait_for_iocstate().
+Update MPI2 strings to MPI2.5.
 
 Changes in v2:
-   Patch version change only.
+	Patch version change only.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 68 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 63a8588..0410cc5 100644
+index bf2d7dc..8730160 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3189,6 +3189,9 @@ _base_wait_on_iocstate(struct MPT3SAS_ADAPTER *ioc, u32 ioc_state, int timeout,
-  * Notes: MPI2_HIS_IOC2SYS_DB_STATUS - set to one when IOC writes to doorbell.
-  */
- static int
-+_base_diag_reset(struct MPT3SAS_ADAPTER *ioc, int sleep_flag);
-+
-+static int
- _base_wait_for_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout,
- 	int sleep_flag)
- {
-@@ -3731,6 +3734,64 @@ _base_get_port_facts(struct MPT3SAS_ADAPTER *ioc, int port, int sleep_flag)
- }
+@@ -3924,7 +3924,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+ 	mpi_request.WhoInit = MPI2_WHOINIT_HOST_DRIVER;
+ 	mpi_request.VF_ID = 0; /* TODO */
+ 	mpi_request.VP_ID = 0;
+-	mpi_request.MsgVersion = cpu_to_le16(MPI2_VERSION);
++	mpi_request.MsgVersion = cpu_to_le16(MPI25_VERSION);
+ 	mpi_request.HeaderVersion = cpu_to_le16(MPI2_HEADER_VERSION);
  
- /**
-+ * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
-+ * @ioc: per adapter object
-+ * @timeout:
-+ * @sleep_flag: CAN_SLEEP or NO_SLEEP
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout,
-+	int sleep_flag)
-+{
-+	u32 ioc_state;
-+	int rc;
-+
-+	dinitprintk(ioc, printk(MPT3SAS_FMT "%s\n", ioc->name,
-+	    __func__));
-+
-+	if (ioc->pci_error_recovery) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: host in pci error recovery\n", ioc->name, __func__));
-+		return -EFAULT;
-+	}
-+
-+	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
-+	dhsprintk(ioc, printk(MPT3SAS_FMT "%s: ioc_state(0x%08x)\n",
-+	    ioc->name, __func__, ioc_state));
-+
-+	if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
-+	    (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-+		return 0;
-+
-+	if (ioc_state & MPI2_DOORBELL_USED) {
-+		dhsprintk(ioc, printk(MPT3SAS_FMT
-+		    "unexpected doorbell active!\n", ioc->name));
-+		goto issue_diag_reset;
-+	}
-+
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-+		mpt3sas_base_fault_info(ioc, ioc_state &
-+		    MPI2_DOORBELL_DATA_MASK);
-+		goto issue_diag_reset;
-+	}
-+
-+	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
-+	    timeout, sleep_flag);
-+	if (ioc_state) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: failed going to ready state (ioc_state=0x%x)\n",
-+		    ioc->name, __func__, ioc_state));
-+		return -EFAULT;
-+	}
-+
-+ issue_diag_reset:
-+	rc = _base_diag_reset(ioc, sleep_flag);
-+	return rc;
-+}
-+
-+/**
-  * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
-  * @ioc: per adapter object
-  * @sleep_flag: CAN_SLEEP or NO_SLEEP
-@@ -3748,6 +3809,13 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
+ 	if (_base_is_controller_msix_enabled(ioc))
+@@ -4793,7 +4793,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->build_sg_scmd = &_base_build_sg_scmd_ieee;
+ 	ioc->build_sg = &_base_build_sg_ieee;
+ 	ioc->build_zero_len_sge = &_base_build_zero_len_sge_ieee;
+-	ioc->mpi25 = 1;
+ 	ioc->sge_size_ieee = sizeof(Mpi2IeeeSgeSimple64_t);
  
-+	r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
-+	if (r) {
-+		dfailprintk(ioc, printk(MPT3SAS_FMT
-+		    "%s: failed getting to correct state\n",
-+		    ioc->name, __func__));
-+		return r;
-+	}
- 	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
- 	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
- 	memset(&mpi_request, 0, mpi_request_sz);
+ 	/*
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index d635612..c0c774f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -826,7 +826,6 @@ struct MPT3SAS_ADAPTER {
+ 	MPT_BUILD_SG_SCMD build_sg_scmd;
+ 	MPT_BUILD_SG    build_sg;
+ 	MPT_BUILD_ZERO_LEN_SGE build_zero_len_sge;
+-	u8              mpi25;
+ 	u16             sge_size_ieee;
+ 
+ 	/* function ptr for MPI sg elements only */
 -- 
 2.0.2
+
