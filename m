@@ -1,108 +1,62 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 16/20] [SCSI] mpt3sas: Added support for  customer specific branding
-Date: Tue, 30 Jun 2015 12:25:02 +0530
-Message-ID: <1435647306-36956-17-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 15/20] [SCSI] mpt3sas: Return host busy error  status to SML when DMA mapping of scatter gather list fails for a SCSI  command
+Date: Tue, 30 Jun 2015 12:25:01 +0530
+Message-ID: <1435647306-36956-16-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:32859 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201AbbF3G43 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2015 02:56:29 -0400
+Received: by pacws9 with SMTP id ws9so726049pac.0
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 23:56:29 -0700 (PDT)
 In-Reply-To: <1435647306-36956-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Added support for below customer specific brandings
+scsi_dma_map API will return a negative value (i.e. -ENOMEM)
+if DMA mapping of sg lists fails and zero if the sg list in the
+SCSI cmd is NULL. But drivers doesn't handled sg list DMA mapping
+failure case properly.
 
-"VendorID"   "DeviceID"  "SubsystemVendor ID"   "SubsystemDevice ID"  Cisco Branding String
-0x1000         0x97           0x1137                 0x154           Cisco 9300-8i 12Gbps SAS HBA
-0x1000         0x97           0x1137                 0x155           Cisco 12G Modular SAS Pass through Controller
-0x1000         0x97           0x1137                 0x156           UCS C3X60 12G SAS Pass through Controller
+So, Updated the code to return host busy error status to SCSI MID Layer(SML),
+when DMA mapping of scatter gather list fails for a SCSI command.
+So that SML will retry this SCSI cmd after some time.
 
 Changes in v2:
-	Patch version change only.
+    Corrected the typo mistake from "(!sges_left < 0)" to "(sges_left < 0)".
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 29 +++++++++++++++++++++++++++--
- drivers/scsi/mpt3sas/mpt3sas_base.h | 16 ++++++++++++----
- 2 files changed, 39 insertions(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 6e44370..dd04ec0 100644
+index 4f82687..6e44370 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2413,9 +2413,17 @@ _base_display_cisco_branding(struct MPT3SAS_ADAPTER *ioc)
- 	switch (ioc->pdev->device) {
- 	case MPI25_MFGPAGE_DEVID_SAS3008:
- 		switch (ioc->pdev->subsystem_device) {
--		case MPT3SAS_CISCO_12G_HBA_SSDID:
-+		case MPT3SAS_CISCO_12G_8E_HBA_SSDID:
- 			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_CISCO_12G_HBA_BRANDING);
-+				MPT3SAS_CISCO_12G_8E_HBA_BRANDING);
-+			break;
-+		case MPT3SAS_CISCO_12G_8I_HBA_SSDID:
-+			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				MPT3SAS_CISCO_12G_8I_HBA_BRANDING);
-+			break;
-+		case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
-+			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING);
- 			break;
- 		default:
- 			pr_info(MPT3SAS_FMT
-@@ -2424,6 +2432,23 @@ _base_display_cisco_branding(struct MPT3SAS_ADAPTER *ioc)
- 			break;
- 		}
- 		break;
-+	case MPI25_MFGPAGE_DEVID_SAS3108_1:
-+		switch (ioc->pdev->subsystem_device) {
-+		case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
-+			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+			MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING);
-+			break;
-+		case MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_SSDID:
-+			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+			MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_BRANDING);
-+			break;
-+		default:
-+			pr_info(MPT3SAS_FMT
-+			 "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+			 ioc->name, ioc->pdev->subsystem_device);
-+			break;
-+		}
-+		break;
- 	default:
- 		 pr_info(MPT3SAS_FMT
- 			"Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 3b03639..87e9000 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -165,13 +165,21 @@
- /*
-  * Cisco HBA branding
-  */
--#define MPT3SAS_CISCO_12G_HBA_BRANDING       \
--	"Cisco 9300-8E 12G SAS HBA"
--
-+#define MPT3SAS_CISCO_12G_8E_HBA_BRANDING		\
-+		"Cisco 9300-8E 12G SAS HBA"
-+#define MPT3SAS_CISCO_12G_8I_HBA_BRANDING		\
-+		"Cisco 9300-8i 12G SAS HBA"
-+#define MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING	\
-+		"Cisco 12G Modular SAS Pass through Controller"
-+#define MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_BRANDING		\
-+		"UCS C3X60 12G SAS Pass through Controller"
- /*
-  * Cisco HBA SSSDIDs
-  */
-- #define MPT3SAS_CISCO_12G_HBA_SSDID  0x14C
-+#define MPT3SAS_CISCO_12G_8E_HBA_SSDID  0x14C
-+#define MPT3SAS_CISCO_12G_8I_HBA_SSDID  0x154
-+#define MPT3SAS_CISCO_12G_AVILA_HBA_SSDID  0x155
-+#define MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_SSDID  0x156
+@@ -1360,7 +1360,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
  
- /*
-  * status bits for ioc->diag_buffer_status
+ 	sg_scmd = scsi_sglist(scmd);
+ 	sges_left = scsi_dma_map(scmd);
+-	if (!sges_left) {
++	if (sges_left < 0) {
+ 		sdev_printk(KERN_ERR, scmd->device,
+ 			"pci_map_sg failed: request for %d bytes!\n",
+ 			scsi_bufflen(scmd));
+@@ -1429,7 +1429,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+  fill_in_last_segment:
+ 
+ 	/* fill the last segment */
+-	while (sges_left) {
++	while (sges_left > 0) {
+ 		if (sges_left == 1)
+ 			_base_add_sg_single_ieee(sg_local,
+ 			    simple_sgl_flags_last, 0, sg_dma_len(sg_scmd),
 -- 
 2.0.2
+
