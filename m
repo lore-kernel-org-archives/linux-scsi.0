@@ -1,71 +1,127 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 98171] [Regression] Marvell SE91xx SATA 3 controllers not
- recognized correctly
-Date: Mon, 29 Jun 2015 22:27:33 +0000
-Message-ID: <bug-98171-11613-ENzQpmuA1w@https.bugzilla.kernel.org/>
-References: <bug-98171-11613@https.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Mon, 29 Jun 2015 17:09:31 -0700
+Message-ID: <20150630000931.GE29763@kroah.com>
+References: <54AC0A17.8020405@redhat.com>
+ <20150128001837.GE17677@kroah.com>
+ <CAHTgTXU1GV8JszqJojk9ML7f1yEtERHY0VjrnjX+OMh4Z_=t0g@mail.gmail.com>
+ <552BC234.4020000@redhat.com>
+ <20150426092719.GA1460@kroah.com>
+ <553E28DC.1040100@redhat.com>
+ <20150427125529.GA18817@kroah.com>
+ <553E354B.90208@redhat.com>
+ <20150502175621.GA15525@kroah.com>
+ <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49065 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752442AbbF2W1h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jun 2015 18:27:37 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A645220600
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 22:27:36 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 9FC9B20609
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2015 22:27:33 +0000 (UTC)
-In-Reply-To: <bug-98171-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAHTgTXX9tm-tdUPzWXd9SJB_MUanMrNe1x9hD9DzU9R5cmuNnQ@mail.gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Vinson Lee <vlee@twopensource.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=98171
-
---- Comment #1 from nucrap@hotmail.com ---
-> This is a regression against 3.14? There was only one change affecting
-> mvsas between those kernels and that was the libsas change:
+On Fri, May 22, 2015 at 12:19:16PM -0700, Vinson Lee wrote:
+> On Sat, May 2, 2015 at 10:56 AM, Greg KH <greg@kroah.com> wrote:
+> > On Mon, Apr 27, 2015 at 03:10:35PM +0200, Tomas Henzl wrote:
+> >> On 04/27/2015 02:55 PM, Greg KH wrote:
+> >> > On Mon, Apr 27, 2015 at 02:17:32PM +0200, Tomas Henzl wrote:
+> >> >> On 04/26/2015 11:27 AM, Greg KH wrote:
+> >> >>> On Mon, Apr 13, 2015 at 03:18:44PM +0200, Tomas Henzl wrote:
+> >> >>>> On 04/11/2015 12:45 AM, Vinson Lee wrote:
+> >> >>>>> On Tue, Jan 27, 2015 at 4:18 PM, Greg KH <greg@kroah.com> wrote:
+> >> >>>>>> On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
+> >> >>>>>>> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
+> >> >>>>>>>> Dear stable maintainers,
+> >> >>>>>>>> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
+> >> >>>>>>>>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
+> >> >>>>>>>> earlier, if applicable)?
+> >> >>>>>>> Please do not apply this patch isolated from his friend, the
+> >> >>>>>>> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
+> >> >>>>>>> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
+> >> >>>>>>>
+> >> >>>>>>> In addition to that, after the original issue goes away you may notice sometimes
+> >> >>>>>>> an unhandled irq 16 message, to fix this a patch is posted
+> >> >>>>>>> here http://www.spinics.net/lists/linux-scsi/msg80316.html
+> >> >>>>>>> This patch still awaits a maintainers review though.
+> >> >>>>>>>
+> >> >>>>>>> Probably the best idea is to wait until the issue is solved completely.
+> >> >>>>>> I'll wait, when it all gets worked out, please let stable@ know what
+> >> >>>>>> patches to apply where.
+> >> >>>>>>
+> >> >>>>>> thanks,
+> >> >>>>>>
+> >> >>>>>> greg k-h
+> >> >>>>>> --
+> >> >>>>>> To unsubscribe from this list: send the line "unsubscribe stable" in
+> >> >>>>>> the body of a message to majordomo@vger.kernel.org
+> >> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> >>>>> Hi, Thomas.
+> >> >>>>>
+> >> >>>>> The unhandled irq 16 issue seems to be fixed by 4.0-rc1 commit "hpsa:
+> >> >>>>> turn off interrupts when kdump starts".
+> >> >>>>>
+> >> >>>>> Are the following patches suitable for stable now?
+> >> >>>> Yes, I believe they are, just note that
+> >> >>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+> >> >>>> is not a part of that group we discussed before, but it may be added
+> >> >>>> to stable too.
+> >> >>>>
+> >> >>>> Cheers,
+> >> >>>> Tomas
+> >> >>>>
+> >> >>>>> 3b74729 hpsa: turn off interrupts when kdump starts
+> >> >>>>> 03741d9 hpsa: fix memory leak in kdump hard reset
+> >> >>>>> 859c75a hpsa: add missing pci_set_master in kdump path
+> >> >>>>> 132aa22 hpsa: refine the pci enable/disable handling
+> >> >>> So what order, and to what stable tree(s) do you want these applied to?
+> >> >>> They seem to span a number of kernel versions, so I'm not quite sure
+> >> >>> what you are wanting me to do.
+> >> >> Please add it in this order
+> >> >> 1. 132aa220b4 hpsa: refine the pci enable/disable handling
+> >> >> 2. 859c75aba2 hpsa: add missing pci_set_master in kdump path
+> >> >>    The first two patches create the fix Masoud has asked for originally to port to stable.
+> >> >> 3. 3b74729878 hpsa: turn off interrupts when kdump starts
+> >> >>    The third should be added too, it fixes an issue made visible by the first patch
+> >> >>
+> >> >> The fourth patch
+> >> >> 03741d956e hpsa: fix memory leak in kdump hard reset
+> >> >> is completely unrelated to the first group, so it may be added after or before
+> >> >> or in the same sequence as it is in the mainline - that is before the third patch.
+> >> >> This patch is tiny error path fix - not sure if important enough for stable.
+> >> > Which stable tree(s) do you want these applied to?  As these "span"
+> >> > different kernel versions, I have no idea of what to do here.
+> >>
+> >> Masoud has asked for the inclusion, I think that what he wrote was - "3.10 stable (and earlier, if applicable)",
+> >> I don't know much about stable so I can't decide to which tree(s) the series should be ported.
+> >
+> > Ok, I'll wait for someone to clarify before doing anything here.
+> >
+> > thanks,
+> >
+> > greg k-h
 > 
-> commit bc6e7c4b0d1a1f742d96556f63d68f17f4e232c3
-> Author: Dan Williams <dan.j.williams@intel.com>
-> Date: Fri Mar 14 13:52:48 2014 -0700
 > 
-> libata, libsas: kill pm_result and related cleanup
+> The first and second patches are from upstream 3.18. The third patch
+> is from upstream 4.0.
 > 
-> Does reverting that make the problem go away?
+> Please use the following list of kernels and patches for backporting.
 > 
+> 3.18, 3.19
+> 3b74729878 hpsa: turn off interrupts when kdump starts
+> 
+> <= 3.17
+> 132aa220b4 hpsa: refine the pci enable/disable handling
+> 859c75aba2 hpsa: add missing pci_set_master in kdump path
 
-It's a regression starting with linux 3.15, meaning everything still worked
-with linux 3.14.
-I have tried reverting that patch from linux-3.15.10 vanilla sources but it
-fails... I don't know why, maybe I'm just not leet enough:
+These two worked for 3.10 and 3.14-stable.
 
-Hunk #1 succeeded at 5364 (offset 13 lines).
-Hunk #2 succeeded at 5388 (offset 13 lines).
-Hunk #3 FAILED at 5390.
-Hunk #4 succeeded at 5506 (offset 13 lines).
-Hunk #5 succeeded at 5532 (offset 13 lines).
-1 out of 5 hunks FAILED -- saving rejects to file drivers/ata/libata-core.c.rej
-patching file drivers/ata/libata-eh.c
-patching file drivers/scsi/libsas/sas_ata.c
-patching file include/linux/libata.h
-Hunk #1 succeeded at 850 (offset 2 lines).
-Hunk #2 FAILED at 1140.
-1 out of 2 hunks FAILED -- saving rejects to file include/linux/libata.h.rej
-patching file include/scsi/libsas.h
-patch unexpectedly ends in middle of line
-Hunk #1 succeeded at 172 with fuzz 1.
+> 3b74729878 hpsa: turn off interrupts when kdump starts
 
+This one did not apply, so I can't add it.
 
-What shall I do?
+thanks,
 
-Regards,
-
-Philip
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+greg k-h
