@@ -1,69 +1,117 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
-Date: Wed,  1 Jul 2015 11:04:08 +0200
-Message-ID: <1435741448-29070-1-git-send-email-vkuznets@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45292 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832AbbGAJEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jul 2015 05:04:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jean Delvare <jdelvare@suse.de>
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+Date: Wed, 01 Jul 2015 11:20:07 +0200
+Message-ID: <1435742407.22803.34.camel@chaos.site>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+	 <20150429172832.GB7888@google.com> <20150528122443.GI10210@google.com>
+	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+	 <1435584320.4646.53.camel@chaos.site>
+	 <12176d8f15f49359898726ccede592bd@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <12176d8f15f49359898726ccede592bd@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org
 
-SPC-2/3/4 specs state that "The standard INQUIRY data (see table ...)
-shall contain at least 36 bytes". Hyper-V host doesn't always honor this
-requirement, e.g. when there is no physical device present at a particular
-LUN host sets Peripheral qualifier to 011b and Additional length to 0
-(thus making the reply 5-bytes long). Upper level SCSI stack complains
-with 'INQUIRY result too short (5), using 36'. Fix the issue by mangling
-Additional length field in host's reply at the driver level.
+Hi Kashyap,
 
-Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
----
-This is a hack, the proper fix should probably be done in Hyper-V.
----
- drivers/scsi/storvsc_drv.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+I finally managed to backport your patch to the SLES 12 kernel :-) I'll
+build a test kernel for the customer and have them test it. I'll let yo=
+u
+know if I need your help later for the SLES 11 SP3 kernel backport -
+thanks for the offer!
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3c6584f..bca31af 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1153,6 +1153,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
- {
- 	struct storvsc_device *stor_device;
- 	struct vstor_packet *stor_pkt;
-+	struct vmbus_packet_mpb_array *payload = request->payload;
- 
- 	stor_device = hv_get_drvdata(device);
- 	stor_pkt = &request->vstor_packet;
-@@ -1174,6 +1175,24 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
- 	}
- 
-+	/*
-+	 * When there is no physical device attached to a LUN Hyper-V host
-+	 * sets Peripheral qualifier to 011b and Additional length to 0. SPC
-+	 * spec, however, says that "The standard INQUIRY data ... shall
-+	 * contain at least 36 bytes". Upper level SCSI stack complains with
-+	 * 'INQUIRY result too short (5), using 36'. Mangle host's reply here.
-+	 */
-+	if (stor_pkt->vm_srb.cdb[0] == INQUIRY && payload) {
-+		u8 *buf, per_qual, data_len;
-+		int range_len = payload->range.len;
-+
-+		buf = phys_to_virt(payload->range.pfn_array[0] << PAGE_SHIFT) +
-+			payload->range.offset;
-+		per_qual = (buf[0] >> 5) & 7;
-+		data_len = buf[4] + 5;
-+		if (per_qual == 3 && data_len < min(range_len, 36))
-+			buf[4] = min(range_len, 36) - 5;
-+	}
- 
- 	/* Copy over the status...etc */
- 	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
--- 
-2.4.3
+Jean
 
+Le Tuesday 30 June 2015 =C3=A0 16:03 +0530, Kashyap Desai a =C3=A9crit =
+:
+> Jean,
+>=20
+> Patch is available at below repo -
+>=20
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git - b for-n=
+ext
+>=20
+> Commit id -
+> 6431f5d7c6025f8b007af06ea090de308f7e6881
+>=20
+> If you share megaraid_sas driver code of your tree, I can provide pat=
+ch for
+> you.
+>=20
+> ` Kashyap
+>=20
+> > -----Original Message-----
+> > From: Jean Delvare [mailto:jdelvare@suse.de]
+> > Sent: Monday, June 29, 2015 6:55 PM
+> > To: Kashyap Desai
+> > Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli=
+;
+> > linux-
+> > scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;=
+ Sumit
+> > Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;=
+ linux-
+> > kernel@vger.kernel.org; Myron Stowe
+> > Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more d=
+ebug
+> > output? [BKO63661]
+> >
+> > Hi Kashyap,
+> >
+> > Thanks for the patch. May I ask what tree it was based on? Linus'
+> > latest? I am trying to apply it to the SLES 11 SP3 and SLES 12 kern=
+el
+> > trees (based
+> > on kernel v3.0 + a bunch of backports and v3.12
+> > respectively) but your patch fails to apply in both cases. I'll try=
+ harder
+> > but I don't
+> > know anything about the megaraid_sas code so I really don't know wh=
+ere I'm
+> > going.
+> >
+> > Does your patch depend on any other that may not be present in the =
+SLES
+> > 11 SP3 and SLES 12 kernels?
+> >
+> > Thanks,
+> > Jean
+> >
+> > Le Thursday 28 May 2015 =C3=A0 19:05 +0530, Kashyap Desai a =C3=A9c=
+rit :
+> > > Bjorn/Robin,
+> > >
+> > > Apologies for delay. Here is one quick suggestion as we have seen
+> > > similar issue (not exactly similar, but high probably to have sam=
+e
+> > > issue) while controller is configured on VM as pass-through and V=
+M
+> > > reboot
+> > abruptly.
+> > > In that particular issue, driver interact with FW which may  requ=
+ire
+> > > chip reset to bring controller to operation state.
+> > >
+> > > Relevant patch was submitted for only Older controller as it was =
+only
+> > > seen for few MegaRaid controller. Below patch already try to do c=
+hip
+> > > reset, but only for limited controllers...I have attached one mor=
+e
+> > > patch which does chip reset from driver load time for
+> > > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
+> > > controller, so attached patch is required.)
+> > >
+> > > http://www.spinics.net/lists/linux-scsi/msg67288.html
+> > >
+> > > Please post the result with attached patch.
+> > >
+> > > Thanks, Kashyap
