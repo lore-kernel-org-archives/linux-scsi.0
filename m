@@ -1,24 +1,69 @@
-From: "Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org> (greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org)" <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3/3] hpsa: Convert DEVICE_ATTR macro usage to
- DEVICE_ATTR_RO|WR|WO
-Date: Tue, 30 Jun 2015 22:45:11 -0700
-Message-ID: <20150701054511.GB23370@kroah.com>
-References: <DDB9C85B850785449757F9914A034FCB4442E19F@G9W0766.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB4442E19F-4I1V4pQFGigSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James Bottomley (JBottomley-O3H1v1f1dlM@public.gmane.org)" <JBottomley-O3H1v1f1dlM@public.gmane.org>, ISS StorageDev <iss_storagedev-VXdhtT5mjnY@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
+Date: Wed,  1 Jul 2015 11:04:08 +0200
+Message-ID: <1435741448-29070-1-git-send-email-vkuznets@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45292 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbbGAJEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jul 2015 05:04:12 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Long Li <longli@microsoft.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org
 
-On Wed, Jul 01, 2015 at 03:47:10AM +0000, Seymour, Shane M wrote:
-> 
-> Convert DEVICE_ATTR macro usage to DEVICE_ATTR_RO|WR|WO
-> Changes forced some function names to change.
-> 
-> Signed-off-by: Shane Seymour <shane.seymour-VXdhtT5mjnY@public.gmane.org>
+SPC-2/3/4 specs state that "The standard INQUIRY data (see table ...)
+shall contain at least 36 bytes". Hyper-V host doesn't always honor this
+requirement, e.g. when there is no physical device present at a particular
+LUN host sets Peripheral qualifier to 011b and Additional length to 0
+(thus making the reply 5-bytes long). Upper level SCSI stack complains
+with 'INQUIRY result too short (5), using 36'. Fix the issue by mangling
+Additional length field in host's reply at the driver level.
 
-Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+This is a hack, the proper fix should probably be done in Hyper-V.
+---
+ drivers/scsi/storvsc_drv.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 3c6584f..bca31af 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1153,6 +1153,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ {
+ 	struct storvsc_device *stor_device;
+ 	struct vstor_packet *stor_pkt;
++	struct vmbus_packet_mpb_array *payload = request->payload;
+ 
+ 	stor_device = hv_get_drvdata(device);
+ 	stor_pkt = &request->vstor_packet;
+@@ -1174,6 +1175,24 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+ 	}
+ 
++	/*
++	 * When there is no physical device attached to a LUN Hyper-V host
++	 * sets Peripheral qualifier to 011b and Additional length to 0. SPC
++	 * spec, however, says that "The standard INQUIRY data ... shall
++	 * contain at least 36 bytes". Upper level SCSI stack complains with
++	 * 'INQUIRY result too short (5), using 36'. Mangle host's reply here.
++	 */
++	if (stor_pkt->vm_srb.cdb[0] == INQUIRY && payload) {
++		u8 *buf, per_qual, data_len;
++		int range_len = payload->range.len;
++
++		buf = phys_to_virt(payload->range.pfn_array[0] << PAGE_SHIFT) +
++			payload->range.offset;
++		per_qual = (buf[0] >> 5) & 7;
++		data_len = buf[4] + 5;
++		if (per_qual == 3 && data_len < min(range_len, 36))
++			buf[4] = min(range_len, 36) - 5;
++	}
+ 
+ 	/* Copy over the status...etc */
+ 	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
+-- 
+2.4.3
+
