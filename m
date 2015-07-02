@@ -1,129 +1,183 @@
 From: "Seymour, Shane M" <shane.seymour@hp.com>
-Subject: RE: [PATCH RFC 1/2] cxlflash: Base support for IBM CXL Flash Adapter
-Date: Thu, 2 Jul 2015 08:08:08 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB44430703@G9W0766.americas.hpqcorp.net>
-References: <1430110220-13268-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH] st: null pointer dereference panic caused by use after
+ kref_put by st_open
+Date: Thu, 2 Jul 2015 12:01:10 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB44430852@G9W0766.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t5009.houston.hp.com ([15.240.92.67]:40840 "EHLO
-	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbbGBIJk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2015 04:09:40 -0400
-In-Reply-To: <1430110220-13268-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:39153 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbbGBMCo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2015 08:02:44 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
-Cc: "mikey@neuling.org" <mikey@neuling.org>, "imunsie@au1.ibm.com" <imunsie@au1.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James Bottomley (JBottomley@Odin.com)" <JBottomley@Odin.com>
+Cc: "Lavender, Darren Christopher" <darren.lavender@hp.com>
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matthew R. Ochs
-Sent: Monday, April 27, 2015 2:50 PM
-To: linux-scsi@vger.kernel.org; James.Bottomley@HansenPartnership.com; nab@linux-iscsi.org; brking@linux.vnet.ibm.com
-Cc: mikey@neuling.org; imunsie@au1.ibm.com; Manoj N. Kumar
-Subject: [PATCH RFC 1/2] cxlflash: Base support for IBM CXL Flash Adapter
 
-> +static ssize_t cxlflash_show_port_status(struct device *dev,
-> +					 struct device_attribute *attr,
-> +					 char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(dev);
-> +	struct cxlflash *cxlflash = (struct cxlflash *)shost->hostdata;
-> +	struct afu *afu = cxlflash->afu;
-> +
-> +	char *disp_status;
-> +	int rc;
-> +	u32 port;
-> +	u64 status;
-> +	volatile u64 *fc_regs;
-> +
-> +	rc = kstrtouint((attr->attr.name + 4), 10, &port);
-> +	if (rc || (port > NUM_FC_PORTS))
-> +		return 0;
-> +
-> +	fc_regs = &afu->afu_map->global.fc_regs[port][0];
-> +	status =
-> +	    (readq_be(&fc_regs[FC_MTIP_STATUS / 8]) & FC_MTIP_STATUS_MASK);
-> +
-> +	if (status == FC_MTIP_STATUS_ONLINE)
-> +		disp_status = "online";
-> +	else if (status == FC_MTIP_STATUS_OFFLINE)
-> +		disp_status = "offline";
-> +	else
-> +		disp_status = "unknown";
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%s\n", disp_status);
+Two SLES11 SP3 servers encountered similar crashes simultaneously
+following some kind of SAN/tape target issue:
 
-You need to use scnprintf() instead of snprintf() here
+...
+qla2xxx [0000:81:00.0]-801c:3: Abort command issued nexus=3:0:2 --  1 2002.
+qla2xxx [0000:81:00.0]-801c:3: Abort command issued nexus=3:0:2 --  1 2002.
+qla2xxx [0000:81:00.0]-8009:3: DEVICE RESET ISSUED nexus=3:0:2 cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-800c:3: do_reset failed for cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-800f:3: DEVICE RESET FAILED: Task management failed nexus=3:0:2 cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-8009:3: TARGET RESET ISSUED nexus=3:0:2 cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-800c:3: do_reset failed for cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-800f:3: TARGET RESET FAILED: Task management failed nexus=3:0:2 cmd=ffff882f89c2c7c0.
+qla2xxx [0000:81:00.0]-8012:3: BUS RESET ISSUED nexus=3:0:2.
+qla2xxx [0000:81:00.0]-802b:3: BUS RESET SUCCEEDED nexus=3:0:2.
+qla2xxx [0000:81:00.0]-505f:3: Link is operational (8 Gbps).
+qla2xxx [0000:81:00.0]-8018:3: ADAPTER RESET ISSUED nexus=3:0:2.
+qla2xxx [0000:81:00.0]-00af:3: Performing ISP error recovery - ha=ffff88bf04d18000.
+ rport-3:0-0: blocked FC remote port time out: removing target and saving binding
+qla2xxx [0000:81:00.0]-505f:3: Link is operational (8 Gbps).
+qla2xxx [0000:81:00.0]-8017:3: ADAPTER RESET SUCCEEDED nexus=3:0:2.
+ rport-2:0-0: blocked FC remote port time out: removing target and saving binding
+sg_rq_end_io: device detached
+BUG: unable to handle kernel NULL pointer dereference at 00000000000002a8
+IP: [<ffffffff8133b268>] __pm_runtime_idle+0x28/0x90
+PGD 7e6586f067 PUD 7e5af06067 PMD 0 [1739975.390354] Oops: 0002 [#1] SMP
+CPU 0
+...
+Supported: No, Proprietary modules are loaded [1739975.390463]
+Pid: 27965, comm: ABCD Tainted: PF           X 3.0.101-0.29-default #1 HP ProLiant DL580 Gen8
+RIP: 0010:[<ffffffff8133b268>]  [<ffffffff8133b268>] __pm_runtime_idle+0x28/0x90
+RSP: 0018:ffff8839dc1e7c68  EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff883f0592fc00 RCX: 0000000000000090
+RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000138
+RBP: 0000000000000138 R08: 0000000000000010 R09: ffffffff81bd39d0
+R10: 00000000000009c0 R11: ffffffff81025790 R12: 0000000000000001
+R13: ffff883022212b80 R14: 0000000000000004 R15: ffff883022212b80
+FS:  00007f8e54560720(0000) GS:ffff88407f800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00000000000002a8 CR3: 0000007e6ced6000 CR4: 00000000001407f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process ABCD (pid: 27965, threadinfo ffff8839dc1e6000, task ffff883592e0c640)
+Stack:
+ ffff883f0592fc00 00000000fffffffa 0000000000000001 ffff883022212b80
+ ffff883eff772400 ffffffffa03fa309 0000000000000000 0000000000000000
+ ffffffffa04003a0 ffff883f063196c0 ffff887f0379a930 ffffffff8115ea1e
+Call Trace:
+ [<ffffffffa03fa309>] st_open+0x129/0x240 [st]
+ [<ffffffff8115ea1e>] chrdev_open+0x13e/0x200
+ [<ffffffff811588a8>] __dentry_open+0x198/0x310
+ [<ffffffff81167d74>] do_last+0x1f4/0x800
+ [<ffffffff81168fe9>] path_openat+0xd9/0x420
+ [<ffffffff8116946c>] do_filp_open+0x4c/0xc0
+ [<ffffffff8115a00f>] do_sys_open+0x17f/0x250
+ [<ffffffff81468d92>] system_call_fastpath+0x16/0x1b
+ [<00007f8e4f617fd0>] 0x7f8e4f617fcf
+Code: eb d3 90 48 83 ec 28 40 f6 c6 04 48 89 6c 24 08 4c 89 74 24 20 48 89 fd 48 89 1c 24 4c 89 64 24 10 41 89 f6 4c 89 6c 24 18 74 11 <f0> ff 8f 70 01 00 00 0f 94 c0 45 31 ed 84 c0 74 2b 4c 8d a5 a0
+RIP  [<ffffffff8133b268>] __pm_runtime_idle+0x28/0x90
+ RSP <ffff8839dc1e7c68>
+CR2: 00000000000002a8
 
-> +static ssize_t cxlflash_show_lun_mode(struct device *dev,
-> +				      struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(dev);
-> +	struct cxlflash *cxlflash = (struct cxlflash *)shost->hostdata;
-> +	struct afu *afu = cxlflash->afu;
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%u\n", afu->internal_lun);
+Analysis reveals the cause of the crash to be due to STp->device
+being NULL. The pointer was NULLed via scsi_tape_put(STp) when it
+calls scsi_tape_release(). In st_open() we jump to err_out after
+scsi_block_when_processing_errors() completes and returns the
+device as offline (sdev_state was SDEV_DEL):
 
-See above about snprintf()
+1180 /* Open the device. Needs to take the BKL only because of incrementing the SCSI host
+1181    module count. */
+1182 static int st_open(struct inode *inode, struct file *filp)
+1183 {
+1184         int i, retval = (-EIO);
+1185         int resumed = 0;
+1186         struct scsi_tape *STp;
+1187         struct st_partstat *STps;
+1188         int dev = TAPE_NR(inode);
+1189         char *name;
+...
+1217         if (scsi_autopm_get_device(STp->device) < 0) {
+1218                 retval = -EIO;
+1219                 goto err_out;
+1220         }
+1221         resumed = 1;
+1222         if (!scsi_block_when_processing_errors(STp->device)) {
+1223                 retval = (-ENXIO);
+1224                 goto err_out;
+1225         }
+...
+1264  err_out:
+1265         normalize_buffer(STp->buffer);
+1266         spin_lock(&st_use_lock);
+1267         STp->in_use = 0;
+1268         spin_unlock(&st_use_lock);
+1269         scsi_tape_put(STp); <-- STp->device = 0 after this
+1270         if (resumed)
+1271                 scsi_autopm_put_device(STp->device);
+1272         return retval;
 
-+static DEVICE_ATTR(port0, S_IRUGO, cxlflash_show_port_status, NULL);
-+static DEVICE_ATTR(port1, S_IRUGO, cxlflash_show_port_status, NULL);
-+static DEVICE_ATTR(lun_mode, S_IRUGO | S_IWUSR, cxlflash_show_lun_mode,
-+		   cxlflash_store_lun_mode);
+The ref count for the struct scsi_tape had already been reduced
+to 1 when the .remove method of the st module had been called.
+The kref_put() in scsi_tape_put() caused scsi_tape_release()
+to be called:
 
-Please use DEVICE_ATTR_RO and DEVICE_ATTR_RW as appropriate if you can, you will need to change the show/store function names. The main reason I know for doing this is (using DEVICE_ATTR_RO as an example) if someone sees a sysfs attribute called port0 or port1 they should be able to search the kernel source to find a function called port0_show or port1_show without having to spend any extra time searching to find out what the driver is and then look at the driver source to find that they need to look at cxlflash_show_port_status. Using DEVICE_ATTR_RO for port0 and port1 would probably change the code to looking something like this:
+0266 static void scsi_tape_put(struct scsi_tape *STp)
+0267 {
+0268         struct scsi_device *sdev = STp->device;
+0269
+0270         mutex_lock(&st_ref_mutex);
+0271         kref_put(&STp->kref, scsi_tape_release); <-- calls this
+0272         scsi_device_put(sdev);
+0273         mutex_unlock(&st_ref_mutex);
+0274 }
 
-static ssize_t cxlflash_show_port_status(u32 port,
-	struct afu *afu, char *buf)
-{
-	char *disp_status;
-	u64 status;
-	volatile u64 *fc_regs;
+In scsi_tape_release() the struct scsi_device in the struct
+scsi_tape gets set to NULL:
 
-	fc_regs = &afu->afu_map->global.fc_regs[port][0];
-	/* I split this line into two because I had to really look at where
-	 * the brackets were and this made it more obvious to me
-	 * what it was doing but that could just be me. */
-	status = readq_be(&fc_regs[FC_MTIP_STATUS / 8]);
-	status &= FC_MTIP_STATUS_MASK;
+4273 static void scsi_tape_release(struct kref *kref)
+4274 {
+4275         struct scsi_tape *tpnt = to_scsi_tape(kref);
+4276         struct gendisk *disk = tpnt->disk;
+4277
+4278         tpnt->device = NULL; <<<---- where the dev is nulled
+4279
+4280         if (tpnt->buffer) {
+4281                 normalize_buffer(tpnt->buffer);
+4282                 kfree(tpnt->buffer->reserved_pages);
+4283                 kfree(tpnt->buffer);
+4284         }
+4285
+4286         disk->private_data = NULL;
+4287         put_disk(disk);
+4288         kfree(tpnt);
+4289         return;
+4290 }
 
-	if (status == FC_MTIP_STATUS_ONLINE)
-		disp_status = "online";
-	else if (status == FC_MTIP_STATUS_OFFLINE)
-		disp_status = "offline";
-	else
-		disp_status = "unknown";
+Although the problem was reported on SLES11.3 the problem appears
+in linux-next as well.
 
-	return scnprintf(buf, PAGE_SIZE, "%s\n", disp_status);
-}
+The crash is fixed by reordering the code so we no longer access
+the struct scsi_tape after the kref_put() is done on it in st_open().
 
-Since you have fixed values you could use also sprintf here (although the documentation currently says to only use scnprintf) and that would make port0_show and port1_show to be:
-
-static ssize_t port0_show(struct device *dev,
-	struct device_attribute *attr,
-	char *buf)
-{
-	struct Scsi_Host *shost = class_to_shost(dev);
-	struct cxlflash *cxlflash = (struct cxlflash *)shost->hostdata;
-	struct afu *afu = cxlflash->afu;
-
-	return cxlflash_show_port_status(0, afu, buf);
-}
-
-static ssize_t port1_show(struct device *dev,
-	struct device_attribute *attr,
-	char *buf)
-{
-	struct Scsi_Host *shost = class_to_shost(dev);
-	struct cxlflash *cxlflash = (struct cxlflash *)shost->hostdata;
-	struct afu *afu = cxlflash->afu;
-
-	return cxlflash_show_port_status(1, afu, buf);
-}
-
-I'm assuming that 0 and 1 are always valid for port number and don't need to be checked against NUM_FC_PORTS. That's just a suggestion and I haven't attempted to compile the above example and you'd need to test it to make sure that they still work as expected.
-
-Shane
+Signed-off-by: Shane Seymour <shane.seymour@hp.com>
+Signed-off-by: Darren Lavender <darren.lavender@hp.com>
+---
+The commit description exceeds 75 characters per line in places
+however we could not include the kernel message buffer
+contents for context and be less than 75 characters per line.
+It's a small change but we felt that it required a fair amount
+of explaining so someone else can determine if they experience
+this issue. 
+--- a/drivers/scsi/st.c	2015-06-25 15:52:15.728031313 -0500
++++ b/drivers/scsi/st.c	2015-07-01 15:10:49.584360250 -0500
+@@ -1329,9 +1329,9 @@ static int st_open(struct inode *inode,
+ 	spin_lock(&st_use_lock);
+ 	STp->in_use = 0;
+ 	spin_unlock(&st_use_lock);
+-	scsi_tape_put(STp);
+ 	if (resumed)
+ 		scsi_autopm_put_device(STp->device);
++	scsi_tape_put(STp);
+ 	return retval;
+ 
+ }
