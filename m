@@ -1,248 +1,96 @@
-From: Ketan Mukadam <ketan.mukadam@avagotech.com>
-Subject: [PATCH 2/2] be2iscsi: Revert ownership to Emulex
-Date: Sat,  4 Jul 2015 04:12:33 +0530
-Message-ID: <1435963353-29153-1-git-send-email-ketan.mukadam@avagotech.com>
+From: Johannes Thumshirn <jthumshirn@suse.com>
+Subject: Re: [PATCH 1/1] we added changes in fnic driver patch 1.6.0.16 to acquire io_req_lock in fnic_queuecommand() before issuing I/O so that io completion is serialized. But when releasing the lock we check for the I/O flags and this could be modified if IO abort occurs before I/O completion. In this case we wont release the lock and causes deadlock in some scenerios. Using the local variable to check the IO lock status will resolve the problem.
+Date: Fri, 03 Jul 2015 09:14:10 +0200
+Message-ID: <mqd4mllaf25.fsf@c203.arch.suse.de>
+References: <1435872835-30656-1-git-send-email-hishah@cisco.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:55870 "EHLO
-	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754250AbbGCGQ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2015 02:16:56 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:38892 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753974AbbGCHON convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2015 03:14:13 -0400
+In-Reply-To: <1435872835-30656-1-git-send-email-hishah@cisco.com> (Hiral
+	Shah's message of "Thu, 2 Jul 2015 14:33:55 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Ketan Mukadam <ketan.mukadam@avagotech.com>
+To: Hiral Shah <hishah@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>, Anil Chintalapati <achintal@cisco.com>
 
-We would like to get the following updates in:
-    Revert ownership to "Emulex" from "Avago Technologies"
+Hiral Shah <hishah@cisco.com> writes:
 
-Signed-off-by: Ketan Mukadam <ketan.mukadam@avagotech.com>
----
- drivers/scsi/be2iscsi/Kconfig    | 4 ++--
- drivers/scsi/be2iscsi/Makefile   | 2 +-
- drivers/scsi/be2iscsi/be.h       | 4 ++--
- drivers/scsi/be2iscsi/be_cmds.c  | 4 ++--
- drivers/scsi/be2iscsi/be_cmds.h  | 4 ++--
- drivers/scsi/be2iscsi/be_iscsi.c | 4 ++--
- drivers/scsi/be2iscsi/be_main.c  | 8 ++++----
- drivers/scsi/be2iscsi/be_main.h  | 6 +++---
- drivers/scsi/be2iscsi/be_mgmt.c  | 4 ++--
- drivers/scsi/be2iscsi/be_mgmt.h  | 4 ++--
- 10 files changed, 22 insertions(+), 22 deletions(-)
+> Signed-off-by: Hiral Shah <hishah@cisco.com>
+> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Signed-off-by: Anil Chintalapati <achintal@cisco.com>
+> ---
+>  drivers/scsi/fnic/fnic.h      | 2 +-
+>  drivers/scsi/fnic/fnic_scsi.c | 4 +++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index 26270c3..ce129e5 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -39,7 +39,7 @@
+> =20
+>  #define DRV_NAME		"fnic"
+>  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+> -#define DRV_VERSION		"1.6.0.17"
+> +#define DRV_VERSION		"1.6.0.17a"
+>  #define PFX			DRV_NAME ": "
+>  #define DFX                     DRV_NAME "%d: "
+> =20
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_s=
+csi.c
+> index 155b286..25436cd 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -425,6 +425,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd=
+ *sc, void (*done)(struct scsi_
+>  	unsigned long ptr;
+>  	struct fc_rport_priv *rdata;
+>  	spinlock_t *io_lock =3D NULL;
+> +	int io_lock_acquired =3D 0;
+> =20
+>  	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKE=
+D)))
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+> @@ -518,6 +519,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd=
+ *sc, void (*done)(struct scsi_
+>  	spin_lock_irqsave(io_lock, flags);
+> =20
+>  	/* initialize rest of io_req */
+> +	io_lock_acquired =3D 1;
+>  	io_req->port_id =3D rport->port_id;
+>  	io_req->start_time =3D jiffies;
+>  	CMD_STATE(sc) =3D FNIC_IOREQ_CMD_PENDING;
+> @@ -571,7 +573,7 @@ out:
+>  		  (((u64)CMD_FLAGS(sc) >> 32) | CMD_STATE(sc)));
+> =20
+>  	/* if only we issued IO, will we have the io lock */
+> -	if (CMD_FLAGS(sc) & FNIC_IO_INITIALIZED)
+> +	if (io_lock_acquired)
+>  		spin_unlock_irqrestore(io_lock, flags);
 
-diff --git a/drivers/scsi/be2iscsi/Kconfig b/drivers/scsi/be2iscsi/Kconfig
-index ceaca32..4e7cad2 100644
---- a/drivers/scsi/be2iscsi/Kconfig
-+++ b/drivers/scsi/be2iscsi/Kconfig
-@@ -1,9 +1,9 @@
- config BE2ISCSI
--	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
-+	tristate "Emulex 10Gbps iSCSI - BladeEngine 2"
- 	depends on PCI && SCSI && NET
- 	select SCSI_ISCSI_ATTRS
- 	select ISCSI_BOOT_SYSFS
- 
- 	help
--	This driver implements the iSCSI functionality for ServerEngines'
-+	This driver implements the iSCSI functionality for Emulex
- 	10Gbps Storage adapter - BladeEngine 2.
-diff --git a/drivers/scsi/be2iscsi/Makefile b/drivers/scsi/be2iscsi/Makefile
-index c11f443..d0488ea 100644
---- a/drivers/scsi/be2iscsi/Makefile
-+++ b/drivers/scsi/be2iscsi/Makefile
-@@ -1,5 +1,5 @@
- #
--# Makefile to build the iSCSI driver for ServerEngine's BladeEngine.
-+# Makefile to build the iSCSI driver for Emulex OneConnect.
- #
- #
- 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 3207009..77f992e 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -10,7 +10,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 185391a..2778089 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -10,7 +10,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index cdfbc5c..4bfca35 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -10,7 +10,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 2f07007..b7087ba 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -12,7 +12,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7a6dbfb..2e6abe7 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -12,7 +12,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-@@ -50,7 +50,7 @@ static unsigned int enable_msix = 1;
- 
- MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
- MODULE_VERSION(BUILD_STR);
--MODULE_AUTHOR("Avago Technologies");
-+MODULE_AUTHOR("Emulex Corporation");
- MODULE_LICENSE("GPL");
- module_param(be_iopoll_budget, int, 0);
- module_param(enable_msix, int, 0);
-@@ -552,7 +552,7 @@ MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
- 
- static struct scsi_host_template beiscsi_sht = {
- 	.module = THIS_MODULE,
--	.name = "Avago Technologies 10Gbe open-iscsi Initiator Driver",
-+	.name = "Emulex 10Gbe open-iscsi Initiator Driver",
- 	.proc_name = DRV_NAME,
- 	.queuecommand = iscsi_queuecommand,
- 	.change_queue_depth = scsi_change_queue_depth,
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index b8c0c78..51366de 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -12,7 +12,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-@@ -37,7 +37,7 @@
- 
- #define DRV_NAME		"be2iscsi"
- #define BUILD_STR		"10.6.0.0"
--#define BE_NAME			"Avago Technologies OneConnect" \
-+#define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
- 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index ca4016f..1b2bd04 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -12,7 +12,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index b58a7de..afa326d 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -1,5 +1,5 @@
- /**
-- * Copyright (C) 2005 - 2015 Avago Technologies
-+ * Copyright (C) 2005 - 2015 Emulex
-  * All rights reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -12,7 +12,7 @@
-  * Contact Information:
-  * linux-drivers@avagotech.com
-  *
-- * Avago Technologies
-+ * Emulex
-  * 3333 Susan Street
-  * Costa Mesa, CA 92626
-  */
--- 
-1.8.3.1
+Can't you just use
+if (spin_is_locked(io_lock))
+   spin_unlock_irqrestore(io_lock, flags);
 
+
+> =20
+>  	atomic_dec(&fnic->in_flight);
+
+Johannes
+
+--=20
+Johannes Thumshirn                                       Storage
+jthumshirn@suse.de                             +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
