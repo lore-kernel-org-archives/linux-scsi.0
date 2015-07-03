@@ -1,57 +1,138 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
-Date: Fri, 3 Jul 2015 16:28:25 +0000
-Message-ID: <BY2PR0301MB1654779EEF1205C4A009C5F6A0960@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1435741448-29070-1-git-send-email-vkuznets@redhat.com>
- <20150703161903.GA20449@infradead.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: blk-mq vs kmemleak
+Date: Fri, 3 Jul 2015 10:04:00 -0700
+Message-ID: <5596C080.4050009@sandisk.com>
+References: <20150703161137.GA10438@codemonkey.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20150703161903.GA20449@infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Christoph Hellwig <hch@infradead.org>, Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
- Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0083.outbound.protection.outlook.com ([65.55.169.83]:35936
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754851AbbGCREG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Jul 2015 13:04:06 -0400
+In-Reply-To: <20150703161137.GA10438@codemonkey.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Jones <davej@codemonkey.org.uk>, Catalin Marinas <catalin.marinas@arm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 07/03/15 09:11, Dave Jones wrote:
+> After a fuzzing run recently, I noticed that the machine had oom'd, and
+> killed everything, but there was still 3GB of memory still in use, that
+> I couldn't even reclaim with /proc/sys/vm/drop_caches
+>
+> So I enabled kmemleak. After applying this..
+>
+> diff --git a/mm/kmemleak.c b/mm/kmemleak.c
+> index cf79f110157c..6dc18dbad9ec 100644
+> --- a/mm/kmemleak.c
+> +++ b/mm/kmemleak.c
+> @@ -553,8 +553,8 @@ static struct kmemleak_object *create_object(unsigned long ptr, size_t size,
+>
+>          object = kmem_cache_alloc(object_cache, gfp_kmemleak_mask(gfp));
+>          if (!object) {
+> -               pr_warning("Cannot allocate a kmemleak_object structure\n");
+> -               kmemleak_disable();
+> +               //pr_warning("Cannot allocate a kmemleak_object structure\n");
+> +               //kmemleak_disable();
+>                  return NULL;
+>          }
+>
+> otherwise it would disable itself within a minute of runtime.
+>
+> I notice now that I'm seeing a lot of traces like this..
+>
+>
+> unreferenced object 0xffff8800ba8202c0 (size 320):
+>    comm "kworker/u4:1", pid 38, jiffies 4294741176 (age 46887.690s)
+>    hex dump (first 32 bytes):
+>      21 43 65 87 00 00 00 00 00 00 00 00 00 00 00 00  !Ce.............
+>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>    backtrace:
+>      [<ffffffff8969b80e>] kmemleak_alloc+0x4e/0xb0
+>      [<ffffffff891b3e37>] kmem_cache_alloc+0x107/0x200
+>      [<ffffffff8916528d>] mempool_alloc_slab+0x1d/0x30
+>      [<ffffffff89165963>] mempool_alloc+0x63/0x180
+>      [<ffffffff8945f85a>] scsi_sg_alloc+0x4a/0x50
+>      [<ffffffff89323f0e>] __sg_alloc_table+0x11e/0x180
+>      [<ffffffff8945dc03>] scsi_alloc_sgtable+0x43/0x90
+>      [<ffffffff8945dc81>] scsi_init_sgtable+0x31/0x80
+>      [<ffffffff8945dd1a>] scsi_init_io+0x4a/0x1c0
+>      [<ffffffff8946da59>] sd_init_command+0x59/0xe40
+>      [<ffffffff8945df81>] scsi_setup_cmnd+0xf1/0x160
+>      [<ffffffff8945e75c>] scsi_queue_rq+0x57c/0x6a0
+>      [<ffffffff892f60b8>] __blk_mq_run_hw_queue+0x1d8/0x390
+>      [<ffffffff892f5e5e>] blk_mq_run_hw_queue+0x9e/0x120
+>      [<ffffffff892f7524>] blk_mq_insert_requests+0xd4/0x1a0
+>      [<ffffffff892f8273>] blk_mq_flush_plug_list+0x123/0x140
+>
+> unreferenced object 0xffff8800ba824800 (size 640):
+>    comm "trinity-c2", pid 3687, jiffies 4294843075 (age 46785.966s)
+>    hex dump (first 32 bytes):
+>      21 43 65 87 00 00 00 00 00 00 00 00 00 00 00 00  !Ce.............
+>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>    backtrace:
+>      [<ffffffff8969b80e>] kmemleak_alloc+0x4e/0xb0
+>      [<ffffffff891b3e37>] kmem_cache_alloc+0x107/0x200
+>      [<ffffffff8916528d>] mempool_alloc_slab+0x1d/0x30
+>      [<ffffffff89165963>] mempool_alloc+0x63/0x180
+>      [<ffffffff8945f85a>] scsi_sg_alloc+0x4a/0x50
+>      [<ffffffff89323f0e>] __sg_alloc_table+0x11e/0x180
+>      [<ffffffff8945dc03>] scsi_alloc_sgtable+0x43/0x90
+>      [<ffffffff8945dc81>] scsi_init_sgtable+0x31/0x80
+>      [<ffffffff8945dd1a>] scsi_init_io+0x4a/0x1c0
+>      [<ffffffff8946da59>] sd_init_command+0x59/0xe40
+>      [<ffffffff8945df81>] scsi_setup_cmnd+0xf1/0x160
+>      [<ffffffff8945e75c>] scsi_queue_rq+0x57c/0x6a0
+>      [<ffffffff892f60b8>] __blk_mq_run_hw_queue+0x1d8/0x390
+>      [<ffffffff892f5e5e>] blk_mq_run_hw_queue+0x9e/0x120
+>      [<ffffffff892f7524>] blk_mq_insert_requests+0xd4/0x1a0
+>      [<ffffffff892f8273>] blk_mq_flush_plug_list+0x123/0x140
+>
+> unreferenced object 0xffff8800a9fe6780 (size 2560):
+>    comm "kworker/1:1H", pid 171, jiffies 4294843118 (age 46785.923s)
+>    hex dump (first 32 bytes):
+>      21 43 65 87 00 00 00 00 00 00 00 00 00 00 00 00  !Ce.............
+>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>    backtrace:
+>      [<ffffffff8969b80e>] kmemleak_alloc+0x4e/0xb0
+>      [<ffffffff891b3e37>] kmem_cache_alloc+0x107/0x200
+>      [<ffffffff8916528d>] mempool_alloc_slab+0x1d/0x30
+>      [<ffffffff89165963>] mempool_alloc+0x63/0x180
+>      [<ffffffff8945f85a>] scsi_sg_alloc+0x4a/0x50
+>      [<ffffffff89323f0e>] __sg_alloc_table+0x11e/0x180
+>      [<ffffffff8945dc03>] scsi_alloc_sgtable+0x43/0x90
+>      [<ffffffff8945dc81>] scsi_init_sgtable+0x31/0x80
+>      [<ffffffff8945dd1a>] scsi_init_io+0x4a/0x1c0
+>      [<ffffffff8946da59>] sd_init_command+0x59/0xe40
+>      [<ffffffff8945df81>] scsi_setup_cmnd+0xf1/0x160
+>      [<ffffffff8945e75c>] scsi_queue_rq+0x57c/0x6a0
+>      [<ffffffff892f60b8>] __blk_mq_run_hw_queue+0x1d8/0x390
+>      [<ffffffff892f66b2>] blk_mq_run_work_fn+0x12/0x20
+>      [<ffffffff8908eba7>] process_one_work+0x147/0x420
+>      [<ffffffff8908f209>] worker_thread+0x69/0x470
+>
+> The sizes vary, but the hex dump is always the same.
+>
+> What's the usual completion path where these would get deallocated ?
+> I'm wondering if there's just some annotation missing to appease kmemleak,
+> because I'm seeing thousands of these.
+>
+> Or it could be a real leak, but it seems surprising no-one else is complaining.
 
+(+Catalin)
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Friday, July 3, 2015 9:19 AM
-> To: Vitaly Kuznetsov
-> Cc: linux-scsi@vger.kernel.org; Long Li; KY Srinivasan; Haiyang Zhang; James
-> E.J. Bottomley; devel@linuxdriverproject.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
-> 
-> On Wed, Jul 01, 2015 at 11:04:08AM +0200, Vitaly Kuznetsov wrote:
-> > SPC-2/3/4 specs state that "The standard INQUIRY data (see table ...)
-> > shall contain at least 36 bytes". Hyper-V host doesn't always honor this
-> > requirement, e.g. when there is no physical device present at a particular
-> > LUN host sets Peripheral qualifier to 011b and Additional length to 0
-> > (thus making the reply 5-bytes long). Upper level SCSI stack complains
-> > with 'INQUIRY result too short (5), using 36'. Fix the issue by mangling
-> > Additional length field in host's reply at the driver level.
-> 
-> This looks like a big mess, and usage of phys_to_virt is not generally
-> safe to start with.
-> 
-> If HyperV really is that broken the warning seems correct, but if you
-> really have to get rid of it we could add a blist flag to not issue
-> the warning in the core code instead of hacking around it in the driver.
+Dave, with which kernel version has this behavior been observed ?
 
-Agreed. We have fixed this issue in win10 and I am trying to get the fix backported.
+Catalin, can you recommend which patches Dave Jones should apply to 
+kmemleak ? A few weeks ago I had noticed similar kmemleak reports. 
+However, when I reran my test with kmemleak disabled memory usage was 
+stable. See also 
+https://www.redhat.com/archives/dm-devel/2015-May/msg00198.html.
 
-Regards,
+Thanks,
 
-K. Y
+Bart.
+
