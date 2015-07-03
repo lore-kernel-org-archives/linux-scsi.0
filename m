@@ -1,28 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] we added changes in fnic driver patch 1.6.0.16 to
- acquire io_req_lock in fnic_queuecommand() before issuing I/O so that io
- completion is serialized. But when releasing the lock we check for the I/O
- flags and this could be modified if IO abort occurs before I/O completion.
- In this case we wont release the lock and causes deadlock in some scenerios.
- Using the local variable to check the IO lock status will resolve the
- problem.
-Date: Fri, 3 Jul 2015 08:21:35 -0700
-Message-ID: <20150703152135.GA4238@infradead.org>
-References: <1435872835-30656-1-git-send-email-hishah@cisco.com>
+Subject: Re: [PATCH 1/6] Add refcount to sas_device struct
+Date: Fri, 3 Jul 2015 08:24:00 -0700
+Message-ID: <20150703152400.GA4472@infradead.org>
+References: <1431661322-3097935-1-git-send-email-calvinowens@fb.com>
+ <1433821856-2815280-1-git-send-email-calvinowens@fb.com>
+ <1433821856-2815280-2-git-send-email-calvinowens@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56235 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:56305 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743AbbGCPVg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2015 11:21:36 -0400
+	with ESMTP id S1755831AbbGCPYC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2015 11:24:02 -0400
 Content-Disposition: inline
-In-Reply-To: <1435872835-30656-1-git-send-email-hishah@cisco.com>
+In-Reply-To: <1433821856-2815280-2-git-send-email-calvinowens@fb.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hiral Shah <hishah@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>, Anil Chintalapati <achintal@cisco.com>
+To: Calvin Owens <calvinowens@fb.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Please use a descriptive one line Subject line and put the rest of
-your changelog into the message body.
+On Mon, Jun 08, 2015 at 08:50:51PM -0700, Calvin Owens wrote:
+> These objects can be referenced concurrently throughout the driver, we
+> need a way to make sure threads can't delete them out from under each
+> other.
+> 
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
 
+Thsi doesn't make sense without users of the refcount, and should be
+squashed into the patch actually using the refcounting.
