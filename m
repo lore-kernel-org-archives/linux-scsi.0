@@ -1,67 +1,34 @@
-From: Hiral Shah <hishah@cisco.com>
-Subject: [PATCH 1/1] we added changes in fnic driver patch 1.6.0.16 to acquire io_req_lock in fnic_queuecommand() before issuing I/O so that io completion is serialized. But when releasing the lock we check for the I/O flags and this could be modified if IO abort occurs before I/O completion. In this case we wont release the lock and causes deadlock in some scenerios. Using the local variable to check the IO lock status will resolve the problem.
-Date: Thu,  2 Jul 2015 14:33:55 -0700
-Message-ID: <1435872835-30656-1-git-send-email-hishah@cisco.com>
+From: Michael Neuling <mikey@neuling.org>
+Subject: Re: [PATCH 1/2] cxlflash: Base superpipe support
+Date: Fri, 03 Jul 2015 13:47:01 +1000
+Message-ID: <1435895221.15310.7.camel@neuling.org>
+References: <1434753473-6218-1-git-send-email-mrochs@linux.vnet.ibm.com>
+	 <1435820412.28784.45.camel@neuling.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-5.cisco.com ([173.37.86.76]:35154 "EHLO
-	rcdn-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002AbbGBVtX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2015 17:49:23 -0400
+Received: from ozlabs.org ([103.22.144.67]:41609 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754436AbbGCDrE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2015 23:47:04 -0400
+In-Reply-To: <1435820412.28784.45.camel@neuling.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hiral Shah <hishah@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Anil Chintalapati <achintal@cisco.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, hch@infradead.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Signed-off-by: Hiral Shah <hishah@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
-Signed-off-by: Anil Chintalapati <achintal@cisco.com>
----
- drivers/scsi/fnic/fnic.h      | 2 +-
- drivers/scsi/fnic/fnic_scsi.c | 4 +++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+On Thu, 2015-07-02 at 17:00 +1000, Michael Neuling wrote:
+> > +struct dk_cxlflash_attach {
+> > +	struct dk_cxlflash_hdr hdr;	/* Common fields */
+> > +	__u64 num_interrupts;		/* Requested number of interrupts */
+> > +	__u64 context_id;		/* Returned context */
+> 
+> Matt,
+> 
+> These ioctls seem to take a context id.  Why isn't that assumed from the
+> fd?  Why get it again from userspace?
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 26270c3..ce129e5 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.17"
-+#define DRV_VERSION		"1.6.0.17a"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 155b286..25436cd 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -425,6 +425,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	unsigned long ptr;
- 	struct fc_rport_priv *rdata;
- 	spinlock_t *io_lock = NULL;
-+	int io_lock_acquired = 0;
- 
- 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -518,6 +519,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	spin_lock_irqsave(io_lock, flags);
- 
- 	/* initialize rest of io_req */
-+	io_lock_acquired = 1;
- 	io_req->port_id = rport->port_id;
- 	io_req->start_time = jiffies;
- 	CMD_STATE(sc) = FNIC_IOREQ_CMD_PENDING;
-@@ -571,7 +573,7 @@ out:
- 		  (((u64)CMD_FLAGS(sc) >> 32) | CMD_STATE(sc)));
- 
- 	/* if only we issued IO, will we have the io lock */
--	if (CMD_FLAGS(sc) & FNIC_IO_INITIALIZED)
-+	if (io_lock_acquired)
- 		spin_unlock_irqrestore(io_lock, flags);
- 
- 	atomic_dec(&fnic->in_flight);
--- 
-1.8.5.4
+Sorry, ignore this.  I'm thinking about the wrong file descriptor.
 
+Mikey
