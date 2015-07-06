@@ -1,200 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/9] scsi_dh: add a common helper to get a scsi_device from a request_queue
-Date: Mon,  6 Jul 2015 16:15:03 +0200
-Message-ID: <1436192105-44064-8-git-send-email-hare@suse.de>
-References: <1436192105-44064-1-git-send-email-hare@suse.de>
+From: Nik Nyby <nikolas@gnu.org>
+Subject: [PATCH] aic7xxx: Fix typo in error message
+Date: Mon,  6 Jul 2015 10:59:48 -0400
+Message-ID: <1436194788-16185-1-git-send-email-nikolas@gnu.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51813 "EHLO mx2.suse.de"
+Received: from eggs.gnu.org ([208.118.235.92]:55427 "EHLO eggs.gnu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860AbbGFOPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jul 2015 10:15:11 -0400
-In-Reply-To: <1436192105-44064-1-git-send-email-hare@suse.de>
+	id S1751062AbbGFPAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jul 2015 11:00:03 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+	(envelope-from <nikolas@gnu.org>)
+	id 1ZC7sG-0004c8-6B
+	for linux-scsi@vger.kernel.org; Mon, 06 Jul 2015 11:00:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>
+To: hare@suse.de, linux-scsi@vger.kernel.org, trivial@kernel.org
+Cc: Nik Nyby <nikolas@gnu.org>
 
-From: Christoph Hellwig <hch@lst.de>
+This fixes "referenced" where it is spelled "referrenced".
 
-And cleanup the various messy opencoded versions of this.  Note that this
-moves the sdev_state checks outside the queue_lock coverage, but as
-we don't hold the lock over the activation they are only advisory anyway.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Nik Nyby <nikolas@gnu.org>
 ---
- drivers/scsi/scsi_dh.c | 99 +++++++++++++++++++++++---------------------------
- 1 file changed, 46 insertions(+), 53 deletions(-)
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index f0b100e..8cae1c9 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -281,6 +281,20 @@ int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
- }
- EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index c4829d8..64ab9ea 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -79,7 +79,7 @@ struct ahc_hard_error_entry {
  
-+static struct scsi_device *get_sdev_from_queue(struct request_queue *q)
-+{
-+	struct scsi_device *sdev;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		sdev = NULL;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return sdev;
-+}
-+
- /*
-  * scsi_dh_activate - activate the path associated with the scsi_device
-  *      corresponding to the given request queue.
-@@ -296,41 +310,37 @@ EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
-  */
- int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- {
--	int err = 0;
--	unsigned long flags;
- 	struct scsi_device *sdev;
--	struct device *dev = NULL;
-+	int err = SCSI_DH_NOSYS;
- 
--	spin_lock_irqsave(q->queue_lock, flags);
--	sdev = q->queuedata;
-+	sdev = get_sdev_from_queue(q);
- 	if (!sdev) {
--		spin_unlock_irqrestore(q->queue_lock, flags);
--		err = SCSI_DH_NOSYS;
- 		if (fn)
- 			fn(data, err);
- 		return err;
- 	}
- 
--	dev = get_device(&sdev->sdev_gendev);
--	if (!sdev->handler || !dev ||
--	    sdev->sdev_state == SDEV_CANCEL ||
-+	if (!sdev->handler)
-+		goto out_fn;
-+	if (sdev->sdev_state == SDEV_CANCEL ||
- 	    sdev->sdev_state == SDEV_DEL)
--		err = SCSI_DH_NOSYS;
--	if (sdev->sdev_state == SDEV_OFFLINE)
--		err = SCSI_DH_DEV_OFFLINED;
--	spin_unlock_irqrestore(q->queue_lock, flags);
-+		goto out_fn;
- 
--	if (err) {
--		if (fn)
--			fn(data, err);
--		goto out;
--	}
-+	err = SCSI_DH_DEV_OFFLINED;
-+	if (sdev->sdev_state == SDEV_OFFLINE)
-+		goto out_fn;
- 
- 	if (sdev->handler->activate)
- 		err = sdev->handler->activate(sdev, fn, data);
--out:
--	put_device(dev);
-+
-+out_put_device:
-+	put_device(&sdev->sdev_gendev);
- 	return err;
-+
-+out_fn:
-+	if (fn)
-+		fn(data, err);
-+	goto out_put_device;
- }
- EXPORT_SYMBOL_GPL(scsi_dh_activate);
- 
-@@ -346,21 +356,15 @@ EXPORT_SYMBOL_GPL(scsi_dh_activate);
-  */
- int scsi_dh_set_params(struct request_queue *q, const char *params)
- {
--	int err = -SCSI_DH_NOSYS;
--	unsigned long flags;
- 	struct scsi_device *sdev;
-+	int err = -SCSI_DH_NOSYS;
- 
--	spin_lock_irqsave(q->queue_lock, flags);
--	sdev = q->queuedata;
--	if (sdev->handler &&
--	    sdev->handler->set_params &&
--	    get_device(&sdev->sdev_gendev))
--		err = 0;
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	if (err)
-+	sdev = get_sdev_from_queue(q);
-+	if (!sdev)
- 		return err;
--	err = sdev->handler->set_params(sdev, params);
-+
-+	if (sdev->handler && sdev->handler->set_params)
-+		err = sdev->handler->set_params(sdev, params);
- 	put_device(&sdev->sdev_gendev);
- 	return err;
- }
-@@ -374,23 +378,19 @@ EXPORT_SYMBOL_GPL(scsi_dh_set_params);
-  */
- int scsi_dh_attach(struct request_queue *q, const char *name)
- {
--	unsigned long flags;
- 	struct scsi_device *sdev;
- 	struct scsi_device_handler *scsi_dh;
- 	int err = 0;
- 
--	scsi_dh = scsi_dh_lookup(name);
--	if (!scsi_dh)
--		return -EINVAL;
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	sdev = q->queuedata;
--	if (!sdev || !get_device(&sdev->sdev_gendev))
--		err = -ENODEV;
--	spin_unlock_irqrestore(q->queue_lock, flags);
-+	sdev = get_sdev_from_queue(q);
-+	if (!sdev)
-+		return -ENODEV;
- 
--	if (err)
--		return err;
-+	scsi_dh = scsi_dh_lookup(name);
-+	if (!scsi_dh) {
-+		err = -EINVAL;
-+		goto out_put_device;
-+	}
- 
- 	if (sdev->handler) {
- 		if (sdev->handler != scsi_dh)
-@@ -417,22 +417,15 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
-  */
- const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
- {
--	unsigned long flags;
- 	struct scsi_device *sdev;
- 	const char *handler_name = NULL;
- 
--	spin_lock_irqsave(q->queue_lock, flags);
--	sdev = q->queuedata;
--	if (!sdev || !get_device(&sdev->sdev_gendev))
--		sdev = NULL;
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
-+	sdev = get_sdev_from_queue(q);
- 	if (!sdev)
- 		return NULL;
- 
- 	if (sdev->handler)
- 		handler_name = kstrdup(sdev->handler->name, gfp);
--
- 	put_device(&sdev->sdev_gendev);
- 	return handler_name;
- }
+ static const struct ahc_hard_error_entry ahc_hard_errors[] = {
+ 	{ ILLHADDR,	"Illegal Host Access" },
+-	{ ILLSADDR,	"Illegal Sequencer Address referrenced" },
++	{ ILLSADDR,	"Illegal Sequencer Address referenced" },
+ 	{ ILLOPCODE,	"Illegal Opcode in sequencer program" },
+ 	{ SQPARERR,	"Sequencer Parity Error" },
+ 	{ DPARERR,	"Data-path Parity Error" },
 -- 
-1.8.5.2
+1.9.1
 
