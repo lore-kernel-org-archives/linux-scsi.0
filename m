@@ -1,22 +1,37 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH] csiostor:Make the function csio_ln_prep_ecwr have a
- return type of void
-Date: Mon, 6 Jul 2015 01:39:28 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D8E9913C@nice.asicdesigners.com>
-References: <1436141180-12872-1-git-send-email-xerofoify@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v1 1/3] target: Inline transport_get_sense_codes()
+Date: Mon, 06 Jul 2015 08:04:57 +0200
+Message-ID: <559A1A89.2090904@suse.de>
+References: <1436081471-667-1-git-send-email-sagig@mellanox.com> <1436081471-667-2-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:23269 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbbGFBjt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2015 21:39:49 -0400
-In-Reply-To: <1436141180-12872-1-git-send-email-xerofoify@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1436081471-667-2-git-send-email-sagig@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>, "JBottomley@odin.com" <JBottomley@odin.com>
-Cc: "davem@davemloft.net" <davem@davemloft.net>, Hariprasad S <hariprasad@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Acked-by: Anish Bhatt <anish@chelsio.com>
+On 07/05/2015 09:31 AM, Sagi Grimberg wrote:
+> From: Bart Van Assche <bart.vanassche@sandisk.com>
+>=20
+> Inline this function in its call site since it performs a trivial
+> task and since it is only called once.
+>=20
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
+>  drivers/target/target_core_transport.c | 16 ++--------------
+>  1 file changed, 2 insertions(+), 14 deletions(-)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
