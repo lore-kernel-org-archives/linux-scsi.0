@@ -1,37 +1,61 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v2 3/3] target: Use scsi helpers to build the sense data
- correctly
-Date: Mon, 6 Jul 2015 15:29:55 +0300
-Message-ID: <559A74C3.1070900@dev.mellanox.co.il>
-References: <1436169747-28834-1-git-send-email-sagig@mellanox.com>
- <1436169747-28834-4-git-send-email-sagig@mellanox.com>
- <20150706090654.GC15996@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v3 1/5] target: Inline transport_get_sense_codes()
+Date: Mon,  6 Jul 2015 16:15:04 +0300
+Message-ID: <1436188508-1539-2-git-send-email-sagig@mellanox.com>
+References: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150706090654.GC15996@infradead.org>
+In-Reply-To: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagig@mellanox.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>
+To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 7/6/2015 12:06 PM, Christoph Hellwig wrote:
-> On Mon, Jul 06, 2015 at 11:02:27AM +0300, Sagi Grimberg wrote:
->> Instead of open coding the sense buffer construction, use
->> scsi scsi_build_sense_buffer() and scsi_set_sense_information()
->> helpers which moved to scsi_common.
->>
->> This patch also fixes wrong setting of descriptor format sense data
->> for t10-pi integrity errors.
->
-> Please split this into three patches:
->
->   1) move the helpers to scsi_common.c
->   2) use helpers in the target code
->   3) always use descriptor-type sense data for PI errors
->
+From: Bart Van Assche <bart.vanassche@sandisk.com>
 
-Easy enough.
+Inline this function in its call site since it performs a trivial
+task and since it is only called once.
 
-Thanks.
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/target/target_core_transport.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 1bc8378..e895156 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2620,17 +2620,6 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
+ }
+ EXPORT_SYMBOL(transport_wait_for_tasks);
+ 
+-static int transport_get_sense_codes(
+-	struct se_cmd *cmd,
+-	u8 *asc,
+-	u8 *ascq)
+-{
+-	*asc = cmd->scsi_asc;
+-	*ascq = cmd->scsi_ascq;
+-
+-	return 0;
+-}
+-
+ static
+ void transport_err_sector_info(unsigned char *buffer, sector_t bad_sector)
+ {
+@@ -2824,9 +2813,8 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+ 		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+ 		/* Not Ready */
+ 		buffer[SPC_SENSE_KEY_OFFSET] = NOT_READY;
+-		transport_get_sense_codes(cmd, &asc, &ascq);
+-		buffer[SPC_ASC_KEY_OFFSET] = asc;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
++		buffer[SPC_ASC_KEY_OFFSET] = cmd->scsi_asc;
++		buffer[SPC_ASCQ_KEY_OFFSET] = cmd->scsi_ascq;
+ 		break;
+ 	case TCM_MISCOMPARE_VERIFY:
+ 		/* CURRENT ERROR */
+-- 
+1.8.4.3
