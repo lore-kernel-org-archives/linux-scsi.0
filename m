@@ -1,34 +1,66 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: [RESEND][PATCH] lpfc: fix model description
-Date: Mon, 6 Jul 2015 23:22:00 +0200
-Message-ID: <20150706232200.00006bd4@localhost>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v3 0/5] Target sense data handling modifications
+Date: Mon, 06 Jul 2015 15:51:05 -0700
+Message-ID: <1436223065.6666.7.camel@haakon3.risingtidesystems.com>
+References: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:58928 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753368AbbGFVWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jul 2015 17:22:49 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <james.smart@avagotech.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-Remove trailing space from model description.
+On Mon, 2015-07-06 at 16:15 +0300, Sagi Grimberg wrote:
+> This patch set modifies the target sense data handling.
+> First, cleanup transport_send_check_condition_and_sense()
+> by splitting the sense translation to a separate function.
+> Second, convert sense reason the switch statement to a table
+> driven code. Third, Use scsi common helpers to correctly set
+> the sense buffer. Last, Fix wrong setting of t10-pi errors
+> (non descriptor format).
+> 
+> Changes from v2:
+> - Pass sense_reason_t to scsi_translate_sense()
+> - Split patch 3:
+>   1) move the helpers to scsi_common.c
+>   2) use helpers in the target code
+>   3) always use descriptor-type sense data for PI errors
+> 
+> Changes from v1:
+> - Added Reviewed-by tags for patches 1,2
+> - Fixed compilation error after testing patch #3 on scsi/for-next
+>   branch. Moved scsi_sense_desc_find() to scsi_common as well (dependency)
+>   and also moved <asm/unaligned.h> include to scsi_common.h
+> 
+> Changes from v0:
+> - Added Bart's patches and converted my patch to apply over his
+> - Moved scsi sense helpers to scsi_common
+> 
+> Bart Van Assche (2):
+>   target: Inline transport_get_sense_codes()
+>   target: Split transport_send_check_condition_and_sense()
+> 
+> Sagi Grimberg (3):
+>   scsi: Move sense handling routines to scsi_common
+>   target: Use scsi helpers to build the sense data correctly
+>   target: Fix wrong setting of sense format for PI errors
+> 
+>  drivers/scsi/scsi_common.c             |  98 ++++++++
+>  drivers/scsi/scsi_error.c              |  99 +-------
+>  drivers/target/target_core_spc.c       |  31 +--
+>  drivers/target/target_core_transport.c | 399 ++++++++++++---------------------
+>  include/scsi/scsi_common.h             |   5 +
+>  include/scsi/scsi_eh.h                 |   7 +-
+>  include/target/target_core_base.h      |   1 +
+>  7 files changed, 256 insertions(+), 384 deletions(-)
+> 
 
-Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
-Reviewed-By: James Smart <james.smart@avagotech.com>
+Nice series to make scsi-core and target-core use common code.  ;)
 
-diff -up 4.0/drivers/scsi/lpfc.orig/lpfc_init.c 4.0/drivers/scsi/lpfc/lpfc_init.c
---- 4.0/drivers/scsi/lpfc.orig/lpfc_init.c	2015-04-15 06:18:24.673045138 +0200
-+++ 4.0/drivers/scsi/lpfc/lpfc_init.c	2015-04-22 21:03:39.203230409 +0200
-@@ -2253,7 +2253,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba
- 				phba->Port);
- 		else if (max_speed == 0)
- 			snprintf(descp, 255,
--				"Emulex %s %s %s ",
-+				"Emulex %s %s %s",
- 				m.name, m.bus, m.function);
- 		else
- 			snprintf(descp, 255,
+Applied to target-pending/for-next.
+
+hch + jejb, please let me know if you have any objections to taking this
+through target-pending.
