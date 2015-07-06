@@ -1,463 +1,435 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v2 3/3] target: Use scsi helpers to build the sense data correctly
-Date: Mon,  6 Jul 2015 11:02:27 +0300
-Message-ID: <1436169747-28834-4-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v2 2/3] target: Split transport_send_check_condition_and_sense()
+Date: Mon,  6 Jul 2015 11:02:26 +0300
+Message-ID: <1436169747-28834-3-git-send-email-sagig@mellanox.com>
 References: <1436169747-28834-1-git-send-email-sagig@mellanox.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:58223 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753722AbbGFIDA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jul 2015 04:03:00 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1436169747-28834-1-git-send-email-sagig@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
-Instead of open coding the sense buffer construction, use
-scsi scsi_build_sense_buffer() and scsi_set_sense_information()
-helpers which moved to scsi_common.
+From: Bart Van Assche <bart.vanassche@sandisk.com>
 
-This patch also fixes wrong setting of descriptor format sense data
-for t10-pi integrity errors.
+Move the code for translating a sense_reason_t code into a SCSI status
+ASC and ASCQ codes from transport_send_check_condition_and_sense() into
+the new function translate_sense_reason(). Convert the switch statement
+that performs the translation into table-driven code.
 
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_common.c             | 98 +++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_error.c              | 99 +---------------------------------
- drivers/target/target_core_spc.c       | 31 ++---------
- drivers/target/target_core_transport.c | 24 +++------
- include/scsi/scsi_common.h             |  5 ++
- include/scsi/scsi_eh.h                 |  7 +--
- include/target/target_core_base.h      |  9 +---
- 7 files changed, 118 insertions(+), 155 deletions(-)
+ drivers/target/target_core_transport.c | 382 +++++++++++++--------------------
+ 1 file changed, 147 insertions(+), 235 deletions(-)
 
-diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-index 2ff0922..41432c1 100644
---- a/drivers/scsi/scsi_common.c
-+++ b/drivers/scsi/scsi_common.c
-@@ -5,6 +5,7 @@
- #include <linux/bug.h>
- #include <linux/kernel.h>
- #include <linux/string.h>
-+#include <asm/unaligned.h>
- #include <scsi/scsi_common.h>
- 
- /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
-@@ -176,3 +177,100 @@ bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 	return true;
- }
- EXPORT_SYMBOL(scsi_normalize_sense);
-+
-+/**
-+ * scsi_sense_desc_find - search for a given descriptor type in	descriptor sense data format.
-+ * @sense_buffer:	byte array of descriptor format sense data
-+ * @sb_len:		number of valid bytes in sense_buffer
-+ * @desc_type:		value of descriptor type to find
-+ *			(e.g. 0 -> information)
-+ *
-+ * Notes:
-+ *	only valid when sense data is in descriptor format
-+ *
-+ * Return value:
-+ *	pointer to start of (first) descriptor if found else NULL
-+ */
-+const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
-+				int desc_type)
-+{
-+	int add_sen_len, add_len, desc_len, k;
-+	const u8 * descp;
-+
-+	if ((sb_len < 8) || (0 == (add_sen_len = sense_buffer[7])))
-+		return NULL;
-+	if ((sense_buffer[0] < 0x72) || (sense_buffer[0] > 0x73))
-+		return NULL;
-+	add_sen_len = (add_sen_len < (sb_len - 8)) ?
-+			add_sen_len : (sb_len - 8);
-+	descp = &sense_buffer[8];
-+	for (desc_len = 0, k = 0; k < add_sen_len; k += desc_len) {
-+		descp += desc_len;
-+		add_len = (k < (add_sen_len - 1)) ? descp[1]: -1;
-+		desc_len = add_len + 2;
-+		if (descp[0] == desc_type)
-+			return descp;
-+		if (add_len < 0) // short descriptor ??
-+			break;
-+	}
-+	return NULL;
-+}
-+EXPORT_SYMBOL(scsi_sense_desc_find);
-+
-+/**
-+ * scsi_build_sense_buffer - build sense data in a buffer
-+ * @desc:	Sense format (non zero == descriptor format,
-+ *              0 == fixed format)
-+ * @buf:	Where to build sense data
-+ * @key:	Sense key
-+ * @asc:	Additional sense code
-+ * @ascq:	Additional sense code qualifier
-+ *
-+ **/
-+void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
-+{
-+	if (desc) {
-+		buf[0] = 0x72;	/* descriptor, current */
-+		buf[1] = key;
-+		buf[2] = asc;
-+		buf[3] = ascq;
-+		buf[7] = 0;
-+	} else {
-+		buf[0] = 0x70;	/* fixed, current */
-+		buf[2] = key;
-+		buf[7] = 0xa;
-+		buf[12] = asc;
-+		buf[13] = ascq;
-+	}
-+}
-+EXPORT_SYMBOL(scsi_build_sense_buffer);
-+
-+/**
-+ * scsi_set_sense_information - set the information field in a
-+ *		formatted sense data buffer
-+ * @buf:	Where to build sense data
-+ * @info:	64-bit information value to be set
-+ *
-+ **/
-+void scsi_set_sense_information(u8 *buf, u64 info)
-+{
-+	if ((buf[0] & 0x7f) == 0x72) {
-+		u8 *ucp, len;
-+
-+		len = buf[7];
-+		ucp = (char *)scsi_sense_desc_find(buf, len + 8, 0);
-+		if (!ucp) {
-+			buf[7] = len + 0xa;
-+			ucp = buf + 8 + len;
-+		}
-+		ucp[0] = 0;
-+		ucp[1] = 0xa;
-+		ucp[2] = 0x80; /* Valid bit */
-+		ucp[3] = 0;
-+		put_unaligned_be64(info, &ucp[4]);
-+	} else if ((buf[0] & 0x7f) == 0x70) {
-+		buf[0] |= 0x80;
-+		put_unaligned_be64(info, &buf[3]);
-+	}
-+}
-+EXPORT_SYMBOL(scsi_set_sense_information);
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 106884a..6e6b2d2 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -26,7 +26,6 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/jiffies.h>
--#include <asm/unaligned.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -34,6 +33,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
-+#include <scsi/scsi_common.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
-@@ -2408,45 +2408,6 @@ bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
- EXPORT_SYMBOL(scsi_command_normalize_sense);
- 
- /**
-- * scsi_sense_desc_find - search for a given descriptor type in	descriptor sense data format.
-- * @sense_buffer:	byte array of descriptor format sense data
-- * @sb_len:		number of valid bytes in sense_buffer
-- * @desc_type:		value of descriptor type to find
-- *			(e.g. 0 -> information)
-- *
-- * Notes:
-- *	only valid when sense data is in descriptor format
-- *
-- * Return value:
-- *	pointer to start of (first) descriptor if found else NULL
-- */
--const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
--				int desc_type)
--{
--	int add_sen_len, add_len, desc_len, k;
--	const u8 * descp;
--
--	if ((sb_len < 8) || (0 == (add_sen_len = sense_buffer[7])))
--		return NULL;
--	if ((sense_buffer[0] < 0x72) || (sense_buffer[0] > 0x73))
--		return NULL;
--	add_sen_len = (add_sen_len < (sb_len - 8)) ?
--			add_sen_len : (sb_len - 8);
--	descp = &sense_buffer[8];
--	for (desc_len = 0, k = 0; k < add_sen_len; k += desc_len) {
--		descp += desc_len;
--		add_len = (k < (add_sen_len - 1)) ? descp[1]: -1;
--		desc_len = add_len + 2;
--		if (descp[0] == desc_type)
--			return descp;
--		if (add_len < 0) // short descriptor ??
--			break;
--	}
--	return NULL;
--}
--EXPORT_SYMBOL(scsi_sense_desc_find);
--
--/**
-  * scsi_get_sense_info_fld - get information field from sense data (either fixed or descriptor format)
-  * @sense_buffer:	byte array of sense data
-  * @sb_len:		number of valid bytes in sense_buffer
-@@ -2495,61 +2456,3 @@ int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
- 	}
- }
- EXPORT_SYMBOL(scsi_get_sense_info_fld);
--
--/**
-- * scsi_build_sense_buffer - build sense data in a buffer
-- * @desc:	Sense format (non zero == descriptor format,
-- * 		0 == fixed format)
-- * @buf:	Where to build sense data
-- * @key:	Sense key
-- * @asc:	Additional sense code
-- * @ascq:	Additional sense code qualifier
-- *
-- **/
--void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
--{
--	if (desc) {
--		buf[0] = 0x72;	/* descriptor, current */
--		buf[1] = key;
--		buf[2] = asc;
--		buf[3] = ascq;
--		buf[7] = 0;
--	} else {
--		buf[0] = 0x70;	/* fixed, current */
--		buf[2] = key;
--		buf[7] = 0xa;
--		buf[12] = asc;
--		buf[13] = ascq;
--	}
--}
--EXPORT_SYMBOL(scsi_build_sense_buffer);
--
--/**
-- * scsi_set_sense_information - set the information field in a
-- *		formatted sense data buffer
-- * @buf:	Where to build sense data
-- * @info:	64-bit information value to be set
-- *
-- **/
--void scsi_set_sense_information(u8 *buf, u64 info)
--{
--	if ((buf[0] & 0x7f) == 0x72) {
--		u8 *ucp, len;
--
--		len = buf[7];
--		ucp = (char *)scsi_sense_desc_find(buf, len + 8, 0);
--		if (!ucp) {
--			buf[7] = len + 0xa;
--			ucp = buf + 8 + len;
--		}
--		ucp[0] = 0;
--		ucp[1] = 0xa;
--		ucp[2] = 0x80; /* Valid bit */
--		ucp[3] = 0;
--		put_unaligned_be64(info, &ucp[4]);
--	} else if ((buf[0] & 0x7f) == 0x70) {
--		buf[0] |= 0x80;
--		put_unaligned_be64(info, &buf[3]);
--	}
--}
--EXPORT_SYMBOL(scsi_set_sense_information);
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index b074443..c43dcbf 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1157,32 +1157,11 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
- 	if (!rbuf)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq)) {
--		/*
--		 * CURRENT ERROR, UNIT ATTENTION
--		 */
--		buf[0] = 0x70;
--		buf[SPC_SENSE_KEY_OFFSET] = UNIT_ATTENTION;
--
--		/*
--		 * The Additional Sense Code (ASC) from the UNIT ATTENTION
--		 */
--		buf[SPC_ASC_KEY_OFFSET] = ua_asc;
--		buf[SPC_ASCQ_KEY_OFFSET] = ua_ascq;
--		buf[7] = 0x0A;
--	} else {
--		/*
--		 * CURRENT ERROR, NO SENSE
--		 */
--		buf[0] = 0x70;
--		buf[SPC_SENSE_KEY_OFFSET] = NO_SENSE;
--
--		/*
--		 * NO ADDITIONAL SENSE INFORMATION
--		 */
--		buf[SPC_ASC_KEY_OFFSET] = 0x00;
--		buf[7] = 0x0A;
--	}
-+	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))
-+		scsi_build_sense_buffer(0, buf, UNIT_ATTENTION,
-+					ua_asc, ua_ascq);
-+	else
-+		scsi_build_sense_buffer(0, buf, NO_SENSE, 0x0, 0x0);
- 
- 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
- 	transport_kunmap_data_sg(cmd);
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index bbd0e57..8822da1 100644
+index e895156..bbd0e57 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2620,24 +2620,12 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
+@@ -2633,13 +2633,154 @@ void transport_err_sector_info(unsigned char *buffer, sector_t bad_sector)
+ 	put_unaligned_be64(bad_sector, &buffer[12]);
  }
- EXPORT_SYMBOL(transport_wait_for_tasks);
  
--static
--void transport_err_sector_info(unsigned char *buffer, sector_t bad_sector)
--{
--	/* Place failed LBA in sense data information descriptor 0. */
--	buffer[SPC_ADD_SENSE_LEN_OFFSET] = 0xc;
--	buffer[SPC_DESC_TYPE_OFFSET] = 0; /* Information */
--	buffer[SPC_ADDITIONAL_DESC_LEN_OFFSET] = 0xa;
--	buffer[SPC_VALIDITY_OFFSET] = 0x80;
--
--	/* Descriptor Information: failing sector */
--	put_unaligned_be64(bad_sector, &buffer[12]);
--}
--
- struct sense_info {
- 	u8 key;
- 	u8 asc;
- 	u8 ascq;
- 	bool add_sector_info;
-+	int desc_format;
- };
- 
- static const struct sense_info sense_info_table[] = {
-@@ -2721,18 +2709,21 @@ static const struct sense_info sense_info_table[] = {
- 		.asc = 0x10,
- 		.ascq = 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
- 		.add_sector_info = true,
-+		.desc_format = 1,
- 	},
- 	[TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] = {
- 		.key = ILLEGAL_REQUEST,
- 		.asc = 0x10,
- 		.ascq = 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
- 		.add_sector_info = true,
-+		.desc_format = 1,
- 	},
- 	[TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] = {
- 		.key = ILLEGAL_REQUEST,
- 		.asc = 0x10,
- 		.ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
- 		.add_sector_info = true,
-+		.desc_format = 1,
- 	},
- 	[TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE] = {
- 		/*
-@@ -2758,7 +2749,6 @@ static void translate_sense_reason(struct se_cmd *cmd, int r)
- 		si = &sense_info_table[(__force int)
- 				       TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE];
- 
--	buffer[SPC_SENSE_KEY_OFFSET] = si->key;
- 	if (r == (__force int)TCM_CHECK_CONDITION_UNIT_ATTENTION) {
- 		core_scsi3_ua_for_check_condition(cmd, &asc, &ascq);
- 		WARN_ON_ONCE(asc == 0);
-@@ -2770,10 +2760,10 @@ static void translate_sense_reason(struct se_cmd *cmd, int r)
- 		asc = si->asc;
- 		ascq = si->ascq;
- 	}
--	buffer[SPC_ASC_KEY_OFFSET] = asc;
--	buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
++struct sense_info {
++	u8 key;
++	u8 asc;
++	u8 ascq;
++	bool add_sector_info;
++};
 +
-+	scsi_build_sense_buffer(si->desc_format, buffer, si->key, asc, ascq);
- 	if (si->add_sector_info)
--		transport_err_sector_info(cmd->sense_buffer, cmd->bad_sector);
-+		scsi_set_sense_information(buffer, cmd->bad_sector);
- }
- 
++static const struct sense_info sense_info_table[] = {
++	[TCM_NO_SENSE] = {
++		.key = NOT_READY
++	},
++	[TCM_NON_EXISTENT_LUN] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x25 /* LOGICAL UNIT NOT SUPPORTED */
++	},
++	[TCM_UNSUPPORTED_SCSI_OPCODE] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x20, /* INVALID COMMAND OPERATION CODE */
++	},
++	[TCM_SECTOR_COUNT_TOO_MANY] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x20, /* INVALID COMMAND OPERATION CODE */
++	},
++	[TCM_UNKNOWN_MODE_PAGE] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x24, /* INVALID FIELD IN CDB */
++	},
++	[TCM_CHECK_CONDITION_ABORT_CMD] = {
++		.key = ABORTED_COMMAND,
++		.asc = 0x29, /* BUS DEVICE RESET FUNCTION OCCURRED */
++		.ascq = 0x03,
++	},
++	[TCM_INCORRECT_AMOUNT_OF_DATA] = {
++		.key = ABORTED_COMMAND,
++		.asc = 0x0c, /* WRITE ERROR */
++		.ascq = 0x0d, /* NOT ENOUGH UNSOLICITED DATA */
++	},
++	[TCM_INVALID_CDB_FIELD] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x24, /* INVALID FIELD IN CDB */
++	},
++	[TCM_INVALID_PARAMETER_LIST] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x26, /* INVALID FIELD IN PARAMETER LIST */
++	},
++	[TCM_PARAMETER_LIST_LENGTH_ERROR] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x1a, /* PARAMETER LIST LENGTH ERROR */
++	},
++	[TCM_UNEXPECTED_UNSOLICITED_DATA] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x0c, /* WRITE ERROR */
++		.ascq = 0x0c, /* UNEXPECTED_UNSOLICITED_DATA */
++	},
++	[TCM_SERVICE_CRC_ERROR] = {
++		.key = ABORTED_COMMAND,
++		.asc = 0x47, /* PROTOCOL SERVICE CRC ERROR */
++		.ascq = 0x05, /* N/A */
++	},
++	[TCM_SNACK_REJECTED] = {
++		.key = ABORTED_COMMAND,
++		.asc = 0x11, /* READ ERROR */
++		.ascq = 0x13, /* FAILED RETRANSMISSION REQUEST */
++	},
++	[TCM_WRITE_PROTECTED] = {
++		.key = DATA_PROTECT,
++		.asc = 0x27, /* WRITE PROTECTED */
++	},
++	[TCM_ADDRESS_OUT_OF_RANGE] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x21, /* LOGICAL BLOCK ADDRESS OUT OF RANGE */
++	},
++	[TCM_CHECK_CONDITION_UNIT_ATTENTION] = {
++		.key = UNIT_ATTENTION,
++	},
++	[TCM_CHECK_CONDITION_NOT_READY] = {
++		.key = NOT_READY,
++	},
++	[TCM_MISCOMPARE_VERIFY] = {
++		.key = MISCOMPARE,
++		.asc = 0x1d, /* MISCOMPARE DURING VERIFY OPERATION */
++		.ascq = 0x00,
++	},
++	[TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x10,
++		.ascq = 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
++		.add_sector_info = true,
++	},
++	[TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x10,
++		.ascq = 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
++		.add_sector_info = true,
++	},
++	[TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] = {
++		.key = ILLEGAL_REQUEST,
++		.asc = 0x10,
++		.ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
++		.add_sector_info = true,
++	},
++	[TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE] = {
++		/*
++		 * Returning ILLEGAL REQUEST would cause immediate IO errors on
++		 * Solaris initiators.  Returning NOT READY instead means the
++		 * operations will be retried a finite number of times and we
++		 * can survive intermittent errors.
++		 */
++		.key = NOT_READY,
++		.asc = 0x08, /* LOGICAL UNIT COMMUNICATION FAILURE */
++	},
++};
++
++static void translate_sense_reason(struct se_cmd *cmd, int r)
++{
++	const struct sense_info *si;
++	u8 *buffer = cmd->sense_buffer;
++	u8 asc, ascq;
++
++	if (r < ARRAY_SIZE(sense_info_table) && sense_info_table[r].key)
++		si = &sense_info_table[r];
++	else
++		si = &sense_info_table[(__force int)
++				       TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE];
++
++	buffer[SPC_SENSE_KEY_OFFSET] = si->key;
++	if (r == (__force int)TCM_CHECK_CONDITION_UNIT_ATTENTION) {
++		core_scsi3_ua_for_check_condition(cmd, &asc, &ascq);
++		WARN_ON_ONCE(asc == 0);
++	} else if (si->asc == 0) {
++		WARN_ON_ONCE(cmd->scsi_asc == 0);
++		asc = cmd->scsi_asc;
++		ascq = cmd->scsi_ascq;
++	} else {
++		asc = si->asc;
++		ascq = si->ascq;
++	}
++	buffer[SPC_ASC_KEY_OFFSET] = asc;
++	buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
++	if (si->add_sector_info)
++		transport_err_sector_info(cmd->sense_buffer, cmd->bad_sector);
++}
++
  int
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 676b03b..156d673 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -61,4 +61,9 @@ static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
- extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 				 struct scsi_sense_hdr *sshdr);
+ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+ 		sense_reason_t reason, int from_transport)
+ {
+-	unsigned char *buffer = cmd->sense_buffer;
+ 	unsigned long flags;
+-	u8 asc = 0, ascq = 0;
  
-+extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
-+extern void scsi_set_sense_information(u8 *buf, u64 info);
-+extern const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
-+				       int desc_type);
-+
- #endif /* _SCSI_COMMON_H_ */
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 4942710..dbb8c64 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -4,6 +4,7 @@
- #include <linux/scatterlist.h>
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
+@@ -2649,242 +2790,13 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+ 	cmd->se_cmd_flags |= SCF_SENT_CHECK_CONDITION;
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
  
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_common.h>
- struct scsi_device;
- struct Scsi_Host;
+-	if (!reason && from_transport)
+-		goto after_reason;
+-
+-	if (!from_transport)
++	if (!from_transport) {
+ 		cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
+-
+-	/*
+-	 * Actual SENSE DATA, see SPC-3 7.23.2  SPC_SENSE_KEY_OFFSET uses
+-	 * SENSE KEY values from include/scsi/scsi.h
+-	 */
+-	switch (reason) {
+-	case TCM_NO_SENSE:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* Not Ready */
+-		buffer[SPC_SENSE_KEY_OFFSET] = NOT_READY;
+-		/* NO ADDITIONAL SENSE INFORMATION */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0;
+-		break;
+-	case TCM_NON_EXISTENT_LUN:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* LOGICAL UNIT NOT SUPPORTED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x25;
+-		break;
+-	case TCM_UNSUPPORTED_SCSI_OPCODE:
+-	case TCM_SECTOR_COUNT_TOO_MANY:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* INVALID COMMAND OPERATION CODE */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x20;
+-		break;
+-	case TCM_UNKNOWN_MODE_PAGE:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* INVALID FIELD IN CDB */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x24;
+-		break;
+-	case TCM_CHECK_CONDITION_ABORT_CMD:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ABORTED COMMAND */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ABORTED_COMMAND;
+-		/* BUS DEVICE RESET FUNCTION OCCURRED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x29;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x03;
+-		break;
+-	case TCM_INCORRECT_AMOUNT_OF_DATA:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ABORTED COMMAND */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ABORTED_COMMAND;
+-		/* WRITE ERROR */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x0c;
+-		/* NOT ENOUGH UNSOLICITED DATA */
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x0d;
+-		break;
+-	case TCM_INVALID_CDB_FIELD:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* INVALID FIELD IN CDB */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x24;
+-		break;
+-	case TCM_INVALID_PARAMETER_LIST:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* INVALID FIELD IN PARAMETER LIST */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x26;
+-		break;
+-	case TCM_PARAMETER_LIST_LENGTH_ERROR:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* PARAMETER LIST LENGTH ERROR */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x1a;
+-		break;
+-	case TCM_UNEXPECTED_UNSOLICITED_DATA:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ABORTED COMMAND */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ABORTED_COMMAND;
+-		/* WRITE ERROR */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x0c;
+-		/* UNEXPECTED_UNSOLICITED_DATA */
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x0c;
+-		break;
+-	case TCM_SERVICE_CRC_ERROR:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ABORTED COMMAND */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ABORTED_COMMAND;
+-		/* PROTOCOL SERVICE CRC ERROR */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x47;
+-		/* N/A */
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x05;
+-		break;
+-	case TCM_SNACK_REJECTED:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ABORTED COMMAND */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ABORTED_COMMAND;
+-		/* READ ERROR */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x11;
+-		/* FAILED RETRANSMISSION REQUEST */
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x13;
+-		break;
+-	case TCM_WRITE_PROTECTED:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* DATA PROTECT */
+-		buffer[SPC_SENSE_KEY_OFFSET] = DATA_PROTECT;
+-		/* WRITE PROTECTED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x27;
+-		break;
+-	case TCM_ADDRESS_OUT_OF_RANGE:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* LOGICAL BLOCK ADDRESS OUT OF RANGE */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x21;
+-		break;
+-	case TCM_CHECK_CONDITION_UNIT_ATTENTION:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* UNIT ATTENTION */
+-		buffer[SPC_SENSE_KEY_OFFSET] = UNIT_ATTENTION;
+-		core_scsi3_ua_for_check_condition(cmd, &asc, &ascq);
+-		buffer[SPC_ASC_KEY_OFFSET] = asc;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
+-		break;
+-	case TCM_CHECK_CONDITION_NOT_READY:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* Not Ready */
+-		buffer[SPC_SENSE_KEY_OFFSET] = NOT_READY;
+-		buffer[SPC_ASC_KEY_OFFSET] = cmd->scsi_asc;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = cmd->scsi_ascq;
+-		break;
+-	case TCM_MISCOMPARE_VERIFY:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		buffer[SPC_SENSE_KEY_OFFSET] = MISCOMPARE;
+-		/* MISCOMPARE DURING VERIFY OPERATION */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x1d;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x00;
+-		break;
+-	case TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* LOGICAL BLOCK GUARD CHECK FAILED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x01;
+-		transport_err_sector_info(buffer, cmd->bad_sector);
+-		break;
+-	case TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x02;
+-		transport_err_sector_info(buffer, cmd->bad_sector);
+-		break;
+-	case TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/* ILLEGAL REQUEST */
+-		buffer[SPC_SENSE_KEY_OFFSET] = ILLEGAL_REQUEST;
+-		/* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x10;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = 0x03;
+-		transport_err_sector_info(buffer, cmd->bad_sector);
+-		break;
+-	case TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE:
+-	default:
+-		/* CURRENT ERROR */
+-		buffer[0] = 0x70;
+-		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+-		/*
+-		 * Returning ILLEGAL REQUEST would cause immediate IO errors on
+-		 * Solaris initiators.  Returning NOT READY instead means the
+-		 * operations will be retried a finite number of times and we
+-		 * can survive intermittent errors.
+-		 */
+-		buffer[SPC_SENSE_KEY_OFFSET] = NOT_READY;
+-		/* LOGICAL UNIT COMMUNICATION FAILURE */
+-		buffer[SPC_ASC_KEY_OFFSET] = 0x08;
+-		break;
++		translate_sense_reason(cmd, (__force int)reason);
++		cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
++		cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
+ 	}
+-	/*
+-	 * This code uses linux/include/scsi/scsi.h SAM status codes!
+-	 */
+-	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
+-	/*
+-	 * Automatically padded, this value is encoded in the fabric's
+-	 * data_length response PDU containing the SCSI defined sense data.
+-	 */
+-	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
  
-@@ -21,15 +22,9 @@ static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
- 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
+-after_reason:
+ 	trace_target_cmd_complete(cmd);
+ 	return cmd->se_tfo->queue_status(cmd);
  }
- 
--extern const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
--				       int desc_type);
--
- extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
- 				   u64 * info_out);
- 
--extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
--extern void scsi_set_sense_information(u8 *buf, u64 info);
--
- extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
- 
- struct scsi_eh_save {
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index a681644..a26271e 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -7,6 +7,7 @@
- #include <linux/blkdev.h>
- #include <linux/percpu_ida.h>
- #include <linux/t10-pi.h>
-+#include <scsi/scsi_common.h>
- #include <net/sock.h>
- #include <net/tcp.h>
- 
-@@ -22,14 +23,6 @@
-  * defined 96, but the real limit is 252 (or 260 including the header)
-  */
- #define TRANSPORT_SENSE_BUFFER			96
--/* Used by transport_send_check_condition_and_sense() */
--#define SPC_SENSE_KEY_OFFSET			2
--#define SPC_ADD_SENSE_LEN_OFFSET		7
--#define SPC_DESC_TYPE_OFFSET			8
--#define SPC_ADDITIONAL_DESC_LEN_OFFSET		9
--#define SPC_VALIDITY_OFFSET			10
--#define SPC_ASC_KEY_OFFSET			12
--#define SPC_ASCQ_KEY_OFFSET			13
- #define TRANSPORT_IQN_LEN			224
- /* Used by target_core_store_alua_lu_gp() and target_core_alua_lu_gp_show_attr_members() */
- #define LU_GROUP_NAME_BUF			256
 -- 
 1.8.4.3
-
