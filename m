@@ -1,116 +1,182 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v3 0/5] Target sense data handling modifications
-Date: Tue, 7 Jul 2015 09:18:14 +0300
-Message-ID: <559B6F26.7050006@dev.mellanox.co.il>
-References: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
- <1436223065.6666.7.camel@haakon3.risingtidesystems.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv2] sd: retry READ CAPACITY for ALUA state transition
+Date: Tue, 07 Jul 2015 08:18:12 +0200
+Message-ID: <559B6F24.6020804@suse.de>
+References: <1436181130-82905-1-git-send-email-hare@suse.de>	 <559A9B23.4020705@sandisk.com> <1436216244.6241.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436223065.6666.7.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33974 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757AbbGGGSP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jul 2015 02:18:15 -0400
+In-Reply-To: <1436216244.6241.7.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 7/7/2015 1:51 AM, Nicholas A. Bellinger wrote:
-> On Mon, 2015-07-06 at 16:15 +0300, Sagi Grimberg wrote:
->> This patch set modifies the target sense data handling.
->> First, cleanup transport_send_check_condition_and_sense()
->> by splitting the sense translation to a separate function.
->> Second, convert sense reason the switch statement to a table
->> driven code. Third, Use scsi common helpers to correctly set
->> the sense buffer. Last, Fix wrong setting of t10-pi errors
->> (non descriptor format).
+On 07/06/2015 10:57 PM, James Bottomley wrote:
+> On Mon, 2015-07-06 at 08:13 -0700, Bart Van Assche wrote:
+>> On 07/06/2015 04:12 AM, Hannes Reinecke wrote:
+>>> During ALUA state transitions the device might return
+>>> a sense code 02/04/0a (Logical unit not accessible, asymmetric
+>>> access state transition). As this is a transient error
+>>> we should just retry the READ CAPACITY call after 1 second
+>>> until the state transition finishes and the correct
+>>> capacity can be returned.
+>>> At the same time we should break out of the loop after
+>>> 2 minutes to avoid unbounded retries.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> ---
+>>>   drivers/scsi/sd.c | 21 +++++++++++++++++++++
+>>>   1 file changed, 21 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>>> index 3b2fcb4..f45b8fe 100644
+>>> --- a/drivers/scsi/sd.c
+>>> +++ b/drivers/scsi/sd.c
+>>> @@ -1934,6 +1934,7 @@ static void read_capacity_error(struct scsi_d=
+isk *sdkp, struct scsi_device *sdp,
+>>>   #endif
+>>>
+>>>   #define READ_CAPACITY_RETRIES_ON_RESET	10
+>>> +#define READ_CAPACITY_RETRIES_ON_TRANSITION 120
+>>>
+>>>   static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_d=
+evice *sdp,
+>>>   						unsigned char *buffer)
+>>> @@ -1943,6 +1944,7 @@ static int read_capacity_16(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+>>>   	int sense_valid =3D 0;
+>>>   	int the_result;
+>>>   	int retries =3D 3, reset_retries =3D READ_CAPACITY_RETRIES_ON_RE=
+SET;
+>>> +	int transition_retries =3D READ_CAPACITY_RETRIES_ON_TRANSITION;
+>>>   	unsigned int alignment;
+>>>   	unsigned long long lba;
+>>>   	unsigned sector_size;
+>>> @@ -1981,6 +1983,15 @@ static int read_capacity_16(struct scsi_disk=
+ *sdkp, struct scsi_device *sdp,
+>>>   				 * give it one more chance */
+>>>   				if (--reset_retries > 0)
+>>>   					continue;
+>>> +			if (sense_valid &&
+>>> +			    sshdr.sense_key =3D=3D NOT_READY &&
+>>> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A) {
+>>> +				/* ALUA state transition; retry after delay */
+>>> +				if (--transition_retries > 0) {
+>>> +					msleep(1000);
+>>> +					continue;
+>>> +				}
+>>> +			}
+>>>   		}
+>>>   		retries--;
+>>>
+>>> @@ -2039,6 +2050,7 @@ static int read_capacity_10(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+>>>   	int sense_valid =3D 0;
+>>>   	int the_result;
+>>>   	int retries =3D 3, reset_retries =3D READ_CAPACITY_RETRIES_ON_RE=
+SET;
+>>> +	int transition_retries =3D READ_CAPACITY_RETRIES_ON_TRANSITION;
+>>>   	sector_t lba;
+>>>   	unsigned sector_size;
+>>>
+>>> @@ -2063,6 +2075,15 @@ static int read_capacity_10(struct scsi_disk=
+ *sdkp, struct scsi_device *sdp,
+>>>   				 * give it one more chance */
+>>>   				if (--reset_retries > 0)
+>>>   					continue;
+>>> +			if (sense_valid &&
+>>> +			    sshdr.sense_key =3D=3D NOT_READY &&
+>>> +			    sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x0A) {
+>>> +				/* ALUA state transition; retry after delay */
+>>> +				if (--transition_retries > 0) {
+>>> +					msleep(1000);
+>>> +					continue;
+>>> +				}
+>>> +			}
+>>>   		}
+>>>   		retries--;
 >>
->> Changes from v2:
->> - Pass sense_reason_t to scsi_translate_sense()
->> - Split patch 3:
->>    1) move the helpers to scsi_common.c
->>    2) use helpers in the target code
->>    3) always use descriptor-type sense data for PI errors
+>> Hello Hannes,
 >>
->> Changes from v1:
->> - Added Reviewed-by tags for patches 1,2
->> - Fixed compilation error after testing patch #3 on scsi/for-next
->>    branch. Moved scsi_sense_desc_find() to scsi_common as well (dependency)
->>    and also moved <asm/unaligned.h> include to scsi_common.h
->>
->> Changes from v0:
->> - Added Bart's patches and converted my patch to apply over his
->> - Moved scsi sense helpers to scsi_common
->>
->> Bart Van Assche (2):
->>    target: Inline transport_get_sense_codes()
->>    target: Split transport_send_check_condition_and_sense()
->>
->> Sagi Grimberg (3):
->>    scsi: Move sense handling routines to scsi_common
->>    target: Use scsi helpers to build the sense data correctly
->>    target: Fix wrong setting of sense format for PI errors
->>
->>   drivers/scsi/scsi_common.c             |  98 ++++++++
->>   drivers/scsi/scsi_error.c              |  99 +-------
->>   drivers/target/target_core_spc.c       |  31 +--
->>   drivers/target/target_core_transport.c | 399 ++++++++++++---------------------
->>   include/scsi/scsi_common.h             |   5 +
->>   include/scsi/scsi_eh.h                 |   7 +-
->>   include/target/target_core_base.h      |   1 +
->>   7 files changed, 256 insertions(+), 384 deletions(-)
->>
->
-> Nice series to make scsi-core and target-core use common code.  ;)
->
-> Applied to target-pending/for-next.
->
-> hch + jejb, please let me know if you have any objections to taking this
-> through target-pending.
+>> Although I agree that multipathd should handle arrays correctly that=
+=20
+>> fail READ CAPACITY commands while transitioning, seeing that a new=20
+>> hard-coded timeout is added in the SCSI initiator code does not make=
+ me=20
+>> enthusiast. The READ_CAPACITY_RETRIES_ON_TRANSITION timeout added=20
+>> through this patch is independent of the IMPLICIT TRANSITION TIME in=
+ the=20
+>> REPORT TARGET PORT GROUPS response. Has the following already been=20
+>> considered ?
+>> - If the capacity is not known, let the scsi_dh_alua handler submit =
+a=20
+>> READ CAPACITY command asynchronously after certain target port group=
+=20
+>> state transitions. Also let the scsi_dh_alua handler submit a=20
+>> notification to user space after the capacity changes from "unknown"=
+ to=20
+>> "known".
+I'd rather prefer to have this handled with the existing 'rescan'
+functionality. IE if the path becomes available (ie returns a state
+of 'optimal' or 'non-optimal' scsi_dh_alua will be invoking 'rescan'
+on that device, which should cause the capacity to be updated.
 
-Can you please fold into patch #5 this change suggested by Bart:
+>> - Let multipathd ignore paths for which READ CAPACITY failed until t=
+he=20
+>> capacity becomes known.
 
-diff --git a/drivers/target/target_core_transport.c 
-b/drivers/target/target_core_transport.c
-index 79bb8d1..9c34937 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2625,7 +2625,7 @@ struct sense_info {
-         u8 asc;
-         u8 ascq;
-         bool add_sector_info;
--   int desc_format;
-+ bool desc_format;
-  };
+I've already sent patches to multipath to simply ignore the results
+from a READ CAPACITY; so this is not an issue.
+Paths with a capacity of '0' will be happily accepted as multipath
+devices with path status 'standby'.
 
-  static const struct sense_info sense_info_table[] = {
-@@ -2709,21 +2709,21 @@ static const struct sense_info 
-sense_info_table[] = {
-                 .asc = 0x10,
-                 .ascq = 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
-                 .add_sector_info = true,
--           .desc_format = 1,
-+         .desc_format = true,
-         },
-         [TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] = {
-                 .key = ILLEGAL_REQUEST,
-                 .asc = 0x10,
-                 .ascq = 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK 
-FAILED */
-                 .add_sector_info = true,
--           .desc_format = 1,
-+         .desc_format = true,
-         },
-         [TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] = {
-                 .key = ILLEGAL_REQUEST,
-                 .asc = 0x10,
-                 .ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK 
-FAILED */
-                 .add_sector_info = true,
--           .desc_format = 1,
-+         .desc_format = true,
-         },
-         [TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE] = {
-                 /*
+>=20
+> Yes, I'm with something like this.  The patch you propose will be a b=
+usy
+> wait for userspace which they may not want.
+>=20
+I'm fully aware that this patch will induce a busy wait if the
+device happens to be in transitioning at that time.
+This patch is just a simple solution to this problem.
+The 'correct' solution is actually a bit more involved, as it would
+require the device handler to keep track of the multipath topology:
+
+Currently the device handler are per ITL nexus, and invoked on
+activation only (ie for explicit ALUA), so the ALUA state only
+reflect the state after the last call to 'activate'.
+
+I have a patchset for moving scsi_dh_alua onto a workqueue, so that
+it'll be able to keep track of the ALUA state per TL nexus (note the
+missing 'I'). This will not only reduce the number of RTPGs send to
+the target (scsi_dh_rdac already does this), but will also allow
+scsi_dh_alua to keep track of the ALUA state of the relative target
+port of the target port group.
+
+However, to handle the above case correctly we would need to keep
+track of the entire multipath topology, to figure out which devices
+belong to that relative target port and might need to be updated
+(there might be several paths in standby, and we will have sent the
+RTPG only for one of them).
+Patches for that are not done yet, so I thought the above patch
+would be a simple stop-gap measure.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
 --
-
-Thanks!
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
