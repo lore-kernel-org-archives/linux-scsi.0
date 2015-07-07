@@ -1,140 +1,155 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] iscsi-target: Fix iscsit_start_kthreads failure OOPs
-Date: Tue,  7 Jul 2015 08:50:23 +0000
-Message-ID: <1436259023-1561-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: lockdep complains on possible circular locking dependency when
+ deleting an iscsi device
+Date: Tue, 7 Jul 2015 11:58:40 +0300
+Message-ID: <559B94C0.7020208@dev.mellanox.co.il>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:35578 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082AbbGGI62 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2015 04:58:28 -0400
+Received: by wgjx7 with SMTP id x7so161504117wgj.2
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2015 01:58:27 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Oren Duer <oren@mellanox.com>, Ariel Nahum <arieln@mellanox.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi,
 
-This patch fixes a regression introduced with the following commit
-in v4.0-rc1 code:
+I recently came across a lockdep complaint on a possible deadlock that
+I don't understand yet (log output below).
 
-    commit 88dcd2dab5c23b1c9cfc396246d8f476c872f0ca
-    Author: Nicholas Bellinger <nab@linux-iscsi.org>
-    Date:   Thu Feb 26 22:19:15 2015 -0800
+Has anyone seen this? Any insights on why exactly is lockdep complaining?
 
-        iscsi-target: Convert iscsi_thread_set usage to kthread.h
+The reproducer is very easy (reproduced both with tcp and iser):
+- login to a target with one or more devices
+- logout from the target
+- login to the target again
+- echo 1 > /sys/class/block/<iscsi_dev>/device/delete
 
-where iscsit_start_kthreads() failure would result in a NULL pointer
-dereference OOPs.
+Note that the device removal completes successfully.
 
-To address this bug, it adds a iscsit_kthread_err() helper to cleanup
-both zero_tsih and !zero_tsih cases, and a iscsi_target_tx_thread()
-special case to avoid iscsit_take_action_for_connection_exit() during
-the late iscsit_start_kthreads() -> kthread_run() failure case for
-iscsi_target_rx_thread().
+log output:
+[   66.189019] ======================================================
+[   66.189019] [ INFO: possible circular locking dependency detected ]
+[   66.189019] 4.1.0-rc7-dbg-vm-for-upstream-dbg-vm-2015-06-09_18-32-18 
+#1 Not tainted
+[   66.189019] -------------------------------------------------------
+[   66.189019] sh/2102 is trying to acquire lock:
+[   66.189019]  (&shost->scan_mutex){+.+.+.}, at: [<ffffffff8149622d>] 
+scsi_remove_device+0x2d/0x50
+[   66.189019]
+but task is already holding lock:
+[   66.189019]  (s_active#126){++++.+}, at: [<ffffffff8127c0a2>] 
+kernfs_remove_self+0xf2/0x160
+[   66.189019]
+which lock already depends on the new lock.
 
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: <stable@vger.kernel.org> # v3.10+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target.c       |  3 ++-
- drivers/target/iscsi/iscsi_target_login.c | 39 +++++++++++++++++++++++++++----
- 2 files changed, 36 insertions(+), 6 deletions(-)
+[   66.189019]
+the existing dependency chain (in reverse order) is:
+[   66.189019]
+-> #1 (s_active#126){++++.+}:
+[   66.189019]        [<ffffffff810bd8ff>] validate_chain+0x64f/0x810
+[   66.189019]        [<ffffffff810bdee7>] __lock_acquire+0x427/0x600
+[   66.189019]        [<ffffffff810be184>] lock_acquire+0xc4/0x220
+[   66.189019]        [<ffffffff8127af73>] kernfs_drain+0x153/0x1d0
+[   66.189019]        [<ffffffff8127ba9e>] __kernfs_remove+0x15e/0x210
+[   66.189019]        [<ffffffff8127bba0>] 
+kernfs_remove_by_name_ns+0x50/0xc0
+[   66.189019]        [<ffffffff8127ed09>] remove_files+0x39/0x80
+[   66.189019]        [<ffffffff8127eeb8>] sysfs_remove_group+0x48/0xa0
+[   66.189019]        [<ffffffff8127ef4b>] sysfs_remove_groups+0x3b/0x60
+[   66.189019]        [<ffffffff81453c1e>] device_remove_attrs+0x5e/0x90
+[   66.189019]        [<ffffffff81453d75>] device_del+0x125/0x220
+[   66.189019]        [<ffffffff814961ed>] __scsi_remove_device+0xcd/0xe0
+[   66.189019]        [<ffffffff81496235>] scsi_remove_device+0x35/0x50
+[   66.189019]        [<ffffffff81496340>] __scsi_remove_target+0xb0/0xf0
+[   66.189019]        [<ffffffff81496778>] scsi_remove_target+0xd8/0x180
+[   66.189019]        [<ffffffffa0564366>] 
+__iscsi_unbind_session+0xb6/0x180 [scsi_transport_iscsi]
+[   66.189019]        [<ffffffff810806da>] process_one_work+0x1ea/0x740
+[   66.189019]        [<ffffffff81080d4f>] worker_thread+0x11f/0x3e0
+[   66.189019]        [<ffffffff810874d6>] kthread+0xf6/0x120
+[   66.189019]        [<ffffffff8169b992>] ret_from_fork+0x42/0x70
+[   66.189019]
+-> #0 (&shost->scan_mutex){+.+.+.}:
+[   66.189019]        [<ffffffff810bd277>] check_prev_add+0x597/0x5d0
+[   66.189019]        [<ffffffff810bd8ff>] validate_chain+0x64f/0x810
+[   66.189019]        [<ffffffff810bdee7>] __lock_acquire+0x427/0x600
+[   66.189019]        [<ffffffff810be184>] lock_acquire+0xc4/0x220
+[   66.189019]        [<ffffffff81696935>] mutex_lock_nested+0x75/0x3e0
+[   66.189019]        [<ffffffff8149622d>] scsi_remove_device+0x2d/0x50
+[   66.189019]        [<ffffffff81496281>] sdev_store_delete+0x31/0x40
+[   66.189019]        [<ffffffff81452920>] dev_attr_store+0x20/0x30
+[   66.189019]        [<ffffffff8127e23f>] sysfs_kf_write+0x4f/0x70
+[   66.189019]        [<ffffffff8127d647>] kernfs_fop_write+0x147/0x170
+[   66.189019]        [<ffffffff811f6c34>] __vfs_write+0x34/0x100
+[   66.189019]        [<ffffffff811f6f93>] vfs_write+0xb3/0x120
+[   66.189019]        [<ffffffff811f7b19>] SyS_write+0x59/0xd0
+[   66.189019]        [<ffffffff8169b597>] system_call_fastpath+0x12/0x6f
+[   66.189019]
+other info that might help us debug this:
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 4e68b62..66655b7 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3998,7 +3998,8 @@ get_immediate:
- 	}
- 
- transport_err:
--	iscsit_take_action_for_connection_exit(conn);
-+	if (conn->rx_thread_active)
-+		iscsit_take_action_for_connection_exit(conn);
- out:
- 	return 0;
- }
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 3d0fe4f..76dedb6 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -679,6 +679,7 @@ static int iscsit_start_kthreads(struct iscsi_conn *conn)
- 
- 	return 0;
- out_tx:
-+	send_sig(SIGINT, conn->tx_thread, 1);
- 	kthread_stop(conn->tx_thread);
- 	conn->tx_thread_active = false;
- out_bitmap:
-@@ -689,6 +690,23 @@ out_bitmap:
- 	return ret;
- }
- 
-+static void iscsit_kthread_err(struct iscsi_session *sess,
-+			       struct iscsi_conn *conn, bool new_sess)
-+{
-+	spin_lock_bh(&sess->conn_lock);
-+	list_del(&conn->conn_list);
-+	if (atomic_dec_and_test(&sess->nconn))
-+		sess->session_state = TARG_SESS_STATE_FAILED;
-+	spin_unlock_bh(&sess->conn_lock);
-+
-+	if (!new_sess)
-+		return;
-+
-+	transport_deregister_session_configfs(sess->se_sess);
-+	transport_deregister_session(sess->se_sess);
-+	sess->se_sess = NULL;
-+}
-+
- int iscsi_post_login_handler(
- 	struct iscsi_np *np,
- 	struct iscsi_conn *conn,
-@@ -740,8 +758,10 @@ int iscsi_post_login_handler(
- 		spin_unlock_bh(&sess->conn_lock);
- 
- 		rc = iscsit_start_kthreads(conn);
--		if (rc)
--			return rc;
-+		if (rc) {
-+			iscsit_kthread_err(sess, conn, false);
-+			goto out_old_sess;
-+		}
- 
- 		iscsi_post_login_start_timers(conn);
- 		/*
-@@ -751,7 +771,7 @@ int iscsi_post_login_handler(
- 		iscsit_thread_get_cpumask(conn);
- 		conn->conn_rx_reset_cpumask = 1;
- 		conn->conn_tx_reset_cpumask = 1;
--
-+out_old_sess:
- 		iscsit_dec_conn_usage_count(conn);
- 		if (stop_timer) {
- 			spin_lock_bh(&se_tpg->session_lock);
-@@ -759,7 +779,7 @@ int iscsi_post_login_handler(
- 			spin_unlock_bh(&se_tpg->session_lock);
- 		}
- 		iscsit_dec_session_usage_count(sess);
--		return 0;
-+		return rc;
- 	}
- 
- 	iscsi_set_session_parameters(sess->sess_ops, conn->param_list, 1);
-@@ -801,8 +821,17 @@ int iscsi_post_login_handler(
- 	spin_unlock_bh(&se_tpg->session_lock);
- 
- 	rc = iscsit_start_kthreads(conn);
--	if (rc)
-+	if (rc) {
-+		spin_lock_bh(&se_tpg->session_lock);
-+		if (tpg->tpg_tiqn)
-+			tpg->tpg_tiqn->tiqn_nsessions--;
-+		tpg->nsessions--;
-+		spin_unlock_bh(&se_tpg->session_lock);
-+
-+		iscsit_kthread_err(sess, conn, true);
-+		iscsit_dec_conn_usage_count(conn);
- 		return rc;
-+	}
- 
- 	iscsi_post_login_start_timers(conn);
- 	/*
--- 
-1.9.1
+[   66.189019]  Possible unsafe locking scenario:
+
+[   66.189019]        CPU0                    CPU1
+[   66.189019]        ----                    ----
+[   66.189019]   lock(s_active#126);
+[   66.189019]                                lock(&shost->scan_mutex);
+[   66.189019]                                lock(s_active#126);
+[   66.189019]   lock(&shost->scan_mutex);
+[   66.189019]
+  *** DEADLOCK ***
+
+[   66.189019] 3 locks held by sh/2102:
+[   66.189019]  #0:  (sb_writers#3){.+.+.+}, at: [<ffffffff811f6913>] 
+file_start_write+0x33/0x40
+[   66.189019]  #1:  (&of->mutex){+.+.+.}, at: [<ffffffff8127d591>] 
+kernfs_fop_write+0x91/0x170
+[   66.189019]  #2:  (s_active#126){++++.+}, at: [<ffffffff8127c0a2>] 
+kernfs_remove_self+0xf2/0x160
+[   66.189019]
+stack backtrace:
+[   66.189019] CPU: 0 PID: 2102 Comm: sh Not tainted 
+4.1.0-rc7-dbg-vm-for-upstream-dbg-vm-2015-06-09_18-32-18 #1
+[   66.189019] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[   66.189019]  ffff8800710b0d18 ffff8800383aba28 ffffffff816942d0 
+0000000000000001
+[   66.189019]  0000000000000000 ffff8800383aba78 ffffffff810bb889 
+ffff8800383aba98
+[   66.189019]  ffff8800383aba98 ffff8800383aba78 ffff8800710b0ce0 
+ffff8800710b0d18
+[   66.189019] Call Trace:
+[   66.189019]  [<ffffffff816942d0>] dump_stack+0x4f/0x6f
+[   66.189019]  [<ffffffff810bb889>] print_circular_bug+0x109/0x110
+[   66.189019]  [<ffffffff810bd277>] check_prev_add+0x597/0x5d0
+[   66.189019]  [<ffffffff810bd8ff>] validate_chain+0x64f/0x810
+[   66.189019]  [<ffffffff8109d1f5>] ? sched_clock_local+0x25/0x90
+[   66.189019]  [<ffffffff810bdee7>] __lock_acquire+0x427/0x600
+[   66.189019]  [<ffffffff810be184>] lock_acquire+0xc4/0x220
+[   66.189019]  [<ffffffff8149622d>] ? scsi_remove_device+0x2d/0x50
+[   66.189019]  [<ffffffff81696935>] mutex_lock_nested+0x75/0x3e0
+[   66.189019]  [<ffffffff8149622d>] ? scsi_remove_device+0x2d/0x50
+[   66.189019]  [<ffffffff8149622d>] ? scsi_remove_device+0x2d/0x50
+[   66.189019]  [<ffffffff8127c0ae>] ? kernfs_remove_self+0xfe/0x160
+[   66.189019]  [<ffffffff816968be>] ? mutex_unlock+0xe/0x10
+[   66.189019]  [<ffffffff8149622d>] scsi_remove_device+0x2d/0x50
+[   66.189019]  [<ffffffff81496281>] sdev_store_delete+0x31/0x40
+[   66.189019]  [<ffffffff81452920>] dev_attr_store+0x20/0x30
+[   66.189019]  [<ffffffff8127e23f>] sysfs_kf_write+0x4f/0x70
+[   66.189019]  [<ffffffff8127d647>] kernfs_fop_write+0x147/0x170
+[   66.189019]  [<ffffffff811f6c34>] __vfs_write+0x34/0x100
+[   66.189019]  [<ffffffff811f6913>] ? file_start_write+0x33/0x40
+[   66.189019]  [<ffffffff810f4a55>] ? current_kernel_time+0xa5/0xc0
+[   66.189019]  [<ffffffff812a8053>] ? security_file_permission+0x23/0x90
+[   66.189019]  [<ffffffff811f6f93>] vfs_write+0xb3/0x120
+[   66.189019]  [<ffffffff811f7b19>] SyS_write+0x59/0xd0
+[   66.189019]  [<ffffffff8113068c>] ? __audit_syscall_entry+0xac/0x110
+[   66.189019]  [<ffffffff8169b597>] system_call_fastpath+0x12/0x6f
+
+Thanks,
+Sagi.
