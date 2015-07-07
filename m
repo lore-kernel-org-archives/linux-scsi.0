@@ -1,157 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Fix iscsit_start_kthreads failure OOPs
-Date: Tue, 07 Jul 2015 02:01:42 -0700
-Message-ID: <1436259702.23883.38.camel@haakon3.risingtidesystems.com>
-References: <1436259023-1561-1-git-send-email-nab@daterainc.com>
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+Date: Tue, 7 Jul 2015 14:48:14 +0530
+Message-ID: <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	<CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	<robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	<20150429172832.GB7888@google.com>
+	<20150528122443.GI10210@google.com>	<9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+ <20150707104426.3d7e8697@endymion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436259023-1561-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150707104426.3d7e8697@endymion.delvare>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hey Sagi,
+> -----Original Message-----
+> From: Jean Delvare [mailto:jdelvare@suse.de]
+> Sent: Tuesday, July 07, 2015 2:14 PM
+> To: Kashyap Desai
+> Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
+linux-
+> scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;
+Sumit
+> Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;
+linux-
+> kernel@vger.kernel.org; Myron Stowe
+> Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
+> output? [BKO63661]
+>
+> Hi Kashyap,
+>
+> On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
+> > Bjorn/Robin,
+> >
+> > Apologies for delay. Here is one quick suggestion as we have seen
+> > similar issue (not exactly similar, but high probably to have same
+> > issue) while controller is configured on VM as pass-through and VM
+reboot
+> abruptly.
+> > In that particular issue, driver interact with FW which may  require
+> > chip reset to bring controller to operation state.
+> >
+> > Relevant patch was submitted for only Older controller as it was only
+> > seen for few MegaRaid controller. Below patch already try to do chip
+> > reset, but only for limited controllers...I have attached one more
+> > patch which does chip reset from driver load time for
+> > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
+> > controller, so attached patch is required.)
+> >
+> > http://www.spinics.net/lists/linux-scsi/msg67288.html
+> >
+> > Please post the result with attached patch.
+>
+> Good news! Customer tested your patch and said it fixed the problem :-)
+>
+> I am now in the process of backporting the patch to the SLES 11 SP3
+kernel for
+> further testing. I'll let you know how it goes. Thank you very much for
+your
+> assistance.
 
-This addresses a regression with traditional iscsi-target that I noticed
-recently, but has not been tested with iser-target yet.
+Thanks for confirmation. Whatever patch I submitted to you, we have added
+recently (as part of common interface approach to do chip reset at load
+time). We will be submitting that patch to mainline soon.
 
-Would you mind taking a quick spin with iser-target to verify, and try
-to intentionally fail iscsit_start_kthreads() into the two out_bitmap +
-out_tx error paths..?
-
-Thanks,
-
---nab
-
-On Tue, 2015-07-07 at 08:50 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch fixes a regression introduced with the following commit
-> in v4.0-rc1 code:
-> 
->     commit 88dcd2dab5c23b1c9cfc396246d8f476c872f0ca
->     Author: Nicholas Bellinger <nab@linux-iscsi.org>
->     Date:   Thu Feb 26 22:19:15 2015 -0800
-> 
->         iscsi-target: Convert iscsi_thread_set usage to kthread.h
-> 
-> where iscsit_start_kthreads() failure would result in a NULL pointer
-> dereference OOPs.
-> 
-> To address this bug, it adds a iscsit_kthread_err() helper to cleanup
-> both zero_tsih and !zero_tsih cases, and a iscsi_target_tx_thread()
-> special case to avoid iscsit_take_action_for_connection_exit() during
-> the late iscsit_start_kthreads() -> kthread_run() failure case for
-> iscsi_target_rx_thread().
-> 
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: <stable@vger.kernel.org> # v3.10+
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/iscsi/iscsi_target.c       |  3 ++-
->  drivers/target/iscsi/iscsi_target_login.c | 39 +++++++++++++++++++++++++++----
->  2 files changed, 36 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index 4e68b62..66655b7 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -3998,7 +3998,8 @@ get_immediate:
->  	}
->  
->  transport_err:
-> -	iscsit_take_action_for_connection_exit(conn);
-> +	if (conn->rx_thread_active)
-> +		iscsit_take_action_for_connection_exit(conn);
->  out:
->  	return 0;
->  }
-> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-> index 3d0fe4f..76dedb6 100644
-> --- a/drivers/target/iscsi/iscsi_target_login.c
-> +++ b/drivers/target/iscsi/iscsi_target_login.c
-> @@ -679,6 +679,7 @@ static int iscsit_start_kthreads(struct iscsi_conn *conn)
->  
->  	return 0;
->  out_tx:
-> +	send_sig(SIGINT, conn->tx_thread, 1);
->  	kthread_stop(conn->tx_thread);
->  	conn->tx_thread_active = false;
->  out_bitmap:
-> @@ -689,6 +690,23 @@ out_bitmap:
->  	return ret;
->  }
->  
-> +static void iscsit_kthread_err(struct iscsi_session *sess,
-> +			       struct iscsi_conn *conn, bool new_sess)
-> +{
-> +	spin_lock_bh(&sess->conn_lock);
-> +	list_del(&conn->conn_list);
-> +	if (atomic_dec_and_test(&sess->nconn))
-> +		sess->session_state = TARG_SESS_STATE_FAILED;
-> +	spin_unlock_bh(&sess->conn_lock);
-> +
-> +	if (!new_sess)
-> +		return;
-> +
-> +	transport_deregister_session_configfs(sess->se_sess);
-> +	transport_deregister_session(sess->se_sess);
-> +	sess->se_sess = NULL;
-> +}
-> +
->  int iscsi_post_login_handler(
->  	struct iscsi_np *np,
->  	struct iscsi_conn *conn,
-> @@ -740,8 +758,10 @@ int iscsi_post_login_handler(
->  		spin_unlock_bh(&sess->conn_lock);
->  
->  		rc = iscsit_start_kthreads(conn);
-> -		if (rc)
-> -			return rc;
-> +		if (rc) {
-> +			iscsit_kthread_err(sess, conn, false);
-> +			goto out_old_sess;
-> +		}
->  
->  		iscsi_post_login_start_timers(conn);
->  		/*
-> @@ -751,7 +771,7 @@ int iscsi_post_login_handler(
->  		iscsit_thread_get_cpumask(conn);
->  		conn->conn_rx_reset_cpumask = 1;
->  		conn->conn_tx_reset_cpumask = 1;
-> -
-> +out_old_sess:
->  		iscsit_dec_conn_usage_count(conn);
->  		if (stop_timer) {
->  			spin_lock_bh(&se_tpg->session_lock);
-> @@ -759,7 +779,7 @@ int iscsi_post_login_handler(
->  			spin_unlock_bh(&se_tpg->session_lock);
->  		}
->  		iscsit_dec_session_usage_count(sess);
-> -		return 0;
-> +		return rc;
->  	}
->  
->  	iscsi_set_session_parameters(sess->sess_ops, conn->param_list, 1);
-> @@ -801,8 +821,17 @@ int iscsi_post_login_handler(
->  	spin_unlock_bh(&se_tpg->session_lock);
->  
->  	rc = iscsit_start_kthreads(conn);
-> -	if (rc)
-> +	if (rc) {
-> +		spin_lock_bh(&se_tpg->session_lock);
-> +		if (tpg->tpg_tiqn)
-> +			tpg->tpg_tiqn->tiqn_nsessions--;
-> +		tpg->nsessions--;
-> +		spin_unlock_bh(&se_tpg->session_lock);
-> +
-> +		iscsit_kthread_err(sess, conn, true);
-> +		iscsit_dec_conn_usage_count(conn);
->  		return rc;
-> +	}
->  
->  	iscsi_post_login_start_timers(conn);
->  	/*
+~ Kashyap
+>
+> --
+> Jean Delvare
+> SUSE L3 Support
