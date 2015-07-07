@@ -1,45 +1,38 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH RESEND] mvsas: always iounmap resources
-Date: Tue,  7 Jul 2015 09:43:02 +0200
-Message-ID: <1436254982-6505-1-git-send-email-jthumshirn@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 09/11] qla2xxx: Added interface to send ELS commands
+ from driver.
+Date: Tue, 07 Jul 2015 09:26:43 +0100
+Message-ID: <1436257603.2238.4.camel@HansenPartnership.com>
+References: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
+	 <1435250031-20525-10-git-send-email-himanshu.madhani@qlogic.com>
+	 <20150703161418.GB32744@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39390 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754218AbbGGHnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jul 2015 03:43:21 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48121 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752811AbbGGI0s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2015 04:26:48 -0400
+In-Reply-To: <20150703161418.GB32744@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-In case pci_resource_start() or pci_resource_len() reutrn 0, mvsas_ioremap
-returns without doing an iounmap() of mvi->regs_ex.
+On Fri, 2015-07-03 at 09:14 -0700, Christoph Hellwig wrote:
+> Why is this a binary attribute?  Needs an interface specific in
+> Documentation/ABI/ to start with, and a Ccto stable seems very
+> aggressive.
 
-Found by the cocinelle tool.
+Right, adding an interface isn't a bug fix.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/mvsas/mv_init.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Can you separate this into patches which are essential bug fixes, which
+can go immediately and those which are enhancements which wait for the
+merge window?
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 53030b0..04a3205 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -339,8 +339,11 @@ int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex)
- 
- 	res_start = pci_resource_start(pdev, bar);
- 	res_len = pci_resource_len(pdev, bar);
--	if (!res_start || !res_len)
-+	if (!res_start || !res_len) {
-+		iounmap(mvi->regs_ex);
-+		mvi->regs_ex = NULL;
- 		goto err_out;
-+	}
- 
- 	res_flag = pci_resource_flags(pdev, bar);
- 	if (res_flag & IORESOURCE_CACHEABLE)
--- 
-2.4.1
+Thanks,
+
+James
+
 
