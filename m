@@ -1,38 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 09/11] qla2xxx: Added interface to send ELS commands
- from driver.
-Date: Tue, 07 Jul 2015 09:26:43 +0100
-Message-ID: <1436257603.2238.4.camel@HansenPartnership.com>
-References: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
-	 <1435250031-20525-10-git-send-email-himanshu.madhani@qlogic.com>
-	 <20150703161418.GB32744@infradead.org>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+Date: Tue, 7 Jul 2015 10:44:26 +0200
+Message-ID: <20150707104426.3d7e8697@endymion.delvare>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	<CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	<robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+	<20150429172832.GB7888@google.com>
+	<20150528122443.GI10210@google.com>
+	<9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48121 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752811AbbGGI0s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2015 04:26:48 -0400
-In-Reply-To: <20150703161418.GB32744@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Fri, 2015-07-03 at 09:14 -0700, Christoph Hellwig wrote:
-> Why is this a binary attribute?  Needs an interface specific in
-> Documentation/ABI/ to start with, and a Ccto stable seems very
-> aggressive.
+Hi Kashyap,
 
-Right, adding an interface isn't a bug fix.
+On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
+> Bjorn/Robin,
+> 
+> Apologies for delay. Here is one quick suggestion as we have seen similar
+> issue (not exactly similar, but high probably to have same issue) while
+> controller is configured on VM as pass-through and VM reboot abruptly.
+> In that particular issue, driver interact with FW which may  require chip
+> reset to bring controller to operation state.
+> 
+> Relevant patch was submitted for only Older controller as it was only seen
+> for few MegaRaid controller. Below patch already try to do chip reset, but
+> only for limited controllers...I have attached one more patch which does
+> chip reset from driver load time for Thunderbolt/Invader/Fury etc. (In
+> your case you have Thunderbolt controller, so attached patch is required.)
+> 
+> http://www.spinics.net/lists/linux-scsi/msg67288.html
+> 
+> Please post the result with attached patch.
 
-Can you separate this into patches which are essential bug fixes, which
-can go immediately and those which are enhancements which wait for the
-merge window?
+Good news! Customer tested your patch and said it fixed the problem :-)
 
-Thanks,
+I am now in the process of backporting the patch to the SLES 11 SP3
+kernel for further testing. I'll let you know how it goes. Thank you
+very much for your assistance.
 
-James
-
-
+-- 
+Jean Delvare
+SUSE L3 Support
