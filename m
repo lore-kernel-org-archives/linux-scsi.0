@@ -1,74 +1,84 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
- output? [BKO63661]
-Date: Tue, 7 Jul 2015 14:48:14 +0530
-Message-ID: <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
-References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
-	<CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
-	<robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	<20150429172832.GB7888@google.com>
-	<20150528122443.GI10210@google.com>	<9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
- <20150707104426.3d7e8697@endymion.delvare>
+From: Frans Klaver <fransklaver@gmail.com>
+Subject: Re: [PATCH] megaraid:Remove no longer required variable ret from the
+ function megasas_sync_map_info
+Date: Tue, 7 Jul 2015 12:07:23 +0200
+Message-ID: <CAH6sp9P4giamp-AQ_Ec3g-x8dcSXhgZo-1Wt8R7P2-p0-8Bbsw@mail.gmail.com>
+References: <1436199198-16415-1-git-send-email-xerofoify@gmail.com>
+	<3970836098e4580f9199a91daa257c48@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150707104426.3d7e8697@endymion.delvare>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:38377 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbbGGKHZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2015 06:07:25 -0400
+In-Reply-To: <3970836098e4580f9199a91daa257c48@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: Nicholas Krause <xerofoify@gmail.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, JBottomley@odin.com, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
+Can't seem to find the original, so here's a reply to the ack mail.
+
+On Tue, Jul 7, 2015 at 10:49 AM, Sumit Saxena
+<sumit.saxena@avagotech.com> wrote:
 > -----Original Message-----
-> From: Jean Delvare [mailto:jdelvare@suse.de]
-> Sent: Tuesday, July 07, 2015 2:14 PM
-> To: Kashyap Desai
-> Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
-linux-
-> scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;
-Sumit
-> Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;
-linux-
-> kernel@vger.kernel.org; Myron Stowe
-> Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
-> output? [BKO63661]
->
-> Hi Kashyap,
->
-> On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
-> > Bjorn/Robin,
-> >
-> > Apologies for delay. Here is one quick suggestion as we have seen
-> > similar issue (not exactly similar, but high probably to have same
-> > issue) while controller is configured on VM as pass-through and VM
-reboot
-> abruptly.
-> > In that particular issue, driver interact with FW which may  require
-> > chip reset to bring controller to operation state.
-> >
-> > Relevant patch was submitted for only Older controller as it was only
-> > seen for few MegaRaid controller. Below patch already try to do chip
-> > reset, but only for limited controllers...I have attached one more
-> > patch which does chip reset from driver load time for
-> > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
-> > controller, so attached patch is required.)
-> >
-> > http://www.spinics.net/lists/linux-scsi/msg67288.html
-> >
-> > Please post the result with attached patch.
->
-> Good news! Customer tested your patch and said it fixed the problem :-)
->
-> I am now in the process of backporting the patch to the SLES 11 SP3
-kernel for
-> further testing. I'll let you know how it goes. Thank you very much for
-your
-> assistance.
+> From: Nicholas Krause [mailto:xerofoify@gmail.com]
+> Sent: Monday, July 06, 2015 9:43 PM
+> To: kashyap.desai@avagotech.com
+> Cc: sumit.saxena@avagotech.com; uday.lingala@avagotech.com;
+> JBottomley@odin.com; megaraidlinux.pdl@avagotech.com;
+> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] megaraid:Remove no longer required variable ret from the
+> function megasas_sync_map_info
 
-Thanks for confirmation. Whatever patch I submitted to you, we have added
-recently (as part of common interface approach to do chip reset at load
-time). We will be submitting that patch to mainline soon.
+Isn't something shorter like
 
-~ Kashyap
+  [PATCH] megaraid: remove pointless variable
+
+much more readable?
+
+
+> This removes the no longer required variable ret due to this variable only
+> ever being used at the end of the function megasas_sync_map_info without
+> changing it's value from the orginal setting of its value to zero due to
+> this just remove the variable ret and just return the value of zero
+> directly here in order to indicate to the caller the call to this function
+> has run successfully without any non recoverable issues.
+
+No interpunction?
+
+
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> --
-> Jean Delvare
-> SUSE L3 Support
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 46a0f8f..b5a8c65 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -836,7 +836,7 @@ megasas_get_map_info(struct megasas_instance
+> *instance)  int  megasas_sync_map_info(struct megasas_instance *instance)
+> {
+> -       int ret = 0, i;
+> +       int i;
+>         struct megasas_cmd *cmd;
+>         struct megasas_dcmd_frame *dcmd;
+>         u32 size_sync_info, num_lds;
+> @@ -906,7 +906,7 @@ megasas_sync_map_info(struct megasas_instance
+> *instance)
+>
+>         instance->instancet->issue_dcmd(instance, cmd);
+>
+> -       return ret;
+> +       return 0;
+>  }
+>
+> Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+
+This ack in an outlook-style response confused the hell out of me ;).
+
+Thanks,
+Frans
