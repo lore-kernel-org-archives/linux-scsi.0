@@ -1,66 +1,47 @@
-From: Khalid Aziz <khalid@gonehiking.org>
-Subject: Re: [PATCH] [SCSI] FlashPoint: optimize string comparison
-Date: Tue, 07 Jul 2015 11:04:52 -0600
-Message-ID: <559C06B4.2010808@gonehiking.org>
-References: <1436247543-7326-1-git-send-email-christophe.jaillet@wanadoo.fr> <CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCHv2] sd: retry READ CAPACITY for ALUA state transition
+Date: Tue, 7 Jul 2015 13:48:26 -0700
+Message-ID: <559C3B1A.3020002@sandisk.com>
+References: <1436181130-82905-1-git-send-email-hare@suse.de>
+	 <559A9B23.4020705@sandisk.com>
+ <1436216244.6241.7.camel@HansenPartnership.com> <559B6F24.6020804@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Frans Klaver <fransklaver@gmail.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0072.outbound.protection.outlook.com ([157.56.111.72]:64170
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932704AbbGGUsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jul 2015 16:48:30 -0400
+In-Reply-To: <559B6F24.6020804@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/07/2015 02:45 AM, Frans Klaver wrote:
-> On Tue, Jul 7, 2015 at 7:39 AM, Christophe JAILLET
-> <christophe.jaillet@wanadoo.fr> wrote:
->> Stop comparing the strings as soon as we know that they don't match.
->>
->> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
->> ---
->>   drivers/scsi/FlashPoint.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
->> index 5c74e4c..24a4d1a 100644
->> --- a/drivers/scsi/FlashPoint.c
->> +++ b/drivers/scsi/FlashPoint.c
->> @@ -6280,8 +6280,10 @@ static unsigned char FPT_scmachid(unsigned char p_card,
->>                  match = 1;
->>
->>                  for (k = 0; k < ID_STRING_LENGTH; k++) {
->> -                       if (p_id_string[k] != FPT_scamInfo[i].id_string[k])
->> +                       if (p_id_string[k] != FPT_scamInfo[i].id_string[k]) {
->>                                  match = 0;
->> +                               break;
->> +                       }
->>                  }
->>
->>                  if (match) {
->
-> Why doesn't this use strncmp?
->
-> Thanks,
-> Frans
->
+On 07/06/2015 11:18 PM, Hannes Reinecke wrote:
+> However, to handle the above case correctly we would need to keep
+> track of the entire multipath topology, to figure out which devices
+> belong to that relative target port and might need to be updated
+> (there might be several paths in standby, and we will have sent the
+> RTPG only for one of them).
+> Patches for that are not done yet, so I thought the above patch
+> would be a simple stop-gap measure.
 
-I suspect that is how this code came from Mylex many years ago. Using 
-strncmp would indeed be a better way to clean this up. Also, further 
-down in the same routine:
+Hello Hannes,
 
-                 if (FPT_scamInfo[match].state == ID_UNUSED) {
-                         for (k = 0; k < ID_STRING_LENGTH; k++) {
-                                 FPT_scamInfo[match].id_string[k] =
-                                     p_id_string[k];
-                         }
-
-
-This should use strncpy instead. There is another similar spot further down.
-
-Christophe, if you can send a new patch with these clean-ups, that would 
-be great.
+Are you sure that keeping track of the entire multipath topology would 
+be required to implement what I proposed ? In the patch "scsi_dh_alua: 
+Use separate alua_port_group structure" 
+(http://thread.gmane.org/gmane.linux.scsi/101388/focus=101380) I see 
+that the new scsi_dh_alua code keeps track of the target port group 
+(TPG) ID and relative target port (RTP) ID. As you know this information 
+can be queried for each LUN via the Device Identification VPD page. How 
+about caching the TPG and RTP IDs per LUN such that the scsi_dh_alua 
+code can figure out which LUNs are associated with which target ports by 
+iterating over the known LUNs ?
 
 Thanks,
-Khalid
+
+Bart.
