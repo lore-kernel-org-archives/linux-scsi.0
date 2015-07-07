@@ -1,47 +1,45 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCHv2] sd: retry READ CAPACITY for ALUA state transition
-Date: Tue, 7 Jul 2015 13:48:26 -0700
-Message-ID: <559C3B1A.3020002@sandisk.com>
-References: <1436181130-82905-1-git-send-email-hare@suse.de>
-	 <559A9B23.4020705@sandisk.com>
- <1436216244.6241.7.camel@HansenPartnership.com> <559B6F24.6020804@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 0/3] megaraid: use dev_printk() when possible
+Date: Tue, 07 Jul 2015 15:52:14 -0500
+Message-ID: <20150707204916.6218.37871.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0072.outbound.protection.outlook.com ([157.56.111.72]:64170
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932704AbbGGUsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jul 2015 16:48:30 -0400
-In-Reply-To: <559B6F24.6020804@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/06/2015 11:18 PM, Hannes Reinecke wrote:
-> However, to handle the above case correctly we would need to keep
-> track of the entire multipath topology, to figure out which devices
-> belong to that relative target port and might need to be updated
-> (there might be several paths in standby, and we will have sent the
-> RTPG only for one of them).
-> Patches for that are not done yet, so I thought the above patch
-> would be a simple stop-gap measure.
+The current megaraid driver messages are somewhat inconsistent, with
+different combinations of driver name and device address:
 
-Hello Hannes,
+  megasas: 0x1000:0x005b:0x15d9:0x0690: bus 1:slot 0:func 0
+  megaraid_sas 0000:01:00.0: megasas: FW restarted successfully from megasas_init_fw!
+  megasas: Waiting for FW to come to ready state
 
-Are you sure that keeping track of the entire multipath topology would 
-be required to implement what I proposed ? In the patch "scsi_dh_alua: 
-Use separate alua_port_group structure" 
-(http://thread.gmane.org/gmane.linux.scsi/101388/focus=101380) I see 
-that the new scsi_dh_alua code keeps track of the target port group 
-(TPG) ID and relative target port (RTP) ID. As you know this information 
-can be queried for each LUN via the Device Identification VPD page. How 
-about caching the TPG and RTP IDs per LUN such that the scsi_dh_alua 
-code can figure out which LUNs are associated with which target ports by 
-iterating over the known LUNs ?
+These patches use dev_printk() to include the driver name and device
+address in the conventional format.
 
-Thanks,
+Changes between v2 and v3:
+  - Rebase to v4.2-rc1
+  - Fix more whitespace issues (but not all) in megaraid_sas_base.c
 
-Bart.
+Changes between v1 and v2:
+  - Rebase to next-20150601
+  - Squash megaraid_sas_base.c and megaraid_sas_fusion.c changes into one patch
+  - Split megasas_dump_pending_frames() run-on printks into one line each
+  - Add patch to fix whitespace errors in megasas_dump_pending_frames()
+
+---
+
+Bjorn Helgaas (3):
+      megaraid : use dev_printk when possible
+      megaraid_sas : use dev_printk when possible
+      megaraid_sas : fix whitespace errors
+
+
+ drivers/scsi/megaraid.c                     |  140 +++----
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  544 +++++++++++++--------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   95 ++---
+ 3 files changed, 378 insertions(+), 401 deletions(-)
