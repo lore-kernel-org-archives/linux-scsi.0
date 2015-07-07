@@ -1,73 +1,96 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/8] tcm_loop updates
-Date: Mon, 06 Jul 2015 17:25:03 -0700
-Message-ID: <1436228703.5138.2.camel@haakon3.risingtidesystems.com>
-References: <1434620622-65391-1-git-send-email-hare@suse.de>
-	 <20150619064855.GB1183@lst.de> <5583C117.4030103@suse.de>
-	 <1435048143.7460.50.camel@haakon3.risingtidesystems.com>
-	 <55892164.6020907@suse.de>
+Subject: Re: [PATCH 00/11] qla2xxx: Updates for Target Mode driver
+Date: Mon, 06 Jul 2015 18:16:09 -0700
+Message-ID: <1436231769.6297.7.camel@haakon3.risingtidesystems.com>
+References: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:56722 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754191AbbGGAZN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2015 20:25:13 -0400
-In-Reply-To: <55892164.6020907@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1435250031-20525-1-git-send-email-himanshu.madhani@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Nic Bellinger <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-On Tue, 2015-06-23 at 11:05 +0200, Hannes Reinecke wrote:
-> On 06/23/2015 10:29 AM, Nicholas A. Bellinger wrote:
-> > On Fri, 2015-06-19 at 09:13 +0200, Hannes Reinecke wrote:
-> >> On 06/19/2015 08:48 AM, Christoph Hellwig wrote:
-> >>> What's the benefit of the SAS transport class writeout?  I honestly
-> >>> always saw tcm_loop as a simple loopback driver, with the different
-> >>> transport IDs in the PR code as a gimmick.  Note that vhost and
-> >>> xen-blkback copies that style and I did plan to consolidate it
-> >>> in common code.
-> >>>
-> >> The benefit is that tcm_loop will show up in the system as a 'real'
-> >> SAS hba; long-term goal is to simulate SAS multipathing here.
-> >> I was even planning on adding simlated FC infrastructure, too;
-> >> with that we could simulate FC multipathing, too, and our QA would
-> >> be _so_ happy...
-> >>
-> > 
-> > Sounds like a reasonable use-case to support for loopback testing.
-> > 
-> >> Again, these patches are mainly a collection of patches I've done to
-> >> test various scenarios, in the hope others might find them useful,
-> >> too. So I can easily hold off these patches until you've posted your
-> >> rework.
-> >>
-> > 
-> > How different do you expect sas, fc, and iscsi transports to be..?
-> > 
-> > Do you think this would this be better served by a simple tcm_loop LLD
-> > specific API for different multipath transports..?
-> > 
-> Actually, I would split off the various transport functions into
-> separate files (tcm_loop_sas, tcm_loop_fc, etc), but keep a common
-> tcm_loop module.
-> We can even make transport classes optional by adding an explicit
-> 'sas.XXX' prefix scanning when creating the device similar to what
-> we do with the 'fc.XXX' prefix already.
-> With that we would have a 'sas.XXX', 'fc.XXX', and 'iqn.XXX' WWN
-> which would attach to the respective transport class, and any other
-> WWN (which would be the default) would be getting the standard
-> emulation without any transport class attached.
+Hi Himanshu & Co,
 
-I'm open to merging the tcm_loop patches #1-#6 as-is for the sas
-transport pieces, or wait until you've done a large split based on
-transport class types.
+(Adding target-devel for the qla_target.c bits, please include this 
+ list for future target patches :-)
 
-It's really your call how the initial merge should look.
+On Thu, 2015-06-25 at 12:33 -0400, Himanshu Madhani wrote:
+> Hi James, 
+> 
+> This series is applied on top of patch series sent on June 10
+>   [PATCH 0/9] qla2xxx: Patches for scsi "misc" branch 
+> (http://marc.info/?l=linux-scsi&m=143395156920505&w=2)
+> 
+> These set of patches addresses issue with reuse of stale command found
+> in a customer enviorment. Here's sequence of events which could result
+> into this reuse of stale command which could potentially lead to data
+> corruption.
+> 
+>  - Backend driver goes out of sync with front end driver due to session 
+>    management problem.
+>  - During this time a session receives a NEW login by the same initiator.
+>  - All the commands from previous session are not flushed before establishing
+>    a new session/connection. 
+>  - These stale commands leaks into new session resulting into case
+>    where they could potentially share same Exchange ID. 
+> 
+> In such case data can cross path between old and new session when the frontend
+> driver/fabric driver allows a new connection to be established without backend
+> knowledge. To fix this problem, old session is destroyed first before creating
+> new session. The session destroy process would wait for all existing commands
+> to finish. 
+> 
+> Please apply these patches to scsi tree at your earliest for inclusion in the
+> next mainline merge window.
+> 
+> Thanks,
+> Himanshu
+> 
+> Alexei Potashnik (8):
+>   qla2xxx: delay plogi/prli ack until existing sessions are deleted
+>   qla2xxx: Abort stale cmds on qla_tgt_wq when plogi arrives
+>   qla2xxx: added sess generations to detect RSCN update races
+>   qla2xxx: disable scsi_transport_fc registration in target mode
+>   qla2xxx: drop cmds/tmrs arrived while session is being deleted
+>   qla2xxx: terminate exchange when command is aborted by LIO
+>   qla2xxx: delete session if initiator is gone from FW
+>   qla2xxx: wait for all conflicts before ack'ing PLOGI
+> 
+> Himanshu Madhani (1):
+>   qla2xxx: Added interface to send ELS commands from driver.
+> 
+> Roland Dreier (1):
+>   qla2xxx: kill sessions/log out initiator on RSCN and port down events
+> 
+> Swapnil Nagle (1):
+>   qla2xxx: cleanup cmd in qla workqueue before processing TMR
+> 
+>  drivers/scsi/qla2xxx/qla_attr.c    |   36 ++
+>  drivers/scsi/qla2xxx/qla_dbg.c     |   13 +-
+>  drivers/scsi/qla2xxx/qla_def.h     |   35 ++-
+>  drivers/scsi/qla2xxx/qla_gbl.h     |    2 +
+>  drivers/scsi/qla2xxx/qla_init.c    |  188 ++++++--
+>  drivers/scsi/qla2xxx/qla_inline.h  |    2 +
+>  drivers/scsi/qla2xxx/qla_iocb.c    |  192 ++++++++
+>  drivers/scsi/qla2xxx/qla_isr.c     |    6 +
+>  drivers/scsi/qla2xxx/qla_os.c      |   13 +-
+>  drivers/scsi/qla2xxx/qla_target.c  |  930 +++++++++++++++++++++++++++++++++---
+>  drivers/scsi/qla2xxx/qla_target.h  |   88 +++-
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |   23 +-
+>  12 files changed, 1387 insertions(+), 141 deletions(-)
+> 
 
---nab
+Since this series addresses a real correctness problem and is destined
+for stable backports, I don't see a reason to wait until the v4.3-rc1
+merge window to merge this code, even though it's a pretty large change.
 
+James, are you going to push this for v4.2-rc scsi-core fixes, or shall
+I push via target-pending/master instead..?
 
+Thank you,
 
+--nab 
