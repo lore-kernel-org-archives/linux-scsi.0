@@ -1,56 +1,66 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
-Date: Tue, 07 Jul 2015 17:01:24 +0200
-Message-ID: <87bnfo106z.fsf@vitty.brq.redhat.com>
-References: <1435741448-29070-1-git-send-email-vkuznets@redhat.com>
-	<20150703161903.GA20449@infradead.org>
-	<BY2PR0301MB1654779EEF1205C4A009C5F6A0960@BY2PR0301MB1654.namprd03.prod.outlook.com>
+From: Khalid Aziz <khalid@gonehiking.org>
+Subject: Re: [PATCH] [SCSI] FlashPoint: optimize string comparison
+Date: Tue, 07 Jul 2015 11:04:52 -0600
+Message-ID: <559C06B4.2010808@gonehiking.org>
+References: <1436247543-7326-1-git-send-email-christophe.jaillet@wanadoo.fr> <CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757106AbbGGPB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jul 2015 11:01:29 -0400
-In-Reply-To: <BY2PR0301MB1654779EEF1205C4A009C5F6A0960@BY2PR0301MB1654.namprd03.prod.outlook.com>
-	(KY Srinivasan's message of "Fri, 3 Jul 2015 16:28:25 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Frans Klaver <fransklaver@gmail.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Long Li <longli@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-KY Srinivasan <kys@microsoft.com> writes:
-
->> -----Original Message-----
->> From: Christoph Hellwig [mailto:hch@infradead.org]
->> Sent: Friday, July 3, 2015 9:19 AM
->> To: Vitaly Kuznetsov
->> Cc: linux-scsi@vger.kernel.org; Long Li; KY Srinivasan; Haiyang Zhang; James
->> E.J. Bottomley; devel@linuxdriverproject.org; linux-kernel@vger.kernel.org
->> Subject: Re: [PATCH] scsi: storvsc: make INQUIRY response SPC-compliant
->> 
->> On Wed, Jul 01, 2015 at 11:04:08AM +0200, Vitaly Kuznetsov wrote:
->> > SPC-2/3/4 specs state that "The standard INQUIRY data (see table ...)
->> > shall contain at least 36 bytes". Hyper-V host doesn't always honor this
->> > requirement, e.g. when there is no physical device present at a particular
->> > LUN host sets Peripheral qualifier to 011b and Additional length to 0
->> > (thus making the reply 5-bytes long). Upper level SCSI stack complains
->> > with 'INQUIRY result too short (5), using 36'. Fix the issue by mangling
->> > Additional length field in host's reply at the driver level.
->> 
->> This looks like a big mess, and usage of phys_to_virt is not generally
->> safe to start with.
->> 
->> If HyperV really is that broken the warning seems correct, but if you
->> really have to get rid of it we could add a blist flag to not issue
->> the warning in the core code instead of hacking around it in the driver.
+On 07/07/2015 02:45 AM, Frans Klaver wrote:
+> On Tue, Jul 7, 2015 at 7:39 AM, Christophe JAILLET
+> <christophe.jaillet@wanadoo.fr> wrote:
+>> Stop comparing the strings as soon as we know that they don't match.
+>>
+>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>> ---
+>>   drivers/scsi/FlashPoint.c | 4 +++-
+>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+>> index 5c74e4c..24a4d1a 100644
+>> --- a/drivers/scsi/FlashPoint.c
+>> +++ b/drivers/scsi/FlashPoint.c
+>> @@ -6280,8 +6280,10 @@ static unsigned char FPT_scmachid(unsigned char p_card,
+>>                  match = 1;
+>>
+>>                  for (k = 0; k < ID_STRING_LENGTH; k++) {
+>> -                       if (p_id_string[k] != FPT_scamInfo[i].id_string[k])
+>> +                       if (p_id_string[k] != FPT_scamInfo[i].id_string[k]) {
+>>                                  match = 0;
+>> +                               break;
+>> +                       }
+>>                  }
+>>
+>>                  if (match) {
 >
-> Agreed. We have fixed this issue in win10 and I am trying to get the fix backported.
+> Why doesn't this use strncmp?
+>
+> Thanks,
+> Frans
+>
 
-In case this is fixed in future Hyper-V versions introducing new blist
-flags looks like an overkill, let's leave things as they are.
+I suspect that is how this code came from Mylex many years ago. Using 
+strncmp would indeed be a better way to clean this up. Also, further 
+down in the same routine:
+
+                 if (FPT_scamInfo[match].state == ID_UNUSED) {
+                         for (k = 0; k < ID_STRING_LENGTH; k++) {
+                                 FPT_scamInfo[match].id_string[k] =
+                                     p_id_string[k];
+                         }
+
+
+This should use strncpy instead. There is another similar spot further down.
+
+Christophe, if you can send a new patch with these clean-ups, that would 
+be great.
 
 Thanks,
-
--- 
-  Vitaly
+Khalid
