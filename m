@@ -1,35 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 3/3] megaraid_sas : fix whitespace errors
-Date: Wed, 08 Jul 2015 12:48:58 +0200
-Message-ID: <559D001A.3020707@suse.de>
-References: <20150707204916.6218.37871.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150707205245.6218.59809.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 5/5] target: Fix wrong setting of sense format for PI
+ errors
+Date: Wed, 8 Jul 2015 03:49:55 -0700
+Message-ID: <20150708104955.GA20842@infradead.org>
+References: <1436188508-1539-1-git-send-email-sagig@mellanox.com>
+ <1436188508-1539-6-git-send-email-sagig@mellanox.com>
+ <20150708101931.GD14466@infradead.org>
+ <559CFD14.9090803@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150707205245.6218.59809.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42879 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758263AbbGHKt6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2015 06:49:58 -0400
+Content-Disposition: inline
+In-Reply-To: <559CFD14.9090803@dev.mellanox.co.il>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: Sagi Grimberg <sagig@mellanox.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
-On 07/07/2015 10:52 PM, Bjorn Helgaas wrote:
-> Fix whitespace and indentation errors.  No code change.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |  244 ++++++++++++++-----=
-----------
->  1 file changed, 118 insertions(+), 126 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On Wed, Jul 08, 2015 at 01:36:04PM +0300, Sagi Grimberg wrote:
+> We don't have any other information today, but sector is not the only
+> information that is requires a descriptor format, so maybe it will be a
+> bit awkward to condition the descriptor format on the sector info?
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+The only reason why you'd want to support descriptor type sense data is
+because you need to add a second descriptor.  If we have another case
+that needs descriptor sense data it'll also need to add that additional
+descriptor.  So we'll need a conditional for it in the sense data
+generation anyway.
