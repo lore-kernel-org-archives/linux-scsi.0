@@ -1,66 +1,115 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2] sd: retry READ CAPACITY for ALUA state transition
-Date: Wed, 08 Jul 2015 08:20:27 +0200
-Message-ID: <559CC12B.3000002@suse.de>
-References: <1436181130-82905-1-git-send-email-hare@suse.de>	 <559A9B23.4020705@sandisk.com> <1436216244.6241.7.camel@HansenPartnership.com> <559B6F24.6020804@suse.de> <559C3B1A.3020002@sandisk.com>
+From: Frans Klaver <fransklaver@gmail.com>
+Subject: Re: [PATCH] [SCSI] FlashPoint: optimize string comparison
+Date: Wed, 8 Jul 2015 09:12:40 +0200
+Message-ID: <CAH6sp9OmMje3EAVisaToorOQb+j3AWm_RE_UTpXN6eYjFny72w@mail.gmail.com>
+References: <1436247543-7326-1-git-send-email-christophe.jaillet@wanadoo.fr>
+	<CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>
+	<559C06B4.2010808@gonehiking.org>
+	<559CB8EC.1090008@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54854 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751068AbbGHGU3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 02:20:29 -0400
-In-Reply-To: <559C3B1A.3020002@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <559CB8EC.1090008@wanadoo.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Khalid Aziz <khalid@gonehiking.org>, JBottomley@odin.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/07/2015 10:48 PM, Bart Van Assche wrote:
-> On 07/06/2015 11:18 PM, Hannes Reinecke wrote:
->> However, to handle the above case correctly we would need to keep
->> track of the entire multipath topology, to figure out which devices
->> belong to that relative target port and might need to be updated
->> (there might be several paths in standby, and we will have sent the
->> RTPG only for one of them).
->> Patches for that are not done yet, so I thought the above patch
->> would be a simple stop-gap measure.
->=20
-> Hello Hannes,
->=20
-> Are you sure that keeping track of the entire multipath topology
-> would be required to implement what I proposed ? In the patch
-> "scsi_dh_alua: Use separate alua_port_group structure"
-> (http://thread.gmane.org/gmane.linux.scsi/101388/focus=3D101380) I se=
-e
-> that the new scsi_dh_alua code keeps track of the target port group
-> (TPG) ID and relative target port (RTP) ID. As you know this
-> information can be queried for each LUN via the Device
-> Identification VPD page. How about caching the TPG and RTP IDs per
-> LUN such that the scsi_dh_alua code can figure out which LUNs are
-> associated with which target ports by iterating over the known LUNs ?
->=20
-I did intentionally _not_ store a pointer to the attached LUN in the
-alua_port_group structure, as this would induce yet another
-potential race condition when devices are being removed.
+On Wed, Jul 8, 2015 at 7:45 AM, Christophe JAILLET
+<christophe.jaillet@wanadoo.fr> wrote:
+> Le 07/07/2015 19:04, Khalid Aziz a =C3=A9crit :
+>>
+>> On 07/07/2015 02:45 AM, Frans Klaver wrote:
+>>>
+>>> On Tue, Jul 7, 2015 at 7:39 AM, Christophe JAILLET
+>>> <christophe.jaillet@wanadoo.fr> wrote:
+>>>>
+>>>> Stop comparing the strings as soon as we know that they don't matc=
+h.
+>>>>
+>>>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>>>> ---
+>>>>   drivers/scsi/FlashPoint.c | 4 +++-
+>>>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+>>>> index 5c74e4c..24a4d1a 100644
+>>>> --- a/drivers/scsi/FlashPoint.c
+>>>> +++ b/drivers/scsi/FlashPoint.c
+>>>> @@ -6280,8 +6280,10 @@ static unsigned char FPT_scmachid(unsigned =
+char
+>>>> p_card,
+>>>>                  match =3D 1;
+>>>>
+>>>>                  for (k =3D 0; k < ID_STRING_LENGTH; k++) {
+>>>> -                       if (p_id_string[k] !=3D
+>>>> FPT_scamInfo[i].id_string[k])
+>>>> +                       if (p_id_string[k] !=3D
+>>>> FPT_scamInfo[i].id_string[k]) {
+>>>>                                  match =3D 0;
+>>>> +                               break;
+>>>> +                       }
+>>>>                  }
+>>>>
+>>>>                  if (match) {
+>>>
+>>>
+>>> Why doesn't this use strncmp?
+>>>
+>>> Thanks,
+>>> Frans
+>>>
+>>
+>> I suspect that is how this code came from Mylex many years ago. Usin=
+g
+>> strncmp would indeed be a better way to clean this up. Also, further=
+ down in
+>> the same routine:
+>>
+>>                 if (FPT_scamInfo[match].state =3D=3D ID_UNUSED) {
+>>                         for (k =3D 0; k < ID_STRING_LENGTH; k++) {
+>>                                 FPT_scamInfo[match].id_string[k] =3D
+>>                                     p_id_string[k];
+>>                         }
+>>
+>>
+>> This should use strncpy instead. There is another similar spot furth=
+er
+>> down.
+>>
+>> Christophe, if you can send a new patch with these clean-ups, that w=
+ould
+>> be great.
+>>
+>> Thanks,
+>> Khalid
+>
+>
+> Hi,
+>
+> I'm sorry but I won't propose a new patch for that.
+>
+> I had the same reaction at first (why not use strncmp?) but it seems =
+to be
+> the way this driver is coded. Should we want to introduce strncmp her=
+e,
+> then, as you have noticed, strcpy should be used to. memset could be =
+also
+> used in many places. Then looking elsewhere in the code, many things =
+should,
+> IMHO, also be fixed. (use consistently empty lines before/after code =
+; use
+> consistently { }...)
+>
+> Another concern to me is "the use of carriage return". In the followi=
+ng
+> examples, things could be much more readable if not limited to 50 cha=
+rs per
+> line, or so.
 
-But meanwhile I've come up with a simpler patch which handles this
-rather elegantly (methinks :-), and doesn't require any additional
-infrastructure.
-I'll be posting it shortly.
+80. Parts of the code are indented way too much, resulting in these
+unreadable lines. I have to say that this entire driver looks like
+something that (sh|w)ould be in staging right now.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+=46rans
