@@ -1,82 +1,53 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/20] revert "scsi_dh_alua: ALUA hander attach should succeed while TPG is transitioning"
-Date: Wed,  8 Jul 2015 11:06:13 +0200
-Message-ID: <1436346378-96518-16-git-send-email-hare@suse.de>
+Subject: [PATCH 01/20] scsi_dh_alua: Disable ALUA handling for non-disk devices
+Date: Wed,  8 Jul 2015 11:05:59 +0200
+Message-ID: <1436346378-96518-2-git-send-email-hare@suse.de>
 References: <1436346378-96518-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35946 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:35903 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934522AbbGHJGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 05:06:33 -0400
+	id S934499AbbGHJG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2015 05:06:28 -0400
 In-Reply-To: <1436346378-96518-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
-This reverts commit a8e5a2d593cbfccf530c3382c2c328d2edaa7b66
-
-Obsoleted by the next patch.
+Non-disk devices might support ALUA, but the firmware
+implementation is untested and frequently broken.
+As we're don't actually need it disable ALUA support
+for non-disk device for now.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 6991171..88c150a 100644
+index cc2773b..7d01ef0 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -498,13 +498,12 @@ static int alua_check_sense(struct scsi_device *sdev,
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-- * @wait_for_transition: if nonzero, wait ALUA_FAILOVER_TIMEOUT seconds for device to exit transitioning state
-  *
-  * Evaluate the Target Port Group State.
-  * Returns SCSI_DH_DEV_OFFLINED if the path is
-  * found to be unusable.
-  */
--static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
-+static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+@@ -320,6 +320,18 @@ static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
  {
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
- 	struct scsi_sense_hdr sense_hdr;
-@@ -600,7 +599,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 	else
- 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
+ 	int err = SCSI_DH_OK;
  
--	if (wait_for_transition && (orig_transition_tmo != pg->transition_tmo)) {
-+	if (orig_transition_tmo != pg->transition_tmo) {
- 		sdev_printk(KERN_INFO, sdev,
- 			    "%s: transition timeout set to %d seconds\n",
- 			    ALUA_DH_NAME, pg->transition_tmo);
-@@ -638,19 +637,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 
- 	switch (pg->state) {
- 	case TPGS_STATE_TRANSITIONING:
--		if (wait_for_transition) {
--			if (time_before(jiffies, expiry)) {
--				/* State transition, retry */
--				interval += 2000;
--				msleep(interval);
--				goto retry;
--			}
--			err = SCSI_DH_RETRY;
--		} else {
--			err = SCSI_DH_OK;
-+		if (time_before(jiffies, expiry)) {
-+			/* State transition, retry */
-+			interval += 2000;
-+			msleep(interval);
-+			goto retry;
- 		}
--
- 		/* Transitioning time exceeded, set port to standby */
-+		err = SCSI_DH_RETRY;
- 		pg->state = TPGS_STATE_STANDBY;
- 		break;
- 	case TPGS_STATE_OFFLINE:
++	/*
++	 * ALUA support for non-disk devices is fraught with
++	 * difficulties, so disable it for now.
++	 */
++	if (sdev->type != TYPE_DISK) {
++		h->tpgs = TPGS_MODE_NONE;
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: disable for non-disk devices\n",
++			    ALUA_DH_NAME);
++		return SCSI_DH_DEV_UNSUPP;
++	}
++
+ 	h->tpgs = scsi_device_tpgs(sdev);
+ 	switch (h->tpgs) {
+ 	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
 -- 
 1.8.5.2
 
