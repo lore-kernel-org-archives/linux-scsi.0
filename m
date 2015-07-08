@@ -1,58 +1,66 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 2/3] megaraid_sas : use dev_printk when possible
-Date: Wed, 8 Jul 2015 08:28:06 -0500
-Message-ID: <CAErSpo6r8TH=262JYpUe4_RFdpEy6XA4LdGa8G5jN27pS0i4_A@mail.gmail.com>
-References: <20150707204916.6218.37871.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150707205233.6218.13548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <559CFFBE.80801@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v4 1/5] target: Inline transport_get_sense_codes()
+Date: Wed,  8 Jul 2015 17:58:50 +0300
+Message-ID: <1436367534-15995-2-git-send-email-sagig@mellanox.com>
+References: <1436367534-15995-1-git-send-email-sagig@mellanox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34481 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758521AbbGHN21 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2015 09:28:27 -0400
-Received: by wifm2 with SMTP id m2so89596539wif.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2015 06:28:26 -0700 (PDT)
-In-Reply-To: <559CFFBE.80801@suse.de>
+Received: from [193.47.165.129] ([193.47.165.129]:56976 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934821AbbGHO7W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2015 10:59:22 -0400
+In-Reply-To: <1436367534-15995-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Joe Perches <joe@perches.com>, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Wed, Jul 8, 2015 at 5:47 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 07/07/2015 10:52 PM, Bjorn Helgaas wrote:
->> Use dev_printk() when possible to make messages more useful.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas_base.c   |  304 +++++++++++++--------------
->>  drivers/scsi/megaraid/megaraid_sas_fusion.c |   95 ++++----
->>  2 files changed, 196 insertions(+), 203 deletions(-)
->>
-> [ .. ]
->> @@ -1873,8 +1872,8 @@ static int megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
->>       cmd = megasas_get_cmd(instance);
->>
->>       if (!cmd) {
->> -             printk(KERN_DEBUG "megasas: megasas_get_ld_vf_affiliation_111:"
->> -                    "Failed to get cmd for scsi%d.\n",
->> +             dev_printk(KERN_DEBUG, &instance->pdev->dev, "megasas_get_ld_vf_affiliation_111:"
->> +                    "Failed to get cmd for scsi%d\n",
->>                       instance->host->host_no);
->>               return -ENOMEM;
->>       }
-> Makes one wonder why we don't have a 'dev_debug'; dev_notice() and
-> dev_warn() are there ...
+From: Bart Van Assche <bart.vanassche@sandisk.com>
 
-There actually is a 'dev_dbg()' but when CONFIG_DYNAMIC_DEBUG is set,
-I think dev_dbg() generates no output by default.  So to preserve the
-previous behavior of "this message always appears in the dmesg log no
-matter what the dynamic debug setting," I used dev_printk(KERN_DEBUG).
+Inline this function in its call site since it performs a trivial
+task and since it is only called once.
 
-Somebody who maintains these drivers could probably go through and
-convert these to either dev_info() or dev_dbg() depending on what they
-need.  That would require more judgment than I wanted to get into :)
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/target/target_core_transport.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-Thanks for taking a look at these!
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 1bc8378..e895156 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2620,17 +2620,6 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
+ }
+ EXPORT_SYMBOL(transport_wait_for_tasks);
+ 
+-static int transport_get_sense_codes(
+-	struct se_cmd *cmd,
+-	u8 *asc,
+-	u8 *ascq)
+-{
+-	*asc = cmd->scsi_asc;
+-	*ascq = cmd->scsi_ascq;
+-
+-	return 0;
+-}
+-
+ static
+ void transport_err_sector_info(unsigned char *buffer, sector_t bad_sector)
+ {
+@@ -2824,9 +2813,8 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+ 		buffer[SPC_ADD_SENSE_LEN_OFFSET] = 10;
+ 		/* Not Ready */
+ 		buffer[SPC_SENSE_KEY_OFFSET] = NOT_READY;
+-		transport_get_sense_codes(cmd, &asc, &ascq);
+-		buffer[SPC_ASC_KEY_OFFSET] = asc;
+-		buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
++		buffer[SPC_ASC_KEY_OFFSET] = cmd->scsi_asc;
++		buffer[SPC_ASCQ_KEY_OFFSET] = cmd->scsi_ascq;
+ 		break;
+ 	case TCM_MISCOMPARE_VERIFY:
+ 		/* CURRENT ERROR */
+-- 
+1.8.4.3
 
-Bjorn
