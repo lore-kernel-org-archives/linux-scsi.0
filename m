@@ -1,77 +1,76 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 5/5] target: Return ABORTED_COMMAND sense key for PI
- errors
-Date: Wed, 08 Jul 2015 17:07:54 +0200
-Message-ID: <559D3CCA.50208@suse.de>
-References: <1436367534-15995-1-git-send-email-sagig@mellanox.com> <1436367534-15995-6-git-send-email-sagig@mellanox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35371 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753205AbbGHPH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 11:07:56 -0400
-In-Reply-To: <1436367534-15995-6-git-send-email-sagig@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] lpfc: Destroy lpfc_hba_index IDR on module exit
+Date: Wed,  8 Jul 2015 17:19:57 +0200
+Message-ID: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 07/08/2015 04:58 PM, Sagi Grimberg wrote:
-> PI errors were reported with ILLEGAL_REQUEST sense key but
-> there was actually no problem with the request. Target
-> detected PI errors should be reported with aborted command
-> sense key.
->=20
-> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> ---
->  drivers/target/target_core_transport.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/=
-target_core_transport.c
-> index 923e69d..1847fdc 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -2705,19 +2705,19 @@ static const struct sense_info sense_info_tab=
-le[] =3D {
->  		.ascq =3D 0x00,
->  	},
->  	[TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED] =3D {
-> -		.key =3D ILLEGAL_REQUEST,
-> +		.key =3D ABORTED_COMMAND,
->  		.asc =3D 0x10,
->  		.ascq =3D 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
->  		.add_sector_info =3D true,
->  	},
->  	[TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] =3D {
-> -		.key =3D ILLEGAL_REQUEST,
-> +		.key =3D ABORTED_COMMAND,
->  		.asc =3D 0x10,
->  		.ascq =3D 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
->  		.add_sector_info =3D true,
->  	},
->  	[TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] =3D {
-> -		.key =3D ILLEGAL_REQUEST,
-> +		.key =3D ABORTED_COMMAND,
->  		.asc =3D 0x10,
->  		.ascq =3D 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
->  		.add_sector_info =3D true,
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Destroy lpfc_hba_index IDR on module exit, reclaiming the allocated memory.
 
-Cheers,
+This was detected by the following semantic patch (written by Luis Rodriguez
+<mcgrof@suse.com>)
+<SmPL>
+@ defines_module_init @
+declarer name module_init, module_exit;
+declarer name DEFINE_IDR;
+identifier init;
+@@
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+module_init(init);
+
+@ defines_module_exit @
+identifier exit;
+@@
+
+module_exit(exit);
+
+@ declares_idr depends on defines_module_init && defines_module_exit @
+identifier idr;
+@@
+
+DEFINE_IDR(idr);
+
+@ on_exit_calls_destroy depends on declares_idr && defines_module_exit @
+identifier declares_idr.idr, defines_module_exit.exit;
+@@
+
+exit(void)
+{
+ ...
+ idr_destroy(&idr);
+ ...
+}
+
+@ missing_module_idr_destroy depends on declares_idr && defines_module_exit && !on_exit_calls_destroy @
+identifier declares_idr.idr, defines_module_exit.exit;
+@@
+
+exit(void)
+{
+ ...
+ +idr_destroy(&idr);
+}
+</SmPL>
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f962118..4bedb06 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11477,6 +11477,7 @@ lpfc_exit(void)
+ 		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
+ 	}
+ 	kfree(lpfc_used_cpu);
++	idr_destroy(&lpfc_hba_index);
+ }
+ 
+ module_init(lpfc_init);
+-- 
+2.4.3
