@@ -1,35 +1,76 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v4 3/5] scsi: Move sense handling routines to scsi_common
-Date: Wed, 8 Jul 2015 18:23:29 +0300
-Message-ID: <559D4071.8010501@dev.mellanox.co.il>
-References: <1436367534-15995-1-git-send-email-sagig@mellanox.com>
- <1436367534-15995-4-git-send-email-sagig@mellanox.com>
- <559D3C5C.4020903@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:35074 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933113AbbGHPXS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2015 11:23:18 -0400
-Received: by wgjx7 with SMTP id x7so198899628wgj.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2015 08:23:17 -0700 (PDT)
-In-Reply-To: <559D3C5C.4020903@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] st: Destroy st_index_idr on module exit
+Date: Wed,  8 Jul 2015 17:24:01 +0200
+Message-ID: <1436369041-31156-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 7/8/2015 6:06 PM, Hannes Reinecke wrote:
+Destroy st_index_idr on module exit, reclaiming the allocated memory.
 
-> We're adding extra fields here, so we need to make sure to not
-> overflow the buffer. You probably have to pass in the buffersize
-> to avoid an overflow ...
-> Yeah, I know, it's theoretical at the moment.
-> But there's nothing which prevents anyone to add other fields to it,
-> so this field might be the one causing the overflow.
+This was detected by the following semantic patch (written by Luis Rodriguez
+<mcgrof@suse.com>)
+<SmPL>
+@ defines_module_init @
+declarer name module_init, module_exit;
+declarer name DEFINE_IDR;
+identifier init;
+@@
 
-Since this patch is simply a movement of functions I don't think I
-should change any functionality here. Would it be acceptable to fix
-this in an incremental patch?
+module_init(init);
+
+@ defines_module_exit @
+identifier exit;
+@@
+
+module_exit(exit);
+
+@ declares_idr depends on defines_module_init && defines_module_exit @
+identifier idr;
+@@
+
+DEFINE_IDR(idr);
+
+@ on_exit_calls_destroy depends on declares_idr && defines_module_exit @
+identifier declares_idr.idr, defines_module_exit.exit;
+@@
+
+exit(void)
+{
+ ...
+ idr_destroy(&idr);
+ ...
+}
+
+@ missing_module_idr_destroy depends on declares_idr && defines_module_exit && !on_exit_calls_destroy @
+identifier declares_idr.idr, defines_module_exit.exit;
+@@
+
+exit(void)
+{
+ ...
+ +idr_destroy(&idr);
+}
+</SmPL>
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/st.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 3f25b8f..79ac024 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4427,6 +4427,7 @@ static void __exit exit_st(void)
+ 	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
+ 				 ST_MAX_TAPE_ENTRIES);
+ 	class_unregister(&st_sysfs_class);
++	idr_destroy(&st_index_idr);
+ 	printk(KERN_INFO "st: Unloaded.\n");
+ }
+ 
+-- 
+2.4.3
