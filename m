@@ -1,188 +1,242 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/20] scsi_dh_alua: switch to scsi_execute()
-Date: Wed,  8 Jul 2015 11:06:07 +0200
-Message-ID: <1436346378-96518-10-git-send-email-hare@suse.de>
+Subject: [PATCH 14/20] scsi_dh_alua: parse target device id
+Date: Wed,  8 Jul 2015 11:06:12 +0200
+Message-ID: <1436346378-96518-15-git-send-email-hare@suse.de>
 References: <1436346378-96518-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35929 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:35945 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934506AbbGHJGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 05:06:31 -0400
+	id S934510AbbGHJGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2015 05:06:33 -0400
 In-Reply-To: <1436346378-96518-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
-All commands are issued synchronously, so no need to open-code
-scsi_execute anymore.
+Parse VPD descriptor to figure out the device identification.
+As devices might implement several descriptors the order
+of preference is:
+- NAA IEE Registered Extended
+- EUI-64 based 16-byte
+- EUI-64 based 12-byte
+- NAA IEEE Registered
+- NAA IEEE Extended
+A SCSI name string descriptor is preferred to all of them
+if the identification is longer than 16 bytes.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 108 ++++++++---------------------
- 1 file changed, 27 insertions(+), 81 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 152 ++++++++++++++++++++++++++++-
+ 1 file changed, 147 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 76bc66d..61301cf 100644
+index f4d851a..6991171 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -103,72 +103,29 @@ static int realloc_buffer(struct alua_dh_data *h, unsigned len)
- 	return 0;
- }
- 
--static struct request *get_alua_req(struct scsi_device *sdev,
--				    void *buffer, unsigned buflen, int rw)
--{
--	struct request *rq;
--	struct request_queue *q = sdev->request_queue;
--
--	rq = blk_get_request(q, rw, GFP_NOIO);
--
--	if (IS_ERR(rq)) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: blk_get_request failed\n", __func__);
--		return NULL;
--	}
--	blk_rq_set_block_pc(rq);
--
--	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
--		blk_put_request(rq);
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: blk_rq_map_kern failed\n", __func__);
--		return NULL;
--	}
--
--	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
--			 REQ_FAILFAST_DRIVER;
--	rq->retries = ALUA_FAILOVER_RETRIES;
--	rq->timeout = ALUA_FAILOVER_TIMEOUT * HZ;
--
--	return rq;
--}
--
- /*
-  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-  * @sdev: sdev the command should be sent to
-  */
--static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
- 			    int bufflen, unsigned char *sense, int flags)
+@@ -70,6 +70,9 @@ static DEFINE_SPINLOCK(port_group_lock);
+ struct alua_port_group {
+ 	struct kref		kref;
+ 	struct list_head	node;
++	unsigned char		device_id[256];
++	unsigned char		device_id_str[256];
++	int			device_id_size;
+ 	int			group_id;
+ 	int			tpgs;
+ 	int			state;
+@@ -227,17 +230,84 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
  {
--	struct request *rq;
--	int err;
--
--	rq = get_alua_req(sdev, buff, bufflen, READ);
--	if (!rq) {
--		err = DRIVER_BUSY << 24;
--		goto done;
--	}
-+	u8 cdb[16];
-+	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-+		REQ_FAILFAST_DRIVER;
+ 	unsigned char *d;
+ 	int group_id = -1;
+-	struct alua_port_group *pg = NULL;
++	char device_id_str[256], *device_id = NULL;
++	int device_id_size, device_id_type = 0;
++	struct alua_port_group *tmp_pg, *pg = NULL;
  
- 	/* Prepare the command. */
--	rq->cmd[0] = MAINTENANCE_IN;
-+	memset(cdb, 0x0, 16);
-+	cdb[0] = MAINTENANCE_IN;
- 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
--		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-+		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
- 	else
--		rq->cmd[1] = MI_REPORT_TARGET_PGS;
--	put_unaligned_be32(bufflen, &rq->cmd[6]);
--	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
-+		cdb[1] = MI_REPORT_TARGET_PGS;
-+	put_unaligned_be32(bufflen, &cdb[6]);
+ 	if (!sdev->vpd_pg83)
+ 		return SCSI_DH_DEV_UNSUPP;
  
--	rq->sense = sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = 0;
--
--	blk_execute_rq(rq->q, NULL, rq, 1);
--	if (rq->errors)
--		err = rq->errors;
--
--	blk_put_request(rq);
--done:
--	return err;
-+	return scsi_execute(sdev, cdb, DMA_FROM_DEVICE, buff, bufflen,
-+			    sense, ALUA_FAILOVER_TIMEOUT * HZ,
-+			    ALUA_FAILOVER_RETRIES, req_flags, NULL);
- }
+ 	/*
+ 	 * Look for the correct descriptor.
++	 * Order of preference for lun descriptor:
++	 * - SCSI name string
++	 * - NAA IEEE Registered Extended
++	 * - EUI-64 based 16-byte
++	 * - EUI-64 based 12-byte
++	 * - NAA IEEE Registered
++	 * - NAA IEEE Extended
++	 * as longer descriptors reduce the likelyhood
++	 * of identification clashes.
+ 	 */
++	memset(device_id_str, 0, 256);
++	device_id_size = 0;
+ 	d = sdev->vpd_pg83 + 4;
+ 	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
+ 		switch (d[1] & 0xf) {
++		case 0x2:
++			/* EUI-64 */
++			if ((d[1] & 0x30) == 0x00) {
++				if (device_id_size > d[3])
++					break;
++				/* Prefer NAA IEEE Registered Extended */
++				if (device_id_type == 0x3 &&
++				    device_id_size == d[3])
++					break;
++				device_id_size = d[3];
++				device_id = d + 4;
++				device_id_type = d[1] & 0xf;
++				switch (device_id_size) {
++				case 8:
++					sprintf(device_id_str,
++						"eui.%8phN", d + 4);
++					break;
++				case 12:
++					sprintf(device_id_str,
++						"eui.%12phN", d + 4);
++					break;
++				case 16:
++					sprintf(device_id_str,
++						"eui.%16phN", d + 4);
++					break;
++				default:
++					device_id_size = 0;
++					break;
++				}
++			}
++			break;
++		case 0x3:
++			/* NAA */
++			if ((d[1] & 0x30) == 0x00) {
++				if (device_id_size > d[3])
++					break;
++				device_id_size = d[3];
++				device_id = d + 4;
++				device_id_type = d[1] & 0xf;
++				switch (device_id_size) {
++				case 8:
++					sprintf(device_id_str,
++						"naa.%8phN", d + 4);
++					break;
++				case 16:
++					sprintf(device_id_str,
++						"naa.%16phN", d + 4);
++					break;
++				default:
++					device_id_size = 0;
++					break;
++				}
++			}
++			break;
+ 		case 0x4:
+ 			/* Relative target port */
+ 			h->rel_port = (d[6] << 8) + d[7];
+@@ -246,6 +316,21 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			/* Target port group */
+ 			group_id = (d[6] << 8) + d[7];
+ 			break;
++		case 0x8:
++			/* SCSI name string */
++			if ((d[1] & 0x30) == 0x00) {
++				/* SCSI name */
++				if (device_id_size > d[3])
++					break;
++				device_id_size = d[3];
++				device_id = d + 4;
++				device_id_type = d[1] & 0xf;
++				strncpy(device_id_str, d + 4, 256);
++				if (device_id_size > 255)
++					device_id_size = 255;
++				device_id_str[device_id_size] = '\0';
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -264,9 +349,38 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		h->tpgs = TPGS_MODE_NONE;
+ 		return SCSI_DH_DEV_UNSUPP;
+ 	}
++	if (!device_id_size) {
++		/*
++		 * Internal error: TPGS supported by no
++		 * device identifcation found.
++		 * Disable ALUA support.
++		 */
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: No device descriptors found\n",
++			    ALUA_DH_NAME);
++		h->tpgs = TPGS_MODE_NONE;
++		return SCSI_DH_DEV_UNSUPP;
++	}
+ 	sdev_printk(KERN_INFO, sdev,
+-		    "%s: port group %02x rel port %02x\n",
+-		    ALUA_DH_NAME, group_id, h->rel_port);
++		    "%s: device %s port group %02x "
++		    "rel port %02x\n", ALUA_DH_NAME,
++		    device_id_str, group_id, h->rel_port);
++	spin_lock(&port_group_lock);
++	list_for_each_entry(tmp_pg, &port_group_list, node) {
++		if (tmp_pg->group_id != group_id)
++			continue;
++		if (tmp_pg->device_id_size != device_id_size)
++			continue;
++		if (memcmp(tmp_pg->device_id, device_id,
++			   device_id_size))
++			continue;
++		h->pg = tmp_pg;
++		kref_get(&tmp_pg->kref);
++		break;
++	}
++	spin_unlock(&port_group_lock);
++	if (h->pg)
++		return SCSI_DH_OK;
  
- /*
-@@ -178,40 +135,29 @@ done:
-  * to 'active/optimized' and let the array firmware figure out
-  * the states of the remaining groups.
-  */
--static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
--			    unsigned char *sense)
-+static int submit_stpg(struct scsi_device *sdev, int group_id,
-+		       unsigned char *sense)
- {
--	struct request *rq;
-+	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
- 	unsigned char stpg_data[8];
- 	int stpg_len = 8;
--	int err = 0;
-+	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-+		REQ_FAILFAST_DRIVER;
+ 	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
+ 	if (!pg) {
+@@ -276,13 +390,41 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		/* Temporary failure, bypass */
+ 		return SCSI_DH_DEV_TEMP_BUSY;
+ 	}
++	if (device_id_size) {
++		memcpy(pg->device_id, device_id, device_id_size);
++		strncpy(pg->device_id_str, device_id_str, 256);
++	} else {
++		memset(pg->device_id, 0, 256);
++		pg->device_id_str[0] = '\0';
++	}
++	pg->device_id_size = device_id_size;
+ 	pg->group_id = group_id;
+ 	pg->tpgs = h->tpgs;
+ 	pg->state = TPGS_STATE_OPTIMIZED;
+ 	kref_init(&pg->kref);
+ 	spin_lock(&port_group_lock);
+-	list_add(&pg->node, &port_group_list);
+-	h->pg = pg;
++	/*
++	 * Re-check list again to catch
++	 * concurrent updates
++	 */
++	list_for_each_entry(tmp_pg, &port_group_list, node) {
++		if (tmp_pg->group_id != pg->group_id)
++			continue;
++		if (tmp_pg->device_id_size != pg->device_id_size)
++			continue;
++		if (memcmp(tmp_pg->device_id, pg->device_id,
++			   device_id_size))
++			continue;
++		h->pg = tmp_pg;
++		kref_get(&tmp_pg->kref);
++		kfree(pg);
++		pg = NULL;
++		break;
++	}
++	if (pg) {
++		list_add(&pg->node, &port_group_list);
++		h->pg = pg;
++	}
+ 	spin_unlock(&port_group_lock);
  
- 	/* Prepare the data buffer */
- 	memset(stpg_data, 0, stpg_len);
- 	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
- 	put_unaligned_be16(group_id, &stpg_data[6]);
- 
--	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
--	if (!rq)
--		return DRIVER_BUSY << 24;
--
- 	/* Prepare the command. */
--	rq->cmd[0] = MAINTENANCE_OUT;
--	rq->cmd[1] = MO_SET_TARGET_PGS;
--	put_unaligned_be32(stpg_len, &rq->cmd[6]);
--	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
--
--	rq->sense = sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = 0;
--
--	blk_execute_rq(rq->q, NULL, rq, 1);
--	if (rq->errors)
--		err = rq->errors;
--
--	blk_put_request(rq);
--
--	return err;
-+	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
-+	cdb[0] = MAINTENANCE_OUT;
-+	cdb[1] = MO_SET_TARGET_PGS;
-+	put_unaligned_be32(stpg_len, &cdb[6]);
-+
-+	return scsi_execute(sdev, cdb, DMA_TO_DEVICE, stpg_data, stpg_len,
-+			    sense, ALUA_FAILOVER_TIMEOUT * HZ,
-+			    ALUA_FAILOVER_RETRIES, req_flags, NULL);
- }
- 
- /*
-@@ -456,7 +402,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: rtpg failed, result %d\n",
- 				    ALUA_DH_NAME, retval);
--			if (driver_byte(retval) == DRIVER_BUSY)
-+			if (driver_byte(retval) == DRIVER_ERROR)
- 				err = SCSI_DH_DEV_TEMP_BUSY;
- 			else
- 				err = SCSI_DH_IO;
-@@ -627,7 +573,7 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: stpg failed, result %d",
- 				    ALUA_DH_NAME, retval);
--			if (driver_byte(retval) == DRIVER_BUSY)
-+			if (driver_byte(retval) == DRIVER_ERROR)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 		} else {
- 			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
+ 	return SCSI_DH_OK;
 -- 
 1.8.5.2
 
