@@ -1,242 +1,200 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/20] scsi_dh_alua: parse target device id
-Date: Wed,  8 Jul 2015 11:06:12 +0200
-Message-ID: <1436346378-96518-15-git-send-email-hare@suse.de>
-References: <1436346378-96518-1-git-send-email-hare@suse.de>
+Subject: [PATCH 10/10] scsi_dh: move 'dh_state' sysfs attribute to generic code
+Date: Wed,  8 Jul 2015 11:07:05 +0200
+Message-ID: <1436346425-96635-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35945 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:36018 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934510AbbGHJGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 05:06:33 -0400
-In-Reply-To: <1436346378-96518-1-git-send-email-hare@suse.de>
+	id S933752AbbGHJHK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jul 2015 05:07:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-Parse VPD descriptor to figure out the device identification.
-As devices might implement several descriptors the order
-of preference is:
-- NAA IEE Registered Extended
-- EUI-64 based 16-byte
-- EUI-64 based 12-byte
-- NAA IEEE Registered
-- NAA IEEE Extended
-A SCSI name string descriptor is preferred to all of them
-if the identification is longer than 16 bytes.
+As scsi_dh.c is now always compiled in we should be moving
+the 'dh_state' attribute to the generic code.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 152 ++++++++++++++++++++++++++++-
- 1 file changed, 147 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_dh.c    | 65 -----------------------------------------------
+ drivers/scsi/scsi_sysfs.c | 60 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 60 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index f4d851a..6991171 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -70,6 +70,9 @@ static DEFINE_SPINLOCK(port_group_lock);
- struct alua_port_group {
- 	struct kref		kref;
- 	struct list_head	node;
-+	unsigned char		device_id[256];
-+	unsigned char		device_id_str[256];
-+	int			device_id_size;
- 	int			group_id;
- 	int			tpgs;
- 	int			state;
-@@ -227,17 +230,84 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index a9494f3..42f20f1 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -153,76 +153,12 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
+ 	module_put(sdev->handler->module);
+ }
+ 
+-/*
+- * Functions for sysfs attribute 'dh_state'
+- */
+-static ssize_t
+-store_dh_state(struct device *dev, struct device_attribute *attr,
+-	       const char *buf, size_t count)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_device_handler *scsi_dh;
+-	int err = -EINVAL;
+-
+-	if (sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
+-		return -ENODEV;
+-
+-	if (!sdev->handler) {
+-		/*
+-		 * Attach to a device handler
+-		 */
+-		if (!(scsi_dh = scsi_dh_lookup(buf)))
+-			return err;
+-		err = scsi_dh_handler_attach(sdev, scsi_dh);
+-	} else {
+-		if (!strncmp(buf, "detach", 6)) {
+-			/*
+-			 * Detach from a device handler
+-			 */
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "can't detach handler %s.\n",
+-				    sdev->handler->name);
+-			err = -EINVAL;
+-		} else if (!strncmp(buf, "activate", 8)) {
+-			/*
+-			 * Activate a device handler
+-			 */
+-			if (sdev->handler->activate)
+-				err = sdev->handler->activate(sdev, NULL, NULL);
+-			else
+-				err = 0;
+-		}
+-	}
+-
+-	return err<0?err:count;
+-}
+-
+-static ssize_t
+-show_dh_state(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-
+-	if (!sdev->handler)
+-		return snprintf(buf, 20, "detached\n");
+-
+-	return snprintf(buf, 20, "%s\n", sdev->handler->name);
+-}
+-
+-static struct device_attribute scsi_dh_state_attr =
+-	__ATTR(dh_state, S_IRUGO | S_IWUSR, show_dh_state,
+-	       store_dh_state);
+-
+ int scsi_dh_add_device(struct scsi_device *sdev)
  {
- 	unsigned char *d;
- 	int group_id = -1;
--	struct alua_port_group *pg = NULL;
-+	char device_id_str[256], *device_id = NULL;
-+	int device_id_size, device_id_type = 0;
-+	struct alua_port_group *tmp_pg, *pg = NULL;
+ 	struct scsi_device_handler *devinfo = NULL;
+ 	const char *drv;
+ 	int err;
  
- 	if (!sdev->vpd_pg83)
- 		return SCSI_DH_DEV_UNSUPP;
+-	err = device_create_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+-	if (err)
+-		return err;
+-
+ 	drv = scsi_dh_find_driver(sdev);
+ 	if (drv)
+ 		devinfo = scsi_dh_lookup(drv);
+@@ -235,7 +171,6 @@ void scsi_dh_remove_device(struct scsi_device *sdev)
+ {
+ 	if (sdev->handler)
+ 		scsi_dh_handler_detach(sdev);
+-	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+ }
  
- 	/*
- 	 * Look for the correct descriptor.
-+	 * Order of preference for lun descriptor:
-+	 * - SCSI name string
-+	 * - NAA IEEE Registered Extended
-+	 * - EUI-64 based 16-byte
-+	 * - EUI-64 based 12-byte
-+	 * - NAA IEEE Registered
-+	 * - NAA IEEE Extended
-+	 * as longer descriptors reduce the likelyhood
-+	 * of identification clashes.
- 	 */
-+	memset(device_id_str, 0, 256);
-+	device_id_size = 0;
- 	d = sdev->vpd_pg83 + 4;
- 	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
- 		switch (d[1] & 0xf) {
-+		case 0x2:
-+			/* EUI-64 */
-+			if ((d[1] & 0x30) == 0x00) {
-+				if (device_id_size > d[3])
-+					break;
-+				/* Prefer NAA IEEE Registered Extended */
-+				if (device_id_type == 0x3 &&
-+				    device_id_size == d[3])
-+					break;
-+				device_id_size = d[3];
-+				device_id = d + 4;
-+				device_id_type = d[1] & 0xf;
-+				switch (device_id_size) {
-+				case 8:
-+					sprintf(device_id_str,
-+						"eui.%8phN", d + 4);
-+					break;
-+				case 12:
-+					sprintf(device_id_str,
-+						"eui.%12phN", d + 4);
-+					break;
-+				case 16:
-+					sprintf(device_id_str,
-+						"eui.%16phN", d + 4);
-+					break;
-+				default:
-+					device_id_size = 0;
-+					break;
-+				}
-+			}
-+			break;
-+		case 0x3:
-+			/* NAA */
-+			if ((d[1] & 0x30) == 0x00) {
-+				if (device_id_size > d[3])
-+					break;
-+				device_id_size = d[3];
-+				device_id = d + 4;
-+				device_id_type = d[1] & 0xf;
-+				switch (device_id_size) {
-+				case 8:
-+					sprintf(device_id_str,
-+						"naa.%8phN", d + 4);
-+					break;
-+				case 16:
-+					sprintf(device_id_str,
-+						"naa.%16phN", d + 4);
-+					break;
-+				default:
-+					device_id_size = 0;
-+					break;
-+				}
-+			}
-+			break;
- 		case 0x4:
- 			/* Relative target port */
- 			h->rel_port = (d[6] << 8) + d[7];
-@@ -246,6 +316,21 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 			/* Target port group */
- 			group_id = (d[6] << 8) + d[7];
- 			break;
-+		case 0x8:
-+			/* SCSI name string */
-+			if ((d[1] & 0x30) == 0x00) {
-+				/* SCSI name */
-+				if (device_id_size > d[3])
-+					break;
-+				device_id_size = d[3];
-+				device_id = d + 4;
-+				device_id_type = d[1] & 0xf;
-+				strncpy(device_id_str, d + 4, 256);
-+				if (device_id_size > 255)
-+					device_id_size = 255;
-+				device_id_str[device_id_size] = '\0';
-+			}
-+			break;
- 		default:
- 			break;
- 		}
-@@ -264,9 +349,38 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 		h->tpgs = TPGS_MODE_NONE;
- 		return SCSI_DH_DEV_UNSUPP;
- 	}
-+	if (!device_id_size) {
+ /*
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index c8a120f..e3c3b86 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -17,6 +17,7 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
++#include <scsi/scsi_dh.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_driver.h>
+ 
+@@ -875,6 +876,62 @@ sdev_show_function(queue_depth, "%d\n");
+ static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
+ 		   sdev_store_queue_depth);
+ 
++#ifdef CONFIG_SCSI_DH
++static ssize_t
++sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
++		   char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->handler)
++		return snprintf(buf, 20, "detached\n");
++
++	return snprintf(buf, 20, "%s\n", sdev->handler->name);
++}
++
++static ssize_t
++sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
++		    const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int err = -EINVAL;
++
++	if (sdev->sdev_state == SDEV_CANCEL ||
++	    sdev->sdev_state == SDEV_DEL)
++		return -ENODEV;
++
++	if (!sdev->handler) {
 +		/*
-+		 * Internal error: TPGS supported by no
-+		 * device identifcation found.
-+		 * Disable ALUA support.
++		 * Attach to a device handler
 +		 */
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: No device descriptors found\n",
-+			    ALUA_DH_NAME);
-+		h->tpgs = TPGS_MODE_NONE;
-+		return SCSI_DH_DEV_UNSUPP;
-+	}
- 	sdev_printk(KERN_INFO, sdev,
--		    "%s: port group %02x rel port %02x\n",
--		    ALUA_DH_NAME, group_id, h->rel_port);
-+		    "%s: device %s port group %02x "
-+		    "rel port %02x\n", ALUA_DH_NAME,
-+		    device_id_str, group_id, h->rel_port);
-+	spin_lock(&port_group_lock);
-+	list_for_each_entry(tmp_pg, &port_group_list, node) {
-+		if (tmp_pg->group_id != group_id)
-+			continue;
-+		if (tmp_pg->device_id_size != device_id_size)
-+			continue;
-+		if (memcmp(tmp_pg->device_id, device_id,
-+			   device_id_size))
-+			continue;
-+		h->pg = tmp_pg;
-+		kref_get(&tmp_pg->kref);
-+		break;
-+	}
-+	spin_unlock(&port_group_lock);
-+	if (h->pg)
-+		return SCSI_DH_OK;
- 
- 	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
- 	if (!pg) {
-@@ -276,13 +390,41 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 		/* Temporary failure, bypass */
- 		return SCSI_DH_DEV_TEMP_BUSY;
- 	}
-+	if (device_id_size) {
-+		memcpy(pg->device_id, device_id, device_id_size);
-+		strncpy(pg->device_id_str, device_id_str, 256);
++		err = scsi_dh_attach(sdev->request_queue, buf);
 +	} else {
-+		memset(pg->device_id, 0, 256);
-+		pg->device_id_str[0] = '\0';
++		if (!strncmp(buf, "detach", 6)) {
++			/*
++			 * Detach from a device handler
++			 */
++			sdev_printk(KERN_WARNING, sdev,
++				    "can't detach handler %s.\n",
++				    sdev->handler->name);
++			err = -EINVAL;
++		} else if (!strncmp(buf, "activate", 8)) {
++			/*
++			 * Activate a device handler
++			 */
++			if (sdev->handler->activate)
++				err = sdev->handler->activate(sdev, NULL, NULL);
++			else
++				err = 0;
++		}
 +	}
-+	pg->device_id_size = device_id_size;
- 	pg->group_id = group_id;
- 	pg->tpgs = h->tpgs;
- 	pg->state = TPGS_STATE_OPTIMIZED;
- 	kref_init(&pg->kref);
- 	spin_lock(&port_group_lock);
--	list_add(&pg->node, &port_group_list);
--	h->pg = pg;
-+	/*
-+	 * Re-check list again to catch
-+	 * concurrent updates
-+	 */
-+	list_for_each_entry(tmp_pg, &port_group_list, node) {
-+		if (tmp_pg->group_id != pg->group_id)
-+			continue;
-+		if (tmp_pg->device_id_size != pg->device_id_size)
-+			continue;
-+		if (memcmp(tmp_pg->device_id, pg->device_id,
-+			   device_id_size))
-+			continue;
-+		h->pg = tmp_pg;
-+		kref_get(&tmp_pg->kref);
-+		kfree(pg);
-+		pg = NULL;
-+		break;
-+	}
-+	if (pg) {
-+		list_add(&pg->node, &port_group_list);
-+		h->pg = pg;
-+	}
- 	spin_unlock(&port_group_lock);
- 
- 	return SCSI_DH_OK;
++
++	return err<0?err:count;
++}
++
++static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
++		   sdev_store_dh_state);
++#endif
++
+ static ssize_t
+ sdev_show_queue_ramp_up_period(struct device *dev,
+ 			       struct device_attribute *attr,
+@@ -944,6 +1001,9 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_modalias.attr,
+ 	&dev_attr_queue_depth.attr,
+ 	&dev_attr_queue_type.attr,
++#ifdef CONFIG_SCSI_DH
++	&dev_attr_dh_state.attr,
++#endif
+ 	&dev_attr_queue_ramp_up_period.attr,
+ 	REF_EVT(media_change),
+ 	REF_EVT(inquiry_change_reported),
 -- 
 1.8.5.2
 
