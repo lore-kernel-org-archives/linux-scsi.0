@@ -1,41 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/10] scsi_dh: return individual errors in scsi_dh_activate()
-Date: Wed,  8 Jul 2015 10:30:26 +0200
-Message-ID: <1436344226-94765-10-git-send-email-hare@suse.de>
-References: <1436344226-94765-1-git-send-email-hare@suse.de>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 3/3] sd: do not try to spin-up disks for ALUA
+ 'transitioning' state
+Date: Wed, 8 Jul 2015 11:41:23 +0300
+Message-ID: <559CE233.3080809@dev.mellanox.co.il>
+References: <1436341268-91432-1-git-send-email-hare@suse.de>
+ <1436341268-91432-4-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33410 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934629AbbGHIat (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Jul 2015 04:30:49 -0400
-In-Reply-To: <1436344226-94765-1-git-send-email-hare@suse.de>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:37965 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932793AbbGHIlN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2015 04:41:13 -0400
+Received: by wibdq8 with SMTP id dq8so205399689wib.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2015 01:41:11 -0700 (PDT)
+In-Reply-To: <1436341268-91432-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: Bart van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-When calling scsi_dh_activate() we should be returning
-individual errors and not lumping all into one.
+On 7/8/2015 10:41 AM, Hannes Reinecke wrote:
+> If a disk reports an ALUA 'transitioning' state we should not
+> try to spin up the device.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/sd.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 7c0bdaa..180a6e8 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1801,6 +1801,8 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+>   		if (sense_valid && sshdr.sense_key == NOT_READY) {
+>   			if (sshdr.asc == 4 && sshdr.ascq == 3)
+>   				break;	/* manual intervention required */
+> +			if (sshdr.asc == 4 && sshdr.ascq == 0xa)
+> +				break;  /* transitioning */
+>   			if (sshdr.asc == 4 && sshdr.ascq == 0xb)
+>   				break;	/* standby */
+>   			if (sshdr.asc == 4 && sshdr.ascq == 0xc)
+>
 
-Reviewed-by: Bart van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_dh.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 7723280..a9494f3 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -325,6 +325,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- 
- 	if (!sdev->handler)
- 		goto out_fn;
-+	err = SCSI_DH_NOTCONN;
- 	if (sdev->sdev_state == SDEV_CANCEL ||
- 	    sdev->sdev_state == SDEV_DEL)
- 		goto out_fn;
--- 
-1.8.5.2
+Hi Hannes,
 
+Just nit-picking, but do you think that these four if statements can be
+re-organized to condition (asc == 4) once and OR on the rest?
