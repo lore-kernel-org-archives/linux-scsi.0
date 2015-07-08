@@ -1,145 +1,124 @@
-From: Khalid Aziz <khalid@gonehiking.org>
-Subject: Re: [PATCH] [SCSI] FlashPoint: optimize string comparison
-Date: Wed, 08 Jul 2015 07:59:23 -0600
-Message-ID: <559D2CBB.8090502@gonehiking.org>
-References: <1436247543-7326-1-git-send-email-christophe.jaillet@wanadoo.fr>	<CAH6sp9PzQUPo2_VczkEtwzhYW8AcNTqNYWF6kwMvk_N8peGhxg@mail.gmail.com>	<559C06B4.2010808@gonehiking.org>	<559CB8EC.1090008@wanadoo.fr> <CAH6sp9OmMje3EAVisaToorOQb+j3AWm_RE_UTpXN6eYjFny72w@mail.gmail.com>
+From: Chris Leech <cleech@redhat.com>
+Subject: Re: [PATCH] libiscsi: Fix host busy blocking during connection teardown
+Date: Wed, 8 Jul 2015 13:08:15 -0700
+Message-ID: <CAHNqLyWX003vOp8CCXZ9kbLBzRX9WSRz=c-okF54A=f4uByADA@mail.gmail.com>
+References: <1435108318-13625-1-git-send-email-sony.john@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <CAH6sp9OmMje3EAVisaToorOQb+j3AWm_RE_UTpXN6eYjFny72w@mail.gmail.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Frans Klaver <fransklaver@gmail.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38650 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758144AbbGHUIQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2015 16:08:16 -0400
+Received: by igrv9 with SMTP id v9so176563020igr.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2015 13:08:16 -0700 (PDT)
+In-Reply-To: <1435108318-13625-1-git-send-email-sony.john@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: John Soni Jose <sony.john@avagotech.com>, minhduc.tran@avagotech.com, jayamohan.kallickal@avagotech.com
 
-On 07/08/2015 01:12 AM, Frans Klaver wrote:
-> On Wed, Jul 8, 2015 at 7:45 AM, Christophe JAILLET
-> <christophe.jaillet@wanadoo.fr> wrote:
->> Le 07/07/2015 19:04, Khalid Aziz a =C3=A9crit :
->>>
->>> On 07/07/2015 02:45 AM, Frans Klaver wrote:
->>>>
->>>> On Tue, Jul 7, 2015 at 7:39 AM, Christophe JAILLET
->>>> <christophe.jaillet@wanadoo.fr> wrote:
->>>>>
->>>>> Stop comparing the strings as soon as we know that they don't mat=
-ch.
->>>>>
->>>>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
->>>>> ---
->>>>>    drivers/scsi/FlashPoint.c | 4 +++-
->>>>>    1 file changed, 3 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.=
-c
->>>>> index 5c74e4c..24a4d1a 100644
->>>>> --- a/drivers/scsi/FlashPoint.c
->>>>> +++ b/drivers/scsi/FlashPoint.c
->>>>> @@ -6280,8 +6280,10 @@ static unsigned char FPT_scmachid(unsigned=
- char
->>>>> p_card,
->>>>>                   match =3D 1;
->>>>>
->>>>>                   for (k =3D 0; k < ID_STRING_LENGTH; k++) {
->>>>> -                       if (p_id_string[k] !=3D
->>>>> FPT_scamInfo[i].id_string[k])
->>>>> +                       if (p_id_string[k] !=3D
->>>>> FPT_scamInfo[i].id_string[k]) {
->>>>>                                   match =3D 0;
->>>>> +                               break;
->>>>> +                       }
->>>>>                   }
->>>>>
->>>>>                   if (match) {
->>>>
->>>>
->>>> Why doesn't this use strncmp?
->>>>
->>>> Thanks,
->>>> Frans
->>>>
->>>
->>> I suspect that is how this code came from Mylex many years ago. Usi=
-ng
->>> strncmp would indeed be a better way to clean this up. Also, furthe=
-r down in
->>> the same routine:
->>>
->>>                  if (FPT_scamInfo[match].state =3D=3D ID_UNUSED) {
->>>                          for (k =3D 0; k < ID_STRING_LENGTH; k++) {
->>>                                  FPT_scamInfo[match].id_string[k] =3D
->>>                                      p_id_string[k];
->>>                          }
->>>
->>>
->>> This should use strncpy instead. There is another similar spot furt=
-her
->>> down.
->>>
->>> Christophe, if you can send a new patch with these clean-ups, that =
-would
->>> be great.
->>>
->>> Thanks,
->>> Khalid
->>
->>
->> Hi,
->>
->> I'm sorry but I won't propose a new patch for that.
->>
->> I had the same reaction at first (why not use strncmp?) but it seems=
- to be
->> the way this driver is coded. Should we want to introduce strncmp he=
-re,
->> then, as you have noticed, strcpy should be used to. memset could be=
- also
->> used in many places. Then looking elsewhere in the code, many things=
- should,
->> IMHO, also be fixed. (use consistently empty lines before/after code=
- ; use
->> consistently { }...)
->>
->> Another concern to me is "the use of carriage return". In the follow=
-ing
->> examples, things could be much more readable if not limited to 50 ch=
-ars per
->> line, or so.
+On Tue, Jun 23, 2015 at 6:11 PM, John Soni Jose <sony.john@avagotech.com> wrote:
 >
-> 80. Parts of the code are indented way too much, resulting in these
-> unreadable lines. I have to say that this entire driver looks like
-> something that (sh|w)ould be in staging right now.
+>  Issue:
+>  In case of hw iscsi offload, an host can have N-number of active
+>  connections. There can be IO's running on some connections which
+>  make host->host_busy always TRUE. Now if logout from a connection
+>  is tried then the code gets into an infinite loop as host->host_busy
+>  is always TRUE.
+>
+>  iscsi_conn_teardown(....)
+>  {
+>    .........
+>     /*
+>      * Block until all in-progress commands for this connection
+>      * time out or fail.
+>      */
+>      for (;;) {
+>       spin_lock_irqsave(session->host->host_lock, flags);
+>       if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
+>               spin_unlock_irqrestore(session->host->host_lock, flags);
+>               break;
+>       }
+>      spin_unlock_irqrestore(session->host->host_lock, flags);
+>      msleep_interruptible(500);
+>      iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
+>                  "host_busy %d host_failed %d\n",
+>                   atomic_read(&session->host->host_busy),
+>                   session->host->host_failed);
+>
+>         ................
+>         ...............
+>      }
+>   }
+>   This is not an issue with software-iscsi/iser as each cxn is a separate
+>   host.
+>
+>  Fix:
+>  Acquiring eh_mutex in iscsi_conn_teardown() before setting
+>  session->state = ISCSI_STATE_TERMINATE.
+>
+> Signed-off-by: John Soni Jose <sony.john@aavagotech.com>
+> ---
+>  drivers/scsi/libiscsi.c | 25 ++-----------------------
+>  1 file changed, 2 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 8053f24..98d9bb6 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -2941,10 +2941,10 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>  {
+>         struct iscsi_conn *conn = cls_conn->dd_data;
+>         struct iscsi_session *session = conn->session;
+> -       unsigned long flags;
+>
+>         del_timer_sync(&conn->transport_timer);
+>
+> +       mutex_lock(&session->eh_mutex);
+>         spin_lock_bh(&session->frwd_lock);
+>         conn->c_stage = ISCSI_CONN_CLEANUP_WAIT;
+>         if (session->leadconn == conn) {
+> @@ -2956,28 +2956,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>         }
+>         spin_unlock_bh(&session->frwd_lock);
+>
+> -       /*
+> -        * Block until all in-progress commands for this connection
+> -        * time out or fail.
+> -        */
+> -       for (;;) {
+> -               spin_lock_irqsave(session->host->host_lock, flags);
+> -               if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
+> -                       spin_unlock_irqrestore(session->host->host_lock, flags);
+> -                       break;
+> -               }
+> -               spin_unlock_irqrestore(session->host->host_lock, flags);
+> -               msleep_interruptible(500);
+> -               iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
+> -                                 "host_busy %d host_failed %d\n",
+> -                                 atomic_read(&session->host->host_busy),
+> -                                 session->host->host_failed);
+> -               /*
+> -                * force eh_abort() to unblock
+> -                */
+> -               wake_up(&conn->ehwait);
+> -       }
+> -
+>         /* flush queued up work because we free the connection below */
+>         iscsi_suspend_tx(conn);
+>
+> @@ -2994,6 +2972,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>         if (session->leadconn == conn)
+>                 session->leadconn = NULL;
+>         spin_unlock_bh(&session->frwd_lock);
+> +       mutex_unlock(&session->eh_mutex);
+>
+>         iscsi_destroy_conn(cls_conn);
+>  }
+> --
 
-=46lashPoint.c and BusLogic.c together make up the buslogic driver. I w=
-ent=20
-through a massive clean up of BusLogic.c (addressing issues like the=20
-ones you guys are bringing up) when I took over maintenance of buslogic=
-=20
-driver and made it 64-bit clean. I am very much in agreement with=20
-suggested clean ups, but this code has been in the kernel for a very=20
-long time and cleaning it up at this point for the sake of clean up is=20
-not a reason enough to destabilize a very stable driver. staging is for=
-=20
-drivers under development and in experimental state. buslogic driver is=
-=20
-most definitely not experimental. For now we either leave FlashPoint.c=20
-as it is or clean it up as part of a bigger effort to add new=20
-functionality or fix a major bug.
 
-Christophe's original patch fixes an inefficiency in the code, so my=20
-take on it is to either accept the very specific fix without modifying=20
-rest of the code or combine this fix with clean up of at least the=20
-entire FPT_scmachid() routine.
+Looks good to me, solid reasoning on why host_busy is the wrong thing to check.
 
-Thanks,
-Khalid
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe kernel-janito=
-rs" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Chris Leech <cleech@redhat.com>
