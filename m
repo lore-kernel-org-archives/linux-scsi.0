@@ -1,42 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/5] scsi: Add 'access_state' attribute
-Date: Thu, 09 Jul 2015 10:43:48 +0200
-Message-ID: <559E3444.2020301@suse.de>
-References: <1436353788-104911-1-git-send-email-hare@suse.de> <1436353788-104911-4-git-send-email-hare@suse.de> <20150709082217.GA1419@lst.de>
+Subject: Re: [PATCH 10/10] scsi_dh: move 'dh_state' sysfs attribute to generic
+ code
+Date: Thu, 09 Jul 2015 10:44:46 +0200
+Message-ID: <559E347E.8060402@suse.de>
+References: <1436346425-96635-1-git-send-email-hare@suse.de> <20150709082424.GB1419@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56713 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:56776 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751088AbbGIInu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jul 2015 04:43:50 -0400
-In-Reply-To: <20150709082217.GA1419@lst.de>
+	id S1750798AbbGIIos (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2015 04:44:48 -0400
+In-Reply-To: <20150709082424.GB1419@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>
 
-On 07/09/2015 10:22 AM, Christoph Hellwig wrote:
-> On Wed, Jul 08, 2015 at 01:09:46PM +0200, Hannes Reinecke wrote:
->> Add an 'access_state' attribute to display the LUN access state.
+On 07/09/2015 10:24 AM, Christoph Hellwig wrote:
+> On Wed, Jul 08, 2015 at 11:07:05AM +0200, Hannes Reinecke wrote:
+>> As scsi_dh.c is now always compiled in we should be moving
+>> the 'dh_state' attribute to the generic code.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
 >=20
-> Should we just reuse the ALUA values here as they part of the spec
-> and map the legacy implemetation values to it?
+> Looks fine, but a few coding style nitpicks:
 >=20
-That's what I've attempted to; only I've displayed them as text,
-not as a numeric value.
-But sure, the idea was to take the ALUA values and map legacy
-implementation onto it.
+>> +	if (!sdev->handler) {
+>> +		/*
+>> +		 * Attach to a device handler
+>> +		 */
+>> +		err =3D scsi_dh_attach(sdev->request_queue, buf);
+>> +	} else {
+>> +		if (!strncmp(buf, "detach", 6)) {
+>=20
+> Switch to en else if here.  Also may=E3=81=B9e move the activate case=
+ up as it's
+> relevant while detach is dead now.
+>=20
+Okay.
 
-> I'd also really love to store the access_state variable in
-> struct scsi_device so we can perform the checks for it in core code
-> instead of the device handlers.
+>> +	return err<0?err:count;
 >=20
-That would be a good idea indeed. I had been pondering the idea of a
-revamped multipath integration, where this would be come in handy.
-
-I can easily adapt the patches here.
+> Please add the missing spaces here.
+>=20
+Will be doing so.
 
 Cheers,
 
@@ -44,8 +53,9 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
