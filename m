@@ -1,49 +1,70 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/10] scsi_dh: move 'dh_state' sysfs attribute to
-	generic code
-Date: Thu, 9 Jul 2015 10:24:24 +0200
-Message-ID: <20150709082424.GB1419@lst.de>
-References: <1436346425-96635-1-git-send-email-hare@suse.de>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: [PATCH] SCSI-libcxgbi: Deletion of an unnecessary check before
+ the function call "dst_release"
+Date: Thu, 9 Jul 2015 10:34:53 +0200
+Message-ID: <559E322D.30705@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <546EF5CC.1050308@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51806 "EHLO newverein.lst.de"
+Received: from mout.web.de ([212.227.17.12]:56417 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752283AbbGIIY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jul 2015 04:24:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1436346425-96635-1-git-send-email-hare@suse.de>
+	id S1750915AbbGIIfD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2015 04:35:03 -0400
+In-Reply-To: <546EF5CC.1050308@users.sourceforge.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-On Wed, Jul 08, 2015 at 11:07:05AM +0200, Hannes Reinecke wrote:
-> As scsi_dh.c is now always compiled in we should be moving
-> the 'dh_state' attribute to the generic code.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 21 Nov 2014 09:15:10 +0100
+> 
+> The dst_release() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/scsi/cxgbi/libcxgbi.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+> index addd1dd..95d2654 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -798,8 +798,7 @@ void cxgbi_sock_closed(struct cxgbi_sock *csk)
+>  		return;
+>  	if (csk->saddr.sin_port)
+>  		sock_put_port(csk);
+> -	if (csk->dst)
+> -		dst_release(csk->dst);
+> +	dst_release(csk->dst);
+>  	csk->cdev->csk_release_offload_resources(csk);
+>  	cxgbi_sock_set_state(csk, CTP_CLOSED);
+>  	cxgbi_inform_iscsi_conn_closing(csk);
+> 
 
-Looks fine, but a few coding style nitpicks:
+Would you like to integrate this update suggestion
+into another source code repository?
 
-> +	if (!sdev->handler) {
-> +		/*
-> +		 * Attach to a device handler
-> +		 */
-> +		err =3D scsi_dh_attach(sdev->request_queue, buf);
-> +	} else {
-> +		if (!strncmp(buf, "detach", 6)) {
-
-Switch to en else if here.  Also may=E3=81=B9e move the activate case u=
-p as it's
-relevant while detach is dead now.
-
-> +	return err<0?err:count;
-
-Please add the missing spaces here.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Markus
