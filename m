@@ -1,70 +1,53 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH] SCSI-libcxgbi: Deletion of an unnecessary check before
- the function call "dst_release"
-Date: Thu, 9 Jul 2015 10:34:53 +0200
-Message-ID: <559E322D.30705@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <546EF5CC.1050308@users.sourceforge.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/5] scsi: Add 'access_state' attribute
+Date: Thu, 09 Jul 2015 10:43:48 +0200
+Message-ID: <559E3444.2020301@suse.de>
+References: <1436353788-104911-1-git-send-email-hare@suse.de> <1436353788-104911-4-git-send-email-hare@suse.de> <20150709082217.GA1419@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:56417 "EHLO mout.web.de"
+Received: from cantor2.suse.de ([195.135.220.15]:56713 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915AbbGIIfD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jul 2015 04:35:03 -0400
-In-Reply-To: <546EF5CC.1050308@users.sourceforge.net>
+	id S1751088AbbGIInu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jul 2015 04:43:50 -0400
+In-Reply-To: <20150709082217.GA1419@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Fri, 21 Nov 2014 09:15:10 +0100
-> 
-> The dst_release() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/scsi/cxgbi/libcxgbi.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-> index addd1dd..95d2654 100644
-> --- a/drivers/scsi/cxgbi/libcxgbi.c
-> +++ b/drivers/scsi/cxgbi/libcxgbi.c
-> @@ -798,8 +798,7 @@ void cxgbi_sock_closed(struct cxgbi_sock *csk)
->  		return;
->  	if (csk->saddr.sin_port)
->  		sock_put_port(csk);
-> -	if (csk->dst)
-> -		dst_release(csk->dst);
-> +	dst_release(csk->dst);
->  	csk->cdev->csk_release_offload_resources(csk);
->  	cxgbi_sock_set_state(csk, CTP_CLOSED);
->  	cxgbi_inform_iscsi_conn_closing(csk);
-> 
+On 07/09/2015 10:22 AM, Christoph Hellwig wrote:
+> On Wed, Jul 08, 2015 at 01:09:46PM +0200, Hannes Reinecke wrote:
+>> Add an 'access_state' attribute to display the LUN access state.
+>=20
+> Should we just reuse the ALUA values here as they part of the spec
+> and map the legacy implemetation values to it?
+>=20
+That's what I've attempted to; only I've displayed them as text,
+not as a numeric value.
+But sure, the idea was to take the ALUA values and map legacy
+implementation onto it.
 
-Would you like to integrate this update suggestion
-into another source code repository?
+> I'd also really love to store the access_state variable in
+> struct scsi_device so we can perform the checks for it in core code
+> instead of the device handlers.
+>=20
+That would be a good idea indeed. I had been pondering the idea of a
+revamped multipath integration, where this would be come in handy.
 
-Regards,
-Markus
+I can easily adapt the patches here.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
