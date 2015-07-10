@@ -1,62 +1,96 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: possible race condition for usb_stor_port_reset and
- usb_reset_and_verify_device
-Date: Fri, 10 Jul 2015 12:04:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1507101153320.1586-100000@iolanthe.rowland.org>
-References: <CADUS3onTG-TMW=U-rc1+ujHDbYVCgwAXwx-LJyY_Guir-8o-Ng@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH v1] libiscsi: Fix iscsi_check_transport_timeouts possible
+ infinite loop
+Date: Fri, 10 Jul 2015 11:25:02 -0500
+Message-ID: <559FF1DE.1050808@cs.wisc.edu>
+References: <1436008133-20226-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CADUS3onTG-TMW=U-rc1+ujHDbYVCgwAXwx-LJyY_Guir-8o-Ng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: yoma sophian <sophian.yoma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41854 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932227AbbGJQZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jul 2015 12:25:14 -0400
+In-Reply-To: <1436008133-20226-1-git-send-email-sagig@mellanox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ariel Nahum <arieln@mellanox.com>
 
-On Fri, 10 Jul 2015, yoma sophian wrote:
+On 7/4/15, 6:08 AM, Sagi Grimberg wrote:
+> From: Ariel Nahum <arieln@mellanox.com>
+>
+> Connection last_ping is not being updated when iscsi_send_nopout fails.
+> Not updating the last_ping will cause firing a timer to a past time
+> (last_ping + ping_tmo < current_time) which triggers an infinite loop of
+> iscsi_check_transport_timeouts() and hogs the cpu.
+>
+> Fix this issue by checking the return value of iscsi_send_nopout.
+> If it fails set the next_timeout to one second later.
+>
+> Signed-off-by: Ariel Nahum <arieln@mellanox.com>
+> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+> ---
+> Changes from v0:
+> - Fixed coding style comment
+>
+>   drivers/scsi/libiscsi.c | 17 +++++++++++------
+>   1 file changed, 11 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 8053f24..29c02b8 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -979,13 +979,13 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+>   	wake_up(&conn->ehwait);
+>   }
+>
+> -static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+> +static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+>   {
+>           struct iscsi_nopout hdr;
+>   	struct iscsi_task *task;
+>
+>   	if (!rhdr && conn->ping_task)
+> -		return;
+> +		return -EINVAL;
+>
+>   	memset(&hdr, 0, sizeof(struct iscsi_nopout));
+>   	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
+> @@ -999,13 +999,16 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+>   		hdr.ttt = RESERVED_ITT;
+>
+>   	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
+> -	if (!task)
+> +	if (!task) {
+>   		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
+> -	else if (!rhdr) {
+> +		return -EIO;
+> +	} else if (!rhdr) {
+>   		/* only track our nops */
+>   		conn->ping_task = task;
+>   		conn->last_ping = jiffies;
+>   	}
+> +
+> +	return 0;
+>   }
+>
+>   static int iscsi_nop_out_rsp(struct iscsi_task *task,
+> @@ -2095,8 +2098,10 @@ static void iscsi_check_transport_timeouts(unsigned long data)
+>   	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
+>   		/* send a ping to try to provoke some traffic */
+>   		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
+> -		iscsi_send_nopout(conn, NULL);
+> -		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
+> +		if (iscsi_send_nopout(conn, NULL))
+> +			next_timeout = jiffies + (1 * HZ);
+> +		else
+> +			next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
+>   	} else
+>   		next_timeout = last_recv + recv_timeout;
+>
+>
 
-> hi Alan:
-> 
-> 2015-05-27 22:40 GMT+08:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
-> > On Wed, 27 May 2015, yoma sophian wrote:
-> >
-> >> After reading the kernel power document, freezing-of-tasks.txt , can I
-> >> get the below conclusion:
-> >> if I put my thread in freezable, it will get frozen automatically
-> >> whenever the system goes in to suspend or hibernate.
-> >
-> > It's not entirely automatic.  Your thread has to call try_to_freeze()
-> > at appropriate spots.  Of course, if your thread is a work queue then
-> > the workqueue core will do that for you.
-> after tracing more kernel based your guide, may I get below conclusion:
-> if I try to create a thread that will do the IO
-> 1. create the thread, with set_freezable, and call try_to_freeze() at
-> appropriate spots.
-> 2. hook my thread on system_freezable_wq
->      such as calling queue_delayed_work(system_freezable_wq, &mythread, intv)
->      or mod_delayed_work((system_freezable_wq, &mythread, intv)
-> 
-> is hub_thread the 1st kind?
 
-It depends on which kernel you're looking at.  Up until commit 
-32a6958998c5, which was added in the 3.18 kernel, hub_thread was the 
-1st kind.
-
-In the 3.18 kernel, hub_thread was replaced by a freezable workqueue
-different from system_freezable_wq.
-
-> if Yes, where it try_to_freeze?
-
-Before 3.18, try_to_freeze was checked inside wait_event_freezable(),
-which was called in hub_thread().
-
-> And why not make hub_thread as above #2 kind?
-
-We probably could, but it works okay the way it is now.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
