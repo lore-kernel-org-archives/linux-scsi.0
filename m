@@ -1,52 +1,62 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
- output? [BKO63661]
-Date: Fri, 10 Jul 2015 19:46:46 +0530
-Message-ID: <775bb7e5ecc09c3f042ca8e949b35e5f@mail.gmail.com>
-References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
-	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
-	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	 <20150429172832.GB7888@google.com>
- <20150528122443.GI10210@google.com>	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
-	 <20150707104426.3d7e8697@endymion.delvare>	 <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
- <1436537115.4540.31.camel@chaos.site>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: possible race condition for usb_stor_port_reset and
+ usb_reset_and_verify_device
+Date: Fri, 10 Jul 2015 12:04:06 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1507101153320.1586-100000@iolanthe.rowland.org>
+References: <CADUS3onTG-TMW=U-rc1+ujHDbYVCgwAXwx-LJyY_Guir-8o-Ng@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1436537115.4540.31.camel@chaos.site>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Adam Radford <aradford@gmail.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com, Matthew Garrett <matthew.garrett@nebula.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CADUS3onTG-TMW=U-rc1+ujHDbYVCgwAXwx-LJyY_Guir-8o-Ng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: yoma sophian <sophian.yoma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
->
-> I am about to commit the patch that was successfully tested by the
-> customer on
-> SLES 12, but I'm a bit confused. The upstream patch you referred to is:
->
-> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?h=for-
-> next&id=6431f5d7c6025f8b007af06ea090de308f7e6881
-> [SCSI] megaraid_sas: megaraid_sas driver init fails in kdump kernel
->
-> But the patch I used is the one you sent by e-mail on May 28th. It is
-> completely
-> different!
->
-> So what am I supposed to do? Use the patch you sent (and that was tested
-> by
-> the customer) for SLES 11 SP3 and SLES 12? Or was it just for testing and
-> the
-> proper way of fixing the problem would be to backport the upstream commit?
+On Fri, 10 Jul 2015, yoma sophian wrote:
 
-You can use that patch as valid candidate for upstream submission. Some of
-the MR maintainer (Sumit Saxena) will send that patch. We are just
-organizing other patch series.
-Since SLES already ported patch without commit id, we are fine. I am just
-giving reference that patch which send via email will be send to upstream
-very soon along with other patch set.
+> hi Alan:
+> 
+> 2015-05-27 22:40 GMT+08:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
+> > On Wed, 27 May 2015, yoma sophian wrote:
+> >
+> >> After reading the kernel power document, freezing-of-tasks.txt , can I
+> >> get the below conclusion:
+> >> if I put my thread in freezable, it will get frozen automatically
+> >> whenever the system goes in to suspend or hibernate.
+> >
+> > It's not entirely automatic.  Your thread has to call try_to_freeze()
+> > at appropriate spots.  Of course, if your thread is a work queue then
+> > the workqueue core will do that for you.
+> after tracing more kernel based your guide, may I get below conclusion:
+> if I try to create a thread that will do the IO
+> 1. create the thread, with set_freezable, and call try_to_freeze() at
+> appropriate spots.
+> 2. hook my thread on system_freezable_wq
+>      such as calling queue_delayed_work(system_freezable_wq, &mythread, intv)
+>      or mod_delayed_work((system_freezable_wq, &mythread, intv)
+> 
+> is hub_thread the 1st kind?
 
-Thanks, Kashyap
->
-> Please advise,
-> --
-> Jean Delvare
-> SUSE L3 Support
+It depends on which kernel you're looking at.  Up until commit 
+32a6958998c5, which was added in the 3.18 kernel, hub_thread was the 
+1st kind.
+
+In the 3.18 kernel, hub_thread was replaced by a freezable workqueue
+different from system_freezable_wq.
+
+> if Yes, where it try_to_freeze?
+
+Before 3.18, try_to_freeze was checked inside wait_event_freezable(),
+which was called in hub_thread().
+
+> And why not make hub_thread as above #2 kind?
+
+We probably could, but it works okay the way it is now.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
