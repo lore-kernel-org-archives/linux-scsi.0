@@ -1,96 +1,112 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v1] libiscsi: Fix iscsi_check_transport_timeouts possible
- infinite loop
-Date: Fri, 10 Jul 2015 11:25:02 -0500
-Message-ID: <559FF1DE.1050808@cs.wisc.edu>
-References: <1436008133-20226-1-git-send-email-sagig@mellanox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: ian mitchell <imitchell@sgi.com>
+Subject: [PATCH] Fix kmalloc overflow in LPFC driver at large core count
+Date: Fri, 10 Jul 2015 11:31:10 -0500
+Message-ID: <1436545870-70261-1-git-send-email-imitchell@asylum.americas.sgi.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:41854 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932227AbbGJQZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jul 2015 12:25:14 -0400
-In-Reply-To: <1436008133-20226-1-git-send-email-sagig@mellanox.com>
+Received: from relay3.sgi.com ([192.48.152.1]:54547 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932349AbbGJQlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jul 2015 12:41:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Ariel Nahum <arieln@mellanox.com>
+To: linux-kernel@vger.kernel.org
+Cc: ian mitchell <imitchell@sgi.com>Ian Mitchell <imitchell@sgi.com>, Alex Thorlton <athorlton@sgi.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 
-On 7/4/15, 6:08 AM, Sagi Grimberg wrote:
-> From: Ariel Nahum <arieln@mellanox.com>
->
-> Connection last_ping is not being updated when iscsi_send_nopout fails.
-> Not updating the last_ping will cause firing a timer to a past time
-> (last_ping + ping_tmo < current_time) which triggers an infinite loop of
-> iscsi_check_transport_timeouts() and hogs the cpu.
->
-> Fix this issue by checking the return value of iscsi_send_nopout.
-> If it fails set the next_timeout to one second later.
->
-> Signed-off-by: Ariel Nahum <arieln@mellanox.com>
-> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> ---
-> Changes from v0:
-> - Fixed coding style comment
->
->   drivers/scsi/libiscsi.c | 17 +++++++++++------
->   1 file changed, 11 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 8053f24..29c02b8 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -979,13 +979,13 @@ static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
->   	wake_up(&conn->ehwait);
->   }
->
-> -static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
-> +static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->   {
->           struct iscsi_nopout hdr;
->   	struct iscsi_task *task;
->
->   	if (!rhdr && conn->ping_task)
-> -		return;
-> +		return -EINVAL;
->
->   	memset(&hdr, 0, sizeof(struct iscsi_nopout));
->   	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
-> @@ -999,13 +999,16 @@ static void iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->   		hdr.ttt = RESERVED_ITT;
->
->   	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
-> -	if (!task)
-> +	if (!task) {
->   		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
-> -	else if (!rhdr) {
-> +		return -EIO;
-> +	} else if (!rhdr) {
->   		/* only track our nops */
->   		conn->ping_task = task;
->   		conn->last_ping = jiffies;
->   	}
-> +
-> +	return 0;
->   }
->
->   static int iscsi_nop_out_rsp(struct iscsi_task *task,
-> @@ -2095,8 +2098,10 @@ static void iscsi_check_transport_timeouts(unsigned long data)
->   	if (time_before_eq(last_recv + recv_timeout, jiffies)) {
->   		/* send a ping to try to provoke some traffic */
->   		ISCSI_DBG_CONN(conn, "Sending nopout as ping\n");
-> -		iscsi_send_nopout(conn, NULL);
-> -		next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
-> +		if (iscsi_send_nopout(conn, NULL))
-> +			next_timeout = jiffies + (1 * HZ);
-> +		else
-> +			next_timeout = conn->last_ping + (conn->ping_timeout * HZ);
->   	} else
->   		next_timeout = last_recv + recv_timeout;
->
->
+This patch allows the LPFC to start up without a fatal kernel bug based
+on an exceeded KMALLOC_MAX_SIZE and a too large NR_CPU-based maskbits
+field. The bug was based on the number of CPU cores in a system.
+Using the get_cpu_mask() function declared in kernel/cpu.c allows the
+driver to load on the community kernel 4.2 RC1.
+
+Below is the kernel bug reproduced:
+
+8<--------------------------------------------------------------------
+2199382.828437 (    0.005216)| lpfc 0003:02:00.0: enabling device (0140 -> 0142)
+2199382.999272 (    0.170835)| ------------[ cut here ]------------
+2199382.999337 (    0.000065)| WARNING: CPU: 84 PID: 404 at mm/slab_common.c:653 kmalloc_slab+0x2f/0x89()
+2199383.004534 (    0.005197)| Modules linked in: lpfc(+) usbcore(+) mptctl scsi_transport_fc sg lpc_ich i2c_i801 usb_common tpm_tis mfd_core tpm acpi_cpufreq button scsi_dh_alua scsi_dh_rdacusbcore: registered new device driver usb
+2199383.020568 (    0.016034)|
+2199383.020581 (    0.000013)|  scsi_dh_hp_sw scsi_dh_emc scsi_dh gru thermal sata_nv processor piix fan thermal_sysehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+2199383.035288 (    0.014707)|
+2199383.035306 (    0.000018)|  hwmon ata_piix
+2199383.035336 (    0.000030)| CPU: 84 PID: 404 Comm: kworker/84:0 Not tainted 3.18.0-rc2-gat-00106-ga7ca10f-dirty #178
+2199383.047077 (    0.011741)| ehci-pci: EHCI PCI platform driver
+2199383.047134 (    0.000057)| Hardware name: SGI UV2000/ROMLEY, BIOS SGI UV 2000/3000 series BIOS 01/15/2013
+2199383.056245 (    0.009111)| Workqueue: events work_for_cpu_fn
+2199383.066174 (    0.009929)|  000000000000028d ffff88eef827bbe8 ffffffff815a542f 000000000000028d
+2199383.069545 (    0.003371)|  ffffffff810ea142 ffff88eef827bc28 ffffffff8104365c ffff88eefe4006c8
+2199383.076214 (    0.006669)|  0000000000000000 00000000000080d0 0000000000000000 0000000000000004
+2199383.079213 (    0.002999)| Call Trace:
+2199383.084084 (    0.004871)|  [<ffffffff815a542f>] dump_stack+0x49/0x62
+2199383.087283 (    0.003199)|  [<ffffffff810ea142>] ? kmalloc_slab+0x2f/0x89
+2199383.091415 (    0.004132)|  [<ffffffff8104365c>] warn_slowpath_common+0x77/0x92
+2199383.095197 (    0.003782)|  [<ffffffff8104368c>] warn_slowpath_null+0x15/0x17
+2199383.103336 (    0.008139)|  [<ffffffff810ea142>] kmalloc_slab+0x2f/0x89
+2199383.107082 (    0.003746)|  [<ffffffff8110fd9e>] __kmalloc+0x13/0x16a
+2199383.112531 (    0.005449)|  [<ffffffffa01a8ed9>] lpfc_pci_probe_one_s4+0x105b/0x1644 [lpfc]
+2199383.115316 (    0.002785)|  [<ffffffff81302b92>] ? pci_bus_read_config_dword+0x75/0x87
+2199383.123431 (    0.008115)|  [<ffffffffa01a951f>] lpfc_pci_probe_one+0x5d/0xcb5 [lpfc]
+2199383.127364 (    0.003933)|  [<ffffffff81497119>] ? dbs_check_cpu+0x168/0x177
+2199383.136438 (    0.009074)|  [<ffffffff81496fa5>] ? gov_queue_work+0xb4/0xc0
+2199383.140407 (    0.003969)|  [<ffffffff8130b2a1>] local_pci_probe+0x1e/0x52
+2199383.143105 (    0.002698)|  [<ffffffff81052c47>] work_for_cpu_fn+0x13/0x1b
+2199383.147315 (    0.004210)|  [<ffffffff81054965>] process_one_work+0x222/0x35e
+2199383.151379 (    0.004064)|  [<ffffffff81054e76>] worker_thread+0x3d5/0x46e
+2199383.159402 (    0.008023)|  [<ffffffff81054aa1>] ? process_one_work+0x35e/0x35e
+2199383.163097 (    0.003695)|  [<ffffffff810599c6>] kthread+0xc8/0xd2
+2199383.167476 (    0.004379)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
+2199383.176434 (    0.008958)|  [<ffffffff815a8cac>] ret_from_fork+0x7c/0xb0
+2199383.180086 (    0.003652)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
+2199383.192333 (    0.012247)| ehci-pci 0000:00:1a.0: EHCI Host Controller
+-------------------------------------------------------------------->8
+
+The proposed solution was approved by James Smart at Emulex and tested
+on a UV2 machine with 6144 cores. With the fix, the LPFC module loads
+with no unwanted effects on the system.
+
+Signed-off-by: Ian Mitchell <imitchell@sgi.com>
+Signed-off-by: Alex Thorlton <athorlton@sgi.com>
+Suggested-by: Robert Elliot <elliott@hp.com>
+Cc: James Smart <james.smart@avagotech.com>
+Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+Cc: James E.J. Bottomley <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 5 +----
+ drivers/scsi/lpfc/lpfc_sli4.h | 1 -
+ 2 files changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index e8c8c1e..66844b3 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8764,11 +8764,8 @@ found:
+ 			first_cpu = cpu;
+ 
+ 		/* Now affinitize to the selected CPU */
+-		mask = &cpup->maskbits;
+-		cpumask_clear(mask);
+-		cpumask_set_cpu(cpu, mask);
+ 		i = irq_set_affinity_hint(phba->sli4_hba.msix_entries[idx].
+-					  vector, mask);
++					  vector, get_cpu_mask(cpu));
+ 
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"3330 Set Affinity: CPU %d channel %d "
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 6eca3b8..bdde2c6 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -454,7 +454,6 @@ struct lpfc_vector_map_info {
+ 	uint16_t	core_id;
+ 	uint16_t	irq;
+ 	uint16_t	channel_id;
+-	struct cpumask	maskbits;
+ };
+ #define LPFC_VECTOR_MAP_EMPTY	0xffff
+ 
+-- 
+1.7.12.4
+
