@@ -1,92 +1,48 @@
 From: James Smart <james.smart@avagotech.com>
-Subject: Re: [PATCH] lpfc: Destroy lpfc_hba_index IDR on module exit
-Date: Fri, 10 Jul 2015 08:33:50 -0400
-Message-ID: <559FBBAE.1030809@avagotech.com>
-References: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [RESEND][PATCH] lpfc: fix model description
+Date: Fri, 10 Jul 2015 08:36:06 -0400
+Message-ID: <559FBC36.1000102@avagotech.com>
+References: <20150706232200.00006bd4@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:33077 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753915AbbGJMdy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jul 2015 08:33:54 -0400
-Received: by qgef3 with SMTP id f3so78515234qge.0
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2015 05:33:53 -0700 (PDT)
-In-Reply-To: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33245 "EHLO
+	mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754342AbbGJMgJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jul 2015 08:36:09 -0400
+Received: by qkhu186 with SMTP id u186so205658041qkh.0
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2015 05:36:08 -0700 (PDT)
+In-Reply-To: <20150706232200.00006bd4@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>, linux-scsi@vger.kernel.org
 
-Reviewed-By:  James Smart <james.smart@avagotech.com>
+As mentioned previously, it's a nit, and not too meaningful, but fine.
+
+If not merged prior, we'll repost as part of an upcoming commit that 
+cleans up sparse warnings.
+
+Reviewed-By:  James Smart  <james.smart@avagotech.com>
 
 -- james s
 
 
-On 7/8/2015 11:19 AM, Johannes Thumshirn wrote:
-> Destroy lpfc_hba_index IDR on module exit, reclaiming the allocated memory.
+On 7/6/2015 5:22 PM, Sebastian Herbszt wrote:
+> Remove trailing space from model description.
 >
-> This was detected by the following semantic patch (written by Luis Rodriguez
-> <mcgrof@suse.com>)
-> <SmPL>
-> @ defines_module_init @
-> declarer name module_init, module_exit;
-> declarer name DEFINE_IDR;
-> identifier init;
-> @@
+> Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+> Reviewed-By: James Smart <james.smart@avagotech.com>
 >
-> module_init(init);
->
-> @ defines_module_exit @
-> identifier exit;
-> @@
->
-> module_exit(exit);
->
-> @ declares_idr depends on defines_module_init && defines_module_exit @
-> identifier idr;
-> @@
->
-> DEFINE_IDR(idr);
->
-> @ on_exit_calls_destroy depends on declares_idr && defines_module_exit @
-> identifier declares_idr.idr, defines_module_exit.exit;
-> @@
->
-> exit(void)
-> {
->   ...
->   idr_destroy(&idr);
->   ...
-> }
->
-> @ missing_module_idr_destroy depends on declares_idr && defines_module_exit && !on_exit_calls_destroy @
-> identifier declares_idr.idr, defines_module_exit.exit;
-> @@
->
-> exit(void)
-> {
->   ...
->   +idr_destroy(&idr);
-> }
-> </SmPL>
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index f962118..4bedb06 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -11477,6 +11477,7 @@ lpfc_exit(void)
->   		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
->   	}
->   	kfree(lpfc_used_cpu);
-> +	idr_destroy(&lpfc_hba_index);
->   }
->   
->   module_init(lpfc_init);
-
+> diff -up 4.0/drivers/scsi/lpfc.orig/lpfc_init.c 4.0/drivers/scsi/lpfc/lpfc_init.c
+> --- 4.0/drivers/scsi/lpfc.orig/lpfc_init.c	2015-04-15 06:18:24.673045138 +0200
+> +++ 4.0/drivers/scsi/lpfc/lpfc_init.c	2015-04-22 21:03:39.203230409 +0200
+> @@ -2253,7 +2253,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba
+>   				phba->Port);
+>   		else if (max_speed == 0)
+>   			snprintf(descp, 255,
+> -				"Emulex %s %s %s ",
+> +				"Emulex %s %s %s",
+>   				m.name, m.bus, m.function);
+>   		else
+>   			snprintf(descp, 255,
