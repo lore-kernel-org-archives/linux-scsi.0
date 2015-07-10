@@ -1,90 +1,39 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] lpfc: Destroy lpfc_hba_index IDR on module exit
-Date: Fri, 10 Jul 2015 08:39:03 +0200
-Message-ID: <559F6887.4020008@suse.de>
-References: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [PATCH v4 3/5] scsi: Move sense handling routines to scsi_common
+Date: Fri, 10 Jul 2015 08:39:39 +0200
+Message-ID: <559F68AB.8020401@suse.de>
+References: <1436367534-15995-1-git-send-email-sagig@mellanox.com> <1436367534-15995-4-git-send-email-sagig@mellanox.com> <559D3C5C.4020903@suse.de> <559D4071.8010501@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:35329 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752687AbbGJGjn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jul 2015 02:39:43 -0400
+In-Reply-To: <559D4071.8010501@dev.mellanox.co.il>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 07/08/2015 05:19 PM, Johannes Thumshirn wrote:
-> Destroy lpfc_hba_index IDR on module exit, reclaiming the allocated m=
-emory.
+On 07/08/2015 05:23 PM, Sagi Grimberg wrote:
+> On 7/8/2015 6:06 PM, Hannes Reinecke wrote:
 >=20
-> This was detected by the following semantic patch (written by Luis Ro=
-driguez
-> <mcgrof@suse.com>)
-> <SmPL>
-> @ defines_module_init @
-> declarer name module_init, module_exit;
-> declarer name DEFINE_IDR;
-> identifier init;
-> @@
+>> We're adding extra fields here, so we need to make sure to not
+>> overflow the buffer. You probably have to pass in the buffersize
+>> to avoid an overflow ...
+>> Yeah, I know, it's theoretical at the moment.
+>> But there's nothing which prevents anyone to add other fields to it,
+>> so this field might be the one causing the overflow.
 >=20
-> module_init(init);
->=20
-> @ defines_module_exit @
-> identifier exit;
-> @@
->=20
-> module_exit(exit);
->=20
-> @ declares_idr depends on defines_module_init && defines_module_exit =
-@
-> identifier idr;
-> @@
->=20
-> DEFINE_IDR(idr);
->=20
-> @ on_exit_calls_destroy depends on declares_idr && defines_module_exi=
-t @
-> identifier declares_idr.idr, defines_module_exit.exit;
-> @@
->=20
-> exit(void)
-> {
->  ...
->  idr_destroy(&idr);
->  ...
-> }
->=20
-> @ missing_module_idr_destroy depends on declares_idr && defines_modul=
-e_exit && !on_exit_calls_destroy @
-> identifier declares_idr.idr, defines_module_exit.exit;
-> @@
->=20
-> exit(void)
-> {
->  ...
->  +idr_destroy(&idr);
-> }
-> </SmPL>
->=20
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/lpfc/lpfc_init.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
-nit.c
-> index f962118..4bedb06 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -11477,6 +11477,7 @@ lpfc_exit(void)
->  		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
->  	}
->  	kfree(lpfc_used_cpu);
-> +	idr_destroy(&lpfc_hba_index);
->  }
-> =20
->  module_init(lpfc_init);
->=20
+> Since this patch is simply a movement of functions I don't think I
+> should change any functionality here. Would it be acceptable to fix
+> this in an incremental patch?
+Sure.
+
+So you can add a
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
@@ -96,3 +45,8 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
