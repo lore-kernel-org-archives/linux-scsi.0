@@ -1,39 +1,92 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 3/5] scsi: Move sense handling routines to scsi_common
-Date: Fri, 10 Jul 2015 08:39:39 +0200
-Message-ID: <559F68AB.8020401@suse.de>
-References: <1436367534-15995-1-git-send-email-sagig@mellanox.com> <1436367534-15995-4-git-send-email-sagig@mellanox.com> <559D3C5C.4020903@suse.de> <559D4071.8010501@dev.mellanox.co.il>
+Subject: Re: [PATCH] st: Destroy st_index_idr on module exit
+Date: Fri, 10 Jul 2015 08:40:08 +0200
+Message-ID: <559F68C8.4050400@suse.de>
+References: <1436369041-31156-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35329 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:35371 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687AbbGJGjn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jul 2015 02:39:43 -0400
-In-Reply-To: <559D4071.8010501@dev.mellanox.co.il>
+	id S1752487AbbGJGkK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jul 2015 02:40:10 -0400
+In-Reply-To: <1436369041-31156-1-git-send-email-jthumshirn@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>, =?windows-1252?Q?Kai_M=E4k?= =?windows-1252?Q?isara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/08/2015 05:23 PM, Sagi Grimberg wrote:
-> On 7/8/2015 6:06 PM, Hannes Reinecke wrote:
+On 07/08/2015 05:24 PM, Johannes Thumshirn wrote:
+> Destroy st_index_idr on module exit, reclaiming the allocated memory.
 >=20
->> We're adding extra fields here, so we need to make sure to not
->> overflow the buffer. You probably have to pass in the buffersize
->> to avoid an overflow ...
->> Yeah, I know, it's theoretical at the moment.
->> But there's nothing which prevents anyone to add other fields to it,
->> so this field might be the one causing the overflow.
+> This was detected by the following semantic patch (written by Luis Ro=
+driguez
+> <mcgrof@suse.com>)
+> <SmPL>
+> @ defines_module_init @
+> declarer name module_init, module_exit;
+> declarer name DEFINE_IDR;
+> identifier init;
+> @@
 >=20
-> Since this patch is simply a movement of functions I don't think I
-> should change any functionality here. Would it be acceptable to fix
-> this in an incremental patch?
-Sure.
-
-So you can add a
-
+> module_init(init);
+>=20
+> @ defines_module_exit @
+> identifier exit;
+> @@
+>=20
+> module_exit(exit);
+>=20
+> @ declares_idr depends on defines_module_init && defines_module_exit =
+@
+> identifier idr;
+> @@
+>=20
+> DEFINE_IDR(idr);
+>=20
+> @ on_exit_calls_destroy depends on declares_idr && defines_module_exi=
+t @
+> identifier declares_idr.idr, defines_module_exit.exit;
+> @@
+>=20
+> exit(void)
+> {
+>  ...
+>  idr_destroy(&idr);
+>  ...
+> }
+>=20
+> @ missing_module_idr_destroy depends on declares_idr && defines_modul=
+e_exit && !on_exit_calls_destroy @
+> identifier declares_idr.idr, defines_module_exit.exit;
+> @@
+>=20
+> exit(void)
+> {
+>  ...
+>  +idr_destroy(&idr);
+> }
+> </SmPL>
+>=20
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/st.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 3f25b8f..79ac024 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -4427,6 +4427,7 @@ static void __exit exit_st(void)
+>  	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
+>  				 ST_MAX_TAPE_ENTRIES);
+>  	class_unregister(&st_sysfs_class);
+> +	idr_destroy(&st_index_idr);
+>  	printk(KERN_INFO "st: Unloaded.\n");
+>  }
+> =20
+>=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
