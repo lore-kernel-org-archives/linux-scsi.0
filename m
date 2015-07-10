@@ -1,112 +1,77 @@
-From: ian mitchell <imitchell@sgi.com>
-Subject: [PATCH] Fix kmalloc overflow in LPFC driver at large core count
-Date: Fri, 10 Jul 2015 11:31:10 -0500
-Message-ID: <1436545870-70261-1-git-send-email-imitchell@asylum.americas.sgi.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3.sgi.com ([192.48.152.1]:54547 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932349AbbGJQlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jul 2015 12:41:02 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: wenxiong@linux.vnet.ibm.com
+Subject: Re: [PATCH 1/1] ipr: Fix incorrect trace indexing
+Date: Fri, 10 Jul 2015 14:46:45 -0400
+Message-ID: <20150710144645.Horde.HJDxy2pjRXgD2dP1icxJjQ1@ltc.linux.ibm.com>
+References: <201506222233.t5MMXpZR011546@d03av04.boulder.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <201506222233.t5MMXpZR011546@d03av04.boulder.ibm.com>
+Content-Disposition: inline
+Sender: stable-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: ian mitchell <imitchell@sgi.com>Ian Mitchell <imitchell@sgi.com>, Alex Thorlton <athorlton@sgi.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
-
-This patch allows the LPFC to start up without a fatal kernel bug based
-on an exceeded KMALLOC_MAX_SIZE and a too large NR_CPU-based maskbits
-field. The bug was based on the number of CPU cores in a system.
-Using the get_cpu_mask() function declared in kernel/cpu.c allows the
-driver to load on the community kernel 4.2 RC1.
-
-Below is the kernel bug reproduced:
-
-8<--------------------------------------------------------------------
-2199382.828437 (    0.005216)| lpfc 0003:02:00.0: enabling device (0140 -> 0142)
-2199382.999272 (    0.170835)| ------------[ cut here ]------------
-2199382.999337 (    0.000065)| WARNING: CPU: 84 PID: 404 at mm/slab_common.c:653 kmalloc_slab+0x2f/0x89()
-2199383.004534 (    0.005197)| Modules linked in: lpfc(+) usbcore(+) mptctl scsi_transport_fc sg lpc_ich i2c_i801 usb_common tpm_tis mfd_core tpm acpi_cpufreq button scsi_dh_alua scsi_dh_rdacusbcore: registered new device driver usb
-2199383.020568 (    0.016034)|
-2199383.020581 (    0.000013)|  scsi_dh_hp_sw scsi_dh_emc scsi_dh gru thermal sata_nv processor piix fan thermal_sysehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-2199383.035288 (    0.014707)|
-2199383.035306 (    0.000018)|  hwmon ata_piix
-2199383.035336 (    0.000030)| CPU: 84 PID: 404 Comm: kworker/84:0 Not tainted 3.18.0-rc2-gat-00106-ga7ca10f-dirty #178
-2199383.047077 (    0.011741)| ehci-pci: EHCI PCI platform driver
-2199383.047134 (    0.000057)| Hardware name: SGI UV2000/ROMLEY, BIOS SGI UV 2000/3000 series BIOS 01/15/2013
-2199383.056245 (    0.009111)| Workqueue: events work_for_cpu_fn
-2199383.066174 (    0.009929)|  000000000000028d ffff88eef827bbe8 ffffffff815a542f 000000000000028d
-2199383.069545 (    0.003371)|  ffffffff810ea142 ffff88eef827bc28 ffffffff8104365c ffff88eefe4006c8
-2199383.076214 (    0.006669)|  0000000000000000 00000000000080d0 0000000000000000 0000000000000004
-2199383.079213 (    0.002999)| Call Trace:
-2199383.084084 (    0.004871)|  [<ffffffff815a542f>] dump_stack+0x49/0x62
-2199383.087283 (    0.003199)|  [<ffffffff810ea142>] ? kmalloc_slab+0x2f/0x89
-2199383.091415 (    0.004132)|  [<ffffffff8104365c>] warn_slowpath_common+0x77/0x92
-2199383.095197 (    0.003782)|  [<ffffffff8104368c>] warn_slowpath_null+0x15/0x17
-2199383.103336 (    0.008139)|  [<ffffffff810ea142>] kmalloc_slab+0x2f/0x89
-2199383.107082 (    0.003746)|  [<ffffffff8110fd9e>] __kmalloc+0x13/0x16a
-2199383.112531 (    0.005449)|  [<ffffffffa01a8ed9>] lpfc_pci_probe_one_s4+0x105b/0x1644 [lpfc]
-2199383.115316 (    0.002785)|  [<ffffffff81302b92>] ? pci_bus_read_config_dword+0x75/0x87
-2199383.123431 (    0.008115)|  [<ffffffffa01a951f>] lpfc_pci_probe_one+0x5d/0xcb5 [lpfc]
-2199383.127364 (    0.003933)|  [<ffffffff81497119>] ? dbs_check_cpu+0x168/0x177
-2199383.136438 (    0.009074)|  [<ffffffff81496fa5>] ? gov_queue_work+0xb4/0xc0
-2199383.140407 (    0.003969)|  [<ffffffff8130b2a1>] local_pci_probe+0x1e/0x52
-2199383.143105 (    0.002698)|  [<ffffffff81052c47>] work_for_cpu_fn+0x13/0x1b
-2199383.147315 (    0.004210)|  [<ffffffff81054965>] process_one_work+0x222/0x35e
-2199383.151379 (    0.004064)|  [<ffffffff81054e76>] worker_thread+0x3d5/0x46e
-2199383.159402 (    0.008023)|  [<ffffffff81054aa1>] ? process_one_work+0x35e/0x35e
-2199383.163097 (    0.003695)|  [<ffffffff810599c6>] kthread+0xc8/0xd2
-2199383.167476 (    0.004379)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
-2199383.176434 (    0.008958)|  [<ffffffff815a8cac>] ret_from_fork+0x7c/0xb0
-2199383.180086 (    0.003652)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
-2199383.192333 (    0.012247)| ehci-pci 0000:00:1a.0: EHCI Host Controller
--------------------------------------------------------------------->8
-
-The proposed solution was approved by James Smart at Emulex and tested
-on a UV2 machine with 6144 cores. With the fix, the LPFC module loads
-with no unwanted effects on the system.
-
-Signed-off-by: Ian Mitchell <imitchell@sgi.com>
-Signed-off-by: Alex Thorlton <athorlton@sgi.com>
-Suggested-by: Robert Elliot <elliott@hp.com>
-Cc: James Smart <james.smart@avagotech.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: James E.J. Bottomley <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org
 
 
----
- drivers/scsi/lpfc/lpfc_init.c | 5 +----
- drivers/scsi/lpfc/lpfc_sli4.h | 1 -
- 2 files changed, 1 insertion(+), 5 deletions(-)
+Reviewed-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index e8c8c1e..66844b3 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8764,11 +8764,8 @@ found:
- 			first_cpu = cpu;
- 
- 		/* Now affinitize to the selected CPU */
--		mask = &cpup->maskbits;
--		cpumask_clear(mask);
--		cpumask_set_cpu(cpu, mask);
- 		i = irq_set_affinity_hint(phba->sli4_hba.msix_entries[idx].
--					  vector, mask);
-+					  vector, get_cpu_mask(cpu));
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"3330 Set Affinity: CPU %d channel %d "
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 6eca3b8..bdde2c6 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -454,7 +454,6 @@ struct lpfc_vector_map_info {
- 	uint16_t	core_id;
- 	uint16_t	irq;
- 	uint16_t	channel_id;
--	struct cpumask	maskbits;
- };
- #define LPFC_VECTOR_MAP_EMPTY	0xffff
- 
--- 
-1.7.12.4
+Thanks,
+Wendy
 
+>> Quoting Brian King <brking@linux.vnet.ibm.com>:
+
+> James,
+>
+> One more ipr patch to go on top of my previous series I sent. This one fixes
+> a pretty nasty bug that can cause us to go writing in memory that is  
+> not ours.
+>
+> 8<
+>
+> When ipr's internal driver trace was changed to an atomic, a signed/unsigned
+> bug slipped in which results in us indexing backwards in our memory buffer
+> writing on memory that does not below to us. This patch fixes this  
+> by removing
+> the modulo and instead just mask off the low bits.
+>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+>
+>  drivers/scsi/ipr.c |    5 +++--
+>  drivers/scsi/ipr.h |    1 +
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff -puN drivers/scsi/ipr.h~ipr_trace_index_fix drivers/scsi/ipr.h
+> --- linux/drivers/scsi/ipr.h~ipr_trace_index_fix	2015-06-22  
+> 16:52:15.649018937 -0500
+> +++ linux-bjking1/drivers/scsi/ipr.h	2015-06-22 16:52:31.895895037 -0500
+> @@ -1487,6 +1487,7 @@ struct ipr_ioa_cfg {
+>
+>  #define IPR_NUM_TRACE_INDEX_BITS	8
+>  #define IPR_NUM_TRACE_ENTRIES		(1 << IPR_NUM_TRACE_INDEX_BITS)
+> +#define IPR_TRACE_INDEX_MASK		(IPR_NUM_TRACE_ENTRIES - 1)
+>  #define IPR_TRACE_SIZE	(sizeof(struct ipr_trace_entry) *  
+> IPR_NUM_TRACE_ENTRIES)
+>  	char trace_start[8];
+>  #define IPR_TRACE_START_LABEL			"trace"
+> diff -puN drivers/scsi/ipr.c~ipr_trace_index_fix drivers/scsi/ipr.c
+> --- linux/drivers/scsi/ipr.c~ipr_trace_index_fix	2015-06-22  
+> 16:52:17.800002537 -0500
+> +++ linux-bjking1/drivers/scsi/ipr.c	2015-06-22 16:53:17.327548285 -0500
+> @@ -599,9 +599,10 @@ static void ipr_trc_hook(struct ipr_cmnd
+>  {
+>  	struct ipr_trace_entry *trace_entry;
+>  	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+> +	unsigned int trace_index;
+>
+> -	trace_entry = &ioa_cfg->trace[atomic_add_return
+> -			(1, &ioa_cfg->trace_index)%IPR_NUM_TRACE_ENTRIES];
+> +	trace_index = atomic_add_return(1, &ioa_cfg->trace_index) &  
+> IPR_TRACE_INDEX_MASK;
+> +	trace_entry = &ioa_cfg->trace[trace_index];
+>  	trace_entry->time = jiffies;
+>  	trace_entry->op_code = ipr_cmd->ioarcb.cmd_pkt.cdb[0];
+>  	trace_entry->type = type;
+> _
