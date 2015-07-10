@@ -1,39 +1,89 @@
-From: "linux" <linux@highpoint-tech.com>
-Subject: Re: [PATCH][SCSI] hptiop: Support HighPoint RR36xx HBAs and Support SAS tape and SAS media changer
-Date: Fri, 10 Jul 2015 14:18:23 +0800
-Message-ID: <000601d0bad8$3d1716d0$b7454470$@highpoint-tech.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] lpfc: Destroy lpfc_hba_index IDR on module exit
+Date: Fri, 10 Jul 2015 08:39:03 +0200
+Message-ID: <559F6887.4020008@suse.de>
+References: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp86.ord1c.emailsrvr.com ([108.166.43.86]:42468 "EHLO
-	smtp86.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752118AbbGJGS2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jul 2015 02:18:28 -0400
-Content-Language: zh-cn
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1436368797-30934-1-git-send-email-jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Hannes Reinecke' <hare@suse.de>, JBottomley@odin.com
-Cc: linux-scsi@vger.kernel.org, 'Steve Chang' <ychang@highpoint-tech.com>
 
-Hi,
- =20
-   We found that the updated hptiop driver (version v1.10.0) was not em=
-bedded into kernel 4.2 RC1, is there something wrong with the submitted=
- patch or when would the patch be accepted?
-
-   If there is any question, please do not hesitate to let us know.
-
-Best Regards,
-HighPoint Linux Team
-
-
-On 06/24/2015 05:41 AM, linux wrote:
-> Support HighPoint RR36xx HBAs which are based on Marvell Frey.
-> Support SAS tape and SAS media changer.
+On 07/08/2015 05:19 PM, Johannes Thumshirn wrote:
+> Destroy lpfc_hba_index IDR on module exit, reclaiming the allocated m=
+emory.
 >=20
-> Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+> This was detected by the following semantic patch (written by Luis Ro=
+driguez
+> <mcgrof@suse.com>)
+> <SmPL>
+> @ defines_module_init @
+> declarer name module_init, module_exit;
+> declarer name DEFINE_IDR;
+> identifier init;
+> @@
+>=20
+> module_init(init);
+>=20
+> @ defines_module_exit @
+> identifier exit;
+> @@
+>=20
+> module_exit(exit);
+>=20
+> @ declares_idr depends on defines_module_init && defines_module_exit =
+@
+> identifier idr;
+> @@
+>=20
+> DEFINE_IDR(idr);
+>=20
+> @ on_exit_calls_destroy depends on declares_idr && defines_module_exi=
+t @
+> identifier declares_idr.idr, defines_module_exit.exit;
+> @@
+>=20
+> exit(void)
+> {
+>  ...
+>  idr_destroy(&idr);
+>  ...
+> }
+>=20
+> @ missing_module_idr_destroy depends on declares_idr && defines_modul=
+e_exit && !on_exit_calls_destroy @
+> identifier declares_idr.idr, defines_module_exit.exit;
+> @@
+>=20
+> exit(void)
+> {
+>  ...
+>  +idr_destroy(&idr);
+> }
+> </SmPL>
+>=20
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_i=
+nit.c
+> index f962118..4bedb06 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -11477,6 +11477,7 @@ lpfc_exit(void)
+>  		free_pages((unsigned long)_dump_buf_dif, _dump_buf_dif_order);
+>  	}
+>  	kfree(lpfc_used_cpu);
+> +	idr_destroy(&lpfc_hba_index);
+>  }
+> =20
+>  module_init(lpfc_init);
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
@@ -43,12 +93,6 @@ Hannes
 --=20
 Dr. Hannes Reinecke		               zSeries & Storage
 hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton H=
-RB 21284 (AG N=C3=BCrnberg)
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
