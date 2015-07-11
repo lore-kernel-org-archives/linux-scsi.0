@@ -1,26 +1,29 @@
-From: "Monetary Authority" <info@contact.org>
-Subject: Re: Attention Please
-Date: Sat, 11 Jul 2015 00:51:42 +0100
-Message-ID: <20150710234439.81BDE1B867B3__47790.5360669412$1436598793$gmane$org@mail.unnes.ac.id>
-Reply-To: nmcch@qq.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: Fix sense information setting in fixed sized format
+Date: Sat, 11 Jul 2015 04:27:42 -0700
+Message-ID: <20150711112742.GA7883@infradead.org>
+References: <1436367603-16456-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 13.subnet-103.23.100.host.unnes.ac.id ([103.23.100.13]:60666
-	"EHLO mail.unnes.ac.id" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734AbbGKHM4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jul 2015 03:12:56 -0400
-Content-Description: Mail message body
+Received: from bombadil.infradead.org ([198.137.202.9]:50473 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699AbbGKL1n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jul 2015 07:27:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1436367603-16456-1-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <info@contact.org>
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
+On Wed, Jul 08, 2015 at 06:00:03PM +0300, Sagi Grimberg wrote:
+> In fixed size sense format the information field is a four byte
+> field.
 
+This looks correct to me,
 
-Hello, I'm Norman Chan, Tak-Lam, S.B.S., J.P, Chief Executive, Hong Kong Monetary Authority (HKMA). I have a monetary proposal worth $47.1M for you to handle with me. Contact me for more details.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
-
+But: this will truncate > 32bit sector numbers.  Maybe we need to
+enable descriptor format sense data for large enough LUs.
