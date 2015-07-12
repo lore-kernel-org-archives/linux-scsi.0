@@ -1,34 +1,71 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] scsi: Fix sense information setting in fixed sized format
-Date: Sun, 12 Jul 2015 09:36:26 +0300
-Message-ID: <55A20AEA.6060808@dev.mellanox.co.il>
-References: <1436367603-16456-1-git-send-email-sagig@mellanox.com>
- <20150711112742.GA7883@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101371] New: OOPS: unplugging western digital passport drive
+Date: Sun, 12 Jul 2015 08:23:59 +0000
+Message-ID: <bug-101371-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:36732 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235AbbGLGga (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jul 2015 02:36:30 -0400
-Received: by widjy10 with SMTP id jy10so43927890wid.1
-        for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2015 23:36:29 -0700 (PDT)
-In-Reply-To: <20150711112742.GA7883@infradead.org>
+Received: from mail.kernel.org ([198.145.29.136]:44710 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752560AbbGLIYC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Jul 2015 04:24:02 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9923A20609
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Jul 2015 08:24:00 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id C1780205F1
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Jul 2015 08:23:59 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagig@mellanox.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=101371
 
-> This looks correct to me,
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> But: this will truncate > 32bit sector numbers.  Maybe we need to
-> enable descriptor format sense data for large enough LUs.
+            Bug ID: 101371
+           Summary: OOPS: unplugging western digital passport drive
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.0.7
+          Hardware: Intel
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: ilanco@gmail.com
+        Regression: No
 
-That should be easy enough now that the sense data is constructed using
-scsi helpers.
+Created attachment 182471
+  --> https://bugzilla.kernel.org/attachment.cgi?id=182471&action=edit
+kernel log
 
-Let me prepare a patch for that.
+Hi,
+
+I can reproducibly crash my laptop by unplugging a western digital passport
+drive.
+The flow is as follow:
+
+1. plugin in passport drive
+2. wait until drivers are loaded
+3. plug in or unplug power cable
+4. unplug passport
+
+This only happens after changing the power state of the laptop. So if I plug in
+the passport drive while on BAT (or AC) and plug in out while on AC (or BAT)
+the system crashes.
+
+I think this is the same bug but for an older kernel version:
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg37689.html
+
+Kernel log is attached.
+
+Friendly regards,
+
+Ilan Cohen
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
