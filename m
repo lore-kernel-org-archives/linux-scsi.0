@@ -1,98 +1,117 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [RFC v4 01/25] scsi/atari_scsi: Dont select CONFIG_NVRAM
-Date: Sun, 12 Jul 2015 20:25:28 +1000
-Message-ID: <20150712102527.615932569@telegraphics.com.au>
-References: <20150712102527.356151908@telegraphics.com.au>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: [RESEND][PATCH] qla2xxx: use t10_pi_tuple
+Date: Sun, 12 Jul 2015 16:06:31 +0200
+Message-ID: <20150712160631.000059ca@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline; filename=atari-nvram-disable
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.15]:57627 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750732AbbGLOGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Jul 2015 10:06:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: qla2xxx-upstream@qlogic.com, Sebastian Herbszt <herbszt@gmx.de>
 
-T24gcG93ZXJwYywgc2V0dGluZyBDT05GSUdfTlZSQU09biBidWlsZHMgYSBrZXJuZWwgd2l0aCBu
-byBOVlJBTSBzdXBwb3J0LgpTZXR0aW5nIENPTkZJR19OVlJBTT1tIGVuYWJsZXMgdGhlIC9kZXYv
-bnZyYW0gbWlzYyBkZXZpY2UgbW9kdWxlIHdpdGhvdXQKZW5hYmxpbmcgTlZSQU0gc3VwcG9ydCBp
-biBkcml2ZXJzLiBTZXR0aW5nIENPTkZJR19OVlJBTT15IGVuYWJsZXMgdGhlCm1pc2MgZGV2aWNl
-IChidWlsdC1pbikgYW5kIGFsc28gZW5hYmxlcyBOVlJBTSBzdXBwb3J0IGluIGRyaXZlcnMuCgpt
-NjhrIHNoYXJlcyB0aGUgdmFsa3lyaWVmYiBkcml2ZXIgd2l0aCBwb3dlcnBjLCBhbmQgc2luY2Ug
-dGhhdCBkcml2ZXIgdXNlcwpOVlJBTSwgaXQgaXMgYWZmZWN0ZWQgYnkgQ09ORklHX0FUQVJJX1ND
-U0ksIGJlY2F1c2Ugb2YgdGhlIHVzZSBvZgoic2VsZWN0IE5WUkFNIi4KCkFkb3B0IHRoZSBwb3dl
-cnBjIGNvbnZlbnRpb24gb24gbTY4ayB0byBhdm9pZCBzdXJwcmlzZXMuCgpTaWduZWQtb2ZmLWJ5
-OiBGaW5uIFRoYWluIDxmdGhhaW5AdGVsZWdyYXBoaWNzLmNvbS5hdT4KCi0tLQoKVGhpcyBwYXRj
-aCB0ZW1wb3JhcmlseSBkaXNhYmxlcyBDT05GSUdfTlZSQU0gb24gQXRhcmksIHRvIHByZXZlbnQg
-YnVpbGQKZmFpbHVyZXMgd2hlbiBiaXNlY3RpbmcgdGhlIHJlc3Qgb2YgdGhpcyBwYXRjaCBzZXJp
-ZXMuIEl0IGdldHMgZW5hYmxlZAphZ2FpbiB3aXRoIHRoZSBpbnRyb2R1Y3Rpb24gb2YgQ09ORklH
-X0hBVkVfQVJDSF9OVlJBTV9PUFMsIG9uY2UgdGhlCm52cmFtXyogZ2xvYmFsIGZ1bmN0aW9ucyBo
-YXZlIGJlZW4gbW92ZWQgdG8gYW4gb3BzIHN0cnVjdC4KClRoZSByZW1vdmFsIG9mICJzZWxlY3Qg
-TlZSQU0iIG1heSBtZWFuIHRoYXQgc29tZSBrZXJuZWwgY29uZmlncyAoc3VjaAphcyBEZWJpYW4v
-bTY4aykgbWF5IG5lZWQgdHdlYWtpbmcuCgotLS0KIGRyaXZlcnMvY2hhci9LY29uZmlnICAgICAg
-fCAgICA1ICstLS0tCiBkcml2ZXJzL3Njc2kvS2NvbmZpZyAgICAgIHwgICAgNiArKystLS0KIGRy
-aXZlcnMvc2NzaS9hdGFyaV9zY3NpLmMgfCAgICA4ICsrKystLS0tCiAzIGZpbGVzIGNoYW5nZWQs
-IDggaW5zZXJ0aW9ucygrKSwgMTEgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgvZHJpdmVycy9j
-aGFyL0tjb25maWcKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgub3JpZy9kcml2ZXJzL2NoYXIvS2NvbmZp
-ZwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAwMAorKysgbGludXgvZHJpdmVycy9j
-aGFyL0tjb25maWcJMjAxNS0wNy0xMiAyMDoyNDo1NC4wMDAwMDAwMDAgKzEwMDAKQEAgLTI0Nyw3
-ICsyNDcsNyBAQCBzb3VyY2UgImRyaXZlcnMvY2hhci9od19yYW5kb20vS2NvbmZpZyIKIAogY29u
-ZmlnIE5WUkFNCiAJdHJpc3RhdGUgIi9kZXYvbnZyYW0gc3VwcG9ydCIKLQlkZXBlbmRzIG9uIEFU
-QVJJIHx8IFg4NiB8fCAoQVJNICYmIFJUQ19EUlZfQ01PUykgfHwgR0VORVJJQ19OVlJBTQorCWRl
-cGVuZHMgb24gWDg2IHx8IChBUk0gJiYgUlRDX0RSVl9DTU9TKSB8fCBHRU5FUklDX05WUkFNCiAJ
-LS0taGVscC0tLQogCSAgSWYgeW91IHNheSBZIGhlcmUgYW5kIGNyZWF0ZSBhIGNoYXJhY3RlciBz
-cGVjaWFsIGZpbGUgL2Rldi9udnJhbQogCSAgd2l0aCBtYWpvciBudW1iZXIgMTAgYW5kIG1pbm9y
-IG51bWJlciAxNDQgdXNpbmcgbWtub2QgKCJtYW4gbWtub2QiKSwKQEAgLTI2NSw5ICsyNjUsNiBA
-QCBjb25maWcgTlZSQU0KIAkgIHNob3VsZCBORVZFUiBpZGx5IHRhbXBlciB3aXRoIGl0LiBTZWUg
-UmFsZiBCcm93bidzIGludGVycnVwdCBsaXN0CiAJICBmb3IgYSBndWlkZSB0byB0aGUgdXNlIG9m
-IENNT1MgYnl0ZXMgYnkgeW91ciBCSU9TLgogCi0JICBPbiBBdGFyaSBtYWNoaW5lcywgL2Rldi9u
-dnJhbSBpcyBhbHdheXMgY29uZmlndXJlZCBhbmQgZG9lcyBub3QgbmVlZAotCSAgdG8gYmUgc2Vs
-ZWN0ZWQuCi0KIAkgIFRvIGNvbXBpbGUgdGhpcyBkcml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBN
-IGhlcmU6IHRoZQogCSAgbW9kdWxlIHdpbGwgYmUgY2FsbGVkIG52cmFtLgogCkluZGV4OiBsaW51
-eC9kcml2ZXJzL3Njc2kvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2RyaXZlcnMv
-c2NzaS9LY29uZmlnCTIwMTUtMDctMTIgMjA6MjQ6NTQuMDAwMDAwMDAwICsxMDAwCisrKyBsaW51
-eC9kcml2ZXJzL3Njc2kvS2NvbmZpZwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAw
-MApAQCAtMTU5MiwxNCArMTU5MiwxNCBAQCBjb25maWcgQVRBUklfU0NTSQogCXRyaXN0YXRlICJB
-dGFyaSBuYXRpdmUgU0NTSSBzdXBwb3J0IgogCWRlcGVuZHMgb24gQVRBUkkgJiYgU0NTSQogCXNl
-bGVjdCBTQ1NJX1NQSV9BVFRSUwotCXNlbGVjdCBOVlJBTQogCS0tLWhlbHAtLS0KIAkgIElmIHlv
-dSBoYXZlIGFuIEF0YXJpIHdpdGggYnVpbHQtaW4gTkNSNTM4MCBTQ1NJIGNvbnRyb2xsZXIgKFRU
-LAogCSAgRmFsY29uLCAuLi4pIHNheSBZIHRvIGdldCBpdCBzdXBwb3J0ZWQuIE9mIGNvdXJzZSBh
-bHNvLCBpZiB5b3UgaGF2ZQogCSAgYSBjb21wYXRpYmxlIFNDU0kgY29udHJvbGxlciAoZS5nLiBm
-b3IgTWVkdXNhKS4KIAotCSAgVG8gY29tcGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hv
-b3NlIE0gaGVyZTogdGhlCi0JICBtb2R1bGUgd2lsbCBiZSBjYWxsZWQgYXRhcmlfc2NzaS4KKwkg
-IFRvIGNvbXBpbGUgdGhpcyBkcml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBNIGhlcmU6IHRoZSBt
-b2R1bGUgd2lsbAorCSAgYmUgY2FsbGVkIGF0YXJpX3Njc2kuIElmIHlvdSBhbHNvIGVuYWJsZSBO
-VlJBTSBzdXBwb3J0LCB0aGUgU0NTSQorCSAgaG9zdCdzIElEIGlzIHRha2VuIGZyb20gdGhlIHNl
-dHRpbmcgaW4gVFQgUlRDIE5WUkFNLgogCiAJICBUaGlzIGRyaXZlciBzdXBwb3J0cyBib3RoIHN0
-eWxlcyBvZiBOQ1IgaW50ZWdyYXRpb24gaW50byB0aGUKIAkgIHN5c3RlbTogdGhlIFRUIHN0eWxl
-IChzZXBhcmF0ZSBETUEpLCBhbmQgdGhlIEZhbGNvbiBzdHlsZSAodmlhCkluZGV4OiBsaW51eC9k
-cml2ZXJzL3Njc2kvYXRhcmlfc2NzaS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4Lm9yaWcvZHJpdmVy
-cy9zY3NpL2F0YXJpX3Njc2kuYwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAwMAor
-KysgbGludXgvZHJpdmVycy9zY3NpL2F0YXJpX3Njc2kuYwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAw
-MDAwMDAwMCArMTAwMApAQCAtODc1LDkgKzg3NSwxMCBAQCBzdGF0aWMgaW50IF9faW5pdCBhdGFy
-aV9zY3NpX3Byb2JlKHN0cnVjCiAJaWYgKEFUQVJJSFdfUFJFU0VOVChUVF9TQ1NJKSAmJiBzZXR1
-cF9zZ190YWJsZXNpemUgPj0gMCkKIAkJYXRhcmlfc2NzaV90ZW1wbGF0ZS5zZ190YWJsZXNpemUg
-PSBzZXR1cF9zZ190YWJsZXNpemU7CiAKLQlpZiAoc2V0dXBfaG9zdGlkID49IDApIHsKKwlpZiAo
-c2V0dXBfaG9zdGlkID49IDApCiAJCWF0YXJpX3Njc2lfdGVtcGxhdGUudGhpc19pZCA9IHNldHVw
-X2hvc3RpZCAmIDc7Ci0JfSBlbHNlIHsKKyNpZmRlZiBDT05GSUdfTlZSQU0KKwllbHNlCiAJCS8q
-IFRlc3QgaWYgYSBob3N0IGlkIGlzIHNldCBpbiB0aGUgTlZSYW0gKi8KIAkJaWYgKEFUQVJJSFdf
-UFJFU0VOVChUVF9DTEspICYmIG52cmFtX2NoZWNrX2NoZWNrc3VtKCkpIHsKIAkJCXVuc2lnbmVk
-IGNoYXIgYiA9IG52cmFtX3JlYWRfYnl0ZSgxNCk7CkBAIC04ODgsOCArODg5LDcgQEAgc3RhdGlj
-IGludCBfX2luaXQgYXRhcmlfc2NzaV9wcm9iZShzdHJ1YwogCQkJaWYgKGIgJiAweDgwKQogCQkJ
-CWF0YXJpX3Njc2lfdGVtcGxhdGUudGhpc19pZCA9IGIgJiA3OwogCQl9Ci0JfQotCisjZW5kaWYK
-IAogI2lmZGVmIFJFQUxfRE1BCiAJLyogSWYgcnVubmluZyBvbiBhIEZhbGNvbiBhbmQgaWYgdGhl
-cmUncyBUVC1SYW0gKGkuZS4sIG1vcmUgdGhhbiBvbmUKCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4
-cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5m
-by9saW51eHBwYy1kZXY=
+Drop unused scsi_dif_tuple and use t10_pi_tuple instead of own sd_dif_tuple copy.
+
+Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+
+diff -urp linux/drivers/scsi/qla2xxx-orig/qla_def.h linux/drivers/scsi/qla2xxx/qla_def.h
+--- linux/drivers/scsi/qla2xxx-orig/qla_def.h	2015-04-15 06:18:24.681045138 +0200
++++ linux/drivers/scsi/qla2xxx/qla_def.h	2015-07-09 09:45:44.285703687 +0200
+@@ -25,6 +25,7 @@
+ #include <linux/firmware.h>
+ #include <linux/aer.h>
+ #include <linux/mutex.h>
++#include <linux/t10-pi.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -276,16 +277,6 @@
+ struct req_que;
+ 
+ /*
+- * (sd.h is not exported, hence local inclusion)
+- * Data Integrity Field tuple.
+- */
+-struct sd_dif_tuple {
+-	__be16 guard_tag;	/* Checksum */
+-	__be16 app_tag;		/* Opaque storage */
+-	__be32 ref_tag;		/* Target LBA or indirect LBA */
+-};
+-
+-/*
+  * SCSI Request Block
+  */
+ struct srb_cmd {
+diff -urp linux/drivers/scsi/qla2xxx-orig/qla_isr.c linux/drivers/scsi/qla2xxx/qla_isr.c
+--- linux/drivers/scsi/qla2xxx-orig/qla_isr.c	2015-07-05 22:18:44.157739160 +0200
++++ linux/drivers/scsi/qla2xxx/qla_isr.c	2015-07-09 09:45:44.289703687 +0200
+@@ -1711,12 +1711,6 @@ qla2x00_handle_sense(srb_t *sp, uint8_t
+ 	}
+ }
+ 
+-struct scsi_dif_tuple {
+-	__be16 guard;       /* Checksum */
+-	__be16 app_tag;         /* APPL identifier */
+-	__be32 ref_tag;         /* Target LBA or indirect LBA */
+-};
+-
+ /*
+  * Checks the guard or meta-data for the type of error
+  * detected by the HBA. In case of errors, we set the
+@@ -1779,7 +1773,7 @@ qla2x00_handle_dif_error(srb_t *sp, stru
+ 		if (scsi_prot_sg_count(cmd)) {
+ 			uint32_t i, j = 0, k = 0, num_ent;
+ 			struct scatterlist *sg;
+-			struct sd_dif_tuple *spt;
++			struct t10_pi_tuple *pi;
+ 
+ 			/* Patch the corresponding protection tags */
+ 			scsi_for_each_prot_sg(cmd, sg,
+@@ -1801,12 +1795,12 @@ qla2x00_handle_dif_error(srb_t *sp, stru
+ 				return 1;
+ 			}
+ 
+-			spt = page_address(sg_page(sg)) + sg->offset;
+-			spt += j;
++			pi = page_address(sg_page(sg)) + sg->offset;
++			pi += j;
+ 
+-			spt->app_tag = 0xffff;
++			pi->app_tag = 0xffff;
+ 			if (scsi_get_prot_type(cmd) == SCSI_PROT_DIF_TYPE3)
+-				spt->ref_tag = 0xffffffff;
++				pi->ref_tag = 0xffffffff;
+ 		}
+ 
+ 		return 0;
+diff -urp linux/drivers/scsi/qla2xxx-orig/qla_target.c linux/drivers/scsi/qla2xxx/qla_target.c
+--- linux/drivers/scsi/qla2xxx-orig/qla_target.c	2015-07-05 22:18:44.177739161 +0200
++++ linux/drivers/scsi/qla2xxx/qla_target.c	2015-07-09 09:45:44.293703687 +0200
+@@ -2589,17 +2589,17 @@ qlt_handle_dif_error(struct scsi_qla_hos
+ 			}
+ 
+ #if 0
+-			struct sd_dif_tuple *spt;
++			struct t10_pi_tuple *pi;
+ 			/* TODO:
+ 			 * This section came from initiator. Is it valid here?
+ 			 * should ulp be override with actual val???
+ 			 */
+-			spt = page_address(sg_page(sg)) + sg->offset;
+-			spt += j;
++			pi = page_address(sg_page(sg)) + sg->offset;
++			pi += j;
+ 
+-			spt->app_tag = 0xffff;
++			pi->app_tag = 0xffff;
+ 			if (cmd->se_cmd.prot_type == SCSI_PROT_DIF_TYPE3)
+-				spt->ref_tag = 0xffffffff;
++				pi->ref_tag = 0xffffffff;
+ #endif
+ 		}
+ 
