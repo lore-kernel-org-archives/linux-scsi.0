@@ -1,197 +1,98 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [RFC v4 04/25] m68k/atari: Replace nvram_{read,write}_byte with arch_nvram_ops
-Date: Sun, 12 Jul 2015 20:25:31 +1000
-Message-ID: <20150712102528.355922410@telegraphics.com.au>
+Subject: [RFC v4 01/25] scsi/atari_scsi: Dont select CONFIG_NVRAM
+Date: Sun, 12 Jul 2015 20:25:28 +1000
+Message-ID: <20150712102527.615932569@telegraphics.com.au>
 References: <20150712102527.356151908@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_scsi-convert-to-nvram_ops
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-Disposition: inline; filename=atari-nvram-disable
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-By implementing an arch_nvram_ops struct, any platform can re-use the
-drivers/char/nvram module without needing any arch-specific code
-in that module. Atari does so here.
-
-Atari has one user of nvram_check_checksum() whereas the other platforms
-(i.e. x86 and ARM platforms) have none at all. Replace this
-validate-checksum-and-read-byte sequence with the equivalent
-rtc_nvram_ops.read() call and remove the now unused functions.
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
-
-The advantage of the new ops struct over the old global nvram_* functions
-is that the misc device module can be shared by different platforms
-without requiring every platform to implement every nvram_* function.
-E.g. only RTC "CMOS" NVRAMs have a checksum for the entire NVRAM
-and only PowerPC platforms have a "sync" ioctl.
-
----
- arch/m68k/atari/nvram.c   |   89 ++++++++++++++++++++++++++++------------------
- drivers/scsi/atari_scsi.c |    8 ++--
- include/linux/nvram.h     |    9 ++++
- 3 files changed, 70 insertions(+), 36 deletions(-)
-
-Index: linux/arch/m68k/atari/nvram.c
-===================================================================
---- linux.orig/arch/m68k/atari/nvram.c	2015-07-12 20:24:56.000000000 +1000
-+++ linux/arch/m68k/atari/nvram.c	2015-07-12 20:24:58.000000000 +1000
-@@ -38,33 +38,12 @@ unsigned char __nvram_read_byte(int i)
- 	return CMOS_READ(NVRAM_FIRST_BYTE + i);
- }
- 
--unsigned char nvram_read_byte(int i)
--{
--	unsigned long flags;
--	unsigned char c;
--
--	spin_lock_irqsave(&rtc_lock, flags);
--	c = __nvram_read_byte(i);
--	spin_unlock_irqrestore(&rtc_lock, flags);
--	return c;
--}
--EXPORT_SYMBOL(nvram_read_byte);
--
- /* This races nicely with trying to read with checksum checking */
- void __nvram_write_byte(unsigned char c, int i)
- {
- 	CMOS_WRITE(c, NVRAM_FIRST_BYTE + i);
- }
- 
--void nvram_write_byte(unsigned char c, int i)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&rtc_lock, flags);
--	__nvram_write_byte(c, i);
--	spin_unlock_irqrestore(&rtc_lock, flags);
--}
--
- /* On Ataris, the checksum is over all bytes except the checksum bytes
-  * themselves; these are at the very end.
-  */
-@@ -83,18 +62,6 @@ int __nvram_check_checksum(void)
- 	       (__nvram_read_byte(ATARI_CKS_LOC + 1) == (sum & 0xff));
- }
- 
--int nvram_check_checksum(void)
--{
--	unsigned long flags;
--	int rv;
--
--	spin_lock_irqsave(&rtc_lock, flags);
--	rv = __nvram_check_checksum();
--	spin_unlock_irqrestore(&rtc_lock, flags);
--	return rv;
--}
--EXPORT_SYMBOL(nvram_check_checksum);
--
- static void __nvram_set_checksum(void)
- {
- 	int i;
-@@ -106,6 +73,62 @@ static void __nvram_set_checksum(void)
- 	__nvram_write_byte(sum, ATARI_CKS_LOC + 1);
- }
- 
-+static ssize_t nvram_read(char *buf, size_t count, loff_t *ppos)
-+{
-+	char *p = buf;
-+	loff_t i;
-+
-+	spin_lock_irq(&rtc_lock);
-+
-+	if (!__nvram_check_checksum()) {
-+		spin_unlock_irq(&rtc_lock);
-+		return -EIO;
-+	}
-+
-+	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
-+		*p = __nvram_read_byte(i);
-+
-+	spin_unlock_irq(&rtc_lock);
-+
-+	*ppos = i;
-+	return p - buf;
-+}
-+
-+static ssize_t nvram_write(char *buf, size_t count, loff_t *ppos)
-+{
-+	char *p = buf;
-+	loff_t i;
-+
-+	spin_lock_irq(&rtc_lock);
-+
-+	if (!__nvram_check_checksum()) {
-+		spin_unlock_irq(&rtc_lock);
-+		return -EIO;
-+	}
-+
-+	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
-+		__nvram_write_byte(*p, i);
-+
-+	__nvram_set_checksum();
-+
-+	spin_unlock_irq(&rtc_lock);
-+
-+	*ppos = i;
-+	return p - buf;
-+}
-+
-+static ssize_t nvram_get_size(void)
-+{
-+	return NVRAM_BYTES;
-+}
-+
-+const struct nvram_ops arch_nvram_ops = {
-+	.read           = nvram_read,
-+	.write          = nvram_write,
-+	.get_size       = nvram_get_size,
-+};
-+EXPORT_SYMBOL(arch_nvram_ops);
-+
- #ifdef CONFIG_PROC_FS
- static struct {
- 	unsigned char val;
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-07-12 20:24:54.000000000 +1000
-+++ linux/drivers/scsi/atari_scsi.c	2015-07-12 20:24:58.000000000 +1000
-@@ -880,13 +880,15 @@ static int __init atari_scsi_probe(struc
- #ifdef CONFIG_NVRAM
- 	else
- 		/* Test if a host id is set in the NVRam */
--		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
--			unsigned char b = nvram_read_byte(14);
-+		if (ATARIHW_PRESENT(TT_CLK)) {
-+			unsigned char b;
-+			loff_t offset = 14;
-+			ssize_t count = arch_nvram_ops.read(&b, 1, &offset);
- 
- 			/* Arbitration enabled? (for TOS)
- 			 * If yes, use configured host ID
- 			 */
--			if (b & 0x80)
-+			if ((count == 1) && (b & 0x80))
- 				atari_scsi_template.this_id = b & 7;
- 		}
- #endif
-Index: linux/include/linux/nvram.h
-===================================================================
---- linux.orig/include/linux/nvram.h	2015-07-12 20:24:53.000000000 +1000
-+++ linux/include/linux/nvram.h	2015-07-12 20:24:58.000000000 +1000
-@@ -10,4 +10,13 @@ extern void __nvram_write_byte(unsigned
- extern void nvram_write_byte(unsigned char c, int i);
- extern int __nvram_check_checksum(void);
- extern int nvram_check_checksum(void);
-+
-+struct nvram_ops {
-+	ssize_t         (*read)(char *, size_t, loff_t *);
-+	ssize_t         (*write)(char *, size_t, loff_t *);
-+	ssize_t         (*get_size)(void);
-+};
-+
-+extern const struct nvram_ops arch_nvram_ops;
-+
- #endif  /* _LINUX_NVRAM_H */
+T24gcG93ZXJwYywgc2V0dGluZyBDT05GSUdfTlZSQU09biBidWlsZHMgYSBrZXJuZWwgd2l0aCBu
+byBOVlJBTSBzdXBwb3J0LgpTZXR0aW5nIENPTkZJR19OVlJBTT1tIGVuYWJsZXMgdGhlIC9kZXYv
+bnZyYW0gbWlzYyBkZXZpY2UgbW9kdWxlIHdpdGhvdXQKZW5hYmxpbmcgTlZSQU0gc3VwcG9ydCBp
+biBkcml2ZXJzLiBTZXR0aW5nIENPTkZJR19OVlJBTT15IGVuYWJsZXMgdGhlCm1pc2MgZGV2aWNl
+IChidWlsdC1pbikgYW5kIGFsc28gZW5hYmxlcyBOVlJBTSBzdXBwb3J0IGluIGRyaXZlcnMuCgpt
+NjhrIHNoYXJlcyB0aGUgdmFsa3lyaWVmYiBkcml2ZXIgd2l0aCBwb3dlcnBjLCBhbmQgc2luY2Ug
+dGhhdCBkcml2ZXIgdXNlcwpOVlJBTSwgaXQgaXMgYWZmZWN0ZWQgYnkgQ09ORklHX0FUQVJJX1ND
+U0ksIGJlY2F1c2Ugb2YgdGhlIHVzZSBvZgoic2VsZWN0IE5WUkFNIi4KCkFkb3B0IHRoZSBwb3dl
+cnBjIGNvbnZlbnRpb24gb24gbTY4ayB0byBhdm9pZCBzdXJwcmlzZXMuCgpTaWduZWQtb2ZmLWJ5
+OiBGaW5uIFRoYWluIDxmdGhhaW5AdGVsZWdyYXBoaWNzLmNvbS5hdT4KCi0tLQoKVGhpcyBwYXRj
+aCB0ZW1wb3JhcmlseSBkaXNhYmxlcyBDT05GSUdfTlZSQU0gb24gQXRhcmksIHRvIHByZXZlbnQg
+YnVpbGQKZmFpbHVyZXMgd2hlbiBiaXNlY3RpbmcgdGhlIHJlc3Qgb2YgdGhpcyBwYXRjaCBzZXJp
+ZXMuIEl0IGdldHMgZW5hYmxlZAphZ2FpbiB3aXRoIHRoZSBpbnRyb2R1Y3Rpb24gb2YgQ09ORklH
+X0hBVkVfQVJDSF9OVlJBTV9PUFMsIG9uY2UgdGhlCm52cmFtXyogZ2xvYmFsIGZ1bmN0aW9ucyBo
+YXZlIGJlZW4gbW92ZWQgdG8gYW4gb3BzIHN0cnVjdC4KClRoZSByZW1vdmFsIG9mICJzZWxlY3Qg
+TlZSQU0iIG1heSBtZWFuIHRoYXQgc29tZSBrZXJuZWwgY29uZmlncyAoc3VjaAphcyBEZWJpYW4v
+bTY4aykgbWF5IG5lZWQgdHdlYWtpbmcuCgotLS0KIGRyaXZlcnMvY2hhci9LY29uZmlnICAgICAg
+fCAgICA1ICstLS0tCiBkcml2ZXJzL3Njc2kvS2NvbmZpZyAgICAgIHwgICAgNiArKystLS0KIGRy
+aXZlcnMvc2NzaS9hdGFyaV9zY3NpLmMgfCAgICA4ICsrKystLS0tCiAzIGZpbGVzIGNoYW5nZWQs
+IDggaW5zZXJ0aW9ucygrKSwgMTEgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgvZHJpdmVycy9j
+aGFyL0tjb25maWcKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgub3JpZy9kcml2ZXJzL2NoYXIvS2NvbmZp
+ZwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAwMAorKysgbGludXgvZHJpdmVycy9j
+aGFyL0tjb25maWcJMjAxNS0wNy0xMiAyMDoyNDo1NC4wMDAwMDAwMDAgKzEwMDAKQEAgLTI0Nyw3
+ICsyNDcsNyBAQCBzb3VyY2UgImRyaXZlcnMvY2hhci9od19yYW5kb20vS2NvbmZpZyIKIAogY29u
+ZmlnIE5WUkFNCiAJdHJpc3RhdGUgIi9kZXYvbnZyYW0gc3VwcG9ydCIKLQlkZXBlbmRzIG9uIEFU
+QVJJIHx8IFg4NiB8fCAoQVJNICYmIFJUQ19EUlZfQ01PUykgfHwgR0VORVJJQ19OVlJBTQorCWRl
+cGVuZHMgb24gWDg2IHx8IChBUk0gJiYgUlRDX0RSVl9DTU9TKSB8fCBHRU5FUklDX05WUkFNCiAJ
+LS0taGVscC0tLQogCSAgSWYgeW91IHNheSBZIGhlcmUgYW5kIGNyZWF0ZSBhIGNoYXJhY3RlciBz
+cGVjaWFsIGZpbGUgL2Rldi9udnJhbQogCSAgd2l0aCBtYWpvciBudW1iZXIgMTAgYW5kIG1pbm9y
+IG51bWJlciAxNDQgdXNpbmcgbWtub2QgKCJtYW4gbWtub2QiKSwKQEAgLTI2NSw5ICsyNjUsNiBA
+QCBjb25maWcgTlZSQU0KIAkgIHNob3VsZCBORVZFUiBpZGx5IHRhbXBlciB3aXRoIGl0LiBTZWUg
+UmFsZiBCcm93bidzIGludGVycnVwdCBsaXN0CiAJICBmb3IgYSBndWlkZSB0byB0aGUgdXNlIG9m
+IENNT1MgYnl0ZXMgYnkgeW91ciBCSU9TLgogCi0JICBPbiBBdGFyaSBtYWNoaW5lcywgL2Rldi9u
+dnJhbSBpcyBhbHdheXMgY29uZmlndXJlZCBhbmQgZG9lcyBub3QgbmVlZAotCSAgdG8gYmUgc2Vs
+ZWN0ZWQuCi0KIAkgIFRvIGNvbXBpbGUgdGhpcyBkcml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBN
+IGhlcmU6IHRoZQogCSAgbW9kdWxlIHdpbGwgYmUgY2FsbGVkIG52cmFtLgogCkluZGV4OiBsaW51
+eC9kcml2ZXJzL3Njc2kvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2RyaXZlcnMv
+c2NzaS9LY29uZmlnCTIwMTUtMDctMTIgMjA6MjQ6NTQuMDAwMDAwMDAwICsxMDAwCisrKyBsaW51
+eC9kcml2ZXJzL3Njc2kvS2NvbmZpZwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAw
+MApAQCAtMTU5MiwxNCArMTU5MiwxNCBAQCBjb25maWcgQVRBUklfU0NTSQogCXRyaXN0YXRlICJB
+dGFyaSBuYXRpdmUgU0NTSSBzdXBwb3J0IgogCWRlcGVuZHMgb24gQVRBUkkgJiYgU0NTSQogCXNl
+bGVjdCBTQ1NJX1NQSV9BVFRSUwotCXNlbGVjdCBOVlJBTQogCS0tLWhlbHAtLS0KIAkgIElmIHlv
+dSBoYXZlIGFuIEF0YXJpIHdpdGggYnVpbHQtaW4gTkNSNTM4MCBTQ1NJIGNvbnRyb2xsZXIgKFRU
+LAogCSAgRmFsY29uLCAuLi4pIHNheSBZIHRvIGdldCBpdCBzdXBwb3J0ZWQuIE9mIGNvdXJzZSBh
+bHNvLCBpZiB5b3UgaGF2ZQogCSAgYSBjb21wYXRpYmxlIFNDU0kgY29udHJvbGxlciAoZS5nLiBm
+b3IgTWVkdXNhKS4KIAotCSAgVG8gY29tcGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hv
+b3NlIE0gaGVyZTogdGhlCi0JICBtb2R1bGUgd2lsbCBiZSBjYWxsZWQgYXRhcmlfc2NzaS4KKwkg
+IFRvIGNvbXBpbGUgdGhpcyBkcml2ZXIgYXMgYSBtb2R1bGUsIGNob29zZSBNIGhlcmU6IHRoZSBt
+b2R1bGUgd2lsbAorCSAgYmUgY2FsbGVkIGF0YXJpX3Njc2kuIElmIHlvdSBhbHNvIGVuYWJsZSBO
+VlJBTSBzdXBwb3J0LCB0aGUgU0NTSQorCSAgaG9zdCdzIElEIGlzIHRha2VuIGZyb20gdGhlIHNl
+dHRpbmcgaW4gVFQgUlRDIE5WUkFNLgogCiAJICBUaGlzIGRyaXZlciBzdXBwb3J0cyBib3RoIHN0
+eWxlcyBvZiBOQ1IgaW50ZWdyYXRpb24gaW50byB0aGUKIAkgIHN5c3RlbTogdGhlIFRUIHN0eWxl
+IChzZXBhcmF0ZSBETUEpLCBhbmQgdGhlIEZhbGNvbiBzdHlsZSAodmlhCkluZGV4OiBsaW51eC9k
+cml2ZXJzL3Njc2kvYXRhcmlfc2NzaS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4Lm9yaWcvZHJpdmVy
+cy9zY3NpL2F0YXJpX3Njc2kuYwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAwMDAwMDAwMCArMTAwMAor
+KysgbGludXgvZHJpdmVycy9zY3NpL2F0YXJpX3Njc2kuYwkyMDE1LTA3LTEyIDIwOjI0OjU0LjAw
+MDAwMDAwMCArMTAwMApAQCAtODc1LDkgKzg3NSwxMCBAQCBzdGF0aWMgaW50IF9faW5pdCBhdGFy
+aV9zY3NpX3Byb2JlKHN0cnVjCiAJaWYgKEFUQVJJSFdfUFJFU0VOVChUVF9TQ1NJKSAmJiBzZXR1
+cF9zZ190YWJsZXNpemUgPj0gMCkKIAkJYXRhcmlfc2NzaV90ZW1wbGF0ZS5zZ190YWJsZXNpemUg
+PSBzZXR1cF9zZ190YWJsZXNpemU7CiAKLQlpZiAoc2V0dXBfaG9zdGlkID49IDApIHsKKwlpZiAo
+c2V0dXBfaG9zdGlkID49IDApCiAJCWF0YXJpX3Njc2lfdGVtcGxhdGUudGhpc19pZCA9IHNldHVw
+X2hvc3RpZCAmIDc7Ci0JfSBlbHNlIHsKKyNpZmRlZiBDT05GSUdfTlZSQU0KKwllbHNlCiAJCS8q
+IFRlc3QgaWYgYSBob3N0IGlkIGlzIHNldCBpbiB0aGUgTlZSYW0gKi8KIAkJaWYgKEFUQVJJSFdf
+UFJFU0VOVChUVF9DTEspICYmIG52cmFtX2NoZWNrX2NoZWNrc3VtKCkpIHsKIAkJCXVuc2lnbmVk
+IGNoYXIgYiA9IG52cmFtX3JlYWRfYnl0ZSgxNCk7CkBAIC04ODgsOCArODg5LDcgQEAgc3RhdGlj
+IGludCBfX2luaXQgYXRhcmlfc2NzaV9wcm9iZShzdHJ1YwogCQkJaWYgKGIgJiAweDgwKQogCQkJ
+CWF0YXJpX3Njc2lfdGVtcGxhdGUudGhpc19pZCA9IGIgJiA3OwogCQl9Ci0JfQotCisjZW5kaWYK
+IAogI2lmZGVmIFJFQUxfRE1BCiAJLyogSWYgcnVubmluZyBvbiBhIEZhbGNvbiBhbmQgaWYgdGhl
+cmUncyBUVC1SYW0gKGkuZS4sIG1vcmUgdGhhbiBvbmUKCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4
+cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5m
+by9saW51eHBwYy1kZXY=
