@@ -1,72 +1,118 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 1/2] mpt2sas: Refcount sas_device objects and fix unsafe
- list usage
-Date: Mon, 13 Jul 2015 11:05:09 -0400
-Message-ID: <55A3D3A5.6090005@stratus.com>
-References: <1433821856-2815280-1-git-send-email-calvinowens@fb.com> <1436675096-324527-1-git-send-email-calvinowens@fb.com> <1436675096-324527-2-git-send-email-calvinowens@fb.com>
+From: James Smart <james.smart@avagotech.com>
+Subject: Re: [PATCH] Fix kmalloc overflow in LPFC driver at large core count
+Date: Mon, 13 Jul 2015 12:10:05 -0400
+Message-ID: <55A3E2DD.5070102@avagotech.com>
+References: <1436545870-70261-1-git-send-email-imitchell@asylum.americas.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1436675096-324527-2-git-send-email-calvinowens@fb.com>
+In-Reply-To: <1436545870-70261-1-git-send-email-imitchell@asylum.americas.sgi.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: ian mitchell <imitchell@sgi.com>, linux-kernel@vger.kernel.org
+Cc: Alex Thorlton <athorlton@sgi.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/12/2015 12:24 AM, Calvin Owens wrote:
-> These objects can be referenced concurrently throughout the driver, we
-> need a way to make sure threads can't delete them out from under each
-> other. This patch adds the refcount, and refactors the code to use it.
-> 
-> Additionally, we cannot iterate over the sas_device_list without
-> holding the lock, or we risk corrupting random memory if items are
-> added or deleted as we iterate. This patch refactors _scsih_probe_sas()
-> to use the sas_device_list in a safe way.
-> 
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Bart Van Assche <bart.vanassche@sandisk.com>
-> Signed-off-by: Calvin Owens <calvinowens@fb.com>
+Looks fine.   If not merged prior, we'll pull it in our next update.
+
+Reviewed-By: James Smart <james.smart@avagotech.com>
+
+-- james s
+
+
+On 7/10/2015 12:31 PM, ian mitchell wrote:
+> This patch allows the LPFC to start up without a fatal kernel bug based
+> on an exceeded KMALLOC_MAX_SIZE and a too large NR_CPU-based maskbits
+> field. The bug was based on the number of CPU cores in a system.
+> Using the get_cpu_mask() function declared in kernel/cpu.c allows the
+> driver to load on the community kernel 4.2 RC1.
+>
+> Below is the kernel bug reproduced:
+>
+> 8<--------------------------------------------------------------------
+> 2199382.828437 (    0.005216)| lpfc 0003:02:00.0: enabling device (0140 -> 0142)
+> 2199382.999272 (    0.170835)| ------------[ cut here ]------------
+> 2199382.999337 (    0.000065)| WARNING: CPU: 84 PID: 404 at mm/slab_common.c:653 kmalloc_slab+0x2f/0x89()
+> 2199383.004534 (    0.005197)| Modules linked in: lpfc(+) usbcore(+) mptctl scsi_transport_fc sg lpc_ich i2c_i801 usb_common tpm_tis mfd_core tpm acpi_cpufreq button scsi_dh_alua scsi_dh_rdacusbcore: registered new device driver usb
+> 2199383.020568 (    0.016034)|
+> 2199383.020581 (    0.000013)|  scsi_dh_hp_sw scsi_dh_emc scsi_dh gru thermal sata_nv processor piix fan thermal_sysehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+> 2199383.035288 (    0.014707)|
+> 2199383.035306 (    0.000018)|  hwmon ata_piix
+> 2199383.035336 (    0.000030)| CPU: 84 PID: 404 Comm: kworker/84:0 Not tainted 3.18.0-rc2-gat-00106-ga7ca10f-dirty #178
+> 2199383.047077 (    0.011741)| ehci-pci: EHCI PCI platform driver
+> 2199383.047134 (    0.000057)| Hardware name: SGI UV2000/ROMLEY, BIOS SGI UV 2000/3000 series BIOS 01/15/2013
+> 2199383.056245 (    0.009111)| Workqueue: events work_for_cpu_fn
+> 2199383.066174 (    0.009929)|  000000000000028d ffff88eef827bbe8 ffffffff815a542f 000000000000028d
+> 2199383.069545 (    0.003371)|  ffffffff810ea142 ffff88eef827bc28 ffffffff8104365c ffff88eefe4006c8
+> 2199383.076214 (    0.006669)|  0000000000000000 00000000000080d0 0000000000000000 0000000000000004
+> 2199383.079213 (    0.002999)| Call Trace:
+> 2199383.084084 (    0.004871)|  [<ffffffff815a542f>] dump_stack+0x49/0x62
+> 2199383.087283 (    0.003199)|  [<ffffffff810ea142>] ? kmalloc_slab+0x2f/0x89
+> 2199383.091415 (    0.004132)|  [<ffffffff8104365c>] warn_slowpath_common+0x77/0x92
+> 2199383.095197 (    0.003782)|  [<ffffffff8104368c>] warn_slowpath_null+0x15/0x17
+> 2199383.103336 (    0.008139)|  [<ffffffff810ea142>] kmalloc_slab+0x2f/0x89
+> 2199383.107082 (    0.003746)|  [<ffffffff8110fd9e>] __kmalloc+0x13/0x16a
+> 2199383.112531 (    0.005449)|  [<ffffffffa01a8ed9>] lpfc_pci_probe_one_s4+0x105b/0x1644 [lpfc]
+> 2199383.115316 (    0.002785)|  [<ffffffff81302b92>] ? pci_bus_read_config_dword+0x75/0x87
+> 2199383.123431 (    0.008115)|  [<ffffffffa01a951f>] lpfc_pci_probe_one+0x5d/0xcb5 [lpfc]
+> 2199383.127364 (    0.003933)|  [<ffffffff81497119>] ? dbs_check_cpu+0x168/0x177
+> 2199383.136438 (    0.009074)|  [<ffffffff81496fa5>] ? gov_queue_work+0xb4/0xc0
+> 2199383.140407 (    0.003969)|  [<ffffffff8130b2a1>] local_pci_probe+0x1e/0x52
+> 2199383.143105 (    0.002698)|  [<ffffffff81052c47>] work_for_cpu_fn+0x13/0x1b
+> 2199383.147315 (    0.004210)|  [<ffffffff81054965>] process_one_work+0x222/0x35e
+> 2199383.151379 (    0.004064)|  [<ffffffff81054e76>] worker_thread+0x3d5/0x46e
+> 2199383.159402 (    0.008023)|  [<ffffffff81054aa1>] ? process_one_work+0x35e/0x35e
+> 2199383.163097 (    0.003695)|  [<ffffffff810599c6>] kthread+0xc8/0xd2
+> 2199383.167476 (    0.004379)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
+> 2199383.176434 (    0.008958)|  [<ffffffff815a8cac>] ret_from_fork+0x7c/0xb0
+> 2199383.180086 (    0.003652)|  [<ffffffff810598fe>] ? kthread_freezable_should_stop+0x5b/0x5b
+> 2199383.192333 (    0.012247)| ehci-pci 0000:00:1a.0: EHCI Host Controller
+> -------------------------------------------------------------------->8
+>
+> The proposed solution was approved by James Smart at Emulex and tested
+> on a UV2 machine with 6144 cores. With the fix, the LPFC module loads
+> with no unwanted effects on the system.
+>
+> Signed-off-by: Ian Mitchell <imitchell@sgi.com>
+> Signed-off-by: Alex Thorlton <athorlton@sgi.com>
+> Suggested-by: Robert Elliot <elliott@hp.com>
+> Cc: James Smart <james.smart@avagotech.com>
+> Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+> Cc: James E.J. Bottomley <JBottomley@odin.com>
+> Cc: linux-scsi@vger.kernel.org
+>
+>
 > ---
->  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
->  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 434 ++++++++++++++++++++-----------
->  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
->  3 files changed, 315 insertions(+), 153 deletions(-)
-
-[ ... snip ... ]
-
-> @@ -2078,7 +2150,7 @@ _scsih_slave_configure(struct scsi_device *sdev)
->  	}
->  
->  	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-> -	sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
-> +	sas_device = __mpt2sas_get_sdev_by_addr(ioc,
->  	   sas_device_priv_data->sas_target->sas_address);
->  	if (!sas_device) {
->  		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-> @@ -2116,13 +2188,14 @@ _scsih_slave_configure(struct scsi_device *sdev)
->  	if (!ssp_target)
->  		_scsih_display_sata_capabilities(ioc, handle, sdev);
->  
-> -
->  	_scsih_change_queue_depth(sdev, qdepth);
->  
->  	if (ssp_target) {
->  		sas_read_port_mode_page(sdev);
->  		_scsih_enable_tlr(ioc, sdev);
->  	}
-> +
-> +	sas_device_put(sas_device);
->  	return 0;
->  }
-
-Hi Calvin,
-
-Any reason why this sas_device_put is placed outside the sas_device
-lock?  Most other instances in this patch were called just before unlocking.
-
-BTW I attempted testing, but needed to port to mpt3 and ended up with a
-driver that didn't boot :(   Hopefully I can retry later this week, or
-find an older mpt2 box lying around.
-
--- Joe
+>   drivers/scsi/lpfc/lpfc_init.c | 5 +----
+>   drivers/scsi/lpfc/lpfc_sli4.h | 1 -
+>   2 files changed, 1 insertion(+), 5 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index e8c8c1e..66844b3 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -8764,11 +8764,8 @@ found:
+>   			first_cpu = cpu;
+>   
+>   		/* Now affinitize to the selected CPU */
+> -		mask = &cpup->maskbits;
+> -		cpumask_clear(mask);
+> -		cpumask_set_cpu(cpu, mask);
+>   		i = irq_set_affinity_hint(phba->sli4_hba.msix_entries[idx].
+> -					  vector, mask);
+> +					  vector, get_cpu_mask(cpu));
+>   
+>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>   				"3330 Set Affinity: CPU %d channel %d "
+> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+> index 6eca3b8..bdde2c6 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli4.h
+> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
+> @@ -454,7 +454,6 @@ struct lpfc_vector_map_info {
+>   	uint16_t	core_id;
+>   	uint16_t	irq;
+>   	uint16_t	channel_id;
+> -	struct cpumask	maskbits;
+>   };
+>   #define LPFC_VECTOR_MAP_EMPTY	0xffff
+>   
