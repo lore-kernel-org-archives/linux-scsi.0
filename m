@@ -1,55 +1,48 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: [PATCH] fix host max depth checking for the 'queue_depth' sysfs
- interface
-Date: Mon, 13 Jul 2015 08:24:39 -0600
-Message-ID: <20150713142439.GA14427@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:51377 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751652AbbGMOZF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jul 2015 10:25:05 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jordan Hargrave <jharg93@gmail.com>
+Subject: [PATCH] Remove check for SAS expander when querying bay/enclosure IDs.
+Date: Mon, 13 Jul 2015 09:27:33 -0500
+Message-ID: <1436797653-9822-1-git-send-email-jordan_hargrave@dell.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@odin.com, jordan_hargrave@dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>
 
+Dell Server backplanes can report bay/enclosure IDs without an
+expander present.  This patch allows the bay/enclosure IDs to be
+propagaged to sysfs.we
 
-Commit 1e6f2416044c0 changed the scsi sysfs 'queue_depth' code to
-rejects depths higher than the scsi host template setting. But lots
-of hosts set this to 1, and update the settings in the scsi host
-when the controller/devices probing happens.
-
-This breaks (at least) mpt2sas and mpt3sas runtime setting of queue
-depth, returning EINVAL for all settings but '1'. And once it's set to
-1, there's no way to go back up.
-
-Cc: stable@kernel.org
-Fixes: 1e6f2416044c0 "scsi: don't allow setting of queue_depth bigger than can_queue"
-Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Jordan Hargrave <jordan_hargrave@dell.com>
 ---
- drivers/scsi/scsi_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_transport_sas.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 1ac38e73df7e..9ad41168d26d 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -859,7 +859,7 @@ sdev_store_queue_depth(struct device *dev, struct device_attribute *attr,
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 9a05819..30d26e3 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1222,13 +1222,6 @@ show_sas_rphy_enclosure_identifier(struct device *dev,
+ 	u64 identifier;
+ 	int error;
  
- 	depth = simple_strtoul(buf, NULL, 0);
+-	/*
+-	 * Only devices behind an expander are supported, because the
+-	 * enclosure identifier is a SMP feature.
+-	 */
+-	if (scsi_is_sas_phy_local(phy))
+-		return -EINVAL;
+-
+ 	error = i->f->get_enclosure_identifier(rphy, &identifier);
+ 	if (error)
+ 		return error;
+@@ -1248,9 +1241,6 @@ show_sas_rphy_bay_identifier(struct device *dev,
+ 	struct sas_internal *i = to_sas_internal(shost->transportt);
+ 	int val;
  
--	if (depth < 1 || depth > sht->can_queue)
-+	if (depth < 1 || depth > sdev->host->can_queue)
- 		return -EINVAL;
- 
- 	retval = sht->change_queue_depth(sdev, depth);
+-	if (scsi_is_sas_phy_local(phy))
+-		return -EINVAL;
+-
+ 	val = i->f->get_bay_identifier(rphy);
+ 	if (val < 0)
+ 		return val;
 -- 
-2.4.1.168.g1ea28e1
-
--- 
-Jens Axboe
-
+1.9.1
