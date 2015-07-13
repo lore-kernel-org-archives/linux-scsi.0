@@ -1,46 +1,111 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] scsi: Fix wrong additional sense length in descriptor
- format
-Date: Mon, 13 Jul 2015 16:05:54 +0200
-Message-ID: <55A3C5C2.9020903@suse.de>
-References: <1436697423-20611-1-git-send-email-sagig@mellanox.com> <1436697423-20611-2-git-send-email-sagig@mellanox.com>
+Subject: Re: [SCSI] scsi_dh: Update EMC handler
+Date: Mon, 13 Jul 2015 16:06:14 +0200
+Message-ID: <55A3C5D6.9080502@suse.de>
+References: <20150711221438.GA20058@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436697423-20611-2-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41860 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098AbbGMOGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jul 2015 10:06:15 -0400
+In-Reply-To: <20150711221438.GA20058@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 07/12/2015 12:37 PM, Sagi Grimberg wrote:
-> The sense header additional sense length should be the accumulated
-> size of all the descriptors. Information descriptor size is 12 bytes.
-> When setting the additional sense length we should add 0xc instead of
-> 0xa.
+On 07/12/2015 12:14 AM, Dan Carpenter wrote:
+> Hello Hannes Reinecke,
 >=20
-> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> ---
->  drivers/scsi/scsi_common.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The patch b6ff1b14cdf4: "[SCSI] scsi_dh: Update EMC handler" from Jul
+> 17, 2008, leads to the following static checker warning:
 >=20
-> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-> index 8cfb7ee..fbf137b 100644
-> --- a/drivers/scsi/scsi_common.c
-> +++ b/drivers/scsi/scsi_common.c
-> @@ -260,7 +260,7 @@ void scsi_set_sense_information(u8 *buf, u64 info=
-)
->  		len =3D buf[7];
->  		ucp =3D (char *)scsi_sense_desc_find(buf, len + 8, 0);
->  		if (!ucp) {
-> -			buf[7] =3D len + 0xa;
-> +			buf[7] =3D len + 0xc;
->  			ucp =3D buf + 8 + len;
->  		}
->  		ucp[0] =3D 0;
+> 	drivers/scsi/device_handler/scsi_dh_emc.c:252 parse_sp_model()
+> 	warn: buffer overflow 'buffer' 252 <=3D 255
 >=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> drivers/scsi/device_handler/scsi_dh_emc.c
+>    217  static char * parse_sp_model(struct scsi_device *sdev, unsign=
+ed char *buffer)
+>    218  {
+>    219          unsigned char len =3D buffer[4] + 5;
+>=20
+> The warning is simply because Smatch assumes that "len" can be up to =
+255
+> since it is a u8.  That is likely not a real concern but I think ther=
+e
+> are some off by one errors.
+>=20
+>    220          char *sp_model =3D NULL;
+>    221          unsigned char sp_len, serial_len;
+>    222 =20
+>    223          if (len < 160) {
+>=20
+> These conditions seem off by one to me.  If len =3D=3D 160 then we ca=
+n read
+> up to buffer[159]?  I think this should be:
+>=20
+> 		if (len < 161).
+>=20
+>    224                  sdev_printk(KERN_WARNING, sdev,
+>    225                              "%s: Invalid information section =
+length %d\n",
+>    226                              CLARIION_NAME, len);
+>    227                  /* Check for old FC arrays */
+>    228                  if (!strncmp(buffer + 8, "DGC", 3)) {
+>    229                          /* Old FC array, not supporting exten=
+ded information */
+>    230                          sp_model =3D emc_default_str;
+>    231                  }
+>    232                  goto out;
+>    233          }
+>    234 =20
+>    235          /*
+>    236           * Parse extended information for SP model number
+>    237           */
+>    238          serial_len =3D buffer[160];
+>    239          if (serial_len =3D=3D 0 || serial_len + 161 > len) {
+>=20
+> Here the > should probably be >=3D.
+>=20
+>    240                  sdev_printk(KERN_WARNING, sdev,
+>    241                              "%s: Invalid array serial number =
+length %d\n",
+>    242                              CLARIION_NAME, serial_len);
+>    243                  goto out;
+>    244          }
+>    245          sp_len =3D buffer[99];
+>    246          if (sp_len =3D=3D 0 || serial_len + sp_len + 161 > le=
+n) {
+>=20
+> And here as well.
+>=20
+>    247                  sdev_printk(KERN_WARNING, sdev,
+>    248                              "%s: Invalid model number length =
+%d\n",
+>    249                              CLARIION_NAME, sp_len);
+>    250                  goto out;
+>    251          }
+>    252          sp_model =3D &buffer[serial_len + 161];
+>=20
+>=20
+> Otherwise we are potetially reading from &buffer[len] here which look=
+s
+> off by one.
+>=20
+>    253          /* Strip whitespace at the end */
+>    254          while (sp_len > 1 && sp_model[sp_len - 1] =3D=3D ' ')
+>    255                  sp_len--;
+>    256 =20
+>    257          sp_model[sp_len] =3D '\0';
+>    258 =20
+>    259  out:
+>    260          return sp_model;
+>    261  }
+>=20
+Thanks, I'll be sending a patch for it.
 
 Cheers,
 
@@ -51,3 +116,8 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
