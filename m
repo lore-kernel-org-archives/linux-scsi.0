@@ -1,173 +1,288 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 8/8] qla2xxx: terminate exchange when command is aborted by LIO
-Date: Tue, 14 Jul 2015 16:00:49 -0400
-Message-ID: <1436904049-27707-9-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH v2 1/8] qla2xxx: kill sessions/log out initiator on RSCN and port down events
+Date: Tue, 14 Jul 2015 16:00:42 -0400
+Message-ID: <1436904049-27707-2-git-send-email-himanshu.madhani@qlogic.com>
 References: <1436904049-27707-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:14170 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753628AbbGNUqA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jul 2015 16:46:00 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1436904049-27707-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-From: Alexei Potashnik <alexei@purestorage.com>
+From: Roland Dreier <roland@purestorage.com>
 
-The newly introduced aborted_task TFO callback has to terminate
-exchange with QLogic driver, since command is being deleted and
-no status will be queued to the driver at a later point.
+To fix some issues talking to ESX, this patch modifies the qla2xxx driver
+so that it never logs into remote ports.  This has the side effect of
+getting rid of the "rports" entirely, which means we never log out of
+initiators and never tear down sessions when an initiator goes away.
 
-This patch also moves the burden of releasing one cmd refcount to
-the aborted_task handler.
+This is mostly OK, except that we can run into trouble if we have
+initiator A assigned FC address X:Y:Z by the fabric talking to us, and
+then initiator A goes away.  Some time (could be a long time) later,
+initiator B comes along and also gets FC address X:Y:Z (which is
+available again, because initiator A is gone).  If initiator B starts
+talking to us, then we'll still have the session for initiator A, and
+since we look up incoming IO based on the FC address X:Y:Z, initiator B
+will end up using ACLs for initiator A.
 
-Changed iSCSI aborted_task logic to satisfy the above requirement.
+Fix this by:
+
+ 1. Handling RSCN events somewhat differently; instead of completely
+    skipping the processing of fcports, we look through the list, and if
+    an fcport disappears, we tell the target code the tear down the
+    session and tell the HBA FW to release the N_Port handle.
+
+ 2. Handling "port down" events by flushing all of our sessions.  The
+    firmware was already releasing the N_Port handle but we want the
+    target code to drop all the sessions too.
 
 Cc: <stable@vger.kernel.org>
+Signed-off-by: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
 Acked-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c  |   35 ++++++++++++++++++-----------------
- drivers/scsi/qla2xxx/qla_target.h  |    9 +--------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |   11 +----------
- 3 files changed, 20 insertions(+), 35 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c   |  137 ++++++++++++++++++++++++++++++-------
+ drivers/scsi/qla2xxx/qla_target.c |    9 ++-
+ 3 files changed, 117 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 0e6ee3c..e9ae6b9 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -68,7 +68,7 @@
+  * |                              |                    | 0xd101-0xd1fe	|
+  * |                              |                    | 0xd214-0xd2fe	|
+  * | Target Mode		  |	  0xe079       |		|
+- * | Target Mode Management	  |	  0xf072       | 0xf002		|
++ * | Target Mode Management	  |	  0xf080       | 0xf002		|
+  * |                              |                    | 0xf046-0xf049  |
+  * | Target Mode Task Management  |	  0x1000b      |		|
+  * ----------------------------------------------------------------------
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 766fdfc..4895a4a 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3462,20 +3462,43 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
+ 				continue;
+ 
+-			if (fcport->scan_state == QLA_FCPORT_SCAN &&
+-			    atomic_read(&fcport->state) == FCS_ONLINE) {
+-				qla2x00_mark_device_lost(vha, fcport,
+-				    ql2xplogiabsentdevice, 0);
+-				if (fcport->loop_id != FC_NO_LOOP_ID &&
+-				    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
+-				    fcport->port_type != FCT_INITIATOR &&
+-				    fcport->port_type != FCT_BROADCAST) {
+-					ha->isp_ops->fabric_logout(vha,
+-					    fcport->loop_id,
+-					    fcport->d_id.b.domain,
+-					    fcport->d_id.b.area,
+-					    fcport->d_id.b.al_pa);
+-					qla2x00_clear_loop_id(fcport);
++			if (fcport->scan_state == QLA_FCPORT_SCAN) {
++				if (qla_ini_mode_enabled(base_vha) &&
++				    atomic_read(&fcport->state) == FCS_ONLINE) {
++					qla2x00_mark_device_lost(vha, fcport,
++					    ql2xplogiabsentdevice, 0);
++					if (fcport->loop_id != FC_NO_LOOP_ID &&
++					    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
++					    fcport->port_type != FCT_INITIATOR &&
++					    fcport->port_type != FCT_BROADCAST) {
++						ha->isp_ops->fabric_logout(vha,
++						    fcport->loop_id,
++						    fcport->d_id.b.domain,
++						    fcport->d_id.b.area,
++						    fcport->d_id.b.al_pa);
++						qla2x00_clear_loop_id(fcport);
++					}
++				} else if (!qla_ini_mode_enabled(base_vha)) {
++					/*
++					 * In target mode, explicitly kill
++					 * sessions and log out of devices
++					 * that are gone, so that we don't
++					 * end up with an initiator using the
++					 * wrong ACL (if the fabric recycles
++					 * an FC address and we have a stale
++					 * session around) and so that we don't
++					 * report initiators that are no longer
++					 * on the fabric.
++					 */
++					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf077,
++					    "port gone, logging out/killing session: "
++					    "%8phC state 0x%x flags 0x%x fc4_type 0x%x "
++					    "scan_state %d\n",
++					    fcport->port_name,
++					    atomic_read(&fcport->state),
++					    fcport->flags, fcport->fc4_type,
++					    fcport->scan_state);
++					qlt_fc_port_deleted(vha, fcport);
+ 				}
+ 			}
+ 		}
+@@ -3496,6 +3519,28 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 			    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
+ 				continue;
+ 
++			/*
++			 * If we're not an initiator, skip looking for devices
++			 * and logging in.  There's no reason for us to do it,
++			 * and it seems to actively cause problems in target
++			 * mode if we race with the initiator logging into us
++			 * (we might get the "port ID used" status back from
++			 * our login command and log out the initiator, which
++			 * seems to cause havoc).
++			 */
++			if (!qla_ini_mode_enabled(base_vha)) {
++				if (fcport->scan_state == QLA_FCPORT_FOUND) {
++					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf078,
++					    "port %8phC state 0x%x flags 0x%x fc4_type 0x%x "
++					    "scan_state %d (initiator mode disabled; skipping "
++					    "login)\n", fcport->port_name,
++					    atomic_read(&fcport->state),
++					    fcport->flags, fcport->fc4_type,
++					    fcport->scan_state);
++				}
++				continue;
++			}
++
+ 			if (fcport->loop_id == FC_NO_LOOP_ID) {
+ 				fcport->loop_id = next_loopid;
+ 				rval = qla2x00_find_new_loop_id(
+@@ -3522,16 +3567,38 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 			    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
+ 				break;
+ 
+-			/* Find a new loop ID to use. */
+-			fcport->loop_id = next_loopid;
+-			rval = qla2x00_find_new_loop_id(base_vha, fcport);
+-			if (rval != QLA_SUCCESS) {
+-				/* Ran out of IDs to use */
+-				break;
+-			}
++			/*
++			 * If we're not an initiator, skip looking for devices
++			 * and logging in.  There's no reason for us to do it,
++			 * and it seems to actively cause problems in target
++			 * mode if we race with the initiator logging into us
++			 * (we might get the "port ID used" status back from
++			 * our login command and log out the initiator, which
++			 * seems to cause havoc).
++			 */
++			if (qla_ini_mode_enabled(base_vha)) {
++				/* Find a new loop ID to use. */
++				fcport->loop_id = next_loopid;
++				rval = qla2x00_find_new_loop_id(base_vha,
++				    fcport);
++				if (rval != QLA_SUCCESS) {
++					/* Ran out of IDs to use */
++					break;
++				}
+ 
+-			/* Login and update database */
+-			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
++				/* Login and update database */
++				qla2x00_fabric_dev_login(vha, fcport,
++				    &next_loopid);
++			} else {
++				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf079,
++					"new port %8phC state 0x%x flags 0x%x fc4_type "
++					"0x%x scan_state %d (initiator mode disabled; "
++					"skipping login)\n",
++					fcport->port_name,
++					atomic_read(&fcport->state),
++					fcport->flags, fcport->fc4_type,
++					fcport->scan_state);
++			}
+ 
+ 			list_move_tail(&fcport->list, &vha->vp_fcports);
+ 		}
+@@ -3727,11 +3794,12 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 			fcport->fp_speed = new_fcport->fp_speed;
+ 
+ 			/*
+-			 * If address the same and state FCS_ONLINE, nothing
+-			 * changed.
++			 * If address the same and state FCS_ONLINE
++			 * (or in target mode), nothing changed.
+ 			 */
+ 			if (fcport->d_id.b24 == new_fcport->d_id.b24 &&
+-			    atomic_read(&fcport->state) == FCS_ONLINE) {
++			    (atomic_read(&fcport->state) == FCS_ONLINE ||
++			     !qla_ini_mode_enabled(base_vha))) {
+ 				break;
+ 			}
+ 
+@@ -3751,6 +3819,22 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 			 * Log it out if still logged in and mark it for
+ 			 * relogin later.
+ 			 */
++			if (!qla_ini_mode_enabled(base_vha)) {
++				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf080,
++					 "port changed FC ID, %8phC"
++					 " old %x:%x:%x (loop_id 0x%04x)-> new %x:%x:%x\n",
++					 fcport->port_name,
++					 fcport->d_id.b.domain,
++					 fcport->d_id.b.area,
++					 fcport->d_id.b.al_pa,
++					 fcport->loop_id,
++					 new_fcport->d_id.b.domain,
++					 new_fcport->d_id.b.area,
++					 new_fcport->d_id.b.al_pa);
++				fcport->d_id.b24 = new_fcport->d_id.b24;
++				break;
++			}
++
+ 			fcport->d_id.b24 = new_fcport->d_id.b24;
+ 			fcport->flags |= FCF_LOGIN_NEEDED;
+ 			if (fcport->loop_id != FC_NO_LOOP_ID &&
+@@ -3770,6 +3854,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 		if (found)
+ 			continue;
+ 		/* If device was not in our fcports list, then add it. */
++		new_fcport->scan_state = QLA_FCPORT_FOUND;
+ 		list_add_tail(&new_fcport->list, new_fcports);
+ 
+ 		/* Allocate a new replacement fcport. */
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index a120209..aef9933 100644
+index 52d8f10..97b42c0 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1924,20 +1924,6 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 	struct qla_hw_data *ha = vha->hw;
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
+@@ -113,6 +113,7 @@ static void qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha,
+ static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio, uint16_t status, int qfull);
+ static void qlt_disable_vha(struct scsi_qla_host *vha);
++static void qlt_clear_tgt_db(struct qla_tgt *tgt);
+ /*
+  * Global Variables
+  */
+@@ -431,10 +432,10 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
  
--	if (unlikely(cmd->aborted)) {
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf014,
--		       "qla_target(%d): terminating exchange for aborted cmd=%p (se_cmd=%p, tag=%lld)",
--		       vha->vp_idx, cmd, se_cmd, se_cmd->tag);
--
--		cmd->state = QLA_TGT_STATE_ABORTED;
--		cmd->cmd_flags |= BIT_6;
--
--		qlt_send_term_exchange(vha, cmd, &cmd->atio, 0);
--
--		/* !! At this point cmd could be already freed !! */
--		return QLA_TGT_PRE_XMIT_RESP_CMD_ABORTED;
--	}
--
- 	prm->cmd = cmd;
- 	prm->tgt = tgt;
- 	prm->rq_result = scsi_status;
-@@ -2524,9 +2510,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	res = qlt_pre_xmit_response(cmd, &prm, xmit_type, scsi_status,
- 	    &full_req_cnt);
- 	if (unlikely(res != 0)) {
--		if (res == QLA_TGT_PRE_XMIT_RESP_CMD_ABORTED)
--			return 0;
--
- 		return res;
- 	}
+ 	loop_id = le16_to_cpu(n->u.isp24.nport_handle);
+ 	if (loop_id == 0xFFFF) {
+-#if 0 /* FIXME: Re-enable Global event handling.. */
+ 		/* Global event */
+-		atomic_inc(&ha->tgt.qla_tgt->tgt_global_resets_count);
+-		qlt_clear_tgt_db(ha->tgt.qla_tgt);
++		atomic_inc(&vha->vha_tgt.qla_tgt->tgt_global_resets_count);
++		qlt_clear_tgt_db(vha->vha_tgt.qla_tgt);
++#if 0 /* FIXME: do we need to choose a session here? */
+ 		if (!list_empty(&ha->tgt.qla_tgt->sess_list)) {
+ 			sess = list_entry(ha->tgt.qla_tgt->sess_list.next,
+ 			    typeof(*sess), sess_list_entry);
+@@ -788,7 +789,7 @@ void qlt_fc_port_deleted(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	if (!vha->hw->tgt.tgt_ops)
+ 		return;
  
-@@ -3098,6 +3081,24 @@ static void qlt_chk_exch_leak_thresh_hold(struct scsi_qla_host *vha)
+-	if (!tgt || (fcport->port_type != FCT_INITIATOR))
++	if (!tgt)
+ 		return;
  
- }
- 
-+void qlt_abort_cmd(struct qla_tgt_cmd *cmd)
-+{
-+	struct qla_tgt *tgt = cmd->tgt;
-+	struct scsi_qla_host *vha = tgt->vha;
-+	struct se_cmd *se_cmd = &cmd->se_cmd;
-+
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf014,
-+	    "qla_target(%d): terminating exchange for aborted cmd=%p "
-+	    "(se_cmd=%p, tag=%llu)", vha->vp_idx, cmd, &cmd->se_cmd,
-+	    se_cmd->tag);
-+
-+	cmd->state = QLA_TGT_STATE_ABORTED;
-+	cmd->cmd_flags |= BIT_6;
-+
-+	qlt_send_term_exchange(vha, cmd, &cmd->atio, 0);
-+}
-+EXPORT_SYMBOL(qlt_abort_cmd);
-+
- void qlt_free_cmd(struct qla_tgt_cmd *cmd)
- {
- 	struct qla_tgt_sess *sess = cmd->sess;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 2ceb60f..bca584a 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -808,13 +808,6 @@ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
- #define	FC_TM_REJECT                4
- #define FC_TM_FAILED                5
- 
--/*
-- * Error code of qlt_pre_xmit_response() meaning that cmd's exchange was
-- * terminated, so no more actions is needed and success should be returned
-- * to target.
-- */
--#define QLA_TGT_PRE_XMIT_RESP_CMD_ABORTED	0x1717
--
- #if (BITS_PER_LONG > 32) || defined(CONFIG_HIGHMEM64G)
- #define pci_dma_lo32(a) (a & 0xffffffff)
- #define pci_dma_hi32(a) ((((a) >> 16)>>16) & 0xffffffff)
-@@ -950,7 +943,6 @@ struct qla_tgt_cmd {
- 	unsigned int conf_compl_supported:1;
- 	unsigned int sg_mapped:1;
- 	unsigned int free_sg:1;
--	unsigned int aborted:1; /* Needed in case of SRR */
- 	unsigned int write_data_transferred:1;
- 	unsigned int ctx_dsd_alloced:1;
- 	unsigned int q_full:1;
-@@ -1134,6 +1126,7 @@ static inline uint32_t sid_to_key(const uint8_t *s_id)
- extern void qlt_response_pkt_all_vps(struct scsi_qla_host *, response_t *);
- extern int qlt_rdy_to_xfer(struct qla_tgt_cmd *);
- extern int qlt_xmit_response(struct qla_tgt_cmd *, int, uint8_t);
-+extern void qlt_abort_cmd(struct qla_tgt_cmd *);
- extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
- extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
- extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 04238a1..ff55c8c 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -545,7 +545,6 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
- 	cmd->cmd_flags |= BIT_4;
- 	cmd->bufflen = se_cmd->data_length;
- 	cmd->dma_data_direction = target_reverse_dma_direction(se_cmd);
--	cmd->aborted = (se_cmd->transport_state & CMD_T_ABORTED);
- 
- 	cmd->sg_cnt = se_cmd->t_data_nents;
- 	cmd->sg = se_cmd->t_data_sg;
-@@ -574,7 +573,6 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
- 	cmd->sg_cnt = 0;
- 	cmd->offset = 0;
- 	cmd->dma_data_direction = target_reverse_dma_direction(se_cmd);
--	cmd->aborted = (se_cmd->transport_state & CMD_T_ABORTED);
- 	if (cmd->cmd_flags &  BIT_5) {
- 		pr_crit("Bit_5 already set for cmd = %p.\n", cmd);
- 		dump_stack();
-@@ -639,14 +637,7 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
- {
- 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
- 				struct qla_tgt_cmd, se_cmd);
--	struct scsi_qla_host *vha = cmd->vha;
--	struct qla_hw_data *ha = vha->hw;
--
--	if (!cmd->sg_mapped)
--		return;
--
--	pci_unmap_sg(ha->pdev, cmd->sg, cmd->sg_cnt, cmd->dma_data_direction);
--	cmd->sg_mapped = 0;
-+	qlt_abort_cmd(cmd);
- }
- 
- static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
+ 	if (tgt->tgt_stop) {
 -- 
 1.7.7
-
