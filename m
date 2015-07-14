@@ -1,27 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] qla2xxx: use t10_pi_tuple
-Date: Mon, 13 Jul 2015 21:28:30 -0400
-Message-ID: <yq14ml7ttmp.fsf@sermon.lab.mkp.net>
-References: <20150712235425.00001970@localhost>
+Subject: Re: [PATCH] fix host max depth checking for the 'queue_depth' sysfs interface
+Date: Mon, 13 Jul 2015 21:30:29 -0400
+Message-ID: <yq1zj2zseyy.fsf@sermon.lab.mkp.net>
+References: <20150713142439.GA14427@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49283 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbbGNB2j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2015 21:28:39 -0400
-In-Reply-To: <20150712235425.00001970@localhost> (Sebastian Herbszt's message
-	of "Sun, 12 Jul 2015 23:54:25 +0200")
+Received: from aserp1040.oracle.com ([141.146.126.69]:24718 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbbGNBbG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2015 21:31:06 -0400
+In-Reply-To: <20150713142439.GA14427@kernel.dk> (Jens Axboe's message of "Mon,
+	13 Jul 2015 08:24:39 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Bart Van Assche <bart.vanassche@sandisk.com>
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
->>>>> "Sebastian" == Sebastian Herbszt <herbszt@gmx.de> writes:
+>>>>> "Jens" == Jens Axboe <axboe@fb.com> writes:
 
-Sebastian> Drop unused scsi_dif_tuple and use t10_pi_tuple instead of
-Sebastian> own sd_dif_tuple copy.  Also use sg_virt() instead of open
-Sebastian> coding it.
+Jens> Commit 1e6f2416044c0 changed the scsi sysfs 'queue_depth' code to
+Jens> rejects depths higher than the scsi host template setting. But
+Jens> lots of hosts set this to 1, and update the settings in the scsi
+Jens> host when the controller/devices probing happens.
+
+Yeah. We can't rely on the template for this.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
