@@ -1,28 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fix host max depth checking for the 'queue_depth' sysfs
- interface
-Date: Tue, 14 Jul 2015 00:13:58 -0700
-Message-ID: <20150714071358.GA31117@infradead.org>
-References: <20150713142439.GA14427@kernel.dk>
+Subject: Re: [PATCH 3/3] target: Return descriptor format sense data
+Date: Tue, 14 Jul 2015 00:17:03 -0700
+Message-ID: <20150714071703.GC31117@infradead.org>
+References: <1436697423-20611-1-git-send-email-sagig@mellanox.com>
+ <1436697423-20611-4-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.137.202.9] ([198.137.202.9]:56409 "EHLO
-	bombadil.infradead.org" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752112AbbGNHOd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jul 2015 03:14:33 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:58416 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbbGNHRE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2015 03:17:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20150713142439.GA14427@kernel.dk>
+In-Reply-To: <1436697423-20611-4-git-send-email-sagig@mellanox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Looks good:
+On Sun, Jul 12, 2015 at 01:37:03PM +0300, Sagi Grimberg wrote:
+> Fixed size sense data information field is only 32 bits which
+> means the sector (64 bits) information will be truncated.
+> 
+> Move to descriptor format sense data to correctly report full
+> sector information.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-I wonder if we should start to gradually phase out these tuables in the
-host template.  It's not really more complicated to set them directly
-in the host anyway.
+I think this needs to be a tunable as old initiators might not be
+able to cope with descriptor sense data.  My idea was to only turn
+it own if the LU is large enough to need it.  Initiators that can
+deal with large LUs by using READ CAPACITY (16) and READ/WRITE (16)
+should be able to handle descriptor style sense data as well.
