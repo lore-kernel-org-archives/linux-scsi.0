@@ -1,36 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] target: Return descriptor format sense data
-Date: Tue, 14 Jul 2015 07:40:32 -0700
-Message-ID: <20150714144032.GA2763@infradead.org>
-References: <1436697423-20611-1-git-send-email-sagig@mellanox.com>
- <1436697423-20611-4-git-send-email-sagig@mellanox.com>
- <20150714071703.GC31117@infradead.org>
- <yq1r3obrvyn.fsf@sermon.lab.mkp.net>
- <55A4F9B7.905@dev.mellanox.co.il>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <55A4F9B7.905@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/3] [RESEND] ipr: Fix locking for unit attention handling
+Date: Tue, 14 Jul 2015 11:41:29 -0500
+Message-ID: <201507141641.t6EGfUKf005602@d03av03.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:52195 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892AbbGNQle (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2015 12:41:34 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Tue, 14 Jul 2015 10:41:34 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, stable@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
 
-On Tue, Jul 14, 2015 at 02:59:51PM +0300, Sagi Grimberg wrote:
-> diff --git a/include/target/target_core_backend.h
-> b/include/target/target_core_backend.h
-> index 1e5c8f9..6ce370f 100644
-> --- a/include/target/target_core_backend.h
-> +++ b/include/target/target_core_backend.h
-> @@ -3,6 +3,9 @@
-> 
->  #define TRANSPORT_FLAG_PASSTHROUGH             1
-> 
-> +#define TARGET_SENSE_DESC_FORMAT(dev)          \
-> +       dev->transport->get_blocks(dev) >= 0xffffffffULL
 
-Make this a proper function, given that MODE SENSE isn't in the fast
-path it doesn't even have to be inline.
+Make sure we have the host lock held when calling scsi_report_bus_reset. Fixes
+a crash seen as the __devices list in the scsi host was changing as we were
+iterating through it.
 
-Together with a fix for the comment from Bart this looks good to me.
+Cc: <stable@vger.kernel.org>
+Reviewed-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Reviewed-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ipr.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_erp_start_locking drivers/scsi/ipr.c
+--- linux/drivers/scsi/ipr.c~ipr_erp_start_locking	2015-07-14 11:10:18.015330839 -0500
++++ linux-bjking1/drivers/scsi/ipr.c	2015-07-14 11:10:50.445165558 -0500
+@@ -6263,21 +6263,23 @@ static void ipr_scsi_done(struct ipr_cmn
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+-	unsigned long hrrq_flags;
++	unsigned long lock_flags;
+ 
+ 	scsi_set_resid(scsi_cmd, be32_to_cpu(ipr_cmd->s.ioasa.hdr.residual_data_len));
+ 
+ 	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
+ 		scsi_dma_unmap(scsi_cmd);
+ 
+-		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
++		spin_lock_irqsave(ipr_cmd->hrrq->lock, lock_flags);
+ 		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
+ 		scsi_cmd->scsi_done(scsi_cmd);
+-		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
++		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, lock_flags);
+ 	} else {
+-		spin_lock_irqsave(ipr_cmd->hrrq->lock, hrrq_flags);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++		spin_lock(&ipr_cmd->hrrq->_lock);
+ 		ipr_erp_start(ioa_cfg, ipr_cmd);
+-		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, hrrq_flags);
++		spin_unlock(&ipr_cmd->hrrq->_lock);
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	}
+ }
+ 
+_
+
