@@ -1,157 +1,27 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH v3 0/10] qla2xxx: Fix various warnings reported by
- static source code analysis tools
-Date: Mon, 13 Jul 2015 18:40:36 +0000
-Message-ID: <D1C953DE.9A3EF%himanshu.madhani@qlogic.com>
-References: <559E8382.6030803@sandisk.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] scsi: Fix wrong additional sense length in descriptor format
+Date: Mon, 13 Jul 2015 20:52:15 -0400
+Message-ID: <yq1twt7tvb4.fsf@sermon.lab.mkp.net>
+References: <1436697423-20611-1-git-send-email-sagig@mellanox.com>
+	<1436697423-20611-2-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D1C953DE9A3EFhimanshumadhaniqlogiccom_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:54071 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751671AbbGMSkj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jul 2015 14:40:39 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6DIeOt9007853
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2015 11:40:39 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1vmg0n86ub-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2015 11:40:38 -0700
-In-Reply-To: <559E8382.6030803@sandisk.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1436697423-20611-2-git-send-email-sagig@mellanox.com> (Sagi
+	Grimberg's message of "Sun, 12 Jul 2015 13:37:01 +0300")
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@odin.com>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_D1C953DE9A3EFhimanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <373734DDA1977440A5E851494B0E6D05@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Sagi" == Sagi Grimberg <sagig@mellanox.com> writes:
 
+Sagi> The sense header additional sense length should be the accumulated
+Sagi> size of all the descriptors. Information descriptor size is 12
+Sagi> bytes.  When setting the additional sense length we should add 0xc
+Sagi> instead of 0xa.
 
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-On 7/9/15, 7:21 AM, "Bart Van Assche" <bart.vanassche@sandisk.com> wrote:
-
->This patch series addresses several warnings reported by static source
->code analysis tools for the qla2xxx driver (gcc (W=3D1), sparse (C=3D2) an=
-d
->smatch (C=3D2 CHECK=3D"smatch -p=3Dkernel")). The patches in this series a=
-re:
->
->0001-qla2xxx-Report-both-rsp_info-and-rsp_info_len.patch
->0002-qla2xxx-Declare-local-functions-static.patch
->0003-qla2xxx-Remove-set-but-not-used-variables.patch
->0004-qla2xxx-Replace-two-macros-with-an-inline-function.patch
->0005-qla2xxx-Remove-__constant_-prefix.patch
->0006-qla2xxx-Avoid-that-sparse-complains-about-duplicate-.patch
->0007-qla2xxx-Fix-sparse-annotations.patch
->0008-qla2xxx-Remove-a-superfluous-test.patch
->0009-qla2xxx-Remove-dead-code.patch
->0010-qla2xxx-Avoid-that-sparse-complains-about-context-im.patch
->
->Version 3 is a resend of the patches from v2 that are not yet upstream.
->
->The changes compared to v1 of this series are:
->- Rebased this patch series onto kernel v4.1-rc6.
->- Also removed variable 'd2' in patch 3.
->- Also remove the recently introduced dead code in patch 10.
-
-Series Looks good=20
-
-Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-
-
->
-
-
---_000_D1C953DE9A3EFhimanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-dQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAiAAAASABp
-AG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAfDAEAAAA4AAAAaABpAG0AYQBuAHMA
-aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABT
-AE0AVABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4A
-cwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBk
-AGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA4AAAAaABpAG0AYQBuAHMA
-aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAACIAAABI
-AGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfACNAAQAAADgAAABoAGkAbQBhAG4A
-cwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAA
-AFMATQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEA
-bgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADgAAABoAGkAbQBhAG4A
-cwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAsAQDoBAAAAHwAa
-AAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQsw
-AQAAABAAAADuWy3gz5jSR5ciwlvff9WuAwAXAAEAAABAADkAAKo6aJu90AFAAAgws7WDaJu90AEL
-AACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
-AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAMAAAABSAGUAOgAgAFsAUABBAFQA
-QwBIACAAdgAzACAAMAAvADEAMABdACAAcQBsAGEAMgB4AHgAeAA6ACAARgBpAHgAIAB2AGEAcgBp
-AG8AdQBzACAAdwBhAHIAbgBpAG4AZwBzACAAcgBlAHAAbwByAHQAZQBkACAAYgB5ACAAcwB0AGEA
-dABpAGMAIABzAG8AdQByAGMAZQAgAGMAbwBkAGUAIABhAG4AYQBsAHkAcwBpAHMAIAB0AG8AbwBs
-AHMAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAPgAAADwANQA1ADkA
-RQA4ADMAOAAyAC4ANgAwADMAMAA4ADAAMwBAAHMAYQBuAGQAaQBzAGsALgBjAG8AbQA+AAAAAAAC
-AXEAAQAAABsAAAABAdC6UqD8Nn+FTonmRqEal1I2+nI9ndnCHwAAHwBwAAEAAAC4AAAAWwBQAEEA
-VABDAEgAIAB2ADMAIAAwAC8AMQAwAF0AIABxAGwAYQAyAHgAeAB4ADoAIABGAGkAeAAgAHYAYQBy
-AGkAbwB1AHMAIAB3AGEAcgBuAGkAbgBnAHMAIAByAGUAcABvAHIAdABlAGQAIABiAHkAIABzAHQA
-YQB0AGkAYwAgAHMAbwB1AHIAYwBlACAAYwBvAGQAZQAgAGEAbgBhAGwAeQBzAGkAcwAgAHQAbwBv
-AGwAcwAAAB8ANRABAAAAWgAAADwARAAxAEMAOQA1ADMARABFAC4AOQBBADMARQBGACUAaABpAG0A
-YQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAAAAAAHwA5
-EAEAAAA+AAAAPAA1ADUAOQBFADgAMwA4ADIALgA2ADAAMwAwADgAMAAzAEAAcwBhAG4AZABpAHMA
-awAuAGMAbwBtAD4AAAAAAAMA3j+fTgAAQAAHMJaRfGibvdABAwAmAAAAAAACAUcAAQAAAC4AAABj
-PVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDcxMzE4NDAzNlotMzg1MDkAAAAfABUQAQAAAFgA
-AAAzADcAMwA3ADMANABEAEQAQQAxADkANwA3ADQANAAwAEEANQBFADgANQAxADQAOQA0AEIAMABF
-ADYARAAwADUAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAWwAAAPWulpxPAAAA
-HwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAAgIYDAgAA
-AAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMA
-cgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAw
-ADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkA
-bwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAA4BAABJAEkAPQAwADEAMAAx
-AEQAMABCAEQAOQBCADYAOAA0AEQAOQAwADcANQAwAEMANgBEADIAOQAxADkANAAzADkAQgAyAEUA
-MQAwADIAOAA4AEEANAAyADkAMwAzAEYAOwBTAEIATQBJAEQAPQA0ADsAUwAxAD0APAA1ADUAOQBF
-ADgAMwA4ADIALgA2ADAAMwAwADgAMAAzAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AOwBWAGUA
-cgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1
-AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAA
-AEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAA
-AAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAFVB
-
---_000_D1C953DE9A3EFhimanshumadhaniqlogiccom_--
+-- 
+Martin K. Petersen	Oracle Linux Engineering
