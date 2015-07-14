@@ -1,35 +1,61 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] fix host max depth checking for the 'queue_depth' sysfs
- interface
-Date: Tue, 14 Jul 2015 13:22:37 +0200
-Message-ID: <55A4F0FD.6070305@suse.de>
-References: <20150713142439.GA14427@kernel.dk> <20150714071358.GA31117@infradead.org>
+Subject: Re: [PATCH] Remove check for SAS expander when querying bay/enclosure
+ IDs.
+Date: Tue, 14 Jul 2015 13:23:35 +0200
+Message-ID: <55A4F137.8010100@suse.de>
+References: <1436797653-9822-1-git-send-email-jordan_hargrave@dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51958 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084AbbGNLWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jul 2015 07:22:38 -0400
-In-Reply-To: <20150714071358.GA31117@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1436797653-9822-1-git-send-email-jordan_hargrave@dell.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jordan Hargrave <jharg93@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@odin.com, jordan_hargrave@dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@fb.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 07/14/2015 09:13 AM, Christoph Hellwig wrote:
-> Looks good:
+On 07/13/2015 04:27 PM, Jordan Hargrave wrote:
+> Dell Server backplanes can report bay/enclosure IDs without an
+> expander present.  This patch allows the bay/enclosure IDs to be
+> propagaged to sysfs.we
 >=20
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jordan Hargrave <jordan_hargrave@dell.com>
+> ---
+>  drivers/scsi/scsi_transport_sas.c | 10 ----------
+>  1 file changed, 10 deletions(-)
 >=20
-> I wonder if we should start to gradually phase out these tuables in t=
-he
-> host template.  It's not really more complicated to set them directly
-> in the host anyway.
-
-=46ully agreed. I would vote for making the host template read-only
-and modify all drivers to use the shost setting.
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_tr=
+ansport_sas.c
+> index 9a05819..30d26e3 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1222,13 +1222,6 @@ show_sas_rphy_enclosure_identifier(struct devi=
+ce *dev,
+>  	u64 identifier;
+>  	int error;
+> =20
+> -	/*
+> -	 * Only devices behind an expander are supported, because the
+> -	 * enclosure identifier is a SMP feature.
+> -	 */
+> -	if (scsi_is_sas_phy_local(phy))
+> -		return -EINVAL;
+> -
+>  	error =3D i->f->get_enclosure_identifier(rphy, &identifier);
+>  	if (error)
+>  		return error;
+> @@ -1248,9 +1241,6 @@ show_sas_rphy_bay_identifier(struct device *dev=
+,
+>  	struct sas_internal *i =3D to_sas_internal(shost->transportt);
+>  	int val;
+> =20
+> -	if (scsi_is_sas_phy_local(phy))
+> -		return -EINVAL;
+> -
+>  	val =3D i->f->get_bay_identifier(rphy);
+>  	if (val < 0)
+>  		return val;
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
@@ -40,8 +66,3 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
