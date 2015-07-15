@@ -1,26 +1,40 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v1 3/4] target: Return descriptor format sense data in
- case the LU spans 64bit sectors
-Date: Wed, 15 Jul 2015 07:07:59 -0700
-Message-ID: <55A6693F.5010807@sandisk.com>
-References: <1436946939-19415-1-git-send-email-sagig@mellanox.com> <1436946939-19415-4-git-send-email-sagig@mellanox.com>
+From: Maria Fernanda Demarchi <mademarchi@pami.org.ar>
+Subject: Caro User Account Mail:
+Date: Wed, 15 Jul 2015 11:29:56 -0300 (ART)
+Message-ID: <1122026492.129873.1436970596908.JavaMail.root@pami.org.ar>
+Reply-To: fedex.deliver.y@foxmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436946939-19415-4-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from correo.pami.org.ar ([179.0.4.12]:37256 "EHLO correo.pami.org.ar"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751502AbbGOOmX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2015 10:42:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/15/15 00:55, Sagi Grimberg wrote:
-> +bool target_sense_desc_format(struct se_device *dev)
-> +{
-> +	return dev->transport->get_blocks(dev) > 0xffffffffULL;
-> +}
+Caro User Account Mail:
 
-Please consider to use U32_MAX instead of 0xffffffffULL since that would 
-make this function easier to read and to verify.
+Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 20=
+ GB como definido pelo
+administrador, que est=C3=A1 actualmente em execu=C3=A7=C3=A3o em 20,9 =
+GB e voc=C3=AA pode n=C3=A3o ser
+capaz
+para enviar ou receber novas mensagens at=C3=A9 que volte a validar a s=
+ua caixa de correio.
 
-Bart.
+Para voltar a validar a sua caixa de correio, clique no link
+
+Clique Aqui http://webmailhelpyou.jimdo.com/
+
+Obrigado por sua coopera=C3=A7=C3=A3o habitual. Pedimos desculpas por q=
+ualquer
+inconveniente.
+
+WEBMASTER
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
