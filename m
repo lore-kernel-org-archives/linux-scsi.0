@@ -1,85 +1,86 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH] dm-mpath: always return reservation conflict
-Date: Wed, 15 Jul 2015 14:35:08 +0300
-Message-ID: <1436960108.31121.41.camel@HansenPartnership.com>
-References: <1436959404-14035-1-git-send-email-hare@suse.de>
+Date: Wed, 15 Jul 2015 13:52:32 +0200
+Message-ID: <55A64980.3070304@suse.de>
+References: <1436959404-14035-1-git-send-email-hare@suse.de> <1436960108.31121.41.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49525 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751710AbbGOLfO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2015 07:35:14 -0400
-In-Reply-To: <1436959404-14035-1-git-send-email-hare@suse.de>
+Received: from cantor2.suse.de ([195.135.220.15]:40192 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752173AbbGOLwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jul 2015 07:52:34 -0400
+In-Reply-To: <1436960108.31121.41.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Wed, 2015-07-15 at 13:23 +0200, Hannes Reinecke wrote:
-> If dm-mpath encounters an reservation conflict it should not
-> fail the path (as communication with the target is not affected)
-> but should rather retry on another path.
-> However, in doing so we might be inducing a ping-pong between
-> paths, with no guarantee of any forward progress.
-> And arguably a reservation conflict is an unexpected error,
-> so we should be passing it upwards to allow the application
-> to take appropriate steps.
+On 07/15/2015 01:35 PM, James Bottomley wrote:
+> On Wed, 2015-07-15 at 13:23 +0200, Hannes Reinecke wrote:
+>> If dm-mpath encounters an reservation conflict it should not
+>> fail the path (as communication with the target is not affected)
+>> but should rather retry on another path.
+>> However, in doing so we might be inducing a ping-pong between
+>> paths, with no guarantee of any forward progress.
+>> And arguably a reservation conflict is an unexpected error,
+>> so we should be passing it upwards to allow the application
+>> to take appropriate steps.
+>=20
+> If I interpret the code correctly, you've changed the behaviour from =
+the
+> current try all paths and fail them, ultimately passing the reservati=
+on
+> conflict up if all paths fail to return reservation conflict
+> immediately, keeping all paths running.  This assumes that the
+> reservation isn't path specific because if we encounter a path specif=
+ic
+> reservation, you've altered the behaviour from route around to fail.
+>=20
+That is correct.
+As mentioned in the path, the 'correct' solution would be to retry
+the offending I/O on another path.
+However, the current multipath design doesn't allow us to do that
+without failing the path first.
+If we were just retrying I/O on another path without failing the
+path first (and all paths would return a reservation conflict) we
+wouldn't know when we've exhausted all paths.
 
-If I interpret the code correctly, you've changed the behaviour from the
-current try all paths and fail them, ultimately passing the reservation
-conflict up if all paths fail to return reservation conflict
-immediately, keeping all paths running.  This assumes that the
-reservation isn't path specific because if we encounter a path specific
-reservation, you've altered the behaviour from route around to fail.
+> The case I think the original code was for is SAN Volume controllers
+> which use path specific SCSI-3 reservations effectively to do traffic
+> control and allow favoured paths.  Have you verified that nothing we
+> encounter in the enterprise uses path specific reservations for
+> multipath shaping any more?
+>=20
+Ah. That was some input I was looking for.
+With that patch I've assumed that persistent reservations are done
+primarily from userland / filesystem, where the reservation would
+effectively be done on a per-LUN basis.
+If it's being used from the storage array internally this is a
+different matter.
+(Although I'd be very interested how this behaviour would play
+together with applications which use persistent reservations
+internally; GPFS springs to mind here ...)
 
-The case I think the original code was for is SAN Volume controllers
-which use path specific SCSI-3 reservations effectively to do traffic
-control and allow favoured paths.  Have you verified that nothing we
-encounter in the enterprise uses path specific reservations for
-multipath shaping any more?
+But apparently this specific behaviour wasn't seen that often in the
+field; I certainly never got any customer reports about mysteriously
+failing paths.
 
-James
+Anyway. I'll see if I can come up with something to restore the
+original behaviour.
 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/md/dm-mpath.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 5a67671..e65d266 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1269,7 +1269,16 @@ static int do_end_io(struct multipath *m, struct request *clone,
->  	if (noretry_error(error))
->  		return error;
->  
-> -	if (mpio->pgpath)
-> +	/*
-> +	 * EBADE signals an reservation conflict.
-> +	 * We shouldn't fail the path here as we can communicate with
-> +	 * the target. We should failover to the next path, but in
-> +	 * doing so we might be causing a ping-pong between paths.
-> +	 * So just return the reservation conflict error.
-> +	 */
-> +	if (error == -EBADE)
-> +		r = error;
-> +	else if (mpio->pgpath)
->  		fail_path(mpio->pgpath);
->  
->  	spin_lock_irqsave(&m->lock, flags);
-> @@ -1277,9 +1286,6 @@ static int do_end_io(struct multipath *m, struct request *clone,
->  		if (!m->queue_if_no_path) {
->  			if (!__must_push_back(m))
->  				r = -EIO;
-> -		} else {
-> -			if (error == -EBADE)
-> -				r = error;
->  		}
->  	}
->  	spin_unlock_irqrestore(&m->lock, flags);
+Cheers,
 
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
