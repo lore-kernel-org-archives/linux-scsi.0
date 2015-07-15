@@ -1,119 +1,96 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] dm-mpath: always return reservation conflict
-Date: Wed, 15 Jul 2015 14:15:24 +0200
-Message-ID: <55A64EDC.1090600@suse.de>
-References: <1436959404-14035-1-git-send-email-hare@suse.de>	 <1436960108.31121.41.camel@HansenPartnership.com>	 <55A64980.3070304@suse.de> <1436961674.31121.48.camel@HansenPartnership.com>
+From: Kevin Groeneveld <kgroeneveld@lenbrook.com>
+Subject: [PATCH] scsi: fix hang in scsi error handling
+Date: Wed, 15 Jul 2015 08:47:29 -0400
+Message-ID: <1436964449-31447-1-git-send-email-kgroeneveld@lenbrook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42630 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796AbbGOMP0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:15:26 -0400
-In-Reply-To: <1436961674.31121.48.camel@HansenPartnership.com>
+Received: from mail.lenbrook.com ([206.191.95.214]:7925 "EHLO
+	mail.lenbrook.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967AbbGOMyO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2015 08:54:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: JBottomley@odin.com
+Cc: linux-scsi@vger.kernel.org, festevam@gmail.com, richard.zhu@freescale.com, arnd@arndb.de, linux@arm.linux.org.uk, Kevin Groeneveld <kgroeneveld@lenbrook.com>
 
-On 07/15/2015 02:01 PM, James Bottomley wrote:
-> On Wed, 2015-07-15 at 13:52 +0200, Hannes Reinecke wrote:
->> On 07/15/2015 01:35 PM, James Bottomley wrote:
->>> On Wed, 2015-07-15 at 13:23 +0200, Hannes Reinecke wrote:
->>>> If dm-mpath encounters an reservation conflict it should not
->>>> fail the path (as communication with the target is not affected)
->>>> but should rather retry on another path.
->>>> However, in doing so we might be inducing a ping-pong between
->>>> paths, with no guarantee of any forward progress.
->>>> And arguably a reservation conflict is an unexpected error,
->>>> so we should be passing it upwards to allow the application
->>>> to take appropriate steps.
->>>
->>> If I interpret the code correctly, you've changed the behaviour fro=
-m the
->>> current try all paths and fail them, ultimately passing the reserva=
-tion
->>> conflict up if all paths fail to return reservation conflict
->>> immediately, keeping all paths running.  This assumes that the
->>> reservation isn't path specific because if we encounter a path spec=
-ific
->>> reservation, you've altered the behaviour from route around to fail=
-=2E
->>>
->> That is correct.
->> As mentioned in the path, the 'correct' solution would be to retry
->> the offending I/O on another path.
->> However, the current multipath design doesn't allow us to do that
->> without failing the path first.
->> If we were just retrying I/O on another path without failing the
->> path first (and all paths would return a reservation conflict) we
->> wouldn't know when we've exhausted all paths.
->>
->>> The case I think the original code was for is SAN Volume controller=
-s
->>> which use path specific SCSI-3 reservations effectively to do traff=
-ic
->>> control and allow favoured paths.  Have you verified that nothing w=
-e
->>> encounter in the enterprise uses path specific reservations for
->>> multipath shaping any more?
->>>
->> Ah. That was some input I was looking for.
->> With that patch I've assumed that persistent reservations are done
->> primarily from userland / filesystem, where the reservation would
->> effectively be done on a per-LUN basis.
->> If it's being used from the storage array internally this is a
->> different matter.
->> (Although I'd be very interested how this behaviour would play
->> together with applications which use persistent reservations
->> internally; GPFS springs to mind here ...)
->>
->> But apparently this specific behaviour wasn't seen that often in the
->> field; I certainly never got any customer reports about mysteriously
->> failing paths.
->=20
-> Have you already got this patch in SLES, if so, for how long?
->=20
-We haven't as of yet; I've come across this behaviour due to another
-issue. And before I were to put this into SLES I thought I should be
-asking those in the know ... persistent reservations _is_ an arcane
-topic, after all.
-I was just referring to the fact that I rarely got customer issues
-with persistent reservations; and those I get tend to be tape-centric.
+With the following setup/steps I can consistently trigger the scsi host to
+hang requiring a reboot:
+1. iMX6Q processor with built in AHCI compatible SATA host
+2. SATA port multiplier in CBS mode connected to iMX6Q
+3. HDD connected to port multiplier
+4. CDROM connected to port multiplier
+5. trigger continuous I/O to HDD
+6. repeatedly execute CDROM_DRIVE_STATUS ioctl on CDROM with no disc in
+   drive
 
->> Anyway. I'll see if I can come up with something to restore the
->> original behaviour.
->=20
-> Or a way of verifying that nothing in the current enterprise uses pat=
-h
-> specific reservations ...  we can change the current behaviour as lon=
-g
-> as nothing notices.
->=20
-The only instance I know of is GPFS; someone in our company once
-wrote an HA agent using persistent reservations, but I'm not sure if
-it's deployed anywhere. But that agent is certainly aware of
-multipathing, and doesn't issue per-path reservations.
-(Well, actually it does, but it does it for every path :-)
-I would think the same goes for GPFS.
+I don't think this issue is iMX6 specific but that is the only platform
+I have duplicated the hang on.
 
-Incidentally, the SVC docs have a section about persistent
-reservations, but do not mention anything about internal use.
-So if it does it'll be opaque to the user, otherwise I would assume
-it to be mentioned there.
+To trigger the issue at least two CPU cores must be enabled and the HDD
+access and CDROM ioctls must be happening concurrently. If I only enable
+one CPU core the hang does not occur.
 
-Cheers,
+The following C program can be used to trigger the CDROM ioctl:
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+#include <stdio.h>
+#include <fcntl.h>
+#include <linux/cdrom.h>
+
+int main(int argc, char* argv[])
+{
+	int fd;
+
+	fd = open("/dev/cdrom", O_RDONLY | O_NONBLOCK);
+	if(fd < 0)
+	{
+		perror("cannot open /dev/cdrom");
+		return fd;
+	}
+
+	for(;;)
+	{
+		ioctl(fd, CDROM_DRIVE_STATUS, 0);
+		usleep(100 * 1000);
+	}
+}
+
+When the hang occurs shost->host_busy == 2 and shost->host_failed == 1 in
+the scsi_eh_wakeup function. However this function only wakes the error
+handler if host_busy == host_failed.
+
+The patch changes the condition to test if host_busy >= host_failed and
+updates the corresponding condition in scsi_error_handler. Without the
+patch I can trigger the hang within seconds. With the patch I have not
+duplicated the hang after hours of testing.
+
+Signed-off-by: Kevin Groeneveld <kgroeneveld@lenbrook.com>
+---
+ drivers/scsi/scsi_error.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 106884a..853964b 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -61,7 +61,7 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *,
+ /* called with shost->host_lock held */
+ void scsi_eh_wakeup(struct Scsi_Host *shost)
+ {
+-	if (atomic_read(&shost->host_busy) == shost->host_failed) {
++	if (atomic_read(&shost->host_busy) >= shost->host_failed) {
+ 		trace_scsi_eh_wakeup(shost);
+ 		wake_up_process(shost->ehandler);
+ 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
+@@ -2173,7 +2173,7 @@ int scsi_error_handler(void *data)
+ 	while (!kthread_should_stop()) {
+ 		set_current_state(TASK_INTERRUPTIBLE);
+ 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
+-		    shost->host_failed != atomic_read(&shost->host_busy)) {
++		    shost->host_failed > atomic_read(&shost->host_busy)) {
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+ 				shost_printk(KERN_INFO, shost,
+ 					     "scsi_eh_%d: sleeping\n",
+-- 
+1.7.4.1
+
