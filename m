@@ -1,40 +1,57 @@
-From: Maria Fernanda Demarchi <mademarchi@pami.org.ar>
-Subject: Caro User Account Mail:
-Date: Wed, 15 Jul 2015 11:29:56 -0300 (ART)
-Message-ID: <1122026492.129873.1436970596908.JavaMail.root@pami.org.ar>
-Reply-To: fedex.deliver.y@foxmail.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
+ memory I/O resources detected
+Date: Wed, 15 Jul 2015 09:59:01 -0500
+Message-ID: <20150715145901.GU24416@google.com>
+References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
+ <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
+ <55A6658D.6030802@raptorengineeringinc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from correo.pami.org.ar ([179.0.4.12]:37256 "EHLO correo.pami.org.ar"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbbGOOmX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2015 10:42:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <55A6658D.6030802@raptorengineeringinc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Yinghai Lu <yinghai@kernel.org>, James Bottomley <jejb@kernel.org>, martin.petersen@oracle.com, Linux-Scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya.Prakash@avagotech.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Caro User Account Mail:
+On Wed, Jul 15, 2015 at 08:52:13AM -0500, Timothy Pearson wrote:
+> On 07/15/2015 01:24 AM, Sreekanth Reddy wrote:
+> > On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
+> >> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
+> >> <sreekanth.reddy@avagotech.com> wrote:
+> >>> Driver crashes if the BIOS do not set up at least one
+> >>> memory I/O resource. This failure can happen if the device is too
+> >>> slow to respond during POST and is missed by the BIOS, but Linux
+> >>> then detects the device later in the boot process.
+> >>
+> >> But pci subsystem should assign resources to those unassigned BAR.
+> >>
+> >> Do you mean even kernel can not assign resource to them? or it takes so long for
+> >> mpt FW to get ready?
+> > 
+> > This is not an issue from mpt FW.
+> > 
+> > I have just kept the same description provide by Timothy in his
+> > initial patch.
+> > 
+> > But I observe that their may be chance of getting "unable to handle
+> > kernel NULL pointer dereference" kernel panic if no Memory Resource
+> > available in the PCI subsystem. So agreed to the Timothy proposal of
+> > aborting the driver initialization if it doesn't detect any Memory
+> > resource instead of whole system get into panic state.
+> 
+> On some systems Linux is unable / unwilling to assign a BAR if the BIOS
+> does not assign one at startup.  I didn't look into the Linux allocator
+> side of things in much detail, but it is quite possible that Linux is
+> unaware the device only has partial resources assigned.
 
-Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 20=
- GB como definido pelo
-administrador, que est=C3=A1 actualmente em execu=C3=A7=C3=A3o em 20,9 =
-GB e voc=C3=AA pode n=C3=A3o ser
-capaz
-para enviar ou receber novas mensagens at=C3=A9 que volte a validar a s=
-ua caixa de correio.
+There might be a Linux PCI core bug if we don't assign a BAR, although
+resource assignment can always fail, even in the absence of bugs.
 
-Para voltar a validar a sua caixa de correio, clique no link
+But there is definitely a driver bug if it uses ioc->chip when it hasn't
+been initialized.  That's what this patch seems to fix.
 
-Clique Aqui http://webmailhelpyou.jimdo.com/
-
-Obrigado por sua coopera=C3=A7=C3=A3o habitual. Pedimos desculpas por q=
-ualquer
-inconveniente.
-
-WEBMASTER
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bjorn
