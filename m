@@ -1,37 +1,30 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH] MAINTAINERS: Update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI) maintainers list
-Date: Wed, 15 Jul 2015 10:20:55 +0530
-Message-ID: <1436935855-29043-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
+ memory I/O resources detected
+Date: Tue, 14 Jul 2015 22:36:58 -0700
+Message-ID: <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
+References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: tpearson@raptorengineeringinc.com, James Bottomley <jejb@kernel.org>, martin.petersen@oracle.com, Linux-Scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya.Prakash@avagotech.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Updating maintainers list for the entry LSILOGIC MPT FUSION DRIVERS in
-MAINTAINERS file
+On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
+<sreekanth.reddy@avagotech.com> wrote:
+> Driver crashes if the BIOS do not set up at least one
+> memory I/O resource. This failure can happen if the device is too
+> slow to respond during POST and is missed by the BIOS, but Linux
+> then detects the device later in the boot process.
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
- MAINTAINERS | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+But pci subsystem should assign resources to those unassigned BAR.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2d3d55c..c3cd5c9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6348,10 +6348,9 @@ S:	Maintained
- F:	arch/arm/mach-lpc32xx/
- 
- LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
--M:	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
--M:	Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-+M:	Sathya Prakash <sathya.prakash@avagotech.com>
- M:	Sreekanth Reddy <sreekanth.reddy@avagotech.com>
--M:	Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-+M:	Chaitra Basappa <chaitra.basappa@avagotech.com>
- L:	MPT-FusionLinux.pdl@avagotech.com
- L:	linux-scsi@vger.kernel.org
- W:	http://www.lsilogic.com/support
--- 
-2.0.2
+Do you mean even kernel can not assign resource to them? or it takes so long for
+mpt FW to get ready?
+
+Thanks
+
+Yinghai
