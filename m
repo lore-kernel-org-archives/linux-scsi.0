@@ -1,85 +1,101 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH v2 6/8] qla2xxx: disable scsi_transport_fc registration in target mode
-Date: Tue, 14 Jul 2015 16:00:47 -0400
-Message-ID: <1436904049-27707-7-git-send-email-himanshu.madhani@qlogic.com>
-References: <1436904049-27707-1-git-send-email-himanshu.madhani@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436904049-27707-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no memory I/O resources detected
+Date: Wed, 15 Jul 2015 10:19:56 +0530
+Message-ID: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tpearson@raptorengineeringinc.com, jejb@kernel.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Alexei Potashnik <alexei@purestorage.com>
+Driver crashes if the BIOS do not set up at least one
+memory I/O resource. This failure can happen if the device is too
+slow to respond during POST and is missed by the BIOS, but Linux
+then detects the device later in the boot process.
 
-There are multiple reasons for disabling this:
+Changes in v3:
+   Rearranged the code to remove the code redundancy
 
-1. It provides no functional benefit. We pretty much only get a few more
-sysfs entries for each port, but all that information is already
-available from /sys/kernel/debug/target/qla-session-X
-
-2. It already only works in private-loop mode. By disabling we'll be
-getting more uniform behavior with fabric mode.
-
-3. It creates complications for the new PLOGI handling mechanism:
-scsi_transport_fc port deletion timer could race with new session
-from initiator and cause logout after successful login.
-
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |   14 +++++++++++---
- drivers/scsi/qla2xxx/qla_os.c   |    3 ++-
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 16 +++++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 16 +++++++++-------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3f3cdbf..5ba5851 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3338,8 +3338,7 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 
- 	if (IS_QLAFX00(vha->hw)) {
- 		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--		qla2x00_reg_remote_port(vha, fcport);
--		return;
-+		goto reg_port;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 11248de..6dec7cf 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1557,7 +1557,8 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		goto out_fail;
  	}
- 	fcport->login_retry = 0;
- 	fcport->flags &= ~(FCF_LOGIN_NEEDED | FCF_ASYNC_SENT);
-@@ -3347,7 +3346,16 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
- 	qla2x00_iidma_fcport(vha, fcport);
- 	qla24xx_update_fcport_fcp_prio(vha, fcport);
--	qla2x00_reg_remote_port(vha, fcport);
-+
-+reg_port:
-+	if (qla_ini_mode_enabled(vha))
-+		qla2x00_reg_remote_port(vha, fcport);
-+	else {
-+		/*
-+		 * Create target mode FC NEXUS in qla_target.c
-+		 */
-+		qlt_fc_port_added(vha, fcport);
+ 
+-	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
++	     (!memap_sz || !pio_sz); i++) {
+ 		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
+ 			if (pio_sz)
+ 				continue;
+@@ -1572,16 +1573,17 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 				chip_phys = (u64)ioc->chip_phys;
+ 				memap_sz = pci_resource_len(pdev, i);
+ 				ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+-				if (ioc->chip == NULL) {
+-					printk(MPT2SAS_ERR_FMT "unable to map "
+-					    "adapter memory!\n", ioc->name);
+-					r = -EINVAL;
+-					goto out_fail;
+-				}
+ 			}
+ 		}
+ 	}
+ 
++	if (ioc->chip == NULL) {
++		printk(MPT2SAS_ERR_FMT "unable to map adapter memory! "
++		       "or resource not found\n", ioc->name);
++		r = -EINVAL;
++		goto out_fail;
 +	}
- }
++
+ 	_base_mask_interrupts(ioc);
  
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index be6de2a..8a5cac8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3235,7 +3235,8 @@ qla2x00_schedule_rport_del(struct scsi_qla_host *vha, fc_port_t *fcport,
- 		qla2xxx_wake_dpc(base_vha);
- 	} else {
- 		int now;
--		fc_remote_port_delete(rport);
-+		if (rport)
-+			fc_remote_port_delete(rport);
- 		qlt_do_generation_tick(vha, &now);
- 		qlt_fc_port_deleted(vha, fcport, now);
+ 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 14a781b..43f87e9 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1843,7 +1843,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		goto out_fail;
  	}
+ 
+-	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
++	     (!memap_sz || !pio_sz); i++) {
+ 		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
+ 			if (pio_sz)
+ 				continue;
+@@ -1856,15 +1857,16 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 			chip_phys = (u64)ioc->chip_phys;
+ 			memap_sz = pci_resource_len(pdev, i);
+ 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+-			if (ioc->chip == NULL) {
+-				pr_err(MPT3SAS_FMT "unable to map adapter memory!\n",
+-					ioc->name);
+-				r = -EINVAL;
+-				goto out_fail;
+-			}
+ 		}
+ 	}
+ 
++	if (ioc->chip == NULL) {
++		pr_err(MPT3SAS_FMT "unable to map adapter memory! "
++			" or resource not found\n", ioc->name);
++		r = -EINVAL;
++		goto out_fail;
++	}
++
+ 	_base_mask_interrupts(ioc);
+ 
+ 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
 -- 
-1.7.7
+2.0.2
