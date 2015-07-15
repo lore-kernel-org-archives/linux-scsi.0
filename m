@@ -1,101 +1,37 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no memory I/O resources detected
-Date: Wed, 15 Jul 2015 10:19:56 +0530
-Message-ID: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH] MAINTAINERS: Update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI) maintainers list
+Date: Wed, 15 Jul 2015 10:20:55 +0530
+Message-ID: <1436935855-29043-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: tpearson@raptorengineeringinc.com, jejb@kernel.org
+To: jejb@kernel.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Driver crashes if the BIOS do not set up at least one
-memory I/O resource. This failure can happen if the device is too
-slow to respond during POST and is missed by the BIOS, but Linux
-then detects the device later in the boot process.
-
-Changes in v3:
-   Rearranged the code to remove the code redundancy
+Updating maintainers list for the entry LSILOGIC MPT FUSION DRIVERS in
+MAINTAINERS file
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c | 16 +++++++++-------
- drivers/scsi/mpt3sas/mpt3sas_base.c | 16 +++++++++-------
- 2 files changed, 18 insertions(+), 14 deletions(-)
+ MAINTAINERS | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 11248de..6dec7cf 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1557,7 +1557,8 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 		goto out_fail;
- 	}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2d3d55c..c3cd5c9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6348,10 +6348,9 @@ S:	Maintained
+ F:	arch/arm/mach-lpc32xx/
  
--	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
-+	     (!memap_sz || !pio_sz); i++) {
- 		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
- 			if (pio_sz)
- 				continue;
-@@ -1572,16 +1573,17 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 				chip_phys = (u64)ioc->chip_phys;
- 				memap_sz = pci_resource_len(pdev, i);
- 				ioc->chip = ioremap(ioc->chip_phys, memap_sz);
--				if (ioc->chip == NULL) {
--					printk(MPT2SAS_ERR_FMT "unable to map "
--					    "adapter memory!\n", ioc->name);
--					r = -EINVAL;
--					goto out_fail;
--				}
- 			}
- 		}
- 	}
- 
-+	if (ioc->chip == NULL) {
-+		printk(MPT2SAS_ERR_FMT "unable to map adapter memory! "
-+		       "or resource not found\n", ioc->name);
-+		r = -EINVAL;
-+		goto out_fail;
-+	}
-+
- 	_base_mask_interrupts(ioc);
- 
- 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 14a781b..43f87e9 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1843,7 +1843,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 		goto out_fail;
- 	}
- 
--	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
-+	     (!memap_sz || !pio_sz); i++) {
- 		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
- 			if (pio_sz)
- 				continue;
-@@ -1856,15 +1857,16 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 			chip_phys = (u64)ioc->chip_phys;
- 			memap_sz = pci_resource_len(pdev, i);
- 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
--			if (ioc->chip == NULL) {
--				pr_err(MPT3SAS_FMT "unable to map adapter memory!\n",
--					ioc->name);
--				r = -EINVAL;
--				goto out_fail;
--			}
- 		}
- 	}
- 
-+	if (ioc->chip == NULL) {
-+		pr_err(MPT3SAS_FMT "unable to map adapter memory! "
-+			" or resource not found\n", ioc->name);
-+		r = -EINVAL;
-+		goto out_fail;
-+	}
-+
- 	_base_mask_interrupts(ioc);
- 
- 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
+ LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
+-M:	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+-M:	Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
++M:	Sathya Prakash <sathya.prakash@avagotech.com>
+ M:	Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+-M:	Abhijit Mahajan <abhijit.mahajan@avagotech.com>
++M:	Chaitra Basappa <chaitra.basappa@avagotech.com>
+ L:	MPT-FusionLinux.pdl@avagotech.com
+ L:	linux-scsi@vger.kernel.org
+ W:	http://www.lsilogic.com/support
 -- 
 2.0.2
