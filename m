@@ -1,52 +1,39 @@
 From: Sagi Grimberg <sagig@mellanox.com>
-Subject: [PATCH v1 0/4] Descriptor format sense data
-Date: Wed, 15 Jul 2015 10:55:35 +0300
-Message-ID: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
+Subject: [PATCH v1 1/4] scsi: Fix wrong additional sense length in descriptor format
+Date: Wed, 15 Jul 2015 10:55:36 +0300
+Message-ID: <1436946939-19415-2-git-send-email-sagig@mellanox.com>
+References: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
 Sender: target-devel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This small patchset addresses some issues with descriptor format
-sense data.
+The sense header additional sense length should be the accumulated
+size of all the descriptors. Information descriptor size is 12 bytes.
+When setting the additional sense length we should add 0xc instead of
+0xa.
 
-Patch 1 fixes wrong additional sense length for descriptor format
-information field.
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/scsi_common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Patch 2 protects against buffer overflow in scsi_set_information_sense
-(reported by Hannes).
-
-Patch 3 converts the target stack to report descriptor format sense
-data to for LUs that spans 64bit sectors in order to avoid info
-truncation (reported by hch).
-
-Patch 4 is a nit, it was included in this to avoid dependencies
-(patch 2/4)
-
-Changes from v0:
-- Added patch 4/4 to avoid dependencies
-- Modified patch 3/4 to use descriptor format only for LUs that
-  span 64bit sectors.
-- Added reviwed-by tags.
-
-Sagi Grimberg (4):
-  scsi: Fix wrong additional sense length in descriptor format
-  scsi: Protect against buffer possible overflow in
-    scsi_set_sense_information
-  target: Return descriptor format sense data in case the LU spans 64bit
-    sectors
-  libiscsi: Use scsi helper to set information descriptor
-
- drivers/ata/libata-scsi.c              |  4 +++-
- drivers/scsi/libiscsi.c                |  9 +++------
- drivers/scsi/scsi_common.c             | 15 +++++++++++++--
- drivers/target/target_core_hba.c       |  5 +++++
- drivers/target/target_core_spc.c       | 12 +++++++++---
- drivers/target/target_core_transport.c | 17 +++++++++++++----
- include/scsi/scsi_common.h             |  2 +-
- include/target/target_core_backend.h   |  2 ++
- 8 files changed, 49 insertions(+), 17 deletions(-)
-
+diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+index 8cfb7ee..fbf137b 100644
+--- a/drivers/scsi/scsi_common.c
++++ b/drivers/scsi/scsi_common.c
+@@ -260,7 +260,7 @@ void scsi_set_sense_information(u8 *buf, u64 info)
+ 		len = buf[7];
+ 		ucp = (char *)scsi_sense_desc_find(buf, len + 8, 0);
+ 		if (!ucp) {
+-			buf[7] = len + 0xa;
++			buf[7] = len + 0xc;
+ 			ucp = buf + 8 + len;
+ 		}
+ 		ucp[0] = 0;
 -- 
 1.8.4.3
