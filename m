@@ -1,143 +1,115 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] csiostor: Use list_for_each_safe instead of re-implementing it
-Date: Thu, 16 Jul 2015 08:50:11 +0200
-Message-ID: <mqd1tg8y4t8.fsf@c203.arch.suse.de>
-References: <69b8506362a7564f7ec5cf8acb40197b634239e9.1436993298.git.christophe.jaillet@wanadoo.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <69b8506362a7564f7ec5cf8acb40197b634239e9.1436993298.git.christophe.jaillet@wanadoo.fr>
-	(Christophe JAILLET's message of "Wed, 15 Jul 2015 22:53:26 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH v2 3/4] target: Return descriptor format sense data in case the LU spans 64bit sectors
+Date: Thu, 16 Jul 2015 10:28:05 +0300
+Message-ID: <1437031685-22403-1-git-send-email-sagig@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [193.47.165.129] ([193.47.165.129]:38180 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752346AbbGPH20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jul 2015 03:28:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-Christophe JAILLET <christophe.jaillet@wanadoo.fr> writes:
+In case a LU spans 64bit sectors, fixed size sense data information
+field is only 32 bits which means the sector information will be truncated.
 
-> Use 'list_for_each_safe' instead of 'list_for_each' + own logic to ke=
-ep
-> safe when a list entry is deleted.
-> Delete the now useless 'csio_list_prev' macro.
->
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/scsi/csiostor/csio_defs.h |  1 -
->  drivers/scsi/csiostor/csio_hw.c   | 10 ++++------
->  drivers/scsi/csiostor/csio_scsi.c | 10 ++++------
->  3 files changed, 8 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/scsi/csiostor/csio_defs.h b/drivers/scsi/csiosto=
-r/csio_defs.h
-> index c38017b..4b3557c 100644
-> --- a/drivers/scsi/csiostor/csio_defs.h
-> +++ b/drivers/scsi/csiostor/csio_defs.h
-> @@ -70,7 +70,6 @@ csio_list_deleted(struct list_head *list)
->  }
-> =20
->  #define csio_list_next(elem)	(((struct list_head *)(elem))->next)
-> -#define csio_list_prev(elem)	(((struct list_head *)(elem))->prev)
-> =20
->  /* State machine */
->  typedef void (*csio_sm_state_t)(void *, uint32_t);
-> diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/=
-csio_hw.c
-> index 622bdab..61ee6cb 100644
-> --- a/drivers/scsi/csiostor/csio_hw.c
-> +++ b/drivers/scsi/csiostor/csio_hw.c
-> @@ -3643,20 +3643,19 @@ static void
->  csio_mgmt_tmo_handler(uintptr_t data)
->  {
->  	struct csio_mgmtm *mgmtm =3D (struct csio_mgmtm *) data;
-> -	struct list_head *tmp;
-> +	struct list_head *tmp, *next;
->  	struct csio_ioreq *io_req;
-> =20
->  	csio_dbg(mgmtm->hw, "Mgmt timer invoked!\n");
-> =20
->  	spin_lock_irq(&mgmtm->hw->lock);
-> =20
-> -	list_for_each(tmp, &mgmtm->active_q) {
-> +	list_for_each_safe(tmp, next, &mgmtm->active_q) {
->  		io_req =3D (struct csio_ioreq *) tmp;
->  		io_req->tmo -=3D min_t(uint32_t, io_req->tmo, ECM_MIN_TMO);
-> =20
->  		if (!io_req->tmo) {
->  			/* Dequeue the request from retry Q. */
-> -			tmp =3D csio_list_prev(tmp);
->  			list_del_init(&io_req->sm.sm_list);
->  			if (io_req->io_cbfn) {
->  				/* io_req will be freed by completion handler */
-> @@ -3680,7 +3679,7 @@ csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
->  {
->  	struct csio_hw *hw =3D mgmtm->hw;
->  	struct csio_ioreq *io_req;
-> -	struct list_head *tmp;
-> +	struct list_head *tmp, *next;
->  	uint32_t count;
-> =20
->  	count =3D 30;
-> @@ -3692,9 +3691,8 @@ csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
->  	}
-> =20
->  	/* release outstanding req from ACTIVEQ */
-> -	list_for_each(tmp, &mgmtm->active_q) {
-> +	list_for_each_safe(tmp, next, &mgmtm->active_q) {
->  		io_req =3D (struct csio_ioreq *) tmp;
-> -		tmp =3D csio_list_prev(tmp);
->  		list_del_init(&io_req->sm.sm_list);
->  		mgmtm->stats.n_active--;
->  		if (io_req->io_cbfn) {
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiosto=
-r/csio_scsi.c
-> index 2c4562d..2bfb401 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-> @@ -2322,7 +2322,7 @@ csio_scsi_alloc_ddp_bufs(struct csio_scsim *scm=
-, struct csio_hw *hw,
->  			 int buf_size, int num_buf)
->  {
->  	int n =3D 0;
-> -	struct list_head *tmp;
-> +	struct list_head *tmp, *next;
->  	struct csio_dma_buf *ddp_desc =3D NULL;
->  	uint32_t unit_size =3D 0;
-> =20
-> @@ -2370,9 +2370,8 @@ csio_scsi_alloc_ddp_bufs(struct csio_scsim *scm=
-, struct csio_hw *hw,
->  	return 0;
->  no_mem:
->  	/* release dma descs back to freelist and free dma memory */
-> -	list_for_each(tmp, &scm->ddp_freelist) {
-> +	list_for_each_safe(tmp, next, &scm->ddp_freelist) {
->  		ddp_desc =3D (struct csio_dma_buf *) tmp;
-> -		tmp =3D csio_list_prev(tmp);
->  		pci_free_consistent(hw->pdev, ddp_desc->len, ddp_desc->vaddr,
->  				    ddp_desc->paddr);
->  		list_del_init(&ddp_desc->list);
-> @@ -2393,13 +2392,12 @@ no_mem:
->  static void
->  csio_scsi_free_ddp_bufs(struct csio_scsim *scm, struct csio_hw *hw)
->  {
-> -	struct list_head *tmp;
-> +	struct list_head *tmp, *next;
->  	struct csio_dma_buf *ddp_desc;
-> =20
->  	/* release dma descs back to freelist and free dma memory */
-> -	list_for_each(tmp, &scm->ddp_freelist) {
-> +	list_for_each_safe(tmp, next, &scm->ddp_freelist) {
->  		ddp_desc =3D (struct csio_dma_buf *) tmp;
-> -		tmp =3D csio_list_prev(tmp);
->  		pci_free_consistent(hw->pdev, ddp_desc->len, ddp_desc->vaddr,
->  				    ddp_desc->paddr);
->  		list_del_init(&ddp_desc->list);
+Thus, if the LU spans 64bit sectors, use descriptor format sense data to
+correctly report sector information.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reported-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+---
+ drivers/target/target_core_hba.c       |  5 +++++
+ drivers/target/target_core_spc.c       | 12 +++++++++---
+ drivers/target/target_core_transport.c |  3 ++-
+ include/target/target_core_backend.h   |  2 ++
+ 4 files changed, 18 insertions(+), 4 deletions(-)
 
---=20
-Johannes Thumshirn                                       Storage
-jthumshirn@suse.de                             +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 62ea4e8..d746a3a 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -176,3 +176,8 @@ core_delete_hba(struct se_hba *hba)
+ 	kfree(hba);
+ 	return 0;
+ }
++
++bool target_sense_desc_format(struct se_device *dev)
++{
++	return dev->transport->get_blocks(dev) > U32_MAX;
++}
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index c43dcbf..b949d33 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -761,7 +761,12 @@ static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+ 	if (pc == 1)
+ 		goto out;
+ 
+-	p[2] = 2;
++	/* GLTSD: No implicit save of log parameters */
++	p[2] = (1 << 1);
++	if (target_sense_desc_format(dev))
++		/* D_SENSE: Descriptor format sense data for 64bit sectors */
++		p[2] |= (1 << 2);
++
+ 	/*
+ 	 * From spc4r23, 7.4.7 Control mode page
+ 	 *
+@@ -1144,6 +1149,7 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	unsigned char *rbuf;
+ 	u8 ua_asc = 0, ua_ascq = 0;
+ 	unsigned char buf[SE_SENSE_BUF];
++	bool desc_format = target_sense_desc_format(cmd->se_dev);
+ 
+ 	memset(buf, 0, SE_SENSE_BUF);
+ 
+@@ -1158,10 +1164,10 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+ 	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))
+-		scsi_build_sense_buffer(0, buf, UNIT_ATTENTION,
++		scsi_build_sense_buffer(desc_format, buf, UNIT_ATTENTION,
+ 					ua_asc, ua_ascq);
+ 	else
+-		scsi_build_sense_buffer(0, buf, NO_SENSE, 0x0, 0x0);
++		scsi_build_sense_buffer(desc_format, buf, NO_SENSE, 0x0, 0x0);
+ 
+ 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+ 	transport_kunmap_data_sg(cmd);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 7fb031b..98155db 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2735,6 +2735,7 @@ static int translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 	u8 *buffer = cmd->sense_buffer;
+ 	int r = (__force int)reason;
+ 	u8 asc, ascq;
++	bool desc_format = target_sense_desc_format(cmd->se_dev);
+ 
+ 	if (r < ARRAY_SIZE(sense_info_table) && sense_info_table[r].key)
+ 		si = &sense_info_table[r];
+@@ -2754,7 +2755,7 @@ static int translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 		ascq = si->ascq;
+ 	}
+ 
+-	scsi_build_sense_buffer(0, buffer, si->key, asc, ascq);
++	scsi_build_sense_buffer(desc_format, buffer, si->key, asc, ascq);
+ 	if (si->add_sector_info)
+ 		return scsi_set_sense_information(buffer,
+ 						  cmd->scsi_sense_length,
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 1e5c8f9..56cf8e4 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -93,4 +93,6 @@ bool	target_lun_is_rdonly(struct se_cmd *);
+ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
+ 	sense_reason_t (*exec_cmd)(struct se_cmd *cmd));
+ 
++bool target_sense_desc_format(struct se_device *dev);
++
+ #endif /* TARGET_CORE_BACKEND_H */
+-- 
+1.8.4.3
+
