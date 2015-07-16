@@ -1,68 +1,63 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH] scsi: fix memory leak with scsi-mq
-Date: Thu, 16 Jul 2015 11:40:41 -0400
-Message-ID: <55A7D079.9010706@cybernetics.com>
+From: Kevin Groeneveld <KGroeneveld@lenbrook.com>
+Subject: RE: [PATCH] scsi: fix hang in scsi error handling
+Date: Thu, 16 Jul 2015 18:55:43 +0000
+Message-ID: <BF6B9AADDDF11740967545E971C7C0DE02234A@MAIL1.pickering.lenbrook.com>
+References: <1436964449-31447-1-git-send-email-kgroeneveld@lenbrook.com>
+ <55A79156.3060307@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@Odin.com>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.lenbrook.com ([206.191.95.214]:60234 "EHLO
+	mail.lenbrook.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637AbbGPSzp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2015 14:55:45 -0400
+In-Reply-To: <55A79156.3060307@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "JBottomley@odin.com" <JBottomley@odin.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "festevam@gmail.com" <festevam@gmail.com>, "richard.zhu@freescale.com" <richard.zhu@freescale.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>
 
-Fix a memory leak with scsi-mq triggered by commands with large data
-transfer length.
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: July-16-15 7:11 AM
+> > When the hang occurs shost->host_busy == 2 and shost->host_failed == 1
+> > in the scsi_eh_wakeup function. However this function only wakes the
+> > error handler if host_busy == host_failed.
+> >
+> Which just means that one command is still outstanding, and we need to wait
+> for it to complete.
+> But see below...
 
-__sg_alloc_table() sets both table->nents and table->orig_nents to the
-same value.  When the scatterlist is DMA-mapped, table->nents is
-overwritten with the (possibly smaller) size of the DMA-mapped
-scatterlist, while table->orig_nents retains the original size of the
-allocated scatterlist.  scsi_free_sgtable() should therefore check
-orig_nents instead of nents, and all code that initializes sdb->table
-without calling __sg_alloc_table() should set both nents and orig_nents.
+So the root cause of the hang is maybe that the second command never
+completes? Maybe host_failed being non zero is blocking something in the
+port multiplier code?
 
-Fixes: d285203cf647 ("scsi: add support for a blk-mq based I/O path.")
-Cc: <stable@vger.kernel.org> # 3.17+
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
+> Hmm.
+> I am really not sure about this.
 
-For immediate inclusion.
+I wasn't sure either, that is one reason why I posted the patch.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 106884a..cfadcce 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -944,7 +944,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 			    scmd->sdb.length);
- 		scmd->sdb.table.sgl = &ses->sense_sgl;
- 		scmd->sc_data_direction = DMA_FROM_DEVICE;
--		scmd->sdb.table.nents = 1;
-+		scmd->sdb.table.nents = scmd->sdb.table.orig_nents = 1;
- 		scmd->cmnd[0] = REQUEST_SENSE;
- 		scmd->cmnd[4] = scmd->sdb.length;
- 		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b1a2631..448ebda 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -583,7 +583,7 @@ static struct scatterlist *scsi_sg_alloc(unsigned int nents, gfp_t gfp_mask)
- 
- static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
- {
--	if (mq && sdb->table.nents <= SCSI_MAX_SG_SEGMENTS)
-+	if (mq && sdb->table.orig_nents <= SCSI_MAX_SG_SEGMENTS)
- 		return;
- 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
- }
-@@ -597,8 +597,8 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
- 
- 	if (mq) {
- 		if (nents <= SCSI_MAX_SG_SEGMENTS) {
--			sdb->table.nents = nents;
--			sg_init_table(sdb->table.sgl, sdb->table.nents);
-+			sdb->table.nents = sdb->table.orig_nents = nents;
-+			sg_init_table(sdb->table.sgl, nents);
- 			return 0;
- 		}
- 		first_chunk = sdb->table.sgl;
+> 'host_busy' indicates the number of outstanding commands, and
+> 'host_failed' is the number of commands which have failed (on the ground
+> that failed commands are considered outstanding, too).
+> 
+> So the first hunk would change the behaviour from 'start SCSI EH once all
+> commands are completed or failed' to 'start SCSI EH for _any_ command if
+> scsi_eh_wakeup is called'
+> (note that shost_failed might be '0'...).
+> Which doesn't sound right.
+
+So could the patch create any problems by starting the EH any time
+scsi_eh_wakeup is called? Or is it is just inefficient?
+
+> I guess this needs further debugging to get to the bottom of it.
+
+Any suggestions on things I could try?
+
+The fact that the problem goes away when I only enable one CPU core makes
+me think there is a race happening somewhere.
+
+
+Kevin
