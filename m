@@ -1,143 +1,59 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
- memory I/O resources detected
-Date: Wed, 15 Jul 2015 15:59:44 -0500
-Message-ID: <20150715205944.GB25591@google.com>
-References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Rajat Jain <rajatja@google.com>
+Subject: Implementing aio cancel for SCSI/SATA devices
+Date: Wed, 15 Jul 2015 17:24:55 -0700
+Message-ID: <CACK8Z6EfZw3NrHZk_HD1Qh17ZAntOaxXzRx=kpp2noNfJ6KRWg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: tpearson@raptorengineeringinc.com, jejb@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:35066 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051AbbGPAY4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2015 20:24:56 -0400
+Received: by iecuq6 with SMTP id uq6so45516037iec.2
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2015 17:24:55 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Benjamin LaHaise <bcrl@kvack.org>, Theodore Tso <tytso@google.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-aio@kvack.org, Kent Overstreet <kent.overstreet@gmail.com>
 
-On Wed, Jul 15, 2015 at 10:19:56AM +0530, Sreekanth Reddy wrote:
-> Driver crashes if the BIOS do not set up at least one
-> memory I/O resource. This failure can happen if the device is too
-> slow to respond during POST and is missed by the BIOS, but Linux
-> then detects the device later in the boot process.
-> 
-> Changes in v3:
->    Rearranged the code to remove the code redundancy
-> 
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_base.c | 16 +++++++++-------
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 16 +++++++++-------
->  2 files changed, 18 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 11248de..6dec7cf 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1557,7 +1557,8 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
->  		goto out_fail;
->  	}
->  
-> -	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
-> +	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
-> +	     (!memap_sz || !pio_sz); i++) {
->  		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
->  			if (pio_sz)
->  				continue;
-> @@ -1572,16 +1573,17 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
->  				chip_phys = (u64)ioc->chip_phys;
->  				memap_sz = pci_resource_len(pdev, i);
->  				ioc->chip = ioremap(ioc->chip_phys, memap_sz);
-> -				if (ioc->chip == NULL) {
-> -					printk(MPT2SAS_ERR_FMT "unable to map "
-> -					    "adapter memory!\n", ioc->name);
-> -					r = -EINVAL;
-> -					goto out_fail;
-> -				}
->  			}
->  		}
->  	}
->  
-> +	if (ioc->chip == NULL) {
-> +		printk(MPT2SAS_ERR_FMT "unable to map adapter memory! "
-> +		       "or resource not found\n", ioc->name);
-> +		r = -EINVAL;
-> +		goto out_fail;
-> +	}
+Hello,
 
-  - Before this patch, the driver probe succeeds even if it can't find an
-    MMIO resource.  That means we would eventually dereference ioc->chip,
-    which is zero.  This patch definitely fixes that bug.
+Currently I don't see any users of aio cancellation facility (except a
+USB gadget driver).
 
-  - I raise my eyebrows a little at the "let's use the first MMIO resource
-    we find" idea.  A driver should know exactly which BAR it needs, so it
-    seems sloppy to search this way.  And it's possible that BIOS or the
-    PCI core set up *one* MMIO BAR, but not the one the driver needs.  Then
-    the search will find the wrong BAR and the driver won't work.
+I have a SATA controller and disk that both support the NCQ command
+aborts, and I am thinking of ways to implement aio cancellation on
+these devices in the kernel. The way I see it, at the time user
+requests for a command to be cancelled, it could be be in one of the 2
+places:
 
-  - These drivers both do:
+1. Sitting in block layer elevator queues, and not yet submitted it to
+the SCSI subsystem (scsi_dispatch_cmd() not yet called). [I see some
+solutions available to this https://lkml.org/lkml/2013/5/13/615 ]
 
-      ioc->chip_phys = pci_resource_start(pdev, i);
-      ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+2. Submitted to the SCSI subsystem / LLD, but pending in the LLD SW or
+the HW  (scsi_done() not yet called). This part is what I am keen on
+adding.
 
-    Saving ioc->chip_phys is pointless because it's only used to guard
-    iounmap(ioc->chip), and the driver probe should fail if it can't find
-    an MMIO resource, so the places that do the iounmap can assume
-    ioc->chip is always valid.
+My line of thought (10000 ft view) currently is, that I should:
 
-  - These drivers also search for an I/O resource, but they don't actually
-    use it, except to print it out.  I guess that's harmless, but it seems
-    sloppy and will print junk on machines where there's no I/O space
-    available.  They do use pci_enable_device_mem(), so at least the device
-    should work even if no I/O space is available.
+A) Do the necessary plumbing (through the block & scsi layers) such
+that the kiocb_cancel() should eventually result in a call to the
+eh_abort_handler() for the LLD for that particular command. This
+should (atleast in my theory) let the LLD know that it needs to cancel
+the command, and can do whatever it needs to do in order to cancel it.
 
-  - It'd be nice if they used dev_printk() and %pR instead of their ad hoc
-    formatting.
+B) Add a helper function in libata that allocates & initializes a new
+"Queue Management - Abort (0x63)" ATA command, that the LLD's
+eh_abort_handler() can choose to use in case it sees that the command
+is already sent to the disk drive. It can then send this new
+ata_queued_cmd to abort the pending command to the drive. This is of
+course optional and to be used at LLD(s) discretion.
 
->  	_base_mask_interrupts(ioc);
->  
->  	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 14a781b..43f87e9 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -1843,7 +1843,8 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
->  		goto out_fail;
->  	}
->  
-> -	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
-> +	for (i = 0, memap_sz = 0, pio_sz = 0; (i < DEVICE_COUNT_RESOURCE) &&
-> +	     (!memap_sz || !pio_sz); i++) {
->  		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
->  			if (pio_sz)
->  				continue;
-> @@ -1856,15 +1857,16 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
->  			chip_phys = (u64)ioc->chip_phys;
->  			memap_sz = pci_resource_len(pdev, i);
->  			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
-> -			if (ioc->chip == NULL) {
-> -				pr_err(MPT3SAS_FMT "unable to map adapter memory!\n",
-> -					ioc->name);
-> -				r = -EINVAL;
-> -				goto out_fail;
-> -			}
->  		}
->  	}
->  
-> +	if (ioc->chip == NULL) {
-> +		pr_err(MPT3SAS_FMT "unable to map adapter memory! "
-> +			" or resource not found\n", ioc->name);
-> +		r = -EINVAL;
-> +		goto out_fail;
-> +	}
-> +
->  	_base_mask_interrupts(ioc);
->  
->  	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-> -- 
-> 2.0.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Comments? Thoughts?
+
+I'd appreciate if you could please let me know if I'm on the right
+track or totally off?
+
+Thanks,
+
+Rajat
