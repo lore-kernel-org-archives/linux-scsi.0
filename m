@@ -1,63 +1,43 @@
-From: Kevin Groeneveld <KGroeneveld@lenbrook.com>
-Subject: RE: [PATCH] scsi: fix hang in scsi error handling
-Date: Thu, 16 Jul 2015 18:55:43 +0000
-Message-ID: <BF6B9AADDDF11740967545E971C7C0DE02234A@MAIL1.pickering.lenbrook.com>
-References: <1436964449-31447-1-git-send-email-kgroeneveld@lenbrook.com>
- <55A79156.3060307@suse.de>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsi:Remove no longer required comment for the function
+ send_mad_adapter_info
+Date: Thu, 16 Jul 2015 13:42:08 -0700
+Message-ID: <55A81720.5050509@linux.vnet.ibm.com>
+References: <1436462664-14263-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.lenbrook.com ([206.191.95.214]:60234 "EHLO
-	mail.lenbrook.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637AbbGPSzp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2015 14:55:45 -0400
-In-Reply-To: <55A79156.3060307@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1436462664-14263-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "JBottomley@odin.com" <JBottomley@odin.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "festevam@gmail.com" <festevam@gmail.com>, "richard.zhu@freescale.com" <richard.zhu@freescale.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: July-16-15 7:11 AM
-> > When the hang occurs shost->host_busy == 2 and shost->host_failed == 1
-> > in the scsi_eh_wakeup function. However this function only wakes the
-> > error handler if host_busy == host_failed.
-> >
-> Which just means that one command is still outstanding, and we need to wait
-> for it to complete.
-> But see below...
-
-So the root cause of the hang is maybe that the second command never
-completes? Maybe host_failed being non zero is blocking something in the
-port multiplier code?
-
-> Hmm.
-> I am really not sure about this.
-
-I wasn't sure either, that is one reason why I posted the patch.
-
-> 'host_busy' indicates the number of outstanding commands, and
-> 'host_failed' is the number of commands which have failed (on the ground
-> that failed commands are considered outstanding, too).
+On 07/09/2015 10:24 AM, Nicholas Krause wrote:
+> This removes the no longer required comment for the function
+> send_mad_adapter_info stating that it always return zero due
+> to this function being declared as void and thus never returning
+> any useful value.
 > 
-> So the first hunk would change the behaviour from 'start SCSI EH once all
-> commands are completed or failed' to 'start SCSI EH for _any_ command if
-> scsi_eh_wakeup is called'
-> (note that shost_failed might be '0'...).
-> Which doesn't sound right.
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 
-So could the patch create any problems by starting the EH any time
-scsi_eh_wakeup is called? Or is it is just inefficient?
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-> I guess this needs further debugging to get to the bottom of it.
-
-Any suggestions on things I could try?
-
-The fact that the problem goes away when I only enable one CPU core makes
-me think there is a race happening somewhere.
-
-
-Kevin
+> ---
+>  drivers/scsi/ibmvscsi/ibmvscsi.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index 6a41c36..70ea976 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -1423,7 +1423,6 @@ static void adapter_info_rsp(struct srp_event_struct *evt_struct)
+>   *      returned SRP version doesn't match ours.
+>   * @hostdata:	ibmvscsi_host_data of host
+>   * 
+> - * Returns zero if successful.
+>  */
+>  static void send_mad_adapter_info(struct ibmvscsi_host_data *hostdata)
+>  {
+> 
