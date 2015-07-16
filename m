@@ -1,66 +1,253 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Fix maximum I/O size for BLOCK_PC requests
-Date: Wed, 15 Jul 2015 21:13:46 -0400
-Message-ID: <1437009226-599-1-git-send-email-martin.petersen@oracle.com>
-References: <5581759A.4080009@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <5581759A.4080009@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
+From: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Subject: Re: [PATCH] dm-mpath: always return reservation conflict
+Date: Thu, 16 Jul 2015 05:07:03 +0000
+Message-ID: <CABr-GncMR4y+Sv=cXnhbXyX+ko2d13hgsPg2xbWSp9Z-v8=nqQ@mail.gmail.com>
+References: <1436959404-14035-1-git-send-email-hare@suse.de>
+	<1436960108.31121.41.camel@HansenPartnership.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7046467599955971217=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1436960108.31121.41.camel@HansenPartnership.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Commit bcdb247c6b6a ("sd: Limit transfer length") clamped the maximum
-size of an I/O request to the MAXIMUM TRANSFER LENGTH field in the BLOCK
-LIMITS VPD. This had the unfortunate effect of also limiting the maximum
-size of non-filesystem requests sent to the device through sg/bsg.
+--===============7046467599955971217==
+Content-Type: multipart/alternative; boundary=089e0160b436585d4b051af70bfb
 
-Avoid using blk_queue_max_hw_sectors() and set the max_sectors queue
-limit directly.
+--089e0160b436585d4b051af70bfb
+Content-Type: text/plain; charset=UTF-8
 
-Also update the comment in blk_limits_max_hw_sectors() to clarify that
-max_hw_sectors defines the limit for the I/O controller only.
+If your patch implement a direct path-to-multipath conflict error
+propagation, won't the common scenario where admins add new (initialy
+unregistered) paths to a reserved multipath result in application-visible
+i/o errors ? If so, those admins might hold us a grudge :/
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-Tested-by: Brian King <brking@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> # 3.17+
----
- block/blk-settings.c | 4 ++--
- drivers/scsi/sd.c    | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+For reference the opensvc crm does use type 5 pr, and aims for all paths
+registered. It still does not make use of the multipathd pr janitoring
+features, and uses sg_persist directly for pr status and actions.
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 12600bfffca9..e0057d035200 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -241,8 +241,8 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
-  * Description:
-  *    Enables a low level driver to set a hard upper limit,
-  *    max_hw_sectors, on the size of requests.  max_hw_sectors is set by
-- *    the device driver based upon the combined capabilities of I/O
-- *    controller and storage device.
-+ *    the device driver based upon the capabilities of the I/O
-+ *    controller.
-  *
-  *    max_sectors is a soft limit imposed by the block layer for
-  *    filesystem type requests.  This value can be overridden on a
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3b2fcb4fada0..a20da8c25b4f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2770,9 +2770,9 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	max_xfer = sdkp->max_xfer_blocks;
- 	max_xfer <<= ilog2(sdp->sector_size) - 9;
- 
--	max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
--				max_xfer);
--	blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
-+	sdkp->disk->queue->limits.max_sectors =
-+		min_not_zero(queue_max_hw_sectors(sdkp->disk->queue), max_xfer);
-+
- 	set_capacity(disk, sdkp->capacity);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
--- 
-2.4.3
+Best regards,
+Christophe Varoqui
+OpenSVC
+
+Regards,
+
+Christophe Varoqui
+
+OpenSVC
+
+On Wed, Jul 15, 2015 at 1:35 PM, James Bottomley <
+James.Bottomley@hansenpartnership.com> wrote:
+
+> On Wed, 2015-07-15 at 13:23 +0200, Hannes Reinecke wrote:
+> > If dm-mpath encounters an reservation conflict it should not
+> > fail the path (as communication with the target is not affected)
+> > but should rather retry on another path.
+> > However, in doing so we might be inducing a ping-pong between
+> > paths, with no guarantee of any forward progress.
+> > And arguably a reservation conflict is an unexpected error,
+> > so we should be passing it upwards to allow the application
+> > to take appropriate steps.
+>
+> If I interpret the code correctly, you've changed the behaviour from the
+> current try all paths and fail them, ultimately passing the reservation
+> conflict up if all paths fail to return reservation conflict
+> immediately, keeping all paths running.  This assumes that the
+> reservation isn't path specific because if we encounter a path specific
+> reservation, you've altered the behaviour from route around to fail.
+>
+> The case I think the original code was for is SAN Volume controllers
+> which use path specific SCSI-3 reservations effectively to do traffic
+> control and allow favoured paths.  Have you verified that nothing we
+> encounter in the enterprise uses path specific reservations for
+> multipath shaping any more?
+>
+> James
+>
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > ---
+> >  drivers/md/dm-mpath.c | 14 ++++++++++----
+> >  1 file changed, 10 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> > index 5a67671..e65d266 100644
+> > --- a/drivers/md/dm-mpath.c
+> > +++ b/drivers/md/dm-mpath.c
+> > @@ -1269,7 +1269,16 @@ static int do_end_io(struct multipath *m, struct
+> request *clone,
+> >       if (noretry_error(error))
+> >               return error;
+> >
+> > -     if (mpio->pgpath)
+> > +     /*
+> > +      * EBADE signals an reservation conflict.
+> > +      * We shouldn't fail the path here as we can communicate with
+> > +      * the target. We should failover to the next path, but in
+> > +      * doing so we might be causing a ping-pong between paths.
+> > +      * So just return the reservation conflict error.
+> > +      */
+> > +     if (error == -EBADE)
+> > +             r = error;
+> > +     else if (mpio->pgpath)
+> >               fail_path(mpio->pgpath);
+> >
+> >       spin_lock_irqsave(&m->lock, flags);
+> > @@ -1277,9 +1286,6 @@ static int do_end_io(struct multipath *m, struct
+> request *clone,
+> >               if (!m->queue_if_no_path) {
+> >                       if (!__must_push_back(m))
+> >                               r = -EIO;
+> > -             } else {
+> > -                     if (error == -EBADE)
+> > -                             r = error;
+> >               }
+> >       }
+> >       spin_unlock_irqrestore(&m->lock, flags);
+>
+>
+>
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+>
+
+--089e0160b436585d4b051af70bfb
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<p dir=3D"ltr">If your patch implement a direct path-to-multipath conflict =
+error propagation, won&#39;t the common scenario where admins add new (init=
+ialy unregistered) paths to a reserved multipath result in application-visi=
+ble i/o errors ? If so, those admins might hold us a grudge :/</p>
+<p dir=3D"ltr">For reference the opensvc crm does use type 5 pr, and aims f=
+or all paths registered. It still does not make use of the multipathd pr ja=
+nitoring features, and uses sg_persist directly for pr status and actions.<=
+/p>
+<p dir=3D"ltr">Best regards,<br>
+Christophe Varoqui <br>
+OpenSVC </p>
+<p dir=3D"ltr">Regards,</p>
+<p dir=3D"ltr">Christophe Varoqui</p>
+<p dir=3D"ltr">OpenSVC</p>
+<div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Wed, Jul 15, 2=
+015 at 1:35 PM, James Bottomley <span dir=3D"ltr">&lt;<a href=3D"mailto:Jam=
+es.Bottomley@hansenpartnership.com" target=3D"_blank">James.Bottomley@hanse=
+npartnership.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote"=
+ style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><s=
+pan>On Wed, 2015-07-15 at 13:23 +0200, Hannes Reinecke wrote:<br>
+&gt; If dm-mpath encounters an reservation conflict it should not<br>
+&gt; fail the path (as communication with the target is not affected)<br>
+&gt; but should rather retry on another path.<br>
+&gt; However, in doing so we might be inducing a ping-pong between<br>
+&gt; paths, with no guarantee of any forward progress.<br>
+&gt; And arguably a reservation conflict is an unexpected error,<br>
+&gt; so we should be passing it upwards to allow the application<br>
+&gt; to take appropriate steps.<br>
+<br>
+</span>If I interpret the code correctly, you&#39;ve changed the behaviour =
+from the<br>
+current try all paths and fail them, ultimately passing the reservation<br>
+conflict up if all paths fail to return reservation conflict<br>
+immediately, keeping all paths running.=C2=A0 This assumes that the<br>
+reservation isn&#39;t path specific because if we encounter a path specific=
+<br>
+reservation, you&#39;ve altered the behaviour from route around to fail.<br=
+>
+<br>
+The case I think the original code was for is SAN Volume controllers<br>
+which use path specific SCSI-3 reservations effectively to do traffic<br>
+control and allow favoured paths.=C2=A0 Have you verified that nothing we<b=
+r>
+encounter in the enterprise uses path specific reservations for<br>
+multipath shaping any more?<br>
+<span><font color=3D"#888888"><br>
+James<br>
+</font></span><div><div><br>
+&gt; Signed-off-by: Hannes Reinecke &lt;<a href=3D"mailto:hare@suse.de" tar=
+get=3D"_blank">hare@suse.de</a>&gt;<br>
+&gt; ---<br>
+&gt;=C2=A0 drivers/md/dm-mpath.c | 14 ++++++++++----<br>
+&gt;=C2=A0 1 file changed, 10 insertions(+), 4 deletions(-)<br>
+&gt;<br>
+&gt; diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c<br>
+&gt; index 5a67671..e65d266 100644<br>
+&gt; --- a/drivers/md/dm-mpath.c<br>
+&gt; +++ b/drivers/md/dm-mpath.c<br>
+&gt; @@ -1269,7 +1269,16 @@ static int do_end_io(struct multipath *m, struc=
+t request *clone,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0if (noretry_error(error))<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return error;<br=
+>
+&gt;<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0if (mpio-&gt;pgpath)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0/*<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * EBADE signals an reservation conflict.<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * We shouldn&#39;t fail the path here as we can =
+communicate with<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * the target. We should failover to the next pat=
+h, but in<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * doing so we might be causing a ping-pong betwe=
+en paths.<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * So just return the reservation conflict error.=
+<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 */<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (error =3D=3D -EBADE)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0r =3D error;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0else if (mpio-&gt;pgpath)<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fail_path(mpio-&=
+gt;pgpath);<br>
+&gt;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irqsave(&amp;m-&gt;lock, flags);<b=
+r>
+&gt; @@ -1277,9 +1286,6 @@ static int do_end_io(struct multipath *m, struct=
+ request *clone,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!m-&gt;queue=
+_if_no_path) {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0if (!__must_push_back(m))<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0r =3D -EIO;<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0if (error =3D=3D -EBADE)<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0r =3D error;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irqrestore(&amp;m-&gt;lock, flag=
+s);<br>
+<br>
+<br>
+<br>
+--<br>
+</div></div><div><div>dm-devel mailing list<br>
+<a href=3D"mailto:dm-devel@redhat.com" target=3D"_blank">dm-devel@redhat.co=
+m</a><br>
+<a href=3D"https://www.redhat.com/mailman/listinfo/dm-devel" rel=3D"norefer=
+rer" target=3D"_blank">https://www.redhat.com/mailman/listinfo/dm-devel</a>=
+<br>
+</div></div></blockquote></div><br></div>
+
+--089e0160b436585d4b051af70bfb--
+
+
+--===============7046467599955971217==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============7046467599955971217==--
