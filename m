@@ -1,35 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] Using the local variable instead of I/O flag to acquire io_req_lock in fnic_queuecommand() to avoid deadloack
-Date: Thu, 16 Jul 2015 21:56:02 -0400
-Message-ID: <yq1pp3rmtsd.fsf@sermon.lab.mkp.net>
-References: <1436882937-11741-1-git-send-email-hishah@cisco.com>
+Subject: Re: [PATCH 1/3] [RESEND] ipr: Fix locking for unit attention handling
+Date: Thu, 16 Jul 2015 21:57:58 -0400
+Message-ID: <yq1lhefmtp5.fsf@sermon.lab.mkp.net>
+References: <201507141641.t6EGfUKf005602@d03av03.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19124 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbbGQB4L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2015 21:56:11 -0400
-In-Reply-To: <1436882937-11741-1-git-send-email-hishah@cisco.com> (Hiral
-	Shah's message of "Tue, 14 Jul 2015 07:08:57 -0700")
+Received: from aserp1040.oracle.com ([141.146.126.69]:33544 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbbGQB6G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jul 2015 21:58:06 -0400
+In-Reply-To: <201507141641.t6EGfUKf005602@d03av03.boulder.ibm.com> (Brian
+	King's message of "Tue, 14 Jul 2015 11:41:29 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hiral Shah <hishah@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>, Anil Chintalapati <achintal@cisco.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
 
->>>>> "Hiral" == Hiral Shah <hishah@cisco.com> writes:
+>>>>> "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
 
-Hiral> We added changes in fnic driver patch 1.6.0.16 to acquire
-Hiral> io_req_lock in fnic_queuecommand() before issuing I/O so that io
-Hiral> completion is serialized. But when releasing the lock we check
-Hiral> for the I/O flag and this could be modified if IO abort occurs
-Hiral> before I/O completion. In this case we wont release the lock and
-Hiral> causes deadlock in some scenerios. Using the local variable to
-Hiral> check the IO lock status will resolve the problem.
+Brian> Make sure we have the host lock held when calling
+Brian> scsi_report_bus_reset. Fixes a crash seen as the __devices list
+Brian> in the scsi host was changing as we were iterating through it.
 
-Maybe bool instead of int?
-
-Otherwise OK.
+Nit: I take it that renaming lock_flags to hrrq_flags makes sense. But
+it muddles what is supposed to be a bugfix patch.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
