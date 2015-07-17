@@ -1,30 +1,51 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] [RESEND] ipr: Fix invalid array indexing for HRRQ
-Date: Thu, 16 Jul 2015 22:00:32 -0400
-Message-ID: <yq1d1zrmtkv.fsf@sermon.lab.mkp.net>
-References: <201507141641.t6EGfXmA021616@d01av05.pok.ibm.com>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: [PATCH] wd719x: Remove use of macro DEFINE_PCI_DEVICE_TABLE
+Date: Fri, 17 Jul 2015 11:16:43 +0530
+Message-ID: <20150717054643.GA7209@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <201507141641.t6EGfXmA021616@d01av05.pok.ibm.com> (Brian King's
-	message of "Tue, 14 Jul 2015 11:41:33 -0500")
-Sender: stable-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
+Macro DEFINE_PCI_DEVICE_TABLE is deprecated. So, here use
+struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE with
+the goal of getting rid of this macro completely.
 
-Brian> Fixes another signed / unsigned array indexing bug in the ipr
-Brian> driver.  Currently, when hrrq_index wraps, it becomes a negative
-Brian> number. We do the modulo, but still have a negative number, so we
-Brian> end up indexing backwards in the array. Given where the hrrq
-Brian> array is located in memory, we probably won't actually reference
-Brian> memory we don't own, but nonetheless ipr is still looking at data
-Brian> within struct ipr_ioa_cfg and interpreting it as struct
-Brian> ipr_hrr_queue data, so bad things could certainly happen.
+The Coccinelle semantic patch that performs this transformation
+is as follows:
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+@@
+identifier a;
+declarer name DEFINE_PCI_DEVICE_TABLE;
+initializer i;
+@@
+- DEFINE_PCI_DEVICE_TABLE(a)
++ const struct pci_device_id a[]
+= i;
 
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+This patch is against linux-next branch
+---
+ drivers/scsi/wd719x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index 61346aa..4655d16 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -962,7 +962,7 @@ static void wd719x_pci_remove(struct pci_dev *pdev)
+ 	scsi_host_put(sh);
+ }
+ 
+-static DEFINE_PCI_DEVICE_TABLE(wd719x_pci_table) = {
++static const struct pci_device_id wd719x_pci_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_WD, 0x3296) },
+ 	{}
+ };
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.9.1
