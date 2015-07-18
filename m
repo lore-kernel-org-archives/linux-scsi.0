@@ -1,16 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 02/11] hpsa: correct decode sense data
-Date: Sat, 18 Jul 2015 11:12:28 -0500
-Message-ID: <20150718161228.31955.89625.stgit@brunhilda>
+Subject: [PATCH 03/11] hpsa: correct static checker warnings on driver init
+ cleanup
+Date: Sat, 18 Jul 2015 11:12:33 -0500
+Message-ID: <20150718161233.31955.63909.stgit@brunhilda>
 References: <20150718160245.31955.16794.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:56151 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764AbbGRQOo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2015 12:14:44 -0400
+Received: from g9t5009.houston.hp.com ([15.240.92.67]:34801 "EHLO
+	g9t5009.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764AbbGRQOu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2015 12:14:50 -0400
 In-Reply-To: <20150718160245.31955.16794.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,20 +23,29 @@ Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1d5f4fd..e9b2073 100644
+index e9b2073..6b083af 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -325,7 +325,7 @@ static int check_for_unit_attention(struct ctlr_info *h,
+@@ -8053,7 +8053,7 @@ reinit_after_soft_reset:
+ 		rc = hpsa_kdump_soft_reset(h);
+ 		if (rc)
+ 			/* Neither hard nor soft reset worked, we're hosed. */
+-			goto clean9;
++			goto clean7;
  
- 	decode_sense_data(c->err_info->SenseInfo, sense_len,
- 				&sense_key, &asc, &ascq);
--	if (sense_key != UNIT_ATTENTION || asc == -1)
-+	if (sense_key != UNIT_ATTENTION || asc == 0xff)
- 		return 0;
+ 		dev_info(&h->pdev->dev, "Board READY.\n");
+ 		dev_info(&h->pdev->dev,
+@@ -8099,8 +8099,6 @@ reinit_after_soft_reset:
+ 				h->heartbeat_sample_interval);
+ 	return 0;
  
- 	switch (asc) {
+-clean9: /* wq, sh, perf, sg, cmd, irq, shost, pci, lu, aer/h */
+-	kfree(h->hba_inquiry_data);
+ clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
 
