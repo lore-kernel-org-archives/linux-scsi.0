@@ -1,37 +1,47 @@
-From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [PATCH 2/3] hpsa: Remove unneccessary variable from
- raid_level_show
-Date: Sat, 18 Jul 2015 16:22:05 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB7CD2B8C7@BBYEXM02.pmc-sierra.internal>
-References: <DDB9C85B850785449757F9914A034FCB4442E192@G9W0766.americas.hpqcorp.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101371] OOPS: unplugging western digital passport drive
+Date: Sun, 19 Jul 2015 02:37:48 +0000
+Message-ID: <bug-101371-11613-kZVexilxaI@https.bugzilla.kernel.org/>
+References: <bug-101371-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:43887 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752565AbbGRQWH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Jul 2015 12:22:07 -0400
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB4442E192@G9W0766.americas.hpqcorp.net>
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.29.136]:60781 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752368AbbGSChv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Jul 2015 22:37:51 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 99F0920567
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2015 02:37:50 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id AEDDE205B5
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2015 02:37:48 +0000 (UTC)
+In-Reply-To: <bug-101371-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James Bottomley (JBottomley@Odin.com)" <JBottomley@Odin.com>, ISS StorageDev <iss_storagedev@hp.com>
-Cc: "Greg KH <greg@kroah.com> (greg@kroah.com)" <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Seymour, Shane M
-> Sent: Tuesday, June 30, 2015 10:46 PM
-> To: linux-scsi@vger.kernel.org; James Bottomley (JBottomley@Odin.com); ISS
-> StorageDev
-> Cc: Greg KH <greg@kroah.com> (greg@kroah.com)
-> Subject: [PATCH 2/3] hpsa: Remove unneccessary variable from raid_level_show
-> 
-> 
-> Remove unneccessary variable from raid_level_show
-> 
-> Signed-off-by: Shane Seymour <shane.seymour@hp.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=101371
 
-Signed-off-by: Don brace <don.brace@pmcs.com>
+Joe Lawrence <joe.lawrence@stratus.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |joe.lawrence@stratus.com
+
+--- Comment #1 from Joe Lawrence <joe.lawrence@stratus.com> ---
+Hi Ilan,
+
+Have you tried the patch to drivers/scsi/scsi_pm.c that Alan posted in the
+thread you mentioned:
+
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg37852.html
+
+Thanks,
+
+-- Joe
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
