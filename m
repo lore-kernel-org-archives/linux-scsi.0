@@ -1,16 +1,16 @@
 From: DIAMOND SWISS LOAN COMPANY <rocio.suarez@dpss.gob.ec>
 Subject: =?utf-8?Q?paskolos_pasi=C5=ABlymas?=
-Date: Mon, 20 Jul 2015 18:28:09 -0500 (ECT)
-Message-ID: <578322082.3968683.1437434889087.JavaMail.root@dpss.gob.ec>
+Date: Mon, 20 Jul 2015 18:22:42 -0500 (ECT)
+Message-ID: <1821305113.3968167.1437434562273.JavaMail.root__44495.5455176116$1437442698$gmane$org@dpss.gob.ec>
 Reply-To: "diamondswissloans2@gmail.com" <diamondswissloans2@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server.dpss.gob.ec ([190.152.151.93]:38623 "EHLO
+Received: from server.dpss.gob.ec ([190.152.151.93]:47075 "EHLO
 	mail.dpss.gob.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757422AbbGUBN1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2015 21:13:27 -0400
+	with ESMTP id S1756745AbbGUBhq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2015 21:37:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
