@@ -1,59 +1,67 @@
-From: Spencer Baugh <sbaugh@catern.com>
-Subject: [PATCH] target/iscsi: fix digest computation for chained SGs
-Date: Mon, 20 Jul 2015 17:12:12 -0700
-Message-ID: <1437437534-17931-1-git-send-email-sbaugh@catern.com>
+From: DIAMOND SWISS LOAN COMPANY <rocio.suarez@dpss.gob.ec>
+Subject: =?utf-8?Q?paskolos_pasi=C5=ABlymas?=
+Date: Mon, 20 Jul 2015 18:28:09 -0500 (ECT)
+Message-ID: <578322082.3968683.1437434889087.JavaMail.root@dpss.gob.ec>
+Reply-To: "diamondswissloans2@gmail.com" <diamondswissloans2@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from catern.com ([104.131.201.120]:52706 "EHLO mail.catern.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932197AbbGUASd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jul 2015 20:18:33 -0400
+Received: from server.dpss.gob.ec ([190.152.151.93]:38623 "EHLO
+	mail.dpss.gob.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757422AbbGUBN1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2015 21:13:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: joern@purestorage.com, Alexei Potashnik <alexei@purestorage.com>
 
-From: Alexei Potashnik <alexei@purestorage.com>
 
-Current implementation assumes that all the buffers of an IO are linked
-with a single SG list. Which makes it fail if SG chaining is used.
 
-Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
----
- drivers/target/iscsi/iscsi_target.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 4e68b62..a4cf58c 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1209,7 +1209,6 @@ static u32 iscsit_do_crypto_hash_sg(
- 	u8 *pad_bytes)
- {
- 	u32 data_crc;
--	u32 i;
- 	struct scatterlist *sg;
- 	unsigned int page_off;
- 
-@@ -1218,15 +1217,15 @@ static u32 iscsit_do_crypto_hash_sg(
- 	sg = cmd->first_data_sg;
- 	page_off = cmd->first_data_sg_off;
- 
--	i = 0;
- 	while (data_length) {
--		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
-+		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
- 
--		crypto_hash_update(hash, &sg[i], cur_len);
-+		crypto_hash_update(hash, sg, cur_len);
- 
- 		data_length -= cur_len;
- 		page_off = 0;
--		i++;
-+		/* iscsit_map_iovec has already checked for invalid sg pointers */
-+		sg = sg_next(sg);
- 	}
- 
- 	if (padding) {
--- 
-2.4.3
+Gera diena,
 
+ Tai DIAMOND =C5=A0VEICARIJOS paskola bendrovei Paskolos pasi=C5=ABlyma=
+s.
+
+   DIAMOND =C5=A0VEICARIJOS paskola bendrovei si=C5=ABlo lanks=C4=8Dias=
+ ir prieinamas paskolas bet kokiam tikslui, siekiant pad=C4=97ti jums p=
+asiekti savo tikslus. mes paskola ma=C5=BEomis pal=C5=ABkan=C5=B3 norma=
+ 1,5%. =C5=A0tai keletas svarbi=C5=B3 bruo=C5=BEai asmenin=C4=97s pasko=
+los si=C5=ABlo DIAMOND =C5=A0VEICARIJOS paskola bendrovei. =C5=A0tai Pa=
+skol=C5=B3 Veiksniai Mes dirbame su pirmaujan=C4=8Di=C5=B3 JK tarpinink=
+us, kurie turi prieig=C4=85 prie geriausi=C5=B3 skolintoj=C5=B3 ir suge=
+ba rasti geriausi=C4=85 finansin=C4=AF sprendim=C4=85 u=C5=BE prieinam=C4=
+=85 price.Please, jei jus domina, maloniai susisiekite su mumis per =C5=
+=A1=C4=AF El.pa=C5=A1tas: diamon_dswissloans@hotmail.com
+
+
+Po reakcijos, gausite paskol=C5=B3 u=C5=BEpildyti parai=C5=A1k=C4=85. N=
+r socialinio draudimo ir ne kredito patikrinimas, 100% garantija.
+
+Tai bus m=C5=ABs=C5=B3 garb=C4=97, jei j=C5=ABs leisti mums b=C5=ABti J=
+=C5=ABs=C5=B3 paslaugoms.
+
+
+Informacij=C4=85, reikaling=C4=85
+
+J=C5=ABs=C5=B3 pavadinimai:
+Adresas: ...........
+Telefonas: ...........
+Reikalinga suma: ........
+Trukm=C4=97: ...............
+Pareigos: ...........
+M=C4=97nesio pajamos Lygis: ........
+Lytis: ...............
+Gimimo data: ........
+Valstyb=C4=97: ..................
+=C5=A0alis: ..........
+Paskirtis: .........
+
+Susitikimas j=C5=ABs=C5=B3 finansinius poreikius yra m=C5=ABs=C5=B3 pas=
+idid=C5=BEiavimas.
+
+Mr.Diamond Petersas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
