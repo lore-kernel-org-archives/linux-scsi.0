@@ -1,101 +1,82 @@
-From: Spencer Baugh <spencer.baugh@purestorage.com>
-Subject: [PATCH 2/2] target: remove initiatorname field in se_acl_lun
-Date: Mon, 20 Jul 2015 16:29:50 -0700
-Message-ID: <1437434990-13452-2-git-send-email-Spencer.baugh@purestorage.com>
-References: <1437434990-13452-1-git-send-email-Spencer.baugh@purestorage.com>
+From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
+Subject: RE: [PATCH V3 10/10] [SCSI] aacraid: Replace pci_enable_msix() with
+ pci_enable_msix_exact()
+Date: Mon, 20 Jul 2015 23:41:38 +0000
+Message-ID: <E34C6B6293F0214497D0C55B92526C05EAFF791E@BBYEXM02.pmc-sierra.internal>
+References: <1436310984-4519-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <1436310984-4519-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
+ <55AD1994.5040504@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:34399 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757247AbbGTXaE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2015 19:30:04 -0400
-Received: by pdbbh15 with SMTP id bh15so63180700pdb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2015 16:30:03 -0700 (PDT)
-In-Reply-To: <1437434990-13452-1-git-send-email-Spencer.baugh@purestorage.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49149 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750869AbbGTXlk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jul 2015 19:41:40 -0400
+In-Reply-To: <55AD1994.5040504@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: Spencer Baugh <sbaugh@catern.com>, Chris Zankel <czankel@purestorage.com>
+To: Tomas Henzl <thenzl@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-From: Spencer Baugh <sbaugh@catern.com>
+Thanks for the comment Tomas.  I'll submit another patch with range.
 
-From: Chris Zankel <czankel@purestorage.com>
 
-The initiatorname field in se_acl_lun is only a copy of the same field
-in se_node_acl, so remove it and use the version in se_node_acl where
-needed (it's actually only used for pr_debug)
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Monday, July 20, 2015 8:54 AM
+To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Mahesh Rajashekhara; Rich Bono; Achim Leubner; Murthy Bhat
+Subject: Re: [PATCH V3 10/10] [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_exact()
 
-Signed-off-by: Chris Zankel <czankel@purestorage.com>
----
- drivers/target/target_core_device.c          | 8 +++-----
- drivers/target/target_core_fabric_configfs.c | 2 +-
- include/target/target_core_base.h            | 1 -
- 3 files changed, 4 insertions(+), 7 deletions(-)
+On 8.7.2015 01:16, rajinikanth.pandurangan@pmcs.com wrote:
+> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+> 
+> Description:
+> 	As pci_enable_msix() deprecated, replaced with 
+> pci_enable_msix_exact()
+> 
+> Changes from V2:
+>  Newly created for V3 based on review comment.
+> 
+> Signed-off-by: Rajinikanth Pandurangan 
+> <rajinikanth.pandurangan@pmcs.com>
+> ---
+>  drivers/scsi/aacraid/comminit.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 09e682b..c4a8db6 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -620,8 +620,6 @@ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(
- 
- 	lacl->mapped_lun = mapped_lun;
- 	lacl->se_lun_nacl = nacl;
--	snprintf(lacl->initiatorname, TRANSPORT_IQN_LEN, "%s",
--		 nacl->initiatorname);
- 
- 	return lacl;
- }
-@@ -656,7 +654,7 @@ int core_dev_add_initiator_node_lun_acl(
- 		" InitiatorNode: %s\n", tpg->se_tpg_tfo->get_fabric_name(),
- 		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun, lacl->mapped_lun,
- 		(lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) ? "RW" : "RO",
--		lacl->initiatorname);
-+		nacl->initiatorname);
- 	/*
- 	 * Check to see if there are any existing persistent reservation APTPL
- 	 * pre-registrations that need to be enabled for this LUN ACL..
-@@ -688,7 +686,7 @@ int core_dev_del_initiator_node_lun_acl(
- 		" InitiatorNode: %s Mapped LUN: %llu\n",
- 		tpg->se_tpg_tfo->get_fabric_name(),
- 		tpg->se_tpg_tfo->tpg_get_tag(tpg), lun->unpacked_lun,
--		lacl->initiatorname, lacl->mapped_lun);
-+		nacl->initiatorname, lacl->mapped_lun);
- 
- 	return 0;
- }
-@@ -701,7 +699,7 @@ void core_dev_free_initiator_node_lun_acl(
- 		" Mapped LUN: %llu\n", tpg->se_tpg_tfo->get_fabric_name(),
- 		tpg->se_tpg_tfo->tpg_get_tag(tpg),
- 		tpg->se_tpg_tfo->get_fabric_name(),
--		lacl->initiatorname, lacl->mapped_lun);
-+		lacl->se_lun_nacl->initiatorname, lacl->mapped_lun);
- 
- 	kfree(lacl);
- }
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 48a3698..be42429 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -203,7 +203,7 @@ static ssize_t target_fabric_mappedlun_store_write_protect(
- 	pr_debug("%s_ConfigFS: Changed Initiator ACL: %s"
- 		" Mapped LUN: %llu Write Protect bit to %s\n",
- 		se_tpg->se_tpg_tfo->get_fabric_name(),
--		lacl->initiatorname, lacl->mapped_lun, (op) ? "ON" : "OFF");
-+		se_nacl->initiatorname, lacl->mapped_lun, (op) ? "ON" : "OFF");
- 
- 	return count;
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 0a7c44e..b59b61a 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -598,7 +598,6 @@ struct se_ml_stat_grps {
- };
- 
- struct se_lun_acl {
--	char			initiatorname[TRANSPORT_IQN_LEN];
- 	u64			mapped_lun;
- 	struct se_node_acl	*se_lun_nacl;
- 	struct se_lun		*se_lun;
--- 
-2.4.3
+> 
+> diff --git a/drivers/scsi/aacraid/comminit.c 
+> b/drivers/scsi/aacraid/comminit.c index b4b6088..e4ff47e 100644
+> --- a/drivers/scsi/aacraid/comminit.c
+> +++ b/drivers/scsi/aacraid/comminit.c
+> @@ -366,7 +366,7 @@ void aac_define_int_mode(struct aac_dev *dev)
+>  
+>  	if (msi_count > 1 &&
+>  	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
+> -		i = pci_enable_msix(dev->pdev,
+> +		i = pci_enable_msix_exact(dev->pdev,
+>  				    dev->msixentry,
+>  				    msi_count);
+>  		 /* Check how many MSIX vectors are allocated */ @@ -374,7 +374,7 
+> @@ void aac_define_int_mode(struct aac_dev *dev)
+>  			dev->msi_enabled = 1;
+>  			if (i) {
+Hi Rajinikanth,
+the pci_enable_msix_exact is not a 1;1 replacement for pci_enable_msix, you shouldn't use it this way - it never returns a positive value.
+What you probably want is to use pci_enable_msix_range
+
+Cheers,
+Tomas
+
+>  				msi_count = i;
+> -				if (pci_enable_msix(dev->pdev,
+> +				if (pci_enable_msix_exact(dev->pdev,
+>  				    dev->msixentry,
+>  				    msi_count)) {
+>  					dev->msi_enabled = 0;
+> 
 
