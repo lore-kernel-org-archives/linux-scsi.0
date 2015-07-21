@@ -1,46 +1,41 @@
 From: Spencer Baugh <sbaugh@catern.com>
-Subject: [PATCH] target/iscsi: Fix double free of a TUR followed by a solicited NOPOUT
-Date: Tue, 21 Jul 2015 15:07:56 -0700
-Message-ID: <1437516477-30554-4-git-send-email-sbaugh@catern.com>
+Subject: [PATCH] qla2xxx: Return the fabric command state for non-task management requests
+Date: Tue, 21 Jul 2015 15:07:55 -0700
+Message-ID: <1437516477-30554-3-git-send-email-sbaugh@catern.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Andy Grover <agrover@redhat.com>, Alexei Potashnik <alexei@purestorage.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
+To: "supporter:QLOGIC QLA2XXX FC-SCSI DRIVER" <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:QLOGIC QLA2XXX FC-SCSI DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Dilip Kumar Uppugandla <dilip@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Alexei Potashnik <alexei@purestorage.com>
+From: Dilip Kumar Uppugandla <dilip@purestorage.com>
 
-Make sure all non-READ SCSI commands get targ_xfer_tag initialized
-to 0xffffffff, not just WRITEs.
+Invoking get_cmd_state for qla2xxx always returns 0. Instead change it
+to return the actual fabric state from qla_tgt_cmd. This will help with
+debugging.
 
-Double-free of a TUR cmd object occurs under the following scenario:
-
-1. TUR received (targ_xfer_tag is uninitialized and left at 0)
-2. TUR status sent
-3. First unsolicited NOPIN is sent to initiator (gets targ_xfer_tag of 0)
-4. NOPOUT for NOPIN (with TTT=0) arrives
- - its ExpStatSN acks TUR status, TUR is queued for removal
- - LIO tries to find NOPIN with TTT=0, but finds the same TUR instead,
-   TUR is queued for removal for the 2nd time
-
-Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
+Signed-off-by: Dilip Kumar Uppugandla <dilip@purestorage.com>
 Signed-off-by: Spencer Baugh <sbaugh@catern.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index a4cf58c..ebb1ece 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -970,7 +970,7 @@ int iscsit_setup_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
- 	conn->sess->init_task_tag = cmd->init_task_tag = hdr->itt;
- 	if (hdr->flags & ISCSI_FLAG_CMD_READ) {
- 		cmd->targ_xfer_tag = session_get_next_ttt(conn->sess);
--	} else if (hdr->flags & ISCSI_FLAG_CMD_WRITE)
-+	} else
- 		cmd->targ_xfer_tag = 0xFFFFFFFF;
- 	cmd->cmd_sn		= be32_to_cpu(hdr->cmdsn);
- 	cmd->exp_stat_sn	= be32_to_cpu(hdr->exp_statsn);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index d9a8c60..e859586 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -420,6 +420,12 @@ static void tcm_qla2xxx_set_default_node_attrs(struct se_node_acl *nacl)
+ 
+ static int tcm_qla2xxx_get_cmd_state(struct se_cmd *se_cmd)
+ {
++	if (!(se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)) {
++		struct qla_tgt_cmd *cmd = container_of(se_cmd,
++				struct qla_tgt_cmd, se_cmd);
++		return cmd->state;
++	}
++
+ 	return 0;
+ }
+ 
 -- 
 2.4.3
