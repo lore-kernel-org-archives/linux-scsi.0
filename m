@@ -1,16 +1,16 @@
 From: <rajinikanth.pandurangan@pmcs.com>
-Subject: [PATCH V4 09/10] [SCSI] aacraid: Update driver version
-Date: Tue, 21 Jul 2015 10:59:30 -0700
-Message-ID: <1437501571-2475-10-git-send-email-rajinikanth.pandurangan@pmcs.com>
+Subject: [PATCH V4 10/10] [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_range()
+Date: Tue, 21 Jul 2015 10:59:31 -0700
+Message-ID: <1437501571-2475-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
 References: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:34212 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:34227 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933524AbbGUSBC (ORCPT
+	by vger.kernel.org with ESMTP id S932970AbbGUSBI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jul 2015 14:01:02 -0400
+	Tue, 21 Jul 2015 14:01:08 -0400
 In-Reply-To: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,38 +19,62 @@ Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, mahesh.raja
 
 From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
+Description:
+        As pci_enable_msix() deprecated, replaced with pci_enable_msix_range()
+
+V3 Reviewed/commented by:
+	Tomas Henzl <thenzl@redhat.com>
+
+Changes from V3:
+	Uses pci_enable_msix_range() instead of pci_enable_msix_exact()
+based on review comment.
+
 Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- drivers/scsi/aacraid/linit.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/comminit.c | 20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 7b95227..73c3384 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index b4b6088..3ba6e97 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -338,7 +338,7 @@ static int aac_comm_init(struct aac_dev * dev)
  
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 35dd849..3fabfa1 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -56,7 +56,7 @@
+ void aac_define_int_mode(struct aac_dev *dev)
+ {
+-	int i, msi_count;
++	int i, msi_count, min_msix;
  
- #include "aacraid.h"
+ 	msi_count = i = 0;
+ 	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
+@@ -366,22 +366,14 @@ void aac_define_int_mode(struct aac_dev *dev)
  
--#define AAC_DRIVER_VERSION		"1.2-1"
-+#define AAC_DRIVER_VERSION		"1.2-2"
- #ifndef AAC_DRIVER_BRANCH
- #define AAC_DRIVER_BRANCH		""
- #endif
+ 	if (msi_count > 1 &&
+ 	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
+-		i = pci_enable_msix(dev->pdev,
++		min_msix = 8;
++		i = pci_enable_msix_range(dev->pdev,
+ 				    dev->msixentry,
++				    min_msix,
+ 				    msi_count);
+-		 /* Check how many MSIX vectors are allocated */
+-		if (i >= 0) {
++		if (i > 0) {
+ 			dev->msi_enabled = 1;
+-			if (i) {
+-				msi_count = i;
+-				if (pci_enable_msix(dev->pdev,
+-				    dev->msixentry,
+-				    msi_count)) {
+-					dev->msi_enabled = 0;
+-					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+-							dev->name, dev->id, i);
+-				}
+-			}
++			msi_count = i;
+ 		} else {
+ 			dev->msi_enabled = 0;
+ 			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
 -- 
 1.9.3
 
