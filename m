@@ -1,82 +1,122 @@
-From: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>
-Subject: RE: [PATCH V3 10/10] [SCSI] aacraid: Replace pci_enable_msix() with
- pci_enable_msix_exact()
-Date: Mon, 20 Jul 2015 23:41:38 +0000
-Message-ID: <E34C6B6293F0214497D0C55B92526C05EAFF791E@BBYEXM02.pmc-sierra.internal>
-References: <1436310984-4519-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <1436310984-4519-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <55AD1994.5040504@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH resend] libsas: fix "sysfs group not found" warnings at port
+ teardown time
+Date: Mon, 20 Jul 2015 20:04:50 -0400
+Message-ID: <20150721000032.35782.27427.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49149 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750869AbbGTXlk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jul 2015 19:41:40 -0400
-In-Reply-To: <55AD1994.5040504@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: Praveen Murali <pmurali@logicube.com>, linux-scsi@vger.kernel.org, JBottomley@odin.com, stable@vger.kernel.org, Hannes Reinecke <hare@suse.de>, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-Thanks for the comment Tomas.  I'll submit another patch with range.
+Praveen reports:
 
+    After some debugging this is what I have found
 
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Monday, July 20, 2015 8:54 AM
-To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Mahesh Rajashekhara; Rich Bono; Achim Leubner; Murthy Bhat
-Subject: Re: [PATCH V3 10/10] [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_exact()
+    sas_phye_loss_of_signal gets triggered on phy_event from mvsas
+        sas_phye_loss_of_signal calls sas_deform_port
+             sas_deform_port posts a DISCE_DESTRUCT event (sas_unregister_domain_devices-> sas_unregister_dev)
+             sas_deform_port calls sas_port_delete
+                     sas_port_delete calls sas_port_delete_link
+                             sysfs_remove_group: kobject 'port-X:Y'
+                     sas_port_delete calls device_del
+                             sysfs_remove_group: kobject 'port-X:Y'
 
-On 8.7.2015 01:16, rajinikanth.pandurangan@pmcs.com wrote:
-> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
-> 
-> Description:
-> 	As pci_enable_msix() deprecated, replaced with 
-> pci_enable_msix_exact()
-> 
-> Changes from V2:
->  Newly created for V3 based on review comment.
-> 
-> Signed-off-by: Rajinikanth Pandurangan 
-> <rajinikanth.pandurangan@pmcs.com>
-> ---
->  drivers/scsi/aacraid/comminit.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+    sas_destruct_devices gets triggered for the destruct event (DISCE_DESTRUCT)
+        sas_destruct_devices calls sas_rphy_delete
+            sas_rphy_delete calls scsi_remove_device
+                 scsi_remove_device calls __scsi_remove_device
+                         __scsi_remove_device calls bsg_unregister_queue
+                                 bsg_unregister_queue -> device_unregister -> device_del -> sysfs_remove_group: kobject 'X:0:0:0'
 
-> 
-> diff --git a/drivers/scsi/aacraid/comminit.c 
-> b/drivers/scsi/aacraid/comminit.c index b4b6088..e4ff47e 100644
-> --- a/drivers/scsi/aacraid/comminit.c
-> +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -366,7 +366,7 @@ void aac_define_int_mode(struct aac_dev *dev)
->  
->  	if (msi_count > 1 &&
->  	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
-> -		i = pci_enable_msix(dev->pdev,
-> +		i = pci_enable_msix_exact(dev->pdev,
->  				    dev->msixentry,
->  				    msi_count);
->  		 /* Check how many MSIX vectors are allocated */ @@ -374,7 +374,7 
-> @@ void aac_define_int_mode(struct aac_dev *dev)
->  			dev->msi_enabled = 1;
->  			if (i) {
-Hi Rajinikanth,
-the pci_enable_msix_exact is not a 1;1 replacement for pci_enable_msix, you shouldn't use it this way - it never returns a positive value.
-What you probably want is to use pci_enable_msix_range
+    Since X:0:0:0 falls under port-X:Y (which got deleted during
+    sas_port_delete), this call results in the warning. All the later
+    warnings in the dmesg output I sent earlier are trying to delete objects
+    under port-X:Y. Since port-X:Y got recursively deleted, all these calls
+    result in warnings. Since, the PHY and DISC events are processed in two
+    different work queues (and one triggers the other), is there any way
+    other than checking if the object exists in sysfs (in device_del) before
+    deleting?
 
-Cheers,
-Tomas
+    WARNING: CPU: 2 PID: 6 at fs/sysfs/group.c:219 device_del+0x40/0x1c0()
+    sysfs group ffffffff818b97e0 not found for kobject '2:0:4:0'
+    [..]
+    CPU: 2 PID: 6 Comm: kworker/u8:0 Tainted: P        W  O  3.16.7-ckt9-logicube-ng.3 #1
+    Hardware name: To be filled by O.E.M. To be filled by O.E.M./VT6085, BIOS 4.6.5 01/23/2015
+    Workqueue: scsi_wq_2 sas_destruct_devices [libsas]
+     0000000000000009 ffffffff8151cd18 ffff88011b35bcd8 ffffffff810687b7
+     ffff88011a661400 ffff88011b35bd28 ffff8800c6e5e968 ffff880000028810
+     ffff8800c89f2c00 ffffffff8106881c ffffffff81733b68 0000000000000028
+    Call Trace:
+     [<ffffffff8151cd18>] ? dump_stack+0x41/0x51
+     [<ffffffff810687b7>] ? warn_slowpath_common+0x77/0x90
+     [<ffffffff8106881c>] ? warn_slowpath_fmt+0x4c/0x50
+     [<ffffffff813ad2d0>] ? device_del+0x40/0x1c0
+     [<ffffffff813ad46a>] ? device_unregister+0x1a/0x70
+     [<ffffffff812a535e>] ? bsg_unregister_queue+0x5e/0xb0
+     [<ffffffffa00781a9>] ? __scsi_remove_device+0xa9/0xd0 [scsi_mod]
 
->  				msi_count = i;
-> -				if (pci_enable_msix(dev->pdev,
-> +				if (pci_enable_msix_exact(dev->pdev,
->  				    dev->msixentry,
->  				    msi_count)) {
->  					dev->msi_enabled = 0;
-> 
+It appears we've always been double deleting the devices below sas_port,
+but recent sysfs changes now exposes this problem.  Libsas should delete
+all the devices from rphy down before deleting the parent port.
 
+Cc: <stable@vger.kernel.org>
+Reported-by: Praveen Murali <pmurali@logicube.com>
+Tested-by: Praveen Murali <pmurali@logicube.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+
+Hi Andrew,
+
+Can you take this through -mm.  It's been on linux-scsi for a couple
+months, and Hannes has reviewed it.
+
+ drivers/scsi/libsas/sas_discover.c |    6 +++---
+ drivers/scsi/libsas/sas_port.c     |    1 -
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 60de66252fa2..a4db770fe8b0 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -362,11 +362,14 @@ static void sas_destruct_devices(struct work_struct *work)
+ 	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
+ 
+ 	list_for_each_entry_safe(dev, n, &port->destroy_list, disco_list_node) {
++		struct sas_port *sas_port = dev_to_sas_port(dev->rphy->dev.parent);
++
+ 		list_del_init(&dev->disco_list_node);
+ 
+ 		sas_remove_children(&dev->rphy->dev);
+ 		sas_rphy_delete(dev->rphy);
+ 		sas_unregister_common_dev(port, dev);
++		sas_port_delete(sas_port);
+ 	}
+ }
+ 
+@@ -400,9 +403,6 @@ void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
+ 
+ 	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
+ 		sas_unregister_dev(port, dev);
+-
+-	port->port->rphy = NULL;
+-
+ }
+ 
+ void sas_device_set_phy(struct domain_device *dev, struct sas_port *port)
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index d3c5297c6c89..9a25ae3a52a4 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -219,7 +219,6 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
+ 
+ 	if (port->num_phys == 1) {
+ 		sas_unregister_domain_devices(port, gone);
+-		sas_port_delete(port->port);
+ 		port->port = NULL;
+ 	} else {
+ 		sas_port_delete_phy(port->port, phy->phy);
