@@ -1,80 +1,74 @@
-From: <rajinikanth.pandurangan@pmcs.com>
-Subject: [PATCH V4 10/10] [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_range()
-Date: Tue, 21 Jul 2015 10:59:31 -0700
-Message-ID: <1437501571-2475-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
-References: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:34227 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932970AbbGUSBI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jul 2015 14:01:08 -0400
-In-Reply-To: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Spencer Baugh <sbaugh@catern.com>
+Subject: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
+Date: Tue, 21 Jul 2015 15:07:53 -0700
+Message-ID: <1437516477-30554-1-git-send-email-sbaugh@catern.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Brian Bunker <brian@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, mahesh.rajashekhara@pmcs.com, achim.leubner@pmcs.com, murthy.bhat@pmcs.com, rajinikanth.pandurangan@pmcs.com
 
-From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+From: Brian Bunker <brian@purestorage.com>
 
-Description:
-        As pci_enable_msix() deprecated, replaced with pci_enable_msix_range()
+AIX servers using VIOS servers that virtualize FC cards will have a
+problem booting without support for START_STOP_UNIT.
 
-V3 Reviewed/commented by:
-	Tomas Henzl <thenzl@redhat.com>
-
-Changes from V3:
-	Uses pci_enable_msix_range() instead of pci_enable_msix_exact()
-based on review comment.
-
-Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Signed-off-by: Spencer Baugh <sbaugh@catern.com>
 ---
- drivers/scsi/aacraid/comminit.c | 20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ drivers/target/target_core_sbc.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index b4b6088..3ba6e97 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -338,7 +338,7 @@ static int aac_comm_init(struct aac_dev * dev)
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index e318ddb..996e584 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -154,6 +154,35 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 	return 0;
+ }
  
- void aac_define_int_mode(struct aac_dev *dev)
++static sense_reason_t
++sbc_emulate_startstop(struct se_cmd *cmd)
++{
++	unsigned char *cdb = cmd->t_task_cdb;
++
++	/* From SBC-3:
++	 * Immediate bit should be set since there is nothing to complete
++	 * POWER CONDITION MODIFIER 0h
++	 */
++	if (!(cdb[1] & 1) || (cdb[2] | cdb[3]))
++		return TCM_INVALID_CDB_FIELD;
++
++	/* From SBC-3:
++	 * POWER CONDITION 0h START_VALID - process START and LOEJ
++	 */
++	if (cdb[4] >> 4 & 0xf)
++		return TCM_INVALID_CDB_FIELD;
++
++	/* From SBC-3:
++	 * LOEJ 0h - nothing to load or unload
++	 * START 1h - we are ready
++	 */
++	if (!(cdb[4] & 1) || ((cdb[4] & 2) | (cdb[4] & 4)))
++		return TCM_INVALID_CDB_FIELD;
++
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
++	return 0;
++}
++
+ sector_t sbc_get_write_same_sectors(struct se_cmd *cmd)
  {
--	int i, msi_count;
-+	int i, msi_count, min_msix;
- 
- 	msi_count = i = 0;
- 	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
-@@ -366,22 +366,14 @@ void aac_define_int_mode(struct aac_dev *dev)
- 
- 	if (msi_count > 1 &&
- 	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
--		i = pci_enable_msix(dev->pdev,
-+		min_msix = 8;
-+		i = pci_enable_msix_range(dev->pdev,
- 				    dev->msixentry,
-+				    min_msix,
- 				    msi_count);
--		 /* Check how many MSIX vectors are allocated */
--		if (i >= 0) {
-+		if (i > 0) {
- 			dev->msi_enabled = 1;
--			if (i) {
--				msi_count = i;
--				if (pci_enable_msix(dev->pdev,
--				    dev->msixentry,
--				    msi_count)) {
--					dev->msi_enabled = 0;
--					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
--							dev->name, dev->id, i);
--				}
--			}
-+			msi_count = i;
- 		} else {
- 			dev->msi_enabled = 0;
- 			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
+ 	u32 num_blocks;
+@@ -1069,6 +1098,10 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		size = 0;
+ 		cmd->execute_cmd = sbc_emulate_noop;
+ 		break;
++	case START_STOP:
++		size = 0;
++		cmd->execute_cmd = sbc_emulate_startstop;
++		break;
+ 	default:
+ 		ret = spc_parse_cdb(cmd, &size);
+ 		if (ret)
 -- 
-1.9.3
-
+2.4.3
