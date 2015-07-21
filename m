@@ -1,121 +1,65 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [PATCH 1/2] mpt2sas: Refcount sas_device objects and fix unsafe
- list usage
-Date: Tue, 21 Jul 2015 00:06:20 -0700
-Message-ID: <20150721070620.GB1353000@mail.thefacebook.com>
-References: <1433821856-2815280-1-git-send-email-calvinowens@fb.com>
- <1436675096-324527-1-git-send-email-calvinowens@fb.com>
- <1436675096-324527-2-git-send-email-calvinowens@fb.com>
- <20150713065206.GC31842@infradead.org>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH] target/iscsi: fix digest computation for chained SGs
+Date: Tue, 21 Jul 2015 11:57:57 +0300
+Message-ID: <55AE0995.2010209@dev.mellanox.co.il>
+References: <1437437534-17931-1-git-send-email-sbaugh@catern.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150713065206.GC31842@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Bart Van Assche <bart.vanassche@sandisk.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1437437534-17931-1-git-send-email-sbaugh@catern.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Spencer Baugh <sbaugh@catern.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: joern@purestorage.com, Alexei Potashnik <alexei@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sunday 07/12 at 23:52 -0700, Christoph Hellwig wrote:
-> On Sat, Jul 11, 2015 at 09:24:55PM -0700, Calvin Owens wrote:
-> > These objects can be referenced concurrently throughout the driver, we
-> > need a way to make sure threads can't delete them out from under each
-> > other. This patch adds the refcount, and refactors the code to use it.
-> > 
-> > Additionally, we cannot iterate over the sas_device_list without
-> > holding the lock, or we risk corrupting random memory if items are
-> > added or deleted as we iterate. This patch refactors _scsih_probe_sas()
-> > to use the sas_device_list in a safe way.
-> > 
-> > Cc: Christoph Hellwig <hch@infradead.org>
-> > Cc: Bart Van Assche <bart.vanassche@sandisk.com>
-> > Signed-off-by: Calvin Owens <calvinowens@fb.com>
-> > ---
-> >  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
-> >  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 434 ++++++++++++++++++++-----------
-> >  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
-> >  3 files changed, 315 insertions(+), 153 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> > index caff8d1..78f41ac 100644
-> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> > @@ -238,6 +238,7 @@
-> >   * @flags: MPT_TARGET_FLAGS_XXX flags
-> >   * @deleted: target flaged for deletion
-> >   * @tm_busy: target is busy with TM request.
-> > + * @sdev: The sas_device associated with this target
-> >   */
-> >  struct MPT2SAS_TARGET {
-> >  	struct scsi_target *starget;
-> > @@ -248,6 +249,7 @@ struct MPT2SAS_TARGET {
-> >  	u32	flags;
-> >  	u8	deleted;
-> >  	u8	tm_busy;
-> > +	struct _sas_device *sdev;
-> >  };
-> >  
-> >  
-> > @@ -376,8 +378,24 @@ struct _sas_device {
-> >  	u8	phy;
-> >  	u8	responding;
-> >  	u8	pfa_led_on;
-> > +	struct kref refcount;
-> >  };
-> >  
-> > +static inline void sas_device_get(struct _sas_device *s)
-> > +{
-> > +	kref_get(&s->refcount);
-> > +}
-> > +
-> > +static inline void sas_device_free(struct kref *r)
-> > +{
-> > +	kfree(container_of(r, struct _sas_device, refcount));
-> > +}
-> > +
-> > +static inline void sas_device_put(struct _sas_device *s)
-> > +{
-> > +	kref_put(&s->refcount, sas_device_free);
-> > +}
-> > +
-> >  /**
-> >   * struct _raid_device - raid volume link list
-> >   * @list: sas device list
-> > @@ -1095,7 +1113,9 @@ struct _sas_node *mpt2sas_scsih_expander_find_by_handle(struct MPT2SAS_ADAPTER *
-> >      u16 handle);
-> >  struct _sas_node *mpt2sas_scsih_expander_find_by_sas_address(struct MPT2SAS_ADAPTER
-> >      *ioc, u64 sas_address);
-> > -struct _sas_device *mpt2sas_scsih_sas_device_find_by_sas_address(
-> > +struct _sas_device *mpt2sas_get_sdev_by_addr(
-> > +    struct MPT2SAS_ADAPTER *ioc, u64 sas_address);
-> > +struct _sas_device *__mpt2sas_get_sdev_by_addr(
-> >      struct MPT2SAS_ADAPTER *ioc, u64 sas_address);
-> >  
-> >  void mpt2sas_port_enable_complete(struct MPT2SAS_ADAPTER *ioc);
-> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > index 3f26147..fad80ce 100644
-> > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > @@ -526,8 +526,43 @@ _scsih_determine_boot_device(struct MPT2SAS_ADAPTER *ioc,
-> >  	}
-> >  }
-> >  
-> > +struct _sas_device *
-> > +__mpt2sas_get_sdev_from_target(struct MPT2SAS_TARGET *tgt_priv)
-> > +{
-> > +	struct _sas_device *ret;
-> > +
-> 
-> Does this need a:
-> 
-> 	assert_spin_locked(&ioc->sas_device_lock);
-> 
-> ?
+On 7/21/2015 3:12 AM, Spencer Baugh wrote:
+> From: Alexei Potashnik <alexei@purestorage.com>
+>
+> Current implementation assumes that all the buffers of an IO are linked
+> with a single SG list. Which makes it fail if SG chaining is used.
+>
+> Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
+> ---
+>   drivers/target/iscsi/iscsi_target.c | 9 ++++-----
+>   1 file changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 4e68b62..a4cf58c 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1209,7 +1209,6 @@ static u32 iscsit_do_crypto_hash_sg(
+>   	u8 *pad_bytes)
+>   {
+>   	u32 data_crc;
+> -	u32 i;
+>   	struct scatterlist *sg;
+>   	unsigned int page_off;
+>
+> @@ -1218,15 +1217,15 @@ static u32 iscsit_do_crypto_hash_sg(
+>   	sg = cmd->first_data_sg;
+>   	page_off = cmd->first_data_sg_off;
+>
+> -	i = 0;
+>   	while (data_length) {
+> -		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
+> +		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
+>
+> -		crypto_hash_update(hash, &sg[i], cur_len);
+> +		crypto_hash_update(hash, sg, cur_len);
+>
+>   		data_length -= cur_len;
+>   		page_off = 0;
+> -		i++;
+> +		/* iscsit_map_iovec has already checked for invalid sg pointers */
+> +		sg = sg_next(sg);
+>   	}
+>
+>   	if (padding) {
+>
 
-Yeah: I'll add that.
+How were you able to get a chained SG list in the target code?
 
-Thanks very much,
-Calvin
+In any event, looks good,
 
-> Otherwise this looks sensible to me.
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
