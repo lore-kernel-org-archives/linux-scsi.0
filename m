@@ -1,37 +1,64 @@
-From: Spencer Baugh <spencer.baugh@purestorage.com>
-Subject: Re: [PATCH 1/2] target: remove unused lun_flags field from se_lun
-Date: Tue, 21 Jul 2015 10:03:29 -0700
-Message-ID: <87r3o1igta.fsf@ponos.purestorage.com>
-References: <1437434990-13452-1-git-send-email-Spencer.baugh@purestorage.com> <20150721134042.GA30664@infradead.org>
+From: <rajinikanth.pandurangan@pmcs.com>
+Subject: [PATCH V4 00/10] [SCSI] aacraid: Patchset for aacraid driver version 41010
+Date: Tue, 21 Jul 2015 10:59:21 -0700
+Message-ID: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36046 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755714AbbGURDd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2015 13:03:33 -0400
-Received: by pachj5 with SMTP id hj5so123407239pac.3
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2015 10:03:33 -0700 (PDT)
-In-Reply-To: <20150721134042.GA30664@infradead.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42197 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755042AbbGUR7r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jul 2015 13:59:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Spencer Baugh <sbaugh@catern.com>, Chris Zankel <czankel@purestorage.com>
+To: jbottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, mahesh.rajashekhara@pmcs.com, achim.leubner@pmcs.com, murthy.bhat@pmcs.com, rajinikanth.pandurangan@pmcs.com
 
-Christoph Hellwig <hch@infradead.org> writes:
+From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
-> Looks good,
->
-> but what's up with your From lines:
->
-> On Mon, Jul 20, 2015 at 04:29:49PM -0700, Spencer Baugh wrote:
->> From: Spencer Baugh <sbaugh@catern.com>
->> 
->> From: Chris Zankel <czankel@purestorage.com>
->
-> plus another address for you in the actual email From line.  Who
-> did actually write this patch?
+This patchset includes the following changes (bug fixes and new feature support)
+specific to aacraid driver.
 
-Sorry, ignore the first From: line; the correct one is
-From: Chris Zankel <czankel@purestorage.com>
-for both patches
+V4:
+Updated code with pci_enable_msix_range instead of exact.
+
+V3:
+Increased msleep() time from 1 to 20.
+Created new patch for pci_enable_msix() replacement.
+Changed subject/description of patch 03.
+
+Reviewed by:
+Tomas Henzl <thenzl@redhat.com>,
+Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>,
+Johannes Thumshirn <jthumshirn@suse.de>,
+James Bottomley <James.Bottomley@HansenPartnership.com>
+
+Rajinikanth Pandurangan (10):
+  [SCSI] aacraid: Fix for logical device name and UID not exposed
+    to the OS
+  [SCSI] aacraid: Add Power Management support
+  [SCSI] aacraid: Change interrupt mode to MSI for series-6     
+    controller
+  [SCSI] aacraid: Enable 64-bit write to controller register
+  [SCSI] aacraid: Tune response path if IsFastPath bit set
+  [SCSI] aacraid: Reset irq affinity hints before releasing irq
+  [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from
+    suspend
+  [SCSI] aacraid: Send commit-config to controller firmware
+  [SCSI] aacraid: Update driver version
+  [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_range()
+
+ drivers/scsi/aacraid/aachba.c   | 263 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/aacraid.h  |  18 ++-
+ drivers/scsi/aacraid/comminit.c | 147 +++++++++++-----------
+ drivers/scsi/aacraid/commsup.c  | 113 ++++++++++++-----
+ drivers/scsi/aacraid/linit.c    | 159 +++++++++++++++++++++++-
+ drivers/scsi/aacraid/rx.c       |   1 +
+ drivers/scsi/aacraid/sa.c       |   1 +
+ drivers/scsi/aacraid/src.c      |  64 +++-------
+ 8 files changed, 483 insertions(+), 283 deletions(-)
+
+-- 
+1.9.3
+
