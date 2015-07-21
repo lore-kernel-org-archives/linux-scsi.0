@@ -1,65 +1,30 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] target/iscsi: fix digest computation for chained SGs
-Date: Tue, 21 Jul 2015 11:57:57 +0300
-Message-ID: <55AE0995.2010209@dev.mellanox.co.il>
-References: <1437437534-17931-1-git-send-email-sbaugh@catern.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] target: remove unused lun_flags field from se_lun
+Date: Tue, 21 Jul 2015 06:40:42 -0700
+Message-ID: <20150721134042.GA30664@infradead.org>
+References: <1437434990-13452-1-git-send-email-Spencer.baugh@purestorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1437437534-17931-1-git-send-email-sbaugh@catern.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Spencer Baugh <sbaugh@catern.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: joern@purestorage.com, Alexei Potashnik <alexei@purestorage.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:33428 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106AbbGUNks (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2015 09:40:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1437434990-13452-1-git-send-email-Spencer.baugh@purestorage.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Spencer Baugh <spencer.baugh@purestorage.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Spencer Baugh <sbaugh@catern.com>, Chris Zankel <czankel@purestorage.com>
 
-On 7/21/2015 3:12 AM, Spencer Baugh wrote:
-> From: Alexei Potashnik <alexei@purestorage.com>
->
-> Current implementation assumes that all the buffers of an IO are linked
-> with a single SG list. Which makes it fail if SG chaining is used.
->
-> Signed-off-by: Alexei Potashnik <alexei@purestorage.com>
-> ---
->   drivers/target/iscsi/iscsi_target.c | 9 ++++-----
->   1 file changed, 4 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index 4e68b62..a4cf58c 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -1209,7 +1209,6 @@ static u32 iscsit_do_crypto_hash_sg(
->   	u8 *pad_bytes)
->   {
->   	u32 data_crc;
-> -	u32 i;
->   	struct scatterlist *sg;
->   	unsigned int page_off;
->
-> @@ -1218,15 +1217,15 @@ static u32 iscsit_do_crypto_hash_sg(
->   	sg = cmd->first_data_sg;
->   	page_off = cmd->first_data_sg_off;
->
-> -	i = 0;
->   	while (data_length) {
-> -		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
-> +		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
->
-> -		crypto_hash_update(hash, &sg[i], cur_len);
-> +		crypto_hash_update(hash, sg, cur_len);
->
->   		data_length -= cur_len;
->   		page_off = 0;
-> -		i++;
-> +		/* iscsit_map_iovec has already checked for invalid sg pointers */
-> +		sg = sg_next(sg);
->   	}
->
->   	if (padding) {
->
+Looks good,
 
-How were you able to get a chained SG list in the target code?
+but what's up with your From lines:
 
-In any event, looks good,
+On Mon, Jul 20, 2015 at 04:29:49PM -0700, Spencer Baugh wrote:
+> From: Spencer Baugh <sbaugh@catern.com>
+> 
+> From: Chris Zankel <czankel@purestorage.com>
 
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+plus another address for you in the actual email From line.  Who
+did actually write this patch?
