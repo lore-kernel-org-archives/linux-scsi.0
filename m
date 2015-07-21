@@ -1,41 +1,21 @@
-From: Spencer Baugh <sbaugh@catern.com>
-Subject: [PATCH] qla2xxx: Return the fabric command state for non-task management requests
-Date: Tue, 21 Jul 2015 15:07:55 -0700
-Message-ID: <1437516477-30554-3-git-send-email-sbaugh@catern.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "supporter:QLOGIC QLA2XXX FC-SCSI DRIVER" <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:QLOGIC QLA2XXX FC-SCSI DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Dilip Kumar Uppugandla <dilip@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
+From: Spencer Baugh <catern@catern.com>
+Subject: Re: [PATCH] target: fix crash in cmd tracing when cmd didn't match a LUN
+Date: Tue, 21 Jul 2015 18:13:29 -0400
+Message-ID: <87zj2pp3au.fsf@earth.i-did-not-set--mail-host-address--so-tickle-me>
+References: <1437516477-30554-2-git-send-email-sbaugh@catern.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from catern.com ([104.131.201.120]:58877 "EHLO mail.catern.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751769AbbGUWSh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jul 2015 18:18:37 -0400
+In-Reply-To: <1437516477-30554-2-git-send-email-sbaugh@catern.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Alexei Potashnik <alexei@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
 
-From: Dilip Kumar Uppugandla <dilip@purestorage.com>
 
-Invoking get_cmd_state for qla2xxx always returns 0. Instead change it
-to return the actual fabric state from qla_tgt_cmd. This will help with
-debugging.
-
-Signed-off-by: Dilip Kumar Uppugandla <dilip@purestorage.com>
-Signed-off-by: Spencer Baugh <sbaugh@catern.com>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index d9a8c60..e859586 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -420,6 +420,12 @@ static void tcm_qla2xxx_set_default_node_attrs(struct se_node_acl *nacl)
- 
- static int tcm_qla2xxx_get_cmd_state(struct se_cmd *se_cmd)
- {
-+	if (!(se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)) {
-+		struct qla_tgt_cmd *cmd = container_of(se_cmd,
-+				struct qla_tgt_cmd, se_cmd);
-+		return cmd->state;
-+	}
-+
- 	return 0;
- }
- 
--- 
-2.4.3
+Please disregard, depends on another patch. Will send again later. Sorry
+for the noise.
