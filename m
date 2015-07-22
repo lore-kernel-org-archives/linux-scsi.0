@@ -1,63 +1,93 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 07/11] hpsa: add in new controllers
-Date: Wed, 22 Jul 2015 17:19:26 +0200
-Message-ID: <55AFB47E.3020808@redhat.com>
+Subject: Re: [PATCH 09/11] hpsa: add in new offline mode
+Date: Wed, 22 Jul 2015 17:19:41 +0200
+Message-ID: <55AFB48D.2000000@redhat.com>
 References: <20150718160245.31955.16794.stgit@brunhilda>
- <20150718161254.31955.27250.stgit@brunhilda>
+ <20150718161304.31955.11191.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55153 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52129 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934322AbbGVPT3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2015 11:19:29 -0400
-In-Reply-To: <20150718161254.31955.27250.stgit@brunhilda>
+	id S934322AbbGVPTo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jul 2015 11:19:44 -0400
+In-Reply-To: <20150718161304.31955.11191.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hp.com
 Cc: linux-scsi@vger.kernel.org
 
-On 18.7.2015 18:12, Don Brace wrote:
+On 18.7.2015 18:13, Don Brace wrote:
+> From: Scott Benesh <scott.benesh@pmcs.com>
+> 
+> prevent adding volumes that are not available.
+> 
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 Tomas
 
 > ---
->  drivers/scsi/hpsa.c |   10 ++++++++++
->  1 file changed, 10 insertions(+)
+>  drivers/scsi/hpsa.c     |   15 +++++++++++----
+>  drivers/scsi/hpsa_cmd.h |    1 +
+>  2 files changed, 12 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index f34978d..20c29e5 100644
+> index df85f89..c72e900 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -129,6 +129,11 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CD},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSI,     0x103C, 0x21CE},
->  	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0580},
-> +	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0581},
-> +	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0582},
-> +	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0583},
-> +	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0584},
-> +	{PCI_VENDOR_ID_ADAPTEC2, 0x0290, 0x9005, 0x0585},
->  	{PCI_VENDOR_ID_HP_3PAR, 0x0075, 0x1590, 0x0076},
->  	{PCI_VENDOR_ID_HP_3PAR, 0x0075, 0x1590, 0x0087},
->  	{PCI_VENDOR_ID_HP_3PAR, 0x0075, 0x1590, 0x007D},
-> @@ -187,6 +192,11 @@ static struct board_type products[] = {
->  	{0x21CD103C, "Smart Array", &SA5_access},
->  	{0x21CE103C, "Smart HBA", &SA5_access},
->  	{0x05809005, "SmartHBA-SA", &SA5_access},
-> +	{0x05819005, "SmartHBA-SA 8i", &SA5_access},
-> +	{0x05829005, "SmartHBA-SA 8i8e", &SA5_access},
-> +	{0x05839005, "SmartHBA-SA 8e", &SA5_access},
-> +	{0x05849005, "SmartHBA-SA 16i", &SA5_access},
-> +	{0x05859005, "SmartHBA-SA 4i4e", &SA5_access},
->  	{0x00761590, "HP Storage P1224 Array Controller", &SA5_access},
->  	{0x00871590, "HP Storage P1224e Array Controller", &SA5_access},
->  	{0x007D1590, "HP Storage P1228 Array Controller", &SA5_access},
+> @@ -1481,17 +1481,23 @@ static void hpsa_show_volume_status(struct ctlr_info *h,
+>  			h->scsi_host->host_no,
+>  			sd->bus, sd->target, sd->lun);
+>  		break;
+> +	case HPSA_LV_NOT_AVAILABLE:
+> +		dev_info(&h->pdev->dev,
+> +			"C%d:B%d:T%d:L%d Volume is waiting for transforming volume.\n",
+> +			h->scsi_host->host_no,
+> +			sd->bus, sd->target, sd->lun);
+> +		break;
+>  	case HPSA_LV_UNDERGOING_RPI:
+>  		dev_info(&h->pdev->dev,
+> -			"C%d:B%d:T%d:L%d Volume is undergoing rapid parity initialization process.\n",
+> +			"C%d:B%d:T%d:L%d Volume is undergoing rapid parity init.\n",
+>  			h->scsi_host->host_no,
+>  			sd->bus, sd->target, sd->lun);
+>  		break;
+>  	case HPSA_LV_PENDING_RPI:
+>  		dev_info(&h->pdev->dev,
+> -				"C%d:B%d:T%d:L%d Volume is queued for rapid parity initialization process.\n",
+> -				h->scsi_host->host_no,
+> -				sd->bus, sd->target, sd->lun);
+> +			"C%d:B%d:T%d:L%d Volume is queued for rapid parity initialization process.\n",
+> +			h->scsi_host->host_no,
+> +			sd->bus, sd->target, sd->lun);
+>  		break;
+>  	case HPSA_LV_ENCRYPTED_NO_KEY:
+>  		dev_info(&h->pdev->dev,
+> @@ -3262,6 +3268,7 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+>  	/* Keep volume offline in certain cases: */
+>  	switch (ldstat) {
+>  	case HPSA_LV_UNDERGOING_ERASE:
+> +	case HPSA_LV_NOT_AVAILABLE:
+>  	case HPSA_LV_UNDERGOING_RPI:
+>  	case HPSA_LV_PENDING_RPI:
+>  	case HPSA_LV_ENCRYPTED_NO_KEY:
+> diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+> index 1a98bbe..47c756b 100644
+> --- a/drivers/scsi/hpsa_cmd.h
+> +++ b/drivers/scsi/hpsa_cmd.h
+> @@ -164,6 +164,7 @@
+>  /* Logical volume states */
+>  #define HPSA_VPD_LV_STATUS_UNSUPPORTED			0xff
+>  #define HPSA_LV_OK                                      0x0
+> +#define HPSA_LV_NOT_AVAILABLE				0x0b
+>  #define HPSA_LV_UNDERGOING_ERASE			0x0F
+>  #define HPSA_LV_UNDERGOING_RPI				0x12
+>  #define HPSA_LV_PENDING_RPI				0x13
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
