@@ -1,16 +1,16 @@
 From: <rajinikanth.pandurangan@pmcs.com>
-Subject: [PATCH V5 07/11] [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from suspend
-Date: Wed, 22 Jul 2015 09:49:13 -0700
-Message-ID: <1437583757-5449-8-git-send-email-rajinikanth.pandurangan@pmcs.com>
+Subject: [PATCH V5 04/11] [SCSI] aacraid: Enable 64-bit write to controller register
+Date: Wed, 22 Jul 2015 09:49:10 -0700
+Message-ID: <1437583757-5449-5-git-send-email-rajinikanth.pandurangan@pmcs.com>
 References: <1437583757-5449-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57017 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:56942 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965435AbbGVQuG (ORCPT
+	by vger.kernel.org with ESMTP id S965489AbbGVQts (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2015 12:50:06 -0400
+	Wed, 22 Jul 2015 12:49:48 -0400
 In-Reply-To: <1437583757-5449-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,37 +20,94 @@ Cc: aacraid@pmc-sierra.com, harry.yang@pmcs.com, rich.bono@pmcs.com, mahesh.raja
 From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 
 Description:
-        Driver blocks ioctls once it received shutdown/suspend request during
-        suspend/hybernation. This patch unblocks ioctls on resume path.
+        If writeq() not supported, then do atomic two 32bit write
 
 Changes from V2:
 None
 
 Reviewed by:
+ Tomas Henzl <thenzl@redhat.com>,
  Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>,
  Johannes Thumshirn <jthumshirn@suse.de>
 
 Signed-off-by: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
 ---
- drivers/scsi/aacraid/linit.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/aacraid/aacraid.h  |  9 +++++++++
+ drivers/scsi/aacraid/comminit.c |  1 +
+ drivers/scsi/aacraid/src.c      | 12 ++++++++++--
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 37375cf..3b6e5c6 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1448,6 +1448,11 @@ static int aac_resume(struct pci_dev *pdev)
- 	pci_set_master(pdev);
- 	if (aac_acquire_resources(aac))
- 		goto fail_device;
-+	/*
-+	* reset this flag to unblock ioctl() as it was set at
-+	* aac_send_shutdown() to block ioctls from upperlayer
-+	*/
-+	aac->adapter_shutdown = 0;
- 	scsi_unblock_requests(shost);
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 62b0999..e54f597 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -844,6 +844,10 @@ struct src_registers {
+ 						&((AEP)->regs.src.bar0->CSR))
+ #define src_writel(AEP, CSR, value)	writel(value, \
+ 						&((AEP)->regs.src.bar0->CSR))
++#if defined(writeq)
++#define	src_writeq(AEP, CSR, value)	writeq(value, \
++						&((AEP)->regs.src.bar0->CSR))
++#endif
  
+ #define SRC_ODR_SHIFT		12
+ #define SRC_IDR_SHIFT		9
+@@ -1163,6 +1167,11 @@ struct aac_dev
+ 	struct fsa_dev_info	*fsa_dev;
+ 	struct task_struct	*thread;
+ 	int			cardtype;
++	/*
++	 *This lock will protect the two 32-bit
++	 *writes to the Inbound Queue
++	 */
++	spinlock_t		iq_lock;
+ 
+ 	/*
+ 	 *	The following is the device specific extension.
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 45a0a04..b4b6088 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -424,6 +424,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 	dev->management_fib_count = 0;
+ 	spin_lock_init(&dev->manage_lock);
+ 	spin_lock_init(&dev->sync_lock);
++	spin_lock_init(&dev->iq_lock);
+ 	dev->max_fib_size = sizeof(struct hw_fib);
+ 	dev->sg_tablesize = host->sg_tablesize = (dev->max_fib_size
+ 		- sizeof(struct aac_fibhdr)
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index eb07b3d..1409a0b 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -447,6 +447,10 @@ static int aac_src_deliver_message(struct fib *fib)
+ 	u32 fibsize;
+ 	dma_addr_t address;
+ 	struct aac_fib_xporthdr *pFibX;
++#if !defined(writeq)
++	unsigned long flags;
++#endif
++
+ 	u16 hdr_size = le16_to_cpu(fib->hw_fib_va->header.Size);
+ 
+ 	atomic_inc(&q->numpending);
+@@ -511,10 +515,14 @@ static int aac_src_deliver_message(struct fib *fib)
+ 			return -EINVAL;
+ 		address |= fibsize;
+ 	}
+-
++#if defined(writeq)
++	src_writeq(dev, MUnit.IQ_L, (u64)address);
++#else
++	spin_lock_irqsave(&fib->dev->iq_lock, flags);
+ 	src_writel(dev, MUnit.IQ_H, upper_32_bits(address) & 0xffffffff);
+ 	src_writel(dev, MUnit.IQ_L, address & 0xffffffff);
+-
++	spin_unlock_irqrestore(&fib->dev->iq_lock, flags);
++#endif
  	return 0;
+ }
+ 
 -- 
 1.9.3
 
