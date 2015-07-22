@@ -1,115 +1,55 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V4 10/10] [SCSI] aacraid: Replace pci_enable_msix() with
- pci_enable_msix_range()
-Date: Wed, 22 Jul 2015 17:09:47 +0200
-Message-ID: <55AFB23B.7070407@redhat.com>
-References: <1437501571-2475-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <1437501571-2475-11-git-send-email-rajinikanth.pandurangan@pmcs.com>
- <55AFA100.7010708@redhat.com>
- <E34C6B6293F0214497D0C55B92526C05EAFF7E6D@BBYEXM02.pmc-sierra.internal>
+Subject: Re: [PATCH 01/11] hpsa: Correct double unlock of mutex
+Date: Wed, 22 Jul 2015 17:16:20 +0200
+Message-ID: <55AFB3C4.3030509@redhat.com>
+References: <20150718160245.31955.16794.stgit@brunhilda>
+ <20150718161222.31955.95845.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57714 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44745 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932693AbbGVPJv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2015 11:09:51 -0400
-In-Reply-To: <E34C6B6293F0214497D0C55B92526C05EAFF7E6D@BBYEXM02.pmc-sierra.internal>
+	id S933634AbbGVPQX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jul 2015 11:16:23 -0400
+In-Reply-To: <20150718161222.31955.95845.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
+To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hp.com
+Cc: linux-scsi@vger.kernel.org
 
-On 22.7.2015 16:55, Rajinikanth Pandurangan wrote:
-> Hello Tomas,
-> 
-> Yes, in case of failure, we'll fall into msi.
-Well ok, if you want support msi-x mode only with exactly 8 msi-x
-lines, that's fine...
+On 18.7.2015 18:12, Don Brace wrote:
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+> Signed-off-by: Don Brace <don.brace@pmcs.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-But because it creates another functional change - (before this patch
-also values lower than eight were allowed please split this patch into
-two parts. One for replacing pci_enable_msix() with
-pci_enable_msix_range() and the other for setting a hard limit to
-8 msi-x lines.
-
--tm
-
+Tomas
+> ---
+>  drivers/scsi/hpsa.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
 > 
-> Thanks,
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Wednesday, July 22, 2015 6:56 AM
-> To: Rajinikanth Pandurangan; jbottomley@parallels.com; linux-scsi@vger.kernel.org
-> Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Mahesh Rajashekhara; Achim Leubner; Murthy Bhat
-> Subject: Re: [PATCH V4 10/10] [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_range()
-> 
-> On 21.7.2015 19:59, rajinikanth.pandurangan@pmcs.com wrote:
->> From: Rajinikanth Pandurangan <rajinikanth.pandurangan@pmcs.com>
->>
->> Description:
->>         As pci_enable_msix() deprecated, replaced with 
->> pci_enable_msix_range()
->>
->> V3 Reviewed/commented by:
->> 	Tomas Henzl <thenzl@redhat.com>
->>
->> Changes from V3:
->> 	Uses pci_enable_msix_range() instead of pci_enable_msix_exact() based 
->> on review comment.
->>
->> Signed-off-by: Rajinikanth Pandurangan 
->> <rajinikanth.pandurangan@pmcs.com>
->> ---
->>  drivers/scsi/aacraid/comminit.c | 20 ++++++--------------
->>  1 file changed, 6 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/scsi/aacraid/comminit.c 
->> b/drivers/scsi/aacraid/comminit.c index b4b6088..3ba6e97 100644
->> --- a/drivers/scsi/aacraid/comminit.c
->> +++ b/drivers/scsi/aacraid/comminit.c
->> @@ -338,7 +338,7 @@ static int aac_comm_init(struct aac_dev * dev)
->>  
->>  void aac_define_int_mode(struct aac_dev *dev)  {
->> -	int i, msi_count;
->> +	int i, msi_count, min_msix;
->>  
->>  	msi_count = i = 0;
->>  	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */ @@ -366,22 
->> +366,14 @@ void aac_define_int_mode(struct aac_dev *dev)
->>  
->>  	if (msi_count > 1 &&
->>  	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
->> -		i = pci_enable_msix(dev->pdev,
->> +		min_msix = 8;
-> That^ will make the pci-enable function fail on boxes with less than eight num-online-cpus
-> 
-> -tm
-> 
->> +		i = pci_enable_msix_range(dev->pdev,
->>  				    dev->msixentry,
->> +				    min_msix,
->>  				    msi_count);
->> -		 /* Check how many MSIX vectors are allocated */
->> -		if (i >= 0) {
->> +		if (i > 0) {
->>  			dev->msi_enabled = 1;
->> -			if (i) {
->> -				msi_count = i;
->> -				if (pci_enable_msix(dev->pdev,
->> -				    dev->msixentry,
->> -				    msi_count)) {
->> -					dev->msi_enabled = 0;
->> -					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->> -							dev->name, dev->id, i);
->> -				}
->> -			}
->> +			msi_count = i;
->>  		} else {
->>  			dev->msi_enabled = 0;
->>  			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n",
->>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 1dafeb4..1d5f4fd 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -2749,11 +2749,10 @@ static int hpsa_do_reset(struct ctlr_info *h, struct hpsa_scsi_dev_t *dev,
+>  			lockup_detected(h));
+>  
+>  	if (unlikely(lockup_detected(h))) {
+> -			dev_warn(&h->pdev->dev,
+> -				 "Controller lockup detected during reset wait\n");
+> -			mutex_unlock(&h->reset_mutex);
+> -			rc = -ENODEV;
+> -		}
+> +		dev_warn(&h->pdev->dev,
+> +			 "Controller lockup detected during reset wait\n");
+> +		rc = -ENODEV;
+> +	}
+>  
+>  	if (unlikely(rc))
+>  		atomic_set(&dev->reset_cmds_out, 0);
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
