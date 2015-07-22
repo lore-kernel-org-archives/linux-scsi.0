@@ -1,176 +1,20 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Return the fabric command state for non-task
- management requests
-Date: Tue, 21 Jul 2015 23:00:38 +0000
-Message-ID: <D1D41CC0.A5C4E%himanshu.madhani@qlogic.com>
-References: <1437516477-30554-3-git-send-email-sbaugh@catern.com>
+From: Roland Dreier <roland@purestorage.com>
+Subject: Re: [PATCH] target/iscsi: fix digest computation for chained SGs
+Date: Tue, 21 Jul 2015 18:38:04 -0700
+Message-ID: <CAL1RGDWAVnwD0bwdFyaUNofjMC6MWREn4pK_3Qu6ZV1rXzL9-w@mail.gmail.com>
+References: <1437437534-17931-1-git-send-email-sbaugh@catern.com> <55AE0995.2010209@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D1D41CC0A5C4Ehimanshumadhaniqlogiccom_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:29222 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755689AbbGUXAl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jul 2015 19:00:41 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6LMvcJo017505
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2015 16:00:40 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1vqnxvmv91-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2015 16:00:40 -0700
-In-Reply-To: <1437516477-30554-3-git-send-email-sbaugh@catern.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <55AE0995.2010209@dev.mellanox.co.il>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: Spencer Baugh <sbaugh@catern.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Alexei Potashnik <alexei@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Spencer Baugh <sbaugh@catern.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Dilip Kumar Uppugandla <dilip@purestorage.com>
 
---_000_D1D41CC0A5C4Ehimanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <496858DAEFD76243AD6883B62C82F544@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jul 21, 2015 at 1:57 AM, Sagi Grimberg <sagig@dev.mellanox.co.il> wrote:
+> How were you able to get a chained SG list in the target code?
 
-
-
-On 7/21/15, 3:07 PM, "Spencer Baugh" <sbaugh@catern.com> wrote:
-
->From: Dilip Kumar Uppugandla <dilip@purestorage.com>
->
->Invoking get_cmd_state for qla2xxx always returns 0. Instead change it
->to return the actual fabric state from qla_tgt_cmd. This will help with
->debugging.
->
->Signed-off-by: Dilip Kumar Uppugandla <dilip@purestorage.com>
->Signed-off-by: Spencer Baugh <sbaugh@catern.com>
->---
-> drivers/scsi/qla2xxx/tcm_qla2xxx.c | 6 ++++++
-> 1 file changed, 6 insertions(+)
->
->diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->index d9a8c60..e859586 100644
->--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->@@ -420,6 +420,12 @@ static void
->tcm_qla2xxx_set_default_node_attrs(struct se_node_acl *nacl)
->=20
-> static int tcm_qla2xxx_get_cmd_state(struct se_cmd *se_cmd)
-> {
->+	if (!(se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)) {
->+		struct qla_tgt_cmd *cmd =3D container_of(se_cmd,
->+				struct qla_tgt_cmd, se_cmd);
->+		return cmd->state;
->+	}
->+
-> 	return 0;
-> }
->=20
->--=20
->2.4.3
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
-
-Looks Good.=20
-
-Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-
->
-
-
---_000_D1D41CC0A5C4Ehimanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+InZ1AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEZDOEJBMUEy
-NUE2MTMxNDU5QjgyRDg0MDdDMkZDNjhBADsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBwAVABcA
-AAAmAAIAQQEBIIADAA4AAADfBwcAFQAXAAAAJgACAEEBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFYAAABSZTogW1BBVENIXSBxbGEyeHh4OiBSZXR1cm4gdGhlIGZhYnJp
-YyBjb21tYW5kIHN0YXRlIGZvciBub24tdGFzayBtYW5hZ2VtZW50IHJlcXVlc3RzAL4eAQOQBgBk
-EQAANAAAAAIBfwABAAAALQAAADxEMUQ0MUNDMC5BNUM0RSVoaW1hbnNodS5tYWRoYW5pQHFsb2dp
-Yy5jb20+AAAAAAsAHw4BAAAAAgEJEAEAAACLBAAAhwQAAAoIAABMWkZ1nhhcMGEACmZiaWQEAABj
-Y8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjI
-OwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2
-AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJr
-bWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8lpsC4BlCoEhpE8DoDcALzIxLzE1LCCAMzowNyBQTSMQ
-KCJTcAnwYxuxQmEAdWdoIiA8c2JNJGJAHlAboW4uBaBtWD4gdwNgECA6IZw+YkYDYTogRAMQBSAg
-jEt1AMAFwFVwcCRwvQBwZAtgJLAN4CfRQCiQ9wlwH2AFsGEYMCWjJtYm1kpJG2BvHaFnIBgwdOBf
-Y21kXx9hECAccKUFsXELYDJ4LYAgB0DYd2F5BCAJcHQIcAYxmDAuICuQH2BlYRxgeRmVaXQm1hiQ
-LiUcwGh/GeAA0C5QB0AccAGgBRBjjiAspRySLUFfdGcsQ/kuwFRoBAAl8AMQAyAxIL5sJ/AD8DEQ
-JtYBAGIkcIpnK+EuKp5TaWcYUIRkLRkwZi1ieSeffyivKb82vzfBI9skvyppLTM+0CbWIGQFEBox
-cy9LBPAAkC8tRS90LGBfAy1FJaAgfCA2ICt7QgM/BzEccAMQGeAZlGRfIxBB4AuAEgAAIGkCIHO4
-KCspKp4N4AEgID7QczWwBUBhLz+fQK8m1mI/Rq9Hv0jHHbEQMD+AOWEIOGM2LrAuZTg1GDk1OEHg
-HpE2NDTfPllGj0pfSKlCASBJX0+/qUi4QEBGIDQB0CxB4ftUog6QIFRhLKIyASuwDdC/L/dA+CyQ
-LDEBASRgbCxAqm4EcV8YgHQR8CgfYLxydTFgMiBYkFhkYwMg/CpuWgFE1wMwPxZVtQuA/wVAVuos
-K1kJLGFaMF6EWpmfAABQ9gyCL8BGECghWQBJXpMtPl6EX2YLYGdFBCAmBgBDRl9i0FMASV9UTVJf
-Q0T4QikpX/5gs1kVMulaMJ1esj0b0gGQIbFyXxkw/WFVLGQvZL8y+CMQXwUWIP9kPzClYZQssmt8
-AzAgQGA3+1q3bGkwa3dumVsnTnEm1mAyLjQuMyqePuhUpTCAdQCAdWIE8mIydf8xEDPRIaAfYDfQ
-EgAdwDEDDyGiI7B1WiGhdXgta38EkTRgJKALgTAGMSEG4GSseSAZMC2wIAeBcyoRVxzAMIAAwGoF
-sGQDcG+kQHYYMHIueSQuBbD6ZybWTQWwGeB710QBAhAPLbAFQDRAAkBwOi8vVXx9L3vXLX7SLn9g
-besJUCblUB5wYRIALiEvMVExEkZBUX8ad4RwLpcuUEGAgJJsHzBsLyGc7ExvK8AEIEeGcDOBIZzc
-QWN5IDdQN7JIB3AAcdxodQXQLzAZoWk9EDPArYjELgDAiVNALUBvNbA+YypKKp0hlRVCjZAAHwBC
-AAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwBlAAEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
-AIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBz
-AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA4AAAA
-aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AOVfAQAAAEAAAABzAGkAcAA6AGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABh
-AG4AaQAAAAAAHwAfDAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHwAAAAA
-AAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAA
-UwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwABXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABo
-AGEAbgBpAAAAAAAfACNAAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAfAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkA
-AABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAldAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABl
-AAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAD8i6GiWmExRZuC2EB8L8aK
-AwAXAAEAAABAADkAAO8MDwnE0AFAAAgwzqUYDwnE0AELAACACCAGAAAAAADAAAAAAAAARgAAAAAU
-hQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUA
-YQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUA
-AAAAAAAfADcAAQAAAKwAAABSAGUAOgAgAFsAUABBAFQAQwBIAF0AIABxAGwAYQAyAHgAeAB4ADoA
-IABSAGUAdAB1AHIAbgAgAHQAaABlACAAZgBhAGIAcgBpAGMAIABjAG8AbQBtAGEAbgBkACAAcwB0
-AGEAdABlACAAZgBvAHIAIABuAG8AbgAtAHQAYQBzAGsAIABtAGEAbgBhAGcAZQBtAGUAbgB0ACAA
-cgBlAHEAdQBlAHMAdABzAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAA
-AGwAAAA8ADEANAAzADcANQAxADYANAA3ADcALQAzADAANQA1ADQALQAzAC0AZwBpAHQALQBzAGUA
-bgBkAC0AZQBtAGEAaQBsAC0AcwBiAGEAdQBnAGgAQABjAGEAdABlAHIAbgAuAGMAbwBtAD4AAAAC
-AXEAAQAAABsAAAABAdDEAgaXsz/KF0pHRYgmUeerjTvAneaKEYAAHwBwAAEAAACkAAAAWwBQAEEA
-VABDAEgAXQAgAHEAbABhADIAeAB4AHgAOgAgAFIAZQB0AHUAcgBuACAAdABoAGUAIABmAGEAYgBy
-AGkAYwAgAGMAbwBtAG0AYQBuAGQAIABzAHQAYQB0AGUAIABmAG8AcgAgAG4AbwBuAC0AdABhAHMA
-awAgAG0AYQBuAGEAZwBlAG0AZQBuAHQAIAByAGUAcQB1AGUAcwB0AHMAAAAfADUQAQAAAFoAAAA8
-AEQAMQBEADQAMQBDAEMAMAAuAEEANQBDADQARQAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
-YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAAbAAAADwAMQA0ADMANwA1
-ADEANgA0ADcANwAtADMAMAA1ADUANAAtADMALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwA
-LQBzAGIAYQB1AGcAaABAAGMAYQB0AGUAcgBuAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMLGBEQ8J
-xNABAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDcyMTIz
-MDAzOFotNDMyMzQAAAAfABUQAQAAAFgAAAA0ADkANgA4ADUAOABEAEEARQBGAEQANwA2ADIANAAz
-AEEARAA2ADgAOAAzAEIANgAyAEMAOAAyAEYANQA0ADQAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-AgEUMAEAAAAMAAAAbgAAAPcas79PAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBh
-AGQAaABhAG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcA
-ZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBr
-AC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAA
-OAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4
-AAAAAQAAADwBAABJAEkAPQAwADEAMAAxAEQAMABDADQAMAA5ADAARgBBAEMARAA5ADcANQA0ADIA
-NwAyADAAOAA2ADUANAAzADgAMwAwADEAMwAxADQAMwA3ADIAOQBBADMANAAzAEMAOwBTAEIATQBJ
-AEQAPQAzADsAUwAxAD0APAAxADQAMwA3ADUAMQA2ADQANwA3AC0AMwAwADUANQA0AC0AMwAtAGcA
-aQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYgBhAHUAZwBoAEAAYwBhAHQAZQByAG4ALgBj
-AG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUA
-aQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMC
-AAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAA
-AgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABp
-AG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAA
-AADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABh
-AHMAcwAAAAAA3Xw=
-
---_000_D1D41CC0A5C4Ehimanshumadhaniqlogiccom_--
+Local hack.  So this bug can't be hit in current mainline code, but
+patch improves the code and removes a hidden booby-trap, so I think it
+makes sense to apply.
