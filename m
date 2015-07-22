@@ -1,41 +1,172 @@
-From: Spencer Baugh <sbaugh@catern.com>
-Subject: [PATCH] target: respond to unknown initiators with sensible REPORT LUNS list length
-Date: Wed, 22 Jul 2015 15:08:17 -0700
-Message-ID: <1437602898-15229-3-git-send-email-sbaugh@catern.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Roland Dreier <roland@purestorage.com>, Spencer Baugh <sbaugh@catern.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: remove unused rval
+Date: Wed, 22 Jul 2015 22:17:24 +0000
+Message-ID: <D1D5644B.A614D%himanshu.madhani@qlogic.com>
+References: <1437602898-15229-1-git-send-email-sbaugh@catern.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_D1D5644BA614Dhimanshumadhaniqlogiccom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:23600 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751154AbbGVWR0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jul 2015 18:17:26 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6MMCvmw014343
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2015 15:17:25 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1vqnxvpf0h-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2015 15:17:25 -0700
+In-Reply-To: <1437602898-15229-1-git-send-email-sbaugh@catern.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Spencer Baugh <sbaugh@catern.com>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Joern Engel <joern@logfs.org>
 
-From: Roland Dreier <roland@purestorage.com>
+--_000_D1D5644BA614Dhimanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <001E24BE52029443A7F9842C3F125A87@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Solaris seems to go beserk if we respond to REPORT LUNS with a
-LUN LIST LENGTH of 0.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Spencer Baugh <sbaugh@catern.com>
----
- drivers/target/target_core_spc.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+On 7/22/15, 3:08 PM, "Spencer Baugh" <sbaugh@catern.com> wrote:
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 87d4adb..d8a32e5 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1241,6 +1241,13 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
- 	 * See SPC3 r07, page 159.
- 	 */
- done:
-+	/*
-+	 * If no real LUNs are accessible, report an allocation length
-+	 * of 1 LUN to account for virtual LUN 0.
-+	 */
-+	if (lun_count == 0)
-+		lun_count = 1;
-+
- 	lun_count *= 8;
- 	buf[0] = ((lun_count >> 24) & 0xff);
- 	buf[1] = ((lun_count >> 16) & 0xff);
--- 
-2.5.0.rc3
+>From: Joern Engel <joern@logfs.org>
+>
+>We don't touch the return value of qla2x00_loop_resync in
+>qla2x00_do_dpc, so don't bother collecting it. Fixes a compiler warning.
+>
+>Signed-off-by: Joern Engel <joern@logfs.org>
+>Signed-off-by: Spencer Baugh <sbaugh@catern.com>
+>---
+> drivers/scsi/qla2xxx/qla_os.c | 3 +--
+> 1 file changed, 1 insertion(+), 2 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+>index a28815b..b9ee115 100644
+>--- a/drivers/scsi/qla2xxx/qla_os.c
+>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>@@ -4793,7 +4793,6 @@ qla2x00_disable_board_on_pci_error(struct
+>work_struct *work)
+> static int
+> qla2x00_do_dpc(void *data)
+> {
+>-	int		rval;
+> 	scsi_qla_host_t *base_vha;
+> 	struct qla_hw_data *ha;
+>=20
+>@@ -5025,7 +5024,7 @@ loop_resync_check:
+> 			if (!(test_and_set_bit(LOOP_RESYNC_ACTIVE,
+> 			    &base_vha->dpc_flags))) {
+>=20
+>-				rval =3D qla2x00_loop_resync(base_vha);
+>+				qla2x00_loop_resync(base_vha);
+>=20
+> 				clear_bit(LOOP_RESYNC_ACTIVE,
+> 						&base_vha->dpc_flags);
+>--=20
+>2.5.0.rc3
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Please read the FAQ at  http://www.tux.org/lkml/
+
+Acked-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+
+
+>
+
+
+--_000_D1D5644BA614Dhimanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IrUhAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADI3NUQ4NzE2
+NzU3MTVFNEVCOEU2NTFGREQwNkFBN0Y0AEEHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBwAWABYA
+EQAYAAMARQEBIIADAA4AAADfBwcAFgAWABEAGAADAEUBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABACgAAABSZTogW1BBVENIXSBxbGEyeHh4OiByZW1vdmUgdW51c2VkIHJ2
+YWwAog0BA5AGAOQQAAA0AAAAAgF/AAEAAAAtAAAAPEQxRDU2NDRCLkE2MTREJWhpbWFuc2h1Lm1h
+ZGhhbmlAcWxvZ2ljLmNvbT4AAAAACwAfDgEAAAACAQkQAQAAAMMEAAC/BAAAcQgAAExaRnWtE7ii
+YQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIK
+gAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHB
+bhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAH
+QA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB8QvyKmwLgGUKgE8DoDcvADIyLzE1LCAz
+QDowOCBQTSKgIhRTcAnwYxuxQmF1gGdoIiA8c2Ij8iZAHlAboW4uBaBtPmwgdwNgECA6IZUhlT5C
+RgNhOiBKbwSSRVMZwQMgPGonUkAJAGdlA9AuBbBnPiZmJmZXtRngZAIgJwVAGJB1EcBtHMBoGeAJ
+cHQIcAOgdksHQApQIBkwIHELYDKKeB6gXwkAb3BfCXD0c3kjkCALgSZ1LEYqQPkukHBjIqAZICo1
+BuArAaUbwmwecGN0C4BnLXBAdC4gRml4B5Fh2RvRbXADEBuxdwrAAwBFGcAuKR5TaWcYUGTCLRkw
+Zi1ieScvKD+/M180YSNrJE8lUSZmLTpgzyZmKjAFEBoxcy8E8ACQbi8sQzwwO+JfGRAlMCDSfCKw
+ICs6eTEccDHR+xvQGaNkIqA+AAuAEgAAIKJpAiAoKykioDIqMIc1IBIQP4FzKC0pKR5rDeABICA6
+YGcw0DFgL/s7Lzw7YkKvPCsmZh2xEDARMWAyODgigGIuLnRiOQngMSKAPfAeoDa8NDQ56UKPRZ8m
+hCtMACdEj0qfJoRAQEIgNDcwOTMsNz0wTvM2IN9OsS4nBAABoB5wXwbgCxHJPKBuXy7gaV8EkANg
+VHIoH2ByKsB0JmZ3yQWwa19SRCAqUyJA138vEAGQMIAtYlKXUAgusyisdm8N0FPQZBiAYVQ4/lwA
+ADn2DIJVMwyTWQEaIF8HQBYgV7dY8kziXzxyaDkZEHRfU8E40BIAX3bvEdBaPlOEW3N3LpBXYVPQ
+c1ybTkk1MA6gTzJgYTS3TzFOsSzJXxHABZBrJeaHWrRZZwaQICghKBAgP1vRAHBRUBIBUQAw0ChM
+AE9PUF9SRVNZAE5DX0FDVElWXEUsYq9Y42fyJlw2LRNB0C7gX2YLYGdzKT9pgFgpX5dY02M7WfIg
+PassPy1BKFw2KVo3K2sP32yPbZ9fW2MrWONjHnAKwP9lL2Y/ax1ZZ2hPaVJaN0lhASZmMi41LjAu
+cqxjMykeOnhULzB1AIC0dWIE8mIZ4ByEaAQA+2FwBAB0NHASAB3AKvMhoocjQHz6IaF1eC1rBJGf
+NSAkMC2IKwIG4GR5LAK/MXAHgVCwGdEYkIKwYTVgIwsgA3BvQHYYMHIu94DEKMImZk0FsBngg3ct
+cScCEDFgBUAgaAJAcDpULy+EHS+Ddy2Gci7thwBtCVAmdVB0IRIAKzGiYX7kRkFRhrp3jBAqLitg
+eIgjbB8wbC/dJfxBYnAz4TRSSAdwAHHcaHUF0IqwGaFpOKB+EO2OxC4AwI9TQHAANdAOUB85miX9
+JfwVQpQAAB8AQgABAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8A
+ZQABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB8AAAAAAAAAIErH6S+oxAZ
+nW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABo
+AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
+Al0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwDlXwEAAABAAAAAcwBpAHAAOgBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
+bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAg
+AE0AYQBkAGgAYQBuAGkAAAAAAB8AHwwBAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
+YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZ
+DAEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQA
+aABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
+YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1
+ACAATQBhAGQAaABhAG4AaQAAAAAAHwAjQAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQA
+aABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAAC
+Afk/AQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABNAGEA
+ZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABx
+AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQA
+aABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABN
+AC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAJ12HFnVx
+Xk645lH90Gqn9AMAFwABAAAAQAA5AACyUS/MxNABQAAIME23pi/MxNABCwAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQA
+bABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAA
+AABGAAAAAAaFAAAAAAAAHwA3AAEAAABQAAAAUgBlADoAIABbAFAAQQBUAEMASABdACAAcQBsAGEA
+MgB4AHgAeAA6ACAAcgBlAG0AbwB2AGUAIAB1AG4AdQBzAGUAZAAgAHIAdgBhAGwAAAAfAD0AAQAA
+AAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAbAAAADwAMQA0ADMANwA2ADAAMgA4ADkA
+OAAtADEANQAyADIAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBzAGIAYQB1
+AGcAaABAAGMAYQB0AGUAcgBuAC4AYwBvAG0APgAAAAIBcQABAAAAGwAAAAEB0MTLBsxS8oh8atRH
+v8AU1J3zcJOd6A7HgAAfAHAAAQAAAEgAAABbAFAAQQBUAEMASABdACAAcQBsAGEAMgB4AHgAeAA6
+ACAAcgBlAG0AbwB2AGUAIAB1AG4AdQBzAGUAZAAgAHIAdgBhAGwAAAAfADUQAQAAAFoAAAA8AEQA
+MQBEADUANgA0ADQAQgAuAEEANgAxADQARAAlAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBu
+AGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAAbAAAADwAMQA0ADMANwA2ADAA
+MgA4ADkAOAAtADEANQAyADIAOQAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBz
+AGIAYQB1AGcAaABAAGMAYQB0AGUAcgBuAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMNExnS/MxNAB
+AwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MDcyMjIyMTcy
+NFotNDM5NjQAAAAfABUQAQAAAFgAAAAwADAAMQBFADIANABCAEUANQAyADAAMgA5ADQANAAzAEEA
+NwBGADkAOAA0ADIAQwAzAEYAMQAyADUAQQA4ADcAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEU
+MAEAAAAMAAAAawAAAIxFHzVPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQA
+aABhAG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBu
+AHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8A
+MQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAA
+AEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAA
+AQAAADwBAABJAEkAPQAwADEAMAAxAEQAMABDADQAQwBDADIARgBDADMAMgA3AEMANABEADcAQwA1
+ADEANwAxADAANAAwAEIAMABFADkANAA1ADcARAAxADcANwBDADgARABBADEAOwBTAEIATQBJAEQA
+PQAyADsAUwAxAD0APAAxADQAMwA3ADYAMAAyADgAOQA4AC0AMQA1ADIAMgA5AC0AMQAtAGcAaQB0
+AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYgBhAHUAZwBoAEAAYwBhAHQAZQByAG4ALgBjAG8A
+bQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUAaQBs
+AGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAwANNP0/AAAfAACAhgMCAAAA
+AADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAA
+AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4A
+ZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4AAABiAHkAcABhAHMA
+cwAAAAAAZm8=
+
+--_000_D1D5644BA614Dhimanshumadhaniqlogiccom_--
