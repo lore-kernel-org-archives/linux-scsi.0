@@ -1,36 +1,46 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 11/11] hpsa: fix rmmod issues
-Date: Wed, 22 Jul 2015 17:20:12 +0200
-Message-ID: <55AFB4AC.5090306@redhat.com>
-References: <20150718160245.31955.16794.stgit@brunhilda>
- <20150718161315.31955.98302.stgit@brunhilda>
+From: James Smart <james.smart@avagotech.com>
+Subject: Re: [PATCH] lpfc: Use && instead of & for boolean expression
+Date: Wed, 22 Jul 2015 11:47:20 -0400
+Message-ID: <55AFBB08.106@avagotech.com>
+References: <20150722105322.00004f4b@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57412 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934564AbbGVPUP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jul 2015 11:20:15 -0400
-In-Reply-To: <20150718161315.31955.98302.stgit@brunhilda>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:36059 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934408AbbGVPrm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2015 11:47:42 -0400
+Received: by pdjr16 with SMTP id r16so143085840pdj.3
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2015 08:47:41 -0700 (PDT)
+In-Reply-To: <20150722105322.00004f4b@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hp.com
-Cc: linux-scsi@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>, linux-scsi@vger.kernel.org
 
-On 18.7.2015 18:13, Don Brace wrote:
-> The driver is calling hpsa_shutdown before calling scsi_remove_host.
-> hpsa_shutdown is disabling interrupts.
-> 
-> scsi_remove_host can trigger I/O operations, such as
-> SYNCHRONIZE CACHE when multipath is enabled which hang the system.
-> 
-> Call scsi_remove_host before calling hpsa_shutdown.
-> 
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: James Smart <james.smart@avagotech.com>
 
-Tomas
+Thanks
+
+-- james
+
+
+On 7/22/2015 4:53 AM, Sebastian Herbszt wrote:
+> Use logical instead of bitwise AND.
+>
+> Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+> ---
+>
+> diff -urp a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2015-07-05 22:18:43.933739150 +0200
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2015-07-22 10:31:14.240209475 +0200
+> @@ -701,7 +701,7 @@ lpfc_work_done(struct lpfc_hba *phba)
+>   								HA_RXMASK));
+>   			}
+>   		}
+> -		if ((phba->sli_rev == LPFC_SLI_REV4) &
+> +		if ((phba->sli_rev == LPFC_SLI_REV4) &&
+>   				 (!list_empty(&pring->txq)))
+>   			lpfc_drain_txq(phba);
+>   		/*
 
