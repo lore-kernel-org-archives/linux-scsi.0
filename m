@@ -1,34 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 101841] iommu memory handling cause mmblock devices stop
- working
-Date: Thu, 23 Jul 2015 09:31:35 +0000
-Message-ID: <bug-101841-11613-Rhi8efiJTC@https.bugzilla.kernel.org/>
-References: <bug-101841-11613@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
+Date: Thu, 23 Jul 2015 02:36:18 -0700
+Message-ID: <20150723093618.GA5382@infradead.org>
+References: <1437516477-30554-1-git-send-email-sbaugh@catern.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52639 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbbGWJbj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jul 2015 05:31:39 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4FC2820774
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 09:31:38 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id C929A20776
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 09:31:35 +0000 (UTC)
-In-Reply-To: <bug-101841-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1437516477-30554-1-git-send-email-sbaugh@catern.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Spencer Baugh <sbaugh@catern.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Brian Bunker <brian@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=101841
+On Tue, Jul 21, 2015 at 03:07:53PM -0700, Spencer Baugh wrote:
+> +static sense_reason_t
+> +sbc_emulate_startstop(struct se_cmd *cmd)
+> +{
+> +	unsigned char *cdb = cmd->t_task_cdb;
+> +
+> +	/* From SBC-3:
+> +	 * Immediate bit should be set since there is nothing to complete
+> +	 * POWER CONDITION MODIFIER 0h
+> +	 */
 
---- Comment #1 from Ivan <dront78@gmail.com> ---
-intel_iommu=off does not help, but switched to 3.14.48 lts and successfully
-tranfered all the data without any error
+Mot of the target code mentions the exact document and section, e.g.
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+drivers/target/target_core_alua.c: * See sbc3r35 section 5.23
+drivers/target/target_core_sbc.c:        * Set Thin Provisioning Enable bit following sbc3r22 in section
+drivers/target/target_core_sbc.c:        * From sbc3r22.pdf section 5.48 XDWRITEREAD (10) command
+
+Also if you fix thing up anyway the Linux style is to keep the opening
+"/*" on a separate line.
+
+> +	if (!(cdb[1] & 1) || (cdb[2] | cdb[3]))
+> +		return TCM_INVALID_CDB_FIELD;
+
+The mix of || and | here is odd, why not just:
+
+ if (!(cdb[1] & 1) || cdb[2] || cdb[3])
+
+> +	if (!(cdb[4] & 1) || ((cdb[4] & 2) | (cdb[4] & 4)))
+
+Same here.
+
+But except for this nitpicking the patch looks good:
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
