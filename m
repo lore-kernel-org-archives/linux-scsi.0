@@ -1,100 +1,815 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 101891] New: mvsas prep failed, NULL pointer dereference in
- mvs_slot_task_free+0x5/0x1f0 [mvsas]
-Date: Thu, 23 Jul 2015 21:34:36 +0000
-Message-ID: <bug-101891-11613@https.bugzilla.kernel.org/>
+From: Spencer Baugh <spencer.baugh@purestorage.com>
+Subject: Re: [PATCH v3] target: Drop iSCSI use of mutex around max_cmd_sn increment
+Date: Thu, 23 Jul 2015 14:53:32 -0700
+Message-ID: <87egjyfsmb.fsf@ponos.purestorage.com>
+References: <1437602898-15229-2-git-send-email-sbaugh@catern.com> <94D0CD8314A33A4D9D801C0FE68B40295AA03CD1@G9W0745.americas.hpqcorp.net> <87r3nyg1km.fsf@ponos.purestorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41917 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753682AbbGWVel (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jul 2015 17:34:41 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A868520698
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 21:34:40 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 1858C206AD
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 21:34:37 +0000 (UTC)
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33536 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753777AbbGWVxg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2015 17:53:36 -0400
+Received: by padck2 with SMTP id ck2so2630544pad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 14:53:36 -0700 (PDT)
+In-Reply-To: <87r3nyg1km.fsf@ponos.purestorage.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Spencer Baugh <sbaugh@catern.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Alexei Potashnik <alexei@purestorage.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, James Bottomley <JBottomley@Odin.com>, Evgenii Lepikhin <johnlepikhin@gmail.com>, Hannes Reinecke <hare@suse.de>, Al Viro <viro@zeniv.linux.org.uk>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Joern Engel <joern@purestorage.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=101891
 
-            Bug ID: 101891
-           Summary: mvsas prep failed, NULL pointer dereference in
-                    mvs_slot_task_free+0x5/0x1f0 [mvsas]
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.1.2
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: davispuh@gmail.com
-        Regression: No
+From: Roland Dreier <roland@purestorage.com>
 
-Got this call trace, it caused any attempts to access those disks hang
-(couldn't even kill those processes, eg. ls).
-Using HighPoint RocketRAID 2760A controller.
+In a performance profile, taking a mutex in iscsit_increment_maxcmdsn()
+shows up very high.  However taking a mutex around "sess->max_cmd_sn += 1"
+seems pretty silly: we're not serializing against other contexts in
+any useful way.
 
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-kernel: sas: trying to find task 0xffff880213ac6a00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff880213ac6a00
-kernel: BUG: unable to handle kernel NULL pointer dereference at
-0000000000000010
-kernel: IP: [<ffffffffa020dfa5>] mvs_slot_task_free+0x5/0x1f0 [mvsas]
-kernel: PGD 1ee973067 PUD 1ee974067 PMD 0
-kernel: Oops: 0000 [#1] PREEMPT SMP
-kernel: Modules linked in: fuse nf_conntrack_netbios_ns nf_conntrack_broadcast
-xt_tcpudp ip6t_rpfilter ip
-kernel:  aesni_intel rc_core snd_hda_codec_realtek aes_x86_64 lrw gf128mul
-videobuf2_dma_sg glue_helper a
-kernel: CPU: 3 PID: 227 Comm: scsi_eh_7 Tainted: P           O    4.1.2-2-ARCH
-#1
-kernel: Hardware name: Gigabyte Technology Co., Ltd.
-GA-990FXA-UD3/GA-990FXA-UD3, BIOS FFe 11/08/2013
-kernel: task: ffff88007f849e90 ti: ffff880223184000 task.ti: ffff880223184000
-kernel: RIP: 0010:[<ffffffffa020dfa5>]  [<ffffffffa020dfa5>]
-mvs_slot_task_free+0x5/0x1f0 [mvsas]
-kernel: RSP: 0018:ffff880223187d00  EFLAGS: 00010a13
-kernel: RAX: 2e8ba2e8ba2e8ba3 RBX: ffff880213ac6a00 RCX: a2e8bb8b9cb3907b
-kernel: RDX: 0000000000000000 RSI: ffff880213ac6a00 RDI: ffff880222440000
-kernel: RBP: ffff880223187d58 R08: 000000000000000a R09: 0000000000000607
-kernel: R10: 00000000000213fc R11: 0000000000000607 R12: 0000000000000005
-kernel: R13: ffff880222a59000 R14: ffff880222440000 R15: ffff880213ac6a08
-kernel: FS:  00007fdddc839880(0000) GS:ffff88022ecc0000(0000)
-knlGS:0000000000000000
-kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-kernel: CR2: 0000000000000010 CR3: 00000001ee978000 CR4: 00000000000407e0
-kernel: Stack:
-kernel:  ffffffffa0210bde ffff880200000018 ffff880223187d68 ffff880223187d28
-kernel:  00000000a5257e12 ffff88007f840208 0000000000000005 ffff880223187db0
-kernel:  ffff880213ac6a08 ffff8802230ef000 ffff880213ac6a00 ffff880223187e28
-kernel: Call Trace:
-kernel:  [<ffffffffa0210bde>] ? mvs_abort_task+0x1ce/0x230 [mvsas]
-kernel:  [<ffffffffa0119eab>] sas_scsi_recover_host+0x47b/0xc20 [libsas]
-kernel:  [<ffffffffa0083afc>] scsi_error_handler+0xfc/0x580 [scsi_mod]
-kernel:  [<ffffffff81587212>] ? __schedule+0x362/0xa30
-kernel:  [<ffffffffa0083a00>] ? scsi_eh_get_sense+0x190/0x190 [scsi_mod]
-kernel:  [<ffffffff810977f8>] kthread+0xd8/0xf0
-kernel:  [<ffffffff81097720>] ? kthread_worker_fn+0x170/0x170
-kernel:  [<ffffffff8158b962>] ret_from_fork+0x42/0x70
-kernel:  [<ffffffff81097720>] ? kthread_worker_fn+0x170/0x170
-kernel: Code: 84 00 00 00 00 00 66 66 66 66 90 55 48 8b 87 b0 00 00 00 89 f6 48
-89 e5 f0 48 0f b3 30 5d c
-kernel: RIP  [<ffffffffa020dfa5>] mvs_slot_task_free+0x5/0x1f0 [mvsas]
-kernel:  RSP <ffff880223187d00>
-kernel: CR2: 0000000000000010
-kernel: ---[ end trace 18b7a6f928680374 ]---
+I did a quick audit and there don't appear to be any other places that
+use max_cmd_sn within the mutex more than once, so this lock can't be
+providing any useful serialization.
 
+v2: Get correct values for logging
+v3: Fix whitespace damage
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Spencer Baugh <sbaugh@catern.com>
+---
+ drivers/target/iscsi/iscsi_target.c          | 18 +++++++++---------
+ drivers/target/iscsi/iscsi_target_configfs.c |  6 ++++--
+ drivers/target/iscsi/iscsi_target_device.c   |  7 ++-----
+ drivers/target/iscsi/iscsi_target_login.c    |  2 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |  9 +++------
+ drivers/target/iscsi/iscsi_target_tmr.c      |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c     |  7 ++++---
+ include/target/iscsi/iscsi_target_core.h     |  2 +-
+ 8 files changed, 25 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index ebb1ece..f615d75 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -2555,7 +2555,7 @@ static int iscsit_send_conn_drop_async_message(
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->async_event	= ISCSI_ASYNC_MSG_DROPPING_CONNECTION;
+ 	hdr->param1		= cpu_to_be16(cmd->logout_cid);
+ 	hdr->param2		= cpu_to_be16(conn->sess->sess_ops->DefaultTime2Wait);
+@@ -2627,7 +2627,7 @@ iscsit_build_datain_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		hdr->statsn		= cpu_to_be32(0xFFFFFFFF);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->datasn		= cpu_to_be32(datain->data_sn);
+ 	hdr->offset		= cpu_to_be32(datain->offset);
+ 
+@@ -2838,7 +2838,7 @@ iscsit_build_logout_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Logout Response ITT: 0x%08x StatSN:"
+ 		" 0x%08x Response: 0x%02x CID: %hu on CID: %hu\n",
+@@ -2901,7 +2901,7 @@ iscsit_build_nopin_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built NOPIN %s Response ITT: 0x%08x, TTT: 0x%08x,"
+ 		" StatSN: 0x%08x, Length %u\n", (nopout_response) ?
+@@ -3048,7 +3048,7 @@ static int iscsit_send_r2t(
+ 	hdr->ttt		= cpu_to_be32(r2t->targ_xfer_tag);
+ 	hdr->statsn		= cpu_to_be32(conn->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->r2tsn		= cpu_to_be32(r2t->r2t_sn);
+ 	hdr->data_offset	= cpu_to_be32(r2t->offset);
+ 	hdr->data_length	= cpu_to_be32(r2t->xfer_len);
+@@ -3201,7 +3201,7 @@ void iscsit_build_rsp_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built SCSI Response, ITT: 0x%08x, StatSN: 0x%08x,"
+ 		" Response: 0x%02x, SAM Status: 0x%02x, CID: %hu\n",
+@@ -3320,7 +3320,7 @@ iscsit_build_task_mgt_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Task Management Response ITT: 0x%08x,"
+ 		" StatSN: 0x%08x, Response: 0x%02x, CID: %hu\n",
+@@ -3575,7 +3575,7 @@ iscsit_build_text_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	 */
+ 	cmd->maxcmdsn_inc = 0;
+ 	hdr->exp_cmdsn = cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn = cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn = cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Text Response: ITT: 0x%08x, TTT: 0x%08x, StatSN: 0x%08x,"
+ 		" Length: %u, CID: %hu F: %d C: %d\n", cmd->init_task_tag,
+@@ -3653,7 +3653,7 @@ iscsit_build_reject(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ }
+ EXPORT_SYMBOL(iscsit_build_reject);
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index c1898c8..cd2e073 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -656,6 +656,7 @@ static ssize_t lio_target_nacl_show_info(
+ 	struct iscsi_conn *conn;
+ 	struct se_session *se_sess;
+ 	ssize_t rb = 0;
++	u32 max_cmd_sn;
+ 
+ 	spin_lock_bh(&se_nacl->nacl_sess_lock);
+ 	se_sess = se_nacl->nacl_sess;
+@@ -703,11 +704,12 @@ static ssize_t lio_target_nacl_show_info(
+ 				" Values]-----------------------\n");
+ 		rb += sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
+ 				"  :  MaxCmdSN  :     ITT    :     TTT\n");
++		max_cmd_sn = (u32) atomic_read(&sess->max_cmd_sn);
+ 		rb += sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
+ 				"   0x%08x   0x%08x\n",
+ 			sess->cmdsn_window,
+-			(sess->max_cmd_sn - sess->exp_cmd_sn) + 1,
+-			sess->exp_cmd_sn, sess->max_cmd_sn,
++			(max_cmd_sn - sess->exp_cmd_sn) + 1,
++			sess->exp_cmd_sn, max_cmd_sn,
+ 			sess->init_task_tag, sess->targ_xfer_tag);
+ 		rb += sprintf(page+rb, "----------------------[iSCSI"
+ 				" Connections]-------------------------\n");
+diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/target/iscsi/iscsi_target_device.c
+index 5fabcd3..07d2ef6 100644
+--- a/drivers/target/iscsi/iscsi_target_device.c
++++ b/drivers/target/iscsi/iscsi_target_device.c
+@@ -47,7 +47,7 @@ void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
+ 	 * core_set_queue_depth_for_node().
+ 	 */
+ 	sess->cmdsn_window = se_nacl->queue_depth;
+-	sess->max_cmd_sn = (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
++	atomic_set(&sess->max_cmd_sn, (u32) atomic_read(&sess->max_cmd_sn) + se_nacl->queue_depth - 1);
+ }
+ 
+ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess)
+@@ -57,9 +57,6 @@ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess
+ 
+ 	cmd->maxcmdsn_inc = 1;
+ 
+-	mutex_lock(&sess->cmdsn_mutex);
+-	sess->max_cmd_sn += 1;
+-	pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	pr_debug("Updated MaxCmdSN to 0x%08x\n", atomic_inc_return(&sess->max_cmd_sn));
+ }
+ EXPORT_SYMBOL(iscsit_increment_maxcmdsn);
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 3d0fe4f..bd192f8 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -330,7 +330,7 @@ static int iscsi_login_zero_tsih_s1(
+ 	 * The FFP CmdSN window values will be allocated from the TPG's
+ 	 * Initiator Node's ACL once the login has been successfully completed.
+ 	 */
+-	sess->max_cmd_sn	= be32_to_cpu(pdu->cmdsn);
++	atomic_set(&sess->max_cmd_sn, be32_to_cpu(pdu->cmdsn));
+ 
+ 	sess->sess_ops = kzalloc(sizeof(struct iscsi_sess_ops), GFP_KERNEL);
+ 	if (!sess->sess_ops) {
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 8c02fa3..74d041e 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -340,7 +340,6 @@ static int iscsi_target_check_first_request(
+ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
+ {
+ 	u32 padding = 0;
+-	struct iscsi_session *sess = conn->sess;
+ 	struct iscsi_login_rsp *login_rsp;
+ 
+ 	login_rsp = (struct iscsi_login_rsp *) login->rsp;
+@@ -352,7 +351,7 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 	login_rsp->itt			= login->init_task_tag;
+ 	login_rsp->statsn		= cpu_to_be32(conn->stat_sn++);
+ 	login_rsp->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	login_rsp->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Sending Login Response, Flags: 0x%02x, ITT: 0x%08x,"
+ 		" ExpCmdSN; 0x%08x, MaxCmdSN: 0x%08x, StatSN: 0x%08x, Length:"
+@@ -367,10 +366,8 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 		return -1;
+ 
+ 	login->rsp_length		= 0;
+-	mutex_lock(&sess->cmdsn_mutex);
+-	login_rsp->exp_cmdsn		= cpu_to_be32(sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	login_rsp->exp_cmdsn		= cpu_to_be32(login_rsp->exp_cmdsn);
++	login_rsp->max_cmdsn		= cpu_to_be32(login_rsp->max_cmdsn);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/iscsi/iscsi_target_tmr.c
+index cf59c39..11320df 100644
+--- a/drivers/target/iscsi/iscsi_target_tmr.c
++++ b/drivers/target/iscsi/iscsi_target_tmr.c
+@@ -50,7 +50,7 @@ u8 iscsit_tmr_abort_task(
+ 		pr_err("Unable to locate RefTaskTag: 0x%08x on CID:"
+ 			" %hu.\n", hdr->rtt, conn->cid);
+ 		return (iscsi_sna_gte(be32_to_cpu(hdr->refcmdsn), conn->sess->exp_cmd_sn) &&
+-			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), conn->sess->max_cmd_sn)) ?
++			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), (u32) atomic_read(&conn->sess->max_cmd_sn))) ?
+ 			ISCSI_TMF_RSP_COMPLETE : ISCSI_TMF_RSP_NO_TASK;
+ 	}
+ 	if (ref_cmd->cmd_sn != be32_to_cpu(hdr->refcmdsn)) {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index a2bff07..7df4fac 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -233,6 +233,7 @@ struct iscsi_r2t *iscsit_get_holder_for_r2tsn(
+ 
+ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cmdsn)
+ {
++	u32 max_cmdsn;
+ 	int ret;
+ 
+ 	/*
+@@ -241,10 +242,10 @@ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cm
+ 	 * or order CmdSNs due to multiple connection sessions and/or
+ 	 * CRC failures.
+ 	 */
+-	if (iscsi_sna_gt(cmdsn, sess->max_cmd_sn)) {
++	max_cmdsn = atomic_read(&sess->max_cmd_sn);
++	if (iscsi_sna_gt(cmdsn, max_cmdsn)) {
+ 		pr_err("Received CmdSN: 0x%08x is greater than"
+-		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn,
+-		       sess->max_cmd_sn);
++		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn, max_cmdsn);
+ 		ret = CMDSN_MAXCMDSN_OVERRUN;
+ 
+ 	} else if (cmdsn == sess->exp_cmd_sn) {
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 34117b8..11abe3a 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -635,7 +635,7 @@ struct iscsi_session {
+ 	/* session wide counter: expected command sequence number */
+ 	u32			exp_cmd_sn;
+ 	/* session wide counter: maximum allowed command sequence number */
+-	u32			max_cmd_sn;
++	atomic_t		max_cmd_sn;
+ 	struct list_head	sess_ooo_cmdsn_list;
+ 
+ 	/* LIO specific session ID */
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.5.0.rc3
+
+>From f5f358beac34f65888031569a03c0d889f5c0ae3 Mon Sep 17 00:00:00 2001
+From: Roland Dreier <roland@purestorage.com>
+Date: Tue, 25 Sep 2012 17:57:38 +0000
+Subject: [PATCH] target: Drop iSCSI use of mutex around max_cmd_sn increment
+
+In a performance profile, taking a mutex in iscsit_increment_maxcmdsn()
+shows up very high.  However taking a mutex around "sess->max_cmd_sn += 1"
+seems pretty silly: we're not serializing against other contexts in
+any useful way.
+
+I did a quick audit and there don't appear to be any other places that
+use max_cmd_sn within the mutex more than once, so this lock can't be
+providing any useful serialization.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Spencer Baugh <sbaugh@catern.com>
+---
+ drivers/target/iscsi/iscsi_target.c          | 18 +++++++++---------
+ drivers/target/iscsi/iscsi_target_configfs.c |  6 ++++--
+ drivers/target/iscsi/iscsi_target_device.c   |  7 ++-----
+ drivers/target/iscsi/iscsi_target_login.c    |  2 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |  9 +++------
+ drivers/target/iscsi/iscsi_target_tmr.c      |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c     |  7 ++++---
+ include/target/iscsi/iscsi_target_core.h     |  2 +-
+ 8 files changed, 25 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index ebb1ece..f615d75 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -2555,7 +2555,7 @@ static int iscsit_send_conn_drop_async_message(
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->async_event	= ISCSI_ASYNC_MSG_DROPPING_CONNECTION;
+ 	hdr->param1		= cpu_to_be16(cmd->logout_cid);
+ 	hdr->param2		= cpu_to_be16(conn->sess->sess_ops->DefaultTime2Wait);
+@@ -2627,7 +2627,7 @@ iscsit_build_datain_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		hdr->statsn		= cpu_to_be32(0xFFFFFFFF);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->datasn		= cpu_to_be32(datain->data_sn);
+ 	hdr->offset		= cpu_to_be32(datain->offset);
+ 
+@@ -2838,7 +2838,7 @@ iscsit_build_logout_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Logout Response ITT: 0x%08x StatSN:"
+ 		" 0x%08x Response: 0x%02x CID: %hu on CID: %hu\n",
+@@ -2901,7 +2901,7 @@ iscsit_build_nopin_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built NOPIN %s Response ITT: 0x%08x, TTT: 0x%08x,"
+ 		" StatSN: 0x%08x, Length %u\n", (nopout_response) ?
+@@ -3048,7 +3048,7 @@ static int iscsit_send_r2t(
+ 	hdr->ttt		= cpu_to_be32(r2t->targ_xfer_tag);
+ 	hdr->statsn		= cpu_to_be32(conn->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->r2tsn		= cpu_to_be32(r2t->r2t_sn);
+ 	hdr->data_offset	= cpu_to_be32(r2t->offset);
+ 	hdr->data_length	= cpu_to_be32(r2t->xfer_len);
+@@ -3201,7 +3201,7 @@ void iscsit_build_rsp_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built SCSI Response, ITT: 0x%08x, StatSN: 0x%08x,"
+ 		" Response: 0x%02x, SAM Status: 0x%02x, CID: %hu\n",
+@@ -3320,7 +3320,7 @@ iscsit_build_task_mgt_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Task Management Response ITT: 0x%08x,"
+ 		" StatSN: 0x%08x, Response: 0x%02x, CID: %hu\n",
+@@ -3575,7 +3575,7 @@ iscsit_build_text_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	 */
+ 	cmd->maxcmdsn_inc = 0;
+ 	hdr->exp_cmdsn = cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn = cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn = cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Text Response: ITT: 0x%08x, TTT: 0x%08x, StatSN: 0x%08x,"
+ 		" Length: %u, CID: %hu F: %d C: %d\n", cmd->init_task_tag,
+@@ -3653,7 +3653,7 @@ iscsit_build_reject(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ }
+ EXPORT_SYMBOL(iscsit_build_reject);
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index c1898c8..cd2e073 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -656,6 +656,7 @@ static ssize_t lio_target_nacl_show_info(
+ 	struct iscsi_conn *conn;
+ 	struct se_session *se_sess;
+ 	ssize_t rb = 0;
++	u32 max_cmd_sn;
+ 
+ 	spin_lock_bh(&se_nacl->nacl_sess_lock);
+ 	se_sess = se_nacl->nacl_sess;
+@@ -703,11 +704,12 @@ static ssize_t lio_target_nacl_show_info(
+ 				" Values]-----------------------\n");
+ 		rb += sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
+ 				"  :  MaxCmdSN  :     ITT    :     TTT\n");
++		max_cmd_sn = (u32) atomic_read(&sess->max_cmd_sn);
+ 		rb += sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
+ 				"   0x%08x   0x%08x\n",
+ 			sess->cmdsn_window,
+-			(sess->max_cmd_sn - sess->exp_cmd_sn) + 1,
+-			sess->exp_cmd_sn, sess->max_cmd_sn,
++			(max_cmd_sn - sess->exp_cmd_sn) + 1,
++			sess->exp_cmd_sn, max_cmd_sn,
+ 			sess->init_task_tag, sess->targ_xfer_tag);
+ 		rb += sprintf(page+rb, "----------------------[iSCSI"
+ 				" Connections]-------------------------\n");
+diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/target/iscsi/iscsi_target_device.c
+index 5fabcd3..07d2ef6 100644
+--- a/drivers/target/iscsi/iscsi_target_device.c
++++ b/drivers/target/iscsi/iscsi_target_device.c
+@@ -47,7 +47,7 @@ void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
+ 	 * core_set_queue_depth_for_node().
+ 	 */
+ 	sess->cmdsn_window = se_nacl->queue_depth;
+-	sess->max_cmd_sn = (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
++	atomic_set(&sess->max_cmd_sn, (u32) atomic_read(&sess->max_cmd_sn) + se_nacl->queue_depth - 1);
+ }
+ 
+ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess)
+@@ -57,9 +57,6 @@ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess
+ 
+ 	cmd->maxcmdsn_inc = 1;
+ 
+-	mutex_lock(&sess->cmdsn_mutex);
+-	sess->max_cmd_sn += 1;
+-	pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	pr_debug("Updated MaxCmdSN to 0x%08x\n", atomic_inc_return(&sess->max_cmd_sn));
+ }
+ EXPORT_SYMBOL(iscsit_increment_maxcmdsn);
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 3d0fe4f..bd192f8 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -330,7 +330,7 @@ static int iscsi_login_zero_tsih_s1(
+ 	 * The FFP CmdSN window values will be allocated from the TPG's
+ 	 * Initiator Node's ACL once the login has been successfully completed.
+ 	 */
+-	sess->max_cmd_sn	= be32_to_cpu(pdu->cmdsn);
++	atomic_set(&sess->max_cmd_sn, be32_to_cpu(pdu->cmdsn));
+ 
+ 	sess->sess_ops = kzalloc(sizeof(struct iscsi_sess_ops), GFP_KERNEL);
+ 	if (!sess->sess_ops) {
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 8c02fa3..74d041e 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -340,7 +340,6 @@ static int iscsi_target_check_first_request(
+ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
+ {
+ 	u32 padding = 0;
+-	struct iscsi_session *sess = conn->sess;
+ 	struct iscsi_login_rsp *login_rsp;
+ 
+ 	login_rsp = (struct iscsi_login_rsp *) login->rsp;
+@@ -352,7 +351,7 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 	login_rsp->itt			= login->init_task_tag;
+ 	login_rsp->statsn		= cpu_to_be32(conn->stat_sn++);
+ 	login_rsp->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	login_rsp->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Sending Login Response, Flags: 0x%02x, ITT: 0x%08x,"
+ 		" ExpCmdSN; 0x%08x, MaxCmdSN: 0x%08x, StatSN: 0x%08x, Length:"
+@@ -367,10 +366,8 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 		return -1;
+ 
+ 	login->rsp_length		= 0;
+-	mutex_lock(&sess->cmdsn_mutex);
+-	login_rsp->exp_cmdsn		= cpu_to_be32(sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	login_rsp->exp_cmdsn		= cpu_to_be32(login_rsp->exp_cmdsn);
++	login_rsp->max_cmdsn		= cpu_to_be32(login_rsp->max_cmdsn);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/iscsi/iscsi_target_tmr.c
+index cf59c39..11320df 100644
+--- a/drivers/target/iscsi/iscsi_target_tmr.c
++++ b/drivers/target/iscsi/iscsi_target_tmr.c
+@@ -50,7 +50,7 @@ u8 iscsit_tmr_abort_task(
+ 		pr_err("Unable to locate RefTaskTag: 0x%08x on CID:"
+ 			" %hu.\n", hdr->rtt, conn->cid);
+ 		return (iscsi_sna_gte(be32_to_cpu(hdr->refcmdsn), conn->sess->exp_cmd_sn) &&
+-			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), conn->sess->max_cmd_sn)) ?
++			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), (u32) atomic_read(&conn->sess->max_cmd_sn))) ?
+ 			ISCSI_TMF_RSP_COMPLETE : ISCSI_TMF_RSP_NO_TASK;
+ 	}
+ 	if (ref_cmd->cmd_sn != be32_to_cpu(hdr->refcmdsn)) {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index a2bff07..7df4fac 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -233,6 +233,7 @@ struct iscsi_r2t *iscsit_get_holder_for_r2tsn(
+ 
+ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cmdsn)
+ {
++	u32 max_cmdsn;
+ 	int ret;
+ 
+ 	/*
+@@ -241,10 +242,10 @@ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cm
+ 	 * or order CmdSNs due to multiple connection sessions and/or
+ 	 * CRC failures.
+ 	 */
+-	if (iscsi_sna_gt(cmdsn, sess->max_cmd_sn)) {
++	max_cmdsn = atomic_read(&sess->max_cmd_sn);
++	if (iscsi_sna_gt(cmdsn, max_cmdsn)) {
+ 		pr_err("Received CmdSN: 0x%08x is greater than"
+-		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn,
+-		       sess->max_cmd_sn);
++		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn, max_cmdsn);
+ 		ret = CMDSN_MAXCMDSN_OVERRUN;
+ 
+ 	} else if (cmdsn == sess->exp_cmd_sn) {
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 34117b8..11abe3a 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -635,7 +635,7 @@ struct iscsi_session {
+ 	/* session wide counter: expected command sequence number */
+ 	u32			exp_cmd_sn;
+ 	/* session wide counter: maximum allowed command sequence number */
+-	u32			max_cmd_sn;
++	atomic_t		max_cmd_sn;
+ 	struct list_head	sess_ooo_cmdsn_list;
+ 
+ 	/* LIO specific session ID */
+-- 
+2.5.0.rc3
+
+>From f5f358beac34f65888031569a03c0d889f5c0ae3 Mon Sep 17 00:00:00 2001
+From: Roland Dreier <roland@purestorage.com>
+Date: Tue, 25 Sep 2012 17:57:38 +0000
+Subject: [PATCH] target: Drop iSCSI use of mutex around max_cmd_sn increment
+
+In a performance profile, taking a mutex in iscsit_increment_maxcmdsn()
+shows up very high.  However taking a mutex around "sess->max_cmd_sn += 1"
+seems pretty silly: we're not serializing against other contexts in
+any useful way.
+
+I did a quick audit and there don't appear to be any other places that
+use max_cmd_sn within the mutex more than once, so this lock can't be
+providing any useful serialization.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Spencer Baugh <sbaugh@catern.com>
+---
+ drivers/target/iscsi/iscsi_target.c          | 18 +++++++++---------
+ drivers/target/iscsi/iscsi_target_configfs.c |  6 ++++--
+ drivers/target/iscsi/iscsi_target_device.c   |  7 ++-----
+ drivers/target/iscsi/iscsi_target_login.c    |  2 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |  9 +++------
+ drivers/target/iscsi/iscsi_target_tmr.c      |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c     |  7 ++++---
+ include/target/iscsi/iscsi_target_core.h     |  2 +-
+ 8 files changed, 25 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index ebb1ece..f615d75 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -2555,7 +2555,7 @@ static int iscsit_send_conn_drop_async_message(
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->async_event	= ISCSI_ASYNC_MSG_DROPPING_CONNECTION;
+ 	hdr->param1		= cpu_to_be16(cmd->logout_cid);
+ 	hdr->param2		= cpu_to_be16(conn->sess->sess_ops->DefaultTime2Wait);
+@@ -2627,7 +2627,7 @@ iscsit_build_datain_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		hdr->statsn		= cpu_to_be32(0xFFFFFFFF);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->datasn		= cpu_to_be32(datain->data_sn);
+ 	hdr->offset		= cpu_to_be32(datain->offset);
+ 
+@@ -2838,7 +2838,7 @@ iscsit_build_logout_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Logout Response ITT: 0x%08x StatSN:"
+ 		" 0x%08x Response: 0x%02x CID: %hu on CID: %hu\n",
+@@ -2901,7 +2901,7 @@ iscsit_build_nopin_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 		iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built NOPIN %s Response ITT: 0x%08x, TTT: 0x%08x,"
+ 		" StatSN: 0x%08x, Length %u\n", (nopout_response) ?
+@@ -3048,7 +3048,7 @@ static int iscsit_send_r2t(
+ 	hdr->ttt		= cpu_to_be32(r2t->targ_xfer_tag);
+ 	hdr->statsn		= cpu_to_be32(conn->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 	hdr->r2tsn		= cpu_to_be32(r2t->r2t_sn);
+ 	hdr->data_offset	= cpu_to_be32(r2t->offset);
+ 	hdr->data_length	= cpu_to_be32(r2t->xfer_len);
+@@ -3201,7 +3201,7 @@ void iscsit_build_rsp_pdu(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built SCSI Response, ITT: 0x%08x, StatSN: 0x%08x,"
+ 		" Response: 0x%02x, SAM Status: 0x%02x, CID: %hu\n",
+@@ -3320,7 +3320,7 @@ iscsit_build_task_mgt_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 
+ 	iscsit_increment_maxcmdsn(cmd, conn->sess);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Task Management Response ITT: 0x%08x,"
+ 		" StatSN: 0x%08x, Response: 0x%02x, CID: %hu\n",
+@@ -3575,7 +3575,7 @@ iscsit_build_text_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	 */
+ 	cmd->maxcmdsn_inc = 0;
+ 	hdr->exp_cmdsn = cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn = cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn = cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Built Text Response: ITT: 0x%08x, TTT: 0x%08x, StatSN: 0x%08x,"
+ 		" Length: %u, CID: %hu F: %d C: %d\n", cmd->init_task_tag,
+@@ -3653,7 +3653,7 @@ iscsit_build_reject(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
+ 	cmd->stat_sn		= conn->stat_sn++;
+ 	hdr->statsn		= cpu_to_be32(cmd->stat_sn);
+ 	hdr->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	hdr->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	hdr->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ }
+ EXPORT_SYMBOL(iscsit_build_reject);
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index c1898c8..cd2e073 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -656,6 +656,7 @@ static ssize_t lio_target_nacl_show_info(
+ 	struct iscsi_conn *conn;
+ 	struct se_session *se_sess;
+ 	ssize_t rb = 0;
++	u32 max_cmd_sn;
+ 
+ 	spin_lock_bh(&se_nacl->nacl_sess_lock);
+ 	se_sess = se_nacl->nacl_sess;
+@@ -703,11 +704,12 @@ static ssize_t lio_target_nacl_show_info(
+ 				" Values]-----------------------\n");
+ 		rb += sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
+ 				"  :  MaxCmdSN  :     ITT    :     TTT\n");
++		max_cmd_sn = (u32) atomic_read(&sess->max_cmd_sn);
+ 		rb += sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
+ 				"   0x%08x   0x%08x\n",
+ 			sess->cmdsn_window,
+-			(sess->max_cmd_sn - sess->exp_cmd_sn) + 1,
+-			sess->exp_cmd_sn, sess->max_cmd_sn,
++			(max_cmd_sn - sess->exp_cmd_sn) + 1,
++			sess->exp_cmd_sn, max_cmd_sn,
+ 			sess->init_task_tag, sess->targ_xfer_tag);
+ 		rb += sprintf(page+rb, "----------------------[iSCSI"
+ 				" Connections]-------------------------\n");
+diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/target/iscsi/iscsi_target_device.c
+index 5fabcd3..07d2ef6 100644
+--- a/drivers/target/iscsi/iscsi_target_device.c
++++ b/drivers/target/iscsi/iscsi_target_device.c
+@@ -47,7 +47,7 @@ void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
+ 	 * core_set_queue_depth_for_node().
+ 	 */
+ 	sess->cmdsn_window = se_nacl->queue_depth;
+-	sess->max_cmd_sn = (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
++	atomic_set(&sess->max_cmd_sn, (u32) atomic_read(&sess->max_cmd_sn) + se_nacl->queue_depth - 1);
+ }
+ 
+ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess)
+@@ -57,9 +57,6 @@ void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_session *sess
+ 
+ 	cmd->maxcmdsn_inc = 1;
+ 
+-	mutex_lock(&sess->cmdsn_mutex);
+-	sess->max_cmd_sn += 1;
+-	pr_debug("Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	pr_debug("Updated MaxCmdSN to 0x%08x\n", atomic_inc_return(&sess->max_cmd_sn));
+ }
+ EXPORT_SYMBOL(iscsit_increment_maxcmdsn);
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 3d0fe4f..bd192f8 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -330,7 +330,7 @@ static int iscsi_login_zero_tsih_s1(
+ 	 * The FFP CmdSN window values will be allocated from the TPG's
+ 	 * Initiator Node's ACL once the login has been successfully completed.
+ 	 */
+-	sess->max_cmd_sn	= be32_to_cpu(pdu->cmdsn);
++	atomic_set(&sess->max_cmd_sn, be32_to_cpu(pdu->cmdsn));
+ 
+ 	sess->sess_ops = kzalloc(sizeof(struct iscsi_sess_ops), GFP_KERNEL);
+ 	if (!sess->sess_ops) {
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 8c02fa3..74d041e 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -340,7 +340,6 @@ static int iscsi_target_check_first_request(
+ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
+ {
+ 	u32 padding = 0;
+-	struct iscsi_session *sess = conn->sess;
+ 	struct iscsi_login_rsp *login_rsp;
+ 
+ 	login_rsp = (struct iscsi_login_rsp *) login->rsp;
+@@ -352,7 +351,7 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 	login_rsp->itt			= login->init_task_tag;
+ 	login_rsp->statsn		= cpu_to_be32(conn->stat_sn++);
+ 	login_rsp->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++	login_rsp->max_cmdsn		= cpu_to_be32((u32) atomic_read(&conn->sess->max_cmd_sn));
+ 
+ 	pr_debug("Sending Login Response, Flags: 0x%02x, ITT: 0x%08x,"
+ 		" ExpCmdSN; 0x%08x, MaxCmdSN: 0x%08x, StatSN: 0x%08x, Length:"
+@@ -367,10 +366,8 @@ static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_log
+ 		return -1;
+ 
+ 	login->rsp_length		= 0;
+-	mutex_lock(&sess->cmdsn_mutex);
+-	login_rsp->exp_cmdsn		= cpu_to_be32(sess->exp_cmd_sn);
+-	login_rsp->max_cmdsn		= cpu_to_be32(sess->max_cmd_sn);
+-	mutex_unlock(&sess->cmdsn_mutex);
++	login_rsp->exp_cmdsn		= cpu_to_be32(login_rsp->exp_cmdsn);
++	login_rsp->max_cmdsn		= cpu_to_be32(login_rsp->max_cmdsn);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/iscsi/iscsi_target_tmr.c
+index cf59c39..11320df 100644
+--- a/drivers/target/iscsi/iscsi_target_tmr.c
++++ b/drivers/target/iscsi/iscsi_target_tmr.c
+@@ -50,7 +50,7 @@ u8 iscsit_tmr_abort_task(
+ 		pr_err("Unable to locate RefTaskTag: 0x%08x on CID:"
+ 			" %hu.\n", hdr->rtt, conn->cid);
+ 		return (iscsi_sna_gte(be32_to_cpu(hdr->refcmdsn), conn->sess->exp_cmd_sn) &&
+-			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), conn->sess->max_cmd_sn)) ?
++			iscsi_sna_lte(be32_to_cpu(hdr->refcmdsn), (u32) atomic_read(&conn->sess->max_cmd_sn))) ?
+ 			ISCSI_TMF_RSP_COMPLETE : ISCSI_TMF_RSP_NO_TASK;
+ 	}
+ 	if (ref_cmd->cmd_sn != be32_to_cpu(hdr->refcmdsn)) {
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index a2bff07..7df4fac 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -233,6 +233,7 @@ struct iscsi_r2t *iscsit_get_holder_for_r2tsn(
+ 
+ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cmdsn)
+ {
++	u32 max_cmdsn;
+ 	int ret;
+ 
+ 	/*
+@@ -241,10 +242,10 @@ static inline int iscsit_check_received_cmdsn(struct iscsi_session *sess, u32 cm
+ 	 * or order CmdSNs due to multiple connection sessions and/or
+ 	 * CRC failures.
+ 	 */
+-	if (iscsi_sna_gt(cmdsn, sess->max_cmd_sn)) {
++	max_cmdsn = atomic_read(&sess->max_cmd_sn);
++	if (iscsi_sna_gt(cmdsn, max_cmdsn)) {
+ 		pr_err("Received CmdSN: 0x%08x is greater than"
+-		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn,
+-		       sess->max_cmd_sn);
++		       " MaxCmdSN: 0x%08x, ignoring.\n", cmdsn, max_cmdsn);
+ 		ret = CMDSN_MAXCMDSN_OVERRUN;
+ 
+ 	} else if (cmdsn == sess->exp_cmd_sn) {
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 34117b8..11abe3a 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -635,7 +635,7 @@ struct iscsi_session {
+ 	/* session wide counter: expected command sequence number */
+ 	u32			exp_cmd_sn;
+ 	/* session wide counter: maximum allowed command sequence number */
+-	u32			max_cmd_sn;
++	atomic_t		max_cmd_sn;
+ 	struct list_head	sess_ooo_cmdsn_list;
+ 
+ 	/* LIO specific session ID */
+-- 
+2.5.0.rc3
