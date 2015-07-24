@@ -1,66 +1,101 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v1 0/4] Descriptor format sense data
-Date: Thu, 23 Jul 2015 22:59:02 -0700
-Message-ID: <1437717542.8929.12.camel@haakon3.risingtidesystems.com>
-References: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
+Subject: Re: [PATCH 0/9] qla2xxx: Patches for scsi "misc" branch.
+Date: Thu, 23 Jul 2015 23:38:54 -0700
+Message-ID: <1437719934.8929.23.camel@haakon3.risingtidesystems.com>
+References: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:50809 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33634 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbbGXF7F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 01:59:05 -0400
-In-Reply-To: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
+	with ESMTP id S1751184AbbGXGi4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 02:38:56 -0400
+In-Reply-To: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 
-On Wed, 2015-07-15 at 10:55 +0300, Sagi Grimberg wrote:
-> This small patchset addresses some issues with descriptor format
-> sense data.
+Hi Himanshu & Co,
+
+(Adding target-devel CC')
+
+On Wed, 2015-06-10 at 11:05 -0400, Himanshu Madhani wrote:
+> Hi James,
 > 
-> Patch 1 fixes wrong additional sense length for descriptor format
-> information field.
+> Please apply the following patches to the scsi tree at your earliest
+> convenience for inclusion in the next mainline merge window.
 > 
-> Patch 2 protects against buffer overflow in scsi_set_information_sense
-> (reported by Hannes).
+> Thanks,
+> Himanshu
 > 
-> Patch 3 converts the target stack to report descriptor format sense
-> data to for LUs that spans 64bit sectors in order to avoid info
-> truncation (reported by hch).
+> Himanshu Madhani (3):
+>   qla2xxx: Enable target mode for ISP27XX
+>   qla2xxx: Remove msleep in qlt_send_term_exchange
+>   qla2xxx: Enable Target counters in DebugFS.
 > 
-> Patch 4 is a nit, it was included in this to avoid dependencies
-> (patch 2/4)
+> Kanoj Sarcar (1):
+>   qla2xxx: fix command initialization in target mode.
 > 
-> Changes from v0:
-> - Added patch 4/4 to avoid dependencies
-> - Modified patch 3/4 to use descriptor format only for LUs that
->   span 64bit sectors.
-> - Added reviwed-by tags.
+> Quinn Tran (4):
+>   qla2xxx: Add flush after updating ATIOQ consumer index.
+>   qla2xxx: release request queue reservation.
+>   qla2xxx: adjust debug flags
+>   qla2xxx: Add FW resource count in DebugFS.
 > 
-> Sagi Grimberg (4):
->   scsi: Fix wrong additional sense length in descriptor format
->   scsi: Protect against buffer possible overflow in
->     scsi_set_sense_information
->   target: Return descriptor format sense data in case the LU spans 64bit
->     sectors
->   libiscsi: Use scsi helper to set information descriptor
+> Saurav Kashyap (1):
+>   qla2xxx: Fix hardware lock/unlock issue causing kernel panic.
 > 
->  drivers/ata/libata-scsi.c              |  4 +++-
->  drivers/scsi/libiscsi.c                |  9 +++------
->  drivers/scsi/scsi_common.c             | 15 +++++++++++++--
->  drivers/target/target_core_hba.c       |  5 +++++
->  drivers/target/target_core_spc.c       | 12 +++++++++---
->  drivers/target/target_core_transport.c | 17 +++++++++++++----
->  include/scsi/scsi_common.h             |  2 +-
->  include/target/target_core_backend.h   |  2 ++
->  8 files changed, 49 insertions(+), 17 deletions(-)
+>  drivers/scsi/qla2xxx/qla_attr.c    |    2 +-
+>  drivers/scsi/qla2xxx/qla_def.h     |   36 ++++++++++---
+>  drivers/scsi/qla2xxx/qla_dfs.c     |  106 ++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/qla2xxx/qla_gbl.h     |    3 +-
+>  drivers/scsi/qla2xxx/qla_init.c    |   20 ++++---
+>  drivers/scsi/qla2xxx/qla_iocb.c    |    1 +
+>  drivers/scsi/qla2xxx/qla_mbx.c     |   31 +++++------
+>  drivers/scsi/qla2xxx/qla_os.c      |    1 +
+>  drivers/scsi/qla2xxx/qla_sup.c     |    2 +-
+>  drivers/scsi/qla2xxx/qla_target.c  |   60 ++++++++++++---------
+>  drivers/scsi/qla2xxx/qla_target.h  |    3 +
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    9 ++-
+>  12 files changed, 208 insertions(+), 66 deletions(-)
 > 
 
-Applied to target-pending/for-next, with the updated patch #3 and
-review-by tags.
+This series contains a number of qla2xxx target mode related bug-fixes
+that have not made it into scsi.git after 6 weeks on the list.  I don't
+see a good reason to wait another 6 weeks for v4.3-rc1 to get these into
+mainline.
 
-Thanks folks.
+That said, I'm going to merge patches #1-#7 via target-pending/master
+now and submit for v4.2-rc code.  Please re-submit the non bug-fix
+related changes in patches #8-#9 as for-4.3 code to JEJB -> scsi.git.
+
+Here's the updated diff-stat for the bug-fix series.
+
+Himanshu Madhani (2):
+  qla2xxx: Enable target mode for ISP27XX
+  qla2xxx: Remove msleep in qlt_send_term_exchange
+
+Kanoj Sarcar (1):
+  qla2xxx: fix command initialization in target mode.
+
+Quinn Tran (3):
+  qla2xxx: Add flush after updating ATIOQ consumer index.
+  qla2xxx: release request queue reservation.
+  qla2xxx: adjust debug flags
+
+Saurav Kashyap (1):
+  qla2xxx: Fix hardware lock/unlock issue causing kernel panic.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |  2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  8 +++----
+ drivers/scsi/qla2xxx/qla_init.c    |  8 +++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |  7 +++---
+ drivers/scsi/qla2xxx/qla_os.c      |  1 +
+ drivers/scsi/qla2xxx/qla_sup.c     |  2 +-
+ drivers/scsi/qla2xxx/qla_target.c  | 49 +++++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_target.h  |  3 +++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  3 +--
+ 9 files changed, 46 insertions(+), 37 deletions(-)
 
