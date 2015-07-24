@@ -1,79 +1,79 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/4] iscsi-target: Fix iser explicit logout TX kthread leak
-Date: Fri, 24 Jul 2015 02:51:18 +0000
-Message-ID: <1437706279-10580-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH 4/4] iser-target: Fix REJECT CM event use-after-free OOPs
+Date: Fri, 24 Jul 2015 02:51:19 +0000
+Message-ID: <1437706279-10580-5-git-send-email-nab@daterainc.com>
 References: <1437706279-10580-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:34861 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427AbbGXC4H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2015 22:56:07 -0400
+Received: by obbop1 with SMTP id op1so8680392obb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2015 19:56:07 -0700 (PDT)
 In-Reply-To: <1437706279-10580-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a regression introduced with the following commit
-in v4.0-rc1 code, where an explicit iser-target logout would result
-in ->tx_thread_active being incorrectly cleared by the logout post
-handler, and subsequent TX kthread leak:
+This patch fixes a bug in iser-target code where the REJECT CM event
+handler code currently performs a isert_put_conn() for the final
+isert_conn->kref put, while iscsi_np process context is still blocked
+in isert_get_login_rx().
 
-    commit 88dcd2dab5c23b1c9cfc396246d8f476c872f0ca
-    Author: Nicholas Bellinger <nab@linux-iscsi.org>
-    Date:   Thu Feb 26 22:19:15 2015 -0800
+Once isert_get_login_rx() is awoking due to login timeout, iscsi_np
+process context will attempt to invoke iscsi_target_login_sess_out()
+to cleanup iscsi_conn as expected, and calls isert_wait_conn() +
+isert_free_conn() which triggers the use-after-free OOPs.
 
-        iscsi-target: Convert iscsi_thread_set usage to kthread.h
-
-To address this bug, change iscsit_logout_post_handler_closesession()
-and iscsit_logout_post_handler_samecid() to only cmpxchg() on
-->tx_thread_active for traditional iscsi/tcp connections.
-
-This is required because iscsi/tcp connections are invoking logout
-post handler logic directly from TX kthread context, while iser
-connections are invoking logout post handler logic from a seperate
-workqueue context.
+To address this bug, move the kref_get_unless_zero() call from
+isert_connected_handler() into isert_connect_request() immediately
+preceeding isert_rdma_accept() to ensure the CM handler cleanup
+paths and isert_free_conn() are always operating with two refs.
 
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: <stable@vger.kernel.org> # v3.10+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 202a428..cd77a06 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4544,7 +4544,18 @@ static void iscsit_logout_post_handler_closesession(
- 	struct iscsi_conn *conn)
- {
- 	struct iscsi_session *sess = conn->sess;
--	int sleep = cmpxchg(&conn->tx_thread_active, true, false);
-+	int sleep = 1;
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 7717009..d851e18 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -775,6 +775,17 @@ isert_connect_request(struct rdma_cm_id *cma_id, struct rdma_cm_event *event)
+ 	ret = isert_rdma_post_recvl(isert_conn);
+ 	if (ret)
+ 		goto out_conn_dev;
 +	/*
-+	 * Traditional iscsi/tcp will invoke this logic from TX thread
-+	 * context during session logout, so clear tx_thread_active and
-+	 * sleep if iscsit_close_connection() has not already occured.
-+	 *
-+	 * Since iser-target invokes this logic from it's own workqueue,
-+	 * always sleep waiting for RX/TX thread shutdown to complete
-+	 * within iscsit_close_connection().
++	 * Obtain the second reference now before isert_rdma_accept() to
++	 * ensure that any initiator generated REJECT CM event that occurs
++	 * asynchronously won't drop the last reference until the error path
++	 * in iscsi_target_login_sess_out() does it's ->iscsit_free_conn() ->
++	 * isert_free_conn() -> isert_put_conn() -> kref_put().
 +	 */
-+	if (conn->conn_transport->transport_type == ISCSI_TCP)
-+		sleep = cmpxchg(&conn->tx_thread_active, true, false);
++	if (!kref_get_unless_zero(&isert_conn->kref)) {
++		isert_warn("conn %p connect_release is running\n", isert_conn);
++		goto out_conn_dev;
++	}
  
- 	atomic_set(&conn->conn_logout_remove, 0);
- 	complete(&conn->conn_logout_comp);
-@@ -4558,7 +4569,10 @@ static void iscsit_logout_post_handler_closesession(
- static void iscsit_logout_post_handler_samecid(
- 	struct iscsi_conn *conn)
- {
--	int sleep = cmpxchg(&conn->tx_thread_active, true, false);
-+	int sleep = 1;
-+
-+	if (conn->conn_transport->transport_type == ISCSI_TCP)
-+		sleep = cmpxchg(&conn->tx_thread_active, true, false);
+ 	ret = isert_rdma_accept(isert_conn);
+ 	if (ret)
+@@ -836,11 +847,6 @@ isert_connected_handler(struct rdma_cm_id *cma_id)
  
- 	atomic_set(&conn->conn_logout_remove, 0);
- 	complete(&conn->conn_logout_comp);
+ 	isert_info("conn %p\n", isert_conn);
+ 
+-	if (!kref_get_unless_zero(&isert_conn->kref)) {
+-		isert_warn("conn %p connect_release is running\n", isert_conn);
+-		return;
+-	}
+-
+ 	mutex_lock(&isert_conn->mutex);
+ 	if (isert_conn->state != ISER_CONN_FULL_FEATURE)
+ 		isert_conn->state = ISER_CONN_UP;
 -- 
 1.9.1
+
