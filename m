@@ -1,59 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 16/20] scsi_dh_alua: Use workqueue for RTPG
-Date: Fri, 24 Jul 2015 17:21:15 +0200
-Message-ID: <20150724152115.GC29434@lst.de>
-References: <1436346378-96518-1-git-send-email-hare@suse.de> <1436346378-96518-17-git-send-email-hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 14/20] scsi_dh_alua: parse target device id
+Date: Fri, 24 Jul 2015 11:28:21 -0400
+Message-ID: <yq1io99y3qi.fsf@sermon.lab.mkp.net>
+References: <1436346378-96518-1-git-send-email-hare@suse.de>
+	<1436346378-96518-15-git-send-email-hare@suse.de>
+	<20150724150740.GB29434@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55993 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751895AbbGXPVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jul 2015 11:21:17 -0400
-Content-Disposition: inline
-In-Reply-To: <1436346378-96518-17-git-send-email-hare@suse.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:19122 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbbGXP2d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 11:28:33 -0400
+In-Reply-To: <20150724150740.GB29434@lst.de> (Christoph Hellwig's message of
+	"Fri, 24 Jul 2015 17:07:40 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>
 
-> +	char			work_q_name[264];
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-create_workqueue and friends now accept printf-like format
-string, so there is no need for this temporary buffer.
+Christoph> Can you move this to scsi_mod.ko?  I'll need the same code
+Christoph> for the NFS SCSI layout driver soon.
 
-> +	int			error;
-> +	struct completion       init_complete;
+Same here. Working on copy offload again.
 
-Please rename error to init_error and only assign to it before calling
-complete().
-
-Also I'm not sure what the real point of init_complete is, shouldn't
-we just have a mutex held in alua_initialize and alua_activate to
-synchronize the two against each other?
-
-> +	rcu_read_lock();
-> +	pg = rcu_dereference(h->pg);
-> +	if (pg) {
-> +		kref_get(&pg->kref);
-> +		rcu_read_unlock();
-> +		alua_rtpg_queue(pg, sdev, NULL);
-> +		kref_put(&pg->kref, release_port_group);
-> +	} else
-> +		rcu_read_unlock();
-> +}
-
-How about:
-
-	rcu_read_lock();
-	pg = rcu_dereference(h->pg);
-	if (!pg) {
-		rcu_read_unlock();
-		return;
-	}
-
-	kref_get(&pg->kref);
-	rcu_read_unlock();
-	alua_rtpg_queue(pg, sdev, NULL);
-	kref_put(&pg->kref, release_port_group);
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
