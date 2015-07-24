@@ -1,92 +1,68 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
-Date: Fri, 24 Jul 2015 03:06:12 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295AA06D79@G9W0745.americas.hpqcorp.net>
-References: <1437516477-30554-1-git-send-email-sbaugh@catern.com>
- <20150723093618.GA5382@infradead.org> <877fpqfr19.fsf@ponos.purestorage.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Fix iscsit_start_kthreads failure OOPs
+Date: Thu, 23 Jul 2015 20:11:40 -0700
+Message-ID: <1437707500.28058.6.camel@haakon3.risingtidesystems.com>
+References: <1436259023-1561-1-git-send-email-nab@daterainc.com>
+	 <1436259702.23883.38.camel@haakon3.risingtidesystems.com>
+	 <559BC048.703@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <877fpqfr19.fsf@ponos.purestorage.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Spencer Baugh <sbaugh@catern.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Brian Bunker <brian@purestorage.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <559BC048.703@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Hey Sagi,
 
+Apologies for the extended delay to follow-up on this..
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> owner@vger.kernel.org] On Behalf Of Spencer Baugh
-> Sent: Thursday, July 23, 2015 5:28 PM
-> To: Christoph Hellwig <hch@infradead.org>; Spencer Baugh
-> <sbaugh@catern.com>
-...
-> Subject: Re: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
+On Tue, 2015-07-07 at 15:04 +0300, Sagi Grimberg wrote:
+> On 7/7/2015 12:01 PM, Nicholas A. Bellinger wrote:
+> > Hey Sagi,
+> >
+> > This addresses a regression with traditional iscsi-target that I noticed
+> > recently, but has not been tested with iser-target yet.
+> >
+> > Would you mind taking a quick spin with iser-target to verify, and try
+> > to intentionally fail iscsit_start_kthreads() into the two out_bitmap +
+> > out_tx error paths..?
 > 
-> From: Brian Bunker <brian@purestorage.com>
+> Umm, I hit a BUG() statement while start to test this.
 > 
-> AIX servers using VIOS servers that virtualize FC cards will have a
-> problem booting without support for START_STOP_UNIT.
+> The easy reproducer is:
+> - create 20 iser targets (listen on any 0.0.0.0:3260)
+> - discover targets 2 initiator ports ports (40 target instances)
+> - run: for i in `seq 100`; do iscsiadm -m node -l && iscsiadm -m node 
+> -u; done
 > 
-> v2: Cite sb3r36 exactly, clean up if conditions
+> Note: I wasn't able to reproduce this with iscsi/tcp.
 > 
-> Signed-off-by: Brian Bunker <brian@purestorage.com>
-> Signed-off-by: Spencer Baugh <sbaugh@catern.com>
-...
-> v2: Cite sb3r36 exactly, clean up if conditions
-> 
-...
-> diff --git a/drivers/target/target_core_sbc.c
-> b/drivers/target/target_core_sbc.c
-> index e318ddb..85c3c0a 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -154,6 +154,38 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
->  	return 0;
->  }
-> 
-> +static sense_reason_t
-> +sbc_emulate_startstop(struct se_cmd *cmd)
-> +{
-> +	unsigned char *cdb = cmd->t_task_cdb;
-> +
-> +	/*
-> +	 * See sb3r36 section 5.25
+> Stack dump:
+> kernel: isert: isert_wait4logout: conn ffff8803db5a9800
+> kernel: ------------[ cut here ]------------
+> kernel: isert: isert_wait4logout: conn ffff8803db5a9800 wait for conn_logout_comp
+> kernel: kernel BUG at drivers/target/iscsi/iscsi_target.c:4465!
 
-Global typo in this patch - sb3 should be sbc3.
+So the proper resolution for this ended up involving moving the call to
+iscsi_start_kthreads() immediately preceding sending the last login
+response.
 
-Editorial comment:
-Note that the officially published versions of the ISO and ANSI 
-standards don't carry that revision number r36; they just have
-the standard name and year.  SBC-3 revision 36 became 
-"ANSI INCITS 514-2014 Information technology - SCSI Block 
-Commands - 3 (SBC-3)".
+This is to ensure that once the last login response is sent signaling
+transition to full-feature-phase, no resource allocation failures should
+ever occur.
 
-T10 isn't really obligated to keep making particular working 
-drafts available, although the ones that have been assigned
-version descriptors (in SPC-n) are more likely to stick 
-around.  For SBC-3, only revisions 35 and 36 earned those.
+I've verified this with iscsi/tcp and iser-target, and AFAICT the
+failure cases for iscsi_start_kthreads() are now working as expected.
 
-Section numbers are quite volatile, too, so you might be
-better off including the section name.  It's starting to
-become standardese, but this kind of wording might be better:
+The updated version of this was just sent out as patch #2 in the v4.2-rc
+fixes series, and has been pushed to target-pending/master here:
 
-"See the SBC-3 START STOP UNIT command description
-(e.g., sbc3r36 5.25)"
+iscsi-target: Fix iscsit_start_kthreads failure OOPs
+https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?id=7238eef0914764211a89c069eef569bc83cb3714
 
-> +	/* From SBC-3:
-> +	 * Immediate bit should be set since there is nothing to complete
-> +	 * POWER CONDITION MODIFIER 0h
-> +	 */
-> +	if (!(cdb[1] & 1) || (cdb[2] | cdb[3]))
-> +		return TCM_INVALID_CDB_FIELD;
+Please review.
 
-Technical comment:
-The application client is not obligated to set the IMMED bit here.
-In fact, that's an unusual choice.  Using the IMMED bit means the 
-application client must handle the initial status for the 
-command, then poll for the functional results with REQUEST SENSE
-and TEST UNIT READY commands, which is much more complicated.
+--nab
