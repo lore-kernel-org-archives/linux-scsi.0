@@ -1,265 +1,369 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 0/9] qla2xxx: Patches for scsi "misc" branch.
-Date: Fri, 24 Jul 2015 18:36:27 +0000
-Message-ID: <D1D7D2D9.A6AE9%himanshu.madhani@qlogic.com>
-References: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
- <1437719934.8929.23.camel@haakon3.risingtidesystems.com>
- <1437749478.2217.13.camel@HansenPartnership.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 3/3] cxlflash: Virtual LUN support
+Date: Fri, 24 Jul 2015 15:15:29 -0500
+Message-ID: <55B29CE1.4030708@linux.vnet.ibm.com>
+References: <1437089217-52200-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D1D7D2D9A6AE9himanshumadhaniqlogiccom_"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:48490 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752193AbbGXSga (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jul 2015 14:36:30 -0400
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6OIVxAM013286
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 11:36:29 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1vqnsn1jff-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 11:36:29 -0700
-In-Reply-To: <1437749478.2217.13.camel@HansenPartnership.com>
-Content-Language: en-US
+Received: from e37.co.us.ibm.com ([32.97.110.158]:57686 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753030AbbGXUPi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 16:15:38 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 24 Jul 2015 14:15:37 -0600
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id CD1F63E4003F
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 14:15:33 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6OKCvOi39780484
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 13:12:57 -0700
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6OKFVcg010746
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 14:15:33 -0600
+In-Reply-To: <1437089217-52200-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@lst.de" <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org
+Cc: hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
---_000_D1D7D2D9A6AE9himanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <5A1EB4988AABFB4E94AEC2F9A1509B86@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+On 07/16/2015 06:26 PM, Matthew R. Ochs wrote:
+> +
+> +/**
+> + * ba_clone() - frees a block from the block allocator
+> + * @ba_lun:	Block allocator from which to allocate a block.
+> + * @to_free:	Block to free.
+> + *
+> + * Return: 0 on success, -1 on failure
+> + */
+> +static int ba_clone(struct ba_lun *ba_lun, u64 to_clone)
+> +{
+> +	struct ba_lun_info *lun_info =
+> +	    (struct ba_lun_info *)ba_lun->ba_lun_handle;
+> +
+> +	if (validate_alloc(lun_info, to_clone)) {
+> +		pr_err("%s: AUN %llX is not allocated on lun_id %llX\n",
+> +		       __func__, to_clone, ba_lun->lun_id);
 
-Hi Nic, James,
+Suggest using dev_err here instead to scope the error to the adapter.
 
+> +		return -1;
 
+Might be nice to return a better error to the user in both of the error cases
+in this code.
 
-On 7/24/15, 7:51 AM, "James Bottomley"
-<James.Bottomley@HansenPartnership.com> wrote:
-
->On Thu, 2015-07-23 at 23:38 -0700, Nicholas A. Bellinger wrote:
->> Hi Himanshu & Co,
->>=20
->> (Adding target-devel CC')
->>=20
->> On Wed, 2015-06-10 at 11:05 -0400, Himanshu Madhani wrote:
->> > Hi James,
->> >=20
->> > Please apply the following patches to the scsi tree at your earliest
->> > convenience for inclusion in the next mainline merge window.
->> >=20
->> > Thanks,
->> > Himanshu
->> >=20
->> > Himanshu Madhani (3):
->> >   qla2xxx: Enable target mode for ISP27XX
->> >   qla2xxx: Remove msleep in qlt_send_term_exchange
->> >   qla2xxx: Enable Target counters in DebugFS.
->> >=20
->> > Kanoj Sarcar (1):
->> >   qla2xxx: fix command initialization in target mode.
->> >=20
->> > Quinn Tran (4):
->> >   qla2xxx: Add flush after updating ATIOQ consumer index.
->> >   qla2xxx: release request queue reservation.
->> >   qla2xxx: adjust debug flags
->> >   qla2xxx: Add FW resource count in DebugFS.
->> >=20
->> > Saurav Kashyap (1):
->> >   qla2xxx: Fix hardware lock/unlock issue causing kernel panic.
->> >=20
->> >  drivers/scsi/qla2xxx/qla_attr.c    |    2 +-
->> >  drivers/scsi/qla2xxx/qla_def.h     |   36 ++++++++++---
->> >  drivers/scsi/qla2xxx/qla_dfs.c     |  106
->>++++++++++++++++++++++++++++++++++++
->> >  drivers/scsi/qla2xxx/qla_gbl.h     |    3 +-
->> >  drivers/scsi/qla2xxx/qla_init.c    |   20 ++++---
->> >  drivers/scsi/qla2xxx/qla_iocb.c    |    1 +
->> >  drivers/scsi/qla2xxx/qla_mbx.c     |   31 +++++------
->> >  drivers/scsi/qla2xxx/qla_os.c      |    1 +
->> >  drivers/scsi/qla2xxx/qla_sup.c     |    2 +-
->> >  drivers/scsi/qla2xxx/qla_target.c  |   60 ++++++++++++---------
->> >  drivers/scsi/qla2xxx/qla_target.h  |    3 +
->> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    9 ++-
->> >  12 files changed, 208 insertions(+), 66 deletions(-)
->> >=20
->>=20
->> This series contains a number of qla2xxx target mode related bug-fixes
->> that have not made it into scsi.git after 6 weeks on the list.  I don't
->> see a good reason to wait another 6 weeks for v4.3-rc1 to get these into
->> mainline.
->
->According to the request, they're not fixes, they're targetted for the
->merge window.  As such, they still require reviews ... but if you'd like
->to provide them, that would be great.
->
->> That said, I'm going to merge patches #1-#7 via target-pending/master
->> now and submit for v4.2-rc code.  Please re-submit the non bug-fix
->> related changes in patches #8-#9 as for-4.3 code to JEJB -> scsi.git.
->
->I don't, in principle object to this demand, because it looks for the
->description that the bug fixes should be split out, except that you
->should follow proper process and have one independent review.  Hannes or
->Christoph are probably the best placed.
-
-I will resubmit patches #8-#9 in next submission.
-
->
->James
->
->> Here's the updated diff-stat for the bug-fix series.
->>=20
->> Himanshu Madhani (2):
->>   qla2xxx: Enable target mode for ISP27XX
->>   qla2xxx: Remove msleep in qlt_send_term_exchange
->>=20
->> Kanoj Sarcar (1):
->>   qla2xxx: fix command initialization in target mode.
->>=20
->> Quinn Tran (3):
->>   qla2xxx: Add flush after updating ATIOQ consumer index.
->>   qla2xxx: release request queue reservation.
->>   qla2xxx: adjust debug flags
->>=20
->> Saurav Kashyap (1):
->>   qla2xxx: Fix hardware lock/unlock issue causing kernel panic.
->>=20
->>  drivers/scsi/qla2xxx/qla_attr.c    |  2 +-
->>  drivers/scsi/qla2xxx/qla_def.h     |  8 +++----
->>  drivers/scsi/qla2xxx/qla_init.c    |  8 +++++--
->>  drivers/scsi/qla2xxx/qla_mbx.c     |  7 +++---
->>  drivers/scsi/qla2xxx/qla_os.c      |  1 +
->>  drivers/scsi/qla2xxx/qla_sup.c     |  2 +-
->>  drivers/scsi/qla2xxx/qla_target.c  | 49
->>+++++++++++++++++++-------------------
->>  drivers/scsi/qla2xxx/qla_target.h  |  3 +++
->>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  3 +--
->>  9 files changed, 46 insertions(+), 37 deletions(-)
->>=20
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>=20
->
->
->
-
-Thanks,=20
-Himanshu
+> +	}
+> +
+> +	pr_debug("%s: Received a request to clone AUN %llX on lun_id %llX\n",
+> +		 __func__, to_clone, ba_lun->lun_id);
+> +
+> +	if (lun_info->aun_clone_map[to_clone] == MAX_AUN_CLONE_CNT) {
+> +		pr_err("%s: AUN %llX on lun_id %llX hit max clones already\n",
+> +		       __func__, to_clone, ba_lun->lun_id);
+> +		return -1;
+> +	}
+> +
+> +	lun_info->aun_clone_map[to_clone]++;
+> +
+> +	return 0;
+> +}
+> +
 
 
---_000_D1D7D2D9A6AE9himanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+> +
+> +/**
+> + * init_ba() - initializes and allocates a block allocator
+> + * @lun_info:	LUN information structure that owns the block allocator.
+> + *
+> + * Return: 0 on success, -errno on failure
+> + */
+> +static int init_ba(struct llun_info *lli)
+> +{
+> +	int rc = 0;
+> +	struct glun_info *gli = lli->parent;
+> +	struct blka *blka = &gli->blka;
+> +
+> +	memset(blka, 0, sizeof(*blka));
+> +	mutex_init(&blka->mutex);
+> +
+> +	/* LUN IDs are unique per port, save the index instead */
+> +	blka->ba_lun.lun_id = lli->lun_index;
+> +	blka->ba_lun.lsize = gli->max_lba + 1;
+> +	blka->ba_lun.lba_size = gli->blk_len;
+> +
+> +	blka->ba_lun.au_size = MC_CHUNK_SIZE;
+> +	blka->nchunk = blka->ba_lun.lsize / MC_CHUNK_SIZE;
+> +
+> +	rc = ba_init(&blka->ba_lun);
+> +	if (rc) {
+> +		pr_err("%s: cannot init block_alloc, rc=%d\n", __func__, rc);
+> +		goto init_ba_exit;
 
-eJ8+ImpHAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEZFNUMxMjE5
-Qzg1ODE1NENCRDc4OURGMjRBNjc1MkRFAFEHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBwAYABIA
-JAAbAAUAWwEBIIADAA4AAADfBwcAGAASACQAGwAFAFsBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADkAAABSZTogW1BBVENIIDAvOV0gcWxhMnh4eDogUGF0Y2hlcyBmb3Ig
-c2NzaSAibWlzYyIgYnJhbmNoLgAQEgEDkAYACBYAADQAAAACAX8AAQAAAC0AAAA8RDFEN0QyRDku
-QTZBRTklaGltYW5zaHUubWFkaGFuaUBxbG9naWMuY29tPgAAAAALAB8OAQAAAAIBCRABAAAAuwgA
-ALcIAAAlFAAATFpGddMZPC9hAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gK
-wHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBh
-dAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIX
-slx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EYIEhp
-B7AOUCwgSqJhB4EsXGwLgGUKgQsinyMxTwOgNy8yNAgvMTUiADc6NTFoIEFNIgAiIiMfsG+nAkAD
-cB5weSIi9TwiI7IuJgdASABxCfBQH4EpGFFzaAUgLgWgbT6sIHcDYBAgOiL8PiRBOFRodSIAAdAk
-wC0wYDctMjMgGIArUDPwOjM4ICuhHqAiACHRSmgG8GEEIEEuH7Bl3mwjARgwBcApmz4pcCGhhyGg
-A4Eo8HUgJiAIUMcidi9BLtgoQWQN4BnA5xzACsAYMHQtAQAaMAMgcENDJykwjy9BJEFXMwmAK0Y2
-LR6QLAIxMWg6MDUskTQs0i+nTfxhZBmhIbAufi9TIis4o504OlAecC1wGeBhcAtQunkcwGgZ4AIQ
-LfBvA/D7MhEKsHQRwAeRGJA7wwTwrwCQHMAJ0SwCeQhhIDsg9nIjAAeQdDg6G+MDAAnw7mM78gXA
-C4BjCkAAkAIg70DxO8MYUBBAIADAC4AjAq9CUASQGdE8YWQ8UC45j/84hSsQAHAfUDl7L6ZDz0YN
-sTdHKDMpOCtKcHELYNQyeErgOhlgbgGgHnAPMjVCUARxQLNJU1AymDdYWEnPStRSZQRgyxowQlBz
-HnBlcEGSSqAkdF8oUWRfG6FtX28QMBmUTR9K21RLtAWgdQcCMCjRQZJEZWJ1ZyxGU0O/OHZLAHBv
-as0GAXIeUAXAKDFJr0q26GZpeBvRbQOBHGALgORpdAcxaXoYgEFmS7jzVH84dlF1C4Aq8RhwA6B8
-KDRW/0q2MdEccEExaMcsAAGAG7F1cGRZ0TIRIEFUSU9RG9JzdfdC8UDxAQB4WxtRuQlwOxT9CXBx
-ClAfYFHAClAKUGNBvxIAGiBZ02HfSsU3YGpBQM8FQAEAVCFfMWFnDgBlj/let0ZXZKIIYUCRU0NT
-z89bfylwBhAIcGF2VfEo8G55O3BWz1G5RliREdFkjncKwBngCQBjay9TYH9wckDwBBBkgR5QQUEy
-EWtvBJEy4QqwAwBja39ud2TTBRAaMXMvPaIvSqV1Mp5fGIA98CkwUaEgfHZi8DIgKy1zr3S/dcIB
-AWYuX4B2ZjM2dwB6py3/e0B3P3hPeVMD0HZEdpIekP42Ltd6qH//eqd7f3yPdcL+ZwJgecl6YHcP
-go91lVlCv3ZIIXF7D4XfhupwgGJ2Sf8lMIGfih91swbQYcB+F3pg/4xhiKWI741/dZUZEH4FjA//
-kT91O2EgKSGEWHb/lQ91hvcyRHZClzI2iIR6yZBfmH//mY950YSmnI+dnzzQUFBKpft2QZczOXqR
-nHwOkFhxHnB/BCAZlDTjLIALgGTRWeJz6CgrKSIANnqAAQAecP2mJC0zSTEKLtgrEAQAPZDfBnGk
-0gIhC3EEIGFCAGEw/mIbsRkwUcZLm2NRGIAcUf1rIS1YgQeQLtg70CwREdD/TsFWIEJCTDFZYEDx
-PTE9otwuZ6/hX6R6gHcJ4B9Q/6uAQbQjAB9gLbBMkGdAAiCOJz85EgA7USBnbwRw/2NBLXCx0j1A
-cCCwwq9RO+CDsThAwnY0LjMtVoD/JTA9MUvSO9E7QbASLthCZvNy1ypmQWMFoTH0PURj1fMiADvR
-eSdwQa9SrcO7+H8yRBxDBbE70SpmQvtRoEH9qeF1EcC79D2QWXAt8GPDzmlwQQlwHgMgLsKArXH3
-arGroD5xJxxgIwByECpmvT0xcANgHWBMMTvRbbvy9SwRdwhgbK1hGeAJwRiAN7lvRSMFQHMLcDTh
-SScfHLC0ILrVQvQ8tiMxLdwjN7aQBzAyNnBP4S4R/i8AwB9gBJAu2FYgB+BZAtlhIGJtr+G2ZTK2
-4RvR71rxUaA7BQlwLc01QdNBcb+thS7YrQYZlFOzyac4ykB3o1AtcRrhLbaxzlM9Ikr4RUpCLJCz
-obB1xp+ytT8iANJyBRBAgAUgS3FvYv5qBZC3gT1CqdEBAFjyIgDvq1Bxkq/DCQBvtjW+qQEA/wT0
-QWKuszvSZ3Ot0j2QLUD9xdVzC1Cv4Qhgu+FQcU8w/7eCPkQqZt2FPBTEcsswBcD/xIFAkAQRWQKv
-AwIgt+IBAP/LMgnwBUDCBLKBKCEYULGx+cwHQ2gFEB9g4UBfgXBB/cSBYktRO7SrUGQhC1FAkP5k
-ctYi9bKwA/DBU8010qz/QaFCE80zBBBlObl+IiPGr/MhkASQZSc9ETvhYAMcUf8N4AEgz2ABkM2E
-3KWtsqn193LZLtpInjJuGlG/S59Mr/9N307vT//x31Xv9D9YL1k//1pP+39cqkmbXl9fb2B/YY7/
-Yq9jv2TP9L1m72f5LthtD/8Dn29PcF9xb3J/EDmg33WP/5cil4wWD3kPlxMsgJAlGL//Gc+HfRvD
-iMIcXx1vjt3KYP+IviCfko9+VJ/qJC+WDxgv5ydPnj+ahDQ5ft+bTy8b/yofKy+ezYTxgYowz6Hf
-ouNvhPIwGqNQpK00eoCl3TPvymCm//IdnGpU1JBTYM0x+9uyxhFm4TDIkNjDskJpUDf6IrH14rEi
-POpCoXV4+89gFqEi4tGuGubR9pDBAD+rkasA7THIEMlxyRJhauO6of8wb0B20jB2MBP06i7wYGcQ
-OE3wYPkhQ3Y/4tH20LPwsNARsL4QcDrcLy9EDcuhQ4UtRoJ5wPh0bWw6v+3X7W0QNcfBPm7acNlw
-EDXzBuusfX0DBABPQAAfAEIAAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBp
-AAAAAAAfAGUAAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACB
-Kx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0A
-VABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAfAAJdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAQAAAAHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBh
-AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4A
-cwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBt
-AGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAA
-AAAAAAIBGQwBAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAg
-AE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4A
-aQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBt
-AGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEA
-bgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAAAB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAu
-AG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQA
-UAAAAAAAAgH5PwEAAAB8AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1
-ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEA
-bgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAu
-AG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIA
-AABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAA
-AP5cEhnIWBVMvXid8kpnUt4DABcAAQAAAEAAOQCAh1umP8bQAUAACDC6pJ+mP8bQAQsAAIAIIAYA
-AAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBj
-AGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAA
-AADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAcgAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAw
-AC8AOQBdACAAcQBsAGEAMgB4AHgAeAA6ACAAUABhAHQAYwBoAGUAcwAgAGYAbwByACAAcwBjAHMA
-aQAgACIAbQBpAHMAYwAiACAAYgByAGEAbgBjAGgALgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAA
-AAAAAwA2AAAAAAAfAEIQAQAAAGIAAAA8ADEANAAzADcANwA0ADkANAA3ADgALgAyADIAMQA3AC4A
-MQAzAC4AYwBhAG0AZQBsAEAASABhAG4AcwBlAG4AUABhAHIAdABuAGUAcgBzAGgAaQBwAC4AYwBv
-AG0APgAAAAAAAgFxAAEAAAAlAAAAAQHQo5T3lIm5BX7d0EOp4EQhBYmgAZ3q5QAAgACJkwD//8mN
-gAAAAB8AcAABAAAAagAAAFsAUABBAFQAQwBIACAAMAAvADkAXQAgAHEAbABhADIAeAB4AHgAOgAg
-AFAAYQB0AGMAaABlAHMAIABmAG8AcgAgAHMAYwBzAGkAIAAiAG0AaQBzAGMAIgAgAGIAcgBhAG4A
-YwBoAC4AAAAAAB8ANRABAAAAWgAAADwARAAxAEQANwBEADIARAA5AC4AQQA2AEEARQA5ACUAaABp
-AG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAAAAAA
-HwA5EAEAAABSAQAAPAAxADQAMwAzADkANAA4ADcAMgA1AC0ANAAwADcAMwAtADEALQBnAGkAdAAt
-AHMAZQBuAGQALQBlAG0AYQBpAGwALQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAA
-cQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAAxADQAMwA3ADcAMQA5ADkAMwA0AC4AOAA5ADIAOQAu
-ADIAMwAuAGMAYQBtAGUAbABAAGgAYQBhAGsAbwBuADMALgByAGkAcwBpAG4AZwB0AGkAZABlAHMA
-eQBzAHQAZQBtAHMALgBjAG8AbQA+ACAAPAAxADQAMwA3ADcANAA5ADQANwA4AC4AMgAyADEANwAu
-ADEAMwAuAGMAYQBtAGUAbABAAEgAYQBuAHMAZQBuAFAAYQByAHQAbgBlAHIAcwBoAGkAcAAuAGMA
-bwBtAD4AAAAAAAMA3j+fTgAAQAAHMJ2AmKY/xtABAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9
-IDtwPVFMb2dpYztsPUFWTUIzLTE1MDcyNDE4MzYyN1otNDUyNzAAAAAfABUQAQAAAFgAAAA1AEEA
-MQBFAEIANAA5ADgAOABBAEEAQgBGAEIANABFADkANABBAEUAQwAyAEYAOQBBADEANQAwADkAQgA4
-ADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAApQEAALfLRgtIAAAAHwD6PwEA
-AAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMA
-bwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAA
-AAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkA
-bgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAADIBAABJAEkAPQAwADEAMAAxAEQAMABD
-ADYAMwBGAEEANgBGADIANgA4ADIAOAAzADkAMABBADMARgBDADQANAA4AEEAMAAyAEYANwA0ADAA
-OABDADMARQAxADUAQgBBAEUAOwBTAEIATQBJAEQAPQAyADsAUwAxAD0APAAxADQAMwA3ADcANAA5
-ADQANwA4AC4AMgAyADEANwAuADEAMwAuAGMAYQBtAGUAbABAAEgAYQBuAHMAZQBuAFAAYQByAHQA
-bgBlAHIAcwBoAGkAcAAuAGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAg
-ADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIA
-AAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAt
-AGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgA
-LQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAu
-ADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIA
-AAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAPmF
+The goto here is unnecessary
 
---_000_D1D7D2D9A6AE9himanshumadhaniqlogiccom_--
+> +	}
+> +
+> +init_ba_exit:
+> +	pr_debug("%s: returning rc=%d lli=%p\n", __func__, rc, lli);
+> +	return rc;
+> +}
+> +
+> +/**
+> + * write_same16() - sends a SCSI WRITE_SAME16 (0) command to specified LUN
+> + * @sdev:	SCSI device associated with LUN.
+> + * @lba:	Logical block address to start write same.
+> + * @nblks:	Number of logical blocks to write same.
+> + *
+> + * Return: 0 on success, -1 on failure
+> + */
+> +static int write_same16(struct scsi_device *sdev,
+> +			u64 lba,
+> +			u32 nblks)
+> +{
+> +	u8 scsi_cmd[MAX_COMMAND_SIZE];
+> +	u8 *cmd_buf = NULL;
+> +	u8 *sense_buf = NULL;
+> +	int rc = 0;
+> +	int result = 0;
+> +	int ws_limit = SISLITE_MAX_WS_BLOCKS;
+> +	u64 offset = lba;
+> +	int left = nblks;
+> +
+> +	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+> +	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
+> +	sense_buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+> +	if (!cmd_buf || !sense_buf) {
+> +		rc = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	while (left > 0) {
+> +
+> +		scsi_cmd[0] = WRITE_SAME_16;
+> +		put_unaligned_be64(offset, &scsi_cmd[2]);
+> +		put_unaligned_be32(ws_limit < left ? ws_limit : left,
+> +				   &scsi_cmd[10]);
+> +
+> +		left -= ws_limit;
+> +		offset += ws_limit;
+> +
+> +		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
+> +				      CMD_BUFSIZE, sense_buf,
+> +				      (MC_DISCOVERY_TIMEOUT*HZ), 5, 0, NULL);
+
+5 seconds seems a little on the short side for this command. Perhaps using
+sdev->request_queue->rq_timeout would be better?
+
+> +
+> +		if (result) {
+> +			pr_err("%s: command failed for offset %lld"
+> +			      " result=0x%x\n", __func__, offset, result);
+> +			rc = -EIO;
+> +			goto out;
+> +		}
+> +	}
+> +
+> +out:
+
+You need to free cmd_buf and sense_buf here.
+
+> +	pr_debug("%s: returning rc=%d\n", __func__, rc);
+> +	return rc;
+> +}
+> +
+
+> +
+> +/**
+> + * _cxlflash_vlun_resize() - changes the size of a virtual lun
+> + * @sdev:	SCSI device associated with LUN owning virtual LUN.
+> + * @ctxi:	Context owning resources.
+> + * @resize:	Resize ioctl data structure.
+> + *
+> + * On successful return, the user is informed of the new size (in blocks)
+> + * of the virtual lun in last LBA format. When the size of the virtual
+> + * lun is zero, the last LBA is reflected as -1.
+> + *
+> + * Return: 0 on success, -errno on failure
+> + */
+> +int _cxlflash_vlun_resize(struct scsi_device *sdev,
+> +			  struct ctx_info *ctxi,
+> +			  struct dk_cxlflash_resize *resize)
+> +{
+> +	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
+> +	struct llun_info *lli = sdev->hostdata;
+> +	struct glun_info *gli = lli->parent;
+> +	struct afu *afu = cfg->afu;
+> +	bool unlock_ctx = false;
+> +
+> +	res_hndl_t rhndl = resize->rsrc_handle;
+> +	u64 new_size;
+> +	u64 nsectors;
+> +	u64 ctxid = DECODE_CTXID(resize->context_id),
+> +	    rctxid = resize->context_id;
+> +
+> +	struct sisl_rht_entry *rhte;
+> +
+> +	int rc = 0;
+> +
+> +	/* req_size is always assumed to be in 4k blocks. So we have to convert
+> +	 * it from 4k to chunk size
+> +	 */
+> +	nsectors = (resize->req_size * CXLFLASH_BLOCK_SIZE) / gli->blk_len;
+> +	new_size = (nsectors + MC_CHUNK_SIZE - 1) / MC_CHUNK_SIZE;
+
+Use DIV_ROUND_UP instead.
+
+> +
+> +	pr_debug("%s: ctxid=%llu rhndl=0x%llx, req_size=0x%llx,"
+> +		 "new_size=%llx\n", __func__, ctxid, resize->rsrc_handle,
+> +		 resize->req_size, new_size);
+> +
+> +	if (unlikely(gli->mode != MODE_VIRTUAL)) {
+> +		pr_err("%s: LUN mode does not support resize! (%d)\n",
+> +		       __func__, gli->mode);
+> +		rc = -EINVAL;
+> +		goto out;
+> +
+> +	}
+> +
+> +	if (!ctxi) {
+> +		ctxi = get_context(cfg, rctxid, lli, CTX_CTRL_ERR_FALLBACK);
+> +		if (unlikely(!ctxi)) {
+> +			pr_err("%s: Bad context! (%llu)\n", __func__, ctxid);
+> +			rc = -EINVAL;
+> +			goto out;
+> +		}
+> +
+> +		unlock_ctx = true;
+> +	}
+> +
+> +	rhte = get_rhte(ctxi, rhndl, lli);
+> +	if (unlikely(!rhte)) {
+> +		pr_err("%s: Bad resource handle! (%u)\n", __func__, rhndl);
+> +		rc = -EINVAL;
+> +		goto out;
+> +	}
+> +
+> +	if (new_size > rhte->lxt_cnt)
+> +		rc = grow_lxt(afu,
+> +			      sdev,
+> +			      ctxid,
+> +			      rhndl,
+> +			      rhte,
+> +			      &new_size);
+> +	else if (new_size < rhte->lxt_cnt)
+> +		rc = shrink_lxt(afu,
+> +				sdev,
+> +				ctxid,
+> +				rhndl,
+> +				rhte,
+> +				&new_size);
+> +
+> +	resize->hdr.return_flags = 0;
+> +	resize->last_lba = (new_size * MC_CHUNK_SIZE * gli->blk_len);
+> +	resize->last_lba /= CXLFLASH_BLOCK_SIZE;
+> +	resize->last_lba--;
+> +
+> +out:
+> +	if (unlock_ctx)
+> +		mutex_unlock(&ctxi->mutex);
+> +	pr_debug("%s: resized to %lld returning rc=%d\n",
+> +		 __func__, resize->last_lba, rc);
+> +	return rc;
+> +}
+> +
+> +int cxlflash_vlun_resize(struct scsi_device *sdev,
+> +			 struct dk_cxlflash_resize *resize)
+> +{
+> +	return _cxlflash_vlun_resize(sdev, NULL, resize);
+> +}
+> +
+> +/**
+> + * init_lun_table() - write an entry in the LUN table
+> + * @cfg:        Internal structure associated with the host.
+> + * @lli:	Per adapter LUN information structure.
+> + *
+> + * On successful return, a LUN table entry is created.
+> + * At the top for LUNs visible on both ports.
+> + * At the bottom for LUNs visible only on one port.
+> + *
+> + * Return: 0 on success, -errno on failure
+> + */
+> +static int init_lun_table(struct cxlflash_cfg *cfg, struct llun_info *lli)
+> +{
+> +	u32 chan;
+> +	int rc = 0;
+> +	struct afu *afu = cfg->afu;
+> +
+> +	if (lli->in_table)
+> +		goto out;
+> +
+> +	if (lli->port_sel == BOTH_PORTS) {
+> +		/*
+> +		 * If this LUN is visible from both ports, we will put
+> +		 * it in the top half of the LUN table.
+> +		 */
+> +		if ((cfg->promote_lun_index == cfg->last_lun_index[0]) ||
+> +		    (cfg->promote_lun_index == cfg->last_lun_index[1])) {
+> +			rc = -ENOSPC;
+> +			goto out;
+> +		}
+> +
+> +		lli->lun_index = cfg->promote_lun_index;
+> +		writeq_be(lli->lun_id[0],
+> +			  &afu->afu_map->global.fc_port[0]
+> +			  [cfg->promote_lun_index]);
+
+Would improve readability IMHO if you either put the second parm all on one
+line or used a local variable to make it better fit on one line, rather than
+line breaking where you did.
+
+> +		writeq_be(lli->lun_id[1],
+> +			  &afu->afu_map->global.fc_port[1]
+> +			  [cfg->promote_lun_index]);
+> +		cfg->promote_lun_index++;
+> +		pr_debug("%s: Virtual LUN on slot %d  id0=%llx, id1=%llx\n",
+> +			 __func__, lli->lun_index, lli->lun_id[0],
+> +			 lli->lun_id[1]);
+
+Suggest changing the pr_debug calls to dev_dbg calls where possible to scope
+the messages to an adapter.
+
+> +	} else {
+> +		/*
+> +		 * If this LUN is visible only from one port, we will put
+> +		 * it in the bottom half of the LUN table.
+> +		 */
+> +		chan = PORT2CHAN(lli->port_sel);
+> +		if (cfg->promote_lun_index == cfg->last_lun_index[chan]) {
+> +			rc = -ENOSPC;
+> +			goto out;
+> +		}
+> +
+> +		lli->lun_index = cfg->last_lun_index[chan];
+> +		writeq_be(lli->lun_id[chan],
+> +			  &afu->afu_map->global.fc_port[chan]
+> +			  [cfg->last_lun_index[chan]]);
+> +		cfg->last_lun_index[chan]--;
+> +		pr_debug("%s: Virtual LUN on slot %d  chan=%d, id=%llx\n",
+> +			 __func__, lli->lun_index, chan, lli->lun_id[chan]);
+> +	}
+> +
+> +	lli->in_table = true;
+> +out:
+> +	pr_debug("%s: returning rc=%d\n", __func__, rc);
+> +	return rc;
+> +}
+> +
+
+
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
