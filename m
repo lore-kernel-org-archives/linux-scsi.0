@@ -1,87 +1,59 @@
-From: Spencer Baugh <sbaugh@catern.com>
-Subject: Re: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
-Date: Thu, 23 Jul 2015 15:27:46 -0700
-Message-ID: <877fpqfr19.fsf@ponos.purestorage.com>
-References: <1437516477-30554-1-git-send-email-sbaugh@catern.com> <20150723093618.GA5382@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from catern.com ([104.131.201.120]:44156 "EHLO mail.catern.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753765AbbGWW1t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jul 2015 18:27:49 -0400
-In-Reply-To: <20150723093618.GA5382@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/4] iscsi/iser-target fixes for v4.2-rc
+Date: Fri, 24 Jul 2015 02:51:15 +0000
+Message-ID: <1437706279-10580-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Spencer Baugh <sbaugh@catern.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Brian Bunker <brian@purestorage.com>
 
-From: Brian Bunker <brian@purestorage.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-AIX servers using VIOS servers that virtualize FC cards will have a
-problem booting without support for START_STOP_UNIT.
+Hi Sagi & Co,
 
-v2: Cite sb3r36 exactly, clean up if conditions
+The following series is a handful of iscsi/iser-target related bugfixes
+for issues uncovered during recent testing with v4.2-rc code.
 
-Signed-off-by: Brian Bunker <brian@purestorage.com>
-Signed-off-by: Spencer Baugh <sbaugh@catern.com>
----
- drivers/target/target_core_sbc.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+Patch #1 fixes a long-standing use-after-free issue during explicit TPG
+shutdown for demo-mode sessions.
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index e318ddb..85c3c0a 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -154,6 +154,38 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
- 	return 0;
- }
- 
-+static sense_reason_t
-+sbc_emulate_startstop(struct se_cmd *cmd)
-+{
-+	unsigned char *cdb = cmd->t_task_cdb;
-+
-+	/*
-+	 * See sb3r36 section 5.25
-+	 * Immediate bit should be set since there is nothing to complete
-+	 * POWER CONDITION MODIFIER 0h
-+	 */
-+	if (!(cdb[1] & 1) || cdb[2] || cdb[3])
-+		return TCM_INVALID_CDB_FIELD;
-+
-+	/*
-+	 * See sb3r36 section 5.25
-+	 * POWER CONDITION 0h START_VALID - process START and LOEJ
-+	 */
-+	if (cdb[4] >> 4 & 0xf)
-+		return TCM_INVALID_CDB_FIELD;
-+
-+	/*
-+	 * See sb3r36 section 5.25
-+	 * LOEJ 0h - nothing to load or unload
-+	 * START 1h - we are ready
-+	 */
-+	if (!(cdb[4] & 1) || (cdb[4] & 2) || (cdb[4] & 4))
-+		return TCM_INVALID_CDB_FIELD;
-+
-+	target_complete_cmd(cmd, SAM_STAT_GOOD);
-+	return 0;
-+}
-+
- sector_t sbc_get_write_same_sectors(struct se_cmd *cmd)
- {
- 	u32 num_blocks;
-@@ -1069,6 +1101,10 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		size = 0;
- 		cmd->execute_cmd = sbc_emulate_noop;
- 		break;
-+	case START_STOP:
-+		size = 0;
-+		cmd->execute_cmd = sbc_emulate_startstop;
-+		break;
- 	default:
- 		ret = spc_parse_cdb(cmd, &size);
- 		if (ret)
+Patch #2 addresses a >= v4.0-rc1 specific regression for the failure case
+when iscsi_start_kthreads() is unable to start new kthreads.  An earlier
+version of the patch was broken wrt iser-target, and this updated version
+is now working as expected (with failure cases) for both transports.
+
+Patch #3 address a different >= v4.0-rc1 specific regression where during
+explicit logout with iser-target, the TX thread was being leaked due to
+the same iscsi_start_kthreads() change.
+
+And finally, patch #4 addresses a (new?) iser-target use-after-free issue,
+where a REJECT CM event -> isert_connect_error() is doing the final
+isert_put_conn() -> kref_put(), before iscsi_np context is able to release
+the associated iscsi_conn, and do isert_wait_conn() -> isert_free_conn().
+
+All four patches have been tested with both transports, but I'd really like
+your review + testing especially on #4 as I'm not sure if the special case
+applies only to REJECT events, or to other isert_connect_error() events
+as well.   (#4 currently does the latter)
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (4):
+  iscsi-target: Fix use-after-free during TPG session shutdown
+  iscsi-target: Fix iscsit_start_kthreads failure OOPs
+  iscsi-target: Fix iser explicit logout TX kthread leak
+  iser-target: Fix REJECT CM event use-after-free OOPs
+
+ drivers/infiniband/ulp/isert/ib_isert.c   | 16 +++++++----
+ drivers/target/iscsi/iscsi_target.c       | 48 +++++++++++++++++++++++++------
+ drivers/target/iscsi/iscsi_target_login.c | 45 +++++++++++------------------
+ drivers/target/iscsi/iscsi_target_login.h |  3 +-
+ drivers/target/iscsi/iscsi_target_nego.c  | 34 +++++++++++++++++++++-
+ include/target/iscsi/iscsi_target_core.h  |  1 +
+ 6 files changed, 103 insertions(+), 44 deletions(-)
+
 -- 
-2.5.0.rc3
+1.9.1
