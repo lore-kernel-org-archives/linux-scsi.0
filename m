@@ -1,30 +1,217 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 14/20] scsi_dh_alua: parse target device id
-Date: Fri, 24 Jul 2015 11:28:21 -0400
-Message-ID: <yq1io99y3qi.fsf@sermon.lab.mkp.net>
-References: <1436346378-96518-1-git-send-email-hare@suse.de>
-	<1436346378-96518-15-git-send-email-hare@suse.de>
-	<20150724150740.GB29434@lst.de>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 0/9] qla2xxx: Patches for scsi "misc" branch.
+Date: Fri, 24 Jul 2015 18:32:07 +0000
+Message-ID: <D1D7CBC8.A6A51%himanshu.madhani@qlogic.com>
+References: <1433948725-4073-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1437719934.8929.23.camel@haakon3.risingtidesystems.com>
+ <1437720321.8929.26.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+	boundary="_000_D1D7CBC8A6A51himanshumadhaniqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19122 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbbGXP2d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 11:28:33 -0400
-In-Reply-To: <20150724150740.GB29434@lst.de> (Christoph Hellwig's message of
-	"Fri, 24 Jul 2015 17:07:40 +0200")
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:8175 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752630AbbGXScJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jul 2015 14:32:09 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6OIRxD2031503
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 11:32:08 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1vqnxvskmj-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2015 11:32:07 -0700
+In-Reply-To: <1437720321.8929.26.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@lst.de" <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+--_000_D1D7CBC8A6A51himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <37C921D3DF8E3D459D5B337A19C60511@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-Christoph> Can you move this to scsi_mod.ko?  I'll need the same code
-Christoph> for the NFS SCSI layout driver soon.
+Hi Nic,=20
 
-Same here. Working on copy offload again.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+On 7/23/15, 11:45 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+>On Thu, 2015-07-23 at 23:38 -0700, Nicholas A. Bellinger wrote:
+>> Hi Himanshu & Co,
+>>=20
+>> (Adding target-devel CC')
+>>=20
+>> On Wed, 2015-06-10 at 11:05 -0400, Himanshu Madhani wrote:
+>> > Hi James,
+>
+><SNIP>
+>
+>> This series contains a number of qla2xxx target mode related bug-fixes
+>> that have not made it into scsi.git after 6 weeks on the list.  I don't
+>> see a good reason to wait another 6 weeks for v4.3-rc1 to get these into
+>> mainline.
+>>=20
+>> That said, I'm going to merge patches #1-#7 via target-pending/master
+>> now and submit for v4.2-rc code.  Please re-submit the non bug-fix
+>> related changes in patches #8-#9 as for-4.3 code to JEJB -> scsi.git.
+>>=20
+>> Here's the updated diff-stat for the bug-fix series.
+>>=20
+>> Himanshu Madhani (2):
+>>   qla2xxx: Enable target mode for ISP27XX
+>>   qla2xxx: Remove msleep in qlt_send_term_exchange
+>>=20
+>> Kanoj Sarcar (1):
+>>   qla2xxx: fix command initialization in target mode.
+>>=20
+>> Quinn Tran (3):
+>>   qla2xxx: Add flush after updating ATIOQ consumer index.
+>>   qla2xxx: release request queue reservation.
+>>   qla2xxx: adjust debug flags
+>>=20
+>> Saurav Kashyap (1):
+>>   qla2xxx: Fix hardware lock/unlock issue causing kernel panic.
+>>=20
+>>  drivers/scsi/qla2xxx/qla_attr.c    |  2 +-
+>>  drivers/scsi/qla2xxx/qla_def.h     |  8 +++----
+>>  drivers/scsi/qla2xxx/qla_init.c    |  8 +++++--
+>>  drivers/scsi/qla2xxx/qla_mbx.c     |  7 +++---
+>>  drivers/scsi/qla2xxx/qla_os.c      |  1 +
+>>  drivers/scsi/qla2xxx/qla_sup.c     |  2 +-
+>>  drivers/scsi/qla2xxx/qla_target.c  | 49
+>>+++++++++++++++++++-------------------
+>>  drivers/scsi/qla2xxx/qla_target.h  |  3 +++
+>>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  3 +--
+>>  9 files changed, 46 insertions(+), 37 deletions(-)
+>>=20
+>
+>Which reminds me, some of bug-fixes need proper CC' stable tags.
+>
+>Can you give me your best guess as to which patches these should be, and
+>the approximate versions for the stable team to pick up..?
+
+This patch http://marc.info/?l=3Dlinux-scsi&m=3D143395154920491&w=3D2 is al=
+ready
+marked for stable and should be included in 3.18 and onwards. In addition
+following=20
+patches should be picked up by stable team for 3.18 and onwards.
+
+http://marc.info/?l=3Dlinux-scsi&m=3D143395156620504&w=3D2
+
+http://marc.info/?l=3Dlinux-scsi&m=3D143395156320500&w=3D2
+
+http://marc.info/?l=3Dlinux-scsi&m=3D143395154820489&w=3D2
+
+
+>
+>Thank you,
+>
+>--nab
+>
+
+
+--_000_D1D7CBC8A6A51himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+PdGpIVBR7yiGQnJ7oKrBeC3RECBHAH+gUaUSXCerdkTwHLFAsHDnDlB+0JTxLj8iLDojTQNjP2AC
+QHA6L08BR2AuwwuAAhAvP2w9JqQnEgAmbT0xNDMzOR41I/CY8AHQmPAxJneePZWwOkEHQEThZHki
+Jf+30X/QHGEFsat1UFOw5kBxnmMKQAEAa2KfAC4xKqDfUFICIH3hqOAlgEkDoDWA/w3gbCIiJQIQ
+JcBQIDAiIiW/TQa9KLUyHFFbED3gebQ7P0bSvo8iLLdvuH+5hTY2/QHQNTSAumLF38bvx//JA3oz
+yWIwyb/Kz8vfuXc4eboRODnN3yh3KIZLIW7/ftCtcTefm8AmYTet0jUVQgHXoAAfAEIAAQAAACIA
+AABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAGUAAQAAADgAAABoAGkAbQBh
+AG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAA
+CgAAAFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBt
+AGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4A
+bQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADgAAABoAGkAbQBh
+AG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAA
+QAAAAHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAA
+AAAfAB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAfAAAAAAAAACBKx+k
+vqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQ
+AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAfAAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBp
+AGMALgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkA
+AAAAAB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB8AAAAAAAAAIEr
+H6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBU
+AFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA
+8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAGaiNHQtRaFPpvrwBddKrDQDABcAAQAA
+AEAAOQCArWILP8bQAUAACDAPXWgLP8bQAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAA
+HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAA
+AAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8A
+NwABAAAAcgAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIAAwAC8AOQBdACAAcQBsAGEAMgB4AHgAeAA6
+ACAAUABhAHQAYwBoAGUAcwAgAGYAbwByACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEA
+bgBjAGgALgAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAHIAAAA8
+ADEANAAzADcANwAyADAAMwAyADEALgA4ADkAMgA5AC4AMgA2AC4AYwBhAG0AZQBsAEAAaABhAGEA
+awBvAG4AMwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5AHMAdABlAG0AcwAuAGMAbwBtAD4AAAAA
+AAIBcQABAAAAJQAAAAEB0KOU95SJuQV+3dBDqeBEIQWJoAGd6uUAAIAAAc2AgABQG4AAAAAfAHAA
+AQAAAGoAAABbAFAAQQBUAEMASAAgADAALwA5AF0AIABxAGwAYQAyAHgAeAB4ADoAIABQAGEAdABj
+AGgAZQBzACAAZgBvAHIAIABzAGMAcwBpACAAIgBtAGkAcwBjACIAIABiAHIAYQBuAGMAaAAuAAAA
+AAAfADUQAQAAAFoAAAA8AEQAMQBEADcAQwBCAEMAOAAuAEEANgBBADUAMQAlAGgAaQBtAGEAbgBz
+AGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAAAB8AORABAAAA
+YgEAADwAMQA0ADMAMwA5ADQAOAA3ADIANQAtADQAMAA3ADMALQAxAC0AZwBpAHQALQBzAGUAbgBk
+AC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0APgAgADwAMQA0ADMANwA3ADEAOQA5ADMANAAuADgAOQAyADkALgAyADMALgBj
+AGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUA
+bQBzAC4AYwBvAG0APgAgADwAMQA0ADMANwA3ADIAMAAzADIAMQAuADgAOQAyADkALgAyADYALgBj
+AGEAbQBlAGwAQABoAGEAYQBrAG8AbgAzAC4AcgBpAHMAaQBuAGcAdABpAGQAZQBzAHkAcwB0AGUA
+bQBzAC4AYwBvAG0APgAAAAAAAwDeP59OAABAAAcw8jhhCz/G0AEDACYAAAAAAAIBRwABAAAALgAA
+AGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTUwNzI0MTgzMjA3Wi00NTI2NQAAAB8AFRABAAAA
+WAAAADMANwBDADkAMgAxAEQAMwBEAEYAOABFADMARAA0ADUAOQBEADUAQgAzADMANwBBADEAOQBD
+ADYAMAA1ADEAMQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAAAMAQAAKAboBkgA
+AAAfAPo/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkA
+YwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4AOQAuADEAMwAx
+ADAAMwAwAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQA
+aQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAQgEAAEkASQA9ADAAMQAw
+ADEARAAwAEMANgAzAEYAMABCADYANAAwADEARAAzAEUANgBDAEEARQBBADkAMAA0ADkAOQA3AEEA
+NAA4ADMANwAwADQAMgA1AEYAMwA0ADIAQwA7AFMAQgBNAEkARAA9ADIAOwBTADEAPQA8ADEANAAz
+ADcANwAyADAAMwAyADEALgA4ADkAMgA5AC4AMgA2AC4AYwBhAG0AZQBsAEAAaABhAGEAawBvAG4A
+MwAuAHIAaQBzAGkAbgBnAHQAaQBkAGUAcwB5AHMAdABlAG0AcwAuAGMAbwBtAD4AOwBWAGUAcgBz
+AGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1AC4A
+MAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAA
+AAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
+FgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAGGE
+
+--_000_D1D7CBC8A6A51himanshumadhaniqlogiccom_--
