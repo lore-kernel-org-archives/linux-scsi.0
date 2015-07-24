@@ -1,73 +1,66 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v4 0/5] Target sense data handling modifications
-Date: Thu, 23 Jul 2015 22:16:04 -0700
-Message-ID: <1437714964.8929.5.camel@haakon3.risingtidesystems.com>
-References: <1436367534-15995-1-git-send-email-sagig@mellanox.com>
+Subject: Re: [PATCH v1 0/4] Descriptor format sense data
+Date: Thu, 23 Jul 2015 22:59:02 -0700
+Message-ID: <1437717542.8929.12.camel@haakon3.risingtidesystems.com>
+References: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1436367534-15995-1-git-send-email-sagig@mellanox.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@mellanox.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50809 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbbGXF7F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2015 01:59:05 -0400
+In-Reply-To: <1436946939-19415-1-git-send-email-sagig@mellanox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hi Sagi & Co,
-
-Apologies for the extended delayed follow-up on this series..
-
-Applied to target-pending/for-next, including the scsi_error.c
--> scsi_common.c conversion in patch #4.
-
-Thanks folks!
-
-On Wed, 2015-07-08 at 17:58 +0300, Sagi Grimberg wrote:
-> This patch set modifies the target sense data handling.
-> First, cleanup transport_send_check_condition_and_sense()
-> by splitting the sense translation to a separate function.
-> Second, convert sense reason the switch statement to a table
-> driven code. Third, Use scsi common helpers to correctly set
-> the sense buffer. Last, Fix sense key wrong setting of t10-pi
-> errors.
+On Wed, 2015-07-15 at 10:55 +0300, Sagi Grimberg wrote:
+> This small patchset addresses some issues with descriptor format
+> sense data.
 > 
-> Changes from v2:
-> - Removed wrong patch 5/5 for descriptor format sense data
-> - Added a patch (5/5) that fixes wrong sense key for PI errors
-> - Incorporate hch's comments
-> - Added Reviewed-by tags
+> Patch 1 fixes wrong additional sense length for descriptor format
+> information field.
 > 
-> Changes from v2:
-> - Pass sense_reason_t to scsi_translate_sense()
-> - Split patch 3:
->   1) move the helpers to scsi_common.c
->   2) use helpers in the target code
->   3) always use descriptor-type sense data for PI errors
+> Patch 2 protects against buffer overflow in scsi_set_information_sense
+> (reported by Hannes).
 > 
-> Changes from v1:
-> - Added Reviewed-by tags for patches 1,2
-> - Fixed compilation error after testing patch #3 on scsi/for-next
->   branch. Moved scsi_sense_desc_find() to scsi_common as well (dependency)
->   and also moved <asm/unaligned.h> include to scsi_common.h
+> Patch 3 converts the target stack to report descriptor format sense
+> data to for LUs that spans 64bit sectors in order to avoid info
+> truncation (reported by hch).
+> 
+> Patch 4 is a nit, it was included in this to avoid dependencies
+> (patch 2/4)
 > 
 > Changes from v0:
-> - Added Bart's patches and converted my patch to apply over his
-> - Moved scsi sense helpers to scsi_common
+> - Added patch 4/4 to avoid dependencies
+> - Modified patch 3/4 to use descriptor format only for LUs that
+>   span 64bit sectors.
+> - Added reviwed-by tags.
 > 
-> Bart Van Assche (2):
->   target: Inline transport_get_sense_codes()
->   target: Split transport_send_check_condition_and_sense()
+> Sagi Grimberg (4):
+>   scsi: Fix wrong additional sense length in descriptor format
+>   scsi: Protect against buffer possible overflow in
+>     scsi_set_sense_information
+>   target: Return descriptor format sense data in case the LU spans 64bit
+>     sectors
+>   libiscsi: Use scsi helper to set information descriptor
 > 
-> Sagi Grimberg (3):
->   scsi: Move sense handling routines to scsi_common
->   target: Use scsi helpers to build the sense data correctly
->   target: Return ABORTED_COMMAND sense key for PI errors
+>  drivers/ata/libata-scsi.c              |  4 +++-
+>  drivers/scsi/libiscsi.c                |  9 +++------
+>  drivers/scsi/scsi_common.c             | 15 +++++++++++++--
+>  drivers/target/target_core_hba.c       |  5 +++++
+>  drivers/target/target_core_spc.c       | 12 +++++++++---
+>  drivers/target/target_core_transport.c | 17 +++++++++++++----
+>  include/scsi/scsi_common.h             |  2 +-
+>  include/target/target_core_backend.h   |  2 ++
+>  8 files changed, 49 insertions(+), 17 deletions(-)
 > 
->  drivers/scsi/scsi_common.c             |  98 ++++++++
->  drivers/scsi/scsi_error.c              |  99 +--------
->  drivers/target/target_core_spc.c       |  31 +--
->  drivers/target/target_core_transport.c | 396 ++++++++++++---------------------
->  include/scsi/scsi_common.h             |   5 +
->  include/scsi/scsi_eh.h                 |   7 +-
->  6 files changed, 252 insertions(+), 384 deletions(-)
-> 
+
+Applied to target-pending/for-next, with the updated patch #3 and
+review-by tags.
+
+Thanks folks.
+
