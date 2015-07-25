@@ -1,32 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/5] scsi: rescan VPD attributes
-Date: Sat, 25 Jul 2015 17:42:43 +0200
-Message-ID: <55B3AE73.7060501@suse.de>
-References: <1436353788-104911-1-git-send-email-hare@suse.de> <1436353788-104911-2-git-send-email-hare@suse.de> <20150724143834.GA28970@lst.de> <55B24E6A.6030904@suse.de> <20150724144348.GA29080@lst.de>
+Subject: Re: [PATCH 04/20] scsi_dh_alua: Improve error handling
+Date: Sat, 25 Jul 2015 17:42:57 +0200
+Message-ID: <55B3AE81.8090603@suse.de>
+References: <1436346378-96518-1-git-send-email-hare@suse.de> <1436346378-96518-5-git-send-email-hare@suse.de> <20150724144802.GA29096@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56791 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56808 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754927AbbGYPmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jul 2015 11:42:45 -0400
-In-Reply-To: <20150724144348.GA29080@lst.de>
+	id S1754880AbbGYPm7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Jul 2015 11:42:59 -0400
+In-Reply-To: <20150724144802.GA29096@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>
 
-On 07/24/2015 04:43 PM, Christoph Hellwig wrote:
-> On Fri, Jul 24, 2015 at 04:40:42PM +0200, Hannes Reinecke wrote:
->> Yeah, possibly. After all, the variable isn't expected to change
->> under rcu_read_lock().
+On 07/24/2015 04:48 PM, Christoph Hellwig wrote:
+> This seems to be a bit of a catchall.  Can you split the logging chan=
+ges
+> from actual error code logic changes and describe the latter in more =
+detail?
 >=20
-> Actually it can and will change, that's the point.  But if you use
-> a local variable you keep a single version of it, which won't be
-> freed until after rcu_read_unlock.
->=20
-Yeah, I figured this as well. Will be updating the patch.
+Ok.
 
 Cheers,
 
