@@ -1,36 +1,27 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] target: add support for START_STOP_UNIT SCSI opcode
-Date: Fri, 24 Jul 2015 23:32:19 -0700
-Message-ID: <20150725063219.GD26437@infradead.org>
-References: <1437516477-30554-1-git-send-email-sbaugh@catern.com>
- <20150723093618.GA5382@infradead.org>
- <877fpqfr19.fsf@ponos.purestorage.com>
- <94D0CD8314A33A4D9D801C0FE68B40295AA06D79@G9W0745.americas.hpqcorp.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] target: fix crash in cmd tracing when cmd didn't match
+	a LUN
+Date: Sat, 25 Jul 2015 08:48:49 +0200
+Message-ID: <20150725064849.GA8052@lst.de>
+References: <1437689973-22991-1-git-send-email-sbaugh@catern.com> <20150724105206.GA25162@lst.de> <1437769934.26220.8.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295AA06D79@G9W0745.americas.hpqcorp.net>
-Sender: target-devel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Spencer Baugh <sbaugh@catern.com>, Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Brian Bunker <brian@purestorage.com>
+In-Reply-To: <1437769934.26220.8.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Spencer Baugh <sbaugh@catern.com>, Sagi Grimberg <sagig@mellanox.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Alexei Potashnik <alexei@purestorage.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, Roland Dreier <roland@purestorage.com>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 24, 2015 at 03:06:12AM +0000, Elliott, Robert (Server Storage) wrote:
-> Note that the officially published versions of the ISO and ANSI 
-> standards don't carry that revision number r36; they just have
-> the standard name and year.  SBC-3 revision 36 became 
-> "ANSI INCITS 514-2014 Information technology - SCSI Block 
-> Commands - 3 (SBC-3)".
+On Fri, Jul 24, 2015 at 01:32:14PM -0700, Nicholas A. Bellinger wrote:
+> We've already been through this discussion a couple of years back when
+> target_submit_cmd() first came into existence.
 > 
-> T10 isn't really obligated to keep making particular working 
-> drafts available, although the ones that have been assigned
-> version descriptors (in SPC-n) are more likely to stick 
-> around.  For SBC-3, only revisions 35 and 36 earned those.
+> The reason iscsi/iser-target continues to be a special case is due to
+> immediate data vs. non immediate data and their respective command
+> sequence number ordering requirements.
 
-Unfortunately the final T10 standards are only available for a high
-monetary cost, so they aren't useful for Free Software development.
-
-We work arounds this by referencing specific drafts that are available.
-If T10 would regress even more by not providing them we'd have to find
-other work arounds.
+I don't see how immediate data plays into this, the write_pending
+callbacks can simply skip the data transfer path, similar to what
+Bart's port of the latest SRP target to lio does as well.
