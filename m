@@ -1,68 +1,33 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 16/20] scsi_dh_alua: Use workqueue for RTPG
-Date: Sat, 25 Jul 2015 17:58:44 +0200
-Message-ID: <55B3B234.80100@suse.de>
-References: <1436346378-96518-1-git-send-email-hare@suse.de> <1436346378-96518-17-git-send-email-hare@suse.de> <20150724152115.GC29434@lst.de>
+Subject: Re: [PATCH 14/20] scsi_dh_alua: parse target device id
+Date: Sat, 25 Jul 2015 18:00:19 +0200
+Message-ID: <55B3B293.3040701@suse.de>
+References: <1436346378-96518-1-git-send-email-hare@suse.de>	<1436346378-96518-15-git-send-email-hare@suse.de>	<20150724150740.GB29434@lst.de> <yq1io99y3qi.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57353 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57445 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002AbbGYP6q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jul 2015 11:58:46 -0400
-In-Reply-To: <20150724152115.GC29434@lst.de>
+	id S1753002AbbGYQAV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Jul 2015 12:00:21 -0400
+In-Reply-To: <yq1io99y3qi.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>
 
-On 07/24/2015 05:21 PM, Christoph Hellwig wrote:
->> +	char			work_q_name[264];
+On 07/24/2015 05:28 PM, Martin K. Petersen wrote:
+>>>>>> "Christoph" =3D=3D Christoph Hellwig <hch@lst.de> writes:
 >=20
-> create_workqueue and friends now accept printf-like format
-> string, so there is no need for this temporary buffer.
+> Christoph> Can you move this to scsi_mod.ko?  I'll need the same code
+> Christoph> for the NFS SCSI layout driver soon.
 >=20
->> +	int			error;
->> +	struct completion       init_complete;
+> Same here. Working on copy offload again.
 >=20
-> Please rename error to init_error and only assign to it before callin=
-g
-> complete().
->=20
-> Also I'm not sure what the real point of init_complete is, shouldn't
-> we just have a mutex held in alua_initialize and alua_activate to
-> synchronize the two against each other?
->=20
-Hmm. I guess I could; I'll check here.
-
->> +	rcu_read_lock();
->> +	pg =3D rcu_dereference(h->pg);
->> +	if (pg) {
->> +		kref_get(&pg->kref);
->> +		rcu_read_unlock();
->> +		alua_rtpg_queue(pg, sdev, NULL);
->> +		kref_put(&pg->kref, release_port_group);
->> +	} else
->> +		rcu_read_unlock();
->> +}
->=20
-> How about:
->=20
-> 	rcu_read_lock();
-> 	pg =3D rcu_dereference(h->pg);
-> 	if (!pg) {
-> 		rcu_read_unlock();
-> 		return;
-> 	}
->=20
-> 	kref_get(&pg->kref);
-> 	rcu_read_unlock();
-> 	alua_rtpg_queue(pg, sdev, NULL);
-> 	kref_put(&pg->kref, release_port_group);
->=20
-
-Ok.
+Hehe. Thought that was needed after all.
+(I dimly remember having some parsing code in my initial VPD page
+patchset :-)
 
 Cheers,
 
