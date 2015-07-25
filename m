@@ -1,42 +1,45 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 14/20] scsi_dh_alua: parse target device id
-Date: Sat, 25 Jul 2015 18:00:19 +0200
-Message-ID: <55B3B293.3040701@suse.de>
-References: <1436346378-96518-1-git-send-email-hare@suse.de>	<1436346378-96518-15-git-send-email-hare@suse.de>	<20150724150740.GB29434@lst.de> <yq1io99y3qi.fsf@sermon.lab.mkp.net>
+From: chinsang835@gmail.com
+Subject: guten Tag
+Date: Sat, 25 Jul 2015 03:04:00 -0500
+Message-ID: <20150725080409.26BF4773A9D@mail.philrice.gov.ph>
+Reply-To: chinsang31@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57445 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002AbbGYQAV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jul 2015 12:00:21 -0400
-In-Reply-To: <yq1io99y3qi.fsf@sermon.lab.mkp.net>
+Received: from host.18.static.philrice.gov.ph ([122.3.235.113]:56115 "EHLO
+	mail.philrice.gov.ph" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1755004AbbGYSEj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2015 14:04:39 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>
+To: Recipients <chinsang835@gmail.com>
 
-On 07/24/2015 05:28 PM, Martin K. Petersen wrote:
->>>>>> "Christoph" =3D=3D Christoph Hellwig <hch@lst.de> writes:
->=20
-> Christoph> Can you move this to scsi_mod.ko?  I'll need the same code
-> Christoph> for the NFS SCSI layout driver soon.
->=20
-> Same here. Working on copy offload again.
->=20
-Hehe. Thought that was needed after all.
-(I dimly remember having some parsing code in my initial VPD page
-patchset :-)
+guten Tag
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
+
+         Ich bin mit diesem Medium, um Sie =FCber die Transaktion zur A=
+bgabe von $ 21500000 (Einundzwanzig Millionen f=FCnfhunderttausend Euro=
+) in meiner Bank in China, Sie als Empf=E4nger zu informieren. Es wird =
+zu 100% sicher, dass der Finanzvorstand des verstorbenen Kunden.
+
+
+
+         Bitte auf meine private E-Mail kontaktieren unter f=FCr Fragen=
+ und weitere Informationen.
+
+
+
+         Mit freundlichen Gr=FC=DFen,
+
+
+
+         sang Chin
+
+         e-mail:chinsang31@gmail.com
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
