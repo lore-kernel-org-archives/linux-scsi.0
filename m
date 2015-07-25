@@ -1,99 +1,35 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [RFC v5 01/26] scsi/atari_scsi: Dont select CONFIG_NVRAM
-Date: Sat, 25 Jul 2015 17:46:00 +1000
-Message-ID: <20150725074559.793301931@telegraphics.com.au>
-References: <20150725074559.543547894@telegraphics.com.au>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: fix crash in cmd tracing when cmd didn't match
+ a LUN
+Date: Sat, 25 Jul 2015 02:28:15 -0700
+Message-ID: <1437816495.25825.59.camel@haakon3.risingtidesystems.com>
+References: <1437689973-22991-1-git-send-email-sbaugh@catern.com>
+	 <20150724105206.GA25162@lst.de>
+	 <1437769934.26220.8.camel@haakon3.risingtidesystems.com>
+	 <20150725064849.GA8052@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline; filename=atari-nvram-disable
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150725064849.GA8052@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Spencer Baugh <sbaugh@catern.com>, Sagi Grimberg <sagig@mellanox.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Alexei Potashnik <alexei@purestorage.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, Roland Dreier <roland@purestorage.com>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gcG93ZXJwYywgc2V0dGluZyBDT05GSUdfTlZSQU09biBidWlsZHMgYSBrZXJuZWwgd2l0aCBu
-byBOVlJBTSBzdXBwb3J0LgpTZXR0aW5nIENPTkZJR19OVlJBTT1tIGVuYWJsZXMgdGhlIC9kZXYv
-bnZyYW0gbWlzYyBkZXZpY2UgbW9kdWxlIHdpdGhvdXQKZW5hYmxpbmcgTlZSQU0gc3VwcG9ydCBp
-biBkcml2ZXJzLiBTZXR0aW5nIENPTkZJR19OVlJBTT15IGVuYWJsZXMgdGhlCm1pc2MgZGV2aWNl
-IChidWlsdC1pbikgYW5kIGFsc28gZW5hYmxlcyBOVlJBTSBzdXBwb3J0IGluIGRyaXZlcnMuCgpt
-NjhrIHNoYXJlcyB0aGUgdmFsa3lyaWVmYiBkcml2ZXIgd2l0aCBwb3dlcnBjLCBhbmQgc2luY2Ug
-dGhhdCBkcml2ZXIgdXNlcwpOVlJBTSwgaXQgaXMgYWZmZWN0ZWQgYnkgQ09ORklHX0FUQVJJX1ND
-U0ksIGJlY2F1c2Ugb2YgdGhlIHVzZSBvZgoic2VsZWN0IE5WUkFNIi4KCkFkb3B0IHRoZSBwb3dl
-cnBjIGNvbnZlbnRpb24gb24gbTY4ayB0byBhdm9pZCBzdXJwcmlzZXMuCgpTaWduZWQtb2ZmLWJ5
-OiBGaW5uIFRoYWluIDxmdGhhaW5AdGVsZWdyYXBoaWNzLmNvbS5hdT4KVGVzdGVkLWJ5OiBDaHJp
-c3RpYW4gVC4gU3RlaWdpZXMgPGN0c0BkZWJpYW4ub3JnPgoKLS0tCgpUaGlzIHBhdGNoIHRlbXBv
-cmFyaWx5IGRpc2FibGVzIENPTkZJR19OVlJBTSBvbiBBdGFyaSwgdG8gcHJldmVudCBidWlsZApm
-YWlsdXJlcyB3aGVuIGJpc2VjdGluZyB0aGUgcmVzdCBvZiB0aGlzIHBhdGNoIHNlcmllcy4gSXQg
-Z2V0cyBlbmFibGVkCmFnYWluIHdpdGggdGhlIGludHJvZHVjdGlvbiBvZiBDT05GSUdfSEFWRV9B
-UkNIX05WUkFNX09QUywgb25jZSB0aGUKbnZyYW1fKiBnbG9iYWwgZnVuY3Rpb25zIGhhdmUgYmVl
-biBtb3ZlZCB0byBhbiBvcHMgc3RydWN0LgoKVGhlIHJlbW92YWwgb2YgInNlbGVjdCBOVlJBTSIg
-bWF5IG1lYW4gdGhhdCBzb21lIGtlcm5lbCBjb25maWdzIChzdWNoCmFzIERlYmlhbi9tNjhrKSBt
-YXkgbmVlZCB0d2Vha2luZy4KCi0tLQogZHJpdmVycy9jaGFyL0tjb25maWcgICAgICB8ICAgIDUg
-Ky0tLS0KIGRyaXZlcnMvc2NzaS9LY29uZmlnICAgICAgfCAgICA2ICsrKy0tLQogZHJpdmVycy9z
-Y3NpL2F0YXJpX3Njc2kuYyB8ICAgIDggKysrKy0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgOCBpbnNl
-cnRpb25zKCspLCAxMSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC9kcml2ZXJzL2NoYXIvS2Nv
-bmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2RyaXZlcnMvY2hhci9LY29uZmlnCTIwMTUt
-MDctMjUgMTc6NDI6MzQuMDAwMDAwMDAwICsxMDAwCisrKyBsaW51eC9kcml2ZXJzL2NoYXIvS2Nv
-bmZpZwkyMDE1LTA3LTI1IDE3OjQ1OjI0LjAwMDAwMDAwMCArMTAwMApAQCAtMjQ3LDcgKzI0Nyw3
-IEBAIHNvdXJjZSAiZHJpdmVycy9jaGFyL2h3X3JhbmRvbS9LY29uZmlnIgogCiBjb25maWcgTlZS
-QU0KIAl0cmlzdGF0ZSAiL2Rldi9udnJhbSBzdXBwb3J0IgotCWRlcGVuZHMgb24gQVRBUkkgfHwg
-WDg2IHx8IChBUk0gJiYgUlRDX0RSVl9DTU9TKSB8fCBHRU5FUklDX05WUkFNCisJZGVwZW5kcyBv
-biBYODYgfHwgKEFSTSAmJiBSVENfRFJWX0NNT1MpIHx8IEdFTkVSSUNfTlZSQU0KIAktLS1oZWxw
-LS0tCiAJICBJZiB5b3Ugc2F5IFkgaGVyZSBhbmQgY3JlYXRlIGEgY2hhcmFjdGVyIHNwZWNpYWwg
-ZmlsZSAvZGV2L252cmFtCiAJICB3aXRoIG1ham9yIG51bWJlciAxMCBhbmQgbWlub3IgbnVtYmVy
-IDE0NCB1c2luZyBta25vZCAoIm1hbiBta25vZCIpLApAQCAtMjY1LDkgKzI2NSw2IEBAIGNvbmZp
-ZyBOVlJBTQogCSAgc2hvdWxkIE5FVkVSIGlkbHkgdGFtcGVyIHdpdGggaXQuIFNlZSBSYWxmIEJy
-b3duJ3MgaW50ZXJydXB0IGxpc3QKIAkgIGZvciBhIGd1aWRlIHRvIHRoZSB1c2Ugb2YgQ01PUyBi
-eXRlcyBieSB5b3VyIEJJT1MuCiAKLQkgIE9uIEF0YXJpIG1hY2hpbmVzLCAvZGV2L252cmFtIGlz
-IGFsd2F5cyBjb25maWd1cmVkIGFuZCBkb2VzIG5vdCBuZWVkCi0JICB0byBiZSBzZWxlY3RlZC4K
-LQogCSAgVG8gY29tcGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hvb3NlIE0gaGVyZTog
-dGhlCiAJICBtb2R1bGUgd2lsbCBiZSBjYWxsZWQgbnZyYW0uCiAKSW5kZXg6IGxpbnV4L2RyaXZl
-cnMvc2NzaS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4Lm9yaWcvZHJpdmVycy9zY3NpL0tj
-b25maWcJMjAxNS0wNy0yNSAxNzo0MjozNC4wMDAwMDAwMDAgKzEwMDAKKysrIGxpbnV4L2RyaXZl
-cnMvc2NzaS9LY29uZmlnCTIwMTUtMDctMjUgMTc6NDU6MjQuMDAwMDAwMDAwICsxMDAwCkBAIC0x
-NjA5LDE0ICsxNjA5LDE0IEBAIGNvbmZpZyBBVEFSSV9TQ1NJCiAJdHJpc3RhdGUgIkF0YXJpIG5h
-dGl2ZSBTQ1NJIHN1cHBvcnQiCiAJZGVwZW5kcyBvbiBBVEFSSSAmJiBTQ1NJCiAJc2VsZWN0IFND
-U0lfU1BJX0FUVFJTCi0Jc2VsZWN0IE5WUkFNCiAJLS0taGVscC0tLQogCSAgSWYgeW91IGhhdmUg
-YW4gQXRhcmkgd2l0aCBidWlsdC1pbiBOQ1I1MzgwIFNDU0kgY29udHJvbGxlciAoVFQsCiAJICBG
-YWxjb24sIC4uLikgc2F5IFkgdG8gZ2V0IGl0IHN1cHBvcnRlZC4gT2YgY291cnNlIGFsc28sIGlm
-IHlvdSBoYXZlCiAJICBhIGNvbXBhdGlibGUgU0NTSSBjb250cm9sbGVyIChlLmcuIGZvciBNZWR1
-c2EpLgogCi0JICBUbyBjb21waWxlIHRoaXMgZHJpdmVyIGFzIGEgbW9kdWxlLCBjaG9vc2UgTSBo
-ZXJlOiB0aGUKLQkgIG1vZHVsZSB3aWxsIGJlIGNhbGxlZCBhdGFyaV9zY3NpLgorCSAgVG8gY29t
-cGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hvb3NlIE0gaGVyZTogdGhlIG1vZHVsZSB3
-aWxsCisJICBiZSBjYWxsZWQgYXRhcmlfc2NzaS4gSWYgeW91IGFsc28gZW5hYmxlIE5WUkFNIHN1
-cHBvcnQsIHRoZSBTQ1NJCisJICBob3N0J3MgSUQgaXMgdGFrZW4gZnJvbSB0aGUgc2V0dGluZyBp
-biBUVCBSVEMgTlZSQU0uCiAKIAkgIFRoaXMgZHJpdmVyIHN1cHBvcnRzIGJvdGggc3R5bGVzIG9m
-IE5DUiBpbnRlZ3JhdGlvbiBpbnRvIHRoZQogCSAgc3lzdGVtOiB0aGUgVFQgc3R5bGUgKHNlcGFy
-YXRlIERNQSksIGFuZCB0aGUgRmFsY29uIHN0eWxlICh2aWEKSW5kZXg6IGxpbnV4L2RyaXZlcnMv
-c2NzaS9hdGFyaV9zY3NpLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgub3JpZy9kcml2ZXJzL3Njc2kv
-YXRhcmlfc2NzaS5jCTIwMTUtMDctMjUgMTc6NDI6MzQuMDAwMDAwMDAwICsxMDAwCisrKyBsaW51
-eC9kcml2ZXJzL3Njc2kvYXRhcmlfc2NzaS5jCTIwMTUtMDctMjUgMTc6NDU6MjQuMDAwMDAwMDAw
-ICsxMDAwCkBAIC04NzUsOSArODc1LDEwIEBAIHN0YXRpYyBpbnQgX19pbml0IGF0YXJpX3Njc2lf
-cHJvYmUoc3RydWMKIAlpZiAoQVRBUklIV19QUkVTRU5UKFRUX1NDU0kpICYmIHNldHVwX3NnX3Rh
-Ymxlc2l6ZSA+PSAwKQogCQlhdGFyaV9zY3NpX3RlbXBsYXRlLnNnX3RhYmxlc2l6ZSA9IHNldHVw
-X3NnX3RhYmxlc2l6ZTsKIAotCWlmIChzZXR1cF9ob3N0aWQgPj0gMCkgeworCWlmIChzZXR1cF9o
-b3N0aWQgPj0gMCkKIAkJYXRhcmlfc2NzaV90ZW1wbGF0ZS50aGlzX2lkID0gc2V0dXBfaG9zdGlk
-ICYgNzsKLQl9IGVsc2UgeworI2lmZGVmIENPTkZJR19OVlJBTQorCWVsc2UKIAkJLyogVGVzdCBp
-ZiBhIGhvc3QgaWQgaXMgc2V0IGluIHRoZSBOVlJhbSAqLwogCQlpZiAoQVRBUklIV19QUkVTRU5U
-KFRUX0NMSykgJiYgbnZyYW1fY2hlY2tfY2hlY2tzdW0oKSkgewogCQkJdW5zaWduZWQgY2hhciBi
-ID0gbnZyYW1fcmVhZF9ieXRlKDE0KTsKQEAgLTg4OCw4ICs4ODksNyBAQCBzdGF0aWMgaW50IF9f
-aW5pdCBhdGFyaV9zY3NpX3Byb2JlKHN0cnVjCiAJCQlpZiAoYiAmIDB4ODApCiAJCQkJYXRhcmlf
-c2NzaV90ZW1wbGF0ZS50aGlzX2lkID0gYiAmIDc7CiAJCX0KLQl9Ci0KKyNlbmRpZgogCiAjaWZk
-ZWYgUkVBTF9ETUEKIAkvKiBJZiBydW5uaW5nIG9uIGEgRmFsY29uIGFuZCBpZiB0aGVyZSdzIFRU
-LVJhbSAoaS5lLiwgbW9yZSB0aGFuIG9uZQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2
-QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4
-cHBjLWRldg==
+On Sat, 2015-07-25 at 08:48 +0200, Christoph Hellwig wrote:
+> On Fri, Jul 24, 2015 at 01:32:14PM -0700, Nicholas A. Bellinger wrote:
+> > We've already been through this discussion a couple of years back when
+> > target_submit_cmd() first came into existence.
+> > 
+> > The reason iscsi/iser-target continues to be a special case is due to
+> > immediate data vs. non immediate data and their respective command
+> > sequence number ordering requirements.
+> 
+> I don't see how immediate data plays into this, the write_pending
+> callbacks can simply skip the data transfer path, similar to what
+> Bart's port of the latest SRP target to lio does as well.
+
+iscsit_execute_cmd() is using iscsit_transport->iscsit_get_dataout() for
+any remaining solicited data-out (R2T/RDMA_READ) payload when immediate
+write data is smaller than total EDTL.
