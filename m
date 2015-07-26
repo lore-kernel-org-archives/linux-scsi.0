@@ -1,85 +1,71 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 30/52] atp870u: Rename is885() to atp_is()
-Date: Sun, 26 Jul 2015 22:24:37 +0200
-Message-ID: <1437942299-26674-31-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 39/52] atp870u: Remove useless and broken card counting
+Date: Sun, 26 Jul 2015 22:24:46 +0200
+Message-ID: <1437942299-26674-40-git-send-email-linux@rainbow-software.org>
 References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56673 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56677 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755467AbbGZU5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2015 16:57:08 -0400
+	id S1755471AbbGZU5N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2015 16:57:13 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1ZJSTy-0003IN-Na
-	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:14 +0200
+	id 1ZJSTz-0003IN-Uu
+	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:16 +0200
 In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Now that all the is* functions except is885() are gone, rename is885() to
-atp_is() to avoid confusion. Don't know what "is" means, though...
-
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/atp870u.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 918875b..0b7d3bd 100644
+index a06a0a4..0b349bc 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -41,7 +41,7 @@
+@@ -1250,7 +1250,6 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct Scsi_Host *shpnt = NULL;
+ 	struct atp_unit *atpdev, *p;
+ 	unsigned char setupdata[2][16];
+-	int count = 0;
  
- static struct scsi_host_template atp870u_template;
- static void send_s870(struct atp_unit *dev,unsigned char c);
--static void is885(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
-+static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
- static void tscam_885(void);
+ 	atpdev = kzalloc(sizeof(*atpdev), GFP_KERNEL);
+ 	if (!atpdev)
+@@ -1298,8 +1297,8 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		host_id = atp_readb_base(atpdev, 0x39);
+ 		host_id >>= 0x04;
  
- static inline void atp_writeb_base(struct atp_unit *atp, u8 reg, u8 val)
-@@ -1373,7 +1373,7 @@ flash_ok_880:
- 		outb(0x20, base_io + 0x51);
+-		printk(KERN_INFO "   ACARD AEC-67160 PCI Ultra3 LVD Host Adapter: %d"
+-			"    IO:%x, IRQ:%d.\n", count, base_io, pdev->irq);
++		printk(KERN_INFO "   ACARD AEC-67160 PCI Ultra3 LVD Host Adapter:"
++			"    IO:%x, IRQ:%d.\n", base_io, pdev->irq);
+ 		atpdev->dev_id = ent->device;
+ 		atpdev->host_id[0] = host_id;
  
- 		tscam(shpnt);
--		is885(p, 0, true, atp_readb_base(p, 0x3f) & 0x40);
-+		atp_is(p, 0, true, atp_readb_base(p, 0x3f) & 0x40);
- 		outb(0xb0, base_io + 0x38);
- 		shpnt->max_id = 16;
- 		shpnt->this_id = host_id;
-@@ -1519,10 +1519,10 @@ flash_ok_885:
+@@ -1546,8 +1545,8 @@ flash_ok_885:
+ 	} else {
+ 		error = pci_read_config_byte(pdev, 0x49, &host_id);
  
- 		tscam_885();
- 		printk(KERN_INFO "   Scanning Channel A SCSI Device ...\n");
--		is885(p, 0, true, atp_readb_io(p, 0, 0x1b) >> 7);
-+		atp_is(p, 0, true, atp_readb_io(p, 0, 0x1b) >> 7);
- 		atp_writeb_io(p, 0, 0x16, 0x80);
- 		printk(KERN_INFO "   Scanning Channel B SCSI Device ...\n");
--		is885(p, 1, true, atp_readb_io(p, 1, 0x1b) >> 7);
-+		atp_is(p, 1, true, atp_readb_io(p, 1, 0x1b) >> 7);
- 		atp_writeb_io(p, 1, 0x16, 0x80);
- 		k = inb(base_io + 0x28) & 0xcf;
- 		k |= 0xc0;
-@@ -1605,7 +1605,7 @@ flash_ok_885:
+-		printk(KERN_INFO "   ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: %d "
+-			"IO:%x, IRQ:%d.\n", count, base_io, pdev->irq);
++		printk(KERN_INFO "   ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: "
++			"IO:%x, IRQ:%d.\n", base_io, pdev->irq);
  
- 		tscam(shpnt);
- 		atp_writeb_io(p, 0, 0x3a, atp_readb_io(p, 0, 0x3a) | 0x10);
--		is885(p, 0, p->chip_ver == 4, 0);
-+		atp_is(p, 0, p->chip_ver == 4, 0);
- 		atp_writeb_io(p, 0, 0x3a, atp_readb_io(p, 0, 0x3a) & 0xef);
- 		outb((inb(base_io + 0x3a) & 0xef), base_io + 0x3a);
- 		outb((inb(base_io + 0x3b) | 0x20), base_io + 0x3b);
-@@ -1826,7 +1826,7 @@ static void tscam_885(void)
- 
- 
- 
--static void is885(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
-+static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
- {
- 	unsigned char i, j, k, rmb, n;
- 	unsigned short int m;
+ 		atpdev->ioport[0] = base_io;
+ 		atpdev->pciport[0] = base_io + 0x20;
+@@ -1612,7 +1611,6 @@ flash_ok_885:
+ 		spin_unlock_irqrestore(shpnt->host_lock, flags);
+ 		if (!request_region(base_io, shpnt->n_io_port, "atp870u"))
+ 			goto request_io_fail;
+-		count++;
+ 		if (scsi_add_host(shpnt, &pdev->dev))
+ 			goto scsi_add_fail;
+ 		scsi_scan_host(shpnt);
 -- 
 Ondrej Zary
 
