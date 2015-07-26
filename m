@@ -1,61 +1,71 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 33/52] atp870u: Fix incorrect writeb_io access to register 0x3a
-Date: Sun, 26 Jul 2015 22:24:40 +0200
-Message-ID: <1437942299-26674-34-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 36/52] atp870u: Remove empty tscam_885()
+Date: Sun, 26 Jul 2015 22:24:43 +0200
+Message-ID: <1437942299-26674-37-git-send-email-linux@rainbow-software.org>
 References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56674 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56675 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755467AbbGZU5K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2015 16:57:10 -0400
+	id S1755471AbbGZU5L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2015 16:57:11 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1ZJSTz-0003IN-4b
+	id 1ZJSTz-0003IN-HV
 	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:15 +0200
 In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-The ioport region is 0x20 bytes long so accessing 0x3a register using
-writeb_io is incorrect. Use writeb_base instead.
-There's no change in behavior as 870 chips have ioport = baseport.
+tscam_885() is empty (except a delay) so remove it.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/atp870u.c |   15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index c4a59cc..04b29d3 100644
+index b662e39..2570919 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -364,9 +364,9 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 					atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
- 			} else {				
- 				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--					atp_writeb_io(dev, c, 0x3a, (atp_readb_io(dev, c, 0x3a) & 0xf3) | 0x08);
-+					atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
- 				else
--					atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xf3);
-+					atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
- 			}	
- 			j = 0;
- 			id = 1;
-@@ -889,9 +889,9 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 			atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
- 	} else {		
- 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
--			atp_writeb_io(dev, c, 0x3a, (atp_readb_io(dev, c, 0x3a) & 0xf3) | 0x08);
-+			atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
- 		else
--			atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xf3);
-+			atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
- 	}	
+@@ -42,7 +42,6 @@
+ static struct scsi_host_template atp870u_template;
+ static void send_s870(struct atp_unit *dev,unsigned char c);
+ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
+-static void tscam_885(void);
  
- 	if(workreq->sc_data_direction == DMA_TO_DEVICE) {
+ static inline void atp_writeb_base(struct atp_unit *atp, u8 reg, u8 val)
+ {
+@@ -1518,7 +1517,7 @@ flash_ok_885:
+ 		   k = (k & 0x07) | 0x40;
+ 		atp_set_host_id(p, 1, k);
+ 
+-		tscam_885();
++		mdelay(600); /* this delay used to be called tscam_885() */
+ 		printk(KERN_INFO "   Scanning Channel A SCSI Device ...\n");
+ 		atp_is(p, 0, true, atp_readb_io(p, 0, 0x1b) >> 7);
+ 		atp_writeb_io(p, 0, 0x16, 0x80);
+@@ -1802,18 +1801,6 @@ static void __exit atp870u_exit(void)
+ 	pci_unregister_driver(&atp870u_driver);
+ }
+ 
+-static void tscam_885(void)
+-{
+-	unsigned char i;
+-
+-	for (i = 0; i < 0x2; i++) {
+-		mdelay(300);
+-	}
+-	return;
+-}
+-
+-
+-
+ static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
+ {
+ 	unsigned char i, j, k, rmb, n;
 -- 
 Ondrej Zary
 
