@@ -1,223 +1,119 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 50/52] atp870u: Introduce atp880_init()
-Date: Sun, 26 Jul 2015 22:24:57 +0200
-Message-ID: <1437942299-26674-51-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 47/52] atp870u: Request IRQ later, remove weird locking
+Date: Sun, 26 Jul 2015 22:24:54 +0200
+Message-ID: <1437942299-26674-48-git-send-email-linux@rainbow-software.org>
 References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56615 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56617 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755340AbbGZUzQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2015 16:55:16 -0400
+	id S1755358AbbGZUzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2015 16:55:21 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1ZJSU1-0003IN-QX
+	id 1ZJSU1-0003IN-AK
 	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:17 +0200
 In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Move 880-specific init code to a separate function atp880_init()
+Allocate IRQ later during probe to avoid code duplication and also remove
+the need for weird locking in _probe.
+(It was probably there to prevent race with the IRQ handler?)
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |  174 ++++++++++++++++++++++++------------------------
- 1 file changed, 88 insertions(+), 86 deletions(-)
+ drivers/scsi/atp870u.c |   47 ++++++++++++-----------------------------------
+ 1 file changed, 12 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 3c66539..c1fd9fb 100644
+index 87dd886..4719df4 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -1249,6 +1249,91 @@ static void atp_set_host_id(struct atp_unit *atp, u8 c, u8 host_id)
- 	atp_writeb_io(atp, c, 0x11, 0x20);
- }
- 
-+static void atp880_init(struct Scsi_Host *shpnt)
-+{
-+	struct atp_unit *atpdev = shost_priv(shpnt);
-+	struct pci_dev *pdev = atpdev->pdev;
-+	unsigned char k, m, host_id;
-+	unsigned int n;
-+
-+	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);
-+
-+	atpdev->ioport[0] = shpnt->io_port + 0x40;
-+	atpdev->pciport[0] = shpnt->io_port + 0x28;
-+
-+	host_id = atp_readb_base(atpdev, 0x39) >> 4;
-+
-+	dev_info(&pdev->dev, "ACARD AEC-67160 PCI Ultra3 LVD Host Adapter: IO:%lx, IRQ:%d.\n",
-+		 shpnt->io_port, shpnt->irq);
-+	atpdev->host_id[0] = host_id;
-+
-+	atpdev->global_map[0] = atp_readb_base(atpdev, 0x35);
-+	atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x3c);
-+
-+	n = 0x3f09;
-+	while (n < 0x4000) {
-+		m = 0;
-+		atp_writew_base(atpdev, 0x34, n);
-+		n += 0x0002;
-+		if (atp_readb_base(atpdev, 0x30) == 0xff)
-+			break;
-+
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
-+		atp_writew_base(atpdev, 0x34, n);
-+		n += 0x0002;
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
-+		atp_writew_base(atpdev, 0x34, n);
-+		n += 0x0002;
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
-+		atp_writew_base(atpdev, 0x34, n);
-+		n += 0x0002;
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
-+		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
-+		n += 0x0018;
-+	}
-+	atp_writew_base(atpdev, 0x34, 0);
-+	atpdev->ultra_map[0] = 0;
-+	atpdev->async[0] = 0;
-+	for (k = 0; k < 16; k++) {
-+		n = 1 << k;
-+		if (atpdev->sp[0][k] > 1)
-+			atpdev->ultra_map[0] |= n;
-+		else
-+			if (atpdev->sp[0][k] == 0)
-+				atpdev->async[0] |= n;
-+	}
-+	atpdev->async[0] = ~(atpdev->async[0]);
-+	atp_writeb_base(atpdev, 0x35, atpdev->global_map[0]);
-+
-+	k = atp_readb_base(atpdev, 0x38) & 0x80;
-+	atp_writeb_base(atpdev, 0x38, k);
-+	atp_writeb_base(atpdev, 0x3b, 0x20);
-+	mdelay(32);
-+	atp_writeb_base(atpdev, 0x3b, 0);
-+	mdelay(32);
-+	atp_readb_io(atpdev, 0, 0x1b);
-+	atp_readb_io(atpdev, 0, 0x17);
-+
-+	atp_set_host_id(atpdev, 0, host_id);
-+
-+	tscam(shpnt, true, atp_readb_base(atpdev, 0x22));
-+	atp_is(atpdev, 0, true, atp_readb_base(atpdev, 0x3f) & 0x40);
-+	atp_writeb_base(atpdev, 0x38, 0xb0);
-+	shpnt->max_id = 16;
-+	shpnt->this_id = host_id;
-+}
-+
- /* return non-zero on detection */
+@@ -1253,7 +1253,6 @@ static void atp_set_host_id(struct atp_unit *atp, u8 c, u8 host_id)
  static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
-@@ -1304,92 +1389,9 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto unregister;
- 	}
+ 	unsigned char k, m, c;
+-	unsigned long flags;
+ 	unsigned int error,n;
+ 	unsigned char host_id;
+ 	struct Scsi_Host *shpnt = NULL;
+@@ -1374,13 +1373,6 @@ flash_ok_880:
+ 			goto unregister;
+ 		}
  
--	if (is880(atpdev)) {
--		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
+-		err = request_irq(shpnt->irq, atp870u_intr_handle, IRQF_SHARED, "atp880i", shpnt);
+-		if (err) {
+-			printk(KERN_ERR "Unable to allocate IRQ%d for Acard controller.\n", shpnt->irq);
+-			goto free_tables;
+-		}
 -
--		atpdev->ioport[0] = shpnt->io_port + 0x40;
--		atpdev->pciport[0] = shpnt->io_port + 0x28;
--
--		host_id = atp_readb_base(atpdev, 0x39);
--		host_id >>= 0x04;
--
--		printk(KERN_INFO "   ACARD AEC-67160 PCI Ultra3 LVD Host Adapter:"
--			"    IO:%lx, IRQ:%d.\n", shpnt->io_port, shpnt->irq);
--		atpdev->host_id[0] = host_id;
--
--		atpdev->global_map[0] = atp_readb_base(atpdev, 0x35);
--		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x3c);
--
--		n = 0x3f09;
--next_fblk_880:
--		if (n >= 0x4000)
--			goto flash_ok_880;
--
--		m = 0;
--		atp_writew_base(atpdev, 0x34, n);
--		n += 0x0002;
--		if (atp_readb_base(atpdev, 0x30) == 0xff)
--			goto flash_ok_880;
--
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
--		atp_writew_base(atpdev, 0x34, n);
--		n += 0x0002;
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
--		atp_writew_base(atpdev, 0x34, n);
--		n += 0x0002;
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
--		atp_writew_base(atpdev, 0x34, n);
--		n += 0x0002;
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x30);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x31);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x32);
--		atpdev->sp[0][m++] = atp_readb_base(atpdev, 0x33);
--		n += 0x0018;
--		goto next_fblk_880;
--flash_ok_880:
--		atp_writew_base(atpdev, 0x34, 0);
--		atpdev->ultra_map[0] = 0;
--		atpdev->async[0] = 0;
--		for (k = 0; k < 16; k++) {
--			n = 1;
--			n = n << k;
--			if (atpdev->sp[0][k] > 1) {
--				atpdev->ultra_map[0] |= n;
--			} else {
--				if (atpdev->sp[0][k] == 0)
--					atpdev->async[0] |= n;
-- 			}
--	 	}
--		atpdev->async[0] = ~(atpdev->async[0]);
--		atp_writeb_base(atpdev, 0x35, atpdev->global_map[0]);
-- 
--
--		k = atp_readb_base(atpdev, 0x38) & 0x80;
--		atp_writeb_base(atpdev, 0x38, k);
--		atp_writeb_base(atpdev, 0x3b, 0x20);
--		mdelay(32);
--		atp_writeb_base(atpdev, 0x3b, 0);
--		mdelay(32);
--		atp_readb_io(atpdev, 0, 0x1b);
--		atp_readb_io(atpdev, 0, 0x17);
--
--		atp_set_host_id(atpdev, 0, host_id);
--
--		tscam(shpnt, true, atp_readb_base(atpdev, 0x22));
--		atp_is(atpdev, 0, true, atp_readb_base(atpdev, 0x3f) & 0x40);
--		atp_writeb_base(atpdev, 0x38, 0xb0);
--		shpnt->max_id = 16;
--		shpnt->this_id = host_id;
--	} else if (is885(atpdev)) {
-+	if (is880(atpdev))
-+		atp880_init(shpnt);
-+	else if (is885(atpdev)) {
- 			printk(KERN_INFO "   ACARD AEC-67162 PCI Ultra3 LVD Host Adapter:  IO:%lx, IRQ:%d.\n"
- 			       , shpnt->io_port, shpnt->irq);
+-		spin_lock_irqsave(shpnt->host_lock, flags);
+ 		k = atp_readb_base(atpdev, 0x38) & 0x80;
+ 		atp_writeb_base(atpdev, 0x38, k);
+ 		atp_writeb_base(atpdev, 0x3b, 0x20);
+@@ -1412,17 +1404,6 @@ flash_ok_880:
+ 			goto unregister;
+ 		}
+ 			
+-#ifdef ED_DBGP		
+-	printk("request_irq() shpnt %p hostdata %p\n", shpnt, atpdev);
+-#endif	        
+-		err = request_irq(shpnt->irq, atp870u_intr_handle, IRQF_SHARED, "atp870u", shpnt);
+-		if (err) {
+-				printk(KERN_ERR "Unable to allocate IRQ for Acard controller.\n");
+-			goto free_tables;
+-		}
+-		
+-		spin_lock_irqsave(shpnt->host_lock, flags);        					
+-        			
+ 		c = atp_readb_base(atpdev, 0x29);
+ 		atp_writeb_base(atpdev, 0x29, c | 0x04);
          	
+@@ -1558,13 +1539,6 @@ flash_ok_885:
+ 			goto unregister;
+ 		}
+ 
+-		err = request_irq(shpnt->irq, atp870u_intr_handle, IRQF_SHARED, "atp870i", shpnt);
+-		if (err) {
+-			printk(KERN_ERR "Unable to allocate IRQ%d for Acard controller.\n", shpnt->irq);
+-			goto free_tables;
+-		}
+-
+-		spin_lock_irqsave(shpnt->host_lock, flags);
+ 		if (pdev->revision > 0x07)	/* check if atp876 chip then enable terminator */
+ 			atp_writeb_base(atpdev, 0x3e, 0x00);
+  
+@@ -1586,15 +1560,18 @@ flash_ok_885:
+ 		shpnt->this_id = host_id;
+ 
+ 	} 
+-		spin_unlock_irqrestore(shpnt->host_lock, flags);
+-		err = scsi_add_host(shpnt, &pdev->dev);
+-		if (err)
+-			goto scsi_add_fail;
+-		scsi_scan_host(shpnt);
+-#ifdef ED_DBGP			
+-		printk("atp870u_prob : exit\n");
+-#endif		
+-		return 0;
++	err = request_irq(shpnt->irq, atp870u_intr_handle, IRQF_SHARED, "atp870u", shpnt);
++	if (err) {
++		dev_err(&pdev->dev, "Unable to allocate IRQ %d.\n", shpnt->irq);
++		goto free_tables;
++	}
++
++	err = scsi_add_host(shpnt, &pdev->dev);
++	if (err)
++		goto scsi_add_fail;
++	scsi_scan_host(shpnt);
++
++	return 0;
+ 
+ scsi_add_fail:
+ 	free_irq(shpnt->irq, shpnt);
 -- 
 Ondrej Zary
 
