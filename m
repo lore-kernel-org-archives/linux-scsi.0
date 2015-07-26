@@ -1,434 +1,279 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 03/52] atp870u: Untangle tmport
-Date: Sun, 26 Jul 2015 22:24:10 +0200
-Message-ID: <1437942299-26674-4-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 01/52] atp870u: Remove workport
+Date: Sun, 26 Jul 2015 22:24:08 +0200
+Message-ID: <1437942299-26674-2-git-send-email-linux@rainbow-software.org>
 References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56642 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56646 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755410AbbGZU4B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2015 16:56:01 -0400
+	id S1755424AbbGZU4M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2015 16:56:12 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1ZJSTu-0003IN-0Y
-	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:10 +0200
+	id 1ZJSTt-0003IN-LJ
+	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:09 +0200
 In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Untangle the tmport crap so it becomes obvious what ports are accessed.
+Remove workport temporary variable to simplify the code.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |  186 ++++++++++++++++++------------------------------
- 1 file changed, 71 insertions(+), 115 deletions(-)
+ drivers/scsi/atp870u.c |   59 +++++++++++++++++++++++-------------------------
+ 1 file changed, 28 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index aac7d47..a25a300 100644
+index 05301bc..3db9d0c 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -51,7 +51,6 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+@@ -51,7 +51,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
  	unsigned char i, j, c, target_id, lun,cmdp;
  	unsigned char *prd;
  	struct scsi_cmnd *workreq;
--	unsigned int tmport;
+-	unsigned int workport, tmport, tmport1;
++	unsigned int tmport, tmport1;
  	unsigned long adrcnt, k;
  #ifdef ED_DBGP
  	unsigned long l;
-@@ -61,8 +60,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 	struct atp_unit *dev = (struct atp_unit *)&host->hostdata;
- 
- 	for (c = 0; c < 2; c++) {
--		tmport = dev->ioport[c] + 0x1f;
--		j = inb(tmport);
-+		j = inb(dev->ioport[c] + 0x1f);
- 		if ((j & 0x80) != 0)
- 		{			
- 	   		goto ch_sel;
-@@ -97,9 +95,8 @@ ch_sel:
- stop_dma:
- 		tmpcip = dev->pciport[c];
- 		outb(0x00, tmpcip);
--		tmport -= 0x08;
- 		
--		i = inb(tmport);
-+		i = inb(dev->ioport[c] + 0x17);
- 		
+@@ -76,10 +76,9 @@ ch_sel:
+ #endif	
+ 	dev->in_int[c] = 1;
+ 	cmdp = inb(dev->ioport[c] + 0x10);
+-	workport = dev->ioport[c];
+ 	if (dev->working[c] != 0) {
  		if (dev->dev_id == ATP885_DEVID) {
- 			tmpcip += 2;
-@@ -107,9 +104,7 @@ stop_dma:
- 			tmpcip -= 2;
- 		}
- 
--		tmport -= 0x02;
--		target_id = inb(tmport);
--		tmport += 0x02;
-+		target_id = inb(dev->ioport[c] + 0x15);
- 
- 		/*
- 		 *	Remap wide devices onto id numbers
-@@ -137,11 +132,10 @@ stop_dma:
- 			   dev->last_cmd[c] = 0xff;
- 			}
- 			if (dev->dev_id == ATP885_DEVID) {
--				tmport -= 0x05;
- 				adrcnt = 0;
--				((unsigned char *) &adrcnt)[2] = inb(tmport++);
--				((unsigned char *) &adrcnt)[1] = inb(tmport++);
--				((unsigned char *) &adrcnt)[0] = inb(tmport);
-+				((unsigned char *) &adrcnt)[2] = inb(dev->ioport[c] + 0x12);
-+				((unsigned char *) &adrcnt)[1] = inb(dev->ioport[c] + 0x13);
-+				((unsigned char *) &adrcnt)[0] = inb(dev->ioport[c] + 0x14);
- 				if (dev->id[c][target_id].last_len != adrcnt)
- 				{
- 			   		k = dev->id[c][target_id].last_len;
-@@ -150,7 +144,7 @@ stop_dma:
- 			   	dev->id[c][target_id].last_len = adrcnt;			   
- 				}
- #ifdef ED_DBGP
--				printk("tmport = %x dev->id[c][target_id].last_len = %d dev->id[c][target_id].tran_len = %d\n",tmport,dev->id[c][target_id].last_len,dev->id[c][target_id].tran_len);
-+				printk("dev->id[c][target_id].last_len = %d dev->id[c][target_id].tran_len = %d\n",dev->id[c][target_id].last_len,dev->id[c][target_id].tran_len);
- #endif		
- 			}
- 
-@@ -158,10 +152,9 @@ stop_dma:
+-			tmport1 = workport + 0x16;
++			tmport1 = dev->ioport[c] + 0x16;
+ 			if ((inb(tmport1) & 0x80) == 0)
+ 				outb((inb(tmport1) | 0x80), tmport1);
+ 		}		
+@@ -160,7 +159,7 @@ stop_dma:
  			 *      Flip wide
  			 */			
  			if (dev->wide_id[c] != 0) {
--				tmport = dev->ioport[c] + 0x1b;
--				outb(0x01, tmport);
--				while ((inb(tmport) & 0x01) != 0x01) {
--					outb(0x01, tmport);
-+				outb(0x01, dev->ioport[c] + 0x1b);
-+				while ((inb(dev->ioport[c] + 0x1b) & 0x01) != 0x01) {
-+					outb(0x01, dev->ioport[c] + 0x1b);
- 				}
- 			}		
- 			/*
-@@ -196,19 +189,16 @@ stop_dma:
- 			if ((dev->last_cmd[c] & 0xf0) != 0x40) {
- 			   dev->last_cmd[c] = 0xff;
- 			}
--			tmport -= 0x05;
- 			adrcnt = 0;
--			((unsigned char *) &adrcnt)[2] = inb(tmport++);
--			((unsigned char *) &adrcnt)[1] = inb(tmport++);
--			((unsigned char *) &adrcnt)[0] = inb(tmport);
-+			((unsigned char *) &adrcnt)[2] = inb(dev->ioport[c] + 0x12);
-+			((unsigned char *) &adrcnt)[1] = inb(dev->ioport[c] + 0x13);
-+			((unsigned char *) &adrcnt)[0] = inb(dev->ioport[c] + 0x14);
- 			k = dev->id[c][target_id].last_len;
- 			k -= adrcnt;
- 			dev->id[c][target_id].tran_len = k;
- 			dev->id[c][target_id].last_len = adrcnt;
--			tmport -= 0x04;
--			outb(0x41, tmport);
--			tmport += 0x08;
--			outb(0x08, tmport);
-+			outb(0x41, dev->ioport[c] + 0x10);
-+			outb(0x08, dev->ioport[c] + 0x18);
- 			dev->in_int[c] = 0;
- 			goto handled;
- 		}
-@@ -227,10 +217,8 @@ stop_dma:
- 			printk(KERN_DEBUG "Device reselect\n");
- #endif			
- 			lun = 0;
--			tmport -= 0x07;
- 			if (cmdp == 0x44 || i==0x80) {
--				tmport += 0x0d;
--				lun = inb(tmport) & 0x07;
-+				lun = inb(dev->ioport[c] + 0x1d) & 0x07;
- 			} else {
- 				if ((dev->last_cmd[c] & 0xf0) != 0x40) {
- 				   dev->last_cmd[c] = 0xff;
-@@ -239,31 +227,27 @@ stop_dma:
- #ifdef ED_DBGP
- 					printk("cmdp = 0x41\n");
- #endif						
--					tmport += 0x02;
- 					adrcnt = 0;
--					((unsigned char *) &adrcnt)[2] = inb(tmport++);
--					((unsigned char *) &adrcnt)[1] = inb(tmport++);
--					((unsigned char *) &adrcnt)[0] = inb(tmport);
-+					((unsigned char *) &adrcnt)[2] = inb(dev->ioport[c] + 0x12);
-+					((unsigned char *) &adrcnt)[1] = inb(dev->ioport[c] + 0x13);
-+					((unsigned char *) &adrcnt)[0] = inb(dev->ioport[c] + 0x14);
- 					k = dev->id[c][target_id].last_len;
- 					k -= adrcnt;
- 					dev->id[c][target_id].tran_len = k;
- 					dev->id[c][target_id].last_len = adrcnt;
--					tmport += 0x04;
--					outb(0x08, tmport);
-+					outb(0x08, dev->ioport[c] + 0x18);
- 					dev->in_int[c] = 0;
- 					goto handled;
- 				} else {
- #ifdef ED_DBGP
- 					printk("cmdp != 0x41\n");
- #endif						
--					outb(0x46, tmport);
-+					outb(0x46, dev->ioport[c] + 0x10);
- 					dev->id[c][target_id].dirct = 0x00;
--					tmport += 0x02;
--					outb(0x00, tmport++);
--					outb(0x00, tmport++);
--					outb(0x00, tmport++);
--					tmport += 0x03;
--					outb(0x08, tmport);
-+					outb(0x00, dev->ioport[c] + 0x12);
-+					outb(0x00, dev->ioport[c] + 0x13);
-+					outb(0x00, dev->ioport[c] + 0x14);
-+					outb(0x08, dev->ioport[c] + 0x18);
- 					dev->in_int[c] = 0;
- 					goto handled;
- 				}
-@@ -274,14 +258,10 @@ stop_dma:
+-				tmport = workport + 0x1b;
++				tmport = dev->ioport[c] + 0x1b;
+ 				outb(0x01, tmport);
+ 				while ((inb(tmport) & 0x01) != 0x01) {
+ 					outb(0x01, tmport);
+@@ -276,9 +275,9 @@ stop_dma:
  			if (dev->dev_id == ATP885_DEVID) {
  				j = inb(dev->baseport + 0x29) & 0xfe;
  				outb(j, dev->baseport + 0x29);
--				tmport = dev->ioport[c] + 0x16;
--			} else {
--				tmport = dev->ioport[c] + 0x10;
--				outb(0x45, tmport);
--				tmport += 0x06;				
--			}
--			
--			target_id = inb(tmport);
-+			} else
-+				outb(0x45, dev->ioport[c] + 0x10);
-+
-+			target_id = inb(dev->ioport[c] + 0x16);
- 			/*
- 			 *	Remap wide identifiers
- 			 */
-@@ -290,10 +270,8 @@ stop_dma:
+-				tmport = workport + 0x16;
++				tmport = dev->ioport[c] + 0x16;
  			} else {
+-				tmport = workport + 0x10;
++				tmport = dev->ioport[c] + 0x10;
+ 				outb(0x45, tmport);
+ 				tmport += 0x06;				
+ 			}
+@@ -293,7 +292,7 @@ stop_dma:
  				target_id &= 0x07;
  			}
--			if (dev->dev_id == ATP885_DEVID) {
--				tmport = dev->ioport[c] + 0x10;
--				outb(0x45, tmport);
--			}
-+			if (dev->dev_id == ATP885_DEVID)
-+				outb(0x45, dev->ioport[c] + 0x10);
+ 			if (dev->dev_id == ATP885_DEVID) {
+-				tmport = workport + 0x10;
++				tmport = dev->ioport[c] + 0x10;
+ 				outb(0x45, tmport);
+ 			}
  			workreq = dev->id[c][target_id].curr_req;
- #ifdef ED_DBGP			
- 			scmd_printk(KERN_DEBUG, workreq, "CDB");
-@@ -302,18 +280,16 @@ stop_dma:
+@@ -304,7 +303,7 @@ stop_dma:
  			printk("\n");
  #endif	
  			
--			tmport = dev->ioport[c] + 0x0f;
--			outb(lun, tmport);
--			tmport += 0x02;
--			outb(dev->id[c][target_id].devsp, tmport++);
-+			outb(lun, dev->ioport[c] + 0x0f);
-+			outb(dev->id[c][target_id].devsp, dev->ioport[c] + 0x11);
- 			adrcnt = dev->id[c][target_id].tran_len;
- 			k = dev->id[c][target_id].last_len;
- 
--			outb(((unsigned char *) &k)[2], tmport++);
--			outb(((unsigned char *) &k)[1], tmport++);
--			outb(((unsigned char *) &k)[0], tmport++);
-+			outb(((unsigned char *) &k)[2], dev->ioport[c] + 0x12);
-+			outb(((unsigned char *) &k)[1], dev->ioport[c] + 0x13);
-+			outb(((unsigned char *) &k)[0], dev->ioport[c] + 0x14);
- #ifdef ED_DBGP			
--			printk("k %x, k[0] 0x%x k[1] 0x%x k[2] 0x%x\n", k, inb(tmport-1), inb(tmport-2), inb(tmport-3));
-+			printk("k %x, k[0] 0x%x k[1] 0x%x k[2] 0x%x\n", k, inb(dev->ioport[c] + 0x14), inb(dev->ioport[c] + 0x13), inb(dev->ioport[c] + 0x12));
- #endif			
- 			/* Remap wide */
- 			j = target_id;
-@@ -322,8 +298,8 @@ stop_dma:
- 			}
- 			/* Add direction */
- 			j |= dev->id[c][target_id].dirct;
--			outb(j, tmport++);
--			outb(0x80,tmport);
-+			outb(j, dev->ioport[c] + 0x15);
-+			outb(0x80, dev->ioport[c] + 0x16);
- 			
- 			/* enable 32 bit fifo transfer */	
- 			if (dev->dev_id == ATP885_DEVID) {
-@@ -336,21 +312,18 @@ stop_dma:
+-			tmport = workport + 0x0f;
++			tmport = dev->ioport[c] + 0x0f;
+ 			outb(lun, tmport);
+ 			tmport += 0x02;
+ 			outb(dev->id[c][target_id].devsp, tmport++);
+@@ -338,21 +337,21 @@ stop_dma:
  				outb(i,tmpcip);		    		    		
  			} else if ((dev->dev_id == ATP880_DEVID1) ||
  	    		    	   (dev->dev_id == ATP880_DEVID2) ) {
--				tmport = dev->ioport[c] - 0x05;
+-				tmport = workport - 0x05;
++				tmport = dev->ioport[c] - 0x05;
  				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
--					outb((unsigned char) ((inb(tmport) & 0x3f) | 0xc0), tmport);
-+					outb((unsigned char) ((inb(dev->ioport[c] - 0x05) & 0x3f) | 0xc0), dev->ioport[c] - 0x05);///minus 0x05???
+ 					outb((unsigned char) ((inb(tmport) & 0x3f) | 0xc0), tmport);
  				} else {
--					outb((unsigned char) (inb(tmport) & 0x3f), tmport);
-+					outb((unsigned char) (inb(dev->ioport[c] - 0x05) & 0x3f), dev->ioport[c] - 0x05);///minus 0x05???
+ 					outb((unsigned char) (inb(tmport) & 0x3f), tmport);
  				}
  			} else {				
--				tmport = dev->ioport[c] + 0x3a;
+-				tmport = workport + 0x3a;
++				tmport = dev->ioport[c] + 0x3a;
  				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
--					outb((unsigned char) ((inb(tmport) & 0xf3) | 0x08), tmport);
-+					outb((unsigned char) ((inb(dev->ioport[c] + 0x3a) & 0xf3) | 0x08), dev->ioport[c] + 0x3a);
+ 					outb((unsigned char) ((inb(tmport) & 0xf3) | 0x08), tmport);
  				} else {
--					outb((unsigned char) (inb(tmport) & 0xf3), tmport);
-+					outb((unsigned char) (inb(dev->ioport[c] + 0x3a) & 0xf3), dev->ioport[c] + 0x3a);
+ 					outb((unsigned char) (inb(tmport) & 0xf3), tmport);
  				}														
  			}	
--			tmport = dev->ioport[c] + 0x1b;
+-			tmport = workport + 0x1b;
++			tmport = dev->ioport[c] + 0x1b;
  			j = 0;
  			id = 1;
  			id = id << target_id;
-@@ -360,13 +333,12 @@ stop_dma:
- 			if ((id & dev->wide_id[c]) != 0) {
- 				j |= 0x01;
- 			}
--			outb(j, tmport);
--			while ((inb(tmport) & 0x01) != j) {
--				outb(j,tmport);
-+			outb(j, dev->ioport[c] + 0x1b);
-+			while ((inb(dev->ioport[c] + 0x1b) & 0x01) != j) {
-+				outb(j,dev->ioport[c] + 0x1b);
+@@ -367,7 +366,7 @@ stop_dma:
+ 				outb(j,tmport);
  			}
  			if (dev->id[c][target_id].last_len == 0) {
--				tmport = dev->ioport[c] + 0x18;
--				outb(0x08, tmport);
-+				outb(0x08, dev->ioport[c] + 0x18);
+-				tmport = workport + 0x18;
++				tmport = dev->ioport[c] + 0x18;
+ 				outb(0x08, tmport);
  				dev->in_int[c] = 0;
  #ifdef ED_DBGP
- 				printk("dev->id[c][target_id].last_len = 0\n");
-@@ -412,12 +384,11 @@ stop_dma:
+@@ -414,7 +413,7 @@ stop_dma:
  				outb(0x00, tmpcip);
  				tmpcip -= 0x02;
  			}
--			tmport = dev->ioport[c] + 0x18;
+-			tmport = workport + 0x18;
++			tmport = dev->ioport[c] + 0x18;
  			/*
  			 *	Check transfer direction
  			 */
- 			if (dev->id[c][target_id].dirct != 0) {
--				outb(0x08, tmport);
-+				outb(0x08, dev->ioport[c] + 0x18);
- 				outb(0x01, tmpcip);
- 				dev->in_int[c] = 0;
- #ifdef ED_DBGP
-@@ -425,7 +396,7 @@ stop_dma:
- #endif				
- 				goto handled;
- 			}
--			outb(0x08, tmport);
-+			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x09, tmpcip);
- 			dev->in_int[c] = 0;
- #ifdef ED_DBGP
-@@ -454,8 +425,7 @@ stop_dma:
- 			   dev->last_cmd[c] = 0xff;
- 			}
- 			errstus = 0;
--			tmport -= 0x08;
--			errstus = inb(tmport);
-+			errstus = inb(dev->ioport[c] + 0x0f);
- 			if (((dev->r1f[c][target_id] & 0x10) != 0)&&(dev->dev_id==ATP885_DEVID)) {
- 			   printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
- 			   errstus = 0x02;
-@@ -486,10 +456,9 @@ go_42:
+@@ -488,7 +487,7 @@ go_42:
  			 *      Take it back wide
  			 */
  			if (dev->wide_id[c] != 0) {
--				tmport = dev->ioport[c] + 0x1b;
--				outb(0x01, tmport);
--				while ((inb(tmport) & 0x01) != 0x01) {
--					outb(0x01, tmport);
-+				outb(0x01, dev->ioport[c] + 0x1b);
-+				while ((inb(dev->ioport[c] + 0x1b) & 0x01) != 0x01) {
-+					outb(0x01, dev->ioport[c] + 0x1b);
- 				}       
- 			} 
- 			/*
-@@ -521,21 +490,17 @@ go_42:
+-				tmport = workport + 0x1b;
++				tmport = dev->ioport[c] + 0x1b;
+ 				outb(0x01, tmport);
+ 				while ((inb(tmport) & 0x01) != 0x01) {
+ 					outb(0x01, tmport);
+@@ -523,7 +522,7 @@ go_42:
  			outb(0x06, tmpcip);
  			outb(0x00, tmpcip);
  			tmpcip = tmpcip - 2;
--			tmport = dev->ioport[c] + 0x10;
--			outb(0x41, tmport);
-+			outb(0x41, dev->ioport[c] + 0x10);
+-			tmport = workport + 0x10;
++			tmport = dev->ioport[c] + 0x10;
+ 			outb(0x41, tmport);
  			if (dev->dev_id == ATP885_DEVID) {
--				tmport += 2;
- 				k = dev->id[c][target_id].last_len;
--				outb((unsigned char) (((unsigned char *) (&k))[2]), tmport++);
--				outb((unsigned char) (((unsigned char *) (&k))[1]), tmport++);
--				outb((unsigned char) (((unsigned char *) (&k))[0]), tmport);
-+				outb((unsigned char) (((unsigned char *) (&k))[2]), dev->ioport[c] + 0x12);
-+				outb((unsigned char) (((unsigned char *) (&k))[1]), dev->ioport[c] + 0x13);
-+				outb((unsigned char) (((unsigned char *) (&k))[0]), dev->ioport[c] + 0x14);
- 				dev->id[c][target_id].dirct = 0x00;
--				tmport += 0x04;
- 			} else {
- 				dev->id[c][target_id].dirct = 0x00;
--				tmport += 0x08;				
- 			}
--			outb(0x08, tmport);
-+			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x09, tmpcip);
- 			dev->in_int[c] = 0;
- 			goto handled;
-@@ -547,43 +512,34 @@ go_42:
+ 				tmport += 2;
+@@ -549,7 +548,7 @@ go_42:
  			outb(0x06, tmpcip);
  			outb(0x00, tmpcip);
  			tmpcip = tmpcip - 2;
--			tmport = dev->ioport[c] + 0x10;
--			outb(0x41, tmport);
-+			outb(0x41, dev->ioport[c] + 0x10);
+-			tmport = workport + 0x10;
++			tmport = dev->ioport[c] + 0x10;
+ 			outb(0x41, tmport);
  			if (dev->dev_id == ATP885_DEVID) {		
--				tmport += 2;
- 				k = dev->id[c][target_id].last_len;
--				outb((unsigned char) (((unsigned char *) (&k))[2]), tmport++);
--				outb((unsigned char) (((unsigned char *) (&k))[1]), tmport++);
--				outb((unsigned char) (((unsigned char *) (&k))[0]), tmport++);
--			} else {
--				tmport += 5;
-+				outb((unsigned char) (((unsigned char *) (&k))[2]), dev->ioport[c] + 0x12);
-+				outb((unsigned char) (((unsigned char *) (&k))[1]), dev->ioport[c] + 0x13);
-+				outb((unsigned char) (((unsigned char *) (&k))[0]), dev->ioport[c] + 0x14);
- 			}
--			outb((unsigned char) (inb(tmport) | 0x20), tmport);
-+			outb((unsigned char) (inb(dev->ioport[c] + 0x15) | 0x20), dev->ioport[c] + 0x15);
- 			dev->id[c][target_id].dirct = 0x20;
--			tmport += 0x03;
--			outb(0x08, tmport);
-+			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x01, tmpcip);
- 			dev->in_int[c] = 0;
- 			goto handled;
- 		}
--		tmport -= 0x07;
- 		if (i == 0x0a) {
--			outb(0x30, tmport);
-+			outb(0x30, dev->ioport[c] + 0x10);
- 		} else {
--			outb(0x46, tmport);
-+			outb(0x46, dev->ioport[c] + 0x10);
- 		}
- 		dev->id[c][target_id].dirct = 0x00;
--		tmport += 0x02;
--		outb(0x00, tmport++);
--		outb(0x00, tmport++);
--		outb(0x00, tmport++);
--		tmport += 0x03;
--		outb(0x08, tmport);
-+		outb(0x00, dev->ioport[c] + 0x12);
-+		outb(0x00, dev->ioport[c] + 0x13);
-+		outb(0x00, dev->ioport[c] + 0x14);
-+		outb(0x08, dev->ioport[c] + 0x18);
+ 				tmport += 2;
+@@ -584,7 +583,7 @@ go_42:
  		dev->in_int[c] = 0;
  		goto handled;
  	} else {
--//		tmport = dev->ioport[c] + 0x17;
--//		inb(tmport);
-+//		inb(dev->ioport[c] + 0x17);
+-//		tmport = workport + 0x17;
++//		tmport = dev->ioport[c] + 0x17;
+ //		inb(tmport);
  //		dev->working[c] = 0;
  		dev->in_int[c] = 0;
- 		goto handled;
+@@ -713,7 +712,6 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 	unsigned char *prd;
+ 	unsigned short int tmpcip, w;
+ 	unsigned long l, bttl = 0;
+-	unsigned int workport;
+ 	unsigned long  sg_count;
+ 
+ 	if (dev->in_snd[c] != 0) {
+@@ -759,12 +757,11 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 	dev->in_snd[c] = 0;
+ 	return;
+ cmd_subp:
+-	workport = dev->ioport[c];
+-	tmport = workport + 0x1f;
++	tmport = dev->ioport[c] + 0x1f;
+ 	if ((inb(tmport) & 0xb0) != 0) {
+ 		goto abortsnd;
+ 	}
+-	tmport = workport + 0x1c;
++	tmport = dev->ioport[c] + 0x1c;
+ 	if (inb(tmport) == 0) {
+ 		goto oktosend;
+ 	}
+@@ -800,7 +797,7 @@ oktosend:
+ 		l = 0;
+ 	}
+ 
+-	tmport = workport + 0x1b;
++	tmport = dev->ioport[c] + 0x1b;
+ 	j = 0;
+ 	target_id = scmd_id(workreq);
+ 
+@@ -823,7 +820,7 @@ oktosend:
+ 	 *	Write the command
+ 	 */
+ 
+-	tmport = workport;
++	tmport = dev->ioport[c];
+ 	outb(workreq->cmd_len, tmport++);
+ 	outb(0x2c, tmport++);
+ 	if (dev->dev_id == ATP885_DEVID) {
+@@ -834,7 +831,7 @@ oktosend:
+ 	for (i = 0; i < workreq->cmd_len; i++) {
+ 		outb(workreq->cmnd[i], tmport++);
+ 	}
+-	tmport = workport + 0x0f;
++	tmport = dev->ioport[c] + 0x0f;
+ 	outb(workreq->device->lun, tmport);
+ 	tmport += 0x02;
+ 	/*
+@@ -874,11 +871,11 @@ oktosend:
+ 	}
+ 	outb((unsigned char) (inb(tmport) | 0x80), tmport);
+ 	outb(0x80, tmport);
+-	tmport = workport + 0x1c;
++	tmport = dev->ioport[c] + 0x1c;
+ 	dev->id[c][target_id].dirct = 0;
+ 	if (l == 0) {
+ 		if (inb(tmport) == 0) {
+-			tmport = workport + 0x18;
++			tmport = dev->ioport[c] + 0x18;
+ #ifdef ED_DBGP
+ 			printk("change SCSI_CMD_REG 0x08\n");	
+ #endif				
+@@ -947,7 +944,7 @@ oktosend:
+ 	} else if ((dev->dev_id == ATP880_DEVID1) ||
+ 	    	   (dev->dev_id == ATP880_DEVID2)) {
+ 		tmpcip =tmpcip -2;	
+-		tmport = workport - 0x05;
++		tmport = dev->ioport[c] - 0x05;
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 			outb((unsigned char) ((inb(tmport) & 0x3f) | 0xc0), tmport);
+ 		} else {
+@@ -955,19 +952,19 @@ oktosend:
+ 		}		
+ 	} else {		
+ 		tmpcip =tmpcip -2;
+-		tmport = workport + 0x3a;
++		tmport = dev->ioport[c] + 0x3a;
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 			outb((inb(tmport) & 0xf3) | 0x08, tmport);
+ 		} else {
+ 			outb(inb(tmport) & 0xf3, tmport);
+ 		}		
+ 	}	
+-	tmport = workport + 0x1c;
++	tmport = dev->ioport[c] + 0x1c;
+ 
+ 	if(workreq->sc_data_direction == DMA_TO_DEVICE) {
+ 		dev->id[c][target_id].dirct = 0x20;
+ 		if (inb(tmport) == 0) {
+-			tmport = workport + 0x18;
++			tmport = dev->ioport[c] + 0x18;
+ 			outb(0x08, tmport);
+ 			outb(0x01, tmpcip);
+ #ifdef ED_DBGP		
+@@ -980,7 +977,7 @@ oktosend:
+ 		return;
+ 	}
+ 	if (inb(tmport) == 0) {		
+-		tmport = workport + 0x18;
++		tmport = dev->ioport[c] + 0x18;
+ 		outb(0x08, tmport);
+ 		outb(0x09, tmpcip);
+ #ifdef ED_DBGP		
 -- 
 Ondrej Zary
 
