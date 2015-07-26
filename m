@@ -1,79 +1,85 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 16/52] atp870u: Remove ugly gotos #4
-Date: Sun, 26 Jul 2015 22:24:23 +0200
-Message-ID: <1437942299-26674-17-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 30/52] atp870u: Rename is885() to atp_is()
+Date: Sun, 26 Jul 2015 22:24:37 +0200
+Message-ID: <1437942299-26674-31-git-send-email-linux@rainbow-software.org>
 References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56667 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56673 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755234AbbGZU46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Jul 2015 16:56:58 -0400
+	id S1755467AbbGZU5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jul 2015 16:57:08 -0400
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1ZJSTw-0003IN-0v
-	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:12 +0200
+	id 1ZJSTy-0003IN-Na
+	for linux-scsi@vger.kernel.org; Sun, 26 Jul 2015 22:25:14 +0200
 In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Now that all the is* functions except is885() are gone, rename is885() to
+atp_is() to avoid confusion. Don't know what "is" means, though...
+
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+ drivers/scsi/atp870u.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index b3d4e9d..68afe11 100644
+index 918875b..0b7d3bd 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -970,19 +970,19 @@ static void tscam(struct Scsi_Host *host)
- 		} else {
- 			outb(0x00, dev->ioport[0] + 0x1b);
- 		}
--wait_rdyok:
--		outb(0x09, dev->ioport[0] + 0x18);
--
--		while ((inb(dev->ioport[0] + 0x1f) & 0x80) == 0x00)
--			cpu_relax();
--		k = inb(dev->ioport[0] + 0x17);
--		if (k != 0x16) {
--			if ((k == 0x85) || (k == 0x42)) {
--				continue;
--			}
--			outb(0x41, dev->ioport[0] + 0x10);
--			goto wait_rdyok;
--		}
-+		do {
-+			outb(0x09, dev->ioport[0] + 0x18);
-+
-+			while ((inb(dev->ioport[0] + 0x1f) & 0x80) == 0x00)
-+				cpu_relax();
-+			k = inb(dev->ioport[0] + 0x17);
-+			if ((k == 0x85) || (k == 0x42))
-+				break;
-+			if (k != 0x16)
-+				outb(0x41, dev->ioport[0] + 0x10);
-+		} while (k != 0x16);
-+		if ((k == 0x85) || (k == 0x42))
-+			continue;
- 		assignid_map |= m;
+@@ -41,7 +41,7 @@
  
- 	}
-@@ -1003,10 +1003,8 @@ wait_rdyok:
- 	mdelay(128);
- 	val &= 0x00fb;		/* after 1ms no msg */
- 	outw(val, dev->ioport[0] + 0x1c);
--wait_nomsg:
--	if ((inb(dev->ioport[0] + 0x1c) & 0x04) != 0) {
--		goto wait_nomsg;
--	}
-+	while ((inb(dev->ioport[0] + 0x1c) & 0x04) != 0)
-+		;
- 	outb(1, 0x80);
- 	udelay(100);
- 	for (n = 0; n < 0x30000; n++) {
+ static struct scsi_host_template atp870u_template;
+ static void send_s870(struct atp_unit *dev,unsigned char c);
+-static void is885(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
++static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode);
+ static void tscam_885(void);
+ 
+ static inline void atp_writeb_base(struct atp_unit *atp, u8 reg, u8 val)
+@@ -1373,7 +1373,7 @@ flash_ok_880:
+ 		outb(0x20, base_io + 0x51);
+ 
+ 		tscam(shpnt);
+-		is885(p, 0, true, atp_readb_base(p, 0x3f) & 0x40);
++		atp_is(p, 0, true, atp_readb_base(p, 0x3f) & 0x40);
+ 		outb(0xb0, base_io + 0x38);
+ 		shpnt->max_id = 16;
+ 		shpnt->this_id = host_id;
+@@ -1519,10 +1519,10 @@ flash_ok_885:
+ 
+ 		tscam_885();
+ 		printk(KERN_INFO "   Scanning Channel A SCSI Device ...\n");
+-		is885(p, 0, true, atp_readb_io(p, 0, 0x1b) >> 7);
++		atp_is(p, 0, true, atp_readb_io(p, 0, 0x1b) >> 7);
+ 		atp_writeb_io(p, 0, 0x16, 0x80);
+ 		printk(KERN_INFO "   Scanning Channel B SCSI Device ...\n");
+-		is885(p, 1, true, atp_readb_io(p, 1, 0x1b) >> 7);
++		atp_is(p, 1, true, atp_readb_io(p, 1, 0x1b) >> 7);
+ 		atp_writeb_io(p, 1, 0x16, 0x80);
+ 		k = inb(base_io + 0x28) & 0xcf;
+ 		k |= 0xc0;
+@@ -1605,7 +1605,7 @@ flash_ok_885:
+ 
+ 		tscam(shpnt);
+ 		atp_writeb_io(p, 0, 0x3a, atp_readb_io(p, 0, 0x3a) | 0x10);
+-		is885(p, 0, p->chip_ver == 4, 0);
++		atp_is(p, 0, p->chip_ver == 4, 0);
+ 		atp_writeb_io(p, 0, 0x3a, atp_readb_io(p, 0, 0x3a) & 0xef);
+ 		outb((inb(base_io + 0x3a) & 0xef), base_io + 0x3a);
+ 		outb((inb(base_io + 0x3b) | 0x20), base_io + 0x3b);
+@@ -1826,7 +1826,7 @@ static void tscam_885(void)
+ 
+ 
+ 
+-static void is885(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
++static void atp_is(struct atp_unit *dev, unsigned char c, bool wide_chip, unsigned char lvdmode)
+ {
+ 	unsigned char i, j, k, rmb, n;
+ 	unsigned short int m;
 -- 
 Ondrej Zary
 
