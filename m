@@ -1,126 +1,134 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [for 4.1 PATCH resend] libsas: fix "sysfs group not found"
- warnings at port teardown time
-Date: Mon, 27 Jul 2015 11:38:15 -0700
-Message-ID: <1438022295.5441.63.camel@HansenPartnership.com>
-References: <20150618032204.29990.87007.stgit@dwillia2-desk3.amr.corp.intel.com>
-	 <1437589687.2171.44.camel@HansenPartnership.com>
-	 <CAPcyv4hTVCKU+SVAPPrne_EKuGdzuZjhpgpte26FVcCYT6_8wQ@mail.gmail.com>
-	 <1438010252.5441.21.camel@HansenPartnership.com>
-	 <CAPcyv4irtD_JgXEVkvhNak3s61kJCVzKADJ2s=nOsrT0qtzjXA@mail.gmail.com>
-	 <1438017069.5441.42.camel@HansenPartnership.com>
-	 <CAPcyv4je3AgKWaoHS9sECyDGeithmZdXX8dKgB9NwYu0donjdQ@mail.gmail.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 2/3] scsi: rescan device if an invalid capacity had been
+ reported
+Date: Mon, 27 Jul 2015 12:55:38 -0700
+Message-ID: <55B68CBA.3090607@suse.com>
+References: <1436341268-91432-1-git-send-email-hare@suse.de>
+ <1436341268-91432-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51654 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750891AbbG0SiS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jul 2015 14:38:18 -0400
-In-Reply-To: <CAPcyv4je3AgKWaoHS9sECyDGeithmZdXX8dKgB9NwYu0donjdQ@mail.gmail.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:41516 "EHLO
+	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751459AbbG0Tzm (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Mon, 27 Jul 2015 15:55:42 -0400
+In-Reply-To: <1436341268-91432-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Praveen Murali <pmurali@logicube.com>, linux-scsi <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: Bart van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Mon, 2015-07-27 at 10:55 -0700, Dan Williams wrote:
-> On Mon, Jul 27, 2015 at 10:11 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Mon, 2015-07-27 at 08:48 -0700, Dan Williams wrote:
-> >> On Mon, Jul 27, 2015 at 8:17 AM, James Bottomley
-> >> <James.Bottomley@hansenpartnership.com> wrote:
-> >> > On Wed, 2015-07-22 at 14:08 -0700, Dan Williams wrote:
-> >> >> On Wed, Jul 22, 2015 at 11:28 AM, James Bottomley
-> >> >> <James.Bottomley@hansenpartnership.com> wrote:
-> >> >> >
-> >> >> >>  }
-> >> >> >>
-> >> >> >>  void sas_device_set_phy(struct domain_device *dev, struct sas_port *port)
-> >> >> >> diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-> >> >> >> index d3c5297c6c89..9a25ae3a52a4 100644
-> >> >> >> --- a/drivers/scsi/libsas/sas_port.c
-> >> >> >> +++ b/drivers/scsi/libsas/sas_port.c
-> >> >> >> @@ -219,7 +219,6 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
-> >> >> >>
-> >> >> >>       if (port->num_phys == 1) {
-> >> >> >>               sas_unregister_domain_devices(port, gone);
-> >> >> >> -             sas_port_delete(port->port);
-> >> >> >>               port->port = NULL;
-> >> >> >>       } else {
-> >> >> >>               sas_port_delete_phy(port->port, phy->phy);
-> >> >> >>
-> >> >> >
-> >> >> > This should become
-> >> >> >
-> >> >> > if (port->num_phys == 1)
-> >> >> >         sas_unregister_domain_device(port, gone);
-> >> >> >
-> >> >> > sas_port_delete_phy(port->port, phy->phy);
-> >> >> >
-> >> >> > So we end up with a port scheduled for destruction with no phys rather
-> >> >> > than making the last phy association hang around until the DISCE
-> >> >> > workqueue runs.
-> >> >>
-> >> >> Sounds ok in theory.
-> >> >
-> >> > It's not really a choice.  The specific problem you've introduced with
-> >> > this patch is failure to cope with link flutter: a deform and form event
-> >> > queued sequentially.  In the new scheme you're trying to introduce, the
-> >> > destruct event gets queued from the deform but behind the form and the
-> >> > link flutter results in a dead link.  I thought just forcing a zero phy
-> >> > port would fix this, but it won't, either the destruct has to run in the
-> >> > context of the deform event or the form has to be queued later than the
-> >> > destruct.  I think coupled with the changes above, there needs to be
-> >> >
-> >> > if (port->port) {
-> >> >         /* dying port, requeue form event */
-> >> >         resend the PORTE_BYTES_DMAED event
-> >> >         return
-> >> > }
-> >> >
-> >> > inside the unmatched port loop in sas_port_form() if nothing is found as
-> >> > well to close this.
-> >>
-> >> I think it's too late.  Once the lldd has triggered libsas to start
-> >> tear down I seem to recall the lldd has the expectation that a new
-> >> PORTE_BYTES_DMAED triggers the creation of a new port instance for
-> >> that phy.  Once the flutter reaches libsas the race is already lost
-> >> and the port needs to be torn down, but I would need to take a closer
-> >> look.
-> >
-> > I don't understand your reasoning.  The expectation is that
-> > PORTE_BYTES_DMAED leads to port formation.  The proposal detects that
-> > this event precedes DISCE_DESTRUCT for the port and requeues the event,
-> > now after DISC_DESTRUCT, so it gets acted on.  Where is the problem?
-> >
+On 07/08/2015 12:41 AM, Hannes Reinecke wrote:
+> Device paths in ALUA state 'standby' do not necessarily support
+> the READ_CAPACITY command. This patch adds a new flag 'invalid_capacity'
+> to the scsi device, and rescans the device if an ALUA state
+> change occurred.
 > 
-> Ah, I read "flutter" and mistakenly thought "debounce".  You're
-> addressing the case where we're fully committed to the port going
-> down, but a "port up" event is injected between the "port down" and
-> "destruct" events.  Yes, I agree re-queuing needs to happen, however
-> don't we now have queue re-order problem with respect to a new "port
-> down" event?  It seems events need to be held off in-order while the
-> subordinate DISCE events are processed.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_lib.c    |  4 ++++
+>  drivers/scsi/sd.c          | 19 ++++++++++++++-----
+>  include/scsi/scsi_device.h |  1 +
+>  3 files changed, 19 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index c005e42..d4245f0 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2701,6 +2701,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+>  		envp[idx++] = "SDEV_UA=INQUIRY_DATA_HAS_CHANGED";
+>  		break;
+>  	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
+> +		scsi_rescan_device(&sdev->sdev_gendev);
+>  		envp[idx++] = "SDEV_UA=CAPACITY_DATA_HAS_CHANGED";
+>  		break;
+>  	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
+> @@ -2713,6 +2714,9 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+>  		envp[idx++] = "SDEV_UA=REPORTED_LUNS_DATA_HAS_CHANGED";
+>  		break;
+>  	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
+> +		if (sdev->invalid_capacity)
+> +			scsi_rescan_device(&sdev->sdev_gendev);
+> +
+>  		envp[idx++] = "SDEV_UA=ASYMMETRIC_ACCESS_STATE_CHANGED";
+>  		break;
+>  	default:
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 03fdfa9..7c0bdaa 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1983,14 +1983,18 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  					continue;
+>  			if (sense_valid &&
+>  			    sshdr.sense_key == NOT_READY &&
+> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a)
+> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a) {
+>  				/* Target port in transition */
+> +				sdp->invalid_capacity = 1;
+>  				return 0;
+> +			}
+>  			if (sense_valid &&
+>  			    sshdr.sense_key == NOT_READY &&
+> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b)
+> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b) {
+>  				/* Target port in standy state */
+> +				sdp->invalid_capacity = 1;
+>  				return 0;
+> +			}
+>  		}
+>  		retries--;
+>  
+> @@ -2075,14 +2079,18 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  					continue;
+>  			if (sense_valid &&
+>  			    sshdr.sense_key == NOT_READY &&
+> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a)
+> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a) {
+>  				/* Target port in transition */
+> +				sdp->invalid_capacity = 1;
+>  				return 0;
+> +			}
+>  			if (sense_valid &&
+>  			    sshdr.sense_key == NOT_READY &&
+> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b)
+> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b) {
+>  				/* Target port in standy state */
+> +				sdp->invalid_capacity = 1;
+>  				return 0;
+> +			}
+>  		}
+>  		retries--;
+>  
+> @@ -2199,7 +2207,8 @@ got_data:
+>  			  "assuming 512.\n");
+>  		if (!sdkp->physical_block_size)
+>  			sdkp->physical_block_size = sector_size;
+> -	}
+> +	} else
+> +		sdp->invalid_capacity = 0;
+>  
+>  	if (sector_size != 512 &&
+>  	    sector_size != 1024 &&
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 50c2a36..99bde5a 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -175,6 +175,7 @@ struct scsi_device {
+>  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+>  	unsigned broken_fua:1;		/* Don't set FUA bit */
+>  	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+> +	unsigned invalid_capacity:1;	/* READ_CAPACITY not supported */
 
-No, that seems to be the intent of the prior code.  The reason port
-visibility goes immediately (along with all associated phys), is that
-the port is ready for reuse as soon as sas_deform_port() returns.
-Destroying the subtree is left to DISCE_DESTRUCT, but since the subtree
-is not visible, a new port can form even as the elements associated with
-the old port are being destroyed.  the DISCE_DISCOVER that populates it
-will queue behind the destruct, so everything just works today (modulo
-the new warning).
+Not sure I like the comment for the new field. How about something like
+"current capacity unknown"?
 
-It would be ideal if we could detect in the destruct queue that the
-visibility is already gone and make use of it, but we can't.  The patch
-that causes this warning induces a mismatch between the state of the
-kernfs tree and the kobjects ... we still have to call device_del which
-leads to kobject_del (which triggers the warning) to bring this state
-back into alignment.  So the disconnected subtree we originally used to
-make all this work is what's suddenly been rendered invalid.
+>  
+>  	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+>  
+> 
 
-James
-
-
+-- 
+Lee Duncan
+SUSE Labs
