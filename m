@@ -1,134 +1,54 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 2/3] scsi: rescan device if an invalid capacity had been
- reported
-Date: Mon, 27 Jul 2015 12:55:38 -0700
-Message-ID: <55B68CBA.3090607@suse.com>
-References: <1436341268-91432-1-git-send-email-hare@suse.de>
- <1436341268-91432-3-git-send-email-hare@suse.de>
+From: Praveen Murali <pmurali@logicube.com>
+Subject: RE: [for 4.1 PATCH resend] libsas: fix "sysfs group not found"
+ warnings at port teardown time
+Date: Mon, 27 Jul 2015 19:53:30 +0000
+Message-ID: <db728468e7274a6b9baf0778d3bcc4d7@EX01.lg.local>
+References: <20150618032204.29990.87007.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<1437589687.2171.44.camel@HansenPartnership.com>
+	<CAPcyv4hTVCKU+SVAPPrne_EKuGdzuZjhpgpte26FVcCYT6_8wQ@mail.gmail.com>
+	<1438010252.5441.21.camel@HansenPartnership.com>
+	<CAPcyv4irtD_JgXEVkvhNak3s61kJCVzKADJ2s=nOsrT0qtzjXA@mail.gmail.com>
+	<1438020423.5441.52.camel@HansenPartnership.com>
+ <CAPcyv4gByOjrgAoLrJFwU7onkQ-+BEL2p3XZc17iubSC8dsPYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:41516 "EHLO
-	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751459AbbG0Tzm (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Mon, 27 Jul 2015 15:55:42 -0400
-In-Reply-To: <1436341268-91432-3-git-send-email-hare@suse.de>
+Received: from p02c11o147.mxlogic.net ([208.65.144.80]:39379 "EHLO
+	p02c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754116AbbG0UGo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2015 16:06:44 -0400
+In-Reply-To: <CAPcyv4gByOjrgAoLrJFwU7onkQ-+BEL2p3XZc17iubSC8dsPYA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Bart van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-On 07/08/2015 12:41 AM, Hannes Reinecke wrote:
-> Device paths in ALUA state 'standby' do not necessarily support
-> the READ_CAPACITY command. This patch adds a new flag 'invalid_capacity'
-> to the scsi device, and rescans the device if an ALUA state
-> change occurred.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_lib.c    |  4 ++++
->  drivers/scsi/sd.c          | 19 ++++++++++++++-----
->  include/scsi/scsi_device.h |  1 +
->  3 files changed, 19 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index c005e42..d4245f0 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2701,6 +2701,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
->  		envp[idx++] = "SDEV_UA=INQUIRY_DATA_HAS_CHANGED";
->  		break;
->  	case SDEV_EVT_CAPACITY_CHANGE_REPORTED:
-> +		scsi_rescan_device(&sdev->sdev_gendev);
->  		envp[idx++] = "SDEV_UA=CAPACITY_DATA_HAS_CHANGED";
->  		break;
->  	case SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED:
-> @@ -2713,6 +2714,9 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
->  		envp[idx++] = "SDEV_UA=REPORTED_LUNS_DATA_HAS_CHANGED";
->  		break;
->  	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
-> +		if (sdev->invalid_capacity)
-> +			scsi_rescan_device(&sdev->sdev_gendev);
-> +
->  		envp[idx++] = "SDEV_UA=ASYMMETRIC_ACCESS_STATE_CHANGED";
->  		break;
->  	default:
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 03fdfa9..7c0bdaa 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1983,14 +1983,18 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  					continue;
->  			if (sense_valid &&
->  			    sshdr.sense_key == NOT_READY &&
-> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a)
-> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a) {
->  				/* Target port in transition */
-> +				sdp->invalid_capacity = 1;
->  				return 0;
-> +			}
->  			if (sense_valid &&
->  			    sshdr.sense_key == NOT_READY &&
-> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b)
-> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b) {
->  				/* Target port in standy state */
-> +				sdp->invalid_capacity = 1;
->  				return 0;
-> +			}
->  		}
->  		retries--;
->  
-> @@ -2075,14 +2079,18 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  					continue;
->  			if (sense_valid &&
->  			    sshdr.sense_key == NOT_READY &&
-> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a)
-> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0a) {
->  				/* Target port in transition */
-> +				sdp->invalid_capacity = 1;
->  				return 0;
-> +			}
->  			if (sense_valid &&
->  			    sshdr.sense_key == NOT_READY &&
-> -			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b)
-> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x0b) {
->  				/* Target port in standy state */
-> +				sdp->invalid_capacity = 1;
->  				return 0;
-> +			}
->  		}
->  		retries--;
->  
-> @@ -2199,7 +2207,8 @@ got_data:
->  			  "assuming 512.\n");
->  		if (!sdkp->physical_block_size)
->  			sdkp->physical_block_size = sector_size;
-> -	}
-> +	} else
-> +		sdp->invalid_capacity = 0;
->  
->  	if (sector_size != 512 &&
->  	    sector_size != 1024 &&
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 50c2a36..99bde5a 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -175,6 +175,7 @@ struct scsi_device {
->  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
->  	unsigned broken_fua:1;		/* Don't set FUA bit */
->  	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
-> +	unsigned invalid_capacity:1;	/* READ_CAPACITY not supported */
-
-Not sure I like the comment for the new field. How about something like
-"current capacity unknown"?
-
->  
->  	atomic_t disk_events_disable_depth; /* disable depth for disk events */
->  
-> 
-
--- 
-Lee Duncan
-SUSE Labs
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gV2lsbGlhbXMgW21haWx0
+bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgSnVseSAyNywgMjAx
+NSAxMToyNSBBTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5DQo+IENjOiBDaHJpc3RvcGggSGVsbHdp
+ZzsgUHJhdmVlbiBNdXJhbGk7IGxpbnV4LXNjc2k7IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4g
+U3ViamVjdDogUmU6IFtmb3IgNC4xIFBBVENIIHJlc2VuZF0gbGlic2FzOiBmaXggInN5c2ZzIGdy
+b3VwIG5vdCBmb3VuZCIgd2FybmluZ3MNCj4gYXQgcG9ydCB0ZWFyZG93biB0aW1lDQo+IA0KPiA+
+IEkgZGlkbid0IGFzayB5b3UgdG8ganVzdGlmeSB5b3VyIHByb2Nlc3MsIEkgYXNrZWQgeW91IGhv
+dyBpbXBvcnRhbnQgeW91DQo+ID4gdGhvdWdodCB0aGUgcGF0Y2ggd2FzIG1haW5seSBiZWNhdXNl
+IG9mIHRoZSBjb25mbGljdGluZyBzaWduYWxzIHlvdSd2ZQ0KPiA+IHNlbnQuICBJIGdldCB0aGF0
+IHlvdSB0aGluayBJIHNob3VsZCB0cmVhdCBhbGwgeW91ciBwYXRjaGVzIGFzIGltcG9ydGFudA0K
+PiA+IHdoZXRoZXIgeW91IGRvIG9yIG5vdCwgYnV0IHRoZSB3b3JsZCBkb2Vzbid0IHF1aXRlIHdv
+cmsgbGlrZSB0aGF0OiBwYXRjaA0KPiA+IGFwcGxpY2F0aW9uIGlzIGEgcHJvY2VzcyBvZiB0cmlh
+Z2UuICBQYXRjaGVzLCBsaWtlIHRoaXMsIHdoaWNoIGhhdmUNCj4gPiB0aW1pbmcgcmVsYXRlZCBp
+c3N1ZXMgcG90ZW50aWFsbHkgbGVhZGluZyB0byByYWNlcyBnZXQgbG9va2VkIGF0IGJ5IG1lDQo+
+ID4gYXMgdGhlIGxhc3QgcmV2aWV3ZXIuICBUaGUgc3BlZWQgb2YgcmV2aWV3IGRlcGVuZHMgb24g
+c2V2ZXJhbCBmYWN0b3JzLA0KPiA+IGJ1dCBvbmUgb2Ygd2hpY2ggaXMgd2hhdCB0eXBlIG9mIHVz
+ZXIgdmlzaWJsZSBpc3N1ZSBpcyB0aGlzIGNhdXNpbmcuDQo+ID4gVGhlIHVzZXIgdmlzaWJsZSBl
+ZmZlY3RzIG9mIHRoaXMgYXJlIGEgbmFzdHkgd2FybmluZyBtZXNzYWdlIGFuZCBub3RoaW5nDQo+
+ID4gbW9yZSwgSSBiZWxpZXZlPyAgQSB1c2VmdWwgaW5kaWNhdG9yIGluIHRoaXMgdHJpYWdlIGlz
+IGhvdyBpbXBvcnRhbnQgdGhlDQo+ID4gc3VibWl0dGVyIHRoaW5rcyB0aGUgcGF0Y2ggaXMsIHdo
+aWNoIHdhcyBvcmlnaW5hbGx5IHdoeSBJIGFza2VkLg0KPiA+DQo+IA0KPiBUaGF0IHdvdWxkIGJl
+IGEgcXVlc3Rpb24gdG8gUHJhdmVlbi4gIEl0IHdhc24ndCBjbGVhciB0byBtZSB3aGV0aGVyDQo+
+IHRoaXMgc3lzZnMgYmFja3RyYWNlIHdhcyBhIHNpbXBseSBhIHdhcm5pbmcgb3IgZXZlbnR1YWxs
+eSBmYXRhbCB0byB0aGUNCj4gYm94Lg0KQXMgZmFyIGFzIEkgcmVtZW1iZXIsIHRoZSBpc3N1ZSB3
+YXMgbW9zdGx5IHdpdGggdGhlIHN5c2ZzIGJhY2t0cmFjZXMuIEkgZG9u4oCZdA0KcmVtZW1iZXIg
+aXQgY2F1c2luZyBhIGZhdGFsIGVycm9yOyBidXQgdGhhdCBjb3VsZCB2ZXJ5IHdlbGwgYmUgYmVj
+YXVzZSBJIGRpZCBub3QNCnJ1biBpdCBsb25nIGVub3VnaC4NCg0K
