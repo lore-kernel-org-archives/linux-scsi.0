@@ -1,81 +1,97 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: fix memory leak with scsi-mq
-Date: Mon, 27 Jul 2015 13:52:04 -0400
-Message-ID: <1438019524.1921.369.camel@localhost.localdomain>
-References: <55A7D079.9010706@cybernetics.com>
-Reply-To: emilne@redhat.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [for 4.1 PATCH resend] libsas: fix "sysfs group not found"
+ warnings at port teardown time
+Date: Mon, 27 Jul 2015 10:55:07 -0700
+Message-ID: <CAPcyv4je3AgKWaoHS9sECyDGeithmZdXX8dKgB9NwYu0donjdQ@mail.gmail.com>
+References: <20150618032204.29990.87007.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<1437589687.2171.44.camel@HansenPartnership.com>
+	<CAPcyv4hTVCKU+SVAPPrne_EKuGdzuZjhpgpte26FVcCYT6_8wQ@mail.gmail.com>
+	<1438010252.5441.21.camel@HansenPartnership.com>
+	<CAPcyv4irtD_JgXEVkvhNak3s61kJCVzKADJ2s=nOsrT0qtzjXA@mail.gmail.com>
+	<1438017069.5441.42.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55A7D079.9010706@cybernetics.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@Odin.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1438017069.5441.42.camel@HansenPartnership.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Praveen Murali <pmurali@logicube.com>, linux-scsi <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-07-16 at 11:40 -0400, Tony Battersby wrote:
-> Fix a memory leak with scsi-mq triggered by commands with large data
-> transfer length.
-> 
-> __sg_alloc_table() sets both table->nents and table->orig_nents to the
-> same value.  When the scatterlist is DMA-mapped, table->nents is
-> overwritten with the (possibly smaller) size of the DMA-mapped
-> scatterlist, while table->orig_nents retains the original size of the
-> allocated scatterlist.  scsi_free_sgtable() should therefore check
-> orig_nents instead of nents, and all code that initializes sdb->table
-> without calling __sg_alloc_table() should set both nents and orig_nents.
-> 
-> Fixes: d285203cf647 ("scsi: add support for a blk-mq based I/O path.")
-> Cc: <stable@vger.kernel.org> # 3.17+
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> ---
-> 
-> For immediate inclusion.
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 106884a..cfadcce 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -944,7 +944,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
->  			    scmd->sdb.length);
->  		scmd->sdb.table.sgl = &ses->sense_sgl;
->  		scmd->sc_data_direction = DMA_FROM_DEVICE;
-> -		scmd->sdb.table.nents = 1;
-> +		scmd->sdb.table.nents = scmd->sdb.table.orig_nents = 1;
->  		scmd->cmnd[0] = REQUEST_SENSE;
->  		scmd->cmnd[4] = scmd->sdb.length;
->  		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b1a2631..448ebda 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -583,7 +583,7 @@ static struct scatterlist *scsi_sg_alloc(unsigned int nents, gfp_t gfp_mask)
->  
->  static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
->  {
-> -	if (mq && sdb->table.nents <= SCSI_MAX_SG_SEGMENTS)
-> +	if (mq && sdb->table.orig_nents <= SCSI_MAX_SG_SEGMENTS)
->  		return;
->  	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
->  }
-> @@ -597,8 +597,8 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
->  
->  	if (mq) {
->  		if (nents <= SCSI_MAX_SG_SEGMENTS) {
-> -			sdb->table.nents = nents;
-> -			sg_init_table(sdb->table.sgl, sdb->table.nents);
-> +			sdb->table.nents = sdb->table.orig_nents = nents;
-> +			sg_init_table(sdb->table.sgl, nents);
->  			return 0;
->  		}
->  		first_chunk = sdb->table.sgl;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, Jul 27, 2015 at 10:11 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Mon, 2015-07-27 at 08:48 -0700, Dan Williams wrote:
+>> On Mon, Jul 27, 2015 at 8:17 AM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
+>> > On Wed, 2015-07-22 at 14:08 -0700, Dan Williams wrote:
+>> >> On Wed, Jul 22, 2015 at 11:28 AM, James Bottomley
+>> >> <James.Bottomley@hansenpartnership.com> wrote:
+>> >> >
+>> >> >>  }
+>> >> >>
+>> >> >>  void sas_device_set_phy(struct domain_device *dev, struct sas_port *port)
+>> >> >> diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+>> >> >> index d3c5297c6c89..9a25ae3a52a4 100644
+>> >> >> --- a/drivers/scsi/libsas/sas_port.c
+>> >> >> +++ b/drivers/scsi/libsas/sas_port.c
+>> >> >> @@ -219,7 +219,6 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
+>> >> >>
+>> >> >>       if (port->num_phys == 1) {
+>> >> >>               sas_unregister_domain_devices(port, gone);
+>> >> >> -             sas_port_delete(port->port);
+>> >> >>               port->port = NULL;
+>> >> >>       } else {
+>> >> >>               sas_port_delete_phy(port->port, phy->phy);
+>> >> >>
+>> >> >
+>> >> > This should become
+>> >> >
+>> >> > if (port->num_phys == 1)
+>> >> >         sas_unregister_domain_device(port, gone);
+>> >> >
+>> >> > sas_port_delete_phy(port->port, phy->phy);
+>> >> >
+>> >> > So we end up with a port scheduled for destruction with no phys rather
+>> >> > than making the last phy association hang around until the DISCE
+>> >> > workqueue runs.
+>> >>
+>> >> Sounds ok in theory.
+>> >
+>> > It's not really a choice.  The specific problem you've introduced with
+>> > this patch is failure to cope with link flutter: a deform and form event
+>> > queued sequentially.  In the new scheme you're trying to introduce, the
+>> > destruct event gets queued from the deform but behind the form and the
+>> > link flutter results in a dead link.  I thought just forcing a zero phy
+>> > port would fix this, but it won't, either the destruct has to run in the
+>> > context of the deform event or the form has to be queued later than the
+>> > destruct.  I think coupled with the changes above, there needs to be
+>> >
+>> > if (port->port) {
+>> >         /* dying port, requeue form event */
+>> >         resend the PORTE_BYTES_DMAED event
+>> >         return
+>> > }
+>> >
+>> > inside the unmatched port loop in sas_port_form() if nothing is found as
+>> > well to close this.
+>>
+>> I think it's too late.  Once the lldd has triggered libsas to start
+>> tear down I seem to recall the lldd has the expectation that a new
+>> PORTE_BYTES_DMAED triggers the creation of a new port instance for
+>> that phy.  Once the flutter reaches libsas the race is already lost
+>> and the port needs to be torn down, but I would need to take a closer
+>> look.
+>
+> I don't understand your reasoning.  The expectation is that
+> PORTE_BYTES_DMAED leads to port formation.  The proposal detects that
+> this event precedes DISCE_DESTRUCT for the port and requeues the event,
+> now after DISC_DESTRUCT, so it gets acted on.  Where is the problem?
+>
 
-Looks good.  James, can we get this in please?
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Ah, I read "flutter" and mistakenly thought "debounce".  You're
+addressing the case where we're fully committed to the port going
+down, but a "port up" event is injected between the "port down" and
+"destruct" events.  Yes, I agree re-queuing needs to happen, however
+don't we now have queue re-order problem with respect to a new "port
+down" event?  It seems events need to be held off in-order while the
+subordinate DISCE events are processed.
