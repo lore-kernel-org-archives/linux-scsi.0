@@ -1,47 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] MAINTAINERS: Update LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
- maintainers list
-Date: Mon, 27 Jul 2015 10:19:48 +0200
-Message-ID: <55B5E9A4.9010206@suse.de>
-References: <1436935855-29043-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: Re: [PATCH 00/52] atp870u: Major rework
+Date: Mon, 27 Jul 2015 10:56:23 +0200
+Message-ID: <55B5F237.8010207@suse.de>
+References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1436935855-29043-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59435 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751416AbbG0I4Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jul 2015 04:56:25 -0400
+In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org
 
-On 07/15/2015 06:50 AM, Sreekanth Reddy wrote:
-> Updating maintainers list for the entry LSILOGIC MPT FUSION DRIVERS i=
-n
-> MAINTAINERS file
+On 07/26/2015 10:24 PM, Ondrej Zary wrote:
+> This patch series removes the first level of crap from atp870u - the =
+worst
+> (in-tree) SCSI driver [1] and then cleans up the code a bit.
 >=20
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  MAINTAINERS | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+> First the driver is converted to C from something that looks like a (=
+bad)
+> assembler code: use of tmport for all I/O accesses and gotos all over=
+ the
+> code.
+> Then I/O access wrappers are introduced.
+> Finally, is870, is880 and is885 are unified and two of them removed.
 >=20
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 2d3d55c..c3cd5c9 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6348,10 +6348,9 @@ S:	Maintained
->  F:	arch/arm/mach-lpc32xx/
-> =20
->  LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
-> -M:	Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-> -M:	Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-> +M:	Sathya Prakash <sathya.prakash@avagotech.com>
->  M:	Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-> -M:	Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-> +M:	Chaitra Basappa <chaitra.basappa@avagotech.com>
->  L:	MPT-FusionLinux.pdl@avagotech.com
->  L:	linux-scsi@vger.kernel.org
->  W:	http://www.lsilogic.com/support
+> After that, some cleanups are done. There's still a lot of work left =
+to do.
 >=20
+> Tested on AEC-6710D (ATP870IU-C).
+>=20
+> [1] http://www.spinics.net/lists/linux-scsi/msg81142.html
+>=20
+>  atp870u.c | 3707 +++++++++++++++++----------------------------------=
+-----------
+>  atp870u.h |    4
+>  2 files changed, 1064 insertions(+), 2647 deletions(-)
+>=20
+> Partially (up to patch 34) Acked-by: Christoph Hellwig <hch@lst.de>
+>=20
+=46or this patchset:
+
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
@@ -53,3 +56,8 @@ hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
