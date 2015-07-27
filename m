@@ -1,54 +1,47 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: RE: [for 4.1 PATCH resend] libsas: fix "sysfs group not found"
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [for 4.1 PATCH resend] libsas: fix "sysfs group not found"
  warnings at port teardown time
-Date: Mon, 27 Jul 2015 19:53:30 +0000
-Message-ID: <db728468e7274a6b9baf0778d3bcc4d7@EX01.lg.local>
+Date: Mon, 27 Jul 2015 13:52:06 -0700
+Message-ID: <CAPcyv4hBWUp+fWz75t9HKJrfmUD051HcLgCo2N0GF9Hs-u8s4w@mail.gmail.com>
 References: <20150618032204.29990.87007.stgit@dwillia2-desk3.amr.corp.intel.com>
 	<1437589687.2171.44.camel@HansenPartnership.com>
 	<CAPcyv4hTVCKU+SVAPPrne_EKuGdzuZjhpgpte26FVcCYT6_8wQ@mail.gmail.com>
 	<1438010252.5441.21.camel@HansenPartnership.com>
 	<CAPcyv4irtD_JgXEVkvhNak3s61kJCVzKADJ2s=nOsrT0qtzjXA@mail.gmail.com>
-	<1438020423.5441.52.camel@HansenPartnership.com>
- <CAPcyv4gByOjrgAoLrJFwU7onkQ-+BEL2p3XZc17iubSC8dsPYA@mail.gmail.com>
+	<1438017069.5441.42.camel@HansenPartnership.com>
+	<CAPcyv4je3AgKWaoHS9sECyDGeithmZdXX8dKgB9NwYu0donjdQ@mail.gmail.com>
+	<1438022295.5441.63.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c11o147.mxlogic.net ([208.65.144.80]:39379 "EHLO
-	p02c11o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116AbbG0UGo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2015 16:06:44 -0400
-In-Reply-To: <CAPcyv4gByOjrgAoLrJFwU7onkQ-+BEL2p3XZc17iubSC8dsPYA@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1438022295.5441.63.camel@HansenPartnership.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Praveen Murali <pmurali@logicube.com>, linux-scsi <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gV2lsbGlhbXMgW21haWx0
-bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgSnVseSAyNywgMjAx
-NSAxMToyNSBBTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5DQo+IENjOiBDaHJpc3RvcGggSGVsbHdp
-ZzsgUHJhdmVlbiBNdXJhbGk7IGxpbnV4LXNjc2k7IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4g
-U3ViamVjdDogUmU6IFtmb3IgNC4xIFBBVENIIHJlc2VuZF0gbGlic2FzOiBmaXggInN5c2ZzIGdy
-b3VwIG5vdCBmb3VuZCIgd2FybmluZ3MNCj4gYXQgcG9ydCB0ZWFyZG93biB0aW1lDQo+IA0KPiA+
-IEkgZGlkbid0IGFzayB5b3UgdG8ganVzdGlmeSB5b3VyIHByb2Nlc3MsIEkgYXNrZWQgeW91IGhv
-dyBpbXBvcnRhbnQgeW91DQo+ID4gdGhvdWdodCB0aGUgcGF0Y2ggd2FzIG1haW5seSBiZWNhdXNl
-IG9mIHRoZSBjb25mbGljdGluZyBzaWduYWxzIHlvdSd2ZQ0KPiA+IHNlbnQuICBJIGdldCB0aGF0
-IHlvdSB0aGluayBJIHNob3VsZCB0cmVhdCBhbGwgeW91ciBwYXRjaGVzIGFzIGltcG9ydGFudA0K
-PiA+IHdoZXRoZXIgeW91IGRvIG9yIG5vdCwgYnV0IHRoZSB3b3JsZCBkb2Vzbid0IHF1aXRlIHdv
-cmsgbGlrZSB0aGF0OiBwYXRjaA0KPiA+IGFwcGxpY2F0aW9uIGlzIGEgcHJvY2VzcyBvZiB0cmlh
-Z2UuICBQYXRjaGVzLCBsaWtlIHRoaXMsIHdoaWNoIGhhdmUNCj4gPiB0aW1pbmcgcmVsYXRlZCBp
-c3N1ZXMgcG90ZW50aWFsbHkgbGVhZGluZyB0byByYWNlcyBnZXQgbG9va2VkIGF0IGJ5IG1lDQo+
-ID4gYXMgdGhlIGxhc3QgcmV2aWV3ZXIuICBUaGUgc3BlZWQgb2YgcmV2aWV3IGRlcGVuZHMgb24g
-c2V2ZXJhbCBmYWN0b3JzLA0KPiA+IGJ1dCBvbmUgb2Ygd2hpY2ggaXMgd2hhdCB0eXBlIG9mIHVz
-ZXIgdmlzaWJsZSBpc3N1ZSBpcyB0aGlzIGNhdXNpbmcuDQo+ID4gVGhlIHVzZXIgdmlzaWJsZSBl
-ZmZlY3RzIG9mIHRoaXMgYXJlIGEgbmFzdHkgd2FybmluZyBtZXNzYWdlIGFuZCBub3RoaW5nDQo+
-ID4gbW9yZSwgSSBiZWxpZXZlPyAgQSB1c2VmdWwgaW5kaWNhdG9yIGluIHRoaXMgdHJpYWdlIGlz
-IGhvdyBpbXBvcnRhbnQgdGhlDQo+ID4gc3VibWl0dGVyIHRoaW5rcyB0aGUgcGF0Y2ggaXMsIHdo
-aWNoIHdhcyBvcmlnaW5hbGx5IHdoeSBJIGFza2VkLg0KPiA+DQo+IA0KPiBUaGF0IHdvdWxkIGJl
-IGEgcXVlc3Rpb24gdG8gUHJhdmVlbi4gIEl0IHdhc24ndCBjbGVhciB0byBtZSB3aGV0aGVyDQo+
-IHRoaXMgc3lzZnMgYmFja3RyYWNlIHdhcyBhIHNpbXBseSBhIHdhcm5pbmcgb3IgZXZlbnR1YWxs
-eSBmYXRhbCB0byB0aGUNCj4gYm94Lg0KQXMgZmFyIGFzIEkgcmVtZW1iZXIsIHRoZSBpc3N1ZSB3
-YXMgbW9zdGx5IHdpdGggdGhlIHN5c2ZzIGJhY2t0cmFjZXMuIEkgZG9u4oCZdA0KcmVtZW1iZXIg
-aXQgY2F1c2luZyBhIGZhdGFsIGVycm9yOyBidXQgdGhhdCBjb3VsZCB2ZXJ5IHdlbGwgYmUgYmVj
-YXVzZSBJIGRpZCBub3QNCnJ1biBpdCBsb25nIGVub3VnaC4NCg0K
+On Mon, Jul 27, 2015 at 11:38 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> No, that seems to be the intent of the prior code.  The reason port
+> visibility goes immediately (along with all associated phys), is that
+> the port is ready for reuse as soon as sas_deform_port() returns.
+> Destroying the subtree is left to DISCE_DESTRUCT, but since the subtree
+> is not visible, a new port can form even as the elements associated with
+> the old port are being destroyed.  the DISCE_DISCOVER that populates it
+> will queue behind the destruct, so everything just works today (modulo
+> the new warning).
+>
+> It would be ideal if we could detect in the destruct queue that the
+> visibility is already gone and make use of it, but we can't.  The patch
+> that causes this warning induces a mismatch between the state of the
+> kernfs tree and the kobjects ... we still have to call device_del which
+> leads to kobject_del (which triggers the warning) to bring this state
+> back into alignment.  So the disconnected subtree we originally used to
+> make all this work is what's suddenly been rendered invalid.
+>
+
+Looking at the original report this seemed new for the 3.16 kernel.
+However, looking closer, that warning in sysfs_remove_group() has been
+present for a long time before that.  I don't recall seeing it back
+when we were doing focused hotplug testing with the isci driver for
+the 3.5 / 3.6 kernels, so I believe it is newly uncovered since then.
