@@ -1,51 +1,93 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/52] atp870u: Major rework
-Date: Mon, 27 Jul 2015 10:56:23 +0200
-Message-ID: <55B5F237.8010207@suse.de>
-References: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
+Subject: Re: [PATCH] scsi: fix hang in scsi error handling
+Date: Mon, 27 Jul 2015 12:38:35 +0200
+Message-ID: <55B60A2B.1040905@suse.de>
+References: <1436964449-31447-1-git-send-email-kgroeneveld@lenbrook.com> <55A79156.3060307@suse.de> <BF6B9AADDDF11740967545E971C7C0DE02234A@MAIL1.pickering.lenbrook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59435 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39592 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751416AbbG0I4Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jul 2015 04:56:25 -0400
-In-Reply-To: <1437942299-26674-1-git-send-email-linux@rainbow-software.org>
+	id S1751754AbbG0Kii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jul 2015 06:38:38 -0400
+In-Reply-To: <BF6B9AADDDF11740967545E971C7C0DE02234A@MAIL1.pickering.lenbrook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org
+To: Kevin Groeneveld <KGroeneveld@lenbrook.com>, "JBottomley@odin.com" <JBottomley@odin.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "festevam@gmail.com" <festevam@gmail.com>, "richard.zhu@freescale.com" <richard.zhu@freescale.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>
 
-On 07/26/2015 10:24 PM, Ondrej Zary wrote:
-> This patch series removes the first level of crap from atp870u - the =
-worst
-> (in-tree) SCSI driver [1] and then cleans up the code a bit.
+On 07/16/2015 08:55 PM, Kevin Groeneveld wrote:
+>> -----Original Message-----
+>> From: Hannes Reinecke [mailto:hare@suse.de]
+>> Sent: July-16-15 7:11 AM
+>>> When the hang occurs shost->host_busy =3D=3D 2 and shost->host_fail=
+ed =3D=3D 1
+>>> in the scsi_eh_wakeup function. However this function only wakes th=
+e
+>>> error handler if host_busy =3D=3D host_failed.
+>>>
+>> Which just means that one command is still outstanding, and we need =
+to wait
+>> for it to complete.
+>> But see below...
 >=20
-> First the driver is converted to C from something that looks like a (=
-bad)
-> assembler code: use of tmport for all I/O accesses and gotos all over=
- the
-> code.
-> Then I/O access wrappers are introduced.
-> Finally, is870, is880 and is885 are unified and two of them removed.
+> So the root cause of the hang is maybe that the second command never
+> completes? Maybe host_failed being non zero is blocking something in =
+the
+> port multiplier code?
 >=20
-> After that, some cleanups are done. There's still a lot of work left =
-to do.
+>> Hmm.
+>> I am really not sure about this.
 >=20
-> Tested on AEC-6710D (ATP870IU-C).
+> I wasn't sure either, that is one reason why I posted the patch.
 >=20
-> [1] http://www.spinics.net/lists/linux-scsi/msg81142.html
+>> 'host_busy' indicates the number of outstanding commands, and
+>> 'host_failed' is the number of commands which have failed (on the gr=
+ound
+>> that failed commands are considered outstanding, too).
+>>
+>> So the first hunk would change the behaviour from 'start SCSI EH onc=
+e all
+>> commands are completed or failed' to 'start SCSI EH for _any_ comman=
+d if
+>> scsi_eh_wakeup is called'
+>> (note that shost_failed might be '0'...).
+>> Which doesn't sound right.
 >=20
->  atp870u.c | 3707 +++++++++++++++++----------------------------------=
------------
->  atp870u.h |    4
->  2 files changed, 1064 insertions(+), 2647 deletions(-)
+> So could the patch create any problems by starting the EH any time
+> scsi_eh_wakeup is called? Or is it is just inefficient?
 >=20
-> Partially (up to patch 34) Acked-by: Christoph Hellwig <hch@lst.de>
->=20
-=46or this patchset:
+SCSI EH _relies_ on the fact that no other commands are outstanding
+on that SCSI host, hence the contents of eh_entry list won't change.
+Your patch breaks this assumption, causing some I/O to be lost.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>> I guess this needs further debugging to get to the bottom of it.
+>=20
+> Any suggestions on things I could try?
+>=20
+> The fact that the problem goes away when I only enable one CPU core m=
+akes
+> me think there is a race happening somewhere.
+>=20
+Not sure here. You're effectively creating an endless loop with your
+patch, assuming that each ioctl will be
+However, you are effectively creating an endless loop with you
+testcase, assuming that 'ioctl' finishes all I/O before returning.
+Which _actually_ is not a requirement; the I/O itself needs to be
+finished by the time the ioctl returns (obviously), but the
+_structures_ associated with the ioctl might linger on a bit longer
+(delayed freeing and whatnot).
+Yet this is a bit far-fetched, and definitely needs some more analysis.
+
+=46or debugging I would suggest looking at the lifetime of each scsi
+command, figuring out if by the time the ioctl returns the scsi
+command is indeed freed up.
+Also you might want to play around with the 'usleep' a bit; my
+assumption is that at one point for a large enough wait the problem
+goes away.
+(And, incidentally, we might actually getting more than one pending
+commands if the sleep is small enough; but this is just conjecture :-)
 
 Cheers,
 
