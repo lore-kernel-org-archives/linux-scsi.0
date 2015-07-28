@@ -1,170 +1,48 @@
-From: Quinn Tran <quinn.tran@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Return the fabric command state for non-task
- management requests
-Date: Mon, 27 Jul 2015 23:25:30 +0000
-Message-ID: <D1DC074A.14AD9%quinn.tran@qlogic.com>
-References: <1437516477-30554-3-git-send-email-sbaugh@catern.com>
- <20150723094651.GA15301@infradead.org>
- <CAGxsngq1aBCoqmdSZcX+o=Ef=NyQSeunqDQuo2iwgmOAxsEqDw@mail.gmail.com>
- <20150725062926.GC26437@infradead.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 1/8] qla2xxx: kill sessions/log out initiator on RSCN
+ and port down events
+Date: Tue, 28 Jul 2015 07:54:14 +0200
+Message-ID: <55B71906.8050807@suse.de>
+References: <1436904049-27707-1-git-send-email-himanshu.madhani@qlogic.com> <1436904049-27707-2-git-send-email-himanshu.madhani@qlogic.com> <55B5E725.4020502@suse.de> <CAL1RGDVUgZVsvh9ppP+c4BCbOOncCz=AUsDctYgQzHQVDKsyZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D1DC074A14AD9quinntranqlogiccom_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:35936 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754132AbbG0XZh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jul 2015 19:25:37 -0400
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6RNNo8r028584
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2015 16:25:37 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1vv9emtvw1-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2015 16:25:37 -0700
-In-Reply-To: <20150725062926.GC26437@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAL1RGDVUgZVsvh9ppP+c4BCbOOncCz=AUsDctYgQzHQVDKsyZw@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Dilip Uppugandla <dilip@purestorage.com>
-Cc: Spencer Baugh <sbaugh@catern.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>
 
---_000_D1DC074A14AD9quinntranqlogiccom_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <15F42DD116C5274F9CCB150ED43C6E1E@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-Christoph,
-
-Currently, the command state within TCM (se_cmd.t_state) only track
-command states from the point of new to the Back End and from Back End up
-to QLA driver.  From the debug perspective, that=B9s only half the picture.
-The other half comes from qla2xxx=B9s private command state provided by thi=
+On 07/27/2015 08:09 PM, Roland Dreier wrote:
+> On Mon, Jul 27, 2015 at 1:09 AM, Hannes Reinecke <hare@suse.de> wrote=
+:
+>> Hmm? What happened to the original FIXME?
+>> Is it not required anymore?
+>=20
+> Not sure I follow the question.  The original FIXME was "/* FIXME:
+> Re-enable Global event handling.. */" and this patch indeed re-enable=
 s
-patch.
+> global event handling.  I don't think it's a separate patch, it's all
+> part of the same work.
+>=20
+> Unless I'm misunderstanding...
+>=20
+No, not really.
+If the patch indeed enables global event handling everything's fine.
+Wasn't just not quite obvious from the description nor the patch itself=
+=2E
 
-Having another trace point that happens 5~10 seconds ago might be
-difficult to back track.  For task management debugging, dumping the
-current states (se_cmd + qla_tgt_cmd) of each command when the TMR is
-received provides some benefit.
+So:
 
-If you feel uncomfortable with the "driver defined binary", one
-alternative would be to translate QLA=B9s private command state into
-se_cmd=B9s new field.  This new file would be modify by the fabric layer
-only.  This would limit any regression with existing se_cmd field
-modification.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+Cheers,
 
-Regards,
-Quinn Tran
-
-
-
-
-On 7/24/15, 11:29 PM, "target-devel-owner@vger.kernel.org on behalf of
-Christoph Hellwig" <target-devel-owner@vger.kernel.org on behalf of
-hch@infradead.org> wrote:
-
->Which debug printk do you care about?  I'd much prefer having a trace
->point inside the driver which could even pretty print it instead of the
->hack where a driver defined binary value is printed by the core.
->--
->To unsubscribe from this list: send the line "unsubscribe target-devel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---_000_D1DC074A14AD9quinntranqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Ii49AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEQyQ0IxMkEy
-MUM5RTQ4NEZBQ0ZCMERFNTFGNThCNEQ4AHkHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HBwAbABcA
-GQAeAAEAVwEBIIADAA4AAADfBwcAGwAXABkAHgABAFcBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFYAAABSZTogW1BBVENIXSBxbGEyeHh4OiBSZXR1cm4gdGhlIGZhYnJp
-YyBjb21tYW5kIHN0YXRlIGZvciBub24tdGFzayBtYW5hZ2VtZW50IHJlcXVlc3RzAL4eAQOQBgDs
-EQAANAAAAAIBfwABAAAAJwAAADxEMURDMDc0QS4xNEFEOSVxdWlubi50cmFuQHFsb2dpYy5jb20+
-AAALAB8OAQAAAAIBCRABAAAA8wQAAO8EAADZBwAATFpGdSv5gzhhAApmYmlkBAAAY2PAcGcxMjUy
-AP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/
-CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0I
-UG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdADRdwMApxF/Jia21rBnMBkAAg
-IEJNX0LgRUdJTn0K/AHxC/EYIENoBRAfYG9waGgsXGwLgGUKgSJUQ0cIcAlwAjBseSwcwGh7GeAF
-oG0DgRxgH2EQICAPA/Aj0AuAEkBDTSAoARIAX2NtZC50X3kkkykgAiAjkBzAGHBjPmsiRSQbBCAc
-hCPhcG/3C4AFQBkwIBhQB+AYkCPDfkInIRlgJGEkUhyDKod1BnAiRSoRUUxBIGTDBRAaMS4gIEYo
-xgEAWGJ1ZykwBJBzLrBjDnQtUSOyGIBcJ0I5dwQgJrMR0GwpsCkDDlB0qQhwZS4iRVQj4W8j0S8F
-wDBzJBEohnELYDJ4ezPQL8RwLUEksiQcNGBv9x1gAQAcYGIm4SUgDgAiVJ0KsHQRwDF2IkVIYR1g
-fxnAKwEyNCcCKSYvgjBhcPMusAYxNX4ekCSABZEdwAkEIGFnKiBtaWdoeQVAYmUiRQ3gASAOUHX2
-bDoBKiBiKpInAy2SBbHdAZBzKrADgTvAZQeAKXGNLlNnOKEjsGR1bTEAPzixI9EnViM0KDYlpSAr
-8TOCX3RnJiAl4SaRKbDqZQDQaCQHdyPgA6Aj0vBUTVIgNqcJcDmQLVH/HGA1xQQgGSAHgDxRGFA9
-IOp0N41JKbB5CGAccAng+QMgdW4kERrhAZEecCTj/SPDIi00LkE9IBhQNjELgPkKwHkiI7ACIDx2
-B0Aboe8/QC8iJOAIYGw2MRngKhL/GHAAgAtgJMEs8TQPJEkpYf5vIkUltC/EKdI9IEnAJgD/LaAx
-8AQAUwVKok5mBGEGkDcm4DZTGeBmAaAFEGMg/QtgeQSQIkUmslOmTlQiUH88AAVAAHAm4AlwCcEE
-EGn/AiBKxBAwIdE4okKlU1MiRb9VQw5QTfECIDeNIkVSWSDlCxFzIjZRdQuAJUFPIRNcr2AvCk8D
-oDcvMhA0LzE1I7AxMTqgMjkgUE0jsCIfcRkYMHQtAQAaMGwtb7J3GFFAdhgwLYBrBJH9ScAuBbAu
-kFmRPGAwcxkwUyK2IbYgSEnAbAPwZ3giIDxjL2Q/ZU8igWjtEcBAC4ADUGEBAGugaaIuPiTgA2AQ
-IDoiTD5XvyUgRFEuVQUQAjAqsGQqIB9JYh5QCXArAAbgdXQ/yS2gSSccYG11RFFQQP8BEDJjOJQ5
-VG0mKUQLgACQ/wEALgRLhEUAbcIFoE5yaEH/A6BwoQJAJuBuY0XAcrMQIPdroCmSQQg+EdAqoUUB
-b2L7c3ZL7CBQcApBRcFuVDYmoyPyMVg+LS1tJlQqIPFJ8HN1YgTyTrEotVPx+yJQH2A6OzEkYSPS
-IlJLUH98umfKZ5ALgW01I9IG4GTvJuApoXGAB4FzP1EqAgDAvmoFsG7QBGBo7m0mTXshf4MoUZEC
-ECsABUAwYAJAcKg6Ly9o/S+DNy2GMnouPDBtCVAiWxVCioAAHwBCAAEAAAAWAAAAUQB1AGkAbgBu
-ACAAVAByAGEAbgAAAAAAHwBlAAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAGQAAAAAAAAAgSsf
-pL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEAdQBpAG4A
-bgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAAsAAAAcQB1AGkAbgBu
-AC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAADQAAABzAGkAcAA6AHEA
-dQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAWAAAAUQB1
-AGkAbgBuACAAVAByAGEAbgAAAAAAHwAfDAEAAAAsAAAAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAGQAAAAA
-AAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBRAHUAaQBuAG4AIABUAHIAYQBuAAAAUwBNAFQAUAAAAHEA
-dQBpAG4AbgAuAHQAcgBhAG4AQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAAsAAAAcQB1
-AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAABYAAABRAHUA
-aQBuAG4AIABUAHIAYQBuAAAAAAAfACNAAQAAACwAAABxAHUAaQBuAG4ALgB0AHIAYQBuAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAZAAAAAAA
-AACBKx+kvqMQGZ1uAN0BD1QCAAAAgFEAdQBpAG4AbgAgAFQAcgBhAG4AAABTAE0AVABQAAAAcQB1
-AGkAbgBuAC4AdAByAGEAbgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAACwAAABxAHUA
-aQBuAG4ALgB0AHIAYQBuAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEAAAAS
-AAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAA
-AADSyxKiHJ5IT6z7DeUfWLTYAwAXAAEAAABAADkAAJHUhsPI0AFAAAgwU31Rh8PI0AELAACACCAG
-AAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMA
-YwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAA
-AAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAKwAAABSAGUAOgAgAFsAUABBAFQAQwBIAF0A
-IABxAGwAYQAyAHgAeAB4ADoAIABSAGUAdAB1AHIAbgAgAHQAaABlACAAZgBhAGIAcgBpAGMAIABj
-AG8AbQBtAGEAbgBkACAAcwB0AGEAdABlACAAZgBvAHIAIABuAG8AbgAtAHQAYQBzAGsAIABtAGEA
-bgBhAGcAZQBtAGUAbgB0ACAAcgBlAHEAdQBlAHMAdABzAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAA
-AAAAAwA2AAAAAAAfAEIQAQAAAE4AAAA8ADIAMAAxADUAMAA3ADIANQAwADYAMgA5ADIANgAuAEcA
-QwAyADYANAAzADcAQABpAG4AZgByAGEAZABlAGEAZAAuAG8AcgBnAD4AAAAAAAIBcQABAAAAJQAA
-AAEB0MQCCAXQJ5BMG8JKgNd2EuUI6eCd6UZUgIACeDcggARAugAAAAAfAHAAAQAAAKQAAABbAFAA
-QQBUAEMASABdACAAcQBsAGEAMgB4AHgAeAA6ACAAUgBlAHQAdQByAG4AIAB0AGgAZQAgAGYAYQBi
-AHIAaQBjACAAYwBvAG0AbQBhAG4AZAAgAHMAdABhAHQAZQAgAGYAbwByACAAbgBvAG4ALQB0AGEA
-cwBrACAAbQBhAG4AYQBnAGUAbQBlAG4AdAAgAHIAZQBxAHUAZQBzAHQAcwAAAB8ANRABAAAATgAA
-ADwARAAxAEQAQwAwADcANABBAC4AMQA0AEEARAA5ACUAcQB1AGkAbgBuAC4AdAByAGEAbgBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0APgAAAAAAHwA5EAEAAACSAQAAPAAxADQAMwA3ADUAMQA2ADQANwA3
-AC0AMwAwADUANQA0AC0AMwAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYgBhAHUA
-ZwBoAEAAYwBhAHQAZQByAG4ALgBjAG8AbQA+ACAAPAAyADAAMQA1ADAANwAyADMAMAA5ADQANgA1
-ADEALgBHAEEAMQA1ADMAMAAxAEAAaQBuAGYAcgBhAGQAZQBhAGQALgBvAHIAZwA+ACAAPABDAEEA
-RwB4AHMAbgBnAHEAMQBhAEIAQwBvAHEAbQBkAFMAWgBjAFgAKwBvAD0ARQBmAD0ATgB5AFEAUwBl
-AHUAbgBxAEQAUQB1AG8AMgBpAHcAZwBtAE8AQQB4AHMARQBxAEQAdwBAAG0AYQBpAGwALgBnAG0A
-YQBpAGwALgBjAG8AbQA+ACAAPAAyADAAMQA1ADAANwAyADUAMAA2ADIAOQAyADYALgBHAEMAMgA2
-ADQAMwA3AEAAaQBuAGYAcgBhAGQAZQBhAGQALgBvAHIAZwA+AAAAAAADAN4/r28AAEAABzAxWUqH
-w8jQAQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNTA3Mjcy
-MzI1MzBaLTQ0OTQ2AAAAHwAVEAEAAABYAAAAMQA1AEYANAAyAEQARAAxADEANgBDADUAMgA3ADQA
-RgA5AEMAQwBCADEANQAwAEUARAA0ADMAQwA2AEUAMQBFAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAIBFDABAAAADAAAAM0AAACgR26GQwAAAB8A+j8BAAAAFgAAAFEAdQBpAG4AbgAgAFQAcgBhAG4A
-AAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAAB
-AAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADUA
-LgAyAC4AMQA1ADAANgAwADQAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2
-AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAgAQAA
-SQBJAD0AMAAxADAAMQBEADAAQwA4AEMAMwA4ADkAQQBGAEYAMgBCADIARgBFAEYARAA0ADcAQgBD
-ADQAOQBBADMARgA1ADQAQwBGADUANAA0AEYANAAzADYARAA5ADsAUwBCAE0ASQBEAD0AMQAyADsA
-UwAxAD0APAAyADAAMQA1ADAANwAyADUAMAA2ADIAOQAyADYALgBHAEMAMgA2ADQAMwA3AEAAaQBu
-AGYAcgBhAGQAZQBhAGQALgBvAHIAZwA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4A
-IAAxADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAy
-AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0A
-YQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAt
-AG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoAAABbADEAMAAuADMALgAxADAA
-LgAyADMAXQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBl
-AHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAHuU
-
---_000_D1DC074A14AD9quinntranqlogiccom_--
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
