@@ -1,54 +1,53 @@
 From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable check
-Date: Tue, 28 Jul 2015 16:54:24 +0300
-Message-ID: <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+Subject: [scsi 3/7 RESEND] scsi_debug: vfree is null safe so drop the check
+Date: Tue, 28 Jul 2015 16:54:22 +0300
+Message-ID: <1438091666-18113-3-git-send-email-tomas.winkler@intel.com>
 References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:37064 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932623AbbG1N5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:57:31 -0400
 In-Reply-To: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Douglas Gilbert <dgilbert@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 
-The function should never be called with cmnd NULL so
-put a fat WARN there.
-Fix also smatch wraning:
-schedule_resp() warn: variable dereferenced before check 'cmnd'
-
-Cc: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 3a70683cf9f9..faa4ddd8decf 100644
+index bbe04dae040c..e2c509e39765 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -3941,13 +3941,20 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	unsigned long iflags;
- 	int k, num_in_q, qdepth, inject;
- 	struct sdebug_queued_cmd *sqcp = NULL;
--	struct scsi_device *sdp = cmnd->device;
-+	struct scsi_device *sdp;
-+
-+	/* this should never happen */
-+	if (WARN_ON(!cmnd))
-+		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -4955,10 +4955,8 @@ bus_unreg:
+ dev_unreg:
+ 	root_device_unregister(pseudo_primary);
+ free_vm:
+-	if (map_storep)
+-		vfree(map_storep);
+-	if (dif_storep)
+-		vfree(dif_storep);
++	vfree(map_storep);
++	vfree(dif_storep);
+ 	vfree(fake_storep);
  
--	if (NULL == cmnd || NULL == devip) {
--		pr_warn("called with NULL cmnd or devip pointer\n");
-+	if (NULL == devip) {
-+		pr_warn("called devip == NULL\n");
- 		/* no particularly good error to report back */
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
-+
-+	sdp = cmnd->device;
-+
- 	if ((scsi_result) && (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
- 		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
- 			    __func__, scsi_result);
+ 	return ret;
+@@ -4976,9 +4974,7 @@ static void __exit scsi_debug_exit(void)
+ 	bus_unregister(&pseudo_lld_bus);
+ 	root_device_unregister(pseudo_primary);
+ 
+-	if (dif_storep)
+-		vfree(dif_storep);
+-
++	vfree(dif_storep);
+ 	vfree(fake_storep);
+ }
+ 
 -- 
 2.4.3
+
