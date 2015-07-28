@@ -1,62 +1,29 @@
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [PATCH 4/8] xen: Use the correctly the Xen memory terminologies
-Date: Tue, 28 Jul 2015 15:12:11 -0400
-Message-ID: <55B7D40B.5080903@oracle.com>
-References: <1438095769-2560-1-git-send-email-julien.grall@citrix.com> <1438095769-2560-5-git-send-email-julien.grall@citrix.com>
+From: "Chris (Christopher) Brand" <chris.brand@broadcom.com>
+Subject: RE: [Xen-devel] [PATCH 4/8] xen: Use the correctly the Xen memory
+	terminologies
+Date: Tue, 28 Jul 2015 19:39:57 +0000
+Message-ID: <4EE5B48738DDED408878C97C8E050A8B1D7DDBB5@SJEXCHMB05.corp.ad.broadcom.com>
+References: <1438095769-2560-1-git-send-email-julien.grall@citrix.com>
+ <1438095769-2560-5-git-send-email-julien.grall@citrix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1438095769-2560-5-git-send-email-julien.grall@citrix.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Julien Grall <julien.grall@citrix.com>, xen-devel@lists.xenproject.org
-Cc: ian.campbell@citrix.com, stefano.stabellini@eu.citrix.com, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, David Vrabel <david.vrabel@citrix.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, =?UTF-8?B?Um9nZXIgUGF1IE1vbm7DqQ==?= <roger.pau@citrix.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Wei Liu <wei.liu2@citrix.com>, Juergen Gross <jgross@suse.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, linux-input@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-fbdev@vger.kernel.org, linux-ar
+To: Julien Grall <julien.grall@citrix.com>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Cc: "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.com>, Thomas Gleixner <tglx@linutronix.de>, "stefano.stabellini@eu.citrix.com" <stefano.stabellini@eu.citrix.com>, Russell King <linux@arm.linux.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, Tomi Valkeinen <tomi.valkeinen@ti.com>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, Ingo Molnar <mingo@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Juergen Gross <jgross@suse.com>, Wei Liu <wei.liu2@citrix.com>, Greg Kroah-Hartman <gregkh@lin>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/28/2015 11:02 AM, Julien Grall wrote:
-> Based on include/xen/mm.h [1], Linux is mistakenly using MFN when GFN
-> is meant, I suspect this is because the first support for Xen was for
-> PV. This brough some misimplementation of helpers on ARM and make the
-> developper confused the expected behavior.
->
-> For instance, with pfn_to_mfn, we expect to get an MFN based on the name.
-> Although, if we look at the implementation on x86, it's returning a GFN.
->
-> For clarity and avoid new confusion, replace any reference of mfn into
-> gnf in any helpers used by PV drivers.
-
-
-
-
-> @@ -730,7 +730,7 @@ static void xen_do_pin(unsigned level, unsigned long pfn)
->   	struct mmuext_op op;
->
->   	op.cmd = level;
-> -	op.arg1.mfn = pfn_to_mfn(pfn);
-> +	op.arg1.mfn = pfn_to_gfn(pfn);
-
-
-This looks slightly odd. It is correct but given that purpose of this 
-series is to make things more clear perhaps we can add another union 
-member (gfn) to mmuext_op.arg1?
-
-(Of course, the hypervisor will continue referring to mfn which could 
-still be confusing)
-
-
->
->   	xen_extend_mmuext_op(&op);
->   }
-> @@ -1323,7 +1323,7 @@ static void __xen_write_cr3(bool kernel, unsigned long cr3)
->   	trace_xen_mmu_write_cr3(kernel, cr3);
->
->   	if (cr3)
-> -		mfn = pfn_to_mfn(PFN_DOWN(cr3));
-> +		mfn = pfn_to_gfn(PFN_DOWN(cr3));
-
-Here too. And further down, thoughout this patch.
-
-
-
-
--boris
+PiBCYXNlZCBvbiBpbmNsdWRlL3hlbi9tbS5oIFsxXSwgTGludXggaXMgbWlzdGFrZW5seSB1c2lu
+ZyBNRk4gd2hlbiBHRk4gaXMgbWVhbnQsDQo+IEkgc3VzcGVjdCB0aGlzIGlzIGJlY2F1c2UgdGhl
+IGZpcnN0IHN1cHBvcnQgZm9yIFhlbiB3YXMgZm9yIFBWLiBUaGlzIGJyb3VnaCBzb21lDQpUeXBv
+IDogImJyb3VnaHQiDQpQZXJoYXBzICJyZXN1bHRlZCBpbiIgd291bGQgYmUgYmV0dGVyID8NCg0K
+PiBtaXNpbXBsZW1lbnRhdGlvbiBvZiBoZWxwZXJzIG9uIEFSTSBhbmQgbWFrZSB0aGUgZGV2ZWxv
+cHBlciBjb25mdXNlZCB0aGUgZXhwZWN0ZWQgYmVoYXZpb3IuDQpUeXBvOiAiZGV2ZWxvcGVyIi4N
+CkknZCBhbHNvIHN1Z2dlc3QgIi4uLmFuZCBjb25mdXNlZCBkZXZlbG9wZXJzIGFib3V0IHRoZS4u
+LiIuDQoNClsuLi5dDQoNCj4gRm9yIGNsYXJpdHkgYW5kIGF2b2lkIG5ldyBjb25mdXNpb24sIHJl
+cGxhY2UgYW55IHJlZmVyZW5jZSBvZiBtZm4gaW50byBnbmYgaW4gYW55IGhlbHBlcnMgdXNlZCBi
+eSBQViBkcml2ZXJzLg0KVHlwbyA6ICJnZm4iDQpJJ2Qgc3VnZ2VzdCAiLi4ucmVwbGFjZSBhbnkg
+cmVmZXJlbmNlIHRvIG1mbiB3aXRoIGdmbi4uLiINCg0KWy4uLl0NCg0KQ2hyaXMNCg0K
