@@ -1,49 +1,40 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: RE: [PATCH 0/8] pm80xx: Driver updates
-Date: Wed, 29 Jul 2015 09:47:28 +0000
-Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5EC62EA74C@BBYEXM02.pmc-sierra.internal>
-References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
- <CAD+HZHVFqmT43PeJL=C1u1dwEi=T8_t_sS5wbc8Dv8EMUdUDsg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: [PATCH] MAINTAINERS: update email for pm8001
+Date: Wed, 29 Jul 2015 12:02:50 +0200
+Message-ID: <1438164170-10723-1-git-send-email-jinpu.wang@profitbricks.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:60758 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751512AbbG2Jra (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2015 05:47:30 -0400
-In-Reply-To: <CAD+HZHVFqmT43PeJL=C1u1dwEi=T8_t_sS5wbc8Dv8EMUdUDsg@mail.gmail.com>
-Content-Language: en-US
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36136 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbbG2KDJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2015 06:03:09 -0400
+Received: by wicgb10 with SMTP id gb10so192852204wic.1
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2015 03:03:07 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>, Viswas G <Viswas.G@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, "pmchba@pmcs.com" <pmchba@pmcs.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@hansenpartnership.com, Jack Wang <jinpu.wang@profitbricks.com>
 
-DQpPbiBXZWQsIEp1bCAyOSwgMjAxNSBhdCAyOjQwIFBNLCBKYWNrIFdhbmcgPHhqdHV3anBAZ21h
-aWwuY29tPiB3cm90ZToNCj4gMjAxNS0wNy0yOSA4OjI3IEdNVCswMjowMCAgPFZpc3dhcy5HQHBt
-Y3MuY29tPjoNCj4+IEZyb206IFZpc3dhcyBHIDxWaXN3YXMuR0BwbWNzLmNvbT4NCj4+DQo+PiBU
-aGlzIHBhdGNoIHNldCBjb250YWlucyBidWcgZml4ZXMgZm9yIHBtODB4eCBkcml2ZXIuDQo+PiBQ
-bGVhc2UgY29uc2lkZXIgdGhlc2UgcGF0Y2hlcyBmb3IgbmV4dCBrZXJuZWwgcmVsZWFzZS4NCj4+
-DQo+PiBWaXN3YXMgRyAoOCk6DQo+PiAgIHBtODB4eDogVXBkYXRlZCBsaW5rIHJhdGUNCj4+ICAg
-cG04MHh4OiBDb3JyZWN0ZWQgZGV2aWNlIHN0YXRlIGNoYW5nZXMgaW4gSV9UX05leHVzX1Jlc2V0
-DQo+PiAgIHBtODB4eDogVXBkYXRlIEZvciBUaGVybWFsIFBhZ2UgQ29kZQ0KPj4gICBwbTgweHg6
-IEZpeCBmb3IgSW5jb3JyZWN0IERNQSBVbm1hcHBpbmcgb2YgU0cgTGlzdA0KPj4gICBwbTgweHg6
-IFJlbW92ZSB1bm5lY2Vzc2FyeSBwaHkgZGlzY29ubmVjdCB3aGlsZSBsaW5rIGVycm9yDQo+PiAg
-IHBtODB4eDogQWRkIFBPUlQgUkVDT1ZFUlkgVElNRU9VVCBzdXBwb3J0DQo+PiAgIHBtODB4eDog
-SGFuZGxpbmcgSW52YWxpZCBTU1AgUmVzcG9uc2UgZnJhbWUNCj4+ICAgcG04MHh4OiBCdW1wIHBt
-ODB4eCBkcml2ZXIgdmVyc2lvbiB0byAwLjEuMzgNCj4+DQo+PiAgZHJpdmVycy9zY3NpL3BtODAw
-MS9wbTgwMDFfZGVmcy5oIHwgICAgMSArDQo+PiAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFf
-aHdpLmMgIHwgICAgNCArDQo+PiAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMgIHwg
-ICAxNSArKysrLQ0KPj4gIGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5oICB8ICAgMTIg
-KysrLQ0KPj4gIGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MHh4X2h3aS5jICB8ICAxMTEgKysrKysr
-KysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9wbTgwMDEv
-cG04MHh4X2h3aS5oICB8ICAgIDUgKy0NCj4+ICA2IGZpbGVzIGNoYW5nZWQsIDExMiBpbnNlcnRp
-b25zKCspLCAzNiBkZWxldGlvbnMoLSkNCj4+DQo+IEZvciB0aGUgd2hvbGUgcGF0Y2hzZXQ6DQo+
-DQo+IFJldmlld2VkLWJ5OiBKYWNrIFdhbmcgPGppbnB1LndhbmdAcHJvZml0YnJpY2tzLmNvbT4N
-Cg0KRm9yIHRoZSB3aG9sZSBwYXRjaHNldCBhZ2FpbjoNClJldmlld2VkLWJ5OiBTdXJlc2ggVGhp
-YWdhcmFqYW4gPFN1cmVzaC5UaGlhZ2FyYWphbkBwbWNzLmNvbT4NCg0KLVN1cmVzaA0KPg0KPiBQ
-UzogY29tcGFueSBwb2xpY3kgcmVxdWVzdHMgdG8gdXNlIHRoZSBlbWFpbCBhZGRyZXNzIG9mIHRo
-ZSBjb21wYW55LA0KPiBwbGVhc2UgY2MgbWUgdG8gYWJvdmUgYWRkcmVzcyBuZXh0IHRpbWUsIEkg
-d2lsbCBzZW5kIGEgcGF0Y2ggdG8gdXBkYXRlDQo+IG15IGVtYWlsDQo+IGluIE1BSU5UQUlORVJT
-IGZpbGUuDQo+DQo+IFRoYW5rcw0KPiBKYWNrDQo=
+Company has policy to use company email address, so update
+my email address to company address.
+
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a226416..c82f964 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8040,7 +8040,7 @@ S:	Supported
+ F:	drivers/scsi/pmcraid.*
+ 
+ PMC SIERRA PM8001 DRIVER
+-M:	xjtuwjp@gmail.com
++M:	Jack Wang <jinpu.wang@profitbricks.com>
+ M:	lindar_liu@usish.com
+ L:	pmchba@pmcs.com
+ L:	linux-scsi@vger.kernel.org
+-- 
+1.9.1
+
