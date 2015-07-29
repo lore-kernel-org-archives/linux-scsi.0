@@ -1,55 +1,122 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 0/8] pm80xx: Driver updates
-Date: Wed, 29 Jul 2015 11:10:49 +0200
-Message-ID: <CAD+HZHVFqmT43PeJL=C1u1dwEi=T8_t_sS5wbc8Dv8EMUdUDsg@mail.gmail.com>
+From: Viswas G <Viswas.G@pmcs.com>
+Subject: RE: [PATCH 5/8] pm80xx: Remove unnecessary phy disconnect while
+ link error
+Date: Wed, 29 Jul 2015 09:20:52 +0000
+Message-ID: <DB8BCD22E410A84DA91083F3479A3DB3C6274FC2@BBYEXM02.pmc-sierra.internal>
 References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
+ <1438151240-4097-6-git-send-email-Viswas.G@pmcs.com>
+ <55B8952E.5000004@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:33094 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbbG2JKv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2015 05:10:51 -0400
-Received: by laah7 with SMTP id h7so2378264laa.0
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2015 02:10:49 -0700 (PDT)
-In-Reply-To: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:50026 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750803AbbG2JUx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2015 05:20:53 -0400
+In-Reply-To: <55B8952E.5000004@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-2015-07-29 8:27 GMT+02:00  <Viswas.G@pmcs.com>:
-> From: Viswas G <Viswas.G@pmcs.com>
->
-> This patch set contains bug fixes for pm80xx driver.
-> Please consider these patches for next kernel release.
->
-> Viswas G (8):
->   pm80xx: Updated link rate
->   pm80xx: Corrected device state changes in I_T_Nexus_Reset
->   pm80xx: Update For Thermal Page Code
->   pm80xx: Fix for Incorrect DMA Unmapping of SG List
->   pm80xx: Remove unnecessary phy disconnect while link error
->   pm80xx: Add PORT RECOVERY TIMEOUT support
->   pm80xx: Handling Invalid SSP Response frame
->   pm80xx: Bump pm80xx driver version to 0.1.38
->
->  drivers/scsi/pm8001/pm8001_defs.h |    1 +
->  drivers/scsi/pm8001/pm8001_hwi.c  |    4 +
->  drivers/scsi/pm8001/pm8001_sas.c  |   15 ++++-
->  drivers/scsi/pm8001/pm8001_sas.h  |   12 +++-
->  drivers/scsi/pm8001/pm80xx_hwi.c  |  111 +++++++++++++++++++++++++++----------
->  drivers/scsi/pm8001/pm80xx_hwi.h  |    5 +-
->  6 files changed, 112 insertions(+), 36 deletions(-)
->
-For the whole patchset:
 
-Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+On Wed, Jul 29, 2015 at 2:26 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On 07/29/2015 08:27 AM, Viswas.G@pmcs.com wrote:
+>> From: Viswas G <Viswas.G@pmcs.com>
+>>
+>> If the link error happens, we don't need to disconnect the phy,
+>> which will remove the drive. Instead acknowledging the controller
+>> and logging the error will be enough.
+>>
+>> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+>> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+>> ---
+>>  drivers/scsi/pm8001/pm80xx_hwi.c |   12 ------------
+>>  1 files changed, 0 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/=
+pm80xx_hwi.c
+>> index dced9f7..3d8b4ae 100644
+>> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+>> @@ -3176,9 +3176,6 @@ static int mpi_hw_event(struct pm8001_hba_info=
+ *pm8001_ha, void *piomb)
+>>                       pm8001_printk("HW_EVENT_LINK_ERR_INVALID_DWORD=
+\n"));
+>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
+>>                       HW_EVENT_LINK_ERR_INVALID_DWORD, port_id, phy_=
+id, 0, 0);
+>> -             sas_phy_disconnected(sas_phy);
+>> -             phy->phy_attached =3D 0;
+>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ER=
+R);
+>>               break;
+>>       case HW_EVENT_LINK_ERR_DISPARITY_ERROR:
+>>               PM8001_MSG_DBG(pm8001_ha,
+>> @@ -3186,9 +3183,6 @@ static int mpi_hw_event(struct pm8001_hba_info=
+ *pm8001_ha, void *piomb)
+>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
+>>                       HW_EVENT_LINK_ERR_DISPARITY_ERROR,
+>>                       port_id, phy_id, 0, 0);
+>> -             sas_phy_disconnected(sas_phy);
+>> -             phy->phy_attached =3D 0;
+>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ER=
+R);
+>>               break;
+>>       case HW_EVENT_LINK_ERR_CODE_VIOLATION:
+>>               PM8001_MSG_DBG(pm8001_ha,
+>> @@ -3196,9 +3190,6 @@ static int mpi_hw_event(struct pm8001_hba_info=
+ *pm8001_ha, void *piomb)
+>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
+>>                       HW_EVENT_LINK_ERR_CODE_VIOLATION,
+>>                       port_id, phy_id, 0, 0);
+>> -             sas_phy_disconnected(sas_phy);
+>> -             phy->phy_attached =3D 0;
+>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ER=
+R);
+>>               break;
+>>       case HW_EVENT_LINK_ERR_LOSS_OF_DWORD_SYNCH:
+>>               PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
+>> @@ -3206,9 +3197,6 @@ static int mpi_hw_event(struct pm8001_hba_info=
+ *pm8001_ha, void *piomb)
+>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
+>>                       HW_EVENT_LINK_ERR_LOSS_OF_DWORD_SYNCH,
+>>                       port_id, phy_id, 0, 0);
+>> -             sas_phy_disconnected(sas_phy);
+>> -             phy->phy_attached =3D 0;
+>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ER=
+R);
+>>               break;
+>>       case HW_EVENT_MALFUNCTION:
+>>               PM8001_MSG_DBG(pm8001_ha,
+>>
+> So what happens with the port, then?
+> Will you be getting another event when the port finally disconnects?
+> If not, how to you remove the port after a link failure?
+>
 
-PS: company policy requests to use the email address of the company,
-please cc me to above address next time, I will send a patch to update
-my email
-in MAINTAINERS file.
+When the Phy disconnects, we will be getting the PHY DOWN events for=20
+the phys in that port and we will remove that port.=20
 
-Thanks
-Jack
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                            zSeries & Storage
+> hare@suse.de                                   +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=FCrnberg)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
