@@ -1,119 +1,72 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 5/8] pm80xx: Remove unnecessary phy disconnect while link
- error
-Date: Wed, 29 Jul 2015 11:21:57 +0200
-Message-ID: <55B89B35.8010008@suse.de>
-References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com> <1438151240-4097-6-git-send-email-Viswas.G@pmcs.com> <55B8952E.5000004@suse.de> <DB8BCD22E410A84DA91083F3479A3DB3C6274FC2@BBYEXM02.pmc-sierra.internal>
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: RE: [PATCH] pm80xx: Added pm8006 controller support
+Date: Wed, 29 Jul 2015 09:33:39 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5EC62EA719@BBYEXM02.pmc-sierra.internal>
+References: <1423722877-17436-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+ <CAD+HZHWRk06bJxEm8zsLPudGeJi96LMJxNd6STVKBF0k1=rphg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34061 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbbG2JV7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2015 05:21:59 -0400
-In-Reply-To: <DB8BCD22E410A84DA91083F3479A3DB3C6274FC2@BBYEXM02.pmc-sierra.internal>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:59775 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750818AbbG2Jdl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jul 2015 05:33:41 -0400
+In-Reply-To: <CAD+HZHWRk06bJxEm8zsLPudGeJi96LMJxNd6STVKBF0k1=rphg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+To: James Bottomley <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Viswas G <Viswas.G@pmcs.com>, Jack Wang <xjtuwjp@gmail.com>, "jinpu.wang@profitbricks.com" <jinpu.wang@profitbricks.com>
 
-On 07/29/2015 11:20 AM, Viswas G wrote:
->=20
-> On Wed, Jul 29, 2015 at 2:26 PM, Hannes Reinecke <hare@suse.de> wrote=
-:
->> On 07/29/2015 08:27 AM, Viswas.G@pmcs.com wrote:
->>> From: Viswas G <Viswas.G@pmcs.com>
->>>
->>> If the link error happens, we don't need to disconnect the phy,
->>> which will remove the drive. Instead acknowledging the controller
->>> and logging the error will be enough.
->>>
->>> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
->>> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->>> ---
->>>  drivers/scsi/pm8001/pm80xx_hwi.c |   12 ------------
->>>  1 files changed, 0 insertions(+), 12 deletions(-)
->>>
->>> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001=
-/pm80xx_hwi.c
->>> index dced9f7..3d8b4ae 100644
->>> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->>> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->>> @@ -3176,9 +3176,6 @@ static int mpi_hw_event(struct pm8001_hba_inf=
-o *pm8001_ha, void *piomb)
->>>                       pm8001_printk("HW_EVENT_LINK_ERR_INVALID_DWOR=
-D\n"));
->>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
->>>                       HW_EVENT_LINK_ERR_INVALID_DWORD, port_id, phy=
-_id, 0, 0);
->>> -             sas_phy_disconnected(sas_phy);
->>> -             phy->phy_attached =3D 0;
->>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_E=
-RR);
->>>               break;
->>>       case HW_EVENT_LINK_ERR_DISPARITY_ERROR:
->>>               PM8001_MSG_DBG(pm8001_ha,
->>> @@ -3186,9 +3183,6 @@ static int mpi_hw_event(struct pm8001_hba_inf=
-o *pm8001_ha, void *piomb)
->>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
->>>                       HW_EVENT_LINK_ERR_DISPARITY_ERROR,
->>>                       port_id, phy_id, 0, 0);
->>> -             sas_phy_disconnected(sas_phy);
->>> -             phy->phy_attached =3D 0;
->>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_E=
-RR);
->>>               break;
->>>       case HW_EVENT_LINK_ERR_CODE_VIOLATION:
->>>               PM8001_MSG_DBG(pm8001_ha,
->>> @@ -3196,9 +3190,6 @@ static int mpi_hw_event(struct pm8001_hba_inf=
-o *pm8001_ha, void *piomb)
->>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
->>>                       HW_EVENT_LINK_ERR_CODE_VIOLATION,
->>>                       port_id, phy_id, 0, 0);
->>> -             sas_phy_disconnected(sas_phy);
->>> -             phy->phy_attached =3D 0;
->>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_E=
-RR);
->>>               break;
->>>       case HW_EVENT_LINK_ERR_LOSS_OF_DWORD_SYNCH:
->>>               PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
->>> @@ -3206,9 +3197,6 @@ static int mpi_hw_event(struct pm8001_hba_inf=
-o *pm8001_ha, void *piomb)
->>>               pm80xx_hw_event_ack_req(pm8001_ha, 0,
->>>                       HW_EVENT_LINK_ERR_LOSS_OF_DWORD_SYNCH,
->>>                       port_id, phy_id, 0, 0);
->>> -             sas_phy_disconnected(sas_phy);
->>> -             phy->phy_attached =3D 0;
->>> -             sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_E=
-RR);
->>>               break;
->>>       case HW_EVENT_MALFUNCTION:
->>>               PM8001_MSG_DBG(pm8001_ha,
->>>
->> So what happens with the port, then?
->> Will you be getting another event when the port finally disconnects?
->> If not, how to you remove the port after a link failure?
->>
->=20
-> When the Phy disconnects, we will be getting the PHY DOWN events for=20
-> the phys in that port and we will remove that port.=20
->=20
-Okay, thanks.
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGkgSmFtZXMsDQoNClRoaXMgcGF0Y2ggaXMgbm90IHB1bGxlZCBpbiB5ZXQuDQoNClJlZ2FyZHMs
+DQpTdXJlc2gNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphY2sgV2FuZyBb
+bWFpbHRvOnhqdHV3anBAZ21haWwuY29tXSANClNlbnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDI0LCAy
+MDE1IDI6MDcgUE0NClRvOiBTdXJlc2ggVGhpYWdhcmFqYW4NCkNjOiBsaW51eC1zY3NpQHZnZXIu
+a2VybmVsLm9yZzsgSmFtZXMgQm90dG9tbGV5OyBWaXN3YXMgRzsgcG1jaGJhQHBtY3MuY29tDQpT
+dWJqZWN0OiBSZTogW1BBVENIXSBwbTgweHg6IEFkZGVkIHBtODAwNiBjb250cm9sbGVyIHN1cHBv
+cnQNCg0KU29ycnkgZm9yIGRlbGF5LCBJIG1pc3NlZCB0aGlzIHBhdGNoLg0KDQpBY2tlZC1ieTog
+SmFjayBXYW5nIDx4anR1d2pwQGdtYWlsLmNvbT4NCg0KMjAxNS0wMi0xMiA3OjM0IEdNVCswMTow
+MCBTdXJlc2ggVGhpYWdhcmFqYW4gPFN1cmVzaC5UaGlhZ2FyYWphbkBwbWNzLmNvbT46DQo+IEFk
+ZGVkIHRoZSBwbTgwMDYgY29udHJvbGxlciBpZCBpbiBwY2kgdGFibGUNCj4NCj4gU2lnbmVkLW9m
+Zi1ieTogU3VyZXNoIFRoaWFnYXJhamFuIDxTdXJlc2guVGhpYWdhcmFqYW5AcG1jcy5jb20+DQo+
+IFNpZ25lZC1vZmYtYnk6IFZpc3dhcyBHIDxWaXN3YXMuR0BwbWNzLmNvbT4NCj4gLS0tDQo+ICBk
+cml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9kZWZzLmggfCAgICAzICsrLQ0KPiAgZHJpdmVycy9z
+Y3NpL3BtODAwMS9wbTgwMDFfaW5pdC5jIHwgICAgNSArKysrLQ0KPiAgMiBmaWxlcyBjaGFuZ2Vk
+LCA2IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9kZWZzLmggDQo+IGIvZHJpdmVycy9zY3NpL3BtODAwMS9w
+bTgwMDFfZGVmcy5oDQo+IGluZGV4IDc0YTRiYjkuLmRjNDIzM2IgMTAwNjQ0DQo+IC0tLSBhL2Ry
+aXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2RlZnMuaA0KPiArKysgYi9kcml2ZXJzL3Njc2kvcG04
+MDAxL3BtODAwMV9kZWZzLmgNCj4gQEAgLTQ5LDcgKzQ5LDggQEAgZW51bSBjaGlwX2ZsYXZvcnMg
+ew0KPiAgICAgICAgIGNoaXBfODAxOSwNCj4gICAgICAgICBjaGlwXzgwNzQsDQo+ICAgICAgICAg
+Y2hpcF84MDc2LA0KPiAtICAgICAgIGNoaXBfODA3Nw0KPiArICAgICAgIGNoaXBfODA3NywNCj4g
+KyAgICAgICBjaGlwXzgwMDYsDQo+ICB9Ow0KPg0KPiAgZW51bSBwaHlfc3BlZWQgew0KPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaW5pdC5jIA0KPiBiL2RyaXZlcnMv
+c2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYw0KPiBpbmRleCA2NTU1NTkxLi5lMWFlZTU4IDEwMDY0
+NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9pbml0LmMNCj4gKysrIGIvZHJp
+dmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaW5pdC5jDQo+IEBAIC01Nyw2ICs1Nyw3IEBAIHN0YXRp
+YyBjb25zdCBzdHJ1Y3QgcG04MDAxX2NoaXBfaW5mbyBwbTgwMDFfY2hpcHNbXSA9IHsNCj4gICAg
+ICAgICBbY2hpcF84MDc0XSA9IHswLCAgOCwgJnBtODAwMV84MHh4X2Rpc3BhdGNoLH0sDQo+ICAg
+ICAgICAgW2NoaXBfODA3Nl0gPSB7MCwgIDE2LCAmcG04MDAxXzgweHhfZGlzcGF0Y2gsfSwNCj4g
+ICAgICAgICBbY2hpcF84MDc3XSA9IHswLCAgMTYsICZwbTgwMDFfODB4eF9kaXNwYXRjaCx9LA0K
+PiArICAgICAgIFtjaGlwXzgwMDZdID0gezAsICAxNiwgJnBtODAwMV84MHh4X2Rpc3BhdGNoLH0s
+DQo+ICB9Ow0KPiAgc3RhdGljIGludCBwbTgwMDFfaWQ7DQo+DQo+IEBAIC0xMTA4LDYgKzExMDks
+OCBAQCBlcnJfb3V0X2VuYWJsZToNCj4gICAqLw0KPiAgc3RhdGljIHN0cnVjdCBwY2lfZGV2aWNl
+X2lkIHBtODAwMV9wY2lfdGFibGVbXSA9IHsNCj4gICAgICAgICB7IFBDSV9WREVWSUNFKFBNQ19T
+aWVycmEsIDB4ODAwMSksIGNoaXBfODAwMSB9LA0KPiArICAgICAgIHsgUENJX1ZERVZJQ0UoUE1D
+X1NpZXJyYSwgMHg4MDA2KSwgY2hpcF84MDA2IH0sDQo+ICsgICAgICAgeyBQQ0lfVkRFVklDRShB
+REFQVEVDMiwgMHg4MDA2KSwgY2hpcF84MDA2IH0sDQo+ICAgICAgICAgeyBQQ0lfVkRFVklDRShB
+VFRPLCAweDAwNDIpLCBjaGlwXzgwMDEgfSwNCj4gICAgICAgICAvKiBTdXBwb3J0IGZvciBTUEMv
+U1BDdi9TUEN2ZSBjb250cm9sbGVycyAqLw0KPiAgICAgICAgIHsgUENJX1ZERVZJQ0UoQURBUFRF
+QzIsIDB4ODAwMSksIGNoaXBfODAwMSB9LCBAQCAtMTIxOCw3IA0KPiArMTIyMSw3IEBAIE1PRFVM
+RV9BVVRIT1IoIkFuYW5kIEt1bWFyIFNhbnRoYW5hbSANCj4gPEFuYW5kS3VtYXIuU2FudGhhbmFt
+QHBtY3MuY29tPiIpOw0KPiAgTU9EVUxFX0FVVEhPUigiU2FuZ2VldGhhIEduYW5hc2VrYXJhbiAN
+Cj4gPFNhbmdlZXRoYS5HbmFuYXNla2FyYW5AcG1jcy5jb20+Iik7DQo+ICBNT0RVTEVfQVVUSE9S
+KCJOaWtpdGggR2FuaWdhcmFrb3BwYWwgDQo+IDxOaWtpdGguR2FuaWdhcmFrb3BwYWxAcG1jcy5j
+b20+Iik7DQo+ICBNT0RVTEVfREVTQ1JJUFRJT04oDQo+IC0gICAgICAgICAgICAgICAiUE1DLVNp
+ZXJyYSBQTTgwMDEvODA4MS84MDg4LzgwODkvODA3NC84MDc2LzgwNzcgIg0KPiArICAgICAgICAg
+ICAgICAgIlBNQy1TaWVycmEgUE04MDAxLzgwMDYvODA4MS84MDg4LzgwODkvODA3NC84MDc2Lzgw
+NzcgIg0KPiAgICAgICAgICAgICAgICAgIlNBUy9TQVRBIGNvbnRyb2xsZXIgZHJpdmVyIik7ICAN
+Cj4gTU9EVUxFX1ZFUlNJT04oRFJWX1ZFUlNJT04pOyAgTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOw0K
+PiAtLQ0KPiAxLjcuMQ0KPg0K
