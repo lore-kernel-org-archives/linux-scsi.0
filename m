@@ -1,61 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 8/8] pm80xx: Bump pm80xx driver version to 0.1.38
-Date: Wed, 29 Jul 2015 10:58:55 +0200
-Message-ID: <55B895CF.6080609@suse.de>
-References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com> <1438151240-4097-9-git-send-email-Viswas.G@pmcs.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 0/8] pm80xx: Driver updates
+Date: Wed, 29 Jul 2015 11:10:49 +0200
+Message-ID: <CAD+HZHVFqmT43PeJL=C1u1dwEi=T8_t_sS5wbc8Dv8EMUdUDsg@mail.gmail.com>
+References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60064 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961AbbG2I65 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2015 04:58:57 -0400
-In-Reply-To: <1438151240-4097-9-git-send-email-Viswas.G@pmcs.com>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:33094 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbbG2JKv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2015 05:10:51 -0400
+Received: by laah7 with SMTP id h7so2378264laa.0
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2015 02:10:49 -0700 (PDT)
+In-Reply-To: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas.G@pmcs.com, linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Tomas Henzl <thenzl@redhat.com>, Suresh.Thiagarajan@pmcs.com
+To: Viswas G <Viswas.G@pmcs.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-On 07/29/2015 08:27 AM, Viswas.G@pmcs.com wrote:
+2015-07-29 8:27 GMT+02:00  <Viswas.G@pmcs.com>:
 > From: Viswas G <Viswas.G@pmcs.com>
->=20
-> Bump pm80xx driver version to 0.1.38.
->=20
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>=20
-> ---
->  drivers/scsi/pm8001/pm8001_sas.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/p=
-m8001_sas.h
-> index 2788026..e2e97db 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -58,7 +58,7 @@
->  #include "pm8001_defs.h"
-> =20
->  #define DRV_NAME		"pm80xx"
-> -#define DRV_VERSION		"0.1.37"
-> +#define DRV_VERSION		"0.1.38"
->  #define PM8001_FAIL_LOGGING	0x01 /* Error message logging */
->  #define PM8001_INIT_LOGGING	0x02 /* driver init logging */
->  #define PM8001_DISC_LOGGING	0x04 /* discovery layer logging */
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>
+> This patch set contains bug fixes for pm80xx driver.
+> Please consider these patches for next kernel release.
+>
+> Viswas G (8):
+>   pm80xx: Updated link rate
+>   pm80xx: Corrected device state changes in I_T_Nexus_Reset
+>   pm80xx: Update For Thermal Page Code
+>   pm80xx: Fix for Incorrect DMA Unmapping of SG List
+>   pm80xx: Remove unnecessary phy disconnect while link error
+>   pm80xx: Add PORT RECOVERY TIMEOUT support
+>   pm80xx: Handling Invalid SSP Response frame
+>   pm80xx: Bump pm80xx driver version to 0.1.38
+>
+>  drivers/scsi/pm8001/pm8001_defs.h |    1 +
+>  drivers/scsi/pm8001/pm8001_hwi.c  |    4 +
+>  drivers/scsi/pm8001/pm8001_sas.c  |   15 ++++-
+>  drivers/scsi/pm8001/pm8001_sas.h  |   12 +++-
+>  drivers/scsi/pm8001/pm80xx_hwi.c  |  111 +++++++++++++++++++++++++++----------
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |    5 +-
+>  6 files changed, 112 insertions(+), 36 deletions(-)
+>
+For the whole patchset:
 
-Cheers,
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PS: company policy requests to use the email address of the company,
+please cc me to above address next time, I will send a patch to update
+my email
+in MAINTAINERS file.
+
+Thanks
+Jack
