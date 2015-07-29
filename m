@@ -1,39 +1,50 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: a100u2w: trivial typo in printk
-Date: Wed, 29 Jul 2015 19:19:45 +0100
-Message-ID: <1438193985-7208-1-git-send-email-colin.king@canonical.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37095 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbbG2SUO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2015 14:20:14 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] scsi: pmcraid: trivial typo in printk
+Date: Wed, 29 Jul 2015 11:39:13 -0700
+Message-ID: <1438195153.30877.3.camel@perches.com>
+References: <1438193985-7208-1-git-send-email-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1438193985-7208-1-git-send-email-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Trivial typo fixes:
 
-Trivial typo fix, \b should be \n
+o \b should be \n
+o coalesce format to avoid excess spaces
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/a100u2w.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+And another here:
 
-diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-index cac6b37..8086bd0 100644
---- a/drivers/scsi/a100u2w.c
-+++ b/drivers/scsi/a100u2w.c
-@@ -888,7 +888,7 @@ static int inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struc
- 	scb->sense_len = SENSE_SIZE;
- 	scb->cdb_len = cmd->cmd_len;
- 	if (scb->cdb_len >= IMAX_CDB) {
--		printk("max cdb length= %x\b", cmd->cmd_len);
-+		printk("max cdb length= %x\n", cmd->cmd_len);
- 		scb->cdb_len = IMAX_CDB;
- 	}
- 	scb->ident = (u8)(cmd->device->lun & 0xff) | DISC_ALLOW;
--- 
-2.4.6
+ drivers/scsi/pmcraid.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index ed31d8c..b421de2 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -1558,8 +1558,7 @@ static void pmcraid_handle_config_change(struct pmcraid_instance *pinstance)
+ 	cfg_entry = &ccn_hcam->cfg_entry;
+ 	fw_version = be16_to_cpu(pinstance->inq_data->fw_version);
+ 
+-	pmcraid_info("CCN(%x): %x timestamp: %llx type: %x lost: %x flags: %x \
+-		 res: %x:%x:%x:%x\n",
++	pmcraid_info("CCN(%x): %x timestamp: %llx type: %x lost: %x flags: %x res: %x:%x:%x:%x\n",
+ 		 pinstance->ccn.hcam->ilid,
+ 		 pinstance->ccn.hcam->op_code,
+ 		((pinstance->ccn.hcam->timestamp1) |
+@@ -1583,7 +1582,7 @@ static void pmcraid_handle_config_change(struct pmcraid_instance *pinstance)
+ 	if (pinstance->ccn.hcam->notification_lost) {
+ 		cfgcmd = pmcraid_get_free_cmd(pinstance);
+ 		if (cfgcmd) {
+-			pmcraid_info("lost CCN, reading config table\b");
++			pmcraid_info("lost CCN, reading config table\n");
+ 			pinstance->reinit_cfg_table = 1;
+ 			pmcraid_querycfg(cfgcmd);
+ 		} else {
