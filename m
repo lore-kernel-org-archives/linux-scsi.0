@@ -1,36 +1,39 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 4/8] pm80xx: Fix for Incorrect DMA Unmapping of SG List
-Date: Wed, 29 Jul 2015 18:12:16 +0200
-Message-ID: <55B8FB60.7040307@redhat.com>
-References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
- <1438151240-4097-5-git-send-email-Viswas.G@pmcs.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: a100u2w: trivial typo in printk
+Date: Wed, 29 Jul 2015 19:19:45 +0100
+Message-ID: <1438193985-7208-1-git-send-email-colin.king@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56407 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670AbbG2QMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jul 2015 12:12:18 -0400
-In-Reply-To: <1438151240-4097-5-git-send-email-Viswas.G@pmcs.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:37095 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbbG2SUO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2015 14:20:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas.G@pmcs.com, linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Suresh.Thiagarajan@pmcs.com
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Jiri Kosina <trivial@kernel.org>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On 29.7.2015 08:27, Viswas.G@pmcs.com wrote:
-> From: Viswas G <Viswas.G@pmcs.com>
-> 
-> In pm8001_ccb_task_free(), the dma unmapping is done based on
-> ccb->n_elem value. This should be initialized to zero in the
-> task_abort(). Otherwise, pm8001_ccb_task_free() will try for
-> dma_unmap_sg() which is invalid for task abort and can lead to
-> kernel crash.
-> 
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com> 
+From: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Trivial typo fix, \b should be \n
 
-Tomas
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/a100u2w.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index cac6b37..8086bd0 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -888,7 +888,7 @@ static int inia100_build_scb(struct orc_host * host, struct orc_scb * scb, struc
+ 	scb->sense_len = SENSE_SIZE;
+ 	scb->cdb_len = cmd->cmd_len;
+ 	if (scb->cdb_len >= IMAX_CDB) {
+-		printk("max cdb length= %x\b", cmd->cmd_len);
++		printk("max cdb length= %x\n", cmd->cmd_len);
+ 		scb->cdb_len = IMAX_CDB;
+ 	}
+ 	scb->ident = (u8)(cmd->device->lun & 0xff) | DISC_ALLOW;
+-- 
+2.4.6
 
