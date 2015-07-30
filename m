@@ -1,122 +1,190 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [patch] Revert "block: remove artifical max_hw_sectors cap"
-Date: Thu, 30 Jul 2015 00:25:28 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295AA1726B@G9W0745.americas.hpqcorp.net>
-References: <x49bnf6y443.fsf@segfault.boston.devel.redhat.com>
-	<20150721130246.GA28676@infradead.org>
- <x49k2tihpnr.fsf@segfault.boston.devel.redhat.com>
+From: Viswas G <Viswas.G@pmcs.com>
+Subject: RE: [PATCH 2/8] pm80xx: Corrected device state changes in
+ I_T_Nexus_Reset
+Date: Thu, 30 Jul 2015 06:17:07 +0000
+Message-ID: <DB8BCD22E410A84DA91083F3479A3DB3C627511D@BBYEXM02.pmc-sierra.internal>
+References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
+ <1438151240-4097-3-git-send-email-Viswas.G@pmcs.com>
+ <55B8FAE3.3010801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <x49k2tihpnr.fsf@segfault.boston.devel.redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48501 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750775AbbG3GRM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jul 2015 02:17:12 -0400
+In-Reply-To: <55B8FAE3.3010801@redhat.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> owner@vger.kernel.org] On Behalf Of Jeff Moyer
-> Sent: Wednesday, July 29, 2015 11:53 AM
-> To: Christoph Hellwig <hch@infradead.org>
-> Cc: Jens Axboe <axboe@kernel.dk>; linux-kernel@vger.kernel.org;
-> dmilburn@redhat.com
 
-Adding linux-scsi...
+On Wed, Jul 29, 2015 at 9:40 PM, Tomas Henzl <thenzl@redhat.com> wrote:
+> On 29.7.2015 08:27, Viswas.G@pmcs.com wrote:
+>> From: Viswas G <Viswas.G@pmcs.com>
+>>
+>> In Nexus reset the device state set to DS_IN_RECOVERY before doing
+>> phy reset and internal cleanup. Once internal cleanup finishes,
+>> the device state will set to DS_OPERATIONAL.
+>>
+>> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+>> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+>> ---
+>>  drivers/scsi/pm8001/pm8001_sas.c |   14 +++++++++++---
+>>  drivers/scsi/pm8001/pm8001_sas.h |    8 ++++++++
+>>  2 files changed, 19 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+>> index b93f289..4e6955f 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.c
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+>> @@ -980,13 +980,21 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
+>>                       rc = 0;
+>>                       goto out;
+>>               }
+>> +             pm8001_dev->setds_completion = &completion_setstate;
+>> +             PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+>> +                     pm8001_dev, DS_IN_RECOVERY);
+>> +             wait_for_completion(&completion_setstate);
+>>               rc = sas_phy_reset(phy, 1);
+>>               msleep(2000);
+>> +             if (rc) {
+>> +                     PM8001_EH_DBG(pm8001_ha,
+>> +                     pm8001_printk("phy reset failed for device %x\n"
+>> +                     "with rc %d\n", pm8001_dev->device_id, rc));
+>> +             }
+>>               rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
+>>                       dev, 1, 0);
+>> -             pm8001_dev->setds_completion = &completion_setstate;
+>> -             rc = PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+>> -                     pm8001_dev, 0x01);
+>> +             PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+>> +                     pm8001_dev, DS_OPERATIONAL);
+> Hi Viswas,
+> the set_dev_state_req can't fail any more ? Also the
+> pm8001_exec_internal_task_abort may fail - shouldn't
+> be error handling also added ?
+> Cheers,
+> Tomas
 
-> Subject: Re: [patch] Revert "block: remove artifical max_hw_sectors cap"
+Hi  Tomas,
+
+The set_dev_state can fail if the ccb/Inbound queue slot is not available. It can happen
+If there are more than 256 requests are penning with controller.
+Internal task abort failure also can be handled. Will resent the patch with these changes.
+
+Regards,
+Viswas G
+ 
+
+>>               wait_for_completion(&completion_setstate);
+>>       } else {
+>>               rc = sas_phy_reset(phy, 1);
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+>> index 8dd8b78..c9736cc 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.h
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+>> @@ -569,6 +569,14 @@ struct pm8001_fw_image_header {
+>>  #define      NCQ_READ_LOG_FLAG                       0x80000000
+>>  #define      NCQ_ABORT_ALL_FLAG                      0x40000000
+>>  #define      NCQ_2ND_RLE_FLAG                        0x20000000
+>> +
+>> +/* Device states */
+>> +#define DS_OPERATIONAL                               0x01
+>> +#define DS_PORT_IN_RESET                     0x02
+>> +#define DS_IN_RECOVERY                               0x03
+>> +#define DS_IN_ERROR                          0x04
+>> +#define DS_NON_OPERATIONAL                   0x07
+>> +
+>>  /**
+>>   * brief param structure for firmware flash update.
+>>   */
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Wednesday, July 29, 2015 9:40 PM
+To: Viswas G; linux-scsi@vger.kernel.org
+Cc: xjtuwjp@gmail.com; JBottomley@parallels.com; Suresh Thiagarajan
+Subject: Re: [PATCH 2/8] pm80xx: Corrected device state changes in I_T_Nexus_Reset
+
+On 29.7.2015 08:27, Viswas.G@pmcs.com wrote:
+> From: Viswas G <Viswas.G@pmcs.com>
 > 
-> Christoph Hellwig <hch@infradead.org> writes:
+> In Nexus reset the device state set to DS_IN_RECOVERY before doing phy 
+> reset and internal cleanup. Once internal cleanup finishes, the device 
+> state will set to DS_OPERATIONAL.
 > 
-> > On Mon, Jul 20, 2015 at 03:17:07PM -0400, Jeff Moyer wrote:
-> >> For SAN storage, we've seen initial write and re-write performance drop
-> >> 25-50% across all I/O sizes.  On locally attached storage, we've seen
-> >> regressions of 40% for all I/O types, but only for I/O sizes larger
-> than
-> >> 1MB.
-> >
-> > Workload, and hardare please.  An only mainline numbers, not some old
-> > hacked vendor kernel, please.
+> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
+> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_sas.c |   14 +++++++++++---
+>  drivers/scsi/pm8001/pm8001_sas.h |    8 ++++++++
+>  2 files changed, 19 insertions(+), 3 deletions(-)
 > 
-> I've attached a simple fio config that reproduces the problem.  It just
-> does sequential, O_DIRECT write I/O with I/O sizes of 1M, 2M and 4M.  So
-> far I've tested it on an HP HSV400 and an IBM XIV SAN array connected
-> via a qlogic adapter, a nearline sata driveand a WD Red (NAS) sata disk
-> connected via an intel ich9r sata controller.  The kernel I tested was
-> 4.2.0-rc3, and the testing was done across 3 different hosts (just
-> because I don't have all the hardware connected to a single box).  I did
-> 10 runs using max_sectors_kb set to 1024, and 10 runs with it set to
-> 32767.  Results compare the averages of those 10 runs.  In no cases did
-> I see a performance gain.  In two cases, there is a performance hit.
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c 
+> b/drivers/scsi/pm8001/pm8001_sas.c
+> index b93f289..4e6955f 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -980,13 +980,21 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
+>  			rc = 0;
+>  			goto out;
+>  		}
+> +		pm8001_dev->setds_completion = &completion_setstate;
+> +		PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+> +			pm8001_dev, DS_IN_RECOVERY);
+> +		wait_for_completion(&completion_setstate);
+>  		rc = sas_phy_reset(phy, 1);
+>  		msleep(2000);
+> +		if (rc) {
+> +			PM8001_EH_DBG(pm8001_ha,
+> +			pm8001_printk("phy reset failed for device %x\n"
+> +			"with rc %d\n", pm8001_dev->device_id, rc));
+> +		}
+>  		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
+>  			dev, 1, 0);
+> -		pm8001_dev->setds_completion = &completion_setstate;
+> -		rc = PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+> -			pm8001_dev, 0x01);
+> +		PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
+> +			pm8001_dev, DS_OPERATIONAL);
+Hi Viswas,
+the set_dev_state_req can't fail any more ? Also the pm8001_exec_internal_task_abort may fail - shouldn't be error handling also added ?
+Cheers,
+Tomas
+>  		wait_for_completion(&completion_setstate);
+>  	} else {
+>  		rc = sas_phy_reset(phy, 1);
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
+> b/drivers/scsi/pm8001/pm8001_sas.h
+> index 8dd8b78..c9736cc 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -569,6 +569,14 @@ struct pm8001_fw_image_header {
+>  #define	NCQ_READ_LOG_FLAG			0x80000000
+>  #define	NCQ_ABORT_ALL_FLAG			0x40000000
+>  #define	NCQ_2ND_RLE_FLAG			0x20000000
+> +
+> +/* Device states */
+> +#define DS_OPERATIONAL				0x01
+> +#define DS_PORT_IN_RESET			0x02
+> +#define DS_IN_RECOVERY				0x03
+> +#define DS_IN_ERROR				0x04
+> +#define DS_NON_OPERATIONAL			0x07
+> +
+>  /**
+>   * brief param structure for firmware flash update.
+>   */
 > 
-> In addition to my testing, our performance teams have seen performance
-> regressions running iozone on fibre channel-attached HP MSA1000 storage,
-> as well as on an SSD hidden behind a megaraid controller.  I was not
-> able to get the exact details on the SSD.  iozone configurations can be
-> provided, but I think I've nailed the underlying problem with this test
-> case.
-> 
-> But, don't take my word for it.  Run the fio script on your own
-> hardware.  All you have to do is echo a couple of values into
-> /sys/block/sdX/queue/max_sectors_kb to test, no kernel rebuilding
-> required.
-> 
-> In the tables below, concentrate on the BW/IOPS numbers under the WRITE
-> column.  Negative numbers indicate that max_sectors_kb of 32767 shows a
-> performance regression of the indicated percentage when compared with a
-> setting of 1024.
-> 
-> Christoph, did you have some hardware where a higher max_sectors_kb
-> improved performance?
 
-I don't still have performance numbers, but the old default of 
-512 KiB was interfering with building large writes that RAID
-controllers can treat as full stripe writes (avoiding the need
-to read the old parity).
-
-With the SCSI LLD value bumped up, some other limits remain:
-* the block layer BIO_MAX_PAGES value of 256 limits IOs
-  to a maximum of 1 MiB (bio chaining affects this too)
-* the SCSI LLD maximum number of scatter gather entries
-  reported in /sys/block/sdNN/queue/max_segments and
-  /sys/block/sdNN/queue/max_segment_size creates a
-  limit based on how fragmented the data buffer is
-  in virtual memory
-* the Block Limits VPD page MAXIMUM TRANSFER LENGTH field
-  indicates the maximum transfer size for one command over
-  the SCSI transport protocol supported by the drive itself
-
-The patch let 1 MiB IOs flow through the stack, which
-is a better fit for modern strip sizes than 512 KiB.
-
-Software using large IOs must be prepared for long 
-latencies in exchange for the potential bandwidth gains,
-and must use a low (but greater than 1) queue depth 
-to keep the IOs flowing back-to-back.
-
-Are you finding real software generating such IOs
-but relying on the storage stack to break them up
-for decent performance?
-
-Your fio script is using the sync IO engine, which
-means no queuing.  This forces a turnaround time 
-between IOs, preventing the device from looking ahead
-to see what's next (for sequential IOs, probably
-continuing data transfers with minimal delay).
-
-If the storage stack breaks up large sync IOs, the 
-drive might be better at detecting that the access
-pattern is sequential (e.g., the gaps are between 
-every set of 2 IOs rather than every IO).  This is
-very drive-specific.
-
-If we have to go back to that artificial limit, then
-modern drivers (e.g., blk-mq capable drivers) need a
-way to raise the default; relying on users to change
-the sysfs settings means they're usually not changed.
-
----
-Robert Elliott, HP Server Storage
