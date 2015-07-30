@@ -1,190 +1,82 @@
-From: Viswas G <Viswas.G@pmcs.com>
-Subject: RE: [PATCH 2/8] pm80xx: Corrected device state changes in
- I_T_Nexus_Reset
-Date: Thu, 30 Jul 2015 06:17:07 +0000
-Message-ID: <DB8BCD22E410A84DA91083F3479A3DB3C627511D@BBYEXM02.pmc-sierra.internal>
-References: <1438151240-4097-1-git-send-email-Viswas.G@pmcs.com>
- <1438151240-4097-3-git-send-email-Viswas.G@pmcs.com>
- <55B8FAE3.3010801@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48501 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750775AbbG3GRM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Jul 2015 02:17:12 -0400
-In-Reply-To: <55B8FAE3.3010801@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] target: Wait RCU grace-period before backend/fabric unload
+Date: Thu, 30 Jul 2015 06:15:23 +0000
+Message-ID: <1438236923-17889-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "xjtuwjp@gmail.com" <xjtuwjp@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
+This patch addresses a v4.2-rc1 regression where backend driver
+struct module unload immediately after ->free_device() has done
+an internal call_rcu(), results in IRQ rcu_process_callbacks()
+use-after-free paging OOPsen.
 
-On Wed, Jul 29, 2015 at 9:40 PM, Tomas Henzl <thenzl@redhat.com> wrote:
-> On 29.7.2015 08:27, Viswas.G@pmcs.com wrote:
->> From: Viswas G <Viswas.G@pmcs.com>
->>
->> In Nexus reset the device state set to DS_IN_RECOVERY before doing
->> phy reset and internal cleanup. Once internal cleanup finishes,
->> the device state will set to DS_OPERATIONAL.
->>
->> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
->> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->> ---
->>  drivers/scsi/pm8001/pm8001_sas.c |   14 +++++++++++---
->>  drivers/scsi/pm8001/pm8001_sas.h |    8 ++++++++
->>  2 files changed, 19 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
->> index b93f289..4e6955f 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.c
->> +++ b/drivers/scsi/pm8001/pm8001_sas.c
->> @@ -980,13 +980,21 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
->>                       rc = 0;
->>                       goto out;
->>               }
->> +             pm8001_dev->setds_completion = &completion_setstate;
->> +             PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
->> +                     pm8001_dev, DS_IN_RECOVERY);
->> +             wait_for_completion(&completion_setstate);
->>               rc = sas_phy_reset(phy, 1);
->>               msleep(2000);
->> +             if (rc) {
->> +                     PM8001_EH_DBG(pm8001_ha,
->> +                     pm8001_printk("phy reset failed for device %x\n"
->> +                     "with rc %d\n", pm8001_dev->device_id, rc));
->> +             }
->>               rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
->>                       dev, 1, 0);
->> -             pm8001_dev->setds_completion = &completion_setstate;
->> -             rc = PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
->> -                     pm8001_dev, 0x01);
->> +             PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
->> +                     pm8001_dev, DS_OPERATIONAL);
-> Hi Viswas,
-> the set_dev_state_req can't fail any more ? Also the
-> pm8001_exec_internal_task_abort may fail - shouldn't
-> be error handling also added ?
-> Cheers,
-> Tomas
+It adds a explicit synchronize_rcu() in target_backend_unregister()
+to wait a full RCU grace period before releasing target_backend_ops
+memory, and allowing TBO->module exit to proceed.
 
-Hi  Tomas,
+Also, go ahead and do the same for target_unregister_template()
+to ensure se_deve_entry->rcu_head -> kfree_rcu() grace period has
+passed, before allowing target_core_fabric_ops->owner module exit
+to proceed.
 
-The set_dev_state can fail if the ccb/Inbound queue slot is not available. It can happen
-If there are more than 256 requests are penning with controller.
-Internal task abort failure also can be handled. Will resent the patch with these changes.
+Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_configfs.c | 10 +++++++++-
+ drivers/target/target_core_hba.c      | 10 +++++++++-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-Regards,
-Viswas G
- 
-
->>               wait_for_completion(&completion_setstate);
->>       } else {
->>               rc = sas_phy_reset(phy, 1);
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
->> index 8dd8b78..c9736cc 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.h
->> +++ b/drivers/scsi/pm8001/pm8001_sas.h
->> @@ -569,6 +569,14 @@ struct pm8001_fw_image_header {
->>  #define      NCQ_READ_LOG_FLAG                       0x80000000
->>  #define      NCQ_ABORT_ALL_FLAG                      0x40000000
->>  #define      NCQ_2ND_RLE_FLAG                        0x20000000
->> +
->> +/* Device states */
->> +#define DS_OPERATIONAL                               0x01
->> +#define DS_PORT_IN_RESET                     0x02
->> +#define DS_IN_RECOVERY                               0x03
->> +#define DS_IN_ERROR                          0x04
->> +#define DS_NON_OPERATIONAL                   0x07
->> +
->>  /**
->>   * brief param structure for firmware flash update.
->>   */
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Wednesday, July 29, 2015 9:40 PM
-To: Viswas G; linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com; JBottomley@parallels.com; Suresh Thiagarajan
-Subject: Re: [PATCH 2/8] pm80xx: Corrected device state changes in I_T_Nexus_Reset
-
-On 29.7.2015 08:27, Viswas.G@pmcs.com wrote:
-> From: Viswas G <Viswas.G@pmcs.com>
-> 
-> In Nexus reset the device state set to DS_IN_RECOVERY before doing phy 
-> reset and internal cleanup. Once internal cleanup finishes, the device 
-> state will set to DS_OPERATIONAL.
-> 
-> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
-> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-> ---
->  drivers/scsi/pm8001/pm8001_sas.c |   14 +++++++++++---
->  drivers/scsi/pm8001/pm8001_sas.h |    8 ++++++++
->  2 files changed, 19 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c 
-> b/drivers/scsi/pm8001/pm8001_sas.c
-> index b93f289..4e6955f 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -980,13 +980,21 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
->  			rc = 0;
->  			goto out;
->  		}
-> +		pm8001_dev->setds_completion = &completion_setstate;
-> +		PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-> +			pm8001_dev, DS_IN_RECOVERY);
-> +		wait_for_completion(&completion_setstate);
->  		rc = sas_phy_reset(phy, 1);
->  		msleep(2000);
-> +		if (rc) {
-> +			PM8001_EH_DBG(pm8001_ha,
-> +			pm8001_printk("phy reset failed for device %x\n"
-> +			"with rc %d\n", pm8001_dev->device_id, rc));
-> +		}
->  		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
->  			dev, 1, 0);
-> -		pm8001_dev->setds_completion = &completion_setstate;
-> -		rc = PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-> -			pm8001_dev, 0x01);
-> +		PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-> +			pm8001_dev, DS_OPERATIONAL);
-Hi Viswas,
-the set_dev_state_req can't fail any more ? Also the pm8001_exec_internal_task_abort may fail - shouldn't be error handling also added ?
-Cheers,
-Tomas
->  		wait_for_completion(&completion_setstate);
->  	} else {
->  		rc = sas_phy_reset(phy, 1);
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h 
-> b/drivers/scsi/pm8001/pm8001_sas.h
-> index 8dd8b78..c9736cc 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -569,6 +569,14 @@ struct pm8001_fw_image_header {
->  #define	NCQ_READ_LOG_FLAG			0x80000000
->  #define	NCQ_ABORT_ALL_FLAG			0x40000000
->  #define	NCQ_2ND_RLE_FLAG			0x20000000
-> +
-> +/* Device states */
-> +#define DS_OPERATIONAL				0x01
-> +#define DS_PORT_IN_RESET			0x02
-> +#define DS_IN_RECOVERY				0x03
-> +#define DS_IN_ERROR				0x04
-> +#define DS_NON_OPERATIONAL			0x07
-> +
->  /**
->   * brief param structure for firmware flash update.
->   */
-> 
-
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index c2e9fea..b4c3ae0 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -457,8 +457,16 @@ void target_unregister_template(const struct target_core_fabric_ops *fo)
+ 		if (!strcmp(t->tf_ops->name, fo->name)) {
+ 			BUG_ON(atomic_read(&t->tf_access_cnt));
+ 			list_del(&t->tf_list);
++			mutex_unlock(&g_tf_lock);
++			/*
++			 * Allow any outstanding fabric se_deve_entry->rcu_head
++			 * grace periods to expire post kfree_rcu(), before allowing
++			 * fabric driver unload of target_core_fabric_ops->module
++			 * to proceed.
++			 */
++			synchronize_rcu();
+ 			kfree(t);
+-			break;
++			return;
+ 		}
+ 	}
+ 	mutex_unlock(&g_tf_lock);
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 62ea4e8..0fb830b 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -84,8 +84,16 @@ void target_backend_unregister(const struct target_backend_ops *ops)
+ 	list_for_each_entry(tb, &backend_list, list) {
+ 		if (tb->ops == ops) {
+ 			list_del(&tb->list);
++			mutex_unlock(&backend_mutex);
++			/*
++			 * Allow any outstanding backend driver ->rcu_head grace
++			 * period to expire post ->free_device() -> call_rcu(),
++			 * before allowing backend driver module unload of
++			 * target_backend_ops->owner to proceed.
++			 */
++			synchronize_rcu();
+ 			kfree(tb);
+-			break;
++			return;
+ 		}
+ 	}
+ 	mutex_unlock(&backend_mutex);
+-- 
+1.9.1
