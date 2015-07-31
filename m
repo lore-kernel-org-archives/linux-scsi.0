@@ -1,64 +1,44 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] scsi: Fixup fixed sense generation
-Date: Fri, 31 Jul 2015 07:05:48 -0700
-Message-ID: <55BB80BC.5080109@sandisk.com>
-References: <1438347903-106697-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0090.outbound.protection.outlook.com ([65.55.169.90]:47306
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754566AbbGaOFx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jul 2015 10:05:53 -0400
-In-Reply-To: <1438347903-106697-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] lpfc: fix double free on mp
+Date: Fri, 31 Jul 2015 17:15:24 +0100
+Message-ID: <1438359324-8834-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 07/31/15 06:05, Hannes Reinecke wrote:
-> Fixed sense reserves only 32 bits for the 'information' field,
-> so we need to restrict the 'information' value to avoid sense
-> data corruption.
-> Also the sense key is only 4 bits.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->   drivers/scsi/scsi_error.c | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 106884a..ba7ffc4 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2510,13 +2510,13 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
->   {
->   	if (desc) {
->   		buf[0] = 0x72;	/* descriptor, current */
-> -		buf[1] = key;
-> +		buf[1] = key & 0x0f;
->   		buf[2] = asc;
->   		buf[3] = ascq;
->   		buf[7] = 0;
->   	} else {
->   		buf[0] = 0x70;	/* fixed, current */
-> -		buf[2] = key;
-> +		buf[2] = key & 0x0f;
->   		buf[7] = 0xa;
->   		buf[12] = asc;
->   		buf[13] = ascq;
+From: Colin Ian King <colin.king@canonical.com>
 
-Please split these changes into two separate patches - one patch for the 
-scsi_build_sense_buffer() changes and another patch for the 
-scsi_set_sense_information() changes. Please also add a statement that 
-triggers a kernel warning if an out-of-range key value is passed to 
-scsi_build_sense_buffer() instead of ignoring out-of-range sense key 
-values silently.
+The error path when the call to lpfc_sli_issue_mbox returns
+MBX_NOT_FINISHED results in the code freeing mp and calling
+lpfc_mbuf_free twice.   Fix this by jumping to the correct
+part of the error clean up path.
 
-Thanks,
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_mbox.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Bart.
-
-
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index eb62772..750f34d 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -2299,13 +2299,14 @@ lpfc_mbx_cmpl_rdp_page_a2(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+ 	mbox->mbox_cmpl = lpfc_mbx_cmpl_rdp_link_stat;
+ 	mbox->context2 = (struct lpfc_rdp_context *) rdp_context;
+ 	if (lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT) == MBX_NOT_FINISHED)
+-		goto error;
++		goto cmd_free;
+ 
+ 	return;
+ 
+ error:
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 	kfree(mp);
++cmd_free:
+ 	lpfc_sli4_mbox_cmd_free(phba, mbox);
+ 	rdp_context->cmpl(phba, rdp_context, FAILURE);
+ }
+-- 
+2.5.0
