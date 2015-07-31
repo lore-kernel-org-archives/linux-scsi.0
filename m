@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 6/8] block: Add 'zoned' sysfs queue attribute
-Date: Fri, 31 Jul 2015 15:36:18 +0200
-Message-ID: <1438349780-116429-7-git-send-email-hare@suse.de>
+Subject: [PATCH 7/8] block: Introduce BLKPREP_DONE
+Date: Fri, 31 Jul 2015 15:36:19 +0200
+Message-ID: <1438349780-116429-8-git-send-email-hare@suse.de>
 References: <1438349780-116429-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1438349780-116429-1-git-send-email-hare@suse.de>
@@ -10,85 +10,61 @@ To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Add a sysfs queue attribute 'zoned' to display the zone layout
-for zoned devices.
+Add a new blkprep return code BLKPREP_DONE to signal completion
+without I/O error.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/blk-sysfs.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ block/blk-core.c        | 8 ++++++++
+ drivers/scsi/scsi_lib.c | 3 ++-
+ include/linux/blkdev.h  | 1 +
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index e419f1f..5e2ba53 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -211,6 +211,43 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
- 	return queue_var_show(max_hw_sectors_kb, (page));
- }
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 82d8ce9..ecdfe1a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2359,6 +2359,14 @@ struct request *blk_peek_request(struct request_queue *q)
+ 			 */
+ 			blk_start_request(rq);
+ 			__blk_end_request_all(rq, -EIO);
++		} else if (ret == BLKPREP_DONE) {
++			rq->cmd_flags |= REQ_QUIET;
++			/*
++			 * Mark this request as started so we don't trigger
++			 * any debug logic in the end I/O path.
++			 */
++			blk_start_request(rq);
++			__blk_end_request_all(rq, 0);
+ 		} else {
+ 			printk(KERN_ERR "%s: bad return=%d\n", __func__, ret);
+ 			break;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b1a2631..830a70b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1342,8 +1342,9 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+ 	struct scsi_device *sdev = q->queuedata;
  
-+#ifdef CONFIG_BLK_DEV_ZONED
-+static ssize_t queue_zoned_show(struct request_queue *q, char *page)
-+{
-+	struct rb_node *node;
-+	struct blk_zone *zone;
-+	ssize_t offset = 0, end = 0;
-+	int size = 0, num = 0;
-+	enum blk_zone_type type = BLK_ZONE_TYPE_UNKNOWN;
-+
-+	for (node = rb_first(&q->zones); node; node = rb_next(node)) {
-+		zone = rb_entry(node, struct blk_zone, node);
-+		if (zone->type != type ||
-+		    zone->len != size ||
-+		    end != zone->start) {
-+			if (size != 0)
-+				offset += sprintf(page + offset, "%u\n", num);
-+			/* We can only store one page ... */
-+			if (offset + 42 > PAGE_SIZE) {
-+				offset += sprintf(page + offset, "...\n");
-+				return offset;
-+			}
-+			size = zone->len;
-+			type = zone->type;
-+			offset += sprintf(page + offset, "%llu %u %d ",
-+					  zone->start, size, type);
-+			num = 0;
-+			end = zone->start + size;
-+		} else
-+			end += zone->len;
-+		num++;
-+	}
-+	if (num > 0)
-+		offset += sprintf(page + offset, "%u\n", num);
-+	return offset > 0 ? offset : -EINVAL;
-+}
-+#endif
-+
- #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
- static ssize_t								\
- queue_show_##name(struct request_queue *q, char *page)			\
-@@ -401,6 +438,13 @@ static struct queue_sysfs_entry queue_write_same_max_entry = {
- 	.show = queue_write_same_max_show,
- };
+ 	switch (ret) {
++	case BLKPREP_DONE:
+ 	case BLKPREP_KILL:
+-		req->errors = DID_NO_CONNECT << 16;
++		req->errors = (ret == BLKPREP_KILL) ? DID_NO_CONNECT << 16 : 0;
+ 		/* release the command and kill it */
+ 		if (req->special) {
+ 			struct scsi_cmnd *cmd = req->special;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 746ea82..86d787d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -728,6 +728,7 @@ static inline bool blk_write_same_mergeable(struct bio *a, struct bio *b)
+ #define BLKPREP_OK		0	/* serve it */
+ #define BLKPREP_KILL		1	/* fatal error, kill */
+ #define BLKPREP_DEFER		2	/* leave on queue */
++#define BLKPREP_DONE		3	/* complete w/o error */
  
-+#ifdef CONFIG_BLK_DEV_ZONED
-+static struct queue_sysfs_entry queue_zoned_entry = {
-+	.attr = {.name = "zoned", .mode = S_IRUGO },
-+	.show = queue_zoned_show,
-+};
-+#endif
-+
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_show_nonrot,
-@@ -451,6 +495,9 @@ static struct attribute *default_attrs[] = {
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_write_same_max_entry.attr,
- 	&queue_nonrot_entry.attr,
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	&queue_zoned_entry.attr,
-+#endif
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
+ extern unsigned long blk_max_low_pfn, blk_max_pfn;
+ 
 -- 
 1.8.5.2
