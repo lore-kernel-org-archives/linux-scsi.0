@@ -1,52 +1,65 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: allow underflow/overflow for PR OUT etc.
- commands
-Date: Thu, 30 Jul 2015 23:44:23 -0700
-Message-ID: <1438325063.16598.15.camel@haakon3.risingtidesystems.com>
-References: <1437602898-15229-4-git-send-email-sbaugh@catern.com>
+Subject: Re: [PATCH] target: improve unsupported opcode message
+Date: Thu, 30 Jul 2015 23:46:58 -0700
+Message-ID: <1438325218.16598.16.camel@haakon3.risingtidesystems.com>
+References: <1437602500-3793-1-git-send-email-sbaugh@catern.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437602898-15229-4-git-send-email-sbaugh@catern.com>
+In-Reply-To: <1437602500-3793-1-git-send-email-sbaugh@catern.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Spencer Baugh <sbaugh@catern.com>
-Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>, Roland Dreier <roland@purestorage.com>
+Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>, Spencer Baugh <Spencer.baugh@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-07-22 at 15:08 -0700, Spencer Baugh wrote:
-> From: Roland Dreier <roland@purestorage.com>
+On Wed, 2015-07-22 at 15:01 -0700, Spencer Baugh wrote:
+> From: Joern Engel <joern@purestorage.com>
 > 
-> It's not necessarily a fatal error if a command with a data-out phase
-> has a data length that differs from the transport data length (e.g.
-> PERSISTENT RESERVE OUT might have a parameter list length in the CDB
-> that's smaller than the FC_DL field), so allow these commands.  The
-> Windows compliance test sends them.
+> Make the warning about unsupported SCSI opcode more useful:
 > 
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
+>  - Add in the initiator name so we know who's sending it.
+>  - Print the warning even for opcodes that spc_parse_cdb() knows about
+>    but that we don't handle.
+> 
+> Signed-off-by: Joern Engel <joern@purestorage.com>
 > Signed-off-by: Spencer Baugh <sbaugh@catern.com>
 > ---
->  drivers/target/target_core_transport.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  drivers/target/target_core_spc.c       | 3 ---
+>  drivers/target/target_core_transport.c | 5 +++++
+>  2 files changed, 5 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> index b074443..87d4adb 100644
+> --- a/drivers/target/target_core_spc.c
+> +++ b/drivers/target/target_core_spc.c
+> @@ -1405,9 +1405,6 @@ spc_parse_cdb(struct se_cmd *cmd, unsigned int *size)
+>  		}
+>  		break;
+>  	default:
+> -		pr_warn("TARGET_CORE[%s]: Unsupported SCSI Opcode"
+> -			" 0x%02x, sending CHECK_CONDITION.\n",
+> -			cmd->se_tfo->get_fabric_name(), cdb[0]);
+>  		return TCM_UNSUPPORTED_SCSI_OPCODE;
+>  	}
+>  
 > diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index ac002a7..f6626bb 100644
+> index ce8574b..ac002a7 100644
 > --- a/drivers/target/target_core_transport.c
 > +++ b/drivers/target/target_core_transport.c
-> @@ -1087,9 +1087,9 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
->  			" 0x%02x\n", cmd->se_tfo->get_fabric_name(),
->  				cmd->data_length, size, cmd->t_task_cdb[0]);
+> @@ -1246,6 +1246,11 @@ target_setup_cmd_from_cdb(struct se_cmd *cmd, unsigned char *cdb)
+>  	}
 >  
-> -		if (cmd->data_direction == DMA_TO_DEVICE) {
-> -			pr_err("Rejecting underflow/overflow"
-> -					" WRITE data\n");
-> +		if (cmd->data_direction == DMA_TO_DEVICE &&
-> +		    cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
-> +			pr_err("Rejecting underflow/overflow WRITE data\n");
->  			return TCM_INVALID_CDB_FIELD;
->  		}
->  		/*
+>  	ret = dev->transport->parse_cdb(cmd);
+> +	if (ret == TCM_UNSUPPORTED_SCSI_OPCODE)
+> +		pr_warn_ratelimited("%s/%s: Unsupported SCSI Opcode 0x%02x, sending CHECK_CONDITION.\n",
+> +				    cmd->se_tfo->get_fabric_name(),
+> +				    cmd->se_sess->se_node_acl->initiatorname,
+> +				    cmd->t_task_cdb[0]);
+>  	if (ret)
+>  		return ret;
+>  
 
 Applied to target-pending/for-next.
 
-Thanks Roland & Co.
+Thanks Joern + Spencer!
