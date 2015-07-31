@@ -1,147 +1,173 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/8] sd: Set chunk_sectors to zone size
-Date: Fri, 31 Jul 2015 15:36:15 +0200
-Message-ID: <1438349780-116429-4-git-send-email-hare@suse.de>
+Subject: [PATCH 4/8] sd: Implement new RESET_WP provisioning mode
+Date: Fri, 31 Jul 2015 15:36:16 +0200
+Message-ID: <1438349780-116429-5-git-send-email-hare@suse.de>
 References: <1438349780-116429-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1438349780-116429-1-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-For ZBC devices I/O must not cross zone boundaries, so setup
-the 'chunk_sectors' block queue setting to the zone size.
-This is only valid for REPORT ZONES SAME type 2 or 3;
-for other types the zone sizes might be different
-for individual zones. So issue a warning if the type is
-found to be different.
+We can map the RESET WRITE POINTER command onto a 'discard'
+request.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++---------
  drivers/scsi/sd.h |  1 +
- 2 files changed, 77 insertions(+)
+ 2 files changed, 48 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3b2fcb4..b5d412a 100644
+index b5d412a..f909684 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1861,6 +1861,45 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 	}
+@@ -367,6 +367,7 @@ static const char *lbp_mode[] = {
+ 	[SD_LBP_WS16]		= "writesame_16",
+ 	[SD_LBP_WS10]		= "writesame_10",
+ 	[SD_LBP_ZERO]		= "writesame_zero",
++	[SD_ZBC_RESET_WP]	= "reset_wp",
+ 	[SD_LBP_DISABLE]	= "disabled",
+ };
+ 
+@@ -389,6 +390,13 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 
++	if (sdkp->zoned == 1) {
++		if (!strncmp(buf, lbp_mode[SD_ZBC_RESET_WP], 20)) {
++			sd_config_discard(sdkp, SD_ZBC_RESET_WP);
++			return count;
++		}
++		return -EINVAL;
++	}
+ 	if (sdp->type != TYPE_DISK)
+ 		return -EINVAL;
+ 
+@@ -668,6 +676,12 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 		q->limits.discard_zeroes_data = sdkp->lbprz;
+ 		break;
+ 
++	case SD_ZBC_RESET_WP:
++		max_blocks = min_not_zero(sdkp->max_unmap_blocks,
++					  (u32)SD_MAX_WS16_BLOCKS);
++		q->limits.discard_zeroes_data = 1;
++		break;
++
+ 	case SD_LBP_ZERO:
+ 		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+ 					  (u32)SD_MAX_WS10_BLOCKS);
+@@ -696,16 +710,18 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int nr_sectors = blk_rq_sectors(rq);
+ 	unsigned int nr_bytes = blk_rq_bytes(rq);
+ 	unsigned int len;
+-	int ret;
++	int ret = 0;
+ 	char *buf;
+-	struct page *page;
++	struct page *page = NULL;
+ 
+ 	sector >>= ilog2(sdp->sector_size) - 9;
+ 	nr_sectors >>= ilog2(sdp->sector_size) - 9;
+ 
+-	page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
+-	if (!page)
+-		return BLKPREP_DEFER;
++	if (sdkp->provisioning_mode != SD_ZBC_RESET_WP) {
++		page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
++		if (!page)
++			return BLKPREP_DEFER;
++	}
+ 
+ 	switch (sdkp->provisioning_mode) {
+ 	case SD_LBP_UNMAP:
+@@ -745,6 +761,16 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 		len = sdkp->device->sector_size;
+ 		break;
+ 
++	case SD_ZBC_RESET_WP:
++		cmd->cmd_len = 16;
++		cmd->cmnd[0] = ZBC_OUT;
++		cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
++		put_unaligned_be64(sector, &cmd->cmnd[2]);
++		/* Reset Write Pointer doesn't have a payload */
++		len = 0;
++		cmd->sc_data_direction = DMA_NONE;
++		break;
++
+ 	default:
+ 		ret = BLKPREP_KILL;
+ 		goto out;
+@@ -764,12 +790,14 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	 * discarded on disk. This allows us to report completion on the full
+ 	 * amount of blocks described by the request.
+ 	 */
+-	blk_add_request_payload(rq, page, len);
+-	ret = scsi_init_io(cmd);
++	if (len) {
++		blk_add_request_payload(rq, page, len);
++		ret = scsi_init_io(cmd);
++	}
+ 	rq->__data_len = nr_bytes;
+ 
+ out:
+-	if (ret != BLKPREP_OK)
++	if (page && ret != BLKPREP_OK)
+ 		__free_page(page);
+ 	return ret;
  }
- 
-+static int
-+sd_zbc_report_zones(struct scsi_disk *sdkp, sector_t start_lba,
-+		    unsigned char *buffer, int bufflen )
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout
-+		* SD_FLUSH_TIMEOUT_MULTIPLIER;
-+	struct scsi_sense_hdr sshdr;
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!scsi_device_online(sdp)) {
-+		sd_printk(KERN_INFO, sdkp, "device not online\n");
-+		return -ENODEV;
-+	}
-+
-+	sd_printk(KERN_INFO, sdkp, "REPORT ZONES lba %zu len %d\n",
-+		  start_lba, bufflen);
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = ZBC_IN;
-+	cmd[1] = ZI_REPORT_ZONES;
-+	put_unaligned_be64(start_lba, &cmd[2]);
-+	put_unaligned_be32(bufflen, &cmd[10]);
-+	memset(buffer, 0, bufflen);
-+
-+	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+				  buffer, bufflen, &sshdr,
-+				  timeout, SD_MAX_RETRIES, NULL);
-+
-+	if (result) {
-+		sd_printk(KERN_NOTICE, sdkp,
-+			  "REPORT ZONES lba %zu failed with %d/%d\n",
-+			  start_lba, host_byte(result), driver_byte(result));
-+
-+		return -EIO;
-+	}
-+	return 0;
-+}
- 
- /*
-  * Determine whether disk supports Data Integrity Field.
-@@ -2631,6 +2670,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 		queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, sdkp->disk->queue);
- 	}
- 
-+	sdkp->zoned = (buffer[8] >> 4) & 3;
-  out:
- 	kfree(buffer);
- }
-@@ -2692,6 +2732,41 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
- 		sdkp->ws10 = 1;
- }
- 
-+static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	int retval;
-+	unsigned char *desc;
-+	u32 rep_len;
-+	u8 same;
-+	u64 zone_len;
-+
-+	if (sdkp->zoned != 1)
-+		/* Device managed, no special handling required */
-+		return;
-+
-+	retval = sd_zbc_report_zones(sdkp, 0, buffer, SD_BUF_SIZE);
-+	if (retval < 0)
-+		return;
-+
-+	rep_len = get_unaligned_be32(&buffer[0]);
-+	same = buffer[4] & 0xf;
-+	if (same != 2 && same != 3) {
-+		sd_printk(KERN_WARNING, sdkp,
-+			  "REPORT ZONES SAME type %d not supported\n", same);
-+		return;
-+	}
-+	if (rep_len < 64) {
-+		sd_printk(KERN_WARNING, sdkp,
-+			  "REPORT ZONES report invalid length %u\n",
-+			  rep_len);
-+		return;
-+	}
-+	/* Read the zone length from the first zone descriptor */
-+	desc = &buffer[64];
-+	zone_len = get_unaligned_be64(&desc[8]);
-+	blk_queue_chunk_sectors(sdkp->disk->queue, zone_len);
-+}
-+
- static int sd_try_extended_inquiry(struct scsi_device *sdp)
+@@ -1136,7 +1164,8 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
  {
- 	/* Attempt VPD inquiry if the device blacklist explicitly calls
-@@ -2757,6 +2832,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_cache_type(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
- 		sd_read_write_same(sdkp, buffer);
-+		sd_read_zones(sdkp, buffer);
- 	}
+ 	struct request *rq = SCpnt->request;
  
- 	sdkp->first_scan = 0;
+-	if (rq->cmd_flags & REQ_DISCARD)
++	if (rq->cmd_flags & REQ_DISCARD &&
++	    rq->completion_data)
+ 		__free_page(rq->completion_data);
+ 
+ 	if (SCpnt->cmnd != rq->cmd) {
+@@ -1657,6 +1686,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	int sense_deferred = 0;
+ 	unsigned char op = SCpnt->cmnd[0];
+ 	unsigned char unmap = SCpnt->cmnd[1] & 8;
++	unsigned char sa = SCpnt->cmnd[1] & 0xf;
+ 
+ 	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
+ 		if (!result) {
+@@ -1708,6 +1738,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			case UNMAP:
+ 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+ 				break;
++			case ZBC_OUT:
++				if (sa == ZO_RESET_WRITE_POINTER)
++					sd_config_discard(sdkp, SD_LBP_DISABLE);
++				break;
+ 			case WRITE_SAME_16:
+ 			case WRITE_SAME:
+ 				if (unmap)
+@@ -2764,6 +2798,10 @@ static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	/* Read the zone length from the first zone descriptor */
+ 	desc = &buffer[64];
+ 	zone_len = get_unaligned_be64(&desc[8]);
++	sdkp->max_unmap_blocks = zone_len;
++	sdkp->unmap_alignment = zone_len;
++	sdkp->unmap_granularity = zone_len;
++	sd_config_discard(sdkp, SD_ZBC_RESET_WP);
+ 	blk_queue_chunk_sectors(sdkp->disk->queue, zone_len);
+ }
+ 
 diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 63ba5ca..6500d51 100644
+index 6500d51..4edcf54 100644
 --- a/drivers/scsi/sd.h
 +++ b/drivers/scsi/sd.h
-@@ -93,6 +93,7 @@ struct scsi_disk {
- 	unsigned	lbpvpd : 1;
- 	unsigned	ws10 : 1;
- 	unsigned	ws16 : 1;
-+	unsigned	zoned: 2;	/* ZONED field */
+@@ -56,6 +56,7 @@ enum {
+ 	SD_LBP_WS16,		/* Use WRITE SAME(16) with UNMAP bit */
+ 	SD_LBP_WS10,		/* Use WRITE SAME(10) with UNMAP bit */
+ 	SD_LBP_ZERO,		/* Use WRITE SAME(10) with zero payload */
++	SD_ZBC_RESET_WP,	/* Use RESET WRITE POINTER */
+ 	SD_LBP_DISABLE,		/* Discard disabled due to failed cmd */
  };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
  
 -- 
 1.8.5.2
