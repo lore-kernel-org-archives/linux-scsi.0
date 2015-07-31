@@ -1,129 +1,207 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Wait RCU grace-period before backend/fabric
- unload
-Date: Thu, 30 Jul 2015 17:23:43 -0700
-Message-ID: <1438302223.32325.7.camel@haakon3.risingtidesystems.com>
-References: <1438236923-17889-1-git-send-email-nab@daterainc.com>
-	 <20150730130754.GB27280@linux.vnet.ibm.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [dm-devel] kernel BUG at drivers/scsi/scsi_lib.c:1101! observed
+ during md5sum for one file on (RAID4->RAID0) device
+Date: Fri, 31 Jul 2015 11:20:58 +1000
+Message-ID: <20150731112058.6e97b491@noble>
+References: <1710310402.852769.1438246982906.JavaMail.zimbra@redhat.com>
+ <1438262886.2229.1.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150730130754.GB27280@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:45895 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750909AbbGaBVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jul 2015 21:21:08 -0400
+In-Reply-To: <1438262886.2229.1.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Yi Zhang <yizhan@redhat.com>, linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com, xni@redhat.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Thu, 2015-07-30 at 06:07 -0700, Paul E. McKenney wrote:
-> On Thu, Jul 30, 2015 at 06:15:23AM +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Thu, 30 Jul 2015 06:28:06 -0700 James Bottomley
+<James.Bottomley@HansenPartnership.com> wrote:
+
+> On Thu, 2015-07-30 at 05:03 -0400, Yi Zhang wrote:
+> > Hi SCSI/RAID maintainer
 > > 
-> > This patch addresses a v4.2-rc1 regression where backend driver
-> > struct module unload immediately after ->free_device() has done
-> > an internal call_rcu(), results in IRQ rcu_process_callbacks()
-> > use-after-free paging OOPsen.
+> > During raid test with 4.2.0-rc3, I observed below kernel BUG, pls check below info for the test log/environment/test steps.
 > > 
-> > It adds a explicit synchronize_rcu() in target_backend_unregister()
-> > to wait a full RCU grace period before releasing target_backend_ops
-> > memory, and allowing TBO->module exit to proceed.
+> > Log:
+> > [  306.741662] md: bind<sdb1>
+> > [  306.750865] md: bind<sdc1>
+> > [  306.753993] md: bind<sdd1>
+> > [  306.764475] md: bind<sde1>
+> > [  306.786156] md: bind<sdf1>
+> > [  306.789362] md: bind<sdh1>
+> > [  306.792555] md: bind<sdg1>
+> > [  306.868166] raid6: sse2x1   gen() 10589 MB/s
+> > [  306.889143] raid6: sse2x1   xor()  8218 MB/s
+> > [  306.910121] raid6: sse2x2   gen() 13453 MB/s
+> > [  306.931102] raid6: sse2x2   xor()  8990 MB/s
+> > [  306.952079] raid6: sse2x4   gen() 15539 MB/s
+> > [  306.973063] raid6: sse2x4   xor() 10771 MB/s
+> > [  306.994039] raid6: avx2x1   gen() 20582 MB/s
+> > [  307.015017] raid6: avx2x2   gen() 24019 MB/s
+> > [  307.035998] raid6: avx2x4   gen() 27824 MB/s
+> > [  307.040755] raid6: using algorithm avx2x4 gen() 27824 MB/s
+> > [  307.046869] raid6: using avx2x2 recovery algorithm
+> > [  307.058793] async_tx: api initialized (async)
+> > [  307.075428] xor: automatically using best checksumming function:
+> > [  307.091942]    avx       : 32008.000 MB/sec
+> > [  307.147662] md: raid6 personality registered for level 6
+> > [  307.153584] md: raid5 personality registered for level 5
+> > [  307.159505] md: raid4 personality registered for level 4
+> > [  307.165698] md/raid:md0: device sdf1 operational as raid disk 4
+> > [  307.172300] md/raid:md0: device sde1 operational as raid disk 3
+> > [  307.178899] md/raid:md0: device sdd1 operational as raid disk 2
+> > [  307.185497] md/raid:md0: device sdc1 operational as raid disk 1
+> > [  307.192093] md/raid:md0: device sdb1 operational as raid disk 0
+> > [  307.199052] md/raid:md0: allocated 6482kB
+> > [  307.203573] md/raid:md0: raid level 4 active with 5 out of 6 devices, algorithm 0
+> > [  307.211958] md0: detected capacity change from 0 to 53645148160
+> > [  307.218658] md: recovery of RAID array md0
+> > [  307.223226] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> > [  307.229729] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+> > [  307.240427] md: using 128k window, over a total of 10477568k.
+> > [  374.670951] md: md0: recovery done.
+> > [  375.722806] EXT4-fs (md0): mounted filesystem with ordered data mode. Opts: (null)
+> > [  447.553364] md: unbind<sdh1>
+> > [  447.559905] md: export_rdev(sdh1)
+> > [  447.572684] md: cannot remove active disk sdg1 from md0 ...
+> > [  447.578909] md/raid:md0: Disk failure on sdg1, disabling device.
+> > [  447.578909] md/raid:md0: Operation continuing on 5 devices.
+> > [  447.594850] md: unbind<sdg1>
+> > [  447.601834] md: export_rdev(sdg1)
+> > [  447.615446] md: raid0 personality registered for level 0
+> > [  447.629275] md/raid0:md0: md_size is 104775680 sectors.
+> > [  447.635094] md: RAID0 configuration for md0 - 1 zone
+> > [  447.640627] md: zone0=[sdb1/sdc1/sdd1/sde1/sdf1]
+> > [  447.645833]       zone-offset=         0KB, device-offset=         0KB, size=  52387840KB
+> > [  447.654949] 
+> > [  447.739443] EXT4-fs (md0): mounted filesystem with ordered data mode. Opts: (null)
+> > [  447.749258] bio too big device sde1 (768 > 512)
 > 
-> Good catch, but...
-> 
-> You need rcu_barrier() rather than synchronize_rcu() in this case.
-> All that synchronize_rcu() does is wait for pre-existing RCU readers,
-> when what is needed is to wait for all pre-existing RCU callbacks
-> to be invoked.
-> 
+> This is the actual error.  It looks like an md problem (md list copied).
 
-Ah, was getting confused by rcu_barrier_tasks() being specific to
-CONFIG_TASKS_RCU in update.c code, and missing rcu_barrier() in
-tree_plugin.h.
+Thanks.  It certainly does look like an md problem.... ah, found it.
 
-Should have taken a look at Documentation/RCU/rcubarrier.txt..
+level_store in drivers/md/md.c calls blk_set_stacking_limits after
+calling ->takeover and before calling ->run.
+->run should impose the limits from the underlying device, but for
+RAID0, ->takeover is doing that.
 
-> So please replace the two synchronize_rcu() calls with rcu_barrier().
-> 
+I can fix that... hopefully it will become irrelevant soon when the
+immutable-bio patches go in.
 
-<nod>, below is the updated version.
 
-Thanks for the review!
+This patch isn't quite right, but it should be pretty close.
+Can you test and confirm?
+Thanks,
+NeilBrown
 
---nab
-
->From 9721910116f9883c7afded613ec88dc2de12339a Mon Sep 17 00:00:00 2001
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Wed, 29 Jul 2015 22:27:13 -0700
-Subject: [PATCH] target: Perform RCU callback barrier before backend/fabric
- unload
-
-This patch addresses a v4.2-rc1 regression where backend driver
-module unload happening immediately after TBO->free_device()
-does internal call_rcu(), will currently result in IRQ context
-rcu_process_callbacks() use-after-free paging OOPsen.
-
-It adds the missing rcu_barrier() in target_backend_unregister()
-to perform an explicit RCU barrier waiting for all RCU callbacks
-to complete before releasing target_backend_ops memory, and
-allowing TBO->module exit to proceed.
-
-Also, do the same for fabric drivers in target_unregister_template()
-to ensure se_deve_entry->rcu_head -> kfree_rcu() callbacks have
-completed, before allowing target_core_fabric_ops->owner module
-exit to proceed.
-
-Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_configfs.c |  9 ++++++++-
- drivers/target/target_core_hba.c      | 10 +++++++++-
- 2 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index c2e9fea..860e840 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -457,8 +457,15 @@ void target_unregister_template(const struct target_core_fabric_ops *fo)
- 		if (!strcmp(t->tf_ops->name, fo->name)) {
- 			BUG_ON(atomic_read(&t->tf_access_cnt));
- 			list_del(&t->tf_list);
-+			mutex_unlock(&g_tf_lock);
-+			/*
-+			 * Wait for any outstanding fabric se_deve_entry->rcu_head
-+			 * callbacks to complete post kfree_rcu(), before allowing
-+			 * fabric driver unload of TFO->module to proceed.
-+			 */
-+			rcu_barrier();
- 			kfree(t);
--			break;
-+			return;
- 		}
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index efb654eb5399..17804f374709 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -83,7 +83,6 @@ static int create_strip_zones(struct mddev *mddev,
+struct r0conf **private_conf) char b[BDEVNAME_SIZE];
+ 	char b2[BDEVNAME_SIZE];
+ 	struct r0conf *conf = kzalloc(sizeof(*conf), GFP_KERNEL);
+-	bool discard_supported = false;
+ 
+ 	if (!conf)
+ 		return -ENOMEM;
+@@ -188,19 +187,12 @@ static int create_strip_zones(struct mddev
+*mddev, struct r0conf **private_conf) }
+ 		dev[j] = rdev1;
+ 
+-		if (mddev->queue)
+-			disk_stack_limits(mddev->gendisk, rdev1->bdev,
+-					  rdev1->data_offset << 9);
+-
+ 		if (rdev1->bdev->bd_disk->queue->merge_bvec_fn)
+ 			conf->has_merge_bvec = 1;
+ 
+ 		if (!smallest || (rdev1->sectors < smallest->sectors))
+ 			smallest = rdev1;
+ 		cnt++;
+-
+-		if (blk_queue_discard(bdev_get_queue(rdev1->bdev)))
+-			discard_supported = true;
  	}
- 	mutex_unlock(&g_tf_lock);
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index 62ea4e8..be9cefc 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -84,8 +84,16 @@ void target_backend_unregister(const struct target_backend_ops *ops)
- 	list_for_each_entry(tb, &backend_list, list) {
- 		if (tb->ops == ops) {
- 			list_del(&tb->list);
-+			mutex_unlock(&backend_mutex);
-+			/*
-+			 * Wait for any outstanding backend driver ->rcu_head
-+			 * callbacks to complete post TBO->free_device() ->
-+			 * call_rcu(), before allowing backend driver module
-+			 * unload of target_backend_ops->owner to proceed.
-+			 */
-+			rcu_barrier();
- 			kfree(tb);
--			break;
-+			return;
- 		}
+ 	if (cnt != mddev->raid_disks) {
+ 		printk(KERN_ERR "md/raid0:%s: too few disks (%d of %d)
+- " @@ -272,17 +264,6 @@ static int create_strip_zones(struct mddev
+*mddev, struct r0conf **private_conf) goto abort;
  	}
- 	mutex_unlock(&backend_mutex);
--- 
-1.9.1
+ 
+-	if (mddev->queue) {
+-		blk_queue_io_min(mddev->queue, mddev->chunk_sectors <<
+9);
+-		blk_queue_io_opt(mddev->queue,
+-				 (mddev->chunk_sectors << 9) *
+mddev->raid_disks); -
+-		if (!discard_supported)
+-			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD,
+mddev->queue);
+-		else
+-			queue_flag_set_unlocked(QUEUE_FLAG_DISCARD,
+mddev->queue);
+-	}
+-
+ 	pr_debug("md/raid0:%s: done.\n", mdname(mddev));
+ 	*private_conf = conf;
+ 
+@@ -433,12 +414,6 @@ static int raid0_run(struct mddev *mddev)
+ 	if (md_check_no_bitmap(mddev))
+ 		return -EINVAL;
+ 
+-	if (mddev->queue) {
+-		blk_queue_max_hw_sectors(mddev->queue,
+mddev->chunk_sectors);
+-		blk_queue_max_write_same_sectors(mddev->queue,
+mddev->chunk_sectors);
+-		blk_queue_max_discard_sectors(mddev->queue,
+mddev->chunk_sectors);
+-	}
+-
+ 	/* if private is not null, we are here after takeover */
+ 	if (mddev->private == NULL) {
+ 		ret = create_strip_zones(mddev, &conf);
+@@ -447,6 +422,29 @@ static int raid0_run(struct mddev *mddev)
+ 		mddev->private = conf;
+ 	}
+ 	conf = mddev->private;
++	if (mddev->queue) {
++		struct md_rdev *rdev;
++		bool discard_supported = false;
++
++		rdev_for_each(rdev, mddev) {
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++					  rdev->data_offset << 9);
++			if
+(blk_queue_discard(bdev_get_queue(rdev->bdev)))
++				discard_supported = true;
++		}
++		blk_queue_max_hw_sectors(mddev->queue,
+mddev->chunk_sectors);
++		blk_queue_max_write_same_sectors(mddev->queue,
+mddev->chunk_sectors);
++		blk_queue_max_discard_sectors(mddev->queue,
+mddev->chunk_sectors); +
++		blk_queue_io_min(mddev->queue, mddev->chunk_sectors <<
+9);
++		blk_queue_io_opt(mddev->queue,
++				 (mddev->chunk_sectors << 9) *
+mddev->raid_disks); +
++		if (!discard_supported)
++			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD,
+mddev->queue);
++		else
++			queue_flag_set_unlocked(QUEUE_FLAG_DISCARD,
+mddev->queue);
++	}
+ 
+ 	/* calculate array device size */
+ 	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
