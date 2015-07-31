@@ -1,65 +1,94 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [RFC PATCH 0/8] ZBC host-managed device support
-Date: Fri, 31 Jul 2015 15:36:12 +0200
-Message-ID: <1438349780-116429-1-git-send-email-hare@suse.de>
+Subject: [PATCH 6/8] block: Add 'zoned' sysfs queue attribute
+Date: Fri, 31 Jul 2015 15:36:18 +0200
+Message-ID: <1438349780-116429-7-git-send-email-hare@suse.de>
+References: <1438349780-116429-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1438349780-116429-1-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+Add a sysfs queue attribute 'zoned' to display the zone layout
+for zoned devices.
 
-Here is a first stab at supporting ZBC host-managed devices.
-For the uninitiated: ZBC host-managed devices (aka shingled or SMR drives)
-have partitioned the drive into several zones, most of which require
-sequential writes.
-To handle this the patchset implements a rbtree for the zone information,
-which will be filled out during device detection.
-The rbtree is hooked to the request queue, as it's envisioned that other
-layers might want to access it, too.
-(Like the device-mapper target I'm working at :-).
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ block/blk-sysfs.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
-Additionally the devices have the habit of spewing out read errors for
-uninitialized areas, making working with those devices awkward as the
-libata error handling takes ages to recover. To handle that I've implemented
-a new BLKPREP return value 'BLKPREP_DONE', allowing for short-circuit
-those commands (as they won't return any value anyway).
-
-Oh, this patchset is based on my earlier patchset
-'libata: ZAC host-aware device support'.
-The entire patchset(s) can be found at
-
-git.kernel.org:/pub/scm/linux/kernel/git/hare/scsi-devel branch zbc.v1
-
-As usual, comments and reviews are welcome.
-
-Hannes Reinecke (8):
-  blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-  block: update chunk_sectors in blk_stack_limits()
-  sd: Set chunk_sectors to zone size
-  sd: Implement new RESET_WP provisioning mode
-  block: Implement support for zoned block devices
-  block: Add 'zoned' sysfs queue attribute
-  block: Introduce BLKPREP_DONE
-  sd: Implement support for ZBC devices
-
- block/Kconfig           |   9 ++
- block/Makefile          |   1 +
- block/blk-core.c        |  13 ++
- block/blk-settings.c    |   3 +
- block/blk-sysfs.c       |  74 +++++++++
- block/blk-zoned.c       |  70 +++++++++
- drivers/scsi/Kconfig    |   8 +
- drivers/scsi/Makefile   |   1 +
- drivers/scsi/scsi_lib.c |   3 +-
- drivers/scsi/sd.c       | 245 ++++++++++++++++++++++++++++--
- drivers/scsi/sd.h       |  36 +++++
- drivers/scsi/sd_zbc.c   | 390 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h  |  48 ++++++
- 13 files changed, 886 insertions(+), 15 deletions(-)
- create mode 100644 block/blk-zoned.c
- create mode 100644 drivers/scsi/sd_zbc.c
-
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index e419f1f..5e2ba53 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -211,6 +211,43 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
+ 	return queue_var_show(max_hw_sectors_kb, (page));
+ }
+ 
++#ifdef CONFIG_BLK_DEV_ZONED
++static ssize_t queue_zoned_show(struct request_queue *q, char *page)
++{
++	struct rb_node *node;
++	struct blk_zone *zone;
++	ssize_t offset = 0, end = 0;
++	int size = 0, num = 0;
++	enum blk_zone_type type = BLK_ZONE_TYPE_UNKNOWN;
++
++	for (node = rb_first(&q->zones); node; node = rb_next(node)) {
++		zone = rb_entry(node, struct blk_zone, node);
++		if (zone->type != type ||
++		    zone->len != size ||
++		    end != zone->start) {
++			if (size != 0)
++				offset += sprintf(page + offset, "%u\n", num);
++			/* We can only store one page ... */
++			if (offset + 42 > PAGE_SIZE) {
++				offset += sprintf(page + offset, "...\n");
++				return offset;
++			}
++			size = zone->len;
++			type = zone->type;
++			offset += sprintf(page + offset, "%llu %u %d ",
++					  zone->start, size, type);
++			num = 0;
++			end = zone->start + size;
++		} else
++			end += zone->len;
++		num++;
++	}
++	if (num > 0)
++		offset += sprintf(page + offset, "%u\n", num);
++	return offset > 0 ? offset : -EINVAL;
++}
++#endif
++
+ #define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
+ static ssize_t								\
+ queue_show_##name(struct request_queue *q, char *page)			\
+@@ -401,6 +438,13 @@ static struct queue_sysfs_entry queue_write_same_max_entry = {
+ 	.show = queue_write_same_max_show,
+ };
+ 
++#ifdef CONFIG_BLK_DEV_ZONED
++static struct queue_sysfs_entry queue_zoned_entry = {
++	.attr = {.name = "zoned", .mode = S_IRUGO },
++	.show = queue_zoned_show,
++};
++#endif
++
+ static struct queue_sysfs_entry queue_nonrot_entry = {
+ 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
+ 	.show = queue_show_nonrot,
+@@ -451,6 +495,9 @@ static struct attribute *default_attrs[] = {
+ 	&queue_discard_zeroes_data_entry.attr,
+ 	&queue_write_same_max_entry.attr,
+ 	&queue_nonrot_entry.attr,
++#ifdef CONFIG_BLK_DEV_ZONED
++	&queue_zoned_entry.attr,
++#endif
+ 	&queue_nomerges_entry.attr,
+ 	&queue_rq_affinity_entry.attr,
+ 	&queue_iostats_entry.attr,
 -- 
 1.8.5.2
