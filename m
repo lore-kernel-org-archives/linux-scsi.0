@@ -1,71 +1,41 @@
-From: jiang.biao2@zte.com.cn
-Subject: =?UTF-8?B?562U5aSNOiBSZTogW1BhdGNoXSBzY3NpX2Vycm9yOiBzaG91bGQgbm90?=
- =?UTF-8?B?IGdldCBzZW5zZSBmb3IgdGltZW91dCBJTyBpbiBzY3NpIGVycm9y?=
- =?UTF-8?B?IGhhbmRsZXI=?=
-Date: Sat, 1 Aug 2015 12:39:12 +0800
-Message-ID: <OF12B43E25.EECE14D9-ON48257E94.0019666E-48257E94.0019976B@zte.com.cn>
-References: <OFAF74C95C.6058723F-ON48257E93.00322982-48257E93.00363C6C@zte.com.cn> <55BB756D.5090606@suse.de>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH v3 0/2] Fixes for memory corruption in mpt2sas
+Date: Fri, 31 Jul 2015 22:02:12 -0700
+Message-ID: <1438405334-1153698-1-git-send-email-calvinowens@fb.com>
+References: <1436675096-324527-1-git-send-email-calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5.zte.com.cn ([63.217.80.70]:52633 "EHLO mx5.zte.com.cn"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750964AbbHAEjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Aug 2015 00:39:47 -0400
-In-Reply-To: <55BB756D.5090606@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1436675096-324527-1-git-send-email-calvinowens@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
+Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, calvinowens@fb.com, Joe Lawrence <joe.lawrence@stratus.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, JBottomley@odin.com
 
-bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgd3JvdGUgb24gMjAxNS8wNy8zMSAyMTox
-NzozMzoNCg0KPiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4gDQo+IOWPkeS7tuS6ujog
-IGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnDQo+IA0KPiAyMDE1LzA3LzMxIDIxOjE3
-DQo+IA0KPiDmlLbku7bkuroNCj4gDQo+IGppYW5nLmJpYW8yQHp0ZS5jb20uY24sIGxpbnV4LXNj
-c2lAdmdlci5rZXJuZWwub3JnLCBKQm90dG9tbGV5QG9kaW4uY29tLCANCg0KPiANCj4g5oqE6YCB
-DQo+IA0KPiDkuLvpopgNCj4gDQo+IFJlOiBbUGF0Y2hdIHNjc2lfZXJyb3I6IHNob3VsZCBub3Qg
-Z2V0IHNlbnNlIGZvciB0aW1lb3V0IElPIGluIHNjc2kgDQo+IGVycm9yIGhhbmRsZXINCj4gDQo+
-IE9uIDA3LzMxLzIwMTUgMTE6NTIgQU0sIGppYW5nLmJpYW8yQHp0ZS5jb20uY24gd3JvdGU6DQo+
-ID4gc2NzaV9lcnJvcjogc2hvdWxkIG5vdCBnZXQgc2Vuc2UgZm9yIHRpbWVvdXQgSU8gaW4gc2Nz
-aSBlcnJvciBoYW5kbGVyDQo+ID4gDQo+ID4gV2hlbiBhbiBJTyB0aW1lb3V0IG9jY3VycywgdGhl
-IElPIHdpbGwgYmUgYWJvcnRlZCBpbg0KPiA+IHNjc2lfYWJvcnRfY29tbWFuZCgpIGFuZCBTQ1NJ
-X0VIX0FCT1JUX1NDSEVEVUxFRCB3aWxsIGJlIHNldC4gQmVjYXVzZQ0KPiA+IG9mIHRoYXQsIHRo
-ZSBTQ1NJX0VIX0NBTkNFTF9DTUQgd2lsbCBiZSBjbGVhciBpbiBzY3NpX2VoX3NjbWRfYWRkKCku
-DQo+ID4gU28gd2hlbiBzY3NpIGVycm9yIGhhbmRsZXIgc3RhcnRzLCBpdCB3aWxsIGdldCBzZW5z
-ZSBmb3IgdGhpcw0KPiA+IHRpbWVvdXQgSU8gYW5kIHRoZSBzY21kIG9mIHRoZSBJTyByZXF1ZXN0
-IHdpbGwgYmUgcmV1c2VkLiBJbiB0aGF0DQo+ID4gY2FzZSwgdGhlIHNjbWQgbWF5IGJlIGRvdWJs
-ZSByZWxlYXNlZCB3aGVuIHJhY2luZyB3aXRoIGlvX2RvbmUoKSwNCj4gPiB3aGljaCB3aWxsIHJl
-c3VsdCBpbiBjcmFzaC4NCj4gPiBTTyBTQ1NJX0VIX0FCT1JUX1NDSEVEVUxFRCBzaG91bGQgYWxz
-byBiZSBjaGVja2VkIHdoZW4gZ2V0dGluZyBzZW5zZS4NCj4gPiBUaGUgYnVnIG1heWJlIHJlcHJv
-ZHVjZWQgd2hlbiB0aGUgbGluayBiZXR3ZWVuIGhvc3QgYW5kIGRpc2sgaXMNCj4gPiB1bnN0YWJs
-ZS4NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBKaWFuZyBCaWFvIDxqaWFuZy5iaWFvMkB6dGUu
-Y29tLmNuPg0KPiA+IFNpZ25lZC1vZmYtYnk6IExvbmcgQ2h1biA8bG9uZy5jaHVuQHp0ZS5jb20u
-Y24+DQo+ID4gUmV2aWV3ZWQtYnk6IFRhbiBIdSA8dGFuLmh1QHp0ZS5jb20uY24+DQo+ID4gUmV2
-aWV3ZWQtYnk6IENoZW4gRG9uZ2hhaSA8Y2hlbi5kb25naGFpQHp0ZS5jb20uY24+DQo+ID4gUmV2
-aWV3ZWQtYnk6IENhaSBRdSA8Y2FpLnF1QHp0ZS5jb20uY24+DQo+ID4gDQo+ID4gZGlmZiAtdXBy
-TiBkcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5jIGRyaXZlcnNfbmV3L3Njc2kvc2NzaV9lcnJvci5j
-DQo+ID4gLS0tIHNjc2kvc2NzaV9lcnJvci5jICAgMjAxNS0wNy0zMSAxNjowMzoxOC4wMDAwMDAw
-MDAgKzA4MDANCj4gPiArKysgc2NzaV9uZXcvc2NzaV9lcnJvci5jICAgICAgIDIwMTUtMDctMzEg
-MTY6Mjk6MjUuMDAwMDAwMDAwICswODAwDQo+ID4gQEAgLTExNTYsOSArMTE1NiwxNCBAQCBpbnQg
-c2NzaV9laF9nZXRfc2Vuc2Uoc3RydWN0IGxpc3RfaGVhZCAqDQo+ID4gICAgICAgICBzdHJ1Y3Qg
-U2NzaV9Ib3N0ICpzaG9zdDsNCj4gPiAgICAgICAgIGludCBydG47DQo+ID4gDQo+ID4gKyAgICAg
-ICAvKg0KPiA+ICsgICAgICAgICogSWYgU0NTSV9FSF9BQk9SVF9TQ0hFRFVMRUQgaGFzIGJlZW4g
-c2V0LCBpdCBpcyB0aW1lb3V0IElPLA0KPiA+ICsgICAgICAgICogc2hvdWxkIG5vdCBnZXQgc2Vu
-c2UuDQo+ID4gKyAgICAgICAgKi8NCj4gPiAgICAgICAgIGxpc3RfZm9yX2VhY2hfZW50cnlfc2Fm
-ZShzY21kLCBuZXh0LCB3b3JrX3EsIGVoX2VudHJ5KSB7DQo+ID4gICAgICAgICAgICAgICAgIGlm
-ICgoc2NtZC0+ZWhfZWZsYWdzICYgU0NTSV9FSF9DQU5DRUxfQ01EKSB8fA0KPiA+IC0gICAgICAg
-ICAgICAgICAgICAgU0NTSV9TRU5TRV9WQUxJRChzY21kKSkNCj4gPiArICAgICAgICAgICAgICAg
-ICAgIChzY21kLT5laF9lZmxhZ3MgJiBTQ1NJX0VIX0FCT1JUX1NDSEVEVUxFRCkgfHwNCj4gPiAr
-ICAgICAgICAgICAgICAgICAgICBTQ1NJX1NFTlNFX1ZBTElEKHNjbWQpKQ0KPiA+ICAgICAgICAg
-ICAgICAgICAgICAgICAgIGNvbnRpbnVlOw0KPiA+IA0KPiA+ICAgICAgICAgICAgICAgICBzaG9z
-dCA9IHNjbWQtPmRldmljZS0+aG9zdDsNCj4gPiAtLQ0KPiBfQWN0dWFsbHlfIHlvdSBuZWVkIHRv
-IHRlc3QgZm9yIGJvdGgsIFNDU0lfRUhfQ0FOQ0VMX0NNRCBfYW5kXw0KPiBTQ1NJX0VIX0FCT1JU
-X1NDSEVEVUxFRC4NCj4gTm90IGV2ZXJ5IGRyaXZlciBpcyByZXF1aXJlZCB0byBpbXBsZW1lbnQg
-YW5kL29yIHN1cHBvcnQNCj4gYXN5bmNocm9ub3VzIGNvbW1hbmQgYWJvcnRzLCBhbmQgdGhvc2Ug
-d2lsbCBiZSBzZXR0aW5nDQo+IFNDU0lfRUhfQ0FOQ0VMX0NNRCBldmVuIHRob3VnaCB0aGV5J3Zl
-IHJ1biBpbnRvIGEgdGltZW91dC4NCj4gDQpUaGF0J3MgcmlnaHQsIGJ1dCBTQ1NJX0VIX0NBTkNF
-TF9DTUQgX2hhc18gYWxyZWFkeSBiZWVuIHRlc3RlZCANCmluIHRoZSBjdXJyZW50IGNvZGUsIHNv
-IHRoZXJlJ3Mgbm8gbmVlZCB0byBhZGQgaW4gdGhlIHBhdGNoLiANCkFmdGVyIHBhdGNoZWQsIGJv
-dGggU0NTSV9FSF9DQU5DRUxfQ01EIF9hbmRfIA0KU0NTSV9FSF9BQk9SVF9TQ0hFRFVMRUQgYXJl
-IHRlc3RlZCBoZXJlLCB0aGF0J2xsIGVuc3VyZSBubyANCmdldHRpbmcgc2Vuc2UgZm9yICp0aW1l
-b3V0IGlvKi4NCg0KVGhhbmtzLg0K
+Hello all,
+
+This patchset attempts to address problems we've been having with
+panics due to memory corruption from the mpt2sas driver.
+
+Changes are noted in the individual patches, I realized putting them in the
+cover was probably a bit confusing.
+
+Thanks,
+Calvin
+
+
+Patches in this series:
+ [PATCH v3 1/2] mpt2sas: Refcount sas_device objects and fix unsafe list
+ [PATCH v3 2/2] mpt2sas: Refcount fw_events and fix unsafe list usage
+
+Total diffstat:
+ drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 579 ++++++++++++++++++++++---------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
+ 3 files changed, 439 insertions(+), 174 deletions(-)
+
+Diff showing changes v2 => v3:
+	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v2v3.patch
+
+Diff showing changes v1 => v2:
+	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v1v2.patch
