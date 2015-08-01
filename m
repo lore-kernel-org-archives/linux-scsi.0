@@ -1,203 +1,68 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 6/6] scsi: ufs: fix module reference for scsi host
-Date: Sun,  2 Aug 2015 02:19:20 +0900
-Message-ID: <1438449560-4106-7-git-send-email-akinobu.mita@gmail.com>
-References: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:34699 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbbHARUE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2015 13:20:04 -0400
-Received: by pdbbh15 with SMTP id bh15so56483330pdb.1
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Aug 2015 10:20:03 -0700 (PDT)
-In-Reply-To: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/3] IB/srp patches for Linux kernel v4.3
+Date: Sat, 1 Aug 2015 14:53:52 -0400
+Message-ID: <55BD15C0.3000109@redhat.com>
+References: <55BBE4A2.5090505@sandisk.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="XX3oMiitksdatU5V6JsjBJTspLFTBuPsH"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <55BBE4A2.5090505-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-While accessing a UFS device, the module reference count for core driver
-(ufshcd) is incremented but not incremented for the actual glue driver
-(ufshcd-pci or ufshcd-pltfrm).  Because these drivers allocate scsi hosts
-with scsi_host_template defined in ufshcd module.  So these drivers always
-can be unloaded.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--XX3oMiitksdatU5V6JsjBJTspLFTBuPsH
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This fixes it by preparing scsi host template which is initialized at
-module_init() for each ufs glue driver.
+On 07/31/2015 05:12 PM, Bart Van Assche wrote:
+> Hello Doug,
+>=20
+> Please apply the following three patches at your earliest convenience:
+>=20
+> 0001-IB-srp-Constify-a-function-argument.patch
+> 0002-IB-srp-Handle-partial-connection-success-correctly.patch
+> 0003-IB-srp-Bump-driver-version-and-release-date.patch
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd-pci.c    | 19 +++++++++++++++++--
- drivers/scsi/ufs/ufshcd-pltfrm.c | 19 +++++++++++++++++--
- drivers/scsi/ufs/ufshcd.c        | 19 +++++++++++++++----
- drivers/scsi/ufs/ufshcd.h        |  5 ++++-
- 4 files changed, 53 insertions(+), 9 deletions(-)
+Got 'em, thanks!
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index d15eaa4..961c4ad 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -106,6 +106,8 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 	ufshcd_remove(hba);
- }
- 
-+static struct scsi_host_template ufshcd_pci_host_template;
-+
- /**
-  * ufshcd_pci_probe - probe routine of the driver
-  * @pdev: pointer to PCI device handle
-@@ -136,7 +138,7 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	mmio_base = pcim_iomap_table(pdev)[0];
- 
--	err = ufshcd_alloc_host(&pdev->dev, &hba);
-+	err = ufshcd_alloc_host(&pdev->dev, &ufshcd_pci_host_template, &hba);
- 	if (err) {
- 		dev_err(&pdev->dev, "Allocation failed\n");
- 		return err;
-@@ -183,7 +185,20 @@ static struct pci_driver ufshcd_pci_driver = {
- 	},
- };
- 
--module_pci_driver(ufshcd_pci_driver);
-+static int __init ufshcd_pci_driver_init(void)
-+{
-+	ufshcd_host_template_init(&ufshcd_pci_host_template, "ufshcd-pci",
-+				  THIS_MODULE);
-+
-+	return pci_register_driver(&ufshcd_pci_driver);
-+}
-+module_init(ufshcd_pci_driver_init);
-+
-+static void __exit ufshcd_pci_driver_exit(void)
-+{
-+	pci_unregister_driver(&ufshcd_pci_driver);
-+}
-+module_exit(ufshcd_pci_driver_exit);
- 
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 12f1246..2a137c2 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -287,6 +287,8 @@ static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
- 	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
- }
- 
-+static struct scsi_host_template ufshcd_pltfrm_host_template;
-+
- /**
-  * ufshcd_pltfrm_probe - probe routine of the driver
-  * @pdev: pointer to Platform device handle
-@@ -315,7 +317,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
- 
--	err = ufshcd_alloc_host(dev, &hba);
-+	err = ufshcd_alloc_host(dev, &ufshcd_pltfrm_host_template, &hba);
- 	if (err) {
- 		dev_err(&pdev->dev, "Allocation failed\n");
- 		goto out;
-@@ -400,7 +402,20 @@ static struct platform_driver ufshcd_pltfrm_driver = {
- 	},
- };
- 
--module_platform_driver(ufshcd_pltfrm_driver);
-+static int __init ufshcd_pltfrm_driver_init(void)
-+{
-+	ufshcd_host_template_init(&ufshcd_pltfrm_host_template, "ufshcd-pltfrm",
-+				  THIS_MODULE);
-+
-+	return platform_driver_register(&ufshcd_pltfrm_driver);
-+}
-+module_init(ufshcd_pltfrm_driver_init);
-+
-+static void __exit ufshcd_pltfrm_driver_exit(void)
-+{
-+	platform_driver_unregister(&ufshcd_pltfrm_driver);
-+}
-+module_exit(ufshcd_pltfrm_driver_exit);
- 
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d287207..6fa64bd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4338,7 +4338,7 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	ufshcd_probe_hba(hba);
- }
- 
--static struct scsi_host_template ufshcd_driver_template = {
-+static const struct scsi_host_template ufshcd_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
- 	.proc_name		= UFSHCD,
-@@ -4359,6 +4359,16 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.track_queue_depth	= 1,
- };
- 
-+void ufshcd_host_template_init(struct scsi_host_template *sht, const char *name,
-+			       struct module *owner)
-+{
-+	*sht = ufshcd_driver_template;
-+	sht->name = name;
-+	sht->proc_name = name;
-+	sht->module = owner;
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_host_template_init);
-+
- static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- 				   int ua)
- {
-@@ -5388,10 +5398,12 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
- /**
-  * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
-  * @dev: pointer to device handle
-+ * @sht: scsi_host_template to use when registering the host
-  * @hba_handle: driver private handle
-  * Returns 0 on success, non-zero value on failure
-  */
--int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
-+int ufshcd_alloc_host(struct device *dev, struct scsi_host_template *sht,
-+		      struct ufs_hba **hba_handle)
- {
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
-@@ -5404,8 +5416,7 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
- 		goto out_error;
- 	}
- 
--	host = scsi_host_alloc(&ufshcd_driver_template,
--				sizeof(struct ufs_hba));
-+	host = scsi_host_alloc(sht, sizeof(struct ufs_hba));
- 	if (!host) {
- 		dev_err(dev, "scsi_host_alloc failed\n");
- 		err = -ENOMEM;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c40a0e7..cad15b0 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -575,7 +575,10 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
- 	ufshcd_writel(hba, tmp, reg);
- }
- 
--int ufshcd_alloc_host(struct device *, struct ufs_hba **);
-+void ufshcd_host_template_init(struct scsi_host_template *sht, const char *name,
-+			       struct module *owner);
-+int ufshcd_alloc_host(struct device *, struct scsi_host_template *,
-+		      struct ufs_hba **);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
- 
--- 
-1.9.1
 
+--=20
+Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+              GPG KeyID: 0E572FDD
+
+
+
+--XX3oMiitksdatU5V6JsjBJTspLFTBuPsH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBCAAGBQJVvRXAAAoJELgmozMOVy/deRYP/ieYb3QRep0P1tjw+/jqMCLe
+ueu6VI6C4Rp6dAYehCm/L0hs2T5FkbCikRuSPej0SstgPmGGzYBccy/vCQJPWou2
+28Wl/zgHnR5NR3bWgtncQsODcJXB98OxIRcqgwpEc/S8cwiKlM6P0mzxLgQ+7tX1
+ahaa2alTDSRfg9OQNvq6IsvOzgIZq/ROm20UohLQ4ZsQwYOxlj45mJWLhBD3+nu1
+3PxR5dizTQSuVBnKsdaaJdDmv5/lnkmhlso5NUEo22uyTnWCd3fvDnrwo3toaX77
+XejF8lwd9uoAM2yTyeIXBIe+jq94lvRW6VgtEuIUsQI/lqRS1U4WAVtumpD12PsU
+McWpzVAepkqGsoekKTtb/xnpo8FQ2YgtSCMkw/A/h6FE2RonrgN9CIozBeueoVOQ
+b6WOWpOvHP+vfUTlFVNMNkR8qZxgHzNRWDYyLeS5uunW4p2hk4n/Z97Vf9FJQkyo
+L8D72oxXbBAPSLHYqUmoNgSsQ98TDsOA5PxJCopnkzJE4ex8gam3vfFLmYrp20Dw
+/cgctA5pWkUuq3D+TEllogysT3GM58+U5GXdPaMqoNXpm6D3O/RIFMOf+0B4/thD
+FcFHZv4RmpD3ErTx/TsW5GkNXLoCn7DMar9Mv2RCzVLy+YxmGVjgUGLdxARmndh/
+rzbszn7BTuqQxKpKDNc1
+=nYze
+-----END PGP SIGNATURE-----
+
+--XX3oMiitksdatU5V6JsjBJTspLFTBuPsH--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
