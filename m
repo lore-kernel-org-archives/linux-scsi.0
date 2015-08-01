@@ -1,43 +1,53 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 0/6] scsi: ufs: fix several issues caused by driver reloading
-Date: Sun,  2 Aug 2015 02:19:14 +0900
-Message-ID: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v2 2/6] scsi: ufs: fix unbalanced power.usage_count after reloading driver
+Date: Sun,  2 Aug 2015 02:19:16 +0900
+Message-ID: <1438449560-4106-3-git-send-email-akinobu.mita@gmail.com>
+References: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:33639 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbbHARTi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2015 13:19:38 -0400
-Received: by pdbnt7 with SMTP id nt7so56628125pdb.0
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Aug 2015 10:19:37 -0700 (PDT)
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34193 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbbHARTr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2015 13:19:47 -0400
+Received: by pacan13 with SMTP id an13so60204284pac.1
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Aug 2015 10:19:46 -0700 (PDT)
+In-Reply-To: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Maya Erez <merez@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-This patch set addresses several issues caused by driver reloading in
-ufs driver.  The first version of this series was sent on March 28.
-This version gained three more fixes.
+On driver removal, pm_runtime_get_sync() is called, but
+pm_runtime_put_*() is missed.  So once the driver is reloaded, the
+device's power.usage_count is unbalanced and the idle callback for the
+device will never be called.
 
-* Changes from v1
-- Call pm_runtime_put_noidle() where idle callback shouldn't be called
-- Prevent IRQ handler accessing already freed hostdata
-- Fix unloading module while runtime suspended
-- Fix module reference for scsi host
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>
+Cc: Sahitya Tummala <stummala@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Akinobu Mita (6):
-  scsi: ufs: avoid using hostdata after scsi_host_put()
-  scsi: ufs: fix unbalanced power.usage_count after reloading driver
-  scsi: ufs: fix unbalanced power.disable_depth after reloading driver
-  scsi: ufs: prevent IRQ handler accessing already freed hostdata
-  scsi: ufs: fix unloading module while runtime suspended
-  scsi: ufs: fix module reference for scsi host
-
- drivers/scsi/ufs/ufshcd-pci.c    | 19 ++++++++++++--
- drivers/scsi/ufs/ufshcd-pltfrm.c | 24 ++++++++++++++++--
- drivers/scsi/ufs/ufshcd.c        | 54 +++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h        |  5 +++-
- 4 files changed, 72 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 7db9564..9beac71 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -368,6 +368,7 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+ 
+ 	pm_runtime_get_sync(&(pdev)->dev);
+ 	ufshcd_remove(hba);
++	pm_runtime_put_noidle(&pdev->dev);
+ 	return 0;
+ }
+ 
 -- 
 1.9.1
 
