@@ -1,65 +1,77 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: blk-mq vs kmemleak
-Date: Fri, 31 Jul 2015 17:37:02 -0700
-Message-ID: <55BC14AE.3090200@sandisk.com>
-References: <20150703161137.GA10438@codemonkey.org.uk>
- <5596C080.4050009@sandisk.com>
- <20150707103323.GA13228@e104818-lin.cambridge.arm.com>
- <559BDB49.70209@sandisk.com> <20150708081740.GA3374@infradead.org>
+From: jiang.biao2@zte.com.cn
+Subject: [Patch] qla2xxx: shoud ensure no *io done* after qla2xxx_eh_abort returning
+ SUCCESS to avoid race between *io timeout* and *io done*.
+Date: Sat, 1 Aug 2015 12:17:17 +0800
+Message-ID: <OF4D71CDEF.67EA2227-ON48257E94.00172CC0-48257E94.001795EA@zte.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0087.outbound.protection.outlook.com ([157.56.111.87]:49812
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mx7.zte.com.cn ([202.103.147.169]:56630 "EHLO zte.com.cn"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751891AbbHAAhH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Jul 2015 20:37:07 -0400
-In-Reply-To: <20150708081740.GA3374@infradead.org>
+	id S1750729AbbHAERl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Aug 2015 00:17:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, Dave Jones <davej@codemonkey.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
+Cc: tan.hu@zte.com.cn, cai.qu@zte.com.cn
 
-On 07/08/2015 01:17 AM, Christoph Hellwig wrote:
-> On Tue, Jul 07, 2015 at 06:59:37AM -0700, Bart Van Assche wrote:
->> Please note that my test was run with CONFIG_SLUB_DEBUG=y which causes a red
->> zone to be allocated before and after each block of allocated memory. Could
->> that explain the kmalloc-96 objects ?
->
-> 96 is almost guaranteed to be the sense buffer allocated in
-> scsi_init_request and freed in scsi_exit_request.
-
-Hello Catalin and Christoph,
-
-kmemleak still reports large numbers of unreferenced objects for the 
-scsi-mq code with the v4.2-rc4 kernel even with the recently posted 
-scsi-mq leak fix applied on top of v4.2-rc4. Here is an example of one 
-such report:
-
-unreferenced object 0xffff88045e05dc28 (size 96):
-   comm "srp_daemon", pid 8461, jiffies 4294973034 (age 742.350s)
-   hex dump (first 32 bytes):
-     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-   backtrace:
-     [<ffffffff814f2ede>] kmemleak_alloc+0x4e/0xb0
-     [<ffffffff811b0678>] kmem_cache_alloc_trace+0xc8/0x2d0
-     [<ffffffffa006cc37>] scsi_init_request+0x27/0x40 [scsi_mod]
-     [<ffffffff81278b91>] blk_mq_init_rq_map+0x1d1/0x260
-     [<ffffffff81278cc4>] blk_mq_alloc_tag_set+0xa4/0x1f0
-     [<ffffffffa006fb0d>] scsi_mq_setup_tags+0xcd/0xd0 [scsi_mod]
-     [<ffffffffa0066464>] scsi_add_host_with_dma+0x74/0x2e0 [scsi_mod]
-     [<ffffffffa0478e12>] srp_create_target+0xe12/0x1320 [ib_srp]
-     [<ffffffff8138a728>] dev_attr_store+0x18/0x30
-     [<ffffffff812371f8>] sysfs_kf_write+0x48/0x60
-     [<ffffffff812367f4>] kernfs_fop_write+0x144/0x190
-     [<ffffffff811bdaf8>] __vfs_write+0x28/0xe0
-     [<ffffffff811be1a9>] vfs_write+0xa9/0x190
-     [<ffffffff811bef09>] SyS_write+0x49/0xa0
-     [<ffffffff815022f2>] entry_SYSCALL_64_fastpath+0x16/0x7a
-     [<ffffffffffffffff>] 0xffffffffffffffff
-
-Thanks,
-
-Bart.
+cWxhMnh4eDogc2hvdWQgZW5zdXJlIG5vICppbyBkb25lKiBhZnRlciBxbGEyeHh4X2VoX2Fib3J0
+IHJldHVybmluZw0KU1VDQ0VTUyB0byBhdm9pZCByYWNlIGJldHdlZW4gKmlvIHRpbWVvdXQqIGFu
+ZCAqaW8gZG9uZSouDQoNCkxMREQgZHJpdmVyIHNob3VsZCBlbnN1cmUgdGhhdCB0aGVyZSBpcyBu
+byAqaW8gZG9uZSogYWZ0ZXIgZWhfYWJvcnQNCigqcWxhMnh4eF9laF9hYm9ydCopIHJldHVybmlu
+ZyBTVUNDRVNTIHRvIGF2b2lkIHRoZSByYWNlIGJldHdlZW4NCippbyB0aW1lb3V0KiBhbmQgKmlv
+IGRvbmUqLiBCdXQgcWxhMnh4eCBkcml2ZXIgY2FuIG5vdCBndWFyYW50ZWUgdGhhdC4NCg0KSWYg
+KmlvIGRvbmUqIG9jY3VycyB3aGVuIHFsYTJ4eHhfZWhfYWJvcnQgaXMgaW4gcHJvY2VzcywgaXQg
+bWF5DQpyZXR1cm4gU1VDQ0VTUyB3aXRob3V0IGFjdHVhbGx5IGFib3J0aW5nIHRoZSBjbWQuIElu
+IHRoYXQgY2FzZSwgdGhlDQpyYWNlIGJldHdlZW4gKmlvIHRpbWVvdXQqIGFuZCAqaW8gZG9uZSog
+YXBwZWFycy4gQWx0aG91Z2ggdGhlcmUgaXMNClJFUV9BVE9NX0NPTVBMRVRFIGZsYWcgdHJ5aW5n
+IHRvIGF2b2lkIHRoZSByYWNlLCB0aGVyZSBpcyBhbHNvIHJhY2UNCnBvc3NpYmlsaXR5IHRoYXQg
+bWF5IHJlc3VsdCBpbiBjcmFzaC4NCg0KVGhlIGZvbGxvd2luZyBpcyBvbmUgb2YgdGhlIHJhY2Ug
+Y2FzZXMsDQogICAgICAgICBDUFUgMSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgQ1BVMg0K
+c2NzaV90cnlfdG9fYWJvcnRfY21kKCktPg0KICAgcWxhMnh4eF9laF9hYm9ydCgpDQogICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICppbyBkb25lKi0+cWxhMngwMF9zcF9jb21wbCgp
+LT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcWxhMngwMF9zcF9mcmVl
+X2RtYSgpDQogICAgICByZXR1cm4gU1VDQ0VTUy0+DQogICAqcmV0cnkqLT5zY3NpX3F1ZXVlX2lu
+c2VydCgpLT4NCiAgICAgIGJsa19jbGVhcl9ycV9jb21wbGV0ZSgpDQogICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIHNjc2lfZG9uZSgpLT4NCiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgYmxrX2NvbXBsZXRlX3JlcXVlc3QoKQ0KDQpJbiB0aGlzIHJhY2UgY2Fz
+ZSwgYmVjYXVzZSB0aGUgUkVRX0FUT01fQ09NUExFVEUgZmxhZyBoYXMgYmVlbg0KY2xlYXIgaW4g
+YmxrX2NsZWFyX3JxX2NvbXBsZXRlLCB0aGUgKmlvIGRvbmUqIHdpbGwgdHJ5IHRvIGNvbXBsZXRl
+DQp0aGUgSU8gcmVxdWVzdCB0aGF0IGhhcyBhbHJlYWR5IGJlZW4gcmVxdWV1ZWQuIFdoZW4gdGhl
+IHJlcXVldWVkIElPDQpjb21wbGV0ZXMgYWdhaW4sIGFub3RoZXIgKmlvIGRvbmUqIG9mIHRoZSBz
+YW1lIElPIHJlcXVlc3Qgd2lsbCBzdGFydA0KYWdhaW4uIFRoYXQgbWVhbnMgdGhlIHNhbWUgSU8g
+cmVxdWVzdCB3aWxsIGJlIGZpbmlzaGVkIHR3aWNlLCB3aGljaA0Kd2lsbCByZXN1bHQgaW4gZG91
+YmxlIHJlbGVhc2luZyB0aGUgcmVzb3VyY2VzIG9mIHRoZSByZXF1ZXN0LCB0aGVuDQpsZWFkIHRv
+IGNyYXNoLg0KDQpTbyB3aGVuICppbyBkb25lKiBoYXBwZW5zIGR1cmluZyBxbGEyeHh4X2VoX2Fi
+b3J0LCB3ZSBzaG91bGQgd2FpdA0KdGhlcmUgdGlsbCAqaW8gZG9uZSogZmluaXNocywgZW5zdXJp
+bmcgbm8gKmlvIGRvbmUqIGFmdGVyDQpxbGEyeHh4X2VoX2Fib3J0IHJldHVybmluZyBTVUNDRVNT
+LCB3aGljaCBhdm9pZHMgcmFjZSBiZXR3ZWVuIA0KKmlvIHRpbWVvdXQqIGFuZCAqaW8gZG9uZSou
+DQoNClNpZ25lZC1vZmYtYnk6IEppYW5nIEJpYW8gPGppYW5nLmJpYW8yQHp0ZS5jb20uY24+DQpT
+aWduZWQtb2ZmLWJ5OiBUYW4gSHUgPHRhbi5odUB6dGUuY29tLmNuPg0KUmV2aWV3ZWQtYnk6IENh
+aSBRdSA8Y2FpLnF1QHp0ZS5jb20uY24+DQoNCmRpZmYgLXVwck4gc2NzaS9xbGFfb3MuYyBzY3Np
+X25ldy9xbGFfb3MuYw0KLS0tIHNjc2kvcWxhX29zLmMgICAgICAgMjAxNS0wNy0zMSAxOTozOTow
+Ni4wMDAwMDAwMDAgKzA4MDANCisrKyBzY3NpX25ldy9xbGFfb3MuYyAgIDIwMTUtMDctMzEgMTk6
+NDY6MjAuMDAwMDAwMDAwICswODAwDQpAQCAtOTM5LDggKzkzOSwxNSBAQCBxbGEyeHh4X2VoX2Fi
+b3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCiAgICAgICAgaW50IHJ2YWwsIHdhaXQgPSAwOw0K
+ICAgICAgICBzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhID0gdmhhLT5odzsNCg0KLSAgICAgICBpZiAo
+IUNNRF9TUChjbWQpKQ0KKyAgICAgICBpZiAoIUNNRF9TUChjbWQpKSB7DQorICAgICAgICAgICAg
+ICAgLyoNCisgICAgICAgICAgICAgICAgKiBXYWl0IHVudGlsIGlvIGRvbmUgZmluaXNocyB0byBh
+dm9pZCByYWNlIGJldHdlZW4gDQorICAgICAgICAgICAgICAgICogaW8gdGltZW91dCBhbmQgaW8g
+ZG9uZS4NCisgICAgICAgICAgICAgICAgKi8NCisgICAgICAgICAgICAgICBzcGluX2xvY2tfaXJx
+c2F2ZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCisgICAgICAgICAgICAgICBzcGluX3Vu
+bG9ja19pcnFyZXN0b3JlKCZoYS0+aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KICAgICAgICAgICAg
+ICAgIHJldHVybiBTVUNDRVNTOw0KKyAgICAgICB9DQoNCiAgICAgICAgcmV0ID0gZmNfYmxvY2tf
+c2NzaV9laChjbWQpOw0KICAgICAgICBpZiAocmV0ICE9IDApDQpAQCAtOTk2LDggKzEwMDMsMTUg
+QEAgcWxhMnh4eF9laF9hYm9ydChzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQpDQogICAgICAgIHNwaW5f
+dW5sb2NrX2lycXJlc3RvcmUoJmhhLT5oYXJkd2FyZV9sb2NrLCBmbGFncyk7DQoNCiAgICAgICAg
+LyogRGlkIHRoZSBjb21tYW5kIHJldHVybiBkdXJpbmcgbWFpbGJveCBleGVjdXRpb24/ICovDQot
+ICAgICAgIGlmIChyZXQgPT0gRkFJTEVEICYmICFDTURfU1AoY21kKSkNCisgICAgICAgaWYgKHJl
+dCA9PSBGQUlMRUQgJiYgIUNNRF9TUChjbWQpKSB7DQorICAgICAgICAgICAgICAgLyoNCisgICAg
+ICAgICAgICAgICAgKiBXYWl0IHVudGlsIGlvIGRvbmUgZmluaXNocyB0byBhdm9pZCByYWNlIGJl
+dHdlZW4gDQorICAgICAgICAgICAgICAgICogaW8gdGltZW91dCBhbmQgaW8gZG9uZS4NCisgICAg
+ICAgICAgICAgICAgKi8NCisgICAgICAgICAgICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmaGEtPmhh
+cmR3YXJlX2xvY2ssIGZsYWdzKTsNCisgICAgICAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0
+b3JlKCZoYS0+aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KICAgICAgICAgICAgICAgIHJldCA9IFNV
+Q0NFU1M7DQorICAgICAgIH0NCg0KICAgICAgICAvKiBXYWl0IGZvciB0aGUgY29tbWFuZCB0byBi
+ZSByZXR1cm5lZC4gKi8NCiAgICAgICAgaWYgKHdhaXQpIHsNCg==
