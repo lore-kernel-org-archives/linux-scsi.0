@@ -1,41 +1,43 @@
-From: jiang.biao2@zte.com.cn
-Subject: [Patch] scsi_ioctl: support persistent reserve commands through ioctl for
- non-root user.
-Date: Sat, 1 Aug 2015 17:51:38 +0800
-Message-ID: <OF31114848.5C193F0C-ON48257E94.00359001-48257E94.00363255@zte.com.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 0/6] scsi: ufs: fix several issues caused by driver reloading
+Date: Sun,  2 Aug 2015 02:19:14 +0900
+Message-ID: <1438449560-4106-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5.zte.com.cn ([63.217.80.70]:41846 "EHLO mx5.zte.com.cn"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751171AbbHAJwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Aug 2015 05:52:06 -0400
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:33639 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbbHARTi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2015 13:19:38 -0400
+Received: by pdbnt7 with SMTP id nt7so56628125pdb.0
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Aug 2015 10:19:37 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, JBottomley@odin.com
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>
 
-c2NzaV9pb2N0bDogc3VwcG9ydCBwZXJzaXN0ZW50IHJlc2VydmUgY29tbWFuZHMgdGhyb3VnaCBp
-b2N0bCBmb3INCm5vbi1yb290IHVzZXIuDQoNClNjc2kgcGVyc2lzdGVudCByZXNlcnZlIGNvbW1h
-bmRzIG5lZWQgdG8gYmUgdXNlZCBmb3Igbm9uLXJvb3QgdXNlciBpbg0KbWFueSBzY2VuYXJpb3Mu
-DQpFUEVSTSBlcnJvciB3aWxsIGJlIHJldHVybmVkIGJ5IHNnX2lvKCkgd2hlbiBQRVJTSVNURU5U
-X1JFU0VSVkVfT1VUDQpvciBQRVJTSVNURU5UX1JFU0VSVkVfSU4gY29tbWFuZCBpcyBzZW50IHRo
-cm91Z2ggaW9jdGwoKSBmb3INCm5vbi1yb290IHVzZXIuDQpBZGQgUEVSU0lTVEVOVF9SRVNFUlZF
-X09VVCBhbmQgUEVSU0lTVEVOVF9SRVNFUlZFX0lOIGludG8NCmJsa19kZWZhdWx0X2NtZF9maWx0
-ZXIgaW4gYmxrX3NldF9jbWRfZmlsdGVyX2RlZmF1bHRzKCkgdG8gc3VwcG9ydCANCnBlcnNpc3Rl
-bnQgcmVzZXJ2ZSBjb21tYW5kcyBmb3Igbm9uLXJvb3QgdXNlci4NCg0KU2lnbmVkLW9mZi1ieTog
-SmlhbmcgQmlhbyA8amlhbmcuYmlhbzJAenRlLmNvbS5jbj4NClNpZ25lZC1vZmYtYnk6IExpIFBp
-bmcgPGxpLnBpbmcyODhAenRlLmNvbS5jbj4NClJldmlld2VkLWJ5OiBMaXUgSmlhbmp1biA8bGl1
-LmppYW5qdW4zQHp0ZS5jb20uY24+DQoNCmRpZmYgLXVycE4gYmxvY2svc2NzaV9pb2N0bC5jIGJs
-b2NrX25ldy9zY3NpX2lvY3RsLmMNCi0tLSBibG9jay9zY3NpX2lvY3RsLmMgIDIwMTUtMDgtMDEg
-MTc6MDc6NDcuMDAwMDAwMDAwICswODAwDQorKysgYmxvY2tfbmV3L3Njc2lfaW9jdGwuYyAgICAg
-IDIwMTUtMDgtMDEgMTc6MDk6NTYuMDAwMDAwMDAwICswODAwDQpAQCAtMjAyLDYgKzIwMiw5IEBA
-IHN0YXRpYyB2b2lkIGJsa19zZXRfY21kX2ZpbHRlcl9kZWZhdWx0cygNCiAgICAgICAgX19zZXRf
-Yml0KEdQQ01EX0xPQURfVU5MT0FELCBmaWx0ZXItPndyaXRlX29rKTsNCiAgICAgICAgX19zZXRf
-Yml0KEdQQ01EX1NFVF9TVFJFQU1JTkcsIGZpbHRlci0+d3JpdGVfb2spOw0KICAgICAgICBfX3Nl
-dF9iaXQoR1BDTURfU0VUX1JFQURfQUhFQUQsIGZpbHRlci0+d3JpdGVfb2spOw0KKyAgICAgICAv
-KiBQZXJzaXN0ZW50IHJlc2VydmUgY29tbWFuZCovDQorICAgICAgIF9fc2V0X2JpdChQRVJTSVNU
-RU5UX1JFU0VSVkVfSU4sIGZpbHRlci0+cmVhZF9vayk7DQorICAgICAgIF9fc2V0X2JpdChQRVJT
-SVNURU5UX1JFU0VSVkVfT1VULCBmaWx0ZXItPndyaXRlX29rKTsNCiB9DQoNCiBpbnQgYmxrX3Zl
-cmlmeV9jb21tYW5kKHVuc2lnbmVkIGNoYXIgKmNtZCwgZm1vZGVfdCBoYXNfd3JpdGVfcGVybSkN
-Cg==
+This patch set addresses several issues caused by driver reloading in
+ufs driver.  The first version of this series was sent on March 28.
+This version gained three more fixes.
+
+* Changes from v1
+- Call pm_runtime_put_noidle() where idle callback shouldn't be called
+- Prevent IRQ handler accessing already freed hostdata
+- Fix unloading module while runtime suspended
+- Fix module reference for scsi host
+
+Akinobu Mita (6):
+  scsi: ufs: avoid using hostdata after scsi_host_put()
+  scsi: ufs: fix unbalanced power.usage_count after reloading driver
+  scsi: ufs: fix unbalanced power.disable_depth after reloading driver
+  scsi: ufs: prevent IRQ handler accessing already freed hostdata
+  scsi: ufs: fix unloading module while runtime suspended
+  scsi: ufs: fix module reference for scsi host
+
+ drivers/scsi/ufs/ufshcd-pci.c    | 19 ++++++++++++--
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 24 ++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.c        | 54 +++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h        |  5 +++-
+ 4 files changed, 72 insertions(+), 30 deletions(-)
+
+-- 
+1.9.1
+
