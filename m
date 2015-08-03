@@ -1,43 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
-Date: Mon, 3 Aug 2015 11:18:26 -0400
-Message-ID: <20150803151826.GG32599@mtj.duckdns.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/6] ZAC host-aware device support
+Date: Mon, 03 Aug 2015 08:31:42 -0700
+Message-ID: <1438615902.2173.14.camel@HansenPartnership.com>
 References: <1438347728-106434-1-git-send-email-hare@suse.de>
- <1438347728-106434-2-git-send-email-hare@suse.de>
- <20150802154415.GA31100@mtj.duckdns.org>
- <55BF18ED.3000002@suse.de>
- <20150803150428.GE32599@mtj.duckdns.org>
+	 <1438531870.2182.23.camel@HansenPartnership.com> <55BF1749.8090606@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36052 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786AbbHCPSj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 11:18:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20150803150428.GE32599@mtj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <55BF1749.8090606@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Adding a bit.
+On Mon, 2015-08-03 at 09:24 +0200, Hannes Reinecke wrote:
+> On 08/02/2015 06:11 PM, James Bottomley wrote:
+> > On Fri, 2015-07-31 at 15:02 +0200, Hannes Reinecke wrote:
+> >> Hi all,
+> >>
+> >> here is a patchset for adding ZAC host-aware device support to libata.
+> >> Main bits are translations for ZBC IN and ZBC OUT; others are the
+> >> required plumbing like generating the correct VPD pages.
+> >> James, do you require a separate patch for adding ZBC IN and ZBC OUT
+> >> or is it okay to have it queued here?
+> > 
+> > This really belongs in the ZBC patch set, doesn't it? Why isn't it
+> > there.  You can't avoid the dependency.  If it goes with the ZAC patch
+> > set, then the ZBC one depends on ZAC.  If it goes properly with ZBC then
+> > you need an additional patch adding the ATA translations after the ZBC
+> > one.  On the whole, I'd prefer the latter so we always have the required
+> > consumers of the API.
+> > 
+> > In fact, if I read the dependencies correctly, you need the ZBC patches
+> > first, don't you ... otherwise there's nothing to drive host aware ZAC?
+> > 
+> No. These patches just implement a proper SATL for ZAC drives.
+> So in effect they just bring libata support on par with 'real' ZBC
+> drives, allowing things like 'sg_rep_zones' to work properly there.
 
-On Mon, Aug 03, 2015 at 11:04:28AM -0400, Tejun Heo wrote:
-> Ugh... so this is from NCQ autosense thing.  Now ATA devices reports
-> sense data too which trumps AC_ERR_DEV so libata EH decides to retry
-> even when the device indicates unrecoverable error.  Urgh... we
-> shouldn't be taking completely different error handling paths because
-> a device chooses to report error conditions slightly differently.
-> Please map them so that they behave in a consistent manner.  I'm gonna
-> plug autosense for now.
+But that was my point: the Linux SATL exists to support our ULDs on ATA
+devices.  Until that support exists within SCSI, we don't really need
+the SATL to support it.  You can argue it's for SG_IO, but really, if
+you're doing user level control of ZAC devices, you'd use ATA commands.
 
-Also, is there anything substantial we gain from NCQ autosense?  Why
-do we want this in the first place?  ATA error reporting is
-rudimentary but it more or less works and I'm not sure whether we'd
-want to overhaul its basic behaviors at this stage.
+> As such I've considered those patches to be a precursor for ZBC support.
+> 
+> But then, I don't mind how it's being handled.
+> I surely can turn things around, ZBC support first, and ZAC as an
+> add-on to that.
+> Just say the word.
 
-Thanks.
+Well, um, since there's no ATA ULD, there is no real kernel handling of
+ZAC devices, so doesn't that mean we have to at least have the reporting
+done via block and sd before the ATA bits will do anything meaningful?
 
--- 
-tejun
+So to me, this looks very like supporting 512e: agree what parameters
+block exposes and how userspace uses them, then plumb into block, then
+SCSI then ATA (i.e. work down the stack, not up).
+
+James
+
+
