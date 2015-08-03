@@ -1,53 +1,81 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v3] target: Drop iSCSI use of mutex around max_cmd_sn
- increment
-Date: Sun, 02 Aug 2015 23:21:47 -0700
-Message-ID: <1438582907.16598.92.camel@haakon3.risingtidesystems.com>
-References: <1437602898-15229-2-git-send-email-sbaugh@catern.com>
-	 <94D0CD8314A33A4D9D801C0FE68B40295AA03CD1@G9W0745.americas.hpqcorp.net>
-	 <87r3nyg1km.fsf@ponos.purestorage.com>
-	 <87egjyfsmb.fsf@ponos.purestorage.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [TRIVIAL PATCH] block: Correct misuses of 0x%<decimal>
+Date: Mon, 03 Aug 2015 09:20:20 +0200
+Message-ID: <mqd614w6dor.fsf@c203.arch.suse.de>
+References: <1438547113.29569.5.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <87egjyfsmb.fsf@ponos.purestorage.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Spencer Baugh <spencer.baugh@purestorage.com>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Spencer Baugh <sbaugh@catern.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Alexei Potashnik <alexei@purestorage.com>, Andy Grover <agrover@redhat.com>, Christophe Vu-Brugier <cvubrugier@fastmail.fm>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, James Bottomley <JBottomley@Odin.com>, Evgenii Lepikhin <johnlepikhin@gmail.com>, Hannes Reinecke <hare@suse.de>, Al Viro <viro@zeniv.linux.org.uk>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Joern Engel <joern@purestorage.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1438547113.29569.5.camel@perches.com> (Joe Perches's message of
+	"Sun, 02 Aug 2015 13:25:13 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Don Brace <don.brace@pmcs.com>, linux-kernel@vger.kernel.org, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-07-23 at 14:53 -0700, Spencer Baugh wrote:
-> From: Roland Dreier <roland@purestorage.com>
-> 
-> In a performance profile, taking a mutex in iscsit_increment_maxcmdsn()
-> shows up very high.  However taking a mutex around "sess->max_cmd_sn += 1"
-> seems pretty silly: we're not serializing against other contexts in
-> any useful way.
-> 
-> I did a quick audit and there don't appear to be any other places that
-> use max_cmd_sn within the mutex more than once, so this lock can't be
-> providing any useful serialization.
-> 
-> v2: Get correct values for logging
-> v3: Fix whitespace damage
-> 
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> Signed-off-by: Spencer Baugh <sbaugh@catern.com>
+Joe Perches <joe@perches.com> writes:
+
+> Correct misuse of 0x%d in logging messages.
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
 > ---
->  drivers/target/iscsi/iscsi_target.c          | 18 +++++++++---------
->  drivers/target/iscsi/iscsi_target_configfs.c |  6 ++++--
->  drivers/target/iscsi/iscsi_target_device.c   |  7 ++-----
->  drivers/target/iscsi/iscsi_target_login.c    |  2 +-
->  drivers/target/iscsi/iscsi_target_nego.c     |  9 +++------
->  drivers/target/iscsi/iscsi_target_tmr.c      |  2 +-
->  drivers/target/iscsi/iscsi_target_util.c     |  7 ++++---
->  include/target/iscsi/iscsi_target_core.h     |  2 +-
->  8 files changed, 25 insertions(+), 28 deletions(-)
-> 
+>  drivers/block/DAC960.c | 4 ++--
+>  drivers/block/cciss.c  | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
+> index 811e11c..d9b32f2 100644
+> --- a/drivers/block/DAC960.c
+> +++ b/drivers/block/DAC960.c
+> @@ -2954,7 +2954,7 @@ DAC960_DetectController(struct pci_dev *PCI_Dev=
+ice,
+>         case DAC960_PD_Controller:
+>           if (!request_region(Controller->IO_Address, 0x80,
+>                               Controller->FullModelName)) {
+> -               DAC960_Error("IO port 0x%d busy for Controller at\n",
+> +               DAC960_Error("IO port 0x%x busy for Controller at\n",
+>                              Controller, Controller->IO_Address);
+>                 goto Failure;
+>           }
+> @@ -2990,7 +2990,7 @@ DAC960_DetectController(struct pci_dev *PCI_Dev=
+ice,
+>         case DAC960_P_Controller:
+>           if (!request_region(Controller->IO_Address, 0x80,
+>                               Controller->FullModelName)){
+> -               DAC960_Error("IO port 0x%d busy for Controller at\n",
+> +               DAC960_Error("IO port 0x%x busy for Controller at\n",
+>                              Controller, Controller->IO_Address);
+>                 goto Failure;
+>           }
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 0422c47..2758982 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -3854,7 +3854,7 @@ static void print_cfg_table(ctlr_info_t *h)
+>                readl(&(tb->HostWrite.CoalIntDelay)));
+>         dev_dbg(&h->pdev->dev, "   Coalesce Interrupt Count =3D 0x%x\=
+n",
+>                readl(&(tb->HostWrite.CoalIntCount)));
+> -       dev_dbg(&h->pdev->dev, "   Max outstanding commands =3D 0x%d\=
+n",
+> +       dev_dbg(&h->pdev->dev, "   Max outstanding commands =3D 0x%x\=
+n",
+>                readl(&(tb->CmdsOutMax)));
+>         dev_dbg(&h->pdev->dev, "   Bus Types =3D 0x%x\n",
+>                 readl(&(tb->BusTypes)));
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-A nice optimization for iscsi-target + ib_isert on this patch.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Applied to target-pending/for-next. 
-
-Thanks Roland & Co.
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
