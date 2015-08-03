@@ -1,84 +1,47 @@
-From: yalin wang <yalin.wang2010@gmail.com>
-Subject: Re: [TRIVIAL PATCH] block: Correct misuses of 0x%<decimal>
-Date: Mon, 3 Aug 2015 15:25:38 +0800
-Message-ID: <9547AF94-2168-4987-AD89-B7F111084CC2@gmail.com>
-References: <1438547113.29569.5.camel@perches.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
+Date: Mon, 03 Aug 2015 09:31:57 +0200
+Message-ID: <55BF18ED.3000002@suse.de>
+References: <1438347728-106434-1-git-send-email-hare@suse.de> <1438347728-106434-2-git-send-email-hare@suse.de> <20150802154415.GA31100@mtj.duckdns.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33339 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770AbbHCHZp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 03:25:45 -0400
-In-Reply-To: <1438547113.29569.5.camel@perches.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20150802154415.GA31100@mtj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Don Brace <don.brace@pmcs.com>, linux-kernel@vger.kernel.org, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-
-> On Aug 3, 2015, at 04:25, Joe Perches <joe@perches.com> wrote:
+On 08/02/2015 05:44 PM, Tejun Heo wrote:
+> Hello,
 >=20
-> Correct misuse of 0x%d in logging messages.
+> On Fri, Jul 31, 2015 at 03:02:03PM +0200, Hannes Reinecke wrote:
+>> If a failed command has a valid autosense there is no need to
+>> retry it on the ATA level; at best we're incurring the same
+>> error again. So rather not retry it here, but leave it to
+>> the SCSI layer to decide if a retry is in order.
 >=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-> drivers/block/DAC960.c | 4 ++--
-> drivers/block/cciss.c  | 2 +-
-> 2 files changed, 3 insertions(+), 3 deletions(-)
+> Hmmm... I don't know.  So, we change how we handle errors completely
+> depending on how the device reports it?  Doesn't seem like a
+> particularly good idea to me.
 >=20
-> diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
-> index 811e11c..d9b32f2 100644
-> --- a/drivers/block/DAC960.c
-> +++ b/drivers/block/DAC960.c
-> @@ -2954,7 +2954,7 @@ DAC960_DetectController(struct pci_dev *PCI_Dev=
-ice,
->        case DAC960_PD_Controller:
->          if (!request_region(Controller->IO_Address, 0x80,
->                              Controller->FullModelName)) {
-> -               DAC960_Error("IO port 0x%d busy for Controller at\n",
-> +               DAC960_Error("IO port 0x%x busy for Controller at\n",
->                             Controller, Controller->IO_Address);
->                goto Failure;
->          }
-> @@ -2990,7 +2990,7 @@ DAC960_DetectController(struct pci_dev *PCI_Dev=
-ice,
->        case DAC960_P_Controller:
->          if (!request_region(Controller->IO_Address, 0x80,
->                              Controller->FullModelName)){
-> -               DAC960_Error("IO port 0x%d busy for Controller at\n",
-> +               DAC960_Error("IO port 0x%x busy for Controller at\n",
->                             Controller, Controller->IO_Address);
->                goto Failure;
->          }
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 0422c47..2758982 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -3854,7 +3854,7 @@ static void print_cfg_table(ctlr_info_t *h)
->               readl(&(tb->HostWrite.CoalIntDelay)));
->        dev_dbg(&h->pdev->dev, "   Coalesce Interrupt Count =3D 0x%x\n=
-",
->               readl(&(tb->HostWrite.CoalIntCount)));
-> -       dev_dbg(&h->pdev->dev, "   Max outstanding commands =3D 0x%d\=
-n",
-> +       dev_dbg(&h->pdev->dev, "   Max outstanding commands =3D 0x%x\=
-n",
->               readl(&(tb->CmdsOutMax)));
->        dev_dbg(&h->pdev->dev, "   Bus Types =3D 0x%x\n",
->                readl(&(tb->BusTypes)));
-> =97
-why not use like this : dev_dbg(&h->pdev->dev, "   Max outstanding comm=
-ands =3D %#x\n=94  ?=20
-%#x will add 0x prefix automatically .
+The whole point of the autosense feature is that you do _not_
+have to fall back to the original trial-and-error libata EH,
+but know exactly what the problem is. Plus any retry will be giving
+us (in most cases) exactly the same sense code.
+_And_ the SCSI layer is actually able to understand the sense code,
+allowing him to make a better judgment on what to do with that error.
 
-Thanks
+So any retry in the libata layer will only slow things down,
+leading to the same results eventually.
 
+Cheers,
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
