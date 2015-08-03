@@ -1,34 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: blk-mq vs kmemleak
-Date: Mon, 3 Aug 2015 06:33:27 -0700
-Message-ID: <20150803133327.GA3390@infradead.org>
-References: <20150703161137.GA10438@codemonkey.org.uk>
- <5596C080.4050009@sandisk.com>
- <20150707103323.GA13228@e104818-lin.cambridge.arm.com>
- <559BDB49.70209@sandisk.com>
- <20150708081740.GA3374@infradead.org>
- <55BC14AE.3090200@sandisk.com>
- <20150803104309.GB4033@e104818-lin.cambridge.arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36192 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbbHCNdc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 09:33:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20150803104309.GB4033@e104818-lin.cambridge.arm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] [SCSI] bfa: fix missing { } braces
+Date: Mon,  3 Aug 2015 15:35:27 +0100
+Message-ID: <1438612527-3707-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Dave Jones <davej@codemonkey.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 03, 2015 at 11:43:09AM +0100, Catalin Marinas wrote:
-> The simplest would be to add a kmemleak_not_leak() annotation in
-> scsi_init_request(), though you would hide real leaks (if any).
-> 
-> A better way could be to inform kmemleak of these pages, something like
-> below (compile-tested only):
+From: Colin Ian King <colin.king@canonical.com>
 
-Both versions sound reasonable to me, but I'd prefer the second one if
-it works.
+Static analysis by smatch indicated that there was a curly
+braces issue:
+
+drivers/scsi/bfa/bfa_ioc.c:3668 bfa_cb_sfp_state_query()
+        warn: curly braces intended?
+drivers/scsi/bfa/bfa_ioc.c:3671 bfa_cb_sfp_state_query()
+        warn: inconsistent indenting
+drivers/scsi/bfa/bfa_ioc.c:3676 bfa_cb_sfp_state_query()
+        warn: curly braces intended?
+
+The fix matches the intended logic based on the original indentation
+layout of the code.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/bfa/bfa_ioc.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 315d6d6..59c3492 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -3662,7 +3662,7 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+ 	bfa_trc(sfp, sfp->portspeed);
+ 	if (sfp->media) {
+ 		bfa_sfp_media_get(sfp);
+-		if (sfp->state_query_cbfn)
++		if (sfp->state_query_cbfn) {
+ 			sfp->state_query_cbfn(sfp->state_query_cbarg,
+ 					sfp->status);
+ 			sfp->media = NULL;
+@@ -3670,14 +3670,16 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+ 
+ 		if (sfp->portspeed) {
+ 			sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+-			if (sfp->state_query_cbfn)
++			if (sfp->state_query_cbfn) {
+ 				sfp->state_query_cbfn(sfp->state_query_cbarg,
+ 						sfp->status);
+ 				sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
++			}
+ 		}
+ 
+ 		sfp->state_query_lock = 0;
+ 		sfp->state_query_cbfn = NULL;
++	}
+ }
+ 
+ /*
+-- 
+2.5.0
