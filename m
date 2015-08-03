@@ -1,154 +1,69 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 2/2] SCSI: fix bug in scsi_dev_info_list matching
-Date: Mon, 3 Aug 2015 11:57:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1508031144150.1667-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
+Date: Mon, 03 Aug 2015 09:44:06 -0700
+Message-ID: <1438620246.2173.20.camel@HansenPartnership.com>
+References: <1438347728-106434-1-git-send-email-hare@suse.de>
+	 <1438347728-106434-2-git-send-email-hare@suse.de>
+	 <20150802154415.GA31100@mtj.duckdns.org> <55BF18ED.3000002@suse.de>
+	 <20150803150428.GE32599@mtj.duckdns.org>
+	 <20150803151826.GG32599@mtj.duckdns.org>
+	 <1438616563.2173.16.camel@HansenPartnership.com>
+	 <20150803155513.GI32599@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43524 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753319AbbHCP5a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 11:57:30 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49862 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753195AbbHCQoI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 12:44:08 -0400
+In-Reply-To: <20150803155513.GI32599@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Giulio Bernardi <ugilio@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The "compatible" matching algorithm used for looking up old-style
-blacklist entries in a scsi_dev_info_list is buggy.  The core of the
-algorithm looks like this:
+On Mon, 2015-08-03 at 11:55 -0400, Tejun Heo wrote:
+> Hello, James.
+> 
+> On Mon, Aug 03, 2015 at 08:42:43AM -0700, James Bottomley wrote:
+> > I'd think it would be the same reason as all modern transports: it's
+> > faster and allows processing of sense data in-band.  Under the old
+> > regime, the device is effectively frozen until you collect the data.
+> > Under autosense, the data is collected as part of the in-band command
+> > processing, so it doesn't stall the device.
+> > 
+> > Modern drives (and protocols) are moving towards being somewhat more
+> > chatty with sense data.  It doesn't just signal an error, mostly it's
+> > just reporting about drive characteristics or other advisory stuff.
+> > This means that if you handle it the old way, you'll get more drive
+> > stalls and a corresponding reduction in throughput.
+> 
+> The problem is not the "auto" part but the "sense" part, I guess.  ATA
+> devices (the harddisks) never reported sense data and instead had a
+> more rudimentary error bits and for newer devices NCQ log pages, so
+> libata EH decodes those error information and takes appropriate
+> actions for the indicated error condition.
+> 
+> Hannes's patchset makes ATA devices mostly bypass libata EH when sense
+> data is present.  For, say, unrecoverable read errors, it'd be
+> possible to make this scheme work (broken currently tho); however,
+> libata and SCSI aren't that closely tied and there currently is no way
+> for SCSI to tell libata that, e.g., link error was detected on the
+> device side, so libata will fail to take link recovery actions on
+> those cases.
+> 
+> This *can* be made to work in a couple different ways but what's
+> implemented now is pretty broken and making it work properly in any
+> other way than integrating sense decoding into libata EH would require
+> major restructuring of the whole thing which I'm not sure would be
+> worthwhile at this point.
 
-		if (memcmp(devinfo->vendor, vendor,
-			    min(max, strlen(devinfo->vendor))))
-			/* not a match */
+I'm not arguing that *this* patch is the best way to do it.  You asked
+*why* autosense and that's what I answered.  I think there's time to
+work out the implementation details to get them to be correct and well
+structured.
 
-where max is the length of the device's vendor string after leading
-spaces have been removed but trailing spaces have not.  Because of the
-min() computation, either entry could be a proper substring of the
-other and the code would still think that they match.
+James
 
-In the case originally reported, the device's vendor and product
-strings were "Inateck " and "                ".  These matched against
-the following entry in the global device list:
-
-	{"", "Scanner", "1.80", BLIST_NOLUN}
-
-because "" is a substring of "Inateck " and "" (the result of removing
-leading spaces from the device's product string) is a substring of
-"Scanner".  The mistaken match prevented the system from scanning and
-finding the device's second Logical Unit.
-
-This patch fixes the problem by making two changes.  First, the code
-for leading-space removal is hoisted out of the loop.  (This means it
-will sometimes run unnecessarily, but since a large percentage of all
-lookups involve the "compatible" entries in global device list, this
-should be an overall improvement.)  Second and more importantly, the
-patch removes trailing spaces and adds a check to verify that the two
-resulting strings are exactly the same length.  This prevents matches
-where one entry is a proper substring of the other.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-by: Giulio Bernardi <ugilio@gmail.com>
-Tested-by: Giulio Bernardi <ugilio@gmail.com>
-
----
-
-
-[as1783]
-
-
- drivers/scsi/scsi_devinfo.c |   69 ++++++++++++++++++++++----------------------
- 1 file changed, 35 insertions(+), 34 deletions(-)
-
-Index: usb-4.2/drivers/scsi/scsi_devinfo.c
-===================================================================
---- usb-4.2.orig/drivers/scsi/scsi_devinfo.c
-+++ usb-4.2/drivers/scsi/scsi_devinfo.c
-@@ -407,51 +407,52 @@ static struct scsi_dev_info_list *scsi_d
- 	struct scsi_dev_info_list *devinfo;
- 	struct scsi_dev_info_list_table *devinfo_table =
- 		scsi_devinfo_lookup_by_key(key);
-+	size_t vmax, mmax;
-+	const char *vskip, *mskip;
- 
- 	if (IS_ERR(devinfo_table))
- 		return (struct scsi_dev_info_list *) devinfo_table;
- 
-+	/* Prepare for "compatible" matches */
-+
-+	/*
-+	 * XXX why skip leading spaces? If an odd INQUIRY
-+	 * value, that should have been part of the
-+	 * scsi_static_device_list[] entry, such as "  FOO"
-+	 * rather than "FOO". Since this code is already
-+	 * here, and we don't know what device it is
-+	 * trying to work with, leave it as-is.
-+	 */
-+	vmax = 8;	/* max length of vendor */
-+	vskip = vendor;
-+	while (vmax > 0 && *vskip == ' ') {
-+		vmax--;
-+		vskip++;
-+	}
-+	/* Also skip trailing spaces */
-+	while (vmax > 0 && vskip[vmax - 1] == ' ')
-+		--vmax;
-+
-+	mmax = 16;	/* max length of model */
-+	mskip = model;
-+	while (mmax > 0 && *mskip == ' ') {
-+		mmax--;
-+		mskip++;
-+	}
-+	while (mmax > 0 && mskip[mmax - 1] == ' ')
-+		--mmax;
-+
- 	list_for_each_entry(devinfo, &devinfo_table->scsi_dev_info_list,
- 			    dev_info_list) {
- 		if (devinfo->compatible) {
- 			/*
- 			 * Behave like the older version of get_device_flags.
- 			 */
--			size_t max;
--			/*
--			 * XXX why skip leading spaces? If an odd INQUIRY
--			 * value, that should have been part of the
--			 * scsi_static_device_list[] entry, such as "  FOO"
--			 * rather than "FOO". Since this code is already
--			 * here, and we don't know what device it is
--			 * trying to work with, leave it as-is.
--			 */
--			max = 8;	/* max length of vendor */
--			while ((max > 0) && *vendor == ' ') {
--				max--;
--				vendor++;
--			}
--			/*
--			 * XXX removing the following strlen() would be
--			 * good, using it means that for a an entry not in
--			 * the list, we scan every byte of every vendor
--			 * listed in scsi_static_device_list[], and never match
--			 * a single one (and still have to compare at
--			 * least the first byte of each vendor).
--			 */
--			if (memcmp(devinfo->vendor, vendor,
--				    min(max, strlen(devinfo->vendor))))
-+			if (memcmp(devinfo->vendor, vskip, vmax) ||
-+					devinfo->vendor[vmax])
- 				continue;
--			/*
--			 * Skip spaces again.
--			 */
--			max = 16;	/* max length of model */
--			while ((max > 0) && *model == ' ') {
--				max--;
--				model++;
--			}
--			if (memcmp(devinfo->model, model,
--				   min(max, strlen(devinfo->model))))
-+			if (memcmp(devinfo->model, mskip, mmax) ||
-+					devinfo->model[mmax])
- 				continue;
- 			return devinfo;
- 		} else {
 
