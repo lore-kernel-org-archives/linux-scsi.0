@@ -1,175 +1,61 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] dm: add support for passing through persistent reservations
-Date: Tue,  4 Aug 2015 09:11:11 +0200
-Message-ID: <1438672271-11309-7-git-send-email-hch@lst.de>
-References: <1438672271-11309-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48129 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbbHDHOY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2015 03:14:24 -0400
-In-Reply-To: <1438672271-11309-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi/be2iscsi: Fix logical-not-parentheses compilation warning
+Date: Tue, 04 Aug 2015 09:42:45 +0200
+Message-ID: <mqdy4hrts7e.fsf@c203.arch.suse.de>
+References: <1438641357-25588-1-git-send-email-barletz@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1438641357-25588-1-git-send-email-barletz@gmail.com> (Tomer
+	Barletz's message of "Mon, 3 Aug 2015 15:35:57 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomer Barletz <barletz@gmail.com>
+Cc: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, dm-devel@redhat.com, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This adds support to pass through persistent reservation requests
-similar to the existing ioctl handling, and with the same limitations,
-e.g. devices may only have a single target attached.
 
-This is mostly intended for multipathing.
+Ok, it has cost me quite some time to figure out what "!length > 0" is
+actually doing, but looks ok to me.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/dm.c | 122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 122 insertions(+)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 8dfc760..3388fa6 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -24,6 +24,7 @@
- #include <linux/ktime.h>
- #include <linux/elevator.h> /* for rq_end_sector() */
- #include <linux/blk-mq.h>
-+#include <linux/pr.h>
- 
- #include <trace/events/block.h>
- 
-@@ -3670,11 +3671,132 @@ void dm_free_md_mempools(struct dm_md_mempools *pools)
- 	kfree(pools);
- }
- 
-+static int dm_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
-+		bool ignore)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	const struct pr_ops *ops;
-+	struct dm_target *tgt;
-+	fmode_t mode;
-+	int srcu_idx, r;
-+
-+	r = dm_get_ioctl_table(md, &tgt, &bdev, &mode, &srcu_idx);
-+	if (r < 0)
-+		return r;
-+
-+	ops = bdev->bd_disk->fops->pr_ops;
-+	if (ops && ops->pr_register)
-+		r = ops->pr_register(bdev, old_key, new_key, ignore);
-+	else
-+		r = -EOPNOTSUPP;
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return r;
-+}
-+
-+static int dm_pr_reserve(struct block_device *bdev, u64 key, enum pr_type type)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	const struct pr_ops *ops;
-+	struct dm_target *tgt;
-+	fmode_t mode;
-+	int srcu_idx, r;
-+
-+	r = dm_get_ioctl_table(md, &tgt, &bdev, &mode, &srcu_idx);
-+	if (r < 0)
-+		return r;
-+
-+	ops = bdev->bd_disk->fops->pr_ops;
-+	if (ops && ops->pr_reserve)
-+		r = ops->pr_reserve(bdev, key, type);
-+	else
-+		r = -EOPNOTSUPP;
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return r;
-+}
-+
-+static int dm_pr_release(struct block_device *bdev, u64 key, enum pr_type type)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	const struct pr_ops *ops;
-+	struct dm_target *tgt;
-+	fmode_t mode;
-+	int srcu_idx, r;
-+
-+	r = dm_get_ioctl_table(md, &tgt, &bdev, &mode, &srcu_idx);
-+	if (r < 0)
-+		return r;
-+
-+	ops = bdev->bd_disk->fops->pr_ops;
-+	if (ops && ops->pr_release)
-+		r = ops->pr_release(bdev, key, type);
-+	else
-+		r = -EOPNOTSUPP;
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return r;
-+}
-+
-+static int dm_pr_preempt(struct block_device *bdev, u64 old_key, u64 new_key,
-+		enum pr_type type, bool abort)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	const struct pr_ops *ops;
-+	struct dm_target *tgt;
-+	fmode_t mode;
-+	int srcu_idx, r;
-+
-+	r = dm_get_ioctl_table(md, &tgt, &bdev, &mode, &srcu_idx);
-+	if (r < 0)
-+		return r;
-+
-+	ops = bdev->bd_disk->fops->pr_ops;
-+	if (ops && ops->pr_preempt)
-+		r = ops->pr_preempt(bdev, old_key, new_key, type, abort);
-+	else
-+		r = -EOPNOTSUPP;
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return r;
-+}
-+
-+static int dm_pr_clear(struct block_device *bdev, u64 key)
-+{
-+	struct mapped_device *md = bdev->bd_disk->private_data;
-+	const struct pr_ops *ops;
-+	struct dm_target *tgt;
-+	fmode_t mode;
-+	int srcu_idx, r;
-+
-+	r = dm_get_ioctl_table(md, &tgt, &bdev, &mode, &srcu_idx);
-+	if (r < 0)
-+		return r;
-+
-+	ops = bdev->bd_disk->fops->pr_ops;
-+	if (ops && ops->pr_clear)
-+		r = ops->pr_clear(bdev, key);
-+	else
-+		r = -EOPNOTSUPP;
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return r;
-+}
-+
-+static const struct pr_ops dm_pr_ops = {
-+	.pr_register	= dm_pr_register,
-+	.pr_reserve	= dm_pr_reserve,
-+	.pr_release	= dm_pr_release,
-+	.pr_preempt	= dm_pr_preempt,
-+	.pr_clear	= dm_pr_clear,
-+};
-+
- static const struct block_device_operations dm_blk_dops = {
- 	.open = dm_blk_open,
- 	.release = dm_blk_close,
- 	.ioctl = dm_blk_ioctl,
- 	.getgeo = dm_blk_getgeo,
-+	.pr_ops = &dm_pr_ops,
- 	.owner = THIS_MODULE
- };
- 
--- 
-1.9.1
+Tomer Barletz <barletz@gmail.com> writes:
 
+> This fixes the following warning seen with GCC v5.1:
+> warning: logical not is only applied to the left hand side of
+> comparison [-Wlogical-not-parentheses].
+>
+> Signed-off-by: Tomer Barletz <barletz@gmail.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/=
+be_main.c
+> index 7a6dbfb..ff8d40e 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+>  {
+>  	WARN_ON(!virtual_address);
+>  	WARN_ON(!physical_address);
+> -	WARN_ON(!length > 0);
+> +	WARN_ON(0 =3D=3D length);
+
+Please write WARN_ON(length =3D=3D 0);
+
+>  	WARN_ON(!sgl);
+> =20
+>  	sgl->va =3D virtual_address;
+
+
+Given the above is swapped:
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
