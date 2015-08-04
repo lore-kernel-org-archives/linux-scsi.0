@@ -1,78 +1,93 @@
-From: yalin wang <yalin.wang2010@gmail.com>
-Subject: Re: [TRIVIAL PATCH] block: Correct misuses of 0x%<decimal>
-Date: Tue, 4 Aug 2015 12:04:53 +0800
-Message-ID: <3A4734B5-19C8-4A67-8298-FF6682AA5972@gmail.com>
-References: <1438547113.29569.5.camel@perches.com> <9547AF94-2168-4987-AD89-B7F111084CC2@gmail.com> <1438589026.30149.15.camel@perches.com> <67B9124A-73E8-4AA1-81E5-18FAC69D3962@gmail.com> <EB2039AE-8999-4D0F-9602-CA5ACF3F66BA@gmail.com> <1438655265.10829.0.camel@perches.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] megaraid_sas: fix missing { } braces
+Date: Tue, 04 Aug 2015 08:47:12 +0200
+Message-ID: <mqdio8vv9cf.fsf@c203.arch.suse.de>
+References: <1438614029-4257-1-git-send-email-colin.king@canonical.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1438655265.10829.0.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Don Brace <don.brace@pmcs.com>, open list <linux-kernel@vger.kernel.org>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:42466 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517AbbHDGrP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2015 02:47:15 -0400
+In-Reply-To: <1438614029-4257-1-git-send-email-colin.king@canonical.com>
+	(Colin King's message of "Mon, 3 Aug 2015 16:00:29 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> On Aug 4, 2015, at 10:27, Joe Perches <joe@perches.com> wrote:
->=20
-> On Tue, 2015-08-04 at 10:19 +0800, yalin wang wrote:
->> Ping ?=20
->>> On Aug 3, 2015, at 16:56, yalin wang <yalin.wang2010@gmail.com> wro=
-te:
->>>=20
->>>=20
->>>> On Aug 3, 2015, at 16:03, Joe Perches <joe@perches.com> wrote:
->>>>=20
->>>> On Mon, 2015-08-03 at 15:25 +0800, yalin wang wrote:
->>>>>> On Aug 3, 2015, at 04:25, Joe Perches <joe@perches.com> wrote:
->>>>>>=20
->>>>>> Correct misuse of 0x%d in logging messages.
->>>>>>=20
->>>> []
->>>>> why not use like this : dev_dbg(&h->pdev->dev, "   Max outstandin=
-g=20
->>>>> commands =3D %#x\n=E2=80=9D  ?=20
->>>>> %#x will add 0x prefix automatically .
->>>>=20
->>>> It's generally a consistency thing.
->>>> A 0 value would be emitted as 0 and not 0x0.
->>>>=20
->>> i try on my ubuntu ,=20
->>>=20
->>> static int __init throtl_init(void)                                =
-                                                                       =
-   =20
->>> {                                                                  =
-             =20
->>>        printk("module init test: %#x %p\n", 0, (void *)0x123);     =
-            =20
->>>         return 0;                                                  =
-                =20
->>>=20
->>> }                                                                  =
-                =20
->>>=20
->>> module_init(throtl_init);=20
->>>=20
->>> #uname -a
->>> Linux ubuntu 3.16.0-38-generic #52~14.04.1-Ubuntu SMP Fri May 8 09:=
-43:57 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
->>>=20
->>> #dmesg
->>> [259356.375586] module init test: 0x0 0000000000000123
->>>=20
->>> it seems don=E2=80=99t need 0x%x for 0, just need %#x for all numbe=
-rs.
->>> there are lots of use like this, i can change them if needed:
->>>=20
->>> # egrep -r  -i '0x%\d*x'  .  | wc -l=20
->>> 11776
->=20
-> I suggest not, it's not a standard usage and the 0
-> may be unexpected.
->=20
-ok, printk for %x  is really not compatible with glibc printf behavior,
-another is %p,  printk print %p as hex but not with 0x prefix, while
-printf print %p as 0x=E2=80=A6. with prefix, is this need change ?
-so we don=E2=80=99t need lots of 0x%p printk .
+Hi Colin,
+
+Colin King <colin.king@canonical.com> writes:
+
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Static analysis by smatch indicated that there was a curly
+> braces issue:
+>
+> drivers/scsi/megaraid/megaraid_sas_base.c:6139
+>   megasas_mgmt_fw_ioctl() warn: curly braces intended?
+>
+> Add braces in the appropriate place so that kbuf_arr[i] gets
+> set to NULL only when we need to.  Also, remove whitespace
+> between kbuff_arr and [].
+
+I don't quite get where you removed that whitespace. Might it be a left
+over from another version of the patch?
+
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi=
+/megaraid/megaraid_sas_base.c
+> index 71b884d..8face78 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -6131,12 +6131,13 @@ megasas_mgmt_fw_ioctl(struct megasas_instance=
+ *instance,
+>  	}
+> =20
+>  	for (i =3D 0; i < ioc->sge_count; i++) {
+> -		if (kbuff_arr[i])
+> +		if (kbuff_arr[i]) {
+>  			dma_free_coherent(&instance->pdev->dev,
+>  					  le32_to_cpu(kern_sge32[i].length),
+>  					  kbuff_arr[i],
+>  					  le32_to_cpu(kern_sge32[i].phys_addr));
+>  			kbuff_arr[i] =3D NULL;
+> +		}
+>  	}
+> =20
+>  	megasas_return_cmd(instance, cmd);
+
+=46or the curly braces part:
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+While you're up to it, care to check drivers/scsi/bfa as well? There wa=
+s
+a patch somewhen in the past but it seems it wasn't applied. But if
+found this bugzilla entry
+https://bugzilla.kernel.org/show_bug.cgi?id=3D98261
+for it.
+
+Thanks,
+Johannes
+
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
