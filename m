@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH  08/14] qla2xxx: Do not reset ISP for error entry with an out of range handle.
-Date: Tue, 4 Aug 2015 13:37:58 -0400
-Message-ID: <1438709884-623-9-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH  10/14] qla2xxx: Remove decrement of sp reference count in abort handler.
+Date: Tue, 4 Aug 2015 13:38:00 -0400
+Message-ID: <1438709884-623-11-git-send-email-himanshu.madhani@qlogic.com>
 References: <1438709884-623-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:48220 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:5146 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752569AbbHDSXq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2015 14:23:46 -0400
+	by vger.kernel.org with ESMTP id S1753110AbbHDSXy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2015 14:23:54 -0400
 In-Reply-To: <1438709884-623-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,35 +18,36 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andre
 
 From: Chad Dupuis <chad.dupuis@qlogic.com>
 
-Instead of resetting the adapter wait for the login to timeout
-and retry. Resetting the adapter can cause extended path recovery
-times.
+Fix for memory leak when command is not found by firmware due to
+mismatch in sp reference count.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a82ba35..fd7b86a 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2474,13 +2474,7 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
- 	}
- fatal:
- 	ql_log(ql_log_warn, vha, 0x5030,
--	    "Error entry - invalid handle/queue.\n");
--
--	if (IS_P3P_TYPE(ha))
--		set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
--	else
--		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
--	qla2xxx_wake_dpc(vha);
-+	    "Error entry - invalid handle/queue (%04x).\n", que);
- }
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8208f6a0..55a53ed 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -967,14 +967,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	rval = ha->isp_ops->abort_command(sp);
+ 	if (rval) {
+-		if (rval == QLA_FUNCTION_PARAMETER_ERROR) {
+-			/*
+-			 * Decrement the ref_count since we can't find the
+-			 * command
+-			 */
+-			atomic_dec(&sp->ref_count);
++		if (rval == QLA_FUNCTION_PARAMETER_ERROR)
+ 			ret = SUCCESS;
+-		} else
++		else
+ 			ret = FAILED;
  
- /**
+ 		ql_dbg(ql_dbg_taskm, vha, 0x8003,
 -- 
 1.7.7
 
