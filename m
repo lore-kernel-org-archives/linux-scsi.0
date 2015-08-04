@@ -1,74 +1,51 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [TRIVIAL PATCH] block: Correct misuses of 0x%<decimal>
-Date: Mon, 03 Aug 2015 19:27:45 -0700
-Message-ID: <1438655265.10829.0.camel@perches.com>
-References: <1438547113.29569.5.camel@perches.com>
-	 <9547AF94-2168-4987-AD89-B7F111084CC2@gmail.com>
-	 <1438589026.30149.15.camel@perches.com>
-	 <67B9124A-73E8-4AA1-81E5-18FAC69D3962@gmail.com>
-	 <EB2039AE-8999-4D0F-9602-CA5ACF3F66BA@gmail.com>
+From: jiang.biao2@zte.com.cn
+Subject: Re: [Patch] scsi_ioctl: support persistent reserve commands for non-root
+ user.
+Date: Tue, 4 Aug 2015 10:28:25 +0800
+Message-ID: <OFA91756DA.5BC920AE-ON48257E97.000AE96C-48257E97.000D96B6@zte.com.cn>
+References: <OF27ABBEA2.0BA86E1E-ON48257E97.0004D192-48257E97.000691DB@zte.com.cn> <1438651937.2173.69.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <EB2039AE-8999-4D0F-9602-CA5ACF3F66BA@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: yalin wang <yalin.wang2010@gmail.com>
-Cc: Don Brace <don.brace@pmcs.com>, open list <linux-kernel@vger.kernel.org>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx7.zte.com.cn ([202.103.147.169]:58099 "EHLO zte.com.cn"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751074AbbHDC3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Aug 2015 22:29:24 -0400
+In-Reply-To: <1438651937.2173.69.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Tue, 2015-08-04 at 10:19 +0800, yalin wang wrote:
-> Ping ?=20
-> > On Aug 3, 2015, at 16:56, yalin wang <yalin.wang2010@gmail.com> wro=
-te:
-> >=20
-> >=20
-> >> On Aug 3, 2015, at 16:03, Joe Perches <joe@perches.com> wrote:
-> >>=20
-> >> On Mon, 2015-08-03 at 15:25 +0800, yalin wang wrote:
-> >>>> On Aug 3, 2015, at 04:25, Joe Perches <joe@perches.com> wrote:
-> >>>>=20
-> >>>> Correct misuse of 0x%d in logging messages.
-> >>>>=20
-> >> []
-> >>> why not use like this : dev_dbg(&h->pdev->dev, "   Max outstandin=
-g=20
-> >>> commands =3D %#x\n=E2=80=9D  ?=20
-> >>> %#x will add 0x prefix automatically .
-> >>=20
-> >> It's generally a consistency thing.
-> >> A 0 value would be emitted as 0 and not 0x0.
-> >>=20
-> > i try on my ubuntu ,=20
-> >=20
-> > static int __init throtl_init(void)                                =
-                                                                       =
-   =20
-> >  {                                                                 =
-              =20
-> >         printk("module init test: %#x %p\n", 0, (void *)0x123);    =
-             =20
-> >          return 0;                                                 =
-                 =20
-> >=20
-> >  }                                                                 =
-                 =20
-> >=20
-> >  module_init(throtl_init);=20
-> >=20
-> > #uname -a
-> > Linux ubuntu 3.16.0-38-generic #52~14.04.1-Ubuntu SMP Fri May 8 09:=
-43:57 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
-> >=20
-> > #dmesg
-> > [259356.375586] module init test: 0x0 0000000000000123
-> >=20
-> > it seems don=E2=80=99t need 0x%x for 0, just need %#x for all numbe=
-rs.
-> > there are lots of use like this, i can change them if needed:
-> >=20
-> > # egrep -r  -i '0x%\d*x'  .  | wc -l=20
-> > 11776
-
-I suggest not, it's not a standard usage and the 0
-may be unexpected.
+SmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tPiB3
+cm90ZSBvbiANCjIwMTUvMDgvMDQgMDk6MzI6MTc6DQo+IE9uIFR1ZSwgMjAxNS0wOC0wNCBhdCAw
+OToxMSArMDgwMCwgamlhbmcuYmlhbzJAenRlLmNvbS5jbiB3cm90ZToNCj4gPiBzY3NpX2lvY3Rs
+OiBzdXBwb3J0IHBlcnNpc3RlbnQgcmVzZXJ2ZSBjb21tYW5kcyB0aHJvdWdoIGlvY3RsIGZvcg0K
+PiA+IG5vbi1yb290IHVzZXIuDQo+ID4gDQo+ID4gU2NzaSBwZXJzaXN0ZW50IHJlc2VydmUgY29t
+bWFuZHMgbmVlZCB0byBiZSB1c2VkIGZvciBub24tcm9vdCB1c2VyIGluDQo+ID4gbWFueSBzY2Vu
+YXJpb3MuDQo+ID4gRVBFUk0gZXJyb3Igd2lsbCBiZSByZXR1cm5lZCBieSBzZ19pbygpIHdoZW4g
+UEVSU0lTVEVOVF9SRVNFUlZFX09VVA0KPiA+IG9yIFBFUlNJU1RFTlRfUkVTRVJWRV9JTiBjb21t
+YW5kIGlzIHNlbnQgdGhyb3VnaCBpb2N0bCgpIGZvcg0KPiA+IG5vbi1yb290IHVzZXIuDQo+ID4g
+QWRkIFBFUlNJU1RFTlRfUkVTRVJWRV9PVVQgYW5kIFBFUlNJU1RFTlRfUkVTRVJWRV9JTiBpbnRv
+DQo+ID4gYmxrX2RlZmF1bHRfY21kX2ZpbHRlciBpbiBibGtfc2V0X2NtZF9maWx0ZXJfZGVmYXVs
+dHMoKSB0byBzdXBwb3J0IA0KPiA+IHBlcnNpc3RlbnQgcmVzZXJ2ZSBjb21tYW5kcyBmb3Igbm9u
+LXJvb3QgdXNlci4NCj4gDQo+IEknbSB2ZXJ5IGR1YmlvdXMgYWJvdXQgdGhpczogYSBQUiB0aGly
+ZCBwYXJ0eSByZXNlcnZhdGlvbiBjYW4gZGVueQ0KPiBhY2Nlc3MgdG8gdGhlIGxvY2FsIGRldmlj
+ZSAuLi4gZWZmZWN0aXZlbHkgYWxsb3dpbmcgYW55IGxvY2FsIHVzZXIgdG8NCj4gY2F1c2UgSS9P
+IGVycm9ycyBvbiBhbGwgZGV2aWNlcyBieSBpc3N1aW5nIGEgYm9ndXMgdGhpcmQgcGFydHkNCj4g
+cmVzZXJ2YXRpb24uICBXaGF0J3MgdGhlIHJlYXNvbiBmb3IgYWxsb3dpbmcgbm9uLXJvb3QgdXNl
+IGluIHRoZSBmaXJzdA0KPiBwbGFjZT8NCj4gDQoNCkhpLCBKYW1zLiANCk91ciBzY2VuYXJpbyBp
+cyB1c2luZyBwZXJzaXN0ZW50IHJlc2VydmF0aW9uIGluIEtWTSBndWVzdCBjbHVzdGVyIA0Kd2hl
+biBwYXNzaW5nIHRocm91Z2ggdGhlIGRpc2sgdG8gdGhlIGd1ZXN0cy4gVGhlIGNsdXN0ZXIgDQpz
+b2Z0d2FyZShNU0NTLCBmb3IgaW5zdGFuY2UpIG5lZWQgdG8gdXNlIFBSIHRvIHN5bmNocm9uaXpl
+IHRoZSANCmNvY3VycmVudCBhY2Nlc3MgdG8gdGhlIHNoYXJlZCBkaXNrLiBCZWNhdXNlIHRoZSBL
+Vk0gZ3Vlc3QgaXMgDQpydW5uaW5nIGluIHFlbXUgY29udGV4dCwgaXQgY291bGQgbm90IGJlIHJv
+b3QuDQoNCkFzIHRvIHlvdXIgY29uY2VybnMsIHNob3VsZCB0aGUgdGhlIGJvZ3VzIHJlc2VydmF0
+aW9uIGFuZCBpbGxlZ2FsIA0KYWNjZXNzIGJlIGxpbWl0ZWQgYnkgdGhlIG90aGVyIG1lYXN1cmVz
+LCBmb3IgZXhhbXBsZSwgdGhlIG1vZGUgb2YgDQp0aGUgZGV2IGZpbGU/IFNpbWlsYXJseSwgdGhl
+ICpCYXNpYyB3cml0aW5nIGNvbW1hbmRzKFdSSVRFXyopKiBhcmUgDQphbHNvIGRhbmdlcm91cyBm
+b3Igbm9uLXJvb3QsIGJ1dCB0aGV5IG11c3QgYmUgdXNlZCBiZSBieSBub24tcm9vdCANCnVzZXIs
+IHNvIHRoZXkgYXJlIGNvbnRyb2xsZWQgYnkgZmlsZSBtb2RlIGFuZCBvdGhlciBzZWN1cml0eSAN
+Cm1lYXN1cmVzLCBhbmQgbm90IGxpbWl0ZWQgaXQgdGhlIGZpcnN0IHBsYWNlLg0KDQpUaGFua3Mg
+YSBsb3QuDQoNCg==
