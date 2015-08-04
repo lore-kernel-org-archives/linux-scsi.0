@@ -1,34 +1,41 @@
-From: Tomer Barletz <barletz@gmail.com>
-Subject: [PATCH] scsi/be2iscsi: Fix logical-not-parentheses compilation warning
-Date: Mon,  3 Aug 2015 15:35:57 -0700
-Message-ID: <1438641357-25588-1-git-send-email-barletz@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, JBottomley@odin.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tomer Barletz <barletz@gmail.com>
+From: jiang.biao2@zte.com.cn
+Subject: [Patch] scsi_ioctl: support persistent reserve commands for non-root user.
+Date: Tue, 4 Aug 2015 09:11:45 +0800
+Message-ID: <OF27ABBEA2.0BA86E1E-ON48257E97.0004D192-48257E97.000691DB@zte.com.cn>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx7.zte.com.cn ([202.103.147.169]:35277 "EHLO zte.com.cn"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754071AbbHDBMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Aug 2015 21:12:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-This fixes the following warning seen with GCC v5.1:
-warning: logical not is only applied to the left hand side of
-comparison [-Wlogical-not-parentheses].
-
-Signed-off-by: Tomer Barletz <barletz@gmail.com>
----
- drivers/scsi/be2iscsi/be_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7a6dbfb..ff8d40e 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
- {
- 	WARN_ON(!virtual_address);
- 	WARN_ON(!physical_address);
--	WARN_ON(!length > 0);
-+	WARN_ON(0 == length);
- 	WARN_ON(!sgl);
- 
- 	sgl->va = virtual_address;
--- 
-2.4.3
+c2NzaV9pb2N0bDogc3VwcG9ydCBwZXJzaXN0ZW50IHJlc2VydmUgY29tbWFuZHMgdGhyb3VnaCBp
+b2N0bCBmb3INCm5vbi1yb290IHVzZXIuDQoNClNjc2kgcGVyc2lzdGVudCByZXNlcnZlIGNvbW1h
+bmRzIG5lZWQgdG8gYmUgdXNlZCBmb3Igbm9uLXJvb3QgdXNlciBpbg0KbWFueSBzY2VuYXJpb3Mu
+DQpFUEVSTSBlcnJvciB3aWxsIGJlIHJldHVybmVkIGJ5IHNnX2lvKCkgd2hlbiBQRVJTSVNURU5U
+X1JFU0VSVkVfT1VUDQpvciBQRVJTSVNURU5UX1JFU0VSVkVfSU4gY29tbWFuZCBpcyBzZW50IHRo
+cm91Z2ggaW9jdGwoKSBmb3INCm5vbi1yb290IHVzZXIuDQpBZGQgUEVSU0lTVEVOVF9SRVNFUlZF
+X09VVCBhbmQgUEVSU0lTVEVOVF9SRVNFUlZFX0lOIGludG8NCmJsa19kZWZhdWx0X2NtZF9maWx0
+ZXIgaW4gYmxrX3NldF9jbWRfZmlsdGVyX2RlZmF1bHRzKCkgdG8gc3VwcG9ydCANCnBlcnNpc3Rl
+bnQgcmVzZXJ2ZSBjb21tYW5kcyBmb3Igbm9uLXJvb3QgdXNlci4NCg0KU2lnbmVkLW9mZi1ieTog
+SmlhbmcgQmlhbyA8amlhbmcuYmlhbzJAenRlLmNvbS5jbj4NClNpZ25lZC1vZmYtYnk6IExpIFBp
+bmcgPGxpLnBpbmcyODhAenRlLmNvbS5jbj4NClJldmlld2VkLWJ5OiBMaXUgSmlhbmp1biA8bGl1
+LmppYW5qdW4zQHp0ZS5jb20uY24+DQoNCmRpZmYgLXVycE4gYmxvY2svc2NzaV9pb2N0bC5jIGJs
+b2NrX25ldy9zY3NpX2lvY3RsLmMNCi0tLSBibG9jay9zY3NpX2lvY3RsLmMgIDIwMTUtMDgtMDEg
+MTc6MDc6NDcuMDAwMDAwMDAwICswODAwDQorKysgYmxvY2tfbmV3L3Njc2lfaW9jdGwuYyAgICAg
+IDIwMTUtMDgtMDEgMTc6MDk6NTYuMDAwMDAwMDAwICswODAwDQpAQCAtMjAyLDYgKzIwMiw5IEBA
+IHN0YXRpYyB2b2lkIGJsa19zZXRfY21kX2ZpbHRlcl9kZWZhdWx0cygNCiAgICAgICAgX19zZXRf
+Yml0KEdQQ01EX0xPQURfVU5MT0FELCBmaWx0ZXItPndyaXRlX29rKTsNCiAgICAgICAgX19zZXRf
+Yml0KEdQQ01EX1NFVF9TVFJFQU1JTkcsIGZpbHRlci0+d3JpdGVfb2spOw0KICAgICAgICBfX3Nl
+dF9iaXQoR1BDTURfU0VUX1JFQURfQUhFQUQsIGZpbHRlci0+d3JpdGVfb2spOw0KKyAgICAgICAv
+KiBQZXJzaXN0ZW50IHJlc2VydmUgY29tbWFuZCovDQorICAgICAgIF9fc2V0X2JpdChQRVJTSVNU
+RU5UX1JFU0VSVkVfSU4sIGZpbHRlci0+cmVhZF9vayk7DQorICAgICAgIF9fc2V0X2JpdChQRVJT
+SVNURU5UX1JFU0VSVkVfT1VULCBmaWx0ZXItPndyaXRlX29rKTsNCiB9DQoNCiBpbnQgYmxrX3Zl
+cmlmeV9jb21tYW5kKHVuc2lnbmVkIGNoYXIgKmNtZCwgZm1vZGVfdCBoYXNfd3JpdGVfcGVybSkN
+Cg==
