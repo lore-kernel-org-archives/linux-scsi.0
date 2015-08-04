@@ -1,44 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Patch] scsi_ioctl: support persistent reserve commands for
- non-root user.
-Date: Mon, 03 Aug 2015 18:32:17 -0700
-Message-ID: <1438651937.2173.69.camel@HansenPartnership.com>
-References: <OF27ABBEA2.0BA86E1E-ON48257E97.0004D192-48257E97.000691DB@zte.com.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52240 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752271AbbHDBcT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2015 21:32:19 -0400
-In-Reply-To: <OF27ABBEA2.0BA86E1E-ON48257E97.0004D192-48257E97.000691DB@zte.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+From: yalin wang <yalin.wang2010@gmail.com>
+Subject: Re: [TRIVIAL PATCH] block: Correct misuses of 0x%<decimal>
+Date: Tue, 4 Aug 2015 10:19:42 +0800
+Message-ID: <EB2039AE-8999-4D0F-9602-CA5ACF3F66BA@gmail.com>
+References: <1438547113.29569.5.camel@perches.com> <9547AF94-2168-4987-AD89-B7F111084CC2@gmail.com> <1438589026.30149.15.camel@perches.com> <67B9124A-73E8-4AA1-81E5-18FAC69D3962@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <67B9124A-73E8-4AA1-81E5-18FAC69D3962@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Don Brace <don.brace@pmcs.com>, open list <linux-kernel@vger.kernel.org>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: jiang.biao2@zte.com.cn
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Tue, 2015-08-04 at 09:11 +0800, jiang.biao2@zte.com.cn wrote:
-> scsi_ioctl: support persistent reserve commands through ioctl for
-> non-root user.
-> 
-> Scsi persistent reserve commands need to be used for non-root user in
-> many scenarios.
-> EPERM error will be returned by sg_io() when PERSISTENT_RESERVE_OUT
-> or PERSISTENT_RESERVE_IN command is sent through ioctl() for
-> non-root user.
-> Add PERSISTENT_RESERVE_OUT and PERSISTENT_RESERVE_IN into
-> blk_default_cmd_filter in blk_set_cmd_filter_defaults() to support 
-> persistent reserve commands for non-root user.
-
-I'm very dubious about this: a PR third party reservation can deny
-access to the local device ... effectively allowing any local user to
-cause I/O errors on all devices by issuing a bogus third party
-reservation.  What's the reason for allowing non-root use in the first
-place?
-
-James
-
-
-
-
+Ping ?=20
+> On Aug 3, 2015, at 16:56, yalin wang <yalin.wang2010@gmail.com> wrote=
+:
+>=20
+>=20
+>> On Aug 3, 2015, at 16:03, Joe Perches <joe@perches.com> wrote:
+>>=20
+>> On Mon, 2015-08-03 at 15:25 +0800, yalin wang wrote:
+>>>> On Aug 3, 2015, at 04:25, Joe Perches <joe@perches.com> wrote:
+>>>>=20
+>>>> Correct misuse of 0x%d in logging messages.
+>>>>=20
+>> []
+>>> why not use like this : dev_dbg(&h->pdev->dev, "   Max outstanding=20
+>>> commands =3D %#x\n=E2=80=9D  ?=20
+>>> %#x will add 0x prefix automatically .
+>>=20
+>> It's generally a consistency thing.
+>> A 0 value would be emitted as 0 and not 0x0.
+>>=20
+> i try on my ubuntu ,=20
+>=20
+> static int __init throtl_init(void)                                  =
+                                                                       =
+ =20
+>  {                                                                   =
+            =20
+>         printk("module init test: %#x %p\n", 0, (void *)0x123);      =
+           =20
+>          return 0;                                                   =
+               =20
+>=20
+>  }                                                                   =
+               =20
+>=20
+>  module_init(throtl_init);=20
+>=20
+> #uname -a
+> Linux ubuntu 3.16.0-38-generic #52~14.04.1-Ubuntu SMP Fri May 8 09:43=
+:57 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+>=20
+> #dmesg
+> [259356.375586] module init test: 0x0 0000000000000123
+>=20
+> it seems don=E2=80=99t need 0x%x for 0, just need %#x for all numbers=
+=2E
+> there are lots of use like this, i can change them if needed:
+>=20
+> # egrep -r  -i '0x%\d*x'  .  | wc -l=20
+> 11776
+>=20
+>=20
+> Thanks
