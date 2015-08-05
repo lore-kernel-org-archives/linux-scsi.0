@@ -1,43 +1,47 @@
-From: Wei Liu <wei.liu2@citrix.com>
-Subject: Re: [PATCH v2 4/8] xen: Use the correctly the Xen memory
- terminologies
-Date: Wed, 5 Aug 2015 18:01:23 +0100
-Message-ID: <20150805170123.GB14224@zion.uk.xensource.com>
-References: <1438711972-18752-1-git-send-email-julien.grall@citrix.com>
- <1438711972-18752-5-git-send-email-julien.grall@citrix.com>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [Open-FCoE] [PATCH] libfc: correct function name in comment
+Date: Wed, 05 Aug 2015 13:45:29 -0700
+Message-ID: <1438807529.19451.9.camel@lin-nd1-054.jf.intel.com>
+References: <20150805002155.00002f53@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1438711972-18752-5-git-send-email-julien.grall@citrix.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julien Grall <julien.grall@citrix.com>
-Cc: xen-devel@lists.xenproject.org, ian.campbell@citrix.com, stefano.stabellini@eu.citrix.com, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Wei Liu <wei.liu2@citrix.com>, Juergen Gross <jgross@suse.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, linux-input@vger.kernel.org, netdev@vger.kernel.orgl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:38586 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753633AbbHEUpa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Aug 2015 16:45:30 -0400
+In-Reply-To: <20150805002155.00002f53@localhost>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sebastian Herbszt <herbszt@gmx.de>, linux-scsi@vger.kernel.org
+Cc: fcoe-devel@open-fcoe.org
 
-On Tue, Aug 04, 2015 at 07:12:48PM +0100, Julien Grall wrote:
-[...]
-> diff --git a/drivers/net/xen-netback/netback.c b/drivers/net/xen-netback/netback.c
-> index 7d50711..3b7b7c3 100644
-> --- a/drivers/net/xen-netback/netback.c
-> +++ b/drivers/net/xen-netback/netback.c
-> @@ -314,7 +314,7 @@ static void xenvif_gop_frag_copy(struct xenvif_queue *queue, struct sk_buff *skb
->  		} else {
->  			copy_gop->source.domid = DOMID_SELF;
->  			copy_gop->source.u.gmfn =
-> -				virt_to_mfn(page_address(page));
-> +				virt_to_gfn(page_address(page));
->  		}
->  		copy_gop->source.offset = offset;
+On Wed, 2015-08-05 at 00:21 +0200, Sebastian Herbszt wrote:
+> Use the correct function name in kernel-doc comment.
+> 
+> Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+> ---
+> 
+> diff -U 5 -rp a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
+> --- a/drivers/scsi/libfc/fc_npiv.c	2014-09-03 19:30:11.760273300 +0200
+> +++ b/drivers/scsi/libfc/fc_npiv.c	2015-08-05 00:06:17.927753719 +0200
+> @@ -23,11 +23,11 @@
 >  
-> @@ -1284,7 +1284,7 @@ static void xenvif_tx_build_gops(struct xenvif_queue *queue,
->  		queue->tx_copy_ops[*copy_ops].source.offset = txreq.offset;
+>  #include <scsi/libfc.h>
+>  #include <linux/export.h>
 >  
->  		queue->tx_copy_ops[*copy_ops].dest.u.gmfn =
-> -			virt_to_mfn(skb->data);
-> +			virt_to_gfn(skb->data);
->  		queue->tx_copy_ops[*copy_ops].dest.domid = DOMID_SELF;
->  		queue->tx_copy_ops[*copy_ops].dest.offset =
->  			offset_in_page(skb->data);
+>  /**
+> - * fc_vport_create() - Create a new NPIV vport instance
+> + * libfc_vport_create() - Create a new NPIV vport instance
+>   * @vport: fc_vport structure from scsi_transport_fc
+>   * @privsize: driver private data size to allocate along with the Scsi_Host
+>   */
+>  
+>  struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize)
+> _
 
-Acked-by: Wei Liu <wei.liu2@citrix.com>
+Looks good.
+
+Acked-by: Vasu Dev <vasu.dev@intel.com>
+
