@@ -1,69 +1,47 @@
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [Xen-devel] [PATCH v2 4/8] xen: Use the correctly the Xen memory
- terminologies
-Date: Wed, 05 Aug 2015 08:44:03 -0400
-Message-ID: <55C20513.2070407@oracle.com>
-References: <1438711972-18752-1-git-send-email-julien.grall@citrix.com>	<1438711972-18752-5-git-send-email-julien.grall@citrix.com>	<55C147DD.7000600@oracle.com>
- <55C1EA95.5060504@citrix.com> <55C1FF54.8060409@oracle.com>
- <55C2029C.9030705@citrix.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 1/4] cxlflash: Updates to legacy I/O
+Date: Wed, 05 Aug 2015 10:44:12 -0500
+Message-ID: <55C22F4C.1030001@linux.vnet.ibm.com>
+References: <1438576364-32896-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <55C2029C.9030705@citrix.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Julien Grall <julien.grall@citrix.com>, xen-devel@lists.xenproject.org
-Cc: linux-fbdev@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.com>, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, x86@kernel.org, Tomi Valkeinen <tomi.valkeinen@ti.com>, linux-input@vger.kernel.org, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, ian.campbell@citrix.com, stefano.stabellini@eu.citrix.com, "James E.J. Bottomley" <JBottomley@odin.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>, Wei Liu <wei.liu2@citrix.com>, netdev@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linuxppc-dev@lists.ozlabs.org, =?windows-1252?Q?Roger_Pau_Monn=E9?= <roger.pau@citrix.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e37.co.us.ibm.com ([32.97.110.158]:42863 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbbHEPoW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2015 11:44:22 -0400
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 5 Aug 2015 09:44:22 -0600
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 85B423E40041
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2015 09:44:18 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t75FfaPP42401894
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Aug 2015 08:41:36 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t75FiFUm008923
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Aug 2015 09:44:18 -0600
+In-Reply-To: <1438576364-32896-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, wenxiong@linux.vnet.ibm.com, shane.seymour@hp.com
+Cc: hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On 08/05/2015 08:33 AM, Julien Grall wrote:
-> On 05/08/15 13:19, Boris Ostrovsky wrote:
->> On 08/05/2015 06:51 AM, Julien Grall wrote:
->>>>> diff --git a/drivers/video/fbdev/xen-fbfront.c
->>>>> b/drivers/video/fbdev/xen-fbfront.c
->>>>> index 09dc447..25e3cce 100644
->>>>> --- a/drivers/video/fbdev/xen-fbfront.c
->>>>> +++ b/drivers/video/fbdev/xen-fbfront.c
->>>>> @@ -539,7 +539,7 @@ static int xenfb_remove(struct xenbus_device *dev)
->>>>>       static unsigned long vmalloc_to_mfn(void *address)
->>>>>     {
->>>>> -    return pfn_to_mfn(vmalloc_to_pfn(address));
->>>>> +    return pfn_to_gfn(vmalloc_to_pfn(address));
->>>>>     }
->>>> Are you sure? This will return vmalloc_to_pfn(address)).
->>> I guess you mean vmalloc_to_mfn will return vmalloc_to_pfn?
->>>
->>> If so, it will be only the case on auto-translated case (because pfn ==
->>> gfn). In the case of PV, the mfn will be returned.
->> How will mfn be returned on PV when pfn_to_gfn() is an identity function?
->>
->> static inline unsigned long pfn_to_gfn(unsigned long pfn)
->>   {
->>       return pfn;
->>   }
-> The identity function is only for ARM guest which are always
-> auto-translated (arch/arm/include/asm/xen/page.h).
->
-> The x86 version contains a check if the guest is auto-translated or not
-> (arch/x86/include/asm/xen/page.):
->
-> static inline unsigned long pfn_to_gfn(unsigned long pfn)
-> {
->          if (xen_feature(XENFEAT_auto_translated_physmap))
->                  return pfn;
->          else
->                  return pfn_to_mfn(pfn);
-> }
+Hi Matt,
 
-Of course --- I was looking at the top of the patch and didn't realize 
-it was ARM changes. Sorry for the noise.
+Can you break this up into separate patches for these separate logical bug fixes / changes?
+There is too much bundled all into a single patch here from my perspective.
 
--boris
+Thanks,
+
+Brian
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
