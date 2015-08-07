@@ -1,258 +1,94 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 2/7] megaraid_sas : Support for max_io_size 1MB
-Date: Fri, 7 Aug 2015 17:53:52 +0530
-Message-ID: <201508071230.t77CU8bl021114@palmhbs0.lsi.com>
+Subject: [PATCH 6/7] megaraid_sas : Code refactor for use of requestorId
+Date: Fri, 7 Aug 2015 17:54:32 +0530
+Message-ID: <201508071230.t77CUmg8021209@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([199.3.246.86]:60044 "EHLO
+Received: from bastion.smtp.avagotech.com ([199.3.246.86]:60060 "EHLO
 	sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753082AbbHGMfp (ORCPT
+	with ESMTP id S1753086AbbHGMfp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Aug 2015 08:35:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
 Cc: uday.lingala@avagotech.com
 
-Driver will expose max sge = 256 (earlier it was 64), if firmware support 
-extended IO size upto 1M. 
+
+Some of the code changes was proposed by David Binderman
+
+Removed redudant check of requestorId. Redundant condition: instance.requestorId. 
+Check for plasma firmware 1.11 or new restructured to support only for specific device id
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
-diff --git a/megaraid_sas.h b/megaraid_sas.h
-index 45500ba..5db31c6 100644
---- a/megaraid_sas.h
-+++ b/megaraid_sas.h
-@@ -1239,7 +1239,9 @@ union megasas_sgl_frame {
- typedef union _MFI_CAPABILITIES {
- 	struct {
- #if   defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:25;
-+		u32     reserved:23;
-+		u32     support_ext_io_size:1;
-+		u32	support_ext_queue_depth:1;
- 		u32     security_protocol_cmds_fw:1;
- 		u32     support_core_affinity:1;
- 		u32     support_ndrive_r1_lb:1;
-@@ -1255,7 +1257,9 @@ typedef union _MFI_CAPABILITIES {
- 		u32     support_ndrive_r1_lb:1;
- 		u32     support_core_affinity:1;
- 		u32     security_protocol_cmds_fw:1;
--		u32     reserved:25;
-+		u32	support_ext_queue_depth:1;
-+		u32     support_ext_io_size:1;
-+		u32     reserved:23;
- #endif
- 	} mfi_capabilities;
- 	__le32		reg;
-@@ -1793,6 +1797,7 @@ struct megasas_instance {
- 	char mpio;
- 	u16 throttlequeuedepth;
- 	u8 mask_interrupts;
-+	u16 max_chain_frame_sz;
- 	u8 is_imr;
- 	bool dev_handle;
- };
-diff --git a/megaraid_sas_fusion.c b/megaraid_sas_fusion.c
-index 5e023a6..a065da7 100644
---- a/megaraid_sas_fusion.c
-+++ b/megaraid_sas_fusion.c
-@@ -316,27 +316,24 @@ static int megasas_create_frame_pool_fusion(struct megasas_instance *instance)
- 	u32 max_cmd;
- 	struct fusion_context *fusion;
- 	struct megasas_cmd_fusion *cmd;
--	u32 total_sz_chain_frame;
+diff --git a/megaraid_sas_base.c b/megaraid_sas_base.c
+index 1994c2a..70e74f4 100644
+--- a/megaraid_sas_base.c
++++ b/megaraid_sas_base.c
+@@ -4844,18 +4844,22 @@ static int megasas_init_fw(struct megasas_instance *instance)
  
- 	fusion = instance->ctrl_context;
- 	max_cmd = instance->max_fw_cmds;
- 
--	total_sz_chain_frame = MEGASAS_MAX_SZ_CHAIN_FRAME;
+ 	}
+ 	if (ctrl_info->host_interface.SRIOV) {
+-		if (!ctrl_info->adapterOperations2.activePassive)
+-			instance->PlasmaFW111 = 1;
 -
- 	/*
- 	 * Use DMA pool facility provided by PCI layer
- 	 */
- 
--	fusion->sg_dma_pool = pci_pool_create("megasas sg pool fusion",
--					      instance->pdev,
--					      total_sz_chain_frame, 4,
--					      0);
-+	fusion->sg_dma_pool = pci_pool_create("sg_pool_fusion", instance->pdev,
-+						instance->max_chain_frame_sz,
-+						4, 0);
+-		if (!instance->PlasmaFW111)
+-			instance->requestorId =
+-				ctrl_info->iov.requestorId;
+-		else {
+-			iovPtr = (struct IOV_111 *)((unsigned char *)ctrl_info + IOV_111_OFFSET);
+-			instance->requestorId = iovPtr->requestorId;
++		instance->requestorId = ctrl_info->iov.requestorId;
++		if (instance->pdev->device == PCI_DEVICE_ID_LSI_PLASMA) {
++			if (!ctrl_info->adapterOperations2.activePassive)
++			    instance->PlasmaFW111 = 1;
 +
- 	if (!fusion->sg_dma_pool) {
- 		printk(KERN_DEBUG "megasas: failed to setup request pool "
- 		       "fusion\n");
- 		return -ENOMEM;
- 	}
--	fusion->sense_dma_pool = pci_pool_create("megasas sense pool fusion",
-+	fusion->sense_dma_pool = pci_pool_create("sense_pool_fusion",
- 						 instance->pdev,
- 						 SCSI_SENSE_BUFFERSIZE, 64, 0);
- 
-@@ -607,6 +604,7 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	int i;
- 	struct megasas_header *frame_hdr;
- 	const char *sys_info;
-+	MFI_CAPABILITIES *drv_ops;
- 
- 	fusion = instance->ctrl_context;
- 
-@@ -654,20 +652,19 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 	init_frame->cmd	= MFI_CMD_INIT;
- 	init_frame->cmd_status = 0xFF;
- 
-+	drv_ops = (MFI_CAPABILITIES *) &(init_frame->driver_operations);
- 	/* driver support Extended MSIX */
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
- 		(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
--		init_frame->driver_operations.
--			mfi_capabilities.support_additional_msix = 1;
-+		drv_ops->mfi_capabilities.support_additional_msix = 1;
- 	/* driver supports HA / Remote LUN over Fast Path interface */
--	init_frame->driver_operations.mfi_capabilities.support_fp_remote_lun
--		= 1;
--	init_frame->driver_operations.mfi_capabilities.support_max_255lds
--		= 1;
--	init_frame->driver_operations.mfi_capabilities.support_ndrive_r1_lb
--		= 1;
--	init_frame->driver_operations.mfi_capabilities.security_protocol_cmds_fw
--		= 1;
-+	drv_ops->mfi_capabilities.support_max_255lds = 1;
-+	drv_ops->mfi_capabilities.support_fp_remote_lun = 1;
-+	drv_ops->mfi_capabilities.support_ndrive_r1_lb = 1;
-+	drv_ops->mfi_capabilities.security_protocol_cmds_fw = 1;
-+	if (instance->max_chain_frame_sz > MEGASAS_CHAIN_FRAME_SZ_MIN)
-+		drv_ops->mfi_capabilities.support_ext_io_size = 1;
++			dev_info(&instance->pdev->dev, "SR-IOV: firmware type: %s\n",
++			    instance->PlasmaFW111 ? "1.11" : "new");
 +
- 	/* Convert capability to LE32 */
- 	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
- 
-@@ -1057,7 +1054,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- {
- 	struct megasas_register_set __iomem *reg_set;
- 	struct fusion_context *fusion;
--	u32 max_cmd;
-+	u32 max_cmd, scratch_pad_2;
- 	int i = 0, count;
- 
- 	fusion = instance->ctrl_context;
-@@ -1096,15 +1093,40 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE *
- 		 (max_cmd + 1)); /* Extra 1 for SMID 0 */
- 
-+	scratch_pad_2 = readl(&instance->reg_set->outbound_scratch_pad_2);
-+	/* If scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK is set,
-+	 * Firmware support extended IO chain frame which is 4 time more than
-+	 * legacy Firmware.
-+	 * Legacy Firmware - Frame size is (8 * 128) = 1K
-+	 * 1M IO Firmware  - Frame size is (8 * 128 * 4)  = 4K
-+	 */
-+	if (scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK)
-+		instance->max_chain_frame_sz =
-+			((scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_MASK) >> 5)
-+					* MEGASAS_1MB_IO;
-+	else
-+		instance->max_chain_frame_sz =
-+			((scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_MASK) >> 5)
-+					* MEGASAS_256K_IO;
-+
-+	if (instance->max_chain_frame_sz < MEGASAS_CHAIN_FRAME_SZ_MIN) {
-+		dev_warn(&instance->pdev->dev, "frame size %d invalid, fall back to legacy max frame size %d\n",
-+			instance->max_chain_frame_sz,
-+			MEGASAS_CHAIN_FRAME_SZ_MIN);
-+		instance->max_chain_frame_sz = MEGASAS_CHAIN_FRAME_SZ_MIN;
-+	}
-+
- 	fusion->max_sge_in_main_msg =
--	  (MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE -
--	   offsetof(struct MPI2_RAID_SCSI_IO_REQUEST, SGL))/16;
-+		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE
-+			- offsetof(struct MPI2_RAID_SCSI_IO_REQUEST, SGL))/16;
- 
- 	fusion->max_sge_in_chain =
--		MEGASAS_MAX_SZ_CHAIN_FRAME / sizeof(union MPI2_SGE_IO_UNION);
-+		instance->max_chain_frame_sz
-+			/ sizeof(union MPI2_SGE_IO_UNION);
- 
--	instance->max_num_sge = rounddown_pow_of_two(
--		fusion->max_sge_in_main_msg + fusion->max_sge_in_chain - 2);
-+	instance->max_num_sge =
-+		rounddown_pow_of_two(fusion->max_sge_in_main_msg
-+			+ fusion->max_sge_in_chain - 2);
- 
- 	/* Used for pass thru MFI frame (DCMD) */
- 	fusion->chain_offset_mfi_pthru =
-@@ -1330,7 +1352,7 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
- 
- 			sgl_ptr =
- 			  (struct MPI25_IEEE_SGE_CHAIN64 *)cmd->sg_frame;
--			memset(sgl_ptr, 0, MEGASAS_MAX_SZ_CHAIN_FRAME);
-+			memset(sgl_ptr, 0, instance->max_chain_frame_sz);
++			if (instance->PlasmaFW111) {
++			    iovPtr = (struct IOV_111 *)
++				((unsigned char *)ctrl_info + IOV_111_OFFSET);
++			    instance->requestorId = iovPtr->requestorId;
++			}
  		}
+-		dev_warn(&instance->pdev->dev, "I am VF "
+-		       "requestorId %d\n", instance->requestorId);
++		dev_info(&instance->pdev->dev, "SRIOV: VF requestorId %d\n",
++			instance->requestorId);
  	}
  
-@@ -1895,7 +1917,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 			struct scsi_cmnd *scp,
- 			struct megasas_cmd_fusion *cmd)
- {
--	u32 sge_count;
-+	u16 sge_count;
- 	u8  cmd_type;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request = cmd->io_request;
+ 	instance->crash_dump_fw_support =
+@@ -6738,8 +6742,7 @@ megasas_aen_polling(struct work_struct *work)
+ 		case MR_EVT_CFG_CLEARED:
+ 		case MR_EVT_LD_DELETED:
+ 			if (!instance->requestorId ||
+-			    (instance->requestorId &&
+-			     megasas_get_ld_vf_affiliation(instance, 0))) {
++			    megasas_get_ld_vf_affiliation(instance, 0)) {
+ 				if (megasas_ld_list_query(instance,
+ 							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
+ 					megasas_get_ld_list(instance);
+@@ -6770,8 +6773,7 @@ megasas_aen_polling(struct work_struct *work)
+ 			break;
+ 		case MR_EVT_LD_CREATED:
+ 			if (!instance->requestorId ||
+-			    (instance->requestorId &&
+-			     megasas_get_ld_vf_affiliation(instance, 0))) {
++			    megasas_get_ld_vf_affiliation(instance, 0)) {
+ 				if (megasas_ld_list_query(instance,
+ 							  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
+ 					megasas_get_ld_list(instance);
+@@ -6837,8 +6839,7 @@ megasas_aen_polling(struct work_struct *work)
+ 		}
  
-@@ -1953,7 +1975,11 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 		return 1;
- 	}
- 
-+	/* numSGE store lower 8 bit of sge_count.
-+	 * numSGEExt store higher 8 bit of sge_count
-+	 */
- 	io_request->RaidContext.numSGE = sge_count;
-+	io_request->RaidContext.numSGEExt = (u8)(sge_count >> 8);
- 
- 	io_request->SGLFlags = cpu_to_le16(MPI2_SGE_FLAGS_64_BIT_ADDRESSING);
- 
-@@ -2347,7 +2373,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
- 	mpi25_ieee_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT |
- 		MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR;
- 
--	mpi25_ieee_chain->Length = cpu_to_le32(MEGASAS_MAX_SZ_CHAIN_FRAME);
-+	mpi25_ieee_chain->Length = cpu_to_le32(instance->max_chain_frame_sz);
- 
- 	return 0;
- }
-diff --git a/megaraid_sas_fusion.h b/megaraid_sas_fusion.h
-index 498d852..ead2c6a 100644
---- a/megaraid_sas_fusion.h
-+++ b/megaraid_sas_fusion.h
-@@ -35,8 +35,12 @@
- #define _MEGARAID_SAS_FUSION_H_
- 
- /* Fusion defines */
--#define MEGASAS_MAX_SZ_CHAIN_FRAME 1024
-+#define MEGASAS_CHAIN_FRAME_SZ_MIN 1024
- #define MFI_FUSION_ENABLE_INTERRUPT_MASK (0x00000009)
-+#define MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK	0x400000
-+#define MEGASAS_MAX_CHAIN_SIZE_MASK		0x3E0
-+#define MEGASAS_256K_IO				128
-+#define MEGASAS_1MB_IO				(MEGASAS_256K_IO * 4)
- #define MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE 256
- #define MEGASAS_MPI2_FUNCTION_PASSTHRU_IO_REQUEST   0xF0
- #define MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST         0xF1
-@@ -117,7 +121,9 @@ struct RAID_CONTEXT {
- 	u8      numSGE;
- 	__le16	configSeqNum;
- 	u8      spanArm;
--	u8      resvd2[3];
-+	u8      priority;
-+	u8	numSGEExt;	/* 0x1E 1M IO support */
-+	u8      resvd2;		/* 0x1F */
- };
- 
- #define RAID_CTX_SPANARM_ARM_SHIFT	(0)
--- 
-1.8.3.1
-
+ 		if (!instance->requestorId ||
+-		    (instance->requestorId &&
+-		     megasas_get_ld_vf_affiliation(instance, 0))) {
++		    megasas_get_ld_vf_affiliation(instance, 0)) {
+ 			if (megasas_ld_list_query(instance,
+ 						  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
+ 				megasas_get_ld_list(instance);
