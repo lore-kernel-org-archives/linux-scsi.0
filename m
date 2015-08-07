@@ -1,44 +1,54 @@
-From: Andrzej Hajda <a.hajda@samsung.com>
-Subject: [PATCH 14/31] message/fusion: use kmemdup rather than duplicating its
- implementation
-Date: Fri, 07 Aug 2015 09:59:20 +0200
-Message-ID: <1438934377-4922-15-git-send-email-a.hajda@samsung.com>
-References: <1438934377-4922-1-git-send-email-a.hajda@samsung.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi/be2iscsi: Fix logical-not-parentheses compilation warning
+Date: Fri, 07 Aug 2015 11:44:14 +0200
+Message-ID: <mqdvbcrmo0h.fsf@c203.arch.suse.de>
+References: <mqdy4hrts7e.fsf@c203.arch.suse.de>
+	<1438712743-5821-1-git-send-email-barletz@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1438934377-4922-1-git-send-email-a.hajda@samsung.com>
+In-Reply-To: <1438712743-5821-1-git-send-email-barletz@gmail.com> (Tomer
+	Barletz's message of "Tue, 4 Aug 2015 11:25:43 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: Andrzej Hajda <a.hajda@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+To: Tomer Barletz <barletz@gmail.com>
+Cc: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The patch was generated using fixed coccinelle semantic patch
-scripts/coccinelle/api/memdup.cocci [1].
+Tomer Barletz <barletz@gmail.com> writes:
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2014320
+> This fixes the following warning seen with GCC v5.1:
+> warning: logical not is only applied to the left hand side of
+> comparison [-Wlogical-not-parentheses].
+>
+> Signed-off-by: Tomer Barletz <barletz@gmail.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/=
+be_main.c
+> index 7a6dbfb..cf1908e 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+>  {
+>  	WARN_ON(!virtual_address);
+>  	WARN_ON(!physical_address);
+> -	WARN_ON(!length > 0);
+> +	WARN_ON(length =3D=3D 0);
+>  	WARN_ON(!sgl);
+> =20
+>  	sgl->va =3D virtual_address;
 
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
----
- drivers/message/fusion/mptbase.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Looks good.
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5dcc031..1551f51 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -5971,13 +5971,12 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
- 	if (mpt_config(ioc, &cfg) != 0)
- 		goto out;
- 
--	mem = kmalloc(iocpage2sz, GFP_KERNEL);
-+	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
- 	if (!mem) {
- 		rc = -ENOMEM;
- 		goto out;
- 	}
- 
--	memcpy(mem, (u8 *)pIoc2, iocpage2sz);
- 	ioc->raid_data.pIocPg2 = (IOCPage2_t *) mem;
- 
- 	mpt_read_ioc_pg_3(ioc);
--- 
-1.9.1
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
