@@ -1,53 +1,88 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb stick
-Date: Mon, 10 Aug 2015 18:02:02 +0000
-Message-ID: <bug-101011-11613-oQtjJ0yDnd@https.bugzilla.kernel.org/>
-References: <bug-101011-11613@https.bugzilla.kernel.org/>
+From: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v4 1/3] cxlflash: Base error recovery support
+Date: Tue, 11 Aug 2015 09:52:58 +1000
+Message-ID: <1439250778.24419.5.camel@axtens.net>
+References: <1439226574-7766-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-RwKpdbo1lFvqFiIZwZtu"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36137 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932183AbbHJSCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Aug 2015 14:02:06 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9A3C820790
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 18:02:04 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id C8D40206EE
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 18:02:02 +0000 (UTC)
-In-Reply-To: <bug-101011-11613@https.bugzilla.kernel.org/>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35727 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933482AbbHJXzR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2015 19:55:17 -0400
+Received: by pacgr6 with SMTP id gr6so36879869pac.2
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 16:55:17 -0700 (PDT)
+In-Reply-To: <1439226574-7766-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=101011
 
-k.kotlenga@sims.pl changed:
+--=-RwKpdbo1lFvqFiIZwZtu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |hch@lst.de,
-                   |                            |linux-ext4@vger.kernel.org
+> @@ -487,11 +515,27 @@ static int cxlflash_eh_host_reset_handler(struct sc=
+si_cmnd *scp)
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+> =20
+> -	rcr =3D cxlflash_afu_reset(cfg);
+> -	if (rcr =3D=3D 0)
+> -		rc =3D SUCCESS;
+> -	else
+> +	switch (cfg->state) {
+> +	case STATE_NORMAL:
+> +		cfg->state =3D STATE_LIMBO;
+> +		scsi_block_requests(cfg->host);
+> +
+> +		rcr =3D cxlflash_afu_reset(cfg);
+> +		if (!rcr)
+> +			rc =3D FAILED;
 
---- Comment #6 from k.kotlenga@sims.pl ---
-This bug is still present in 4.2-rc6. Reverting:
+I think you want:
 
-commit 08439fec266c3cc5702953b4f54bdf5649357de0
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Thu Apr 2 23:56:32 2015 -0400
+	if (rcr) {
+		rc =3D FAILED;
+		break;
+	}
 
-    ext4: remove block_device_ejected
+cxlflash_afu_reset returns 0 on success, so I think you want to drop the
+negation, and also I think if it fails you want to break out and not set
+STATE_NORMAL. Is that right?
 
-    bdi->dev now never goes away, so this function became useless.
+Once you fix that, or explain to me why I'm wrong:
+Reviewed-by: Daniel Axtens <dja@axtens.net>
 
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+--=20
+Regards,
+Daniel
 
-makes the oops go away, at least for me (I've tested this on v4.1.4 i386 only).
-I hope this rings some bells.
+--=-RwKpdbo1lFvqFiIZwZtu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAABCgAGBQJVyTlaAAoJEPC3R3P2I92FLjIP/2z5cyWkohHfwhV/btjkUzMt
+pYbEZmx/y7qGkKFLP4TfRaZWCfCteEjZvOI+k33HbdHTVikU1ilBdygoaDZtkFww
+u+kR+CkibaNuA2oyzCdL9QQzq8rb158Ykd7+IA4wGmuuarZ8s66ch8nBkADROTFX
+bCrwpSN7kKzYpj9dtu/hMxUTg33RwfYJS5lsJZGyMKPhwocdepZDJ/kuAIU8/J4V
+GIBOqLSm3IiUTk0ZUCgWeGuZy+W5E8mXKsH6bYzoDcw7IaKP1FwgMaIlulJbHO+q
+Cs07aZPTBTQZI7/wpRpX4VlgRVp2HcoEpCW+CM9lypw+kaTiXdVCxz9Tz+BB9Uqv
+rmuxUQntQf6dQvXA3+Usv2tVH6vACiKxqutJ2Tg77QIA+cb+5E6MmQ0wnkOt+mWa
+h4O0ekDS3i3XZayVFR6desIa73aWycq9yGIk5pmjhD+Or90LyRN5VHgQicsg6dL5
+WzIj/Paz8xYfHrolF5GJJZhGEz93pTIBmclGIJ5HEqEaT+8dnp+1wDQ3xisAU6LV
+FM+rP5WfksT3koU2eg0pnlQ8je5ZPOnN20TFYqeiHLnkwIvpxW27aW7CFCUpOORN
+nngS6/veo1/iR56Q++2HwY2lI44DQPLXT5/V4qfMDS6oG/5lYYDeWsXmS3aEW1we
+sZkonEEfsAT62LWAfgRh
+=uz3k
+-----END PGP SIGNATURE-----
+
+--=-RwKpdbo1lFvqFiIZwZtu--
+
