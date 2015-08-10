@@ -1,193 +1,373 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v4 0/3] CXL Flash Error Recovery and Superpipe
-Date: Mon, 10 Aug 2015 12:09:25 -0500
-Message-ID: <1439226565-7700-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v4 1/3] cxlflash: Base error recovery support
+Date: Mon, 10 Aug 2015 12:09:34 -0500
+Message-ID: <1439226574-7766-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:55190 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503AbbHJRKf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2015 13:10:35 -0400
+Received: from e39.co.us.ibm.com ([32.97.110.160]:51549 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753967AbbHJRKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2015 13:10:43 -0400
 Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Mon, 10 Aug 2015 11:10:35 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id C34B73E40041
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 11:10:31 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7AH9ZxM54001840
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 10:09:35 -0700
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7AHATN1017042
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 11:10:30 -0600
+	Mon, 10 Aug 2015 11:10:42 -0600
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5F63E1FF0046
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 11:01:50 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7AHAegD55312522
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 10:10:40 -0700
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7AHAbRl010163
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 11:10:40 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
-Cc: hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com
+Cc: hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-This patch set is intended for the 4.3 release and adds support for
-error recovery and the superpipe features provided by the IBM CXL
-Flash adapter. The superpipe function was originally presented in an
-RFC patch set in late April. To aid with the review of the superpipe
-portion of these enhancements, we have further split it across the
-last two patches in this set. Please reference the changelog below
-for details on what has been altered from previous versions of this
-patchset.
+Introduce support for enhanced I/O error handling.
 
-The IBM Power processor architecture provides support for CAPI (Coherent
-Accelerator Power Interface), which is available to certain PCIe slots
-on Power 8 systems. CAPI can be thought of as a special tunneling
-protocol through PCIe that allow PCIe adapters to look like special
-purpose co-processors which can read or write an application's memory
-and generate page faults. As a result, the host interface to an adapter
-running in CAPI mode does not require data buffers to be mapped to the
-device's memory (IOMMU bypass) nor does it require memory to be pinned.
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+---
+ drivers/scsi/cxlflash/Kconfig  |   2 +-
+ drivers/scsi/cxlflash/common.h |  11 ++-
+ drivers/scsi/cxlflash/main.c   | 166 ++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/cxlflash/main.h   |   4 +
+ 4 files changed, 170 insertions(+), 13 deletions(-)
 
-Application specific accelerators are constructed by burning logic
-to either an FPGA or ASIC that accelerates a certain function in
-hardware. This logic is referred to as an Accelerator Function Unit
-or AFU. AFUs and their associated software are designed to leverage the
-benefits that CAPI provides to reduce the burden on CPUs and achieve
-higher performance. Examples of AFUs include compression, encryption,
-sorting, etc.
-
-The cxlflash adapter contains an AFU that enhances the performance of
-accessing an external flash storage device by allowing user space
-applications to establish a 'superpipe' through which they may directly
-access the storage, bypassing the traditional storage stack and reducing
-path length per-I/O by more than an order of magnitude. The AFU also
-supports a translation function that allows users to segment a physical
-device into 'n' virtual devices [by programmatic means] and refer to these
-segments as if they were a true physical device. This function enables
-a more efficient use of a physical device and provides for a secure
-multi-tenant environment.
-
-At a high-level, the cxlflash adapter looks and behaves very much like
-a SCSI HBA. Like other SCSI adapters it understands SCSI CDBs and LUN
-discovery. It also provides health monitoring, error recovery, and link
-event reporting.
-
-At a lower level, the cxlflash adapter requires some additional items not
-found in a traditional SCSI HBA driver. These include the following:
-
-- A programmatic API (implemented as ioctls) that user applications
-interact with when they desire to take advantage of the superpipe access
-from user space. These ioctls allow the user to gain access to the CAPI
-resources (ie: interrupts, MMIO space, etc.) that are required to use
-the superpipe. Additionally, they allow applications to use the AFUs
-virtual partitioning function. Note that while the ioctls are new, under
-the covers they make use of existing functionality found in the cxl
-driver (drivers/misc/cxl).
-
-- A block allocation table (implemented as a bitmap) per physical
-device attached to the cxlflash adapter that is operating in the virtual
-partitioned mode. This table manages the segmentation of the physical
-device and is used to derive the entries found in the LUN mapping table.
-
-- A LUN mapping table that is shared with the AFU and used by the AFU
-to associate the resource handles referring to a specific virtual device
-with blocks on the physical device.
-
-- The ability to send a limited set of SCSI commands directly to the
-adapter to determine capacity and identification data as well as wipe
-blocks that are no longer in use when a virtual device is released. This
-set of commands includes READ_CAPACITY and WRITE_SAME.
-
-Accompanying this adapter driver but not included here is a user space
-library (known as the block library) that will hide the interaction
-between user space and the cxlflash driver. Most (if not all) users will
-chose to use this library when developing superpipe-aware applications.
-
-The block library can be found on Github:
-
- https://github.com/mikehollinger/ibmcapikv
-
-More technical details can be found in Documentation/powerpc/cxlflash.txt
-
-The following patches are bisectable:
-
-Patch 1 contains base enablement of error recovery function.
-
-Patch 2 contains base enablement of superpipe function.
-
-Patch 3 adds support for segmentation of physical LUNs from user space.
-
-v4 Changes:
-- Removes patch of legacy fixes/refactoring
-- Incorporate comments from Brian King
-- Incorporate comments from Daniel Axtens
-- Remove duplication of EEH state machine
-- Introduce adapter state machine
-- Tuck ifdef inside header
-- Remove unnecessary delay
-- Check state after waiting in limbo
-- Return the proper code in EEH callback
-- Remove SCSI read/write command snooping
-- Use cpu-endian-aware swap routines
-
-v3 Changes:
-- Add patch of legacy fixes/refactoring
-- Fix enhanced I/O error handling bugs
-- Incorporate review comments from Brian King
-- Incorporate review comments from Wendy Xiong
-- Transition more pr_* prints to dev_* prints
-- Clarify functions through renaming and prolog details
-- Remove unnecessary gotos/labels
-- Use rq_timeout instead of defining own timeout
-- Fix potential memory leaks
-- Use existing services/macros instead of defining our own
-- Make code more readable (ie: reduce multi-line statements)
-- Manage layout of LUN table
-- Add retry logic to context recovery
-
-v2 Changes:
-- Introduce support for enhanced I/O error handling
-- Incorporate review comments from Mikey Neuling
-- Incorporate review comments from Brian King
-- Update/add serialization strategy for contexts
-- Lock down LUN lists and global struct
-- Make items that can be static, static
-- Remove duplicate statements
-- Make shared counters atomic
-- Use correct memory barrier for LWSYNC
-- Add cxlflash_ioctl.h to UAPI Kbuild
-- Remove unnecessary initialization code
-- Fix spelling/grammar errors
-- Remove the slave_* routines
-- Tone down branch hints
-- Use scsi_execute() to issue SCSI commands
-- Use existing SCSI defines
-- Sleep instead of busy-wait
-- Remove duplicate parenths
-- Refine patch staging 
-
-Matthew R. Ochs (3):
-  cxlflash: Base error recovery support
-  cxlflash: Superpipe support
-  cxlflash: Virtual LUN support
-
- Documentation/ioctl/ioctl-number.txt |    1 +
- Documentation/powerpc/cxlflash.txt   |  297 +++++
- drivers/scsi/cxlflash/Kconfig        |    2 +-
- drivers/scsi/cxlflash/Makefile       |    2 +-
- drivers/scsi/cxlflash/common.h       |   34 +-
- drivers/scsi/cxlflash/main.c         |  195 ++-
- drivers/scsi/cxlflash/main.h         |    4 +
- drivers/scsi/cxlflash/sislite.h      |    3 +
- drivers/scsi/cxlflash/superpipe.c    | 2261 ++++++++++++++++++++++++++++++++++
- drivers/scsi/cxlflash/superpipe.h    |  145 +++
- drivers/scsi/cxlflash/vlun.c         | 1241 +++++++++++++++++++
- drivers/scsi/cxlflash/vlun.h         |   74 ++
- include/uapi/scsi/Kbuild             |    1 +
- include/uapi/scsi/cxlflash_ioctl.h   |  173 +++
- 14 files changed, 4419 insertions(+), 14 deletions(-)
- create mode 100644 Documentation/powerpc/cxlflash.txt
- create mode 100644 drivers/scsi/cxlflash/superpipe.c
- create mode 100644 drivers/scsi/cxlflash/superpipe.h
- create mode 100644 drivers/scsi/cxlflash/vlun.c
- create mode 100644 drivers/scsi/cxlflash/vlun.h
- create mode 100644 include/uapi/scsi/cxlflash_ioctl.h
-
+diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
+index c707508..c052104 100644
+--- a/drivers/scsi/cxlflash/Kconfig
++++ b/drivers/scsi/cxlflash/Kconfig
+@@ -4,7 +4,7 @@
+ 
+ config CXLFLASH
+ 	tristate "Support for IBM CAPI Flash"
+-	depends on PCI && SCSI && CXL
++	depends on PCI && SCSI && CXL && EEH
+ 	default m
+ 	help
+ 	  Allows CAPI Accelerated IO to Flash
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index fe86bfe..7e663f4 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -76,6 +76,12 @@ enum cxlflash_init_state {
+ 	INIT_STATE_SCSI
+ };
+ 
++enum cxlflash_state {
++	STATE_NORMAL,	/* Normal running state, everything good */
++	STATE_LIMBO,	/* Limbo running state, trying to reset/recover */
++	STATE_FAILTERM	/* Failed/terminating state, error out users/threads */
++};
++
+ /*
+  * Each context has its own set of resource handles that is visible
+  * only from that context.
+@@ -91,8 +97,6 @@ struct cxlflash_cfg {
+ 
+ 	ulong cxlflash_regs_pci;
+ 
+-	wait_queue_head_t eeh_waitq;
+-
+ 	struct work_struct work_q;
+ 	enum cxlflash_init_state init_state;
+ 	enum cxlflash_lr_state lr_state;
+@@ -105,7 +109,8 @@ struct cxlflash_cfg {
+ 
+ 	wait_queue_head_t tmf_waitq;
+ 	bool tmf_active;
+-	u8 err_recovery_active:1;
++	wait_queue_head_t limbo_waitq;
++	enum cxlflash_state state;
+ };
+ 
+ struct afu_cmd {
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 76a7286..18359d4 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -380,6 +380,18 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	}
+ 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+ 
++	switch (cfg->state) {
++	case STATE_LIMBO:
++		pr_debug_ratelimited("%s: device in limbo!\n", __func__);
++		rc = SCSI_MLQUEUE_HOST_BUSY;
++		goto out;
++	case STATE_FAILTERM:
++		pr_debug_ratelimited("%s: device has failed!\n", __func__);
++		goto error;
++	default:
++		break;
++	}
++
+ 	cmd = cxlflash_cmd_checkout(afu);
+ 	if (unlikely(!cmd)) {
+ 		pr_err("%s: could not get a free command\n", __func__);
+@@ -428,6 +440,10 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 
+ out:
+ 	return rc;
++error:
++	scp->result = (DID_NO_CONNECT << 16);
++	scp->scsi_done(scp);
++	return 0;
+ }
+ 
+ /**
+@@ -455,9 +471,21 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+ 		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+ 		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 
+-	rcr = send_tmf(afu, scp, TMF_LUN_RESET);
+-	if (unlikely(rcr))
++	switch (cfg->state) {
++	case STATE_NORMAL:
++		rcr = send_tmf(afu, scp, TMF_LUN_RESET);
++		if (unlikely(rcr))
++			rc = FAILED;
++		break;
++	case STATE_LIMBO:
++		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++		if (cfg->state == STATE_NORMAL)
++			break;
++		/* fall through */
++	default:
+ 		rc = FAILED;
++		break;
++	}
+ 
+ 	pr_debug("%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+@@ -487,11 +515,27 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+ 		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 
+-	rcr = cxlflash_afu_reset(cfg);
+-	if (rcr == 0)
+-		rc = SUCCESS;
+-	else
++	switch (cfg->state) {
++	case STATE_NORMAL:
++		cfg->state = STATE_LIMBO;
++		scsi_block_requests(cfg->host);
++
++		rcr = cxlflash_afu_reset(cfg);
++		if (!rcr)
++			rc = FAILED;
++		cfg->state = STATE_NORMAL;
++		wake_up_all(&cfg->limbo_waitq);
++		scsi_unblock_requests(cfg->host);
++		break;
++	case STATE_LIMBO:
++		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++		if (cfg->state == STATE_NORMAL)
++			break;
++		/* fall through */
++	default:
+ 		rc = FAILED;
++		break;
++	}
+ 
+ 	pr_debug("%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+@@ -642,7 +686,7 @@ static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+ 	struct pci_dev *pdev = cfg->dev;
+ 
+ 	if (pci_channel_offline(pdev))
+-		wait_event_timeout(cfg->eeh_waitq,
++		wait_event_timeout(cfg->limbo_waitq,
+ 				   !pci_channel_offline(pdev),
+ 				   CXLFLASH_PCI_ERROR_RECOVERY_TIMEOUT);
+ }
+@@ -825,6 +869,8 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 						    !cfg->tmf_active);
+ 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+ 
++	cfg->state = STATE_FAILTERM;
++
+ 	switch (cfg->init_state) {
+ 	case INIT_STATE_SCSI:
+ 		scsi_remove_host(cfg->host);
+@@ -1879,6 +1925,8 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 	struct afu *afu = cfg->afu;
+ 	struct device *dev = &cfg->dev->dev;
+ 
++	cxl_perst_reloads_same_image(cfg->cxl_afu, true);
++
+ 	rc = init_mc(cfg);
+ 	if (rc) {
+ 		dev_err(dev, "%s: call to init_mc failed, rc=%d!\n",
+@@ -2021,6 +2069,12 @@ void cxlflash_wait_resp(struct afu *afu, struct afu_cmd *cmd)
+  * the sync. This design point requires calling threads to not be on interrupt
+  * context due to the possibility of sleeping during concurrent sync operations.
+  *
++ * AFU sync operations are only necessary and allowed when the device is
++ * operating normally. When not operating normally, sync requests can occur as
++ * part of cleaning up resources associated with an adapter prior to removal.
++ * In this scenario, these requests are simply ignored (safe due to the AFU
++ * going away).
++ *
+  * Return:
+  *	0 on success
+  *	-1 on failure
+@@ -2028,11 +2082,17 @@ void cxlflash_wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 		      res_hndl_t res_hndl_u, u8 mode)
+ {
++	struct cxlflash_cfg *cfg = afu->parent;
+ 	struct afu_cmd *cmd = NULL;
+ 	int rc = 0;
+ 	int retry_cnt = 0;
+ 	static DEFINE_MUTEX(sync_active);
+ 
++	if (cfg->state != STATE_NORMAL) {
++		pr_debug("%s: Sync not required! (%u)\n", __func__, cfg->state);
++		return 0;
++	}
++
+ 	mutex_lock(&sync_active);
+ retry:
+ 	cmd = cxlflash_cmd_checkout(afu);
+@@ -2122,6 +2182,11 @@ static void cxlflash_worker_thread(struct work_struct *work)
+ 	int port;
+ 	ulong lock_flags;
+ 
++	/* Avoid MMIO if the device has failed */
++
++	if (cfg->state != STATE_NORMAL)
++		return;
++
+ 	spin_lock_irqsave(cfg->host->host_lock, lock_flags);
+ 
+ 	if (cfg->lr_state == LINK_RESET_REQUIRED) {
+@@ -2200,10 +2265,9 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	cfg->dev = pdev;
+ 	cfg->dev_id = (struct pci_device_id *)dev_id;
+ 	cfg->mcctx = NULL;
+-	cfg->err_recovery_active = 0;
+ 
+ 	init_waitqueue_head(&cfg->tmf_waitq);
+-	init_waitqueue_head(&cfg->eeh_waitq);
++	init_waitqueue_head(&cfg->limbo_waitq);
+ 
+ 	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
+ 	cfg->lr_state = LINK_RESET_INVALID;
+@@ -2259,6 +2323,89 @@ out_remove:
+ 	goto out;
+ }
+ 
++/**
++ * cxlflash_pci_error_detected() - called when a PCI error is detected
++ * @pdev:	PCI device struct.
++ * @state:	PCI channel state.
++ *
++ * Return: PCI_ERS_RESULT_NEED_RESET or PCI_ERS_RESULT_DISCONNECT
++ */
++static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
++						    pci_channel_state_t state)
++{
++	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
++
++	pr_debug("%s: pdev=%p state=%u\n", __func__, pdev, state);
++
++	switch (state) {
++	case pci_channel_io_frozen:
++		cfg->state = STATE_LIMBO;
++
++		/* Turn off legacy I/O */
++		scsi_block_requests(cfg->host);
++
++		term_mc(cfg, UNDO_START);
++		stop_afu(cfg);
++
++		return PCI_ERS_RESULT_NEED_RESET;
++	case pci_channel_io_perm_failure:
++		cfg->state = STATE_FAILTERM;
++		wake_up_all(&cfg->limbo_waitq);
++		scsi_unblock_requests(cfg->host);
++		return PCI_ERS_RESULT_DISCONNECT;
++	default:
++		break;
++	}
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++/**
++ * cxlflash_pci_slot_reset() - called when PCI slot has been reset
++ * @pdev:	PCI device struct.
++ *
++ * This routine is called by the pci error recovery code after the PCI
++ * slot has been reset, just before we should resume normal operations.
++ *
++ * Return: PCI_ERS_RESULT_RECOVERED or PCI_ERS_RESULT_DISCONNECT
++ */
++static pci_ers_result_t cxlflash_pci_slot_reset(struct pci_dev *pdev)
++{
++	int rc = 0;
++	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
++	struct device *dev = &cfg->dev->dev;
++
++	pr_debug("%s: pdev=%p\n", __func__, pdev);
++
++	rc = init_afu(cfg);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: EEH recovery failed! (%d)\n", __func__, rc);
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++/**
++ * cxlflash_pci_resume() - called when normal operation can resume
++ * @pdev:	PCI device struct
++ */
++static void cxlflash_pci_resume(struct pci_dev *pdev)
++{
++	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
++
++	pr_debug("%s: pdev=%p\n", __func__, pdev);
++
++	cfg->state = STATE_NORMAL;
++	wake_up_all(&cfg->limbo_waitq);
++	scsi_unblock_requests(cfg->host);
++}
++
++static const struct pci_error_handlers cxlflash_err_handler = {
++	.error_detected = cxlflash_pci_error_detected,
++	.slot_reset = cxlflash_pci_slot_reset,
++	.resume = cxlflash_pci_resume,
++};
++
+ /*
+  * PCI device structure
+  */
+@@ -2267,6 +2414,7 @@ static struct pci_driver cxlflash_driver = {
+ 	.id_table = cxlflash_pci_table,
+ 	.probe = cxlflash_probe,
+ 	.remove = cxlflash_remove,
++	.err_handler = &cxlflash_err_handler,
+ };
+ 
+ /**
+diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+index 7f890cc..7232536 100644
+--- a/drivers/scsi/cxlflash/main.h
++++ b/drivers/scsi/cxlflash/main.h
+@@ -101,4 +101,8 @@ struct asyc_intr_info {
+ #define LINK_RESET	0x02
+ };
+ 
++#ifndef CONFIG_CXL_EEH
++#define cxl_perst_reloads_same_image(_a, _b) do { } while (0)
++#endif
++
+ #endif /* _CXLFLASH_MAIN_H */
 -- 
 2.1.0
 
