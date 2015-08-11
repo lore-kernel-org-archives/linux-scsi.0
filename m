@@ -1,173 +1,156 @@
 From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 3/3] cxlflash: Virtual LUN support
-Date: Tue, 11 Aug 2015 17:06:51 -0500
-Message-ID: <55CA71FB.7090705@linux.vnet.ibm.com>
-References: <1439226594-7944-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439290473.28873.3.camel@neuling.org>
+Subject: Re: [PATCH v4 2/3] cxlflash: Superpipe support
+Date: Tue, 11 Aug 2015 17:21:56 -0500
+Message-ID: <55CA7584.4020505@linux.vnet.ibm.com>
+References: <1439226588-7886-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439270955.14448.91.camel@kernel.crashing.org>
 Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:46913 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbbHKWGx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 18:06:53 -0400
+Received: from e38.co.us.ibm.com ([32.97.110.159]:41486 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932875AbbHKWV7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 18:21:59 -0400
 Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 16:06:53 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 8331419D8042
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 15:57:48 -0600 (MDT)
+	Tue, 11 Aug 2015 16:21:58 -0600
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id F2CE61FF002D
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 16:13:05 -0600 (MDT)
 Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7BM5tC950331734
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 15:05:55 -0700
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7BML18R42926300
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 15:21:02 -0700
 Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7BM6oE6015861
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 16:06:51 -0600
-In-Reply-To: <1439290473.28873.3.camel@neuling.org>
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7BMLsRB000301
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 16:21:56 -0600
+In-Reply-To: <1439270955.14448.91.camel@kernel.crashing.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, hch@infradead.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com
 
-Mikey: Thanks for your review. Comments inline below.
+Ben:
 
-On 8/11/2015 5:54 AM, Michael Neuling wrote:
+Comments inline below.
+
+
+On 8/11/2015 12:29 AM, Benjamin Herrenschmidt wrote:
+>   So in a similar vein to the previous review, I am missing a lot of
+> context here but a few things did spring to me eyes:
+
+Thanks for your review.
+
+>> +	list_for_each_entry_safe(lli, temp, &cfg->lluns, list)
+>> +		if (!memcmp(lli->wwid, wwid, DK_CXLFLASH_MANAGE_LUN_WWID_LEN)) {
+>> +			lli->newly_created = false;
 >
-> I'm not keen on the numerous pr_err() in here.  I think it'll make the driver
-> chatty especially with a badly behaving userspace.
-
-
-Will look at all the pr_err() and limit them to errors that are 
-indicative of a mis-behaving device, as opposed to a mis-behaving 
-application.
-
->> -	.ioctl = cxlflash_ioctl,
- >
-> Where are you hooking this in now?  This seems broken.
-
-This was an error in splitting up the patch. Will correct in v5.
-
->>   	size = (MAX_RHT_PER_CONTEXT * sizeof(*ctxi->rht_lun));
->> +	size += (MAX_RHT_PER_CONTEXT * sizeof(*ctxi->rht_needs_ws));
+> This is weird ... a lookup effectively changes the state of the object
+> looked up... what for ? There is something oddball here.
 >
-> This needs to be cleaned up as per my comment on patch 2.  Make this a separate
-> allocation.
+> It might be legit but in that case, you should really add a comment
+> explaining the logic around that 'newly_created' field.
 
-Okay. Will split this into multiple allocations.
+As suggested later, will rename these functions in v5.
+
+> Also you drop the lock right below but you have no refcounting, are
+> these objects ever disposed of ?
+
+These objects are long lived. The local lun info structure lives as
+long as the card is available, and the global lun info is kept around
+as long as the module is loaded.
+
+> In general, can you provide a clearer explanation of what are "global"
+> vs "local" LUNs ?
+
+This is a good idea. Will clarify in v5.
+
+> Same ...
+
+Same as above. Will address by renaming.
+
+> Make the function name more explicit: find_or_create_lun() for example.
+> I very much dislike a function called "lookup" that has side effects.
+
+Good point. Will rename in v5.
 
 
->> +	{sizeof(struct dk_cxlflash_clone), (sioctl)cxlflash_disk_clone},
->>   	{sizeof(struct dk_cxlflash_recover_afu), (sioctl)cxlflash_afu_recover},
->>   	{sizeof(struct dk_cxlflash_manage_lun), (sioctl)cxlflash_manage_lun},
+>> +	lli = create_local(sdev, wwid);
+>> +	if (unlikely(!lli))
+>> +		goto out;
 >
-> Does this actually work if we don't have this patch?  If the IOCTLS are sparse
-> (like with only patch 2/3) won't this table be broken?
+> Similar question to earlier, you have no refcounting, should I assume
+> these things never get removed ?
 
-Agreed. Look for these ioctls being re-ordered in v5 to avoid sparseness 
-in the individual patches.
-
->>   		switch (cmd) {
->> +		case DK_CXLFLASH_USER_VIRTUAL:
->> +		case DK_CXLFLASH_VLUN_RESIZE:
->>   		case DK_CXLFLASH_RELEASE:
->> +		case DK_CXLFLASH_CLONE:
->>   			pr_err("%s: %s not supported for lun_mode=%d\n",
->>   			       __func__, decode_ioctl(cmd), afu->internal_lun);
->>   			rc = -EINVAL;
->
-> If someone creates an internal lun and then does this, then we are going to get
-> a bunch of errors on the console.  I don't think that should happen.  Just
-> return it to the caller.
-
-Will remove the pr_err().
+Right, these are long lived.
 
 
-> Be good to do some clear sanity check the "struct dk_cxlflash_resize *resize"
-> here.  It's passed from userspace but then gets propogated to a bunch of other
-> things here like nsectors, get_context etc who will all now be responsible for
-> handling any dodgy data passed in.
->
-> Same with all the other ioctl calls.  Sanity check the parameters ASAP.  Don't
-> propagate potentially dodgy values all over the code base.
->
-
-The ioctls have a standard header structure, with version etc. that are 
-sanity checked before we get here. The other fields are sanity checked 
-where they are used, i.e. in get_context().
-
->> +	/*
->> +	 * The requested size (req_size) is always assumed to be in 4k blocks,
->> +	 * so we have to convert it here from 4k to chunk size.
->> +	 */
->> +	nsectors = (resize->req_size * CXLFLASH_BLOCK_SIZE) / gli->blk_len;
->> +	new_size = DIV_ROUND_UP(nsectors, MC_CHUNK_SIZE);
->
-> Like here. resize->req_size => new_size => grow_lxt() now grow_lxt() need to
-> sanity check new_size.
-
-
-This is a best effort allocator. If an allocation request y, cannot be 
-satisfied because of insufficient space in the LUN (i.e. only x amount 
-of space is available), then the allocator returns the remaining space 
-(x). This best effort allocation mechanism avoids having to sanity check 
-the size parameter.
-
-
->> +	struct dk_cxlflash_uvirtual *virt = (struct dk_cxlflash_uvirtual *)arg;
->
-> Again, this should be sanity checked.
-
-Same as comment above.
-
->> +	/* Resize even if requested size is 0 */
->> +	marshal_virt_to_resize(virt, &resize);
->
-> Virt has not been sanity checked.  So now resize can contain bad data.
->
->
->> +	resize.rsrc_handle = rsrc_handle;
-
-Same as above. As mentioned earlier, the size is immaterial. The rest of 
-the parameters are set here (rsrc_handle).
-
-
->> +	dma_wmb(); /* Make RHT entry's LXT table size update visible */
->
-> Nice documentation here for the memory barriers!
-
-Thank you!
-
->> +#define LXT_LUNIDX_SHIFT  8	/* LXT entry, shift for LUN index */
->> +#define LXT_PERM_SHIFT    4	/* LXT entry, shift for permission bits */
->
-> What is LXT?
-
-LXT = lun translation table. There is one LXT entry per set of 
-contiguous blocks for a virtual LUN (known both to the host and to the 
-AFU). Will clarify this with inline comments.
-
+>> +	lli->parent = gli;
+>> +	spin_lock_irqsave(&cfg->slock, lock_flags);
+>> +	list_add(&lli->list, &cfg->lluns);
+>> +	spin_unlock_irqrestore(&cfg->slock, lock_flags);
 >> +
->> +#define BITS_PER_LONG     64
+>> +	spin_lock_irqsave(&global.slock, lock_flags);
+>> +	list_add(&gli->list, &global.gluns);
+>> +	spin_unlock_irqrestore(&global.slock, lock_flags);
 >
-> Please use #include <asm/bitsperlong.h>
-
-Will re-use this, instead of creating our own definition.
-
+> Your locks are extremely fine grained... too much ? Any reason why you
+> don't have a simple/single lock handling all these ? IE, do you expect
+> frequent accesses ?
 >
->> +#define BPL               BITS_PER_LONG
+> Also, a function called "lookup_something" that has the side effect of
+> adding that something to two lists doesn't look great to me. You may
+> want to review the function naming a bit.
 >
-> Don't redefine this.  Make it harder for others to read.  No one wants to learn
-> your TLAs.
-
-Same as above.
-
->> +	void *ba_lun_handle;
+> Finally, what happens if two processes call this trying to effectively
+> create the same global LUN simultaneously ?
 >
-> ba_lun_handle seems to be commonly cast to a struct ba_lun_info *.  Can it just
-> be a pointer to that?
+> IE, can't you have a case where both lookup fail, then they both hit the
+> create_global() case for the same WWID ? Should you have a single lock
+> or a mutex wrapping the whole thing ? That would make the code a lot
+> simpler to review as well...
 
-Good catch. Will change in v5.
+Good catch. Will look into simplifying to a mutex in v5, wrapping the
+whole lookup/create sequence.
+
+
+>> +void cxlflash_list_init(void)
+>> +{
+>> +	INIT_LIST_HEAD(&global.gluns);
+>> +	spin_lock_init(&global.slock);
+>> +	global.err_page = NULL;
+>> +}
+>
+> Wouldn't it make the code nicer to have all that LUN management in a
+> separate file ?
+
+Good suggestion. Will look at moving these LUN management to a separate
+file.
+
+>> +		rc = mutex_lock_interruptible(&cfg->ctx_tbl_list_mutex);
+>> +		if (rc)
+>> +			goto out;
+>
+> This can be interrupted by any signal, I assume your userspace deals
+> with it ?
+
+That is correct. We do want to be interrupted by any signal (SIGTERM, 
+SIGKILL, SIGINT etc.) at this point. We fail the context validation, and 
+ultimately the ioctl and leave it to user-space to deal with it.
+
+
+>> +		rc = mutex_trylock(&ctxi->mutex);
+>> +		mutex_unlock(&cfg->ctx_tbl_list_mutex);
+>> +		if (!rc)
+>> +			goto retry;
+>
+> Ouch.. that's a nasty one. Are you using the above construct to avoid
+> an A->B/B->A deadlock scenario where somebody else might be taking
+> the list mutex while holding the context one ?
+
+No, this is not addressing a lock ordering issue. Will clarify with a
+comment why the list mutex is being released and reacquired in the
+retry loop.
 
 
