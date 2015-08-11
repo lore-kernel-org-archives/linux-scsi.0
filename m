@@ -1,16 +1,16 @@
 From: <Viswas.G@pmcs.com>
-Subject: [PATCH V2 3/8] pm80xx: Update For Thermal Page Code
-Date: Tue, 11 Aug 2015 15:06:27 +0530
-Message-ID: <1439285792-12030-4-git-send-email-Viswas.G@pmcs.com>
+Subject: [PATCH V2 4/8] pm80xx: Fix for Incorrect DMA Unmapping of SG List
+Date: Tue, 11 Aug 2015 15:06:28 +0530
+Message-ID: <1439285792-12030-5-git-send-email-Viswas.G@pmcs.com>
 References: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:37382 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:37394 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933709AbbHKJen (ORCPT
+	by vger.kernel.org with ESMTP id S933709AbbHKJeu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Aug 2015 05:34:43 -0400
+	Tue, 11 Aug 2015 05:34:50 -0400
 In-Reply-To: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,7 +19,11 @@ Cc: Jack Wang <jinpu.wang@profitbricks.com>, JBottomley@parallels.com, Tomas Hen
 
 From: Viswas G <Viswas.G@pmcs.com>
 
-Thermal page code has been changed to 7 for the 12G controllers.
+In pm8001_ccb_task_free(), the dma unmapping is done based on
+ccb->n_elem value. This should be initialized to zero in the
+task_abort(). Otherwise, pm8001_ccb_task_free() will try for
+dma_unmap_sg() which is invalid for task abort and can lead to
+kernel crash.
 
 Changes From V1:
 None
@@ -31,52 +35,21 @@ Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c |    9 ++++++++-
- drivers/scsi/pm8001/pm80xx_hwi.h |    3 ++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 05cce46..dced9f7 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -843,6 +843,7 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
- 	int rc;
- 	u32 tag;
- 	u32 opc = OPC_INB_SET_CONTROLLER_CONFIG;
-+	u32 page_code;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 48f4627..949198c 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -790,6 +790,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 		ccb->device = pm8001_dev;
+ 		ccb->ccb_tag = ccb_tag;
+ 		ccb->task = task;
++		ccb->n_elem = 0;
  
- 	memset(&payload, 0, sizeof(struct set_ctrl_cfg_req));
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
-@@ -851,8 +852,14 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
- 
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	payload.tag = cpu_to_le32(tag);
-+
-+	if (IS_SPCV_12G(pm8001_ha->pdev))
-+		page_code = THERMAL_PAGE_CODE_7H;
-+	else
-+		page_code = THERMAL_PAGE_CODE_8H;
-+
- 	payload.cfg_pg[0] = (THERMAL_LOG_ENABLE << 9) |
--			(THERMAL_ENABLE << 8) | THERMAL_OP_CODE;
-+				(THERMAL_ENABLE << 8) | page_code;
- 	payload.cfg_pg[1] = (LTEMPHIL << 24) | (RTEMPHIL << 8);
- 
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index 9970a38..a083cc6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -177,7 +177,8 @@
- /* Thermal related */
- #define	THERMAL_ENABLE			0x1
- #define	THERMAL_LOG_ENABLE		0x1
--#define THERMAL_OP_CODE			0x6
-+#define THERMAL_PAGE_CODE_7H		0x6
-+#define THERMAL_PAGE_CODE_8H		0x7
- #define LTEMPHIL			 70
- #define RTEMPHIL			100
- 
+ 		res = PM8001_CHIP_DISP->task_abort(pm8001_ha,
+ 			pm8001_dev, flag, task_tag, ccb_tag);
 -- 
 1.7.1
 
