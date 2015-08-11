@@ -1,105 +1,79 @@
-From: Konstantin Krotov <kkv@clodo.ru>
-Subject: Re: threads scsi_eh_ and scsi_tmf_ don't die when ib_srp reconnect
-Date: Tue, 11 Aug 2015 16:40:50 +0300
-Message-ID: <55C9FB62.1030004@clodo.ru>
-References: <55C8C0DC.7070505@clodo.ru> <55C8C39B.1010000@sandisk.com>
-Reply-To: kkv@clodo.ru
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 1/3] cxlflash: Base error recovery support
+Date: Tue, 11 Aug 2015 09:17:10 -0500
+Message-ID: <CCF4EE20-6211-4CA6-96F1-311BF0A294B4@linux.vnet.ibm.com>
+References: <1439226574-7766-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439250778.24419.5.camel@axtens.net>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:33992 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934370AbbHKNk7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 09:40:59 -0400
-Received: by lbbtg9 with SMTP id tg9so6451162lbb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 06:40:55 -0700 (PDT)
-In-Reply-To: <55C8C39B.1010000@sandisk.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:35341 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965025AbbHKORO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 10:17:14 -0400
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 08:17:14 -0600
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 140F63E40041
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 08:17:12 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7BEGH0P35717368
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 07:16:17 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7BEHAU8007199
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 08:17:11 -0600
+In-Reply-To: <1439250778.24419.5.camel@axtens.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+To: Daniel Axtens <dja@axtens.net>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
+> On Aug 10, 2015, at 6:52 PM, Daniel Axtens <dja@axtens.net> wrote:
+>=20
+>> @@ -487,11 +515,27 @@ static int cxlflash_eh_host_reset_handler(stru=
+ct scsi_cmnd *scp)
+>> 		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+>> 		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+>>=20
+>> -	rcr =3D cxlflash_afu_reset(cfg);
+>> -	if (rcr =3D=3D 0)
+>> -		rc =3D SUCCESS;
+>> -	else
+>> +	switch (cfg->state) {
+>> +	case STATE_NORMAL:
+>> +		cfg->state =3D STATE_LIMBO;
+>> +		scsi_block_requests(cfg->host);
+>> +
+>> +		rcr =3D cxlflash_afu_reset(cfg);
+>> +		if (!rcr)
+>> +			rc =3D FAILED;
+>=20
+> I think you want:
+>=20
+> 	if (rcr) {
+> 		rc =3D FAILED;
+> 		break;
+> 	}
+>=20
+> cxlflash_afu_reset returns 0 on success, so I think you want to drop =
+the
+> negation, and also I think if it fails you want to break out and not =
+set
+> STATE_NORMAL. Is that right?
 
+Good catch!
 
-10.08.2015 18:30, Bart Van Assche =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
-> On 08/10/2015 08:18 AM, Konstantin Krotov wrote:
->> I was faced with the following problem:
->>
->> Im exported to compute-node scsi disks through ib_srp from storages.=
- And
->> if reconnect occurs for any reason, eg
->>
->> "[1201117.626498] scsi host62: ib_srp: REJ received
->> [1201117.626507] scsi host62: ib_srp: SRP LOGIN from
->> fe80:0000:0000:0000:0002:c903:0009:1796 to
->> fe80:0000:0000:0000:0002:c903:0009:c1a0 REJECTED, reason 0x00010001
->> [1201117.626656] scsi host62: ib_srp: Connection 0/8 failed"
->>
->> i find threads in output ps:
->> "root     28047  0.0  0.0      0     0 ?        S    18:04   0:00
->> [scsi_eh_62]
->> root     28048  0.0  0.0      0     0 ?        S<   18:04   0:00
->> [scsi_tmf_62]"
->>
->> Each reconnect generates two thread, which do not die.
->>
->> kernel version 3.19.1
->>
->> modinfo ib_srp
->> filename:       /lib/modules/3.19-3-amd64/updates/dkms/ib_srp.ko
->> release_date:   Apr 09 2015
->> version:        2.0.32#in-tree
->
-> Hello Konstantin,
->
-> Does the above output mean that you are using the ib_srp-backport dri=
-ver
-> ? If so, please upgrade to version v2.0.34. That version includes all
-> SRP initiator fixes that have been posted on the linux-rdma and
-> linux-scsi mailing lists for inclusion in Linux kernel v4.3.
->
-> Bart.
->
-Hello, thanks for reply.
+Both of these were an oversight on my part and are now fixed. They=E2=80=
+=99ll be
+included with v5.
 
-I build a package version 2.0.34, but problem is reproduced:
-[  260.266374] scsi host15: ib_srp: REJ received
-[  260.266383] scsi host15: ib_srp: SRP LOGIN from=20
-fe80:0000:0000:0000:0002:c903:0008:c884 to=20
-fe80:0000:0000:0000:0002:c903:0009:c1a0 REJECTED, reason 0x00010001
-[  260.266588] scsi host15: ib_srp: Connection 0/8 failed
-[  260.266700] scsi host15: ib_srp: Sending CM DREQ failed
+>=20
+> Once you fix that, or explain to me why I'm wrong:
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
 
-and increases the number of threads scsi_tmf_ and scsi_eh_ at every=20
-reconnect..
-
-modinfo ib_srp
-filename:       /lib/modules/3.19-3-amd64/updates/dkms/ib_srp.ko
-release_date:   Jul 27 2015
-version:        2.0.34#in-tree
-license:        Dual BSD/GPL
-description:    InfiniBand SCSI RDMA Protocol initiator
-author:         Roland Dreier
-srcversion:     75206A3E8C5F05BED61C20B
-depends:=20
-ib_core,scsi_transport_srp,ib_sa,scsi_mod,ib_cm,rdma_cm,scsi_transport_=
-srp
-vermagic:       3.19-3-amd64 SMP mod_unload modversions
-
-modinfo scsi_transport_srp
-filename:       /lib/modules/3.19-3-amd64/updates/dkms/scsi_transport_s=
-rp.ko
-license:        GPL
-description:    SRP Transport Attributes
-author:         FUJITA Tomonori
-depends:        scsi_mod
-vermagic:       3.19-3-amd64 SMP mod_unload modversions
-
---=20
-WBR
-Konstantin V. Krotov
-
+Thanks.
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
