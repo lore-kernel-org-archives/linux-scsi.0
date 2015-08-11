@@ -1,44 +1,47 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] scsi: Fixup fixed sense generation
-Date: Tue, 11 Aug 2015 09:49:26 +0300
-Message-ID: <55C99AF6.5080601@dev.mellanox.co.il>
-References: <1438347903-106697-1-git-send-email-hare@suse.de>
+From: David Disseldorp <ddiss@suse.de>
+Subject: Re: Persistent Reservation API
+Date: Tue, 11 Aug 2015 11:30:41 +0200
+Message-ID: <20150811113041.68d9f122@g21.suse.de>
+References: <1438672271-11309-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:34889 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754977AbbHKGta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 02:49:30 -0400
-Received: by wicne3 with SMTP id ne3so48038546wic.0
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2015 23:49:29 -0700 (PDT)
-In-Reply-To: <1438347903-106697-1-git-send-email-hare@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:40436 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933704AbbHKJan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Aug 2015 05:30:43 -0400
+In-Reply-To: <1438672271-11309-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
+Hi Christoph,
 
-> -		put_unaligned_be64(info, &buf[3]);
-> +		/*
-> +		 * Fixed format sense reserves only 32 bits for the
-> +		 * 'information' field
-> +		 */
-> +		put_unaligned_be32((u32)info, &buf[3]);
->   	}
->   }
->   EXPORT_SYMBOL(scsi_set_sense_information);
->
+On Tue,  4 Aug 2015 09:11:05 +0200, Christoph Hellwig wrote:
 
-Hannes,
+> This series adds support for a simplified persistent reservation API
+> to the block layer.  The intent is that both in-kernel and userspace
+> consumers can use the API instead of having to hand craft SCSI or NVMe
+> command through the various pass through interfaces.  It also adds
+> DM support as getting reservations through dm-multipath is a major
+> pain with the current scheme.
+> 
+> NVMe support currently isn't included as I don't have a multihost
+> NVMe setup to test on, but if I can find a volunteer to test it I'm
+> happy to write the code for it.
+> 
+> The ioctl API is documented in Documentation/block/pr.txt, but to
+> fully understand the concept you'll have to read up the SPC spec,
+> PRs are too complicated that trying to rephrase them into different
+> terminology is just going to create confusion.
 
-This bit is handled in "scsi: Fix sense information setting in fixed 
-sized format"
-see http://permalink.gmane.org/gmane.linux.scsi/103115
+Do you have any thoughts on where SCSI-2 RESERVE/RELEASE should fit into
+this API, if at all? I.e. as a new enum pr_type members for
+pr_reserve()/pr_release(), as separate pr_ops hooks, etc?
+Similarly for PR_IN - IIUC, if LIO is to handle cluster wide PRs
+for Ceph rbd via the block layer, these will all need to be supported
+by block layer (and LIO backend) APIs.
 
-Can you make it incremental to this patch?
-
-James, I don't see it on the scsi tree, can you pick it up?
-
-Sagi.
+Cheers, David
