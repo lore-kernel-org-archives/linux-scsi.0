@@ -1,88 +1,24 @@
-From: Abhilash Jindal <klock.android@gmail.com>
-Subject: [PATCH] [SCSI] bfa: Use boottime
-Date: Tue, 11 Aug 2015 12:10:09 -0400
-Message-ID: <1439309409-10158-1-git-send-email-klock.android@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33088 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbbHKQKM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2015 12:10:12 -0400
-Received: by iods203 with SMTP id s203so10210034iod.0
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 09:10:11 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [Xen-devel] [PATCH v3 0/9] Use correctly the Xen memory terminologies
+Date: Tue, 11 Aug 2015 18:37:25 +0100
+Message-ID: <55CA32D5.606@citrix.com>
+References: <1438965282-19103-1-git-send-email-julien.grall@citrix.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1438965282-19103-1-git-send-email-julien.grall@citrix.com>
+Sender: netdev-owner@vger.kernel.org
+To: Julien Grall <julien.grall@citrix.com>, xen-devel@lists.xenproject.org
+Cc: linux-fbdev@vger.kernel.org, x86@kernel.org, netdev@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, Tomi Valkeinen <tomi.valkeinen@ti.com>, stefano.stabellini@eu.citrix.com, Ingo Molnar <mingo@redhat.com>, linux-input@vger.kernel.org, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, ian.campbell@citrix.com, "James E.J. Bottomley" <JBottomley@odin.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>, Wei Liu <wei.liu2@citrix.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, linux-api@vger.kernel.org, linuxppc-d
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sudarsana.kalluru@qlogic.com, anil.gurumurthy@qlogic.com, Abhilash Jindal <klock.android@gmail.com>
 
-Wall time obtained from do_gettimeofday is susceptible to sudden jumps due to
-user setting the time or due to NTP.  Boot time is constantly increasing time
-better suited for comparing two timestamps.
+On 07/08/15 17:34, Julien Grall wrote:
+> Hi all,
+> 
+> This patch series aims to use the memory terminologies described in
+> include/xen/mm.h [1] for Linux xen code.
 
-Signed-off-by: Abhilash Jindal <klock.android@gmail.com>
----
- drivers/scsi/bfa/bfa_svc.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Applied to for-linus-4.3, thanks.
 
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 625225f..a4f59c7 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -307,8 +307,8 @@ static u64
- bfa_get_log_time(void)
- {
- 	u64 system_time = 0;
--	struct timeval tv;
--	do_gettimeofday(&tv);
-+	struct timespec tv;
-+	getboottime(&tv);
- 
- 	/* We are interested in seconds only. */
- 	system_time = tv.tv_sec;
-@@ -3092,7 +3092,7 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
- 	struct bfa_port_cfg_s *port_cfg = &fcport->cfg;
- 	struct bfa_fcport_ln_s *ln = &fcport->ln;
--	struct timeval tv;
-+	struct timespec tv;
- 
- 	fcport->bfa = bfa;
- 	ln->fcport = fcport;
-@@ -3105,7 +3105,7 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	/*
- 	 * initialize time stamp for stats reset
- 	 */
--	do_gettimeofday(&tv);
-+	getboottime(&tv);
- 	fcport->stats_reset_time = tv.tv_sec;
- 	fcport->stats_dma_ready = BFA_FALSE;
- 
-@@ -3358,9 +3358,9 @@ __bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
- 	union bfa_fcport_stats_u *ret;
- 
- 	if (complete) {
--		struct timeval tv;
-+		struct timespec tv;
- 		if (fcport->stats_status == BFA_STATUS_OK)
--			do_gettimeofday(&tv);
-+			getboottime(&tv);
- 
- 		list_for_each_safe(qe, qen, &fcport->stats_pending_q) {
- 			bfa_q_deq(&fcport->stats_pending_q, &qe);
-@@ -3436,12 +3436,12 @@ __bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete)
- 	struct list_head *qe, *qen;
- 
- 	if (complete) {
--		struct timeval tv;
-+		struct timespec tv;
- 
- 		/*
- 		 * re-initialize time stamp for stats reset
- 		 */
--		do_gettimeofday(&tv);
-+		getboottime(&tv);
- 		fcport->stats_reset_time = tv.tv_sec;
- 		list_for_each_safe(qe, qen, &fcport->statsclr_pending_q) {
- 			bfa_q_deq(&fcport->statsclr_pending_q, &qe);
--- 
-1.7.9.5
-
+David
