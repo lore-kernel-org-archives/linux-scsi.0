@@ -1,16 +1,16 @@
 From: <Viswas.G@pmcs.com>
-Subject: [PATCH V2 2/8] pm80xx: Corrected device state changes in I_T_Nexus_Reset.
-Date: Tue, 11 Aug 2015 15:06:26 +0530
-Message-ID: <1439285792-12030-3-git-send-email-Viswas.G@pmcs.com>
+Subject: [PATCH V2 3/8] pm80xx: Update For Thermal Page Code
+Date: Tue, 11 Aug 2015 15:06:27 +0530
+Message-ID: <1439285792-12030-4-git-send-email-Viswas.G@pmcs.com>
 References: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:34967 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933709AbbHKJef (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:37382 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933709AbbHKJen (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Aug 2015 05:34:35 -0400
+	Tue, 11 Aug 2015 05:34:43 -0400
 In-Reply-To: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,77 +19,64 @@ Cc: Jack Wang <jinpu.wang@profitbricks.com>, JBottomley@parallels.com, Tomas Hen
 
 From: Viswas G <Viswas.G@pmcs.com>
 
-In Nexus reset the device state request are not needed.
+Thermal page code has been changed to 7 for the 12G controllers.
 
-Changes from V1:
-Device state change request has been removed as the firmware
-will handle it during internal cleanup. Also updated the
-proper return value in case of failures.
+Changes From V1:
+None
 
 Signed-off-by: Viswas G <Viswas.G@pmcs.com>
 
 Reviewed-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.c |   18 +++++++++++++-----
- drivers/scsi/pm8001/pm8001_sas.h |    8 ++++++++
- 2 files changed, 21 insertions(+), 5 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c |    9 ++++++++-
+ drivers/scsi/pm8001/pm80xx_hwi.h |    3 ++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index b93f289..48f4627 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -975,19 +975,27 @@ int pm8001_I_T_nexus_reset(struct domain_device *dev)
- 	phy = sas_get_local_phy(dev);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 05cce46..dced9f7 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -843,6 +843,7 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
+ 	int rc;
+ 	u32 tag;
+ 	u32 opc = OPC_INB_SET_CONTROLLER_CONFIG;
++	u32 page_code;
  
- 	if (dev_is_sata(dev)) {
--		DECLARE_COMPLETION_ONSTACK(completion_setstate);
- 		if (scsi_is_sas_phy_local(phy)) {
- 			rc = 0;
- 			goto out;
- 		}
- 		rc = sas_phy_reset(phy, 1);
-+		if (rc) {
-+			PM8001_EH_DBG(pm8001_ha,
-+			pm8001_printk("phy reset failed for device %x\n"
-+			"with rc %d\n", pm8001_dev->device_id, rc));
-+			rc = TMF_RESP_FUNC_FAILED;
-+			goto out;
-+		}
- 		msleep(2000);
- 		rc = pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev ,
- 			dev, 1, 0);
--		pm8001_dev->setds_completion = &completion_setstate;
--		rc = PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
--			pm8001_dev, 0x01);
--		wait_for_completion(&completion_setstate);
-+		if (rc) {
-+			PM8001_EH_DBG(pm8001_ha,
-+			pm8001_printk("task abort failed %x\n"
-+			"with rc %d\n", pm8001_dev->device_id, rc));
-+			rc = TMF_RESP_FUNC_FAILED;
-+		}
- 	} else {
- 		rc = sas_phy_reset(phy, 1);
- 		msleep(2000);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 8dd8b78..c9736cc 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -569,6 +569,14 @@ struct pm8001_fw_image_header {
- #define	NCQ_READ_LOG_FLAG			0x80000000
- #define	NCQ_ABORT_ALL_FLAG			0x40000000
- #define	NCQ_2ND_RLE_FLAG			0x20000000
+ 	memset(&payload, 0, sizeof(struct set_ctrl_cfg_req));
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+@@ -851,8 +852,14 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
+ 
+ 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+ 	payload.tag = cpu_to_le32(tag);
 +
-+/* Device states */
-+#define DS_OPERATIONAL				0x01
-+#define DS_PORT_IN_RESET			0x02
-+#define DS_IN_RECOVERY				0x03
-+#define DS_IN_ERROR				0x04
-+#define DS_NON_OPERATIONAL			0x07
++	if (IS_SPCV_12G(pm8001_ha->pdev))
++		page_code = THERMAL_PAGE_CODE_7H;
++	else
++		page_code = THERMAL_PAGE_CODE_8H;
 +
- /**
-  * brief param structure for firmware flash update.
-  */
+ 	payload.cfg_pg[0] = (THERMAL_LOG_ENABLE << 9) |
+-			(THERMAL_ENABLE << 8) | THERMAL_OP_CODE;
++				(THERMAL_ENABLE << 8) | page_code;
+ 	payload.cfg_pg[1] = (LTEMPHIL << 24) | (RTEMPHIL << 8);
+ 
+ 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 9970a38..a083cc6 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -177,7 +177,8 @@
+ /* Thermal related */
+ #define	THERMAL_ENABLE			0x1
+ #define	THERMAL_LOG_ENABLE		0x1
+-#define THERMAL_OP_CODE			0x6
++#define THERMAL_PAGE_CODE_7H		0x6
++#define THERMAL_PAGE_CODE_8H		0x7
+ #define LTEMPHIL			 70
+ #define RTEMPHIL			100
+ 
 -- 
 1.7.1
 
