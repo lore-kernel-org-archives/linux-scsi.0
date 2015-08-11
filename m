@@ -1,24 +1,45 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH v3 0/9] Use correctly the Xen memory terminologies
-Date: Tue, 11 Aug 2015 18:37:25 +0100
-Message-ID: <55CA32D5.606@citrix.com>
-References: <1438965282-19103-1-git-send-email-julien.grall@citrix.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: threads scsi_eh_ and scsi_tmf_ don't die when ib_srp reconnect
+Date: Tue, 11 Aug 2015 13:28:04 -0700
+Message-ID: <55CA5AD4.8080109@sandisk.com>
+References: <55C8C0DC.7070505@clodo.ru> <55C8C39B.1010000@sandisk.com>
+ <55C9FB62.1030004@clodo.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1438965282-19103-1-git-send-email-julien.grall@citrix.com>
-Sender: netdev-owner@vger.kernel.org
-To: Julien Grall <julien.grall@citrix.com>, xen-devel@lists.xenproject.org
-Cc: linux-fbdev@vger.kernel.org, x86@kernel.org, netdev@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.com>, Thomas Gleixner <tglx@linutronix.de>, Russell King <linux@arm.linux.org.uk>, linux-scsi@vger.kernel.org, Tomi Valkeinen <tomi.valkeinen@ti.com>, stefano.stabellini@eu.citrix.com, Ingo Molnar <mingo@redhat.com>, linux-input@vger.kernel.org, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, ian.campbell@citrix.com, "James E.J. Bottomley" <JBottomley@odin.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>, Wei Liu <wei.liu2@citrix.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, linux-api@vger.kernel.org, linuxppc-d
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0063.outbound.protection.outlook.com ([207.46.100.63]:17536
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932739AbbHKU2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Aug 2015 16:28:10 -0400
+In-Reply-To: <55C9FB62.1030004@clodo.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "kkv@clodo.ru" <kkv@clodo.ru>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/08/15 17:34, Julien Grall wrote:
-> Hi all,
-> 
-> This patch series aims to use the memory terminologies described in
-> include/xen/mm.h [1] for Linux xen code.
+On 08/11/2015 06:41 AM, Konstantin Krotov wrote:
+> Hello, thanks for reply.
+>
+> I build a package version 2.0.34, but problem is reproduced:
+> [  260.266374] scsi host15: ib_srp: REJ received
+> [  260.266383] scsi host15: ib_srp: SRP LOGIN from
+> fe80:0000:0000:0000:0002:c903:0008:c884 to
+> fe80:0000:0000:0000:0002:c903:0009:c1a0 REJECTED, reason 0x00010001
+> [  260.266588] scsi host15: ib_srp: Connection 0/8 failed
+> [  260.266700] scsi host15: ib_srp: Sending CM DREQ failed
+>
+> and increases the number of threads scsi_tmf_ and scsi_eh_ at every
+> reconnect..
 
-Applied to for-linus-4.3, thanks.
+Hello Konstantin,
 
-David
+I have tried to reproduce this but without success so far. Whether I 
+install upstream kernel v4.2-rc6 or another kernel version + 
+ib_srp-backport on the initiator system, the result is the same when I 
+block SRP login on the target system: the ib_srp driver keeps trying to 
+log in without creating new SCSI hosts. Are you using a kernel from Greg 
+KH's stable repository or another kernel ? And to which values were the 
+ib_srp kernel module parameters set (cat /etc/modprobe.d/ib_srp.conf) ?
+
+Bart.
