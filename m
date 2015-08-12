@@ -1,185 +1,132 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 2/3] cxlflash: Superpipe support
-Date: Wed, 12 Aug 2015 12:05:05 -0500
-Message-ID: <38EC3DE3-C49C-406F-BC55-C5BC78F23293@linux.vnet.ibm.com>
-References: <1439226588-7886-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439270596.5081.58.camel@neuling.org> <164CACE9-6195-4F1C-AA23-779FFF7D9DF8@linux.vnet.ibm.com> <1439351675.28873.57.camel@neuling.org>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Chris Leech <leech@pobox.com>
+Subject: Re: [PATCH] libiscsi: Fix host busy blocking during connection teardown
+Date: Wed, 12 Aug 2015 10:10:05 -0700
+Message-ID: <CAHNqLyU+Q=Frg2Z-igQQvp_bZ_B_9T5FvaEj+oM13vZdpjCDMQ@mail.gmail.com>
+References: <1435108318-13625-1-git-send-email-sony.john@avagotech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:53194 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbbHLRFL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2015 13:05:11 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 12 Aug 2015 11:05:11 -0600
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 4408438C8026
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 13:05:08 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7CH58a751773576
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 17:05:08 GMT
-Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7CH54hH030399
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 13:05:08 -0400
-In-Reply-To: <1439351675.28873.57.camel@neuling.org>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:35950 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932279AbbHLRKG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2015 13:10:06 -0400
+Received: by iodv127 with SMTP id v127so10801038iod.3
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 10:10:05 -0700 (PDT)
+In-Reply-To: <1435108318-13625-1-git-send-email-sony.john@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Neuling <mikey@neuling.org>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, hch@infradead.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: John Soni Jose <sony.john@aavagotech.com>, Jej B <james.bottomley@hansenpartnership.com>
 
-> On Aug 11, 2015, at 10:54 PM, Michael Neuling <mikey@neuling.org> wro=
-te:
->=20
->=20
->>>> +		pr_debug("%s: Wait for user context to quiesce...\n", __func__)=
-;
->>>> +		wake_up_all(&cfg->limbo_waitq);
->>>> +		ssleep(1);
->>>=20
->>> Why 1 sec and why in a loop?  Can=E2=80=99t you poll/wait for compl=
-etion somewhere?
->>=20
->> This routine is called when the device is being removed and we need =
-to stall until
->> the user contexts are made aware of removal [by marking them in erro=
-r] and have
->> completely gone away [there are no longer any contexts in our table =
-or list].
->>=20
->> The 1 second sleep is simply to give the users time to cleanup once =
-they see
->> the notification. We can make it a larger/smaller value or remove it=
- entirely, but
->> I felt that since this is not a hot path there was no reason to perf=
-orm a busy-wait
->> style of loop here and yield to someone else.
->>=20
->> As for the completion/poll, I did consider that but couldn=E2=80=99t=
- come up with a clean
->> way of implementing given how we designed the notification/cleanup m=
-echanism
->> (really just a failed recovery). We can certainly look at doing that=
- as an
->> enhancement in the future.
->=20
-> Does the API allow this flexibility in the future?
+Bump.
 
-Yes, I believe it is flexible enough where it could allow for this.
+We've done some testing, and this does prevent a deadlock that can be
+triggered with a session logout while other sessions on the same HBA
+are under high IO load.  I'd be nice to see this merged.
 
->>=20
->>>> +	rhte_checkin(ctxi, rhte);
->>>> +	cxlflash_lun_detach(gli);
->>>> +
->>>> +out:
->>>> +	if (unlock_ctx)
->>>> +		mutex_unlock(&ctxi->mutex);
->>>=20
->>> Where is the matching lock for this?
->>=20
->> One of the main design points of our context serialization strategy =
-is that
->> any context returned from get_context() has been fully validated, wi=
-ll not
->> be removed from under you, and _is holding the context mutex_. Thus
->> for each of these mutex_unlock(ctxi) you see at the bottom of extern=
-al
->> entry points, the mutex was obtained in get_context().
->=20
-> Should we have something like put_context() that does this?  So there=
- is
-> matching calls to get/put_context
+- Chris
 
-Yes, this is a really good idea (I wish I=E2=80=99d thought of it ;)) t=
-hat will make for
-better code. Look for it in v5!
-
->=20
->>=20
->>>> +	char *tmp =3D NULL;
->>>> +	size_t size;
->>>> +	struct afu *afu =3D cfg->afu;
->>>> +	struct ctx_info *ctxi =3D NULL;
->>>> +	struct sisl_rht_entry *rhte;
->>>> +
->>>> +	size =3D (MAX_RHT_PER_CONTEXT * sizeof(*ctxi->rht_lun));
->>>> +	size +=3D sizeof(*ctxi);
->>>> +
->>>> +	tmp =3D kzalloc(size, GFP_KERNEL);
->>>=20
->>> Just do two allocs. One for ctxi and one for rht_lun.  This is over=
-ly
->>> complicated.
->>=20
->> I disagree that it=E2=80=99s overly complicated. The intention here =
-was to get this
->> stuff together to avoid multiple function calls and possibly help ou=
-t perf-wise
->> via locality. That said, I=E2=80=99m not opposed to performing multi=
-ple allocations.
->=20
-> I'm not sure I buy it's a performance issue on create_context().  How
-> often are you calling that?  Doesn't that do a lot of things other th=
-an
-> just this?
->=20
-> Anyway if you want to do that, that's ok I guess, but you need to
-> document why and what you=E2=80=99re doing.
-
-We=E2=80=99ve already made the change to perform multiple allocations a=
-nd
-are =E2=80=98okay=E2=80=99 with that.
-
->>>> +	hdr =3D (struct dk_cxlflash_hdr *)&buf;
->>>> +	if (hdr->version !=3D 0) {
->>>> +		pr_err("%s: Version %u not supported for %s\n",
->>>> +		       __func__, hdr->version, decode_ioctl(cmd));
->>>> +		rc =3D -EINVAL;
->>>> +		goto cxlflash_ioctl_exit;
->>>> +	}
->>>=20
->>> Do you advertise this version anywhere?  Users just have to call it=
- and fail?
->>=20
->> We don=E2=80=99t. We can add a version define to the exported ioctl =
-header.
->=20
-> It needs to be exported dynamically by the kernel.  Not the headers.
-> Think new software on old kernel and visa versa.
-
-Okay, will look into this.
-
->>>> +#define DK_CXLFLASH_ATTACH		CXL_IOWR(0x80, dk_cxlflash_attach)
->>>> +#define DK_CXLFLASH_USER_DIRECT		CXL_IOWR(0x81, dk_cxlflash_udire=
-ct)
->>>> +#define DK_CXLFLASH_RELEASE		CXL_IOWR(0x84, dk_cxlflash_release)
->>>> +#define DK_CXLFLASH_DETACH		CXL_IOWR(0x85, dk_cxlflash_detach)
->>>> +#define DK_CXLFLASH_VERIFY		CXL_IOWR(0x86, dk_cxlflash_verify)
->>>> +#define DK_CXLFLASH_RECOVER_AFU		CXL_IOWR(0x88, dk_cxlflash_recov=
-er_afu)
->>>> +#define DK_CXLFLASH_MANAGE_LUN		CXL_IOWR(0x89, dk_cxlflash_manage=
-_lun)
->>>=20
->>> I'm not sure I'd leave these sparse.  What happens if the vlun patc=
-hes don't
->>> get in?
->>=20
->> I do agree with you. I had wanted to keep them like this as their or=
-dering matched
->> closer with how they are expected to be used. That said, I=E2=80=99m=
- okay with moving
->> them around to avoid the sparseness.
->=20
-> Yeah, plus it breaks your table in the ioctl
-
-Right. We had originally thought about adding reserved placeholders to
-avoid the breakage in the ioctl table but have gone ahead and just reor=
-dered.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Jun 23, 2015 at 6:11 PM, John Soni Jose <sony.john@avagotech.com> wrote:
+>  Issue:
+>  In case of hw iscsi offload, an host can have N-number of active
+>  connections. There can be IO's running on some connections which
+>  make host->host_busy always TRUE. Now if logout from a connection
+>  is tried then the code gets into an infinite loop as host->host_busy
+>  is always TRUE.
+>
+>  iscsi_conn_teardown(....)
+>  {
+>    .........
+>     /*
+>      * Block until all in-progress commands for this connection
+>      * time out or fail.
+>      */
+>      for (;;) {
+>       spin_lock_irqsave(session->host->host_lock, flags);
+>       if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
+>               spin_unlock_irqrestore(session->host->host_lock, flags);
+>               break;
+>       }
+>      spin_unlock_irqrestore(session->host->host_lock, flags);
+>      msleep_interruptible(500);
+>      iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
+>                  "host_busy %d host_failed %d\n",
+>                   atomic_read(&session->host->host_busy),
+>                   session->host->host_failed);
+>
+>         ................
+>         ...............
+>      }
+>   }
+>   This is not an issue with software-iscsi/iser as each cxn is a separate
+>   host.
+>
+>  Fix:
+>  Acquiring eh_mutex in iscsi_conn_teardown() before setting
+>  session->state = ISCSI_STATE_TERMINATE.
+>
+> Signed-off-by: John Soni Jose <sony.john@aavagotech.com>
+> ---
+>  drivers/scsi/libiscsi.c | 25 ++-----------------------
+>  1 file changed, 2 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 8053f24..98d9bb6 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -2941,10 +2941,10 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>  {
+>         struct iscsi_conn *conn = cls_conn->dd_data;
+>         struct iscsi_session *session = conn->session;
+> -       unsigned long flags;
+>
+>         del_timer_sync(&conn->transport_timer);
+>
+> +       mutex_lock(&session->eh_mutex);
+>         spin_lock_bh(&session->frwd_lock);
+>         conn->c_stage = ISCSI_CONN_CLEANUP_WAIT;
+>         if (session->leadconn == conn) {
+> @@ -2956,28 +2956,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>         }
+>         spin_unlock_bh(&session->frwd_lock);
+>
+> -       /*
+> -        * Block until all in-progress commands for this connection
+> -        * time out or fail.
+> -        */
+> -       for (;;) {
+> -               spin_lock_irqsave(session->host->host_lock, flags);
+> -               if (!atomic_read(&session->host->host_busy)) { /* OK for ERL == 0 */
+> -                       spin_unlock_irqrestore(session->host->host_lock, flags);
+> -                       break;
+> -               }
+> -               spin_unlock_irqrestore(session->host->host_lock, flags);
+> -               msleep_interruptible(500);
+> -               iscsi_conn_printk(KERN_INFO, conn, "iscsi conn_destroy(): "
+> -                                 "host_busy %d host_failed %d\n",
+> -                                 atomic_read(&session->host->host_busy),
+> -                                 session->host->host_failed);
+> -               /*
+> -                * force eh_abort() to unblock
+> -                */
+> -               wake_up(&conn->ehwait);
+> -       }
+> -
+>         /* flush queued up work because we free the connection below */
+>         iscsi_suspend_tx(conn);
+>
+> @@ -2994,6 +2972,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+>         if (session->leadconn == conn)
+>                 session->leadconn = NULL;
+>         spin_unlock_bh(&session->frwd_lock);
+> +       mutex_unlock(&session->eh_mutex);
+>
+>         iscsi_destroy_conn(cls_conn);
+>  }
+> --
+> 1.8.3.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
