@@ -1,69 +1,29 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Make discard granularity match logical block size when LBPRZ=1
-Date: Tue, 11 Aug 2015 19:07:34 -0400
-Message-ID: <1439334454-28754-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, stable@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/6] block: cleanup blkdev_ioctl
+Date: Tue, 11 Aug 2015 20:29:55 -0400
+Message-ID: <yq1y4hhe4cc.fsf@sermon.lab.mkp.net>
+References: <1438672271-11309-1-git-send-email-hch@lst.de>
+	<1438672271-11309-2-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1438672271-11309-2-git-send-email-hch-jcswGhMUV9g@public.gmane.org> (Christoph
+	Hellwig's message of "Tue, 4 Aug 2015 09:11:06 +0200")
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-A device may report an OPTIMAL UNMAP GRANULARITY and UNMAP GRANULARITY
-ALIGNMENT in the Block Limits VPD. These parameters describe the
-device's internal provisioning allocation units. By default the block
-layer will round and align any discard requests based on these limits.
+>>>>> "Christoph" == Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
 
-If a device reports LBPRZ=1 to guarantee zeroes after discard, however,
-it is imperative that the block layer does not leave out any parts of
-the requested block range. Otherwise the device can not do the required
-zeroing of any partial allocation units and this can lead to data
-corruption.
+Christoph> Split out helpers for all non-trivial ioctls to make this
+Christoph> function simpler, and also start passing around a pointer
+Christoph> version of the argument, as that's what most ioctl handlers
+Christoph> actually need.
 
-Since the dm thinp personality relies on the block layer's current
-behavior and is unable to deal with partial discard blocks we work
-around the problem by setting the granularity to match the logical block
-size when LBPRZ is enabled.
+Looks good.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/sd.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a20da8c25b4f..14e7cd763233 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -636,11 +636,24 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	unsigned int max_blocks = 0;
- 
- 	q->limits.discard_zeroes_data = 0;
--	q->limits.discard_alignment = sdkp->unmap_alignment *
--		logical_block_size;
--	q->limits.discard_granularity =
--		max(sdkp->physical_block_size,
--		    sdkp->unmap_granularity * logical_block_size);
-+
-+	/*
-+	 * When LBPRZ is set, discard alignment and granularity must be
-+	 * fixed to the logical block size. Otherwise the block layer
-+	 * will drop misaligned portions of the request which can lead
-+	 * to data corruption. If LBPRZ is not set, we honor the device
-+	 * preference.
-+	 */
-+	if (sdkp->lbprz) {
-+		q->limits.discard_alignment = 0;
-+		q->limits.discard_granularity = 1;
-+	} else {
-+		q->limits.discard_alignment = sdkp->unmap_alignment *
-+			logical_block_size;
-+		q->limits.discard_granularity =
-+			max(sdkp->physical_block_size,
-+			    sdkp->unmap_granularity * logical_block_size);
-+	}
- 
- 	sdkp->provisioning_mode = mode;
- 
 -- 
-2.4.3
+Martin K. Petersen	Oracle Linux Engineering
