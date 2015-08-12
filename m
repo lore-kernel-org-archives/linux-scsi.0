@@ -1,88 +1,117 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: threads scsi_eh_ and scsi_tmf_ don't die when ib_srp reconnect
-Date: Wed, 12 Aug 2015 09:50:53 -0700
-Message-ID: <55CB796D.3030709@sandisk.com>
-References: <55C8C0DC.7070505@clodo.ru> <55C8C39B.1010000@sandisk.com>
- <55C9FB62.1030004@clodo.ru> <55CA5AD4.8080109@sandisk.com>
- <55CAD674.4040104@clodo.ru>
-Mime-Version: 1.0
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 1/3] cxlflash: Base error recovery support
+Date: Wed, 12 Aug 2015 12:00:23 -0500
+Message-ID: <1A60E57B-2272-47D5-BD34-4E8517C4C99B@linux.vnet.ibm.com>
+References: <1439226574-7766-1-git-send-email-mrochs@linux.vnet.ibm.com> <20150812001556.Horde.B0DQAWPuWIGynBAYlIejmg1@ltc.linux.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0075.outbound.protection.outlook.com ([65.55.169.75]:55638
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753241AbbHLQu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Aug 2015 12:50:59 -0400
-In-Reply-To: <55CAD674.4040104@clodo.ru>
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:55740 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187AbbHLRAe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2015 13:00:34 -0400
+Received: from /spool/local
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Wed, 12 Aug 2015 13:00:33 -0400
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id B0688C90043
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 12:51:34 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7CH0TOC58786028
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 17:00:29 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7CH0RCp007963
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2015 13:00:29 -0400
+In-Reply-To: <20150812001556.Horde.B0DQAWPuWIGynBAYlIejmg1@ltc.linux.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "kkv@clodo.ru" <kkv@clodo.ru>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: wenxiong@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, hch@infradead.org, mikey@neuling.org, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On 08/11/2015 10:15 PM, Konstantin Krotov wrote:
-> 11.08.2015 23:28, Bart Van Assche =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
->> Are you using a kernel from Greg KH's stable repository or another k=
-ernel ? And to which values were the
-> yes, sources from upstream, 3.19.1
+Hi Wendy,
 
-Hello Konstantin,
+Thanks for reviewing. Comments inline below.
 
-Can you test the patch below ? That patch not only applies to the v4.2-=
-rc6
-kernel but also to the ib_srp-backport driver.
 
-Thanks,
+-matt
 
-Bart.
+> On Aug 11, 2015, at 11:15 PM, wenxiong@linux.vnet.ibm.com wrote:
+>=20
+>=20
+> Quoting "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>:
+>=20
+>> Introduce support for enhanced I/O error handling.
+>>=20
+>> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+>> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+>> ---
+>> drivers/scsi/cxlflash/Kconfig  |   2 +-
+>> drivers/scsi/cxlflash/common.h |  11 ++-
+>> drivers/scsi/cxlflash/main.c   | 166 +++++++++++++++++++++++++++++++=
++++++++---
+>> drivers/scsi/cxlflash/main.h   |   4 +
+>> 4 files changed, 170 insertions(+), 13 deletions(-)
+>>=20
+>> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/ma=
+in.c
+>> index 76a7286..18359d4 100644
+>> --- a/drivers/scsi/cxlflash/main.c
+>> +++ b/drivers/scsi/cxlflash/main.c
+>> @@ -380,6 +380,18 @@ static int cxlflash_queuecommand(struct Scsi_Ho=
+st *host, struct scsi_cmnd *scp)
+>> 	}
+>> 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+>>=20
+>> +	switch (cfg->state) {
+>> +	case STATE_LIMBO:
+>> +		pr_debug_ratelimited("%s: device in limbo!\n", __func__);
+>> +		rc =3D SCSI_MLQUEUE_HOST_BUSY;
+>> +		goto out;
+>=20
+> remove =E2=80=9Cgoto out", return SCSI_MLQUEUE_HOST_BUSY;
 
-Subject: [PATCH] IB/srp: Stop the scsi_eh_<n> and scsi_tmf_<n> threads =
-if login fails
+I=E2=80=99d like to keep this as goto out as we have a common exit poin=
+t strategy
+already in place for this routine (and pretty much everywhere else in t=
+he
+driver for that matter). It would seem odd to just have this one place =
+perform
+a direct return.
 
-scsi_host_alloc() not only allocates memory for a SCSI host but also
-creates the scsi_eh_<n> kernel thread and the scsi_tmf_<n> workqueue.
-Stop these threads if login fails by calling scsi_host_put().
-
-Reported-by: Konstantin Krotov <kkv@clodo.ru>
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: stable <stable@vger.kernel.org>
----
- drivers/infiniband/ulp/srp/ib_srp.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/u=
-lp/srp/ib_srp.c
-index f962267..b5f9456 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2765,6 +2765,13 @@ static int srp_sdev_count(struct Scsi_Host *host=
-)
- 	return c;
- }
+Additionally, not included in this patch but one of the bug fixes/enhan=
+cements
+(to be sent out as a separate patch series) we=E2=80=99ve made to this =
+routine is to add
+a =E2=80=98devel=E2=80=99 trace point in the common exit to help with d=
+ebug.
 =20
-+/*
-+ * Return values:
-+ * < 0 upon failure. Caller is responsible for SRP target port cleanup=
-=2E
-+ * 0 and target->state =3D=3D SRP_TARGET_REMOVED if the target port wi=
-ll be removed
-+ *    asynchronously.
-+ * 0 and target->state !=3D SRP_TARGET_REMOVED upon success.
-+ */
- static int srp_add_target(struct srp_host *host, struct srp_target_por=
-t *target)
- {
- 	struct srp_rport_identifiers ids;
-@@ -3316,6 +3323,7 @@ err_disconnect:
- 	}
-=20
- 	kfree(target->ch);
-+	scsi_host_put(target->scsi_host);
- 	goto out;
- }
-=20
---=20
-2.1.4
+>=20
+>> +	case STATE_FAILTERM:
+>> +		pr_debug_ratelimited("%s: device has failed!\n", __func__);
+>> +		goto error;
+>> +	default:
+>> +		break;
+>> +	}
+>> +
+>> 	cmd =3D cxlflash_cmd_checkout(afu);
+>> 	if (unlikely(!cmd)) {
+>> 		pr_err("%s: could not get a free command\n", __func__);
+>> @@ -428,6 +440,10 @@ static int cxlflash_queuecommand(struct Scsi_Ho=
+st *host, struct scsi_cmnd *scp)
+>>=20
+>> out:
+>> 	return rc;
+>> +error:
+>> +	scp->result =3D (DID_NO_CONNECT << 16);
+>> +	scp->scsi_done(scp);
+>> +	return 0;
+>> }
+>>=20
+> I have reviewed most of part in v2.
 
+Thanks again for your previous comments.
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
