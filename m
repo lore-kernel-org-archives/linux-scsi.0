@@ -1,18 +1,18 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 1/7] megaraid_sas : Jbod sequence number support
-Date: Wed, 12 Aug 2015 11:30:14 +0530
-Message-ID: <84e4c58f0e2c8a184deb53e31edca6c5@mail.gmail.com>
-References: <201508071230.t77CTw3x021043@palmhbs0.lsi.com> <yq1h9o5e1li.fsf@sermon.lab.mkp.net>
+Subject: RE: [PATCH 2/7] megaraid_sas : Support for max_io_size 1MB
+Date: Wed, 12 Aug 2015 11:39:12 +0530
+Message-ID: <71e5118ad7612c601cef07c5696340d9@mail.gmail.com>
+References: <201508071230.t77CU8bl021114@palmhbs0.lsi.com> <yq1d1yte07y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36059 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933602AbbHLGAU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2015 02:00:20 -0400
-Received: by lbbpu9 with SMTP id pu9so3668542lbb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 23:00:18 -0700 (PDT)
-In-Reply-To: <yq1h9o5e1li.fsf@sermon.lab.mkp.net>
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34374 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933269AbbHLGJQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2015 02:09:16 -0400
+Received: by labd1 with SMTP id d1so3603133lab.1
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2015 23:09:14 -0700 (PDT)
+In-Reply-To: <yq1d1yte07y.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -20,180 +20,102 @@ Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley
 
 > -----Original Message-----
 > From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Wednesday, August 12, 2015 6:59 AM
+> Sent: Wednesday, August 12, 2015 7:29 AM
 > To: Sumit.Saxena@avagotech.com
 > Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
 > martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
 > kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
 > uday.lingala@avagotech.com
-> Subject: Re: [PATCH 1/7] megaraid_sas : Jbod sequence number support
+> Subject: Re: [PATCH 2/7] megaraid_sas : Support for max_io_size 1MB
 >
 >
 > Sumit,
 >
-> @@ -973,7 +973,12 @@ struct megasas_ctrl_info {
->
+> @@ -1239,7 +1239,9 @@ union megasas_sgl_frame {  typedef union
+> _MFI_CAPABILITIES {
 >  	struct {
->  #if defined(__BIG_ENDIAN_BITFIELD)
-> -		u32     reserved:12;
-> +		u32     reserved:7;
-> +		u32     useSeqNumJbodFP:1;
-> +		u32     supportExtendedSSCSize:1;
-> +		u32     supportDiskCacheSettingForSysPDs:1;
-> +		u32     supportCPLDUpdate:1;
-> +		u32     supportTTYLogCompression:1;
->  		u32     discardCacheDuringLDDelete:1;
->  		u32     supportSecurityonJBOD:1;
->  		u32     supportCacheBypassModes:1;
-> @@ -1013,7 +1018,12 @@ struct megasas_ctrl_info {
->  		u32     supportCacheBypassModes:1;
->  		u32     supportSecurityonJBOD:1;
->  		u32     discardCacheDuringLDDelete:1;
-> -		u32     reserved:12;
-> +		u32     supportTTYLogCompression:1;
-> +		u32     supportCPLDUpdate:1;
-> +		u32     supportDiskCacheSettingForSysPDs:1;
-> +		u32     supportExtendedSSCSize:1;
-> +		u32     useSeqNumJbodFP:1;
-> +		u32     reserved:7;
+>  #if   defined(__BIG_ENDIAN_BITFIELD)
+> -		u32     reserved:25;
+> +		u32     reserved:23;
+> +		u32     support_ext_io_size:1;
+> +		u32	support_ext_queue_depth:1;
+>  		u32     security_protocol_cmds_fw:1;
+>  		u32     support_core_affinity:1;
+>  		u32     support_ndrive_r1_lb:1;
+> @@ -1255,7 +1257,9 @@ typedef union _MFI_CAPABILITIES {
+>  		u32     support_ndrive_r1_lb:1;
+>  		u32     support_core_affinity:1;
+>  		u32     security_protocol_cmds_fw:1;
+> -		u32     reserved:25;
+> +		u32	support_ext_queue_depth:1;
+> +		u32     support_ext_io_size:1;
+> +		u32     reserved:23;
 >  #endif
->  	} adapterOperations3;
+>  	} mfi_capabilities;
+>  	__le32		reg;
 >
-> Looks like most of these new flags should be in a separate patch.
-I will create separate patch for these new flags which are not related to
-JBOD sequence support. These flags are created to keep APIs in sync across
-driver and firmware.
->
-> @@ -4482,6 +4506,62 @@ megasas_destroy_irqs(struct megasas_instance
-> *instance) {  }
->
->  /**
-> + * megasas_setup_jbod_map -	setup jbod map for FP seq_number.
-> + * @instance:				Adapter soft state
-> + * @is_probe:				Driver probe check
-> + *
-> + * Return 0 on success.
-> + */
-> +void
-> +megasas_setup_jbod_map(struct megasas_instance *instance) {
-> +	int i;
-> +	struct fusion_context *fusion = instance->ctrl_context;
-> +	u32 pd_seq_map_sz;
-> +
-> +	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
-> +		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES -
-> 1));
->
-> Why -1 here? Presumably MAX_PHYSICAL_DEVICES is a count, not an index.
-Yes it is count only.  struct MR_PD_CFG_SEQ_NUM_SYNC has "struct
-MR_PD_CFG_SEQ" as one of its member so struct MR_PD_CFG_SEQ corresponding
-to PD index "0" is embedded inside struct MR_PD_CFG_SEQ_NUM_SYNC. That's
-why -1 here.
->
-> +
-> +	if (reset_devices || !fusion ||
-> +		!instance->ctrl_info->adapterOperations3.useSeqNumJbodFP)
-{
-> +		dev_info(&instance->pdev->dev,
-> +			"Jbod map is not supported %s %d\n",
-> +			__func__, __LINE__);
-> +		instance->use_seqnum_jbod_fp = 0;
->
-> Nitpick: It's a bool so use false. Occurs throughout the patch.
-Agree, will do this.
->
-> +		return;
-> +	}
-> +
-> +	if (fusion->pd_seq_sync[0])
-> +		goto skip_alloc;
-> +
-> +	for (i = 0; i < 2; i++) {
->
-> Magic number. See comment below.
->
-> @@ -5510,10 +5594,16 @@ static void megasas_shutdown_controller(struct
-> megasas_instance *instance,
->
->  	if (instance->aen_cmd)
->  		megasas_issue_blocked_abort_cmd(instance,
-> -			instance->aen_cmd, 30);
-> +			instance->aen_cmd,
-> +			MEGASAS_BLOCKED_CMD_TIMEOUT);
->  	if (instance->map_update_cmd)
->  		megasas_issue_blocked_abort_cmd(instance,
-> -			instance->map_update_cmd, 30);
-> +			instance->map_update_cmd,
-> +			MEGASAS_BLOCKED_CMD_TIMEOUT);
-> +	if (instance->jbod_seq_cmd)
-> +		megasas_issue_blocked_abort_cmd(instance,
-> +			instance->jbod_seq_cmd,
-> +			MEGASAS_BLOCKED_CMD_TIMEOUT);
->  	dcmd = &cmd->frame->dcmd;
->
-> Nice cleanup but ideally those non-jbod timeouts would have been in a
-separate
-> patch. Please make sure your patches only do what they purport to do.
-Agree, will create separate patch.
->
->
->  	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE); @@ -5648,6 +5738,7 @@
-> megasas_resume(struct pci_dev *pdev)
->  		}
->  		if (!megasas_get_map_info(instance))
->  			megasas_sync_map_info(instance);
-> +
->  	}
->  	break;
->  	default:
->
-> Whitespace snafu.
-Oops.. My bad. Will work on it.
->
-> @@ -5781,6 +5874,9 @@ static void megasas_detach_one(struct pci_dev
-> *pdev)
->  	case PCI_DEVICE_ID_LSI_INVADER:
->  	case PCI_DEVICE_ID_LSI_FURY:
->  		megasas_release_fusion(instance);
-> +			pd_seq_map_sz = sizeof(struct
-> MR_PD_CFG_SEQ_NUM_SYNC) +
-> +				(sizeof(struct MR_PD_CFG_SEQ) *
-> +					(MAX_PHYSICAL_DEVICES - 1));
->  		for (i = 0; i < 2 ; i++) {
->  			if (fusion->ld_map[i])
->  				dma_free_coherent(&instance->pdev->dev,
->
-> Minus one again.
+> Mystery field: support_ext_queue_depth.
 
-Explained above.
+This is added to keep driver and firmware API naming in sync, will create
+separate patch for syncing drivers and firmware APIs changes.
 >
-> +	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id &
-> 1)];
-> +	pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
-> +	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
-> +			(sizeof(struct MR_PD_CFG_SEQ) *
-> +			(MAX_PHYSICAL_DEVICES - 1));
+> -	fusion->sg_dma_pool = pci_pool_create("megasas sg pool fusion",
+> -					      instance->pdev,
+> -					      total_sz_chain_frame, 4,
+> -					      0);
+> +	fusion->sg_dma_pool = pci_pool_create("sg_pool_fusion", instance-
+> >pdev,
+> +						instance-
+> >max_chain_frame_sz,
+> +						4, 0);
+> +
 >
-> Patch description could do with a description of the data structures you
-set up.
-Had given high level description of what patch does. Will rework to
-provide description of data structures used in patch as well.
+> Why rename the pools? I don't particularly mind but megasas is probably
+more
+> descriptive for most users than fusion is.
+There are two types of controllers megasas drivers support- 1)MFI
+controllers 2)Fusion controllers so used "fusion" name here.
 >
+> @@ -1096,15 +1093,40 @@ megasas_init_adapter_fusion(struct
+> megasas_instance *instance)
+>  		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE *
+>  		 (max_cmd + 1)); /* Extra 1 for SMID 0 */
 >
-> +		/*Want to send all IO via FW path*/
+> +	scratch_pad_2 = readl(&instance->reg_set->outbound_scratch_pad_2);
 >
-> Comment needs spaces.
-I will work on this.
+> scratch_pad_2 sounds like a pretty temporary thing rather than an
+officially
+> exported interface. But I guess that's what it's called.
+Correct.
 >
-> @@ -828,6 +844,8 @@ struct fusion_context {
->  	u32 current_map_sz;
->  	u32 drv_map_sz;
->  	u32 drv_map_pages;
-> +	struct MR_PD_CFG_SEQ_NUM_SYNC	*pd_seq_sync[2];
-> +	dma_addr_t pd_seq_phys[2];
+> +	/* If scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK is set,
+> +	 * Firmware support extended IO chain frame which is 4 time more
 >
-> Please define a suitable constant for 2 and use it in the code.
-Sure, will  use a suitable macro for 2 and resend patch.
+> Nitpick: s/time/times/
+Will rectify this:)
+>
+> +	if (scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK)
+> +		instance->max_chain_frame_sz =
+> +			((scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_MASK)
+> >> 5)
+> +					* MEGASAS_1MB_IO;
+>
+> Magic number 5. Please define MEGASAS_MAX_CHAIN_SHIFT and use that.
+Agree..will do this.
+>
+> @@ -117,7 +121,9 @@ struct RAID_CONTEXT {
+>  	u8      numSGE;
+>  	__le16	configSeqNum;
+>  	u8      spanArm;
+> -	u8      resvd2[3];
+> +	u8      priority;
+> +	u8	numSGEExt;	/* 0x1E 1M IO support */
+> +	u8      resvd2;		/* 0x1F */
+>  };
+>
+> Mystery priority addition.
+Again this is to keep driver and firmware APIs in sync and will do all
+such changes in separate patch.
 >
 > --
 > Martin K. Petersen	Oracle Linux Engineering
