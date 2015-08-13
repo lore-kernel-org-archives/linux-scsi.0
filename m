@@ -1,31 +1,31 @@
 From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5 2/3] cxlflash: Superpipe support
-Date: Thu, 13 Aug 2015 18:38:53 -0500
-Message-ID: <55CD2A8D.307@linux.vnet.ibm.com>
-References: <1439423471-15648-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439463187.21643.49.camel@neuling.org>
+Subject: Re: [PATCH v5 3/3] cxlflash: Virtual LUN support
+Date: Thu, 13 Aug 2015 18:43:28 -0500
+Message-ID: <55CD2BA0.6040005@linux.vnet.ibm.com>
+References: <1439423476-15687-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439467402.21643.50.camel@neuling.org>
 Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:51221 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbbHMXi4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 19:38:56 -0400
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:44599 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212AbbHMXnb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 19:43:31 -0400
 Received: from /spool/local
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Thu, 13 Aug 2015 19:38:55 -0400
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 39D4DC90043
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 19:29:57 -0400 (EDT)
+	Thu, 13 Aug 2015 19:43:30 -0400
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 02F3DC90043
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 19:34:32 -0400 (EDT)
 Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7DNcpee65405026
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 23:38:51 GMT
+	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7DNhQHB59899954
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 23:43:26 GMT
 Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7DNcoVV020151
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 19:38:51 -0400
-In-Reply-To: <1439463187.21643.49.camel@neuling.org>
+	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7DNhPOi023827
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 19:43:26 -0400
+In-Reply-To: <1439467402.21643.50.camel@neuling.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Michael Neuling <mikey@neuling.org>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
@@ -33,31 +33,17 @@ Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux
 
 Mikey:
 
-Good catch. Will resolve this in the v6 patch.
+Thanks for your review. See comment inline below.
 
-Thanks,
-- Manoj
+- Manoj Kumar
 
-On 8/13/2015 5:53 AM, Michael Neuling wrote:
-
->> +
->> +	ctxi = kzalloc(sizeof(*ctxi), GFP_KERNEL);
->> +	lli = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*lli)), GFP_KERNEL);
->> +	if (unlikely(!ctxi || !lli)) {
->> +		dev_err(dev, "%s: Unable to allocate context!\n", __func__);
->> +		goto out;
+On 8/13/2015 7:03 AM, Michael Neuling wrote:
+> Thanks for integrating my suggestions.  create_context() has the same
+> freeing bug as 2/3 but if you fix that I'm happy if you add my
+> reviewed by:
 >
-> If only one of these allocations fails you'll leak some memory.  I
-> suggest making this "goto err", remove the "out" label and make err
-> look like this:
->
-> err:
-> 	if lli
-> 		kfree(lli);
-> 	if ctxi
-> 		kfree(ctxi);
-> 	return NULL;
+> Reviewed-by: Michael Neuling <mikey@neuling.org>
 
-Since kfree() handles being passed a NULL pointer, we will change this 
-also to 'goto err'.
+I believe create_context() is in 2/3, not here. I did not find the same
+issue in this patch.
 
