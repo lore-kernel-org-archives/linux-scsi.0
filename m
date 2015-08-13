@@ -1,64 +1,80 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND V2 7/7] scsi: storvsc: Set the error code correctly in failure conditions
-Date: Thu, 13 Aug 2015 08:43:52 -0700
-Message-ID: <1439480632-11144-7-git-send-email-kys@microsoft.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage
+ protocol negotiation from the vmbus protocol negotiation.
+Date: Thu, 13 Aug 2015 16:33:30 +0200
+Message-ID: <mqda8tv6yx1.fsf@c203.arch.suse.de>
 References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
  <1439480632-11144-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1439480632-11144-1-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+ <1439480632-11144-3-git-send-email-kys@microsoft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1439480632-11144-3-git-send-email-kys@microsoft.com>
+ (K. Y. Srinivasan's message of "Thu, 13 Aug 2015 08:43:48 -0700")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>, Keith Mange <keith.mange@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hch@infradead.org, apw@canonical.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-In the function storvsc_channel_init(), error code was not getting
-set correctly in some of the failure cases. Fix this issue.
-
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/storvsc_drv.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 021cbdf..aac8297 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -960,8 +960,10 @@ static int storvsc_channel_init(struct hv_device *device)
- 	}
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0)
-+	    vstor_packet->status != 0) {
-+		ret = -EINVAL;
- 		goto cleanup;
-+	}
- 
- 
- 	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
-@@ -1040,8 +1042,10 @@ static int storvsc_channel_init(struct hv_device *device)
- 	}
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0)
-+	    vstor_packet->status != 0) {
-+		ret = -EINVAL;
- 		goto cleanup;
-+	}
- 
- 	/*
- 	 * Check to see if multi-channel support is there.
-@@ -1078,8 +1082,10 @@ static int storvsc_channel_init(struct hv_device *device)
- 	}
- 
- 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
--	    vstor_packet->status != 0)
-+	    vstor_packet->status != 0) {
-+		ret = -EINVAL;
- 		goto cleanup;
-+	}
- 
- 	if (process_sub_channels)
- 		handle_multichannel_storage(device, max_chns);
--- 
-1.7.4.1
+IksuIFkuIFNyaW5pdmFzYW4iIDxreXNAbWljcm9zb2Z0LmNvbT4gd3JpdGVzOgoKPiBGcm9tOiBL
+ZWl0aCBNYW5nZSA8a2VpdGgubWFuZ2VAbWljcm9zb2Z0LmNvbT4KPgo+IEN1cnJlbnRseSB3ZSBh
+cmUgbWFraW5nIGRlY2lzaW9ucyBiYXNlZCBvbiB2bWJ1cyBwcm90b2NvbCB2ZXJzaW9ucwo+IHRo
+YXQgaGF2ZSBiZWVuIG5lZ290aWF0ZWQ7IHVzZSBzdG9yYWdlIHBvdG9jb2wgdmVyc2lvbnMgaW5z
+dGVhZC4KPgo+IFRlc3RlZC1ieTogQWxleCBOZyA8YWxleG5nQG1pY3Jvc29mdC5jb20+Cj4gU2ln
+bmVkLW9mZi1ieTogS2VpdGggTWFuZ2UgPGtlaXRoLm1hbmdlQG1pY3Jvc29mdC5jb20+Cj4gU2ln
+bmVkLW9mZi1ieTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+Cj4gLS0tCj4g
+IGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIHwgIDEwOSArKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKy0tLS0tLS0tLQo+ICAxIGZpbGVzIGNoYW5nZWQsIDg3IGluc2VydGlvbnMo
+KyksIDIyIGRlbGV0aW9ucygtKQo+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zdG9ydnNj
+X2Rydi5jIGIvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMKPiBpbmRleCA1ZjlkMTMzLi5mMjk4
+NzFlIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jCj4gKysrIGIvZHJp
+dmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMKPiBAQCAtNTYsMTQgKzU2LDE4IEBACj4gICAqIFYxIFJD
+ID4gMjAwOC8xLzMxOiAgMi4wCj4gICAqIFdpbjc6IDQuMgo+ICAgKiBXaW44OiA1LjEKPiArICog
+V2luOC4xOiA2LjAKPiArICogV2luMTA6IDYuMgo+ICAgKi8KPiAgCj4gICNkZWZpbmUgVk1TVE9S
+X1BST1RPX1ZFUlNJT04oTUFKT1JfLCBNSU5PUl8pCSgoKChNQUpPUl8pICYgMHhmZikgPDwgOCkg
+fCBcCj4gIAkJCQkJCSgoKE1JTk9SXykgJiAweGZmKSkpCj4gIAo+ICsjZGVmaW5lIFZNU1RPUl9Q
+Uk9UT19WRVJTSU9OX1dJTjYJVk1TVE9SX1BST1RPX1ZFUlNJT04oMiwgMCkKPiAgI2RlZmluZSBW
+TVNUT1JfUFJPVE9fVkVSU0lPTl9XSU43CVZNU1RPUl9QUk9UT19WRVJTSU9OKDQsIDIpCj4gICNk
+ZWZpbmUgVk1TVE9SX1BST1RPX1ZFUlNJT05fV0lOOAlWTVNUT1JfUFJPVE9fVkVSU0lPTig1LCAx
+KQo+IC0KPiArI2RlZmluZSBWTVNUT1JfUFJPVE9fVkVSU0lPTl9XSU44XzEJVk1TVE9SX1BST1RP
+X1ZFUlNJT04oNiwgMCkKPiArI2RlZmluZSBWTVNUT1JfUFJPVE9fVkVSU0lPTl9XSU4xMAlWTVNU
+T1JfUFJPVE9fVkVSU0lPTig2LCAyKQo+ICAKPiAgLyogIFBhY2tldCBzdHJ1Y3R1cmUgZGVzY3Jp
+YmluZyB2aXJ0dWFsIHN0b3JhZ2UgcmVxdWVzdHMuICovCj4gIGVudW0gdnN0b3JfcGFja2V0X29w
+ZXJhdGlvbiB7Cj4gQEAgLTIwNSw2ICsyMDksNDYgQEAgc3RydWN0IHZtc2NzaV9yZXF1ZXN0IHsK
+PiAgCj4gIAo+ICAvKgo+ICsgKiBUaGUgbGlzdCBvZiBzdG9yYWdlIHByb3RvY29scyBpbiBvcmRl
+ciBvZiBwcmVmZXJlbmNlLgo+ICsgKi8KPiArc3RydWN0IHZtc3Rvcl9wcm90b2NvbCB7Cj4gKwlp
+bnQgcHJvdG9jb2xfdmVyc2lvbjsKPiArCWludCBzZW5zZV9idWZmZXJfc2l6ZTsKPiArCWludCB2
+bXNjc2lfc2l6ZV9kZWx0YTsKPiArfTsKPiArCj4gKyNkZWZpbmUgVk1TVE9SX05VTV9QUk9UT0NP
+TFMgICAgNQoKY2FuJ3QgeW91IGp1c3QgdXNlIEFSUkFZX1NJWkUoKSBoZXJlLCBzbyB5b3UgZG9u
+J3QgaGF2ZSB0byB0b3VjaCB0aGUKY29uc3RhbnQgZXZlcnkgdGltZSBhIG5ldyBwcm90b2NvbCBp
+cyBhcHBlbmRlZCB0byB0aGUgbGlzdD8KCj4gKwo+ICtjb25zdCBzdHJ1Y3Qgdm1zdG9yX3Byb3Rv
+Y29sIHZtc3Rvcl9wcm90b2NvbHNbVk1TVE9SX05VTV9QUk9UT0NPTFNdID0gewo+ICsJewo+ICsJ
+CVZNU1RPUl9QUk9UT19WRVJTSU9OX1dJTjEwLAo+ICsJCVBPU1RfV0lON19TVE9SVlNDX1NFTlNF
+X0JVRkZFUl9TSVpFLAo+ICsJCTAKPiArCX0sCj4gKwl7Cj4gKwkJVk1TVE9SX1BST1RPX1ZFUlNJ
+T05fV0lOOF8xLAo+ICsJCVBPU1RfV0lON19TVE9SVlNDX1NFTlNFX0JVRkZFUl9TSVpFLAo+ICsJ
+CTAKPiArCX0sCj4gKwl7Cj4gKwkJVk1TVE9SX1BST1RPX1ZFUlNJT05fV0lOOCwKPiArCQlQT1NU
+X1dJTjdfU1RPUlZTQ19TRU5TRV9CVUZGRVJfU0laRSwKPiArCQkwCj4gKwl9LAo+ICsJewo+ICsJ
+CVZNU1RPUl9QUk9UT19WRVJTSU9OX1dJTjcsCj4gKwkJUFJFX1dJTjhfU1RPUlZTQ19TRU5TRV9C
+VUZGRVJfU0laRSwKPiArCQlzaXplb2Yoc3RydWN0IHZtc2NzaV93aW44X2V4dGVuc2lvbiksCj4g
+Kwl9LAo+ICsJewo+ICsJCVZNU1RPUl9QUk9UT19WRVJTSU9OX1dJTjYsCj4gKwkJUFJFX1dJTjhf
+U1RPUlZTQ19TRU5TRV9CVUZGRVJfU0laRSwKPiArCQlzaXplb2Yoc3RydWN0IHZtc2NzaV93aW44
+X2V4dGVuc2lvbiksCj4gKwl9Cj4gK307Cj4gKwoKVGhhbmtzLAogICAgICAgIEpvaGFubmVzCi0t
+IApKb2hhbm5lcyBUaHVtc2hpcm4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgU3RvcmFnZQpqdGh1bXNoaXJuQHN1c2UuZGUgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICArNDkgOTExIDc0MDUzIDY4OQpTVVNFIExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUs
+IDkwNDA5IE7DvHJuYmVyZwpHRjogRi4gSW1lbmTDtnJmZmVyLCBKLiBTbWl0aGFyZCwgSi4gR3Vp
+bGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbgpIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykKS2V5IGZp
+bmdlcnByaW50ID0gRUMzOCA5Q0FCIEMyQzQgRjI1RCA4NjAwICBEMEQwIDAzOTMgOTY5RCAyRDc2
+IDA4NTAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZGV2
+ZWwgbWFpbGluZyBsaXN0CmRldmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmcKaHR0cDovL2RyaXZl
+cmRldi5saW51eGRyaXZlcnByb2plY3Qub3JnL21haWxtYW4vbGlzdGluZm8vZHJpdmVyZGV2LWRl
+dmVsCg==
