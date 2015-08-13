@@ -1,90 +1,40 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage
- protocol negotiation from the vmbus protocol negotiation.
-Date: Thu, 13 Aug 2015 15:18:57 +0000
-Message-ID: <SN1PR0301MB166260423693200F01696E72A07D0@SN1PR0301MB1662.namprd03.prod.outlook.com>
-References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
-	<1439480632-11144-1-git-send-email-kys@microsoft.com>
-	<1439480632-11144-3-git-send-email-kys@microsoft.com>
- <mqda8tv6yx1.fsf@c203.arch.suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/7] megaraid_sas : Jbod sequence number support
+Date: Thu, 13 Aug 2015 13:08:50 -0400
+Message-ID: <yq1si7nazfh.fsf@sermon.lab.mkp.net>
+References: <201508071230.t77CTw3x021043@palmhbs0.lsi.com>
+	<yq1h9o5e1li.fsf@sermon.lab.mkp.net>
+	<84e4c58f0e2c8a184deb53e31edca6c5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mqda8tv6yx1.fsf@c203.arch.suse.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Keith Mange <Keith.Mange@microsoft.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25812 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbbHMRJ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 13:09:27 -0400
+In-Reply-To: <84e4c58f0e2c8a184deb53e31edca6c5@mail.gmail.com> (Sumit Saxena's
+	message of "Wed, 12 Aug 2015 11:30:14 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgVGh1bXNo
-aXJuIFttYWlsdG86anRodW1zaGlybkBzdXNlLmRlXQ0KPiBTZW50OiBUaHVyc2RheSwgQXVndXN0
-IDEzLCAyMDE1IDc6MzQgQU0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29t
-PjsgS2VpdGggTWFuZ2UNCj4gPEtlaXRoLk1hbmdlQG1pY3Jvc29mdC5jb20+DQo+IENjOiBncmVn
-a2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4g
-ZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsNCj4gamJvdHRv
-bWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFkZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtl
-cm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNv
-d2FuZ0ByZWRoYXQuY29tDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggUkVTRU5EIFYyIDMvN10gc2Nz
-aTogc3RvcnZzYzogVW50YW5nbGUgdGhlIHN0b3JhZ2UNCj4gcHJvdG9jb2wgbmVnb3RpYXRpb24g
-ZnJvbSB0aGUgdm1idXMgcHJvdG9jb2wgbmVnb3RpYXRpb24uDQo+IA0KPiAiSy4gWS4gU3Jpbml2
-YXNhbiIgPGt5c0BtaWNyb3NvZnQuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206IEtlaXRoIE1h
-bmdlIDxrZWl0aC5tYW5nZUBtaWNyb3NvZnQuY29tPg0KPiA+DQo+ID4gQ3VycmVudGx5IHdlIGFy
-ZSBtYWtpbmcgZGVjaXNpb25zIGJhc2VkIG9uIHZtYnVzIHByb3RvY29sIHZlcnNpb25zDQo+ID4g
-dGhhdCBoYXZlIGJlZW4gbmVnb3RpYXRlZDsgdXNlIHN0b3JhZ2UgcG90b2NvbCB2ZXJzaW9ucyBp
-bnN0ZWFkLg0KPiA+DQo+ID4gVGVzdGVkLWJ5OiBBbGV4IE5nIDxhbGV4bmdAbWljcm9zb2Z0LmNv
-bT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLZWl0aCBNYW5nZSA8a2VpdGgubWFuZ2VAbWljcm9zb2Z0
-LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0
-LmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgMTA5DQo+
-ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tDQo+ID4gIDEgZmls
-ZXMgY2hhbmdlZCwgODcgaW5zZXJ0aW9ucygrKSwgMjIgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3Rv
-cnZzY19kcnYuYw0KPiA+IGluZGV4IDVmOWQxMzMuLmYyOTg3MWUgMTAwNjQ0DQo+ID4gLS0tIGEv
-ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc3RvcnZz
-Y19kcnYuYw0KPiA+IEBAIC01NiwxNCArNTYsMTggQEANCj4gPiAgICogVjEgUkMgPiAyMDA4LzEv
-MzE6ICAyLjANCj4gPiAgICogV2luNzogNC4yDQo+ID4gICAqIFdpbjg6IDUuMQ0KPiA+ICsgKiBX
-aW44LjE6IDYuMA0KPiA+ICsgKiBXaW4xMDogNi4yDQo+ID4gICAqLw0KPiA+DQo+ID4gICNkZWZp
-bmUgVk1TVE9SX1BST1RPX1ZFUlNJT04oTUFKT1JfLCBNSU5PUl8pCSgoKChNQUpPUl8pDQo+ICYg
-MHhmZikgPDwgOCkgfCBcDQo+ID4gIAkJCQkJCSgoKE1JTk9SXykgJiAweGZmKSkpDQo+ID4NCj4g
-PiArI2RlZmluZSBWTVNUT1JfUFJPVE9fVkVSU0lPTl9XSU42DQo+IAlWTVNUT1JfUFJPVE9fVkVS
-U0lPTigyLCAwKQ0KPiA+ICAjZGVmaW5lIFZNU1RPUl9QUk9UT19WRVJTSU9OX1dJTjcNCj4gCVZN
-U1RPUl9QUk9UT19WRVJTSU9OKDQsIDIpDQo+ID4gICNkZWZpbmUgVk1TVE9SX1BST1RPX1ZFUlNJ
-T05fV0lOOA0KPiAJVk1TVE9SX1BST1RPX1ZFUlNJT04oNSwgMSkNCj4gPiAtDQo+ID4gKyNkZWZp
-bmUgVk1TVE9SX1BST1RPX1ZFUlNJT05fV0lOOF8xDQo+IAlWTVNUT1JfUFJPVE9fVkVSU0lPTig2
-LCAwKQ0KPiA+ICsjZGVmaW5lIFZNU1RPUl9QUk9UT19WRVJTSU9OX1dJTjEwDQo+IAlWTVNUT1Jf
-UFJPVE9fVkVSU0lPTig2LCAyKQ0KPiA+DQo+ID4gIC8qICBQYWNrZXQgc3RydWN0dXJlIGRlc2Ny
-aWJpbmcgdmlydHVhbCBzdG9yYWdlIHJlcXVlc3RzLiAqLw0KPiA+ICBlbnVtIHZzdG9yX3BhY2tl
-dF9vcGVyYXRpb24gew0KPiA+IEBAIC0yMDUsNiArMjA5LDQ2IEBAIHN0cnVjdCB2bXNjc2lfcmVx
-dWVzdCB7DQo+ID4NCj4gPg0KPiA+ICAvKg0KPiA+ICsgKiBUaGUgbGlzdCBvZiBzdG9yYWdlIHBy
-b3RvY29scyBpbiBvcmRlciBvZiBwcmVmZXJlbmNlLg0KPiA+ICsgKi8NCj4gPiArc3RydWN0IHZt
-c3Rvcl9wcm90b2NvbCB7DQo+ID4gKwlpbnQgcHJvdG9jb2xfdmVyc2lvbjsNCj4gPiArCWludCBz
-ZW5zZV9idWZmZXJfc2l6ZTsNCj4gPiArCWludCB2bXNjc2lfc2l6ZV9kZWx0YTsNCj4gPiArfTsN
-Cj4gPiArDQo+ID4gKyNkZWZpbmUgVk1TVE9SX05VTV9QUk9UT0NPTFMgICAgNQ0KPiANCj4gY2Fu
-J3QgeW91IGp1c3QgdXNlIEFSUkFZX1NJWkUoKSBoZXJlLCBzbyB5b3UgZG9uJ3QgaGF2ZSB0byB0
-b3VjaCB0aGUNCj4gY29uc3RhbnQgZXZlcnkgdGltZSBhIG5ldyBwcm90b2NvbCBpcyBhcHBlbmRl
-ZCB0byB0aGUgbGlzdD8NCg0KQ2VydGFpbmx5LiBUaGVzZSBwYXRjaGVzIGhhdmUgYmVlbiBmbG9h
-dGluZyBhcm91bmQgZm9yIG1vcmUgdGhhbiBhIG1vbnRoIG5vdyBhbmQgaWYgaXQgaXMgb2sNCndp
-dGggeW91LCBJIHdpbGwgc3VibWl0IGEgcGF0Y2ggb24gdG9wIG9mIHRoaXMgY3VycmVudCBzZXJp
-ZXMgdG8gYWRkcmVzcyB0aGUgY29uY2VybiB5b3UgaGF2ZSByYWlzZWQuDQpKYW1lcywgcGxlYXNl
-IGxldCBtZSBrbm93Lg0KDQpSZWdhcmRzLA0KDQpLLiBZIA0KPiANCj4gPiArDQo+ID4gK2NvbnN0
-IHN0cnVjdCB2bXN0b3JfcHJvdG9jb2wNCj4gdm1zdG9yX3Byb3RvY29sc1tWTVNUT1JfTlVNX1BS
-T1RPQ09MU10gPSB7DQo+ID4gKwl7DQo+ID4gKwkJVk1TVE9SX1BST1RPX1ZFUlNJT05fV0lOMTAs
-DQo+ID4gKwkJUE9TVF9XSU43X1NUT1JWU0NfU0VOU0VfQlVGRkVSX1NJWkUsDQo+ID4gKwkJMA0K
-PiA+ICsJfSwNCj4gPiArCXsNCj4gPiArCQlWTVNUT1JfUFJPVE9fVkVSU0lPTl9XSU44XzEsDQo+
-ID4gKwkJUE9TVF9XSU43X1NUT1JWU0NfU0VOU0VfQlVGRkVSX1NJWkUsDQo+ID4gKwkJMA0KPiA+
-ICsJfSwNCj4gPiArCXsNCj4gPiArCQlWTVNUT1JfUFJPVE9fVkVSU0lPTl9XSU44LA0KPiA+ICsJ
-CVBPU1RfV0lON19TVE9SVlNDX1NFTlNFX0JVRkZFUl9TSVpFLA0KPiA+ICsJCTANCj4gPiArCX0s
-DQo+ID4gKwl7DQo+ID4gKwkJVk1TVE9SX1BST1RPX1ZFUlNJT05fV0lONywNCj4gPiArCQlQUkVf
-V0lOOF9TVE9SVlNDX1NFTlNFX0JVRkZFUl9TSVpFLA0KPiA+ICsJCXNpemVvZihzdHJ1Y3Qgdm1z
-Y3NpX3dpbjhfZXh0ZW5zaW9uKSwNCj4gPiArCX0sDQo+ID4gKwl7DQo+ID4gKwkJVk1TVE9SX1BS
-T1RPX1ZFUlNJT05fV0lONiwNCj4gPiArCQlQUkVfV0lOOF9TVE9SVlNDX1NFTlNFX0JVRkZFUl9T
-SVpFLA0KPiA+ICsJCXNpemVvZihzdHJ1Y3Qgdm1zY3NpX3dpbjhfZXh0ZW5zaW9uKSwNCj4gPiAr
-CX0NCj4gPiArfTsNCj4gPiArDQo+IA0KPiBUaGFua3MsDQo+ICAgICAgICAgSm9oYW5uZXMNCj4g
-LS0NCj4gSm9oYW5uZXMgVGh1bXNoaXJuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIFN0b3JhZ2UNCj4ganRodW1zaGlybkBzdXNlLmRlICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODkNCj4gU1VTRSBMSU5VWCBHbWJILCBNYXhm
-ZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj4gR0Y6IEYuIEltZW5kw7ZyZmZlciwgSi4gU21p
-dGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24NCj4gSFJCIDIxMjg0IChBRyBO
-w7xybmJlcmcpDQo+IEtleSBmaW5nZXJwcmludCA9IEVDMzggOUNBQiBDMkM0IEYyNUQgODYwMCAg
-RDBEMCAwMzkzIDk2OUQgMkQ3NiAwODUwDQo=
+>>>>> "Sumit" == Sumit Saxena <sumit.saxena@avagotech.com> writes:
+
+Sumit> I will create separate patch for these new flags which are not
+Sumit> related to JBOD sequence support. These flags are created to keep
+Sumit> APIs in sync across driver and firmware.
+
+*nod*
+
+>> Why -1 here? Presumably MAX_PHYSICAL_DEVICES is a count, not an
+>> index.
+Sumit> Yes it is count only.  struct MR_PD_CFG_SEQ_NUM_SYNC has "struct
+Sumit> MR_PD_CFG_SEQ" as one of its member so struct MR_PD_CFG_SEQ
+Sumit> corresponding to PD index "0" is embedded inside struct
+Sumit> MR_PD_CFG_SEQ_NUM_SYNC. That's why -1 here.
+
+OK. Just checking.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
