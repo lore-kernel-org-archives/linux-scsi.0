@@ -1,14 +1,14 @@
 From: <anil.gurumurthy@qlogic.com>
-Subject: [PATCH 1/2] bfa: Fix indentation
-Date: Thu, 13 Aug 2015 06:41:51 -0400
-Message-ID: <1439462512-1911-2-git-send-email-anil.gurumurthy@qlogic.com>
+Subject: [PATCH 2/2] bfa: Fix incorrect de-reference of pointer
+Date: Thu, 13 Aug 2015 06:41:52 -0400
+Message-ID: <1439462512-1911-3-git-send-email-anil.gurumurthy@qlogic.com>
 References: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:64136 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:37683 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751345AbbHML2b (ORCPT
+	by vger.kernel.org with ESMTP id S1751442AbbHML2b (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 13 Aug 2015 07:28:31 -0400
 In-Reply-To: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
@@ -20,46 +20,24 @@ Cc: linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com, Anil Gurumurthy <a
 From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
 Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Tested-by : Sudarasana Kalluru <sudarsana.kalluru@qlogic.com>
+Tested-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 ---
- drivers/scsi/bfa/bfa_ioc.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/scsi/bfa/bfa_ioc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 315d6d6..4e71044 100644
+index 4e71044..98f7e8c 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -3665,19 +3665,19 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
- 		if (sfp->state_query_cbfn)
- 			sfp->state_query_cbfn(sfp->state_query_cbarg,
- 					sfp->status);
--			sfp->media = NULL;
--		}
-+		sfp->media = NULL;
-+	}
- 
--		if (sfp->portspeed) {
--			sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
--			if (sfp->state_query_cbfn)
--				sfp->state_query_cbfn(sfp->state_query_cbarg,
--						sfp->status);
--				sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
--		}
-+	if (sfp->portspeed) {
-+		sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
-+		if (sfp->state_query_cbfn)
-+			sfp->state_query_cbfn(sfp->state_query_cbarg,
-+					sfp->status);
-+		sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
-+	}
- 
--		sfp->state_query_lock = 0;
--		sfp->state_query_cbfn = NULL;
-+	sfp->state_query_lock = 0;
-+	sfp->state_query_cbfn = NULL;
- }
- 
- /*
+@@ -3878,7 +3878,7 @@ bfa_sfp_show_comp(struct bfa_sfp_s *sfp, struct bfi_mbmsg_s *msg)
+ 		bfa_trc(sfp, sfp->data_valid);
+ 		if (sfp->data_valid) {
+ 			u32	size = sizeof(struct sfp_mem_s);
+-			u8 *des = (u8 *) &(sfp->sfpmem);
++			u8 *des = (u8 *)(sfp->sfpmem);
+ 			memcpy(des, sfp->dbuf_kva, size);
+ 		}
+ 		/*
 -- 
 1.7.10.4
 
