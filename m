@@ -1,139 +1,444 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH] pm80xx: Added pm8006 controller support
-Date: Thu, 13 Aug 2015 14:51:55 +0200
-Message-ID: <CAMGffEkH7xz+zmdNvBR3WxOB=-VX4vd+sD_gx_C_6TCGLGNM=A@mail.gmail.com>
-References: <1423722877-17436-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
- <CAD+HZHWRk06bJxEm8zsLPudGeJi96LMJxNd6STVKBF0k1=rphg@mail.gmail.com> <CE2C58F938F4C44EA74FFF880BAA7E5EC62EA719@BBYEXM02.pmc-sierra.internal>
+From: wenxiong@linux.vnet.ibm.com
+Subject: Re: [PATCH v5 1/3] cxlflash: Base error recovery support
+Date: Thu, 13 Aug 2015 09:25:27 -0400
+Message-ID: <20150813092527.Horde.Gnhl9W8RluCuAKlQh0IQfQ1@ltc.linux.ibm.com>
+References: <1439423466-15609-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:34033 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbbHMMwP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 08:52:15 -0400
-Received: by wicne3 with SMTP id ne3so258020674wic.1
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 05:52:14 -0700 (PDT)
-In-Reply-To: <CE2C58F938F4C44EA74FFF880BAA7E5EC62EA719@BBYEXM02.pmc-sierra.internal>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:52633 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862AbbHMNZf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 09:25:35 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
+	Thu, 13 Aug 2015 07:25:34 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 4EE173E40048
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 07:25:32 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7DDOZlY56688772
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 06:24:35 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7DDPT0j004346
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 07:25:31 -0600
+In-Reply-To: <1439423466-15609-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jej B <James.Bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Viswas G <Viswas.G@pmcs.com>, Jack Wang <xjtuwjp@gmail.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, mikey@neuling.org, dja@ozlabs.au.ibm.com, benh@kernel.crashing.org, hch@infradead.org, imunsie@au1.ibm.com, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Hi James,
+Thanks for merging the comments I made for v3.
 
-Ping?
+Reviewed-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-On Wed, Jul 29, 2015 at 11:33 AM, Suresh Thiagarajan
-<Suresh.Thiagarajan@pmcs.com> wrote:
-> Hi James,
+Quoting "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>:
+
+> Introduce support for enhanced I/O error handling.
 >
-> This patch is not pulled in yet.
+> A device state is added to track 3 possible states of the device:
 >
-> Regards,
-> Suresh
+> Normal - the device is operating normally and is fully operational
 >
-> -----Original Message-----
-> From: Jack Wang [mailto:xjtuwjp@gmail.com]
-> Sent: Tuesday, February 24, 2015 2:07 PM
-> To: Suresh Thiagarajan
-> Cc: linux-scsi@vger.kernel.org; James Bottomley; Viswas G; pmchba@pmc=
-s.com
-> Subject: Re: [PATCH] pm80xx: Added pm8006 controller support
+> Limbo - the device is in a reset/recovery scenario and its operational
+>         status is paused
 >
-> Sorry for delay, I missed this patch.
+> Failed/terminating - the device has either failed to be reset/recovered
+>                      or is being terminated (removed); it is no longer
+>                      operational
 >
-> Acked-by: Jack Wang <xjtuwjp@gmail.com>
+> All operations are allowed when the device is operating normally. When the
+> device transitions to limbo state, I/O must be paused. To help accomplish
+> this, a wait queue is introduced where existing and new threads can wait
+> until the device is no longer in limbo. When coming out of limbo, threads
+> need to check the state and error out gracefully when encountering the
+> failed state. When the device transitions to the failed/terminating state,
+> normal operations are no longer allowed. Only specially designated
+> operations related to graceful cleanup are permitted.
 >
-> 2015-02-12 7:34 GMT+01:00 Suresh Thiagarajan <Suresh.Thiagarajan@pmcs=
-=2Ecom>:
->> Added the pm8006 controller id in pci table
->>
->> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->> Signed-off-by: Viswas G <Viswas.G@pmcs.com>
->> ---
->>  drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
->>  drivers/scsi/pm8001/pm8001_init.c |    5 ++++-
->>  2 files changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/pm8001/pm8001_defs.h
->> b/drivers/scsi/pm8001/pm8001_defs.h
->> index 74a4bb9..dc4233b 100644
->> --- a/drivers/scsi/pm8001/pm8001_defs.h
->> +++ b/drivers/scsi/pm8001/pm8001_defs.h
->> @@ -49,7 +49,8 @@ enum chip_flavors {
->>         chip_8019,
->>         chip_8074,
->>         chip_8076,
->> -       chip_8077
->> +       chip_8077,
->> +       chip_8006,
->>  };
->>
->>  enum phy_speed {
->> diff --git a/drivers/scsi/pm8001/pm8001_init.c
->> b/drivers/scsi/pm8001/pm8001_init.c
->> index 6555591..e1aee58 100644
->> --- a/drivers/scsi/pm8001/pm8001_init.c
->> +++ b/drivers/scsi/pm8001/pm8001_init.c
->> @@ -57,6 +57,7 @@ static const struct pm8001_chip_info pm8001_chips[=
-] =3D {
->>         [chip_8074] =3D {0,  8, &pm8001_80xx_dispatch,},
->>         [chip_8076] =3D {0,  16, &pm8001_80xx_dispatch,},
->>         [chip_8077] =3D {0,  16, &pm8001_80xx_dispatch,},
->> +       [chip_8006] =3D {0,  16, &pm8001_80xx_dispatch,},
->>  };
->>  static int pm8001_id;
->>
->> @@ -1108,6 +1109,8 @@ err_out_enable:
->>   */
->>  static struct pci_device_id pm8001_pci_table[] =3D {
->>         { PCI_VDEVICE(PMC_Sierra, 0x8001), chip_8001 },
->> +       { PCI_VDEVICE(PMC_Sierra, 0x8006), chip_8006 },
->> +       { PCI_VDEVICE(ADAPTEC2, 0x8006), chip_8006 },
->>         { PCI_VDEVICE(ATTO, 0x0042), chip_8001 },
->>         /* Support for SPC/SPCv/SPCve controllers */
->>         { PCI_VDEVICE(ADAPTEC2, 0x8001), chip_8001 }, @@ -1218,7
->> +1221,7 @@ MODULE_AUTHOR("Anand Kumar Santhanam
->> <AnandKumar.Santhanam@pmcs.com>");
->>  MODULE_AUTHOR("Sangeetha Gnanasekaran
->> <Sangeetha.Gnanasekaran@pmcs.com>");
->>  MODULE_AUTHOR("Nikith Ganigarakoppal
->> <Nikith.Ganigarakoppal@pmcs.com>");
->>  MODULE_DESCRIPTION(
->> -               "PMC-Sierra PM8001/8081/8088/8089/8074/8076/8077 "
->> +               "PMC-Sierra PM8001/8006/8081/8088/8089/8074/8076/807=
-7 "
->>                 "SAS/SATA controller driver");
->> MODULE_VERSION(DRV_VERSION);  MODULE_LICENSE("GPL");
->> --
->> 1.7.1
->>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
+> ---
+>  drivers/scsi/cxlflash/Kconfig  |   2 +-
+>  drivers/scsi/cxlflash/common.h |  12 ++-
+>  drivers/scsi/cxlflash/main.c   | 174  
+> ++++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/cxlflash/main.h   |   6 +-
+>  4 files changed, 177 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
+> index c707508..c052104 100644
+> --- a/drivers/scsi/cxlflash/Kconfig
+> +++ b/drivers/scsi/cxlflash/Kconfig
+> @@ -4,7 +4,7 @@
+>
+>  config CXLFLASH
+>  	tristate "Support for IBM CAPI Flash"
+> -	depends on PCI && SCSI && CXL
+> +	depends on PCI && SCSI && CXL && EEH
+>  	default m
+>  	help
+>  	  Allows CAPI Accelerated IO to Flash
+> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+> index fe86bfe..ffdbc57 100644
+> --- a/drivers/scsi/cxlflash/common.h
+> +++ b/drivers/scsi/cxlflash/common.h
+> @@ -76,6 +76,12 @@ enum cxlflash_init_state {
+>  	INIT_STATE_SCSI
+>  };
+>
+> +enum cxlflash_state {
+> +	STATE_NORMAL,	/* Normal running state, everything good */
+> +	STATE_LIMBO,	/* Limbo running state, trying to reset/recover */
+> +	STATE_FAILTERM	/* Failed/terminating state, error out users/threads */
+> +};
+> +
+>  /*
+>   * Each context has its own set of resource handles that is visible
+>   * only from that context.
+> @@ -91,8 +97,6 @@ struct cxlflash_cfg {
+>
+>  	ulong cxlflash_regs_pci;
+>
+> -	wait_queue_head_t eeh_waitq;
+> -
+>  	struct work_struct work_q;
+>  	enum cxlflash_init_state init_state;
+>  	enum cxlflash_lr_state lr_state;
+> @@ -105,7 +109,8 @@ struct cxlflash_cfg {
+>
+>  	wait_queue_head_t tmf_waitq;
+>  	bool tmf_active;
+> -	u8 err_recovery_active:1;
+> +	wait_queue_head_t limbo_waitq;
+> +	enum cxlflash_state state;
+>  };
+>
+>  struct afu_cmd {
+> @@ -178,4 +183,3 @@ struct afu_cmd *cxlflash_cmd_checkout(struct afu *);
+>  void cxlflash_cmd_checkin(struct afu_cmd *);
+>  int cxlflash_afu_sync(struct afu *, ctx_hndl_t, res_hndl_t, u8);
+>  #endif /* ifndef _CXLFLASH_COMMON_H */
+> -
+> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+> index 76a7286..4df1ff6 100644
+> --- a/drivers/scsi/cxlflash/main.c
+> +++ b/drivers/scsi/cxlflash/main.c
+> @@ -353,6 +353,7 @@ static int cxlflash_queuecommand(struct  
+> Scsi_Host *host, struct scsi_cmnd *scp)
+>  	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
+>  	struct afu *afu = cfg->afu;
+>  	struct pci_dev *pdev = cfg->dev;
+> +	struct device *dev = &cfg->dev->dev;
+>  	struct afu_cmd *cmd;
+>  	u32 port_sel = scp->device->channel + 1;
+>  	int nseg, i, ncount;
+> @@ -380,6 +381,21 @@ static int cxlflash_queuecommand(struct  
+> Scsi_Host *host, struct scsi_cmnd *scp)
+>  	}
+>  	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+>
+> +	switch (cfg->state) {
+> +	case STATE_LIMBO:
+> +		dev_dbg_ratelimited(dev, "%s: device in limbo!\n", __func__);
+> +		rc = SCSI_MLQUEUE_HOST_BUSY;
+> +		goto out;
+> +	case STATE_FAILTERM:
+> +		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
+> +		scp->result = (DID_NO_CONNECT << 16);
+> +		scp->scsi_done(scp);
+> +		rc = 0;
+> +		goto out;
+> +	default:
+> +		break;
+> +	}
+> +
+>  	cmd = cxlflash_cmd_checkout(afu);
+>  	if (unlikely(!cmd)) {
+>  		pr_err("%s: could not get a free command\n", __func__);
+> @@ -455,9 +471,21 @@ static int  
+> cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+>
+> -	rcr = send_tmf(afu, scp, TMF_LUN_RESET);
+> -	if (unlikely(rcr))
+> +	switch (cfg->state) {
+> +	case STATE_NORMAL:
+> +		rcr = send_tmf(afu, scp, TMF_LUN_RESET);
+> +		if (unlikely(rcr))
+> +			rc = FAILED;
+> +		break;
+> +	case STATE_LIMBO:
+> +		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
+> +		if (cfg->state == STATE_NORMAL)
+> +			break;
+> +		/* fall through */
+> +	default:
+>  		rc = FAILED;
+> +		break;
+> +	}
+>
+>  	pr_debug("%s: returning rc=%d\n", __func__, rc);
+>  	return rc;
+> @@ -487,11 +515,29 @@ static int  
+> cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+>  		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+>
+> -	rcr = cxlflash_afu_reset(cfg);
+> -	if (rcr == 0)
+> -		rc = SUCCESS;
+> -	else
+> +	switch (cfg->state) {
+> +	case STATE_NORMAL:
+> +		cfg->state = STATE_LIMBO;
+> +		scsi_block_requests(cfg->host);
+> +
+> +		rcr = cxlflash_afu_reset(cfg);
+> +		if (rcr) {
+> +			rc = FAILED;
+> +			cfg->state = STATE_FAILTERM;
+> +		} else
+> +			cfg->state = STATE_NORMAL;
+> +		wake_up_all(&cfg->limbo_waitq);
+> +		scsi_unblock_requests(cfg->host);
+> +		break;
+> +	case STATE_LIMBO:
+> +		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
+> +		if (cfg->state == STATE_NORMAL)
+> +			break;
+> +		/* fall through */
+> +	default:
+>  		rc = FAILED;
+> +		break;
+> +	}
+>
+>  	pr_debug("%s: returning rc=%d\n", __func__, rc);
+>  	return rc;
+> @@ -642,7 +688,7 @@ static void  
+> cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+>  	struct pci_dev *pdev = cfg->dev;
+>
+>  	if (pci_channel_offline(pdev))
+> -		wait_event_timeout(cfg->eeh_waitq,
+> +		wait_event_timeout(cfg->limbo_waitq,
+>  				   !pci_channel_offline(pdev),
+>  				   CXLFLASH_PCI_ERROR_RECOVERY_TIMEOUT);
+>  }
+> @@ -825,6 +871,8 @@ static void cxlflash_remove(struct pci_dev *pdev)
+>  						    !cfg->tmf_active);
+>  	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+>
+> +	cfg->state = STATE_FAILTERM;
+> +
+>  	switch (cfg->init_state) {
+>  	case INIT_STATE_SCSI:
+>  		scsi_remove_host(cfg->host);
+> @@ -1879,6 +1927,8 @@ static int init_afu(struct cxlflash_cfg *cfg)
+>  	struct afu *afu = cfg->afu;
+>  	struct device *dev = &cfg->dev->dev;
+>
+> +	cxl_perst_reloads_same_image(cfg->cxl_afu, true);
+> +
+>  	rc = init_mc(cfg);
+>  	if (rc) {
+>  		dev_err(dev, "%s: call to init_mc failed, rc=%d!\n",
+> @@ -2021,6 +2071,12 @@ void cxlflash_wait_resp(struct afu *afu,  
+> struct afu_cmd *cmd)
+>   * the sync. This design point requires calling threads to not be  
+> on interrupt
+>   * context due to the possibility of sleeping during concurrent  
+> sync operations.
+>   *
+> + * AFU sync operations are only necessary and allowed when the device is
+> + * operating normally. When not operating normally, sync requests  
+> can occur as
+> + * part of cleaning up resources associated with an adapter prior  
+> to removal.
+> + * In this scenario, these requests are simply ignored (safe due to the AFU
+> + * going away).
+> + *
+>   * Return:
+>   *	0 on success
+>   *	-1 on failure
+> @@ -2028,11 +2084,17 @@ void cxlflash_wait_resp(struct afu *afu,  
+> struct afu_cmd *cmd)
+>  int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+>  		      res_hndl_t res_hndl_u, u8 mode)
+>  {
+> +	struct cxlflash_cfg *cfg = afu->parent;
+>  	struct afu_cmd *cmd = NULL;
+>  	int rc = 0;
+>  	int retry_cnt = 0;
+>  	static DEFINE_MUTEX(sync_active);
+>
+> +	if (cfg->state != STATE_NORMAL) {
+> +		pr_debug("%s: Sync not required! (%u)\n", __func__, cfg->state);
+> +		return 0;
+> +	}
+> +
+>  	mutex_lock(&sync_active);
+>  retry:
+>  	cmd = cxlflash_cmd_checkout(afu);
+> @@ -2116,12 +2178,17 @@ int cxlflash_afu_reset(struct cxlflash_cfg *cfg)
+>   */
+>  static void cxlflash_worker_thread(struct work_struct *work)
+>  {
+> -	struct cxlflash_cfg *cfg =
+> -	    container_of(work, struct cxlflash_cfg, work_q);
+> +	struct cxlflash_cfg *cfg = container_of(work, struct cxlflash_cfg,
+> +						work_q);
+>  	struct afu *afu = cfg->afu;
+>  	int port;
+>  	ulong lock_flags;
+>
+> +	/* Avoid MMIO if the device has failed */
+> +
+> +	if (cfg->state != STATE_NORMAL)
+> +		return;
+> +
+>  	spin_lock_irqsave(cfg->host->host_lock, lock_flags);
+>
+>  	if (cfg->lr_state == LINK_RESET_REQUIRED) {
+> @@ -2200,10 +2267,9 @@ static int cxlflash_probe(struct pci_dev *pdev,
+>  	cfg->dev = pdev;
+>  	cfg->dev_id = (struct pci_device_id *)dev_id;
+>  	cfg->mcctx = NULL;
+> -	cfg->err_recovery_active = 0;
+>
+>  	init_waitqueue_head(&cfg->tmf_waitq);
+> -	init_waitqueue_head(&cfg->eeh_waitq);
+> +	init_waitqueue_head(&cfg->limbo_waitq);
+>
+>  	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
+>  	cfg->lr_state = LINK_RESET_INVALID;
+> @@ -2259,6 +2325,91 @@ out_remove:
+>  	goto out;
+>  }
+>
+> +/**
+> + * cxlflash_pci_error_detected() - called when a PCI error is detected
+> + * @pdev:	PCI device struct.
+> + * @state:	PCI channel state.
+> + *
+> + * Return: PCI_ERS_RESULT_NEED_RESET or PCI_ERS_RESULT_DISCONNECT
+> + */
+> +static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+> +						    pci_channel_state_t state)
+> +{
+> +	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
+> +	struct device *dev = &cfg->dev->dev;
+> +
+> +	dev_dbg(dev, "%s: pdev=%p state=%u\n", __func__, pdev, state);
+> +
+> +	switch (state) {
+> +	case pci_channel_io_frozen:
+> +		cfg->state = STATE_LIMBO;
+> +
+> +		/* Turn off legacy I/O */
+> +		scsi_block_requests(cfg->host);
+> +
+> +		term_mc(cfg, UNDO_START);
+> +		stop_afu(cfg);
+> +
+> +		return PCI_ERS_RESULT_NEED_RESET;
+> +	case pci_channel_io_perm_failure:
+> +		cfg->state = STATE_FAILTERM;
+> +		wake_up_all(&cfg->limbo_waitq);
+> +		scsi_unblock_requests(cfg->host);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	default:
+> +		break;
+> +	}
+> +	return PCI_ERS_RESULT_NEED_RESET;
+> +}
+> +
+> +/**
+> + * cxlflash_pci_slot_reset() - called when PCI slot has been reset
+> + * @pdev:	PCI device struct.
+> + *
+> + * This routine is called by the pci error recovery code after the PCI
+> + * slot has been reset, just before we should resume normal operations.
+> + *
+> + * Return: PCI_ERS_RESULT_RECOVERED or PCI_ERS_RESULT_DISCONNECT
+> + */
+> +static pci_ers_result_t cxlflash_pci_slot_reset(struct pci_dev *pdev)
+> +{
+> +	int rc = 0;
+> +	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
+> +	struct device *dev = &cfg->dev->dev;
+> +
+> +	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
+> +
+> +	rc = init_afu(cfg);
+> +	if (unlikely(rc)) {
+> +		dev_err(dev, "%s: EEH recovery failed! (%d)\n", __func__, rc);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +}
+> +
+> +/**
+> + * cxlflash_pci_resume() - called when normal operation can resume
+> + * @pdev:	PCI device struct
+> + */
+> +static void cxlflash_pci_resume(struct pci_dev *pdev)
+> +{
+> +	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
+> +	struct device *dev = &cfg->dev->dev;
+> +
+> +	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
+> +
+> +	cfg->state = STATE_NORMAL;
+> +	wake_up_all(&cfg->limbo_waitq);
+> +	scsi_unblock_requests(cfg->host);
+> +}
+> +
+> +static const struct pci_error_handlers cxlflash_err_handler = {
+> +	.error_detected = cxlflash_pci_error_detected,
+> +	.slot_reset = cxlflash_pci_slot_reset,
+> +	.resume = cxlflash_pci_resume,
+> +};
+> +
+>  /*
+>   * PCI device structure
+>   */
+> @@ -2267,6 +2418,7 @@ static struct pci_driver cxlflash_driver = {
+>  	.id_table = cxlflash_pci_table,
+>  	.probe = cxlflash_probe,
+>  	.remove = cxlflash_remove,
+> +	.err_handler = &cxlflash_err_handler,
+>  };
+>
+>  /**
+> diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+> index 7f890cc..7bf0d4d 100644
+> --- a/drivers/scsi/cxlflash/main.h
+> +++ b/drivers/scsi/cxlflash/main.h
+> @@ -22,7 +22,7 @@
+>
+>  #define CXLFLASH_NAME		"cxlflash"
+>  #define CXLFLASH_ADAPTER_NAME	"IBM POWER CXL Flash Adapter"
+> -#define CXLFLASH_DRIVER_DATE	"(June 2, 2015)"
+> +#define CXLFLASH_DRIVER_DATE	"(August 12, 2015)"
+>
+>  #define PCI_DEVICE_ID_IBM_CORSA	0x04F0
+>  #define CXLFLASH_SUBS_DEV_ID	0x04F0
+> @@ -101,4 +101,8 @@ struct asyc_intr_info {
+>  #define LINK_RESET	0x02
+>  };
+>
+> +#ifndef CONFIG_CXL_EEH
+> +#define cxl_perst_reloads_same_image(_a, _b) do { } while (0)
+> +#endif
+> +
+>  #endif /* _CXLFLASH_MAIN_H */
+> --
+> 2.1.0
 
 
-
---=20
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Best Regards,
-
-Jack Wang
-
-Linux Kernel Developer Storage
-ProfitBricks GmbH  The IaaS-Company.
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
-Tel: +49 30 5770083-42
-=46ax: +49 30 5770085-98
-Email: jinpu.wang@profitbricks.com
-URL: http://www.profitbricks.de
-
-Sitz der Gesellschaft: Berlin.
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B.
-Gesch=C3=A4ftsf=C3=BChrer: Andreas Gauger, Achim Weiss.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
