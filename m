@@ -1,212 +1,64 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage protocol
- negotiation from the vmbus protocol negotiation.
-Date: Thu, 13 Aug 2015 08:43:48 -0700
-Message-ID: <1439480632-11144-3-git-send-email-kys@microsoft.com>
+Subject: [PATCH RESEND V2 7/7] scsi: storvsc: Set the error code correctly in failure conditions
+Date: Thu, 13 Aug 2015 08:43:52 -0700
+Message-ID: <1439480632-11144-7-git-send-email-kys@microsoft.com>
 References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
  <1439480632-11144-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1439480632-11144-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
-Cc: Keith Mange <keith.mange@microsoft.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Keith Mange <keith.mange@microsoft.com>
+In the function storvsc_channel_init(), error code was not getting
+set correctly in some of the failure cases. Fix this issue.
 
-Currently we are making decisions based on vmbus protocol versions
-that have been negotiated; use storage potocol versions instead.
-
-Tested-by: Alex Ng <alexng@microsoft.com>
-Signed-off-by: Keith Mange <keith.mange@microsoft.com>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/scsi/storvsc_drv.c |  109 +++++++++++++++++++++++++++++++++++---------
- 1 files changed, 87 insertions(+), 22 deletions(-)
+ drivers/scsi/storvsc_drv.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 5f9d133..f29871e 100644
+index 021cbdf..aac8297 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -56,14 +56,18 @@
-  * V1 RC > 2008/1/31:  2.0
-  * Win7: 4.2
-  * Win8: 5.1
-+ * Win8.1: 6.0
-+ * Win10: 6.2
-  */
- 
- #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
- 						(((MINOR_) & 0xff)))
- 
-+#define VMSTOR_PROTO_VERSION_WIN6	VMSTOR_PROTO_VERSION(2, 0)
- #define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
- #define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
--
-+#define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
-+#define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
- 
- /*  Packet structure describing virtual storage requests. */
- enum vstor_packet_operation {
-@@ -205,6 +209,46 @@ struct vmscsi_request {
- 
- 
- /*
-+ * The list of storage protocols in order of preference.
-+ */
-+struct vmstor_protocol {
-+	int protocol_version;
-+	int sense_buffer_size;
-+	int vmscsi_size_delta;
-+};
-+
-+#define VMSTOR_NUM_PROTOCOLS    5
-+
-+const struct vmstor_protocol vmstor_protocols[VMSTOR_NUM_PROTOCOLS] = {
-+	{
-+		VMSTOR_PROTO_VERSION_WIN10,
-+		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
-+		0
-+	},
-+	{
-+		VMSTOR_PROTO_VERSION_WIN8_1,
-+		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
-+		0
-+	},
-+	{
-+		VMSTOR_PROTO_VERSION_WIN8,
-+		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
-+		0
-+	},
-+	{
-+		VMSTOR_PROTO_VERSION_WIN7,
-+		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
-+		sizeof(struct vmscsi_win8_extension),
-+	},
-+	{
-+		VMSTOR_PROTO_VERSION_WIN6,
-+		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
-+		sizeof(struct vmscsi_win8_extension),
-+	}
-+};
-+
-+
-+/*
-  * This structure is sent during the intialization phase to get the different
-  * properties of the channel.
-  */
-@@ -871,7 +915,7 @@ static int storvsc_channel_init(struct hv_device *device)
- 	struct storvsc_device *stor_device;
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
--	int ret, t;
-+	int ret, t, i;
- 	int max_chns;
- 	bool process_sub_channels = false;
- 
-@@ -911,36 +955,59 @@ static int storvsc_channel_init(struct hv_device *device)
- 		goto cleanup;
- 
- 
--	/* reuse the packet for version range supported */
--	memset(vstor_packet, 0, sizeof(struct vstor_packet));
--	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
--	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
-+	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
-+		/* reuse the packet for version range supported */
-+		memset(vstor_packet, 0, sizeof(struct vstor_packet));
-+		vstor_packet->operation =
-+			VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
-+		vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 
--	vstor_packet->version.major_minor = vmstor_proto_version;
-+		vstor_packet->version.major_minor =
-+			vmstor_protocols[i].protocol_version;
- 
--	/*
--	 * The revision number is only used in Windows; set it to 0.
--	 */
--	vstor_packet->version.revision = 0;
-+		/*
-+		 * The revision number is only used in Windows; set it to 0.
-+		 */
-+		vstor_packet->version.revision = 0;
- 
--	ret = vmbus_sendpacket(device->channel, vstor_packet,
-+		ret = vmbus_sendpacket(device->channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
- 				vmscsi_size_delta),
- 			       (unsigned long)request,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
--	if (ret != 0)
--		goto cleanup;
-+		if (ret != 0)
-+			goto cleanup;
- 
--	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
--	if (t == 0) {
--		ret = -ETIMEDOUT;
--		goto cleanup;
-+		t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-+		if (t == 0) {
-+			ret = -ETIMEDOUT;
-+			goto cleanup;
-+		}
-+
-+		if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO) {
-+			ret = -EINVAL;
-+			goto cleanup;
-+		}
-+
-+		if (vstor_packet->status == 0) {
-+			vmstor_proto_version =
-+				vmstor_protocols[i].protocol_version;
-+
-+			sense_buffer_size =
-+				vmstor_protocols[i].sense_buffer_size;
-+
-+			vmscsi_size_delta =
-+				vmstor_protocols[i].vmscsi_size_delta;
-+
-+			break;
-+		}
+@@ -960,8 +960,10 @@ static int storvsc_channel_init(struct hv_device *device)
  	}
  
--	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
 -	    vstor_packet->status != 0)
-+	if (vstor_packet->status != 0) {
++	    vstor_packet->status != 0) {
 +		ret = -EINVAL;
  		goto cleanup;
 +	}
  
  
- 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-@@ -1745,14 +1812,12 @@ static int storvsc_probe(struct hv_device *device,
- 	if (vmbus_proto_version < VERSION_WIN8) {
- 		sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
--		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN7;
- 		max_luns_per_target = STORVSC_IDE_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_IDE_MAX_TARGETS;
- 		max_channels = STORVSC_IDE_MAX_CHANNELS;
- 	} else {
- 		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = 0;
--		vmstor_proto_version = VMSTOR_PROTO_VERSION_WIN8;
- 		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
- 		max_targets = STORVSC_MAX_TARGETS;
- 		max_channels = STORVSC_MAX_CHANNELS;
+ 	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
+@@ -1040,8 +1042,10 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	}
+ 
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	    vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 	/*
+ 	 * Check to see if multi-channel support is there.
+@@ -1078,8 +1082,10 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	}
+ 
+ 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+-	    vstor_packet->status != 0)
++	    vstor_packet->status != 0) {
++		ret = -EINVAL;
+ 		goto cleanup;
++	}
+ 
+ 	if (process_sub_channels)
+ 		handle_multichannel_storage(device, max_chns);
 -- 
 1.7.4.1
