@@ -1,103 +1,75 @@
-From: Viswas G <Viswas.G@pmcs.com>
-Subject: RE: [PATCH V2 2/8] pm80xx: Corrected device state changes in
- I_T_Nexus_Reset.
-Date: Fri, 14 Aug 2015 07:15:04 +0000
-Message-ID: <DB8BCD22E410A84DA91083F3479A3DB3C6275C41@BBYEXM02.pmc-sierra.internal>
-References: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
- <1439285792-12030-3-git-send-email-Viswas.G@pmcs.com>
- <CAMGffEmt82v3jw0mY8bg+ikmjCJYpROQ7KMPMtBOASMX2OePpA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:43830 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753831AbbHNHPG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Aug 2015 03:15:06 -0400
-In-Reply-To: <CAMGffEmt82v3jw0mY8bg+ikmjCJYpROQ7KMPMtBOASMX2OePpA@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v2] scsi: Export SCSI Inquiry data to sysfs
+Date: Fri, 14 Aug 2015 09:39:20 +0200
+Message-ID: <1439537960-25085-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, Hannes Reinecke <hare@suse.com>
 
-T24gVGh1LCBBdWcgMTMsIDIwMTUgYXQgNjoxMyBQTSwgSmlucHUgV2FuZyA8amlucHUud2FuZ0Bw
-cm9maXRicmlja3MuY29tPiB3cm90ZToNCj4gSGkNCj4NCj4gT24gVHVlLCBBdWcgMTEsIDIwMTUg
-YXQgMTE6MzYgQU0sICA8Vmlzd2FzLkdAcG1jcy5jb20+IHdyb3RlOg0KPj4gRnJvbTogVmlzd2Fz
-IEcgPFZpc3dhcy5HQHBtY3MuY29tPg0KPj4NCj4+IEluIE5leHVzIHJlc2V0IHRoZSBkZXZpY2Ug
-c3RhdGUgcmVxdWVzdCBhcmUgbm90IG5lZWRlZC4NCj4+DQo+PiBDaGFuZ2VzIGZyb20gVjE6DQo+
-PiBEZXZpY2Ugc3RhdGUgY2hhbmdlIHJlcXVlc3QgaGFzIGJlZW4gcmVtb3ZlZCBhcyB0aGUgZmly
-bXdhcmUNCj4+IHdpbGwgaGFuZGxlIGl0IGR1cmluZyBpbnRlcm5hbCBjbGVhbnVwLiBBbHNvIHVw
-ZGF0ZWQgdGhlDQo+PiBwcm9wZXIgcmV0dXJuIHZhbHVlIGluIGNhc2Ugb2YgZmFpbHVyZXMuDQo+
-DQo+IElmIGFib3ZlIGlzIHRydWUsIHNob3VsZCB3ZSByZW1vdmUgdGhlIGRldmljZSBzdGF0ZSBj
-aGFuZ2UgY29tbWFuZA0KPiBzdXBwb3J0IGF0IGFsbD8NCj4NCg0KV2UgY2FuJ3QgcmVtb3ZlIHRo
-ZSBzdGF0ZSBjaGFuZ2UgY29tbWFuZCBhcyBpdCBpcyByZXF1aXJlZCBmb3IgDQpzb21lIHRhc2sg
-bWFuYWdlbWVudCBjb21tYW5kIHN1Y2ggYXMgQUJPUlRfVEFTSy4NCg0KPiBPdGhlciB0aGFuIHRo
-YXQsIHBsZWFzZSBmZWVsIGZyZWUgdG8gYWRkOg0KPiBBY2tlZC1ieTogSmFjayBXYW5nIDxqaW5w
-dS53YW5nQHByb2ZpdGJyaWNrcy5jb20+DQo+DQo+IFRoYW5rcw0KPiBKYWNrDQo+DQo+DQo+Pg0K
-Pj4gU2lnbmVkLW9mZi1ieTogVmlzd2FzIEcgPFZpc3dhcy5HQHBtY3MuY29tPg0KPj4NCj4+IFJl
-dmlld2VkLWJ5OiBTdXJlc2ggVGhpYWdhcmFqYW4gPFN1cmVzaC5UaGlhZ2FyYWphbkBwbWNzLmNv
-bT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jIHwgICAxOCAr
-KysrKysrKysrKysrLS0tLS0NCj4+ICBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCB8
-ICAgIDggKysrKysrKysNCj4+ICAyIGZpbGVzIGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKyksIDUg
-ZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04
-MDAxX3Nhcy5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMNCj4+IGluZGV4IGI5
-M2YyODkuLjQ4ZjQ2MjcgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAw
-MV9zYXMuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMNCj4+IEBA
-IC05NzUsMTkgKzk3NSwyNyBAQCBpbnQgcG04MDAxX0lfVF9uZXh1c19yZXNldChzdHJ1Y3QgZG9t
-YWluX2RldmljZSAqZGV2KQ0KPj4gICAgICAgICBwaHkgPSBzYXNfZ2V0X2xvY2FsX3BoeShkZXYp
-Ow0KPj4NCj4+ICAgICAgICAgaWYgKGRldl9pc19zYXRhKGRldikpIHsNCj4+IC0gICAgICAgICAg
-ICAgICBERUNMQVJFX0NPTVBMRVRJT05fT05TVEFDSyhjb21wbGV0aW9uX3NldHN0YXRlKTsNCj4+
-ICAgICAgICAgICAgICAgICBpZiAoc2NzaV9pc19zYXNfcGh5X2xvY2FsKHBoeSkpIHsNCj4+ICAg
-ICAgICAgICAgICAgICAgICAgICAgIHJjID0gMDsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAg
-IGdvdG8gb3V0Ow0KPj4gICAgICAgICAgICAgICAgIH0NCj4+ICAgICAgICAgICAgICAgICByYyA9
-IHNhc19waHlfcmVzZXQocGh5LCAxKTsNCj4+ICsgICAgICAgICAgICAgICBpZiAocmMpIHsNCj4+
-ICsgICAgICAgICAgICAgICAgICAgICAgIFBNODAwMV9FSF9EQkcocG04MDAxX2hhLA0KPj4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgcG04MDAxX3ByaW50aygicGh5IHJlc2V0IGZhaWxlZCBmb3Ig
-ZGV2aWNlICV4XG4iDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAid2l0aCByYyAlZFxuIiwg
-cG04MDAxX2Rldi0+ZGV2aWNlX2lkLCByYykpOw0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAg
-cmMgPSBUTUZfUkVTUF9GVU5DX0ZBSUxFRDsNCj4+ICsgICAgICAgICAgICAgICAgICAgICAgIGdv
-dG8gb3V0Ow0KPj4gKyAgICAgICAgICAgICAgIH0NCj4+ICAgICAgICAgICAgICAgICBtc2xlZXAo
-MjAwMCk7DQo+PiAgICAgICAgICAgICAgICAgcmMgPSBwbTgwMDFfZXhlY19pbnRlcm5hbF90YXNr
-X2Fib3J0KHBtODAwMV9oYSwgcG04MDAxX2RldiAsDQo+PiAgICAgICAgICAgICAgICAgICAgICAg
-ICBkZXYsIDEsIDApOw0KPj4gLSAgICAgICAgICAgICAgIHBtODAwMV9kZXYtPnNldGRzX2NvbXBs
-ZXRpb24gPSAmY29tcGxldGlvbl9zZXRzdGF0ZTsNCj4+IC0gICAgICAgICAgICAgICByYyA9IFBN
-ODAwMV9DSElQX0RJU1AtPnNldF9kZXZfc3RhdGVfcmVxKHBtODAwMV9oYSwNCj4+IC0gICAgICAg
-ICAgICAgICAgICAgICAgIHBtODAwMV9kZXYsIDB4MDEpOw0KPj4gLSAgICAgICAgICAgICAgIHdh
-aXRfZm9yX2NvbXBsZXRpb24oJmNvbXBsZXRpb25fc2V0c3RhdGUpOw0KPj4gKyAgICAgICAgICAg
-ICAgIGlmIChyYykgew0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgUE04MDAxX0VIX0RCRyhw
-bTgwMDFfaGEsDQo+PiArICAgICAgICAgICAgICAgICAgICAgICBwbTgwMDFfcHJpbnRrKCJ0YXNr
-IGFib3J0IGZhaWxlZCAleFxuIg0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgIndpdGggcmMg
-JWRcbiIsIHBtODAwMV9kZXYtPmRldmljZV9pZCwgcmMpKTsNCj4+ICsgICAgICAgICAgICAgICAg
-ICAgICAgIHJjID0gVE1GX1JFU1BfRlVOQ19GQUlMRUQ7DQo+PiArICAgICAgICAgICAgICAgfQ0K
-Pj4gICAgICAgICB9IGVsc2Ugew0KPj4gICAgICAgICAgICAgICAgIHJjID0gc2FzX3BoeV9yZXNl
-dChwaHksIDEpOw0KPj4gICAgICAgICAgICAgICAgIG1zbGVlcCgyMDAwKTsNCj4+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCBiL2RyaXZlcnMvc2NzaS9wbTgw
-MDEvcG04MDAxX3Nhcy5oDQo+PiBpbmRleCA4ZGQ4Yjc4Li5jOTczNmNjIDEwMDY0NA0KPj4gLS0t
-IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmgNCj4+ICsrKyBiL2RyaXZlcnMvc2Nz
-aS9wbTgwMDEvcG04MDAxX3Nhcy5oDQo+PiBAQCAtNTY5LDYgKzU2OSwxNCBAQCBzdHJ1Y3QgcG04
-MDAxX2Z3X2ltYWdlX2hlYWRlciB7DQo+PiAgI2RlZmluZSAgICAgICAgTkNRX1JFQURfTE9HX0ZM
-QUcgICAgICAgICAgICAgICAgICAgICAgIDB4ODAwMDAwMDANCj4+ICAjZGVmaW5lICAgICAgICBO
-Q1FfQUJPUlRfQUxMX0ZMQUcgICAgICAgICAgICAgICAgICAgICAgMHg0MDAwMDAwMA0KPj4gICNk
-ZWZpbmUgICAgICAgIE5DUV8yTkRfUkxFX0ZMQUcgICAgICAgICAgICAgICAgICAgICAgICAweDIw
-MDAwMDAwDQo+PiArDQo+PiArLyogRGV2aWNlIHN0YXRlcyAqLw0KPj4gKyNkZWZpbmUgRFNfT1BF
-UkFUSU9OQUwgICAgICAgICAgICAgICAgICAgICAgICAgMHgwMQ0KPj4gKyNkZWZpbmUgRFNfUE9S
-VF9JTl9SRVNFVCAgICAgICAgICAgICAgICAgICAgICAgMHgwMg0KPj4gKyNkZWZpbmUgRFNfSU5f
-UkVDT1ZFUlkgICAgICAgICAgICAgICAgICAgICAgICAgMHgwMw0KPj4gKyNkZWZpbmUgRFNfSU5f
-RVJST1IgICAgICAgICAgICAgICAgICAgICAgICAgICAgMHgwNA0KPj4gKyNkZWZpbmUgRFNfTk9O
-X09QRVJBVElPTkFMICAgICAgICAgICAgICAgICAgICAgMHgwNw0KPj4gKw0KPj4gIC8qKg0KPj4g
-ICAqIGJyaWVmIHBhcmFtIHN0cnVjdHVyZSBmb3IgZmlybXdhcmUgZmxhc2ggdXBkYXRlLg0KPj4g
-ICAqLw0KPj4gLS0NCj4+IDEuNy4xDQo+Pg0KPg0KPg0KPg0KPiAtLQ0KPiBNaXQgZnJldW5kbGlj
-aGVuIEdyw7zDn2VuLA0KPiBCZXN0IFJlZ2FyZHMsDQo+DQo+IEphY2sgV2FuZw0KPg0KPiBMaW51
-eCBLZXJuZWwgRGV2ZWxvcGVyIFN0b3JhZ2UNCj4gUHJvZml0QnJpY2tzIEdtYkggIFRoZSBJYWFT
-LUNvbXBhbnkuDQo+DQo+IFByb2ZpdEJyaWNrcyBHbWJIDQo+IEdyZWlmc3dhbGRlciBTdHIuIDIw
-Nw0KPiBEIC0gMTA0MDUgQmVybGluDQo+IFRlbDogKzQ5IDMwIDU3NzAwODMtNDINCj4gRmF4OiAr
-NDkgMzAgNTc3MDA4NS05OA0KPiBFbWFpbDogamlucHUud2FuZ0Bwcm9maXRicmlja3MuY29tDQo+
-IFVSTDogaHR0cDovL3d3dy5wcm9maXRicmlja3MuZGUNCj4NCj4gU2l0eiBkZXIgR2VzZWxsc2No
-YWZ0OiBCZXJsaW4uDQo+IFJlZ2lzdGVyZ2VyaWNodDogQW10c2dlcmljaHQgQ2hhcmxvdHRlbmJ1
-cmcsIEhSQiAxMjU1MDYgQi4NCj4gR2VzY2jDpGZ0c2bDvGhyZXI6IEFuZHJlYXMgR2F1Z2VyLCBB
-Y2hpbSBXZWlzcy4NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
-dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVz
-c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
-YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Export the RAW SCSI Inquiry to sysfs as binfile. This way the data can be used
+by userland without the need to have and ioctl or use the sg_inq tool.
+
+Here is an example of the provided data
+
+linux:~ # hexdump /sys/class/scsi_device/1\:0\:0\:0/device/inquiry
+0000000 8005 3205 001f 0000 4551 554d 2020 2020
+0000010 4551 554d 4420 4456 522d 4d4f 2020 2020
+0000020 2e32 2e33
+0000024
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+
+Chanes to v1:
+* Correct typo userlang -> userland in commit message.
+
+ drivers/scsi/scsi_sysfs.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9ad4116..5ecb65d 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -773,6 +773,29 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
+ sdev_vpd_pg_attr(pg83);
+ sdev_vpd_pg_attr(pg80);
+ 
++static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
++			    struct bin_attribute *bin_attr,
++			    char *buf, loff_t off, size_t count)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->inquiry)
++		return -EINVAL;
++
++	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
++				       sdev->inquiry_len);
++}
++
++static struct bin_attribute dev_attr_inquiry = {
++	.attr = {
++		.name = "inquiry",
++		.mode = S_IRUGO,
++	},
++	.size = 0,
++	.read = show_inquiry,
++};
++
+ static ssize_t
+ show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -957,6 +980,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ static struct bin_attribute *scsi_sdev_bin_attrs[] = {
+ 	&dev_attr_vpd_pg83,
+ 	&dev_attr_vpd_pg80,
++	&dev_attr_inquiry,
+ 	NULL
+ };
+ static struct attribute_group scsi_sdev_attr_group = {
+-- 
+2.5.0
