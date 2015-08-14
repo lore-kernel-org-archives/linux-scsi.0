@@ -1,40 +1,78 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/7] megaraid_sas : Jbod sequence number support
-Date: Thu, 13 Aug 2015 13:08:50 -0400
-Message-ID: <yq1si7nazfh.fsf@sermon.lab.mkp.net>
-References: <201508071230.t77CTw3x021043@palmhbs0.lsi.com>
-	<yq1h9o5e1li.fsf@sermon.lab.mkp.net>
-	<84e4c58f0e2c8a184deb53e31edca6c5@mail.gmail.com>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] Drivers: hv: vmbus: fix init_vp_index() for reloading
+ hv_netvsc
+Date: Thu, 13 Aug 2015 17:07:03 -0700
+Message-ID: <1439510823-16280-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25812 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbHMRJ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 13:09:27 -0400
-In-Reply-To: <84e4c58f0e2c8a184deb53e31edca6c5@mail.gmail.com> (Sumit Saxena's
-	message of "Wed, 12 Aug 2015 11:30:14 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
 
->>>>> "Sumit" == Sumit Saxena <sumit.saxena@avagotech.com> writes:
+From: Dexuan Cui <decui@microsoft.com>
 
-Sumit> I will create separate patch for these new flags which are not
-Sumit> related to JBOD sequence support. These flags are created to keep
-Sumit> APIs in sync across driver and firmware.
+This fixes the recent commit 3b71107d73b16074afa7658f3f0fcf837aabfe24:
+Drivers: hv: vmbus: Further improve CPU affiliation logic
 
-*nod*
+Without the fix, reloading hv_netvsc hangs the guest.
 
->> Why -1 here? Presumably MAX_PHYSICAL_DEVICES is a count, not an
->> index.
-Sumit> Yes it is count only.  struct MR_PD_CFG_SEQ_NUM_SYNC has "struct
-Sumit> MR_PD_CFG_SEQ" as one of its member so struct MR_PD_CFG_SEQ
-Sumit> corresponding to PD index "0" is embedded inside struct
-Sumit> MR_PD_CFG_SEQ_NUM_SYNC. That's why -1 here.
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/hv/channel_mgmt.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-OK. Just checking.
-
+diff --git a/drivers/hv/channel_mgmt.c b/drivers/hv/channel_mgmt.c
+index 3ab4753..8a4105c 100644
+--- a/drivers/hv/channel_mgmt.c
++++ b/drivers/hv/channel_mgmt.c
+@@ -204,6 +204,8 @@ void hv_process_channel_removal(struct vmbus_channel *channel, u32 relid)
+ 		spin_lock_irqsave(&vmbus_connection.channel_lock, flags);
+ 		list_del(&channel->listentry);
+ 		spin_unlock_irqrestore(&vmbus_connection.channel_lock, flags);
++
++		primary_channel = channel;
+ 	} else {
+ 		primary_channel = channel->primary_channel;
+ 		spin_lock_irqsave(&primary_channel->lock, flags);
+@@ -211,6 +213,14 @@ void hv_process_channel_removal(struct vmbus_channel *channel, u32 relid)
+ 		primary_channel->num_sc--;
+ 		spin_unlock_irqrestore(&primary_channel->lock, flags);
+ 	}
++
++	/*
++	 * We need to free the bit for init_vp_index() to work in the case
++	 * of sub-channel, when we reload drivers like hv_netvsc.
++	 */
++	cpumask_clear_cpu(channel->target_cpu,
++			  &primary_channel->alloced_cpus_in_node);
++
+ 	free_channel(channel);
+ }
+ 
+@@ -457,6 +467,13 @@ static void init_vp_index(struct vmbus_channel *channel, const uuid_le *type_gui
+ 			continue;
+ 		}
+ 
++		/*
++		 * NOTE: in the case of sub-channel, we clear the sub-channel
++		 * related bit(s) in primary->alloced_cpus_in_node in
++		 * hv_process_channel_removal(), so when we reload drivers
++		 * like hv_netvsc in SMP guest, here we're able to re-allocate
++		 * bit from primary->alloced_cpus_in_node.
++		 */
+ 		if (!cpumask_test_cpu(cur_cpu,
+ 				&primary->alloced_cpus_in_node)) {
+ 			cpumask_set_cpu(cur_cpu,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.4.1
