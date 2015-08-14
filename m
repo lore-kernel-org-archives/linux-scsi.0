@@ -1,118 +1,84 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Drivers: hv: vmbus: fix init_vp_index() for reloading
- hv_netvsc
-Date: Fri, 14 Aug 2015 01:32:04 +0000
-Message-ID: <BY2PR0301MB165407BC397C346F69A796B5A07C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1439510823-16280-1-git-send-email-kys@microsoft.com>
- <1439507350.8421.13.camel@HansenPartnership.com>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 3/3] cxlflash: Virtual LUN support
+Date: Thu, 13 Aug 2015 20:39:19 -0500
+Message-ID: <55CD46C7.5060506@linux.vnet.ibm.com>
+References: <1439423476-15687-1-git-send-email-mrochs@linux.vnet.ibm.com> <1439467402.21643.50.camel@neuling.org> <55CD2BA0.6040005@linux.vnet.ibm.com> <1439514506.2641.2.camel@neuling.org>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1439507350.8421.13.camel@HansenPartnership.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:36959 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbbHNBjU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Aug 2015 21:39:20 -0400
+Received: from /spool/local
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Thu, 13 Aug 2015 21:39:19 -0400
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 9E03AC9003E
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 21:30:22 -0400 (EDT)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7E1dHkA62390340
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 01:39:17 GMT
+Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7E1dGun011097
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2015 21:39:17 -0400
+In-Reply-To: <1439514506.2641.2.camel@neuling.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Neuling <mikey@neuling.org>
+Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, dja@ozlabs.au.ibm.com, benh@kernel.crashing.org, hch@infradead.org, imunsie@au1.ibm.com
+
+Mikey:
+
+Thanks for pointing this out. The patch for 2/3 should address this
+issue.
+
+Regards,
+- Manoj Kumar
+
+
+On 8/13/2015 8:08 PM, Michael Neuling wrote:
+> On Thu, 2015-08-13 at 18:43 -0500, Manoj Kumar wrote:
+>> Mikey:
+>>
+>> Thanks for your review. See comment inline below.
+>>
+>> - Manoj Kumar
+>>
+>> On 8/13/2015 7:03 AM, Michael Neuling wrote:
+>>> Thanks for integrating my suggestions.  create_context() has the same
+>>> freeing bug as 2/3 but if you fix that I'm happy if you add my
+>>> reviewed by:
+>>>
+>>> Reviewed-by: Michael Neuling <mikey@neuling.org>
+>>
+>> I believe create_context() is in 2/3, not here. I did not find the same
+>> issue in this patch.
+>>
+>
+> This is the section I referring to from this patch.  Seems to be
+> building on the 2/3 issue.
+>
+>
+> @@ -693,11 +737,13 @@ static struct ctx_info *create_context(struct cxlflash_cfg *cfg,
+>   	struct afu *afu = cfg->afu;
+>   	struct ctx_info *ctxi = NULL;
+>   	struct llun_info **lli = NULL;
+> +	bool *ws = NULL;
+>   	struct sisl_rht_entry *rhte;
+>
+>   	ctxi = kzalloc(sizeof(*ctxi), GFP_KERNEL);
+>   	lli = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*lli)), GFP_KERNEL);
+> -	if (unlikely(!ctxi || !lli)) {
+> +	ws = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*ws)), GFP_KERNEL);
+> +	if (unlikely(!ctxi || !lli || !ws)) {
+>   		dev_err(dev, "%s: Unable to allocate context!\n", __func__);
+>   		goto out;
+
+This will be changed to 'goto err' by the v6 patch 2/3.
 
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Thursday, August 13, 2015 4:09 PM
-> To: KY Srinivasan <kys@microsoft.com>
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> Dexuan Cui <decui@microsoft.com>
-> Subject: Re: [PATCH 1/1] Drivers: hv: vmbus: fix init_vp_index() for reloading
-> hv_netvsc
-> 
-> On Thu, 2015-08-13 at 17:07 -0700, K. Y. Srinivasan wrote:
-> > From: Dexuan Cui <decui@microsoft.com>
-> >
-> > This fixes the recent commit 3b71107d73b16074afa7658f3f0fcf837aabfe24:
-> 
-> Which tree is this in?  upstream linus is giving me bad object on that
-> id.
-
-Greg's char-misc tree.
-> 
-> 
-> > Drivers: hv: vmbus: Further improve CPU affiliation logic
-> >
-> > Without the fix, reloading hv_netvsc hangs the guest.
-> 
-> The reason for looking for the commit id was to see if cc to stable was
-> necessary, is it?
-The offending patch was committed on August 5th and cc to stable was not necessary.
-
-K. Y
-> 
-> James
-> 
-> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
-> >  drivers/hv/channel_mgmt.c |   17 +++++++++++++++++
-> >  1 files changed, 17 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/hv/channel_mgmt.c b/drivers/hv/channel_mgmt.c
-> > index 3ab4753..8a4105c 100644
-> > --- a/drivers/hv/channel_mgmt.c
-> > +++ b/drivers/hv/channel_mgmt.c
-> > @@ -204,6 +204,8 @@ void hv_process_channel_removal(struct
-> vmbus_channel *channel, u32 relid)
-> >  		spin_lock_irqsave(&vmbus_connection.channel_lock, flags);
-> >  		list_del(&channel->listentry);
-> >  		spin_unlock_irqrestore(&vmbus_connection.channel_lock,
-> flags);
-> > +
-> > +		primary_channel = channel;
-> >  	} else {
-> >  		primary_channel = channel->primary_channel;
-> >  		spin_lock_irqsave(&primary_channel->lock, flags);
-> > @@ -211,6 +213,14 @@ void hv_process_channel_removal(struct
-> vmbus_channel *channel, u32 relid)
-> >  		primary_channel->num_sc--;
-> >  		spin_unlock_irqrestore(&primary_channel->lock, flags);
-> >  	}
-> > +
-> > +	/*
-> > +	 * We need to free the bit for init_vp_index() to work in the case
-> > +	 * of sub-channel, when we reload drivers like hv_netvsc.
-> > +	 */
-> > +	cpumask_clear_cpu(channel->target_cpu,
-> > +			  &primary_channel->alloced_cpus_in_node);
-> > +
-> >  	free_channel(channel);
-> >  }
-> >
-> > @@ -457,6 +467,13 @@ static void init_vp_index(struct vmbus_channel
-> *channel, const uuid_le *type_gui
-> >  			continue;
-> >  		}
-> >
-> > +		/*
-> > +		 * NOTE: in the case of sub-channel, we clear the sub-channel
-> > +		 * related bit(s) in primary->alloced_cpus_in_node in
-> > +		 * hv_process_channel_removal(), so when we reload
-> drivers
-> > +		 * like hv_netvsc in SMP guest, here we're able to re-allocate
-> > +		 * bit from primary->alloced_cpus_in_node.
-> > +		 */
-> >  		if (!cpumask_test_cpu(cur_cpu,
-> >  				&primary->alloced_cpus_in_node)) {
-> >  			cpumask_set_cpu(cur_cpu,
-> 
-> 
