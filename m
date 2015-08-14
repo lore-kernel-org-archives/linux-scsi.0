@@ -1,120 +1,103 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage protocol negotiation from the vmbus protocol negotiation.
-Date: Fri, 14 Aug 2015 08:45:57 +0200
-Message-ID: <mqdwpwy74gq.fsf@c203.arch.suse.de>
-References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
-	<1439480632-11144-1-git-send-email-kys@microsoft.com>
-	<1439480632-11144-3-git-send-email-kys@microsoft.com>
-	<mqda8tv6yx1.fsf@c203.arch.suse.de>
-	<SN1PR0301MB166260423693200F01696E72A07D0@SN1PR0301MB1662.namprd03.prod.outlook.com>
+From: Viswas G <Viswas.G@pmcs.com>
+Subject: RE: [PATCH V2 2/8] pm80xx: Corrected device state changes in
+ I_T_Nexus_Reset.
+Date: Fri, 14 Aug 2015 07:15:04 +0000
+Message-ID: <DB8BCD22E410A84DA91083F3479A3DB3C6275C41@BBYEXM02.pmc-sierra.internal>
+References: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
+ <1439285792-12030-3-git-send-email-Viswas.G@pmcs.com>
+ <CAMGffEmt82v3jw0mY8bg+ikmjCJYpROQ7KMPMtBOASMX2OePpA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <SN1PR0301MB166260423693200F01696E72A07D0@SN1PR0301MB1662.namprd03.prod.outlook.com>
-	(KY Srinivasan's message of "Thu, 13 Aug 2015 15:18:57 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: Keith Mange <Keith.Mange@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:43830 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753831AbbHNHPG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2015 03:15:06 -0400
+In-Reply-To: <CAMGffEmt82v3jw0mY8bg+ikmjCJYpROQ7KMPMtBOASMX2OePpA@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jinpu Wang <jinpu.wang@profitbricks.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, Hannes Reinecke <hare@suse.com>
 
-KY Srinivasan <kys@microsoft.com> writes:
-
->> -----Original Message-----
->> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
->> Sent: Thursday, August 13, 2015 7:34 AM
->> To: KY Srinivasan <kys@microsoft.com>; Keith Mange
->> <Keith.Mange@microsoft.com>
->> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
->> devel@linuxdriverproject.org; ohering@suse.com;
->> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.=
-org;
->> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com
->> Subject: Re: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the stora=
-ge
->> protocol negotiation from the vmbus protocol negotiation.
->>=20
->> "K. Y. Srinivasan" <kys@microsoft.com> writes:
->>=20
->> > From: Keith Mange <keith.mange@microsoft.com>
->> >
->> > Currently we are making decisions based on vmbus protocol versions
->> > that have been negotiated; use storage potocol versions instead.
->> >
->> > Tested-by: Alex Ng <alexng@microsoft.com>
->> > Signed-off-by: Keith Mange <keith.mange@microsoft.com>
->> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
->> > ---
->> >  drivers/scsi/storvsc_drv.c |  109
->> +++++++++++++++++++++++++++++++++++---------
->> >  1 files changed, 87 insertions(+), 22 deletions(-)
->> >
->> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv=
-=2Ec
->> > index 5f9d133..f29871e 100644
->> > --- a/drivers/scsi/storvsc_drv.c
->> > +++ b/drivers/scsi/storvsc_drv.c
->> > @@ -56,14 +56,18 @@
->> >   * V1 RC > 2008/1/31:  2.0
->> >   * Win7: 4.2
->> >   * Win8: 5.1
->> > + * Win8.1: 6.0
->> > + * Win10: 6.2
->> >   */
->> >
->> >  #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_)
->> & 0xff) << 8) | \
->> >  						(((MINOR_) & 0xff)))
->> >
->> > +#define VMSTOR_PROTO_VERSION_WIN6
->> 	VMSTOR_PROTO_VERSION(2, 0)
->> >  #define VMSTOR_PROTO_VERSION_WIN7
->> 	VMSTOR_PROTO_VERSION(4, 2)
->> >  #define VMSTOR_PROTO_VERSION_WIN8
->> 	VMSTOR_PROTO_VERSION(5, 1)
->> > -
->> > +#define VMSTOR_PROTO_VERSION_WIN8_1
->> 	VMSTOR_PROTO_VERSION(6, 0)
->> > +#define VMSTOR_PROTO_VERSION_WIN10
->> 	VMSTOR_PROTO_VERSION(6, 2)
->> >
->> >  /*  Packet structure describing virtual storage requests. */
->> >  enum vstor_packet_operation {
->> > @@ -205,6 +209,46 @@ struct vmscsi_request {
->> >
->> >
->> >  /*
->> > + * The list of storage protocols in order of preference.
->> > + */
->> > +struct vmstor_protocol {
->> > +	int protocol_version;
->> > +	int sense_buffer_size;
->> > +	int vmscsi_size_delta;
->> > +};
->> > +
->> > +#define VMSTOR_NUM_PROTOCOLS    5
->>=20
->> can't you just use ARRAY_SIZE() here, so you don't have to touch the
->> constant every time a new protocol is appended to the list?
->
-> Certainly. These patches have been floating around for more than a mo=
-nth now and if it is ok
-> with you, I will submit a patch on top of this current series to addr=
-ess the concern you have raised.
-> James, please let me know.
->
-
-No objections from my side, but it's up to James to decide what and whe=
-n
-he picks up patches.
-
-Thanks,
-        Johannes
-
---=20
-Johannes Thumshirn                                           Storage
-jthumshirn@suse.de                                 +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
+T24gVGh1LCBBdWcgMTMsIDIwMTUgYXQgNjoxMyBQTSwgSmlucHUgV2FuZyA8amlucHUud2FuZ0Bw
+cm9maXRicmlja3MuY29tPiB3cm90ZToNCj4gSGkNCj4NCj4gT24gVHVlLCBBdWcgMTEsIDIwMTUg
+YXQgMTE6MzYgQU0sICA8Vmlzd2FzLkdAcG1jcy5jb20+IHdyb3RlOg0KPj4gRnJvbTogVmlzd2Fz
+IEcgPFZpc3dhcy5HQHBtY3MuY29tPg0KPj4NCj4+IEluIE5leHVzIHJlc2V0IHRoZSBkZXZpY2Ug
+c3RhdGUgcmVxdWVzdCBhcmUgbm90IG5lZWRlZC4NCj4+DQo+PiBDaGFuZ2VzIGZyb20gVjE6DQo+
+PiBEZXZpY2Ugc3RhdGUgY2hhbmdlIHJlcXVlc3QgaGFzIGJlZW4gcmVtb3ZlZCBhcyB0aGUgZmly
+bXdhcmUNCj4+IHdpbGwgaGFuZGxlIGl0IGR1cmluZyBpbnRlcm5hbCBjbGVhbnVwLiBBbHNvIHVw
+ZGF0ZWQgdGhlDQo+PiBwcm9wZXIgcmV0dXJuIHZhbHVlIGluIGNhc2Ugb2YgZmFpbHVyZXMuDQo+
+DQo+IElmIGFib3ZlIGlzIHRydWUsIHNob3VsZCB3ZSByZW1vdmUgdGhlIGRldmljZSBzdGF0ZSBj
+aGFuZ2UgY29tbWFuZA0KPiBzdXBwb3J0IGF0IGFsbD8NCj4NCg0KV2UgY2FuJ3QgcmVtb3ZlIHRo
+ZSBzdGF0ZSBjaGFuZ2UgY29tbWFuZCBhcyBpdCBpcyByZXF1aXJlZCBmb3IgDQpzb21lIHRhc2sg
+bWFuYWdlbWVudCBjb21tYW5kIHN1Y2ggYXMgQUJPUlRfVEFTSy4NCg0KPiBPdGhlciB0aGFuIHRo
+YXQsIHBsZWFzZSBmZWVsIGZyZWUgdG8gYWRkOg0KPiBBY2tlZC1ieTogSmFjayBXYW5nIDxqaW5w
+dS53YW5nQHByb2ZpdGJyaWNrcy5jb20+DQo+DQo+IFRoYW5rcw0KPiBKYWNrDQo+DQo+DQo+Pg0K
+Pj4gU2lnbmVkLW9mZi1ieTogVmlzd2FzIEcgPFZpc3dhcy5HQHBtY3MuY29tPg0KPj4NCj4+IFJl
+dmlld2VkLWJ5OiBTdXJlc2ggVGhpYWdhcmFqYW4gPFN1cmVzaC5UaGlhZ2FyYWphbkBwbWNzLmNv
+bT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jIHwgICAxOCAr
+KysrKysrKysrKysrLS0tLS0NCj4+ICBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCB8
+ICAgIDggKysrKysrKysNCj4+ICAyIGZpbGVzIGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKyksIDUg
+ZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04
+MDAxX3Nhcy5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMNCj4+IGluZGV4IGI5
+M2YyODkuLjQ4ZjQ2MjcgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAw
+MV9zYXMuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMNCj4+IEBA
+IC05NzUsMTkgKzk3NSwyNyBAQCBpbnQgcG04MDAxX0lfVF9uZXh1c19yZXNldChzdHJ1Y3QgZG9t
+YWluX2RldmljZSAqZGV2KQ0KPj4gICAgICAgICBwaHkgPSBzYXNfZ2V0X2xvY2FsX3BoeShkZXYp
+Ow0KPj4NCj4+ICAgICAgICAgaWYgKGRldl9pc19zYXRhKGRldikpIHsNCj4+IC0gICAgICAgICAg
+ICAgICBERUNMQVJFX0NPTVBMRVRJT05fT05TVEFDSyhjb21wbGV0aW9uX3NldHN0YXRlKTsNCj4+
+ICAgICAgICAgICAgICAgICBpZiAoc2NzaV9pc19zYXNfcGh5X2xvY2FsKHBoeSkpIHsNCj4+ICAg
+ICAgICAgICAgICAgICAgICAgICAgIHJjID0gMDsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAg
+IGdvdG8gb3V0Ow0KPj4gICAgICAgICAgICAgICAgIH0NCj4+ICAgICAgICAgICAgICAgICByYyA9
+IHNhc19waHlfcmVzZXQocGh5LCAxKTsNCj4+ICsgICAgICAgICAgICAgICBpZiAocmMpIHsNCj4+
+ICsgICAgICAgICAgICAgICAgICAgICAgIFBNODAwMV9FSF9EQkcocG04MDAxX2hhLA0KPj4gKyAg
+ICAgICAgICAgICAgICAgICAgICAgcG04MDAxX3ByaW50aygicGh5IHJlc2V0IGZhaWxlZCBmb3Ig
+ZGV2aWNlICV4XG4iDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAid2l0aCByYyAlZFxuIiwg
+cG04MDAxX2Rldi0+ZGV2aWNlX2lkLCByYykpOw0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAg
+cmMgPSBUTUZfUkVTUF9GVU5DX0ZBSUxFRDsNCj4+ICsgICAgICAgICAgICAgICAgICAgICAgIGdv
+dG8gb3V0Ow0KPj4gKyAgICAgICAgICAgICAgIH0NCj4+ICAgICAgICAgICAgICAgICBtc2xlZXAo
+MjAwMCk7DQo+PiAgICAgICAgICAgICAgICAgcmMgPSBwbTgwMDFfZXhlY19pbnRlcm5hbF90YXNr
+X2Fib3J0KHBtODAwMV9oYSwgcG04MDAxX2RldiAsDQo+PiAgICAgICAgICAgICAgICAgICAgICAg
+ICBkZXYsIDEsIDApOw0KPj4gLSAgICAgICAgICAgICAgIHBtODAwMV9kZXYtPnNldGRzX2NvbXBs
+ZXRpb24gPSAmY29tcGxldGlvbl9zZXRzdGF0ZTsNCj4+IC0gICAgICAgICAgICAgICByYyA9IFBN
+ODAwMV9DSElQX0RJU1AtPnNldF9kZXZfc3RhdGVfcmVxKHBtODAwMV9oYSwNCj4+IC0gICAgICAg
+ICAgICAgICAgICAgICAgIHBtODAwMV9kZXYsIDB4MDEpOw0KPj4gLSAgICAgICAgICAgICAgIHdh
+aXRfZm9yX2NvbXBsZXRpb24oJmNvbXBsZXRpb25fc2V0c3RhdGUpOw0KPj4gKyAgICAgICAgICAg
+ICAgIGlmIChyYykgew0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgUE04MDAxX0VIX0RCRyhw
+bTgwMDFfaGEsDQo+PiArICAgICAgICAgICAgICAgICAgICAgICBwbTgwMDFfcHJpbnRrKCJ0YXNr
+IGFib3J0IGZhaWxlZCAleFxuIg0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgIndpdGggcmMg
+JWRcbiIsIHBtODAwMV9kZXYtPmRldmljZV9pZCwgcmMpKTsNCj4+ICsgICAgICAgICAgICAgICAg
+ICAgICAgIHJjID0gVE1GX1JFU1BfRlVOQ19GQUlMRUQ7DQo+PiArICAgICAgICAgICAgICAgfQ0K
+Pj4gICAgICAgICB9IGVsc2Ugew0KPj4gICAgICAgICAgICAgICAgIHJjID0gc2FzX3BoeV9yZXNl
+dChwaHksIDEpOw0KPj4gICAgICAgICAgICAgICAgIG1zbGVlcCgyMDAwKTsNCj4+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaCBiL2RyaXZlcnMvc2NzaS9wbTgw
+MDEvcG04MDAxX3Nhcy5oDQo+PiBpbmRleCA4ZGQ4Yjc4Li5jOTczNmNjIDEwMDY0NA0KPj4gLS0t
+IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmgNCj4+ICsrKyBiL2RyaXZlcnMvc2Nz
+aS9wbTgwMDEvcG04MDAxX3Nhcy5oDQo+PiBAQCAtNTY5LDYgKzU2OSwxNCBAQCBzdHJ1Y3QgcG04
+MDAxX2Z3X2ltYWdlX2hlYWRlciB7DQo+PiAgI2RlZmluZSAgICAgICAgTkNRX1JFQURfTE9HX0ZM
+QUcgICAgICAgICAgICAgICAgICAgICAgIDB4ODAwMDAwMDANCj4+ICAjZGVmaW5lICAgICAgICBO
+Q1FfQUJPUlRfQUxMX0ZMQUcgICAgICAgICAgICAgICAgICAgICAgMHg0MDAwMDAwMA0KPj4gICNk
+ZWZpbmUgICAgICAgIE5DUV8yTkRfUkxFX0ZMQUcgICAgICAgICAgICAgICAgICAgICAgICAweDIw
+MDAwMDAwDQo+PiArDQo+PiArLyogRGV2aWNlIHN0YXRlcyAqLw0KPj4gKyNkZWZpbmUgRFNfT1BF
+UkFUSU9OQUwgICAgICAgICAgICAgICAgICAgICAgICAgMHgwMQ0KPj4gKyNkZWZpbmUgRFNfUE9S
+VF9JTl9SRVNFVCAgICAgICAgICAgICAgICAgICAgICAgMHgwMg0KPj4gKyNkZWZpbmUgRFNfSU5f
+UkVDT1ZFUlkgICAgICAgICAgICAgICAgICAgICAgICAgMHgwMw0KPj4gKyNkZWZpbmUgRFNfSU5f
+RVJST1IgICAgICAgICAgICAgICAgICAgICAgICAgICAgMHgwNA0KPj4gKyNkZWZpbmUgRFNfTk9O
+X09QRVJBVElPTkFMICAgICAgICAgICAgICAgICAgICAgMHgwNw0KPj4gKw0KPj4gIC8qKg0KPj4g
+ICAqIGJyaWVmIHBhcmFtIHN0cnVjdHVyZSBmb3IgZmlybXdhcmUgZmxhc2ggdXBkYXRlLg0KPj4g
+ICAqLw0KPj4gLS0NCj4+IDEuNy4xDQo+Pg0KPg0KPg0KPg0KPiAtLQ0KPiBNaXQgZnJldW5kbGlj
+aGVuIEdyw7zDn2VuLA0KPiBCZXN0IFJlZ2FyZHMsDQo+DQo+IEphY2sgV2FuZw0KPg0KPiBMaW51
+eCBLZXJuZWwgRGV2ZWxvcGVyIFN0b3JhZ2UNCj4gUHJvZml0QnJpY2tzIEdtYkggIFRoZSBJYWFT
+LUNvbXBhbnkuDQo+DQo+IFByb2ZpdEJyaWNrcyBHbWJIDQo+IEdyZWlmc3dhbGRlciBTdHIuIDIw
+Nw0KPiBEIC0gMTA0MDUgQmVybGluDQo+IFRlbDogKzQ5IDMwIDU3NzAwODMtNDINCj4gRmF4OiAr
+NDkgMzAgNTc3MDA4NS05OA0KPiBFbWFpbDogamlucHUud2FuZ0Bwcm9maXRicmlja3MuY29tDQo+
+IFVSTDogaHR0cDovL3d3dy5wcm9maXRicmlja3MuZGUNCj4NCj4gU2l0eiBkZXIgR2VzZWxsc2No
+YWZ0OiBCZXJsaW4uDQo+IFJlZ2lzdGVyZ2VyaWNodDogQW10c2dlcmljaHQgQ2hhcmxvdHRlbmJ1
+cmcsIEhSQiAxMjU1MDYgQi4NCj4gR2VzY2jDpGZ0c2bDvGhyZXI6IEFuZHJlYXMgR2F1Z2VyLCBB
+Y2hpbSBXZWlzcy4NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
+dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVz
+c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
+YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
