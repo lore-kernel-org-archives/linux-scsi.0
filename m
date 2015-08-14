@@ -1,29 +1,61 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: threads scsi_eh_ and scsi_tmf_ don't die when ib_srp reconnect
-Date: Fri, 14 Aug 2015 09:10:09 -0700
-Message-ID: <55CE12E1.6030707@sandisk.com>
-References: <55C8C0DC.7070505@clodo.ru> <55C8C39B.1010000@sandisk.com>
- <55C9FB62.1030004@clodo.ru> <55CA5AD4.8080109@sandisk.com>
- <55CAD674.4040104@clodo.ru> <55CB796D.3030709@sandisk.com>
- <55CDAF7D.3050301@clodo.ru>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb stick
+Date: Fri, 14 Aug 2015 18:39:43 +0000
+Message-ID: <bug-101011-11613-6jIKlaWb2M@https.bugzilla.kernel.org/>
+References: <bug-101011-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0062.outbound.protection.outlook.com ([207.46.100.62]:62112
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754304AbbHNQKP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Aug 2015 12:10:15 -0400
-In-Reply-To: <55CDAF7D.3050301@clodo.ru>
+Received: from mail.kernel.org ([198.145.29.136]:41515 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752053AbbHNSjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2015 14:39:48 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 1373B2081B
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 18:39:47 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B1B0D2080A
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 18:39:43 +0000 (UTC)
+In-Reply-To: <bug-101011-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "kkv@clodo.ru" <kkv@clodo.ru>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 08/14/2015 02:06 AM, Konstantin Krotov wrote:
-> I tested the patch, the problem is not reproduced.
+https://bugzilla.kernel.org/show_bug.cgi?id=101011
 
-Thanks for confirming that the patch fixes this issue. I will send a 
-slightly modified version of this patch soon to the Linux RDMA maintainer.
+--- Comment #8 from Theodore Tso <tytso@mit.edu> ---
+On Fri, Aug 14, 2015 at 11:02:14AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=101011
+> 
+> I can also confirm that this bug is present in latest stable kernel (4.1.5) and
+> reverting commit from comment 6 seems to fix it.
 
-Bart.
+Christoph,
+
+I've since gotten two reports from users that reverting your commit:
+"08439fec266c3: ext4: remove block_device_ejected" fixes a crash when
+a USB stick is yanked from their system.  Looking at the reported
+stack dump, it looks like the crash is happening in
+account_page_dirtied() when it updates some bdi-specific statistics.
+
+I haven't been paying attention to the recent changes in how bdi gets
+torn down after the device gets removed, and in fact finding the
+recent changes wasn't obvioius enough after doing a brief search, but
+it seems to me that if reverting this patch is making any kind of
+differences, then the assertion in the commit description:
+
+    bdi->dev now never goes away, so this function became useless.
+
+it implies that bdi->dev *does* become NULL, and checking for this is
+useful.  In any case, I don't see any harm in reverting this commit;
+what do you think?
+
+Thanks,
+
+                    - Ted
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
