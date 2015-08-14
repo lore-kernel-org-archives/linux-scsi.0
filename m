@@ -1,50 +1,47 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb
- stick
-Date: Fri, 14 Aug 2015 14:39:31 -0400
-Message-ID: <20150814183931.GA3050@thunk.org>
-References: <bug-101011-11613@https.bugzilla.kernel.org/>
- <bug-101011-11613-PGvplgVz20@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:59434 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973AbbHNSjh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Aug 2015 14:39:37 -0400
-Content-Disposition: inline
-In-Reply-To: <bug-101011-11613-PGvplgVz20@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Use ARRAY_SIZE() to compute the elements in the protocol array
+Date: Fri, 14 Aug 2015 13:50:13 -0700
+Message-ID: <1439585413-3279-1-git-send-email-kys@microsoft.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com, jthumshirn@suse.de
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Fri, Aug 14, 2015 at 11:02:14AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=101011
-> 
-> I can also confirm that this bug is present in latest stable kernel (4.1.5) and
-> reverting commit from comment 6 seems to fix it.
+Rather than hard coding the number of elements in the array, use the ARRAY_SIZE()
+macro to compute the number of elements in the array. This would minimize the
+changes needed when we have to extend the protocols supported.
 
-Christoph,
+This was suggested by Johannes Thumshirn <jthumshirn@suse.de>.
 
-I've since gotten two reports from users that reverting your commit:
-"08439fec266c3: ext4: remove block_device_ejected" fixes a crash when
-a USB stick is yanked from their system.  Looking at the reported
-stack dump, it looks like the crash is happening in
-account_page_dirtied() when it updates some bdi-specific statistics.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-I haven't been paying attention to the recent changes in how bdi gets
-torn down after the device gets removed, and in fact finding the
-recent changes wasn't obvioius enough after doing a brief search, but
-it seems to me that if reverting this patch is making any kind of
-differences, then the assertion in the commit description:
-
-    bdi->dev now never goes away, so this function became useless.
-
-it implies that bdi->dev *does* become NULL, and checking for this is
-useful.  In any case, I don't see any harm in reverting this commit;
-what do you think?
-
-Thanks,
-
-					- Ted
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 64fa305..4dffc3b 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -226,9 +226,8 @@ struct vmstor_protocol {
+ 	int vmscsi_size_delta;
+ };
+ 
+-#define VMSTOR_NUM_PROTOCOLS    5
+ 
+-const struct vmstor_protocol vmstor_protocols[VMSTOR_NUM_PROTOCOLS] = {
++const struct vmstor_protocol vmstor_protocols[] = {
+ 	{
+ 		VMSTOR_PROTO_VERSION_WIN10,
+ 		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
+@@ -959,7 +958,7 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	}
+ 
+ 
+-	for (i = 0; i < VMSTOR_NUM_PROTOCOLS; i++) {
++	for (i = 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
+ 		/* reuse the packet for version range supported */
+ 		memset(vstor_packet, 0, sizeof(struct vstor_packet));
+ 		vstor_packet->operation =
+-- 
+1.7.4.1
