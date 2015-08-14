@@ -1,32 +1,25 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb stick
-Date: Fri, 14 Aug 2015 18:39:43 +0000
-Message-ID: <bug-101011-11613-6jIKlaWb2M@https.bugzilla.kernel.org/>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb
+ stick
+Date: Fri, 14 Aug 2015 14:39:31 -0400
+Message-ID: <20150814183931.GA3050@thunk.org>
 References: <bug-101011-11613@https.bugzilla.kernel.org/>
+ <bug-101011-11613-PGvplgVz20@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41515 "EHLO mail.kernel.org"
+Received: from imap.thunk.org ([74.207.234.97]:59434 "EHLO imap.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752053AbbHNSjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Aug 2015 14:39:48 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 1373B2081B
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 18:39:47 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id B1B0D2080A
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 18:39:43 +0000 (UTC)
-In-Reply-To: <bug-101011-11613@https.bugzilla.kernel.org/>
+	id S1751973AbbHNSjh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Aug 2015 14:39:37 -0400
+Content-Disposition: inline
+In-Reply-To: <bug-101011-11613-PGvplgVz20@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=101011
-
---- Comment #8 from Theodore Tso <tytso@mit.edu> ---
-On Fri, Aug 14, 2015 at 11:02:14AM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
+On Fri, Aug 14, 2015 at 11:02:14AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=101011
 > 
 > I can also confirm that this bug is present in latest stable kernel (4.1.5) and
@@ -54,8 +47,4 @@ what do you think?
 
 Thanks,
 
-                    - Ted
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+					- Ted
