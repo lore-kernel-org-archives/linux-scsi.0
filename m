@@ -1,75 +1,102 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2] scsi: Export SCSI Inquiry data to sysfs
-Date: Fri, 14 Aug 2015 09:39:20 +0200
-Message-ID: <1439537960-25085-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Konstantin Krotov <kkv@clodo.ru>
+Subject: Re: threads scsi_eh_ and scsi_tmf_ don't die when ib_srp reconnect
+Date: Fri, 14 Aug 2015 12:06:05 +0300
+Message-ID: <55CDAF7D.3050301@clodo.ru>
+References: <55C8C0DC.7070505@clodo.ru> <55C8C39B.1010000@sandisk.com> <55C9FB62.1030004@clodo.ru> <55CA5AD4.8080109@sandisk.com> <55CAD674.4040104@clodo.ru> <55CB796D.3030709@sandisk.com>
+Reply-To: kkv@clodo.ru
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:33042 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444AbbHNJGL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Aug 2015 05:06:11 -0400
+Received: by lalv9 with SMTP id v9so40265083lal.0
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2015 02:06:09 -0700 (PDT)
+In-Reply-To: <55CB796D.3030709@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Export the RAW SCSI Inquiry to sysfs as binfile. This way the data can be used
-by userland without the need to have and ioctl or use the sg_inq tool.
 
-Here is an example of the provided data
 
-linux:~ # hexdump /sys/class/scsi_device/1\:0\:0\:0/device/inquiry
-0000000 8005 3205 001f 0000 4551 554d 2020 2020
-0000010 4551 554d 4420 4456 522d 4d4f 2020 2020
-0000020 2e32 2e33
-0000024
+12.08.2015 19:50, Bart Van Assche =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+> On 08/11/2015 10:15 PM, Konstantin Krotov wrote:
+>> 11.08.2015 23:28, Bart Van Assche =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+>>> Are you using a kernel from Greg KH's stable repository or another =
+kernel ? And to which values were the
+>> yes, sources from upstream, 3.19.1
+>
+> Hello Konstantin,
+>
+> Can you test the patch below ? That patch not only applies to the v4.=
+2-rc6
+> kernel but also to the ib_srp-backport driver.
+>
+> Thanks,
+>
+> Bart.
+>
+> Subject: [PATCH] IB/srp: Stop the scsi_eh_<n> and scsi_tmf_<n> thread=
+s if login fails
+>
+> scsi_host_alloc() not only allocates memory for a SCSI host but also
+> creates the scsi_eh_<n> kernel thread and the scsi_tmf_<n> workqueue.
+> Stop these threads if login fails by calling scsi_host_put().
+>
+> Reported-by: Konstantin Krotov <kkv@clodo.ru>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: stable <stable@vger.kernel.org>
+> ---
+>   drivers/infiniband/ulp/srp/ib_srp.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+>
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband=
+/ulp/srp/ib_srp.c
+> index f962267..b5f9456 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -2765,6 +2765,13 @@ static int srp_sdev_count(struct Scsi_Host *ho=
+st)
+>   	return c;
+>   }
+>
+> +/*
+> + * Return values:
+> + * < 0 upon failure. Caller is responsible for SRP target port clean=
+up.
+> + * 0 and target->state =3D=3D SRP_TARGET_REMOVED if the target port =
+will be removed
+> + *    asynchronously.
+> + * 0 and target->state !=3D SRP_TARGET_REMOVED upon success.
+> + */
+>   static int srp_add_target(struct srp_host *host, struct srp_target_=
+port *target)
+>   {
+>   	struct srp_rport_identifiers ids;
+> @@ -3316,6 +3323,7 @@ err_disconnect:
+>   	}
+>
+>   	kfree(target->ch);
+> +	scsi_host_put(target->scsi_host);
+>   	goto out;
+>   }
+>
+>
+Hello Bart
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
+I tested the patch, the problem is not reproduced.
 
-Chanes to v1:
-* Correct typo userlang -> userland in commit message.
+Thanks.
 
- drivers/scsi/scsi_sysfs.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+--=20
+WBR
+Konstantin V. Krotov
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9ad4116..5ecb65d 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -773,6 +773,29 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
- sdev_vpd_pg_attr(pg83);
- sdev_vpd_pg_attr(pg80);
- 
-+static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
-+			    struct bin_attribute *bin_attr,
-+			    char *buf, loff_t off, size_t count)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	if (!sdev->inquiry)
-+		return -EINVAL;
-+
-+	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
-+				       sdev->inquiry_len);
-+}
-+
-+static struct bin_attribute dev_attr_inquiry = {
-+	.attr = {
-+		.name = "inquiry",
-+		.mode = S_IRUGO,
-+	},
-+	.size = 0,
-+	.read = show_inquiry,
-+};
-+
- static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
- 			char *buf)
-@@ -957,6 +980,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- static struct bin_attribute *scsi_sdev_bin_attrs[] = {
- 	&dev_attr_vpd_pg83,
- 	&dev_attr_vpd_pg80,
-+	&dev_attr_inquiry,
- 	NULL
- };
- static struct attribute_group scsi_sdev_attr_group = {
--- 
-2.5.0
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
