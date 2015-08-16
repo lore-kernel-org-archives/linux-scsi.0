@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 6/8] scsi: ufs: make the UFS variant a platform device
-Date: Sun, 16 Aug 2015 13:14:15 +0300
-Message-ID: <1439720057-9186-7-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 4/8] add ufshcd_get_variant ufshcd_set_variant
+Date: Sun, 16 Aug 2015 13:14:13 +0300
+Message-ID: <1439720057-9186-5-git-send-email-ygardi@codeaurora.org>
 References: <1439720057-9186-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1439720057-9186-1-git-send-email-ygardi@codeaurora.org>
@@ -10,357 +10,201 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
-a platform device.
-In order to do so a few additional changes are required:
-1. The ufshcd-pltfrm is no longer serves as a platform device.
-   Now it only serves as a group of platform APIs such as PM APIs
-   (runtime suspend/resume, system suspend/resume etc), parsers of
-   clocks, regulators and pm_levels from DT.
-2. What used to be the old platform "probe" is now "only" a pltfrm_init()
-   routine, that does exactly the same, but only being called by the
-   new probe function of the UFS variant.
-
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c      | 83 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-pltfrm.c | 84 +++++++++-------------------------------
- drivers/scsi/ufs/ufshcd-pltfrm.h | 27 +++++++++++++
- drivers/scsi/ufs/ufshcd.c        | 10 +++++
- drivers/scsi/ufs/ufshcd.h        |  6 +++
- 5 files changed, 145 insertions(+), 65 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
+ drivers/scsi/ufs/ufs-qcom.c | 34 +++++++++++++++++-----------------
+ drivers/scsi/ufs/ufshcd.h   | 21 +++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index a6b7e10..2c3d57e 100644
+index 6c23bbf..64c54b7 100644
 --- a/drivers/scsi/ufs/ufs-qcom.c
 +++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -19,6 +19,7 @@
+@@ -155,7 +155,7 @@ out:
  
- #include <linux/phy/phy-qcom-ufs.h>
- #include "ufshcd.h"
-+#include "ufshcd-pltfrm.h"
- #include "unipro.h"
- #include "ufs-qcom.h"
- #include "ufshci.h"
-@@ -1050,4 +1051,86 @@ static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.resume			= ufs_qcom_resume,
- };
- 
-+/**
-+ * ufs_qcom_probe - probe routine of the driver
-+ * @pdev: pointer to Platform device handle
-+ *
-+ * Always return 0
-+ */
-+static int ufs_qcom_probe(struct platform_device *pdev)
-+{
-+	int err;
-+	struct device *dev = &pdev->dev;
-+	struct ufs_hba *hba;
-+
-+	/* Perform generic probe */
-+	err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
-+	if (err) {
-+		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
-+		goto out;
-+	}
-+
-+	hba = platform_get_drvdata(pdev);
-+	if (unlikely(!hba)) {
-+		dev_err(dev, "no hba structure after successful probing\n");
-+		goto dealloc_host;
-+	}
-+
-+	return 0;
-+
-+dealloc_host:
-+	/* disconnect the bind between the qcom host and the hba */
-+	ufshcd_set_variant(hba, NULL);
-+	ufshcd_dealloc_host(hba);
-+out:
-+	return err;
-+}
-+
-+/**
-+ * ufs_qcom_remove - set driver_data of the device to NULL
-+ * @pdev: pointer to platform device handle
-+ *
-+ * Always return 0
-+ */
-+static int ufs_qcom_remove(struct platform_device *pdev)
-+{
-+	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-+
-+	pm_runtime_get_sync(&(pdev)->dev);
-+	ufshcd_remove(hba);
-+	ufshcd_dealloc_host(hba);
-+	return 0;
-+}
-+
-+static void ufs_qcom_shutdown(struct platform_device *pdev)
-+{
-+	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
-+}
-+
-+static const struct of_device_id ufs_qcom_of_match[] = {
-+	{ .compatible = "qcom,ufshc"},
-+	{},
-+};
-+
-+static const struct dev_pm_ops ufs_qcom_pm_ops = {
-+	.suspend	= ufshcd_pltfrm_suspend,
-+	.resume		= ufshcd_pltfrm_resume,
-+	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
-+	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
-+	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
-+};
-+
-+static struct platform_driver ufs_qcom_pltform = {
-+	.probe	= ufs_qcom_probe,
-+	.remove	= ufs_qcom_remove,
-+	.shutdown = ufs_qcom_shutdown,
-+	.driver	= {
-+		.name	= "ufshcd-qcom",
-+		.owner	= THIS_MODULE,
-+		.pm	= &ufs_qcom_pm_ops,
-+		.of_match_table = of_match_ptr(ufs_qcom_of_match),
-+	},
-+};
-+module_platform_driver(ufs_qcom_pltform);
-+
- MODULE_LICENSE("GPL v2");
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 7db9564..20009a9 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -38,20 +38,9 @@
- #include <linux/of.h>
- 
- #include "ufshcd.h"
-+#include "ufshcd-pltfrm.h"
- 
- static const struct of_device_id ufs_of_match[];
--static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
--{
--	if (dev->of_node) {
--		const struct of_device_id *match;
--
--		match = of_match_node(ufs_of_match, dev->of_node);
--		if (match)
--			return (struct ufs_hba_variant_ops *)match->data;
--	}
--
--	return NULL;
--}
- 
- static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ static int ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
  {
-@@ -245,10 +234,11 @@ out:
-  * Returns 0 if successful
-  * Returns non-zero otherwise
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct phy *phy = host->generic_phy;
+ 	u32 tx_lanes;
+ 	int err = 0;
+@@ -211,7 +211,7 @@ static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
+ 
+ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct phy *phy = host->generic_phy;
+ 	int ret = 0;
+ 	bool is_rate_B = (UFS_QCOM_LIMIT_HS_RATE == PA_HS_MODE_B)
+@@ -273,7 +273,7 @@ static void ufs_qcom_enable_hw_clk_gating(struct ufs_hba *hba)
+ 
+ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba, bool status)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	int err = 0;
+ 
+ 	switch (status) {
+@@ -307,7 +307,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba, bool status)
+ static unsigned long
+ ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear, u32 hs, u32 rate)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_clk_info *clki;
+ 	u32 core_clk_period_in_ns;
+ 	u32 tx_clk_cycles_per_us = 0;
+@@ -448,7 +448,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba, bool status)
+ 
+ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct phy *phy = host->generic_phy;
+ 	int ret = 0;
+ 
+@@ -479,7 +479,7 @@ out:
+ 
+ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct phy *phy = host->generic_phy;
+ 	int err;
+ 
+@@ -621,7 +621,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	u32 val;
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct phy *phy = host->generic_phy;
+ 	struct ufs_qcom_dev_params ufs_qcom_cap;
+ 	int ret = 0;
+@@ -696,7 +696,7 @@ out:
+ 
+ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 
+ 	if (host->hw_ver.major == 0x1)
+ 		return UFSHCI_VERSION_11;
+@@ -715,7 +715,7 @@ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
   */
--static int ufshcd_pltfrm_suspend(struct device *dev)
-+int ufshcd_pltfrm_suspend(struct device *dev)
+ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
  {
- 	return ufshcd_system_suspend(dev_get_drvdata(dev));
- }
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_suspend);
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
  
- /**
-  * ufshcd_pltfrm_resume - resume power management function
-@@ -257,23 +247,30 @@ static int ufshcd_pltfrm_suspend(struct device *dev)
-  * Returns 0 if successful
-  * Returns non-zero otherwise
-  */
--static int ufshcd_pltfrm_resume(struct device *dev)
-+int ufshcd_pltfrm_resume(struct device *dev)
- {
- 	return ufshcd_system_resume(dev_get_drvdata(dev));
- }
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_resume);
+ 	if (host->hw_ver.major == 0x01) {
+ 		hba->quirks |= UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS
+@@ -740,7 +740,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
  
--static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
-+int ufshcd_pltfrm_runtime_suspend(struct device *dev)
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
  {
- 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
- }
--static int ufshcd_pltfrm_runtime_resume(struct device *dev)
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_suspend);
-+
-+int ufshcd_pltfrm_runtime_resume(struct device *dev)
- {
- 	return ufshcd_runtime_resume(dev_get_drvdata(dev));
- }
--static int ufshcd_pltfrm_runtime_idle(struct device *dev)
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_resume);
-+
-+int ufshcd_pltfrm_runtime_idle(struct device *dev)
- {
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_idle);
-+
- #else /* !CONFIG_PM */
- #define ufshcd_pltfrm_suspend	NULL
- #define ufshcd_pltfrm_resume	NULL
-@@ -282,18 +279,15 @@ static int ufshcd_pltfrm_runtime_idle(struct device *dev)
- #define ufshcd_pltfrm_runtime_idle	NULL
- #endif /* CONFIG_PM */
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
  
--static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
--{
--	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
--}
--
- /**
-  * ufshcd_pltfrm_probe - probe routine of the driver
-  * @pdev: pointer to Platform device handle
-+ * @vops: pointer to variant ops
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--static int ufshcd_pltfrm_probe(struct platform_device *pdev)
-+int ufshcd_pltfrm_init(struct platform_device *pdev,
-+		       struct ufs_hba_variant_ops *vops)
+ 	if (host->hw_ver.major >= 0x2)
+ 		host->caps = UFS_QCOM_CAP_QUNIPRO;
+@@ -811,7 +811,7 @@ static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
+ 
+ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
  {
- 	struct ufs_hba *hba;
- 	void __iomem *mmio_base;
-@@ -321,7 +315,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	int err = 0;
+ 	int vote = 0;
+ 
+@@ -866,7 +866,7 @@ show_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%u\n",
+ 			host->bus_vote.is_max_bw_needed);
+@@ -877,7 +877,7 @@ store_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+ 		const char *buf, size_t count)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	uint32_t value;
+ 
+ 	if (!kstrtou32(buf, 0, &value)) {
+@@ -954,7 +954,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
  	}
  
--	hba->vops = get_variant_ops(&pdev->dev);
-+	hba->vops = vops;
+ 	host->hba = hba;
+-	hba->priv = (void *)host;
++	ufshcd_set_variant(hba, host);
  
- 	err = ufshcd_parse_clock_info(hba);
- 	if (err) {
-@@ -355,47 +349,7 @@ out_disable_rpm:
+ 	host->generic_phy = devm_phy_get(dev, "ufsphy");
+ 
+@@ -1003,14 +1003,14 @@ out_unregister_bus:
+ 	phy_exit(host->generic_phy);
+ out_host_free:
+ 	devm_kfree(dev, host);
+-	hba->priv = NULL;
++	ufshcd_set_variant(hba, NULL);
  out:
  	return err;
  }
--
--/**
-- * ufshcd_pltfrm_remove - remove platform driver routine
-- * @pdev: pointer to platform device handle
-- *
-- * Returns 0 on success, non-zero value on failure
-- */
--static int ufshcd_pltfrm_remove(struct platform_device *pdev)
--{
--	struct ufs_hba *hba =  platform_get_drvdata(pdev);
--
--	pm_runtime_get_sync(&(pdev)->dev);
--	ufshcd_remove(hba);
--	return 0;
--}
--
--static const struct of_device_id ufs_of_match[] = {
--	{ .compatible = "jedec,ufs-1.1"},
--	{},
--};
--
--static const struct dev_pm_ops ufshcd_dev_pm_ops = {
--	.suspend	= ufshcd_pltfrm_suspend,
--	.resume		= ufshcd_pltfrm_resume,
--	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
--	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
--	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
--};
--
--static struct platform_driver ufshcd_pltfrm_driver = {
--	.probe	= ufshcd_pltfrm_probe,
--	.remove	= ufshcd_pltfrm_remove,
--	.shutdown = ufshcd_pltfrm_shutdown,
--	.driver	= {
--		.name	= "ufshcd",
--		.pm	= &ufshcd_dev_pm_ops,
--		.of_match_table = ufs_of_match,
--	},
--};
--
--module_platform_driver(ufshcd_pltfrm_driver);
-+EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
  
- MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
-new file mode 100644
-index 0000000..2cec7e9
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
-@@ -0,0 +1,27 @@
-+/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 and
-+ * only version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ */
-+
-+#ifndef UFSHCD_PLTFRM_H_
-+#define UFSHCD_PLTFRM_H_
-+
-+#include "ufshcd.h"
-+
-+int ufshcd_pltfrm_init(struct platform_device *pdev,
-+		       struct ufs_hba_variant_ops *vops);
-+int ufshcd_pltfrm_suspend(struct device *dev);
-+int ufshcd_pltfrm_resume(struct device *dev);
-+int ufshcd_pltfrm_runtime_suspend(struct device *dev);
-+int ufshcd_pltfrm_runtime_resume(struct device *dev);
-+int ufshcd_pltfrm_runtime_idle(struct device *dev);
-+
-+#endif /* UFSHCD_PLTFRM_H_ */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9e79c33..2ef9834 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5348,6 +5348,16 @@ void ufshcd_remove(struct ufs_hba *hba)
- EXPORT_SYMBOL_GPL(ufshcd_remove);
+ static void ufs_qcom_exit(struct ufs_hba *hba)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
  
- /**
-+ * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
-+ * @hba: pointer to Host Bus Adapter (HBA)
-+ */
-+void ufshcd_dealloc_host(struct ufs_hba *hba)
-+{
-+	scsi_host_put(hba->host);
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-+
-+/**
-  * ufshcd_set_dma_mask - Set dma mask based on the controller
-  *			 addressing capability
-  * @hba: per adapter instance
+ 	ufs_qcom_disable_lane_clks(host);
+ 	phy_power_off(host->generic_phy);
+@@ -1019,7 +1019,7 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+ static
+ void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
+ {
+-	struct ufs_qcom_host *host = hba->priv;
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_pa_layer_attr *dev_req_params = &host->dev_req_params;
+ 
+ 	if (!dev_req_params)
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index ce75626..cc65d96 100644
+index c40a0e7..54e7afb 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -576,6 +576,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+@@ -594,6 +594,27 @@ static inline void check_upiu_size(void)
+ 		GENERAL_UPIU_REQUEST_SIZE + QUERY_DESC_MAX_SIZE);
  }
  
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
-+void ufshcd_dealloc_host(struct ufs_hba *);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
- 
-@@ -772,4 +773,9 @@ static inline int ufshcd_vops_resume(struct ufs_hba *hba, enum ufs_pm_op op)
- 	return 0;
- }
- 
-+/* variant specific ops structures */
-+#ifdef CONFIG_SCSI_UFS_QCOM
-+extern struct ufs_hba_variant_ops ufs_hba_qcom_variant;
-+#endif
++/**
++ * ufshcd_set_variant - set variant specific data to the hba
++ * @hba - per adapter instance
++ * @variant - pointer to variant specific data
++ */
++static inline void ufshcd_set_variant(struct ufs_hba *hba, void *variant)
++{
++	BUG_ON(!hba);
++	hba->priv = variant;
++}
 +
- #endif /* End of Header */
++/**
++ * ufshcd_get_variant - get variant specific data from the hba
++ * @hba - per adapter instance
++ */
++static inline void *ufshcd_get_variant(struct ufs_hba *hba)
++{
++	BUG_ON(!hba);
++	return hba->priv;
++}
++
+ extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+ extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+ extern int ufshcd_runtime_idle(struct ufs_hba *hba);
 -- 
 1.8.5.2
 
