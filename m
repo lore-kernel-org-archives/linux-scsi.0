@@ -1,100 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: Fix NULL pointer dereference in runtime PM
-Date: Mon, 17 Aug 2015 11:02:42 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1508171059320.1706-100000@iolanthe.rowland.org>
+From: "Hiral Shah (hishah)" <hishah@cisco.com>
+Subject: Re: [PATCH 1/1] Using the local variable instead of I/O flag to
+ acquire io_req_lock in fnic_queuecommand() to avoid deadloack
+Date: Mon, 17 Aug 2015 17:50:39 +0000
+Message-ID: <8FC9A9E3-7C47-45D1-869B-6E4E5A15396D@cisco.com>
+References: <1436882937-11741-1-git-send-email-hishah@cisco.com>
+ <yq1pp3rmtsd.fsf@sermon.lab.mkp.net>
+ <6C49D972-4646-4074-927E-EF1B9F75BF34@cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57939 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754862AbbHQPCn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2015 11:02:43 -0400
+Received: from rcdn-iport-3.cisco.com ([173.37.86.74]:25112 "EHLO
+	rcdn-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbbHQSAM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2015 14:00:12 -0400
+In-Reply-To: <6C49D972-4646-4074-927E-EF1B9F75BF34@cisco.com>
+Content-Language: en-US
+Content-ID: <4F0820D31940A542BFF3039E10CDAFB9@emea.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Ilan Cohen <ilanco@gmail.com>, Joe Lawrence <joe.lawrence@stratus.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Anil Chintalapati (achintal)" <achintal@cisco.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The routines in scsi_rpm.c assume that if a runtime-PM callback is
-invoked for a SCSI device, it can only mean that the device's driver=20
-has asked the block layer to handle the runtime power management (by
-calling blk_pm_runtime_init(), which among other things sets q->dev).
-
-However, this assumption turns out to be wrong for things like the ses
-driver.  Normally ses devices are not allowed to do runtime PM, but
-userspace can override this setting.  If this happens, the kernel gets
-a NULL pointer dereference when blk_post_runtime_resume() tries to use
-the uninitialized q->dev pointer.
-
-This patch fixes the problem by calling the block layer's runtime-PM
-routines only if the device's driver really does have a runtime-PM
-callback routine.  Since ses doesn't define any such callbacks, the
-crash won't occur.
-
-This fixes Bugzilla #101371.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-by: Stanis=C5=82aw Pitucha <viraptor@gmail.com>
-Reported-by: Ilan Cohen <ilanco@gmail.com>
-Tested-by: Ilan Cohen <ilanco@gmail.com>
-
----
-
-
-[as1784]
-
-
- drivers/scsi/scsi_pm.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-Index: usb-4.0/drivers/scsi/scsi_pm.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- usb-4.0.orig/drivers/scsi/scsi_pm.c
-+++ usb-4.0/drivers/scsi/scsi_pm.c
-@@ -217,15 +217,15 @@ static int sdev_runtime_suspend(struct d
- {
- 	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NULL;
- 	struct scsi_device *sdev =3D to_scsi_device(dev);
--	int err;
-+	int err =3D 0;
-=20
--	err =3D blk_pre_runtime_suspend(sdev->request_queue);
--	if (err)
--		return err;
--	if (pm && pm->runtime_suspend)
-+	if (pm && pm->runtime_suspend) {
-+		err =3D blk_pre_runtime_suspend(sdev->request_queue);
-+		if (err)
-+			return err;
- 		err =3D pm->runtime_suspend(dev);
--	blk_post_runtime_suspend(sdev->request_queue, err);
--
-+		blk_post_runtime_suspend(sdev->request_queue, err);
-+	}
- 	return err;
- }
-=20
-@@ -248,11 +248,11 @@ static int sdev_runtime_resume(struct de
- 	const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : NULL;
- 	int err =3D 0;
-=20
--	blk_pre_runtime_resume(sdev->request_queue);
--	if (pm && pm->runtime_resume)
-+	if (pm && pm->runtime_resume) {
-+		blk_pre_runtime_resume(sdev->request_queue);
- 		err =3D pm->runtime_resume(dev);
--	blk_post_runtime_resume(sdev->request_queue, err);
--
-+		blk_post_runtime_resume(sdev->request_queue, err);
-+	}
- 	return err;
- }
-=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+QnJvYWRjYXN0aW5n4oCmDQoNClJlZ2FyZHMsDQpIaXJhbA0KDQoNCg0KDQoNCg0KDQoNCk9uIDcv
+MjAvMTUsIDU6NDggUE0sICJIaXJhbCBTaGFoIChoaXNoYWgpIiA8aGlzaGFoQGNpc2NvLmNvbT4g
+d3JvdGU6DQoNCj5IaSBNYXJ0aW4sDQo+DQo+VGhhbmtzIGZvciB0aGUgc3VnZ2VzdGlvbi4gQWN0
+dWFsbHkgYm9vdCBtYWtlIG1vcmUgc2Vuc2UgYXMgdGhlIHZhbHVlIHdpbGwgYmUgZWl0aGVyIDAg
+b3IgMSBvbmx5LiBXZSBoYXZlIGFscmVhZHkgcmVsZWFzZSBmb2xsb3dpbmcgcGF0Y2ggdG8gb3Ro
+ZXIgbm9uLWxpbnV4IGN1c3RvbWVycy4gV2Ugd2lsbCBtYWtlIHN1cmUgbmV4dCB0aW1lLg0KPg0K
+Pg0KPlJlZ2FyZHMsDQo+SGlyYWwNCj4NCj4NCj4NCj4NCj4NCj4NCj4NCj4NCj5PbiA3LzE2LzE1
+LCA5OjU2IFBNLCAiTWFydGluIEsuIFBldGVyc2VuIiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5j
+b20+IHdyb3RlOg0KPg0KPj4+Pj4+PiAiSGlyYWwiID09IEhpcmFsIFNoYWggPGhpc2hhaEBjaXNj
+by5jb20+IHdyaXRlczoNCj4+DQo+PkhpcmFsPiBXZSBhZGRlZCBjaGFuZ2VzIGluIGZuaWMgZHJp
+dmVyIHBhdGNoIDEuNi4wLjE2IHRvIGFjcXVpcmUNCj4+SGlyYWw+IGlvX3JlcV9sb2NrIGluIGZu
+aWNfcXVldWVjb21tYW5kKCkgYmVmb3JlIGlzc3VpbmcgSS9PIHNvIHRoYXQgaW8NCj4+SGlyYWw+
+IGNvbXBsZXRpb24gaXMgc2VyaWFsaXplZC4gQnV0IHdoZW4gcmVsZWFzaW5nIHRoZSBsb2NrIHdl
+IGNoZWNrDQo+PkhpcmFsPiBmb3IgdGhlIEkvTyBmbGFnIGFuZCB0aGlzIGNvdWxkIGJlIG1vZGlm
+aWVkIGlmIElPIGFib3J0IG9jY3Vycw0KPj5IaXJhbD4gYmVmb3JlIEkvTyBjb21wbGV0aW9uLiBJ
+biB0aGlzIGNhc2Ugd2Ugd29udCByZWxlYXNlIHRoZSBsb2NrIGFuZA0KPj5IaXJhbD4gY2F1c2Vz
+IGRlYWRsb2NrIGluIHNvbWUgc2NlbmVyaW9zLiBVc2luZyB0aGUgbG9jYWwgdmFyaWFibGUgdG8N
+Cj4+SGlyYWw+IGNoZWNrIHRoZSBJTyBsb2NrIHN0YXR1cyB3aWxsIHJlc29sdmUgdGhlIHByb2Js
+ZW0uDQo+Pg0KPj5NYXliZSBib29sIGluc3RlYWQgb2YgaW50Pw0KPj4NCj4+T3RoZXJ3aXNlIE9L
+Lg0KPj4NCj4+UmV2aWV3ZWQtYnk6IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFydGluLnBldGVyc2Vu
+QG9yYWNsZS5jb20+DQo+Pg0KPj4tLSANCj4+TWFydGluIEsuIFBldGVyc2VuCU9yYWNsZSBMaW51
+eCBFbmdpbmVlcmluZw0K
