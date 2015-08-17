@@ -1,43 +1,47 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] [SCSI] bfa: check if port is non NULL before dereferencing
-Date: Mon, 17 Aug 2015 14:03:08 +0200
-Message-ID: <1439812988-2127-1-git-send-email-jthumshirn@suse.de>
+Subject: [PATCH] pm80xx: Don't override ts->stat on IO_OPEN_CNX_ERROR_HW_RESOURCE_BUSY
+Date: Mon, 17 Aug 2015 15:04:42 +0200
+Message-ID: <1439816682-9781-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+To: xjtuwjp@gmail.com, lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@odin.com>, pmchba@pmcs.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-In bfa_fcs_lport_get_rport_max_speed() check if port is non NULL before
-dereferencing it's child port->fcs->bfa to trl_enabled.
-
-NB: I'm not entirely sure if port can even be NULL, so the check for NULL might
-be useless as well.
+In case XXX returns with a status of IO_OPEN_CNX_ERROR_HW_RESOURCE_BUSY
+ts->stat gets set to SAS_OPEN_REJECT but a missing 'break' statement causes a
+fallthrough to the default handler of the switch statement overriding ts->stat
+to SAS_DEV_NO_RESPONSE.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/bfa/bfa_fcs_lport.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 1 +
+ drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index ff75ef8..096c2a2 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -5826,12 +5826,14 @@ bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
- 	bfa_port_speed_t max_speed = 0;
- 	struct bfa_port_attr_s port_attr;
- 	bfa_port_speed_t port_speed, rport_speed;
--	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
-+	bfa_boolean_t trl_enabled;
- 
- 
- 	if (port == NULL)
- 		return 0;
- 
-+	trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
-+
- 	fcs = port->fcs;
- 
- 	/* Get Physical port's current speed */
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 96dcc09..d0feec5 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -2642,6 +2642,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		ts->resp = SAS_TASK_COMPLETE;
+ 		ts->stat = SAS_OPEN_REJECT;
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
++		break;
+ 	default:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("Unknown status 0x%x\n", status));
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 05cce46..18d4ac4 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2314,6 +2314,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		ts->resp = SAS_TASK_COMPLETE;
+ 		ts->stat = SAS_OPEN_REJECT;
+ 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
++		break;
+ 	default:
+ 		PM8001_IO_DBG(pm8001_ha,
+ 			pm8001_printk("Unknown status 0x%x\n", status));
 -- 
 2.5.0
