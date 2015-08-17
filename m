@@ -1,48 +1,57 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2] pm80xx: Don't override ts->stat on IO_OPEN_CNX_ERROR_HW_RESOURCE_BUSY
-Date: Mon, 17 Aug 2015 15:52:32 +0200
-Message-ID: <1439819552-11636-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: xjtuwjp@gmail.com, lindar_liu@usish.com, "James E.J. Bottomley" <JBottomley@odin.com>, pmchba@pmcs.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH V5 11/11] [SCSI] aacraid: Requests at least 2 MSIx in
+ pci_enable_msix_range()
+Date: Mon, 17 Aug 2015 14:12:06 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AEC5FAE5E@BBYEXM02.pmc-sierra.internal>
+References: <1437583757-5449-1-git-send-email-rajinikanth.pandurangan@pmcs.com>
+	 <1437583757-5449-12-git-send-email-rajinikanth.pandurangan@pmcs.com>
+	 <55B0E429.2090805@redhat.com>
+ <1439404140.2825.61.camel@HansenPartnership.com>
+ <B539A9786201A44A91E34268415A2B1AEC5F987E@BBYEXM02.pmc-sierra.internal>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:39189 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752081AbbHQOMJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Aug 2015 10:12:09 -0400
+In-Reply-To: <B539A9786201A44A91E34268415A2B1AEC5F987E@BBYEXM02.pmc-sierra.internal>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-In case psataPayload->status has a status of IO_OPEN_CNX_ERROR_HW_RESOURCE_BUSY
-ts->stat gets set to SAS_OPEN_REJECT but a missing 'break' statement causes a
-fallthrough to the default handler of the switch statement overriding ts->stat
-to SAS_DEV_NO_RESPONSE.
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 1 +
- drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 96dcc09..d0feec5 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -2642,6 +2642,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAS_OPEN_REJECT;
- 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
-+		break;
- 	default:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("Unknown status 0x%x\n", status));
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 05cce46..18d4ac4 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2314,6 +2314,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		ts->resp = SAS_TASK_COMPLETE;
- 		ts->stat = SAS_OPEN_REJECT;
- 		ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
-+		break;
- 	default:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("Unknown status 0x%x\n", status));
--- 
-2.5.0
+SGkgSmFtZXMsDQoNClBsZWFzZSBsZXQgbWUga25vdyB0aGUgc3RhdHVzIG9mIFY2IHBhdGNoc2V0
+Lg0KDQpUaGFua3MsDQpNYWhlc2gNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBN
+YWhlc2ggUmFqYXNoZWtoYXJhIFttYWlsdG86TWFoZXNoLlJhamFzaGVraGFyYUBwbWNzLmNvbV0g
+DQpTZW50OiBUaHVyc2RheSwgQXVndXN0IDEzLCAyMDE1IDU6NTIgQU0NClRvOiBKYW1lcyBCb3R0
+b21sZXk7IFRvbWFzIEhlbnpsDQpDYzogamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZzsgYWFjcmFpZEBwbWMtc2llcnJhLmNvbTsgSGFycnkgWWFuZzsg
+UmljaCBCb25vDQpTdWJqZWN0OiBSRTogW1BBVENIIFY1IDExLzExXSBbU0NTSV0gYWFjcmFpZDog
+UmVxdWVzdHMgYXQgbGVhc3QgMiBNU0l4IGluIHBjaV9lbmFibGVfbXNpeF9yYW5nZSgpDQoNCkFz
+IFRvbWFzIEhlbnpsIHN1Z2dlc3RlZCwgSSBoYXZlIG1lcmdlZCAxMCBhbmQgMTEgb2YgVjUgaW50
+byBzaW5nbGUgcGF0Y2ggKGkuZSA5IG9mIFY2KQ0KDQpDaGFuZ2VzIGZyb20gVjU6DQpBcHBsaWVk
+IGRyaXZlciB1cGRhdGUgY2hhbmdlIGF0IHRoZSBlbmQuDQpNZXJnZWQgMTAgYW5kIDExIG9mIFY1
+IGludG8gOSBvZiBWNi4NCkFBQ19NQVhfTVNJWCBkZWZpbml0aW9uIGNoYW5nZS4NCmFhY19tc2kg
+b3B0aW9uIGRlc2NyaXB0aW9uIGFuZCBzdWJqZWN0IGNoYW5nZS4NCg0KVGhhbmtzLA0KTWFoZXNo
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXSANClNlbnQ6IFdlZG5l
+c2RheSwgQXVndXN0IDEyLCAyMDE1IDExOjU5IFBNDQpUbzogVG9tYXMgSGVuemwNCkNjOiBSYWpp
+bmlrYW50aCBQYW5kdXJhbmdhbjsgamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZzsgYWFjcmFpZEBwbWMtc2llcnJhLmNvbTsgSGFycnkgWWFuZzsgUmlj
+aCBCb25vOyBNYWhlc2ggUmFqYXNoZWtoYXJhOyBBY2hpbSBMZXVibmVyOyBNdXJ0aHkgQmhhdA0K
+U3ViamVjdDogUmU6IFtQQVRDSCBWNSAxMS8xMV0gW1NDU0ldIGFhY3JhaWQ6IFJlcXVlc3RzIGF0
+IGxlYXN0IDIgTVNJeCBpbiBwY2lfZW5hYmxlX21zaXhfcmFuZ2UoKQ0KDQoNCj4gT24gMjIuNy4y
+MDE1IDE4OjQ5LCByYWppbmlrYW50aC5wYW5kdXJhbmdhbkBwbWNzLmNvbSB3cm90ZToNCj4gPiBG
+cm9tOiBSYWppbmlrYW50aCBQYW5kdXJhbmdhbiA8cmFqaW5pa2FudGgucGFuZHVyYW5nYW5AcG1j
+cy5jb20+DQo+ID4gDQo+ID4gRGVzY3JpcHRpb246DQo+ID4gICAgICAgICBJbiBNU0l4IG1vZGUs
+IHdlIG5lZWQgYXQgbGVhc3QgMiB2ZWN0b3JzLg0KPiA+IA0KPiA+IENoYW5nZXMgZnJvbSBWNDoN
+Cj4gPiAgICAgICBOZXdseSBjcmVhdGVkIGZvciBWNSBiYXNlZCBvbiByZXZpZXcgY29tbWVudC4N
+Cj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWppbmlrYW50aCBQYW5kdXJhbmdhbg0KPiA8cmFq
+aW5pa2FudGgucGFuZHVyYW5nYW5AcG1jcy4NCj4gDQo+IFJldmlld2VkLWJ5OiBUb21hcyBIZW56
+bCA8dGhlbnpsQHJlZGhhdC5jb20+DQoNCkknbSBjb25mdXNlZCBieSB5b3VyIFtQQVRDSCB2Nl0g
+cG9zdGluZzogd2hlcmUgZGlkIHRoaXMgcGF0Y2ggZ28gLi4uIGRvIHlvdSB3YW50IGl0IGRyb3Bw
+ZWQgb3IgZGlkIHlvdSBqdXN0IGZvcmdldCB0byBpbmNsdWRlIGl0Pw0KDQpKYW1lcw0KDQoNCg==
