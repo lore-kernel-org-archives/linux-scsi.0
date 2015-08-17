@@ -1,73 +1,60 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH V2 2/8] pm80xx: Corrected device state changes in I_T_Nexus_Reset.
-Date: Mon, 17 Aug 2015 09:52:40 +0200
-Message-ID: <CAMGffEndTUzwNPgaUqX+0weAirBbzq_tb9+VmFoWezHj+g_bJA@mail.gmail.com>
-References: <1439285792-12030-1-git-send-email-Viswas.G@pmcs.com>
- <1439285792-12030-3-git-send-email-Viswas.G@pmcs.com> <CAMGffEmt82v3jw0mY8bg+ikmjCJYpROQ7KMPMtBOASMX2OePpA@mail.gmail.com>
- <DB8BCD22E410A84DA91083F3479A3DB3C6275C41@BBYEXM02.pmc-sierra.internal>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] lpfc: Fix possible use-after-free and double free in lpfc_mbx_cmpl_rdp_page_a2()
+Date: Mon, 17 Aug 2015 13:03:02 +0200
+Message-ID: <1439809382-32419-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:32800 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbbHQHxA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2015 03:53:00 -0400
-Received: by iods203 with SMTP id s203so142413479iod.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2015 00:52:59 -0700 (PDT)
-In-Reply-To: <DB8BCD22E410A84DA91083F3479A3DB3C6275C41@BBYEXM02.pmc-sierra.internal>
+Received: from mx2.suse.de ([195.135.220.15]:44149 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbbHQLDQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Aug 2015 07:03:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, Hannes Reinecke <hare@suse.com>
+To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Fri, Aug 14, 2015 at 9:15 AM, Viswas G <Viswas.G@pmcs.com> wrote:
-> On Thu, Aug 13, 2015 at 6:13 PM, Jinpu Wang <jinpu.wang@profitbricks.=
-com> wrote:
->> Hi
->>
->> On Tue, Aug 11, 2015 at 11:36 AM,  <Viswas.G@pmcs.com> wrote:
->>> From: Viswas G <Viswas.G@pmcs.com>
->>>
->>> In Nexus reset the device state request are not needed.
->>>
->>> Changes from V1:
->>> Device state change request has been removed as the firmware
->>> will handle it during internal cleanup. Also updated the
->>> proper return value in case of failures.
->>
->> If above is true, should we remove the device state change command
->> support at all?
->>
->
-> We can't remove the state change command as it is required for
-> some task management command such as ABORT_TASK.
->
+If the bf_get() call in lpfc_mbx_cmpl_rdp_page_a2() does succeeds, execution
+continues normally and mp gets kfree()d.
 
-Ok, thanks
+If the subsequent call to lpfc_sli_issue_mbox() fails execution jumps to the
+error label where lpfc_mbuf_free() is called with mp->virt and mp->phys as
+function arguments. This is the use after free. Following the use after free mp
+gets kfree()d again which is a double free.
 
---=20
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Best Regards,
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_mbox.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Jack Wang
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index eb62772..4abb93a 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -2284,7 +2284,7 @@ lpfc_mbx_cmpl_rdp_page_a2(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+ 			(struct lpfc_rdp_context *)(mbox->context2);
+ 
+ 	if (bf_get(lpfc_mqe_status, &mbox->u.mqe))
+-		goto error;
++		goto error_mbuf_free;
+ 
+ 	lpfc_sli_bemem_bcopy(mp->virt, &rdp_context->page_a2,
+ 				DMP_SFF_PAGE_A2_SIZE);
+@@ -2299,13 +2299,14 @@ lpfc_mbx_cmpl_rdp_page_a2(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+ 	mbox->mbox_cmpl = lpfc_mbx_cmpl_rdp_link_stat;
+ 	mbox->context2 = (struct lpfc_rdp_context *) rdp_context;
+ 	if (lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT) == MBX_NOT_FINISHED)
+-		goto error;
++		goto error_cmd_free;
+ 
+ 	return;
+ 
+-error:
++error_mbuf_free:
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 	kfree(mp);
++error_cmd_free:
+ 	lpfc_sli4_mbox_cmd_free(phba, mbox);
+ 	rdp_context->cmpl(phba, rdp_context, FAILURE);
+ }
+-- 
+2.5.0
 
-Linux Kernel Developer Storage
-ProfitBricks GmbH  The IaaS-Company.
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
-Tel: +49 30 5770083-42
-=46ax: +49 30 5770085-98
-Email: jinpu.wang@profitbricks.com
-URL: http://www.profitbricks.de
-
-Sitz der Gesellschaft: Berlin.
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B.
-Gesch=C3=A4ftsf=C3=BChrer: Andreas Gauger, Achim Weiss.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
