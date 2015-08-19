@@ -1,40 +1,40 @@
-From: John Soni Jose <sony.john@avagotech.com>
-Subject: [PATCH 2/2]  be2iscsi: Bump the driver version
-Date: Thu, 20 Aug 2015 04:44:31 +0530
-Message-ID: <1440026071-27748-3-git-send-email-sony.john@avagotech.com>
-References: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
+From: David Binderman <dcb314@hotmail.com>
+Subject: linux-4.2-rc7/drivers/scsi/bfa/bfad_bsg.c:108: bad sanity check on
+ array index ?
+Date: Wed, 19 Aug 2015 07:34:46 +0000
+Message-ID: <DUB128-W4135F31B0C5087EDA6EE5F9C670@phx.gbl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmrelayp1.emulex.com ([138.239.112.140]:50763 "EHLO
-	CMRELAYP1.ad.emulex.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752540AbbHSGtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Aug 2015 02:49:18 -0400
-In-Reply-To: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
+Received: from dub004-omc4s13.hotmail.com ([157.55.2.88]:54471 "EHLO
+	DUB004-OMC4S13.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752101AbbHSHjt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Aug 2015 03:39:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: John Soni Jose <sony.john@avagotech.com>
+To: "anil.gurumurthy@qlogic.com" <anil.gurumurthy@qlogic.com>, "sudarsana.kalluru@qlogic.com" <sudarsana.kalluru@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
- Bump the driver version
+Hello there,
 
-Signed-off-by: John Soni Jose <sony.john@avagotech.com>
----
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+[linux-4.2-rc7/drivers/scsi/bfa/bfad_bsg.c:108]: (style) Array index 'i=
+' is used before limits check.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index afcd55f..9ff4fd6 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- 
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"10.6.0.0"
-+#define BUILD_STR		"10.6.0.1"
- #define BE_NAME			"Avago Technologies OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
--- 
-1.7.1
+Source code is
 
+=A0=A0=A0 for (i =3D 0; iocmd->adapter_hwpath[i] !=3D ':' && i < BFA_ST=
+RING_32; i++)
+
+Suggest sanity check array index before use.
+
+
+Regards
+
+David Binderman
+
+ 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
