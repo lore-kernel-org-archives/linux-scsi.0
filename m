@@ -1,39 +1,85 @@
-From: David Binderman <dcb314@hotmail.com>
-Subject: linux-4.2-rc7/drivers/scsi/bfa/bfad_bsg.c:108: bad sanity check on
- array index ?
-Date: Wed, 19 Aug 2015 07:34:46 +0000
-Message-ID: <DUB128-W4135F31B0C5087EDA6EE5F9C670@phx.gbl>
+From: Standard Charterd Bank UAE <abriones@munichiclayo.gob.pe>
+Subject: =?utf-8?Q?Telegrafische_=C3=9Cberweisung_HINWEIS?=
+Date: Wed, 19 Aug 2015 07:02:34 -0500 (PET)
+Message-ID: <1376371667.509362.1439985754821.JavaMail.zimbra__45334.2389119372$1439986489$gmane$org@munichiclayo.gob.pe>
+Reply-To: Standard Charterd Bank UAE <standchart_orgbank@asia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dub004-omc4s13.hotmail.com ([157.55.2.88]:54471 "EHLO
-	DUB004-OMC4S13.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752101AbbHSHjt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Aug 2015 03:39:49 -0400
+Received: from mail.munichiclayo.gob.pe ([200.48.163.60]:33383 "EHLO
+	mail.munichiclayo.gob.pe" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920AbbHSMOh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2015 08:14:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "anil.gurumurthy@qlogic.com" <anil.gurumurthy@qlogic.com>, "sudarsana.kalluru@qlogic.com" <sudarsana.kalluru@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello there,
+Standard Chartered Bank Dubai Main Branch,
+Al Fardan Geb=C3=A4ude, Al Mankhool Road,
+P.O. Box 999, Dubai,
+Vereinigte Arabische Emirate
 
-[linux-4.2-rc7/drivers/scsi/bfa/bfad_bsg.c:108]: (style) Array index 'i=
-' is used before limits check.
-
-Source code is
-
-=A0=A0=A0 for (i =3D 0; iocmd->adapter_hwpath[i] !=3D ':' && i < BFA_ST=
-RING_32; i++)
-
-Suggest sanity check array index before use.
+Sehr geehrte Kunden,
 
 
-Regards
+Telegrafische =C3=9Cberweisung HINWEIS.
 
-David Binderman
+Wir sind hiermit offiziell informieren Sie =C3=BCber Ihre Fondstelegraf=
+ische =C3=9Cberweisung durch unsere Bank, Standard Chartered Bank, auf =
+Ihr Bankkonto, die offiziell von der Leitung der Weltbank Swiss (WBS) g=
+enehmigt worden ist, um die Summe von $ 5.500,000.00 USD in Credit Ihre=
+r Bank Konto.
+Beachten Sie, dass ich die Bearbeitung Ihrer Zahlung und alles =C3=BCbe=
+r die sofortige =C3=9Cberweisung von Ihrem Fonds wird innerhalb k=C3=BC=
+rzester Zeit von der Zeit, die wir Ihren Unten ben=C3=B6tigten Informat=
+ionen erhalten gef=C3=BChrt werden gestartet.
+Auch dar=C3=BCber informiert, dass der Gouverneur von Standard Chartere=
+d Bank (UAE) Plc auf Ihrer Avis unterschreiben und eine Kopie der Berat=
+ung wird bei der Weltbank in der Schweiz f=C3=BCr einige Aufzeichnungsz=
+wecke versandt werden. Inzwischen Ihrer Information und Ihre vollst=C3=A4=
+ndigen Kontaktdaten wurden aus unserer Forschung manager.Barrister Paul=
+ Dean eingehen, werden in Ihrem Namen, um eine zu erhalten, zu handeln
+AFIDAVIT ANSPRUCHS zur sofortigen Ver=C3=B6ffentlichung Ihres Fonds.
 
- 		 	   		  --
+Dieser Fonds war Teil der eingereichten verstorbenen Pr=C3=A4sidenten S=
+addam Hussein im Irak Discovery Fund der Weltbank der Schweiz, die die =
+Schweizer Bank hat beschlossen, es zu gro=C3=9Fz=C3=BCgig verteilen
+helfen wenigen gl=C3=BCcklichen Menschen, und die Europ=C3=A4ische Unio=
+n wird im Einvernehmen mit der Schweizerischen Bank, den Fonds auf 700 =
+hunderttausend Menschen in Amerika, Europa und Asien, Naher Osten Afrik=
+a in andere zu verteilen, um zur Verbesserung ihrer Unternehmen.
+
+Daher best=C3=A4tigen die die unten angegebenen Informationen genau, de=
+nn dieses Amt nicht leisten k=C3=B6nnen, haftet f=C3=BCr falsche =C3=9C=
+bertragung von Mitteln oder Haftung eines Fonds in ein unbekanntes Kont=
+o gutgeschrieben gehalten werden.
+Das einzige, was von Ihnen verlangt wird, um die eidesstattliche Erkl=C3=
+=A4rung ANSPRUCH zu erhalten, damit wir Ihrem Konto direkt durch telegr=
+afische =C3=9Cberweisung oder =C3=BCber eine unserer entsprechenden Ban=
+ken und schickt Kopien der Geldtransfer Freigabedokumente f=C3=BCr Sie =
+und Ihre Banker zur Best=C3=A4tigung.
+
+Sollten Sie unsere Richtlinien befolgen, werden Ihre Fonds gutgeschrieb=
+en und beziehen sich auf Ihrem Bankkonto innerhalb von f=C3=BCnf (5) Ba=
+nkarbeitstagen ab dem Tag, Sie diese eidesstattliche Erkl=C3=A4rung ANS=
+PRUCH erhalten.
+
+=46=C3=BCr weitere Informationen und Unterst=C3=BCtzung auf dieser Remi=
+ttance Mitteilung Bitte leiten Sie Ihre
+
+VOLLER NAME:
+
+=46ULL KONTAKTADRESSE:
+
+Telefon- und Faxnummern:
+
+Direkt an meine E-Mail: standchart_orgbank@asia.com
+
+Mit freundlichen Gr=C3=BC=C3=9Fen,
+Mr. Rajesh Arora
+=46inanzvorstand,
+UAE.
+--
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
 the body of a message to majordomo@vger.kernel.org
