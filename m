@@ -1,86 +1,50 @@
-From: Standard Charterd Bank UAE <abriones@munichiclayo.gob.pe>
-Subject: =?utf-8?Q?Telegrafische_=C3=9Cberweisung_HINWEIS?=
-Date: Wed, 19 Aug 2015 07:02:34 -0500 (PET)
-Message-ID: <1376371667.509362.1439985754821.JavaMail.zimbra__45334.2389119372$1439986489$gmane$org@munichiclayo.gob.pe>
-Reply-To: Standard Charterd Bank UAE <standchart_orgbank@asia.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v1 5/8] scsi: ufs: creates wrapper functions for vops
+Date: Wed, 19 Aug 2015 21:19:04 +0900
+Message-ID: <CAC5umyitsmWFddSzGiHHvPH7Jyer3CeMfbE1QJbwRTugN2VcEQ@mail.gmail.com>
+References: <1439720057-9186-1-git-send-email-ygardi@codeaurora.org>
+	<1439720057-9186-6-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.munichiclayo.gob.pe ([200.48.163.60]:33383 "EHLO
-	mail.munichiclayo.gob.pe" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbbHSMOh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2015 08:14:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1439720057-9186-6-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Rob Herring <robherring2@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Standard Chartered Bank Dubai Main Branch,
-Al Fardan Geb=C3=A4ude, Al Mankhool Road,
-P.O. Box 999, Dubai,
-Vereinigte Arabische Emirate
+2015-08-16 19:14 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+> In order to simplify the code a set of wrapper functions is created
+> to test and call each of the variant operations.
+>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c |   3 +-
+>  drivers/scsi/ufs/ufshcd.c   | 104 +++++++++++++++++---------------------------
+>  drivers/scsi/ufs/ufshcd.h   |  98 +++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 138 insertions(+), 67 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 64c54b7..a6b7e10 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1036,7 +1036,7 @@ void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
+>   * The variant operations configure the necessary controller and PHY
+>   * handshake during initialization.
+>   */
+> -static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+> +static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
 
-Sehr geehrte Kunden,
+Why do we need to drop 'const'?
 
+>         .name                   = "qcom",
+>         .init                   = ufs_qcom_init,
+>         .exit                   = ufs_qcom_exit,
+> @@ -1049,6 +1049,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+>         .suspend                = ufs_qcom_suspend,
+>         .resume                 = ufs_qcom_resume,
+>  };
+> -EXPORT_SYMBOL(ufs_hba_qcom_vops);
 
-Telegrafische =C3=9Cberweisung HINWEIS.
-
-Wir sind hiermit offiziell informieren Sie =C3=BCber Ihre Fondstelegraf=
-ische =C3=9Cberweisung durch unsere Bank, Standard Chartered Bank, auf =
-Ihr Bankkonto, die offiziell von der Leitung der Weltbank Swiss (WBS) g=
-enehmigt worden ist, um die Summe von $ 5.500,000.00 USD in Credit Ihre=
-r Bank Konto.
-Beachten Sie, dass ich die Bearbeitung Ihrer Zahlung und alles =C3=BCbe=
-r die sofortige =C3=9Cberweisung von Ihrem Fonds wird innerhalb k=C3=BC=
-rzester Zeit von der Zeit, die wir Ihren Unten ben=C3=B6tigten Informat=
-ionen erhalten gef=C3=BChrt werden gestartet.
-Auch dar=C3=BCber informiert, dass der Gouverneur von Standard Chartere=
-d Bank (UAE) Plc auf Ihrer Avis unterschreiben und eine Kopie der Berat=
-ung wird bei der Weltbank in der Schweiz f=C3=BCr einige Aufzeichnungsz=
-wecke versandt werden. Inzwischen Ihrer Information und Ihre vollst=C3=A4=
-ndigen Kontaktdaten wurden aus unserer Forschung manager.Barrister Paul=
- Dean eingehen, werden in Ihrem Namen, um eine zu erhalten, zu handeln
-AFIDAVIT ANSPRUCHS zur sofortigen Ver=C3=B6ffentlichung Ihres Fonds.
-
-Dieser Fonds war Teil der eingereichten verstorbenen Pr=C3=A4sidenten S=
-addam Hussein im Irak Discovery Fund der Weltbank der Schweiz, die die =
-Schweizer Bank hat beschlossen, es zu gro=C3=9Fz=C3=BCgig verteilen
-helfen wenigen gl=C3=BCcklichen Menschen, und die Europ=C3=A4ische Unio=
-n wird im Einvernehmen mit der Schweizerischen Bank, den Fonds auf 700 =
-hunderttausend Menschen in Amerika, Europa und Asien, Naher Osten Afrik=
-a in andere zu verteilen, um zur Verbesserung ihrer Unternehmen.
-
-Daher best=C3=A4tigen die die unten angegebenen Informationen genau, de=
-nn dieses Amt nicht leisten k=C3=B6nnen, haftet f=C3=BCr falsche =C3=9C=
-bertragung von Mitteln oder Haftung eines Fonds in ein unbekanntes Kont=
-o gutgeschrieben gehalten werden.
-Das einzige, was von Ihnen verlangt wird, um die eidesstattliche Erkl=C3=
-=A4rung ANSPRUCH zu erhalten, damit wir Ihrem Konto direkt durch telegr=
-afische =C3=9Cberweisung oder =C3=BCber eine unserer entsprechenden Ban=
-ken und schickt Kopien der Geldtransfer Freigabedokumente f=C3=BCr Sie =
-und Ihre Banker zur Best=C3=A4tigung.
-
-Sollten Sie unsere Richtlinien befolgen, werden Ihre Fonds gutgeschrieb=
-en und beziehen sich auf Ihrem Bankkonto innerhalb von f=C3=BCnf (5) Ba=
-nkarbeitstagen ab dem Tag, Sie diese eidesstattliche Erkl=C3=A4rung ANS=
-PRUCH erhalten.
-
-=46=C3=BCr weitere Informationen und Unterst=C3=BCtzung auf dieser Remi=
-ttance Mitteilung Bitte leiten Sie Ihre
-
-VOLLER NAME:
-
-=46ULL KONTAKTADRESSE:
-
-Telefon- und Faxnummern:
-
-Direkt an meine E-Mail: standchart_orgbank@asia.com
-
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Mr. Rajesh Arora
-=46inanzvorstand,
-UAE.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In patch 8, ufs_hba_qcom_vops is exported again...
