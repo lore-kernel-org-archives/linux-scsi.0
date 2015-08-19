@@ -1,60 +1,55 @@
 From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] ipr: Inhibit underlength data check for AFDASD in raw mode.
-Date: Wed, 19 Aug 2015 11:47:05 -0300
-Message-ID: <1439995626-16202-1-git-send-email-krisman@linux.vnet.ibm.com>
+Subject: [PATCH 2/2] ipr: Enable SIS pipe commands for SIS-32 devices.
+Date: Wed, 19 Aug 2015 11:47:06 -0300
+Message-ID: <1439995626-16202-2-git-send-email-krisman@linux.vnet.ibm.com>
+References: <1439995626-16202-1-git-send-email-krisman@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:33410 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753474AbbHSOra (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2015 10:47:30 -0400
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:51363 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753474AbbHSOrb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2015 10:47:31 -0400
 Received: from /spool/local
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-	Wed, 19 Aug 2015 11:47:25 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id E8EEE3520078
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 10:46:16 -0400 (EDT)
+	Wed, 19 Aug 2015 11:47:27 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 7EB8E1DC006F
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 10:46:23 -0400 (EDT)
 Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7JElkxD4345962
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 11:47:47 -0300
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7JEjsWL5833014
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 11:45:54 -0300
 Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7JElLOh021274
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 11:47:21 -0300
+	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7JElO5e021342
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 11:47:24 -0300
+In-Reply-To: <1439995626-16202-1-git-send-email-krisman@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: brking@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 
-Disable underlength error verification based on count of bytes actually
-transferred for AF DASD devices when SIS pipe mode is enabled.
+Remove unnecessary check that disabled SIS pipe commands for SIS-32
+devices.  This change was sufficient to enable raw mode and send SIS
+pipe commands for a 57B3 device.
 
-This avoids unexpected underlength errors when issuing some commands in
-raw mode.
-
+Fixes: f8ee25d7d239 ("ipr: AF DASD raw mode implementation in ipr driver")
 Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 ---
- drivers/scsi/ipr.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/ipr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index a9aa389..db0c2cf 100644
+index db0c2cf..b19719f 100644
 --- a/drivers/scsi/ipr.c
 +++ b/drivers/scsi/ipr.c
-@@ -6382,9 +6382,13 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
- 	    (!ipr_is_gscsi(res) || scsi_cmd->cmnd[0] == IPR_QUERY_RSRC_STATE)) {
- 		ioarcb->cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
- 	}
--	if (res->raw_mode && ipr_is_af_dasd_device(res))
-+	if (res->raw_mode && ipr_is_af_dasd_device(res)) {
- 		ioarcb->cmd_pkt.request_type = IPR_RQTYPE_PIPE;
- 
-+		if (scsi_cmd->underflow == 0)
-+			ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_ULEN_CHK;
-+	}
-+
- 	if (ioa_cfg->sis64)
- 		rc = ipr_build_ioadl64(ioa_cfg, ipr_cmd);
- 	else
+@@ -4554,7 +4554,7 @@ static ssize_t ipr_store_raw_mode(struct device *dev,
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 	res = (struct ipr_resource_entry *)sdev->hostdata;
+ 	if (res) {
+-		if (ioa_cfg->sis64 && ipr_is_af_dasd_device(res)) {
++		if (ipr_is_af_dasd_device(res)) {
+ 			res->raw_mode = simple_strtoul(buf, NULL, 10);
+ 			len = strlen(buf);
+ 			if (res->sdev)
 -- 
 2.1.0
 
