@@ -1,55 +1,51 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH] lpfc: Fix possible use-after-free and double free in
- lpfc_mbx_cmpl_rdp_page_a2()
-Date: Wed, 19 Aug 2015 00:27:51 +0200
-Message-ID: <20150819002751.00000f06@localhost>
-References: <1439809382-32419-1-git-send-email-jthumshirn@suse.de>
-	<20150817232634.00006d80@localhost>
-	<mqdfv3h5cia.fsf@c203.arch.suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.2-rc7
+Date: Tue, 18 Aug 2015 22:48:09 -0700
+Message-ID: <1439963289.28553.124.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:54687 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465AbbHRW2U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Aug 2015 18:28:20 -0400
-In-Reply-To: <mqdfv3h5cia.fsf@c203.arch.suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Colin King <colin.king@canonical.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-Johannes Thumshirn wrote:
-> Sebastian Herbszt <herbszt@gmx.de> writes:
-> 
-> > Johannes Thumshirn wrote:
-> >> If the bf_get() call in lpfc_mbx_cmpl_rdp_page_a2() does succeeds, execution
-> >> continues normally and mp gets kfree()d.
-> >> 
-> >> If the subsequent call to lpfc_sli_issue_mbox() fails execution jumps to the
-> >> error label where lpfc_mbuf_free() is called with mp->virt and mp->phys as
-> >> function arguments. This is the use after free. Following the use after free mp
-> >> gets kfree()d again which is a double free.
-> >
-> > A similar patch was posted by Colin Ian King on 2015-07-31 [1].
-> >
-> > [1] http://marc.info/?l=linux-scsi&m=143835937206204&w=2
-> 
-> OK,
-> 
-> Is it already in James' tree (haven't checked)? The problematic code was
-> merged for 4.2-rc1 so if the fix (Collin's or mine I don't care) could go
-> in while we're still in the rc phase, we could avoid all that stable
-> circus.
-> 
-> Thanks for digging this out.
-> 
-> Byte,
->         Johannes
+Hi Linus,
 
-It is not yet in scsi.git.
+Here are the outstanding target-pending fixes for v4.2-rc7 code.
 
-James S., Dick, which patch do you prefer?
+Please pull from:
 
-Sebastian
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+
+It contains a v4.2-rc specific RCU module unload regression bug-fix, a
+long-standing iscsi-target bug-fix for duplicate target_xfer_tags during
+NOP processing from Alexei, and two more small REPORT_LUNs emulation
+related patches to make Solaris FC host LUN scanning happy from Roland.
+
+There is also one patch not included that allows target-core to limit
+the number of fabric driver SGLs per I/O request using residuals, that
+is currently required as a work-around for FC hosts which don't honor
+EVPD block-limits settings.  At this point, it will most likely become
+for-next material.
+
+Thank you,
+
+--nab
+
+Alexei Potashnik (1):
+  target/iscsi: Fix double free of a TUR followed by a solicited NOPOUT
+
+Nicholas Bellinger (1):
+  target: Perform RCU callback barrier before backend/fabric unload
+
+Roland Dreier (2):
+  target: REPORT LUNS should return LUN 0 even for dynamic ACLs
+  target: Fix handling of small allocation lengths in REPORT LUNS
+
+ drivers/target/iscsi/iscsi_target.c   |  4 ++--
+ drivers/target/target_core_configfs.c |  9 ++++++-
+ drivers/target/target_core_hba.c      | 10 +++++++-
+ drivers/target/target_core_spc.c      | 44 ++++++++++++++++++++---------------
+ 4 files changed, 44 insertions(+), 23 deletions(-)
