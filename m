@@ -1,51 +1,46 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.2-rc7
-Date: Tue, 18 Aug 2015 22:48:09 -0700
-Message-ID: <1439963289.28553.124.camel@haakon3.risingtidesystems.com>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: [PATCH] scsi: fcoe: Convert use of __constant_htons to htons
+Date: Wed, 19 Aug 2015 11:18:44 +0530
+Message-ID: <20150819054844.GA21960@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+In little endian cases, the macro htons unfolds to __swab16 which
+provides special case for constants. In big endian cases,
+__constant_htons and htons expand directly to the same expression.
+So, replace __constant_htons with htons with the goal of getting
+rid of the definition of __constant_htons completely.
 
-Here are the outstanding target-pending fixes for v4.2-rc7 code.
+The semantic patch that performs this transformation is as follows:
 
-Please pull from:
+@@expression x;@@
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+- __constant_htons(x)
++ htons(x)
 
-It contains a v4.2-rc specific RCU module unload regression bug-fix, a
-long-standing iscsi-target bug-fix for duplicate target_xfer_tags during
-NOP processing from Alexei, and two more small REPORT_LUNs emulation
-related patches to make Solaris FC host LUN scanning happy from Roland.
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-There is also one patch not included that allows target-core to limit
-the number of fabric driver SGLs per I/O request using residuals, that
-is currently required as a work-around for FC hosts which don't honor
-EVPD block-limits settings.  At this point, it will most likely become
-for-next material.
-
-Thank you,
-
---nab
-
-Alexei Potashnik (1):
-  target/iscsi: Fix double free of a TUR followed by a solicited NOPOUT
-
-Nicholas Bellinger (1):
-  target: Perform RCU callback barrier before backend/fabric unload
-
-Roland Dreier (2):
-  target: REPORT LUNS should return LUN 0 even for dynamic ACLs
-  target: Fix handling of small allocation lengths in REPORT LUNS
-
- drivers/target/iscsi/iscsi_target.c   |  4 ++--
- drivers/target/target_core_configfs.c |  9 ++++++-
- drivers/target/target_core_hba.c      | 10 +++++++-
- drivers/target/target_core_spc.c      | 44 ++++++++++++++++++++---------------
- 4 files changed, 44 insertions(+), 23 deletions(-)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ec193a8..d3eb80c 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -364,7 +364,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	 * on the ethertype for the given device
+ 	 */
+ 	fcoe->fcoe_packet_type.func = fcoe_rcv;
+-	fcoe->fcoe_packet_type.type = __constant_htons(ETH_P_FCOE);
++	fcoe->fcoe_packet_type.type = htons(ETH_P_FCOE);
+ 	fcoe->fcoe_packet_type.dev = netdev;
+ 	dev_add_pack(&fcoe->fcoe_packet_type);
+ 
+-- 
+1.9.1
