@@ -1,35 +1,93 @@
-From: Ales Novak <alnovak@suse.cz>
-Subject: [PATCH] fix: lpfc_send_rscn_event sends bigger buffer size
-Date: Thu, 20 Aug 2015 13:35:45 +0200
-Message-ID: <1440070545-15037-1-git-send-email-alnovak@suse.cz>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ales Novak <alnovak@suse.cz>
+From: <Sumit.Saxena@avagotech.com>
+Subject: [PATCH v2 01/10] megaraid_sas : Synchronize driver headers with
+ firmware APIs
+Date: Thu, 20 Aug 2015 18:43:49 +0530
+Message-ID: <201508201319.t7KDJNQa028525@palmhbs0.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:46434 "EHLO
+	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbbHTNOD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2015 09:14:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
+Cc: uday.lingala@avagotech.com
 
-lpfc_send_rscn_event() allocates data for sizeof(struct
-lpfc_rscn_event_header) + payload_len, but claims that the data has size
-of sizeof(struct lpfc_els_event_header) + payload_len. That leads to
-buffer overruns.
-
-Signed-off-by: Ales Novak <alnovak@suse.cz>
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+Reviewed-by: Martin Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |   18 ++++++++++++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |    3 ++-
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 36bf58b..136928e 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5444,7 +5444,7 @@ lpfc_send_rscn_event(struct lpfc_vport *vport,
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 20c3754..b0d373d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -973,7 +973,11 @@ struct megasas_ctrl_info {
  
- 	fc_host_post_vendor_event(shost,
- 		fc_get_event_number(),
--		sizeof(struct lpfc_els_event_header) + payload_len,
-+		sizeof(struct lpfc_rscn_event_header) + payload_len,
- 		(char *)rscn_event_data,
- 		LPFC_NL_VENDOR_ID);
+ 	struct {
+ #if defined(__BIG_ENDIAN_BITFIELD)
+-		u32     reserved:12;
++		u32     reserved:8;
++		u32     supportExtendedSSCSize:1;
++		u32     supportDiskCacheSettingForSysPDs:1;
++		u32     supportCPLDUpdate:1;
++		u32     supportTTYLogCompression:1;
+ 		u32     discardCacheDuringLDDelete:1;
+ 		u32     supportSecurityonJBOD:1;
+ 		u32     supportCacheBypassModes:1;
+@@ -1013,7 +1017,11 @@ struct megasas_ctrl_info {
+ 		u32     supportCacheBypassModes:1;
+ 		u32     supportSecurityonJBOD:1;
+ 		u32     discardCacheDuringLDDelete:1;
+-		u32     reserved:12;
++		u32     supportTTYLogCompression:1;
++		u32     supportCPLDUpdate:1;
++		u32     supportDiskCacheSettingForSysPDs:1;
++		u32     supportExtendedSSCSize:1;
++		u32     reserved:8;
+ #endif
+ 	} adapterOperations3;
  
+@@ -1229,7 +1237,8 @@ union megasas_sgl_frame {
+ typedef union _MFI_CAPABILITIES {
+ 	struct {
+ #if   defined(__BIG_ENDIAN_BITFIELD)
+-		u32     reserved:25;
++		u32     reserved:24;
++		u32	support_ext_queue_depth:1;
+ 		u32     security_protocol_cmds_fw:1;
+ 		u32     support_core_affinity:1;
+ 		u32     support_ndrive_r1_lb:1;
+@@ -1245,7 +1254,8 @@ typedef union _MFI_CAPABILITIES {
+ 		u32     support_ndrive_r1_lb:1;
+ 		u32     support_core_affinity:1;
+ 		u32     security_protocol_cmds_fw:1;
+-		u32     reserved:25;
++		u32	support_ext_queue_depth:1;
++		u32     reserved:24;
+ #endif
+ 	} mfi_capabilities;
+ 	__le32		reg;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index ced6dc0..be1be8e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -117,7 +117,8 @@ struct RAID_CONTEXT {
+ 	u8      numSGE;
+ 	__le16	configSeqNum;
+ 	u8      spanArm;
+-	u8      resvd2[3];
++	u8      priority;
++	u8      resvd2[2];
+ };
+ 
+ #define RAID_CTX_SPANARM_ARM_SHIFT	(0)
 -- 
-2.4.1.168.g1ea28e1
+1.7.1
+
