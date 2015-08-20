@@ -1,59 +1,65 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 8/8] scsi: ufs-qcom: add QUniPro hardware support and
- power optimizations
-Date: Thu, 20 Aug 2015 13:31:30 -0000
-Message-ID: <1684abfb98b709024bf68a9507ba99a2.squirrel@www.codeaurora.org>
-References: <1439720057-9186-1-git-send-email-ygardi@codeaurora.org>
-    <1439720057-9186-9-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyhquEQh8O=8cz8xKTEzUcD3wKAiLd5RNzAMzEL6C9GWUA@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101891] mvsas prep failed, NULL pointer dereference in
+ mvs_slot_task_free+0x5/0x1f0 [mvsas]
+Date: Thu, 20 Aug 2015 13:45:51 +0000
+Message-ID: <bug-101891-11613-dKeKYCvRwW@https.bugzilla.kernel.org/>
+References: <bug-101891-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyhquEQh8O=8cz8xKTEzUcD3wKAiLd5RNzAMzEL6C9GWUA@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40200 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751844AbbHTNpy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2015 09:45:54 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 70BFA20595
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 13:45:53 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id D846120585
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 13:45:51 +0000 (UTC)
+In-Reply-To: <bug-101891-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Thank you Mita for the review.
-Your comments were correct and helpful.
-I appreciate your time and effort.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
 
-please see inline.
+--- Comment #7 from D=C4=81vis <davispuh@gmail.com> ---
+(In reply to Turbo Fredriksson from comment #6)
+> Forgive an ignoramus, but those last lines doesn't look to good
+>=20
+>     kernel: ata11.00: device reported invalid CHS sector 0
+>=20
+> I have a problem that is very much like yours, but my stack traces ar=
+e
+> different so I'm unsure if we have the same problem. I'm going to reb=
+uild my
+> kernel as well with your fix and see if it helps me as well.
 
-> 2015-08-16 19:14 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> @@ -1208,6 +1510,7 @@ static struct ufs_hba_variant_ops
->> ufs_hba_qcom_vops = {
->>         .resume                 = ufs_qcom_resume,
->>         .dbg_register_dump      = ufs_qcom_dump_dbg_regs,
->>  };
->> +EXPORT_SYMBOL(ufs_hba_qcom_vops);
->
-> As I said in the view comment for the patch 5, this shouldn't be exported
-> again.
+My fix is only for "NULL pointer dereference in mvs_slot_task_free" in =
+mvsas
+driver. If you use hardware with different driver then this fix won't c=
+hange
+anything for you. And even if you've such hardware and use this driver =
+then you
+might have hit different bug, you really should have posted stack trace=
+, logs,
+etc...
 
-I removed this export at all. it is not needed anymore.
+As for those other messages, I've no clue what they actually mean. But =
+as I
+understand under heavy I/O load pci_pool_alloc fails, so those tasks ar=
+e
+aborted and that probably prevents kernel from accessing disks and disk=
+ reset
+is issued. Then it can access all disks again and everything keeps work=
+ing.
 
->
->> @@ -775,6 +781,12 @@ static inline int ufshcd_vops_resume(struct ufs_hba
->> *hba, enum ufs_pm_op op)
->>         return 0;
->>  }
->>
->> +static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
->> +{
->> +       if (hba->vops && hba->vops->dbg_register_dump)
->> +               hba->vops->dbg_register_dump(hba);
->> +}
->> +
->
-> This change should be done in the patch 7?
-
-you are correct.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--=20
+You are receiving this mail because:
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
