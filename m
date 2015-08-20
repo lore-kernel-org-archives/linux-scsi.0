@@ -1,67 +1,71 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: SCSI scanning behavior
-Date: Thu, 20 Aug 2015 17:11:14 -0500
-Message-ID: <55D65082.6020504@linux.vnet.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target/qla2xxx: Honor max_data_sg_nents I/O transfer
+ limit
+Date: Thu, 20 Aug 2015 16:17:13 -0700
+Message-ID: <1440112633.14304.23.camel@haakon3.risingtidesystems.com>
+References: <1439455550-2626-1-git-send-email-nab@daterainc.com>
+	 <alpine.LRH.2.00.1508171724150.19116@mvluser04.mv.qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:42888 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611AbbHTWLU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2015 18:11:20 -0400
-Received: from /spool/local
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 20 Aug 2015 18:11:19 -0400
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 2F65538C8039
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 18:11:16 -0400 (EDT)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7KMBFBW65077258
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 22:11:16 GMT
-Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7KMBF44020052
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 18:11:15 -0400
-Received: from skaro.rchland.ibm.com (sig-9-48-96-74.ibm.com [9.48.96.74])
-	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVin) with ESMTP id t7KMBEFu019985
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 18:11:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.00.1508171724150.19116@mvluser04.mv.qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Arun Easi <arun.easi@qlogic.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Craig Watson <craig.watson@vanguard-rugged.com>, Roland Dreier <roland@purestorage.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-In one of our SAN test labs where there is some storage controller error injection going on,
-I'm seeing some interesting behavior. We are getting into a scenario, when the target is coming
-back where we are going through SCSI scan for it and the Report LUNs we are issuing to it times
-out, so we fall back to a sequential LUN scan. When performing the sequential LUN scan, we 
-end up adding a bunch of LUNs than we didn't previously see, 512 in fact. The target is reporting
-PQ=1, PDT=0 for every LUN that doesn't exist. When Report LUNs *does work*, it doesn't report
-these LUNs. 
+On Wed, 2015-08-19 at 17:48 -0700, Arun Easi wrote:
+> Hi nab,
+> 
+> On Thu, 13 Aug 2015, 1:45am -0700, Nicholas A. Bellinger wrote:
+> 
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >
+> > Hi Arun, Roland & Co,
+> >
+> > Based upon the feedback from last week, here is a proper
+> > patch for target-core to honor a fabric provided SGL limit
+> > using residual count plus underflow response bit.
+> >
+> > Everything appears to be working as expected with tcm-loop
+> > LUNs with basic I/O and sg_raw to test CDB underflow, but
+> > still needs to be verified on real qla2xxx hardware over
+> > the next days for v4.2.0 code.
+> >
+> > Please review + test.
+> 
+> Changes look good. I could not test the changes, though. I have requested 
+> internally to test this patch. Himanshu (copied) will get back with the 
+> test results (Thanks Himanshu).
+> 
 
-In net, we end up with a different result if we do a sequential LUN scan compared to a report LUNs
-scan.
+Thanks for the update.  Btw, this patch has been pushed to
+refs/heads/queue, atop the other recent v4.2-rc fixes here:
 
-Now, one could argue this is a defect in the SCSI target, since SPC says:
+https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=queue
 
-The REPORT LUNS parameter data should be returned even though the device server is not ready for other
-commands. The report of the logical unit inventory should be available without incurring any media access
-delays. If the device server is not ready with the logical unit inventory or if the inventory list is null for the
-requesting I_T nexus and the SELECT REPORT field set to 02h, then the device server shall provide a default
-logical unit inventory that contains at least LUN 0 or the REPORT LUNS well known logical unit (see 8.2). A
-non-empty peripheral device logical unit inventory that does not contain either LUN 0 or the REPORT LUNS
-well known logical unit is valid.
+Just an FYI for Himanshu, for testing against Linux hosts that do honor
+EVPD block-limits, you'll want to include the following small hack to
+report a larger block-limits value so the new residual handling can
+actually get invoked.
 
-However, I'm still left wondering why we are adding PQ=1, PDT=0 devices in the sequential LUN scan at all.
-Are there media changer devices out there that we've seen respond like this? Even so, does it make sense
-to add PQ=1, PDT=0 LUNs for LUN > 0?
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 01421e9..f02767b 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -523,6 +523,7 @@ spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
+        if (cmd->se_tfo->max_data_sg_nents) {
+                mtl = (cmd->se_tfo->max_data_sg_nents * PAGE_SIZE) /
+                       dev->dev_attrib.block_size;
++               mtl *= 2;
+        }
+        put_unaligned_be32(min_not_zero(mtl, dev->dev_attrib.hw_max_sectors), &buf[8]);
 
-Thanks,
+Also for testing, I'd recommend lowering tcm_qla2xxx's max_data_sg_nents
+to something arbitrarily small to exercise the new code.
 
-Brian
+Craig, have you had a chance to test the new logic on your setup with
+hosts that don't honor EVPD block-limits..?
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+--nab 
