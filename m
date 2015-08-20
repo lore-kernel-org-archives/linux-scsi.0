@@ -1,40 +1,45 @@
-From: Mark Singer <MSinger@napavalley.edu>
-Subject: (unknown)
-Date: Thu, 20 Aug 2015 00:12:49 -0700
-Message-ID: <66EA9C2C53B30B46B1D28150E6EB8FB5015BB1A6902C__28010.5064659894$1440055118$gmane$org@mail.napavalley.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101891] mvsas prep failed, NULL pointer dereference in
+ mvs_slot_task_free+0x5/0x1f0 [mvsas]
+Date: Thu, 20 Aug 2015 07:55:06 +0000
+Message-ID: <bug-101891-11613-28ZDiLPKuy@https.bugzilla.kernel.org/>
+References: <bug-101891-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.napavalley.edu ([209.129.252.13]:17286 "EHLO
-	mail.napavalley.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbbHTHSU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2015 03:18:20 -0400
-Subject: 
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.29.136]:49902 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868AbbHTHzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Aug 2015 03:55:10 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DBAF720555
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 07:55:08 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 20B9D2054C
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 07:55:07 +0000 (UTC)
+In-Reply-To: <bug-101891-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=101891
 
+Turbo Fredriksson <turbo@bayour.com> changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |turbo@bayour.com
 
-Do you need an investor?
-Our investors fund project and business. We also give out loan/credit t=
-o any individual and company at 3% interest rate yearly. For more infor=
-mation, Contact us via Email: devonfps@gmail.com=20
+--- Comment #6 from Turbo Fredriksson <turbo@bayour.com> ---
+Forgive an ignoramus, but those last lines doesn't look to good
 
-If you need an investor or quick funding, forward your response ONLY to=
- this E-mail: devonfps@gmail.com=20
-=2E...
-Haben Sie einen Investor brauchen?
-Unsere Investoren Fonds Projekt- und Gesch=E4fts. Wir geben auch Darleh=
-en / Kredite an jeden einzelnen und Unternehmen bei 3% Zinsen j=E4hrlic=
-h. F=FCr weitere Informationen, kontaktieren Sie uns per E-Mail: devonf=
-ps@gmail.com=20
+    kernel: ata11.00: device reported invalid CHS sector 0
 
-Wenn Sie ein Investor oder schnelle Finanzierung ben=F6tigen, senden Si=
-e Ihre Antwort nur auf diese E-mail: devonfps@gmail.com --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have a problem that is very much like yours, but my stack traces are
+different so I'm unsure if we have the same problem. I'm going to rebuild my
+kernel as well with your fix and see if it helps me as well.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
