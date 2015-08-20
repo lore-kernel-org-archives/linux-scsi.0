@@ -1,314 +1,224 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 101891] mvsas prep failed, NULL pointer dereference in
- mvs_slot_task_free+0x5/0x1f0 [mvsas]
-Date: Wed, 19 Aug 2015 22:09:10 +0000
-Message-ID: <bug-101891-11613-4lSqshUjyR@https.bugzilla.kernel.org/>
-References: <bug-101891-11613@https.bugzilla.kernel.org/>
+From: Arun Easi <arun.easi@qlogic.com>
+Subject: Re: [PATCH] target/qla2xxx: Honor max_data_sg_nents I/O transfer
+ limit
+Date: Wed, 19 Aug 2015 17:48:38 -0700
+Message-ID: <alpine.LRH.2.00.1508171724150.19116@mvluser04.mv.qlogic.com>
+References: <1439455550-2626-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58195 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406AbbHSWJP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2015 18:09:15 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6022A20552
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 22:09:13 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id A05B220864
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2015 22:09:10 +0000 (UTC)
-In-Reply-To: <bug-101891-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1439455550-2626-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Craig Watson <craig.watson@vanguard-rugged.com>, Roland Dreier <roland@purestorage.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
+Hi nab,
 
---- Comment #5 from D=C4=81vis <davispuh@gmail.com> ---
-Success, patch indeed fixed it :)
+On Thu, 13 Aug 2015, 1:45am -0700, Nicholas A. Bellinger wrote:
 
-Now instead of crash I get this =E2=86=93, but everything seems to be w=
-orking and no
-need for reboot.
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> Hi Arun, Roland & Co,
+>
+> Based upon the feedback from last week, here is a proper
+> patch for target-core to honor a fabric provided SGL limit
+> using residual count plus underflow response bit.
+>
+> Everything appears to be working as expected with tcm-loop
+> LUNs with basic I/O and sg_raw to test CDB underflow, but
+> still needs to be verified on real qla2xxx hardware over
+> the next days for v4.2.0 code.
+>
+> Please review + test.
 
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: mvsas 0000:07:00.0: mvsas prep failed[0]!
-kernel: sas: Enter sas_scsi_recover_host busy: 19 failed: 19
-kernel: sas: trying to find task 0xffff8801c9599100
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8801c9599100
-kernel: sas: sas_scsi_find_task: task 0xffff8801c9599100 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8801c9599100 is abort=
-ed
-kernel: sas: trying to find task 0xffff8801c9599500
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8801c9599500
-kernel: sas: sas_scsi_find_task: task 0xffff8801c9599500 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8801c9599500 is abort=
-ed
-kernel: sas: trying to find task 0xffff8801c9599900
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8801c9599900
-kernel: sas: sas_scsi_find_task: task 0xffff8801c9599900 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8801c9599900 is abort=
-ed
-kernel: sas: trying to find task 0xffff8801ba22a500
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8801ba22a500
-kernel: sas: sas_scsi_find_task: task 0xffff8801ba22a500 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8801ba22a500 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f686300
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f686300
-kernel: sas: sas_scsi_find_task: task 0xffff88000f686300 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f686300 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f687f00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f687f00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f687f00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f687f00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f687c00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f687c00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f687c00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f687c00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f686e00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f686e00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f686e00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f686e00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f686a00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f686a00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f686a00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f686a00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f687d00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f687d00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f687d00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f687d00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f686f00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f686f00
-kernel: sas: sas_scsi_find_task: task 0xffff88000f686f00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f686f00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f687500
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f687500
-kernel: sas: sas_scsi_find_task: task 0xffff88000f687500 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f687500 is abort=
-ed
-kernel: sas: trying to find task 0xffff88000f687000
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88000f687000
-kernel: sas: sas_scsi_find_task: task 0xffff88000f687000 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88000f687000 is abort=
-ed
-kernel: sas: trying to find task 0xffff8800024f1900
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8800024f1900
-kernel: sas: sas_scsi_find_task: task 0xffff8800024f1900 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8800024f1900 is abort=
-ed
-kernel: sas: trying to find task 0xffff8800024f0d00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff8800024f0d00
-kernel: sas: sas_scsi_find_task: task 0xffff8800024f0d00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff8800024f0d00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88007c8ec600
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88007c8ec600
-kernel: sas: sas_scsi_find_task: task 0xffff88007c8ec600 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88007c8ec600 is abort=
-ed
-kernel: sas: trying to find task 0xffff88007c8ecf00
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88007c8ecf00
-kernel: sas: sas_scsi_find_task: task 0xffff88007c8ecf00 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88007c8ecf00 is abort=
-ed
-kernel: sas: trying to find task 0xffff88007c8ec700
-kernel: sas: sas_scsi_find_task: aborting task 0xffff88007c8ec700
-kernel: sas: sas_scsi_find_task: task 0xffff88007c8ec700 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff88007c8ec700 is abort=
-ed
-kernel: sas: trying to find task 0xffff880079672700
-kernel: sas: sas_scsi_find_task: aborting task 0xffff880079672700
-kernel: sas: sas_scsi_find_task: task 0xffff880079672700 is aborted
-kernel: sas: sas_eh_handle_sas_errors: task 0xffff880079672700 is abort=
-ed
-kernel: sas: ata11: end_device-5:6: cmd error handler
-kernel: sas: ata12: end_device-5:7: cmd error handler
-kernel: sas: ata5: end_device-5:0: dev error handler
-kernel: sas: ata6: end_device-5:1: dev error handler
-kernel: sas: ata7: end_device-5:2: dev error handler
-kernel: sas: ata8: end_device-5:3: dev error handler
-kernel: sas: ata9: end_device-5:4: dev error handler
-kernel: sas: ata10: end_device-5:5: dev error handler
-kernel: sas: ata11: end_device-5:6: dev error handler
-kernel: ata11.00: exception Emask 0x0 SAct 0x3fff78 SErr 0x0 action 0x6=
- frozen
-kernel: sas: ata12: end_device-5:7: dev error handler
-kernel: ata12.00: exception Emask 0x0 SAct 0x100 SErr 0x0 action 0x6 fr=
-ozen
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:70:5b:78/00:00:12:00:00/40 tag 3 ncq 819=
-2 in
-                                           res
-40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:60:72:78/00:00:12:00:00/40 tag 4 ncq 819=
-2 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:10:b9:78/00:00:12:00:00/40 tag 5 ncq 819=
-2 in
-                                           res
-40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/20:00:48:bb:78/00:00:12:00:00/40 tag 6 ncq 163=
-84 in
-                                           res
-40/00:0c:b8:5e:aa/00:00:0e:00:00/40 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/20:00:10:d6:79/00:00:12:00:00/40 tag 8 ncq 163=
-84 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/20:00:f0:ed:79/00:00:12:00:00/40 tag 9 ncq 163=
-84 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:e0:2f:7a/00:00:12:00:00/40 tag 10 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:e8:8e:7a/00:00:12:00:00/40 tag 11 ncq 81=
-92 in
-                                           res
-40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:a0:a8:7a/00:00:12:00:00/40 tag 12 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:20:e8:7a/00:00:12:00:00/40 tag 13 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:b0:12:7c/00:00:12:00:00/40 tag 14 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:50:26:7c/00:00:12:00:00/40 tag 15 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:a8:d2:7c/00:00:12:00:00/40 tag 16 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/10:00:c0:ec:7c/00:00:12:00:00/40 tag 17 ncq 81=
-92 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/08:00:98:6f:70/00:00:12:00:00/40 tag 18 ncq 40=
-96 in
-                                           res
-40/00:64:b8:7e:aa/00:00:0e:00:00/40 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/08:00:b8:3c:73/00:00:12:00:00/40 tag 19 ncq 40=
-96 in
-                                           res
-40/00:70:a0:40:8e/00:00:29:01:00/40 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/08:00:68:57:73/00:00:12:00:00/40 tag 20 ncq 40=
-96 in
-                                           res
-40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11.00: failed command: READ FPDMA QUEUED
-kernel: ata11.00: cmd 60/08:00:f8:89:73/00:00:12:00:00/40 tag 21 ncq 40=
-96 in
-                                           res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-kernel: ata11.00: status: { DRDY }
-kernel: ata11: hard resetting link
-kernel: ata12.00: failed command: WRITE FPDMA QUEUED
-kernel: ata12.00: cmd 61/c0:00:40:33:50/00:00:0d:00:00/40 tag 8 ncq 983=
-04 out
-                                           res
-40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-kernel: ata12.00: status: { DRDY }
-kernel: ata12: hard resetting link
-kernel: sas: sas_form_port: phy2 belongs to port6 already(1)!
-kernel: sas: sas_form_port: phy3 belongs to port7 already(1)!
-kernel: /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1439:mvs_I_T_nexus_reset=
- for
-kernel: /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1439:mvs_I_T_nexus_reset=
- for
-kernel: ata12.00: configured for UDMA/133
-kernel: ata12.00: device reported invalid CHS sector 0
-kernel: ata12: EH complete
-kernel: ata11.00: configured for UDMA/133
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11.00: device reported invalid CHS sector 0
-kernel: ata11: EH complete
-kernel: sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+Changes look good. I could not test the changes, though. I have requested 
+internally to test this patch. Himanshu (copied) will get back with the 
+test results (Thanks Himanshu).
 
---=20
-You are receiving this mail because:
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+-Arun
+
+>
+> --nab
+>
+> This patch adds an optional fabric driver provided SGL limit
+> that target-core will honor as it's own internal I/O maximum
+> transfer length limit, as exposed by EVPD=0xb0 block limits
+> parameters.
+>
+> This is required for handling cases when host I/O transfer
+> length exceeds the requested EVPD block limits maximum
+> transfer length. The initial user of this logic is qla2xxx,
+> so that we can avoid having to reject I/Os from some legacy
+> FC hosts where EVPD=0xb0 parameters are not honored.
+>
+> When se_cmd payload length exceeds the provided limit in
+> target_check_max_data_sg_nents() code, se_cmd->data_length +
+> se_cmd->prot_length are reset with se_cmd->residual_count
+> plus underflow bit for outgoing TFO response callbacks.
+> It also checks for existing CDB level underflow + overflow
+> and recalculates final residual_count as necessary.
+>
+> Note this patch currently assumes 1:1 mapping of PAGE_SIZE
+> per struct scatterlist entry.
+>
+> Reported-by: Craig Watson <craig.watson@vanguard-rugged.com>
+> Cc: Craig Watson <craig.watson@vanguard-rugged.com>
+> Cc: Roland Dreier <roland@purestorage.com>
+> Cc: Arun Easi <arun.easi@qlogic.com>
+> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+> drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  5 ++++
+> drivers/target/target_core_spc.c       | 13 +++++++--
+> drivers/target/target_core_transport.c | 51 +++++++++++++++++++++++++++++++++-
+> include/target/target_core_fabric.h    | 13 +++++++++
+> 4 files changed, 78 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 9224a06..6649809 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -1804,6 +1804,11 @@ static const struct target_core_fabric_ops tcm_qla2xxx_ops = {
+> 	.module				= THIS_MODULE,
+> 	.name				= "qla2xxx",
+> 	.node_acl_size			= sizeof(struct tcm_qla2xxx_nacl),
+> +	/*
+> +	 * XXX: Limit assumes single page per scatter-gather-list entry.
+> +	 * Current maximum is ~4.9 MB per se_cmd->t_data_sg with PAGE_SIZE=4096
+> +	 */
+> +	.max_data_sg_nents		= 1200,
+> 	.get_fabric_name		= tcm_qla2xxx_get_fabric_name,
+> 	.tpg_get_wwn			= tcm_qla2xxx_get_fabric_wwn,
+> 	.tpg_get_tag			= tcm_qla2xxx_get_tag,
+> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> index 556ea1b..da6130a 100644
+> --- a/drivers/target/target_core_spc.c
+> +++ b/drivers/target/target_core_spc.c
+> @@ -484,8 +484,8 @@ static sense_reason_t
+> spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
+> {
+> 	struct se_device *dev = cmd->se_dev;
+> -	int have_tp = 0;
+> -	int opt, min;
+> +	u32 mtl = 0;
+> +	int have_tp = 0, opt, min;
+>
+> 	/*
+> 	 * Following spc3r22 section 6.5.3 Block Limits VPD page, when
+> @@ -516,8 +516,15 @@ spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
+>
+> 	/*
+> 	 * Set MAXIMUM TRANSFER LENGTH
+> +	 *
+> +	 * XXX: Currently assumes single PAGE_SIZE per scatterlist for fabrics
+> +	 * enforcing maximum HW scatter-gather-list entry limit
+> 	 */
+> -	put_unaligned_be32(dev->dev_attrib.hw_max_sectors, &buf[8]);
+> +	if (cmd->se_tfo->max_data_sg_nents) {
+> +		mtl = (cmd->se_tfo->max_data_sg_nents * PAGE_SIZE) /
+> +		       dev->dev_attrib.block_size;
+> +	}
+> +	put_unaligned_be32(min_not_zero(mtl, dev->dev_attrib.hw_max_sectors), &buf[8]);
+>
+> 	/*
+> 	 * Set OPTIMAL TRANSFER LENGTH
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index ce8574b..652471a1 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1074,6 +1074,55 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsigned char *page_83)
+> }
+> EXPORT_SYMBOL(transport_set_vpd_ident);
+>
+> +static sense_reason_t
+> +target_check_max_data_sg_nents(struct se_cmd *cmd, struct se_device *dev,
+> +			       unsigned int size)
+> +{
+> +	u32 mtl;
+> +
+> +	if (!cmd->se_tfo->max_data_sg_nents)
+> +		return TCM_NO_SENSE;
+> +	/*
+> +	 * Check if fabric enforced maximum SGL entries per I/O descriptor
+> +	 * exceeds se_cmd->data_length.  If true, set SCF_UNDERFLOW_BIT +
+> +	 * residual_count and reduce original cmd->data_length to maximum
+> +	 * length based on single PAGE_SIZE entry scatter-lists.
+> +	 */
+> +	mtl = (cmd->se_tfo->max_data_sg_nents * PAGE_SIZE);
+> +	if (cmd->data_length > mtl) {
+> +		/*
+> +		 * If an existing CDB overflow is present, calculate new residual
+> +		 * based on CDB size minus fabric maximum transfer length.
+> +		 *
+> +		 * If an existing CDB underflow is present, calculate new residual
+> +		 * based on original cmd->data_length minus fabric maximum transfer
+> +		 * length.
+> +		 *
+> +		 * Otherwise, set the underflow residual based on cmd->data_length
+> +		 * minus fabric maximum transfer length.
+> +		 */
+> +		if (cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
+> +			cmd->residual_count = (size - mtl);
+> +		} else if (cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
+> +			u32 orig_dl = size + cmd->residual_count;
+> +			cmd->residual_count = (orig_dl - mtl);
+> +		} else {
+> +			cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
+> +			cmd->residual_count = (cmd->data_length - mtl);
+> +		}
+> +		cmd->data_length = mtl;
+> +		/*
+> +		 * Reset sbc_check_prot() calculated protection payload
+> +		 * length based upon the new smaller MTL.
+> +		 */
+> +		if (cmd->prot_length) {
+> +			u32 sectors = (mtl / dev->dev_attrib.block_size);
+> +			cmd->prot_length = dev->prot_length * sectors;
+> +		}
+> +	}
+> +	return TCM_NO_SENSE;
+> +}
+> +
+> sense_reason_t
+> target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
+> {
+> @@ -1119,7 +1168,7 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
+> 		}
+> 	}
+>
+> -	return 0;
+> +	return target_check_max_data_sg_nents(cmd, dev, size);
+>
+> }
+>
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index 18afef9..995f2e1 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -5,6 +5,19 @@ struct target_core_fabric_ops {
+> 	struct module *module;
+> 	const char *name;
+> 	size_t node_acl_size;
+> +	/*
+> +	 * Limits number of scatterlist entries per SCF_SCSI_DATA_CDB payload.
+> +	 * Setting this value tells target-core to enforce this limit, and
+> +	 * report as INQUIRY EVPD=b0 MAXIMUM TRANSFER LENGTH.
+> +	 *
+> +	 * target-core will currently reset se_cmd->data_length to this
+> +	 * maximum size, and set OVERFLOW residual count if length exceeds
+> +	 * this limit.
+> +	 *
+> +	 * XXX: Not all initiator hosts honor this block-limit EVPD
+> +	 * XXX: Currently assumes single PAGE_SIZE per scatterlist entry
+> +	 */
+> +	u32 max_data_sg_nents;
+> 	char *(*get_fabric_name)(void);
+> 	char *(*tpg_get_wwn)(struct se_portal_group *);
+> 	u16 (*tpg_get_tag)(struct se_portal_group *);
+>
