@@ -1,28 +1,40 @@
-From: Maria-Elisabeth Schaeffler <ayazdani@fdsindia.co.in>
-Subject: FINANCIAL GIFT
-Date: Fri, 21 Aug 2015 20:41:24 +0200
-Message-ID: <20150821184304.8F56CB3CB6__9093.83037728748$1440185229$gmane$org@mail.ricohidc.com>
-Reply-To: mariaelisabethscha@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.uniglobeatb.co.in ([103.16.140.19]:50717 "EHLO
-	mail.ricohidc.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbHUT04 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2015 15:26:56 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v1 00/15] Big fixes, retries, handle a race condition
+Date: Sat, 22 Aug 2015 01:09:34 +0300
+Message-ID: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <ayazdani@fdsindia.co.in>
 
-I intend to give to you a portion of my Wealth as a free-will financial donation to you. Respond now to partake.
+This serie of 15 small patches should be pushed after the series of 8 patches
+I have uploaded to the upstream a week ago:
+"Fix error message and present UFS variant probe"
 
-Regards
-Maria-Elisabeth Schaeffler
-Email:mariaelisabt@outlook.com
+Yaniv Gardi (15):
+  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
+  scsi: ufs: verify command tag validity
+  scsi: ufs: clear outstanding_request bit in case query timeout
+  scsi: ufs: increase fDeviceInit query response timeout
+  scsi: ufs: avoid exception event handler racing with PM callbacks
+  scsi: ufs: set REQUEST_SENSE command size to 18 bytes
+  scsi: ufs: add retries to dme_peer get and set attribute
+  scsi: ufs: add retries for hibern8 enter
+  scsi: ufs: fix error recovery after the hibern8 exit failure
+  scsi: ufs: retry failed query flag requests
+  scsi: ufs: reduce the interrupts for power mode change requests
+  scsi: ufs: add missing memory barriers
+  scsi: ufs: commit descriptors before setting the doorbell
+  scsi: ufs: add wrapper for retrying sending query attribute
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+ drivers/scsi/ufs/ufshcd.c | 411 ++++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/ufs/ufshcd.h |   4 +
+ 2 files changed, 331 insertions(+), 84 deletions(-)
 
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
