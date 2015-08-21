@@ -1,128 +1,152 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 15/15] scsi: ufs: add wrapper for retrying sending query attribute
-Date: Sat, 22 Aug 2015 01:09:49 +0300
-Message-ID: <1440194989-28835-16-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 10/15] scsi: ufs: fix error recovery after the hibern8 exit failure
+Date: Sat, 22 Aug 2015 01:09:44 +0300
+Message-ID: <1440194989-28835-11-git-send-email-ygardi@codeaurora.org>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37545 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319AbbHUWLB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2015 18:11:01 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Sometimes queries from the device might return a failure so it is
-recommended to retry sending the query, before giving up.
-This change adds a wrapper to retry sending a query attribute,
-in cases where we need to wait longer, before we continue,
-or before reporting a failure.
+Hibern8 exit can be called from 3 different context:
+    - ufshcd_hibern8_exit_work
+    - ufshcd_ungate_work
+    - runtime/system resume
+
+If hibern8 exit fails for some reason then we try to bring the link to
+active state by link startup but this recovery mechanism results into
+deadlock or errors from first 2 context listed above. This change fixes
+the recovery by adding proper error handling mechanism.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 51 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 44 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 58 +++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 53 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 876148b..bfef67d 100644
+index 6d47e9e..30aec4d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1827,6 +1827,43 @@ out:
- }
+@@ -609,6 +609,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->clk_gating.active_reqs++;
  
- /**
-+ * ufshcd_query_attr_retry() - API function for sending query
-+ * attribute with retries
-+ * @hba: per-adapter instance
-+ * @opcode: attribute opcode
-+ * @idn: attribute idn to access
-+ * @index: index field
-+ * @selector: selector field
-+ * @attr_val: the attribute value after the query request
-+ * completes
-+ *
-+ * Returns 0 for success, non-zero in case of failure
-+*/
-+static int ufshcd_query_attr_retry(struct ufs_hba *hba,
-+	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
-+	u32 *attr_val)
-+{
-+	int ret = 0;
-+	u32 retries;
-+
-+	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-+		ret = ufshcd_query_attr(hba, opcode, idn, index,
-+						selector, attr_val);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: failed with error %d, retries %d\n",
-+				__func__, ret, retries);
-+		else
-+			break;
++	if (ufshcd_eh_in_progress(hba)) {
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		return 0;
 +	}
 +
+ start:
+ 	switch (hba->clk_gating.state) {
+ 	case CLKS_ON:
+@@ -724,7 +729,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
+ 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
+ 		|| hba->lrb_in_use || hba->outstanding_tasks
+-		|| hba->active_uic_cmd || hba->uic_async_done)
++		|| hba->active_uic_cmd || hba->uic_async_done
++		|| ufshcd_eh_in_progress(hba))
+ 		return;
+ 
+ 	hba->clk_gating.state = REQ_CLKS_OFF;
+@@ -1362,6 +1368,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		cmd->scsi_done(cmd);
+ 		goto out_unlock;
+ 	}
++
++	/* if error handling is in progress, don't issue commands */
++	if (ufshcd_eh_in_progress(hba)) {
++		set_host_byte(cmd, DID_ERROR);
++		cmd->scsi_done(cmd);
++		goto out_unlock;
++	}
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	/* acquire the tag to make sure device cmds don't use it */
+@@ -2392,6 +2405,31 @@ out:
+ 	return ret;
+ }
+ 
++static int ufshcd_link_recovery(struct ufs_hba *hba)
++{
++	int ret;
++	unsigned long flags;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->ufshcd_state = UFSHCD_STATE_RESET;
++	ufshcd_set_eh_in_progress(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	ret = ufshcd_host_reset_and_restore(hba);
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
 +	if (ret)
-+		dev_err(hba->dev,
-+			"%s: query attribute, idn %d, failed with error %d after %d retires\n",
-+			__func__, idn, ret, retries);
++		hba->ufshcd_state = UFSHCD_STATE_ERROR;
++	ufshcd_clear_eh_in_progress(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	if (ret)
++		dev_err(hba->dev, "%s: link recovery failed, err %d",
++			__func__, ret);
++
 +	return ret;
 +}
 +
-+/**
-  * ufshcd_query_descriptor - API function for sending descriptor requests
-  * hba: per-adapter instance
-  * opcode: attribute opcode
-@@ -3407,7 +3444,7 @@ static int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
- 
- 	val = hba->ee_ctrl_mask & ~mask;
- 	val &= 0xFFFF; /* 2 bytes */
--	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
- 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
- 	if (!err)
- 		hba->ee_ctrl_mask &= ~mask;
-@@ -3435,7 +3472,7 @@ static int ufshcd_enable_ee(struct ufs_hba *hba, u16 mask)
- 
- 	val = hba->ee_ctrl_mask | mask;
- 	val &= 0xFFFF; /* 2 bytes */
--	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
- 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
- 	if (!err)
- 		hba->ee_ctrl_mask |= mask;
-@@ -3541,7 +3578,7 @@ static void  ufshcd_force_reset_auto_bkops(struct ufs_hba *hba)
- 
- static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
  {
--	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
- 			QUERY_ATTR_IDN_BKOPS_STATUS, 0, 0, status);
+ 	int ret;
+@@ -2400,10 +2438,18 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+ 
+-	if (ret)
++	if (ret) {
+ 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d",
+ 			__func__, ret);
+ 
++		/*
++		 * If link recovery fails then return error so that caller
++		 * don't retry the hibern8 enter again.
++		 */
++		if (ufshcd_link_recovery(hba))
++			ret = -ENOLINK;
++	}
++
+ 	return ret;
  }
  
-@@ -3604,7 +3641,7 @@ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+@@ -2428,8 +2474,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+ 	if (ret) {
+-		ufshcd_set_link_off(hba);
+-		ret = ufshcd_host_reset_and_restore(hba);
++		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d",
++			__func__, ret);
++		ret = ufshcd_link_recovery(hba);
+ 	}
  
- static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
- {
--	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
- 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
- }
+ 	return ret;
+@@ -4381,7 +4428,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+-	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	hba->wlun_dev_clr_ua = true;
  
-@@ -4360,9 +4397,9 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- 	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
- 			__func__, hba->init_prefetch_data.icc_level);
+ 	if (ufshcd_get_max_pwr_mode(hba)) {
+@@ -4395,6 +4441,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 					__func__, ret);
+ 	}
  
--	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
--			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
--			&hba->init_prefetch_data.icc_level);
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
-+		&hba->init_prefetch_data.icc_level);
- 
- 	if (ret)
- 		dev_err(hba->dev,
++	/* set the state as operational after switching to desired gear */
++	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	/*
+ 	 * If we are in error handling context or in power management callbacks
+ 	 * context, no need to scan the host
 -- 
 1.8.5.2
 
