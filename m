@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 08/15] scsi: ufs: add retries to dme_peer get and set attribute
-Date: Sat, 22 Aug 2015 01:09:42 +0300
-Message-ID: <1440194989-28835-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 03/15] scsi: ufs: verify command tag validity
+Date: Sat, 22 Aug 2015 01:09:37 +0300
+Message-ID: <1440194989-28835-4-git-send-email-ygardi@codeaurora.org>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
@@ -10,98 +10,71 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The dme_peer get/set attribute commands are prone to errors, therefore
-we add three retries for the UIC command sending.
-Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-it was successful or the retries have finished, another command will be
-sent.
+A race condition appear to exist between request completion when
+scsi_done() is called to end the request and set the tag back to
+-1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
+handling which aborts the command and reuses it to request sense
+data. Sending the request sense is done with tag which was set to -1
+and so it is invalid.
+Assert command tag passed from scsi layer is valid.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d0269ad..a146587 100644
+index 2d3ebca..61e98a9 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -69,6 +69,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
++static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
++{
++	return tag >= 0 && tag < hba->nutrs;
++}
  
-+/* maximum number of retries for a general UIC command  */
-+#define UFS_UIC_COMMAND_RETRIES 3
-+
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
+ static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+ {
+@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	hba = shost_priv(host);
  
-@@ -2184,6 +2187,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *set = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
- 	uic_cmd.command = peer ?
- 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-@@ -2191,10 +2195,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
- 	uic_cmd.argument3 = mib_val;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	switch (hba->ufshcd_state) {
+@@ -3862,11 +3872,21 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret)
--		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
--			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-+				retries);
+ 	ufshcd_hold(hba, false);
+ 	/* If command is already aborted/completed, return SUCCESS */
+-	if (!(test_bit(tag, &hba->outstanding_reqs)))
++	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++		dev_err(hba->dev,
++			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
++			__func__, tag, hba->outstanding_reqs, reg);
+ 		goto out;
++	}
  
- 	return ret;
- }
-@@ -2219,6 +2231,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *get = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 	struct ufs_pa_layer_attr orig_pwr_info;
- 	struct ufs_pa_layer_attr temp_pwr_info;
- 	bool pwr_mode_change = false;
-@@ -2249,14 +2262,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
- 	uic_cmd.argument1 = attr_sel;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret) {
--		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
--			get, UIC_GET_ATTR_ID(attr_sel), ret);
--		goto out;
--	}
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), retries);
- 
--	if (mib_val)
-+	if (mib_val && !ret)
- 		*mib_val = uic_cmd.argument3;
- 
- 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	if (!(reg & (1 << tag))) {
 -- 
 1.8.5.2
 
