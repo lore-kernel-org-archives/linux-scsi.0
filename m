@@ -1,8 +1,7 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 05/10] scsi: ufs: add quirk to enable host controller without
- hce
-Date: Fri, 21 Aug 2015 14:57:56 +0530
-Message-ID: <1440149281-26336-6-git-send-email-alim.akhtar@samsung.com>
+Subject: [PATCH 06/10] scsi: ufs: add specific callback for nexus type
+Date: Fri, 21 Aug 2015 14:57:57 +0530
+Message-ID: <1440149281-26336-7-git-send-email-alim.akhtar@samsung.com>
 References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
@@ -13,138 +12,71 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Seungwon Jeon <tgih.jun@samsung.com>
 
-Some host controller doesn't support host controller enable via HCE.
+Some host controller needs nexus type information for handling
+command. This change adds specific callback function to support
+vendor's implementation.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   76 +++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |    5 +++
- 2 files changed, 79 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |    6 ++++++
+ drivers/scsi/ufs/ufshcd.h |    6 ++++++
+ 2 files changed, 12 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 35380aa..bb143ac 100644
+index bb143ac..bc27f5e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2106,6 +2106,52 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- 			"dme-link-startup: error code %d\n", ret);
- 	return ret;
- }
-+/**
-+ * ufshcd_dme_reset - UIC command for DME_RESET
-+ * @hba: per adapter instance
-+ *
-+ * DME_RESET command is issued in order to reset UniPro stack.
-+ * This function now deal with cold reset.
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_dme_reset(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
-+
-+	uic_cmd.command = UIC_CMD_DME_RESET;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"dme-reset: error code %d\n", ret);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_dme_enable - UIC command for DME_ENABLE
-+ * @hba: per adapter instance
-+ *
-+ * DME_ENABLE command is issued in order to enable UniPro stack.
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_dme_enable(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
-+
-+	uic_cmd.command = UIC_CMD_DME_ENABLE;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"dme-reset: error code %d\n", ret);
-+
-+	return ret;
-+}
+@@ -1377,6 +1377,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
- {
-@@ -2642,7 +2688,7 @@ out:
- }
+ 	/* issue command to the controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (hba->vops && hba->vops->specify_nexus_t_xfer_req)
++		hba->vops->specify_nexus_t_xfer_req(hba, tag, lrbp->cmd);
+ 	ufshcd_send_command(hba, tag);
+ out_unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -1577,6 +1579,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	hba->dev_cmd.complete = &wait;
  
- /**
-- * ufshcd_hba_enable - initialize the controller
-+ * ufshcd_hba_execute_hce - initialize the controller
-  * @hba: per adapter instance
-  *
-  * The controller resets itself and controller firmware initialization
-@@ -2651,7 +2697,7 @@ out:
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--static int ufshcd_hba_enable(struct ufs_hba *hba)
-+static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
- {
- 	int retry;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (hba->vops && hba->vops->specify_nexus_t_xfer_req)
++		hba->vops->specify_nexus_t_xfer_req(hba, tag, lrbp->cmd);
+ 	ufshcd_send_command(hba, tag);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
-@@ -2717,6 +2763,32 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	return 0;
- }
+@@ -3848,6 +3852,8 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 	task_req_upiup->input_param2 = cpu_to_be32(task_id);
  
-+static int ufshcd_hba_enable(struct ufs_hba *hba)
-+{
-+	int ret;
-+
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_HCE) {
-+		ufshcd_set_link_off(hba);
-+		if (hba->vops && hba->vops->hce_enable_notify)
-+			hba->vops->hce_enable_notify(hba, PRE_CHANGE);
-+
-+		/* enable UIC related interrupts */
-+		ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
-+		ret = ufshcd_dme_reset(hba);
-+		if (!ret) {
-+			ret = ufshcd_dme_enable(hba);
-+			if (!ret && hba->vops && hba->vops->hce_enable_notify)
-+				hba->vops->hce_enable_notify(hba, POST_CHANGE);
-+			if (ret)
-+				dev_err(hba->dev,
-+					"Host controller enable failed with non-hce\n");
-+		}
-+	} else {
-+		ret = ufshcd_hba_execute_hce(hba);
-+	}
-+
-+	return ret;
-+}
- static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
- {
- 	int tx_lanes, i, err = 0;
+ 	/* send command to the controller */
++	if (hba->vops && hba->vops->specify_nexus_t_tm_req)
++		hba->vops->specify_nexus_t_tm_req(hba, free_slot, tm_function);
+ 	__set_bit(free_slot, &hba->outstanding_tasks);
+ 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 7986a54..f4ad3df 100644
+index f4ad3df..0b7dde0 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -477,6 +477,11 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCI_QUIRK_BROKEN_RESET_INTR_AGGR		UFS_BIT(8)
- 
-+	/*
-+	 * This quirks needs to be enabled if host controller cannot be
-+	 * enabled via HCE register.
-+	 */
-+	#define UFSHCI_QUIRK_BROKEN_HCE				UFS_BIT(9)
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	wait_queue_head_t tm_wq;
+@@ -257,6 +257,9 @@ struct ufs_pwr_mode_info {
+  * @pwr_change_notify: called before and after a power mode change
+  *			is carried out to allow vendor spesific capabilities
+  *			to be set.
++ * @specify_nexus_t_xfer_req:
++ * @specify_nexus_t_tm_req: called before command is issued to allow vendor
++ *			specific handling to be set for nexus type.
+  * @suspend: called during host controller PM callback
+  * @resume: called during host controller PM callback
+  */
+@@ -273,6 +276,9 @@ struct ufs_hba_variant_ops {
+ 	int	(*pwr_change_notify)(struct ufs_hba *,
+ 					bool, struct ufs_pa_layer_attr *,
+ 					struct ufs_pa_layer_attr *);
++	void	(*specify_nexus_t_xfer_req)(struct ufs_hba *,
++					    int, struct scsi_cmnd *);
++	void	(*specify_nexus_t_tm_req)(struct ufs_hba *, int, u8);
+ 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+ };
 -- 
 1.7.10.4
