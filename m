@@ -1,7 +1,8 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 03/10] scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
-Date: Fri, 21 Aug 2015 14:57:54 +0530
-Message-ID: <1440149281-26336-4-git-send-email-alim.akhtar@samsung.com>
+Subject: [PATCH 04/10] scsi: ufs: add quirk not to allow reset of interrupt
+ aggregation
+Date: Fri, 21 Aug 2015 14:57:55 +0530
+Message-ID: <1440149281-26336-5-git-send-email-alim.akhtar@samsung.com>
 References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
@@ -12,67 +13,43 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Seungwon Jeon <tgih.jun@samsung.com>
 
-In the right behavior, setting the bit to '0' indicates clear and
-'1' indicates no change. If host contoller handles this the other way,
-UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR can be used.
+Some host controller supports interrupt aggregation, but doesn't
+allow to reset counter and timer by s/w.
 
 Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   20 ++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |    5 +++++
- 2 files changed, 23 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |    3 ++-
+ drivers/scsi/ufs/ufshcd.h |    6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f882bf0..b441a39 100644
+index b441a39..35380aa 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -358,7 +358,23 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
-  */
- static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
- {
--	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-+		ufshcd_writel(hba, (1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	else
-+		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+}
-+
-+/**
-+ * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-+ * @hba: per adapter instance
-+ * @pos: position of the bit to be cleared
-+ */
-+static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
-+{
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
-+		ufshcd_writel(hba, (1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	else
-+		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
- }
+@@ -3204,7 +3204,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	 * false interrupt if device completes another request after resetting
+ 	 * aggregation and before reading the DB.
+ 	 */
+-	if (ufshcd_is_intr_aggr_allowed(hba))
++	if (ufshcd_is_intr_aggr_allowed(hba) &&
++	    !(hba->quirks & UFSHCI_QUIRK_BROKEN_RESET_INTR_AGGR))
+ 		ufshcd_reset_intr_aggr(hba);
  
- /**
-@@ -3691,7 +3707,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 		goto out;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	ufshcd_utmrl_clear(hba, tag);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* poll for max. 1 sec to clear door bell register by h/w */
+ 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1fa5ac1..24245c9 100644
+index 24245c9..7986a54 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -466,6 +466,11 @@ struct ufs_hba {
+@@ -471,6 +471,12 @@ struct ufs_hba {
  	 */
- 	#define UFSHCI_QUIRK_BROKEN_UTRD			UFS_BIT(6)
+ 	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		UFS_BIT(7)
  
 +	/*
-+	 * Cleaer handling for transfer/task request list is just opposite.
++	 * This quirk needs to be enabled if host controller doesn't allow
++	 * that the interrupt aggregation timer and counter are reset by s/w.
 +	 */
-+	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		UFS_BIT(7)
++	#define UFSHCI_QUIRK_BROKEN_RESET_INTR_AGGR		UFS_BIT(8)
 +
  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
  
