@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 13/15] scsi: ufs: add missing memory barriers
-Date: Sat, 22 Aug 2015 01:09:47 +0300
-Message-ID: <1440194989-28835-14-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 11/15] scsi: ufs: retry failed query flag requests
+Date: Sat, 22 Aug 2015 01:09:45 +0300
+Message-ID: <1440194989-28835-12-git-send-email-ygardi@codeaurora.org>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
@@ -10,75 +10,156 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Performing several writes to UFS host controller registers has
-no gurrantee of ordering, so we must make sure register writes
-to setup request list base address etc. are performed before the
-run/stop register is enabled.
-In addition, when setting up a task request, we must make sure
-the updating of descriptors takes places before ringing the
-doorbell, similarly to setting up a transfer request.
+UFS flag query requests may fail sometimes due to timeouts etc.
+Add a wrapper function to retry up to 10 times in case of such
+failure, similar to retries being made for attribute queries.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 63 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h |  4 +++
+ 2 files changed, 41 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8f17cf5..fef0660 100644
+index 30aec4d..0a8aa88 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -401,11 +401,9 @@ static inline int ufshcd_get_lists_status(u32 reg)
- 	 *  1		UTRLRDY
- 	 *  2		UTMRLRDY
- 	 *  3		UCRDY
--	 *  4		HEI
--	 *  5		DEI
--	 * 6-7		reserved
-+	 * 4-7		reserved
- 	 */
--	return (((reg) & (0xFF)) >> 1) ^ (0x07);
-+	return ((reg & 0xFF) >> 1) ^ 0x07;
+@@ -1662,6 +1662,29 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
+ 	(*request)->upiu_req.selector = selector;
  }
  
++static int ufshcd_query_flag_retry(struct ufs_hba *hba,
++	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
++{
++	int ret;
++	int retries;
++
++	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
++		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
++		if (ret)
++			dev_dbg(hba->dev,
++				"%s: failed with error %d, retries %d\n",
++				__func__, ret, retries);
++		else
++			break;
++	}
++
++	if (ret)
++		dev_err(hba->dev,
++			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retires\n",
++			__func__, opcode, idn, ret, retries);
++	return ret;
++}
++
  /**
-@@ -2726,7 +2724,7 @@ out:
-  * To bring UFS host controller to operational state,
-  * 1. Enable required interrupts
-  * 2. Configure interrupt aggregation
-- * 3. Program UTRL and UTMRL base addres
-+ * 3. Program UTRL and UTMRL base address
-  * 4. Configure run-stop-registers
+  * ufshcd_query_flag() - API function for sending flag query requests
+  * hba: per-adapter instance
+@@ -1671,7 +1694,7 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
   *
-  * Returns 0 on success, non-zero value on failure
-@@ -2756,8 +2754,13 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 			REG_UTP_TASK_REQ_LIST_BASE_H);
+  * Returns 0 for success, non-zero in case of failure
+  */
+-static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
++int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 			enum flag_idn idn, bool *flag_res)
+ {
+ 	struct ufs_query_req *request = NULL;
+@@ -2656,17 +2679,12 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+  */
+ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ {
+-	int i, retries, err = 0;
++	int i;
++	int err;
+ 	bool flag_res = 1;
  
- 	/*
-+	 * Make sure base address and interrupt setup are updated before
-+	 * enabling the run/stop registers below.
-+	 */
-+	wmb();
-+
-+	/*
- 	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
--	 * DEI, HEI bits must be 0
- 	 */
- 	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
- 	if (!(ufshcd_get_lists_status(reg))) {
-@@ -3920,7 +3923,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+-	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+-		/* Set the fDeviceInit flag */
+-		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+-					QUERY_FLAG_IDN_FDEVICEINIT, NULL);
+-		if (!err || err == -ETIMEDOUT)
+-			break;
+-		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
+-	}
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++		QUERY_FLAG_IDN_FDEVICEINIT, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev,
+ 			"%s setting fDeviceInit flag failed with error %d\n",
+@@ -2674,18 +2692,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ 		goto out;
+ 	}
  
- 	/* send command to the controller */
- 	__set_bit(free_slot, &hba->outstanding_tasks);
+-	/* poll for max. 100 iterations for fDeviceInit flag to clear */
+-	for (i = 0; i < 100 && !err && flag_res; i++) {
+-		for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+-			err = ufshcd_query_flag(hba,
+-					UPIU_QUERY_OPCODE_READ_FLAG,
+-					QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
+-			if (!err || err == -ETIMEDOUT)
+-				break;
+-			dev_dbg(hba->dev, "%s: error %d retrying\n", __func__,
+-					err);
+-		}
+-	}
++	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
++	for (i = 0; i < 1000 && !err && flag_res; i++)
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++			QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
 +
-+	/* Make sure descriptors are ready before ringing the task doorbell */
-+	wmb();
-+
- 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
-+	/* Make sure that doorbell is committed immediately */
-+	wmb();
+ 	if (err)
+ 		dev_err(hba->dev,
+ 			"%s reading fDeviceInit flag failed with error %d\n",
+@@ -3432,7 +3443,7 @@ static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
+ 	if (hba->auto_bkops_enabled)
+ 		goto out;
  
- 	spin_unlock_irqrestore(host->host_lock, flags);
+-	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+ 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: failed to enable bkops %d\n",
+@@ -3481,7 +3492,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+ 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: failed to disable bkops %d\n",
+@@ -4452,8 +4463,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 		/* clear any previous UFS device information */
+ 		memset(&hba->dev_info, 0, sizeof(hba->dev_info));
+-		if (!ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+-				       QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
++		if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+ 			hba->dev_info.f_power_on_wp_en = flag;
+ 
+ 		if (!hba->is_init_prefetch)
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 4bb2697..2e8f64b 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -3,6 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.h
+  * Copyright (C) 2011-2013 Samsung India Software Operations
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -680,6 +681,9 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ }
+ 
++/* Expose Query-Request API */
++int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
++	enum flag_idn idn, bool *flag_res);
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
  
 -- 
 1.8.5.2
