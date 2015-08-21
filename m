@@ -1,70 +1,30 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 02/15] scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-Date: Sat, 22 Aug 2015 01:09:36 +0300
-Message-ID: <1440194989-28835-3-git-send-email-ygardi@codeaurora.org>
-References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
+From: "email" <abi_1979@live.com>
+Subject: Vorteile
+Date: Fri, 21 Aug 2015 08:11:03 -0000
+Message-ID: <2de9a79fea93d01fa6c53f3525a4503f.squirrel__7074.89258279583$1440195498$gmane$org@204.151.29.214>
+Reply-To: chn.jg53@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37344 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbbHUWKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2015 18:10:07 -0400
-In-Reply-To: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
+Received: from [204.151.29.214] ([204.151.29.214]:47055 "EHLO mail.vps.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751423AbbHUWRx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Aug 2015 18:17:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-Some of the data structures (like response UPIU) and/or its elements
-(unused fields) should be cleared before sending out the respective
-command to UFS device.
 
-This change clears the UPIU response data structure for query commands
-and NOP command before sending out the command. We also initialize the
-PRDT table length to zero which should take care of commands which doesn't
-have any data associated with it. We are also clearing the unused fields in
-request UPIU for NOP command.
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
----
- drivers/scsi/ufs/ufshcd.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Ich habe eine positive Sache f=FCr uns beide. Sie sollten mit mir unter=
+ der
+E-Mail-Adresse ein f=FCr Erkl=E4rungen zu antworten.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3428f72..2d3ebca 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1129,6 +1129,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
- 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
- 	/* dword_3 is reserved, hence it is set to 0 */
- 	req_desc->header.dword_3 = 0;
-+
-+	req_desc->prd_table_length = 0;
- }
- 
- /**
-@@ -1198,6 +1200,7 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
- 	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
- 		memcpy(descp, query->descriptor, len);
- 
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
- 
- static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
-@@ -1210,6 +1213,11 @@ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
- 	ucd_req_ptr->header.dword_0 =
- 		UPIU_HEADER_DWORD(
- 			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
-+	/* clear rest of the fields of basic header */
-+	ucd_req_ptr->header.dword_1 = 0;
-+	ucd_req_ptr->header.dword_2 = 0;
-+
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
- 
- /**
--- 
-1.8.5.2
+E-Mail: chn.jg53@gmail.com
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
