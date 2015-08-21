@@ -1,108 +1,58 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 02/10] scsi: ufs: add quirk to contain unconformable utrd field
-Date: Fri, 21 Aug 2015 14:57:53 +0530
-Message-ID: <1440149281-26336-3-git-send-email-alim.akhtar@samsung.com>
-References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] mptfusion: prevent some memory corruption
+Date: Fri, 21 Aug 2015 18:42:21 +0300
+Message-ID: <20150821154221.GS5610@mwanda>
+References: <20150703085303.GA11901@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
+Content-Disposition: inline
+In-Reply-To: <20150703085303.GA11901@mwanda>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: vinholikatti@gmail.com, JBottomley@odin.com, Seungwon Jeon <tgih.jun@samsung.com>
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Seungwon Jeon <tgih.jun@samsung.com>
+Ping?
 
-UTRD(UTP Transfer Request Descriptor)'s field such as offset/length,
-especially response's has DWORD expression. This quirk can be specified
-for host controller not to conform standard.
+regards,
+dan carpenter
 
-Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c |   28 +++++++++++++++++++++-------
- drivers/scsi/ufs/ufshcd.h |    7 +++++++
- 2 files changed, 28 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b0ade73..f882bf0 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1009,7 +1009,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-  *
-  * Returns 0 in case of success, non-zero value in case of failure
-  */
--static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-+static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- {
- 	struct ufshcd_sg_entry *prd_table;
- 	struct scatterlist *sg;
-@@ -1023,8 +1023,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
- 		return sg_segments;
- 
- 	if (sg_segments) {
--		lrbp->utr_descriptor_ptr->prd_table_length =
--					cpu_to_le16((u16) (sg_segments));
-+		if (hba->quirks & UFSHCI_QUIRK_BROKEN_UTRD)
-+			lrbp->utr_descriptor_ptr->prd_table_length =
-+				cpu_to_le16((u16)(sg_segments *
-+					sizeof(struct ufshcd_sg_entry)));
-+		else
-+			lrbp->utr_descriptor_ptr->prd_table_length =
-+				cpu_to_le16((u16) (sg_segments));
- 
- 		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
- 
-@@ -1347,7 +1352,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	/* form UPIU before issuing the command */
- 	ufshcd_compose_upiu(hba, lrbp);
--	err = ufshcd_map_sg(lrbp);
-+	err = ufshcd_map_sg(hba, lrbp);
- 	if (err) {
- 		lrbp->cmd = NULL;
- 		clear_bit_unlock(tag, &hba->lrb_in_use);
-@@ -2035,12 +2040,21 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
- 
- 		/* Response upiu and prdt offset should be in double words */
--		utrdlp[i].response_upiu_offset =
-+		if (hba->quirks & UFSHCI_QUIRK_BROKEN_UTRD) {
-+			utrdlp[i].response_upiu_offset =
-+				cpu_to_le16(response_offset);
-+			utrdlp[i].prd_table_offset =
-+				cpu_to_le16(prdt_offset);
-+			utrdlp[i].response_upiu_length =
-+				cpu_to_le16(ALIGNED_UPIU_SIZE);
-+		} else {
-+			utrdlp[i].response_upiu_offset =
- 				cpu_to_le16((response_offset >> 2));
--		utrdlp[i].prd_table_offset =
-+			utrdlp[i].prd_table_offset =
- 				cpu_to_le16((prdt_offset >> 2));
--		utrdlp[i].response_upiu_length =
-+			utrdlp[i].response_upiu_length =
- 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
-+		}
- 
- 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
- 		hba->lrb[i].ucd_req_ptr =
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c40a0e7..1fa5ac1 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -459,6 +459,13 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
- 
-+	/*
-+	 * This quirk needs to be enabled if host controller doesn't conform
-+	 * with UTRD. Some fields such as offset/length might not be in double word,
-+	 * but in byte.
-+	 */
-+	#define UFSHCI_QUIRK_BROKEN_UTRD			UFS_BIT(6)
-+
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	wait_queue_head_t tm_wq;
--- 
-1.7.10.4
+On Fri, Jul 03, 2015 at 11:53:03AM +0300, Dan Carpenter wrote:
+> These are signed values the come from the user, we put a cap on the
+> upper bounds but not on the lower bounds.
+> 
+> We use "karg.dataSgeOffset" to calculate "sz".  We verify "sz" and
+> proceed as if that means that "karg.dataSgeOffset" is correct but this
+> fails to consider that the "sz" calculations can have integer overflows.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> During my QC process, I realized that I sent a similar patch last year,
+> but never received a response.
+> 
+> http://permalink.gmane.org/gmane.linux.kernel.janitors/32590
+> 
+> Looking at both of them, I guess I prefer today's patch because it is
+> simpler.
+> 
+> diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+> index 70bb753..fc73937 100644
+> --- a/drivers/message/fusion/mptctl.c
+> +++ b/drivers/message/fusion/mptctl.c
+> @@ -1859,6 +1859,15 @@ mptctl_do_mpt_command (struct mpt_ioctl_command karg, void __user *mfPtr)
+>  	}
+>  	spin_unlock_irqrestore(&ioc->taskmgmt_lock, flags);
+>  
+> +	/* Basic sanity checks to prevent underflows or integer overflows */
+> +	if (karg.maxReplyBytes < 0 ||
+> +	    karg.dataInSize < 0 ||
+> +	    karg.dataOutSize < 0 ||
+> +	    karg.dataSgeOffset < 0 ||
+> +	    karg.maxSenseBytes < 0 ||
+> +	    karg.dataSgeOffset > ioc->req_sz / 4)
+> +		return -EINVAL;
+> +
+>  	/* Verify that the final request frame will not be too large.
+>  	 */
+>  	sz = karg.dataSgeOffset * 4;
