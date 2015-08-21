@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 03/15] scsi: ufs: verify command tag validity
-Date: Sat, 22 Aug 2015 01:09:37 +0300
-Message-ID: <1440194989-28835-4-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 12/15] scsi: ufs: reduce the interrupts for power mode change requests
+Date: Sat, 22 Aug 2015 01:09:46 +0300
+Message-ID: <1440194989-28835-13-git-send-email-ygardi@codeaurora.org>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
@@ -10,71 +10,130 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-A race condition appear to exist between request completion when
-scsi_done() is called to end the request and set the tag back to
--1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
-handling which aborts the command and reuses it to request sense
-data. Sending the request sense is done with tag which was set to -1
-and so it is invalid.
-Assert command tag passed from scsi layer is valid.
+DME commands such as Hibern8 enter/exit and gear switch generate 2
+completion interrupts, one for confirmation that command is received
+by local UniPro and 2nd one is the final confirmation after communication
+with remote UniPro. Currently both of these completions are registered
+as interrupt events which is not quite necessary and instead we can
+just wait for the interrupt of 2nd completion, this should reduce
+the number of interrupts and could reduce the unnecessary CPU wakeups
+to handle extra interrupts.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 41 +++++++++++++++++++++++++++--------------
+ 1 file changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2d3ebca..61e98a9 100644
+index 0a8aa88..8f17cf5 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 		struct ufs_pa_layer_attr *desired_pwr_mode);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
-+static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
-+{
-+	return tag >= 0 && tag < hba->nutrs;
-+}
- 
- static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+@@ -986,13 +986,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
+  * @hba: per adapter instance
+  * @uic_cmd: UIC command
++ * @completion: initialize the completion only if this is set to true
+  *
+  * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
+  * with mutex held and host_lock locked.
+  * Returns 0 only if success.
+  */
+ static int
+-__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
++__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
++		      bool completion)
  {
-@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	hba = shost_priv(host);
+ 	if (!ufshcd_ready_for_uic_cmd(hba)) {
+ 		dev_err(hba->dev,
+@@ -1000,7 +1002,8 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 		return -EIO;
+ 	}
  
- 	tag = cmd->request->tag;
-+	if (!ufshcd_valid_tag(hba, tag)) {
-+		dev_err(hba->dev,
-+			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
-+			__func__, tag, cmd, cmd->request);
-+		BUG();
-+	}
+-	init_completion(&uic_cmd->done);
++	if (completion)
++		init_completion(&uic_cmd->done);
+ 
+ 	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
+ 
+@@ -1025,7 +1028,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	ufshcd_add_delay_before_dme_cmd(hba);
  
  	spin_lock_irqsave(hba->host->host_lock, flags);
- 	switch (hba->ufshcd_state) {
-@@ -3862,11 +3872,21 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	host = cmd->device->host;
- 	hba = shost_priv(host);
- 	tag = cmd->request->tag;
-+	if (!ufshcd_valid_tag(hba, tag)) {
-+		dev_err(hba->dev,
-+			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
-+			__func__, tag, cmd, cmd->request);
-+		BUG();
-+	}
+-	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
++	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	if (!ret)
+ 		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+@@ -2346,6 +2349,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	unsigned long flags;
+ 	u8 status;
+ 	int ret;
++	bool reenable_intr = false;
  
- 	ufshcd_hold(hba, false);
- 	/* If command is already aborted/completed, return SUCCESS */
--	if (!(test_bit(tag, &hba->outstanding_reqs)))
-+	if (!(test_bit(tag, &hba->outstanding_reqs))) {
-+		dev_err(hba->dev,
-+			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
-+			__func__, tag, hba->outstanding_reqs, reg);
- 		goto out;
-+	}
+ 	mutex_lock(&hba->uic_cmd_mutex);
+ 	init_completion(&uic_async_done);
+@@ -2353,15 +2357,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
  
- 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	if (!(reg & (1 << tag))) {
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->uic_async_done = &uic_async_done;
+-	ret = __ufshcd_send_uic_cmd(hba, cmd);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	if (ret) {
+-		dev_err(hba->dev,
+-			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+-			cmd->command, cmd->argument3, ret);
+-		goto out;
++	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
++		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
++		/*
++		 * Make sure UIC command completion interrupt is disabled before
++		 * issuing UIC command.
++		 */
++		wmb();
++		reenable_intr = true;
+ 	}
+-	ret = ufshcd_wait_for_uic_cmd(hba, cmd);
++	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	if (ret) {
+ 		dev_err(hba->dev,
+ 			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+@@ -2387,7 +2393,10 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	}
+ out:
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->active_uic_cmd = NULL;
+ 	hba->uic_async_done = NULL;
++	if (reenable_intr)
++		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	mutex_unlock(&hba->uic_cmd_mutex);
+ 
+@@ -3812,16 +3821,20 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+  */
+ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ {
+-	u32 intr_status;
++	u32 intr_status, enabled_intr_status;
+ 	irqreturn_t retval = IRQ_NONE;
+ 	struct ufs_hba *hba = __hba;
+ 
+ 	spin_lock(hba->host->host_lock);
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
++	enabled_intr_status =
++		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 
+-	if (intr_status) {
++	if (intr_status)
+ 		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+-		ufshcd_sl_intr(hba, intr_status);
++
++	if (enabled_intr_status) {
++		ufshcd_sl_intr(hba, enabled_intr_status);
+ 		retval = IRQ_HANDLED;
+ 	}
+ 	spin_unlock(hba->host->host_lock);
 -- 
 1.8.5.2
 
