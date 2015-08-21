@@ -1,54 +1,35 @@
-From: =?UTF-8?q?D=C4=81vis=20Mos=C4=81ns?= <davispuh@gmail.com>
-Subject: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in mvs_slot_task_free
-Date: Fri, 21 Aug 2015 07:29:22 +0300
-Message-ID: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Persistent Reservation API V2
+Date: Fri, 21 Aug 2015 08:59:54 +0200
+Message-ID: <20150821065954.GA14559@lst.de>
+References: <1439360604-16192-1-git-send-email-hch@lst.de> <alpine.LNX.2.00.1508202317270.15930@localhost.lm.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:37869 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbbHUE3v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2015 00:29:51 -0400
-Received: by widdq5 with SMTP id dq5so5880008wid.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2015 21:29:49 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.1508202317270.15930@localhost.lm.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-api@vger.kernel.org, dm-devel@redhat.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
-Cc: =?UTF-8?q?D=C4=81vis=20Mos=C4=81ns?= <davispuh@gmail.com>
 
-When pci_pool_alloc fails in mvs_task_prep then task->lldd_task stays
-NULL but it's later used in mvs_abort_task as slot which is passed
-to mvs_slot_task_free causing NULL pointer dereference.
+On Thu, Aug 20, 2015 at 11:56:36PM +0000, Keith Busch wrote:
 
-Just return from mvs_slot_task_free when passed with NULL slot.
+> NVMe can also specify
+> if whether or not a reservation should persist through power-loss.
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
-Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
----
- drivers/scsi/mvsas/mv_sas.c | 2 ++
- 1 file changed, 2 insertions(+)
+SCSI does as well, it's the APTPL flag.  However reservations not persistent
+through a power loss are basically useless, so I decided to force them on
+in the API.  From the documentation:
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 454536c..9c78074 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi, u32=
- rx_desc)
- static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *=
-task,
- 			  struct mvs_slot_info *slot, u32 slot_idx)
- {
-+	if (!slot)
-+		return;
- 	if (!slot->task)
- 		return;
- 	if (!sas_protocol_ata(task->task_proto))
---=20
-2.5.0
+"All implementations are expected to ensure the reservations survive
+ a power loss"
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I would prefer not to add it, or if we really have to as a negative flag
+to specifically opt out of the APTPL behavior.
+
+> with it. For example, NVMe can ignore existing keys when acquiring a
+> reservation in addition to registering a new key.
+
+This sounds like a sensible addition to me, and I wouldn't be surprised
+if future SPC versions will add this flag.
