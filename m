@@ -1,47 +1,77 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 7/8] scsi: ufs-qcom: add debug prints for test bus
-Date: Sat, 22 Aug 2015 12:07:52 +0900
-Message-ID: <CAC5umyhX0kD=v+3fsU+BYSbsfde6jAxuG4EgvvYTQc7hF8mW6g@mail.gmail.com>
-References: <1440079144-26461-1-git-send-email-ygardi@codeaurora.org>
-	<1440079144-26461-8-git-send-email-ygardi@codeaurora.org>
+From: Anatol Pomozov <anatol.pomozov@gmail.com>
+Subject: IO failures with SMR drives at latest kernel versions
+Date: Fri, 21 Aug 2015 22:37:44 -0700
+Message-ID: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:36802 "EHLO
-	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbbHVDHx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2015 23:07:53 -0400
-In-Reply-To: <1440079144-26461-8-git-send-email-ygardi@codeaurora.org>
+Received: from mail-vk0-f46.google.com ([209.85.213.46]:32881 "EHLO
+	mail-vk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbbHVFoz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2015 01:44:55 -0400
+Received: by vkd66 with SMTP id 66so39271619vkd.0
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Aug 2015 22:44:55 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Rob Herring <robherring2@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+To: Hannes Reinecke <hare@suse.de>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Cc: hch@lst.de, Tejun Heo <tj@kernel.org>
 
-2015-08-20 22:59 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+Hi
 
-> +static bool ufs_qcom_testbus_cfg_is_ok(struct ufs_qcom_host *host)
-> +{
-> +       if (host->testbus.select_major >= TSTBUS_MAX) {
-> +               dev_err(host->hba->dev,
-> +                       "%s: UFS_CFG1[TEST_BUS_SEL} may not equal 0x%05X\n",
-> +                       __func__, host->testbus.select_major);
-> +               return false;
-> +       }
-> +
-> +       /*
-> +        * Not performing check for each individual select_major
-> +        * mappings of select_minor, since there is no harm in
-> +        * configuring a non-existent select_minor
-> +        */
-> +       if (host->testbus.select_major > 0x1F) {
+I recently got 2 Seagate 8Tb drives. 'dd' over whole disc ran fine.
+Then I inserted into my RAID and started rebalancing. I've got
+following error almost immediately:
 
-select_minor should be checked instead of select_major here?
 
-> +               dev_err(host->hba->dev,
-> +                       "%s: 0x%05X is not a legal testbus option\n",
-> +                       __func__, host->testbus.select_minor);
-> +               return false;
-> +       }
-> +
-> +       return true;
-> +}
+
+ata5.00: failed command: WRITE FPDMA QUEUED
+ata5.00: cmd 61/00:e0:80:e7:75/1d:00:9f:00:00/40 tag 28 ncq 3801088 out
+                                       res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5.00: status: { DRDY }
+ata5.00: failed command: WRITE FPDMA QUEUED
+ata5.00: cmd 61/80:e8:80:04:76/1d:00:9f:00:00/40 tag 29 ncq 3866624 out
+                                       res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5.00: status: { DRDY }
+ata5: hard resetting link
+ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata5.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
+ata5.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
+ata5.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE CONFIGURATION OVERLAY)
+filtered out
+ata5.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
+ata5.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
+ata5.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE CONFIGURATION OVERLAY)
+filtered out
+ata5.00: configured for UDMA/133
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+ata5.00: device reported invalid CHS sector 0
+
+
+
+Discs are from different batches and I was a bit surprised to see
+identical failures at the same time. I was ready send the drives to
+RMA but then I discovered this thread
+https://bbs.archlinux.org/viewtopic.php?id=199351 A lot of people
+report the same problem as mine. It was found that the problem appears
+only starting from 3.19, with kernel 3.18 or Windows these drives work
+fine. It is recommended to revert this change
+9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb "libata: Implement
+ATA_DEV_ZAC" that seems fixes the issue.
+
+There is also the same issue reported at kernel.org
+https://bugzilla.kernel.org/show_bug.cgi?id=93581
+
+
+This issue is extremely annoying and makes negative SMR drives user
+experience. Had anybody look at this bug?
