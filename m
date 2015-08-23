@@ -1,42 +1,43 @@
-From: Anatol Pomozov <anatol.pomozov@gmail.com>
-Subject: Re: IO failures with SMR drives at latest kernel versions
-Date: Sat, 22 Aug 2015 10:23:50 -0700
-Message-ID: <CAOMFOmXSrG82TFmHFTiCQoG3hkwJ69+U5Z=fXfbbgdf=xjTaJQ@mail.gmail.com>
-References: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [patch] qla4xxx: remove some bogus casts
+Date: Sat, 22 Aug 2015 18:41:12 -0700
+Message-ID: <55D924B8.3090407@sandisk.com>
+References: <20150817143647.GA23820@mwanda> <55D2B879.7040906@sandisk.com>
+ <20150818084726.GG5610@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:35719 "EHLO
-	mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396AbbHVRXv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2015 13:23:51 -0400
-Received: by vkfi73 with SMTP id i73so43117741vkf.2
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Aug 2015 10:23:50 -0700 (PDT)
-In-Reply-To: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
+Received: from mail-bl2on0056.outbound.protection.outlook.com ([65.55.169.56]:18016
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751071AbbHWBlU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Aug 2015 21:41:20 -0400
+In-Reply-To: <20150818084726.GG5610@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Linux SCSI List <linux-scsi@vger.kernel.org>
-Cc: hch@lst.de, Tejun Heo <tj@kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Hi
+On 08/18/15 01:47, Dan Carpenter wrote:
+> On Mon, Aug 17, 2015 at 09:45:45PM -0700, Bart Van Assche wrote:
+>> On 08/17/2015 07:36 AM, Dan Carpenter wrote:
+>>> These casts are wrong and unnecessary.  They annoy static checkers
+>>> because they imply we are planning to write sizeof(long) bytes to a
+>>> sizeof(u32) buffer which would corrupt memory.
+>>
+>> Hello Dan,
+>>
+>> Can you verify whether that patch is still needed after having
+>> applied the patch series I posted in July (and that was acknowledged
+>> by QLogic): http://thread.gmane.org/gmane.linux.scsi/103135 ?
+>>
+>
+> I think it is needed still?
 
-On Fri, Aug 21, 2015 at 10:37 PM, Anatol Pomozov
-<anatol.pomozov@gmail.com> wrote:
-> Discs are from different batches and I was a bit surprised to see
-> identical failures at the same time. I was ready send the drives to
-> RMA but then I discovered this thread
-> https://bbs.archlinux.org/viewtopic.php?id=199351 A lot of people
-> report the same problem as mine. It was found that the problem appears
-> only starting from 3.19, with kernel 3.18 or Windows these drives work
-> fine. It is recommended to revert this change
-> 9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb "libata: Implement
-> ATA_DEV_ZAC" that seems fixes the issue.
+Hello Dan,
 
-I looked at this commit and it actually adds SMR support to SCSI
-layer. Reverting ATA_DEV_ZAC means going back to zones-unaware
-algorithms. It is suboptimal but still much better than IO failures
-and "BTRFS: lost page write due to I/O error on /dev/sdc" errors I see
-at my computer.
+You are right, this patch is indeed needed. Hence:
 
-If this SMR support is considered as non-stable, can we at least get a
-kernel boot (or config) option that disables ZAC?
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+
