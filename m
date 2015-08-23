@@ -1,55 +1,135 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 2/8] scsi: ufs-qcom: fix compilation warning if compiled as a module
-Date: Sun, 23 Aug 2015 16:09:35 +0300
-Message-ID: <1440335381-5122-3-git-send-email-ygardi@codeaurora.org>
-References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.2-rc7
+Date: Sun, 23 Aug 2015 09:00:13 -0700
+Message-ID: <1440345613.2910.4.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58919 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751444AbbHWQAP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Aug 2015 12:00:15 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This change fixes a compilation warning that happens if SCSI_UFS_QCOM
-is compiled as a module.
-Also this patch fixes an error happens when insmod the module:
-"ufs_qcom: module license 'unspecified' taints kernel."
+A couple of major (hang and deadlock) fixes with fortunately fairly rare
+triggering conditions.  The PM oops is only really triggered by people
+using enclosure services (rare) and the fnic driver is mostly used in
+enterprise environments.
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Alan Stern (1):
+      SCSI: Fix NULL pointer dereference in runtime PM
+
+Hiral Shah (1):
+      fnic: Use the local variable instead of I/O flag to acquire io_req_lock in fnic_queuecommand() to avoid deadloack
+
+And the diffstat:
+
+ drivers/scsi/fnic/fnic.h      |  2 +-
+ drivers/scsi/fnic/fnic_scsi.c |  4 +++-
+ drivers/scsi/scsi_pm.c        | 22 +++++++++++-----------
+ 3 files changed, 15 insertions(+), 13 deletions(-)
+
+With full diff below.
+
+James
 
 ---
- drivers/scsi/ufs/ufs-qcom.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 4cdffa4..6c23bbf 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -917,12 +917,15 @@ out:
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 26270c3..ce129e5 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -39,7 +39,7 @@
  
- #define	ANDROID_BOOT_DEV_MAX	30
- static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
--static int get_android_boot_dev(char *str)
-+
-+#ifndef MODULE
-+static int __init get_android_boot_dev(char *str)
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.17"
++#define DRV_VERSION		"1.6.0.17a"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 155b286..25436cd 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -425,6 +425,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	unsigned long ptr;
+ 	struct fc_rport_priv *rdata;
+ 	spinlock_t *io_lock = NULL;
++	int io_lock_acquired = 0;
+ 
+ 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -518,6 +519,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	spin_lock_irqsave(io_lock, flags);
+ 
+ 	/* initialize rest of io_req */
++	io_lock_acquired = 1;
+ 	io_req->port_id = rport->port_id;
+ 	io_req->start_time = jiffies;
+ 	CMD_STATE(sc) = FNIC_IOREQ_CMD_PENDING;
+@@ -571,7 +573,7 @@ out:
+ 		  (((u64)CMD_FLAGS(sc) >> 32) | CMD_STATE(sc)));
+ 
+ 	/* if only we issued IO, will we have the io lock */
+-	if (CMD_FLAGS(sc) & FNIC_IO_INITIALIZED)
++	if (io_lock_acquired)
+ 		spin_unlock_irqrestore(io_lock, flags);
+ 
+ 	atomic_dec(&fnic->in_flight);
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 9e43ae1..e4b7998 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -217,15 +217,15 @@ static int sdev_runtime_suspend(struct device *dev)
  {
- 	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
- 	return 1;
- }
- __setup("androidboot.bootdevice=", get_android_boot_dev);
-+#endif
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	int err;
++	int err = 0;
  
- /**
-  * ufs_qcom_init - bind phy with controller
-@@ -1047,3 +1050,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.resume			= ufs_qcom_resume,
- };
- EXPORT_SYMBOL(ufs_hba_qcom_vops);
-+
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.5.2
+-	err = blk_pre_runtime_suspend(sdev->request_queue);
+-	if (err)
+-		return err;
+-	if (pm && pm->runtime_suspend)
++	if (pm && pm->runtime_suspend) {
++		err = blk_pre_runtime_suspend(sdev->request_queue);
++		if (err)
++			return err;
+ 		err = pm->runtime_suspend(dev);
+-	blk_post_runtime_suspend(sdev->request_queue, err);
+-
++		blk_post_runtime_suspend(sdev->request_queue, err);
++	}
+ 	return err;
+ }
+ 
+@@ -248,11 +248,11 @@ static int sdev_runtime_resume(struct device *dev)
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 	int err = 0;
+ 
+-	blk_pre_runtime_resume(sdev->request_queue);
+-	if (pm && pm->runtime_resume)
++	if (pm && pm->runtime_resume) {
++		blk_pre_runtime_resume(sdev->request_queue);
+ 		err = pm->runtime_resume(dev);
+-	blk_post_runtime_resume(sdev->request_queue, err);
+-
++		blk_post_runtime_resume(sdev->request_queue, err);
++	}
+ 	return err;
+ }
+ 
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
