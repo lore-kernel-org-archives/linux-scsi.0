@@ -1,71 +1,157 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH v1 14/15] scsi: ufs: commit descriptors before setting the doorbell
-Date: Sun, 23 Aug 2015 16:10:56 -0500
-Message-ID: <CAL_JsqJELy5jKpkN6GRJqAEVK-rvRxttUg4aLQhFjjkhPxxo8g@mail.gmail.com>
-References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org> <1440194989-28835-15-git-send-email-ygardi@codeaurora.org>
+From: Alexey Klimov <klimov.linux@gmail.com>
+Subject: Re: [PATCH 01/10] phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
+Date: Mon, 24 Aug 2015 01:45:33 +0300
+Message-ID: <CALW4P++V0ymA9OsDZnaiV+6FXHyt8+F96vPe0Jn5Yyv9anKfAQ@mail.gmail.com>
+References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
+	<1440149281-26336-2-git-send-email-alim.akhtar@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1440194989-28835-15-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <James.Bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <JBottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440149281-26336-2-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, vinholikatti@gmail.com, JBottomley@odin.com, Seungwon Jeon <tgih.jun@samsung.com>, Kishon Vijay Abraham I <kishon@ti.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
+Hi Alim,
+
+On Fri, Aug 21, 2015 at 12:27 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
+> From: Seungwon Jeon <tgih.jun@samsung.com>
 >
-> Add a write memory barrier to make sure descriptors prepared are actually
-> written to memory before ringing the doorbell. We have also added the
-> write memory barrier after ringing the doorbell register so that
-> controller sees the new request immediately.
+> This patch introduces Exynos UFS PHY driver. This driver
+> supports to deal with phy calibration and power control
+> according to UFS host driver's behavior.
 >
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->
+> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  .../devicetree/bindings/phy/samsung-phy.txt        |   22 ++
+>  drivers/phy/Kconfig                                |    7 +
+>  drivers/phy/Makefile                               |    1 +
+>  drivers/phy/phy-exynos-ufs.c                       |  277 ++++++++++++++++++++
+>  drivers/phy/phy-exynos-ufs.h                       |   73 ++++++
+>  drivers/phy/phy-exynos7-ufs.h                      |   89 +++++++
+>  include/linux/phy/phy-exynos-ufs.h                 |  107 ++++++++
+>  7 files changed, 576 insertions(+)
+>  create mode 100644 drivers/phy/phy-exynos-ufs.c
+>  create mode 100644 drivers/phy/phy-exynos-ufs.h
+>  create mode 100644 drivers/phy/phy-exynos7-ufs.h
+>  create mode 100644 include/linux/phy/phy-exynos-ufs.h
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index fef0660..876148b 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -833,6 +833,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
->         ufshcd_clk_scaling_start_busy(hba);
->         __set_bit(task_tag, &hba->outstanding_reqs);
->         ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> +       /* Make sure that doorbell is committed immediately */
-> +       wmb();
+> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+> index 60c6f2a..1abe2c4 100644
+> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+> @@ -174,3 +174,25 @@ Example:
+>                 usbdrdphy0 = &usb3_phy0;
+>                 usbdrdphy1 = &usb3_phy1;
+>         };
+> +
+> +Samsung Exynos7 soc serise UFS PHY Controller
+> +---------------------------------------------
+> +
+> +UFS PHY nodes are defined to describe on-chip UFS Physical layer controllers.
+> +Each UFS PHY controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains "samsung,exynos7-ufs-phy"
+> +- reg : offset and length of the UFS PHY register set;
+> +- reg-names : reg name(s) must be 'phy-pma';
+> +- #phy-cells : must be zero
+> +- samsung,syscon-phandle : a phandle to the PMU system controller, no arguments
+> +
+> +Example:
+> +       ufs_phy: ufs-phy@0x15571800 {
+> +               compatible = "samsung,exynos7-ufs-phy";
+> +               reg = <0x15571800 0x240>;
+> +               reg-names = "phy-pma";
+> +               samsung,syscon-phandle = <&pmu_system_controller>;
+> +               #phy-cells = <0>;
+> +       };
+> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+> index 6b8dd16..7449376 100644
+> --- a/drivers/phy/Kconfig
+> +++ b/drivers/phy/Kconfig
+> @@ -358,4 +358,11 @@ config PHY_BRCMSTB_SATA
+>           Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
+>           Likely useful only with CONFIG_SATA_BRCMSTB enabled.
+>
+> +config PHY_EXYNOS_UFS
+> +       tristate "EXYNOS SoC series UFS PHY driver"
+> +       depends on OF && ARCH_EXYNOS
+> +       select GENERIC_PHY
+> +       help
+> +         Support for UFS PHY on Samsung EXYNOS chipsets.
+> +
+>  endmenu
+> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+> index f344e1b..7a36818 100644
+> --- a/drivers/phy/Makefile
+> +++ b/drivers/phy/Makefile
+> @@ -45,3 +45,4 @@ obj-$(CONFIG_PHY_QCOM_UFS)    += phy-qcom-ufs-qmp-14nm.o
+>  obj-$(CONFIG_PHY_TUSB1210)             += phy-tusb1210.o
+>  obj-$(CONFIG_PHY_BRCMSTB_SATA)         += phy-brcmstb-sata.o
+>  obj-$(CONFIG_PHY_PISTACHIO_USB)                += phy-pistachio-usb.o
+> +obj-$(CONFIG_PHY_EXYNOS_UFS)   += phy-exynos-ufs.o
+> diff --git a/drivers/phy/phy-exynos-ufs.c b/drivers/phy/phy-exynos-ufs.c
+> new file mode 100644
+> index 0000000..840375d
+> --- /dev/null
+> +++ b/drivers/phy/phy-exynos-ufs.c
+> @@ -0,0 +1,277 @@
+> +/*
+> + * UFS PHY driver for Samsung EXYNOS SoC
+> + *
+> + * Copyright (C) 2015 Samsung Electronics Co., Ltd.
+> + * Author: Seungwon Jeon <tgih.jun@samsung.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
+> +#include <linux/module.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/of.h>
+> +#include <linux/io.h>
+> +#include <linux/err.h>
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/phy/phy.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/regmap.h>
+> +#include <linux/iopoll.h>
+> +#include <linux/phy/phy-exynos-ufs.h>
 
-Is this really necessary? Is there a measurable difference?
+What do you think about sorting this?
 
->  }
->
->  /**
-> @@ -1418,6 +1420,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->                 goto out;
->         }
->
-> +       /* Make sure descriptors are ready before ringing the doorbell */
-> +       wmb();
 
-The writel for the doorbell will do a barrier first. (I didn't check
-what exactly ufshcd_writel does, but that is why I don't like these
-private access wrappers.)
+> +#include "phy-exynos-ufs.h"
+> +
+> +#define for_each_phy_lane(phy, i) \
+> +       for (i = 0; i < (phy)->lane_cnt; i++)
+> +#define for_each_phy_cfg(cfg) \
+> +       for (; (cfg)->id; (cfg)++)
+> +
+> +#define phy_pma_writel(phy, val, reg) \
+> +       writel((val), (phy)->reg_pma + (reg))
+> +#define phy_pma_readl(phy, reg) \
+> +       readl((phy)->reg_pma + (reg))
+> +
+> +#define PHY_DEF_LANE_CNT       1
+> +
+> +static inline struct exynos_ufs_phy *get_exynos_ufs_phy(struct phy *phy)
+> +{
+> +       return (struct exynos_ufs_phy *)phy_get_drvdata(phy);
+> +}
 
->         /* issue command to the controller */
->         spin_lock_irqsave(hba->host->host_lock, flags);
->         ufshcd_send_command(hba, tag);
-> @@ -1627,6 +1631,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
->
->         hba->dev_cmd.complete = &wait;
->
-> +       /* Make sure descriptors are ready before ringing the doorbell */
-> +       wmb();
->         spin_lock_irqsave(hba->host->host_lock, flags);
->         ufshcd_send_command(hba, tag);
->         spin_unlock_irqrestore(hba->host->host_lock, flags);
-> --
-> 1.8.5.2
->
-> --
-> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Let compiler decide when to inline static function.
+Please don't make static inline functions in *.c files.
+
+
+
+Thanks.
+
+-- 
+Best regards, Klimov Alexey
