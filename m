@@ -1,157 +1,108 @@
-From: Alexey Klimov <klimov.linux@gmail.com>
-Subject: Re: [PATCH 01/10] phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
-Date: Mon, 24 Aug 2015 01:45:33 +0300
-Message-ID: <CALW4P++V0ymA9OsDZnaiV+6FXHyt8+F96vPe0Jn5Yyv9anKfAQ@mail.gmail.com>
-References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
-	<1440149281-26336-2-git-send-email-alim.akhtar@samsung.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: IO failures with SMR drives at latest kernel versions
+Date: Mon, 24 Aug 2015 08:11:06 +0200
+Message-ID: <55DAB57A.70906@suse.de>
+References: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440149281-26336-2-git-send-email-alim.akhtar@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, vinholikatti@gmail.com, JBottomley@odin.com, Seungwon Jeon <tgih.jun@samsung.com>, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50528 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751777AbbHXGLI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Aug 2015 02:11:08 -0400
+In-Reply-To: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anatol Pomozov <anatol.pomozov@gmail.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Cc: hch@lst.de, Tejun Heo <tj@kernel.org>
 
-Hi Alim,
+On 08/22/2015 07:37 AM, Anatol Pomozov wrote:
+> Hi
+>=20
+> I recently got 2 Seagate 8Tb drives. 'dd' over whole disc ran fine.
+> Then I inserted into my RAID and started rebalancing. I've got
+> following error almost immediately:
+>=20
+>=20
+>=20
+> ata5.00: failed command: WRITE FPDMA QUEUED
+> ata5.00: cmd 61/00:e0:80:e7:75/1d:00:9f:00:00/40 tag 28 ncq 3801088 o=
+ut
+>                                        res
+> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata5.00: status: { DRDY }
+> ata5.00: failed command: WRITE FPDMA QUEUED
+> ata5.00: cmd 61/80:e8:80:04:76/1d:00:9f:00:00/40 tag 29 ncq 3866624 o=
+ut
+>                                        res
+> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata5.00: status: { DRDY }
+> ata5: hard resetting link
+> ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata5.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
+> ata5.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtere=
+d out
+> ata5.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE CONFIGURATION OVERLAY)
+> filtered out
+> ata5.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
+> ata5.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtere=
+d out
+> ata5.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE CONFIGURATION OVERLAY)
+> filtered out
+> ata5.00: configured for UDMA/133
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+> ata5.00: device reported invalid CHS sector 0
+>=20
+>=20
+>=20
+> Discs are from different batches and I was a bit surprised to see
+> identical failures at the same time. I was ready send the drives to
+> RMA but then I discovered this thread
+> https://bbs.archlinux.org/viewtopic.php?id=3D199351 A lot of people
+> report the same problem as mine. It was found that the problem appear=
+s
+> only starting from 3.19, with kernel 3.18 or Windows these drives wor=
+k
+> fine. It is recommended to revert this change
+> 9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb "libata: Implement
+> ATA_DEV_ZAC" that seems fixes the issue.
+>=20
+Please clarify: Have you _checked_ that it fixes this issue?
 
-On Fri, Aug 21, 2015 at 12:27 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
-> From: Seungwon Jeon <tgih.jun@samsung.com>
->
-> This patch introduces Exynos UFS PHY driver. This driver
-> supports to deal with phy calibration and power control
-> according to UFS host driver's behavior.
->
-> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../devicetree/bindings/phy/samsung-phy.txt        |   22 ++
->  drivers/phy/Kconfig                                |    7 +
->  drivers/phy/Makefile                               |    1 +
->  drivers/phy/phy-exynos-ufs.c                       |  277 ++++++++++++++++++++
->  drivers/phy/phy-exynos-ufs.h                       |   73 ++++++
->  drivers/phy/phy-exynos7-ufs.h                      |   89 +++++++
->  include/linux/phy/phy-exynos-ufs.h                 |  107 ++++++++
->  7 files changed, 576 insertions(+)
->  create mode 100644 drivers/phy/phy-exynos-ufs.c
->  create mode 100644 drivers/phy/phy-exynos-ufs.h
->  create mode 100644 drivers/phy/phy-exynos7-ufs.h
->  create mode 100644 include/linux/phy/phy-exynos-ufs.h
->
-> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> index 60c6f2a..1abe2c4 100644
-> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> @@ -174,3 +174,25 @@ Example:
->                 usbdrdphy0 = &usb3_phy0;
->                 usbdrdphy1 = &usb3_phy1;
->         };
-> +
-> +Samsung Exynos7 soc serise UFS PHY Controller
-> +---------------------------------------------
-> +
-> +UFS PHY nodes are defined to describe on-chip UFS Physical layer controllers.
-> +Each UFS PHY controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains "samsung,exynos7-ufs-phy"
-> +- reg : offset and length of the UFS PHY register set;
-> +- reg-names : reg name(s) must be 'phy-pma';
-> +- #phy-cells : must be zero
-> +- samsung,syscon-phandle : a phandle to the PMU system controller, no arguments
-> +
-> +Example:
-> +       ufs_phy: ufs-phy@0x15571800 {
-> +               compatible = "samsung,exynos7-ufs-phy";
-> +               reg = <0x15571800 0x240>;
-> +               reg-names = "phy-pma";
-> +               samsung,syscon-phandle = <&pmu_system_controller>;
-> +               #phy-cells = <0>;
-> +       };
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index 6b8dd16..7449376 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -358,4 +358,11 @@ config PHY_BRCMSTB_SATA
->           Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
->           Likely useful only with CONFIG_SATA_BRCMSTB enabled.
->
-> +config PHY_EXYNOS_UFS
-> +       tristate "EXYNOS SoC series UFS PHY driver"
-> +       depends on OF && ARCH_EXYNOS
-> +       select GENERIC_PHY
-> +       help
-> +         Support for UFS PHY on Samsung EXYNOS chipsets.
-> +
->  endmenu
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index f344e1b..7a36818 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -45,3 +45,4 @@ obj-$(CONFIG_PHY_QCOM_UFS)    += phy-qcom-ufs-qmp-14nm.o
->  obj-$(CONFIG_PHY_TUSB1210)             += phy-tusb1210.o
->  obj-$(CONFIG_PHY_BRCMSTB_SATA)         += phy-brcmstb-sata.o
->  obj-$(CONFIG_PHY_PISTACHIO_USB)                += phy-pistachio-usb.o
-> +obj-$(CONFIG_PHY_EXYNOS_UFS)   += phy-exynos-ufs.o
-> diff --git a/drivers/phy/phy-exynos-ufs.c b/drivers/phy/phy-exynos-ufs.c
-> new file mode 100644
-> index 0000000..840375d
-> --- /dev/null
-> +++ b/drivers/phy/phy-exynos-ufs.c
-> @@ -0,0 +1,277 @@
-> +/*
-> + * UFS PHY driver for Samsung EXYNOS SoC
-> + *
-> + * Copyright (C) 2015 Samsung Electronics Co., Ltd.
-> + * Author: Seungwon Jeon <tgih.jun@samsung.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your option) any later version.
-> + */
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/of.h>
-> +#include <linux/io.h>
-> +#include <linux/err.h>
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/regmap.h>
-> +#include <linux/iopoll.h>
-> +#include <linux/phy/phy-exynos-ufs.h>
+The above patch just adds a new ATA device type, and the necessary
+changes to have it detected correctly.
+I find it extremely unlikely it being the culprit here.
 
-What do you think about sorting this?
+> There is also the same issue reported at kernel.org
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D93581
+>=20
+>=20
+> This issue is extremely annoying and makes negative SMR drives user
+> experience. Had anybody look at this bug?
+>=20
+Did you attempt a bisect to find out the offending patch?
 
+Cheers,
 
-> +#include "phy-exynos-ufs.h"
-> +
-> +#define for_each_phy_lane(phy, i) \
-> +       for (i = 0; i < (phy)->lane_cnt; i++)
-> +#define for_each_phy_cfg(cfg) \
-> +       for (; (cfg)->id; (cfg)++)
-> +
-> +#define phy_pma_writel(phy, val, reg) \
-> +       writel((val), (phy)->reg_pma + (reg))
-> +#define phy_pma_readl(phy, reg) \
-> +       readl((phy)->reg_pma + (reg))
-> +
-> +#define PHY_DEF_LANE_CNT       1
-> +
-> +static inline struct exynos_ufs_phy *get_exynos_ufs_phy(struct phy *phy)
-> +{
-> +       return (struct exynos_ufs_phy *)phy_get_drvdata(phy);
-> +}
-
-Let compiler decide when to inline static function.
-Please don't make static inline functions in *.c files.
-
-
-
-Thanks.
-
--- 
-Best regards, Klimov Alexey
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
