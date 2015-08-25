@@ -1,19 +1,19 @@
 From: ygardi@codeaurora.org
 Subject: Re: [PATCH v1 15/15] scsi: ufs: add wrapper for retrying sending
  query attribute
-Date: Tue, 25 Aug 2015 12:45:29 -0000
-Message-ID: <4117ea4cc6f5a3dbfc673553e2f94d6c.squirrel@www.codeaurora.org>
+Date: Tue, 25 Aug 2015 13:22:56 -0000
+Message-ID: <1186be986c60e3226e2fd8bd8adab2f4.squirrel@www.codeaurora.org>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
     <1440194989-28835-16-git-send-email-ygardi@codeaurora.org>
     <CAL_JsqKW6Q5u5NfYBFWQdhS0LmcVwQYrqL6zqF5YurY5ti_kGA@mail.gmail.com>
+    <4117ea4cc6f5a3dbfc673553e2f94d6c.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAL_JsqKW6Q5u5NfYBFWQdhS0LmcVwQYrqL6zqF5YurY5ti_kGA@mail.gmail.com>
+In-Reply-To: <4117ea4cc6f5a3dbfc673553e2f94d6c.squirrel@www.codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
-To: Rob Herring <robherring2@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <james.bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <jbottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: Rob Herring <robherring2@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <james.bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <jbottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 > On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
@@ -29,8 +29,6 @@ List-Id: linux-scsi@vger.kernel.org
 
 There is no problem to retry whenever we encounter a query that returns
 with and error.
-In the code, it's recommended to replace any call to
-
 
 >
 >
@@ -162,3 +160,12 @@ you are correct. will be fixed in V2
 >> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
 >> member of Code Aurora Forum, hosted by The Linux Foundation
 >
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Delete & Prev | Delete & Next
+Move to:
