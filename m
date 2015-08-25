@@ -1,50 +1,56 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v4 2/2] mpt2sas: Refcount fw_events and fix unsafe list
- usage
-Date: Tue, 25 Aug 2015 14:06:15 -0700
-Message-ID: <1440536775.23178.2.camel@haakon3.risingtidesystems.com>
-References: <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
-	 <5710d5e272a19c252db0171133a1092be00208f2.1439510240.git.calvinowens@fb.com>
+Subject: Re: [PATCH v4 0/2] Fixes for memory corruption in mpt2sas
+Date: Tue, 25 Aug 2015 14:21:24 -0700
+Message-ID: <1440537684.23178.7.camel@haakon3.risingtidesystems.com>
+References: <1438405334-1153698-1-git-send-email-calvinowens@fb.com>
+	 <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5710d5e272a19c252db0171133a1092be00208f2.1439510240.git.calvinowens@fb.com>
+In-Reply-To: <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Calvin Owens <calvinowens@fb.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@lst.de>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On Thu, 2015-08-13 at 18:48 -0700, Calvin Owens wrote:
-> The fw_event_work struct is concurrently referenced at shutdown, so
-> add a refcount to protect it, and refactor the code to use it.
+> Hello all,
 > 
-> Additionally, refactor _scsih_fw_event_cleanup_queue() such that it
-> no longer iterates over the list without holding the lock, since
-> _firmware_event_work() concurrently deletes items from the list.
+> This patchset attempts to address problems we've been having with
+> panics due to memory corruption from the mpt2sas driver.
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Calvin Owens <calvinowens@fb.com>
-> ---
-> Changes in v4: None
+> Thanks,
+> Calvin
 > 
-> Changes in v3:
-> 	* Add a break condition to the REMOVE_UNRESPONDING_DEVICES fw_event,
-> 	  which can loop over a sleep forever (5m+ at least) at unloading. I
-> 	  don't think anything prevented this before, but taking the fw_event
-> 	  object off the list at the top of _firmware_event_work() seems to have
-> 	  made it more likely to happen.
 > 
-> Changes in v2:
-> 	* Squished patches 4-6 into one patch
-> 	* Remove the fw_event from fw_event_list at the start of
-> 	  _firmware_event_work()
-> 	* Explicitly seperate fw_event_list removal from fw_event freeing
+> [PATCH v4 1/2] mpt2sas: Refcount sas_device objects and fix unsafe list
+> [PATCH v4 2/2] mpt2sas: Refcount fw_events and fix unsafe list usage
 > 
-> drivers/scsi/mpt2sas/mpt2sas_scsih.c | 112 ++++++++++++++++++++++++++++-------
->  1 file changed, 91 insertions(+), 21 deletions(-)
+> Total diffstat:
+>  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
+>  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 592 ++++++++++++++++++++++---------
+>  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
+>  3 files changed, 451 insertions(+), 175 deletions(-)
 > 
+> Diff showing changes v3 => v4:
+> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v3v4.patch
+> 
+> Diff showing changes v2 => v3:
+> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v2v3.patch
+> 
+> Diff showing changes v1 => v2:
+> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v1v2.patch
+> --
 
-Looks good.
+(Adding JEJB CC')
 
-Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+James, please considering pick this up for v4.3-rc1.
+
+Btw, I'm seeing the same type of issues on mpt3sas, and unless someone
+at Avago is already working on a similar patch series, I'll end up
+forward porting these to mpt3sas code.
+
+Thank you,
+
+--nab
