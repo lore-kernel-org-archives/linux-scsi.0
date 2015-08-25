@@ -1,48 +1,64 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] scsi_debug: fix failure to probe with scsi_level=1 or 2 due to NULL devip
-Date: Tue, 25 Aug 2015 15:47:54 -0400
-Message-ID: <1440532074-28321-1-git-send-email-emilne@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47874 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751854AbbHYTr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2015 15:47:57 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
+ check
+Date: Tue, 25 Aug 2015 15:52:51 -0400
+Message-ID: <1440532371.23183.81.camel@localhost.localdomain>
+References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
+	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+Reply-To: emilne@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+On Tue, 2015-07-28 at 16:54 +0300, Tomas Winkler wrote:
+> The function should never be called with cmnd NULL so
+> put a fat WARN there.
+> Fix also smatch wraning:
+> schedule_resp() warn: variable dereferenced before check 'cmnd'
+> 
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+> ---
+>  drivers/scsi/scsi_debug.c | 13 ++++++++++---
+>  1 file changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 3a70683cf9f9..faa4ddd8decf 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3941,13 +3941,20 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>  	unsigned long iflags;
+>  	int k, num_in_q, qdepth, inject;
+>  	struct sdebug_queued_cmd *sqcp = NULL;
+> -	struct scsi_device *sdp = cmnd->device;
+> +	struct scsi_device *sdp;
+> +
+> +	/* this should never happen */
+> +	if (WARN_ON(!cmnd))
+> +		return SCSI_MLQUEUE_HOST_BUSY;
+>  
+> -	if (NULL == cmnd || NULL == devip) {
+> -		pr_warn("called with NULL cmnd or devip pointer\n");
+> +	if (NULL == devip) {
+> +		pr_warn("called devip == NULL\n");
+>  		/* no particularly good error to report back */
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+>  	}
 
-commit cbf67842c3d9 ("scsi_debug: support scsi-mq, queues and locks")
-added a test for devip == NULL in schedule_resp which returned
-SCSI_MLQUEUE_HOST_BUSY.  Unfortunately, if scsi_level 1 or 2 is specified,
-devip will be NULL for the INQUIRY command for the next LUN above the
-configured value and it will be retried indefinitely with an error message.
-Fix this by returning the command in the same context if no devip exists.
+Please refer to the patch I just posted, we can't return _HOST_BUSY here
+if devip == NULL.  I posted a fix against the current "misc" branch as
+I don't see this patch applied, let me know if I need to update it.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_debug.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 30268bb..25f5cee1 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3944,8 +3944,11 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	struct sdebug_queued_cmd *sqcp = NULL;
- 	struct scsi_device *sdp = cmnd->device;
- 
--	if (NULL == cmnd || NULL == devip) {
--		pr_warn("%s: called with NULL cmnd or devip pointer\n",
-+	/* devip will be NULL when probing nonexistent LUNs w/o REPORT LUNS */
-+	if (NULL == devip)
-+		goto respond_in_thread;
-+	if (NULL == cmnd) {
-+		pr_warn("%s: called with NULL cmnd pointer\n",
- 			__func__);
- 		/* no particularly good error to report back */
- 		return SCSI_MLQUEUE_HOST_BUSY;
--- 
-2.1.0
-
+> +
+> +	sdp = cmnd->device;
+> +
+>  	if ((scsi_result) && (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
+>  		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
+>  			    __func__, scsi_result);
