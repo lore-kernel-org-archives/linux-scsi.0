@@ -1,56 +1,70 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] SCSI: DTC: Adding KERN_ facility level
-Date: Tue, 25 Aug 2015 11:53:53 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1508241518160.19365@nippy.intranet>
-References: <1435681756-5508-1-git-send-email-rudhreshj@cdac.in>
+Subject: Re: [PATCH] SCSI: DTC: Removed 0 initialization for statics
+Date: Tue, 25 Aug 2015 11:54:26 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1508251153090.5160@nippy.intranet>
+References: <1435517285-13411-1-git-send-email-rudhresh.jk@gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1435681756-5508-1-git-send-email-rudhreshj@cdac.in>
+In-Reply-To: <1435517285-13411-1-git-send-email-rudhresh.jk@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rudhresh Kumar J <rudhresh.jk@gmail.com>
-Cc: schmitzmic@gmail.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rudhresh Kumar J <rudhreshj@cdac.in>
+To: Rudhresh Kumar J <rudhreshj@cdac.in>
+Cc: schmitzmic@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-On Tue, 30 Jun 2015, Rudhresh Kumar J wrote:
+On Mon, 29 Jun 2015, Rudhresh wrote:
 
-> Fixed coding style issue by adding KERN_ facility level to some of
-> the printk functions.
+> Removed unneccessary initialization of zero to a static variable
 > 
-> Signed-off-by: Rudhresh Kumar J <rudhresh.jk@gmail.com>
+> Signed-off-by: Rudhresh Kumar J <rudhreshj@cdac.in>
 > ---
 >  drivers/scsi/dtc.c | 4 ++--
 >  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/dtc.c b/drivers/scsi/dtc.c
-> index 4c74c7b..a3a2a71 100644
+> index 4c74c7b..99164d6 100644
 > --- a/drivers/scsi/dtc.c
 > +++ b/drivers/scsi/dtc.c
-> @@ -156,7 +156,7 @@ static int __init dtc_setup(char *str)
+> @@ -150,7 +150,7 @@ static const struct signature {
 >  
->  	get_options(str, ARRAY_SIZE(ints), ints);
->  	if (ints[0] != 2)
-> -		printk("dtc_setup: usage dtc=address,irq\n");
-> +		printk(KERN_DEBUG "dtc_setup: usage dtc=address,irq\n");
-
-No, that is an error message that the user needs to see.
-
->  	else if (commandline_current < NO_OVERRIDES) {
->  		overrides[commandline_current].address = ints[1];
->  		overrides[commandline_current].irq = ints[2];
-> @@ -272,7 +272,7 @@ found:
->  		instance->irq = NO_IRQ;
->  #endif
->  #if defined(DTCDEBUG) && (DTCDEBUG & DTCDEBUG_INIT)
-> -		printk("scsi%d : irq = %d\n", instance->host_no, instance->irq);
-> +		printk(KERN_DEBUG "scsi%d : irq = %d\n", instance->host_no, instance->irq);
->  #endif
+>  static int __init dtc_setup(char *str)
+>  {
+> -	static int commandline_current = 0;
+> +	static int commandline_current;
+>  	int i;
+>  	int ints[10];
 >  
->  		++current_override;
+> @@ -188,7 +188,7 @@ __setup("dtc=", dtc_setup);
+>  
+>  static int __init dtc_detect(struct scsi_host_template * tpnt)
+>  {
+> -	static int current_override = 0, current_base = 0;
+> +	static int current_override, current_base;
+>  	struct Scsi_Host *instance;
+>  	unsigned int addr;
+>  	void __iomem *base;
 > 
 
-I have a better patch for this, which makes use of the dprintk macro to 
-replace {DTC,P,T}DEBUG_INIT with NDEBUG_INIT. Thanks anyway.
+This issue affects all four copies of this code in the NCR5380 drivers:
+
+drivers/scsi/t128.c:    static int commandline_current = 0;
+drivers/scsi/t128.c:    static int current_override = 0, current_base = 0;
+drivers/scsi/dtc.c:     static int commandline_current = 0;
+drivers/scsi/dtc.c:     static int current_override = 0, current_base = 0;
+drivers/scsi/g_NCR5380.c:       static int commandline_current = 0;
+drivers/scsi/g_NCR5380.c:       static int current_override = 0;
+drivers/scsi/pas16.c:    static int commandline_current = 0;
+drivers/scsi/pas16.c:    static int current_override = 0;
+drivers/scsi/pas16.c:    static unsigned short current_base = 0;
+
+And there are more instances of redundant initialization in pas16.c, 
+NCR5380.c and sun3_scsi.c.
+
+All of these drivers have the same maintainers, so I'd prefer a single 
+patch to fix this.
+
+You must address your patches to all of the interested parties (see 
+scripts/get_maintainer.pl).
 
 -- 
