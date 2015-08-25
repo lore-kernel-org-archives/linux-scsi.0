@@ -1,40 +1,50 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
- check
-Date: Tue, 25 Aug 2015 21:03:55 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
-References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
- <1440532371.23183.81.camel@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v4 2/2] mpt2sas: Refcount fw_events and fix unsafe list
+ usage
+Date: Tue, 25 Aug 2015 14:06:15 -0700
+Message-ID: <1440536775.23178.2.camel@haakon3.risingtidesystems.com>
+References: <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
+	 <5710d5e272a19c252db0171133a1092be00208f2.1439510240.git.calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64903 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753234AbbHYVEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2015 17:04:04 -0400
-In-Reply-To: <1440532371.23183.81.camel@localhost.localdomain>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5710d5e272a19c252db0171133a1092be00208f2.1439510240.git.calvinowens@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-DQo+ID4gKwkvKiB0aGlzIHNob3VsZCBuZXZlciBoYXBwZW4gKi8NCj4gPiArCWlmIChXQVJOX09O
-KCFjbW5kKSkNCj4gPiArCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsNCj4gPg0KPiA+
-IC0JaWYgKE5VTEwgPT0gY21uZCB8fCBOVUxMID09IGRldmlwKSB7DQo+ID4gLQkJcHJfd2Fybigi
-Y2FsbGVkIHdpdGggTlVMTCBjbW5kIG9yIGRldmlwIHBvaW50ZXJcbiIpOw0KPiA+ICsJaWYgKE5V
-TEwgPT0gZGV2aXApIHsNCj4gPiArCQlwcl93YXJuKCJjYWxsZWQgZGV2aXAgPT0gTlVMTFxuIik7
-DQo+ID4gIAkJLyogbm8gcGFydGljdWxhcmx5IGdvb2QgZXJyb3IgdG8gcmVwb3J0IGJhY2sgKi8N
-Cj4gPiAgCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsNCj4gPiAgCX0NCj4gDQo+IFBs
-ZWFzZSByZWZlciB0byB0aGUgcGF0Y2ggSSBqdXN0IHBvc3RlZCwgd2UgY2FuJ3QgcmV0dXJuIF9I
-T1NUX0JVU1kgaGVyZQ0KPiBpZiBkZXZpcCA9PSBOVUxMLiAgSSBwb3N0ZWQgYSBmaXggYWdhaW5z
-dCB0aGUgY3VycmVudCAibWlzYyIgYnJhbmNoIGFzDQo+IEkgZG9uJ3Qgc2VlIHRoaXMgcGF0Y2gg
-YXBwbGllZCwgbGV0IG1lIGtub3cgaWYgSSBuZWVkIHRvIHVwZGF0ZSBpdC4NCg0KDQpJJ20ganVz
-dCBub3Qgc3VyZSB3aHkgdGhlIHBhdGNoZXMgYXJlIG5vdCBtZXJnZWQgb3IgZXZlbiByZWplY3Rl
-ZC4NCkknbSBzdWJtaXR0aW5nIHBhdGNoZXMgdG8gdGhlIExpbnV4IGtlcm5lbCBmb3IgbW9yZSB0
-aGFuIDEwIHllYXJzIHRvIHZhcmlvdXMgdHJlZXMgYW5kICBJIGNhbiBhZ3JlZSB0aGF0IHRoZXNl
-IGFyZSBub3Qgc29tZSAgdXJnZW50IGZpeGVzLCBidXQgIHRoaXMgaXMgdGhlIGZpcnN0IHRpbWUg
-bXkgZWZmb3J0IGlzIGlnbm9yZWQgZm9yIHN1Y2ggbG9uZyB0aW1lIGJ5IHRoZSBtYWludGFpbmVy
-LiANCg0KVGhhbmtzDQpUb21hcw0KDQo=
+On Thu, 2015-08-13 at 18:48 -0700, Calvin Owens wrote:
+> The fw_event_work struct is concurrently referenced at shutdown, so
+> add a refcount to protect it, and refactor the code to use it.
+> 
+> Additionally, refactor _scsih_fw_event_cleanup_queue() such that it
+> no longer iterates over the list without holding the lock, since
+> _firmware_event_work() concurrently deletes items from the list.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
+> ---
+> Changes in v4: None
+> 
+> Changes in v3:
+> 	* Add a break condition to the REMOVE_UNRESPONDING_DEVICES fw_event,
+> 	  which can loop over a sleep forever (5m+ at least) at unloading. I
+> 	  don't think anything prevented this before, but taking the fw_event
+> 	  object off the list at the top of _firmware_event_work() seems to have
+> 	  made it more likely to happen.
+> 
+> Changes in v2:
+> 	* Squished patches 4-6 into one patch
+> 	* Remove the fw_event from fw_event_list at the start of
+> 	  _firmware_event_work()
+> 	* Explicitly seperate fw_event_list removal from fw_event freeing
+> 
+> drivers/scsi/mpt2sas/mpt2sas_scsih.c | 112 ++++++++++++++++++++++++++++-------
+>  1 file changed, 91 insertions(+), 21 deletions(-)
+> 
+
+Looks good.
+
+Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
