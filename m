@@ -1,60 +1,43 @@
 From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 2/8] scsi: ufs-qcom: fix compilation warning if
- compiled as a module
-Date: Tue, 25 Aug 2015 11:53:11 -0000
-Message-ID: <cc0cd13785d065bdabd48466d61463d6.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v3 3/8] scsi: ufs-qcom: update configuration option of
+ SCSI_UFS_QCOM component
+Date: Tue, 25 Aug 2015 11:53:23 -0000
+Message-ID: <13f18d4cdc341417330b9eaf4fabac77.squirrel@www.codeaurora.org>
 References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
-    <1440335381-5122-3-git-send-email-ygardi@codeaurora.org>
+    <1440335381-5122-4-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440335381-5122-3-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1440335381-5122-4-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Akinobu Mita <akinobu.mita@gmail.com>
 
-> This change fixes a compilation warning that happens if SCSI_UFS_QCOM
-> is compiled as a module.
-> Also this patch fixes an error happens when insmod the module:
-> "ufs_qcom: module license 'unspecified' taints kernel."
+> This change is required in order to be able to build the component
+> as a module.
 >
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufs-qcom.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  drivers/scsi/ufs/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 4cdffa4..6c23bbf 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -917,12 +917,15 @@ out:
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index e945383..5f45307 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -72,7 +72,7 @@ config SCSI_UFSHCD_PLATFORM
+>  	  If unsure, say N.
 >
->  #define	ANDROID_BOOT_DEV_MAX	30
->  static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
-> -static int get_android_boot_dev(char *str)
-> +
-> +#ifndef MODULE
-> +static int __init get_android_boot_dev(char *str)
->  {
->  	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
->  	return 1;
->  }
->  __setup("androidboot.bootdevice=", get_android_boot_dev);
-> +#endif
->
->  /**
->   * ufs_qcom_init - bind phy with controller
-> @@ -1047,3 +1050,5 @@ static const struct ufs_hba_variant_ops
-> ufs_hba_qcom_vops = {
->  	.resume			= ufs_qcom_resume,
->  };
->  EXPORT_SYMBOL(ufs_hba_qcom_vops);
-> +
-> +MODULE_LICENSE("GPL v2");
+>  config SCSI_UFS_QCOM
+> -	bool "QCOM specific hooks to UFS controller platform driver"
+> +	tristate "QCOM specific hooks to UFS controller platform driver"
+>  	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+>  	select PHY_QCOM_UFS
+>  	help
 > --
 > 1.8.5.2
 >
