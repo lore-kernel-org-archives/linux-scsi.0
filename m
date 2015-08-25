@@ -1,69 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v4 1/2] mpt2sas: Refcount sas_device objects and fix
- unsafe list usage
-Date: Tue, 25 Aug 2015 14:03:27 -0700
-Message-ID: <1440536607.23178.1.camel@haakon3.risingtidesystems.com>
-References: <1438405334-1153698-1-git-send-email-calvinowens@fb.com>
-	 <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
-	 <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
+ check
+Date: Tue, 25 Aug 2015 21:03:55 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
+References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
+	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+ <1440532371.23183.81.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:64903 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753234AbbHYVEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2015 17:04:04 -0400
+In-Reply-To: <1440532371.23183.81.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "emilne@redhat.com" <emilne@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-Hi Calvin,
-
-On Thu, 2015-08-13 at 18:48 -0700, Calvin Owens wrote:
-> These objects can be referenced concurrently throughout the driver, we
-> need a way to make sure threads can't delete them out from under each
-> other. This patch adds the refcount, and refactors the code to use it.
-> 
-> Additionally, we cannot iterate over the sas_device_list without
-> holding the lock, or we risk corrupting random memory if items are
-> added or deleted as we iterate. This patch refactors _scsih_probe_sas()
-> to use the sas_device_list in a safe way.
-> 
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Joe Lawrence <joe.lawrence@stratus.com>
-> Signed-off-by: Calvin Owens <calvinowens@fb.com>
-> ---
-> Changes in v4:
-> 	* Fix lack of put() in non-SATA case in _scsih_change_queue_depth()
-> 	* Fix lack of put() in the non-error case in _scsih_check_device()
-> 	* Add missing put() at bottom of _scsih_add_device()
-> 	* Add put for ->hostdata pointer in _scsih_target_destroy() for the
-> 	  get() in _scsih_target_alloc()
-> 
-> Changes in v3:
-> 	* Drop the sas_device_lock while enabling devices, and leave the
-> 	  sas_device object on the list, since it may need to be looked up there
-> 	  while it is being enabled.
-> 	* Drop put() in _scsih_add_device(), because the ->hostdata now keeps a
-> 	  reference (this was an oversight in v2).
-> 	* Be consistent about calling sas_device_put() while holding the
-> 	  sas_device_lock where feasible.
-> 	* Take and assert_spin_locked() on the sas_device_lock from the newly
-> 	  added __get_sdev_from_target(), add wrapper similar to other lookups
-> 	  for callers which do not explicitly take the lock.
-> 
-> Changes in v2:
-> 	* Squished patches 1-3 into this one
-> 	* s/BUG_ON(!spin_is_locked/assert_spin_locked/g
-> 	* Store a pointer to the sas_device object in ->hostdata, to eliminate
-> 	  the need for several lookups on the lists.
-> 
->  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
->  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 480 +++++++++++++++++++++----------
->  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
->  3 files changed, 360 insertions(+), 154 deletions(-)
-> 
-
-Looks good.
-
-Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+DQo+ID4gKwkvKiB0aGlzIHNob3VsZCBuZXZlciBoYXBwZW4gKi8NCj4gPiArCWlmIChXQVJOX09O
+KCFjbW5kKSkNCj4gPiArCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsNCj4gPg0KPiA+
+IC0JaWYgKE5VTEwgPT0gY21uZCB8fCBOVUxMID09IGRldmlwKSB7DQo+ID4gLQkJcHJfd2Fybigi
+Y2FsbGVkIHdpdGggTlVMTCBjbW5kIG9yIGRldmlwIHBvaW50ZXJcbiIpOw0KPiA+ICsJaWYgKE5V
+TEwgPT0gZGV2aXApIHsNCj4gPiArCQlwcl93YXJuKCJjYWxsZWQgZGV2aXAgPT0gTlVMTFxuIik7
+DQo+ID4gIAkJLyogbm8gcGFydGljdWxhcmx5IGdvb2QgZXJyb3IgdG8gcmVwb3J0IGJhY2sgKi8N
+Cj4gPiAgCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsNCj4gPiAgCX0NCj4gDQo+IFBs
+ZWFzZSByZWZlciB0byB0aGUgcGF0Y2ggSSBqdXN0IHBvc3RlZCwgd2UgY2FuJ3QgcmV0dXJuIF9I
+T1NUX0JVU1kgaGVyZQ0KPiBpZiBkZXZpcCA9PSBOVUxMLiAgSSBwb3N0ZWQgYSBmaXggYWdhaW5z
+dCB0aGUgY3VycmVudCAibWlzYyIgYnJhbmNoIGFzDQo+IEkgZG9uJ3Qgc2VlIHRoaXMgcGF0Y2gg
+YXBwbGllZCwgbGV0IG1lIGtub3cgaWYgSSBuZWVkIHRvIHVwZGF0ZSBpdC4NCg0KDQpJJ20ganVz
+dCBub3Qgc3VyZSB3aHkgdGhlIHBhdGNoZXMgYXJlIG5vdCBtZXJnZWQgb3IgZXZlbiByZWplY3Rl
+ZC4NCkknbSBzdWJtaXR0aW5nIHBhdGNoZXMgdG8gdGhlIExpbnV4IGtlcm5lbCBmb3IgbW9yZSB0
+aGFuIDEwIHllYXJzIHRvIHZhcmlvdXMgdHJlZXMgYW5kICBJIGNhbiBhZ3JlZSB0aGF0IHRoZXNl
+IGFyZSBub3Qgc29tZSAgdXJnZW50IGZpeGVzLCBidXQgIHRoaXMgaXMgdGhlIGZpcnN0IHRpbWUg
+bXkgZWZmb3J0IGlzIGlnbm9yZWQgZm9yIHN1Y2ggbG9uZyB0aW1lIGJ5IHRoZSBtYWludGFpbmVy
+LiANCg0KVGhhbmtzDQpUb21hcw0KDQo=
