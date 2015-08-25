@@ -1,64 +1,69 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
- check
-Date: Tue, 25 Aug 2015 15:52:51 -0400
-Message-ID: <1440532371.23183.81.camel@localhost.localdomain>
-References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
-Reply-To: emilne@redhat.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v4 1/2] mpt2sas: Refcount sas_device objects and fix
+ unsafe list usage
+Date: Tue, 25 Aug 2015 14:03:27 -0700
+Message-ID: <1440536607.23178.1.camel@haakon3.risingtidesystems.com>
+References: <1438405334-1153698-1-git-send-email-calvinowens@fb.com>
+	 <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
+	 <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <c4742680984986864719f36e691883815e6b5d55.1439510240.git.calvinowens@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+To: Calvin Owens <calvinowens@fb.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>, Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2015-07-28 at 16:54 +0300, Tomas Winkler wrote:
-> The function should never be called with cmnd NULL so
-> put a fat WARN there.
-> Fix also smatch wraning:
-> schedule_resp() warn: variable dereferenced before check 'cmnd'
+Hi Calvin,
+
+On Thu, 2015-08-13 at 18:48 -0700, Calvin Owens wrote:
+> These objects can be referenced concurrently throughout the driver, we
+> need a way to make sure threads can't delete them out from under each
+> other. This patch adds the refcount, and refactors the code to use it.
 > 
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+> Additionally, we cannot iterate over the sas_device_list without
+> holding the lock, or we risk corrupting random memory if items are
+> added or deleted as we iterate. This patch refactors _scsih_probe_sas()
+> to use the sas_device_list in a safe way.
+> 
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Joe Lawrence <joe.lawrence@stratus.com>
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
 > ---
->  drivers/scsi/scsi_debug.c | 13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
+> Changes in v4:
+> 	* Fix lack of put() in non-SATA case in _scsih_change_queue_depth()
+> 	* Fix lack of put() in the non-error case in _scsih_check_device()
+> 	* Add missing put() at bottom of _scsih_add_device()
+> 	* Add put for ->hostdata pointer in _scsih_target_destroy() for the
+> 	  get() in _scsih_target_alloc()
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 3a70683cf9f9..faa4ddd8decf 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3941,13 +3941,20 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
->  	unsigned long iflags;
->  	int k, num_in_q, qdepth, inject;
->  	struct sdebug_queued_cmd *sqcp = NULL;
-> -	struct scsi_device *sdp = cmnd->device;
-> +	struct scsi_device *sdp;
-> +
-> +	/* this should never happen */
-> +	if (WARN_ON(!cmnd))
-> +		return SCSI_MLQUEUE_HOST_BUSY;
->  
-> -	if (NULL == cmnd || NULL == devip) {
-> -		pr_warn("called with NULL cmnd or devip pointer\n");
-> +	if (NULL == devip) {
-> +		pr_warn("called devip == NULL\n");
->  		/* no particularly good error to report back */
->  		return SCSI_MLQUEUE_HOST_BUSY;
->  	}
+> Changes in v3:
+> 	* Drop the sas_device_lock while enabling devices, and leave the
+> 	  sas_device object on the list, since it may need to be looked up there
+> 	  while it is being enabled.
+> 	* Drop put() in _scsih_add_device(), because the ->hostdata now keeps a
+> 	  reference (this was an oversight in v2).
+> 	* Be consistent about calling sas_device_put() while holding the
+> 	  sas_device_lock where feasible.
+> 	* Take and assert_spin_locked() on the sas_device_lock from the newly
+> 	  added __get_sdev_from_target(), add wrapper similar to other lookups
+> 	  for callers which do not explicitly take the lock.
+> 
+> Changes in v2:
+> 	* Squished patches 1-3 into this one
+> 	* s/BUG_ON(!spin_is_locked/assert_spin_locked/g
+> 	* Store a pointer to the sas_device object in ->hostdata, to eliminate
+> 	  the need for several lookups on the lists.
+> 
+>  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
+>  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 480 +++++++++++++++++++++----------
+>  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
+>  3 files changed, 360 insertions(+), 154 deletions(-)
+> 
 
-Please refer to the patch I just posted, we can't return _HOST_BUSY here
-if devip == NULL.  I posted a fix against the current "misc" branch as
-I don't see this patch applied, let me know if I need to update it.
+Looks good.
 
-> +
-> +	sdp = cmnd->device;
-> +
->  	if ((scsi_result) && (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
->  		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
->  			    __func__, scsi_result);
+Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
