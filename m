@@ -1,21 +1,21 @@
 From: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Subject: RE: [PATCH V6 05/10] [SCSI] aacraid: Tune response path if
- IsFastPath bit set
-Date: Tue, 25 Aug 2015 07:07:02 +0000
-Message-ID: <13272BDD18A5F44CB23C497D29A37252DAB0F7AD@BBYEXM02.pmc-sierra.internal>
+Subject: RE: [PATCH V6 06/10] [SCSI] aacraid: Reset irq affinity hints
+ before releasing irq
+Date: Tue, 25 Aug 2015 07:07:18 +0000
+Message-ID: <13272BDD18A5F44CB23C497D29A37252DAB0F7BB@BBYEXM02.pmc-sierra.internal>
 References: <1439272701-15344-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1439272701-15344-6-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <E4E5FF3C42893646A5934D219F9C8A514CA3A4F5@BBYEXM02.pmc-sierra.internal>
+ <1439272701-15344-7-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <E4E5FF3C42893646A5934D219F9C8A514CA3A502@BBYEXM02.pmc-sierra.internal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42379 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42412 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750768AbbHYHHE convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1753361AbbHYHHT convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2015 03:07:04 -0400
-In-Reply-To: <E4E5FF3C42893646A5934D219F9C8A514CA3A4F5@BBYEXM02.pmc-sierra.internal>
+	Tue, 25 Aug 2015 03:07:19 -0400
+In-Reply-To: <E4E5FF3C42893646A5934D219F9C8A514CA3A502@BBYEXM02.pmc-sierra.internal>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -27,10 +27,10 @@ Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
 
 -----Original Message-----
 From: Karthikeya Sunkesula 
-Sent: Tuesday, August 25, 2015 11:58 AM
+Sent: Tuesday, August 25, 2015 11:59 AM
 To: Mahesh Rajashekhara; Tomas Henzl; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
 Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Murthy Bhat
-Subject: RE: [PATCH V6 05/10] [SCSI] aacraid: Tune response path if IsFastPath bit set
+Subject: RE: [PATCH V6 06/10] [SCSI] aacraid: Reset irq affinity hints before releasing irq
 
 Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
 
@@ -40,319 +40,233 @@ From: Mahesh Rajashekhara
 Sent: Tuesday, August 11, 2015 11:28 AM
 To: Tomas Henzl; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
 Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Mahesh Rajashekhara
-Subject: [PATCH V6 05/10] [SCSI] aacraid: Tune response path if IsFastPath bit set
+Subject: [PATCH V6 06/10] [SCSI] aacraid: Reset irq affinity hints before releasing irq
 
 Description:
-	If 'IsFastPath' bit is set, then response path assumes no error
-	and skips error check.
+	Reset irq affinity hints before releasing IRQ
+	Removed duplicate code of IRQ acquire/release
 
 Changes from V2:
 None
 
 Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 ---
- drivers/scsi/aacraid/aachba.c | 259 ++++++++++++++++++++++--------------------
- 1 file changed, 137 insertions(+), 122 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |   2 +
+ drivers/scsi/aacraid/commsup.c | 113 ++++++++++++++++++++++++++++++-----------
+ drivers/scsi/aacraid/src.c     |  48 ++---------------
+ 3 files changed, 88 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c index 05f2a02..e4c2437 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2977,11 +2977,16 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
- 		return;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index e54f597..7b95227 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2110,6 +2110,8 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
+ #define AAC_OWNER_ERROR_HANDLER	0x103
+ #define AAC_OWNER_FIRMWARE	0x106
  
- 	BUG_ON(fibptr == NULL);
--
- 	dev = fibptr->dev;
++int aac_acquire_irq(struct aac_dev *dev); void aac_free_irq(struct 
++aac_dev *dev);
+ const char *aac_driverinfo(struct Scsi_Host *);  struct fib *aac_fib_alloc(struct aac_dev *dev);  int aac_fib_setup(struct aac_dev *dev); diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c index 4da5749..a1f90fe 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1270,13 +1270,12 @@ retry_next:
+ static int _aac_reset_adapter(struct aac_dev *aac, int forced)  {
+ 	int index, quirks;
+-	int retval, i;
++	int retval;
+ 	struct Scsi_Host *host;
+ 	struct scsi_device *dev;
+ 	struct scsi_cmnd *command;
+ 	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+-	int cpu;
  
--	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
-+	scsi_dma_unmap(scsicmd);
- 
-+	/* expose physical device if expose_physicald flag is on */
-+	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
-+	  && expose_physicals > 0)
-+		aac_expose_phy_device(scsicmd);
-+
-+	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
- 	scsicmd->sense_buffer[0] = '\0';  /* Initialize sense valid flag to false */
- 
- 	if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) { @@ -2994,147 +2999,157 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
- 		 */
- 		scsi_set_resid(scsicmd, scsi_bufflen(scsicmd)
- 				   - le32_to_cpu(srbreply->data_xfer_length));
--	}
--
--	scsi_dma_unmap(scsicmd);
--
--	/* expose physical device if expose_physicald flag is on */
--	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
--	  && expose_physicals > 0)
--		aac_expose_phy_device(scsicmd);
-+		/*
-+		 * First check the fib status
-+		 */
- 
--	/*
--	 * First check the fib status
--	 */
-+		if (le32_to_cpu(srbreply->status) != ST_OK) {
-+			int len;
- 
--	if (le32_to_cpu(srbreply->status) != ST_OK){
--		int len;
--		printk(KERN_WARNING "aac_srb_callback: srb failed, status = %d\n", le32_to_cpu(srbreply->status));
--		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
--			    SCSI_SENSE_BUFFERSIZE);
--		scsicmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_CHECK_CONDITION;
--		memcpy(scsicmd->sense_buffer, srbreply->sense_data, len);
--	}
-+			printk(KERN_WARNING "aac_srb_callback: srb failed, status = %d\n", le32_to_cpu(srbreply->status));
-+			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
-+				    SCSI_SENSE_BUFFERSIZE);
-+			scsicmd->result = DID_ERROR << 16
-+						| COMMAND_COMPLETE << 8
-+						| SAM_STAT_CHECK_CONDITION;
-+			memcpy(scsicmd->sense_buffer,
-+					srbreply->sense_data, len);
-+		}
- 
--	/*
--	 * Next check the srb status
--	 */
--	switch( (le32_to_cpu(srbreply->srb_status))&0x3f){
--	case SRB_STATUS_ERROR_RECOVERY:
--	case SRB_STATUS_PENDING:
--	case SRB_STATUS_SUCCESS:
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
--		break;
--	case SRB_STATUS_DATA_OVERRUN:
--		switch(scsicmd->cmnd[0]){
--		case  READ_6:
--		case  WRITE_6:
--		case  READ_10:
--		case  WRITE_10:
--		case  READ_12:
--		case  WRITE_12:
--		case  READ_16:
--		case  WRITE_16:
--			if (le32_to_cpu(srbreply->data_xfer_length) < scsicmd->underflow) {
--				printk(KERN_WARNING"aacraid: SCSI CMD underflow\n");
--			} else {
--				printk(KERN_WARNING"aacraid: SCSI CMD Data Overrun\n");
-+		/*
-+		 * Next check the srb status
-+		 */
-+		switch ((le32_to_cpu(srbreply->srb_status))&0x3f) {
-+		case SRB_STATUS_ERROR_RECOVERY:
-+		case SRB_STATUS_PENDING:
-+		case SRB_STATUS_SUCCESS:
-+			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+			break;
-+		case SRB_STATUS_DATA_OVERRUN:
-+			switch (scsicmd->cmnd[0]) {
-+			case  READ_6:
-+			case  WRITE_6:
-+			case  READ_10:
-+			case  WRITE_10:
-+			case  READ_12:
-+			case  WRITE_12:
-+			case  READ_16:
-+			case  WRITE_16:
-+				if (le32_to_cpu(srbreply->data_xfer_length)
-+							< scsicmd->underflow)
-+					printk(KERN_WARNING"aacraid: SCSI CMD underflow\n");
-+				else
-+					printk(KERN_WARNING"aacraid: SCSI CMD Data Overrun\n");
-+				scsicmd->result = DID_ERROR << 16
-+							| COMMAND_COMPLETE << 8;
-+				break;
-+			case INQUIRY: {
-+				scsicmd->result = DID_OK << 16
-+							| COMMAND_COMPLETE << 8;
-+				break;
-+			}
-+			default:
-+				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+				break;
- 			}
--			scsicmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
- 			break;
--		case INQUIRY: {
--			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+		case SRB_STATUS_ABORTED:
-+			scsicmd->result = DID_ABORT << 16 | ABORT << 8;
- 			break;
--		}
--		default:
--			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-+		case SRB_STATUS_ABORT_FAILED:
-+			/*
-+			 * Not sure about this one - but assuming the
-+			 * hba was trying to abort for some reason
-+			 */
-+			scsicmd->result = DID_ERROR << 16 | ABORT << 8;
-+			break;
-+		case SRB_STATUS_PARITY_ERROR:
-+			scsicmd->result = DID_PARITY << 16
-+						| MSG_PARITY_ERROR << 8;
-+			break;
-+		case SRB_STATUS_NO_DEVICE:
-+		case SRB_STATUS_INVALID_PATH_ID:
-+		case SRB_STATUS_INVALID_TARGET_ID:
-+		case SRB_STATUS_INVALID_LUN:
-+		case SRB_STATUS_SELECTION_TIMEOUT:
-+			scsicmd->result = DID_NO_CONNECT << 16
-+						| COMMAND_COMPLETE << 8;
- 			break;
--		}
--		break;
--	case SRB_STATUS_ABORTED:
--		scsicmd->result = DID_ABORT << 16 | ABORT << 8;
--		break;
--	case SRB_STATUS_ABORT_FAILED:
--		// Not sure about this one - but assuming the hba was trying to abort for some reason
--		scsicmd->result = DID_ERROR << 16 | ABORT << 8;
--		break;
--	case SRB_STATUS_PARITY_ERROR:
--		scsicmd->result = DID_PARITY << 16 | MSG_PARITY_ERROR << 8;
--		break;
--	case SRB_STATUS_NO_DEVICE:
--	case SRB_STATUS_INVALID_PATH_ID:
--	case SRB_STATUS_INVALID_TARGET_ID:
--	case SRB_STATUS_INVALID_LUN:
--	case SRB_STATUS_SELECTION_TIMEOUT:
--		scsicmd->result = DID_NO_CONNECT << 16 | COMMAND_COMPLETE << 8;
--		break;
- 
--	case SRB_STATUS_COMMAND_TIMEOUT:
--	case SRB_STATUS_TIMEOUT:
--		scsicmd->result = DID_TIME_OUT << 16 | COMMAND_COMPLETE << 8;
--		break;
-+		case SRB_STATUS_COMMAND_TIMEOUT:
-+		case SRB_STATUS_TIMEOUT:
-+			scsicmd->result = DID_TIME_OUT << 16
-+						| COMMAND_COMPLETE << 8;
-+			break;
- 
--	case SRB_STATUS_BUSY:
--		scsicmd->result = DID_BUS_BUSY << 16 | COMMAND_COMPLETE << 8;
--		break;
-+		case SRB_STATUS_BUSY:
-+			scsicmd->result = DID_BUS_BUSY << 16
-+						| COMMAND_COMPLETE << 8;
-+			break;
- 
--	case SRB_STATUS_BUS_RESET:
--		scsicmd->result = DID_RESET << 16 | COMMAND_COMPLETE << 8;
--		break;
-+		case SRB_STATUS_BUS_RESET:
-+			scsicmd->result = DID_RESET << 16
-+						| COMMAND_COMPLETE << 8;
-+			break;
- 
--	case SRB_STATUS_MESSAGE_REJECTED:
--		scsicmd->result = DID_ERROR << 16 | MESSAGE_REJECT << 8;
--		break;
--	case SRB_STATUS_REQUEST_FLUSHED:
--	case SRB_STATUS_ERROR:
--	case SRB_STATUS_INVALID_REQUEST:
--	case SRB_STATUS_REQUEST_SENSE_FAILED:
--	case SRB_STATUS_NO_HBA:
--	case SRB_STATUS_UNEXPECTED_BUS_FREE:
--	case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
--	case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
--	case SRB_STATUS_DELAYED_RETRY:
--	case SRB_STATUS_BAD_FUNCTION:
--	case SRB_STATUS_NOT_STARTED:
--	case SRB_STATUS_NOT_IN_USE:
--	case SRB_STATUS_FORCE_ABORT:
--	case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
--	default:
-+		case SRB_STATUS_MESSAGE_REJECTED:
-+			scsicmd->result = DID_ERROR << 16
-+						| MESSAGE_REJECT << 8;
-+			break;
-+		case SRB_STATUS_REQUEST_FLUSHED:
-+		case SRB_STATUS_ERROR:
-+		case SRB_STATUS_INVALID_REQUEST:
-+		case SRB_STATUS_REQUEST_SENSE_FAILED:
-+		case SRB_STATUS_NO_HBA:
-+		case SRB_STATUS_UNEXPECTED_BUS_FREE:
-+		case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
-+		case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
-+		case SRB_STATUS_DELAYED_RETRY:
-+		case SRB_STATUS_BAD_FUNCTION:
-+		case SRB_STATUS_NOT_STARTED:
-+		case SRB_STATUS_NOT_IN_USE:
-+		case SRB_STATUS_FORCE_ABORT:
-+		case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
-+		default:
- #ifdef AAC_DETAILED_STATUS_INFO
--		printk("aacraid: SRB ERROR(%u) %s scsi cmd 0x%x - scsi status 0x%x\n",
--			le32_to_cpu(srbreply->srb_status) & 0x3F,
--			aac_get_status_string(
--				le32_to_cpu(srbreply->srb_status) & 0x3F),
--			scsicmd->cmnd[0],
--			le32_to_cpu(srbreply->scsi_status));
-+			printk(KERN_INFO "aacraid: SRB ERROR(%u) %s scsi cmd 0x%x - scsi status 0x%x\n",
-+				le32_to_cpu(srbreply->srb_status) & 0x3F,
-+				aac_get_status_string(
-+					le32_to_cpu(srbreply->srb_status) & 0x3F),
-+				scsicmd->cmnd[0],
-+				le32_to_cpu(srbreply->scsi_status));
- #endif
--		if ((scsicmd->cmnd[0] == ATA_12)
--		  || (scsicmd->cmnd[0] == ATA_16)) {
--			if (scsicmd->cmnd[2] & (0x01 << 5)) {
--				scsicmd->result = DID_OK << 16
--						| COMMAND_COMPLETE << 8;
-+			if ((scsicmd->cmnd[0] == ATA_12)
-+				|| (scsicmd->cmnd[0] == ATA_16)) {
-+					if (scsicmd->cmnd[2] & (0x01 << 5)) {
-+						scsicmd->result = DID_OK << 16
-+							| COMMAND_COMPLETE << 8;
- 				break;
-+				} else {
-+					scsicmd->result = DID_ERROR << 16
-+						| COMMAND_COMPLETE << 8;
-+					break;
-+				}
- 			} else {
- 				scsicmd->result = DID_ERROR << 16
--						| COMMAND_COMPLETE << 8;
-+					| COMMAND_COMPLETE << 8;
- 				break;
- 			}
--		} else {
--			scsicmd->result = DID_ERROR << 16
--					| COMMAND_COMPLETE << 8;
--			break;
- 		}
--	}
--	if (le32_to_cpu(srbreply->scsi_status) == SAM_STAT_CHECK_CONDITION) {
--		int len;
--		scsicmd->result |= SAM_STAT_CHECK_CONDITION;
--		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
--			    SCSI_SENSE_BUFFERSIZE);
-+		if (le32_to_cpu(srbreply->scsi_status)
-+				== SAM_STAT_CHECK_CONDITION) {
-+			int len;
-+
-+			scsicmd->result |= SAM_STAT_CHECK_CONDITION;
-+			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
-+				    SCSI_SENSE_BUFFERSIZE);
- #ifdef AAC_DETAILED_STATUS_INFO
--		printk(KERN_WARNING "aac_srb_callback: check condition, status = %d len=%d\n",
--					le32_to_cpu(srbreply->status), len);
-+			printk(KERN_WARNING "aac_srb_callback: check condition, status = %d len=%d\n",
-+						le32_to_cpu(srbreply->status), len);
- #endif
--		memcpy(scsicmd->sense_buffer, srbreply->sense_data, len);
-+			memcpy(scsicmd->sense_buffer,
-+					srbreply->sense_data, len);
-+		}
- 	}
  	/*
- 	 * OR in the scsi status (already shifted up a bit)
+ 	 * Assumptions:
+@@ -1339,35 +1338,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced)
+ 	aac->comm_phys = 0;
+ 	kfree(aac->queues);
+ 	aac->queues = NULL;
+-	cpu = cpumask_first(cpu_online_mask);
+-	if (aac->pdev->device == PMC_DEVICE_S6 ||
+-	    aac->pdev->device == PMC_DEVICE_S7 ||
+-	    aac->pdev->device == PMC_DEVICE_S8 ||
+-	    aac->pdev->device == PMC_DEVICE_S9) {
+-		if (aac->max_msix > 1) {
+-			for (i = 0; i < aac->max_msix; i++) {
+-				if (irq_set_affinity_hint(
+-				    aac->msixentry[i].vector,
+-				    NULL)) {
+-					printk(KERN_ERR "%s%d: Failed to reset IRQ affinity for cpu %d\n",
+-						aac->name,
+-						aac->id,
+-						cpu);
+-				}
+-				cpu = cpumask_next(cpu,
+-						cpu_online_mask);
+-				free_irq(aac->msixentry[i].vector,
+-					 &(aac->aac_msix[i]));
+-			}
+-			pci_disable_msix(aac->pdev);
+-		} else {
+-			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
+-		}
+-	} else {
+-		free_irq(aac->pdev->irq, aac);
+-	}
+-	if (aac->msi)
+-		pci_disable_msi(aac->pdev);
++	aac_free_irq(aac);
+ 	kfree(aac->fsa_dev);
+ 	aac->fsa_dev = NULL;
+ 	quirks = aac_get_driver_ident(index)->quirks;
+@@ -1978,3 +1949,83 @@ int aac_command_thread(void *data)
+ 	dev->aif_thread = 0;
+ 	return 0;
+ }
++
++int aac_acquire_irq(struct aac_dev *dev) {
++	int i;
++	int j;
++	int ret = 0;
++	int cpu;
++
++	cpu = cpumask_first(cpu_online_mask);
++	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
++		for (i = 0; i < dev->max_msix; i++) {
++			dev->aac_msix[i].vector_no = i;
++			dev->aac_msix[i].dev = dev;
++			if (request_irq(dev->msixentry[i].vector,
++					dev->a_ops.adapter_intr,
++					0, "aacraid", &(dev->aac_msix[i]))) {
++				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
++						dev->name, dev->id, i);
++				for (j = 0 ; j < i ; j++)
++					free_irq(dev->msixentry[j].vector,
++						 &(dev->aac_msix[j]));
++				pci_disable_msix(dev->pdev);
++				ret = -1;
++			}
++			if (irq_set_affinity_hint(dev->msixentry[i].vector,
++							get_cpu_mask(cpu))) {
++				printk(KERN_ERR "%s%d: Failed to set IRQ affinity for cpu %d\n",
++					    dev->name, dev->id, cpu);
++			}
++			cpu = cpumask_next(cpu, cpu_online_mask);
++		}
++	} else {
++		dev->aac_msix[0].vector_no = 0;
++		dev->aac_msix[0].dev = dev;
++
++		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
++			IRQF_SHARED, "aacraid",
++			&(dev->aac_msix[0])) < 0) {
++			if (dev->msi)
++				pci_disable_msi(dev->pdev);
++			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
++					dev->name, dev->id);
++			ret = -1;
++		}
++	}
++	return ret;
++}
++
++void aac_free_irq(struct aac_dev *dev)
++{
++	int i;
++	int cpu;
++
++	cpu = cpumask_first(cpu_online_mask);
++	if (dev->pdev->device == PMC_DEVICE_S6 ||
++	    dev->pdev->device == PMC_DEVICE_S7 ||
++	    dev->pdev->device == PMC_DEVICE_S8 ||
++	    dev->pdev->device == PMC_DEVICE_S9) {
++		if (dev->max_msix > 1) {
++			for (i = 0; i < dev->max_msix; i++) {
++				if (irq_set_affinity_hint(
++					dev->msixentry[i].vector, NULL)) {
++					printk(KERN_ERR "%s%d: Failed to reset IRQ affinity for cpu %d\n",
++					    dev->name, dev->id, cpu);
++				}
++				cpu = cpumask_next(cpu, cpu_online_mask);
++				free_irq(dev->msixentry[i].vector,
++						&(dev->aac_msix[i]));
++			}
++		} else {
++			free_irq(dev->pdev->irq, &(dev->aac_msix[0]));
++		}
++	} else {
++		free_irq(dev->pdev->irq, dev);
++	}
++	if (dev->msi)
++		pci_disable_msi(dev->pdev);
++	else if (dev->max_msix > 1)
++		pci_disable_msix(dev->pdev);
++}
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c index 1409a0b..2aa34ea 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -798,9 +798,7 @@ int aac_srcv_init(struct aac_dev *dev)
+ 	unsigned long status;
+ 	int restart = 0;
+ 	int instance = dev->id;
+-	int i, j;
+ 	const char *name = dev->name;
+-	int cpu;
+ 
+ 	dev->a_ops.adapter_ioremap = aac_srcv_ioremap;
+ 	dev->a_ops.adapter_comm = aac_src_select_comm; @@ -918,48 +916,10 @@ int aac_srcv_init(struct aac_dev *dev)
+ 		goto error_iounmap;
+ 	if (dev->msi_enabled)
+ 		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
+-	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
+-		cpu = cpumask_first(cpu_online_mask);
+-		for (i = 0; i < dev->max_msix; i++) {
+-			dev->aac_msix[i].vector_no = i;
+-			dev->aac_msix[i].dev = dev;
+-
+-			if (request_irq(dev->msixentry[i].vector,
+-					dev->a_ops.adapter_intr,
+-					0,
+-					"aacraid",
+-					&(dev->aac_msix[i]))) {
+-				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
+-						name, instance, i);
+-				for (j = 0 ; j < i ; j++)
+-					free_irq(dev->msixentry[j].vector,
+-						 &(dev->aac_msix[j]));
+-				pci_disable_msix(dev->pdev);
+-				goto error_iounmap;
+-			}
+-			if (irq_set_affinity_hint(
+-			   dev->msixentry[i].vector,
+-			   get_cpu_mask(cpu))) {
+-				printk(KERN_ERR "%s%d: Failed to set IRQ affinity for cpu %d\n",
+-						name, instance, cpu);
+-			}
+-			cpu = cpumask_next(cpu, cpu_online_mask);
+-		}
+-	} else {
+-		dev->aac_msix[0].vector_no = 0;
+-		dev->aac_msix[0].dev = dev;
+-
+-		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-				IRQF_SHARED,
+-				"aacraid",
+-				&(dev->aac_msix[0])) < 0) {
+-			if (dev->msi)
+-				pci_disable_msi(dev->pdev);
+-			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+-					name, instance);
+-			goto error_iounmap;
+-		}
+-	}
++
++	if (aac_acquire_irq(dev))
++		goto error_iounmap;
++
+ 	dev->dbg_base = dev->base_start;
+ 	dev->dbg_base_mapped = dev->base;
+ 	dev->dbg_size = dev->base_size;
 --
 1.9.3
 
