@@ -1,33 +1,51 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 0/8] Fix error message and present UFS variant
-Date: Tue, 25 Aug 2015 08:47:13 +0900
-Message-ID: <CAC5umyg6TNM4XZaq3=ZwyzindB-qjJuzxXtJ=3+G=6T2HE8-EQ@mail.gmail.com>
-References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
+From: "Seymour, Shane M" <shane.seymour@hp.com>
+Subject: [ANNOUNCE] tapestat command now part of upstream sysstat
+Date: Tue, 25 Aug 2015 00:37:11 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB44471B10@G9W0748.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Rob Herring <robherring2@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:58801 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352AbbHYAic convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2015 20:38:32 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, Sebastien Godard <sysstat@orange.fr>
 
-Hi Yaniv,
 
-2015-08-23 22:09 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
-> V3: fixes a few minor issues.
->
-> V2: fixes a few issues of unnecessary EXPORT_SYMBOL,
-> types of parameters in routine definition,
-> build errors in case CONFIG_PM is not defined and some
-> other minor fixes.
+While tape stats were being implemented in the kernel I started working
+on a program that would read them out and display the data to allow me
+to test the interface. After the changes were available in linux-next
+I worked with the upstream sysstat maintainer to get that code into shape
+so it was suitable for inclusion into sysstat. The latest version of
+sysstat on github now contains the tapestat command:
 
-I've checked outstanding issues I reported for v1 and v2 are fixed
-in this version of series.  So please feel free to add:
+https://github.com/sysstat/sysstat
 
-Reviewed-by: Akinobu Mita <akinobu.mita@gmail.com>
+New tarballs will be available from the sysstat homepage soon. 
 
-I still think that we should introduce print_hex_dump_io() or
-something simpler for dumping __iomem pointer instead of casting
-'void __force *'.  But it is only used for debug dump function, so
-I don't too much worry about it.
+Some example output (this is the only format) while using the dd command
+to copy a tape from a slow tape drive to a fast one (DDS to LTO):
+
+Tape:    r/s     w/s   kB_read/s   kB_wrtn/s %Rd %Wr %Oa    Rs/s    Ot/s
+st0        0     523           0        5230   0  14  14       0       0
+st1      523       0        5230           0  83   0  83       0       0
+
+Tape:    r/s     w/s   kB_read/s   kB_wrtn/s %Rd %Wr %Oa    Rs/s    Ot/s
+st0        0     406           0        4060   0  11  11       0       0
+st1      406       0        4060           0  86   0  86       0       0
+
+Tape:    r/s     w/s   kB_read/s   kB_wrtn/s %Rd %Wr %Oa    Rs/s    Ot/s
+st0        0     318           0        3181   0   8   8       0       0
+st1      318       0        3182           0  90   0  90       0       0
+
+I want to thank everyone who provided advice, feedback, or helped me get
+tape stats to this point - especially Sebastien who was a pleasure to work
+with.
+
+Thanks
+Shane
