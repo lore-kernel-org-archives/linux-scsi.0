@@ -1,63 +1,49 @@
-From: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Subject: RE: [PATCH V6 10/10] [SCSI] aacraid: Update driver version
-Date: Tue, 25 Aug 2015 07:11:24 +0000
-Message-ID: <13272BDD18A5F44CB23C497D29A37252DAB0F80D@BBYEXM02.pmc-sierra.internal>
-References: <1439272701-15344-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1439272701-15344-11-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <E4E5FF3C42893646A5934D219F9C8A514CA3A536@BBYEXM02.pmc-sierra.internal>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v2 0/8] Fix error message and present UFS variant
+Date: Tue, 25 Aug 2015 11:49:50 -0000
+Message-ID: <a6f707bd57a50b3ee5b6dcdd3d5bb53a.squirrel@www.codeaurora.org>
+References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
+    <CAC5umyg6TNM4XZaq3=ZwyzindB-qjJuzxXtJ=3+G=6T2HE8-EQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:42825 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751258AbbHYHLZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Aug 2015 03:11:25 -0400
-In-Reply-To: <E4E5FF3C42893646A5934D219F9C8A514CA3A536@BBYEXM02.pmc-sierra.internal>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyg6TNM4XZaq3=ZwyzindB-qjJuzxXtJ=3+G=6T2HE8-EQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
+Thank you Mita,
+We appreciate your comments and your time.
 
+will add "Reviewed-by".
 
------Original Message-----
-From: Karthikeya Sunkesula 
-Sent: Tuesday, August 25, 2015 12:00 PM
-To: Mahesh Rajashekhara; Tomas Henzl; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Murthy Bhat
-Subject: RE: [PATCH V6 10/10] [SCSI] aacraid: Update driver version
-
-Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
+regards,
+Yaniv
 
 
------Original Message-----
-From: Mahesh Rajashekhara 
-Sent: Tuesday, August 11, 2015 11:28 AM
-To: Tomas Henzl; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Mahesh Rajashekhara
-Subject: [PATCH V6 10/10] [SCSI] aacraid: Update driver version
-
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
----
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 2de5ebc..074878b 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
---
-1.9.3
-
+> Hi Yaniv,
+>
+> 2015-08-23 22:09 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+>> V3: fixes a few minor issues.
+>>
+>> V2: fixes a few issues of unnecessary EXPORT_SYMBOL,
+>> types of parameters in routine definition,
+>> build errors in case CONFIG_PM is not defined and some
+>> other minor fixes.
+>
+> I've checked outstanding issues I reported for v1 and v2 are fixed
+> in this version of series.  So please feel free to add:
+>
+> Reviewed-by: Akinobu Mita <akinobu.mita@gmail.com>
+>
+> I still think that we should introduce print_hex_dump_io() or
+> something simpler for dumping __iomem pointer instead of casting
+> 'void __force *'.  But it is only used for debug dump function, so
+> I don't too much worry about it.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
