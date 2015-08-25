@@ -1,65 +1,67 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] SCSI: dtc: Fixed a brace issue on return 0
-Date: Tue, 25 Aug 2015 11:54:55 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1508241649310.19365@nippy.intranet>
-References: <1435491896-9755-1-git-send-email-rudhresh.jk@gmail.com>
+From: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
+Subject: RE: [PATCH V6 01/10] [SCSI] aacraid: Fix for logical device name
+ and UID not exposed to the OS
+Date: Tue, 25 Aug 2015 06:26:09 +0000
+Message-ID: <E4E5FF3C42893646A5934D219F9C8A514CA3A4C1@BBYEXM02.pmc-sierra.internal>
+References: <1439272701-15344-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <1439272701-15344-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49848 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773AbbHYBzP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2015 21:55:15 -0400
-In-Reply-To: <1435491896-9755-1-git-send-email-rudhresh.jk@gmail.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:39290 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751113AbbHYG0N convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2015 02:26:13 -0400
+In-Reply-To: <1439272701-15344-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rudhresh <rudhresh.jk@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>
 
+Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
 
-On Sun, 28 Jun 2015, Rudhresh wrote:
+-----Original Message-----
+From: Mahesh Rajashekhara 
+Sent: Tuesday, August 11, 2015 11:28 AM
+To: Tomas Henzl; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Rich Bono; Mahesh Rajashekhara
+Subject: [PATCH V6 01/10] [SCSI] aacraid: Fix for logical device name and UID not exposed to the OS
 
-> From: rudhresh <rudhresh.jk@gmail.com>
-> 
-> Return is not a function so parenthesis is not required
-> 
-> Signed-off-by: Rudhresh <rudhresh.jk@gmail.com>
+Description:
+	Driver sends the right size of the response buffer.
 
-Can you put your full name here?
+Changes from V2:
+None
 
-You must address your patches to all of the interested parties (see 
-scripts/get_maintainer.pl).
+Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+---
+ drivers/scsi/aacraid/aachba.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Please read Documentation/SubmittingPatches and adhere to the instructions 
-therein.
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c index 9b3dd6e..fe59b00 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -570,7 +570,7 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
+ 
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_name),
++		  sizeof(struct aac_get_name_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback)get_container_name_callback,
+@@ -1052,7 +1052,7 @@ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
+ 
+ 	status = aac_fib_send(ContainerCommand,
+ 		  cmd_fibcontext,
+-		  sizeof (struct aac_get_serial),
++		  sizeof(struct aac_get_serial_resp),
+ 		  FsaNormal,
+ 		  0, 1,
+ 		  (fib_callback) get_container_serial_callback,
+--
+1.9.3
 
--- 
-
->
-> ---
->  drivers/scsi/dtc.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/dtc.c b/drivers/scsi/dtc.c
-> index 4c74c7b..c793ecf 100644
-> --- a/drivers/scsi/dtc.c
-> +++ b/drivers/scsi/dtc.c
-> @@ -363,7 +363,7 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
->  	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
->  	if (i > hostdata->spin_max_r)
->  		hostdata->spin_max_r = i;
-> -	return (0);
-> +	return 0;
->  }
->  
->  /****************************************************************
-> @@ -417,7 +417,7 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
->  	rtrc(0);
->  	if (i > hostdata->spin_max_w)
->  		hostdata->spin_max_w = i;
-> -	return (0);
-> +	return 0;
->  }
->  
->  MODULE_LICENSE("GPL");
-> 
