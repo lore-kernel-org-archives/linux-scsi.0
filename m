@@ -1,64 +1,48 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH v1 14/15] scsi: ufs: commit descriptors before setting the doorbell
-Date: Tue, 25 Aug 2015 13:25:02 -0500
-Message-ID: <CAL_JsqKPz85_6_Q0Q8kJBhi6oDAHnf8LpdvCy+-qbyfEHK1cQQ@mail.gmail.com>
-References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
- <1440194989-28835-15-git-send-email-ygardi@codeaurora.org>
- <CAL_JsqJELy5jKpkN6GRJqAEVK-rvRxttUg4aLQhFjjkhPxxo8g@mail.gmail.com> <1408ea96f7b8f33aef73e0f84abd8792.squirrel@www.codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1408ea96f7b8f33aef73e0f84abd8792.squirrel@www.codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <james.bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <jbottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi_debug: fix failure to probe with scsi_level=1 or 2 due to NULL devip
+Date: Tue, 25 Aug 2015 15:47:54 -0400
+Message-ID: <1440532074-28321-1-git-send-email-emilne@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47874 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751854AbbHYTr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Aug 2015 15:47:57 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-On Tue, Aug 25, 2015 at 7:36 AM,  <ygardi@codeaurora.org> wrote:
->> On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
->>>
->>> Add a write memory barrier to make sure descriptors prepared are
->>> actually
->>> written to memory before ringing the doorbell. We have also added the
->>> write memory barrier after ringing the doorbell register so that
->>> controller sees the new request immediately.
->>>
->>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>>
->>> ---
->>>  drivers/scsi/ufs/ufshcd.c | 6 ++++++
->>>  1 file changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index fef0660..876148b 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -833,6 +833,8 @@ void ufshcd_send_command(struct ufs_hba *hba,
->>> unsigned int task_tag)
->>>         ufshcd_clk_scaling_start_busy(hba);
->>>         __set_bit(task_tag, &hba->outstanding_reqs);
->>>         ufshcd_writel(hba, 1 << task_tag,
->>> REG_UTP_TRANSFER_REQ_DOOR_BELL);
->>> +       /* Make sure that doorbell is committed immediately */
->>> +       wmb();
->>
->> Is this really necessary? Is there a measurable difference?
->
-> I'm not sure if there is a measurable difference, but as the Door-Bell
-> register is the one that actually responsible for the HW execution of the
-> requests, anyhow, it's recommended to its value will be written
-> instantly to the memory.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-A barrier doesn't guarantee speed, only ordering. Unless you can
-measure the difference, you should not have it.
+commit cbf67842c3d9 ("scsi_debug: support scsi-mq, queues and locks")
+added a test for devip == NULL in schedule_resp which returned
+SCSI_MLQUEUE_HOST_BUSY.  Unfortunately, if scsi_level 1 or 2 is specified,
+devip will be NULL for the INQUIRY command for the next LUN above the
+configured value and it will be retried indefinitely with an error message.
+Fix this by returning the command in the same context if no devip exists.
 
-> Also, as the Interrupt context reads this register, and compare it to the
-> SW mirroring value (hba->outstanding_reqs) in order to realize what
-> requests are already completed, it's important to get the correct value
-> by reading this register, otherwise we might realize a request completion
-> while it was never even submitted.
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_debug.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-If a register read can pass a register write out of order, then your
-h/w is broken. Plus what if the interrupt occurs before the barrier.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 30268bb..25f5cee1 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -3944,8 +3944,11 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 	struct sdebug_queued_cmd *sqcp = NULL;
+ 	struct scsi_device *sdp = cmnd->device;
+ 
+-	if (NULL == cmnd || NULL == devip) {
+-		pr_warn("%s: called with NULL cmnd or devip pointer\n",
++	/* devip will be NULL when probing nonexistent LUNs w/o REPORT LUNS */
++	if (NULL == devip)
++		goto respond_in_thread;
++	if (NULL == cmnd) {
++		pr_warn("%s: called with NULL cmnd pointer\n",
+ 			__func__);
+ 		/* no particularly good error to report back */
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+-- 
+2.1.0
 
-Rob
