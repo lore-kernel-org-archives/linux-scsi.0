@@ -1,237 +1,72 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v6 0/3] CXL Flash Error Recovery and Superpipe
-Date: Tue, 25 Aug 2015 23:56:42 -0700
-Message-ID: <1440572202.8608.10.camel@haakon3.risingtidesystems.com>
-References: <1439520443-56720-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Persistent Reservation API
+Date: Wed, 26 Aug 2015 14:45:59 +0200
+Message-ID: <55DDB507.8000403@suse.de>
+References: <1438672271-11309-1-git-send-email-hch@lst.de> <20150811113041.68d9f122@g21.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:52318 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbbHZG4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 02:56:52 -0400
-In-Reply-To: <1439520443-56720-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:46884 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754893AbbHZMqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2015 08:46:01 -0400
+In-Reply-To: <20150811113041.68d9f122@g21.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, mikey@neuling.org, dja@ozlabs.au.ibm.com, benh@kernel.crashing.org, hch@infradead.org, imunsie@au1.ibm.com
+To: David Disseldorp <ddiss@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Matthew & Co,
+On 08/11/2015 11:30 AM, David Disseldorp wrote:
+> Hi Christoph,
+>=20
+> On Tue,  4 Aug 2015 09:11:05 +0200, Christoph Hellwig wrote:
+>=20
+>> This series adds support for a simplified persistent reservation API
+>> to the block layer.  The intent is that both in-kernel and userspace
+>> consumers can use the API instead of having to hand craft SCSI or NV=
+Me
+>> command through the various pass through interfaces.  It also adds
+>> DM support as getting reservations through dm-multipath is a major
+>> pain with the current scheme.
+>>
+>> NVMe support currently isn't included as I don't have a multihost
+>> NVMe setup to test on, but if I can find a volunteer to test it I'm
+>> happy to write the code for it.
+>>
+>> The ioctl API is documented in Documentation/block/pr.txt, but to
+>> fully understand the concept you'll have to read up the SPC spec,
+>> PRs are too complicated that trying to rephrase them into different
+>> terminology is just going to create confusion.
+>=20
+> Do you have any thoughts on where SCSI-2 RESERVE/RELEASE should fit i=
+nto
+> this API, if at all? I.e. as a new enum pr_type members for
+> pr_reserve()/pr_release(), as separate pr_ops hooks, etc?
+> Similarly for PR_IN - IIUC, if LIO is to handle cluster wide PRs
+> for Ceph rbd via the block layer, these will all need to be supported
+> by block layer (and LIO backend) APIs.
+>=20
+Just don't. Ignore SCSI-2 RESERVE/RELEASE.
 
-On Thu, 2015-08-13 at 21:47 -0500, Matthew R. Ochs wrote:
-> This patch set is intended for the 4.3 release and adds support for
-> error recovery and the superpipe features provided by the IBM CXL
-> Flash adapter. The superpipe function was originally presented in an
-> RFC patch set in late April. To aid with the review of the superpipe
-> portion of these enhancements, we have further split it across the
-> last two patches in this set. Please reference the changelog below
-> for details on what has been altered from previous versions of this
-> patchset.
-> 
-> The IBM Power processor architecture provides support for CAPI (Coherent
-> Accelerator Power Interface), which is available to certain PCIe slots
-> on Power 8 systems. CAPI can be thought of as a special tunneling
-> protocol through PCIe that allow PCIe adapters to look like special
-> purpose co-processors which can read or write an application's memory
-> and generate page faults. As a result, the host interface to an adapter
-> running in CAPI mode does not require data buffers to be mapped to the
-> device's memory (IOMMU bypass) nor does it require memory to be pinned.
-> 
-> Application specific accelerators are constructed by burning logic
-> to either an FPGA or ASIC that accelerates a certain function in
-> hardware. This logic is referred to as an Accelerator Function Unit
-> or AFU. AFUs and their associated software are designed to leverage the
-> benefits that CAPI provides to reduce the burden on CPUs and achieve
-> higher performance. Examples of AFUs include compression, encryption,
-> sorting, etc.
-> 
-> The cxlflash adapter contains an AFU that enhances the performance of
-> accessing an external flash storage device by allowing user space
-> applications to establish a 'superpipe' through which they may directly
-> access the storage, bypassing the traditional storage stack and reducing
-> path length per-I/O by more than an order of magnitude. The AFU also
-> supports a translation function that allows users to segment a physical
-> device into 'n' virtual devices [by programmatic means] and refer to these
-> segments as if they were a true physical device. This function enables
-> a more efficient use of a physical device and provides for a secure
-> multi-tenant environment.
-> 
-> At a high-level, the cxlflash adapter looks and behaves very much like
-> a SCSI HBA. Like other SCSI adapters it understands SCSI CDBs and LUN
-> discovery. It also provides health monitoring, error recovery, and link
-> event reporting.
-> 
-> At a lower level, the cxlflash adapter requires some additional items
-> not found in a traditional SCSI HBA driver. These include the following:
-> 
-> - A programmatic API (implemented as ioctls) that user applications
-> interact with when they desire to take advantage of the superpipe access
-> from user space. These ioctls allow the user to gain access to the CAPI
-> resources (ie: interrupts, MMIO space, etc.) that are required to use
-> the superpipe. Additionally, they allow applications to use the AFUs
-> virtual partitioning function. Note that while the ioctls are new, under
-> the covers they make use of existing functionality found in the cxl
-> driver (drivers/misc/cxl).
-> 
-> - A block allocation table (implemented as a bitmap) per physical
-> device attached to the cxlflash adapter that is operating in the virtual
-> partitioned mode. This table manages the segmentation of the physical
-> device and is used to derive the entries found in the LUN mapping table.
-> 
-> - A LUN mapping table that is shared with the AFU and used by the AFU
-> to associate the resource handles referring to a specific virtual device
-> with blocks on the physical device.
-> 
-> - The ability to send a limited set of SCSI commands directly to the
-> adapter to determine capacity and identification data as well as wipe
-> blocks that are no longer in use when a virtual device is released. This
-> set of commands includes READ_CAPACITY and WRITE_SAME.
-> 
-> Accompanying this adapter driver but not included here is a user space
-> library (known as the block library) that will hide the interaction
-> between user space and the cxlflash driver. Most (if not all) users will
-> chose to use this library when developing superpipe-aware applications.
-> 
-> The block library can be found on Github:
-> 
-> https://github.com/mikehollinger/ibmcapikv
-> 
-> More technical details can be found in Documentation/powerpc/cxlflash.txt
-> 
-> This patch set depends on the original cxlflash patch from:
-> 
-> http://permalink.gmane.org/gmane.linux.scsi/102357
-> 
-> The following patches are bisectable:
-> 
-> Patch 1 contains base enablement of error recovery function.
-> 
-> Patch 2 contains base enablement of superpipe function.
-> 
-> Patch 3 adds support for segmentation of physical LUNs from user space.
-> 
-> v6 Changes:
-> - Incorporate comments from Michael Neuling
-> - Fix memory leak in create_context()
-> - Advertise ioctl version via sysfs
-> 
-> v5 Changes:
-> - Incorporate comments from Daniel Axtens
-> - Incorporate comments from Benjamin Herrenschmidt
-> - Incorporate comments from Michael Neuling
-> - Incorporate comments from Wendy Xiong
-> - Properly reflect (via rc) a failed reset
-> - Transition to failed state following a failed reset
-> - Added ioctl header validation
-> - Patch against upstreamed code to avoid conflicts
-> - Refine traces (use dev_* and selectively move traces to debug)
-> - Make context retrieval/release symmetric
-> - Inline comments clarifying abbreviations, global/local lun table
-> - Rename functions to properly reflect their actions
-> - Don't hide sizeof() behind a #define
-> - Add ioctl version
-> - Reorder ioctls to avoid sparse numbers in absence of vlun patch
-> - Rename clone ioctl to properly reflect it being vlun-specific
-> - Use actual record type instead of void *
-> - Remove trailing newlines from files
-> - Improved documentation of ioctls
-> - Split larger contiguous allocations into multiple allocations
-> - Split lun management function into separate file
-> - Re-use existing defines, instead of creating new ones
-> - Simplify locking of lun table
-> - Remove unnecessary gotos/labels
-> - Fix a LUN serialization bug
-> 
-> v4 Changes:
-> - Removes patch of legacy fixes/refactoring (to be posted as separate set)
-> - Incorporate comments from Brian King
-> - Incorporate comments from Daniel Axtens
-> - Remove duplication of EEH state machine
-> - Introduce adapter state machine
-> - Tuck ifdef inside header
-> - Remove unnecessary delay
-> - Check state after waiting in limbo
-> - Return the proper code in EEH callback
-> - Remove SCSI read/write command snooping
-> - Use cpu-endian-aware swap routines
-> 
-> v3 Changes:
-> - Add patch of legacy fixes/refactoring
-> - Fix enhanced I/O error handling bugs
-> - Incorporate review comments from Brian King
-> - Incorporate review comments from Wendy Xiong
-> - Transition more pr_* prints to dev_* prints
-> - Clarify functions through renaming and prolog details
-> - Remove unnecessary gotos/labels
-> - Use rq_timeout instead of defining own timeout
-> - Fix potential memory leaks
-> - Use existing services/macros instead of defining our own
-> - Make code more readable (ie: reduce multi-line statements)
-> - Manage layout of LUN table
-> - Add retry logic to context recovery
-> 
-> v2 Changes:
-> - Introduce support for enhanced I/O error handling
-> - Incorporate review comments from Mikey Neuling
-> - Incorporate review comments from Brian King
-> - Update/add serialization strategy for contexts
-> - Lock down LUN lists and global struct
-> - Make items that can be static, static
-> - Remove duplicate statements
-> - Make shared counters atomic
-> - Use correct memory barrier for LWSYNC
-> - Add cxlflash_ioctl.h to UAPI Kbuild
-> - Remove unnecessary initialization code
-> - Fix spelling/grammar errors
-> - Remove the slave_* routines
-> - Tone down branch hints
-> - Use scsi_execute() to issue SCSI commands
-> - Use existing SCSI defines
-> - Sleep instead of busy-wait
-> - Remove duplicate parenths
-> - Refine patch staging
-> 
-> Matthew R. Ochs (3):
->   cxlflash: Base error recovery support
->   cxlflash: Superpipe support
->   cxlflash: Virtual LUN support
-> 
->  Documentation/ioctl/ioctl-number.txt |    1 +
->  Documentation/powerpc/cxlflash.txt   |  318 ++++++
->  drivers/scsi/cxlflash/Kconfig        |    2 +-
->  drivers/scsi/cxlflash/Makefile       |    2 +-
->  drivers/scsi/cxlflash/common.h       |   34 +-
->  drivers/scsi/cxlflash/lunmgt.c       |  266 +++++
->  drivers/scsi/cxlflash/main.c         |  221 +++-
->  drivers/scsi/cxlflash/main.h         |    6 +-
->  drivers/scsi/cxlflash/sislite.h      |   25 +-
->  drivers/scsi/cxlflash/superpipe.c    | 2084 ++++++++++++++++++++++++++++++++++
->  drivers/scsi/cxlflash/superpipe.h    |  147 +++
->  drivers/scsi/cxlflash/vlun.c         | 1243 ++++++++++++++++++++
->  drivers/scsi/cxlflash/vlun.h         |   86 ++
->  include/uapi/scsi/Kbuild             |    1 +
->  include/uapi/scsi/cxlflash_ioctl.h   |  174 +++
->  15 files changed, 4584 insertions(+), 27 deletions(-)
->  create mode 100644 Documentation/powerpc/cxlflash.txt
->  create mode 100644 drivers/scsi/cxlflash/lunmgt.c
->  mode change 100755 => 100644 drivers/scsi/cxlflash/sislite.h
->  create mode 100644 drivers/scsi/cxlflash/superpipe.c
->  create mode 100644 drivers/scsi/cxlflash/superpipe.h
->  create mode 100644 drivers/scsi/cxlflash/vlun.c
->  create mode 100644 drivers/scsi/cxlflash/vlun.h
->  create mode 100644 include/uapi/scsi/cxlflash_ioctl.h
-> 
+To my knowledge there are _no_ 'real' SCSI-2 systems in the market
+anymore; those which you might come across are 'fake' devices,
+trying to emulate SCSI-2 for backwards compability despite being in
+fact SCSI-3 devices.
 
-Thanks for including the full review history.
+I would vote for just ignoring them. Simply not worth the pain.
 
-This series has been added to target-pending.git/for-next-merge atop
-current scsi.git/for-next code so it can be picked up by sfr for
-tomorrow's linux-next build.
+Cheers,
 
-James, please include this for v4.3-rc1 code.
-
-Thank you,
-
---nab
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
