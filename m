@@ -1,61 +1,71 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
- check
-Date: Wed, 26 Aug 2015 16:38:00 -0700
-Message-ID: <1440632280.2196.94.camel@HansenPartnership.com>
-References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
-	 <1440532371.23183.81.camel@localhost.localdomain>
-	 <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] cxlflash: Remove unused variable from queuecommand
+Date: Wed, 26 Aug 2015 16:49:33 -0700
+Message-ID: <1440632973.31814.0.camel@haakon3.risingtidesystems.com>
+References: <1440632172-10180-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: "emilne@redhat.com" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44979 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801AbbHZXtn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 19:49:43 -0400
+In-Reply-To: <1440632172-10180-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, mikey@neuling.org, kbuild-all@01.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On Tue, 2015-08-25 at 21:03 +0000, Winkler, Tomas wrote:
->=20
-> > > +	/* this should never happen */
-> > > +	if (WARN_ON(!cmnd))
-> > > +		return SCSI_MLQUEUE_HOST_BUSY;
-> > >
-> > > -	if (NULL =3D=3D cmnd || NULL =3D=3D devip) {
-> > > -		pr_warn("called with NULL cmnd or devip pointer\n");
-> > > +	if (NULL =3D=3D devip) {
-> > > +		pr_warn("called devip =3D=3D NULL\n");
-> > >  		/* no particularly good error to report back */
-> > >  		return SCSI_MLQUEUE_HOST_BUSY;
-> > >  	}
-> >=20
-> > Please refer to the patch I just posted, we can't return _HOST_BUSY=
- here
-> > if devip =3D=3D NULL.  I posted a fix against the current "misc" br=
-anch as
-> > I don't see this patch applied, let me know if I need to update it.
->=20
->=20
-> I'm just not sure why the patches are not merged or even rejected.
+Hi Matthew,
 
-Because ideally I want a Maintainer ack.  That's Doug Gilbert.
+On Wed, 2015-08-26 at 18:36 -0500, Matthew R. Ochs wrote:
+> The queuecommand routine has a local dev pointer used for the
+> dev_* prints. The two prints that currently exist are tucked
+> under a debug define and thus can be left out. Use the actual
+> location instead of a local to avoid this warning.
+> 
+> This patch is intended to be applied after the "CXL Flash Error
+> Recovery and Superpipe" series.
+> 
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> ---
+>  drivers/scsi/cxlflash/main.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+> index 458ed83..3ccb546 100644
+> --- a/drivers/scsi/cxlflash/main.c
+> +++ b/drivers/scsi/cxlflash/main.c
+> @@ -354,7 +354,6 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+>  	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
+>  	struct afu *afu = cfg->afu;
+>  	struct pci_dev *pdev = cfg->dev;
+> -	struct device *dev = &cfg->dev->dev;
+>  	struct afu_cmd *cmd;
+>  	u32 port_sel = scp->device->channel + 1;
+>  	int nseg, i, ncount;
+> @@ -384,11 +383,13 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+>  
+>  	switch (cfg->state) {
+>  	case STATE_LIMBO:
+> -		dev_dbg_ratelimited(dev, "%s: device in limbo!\n", __func__);
+> +		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device in limbo!\n",
+> +				    __func__);
+>  		rc = SCSI_MLQUEUE_HOST_BUSY;
+>  		goto out;
+>  	case STATE_FAILTERM:
+> -		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
+> +		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device has failed!\n",
+> +				    __func__);
+>  		scp->result = (DID_NO_CONNECT << 16);
+>  		scp->scsi_done(scp);
+>  		rc = 0;
 
-> I'm submitting patches to the Linux kernel for more than 10 years to
-> various trees and  I can agree that these are not some  urgent fixes,
-> but  this is the first time my effort is ignored for such long time b=
-y
-> the maintainer.=20
+Applied + squashed into the original PATCH #1, and pushed out to
+target-pending.git/for-next-merge.
 
-Well, OK, I trust martin, I'll override the lack of Maintainer ack if
-you fix as Ewan suggests.
+--nab
 
-James
-
-
-> Thanks
-> Tomas
->=20
-> NrybX=C7=A7v^)=DE=BA{.n+{"{ay=1D=CA=87=DA=99,j=07fhz=1Ew=0Cj:+vwjm=07=
-zZ+=DD=A2j"!
