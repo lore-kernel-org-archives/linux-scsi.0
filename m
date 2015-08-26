@@ -1,59 +1,30 @@
-From: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>
-Subject: RE: [PATCH 1/3] hpsa: convert show method snprintf usage to
- scnprintf
-Date: Thu, 27 Aug 2015 06:56:00 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB44475B26@G9W0748.americas.hpqcorp.net>
-References: <DDB9C85B850785449757F9914A034FCB4442E184@G9W0766.americas.hpqcorp.net>
- <1440597925.2196.6.camel@HansenPartnership.com>
+From: "Email" <amelrekic@live.com>
+Subject: Transakce /
+Date: Wed, 26 Aug 2015 22:32:55 -0000
+Message-ID: <4fd833f08f2a584069cf4f72596a5647.squirrel__43191.0072606572$1440658712$gmane$org@204.151.225.58>
+Reply-To: chn.jg57@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1440597925.2196.6.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Content-Language: en-US
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ISS StorageDev <iss_storagedev-VXdhtT5mjnY@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org> (greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org)" <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [204.151.225.58] ([204.151.225.58]:36813 "EHLO mail.abc.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753231AbbH0G5v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2015 02:57:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgSmFtZXMsDQoNCj4gVGhlcmUncyBiZWVuIG5vIGFjayBvbiB0aGlzIG9uZS4gIEhvd2V2ZXIs
-IHRoZXJlJ3Mgbm8gYWN0dWFsIHJlYXNvbiB0bw0KPiBwcmVmZXIgc2NucHJpbnRmIG92ZXIgc25w
-cmludGY6IHRoZSBmb3JtZXIgd2lsbCB6ZXJvIHRlcm1pbmF0ZSwgdGhlDQo+IGxhdHRlciB3b24n
-dCBpZiB0aGUgd3JpdGUgbGVuZ3RoIGlzIG92ZXIgdGhlIGJ1ZmZlciBsZW5ndGgsIGJ1dCB0aGlz
-IGlzDQo+IGEgZmlsZSBidWZmZXI6IHRoZSByb3V0aW5lIHdpbGwgcmV0dXJuIGFzIG1hbnkgYnl0
-ZXMgdG8gdXNlcnNwYWNlIGFzIGFyZQ0KPiBzcGVjaWZpZWQgaW4gdGhlIGNvdW50IChpbmNsdWRp
-bmcgemVyb3MgaWYgdGhleSdyZSB3aXRoaW4gdGhlIGNvdW50KSwgc28NCj4gemVybyB0ZXJtaW5h
-dGlvbiBvZiBhIHN0cmluZyBpbiBzeXNmcyBpcyB1bm5lY2Vzc2FyeS4NCg0KVGhlcmUncyBhIHBh
-dGNoIGluIEdyZWcncyBkcml2ZXIgdHJlZSBmb3IgdGhlIG5leHQgbWVyZ2UgdGhhdCBjaGFuZ2Vz
-DQp0aGUgZG9jdW1lbnRhdGlvbiBhYm91dCB0aGUgdXNhZ2Ugb2YgdGhlIHMqcHJpbnRmKCkgZnVu
-Y3Rpb25zIGluIHN5c2ZzDQpzaG93KCkgbWV0aG9kcyBmcm9tL3RvIChpbiBEb2N1bWVudGF0aW9u
-L2ZpbGVzeXN0ZW1zL3N5c2ZzLnR4dCk6DQoNCi0tIHNob3coKSBzaG91bGQgYWx3YXlzIHVzZSBz
-Y25wcmludGYoKS4NCistIHNob3coKSBtdXN0IG5vdCB1c2Ugc25wcmludGYoKSB3aGVuIGZvcm1h
-dHRpbmcgdGhlIHZhbHVlIHRvIGJlDQorICByZXR1cm5lZCB0byB1c2VyIHNwYWNlLiBJZiB5b3Ug
-Y2FuIGd1YXJhbnRlZSB0aGF0IGFuIG92ZXJmbG93DQorICB3aWxsIG5ldmVyIGhhcHBlbiB5b3Ug
-Y2FuIHVzZSBzcHJpbnRmKCkgb3RoZXJ3aXNlIHlvdSBtdXN0IHVzZQ0KKyAgc2NucHJpbnRmKCku
-DQoNCkl0IGN1cnJlbnRseSBzYXlzIHlvdSBzaG91bGQgdXNlIHNjbnByaW50ZigpIGJ1dCB3aWxs
-IGJlY29tZSBtb3JlDQpleHBsaWNpdCBhYm91dCB3aGF0IHlvdSBtdXN0IG5vdCB1c2UgYW5kIHdo
-YXQgeW91IGNhbiBvciBtdXN0IHVzZS4NClRoYXQncyBwcm9iYWJseSB0aGUgYmVzdCByZWFzb24g
-SSBjYW4gb2ZmZXIgYWJvdXQgd2h5IHRvIHByZWZlciBvbmUNCmZ1bmN0aW9uIG92ZXIgdGhlIG90
-aGVyLg0KDQpUaGlzIGlzIG15IHVuZGVyc3RhbmRpbmcgb2YgdGhlIGRpZmZlcmVuY2UgYmV0d2Vl
-biBzbnByaW50ZigpIGFuZA0Kc2NucHJpbnRmKCkgaW4gdGVybXMgb2Ygc3lzZnMgc2hvdygpIG1l
-dGhvZHMgLSB0aGVyZSBpcyBhIHN1YnRsZQ0KZGlmZmVyZW5jZSBiZXR3ZWVuIHRoZSB0d28gZnVu
-Y3Rpb25zIGluIHRoZSByZXR1cm4gdmFsdWUuDQoNClRoZSBzbnByaW50ZigpIGZ1bmN0aW9uIHJl
-dHVybnMgdGhlIG51bWJlciBvZiBieXRlcyB0aGF0IGl0IHdvdWxkDQpoYXZlIGZvcm1hdHRlZCBn
-aXZlbiBzdWZmaWNpZW50IHNwYWNlLiBJdCBkb2Vzbid0IG1hdHRlciB3aGF0IHRoZQ0Kc2l6ZSBh
-cmd1bWVudCB3YXMuIElmIHRoZSBzaXplIHBhc3NlZCBpbiBpcyA0MDk2IGFuZCB0aGUgbnVtYmVy
-IG9mDQpieXRlcyB0aGF0IGl0IHdvdWxkIGhhdmUgZm9ybWF0dGVkIGlzIDQyMDAgdGhlbiA0MjAw
-IHdpbGwgYmUgd2hhdCBpcw0KcmV0dXJuZWQgZnJvbSBzbnByaW50ZigpIGV2ZW4gdGhvdWdoIGl0
-IGRpZCBub3QgbW9kaWZ5IGFueXRoaW5nDQphZnRlciBieXRlIDQwOTYgaW4gdGhlIGJ1ZmZlci4N
-Cg0KVGhlIHNjbnByaW50ZigpIGZ1bmN0aW9uIHJldHVybnMgdGhlIG51bWJlciBvZiBieXRlcyBp
-dCBhY3R1YWxseQ0KZm9ybWF0dGVkIChleGNsdWRpbmcgdGhlIHplcm8gdGVybWluYXRpb24pLiBV
-c2luZyB0aGUgYWJvdmUgZGF0YQ0KaWYgNDA5NiB3YXMgdGhlIHNpemUgcGFzc2VkIGluIHRoZW4g
-dGhlIHJldHVybiB2YWx1ZSB3aWxsIG5ldmVyIGJlDQptb3JlIHRoYW4gNDA5NS4NCg0KVGhlcmUg
-aXMgY29kZSBpbiBzeXNmc19rZl9zZXFfc2hvdygpIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBjb3Vu
-dA0KcmV0dXJuZWQgZnJvbSB0aGUgc2hvdygpIG1ldGhvZCBpcyBub3QgPj0gUEFHRV9TSVpFIGFu
-ZA0KcmVkdWNlIGl0IHRvIFBBR0VfU0laRS0xIGlmIGl0IHdhcy4gSSBkb24ndCB0aGluayB1c2Vy
-IHNwYWNlIHdpbGwgDQpldmVyIGdldCBtb3JlIHRoYW4gUEFHRV9TSVpFLTEgYnl0ZXMgcmVnYXJk
-bGVzcyBvZiB3aGljaA0KZnVuY3Rpb24gaXMgdXNlZC4NCg0KSSBkb24ndCBtaW5kIGlmIHRoZSBw
-YXRjaCBpc24ndCBhY2NlcHRlZCBidXQgSSB0aG91Z2h0IEkgc2hvdWxkIGF0DQpsZWFzdCBleHBs
-YWluIG15IHJhdGlvbmFsZSBiZWhpbmQgdGhlIGNoYW5nZS4NCg0KVGhhbmtzDQpTaGFuZQ0K
+
+
+
+Mam vzajemne mit prospech podnik pro nas oba. pokud mate zajem, muzete =
+mi
+dostat na e-mailovou adresu a pro detaily a vysvetlen=ED.
+
+E-mail: chn.jg57@gmail.com
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
