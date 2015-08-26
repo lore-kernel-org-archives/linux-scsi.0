@@ -1,56 +1,305 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v4 0/2] Fixes for memory corruption in mpt2sas
-Date: Tue, 25 Aug 2015 14:21:24 -0700
-Message-ID: <1440537684.23178.7.camel@haakon3.risingtidesystems.com>
-References: <1438405334-1153698-1-git-send-email-calvinowens@fb.com>
-	 <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1439516890-3548744-1-git-send-email-calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Joe Lawrence <joe.lawrence@stratus.com>
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 2/2] mpt3sas: Refcount fw_events and fix unsafe list usage
+Date: Wed, 26 Aug 2015 04:09:44 +0000
+Message-ID: <1440562184-23945-3-git-send-email-nab@daterainc.com>
+References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34976 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbbHZEPb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 00:15:31 -0400
+Received: by obbwr7 with SMTP id wr7so161255692obb.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2015 21:15:30 -0700 (PDT)
+In-Reply-To: <1440562184-23945-1-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Thu, 2015-08-13 at 18:48 -0700, Calvin Owens wrote:
-> Hello all,
-> 
-> This patchset attempts to address problems we've been having with
-> panics due to memory corruption from the mpt2sas driver.
-> 
-> Thanks,
-> Calvin
-> 
-> 
-> [PATCH v4 1/2] mpt2sas: Refcount sas_device objects and fix unsafe list
-> [PATCH v4 2/2] mpt2sas: Refcount fw_events and fix unsafe list usage
-> 
-> Total diffstat:
->  drivers/scsi/mpt2sas/mpt2sas_base.h      |  22 +-
->  drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 592 ++++++++++++++++++++++---------
->  drivers/scsi/mpt2sas/mpt2sas_transport.c |  12 +-
->  3 files changed, 451 insertions(+), 175 deletions(-)
-> 
-> Diff showing changes v3 => v4:
-> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v3v4.patch
-> 
-> Diff showing changes v2 => v3:
-> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v2v3.patch
-> 
-> Diff showing changes v1 => v2:
-> 	http://jcalvinowens.github.io/stuff/mpt2sas-patchset-v1v2.patch
-> --
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-(Adding JEJB CC')
+The fw_event_work struct is concurrently referenced at shutdown, so
+add a refcount to protect it, and refactor the code to use it.
 
-James, please considering pick this up for v4.3-rc1.
+Additionally, refactor _scsih_fw_event_cleanup_queue() such that it
+no longer iterates over the list without holding the lock, since
+_firmware_event_work() concurrently deletes items from the list.
 
-Btw, I'm seeing the same type of issues on mpt3sas, and unless someone
-at Avago is already working on a similar patch series, I'll end up
-forward porting these to mpt3sas code.
+This patch is a port of Calvin's PATCH-v4 for mpt2sas code.
 
-Thank you,
+Cc: Calvin Owens <calvinowens@fb.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 116 ++++++++++++++++++++++++++++-------
+ 1 file changed, 94 insertions(+), 22 deletions(-)
 
---nab
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 7142e3b..4cb7e89 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -175,6 +175,7 @@ struct sense_info {
+  * @VP_ID: virtual port id
+  * @ignore: flag meaning this event has been marked to ignore
+  * @event: firmware event MPI2_EVENT_XXX defined in mpt2_ioc.h
++ * @refcount: reference count for fw_event_work
+  * @event_data: reply event data payload follows
+  *
+  * This object stored on ioc->fw_event_list.
+@@ -191,9 +192,37 @@ struct fw_event_work {
+ 	u8			VP_ID;
+ 	u8			ignore;
+ 	u16			event;
++	struct kref		refcount;
+ 	char			event_data[0] __aligned(4);
+ };
+ 
++static void fw_event_work_free(struct kref *r)
++{
++	kfree(container_of(r, struct fw_event_work, refcount));
++}
++
++static void fw_event_work_get(struct fw_event_work *fw_work)
++{
++	kref_get(&fw_work->refcount);
++}
++
++static void fw_event_work_put(struct fw_event_work *fw_work)
++{
++	kref_put(&fw_work->refcount, fw_event_work_free);
++}
++
++static struct fw_event_work *alloc_fw_event_work(int len)
++{
++	struct fw_event_work *fw_event;
++
++	fw_event = kzalloc(sizeof(*fw_event) + len, GFP_ATOMIC);
++	if (!fw_event)
++		return NULL;
++
++	kref_init(&fw_event->refcount);
++	return fw_event;
++}
++
+ /* raid transport support */
+ static struct raid_template *mpt3sas_raid_template;
+ 
+@@ -2542,32 +2571,36 @@ _scsih_fw_event_add(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
++	fw_event_work_get(fw_event);
+ 	INIT_LIST_HEAD(&fw_event->list);
+ 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
+ 	INIT_WORK(&fw_event->work, _firmware_event_work);
++	fw_event_work_get(fw_event);
+ 	queue_work(ioc->firmware_event_thread, &fw_event->work);
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+ 
+ /**
+- * _scsih_fw_event_free - delete fw_event
++ * _scsih_fw_event_del_from_list - delete fw_event from the list
+  * @ioc: per adapter object
+  * @fw_event: object describing the event
+  * Context: This function will acquire ioc->fw_event_lock.
+  *
+- * This removes firmware event object from link list, frees associated memory.
++ * If the fw_event is on the fw_event_list, remove it and do a put.
+  *
+  * Return nothing.
+  */
+ static void
+-_scsih_fw_event_free(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
++_scsih_fw_event_del_from_list(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
+ 	*fw_event)
+ {
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+-	list_del(&fw_event->list);
+-	kfree(fw_event);
++	if (!list_empty(&fw_event->list)) {
++		list_del_init(&fw_event->list);
++		fw_event_work_put(fw_event);
++	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+ 
+@@ -2587,14 +2620,14 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	if (ioc->is_driver_loading)
+ 		return;
+-	fw_event = kzalloc(sizeof(*fw_event) + sizeof(*event_data),
+-			   GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(sizeof(*event_data));
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
+ 	fw_event->ioc = ioc;
+ 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -2610,12 +2643,13 @@ _scsih_error_recovery_delete_devices(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	if (ioc->is_driver_loading)
+ 		return;
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT3SAS_REMOVE_UNRESPONDING_DEVICES;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -2629,12 +2663,29 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	struct fw_event_work *fw_event;
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT3SAS_PORT_ENABLE_COMPLETE;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
++}
++
++static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
++{
++	unsigned long flags;
++	struct fw_event_work *fw_event = NULL;
++
++	spin_lock_irqsave(&ioc->fw_event_lock, flags);
++	if (!list_empty(&ioc->fw_event_list)) {
++		fw_event = list_first_entry(&ioc->fw_event_list,
++				struct fw_event_work, list);
++		list_del_init(&fw_event->list);
++	}
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++
++	return fw_event;
+ }
+ 
+ /**
+@@ -2649,17 +2700,25 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
+ static void
+ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ {
+-	struct fw_event_work *fw_event, *next;
++	struct fw_event_work *fw_event;
+ 
+ 	if (list_empty(&ioc->fw_event_list) ||
+ 	     !ioc->firmware_event_thread || in_interrupt())
+ 		return;
+ 
+-	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
+-		if (cancel_delayed_work_sync(&fw_event->delayed_work)) {
+-			_scsih_fw_event_free(ioc, fw_event);
+-			continue;
+-		}
++	while ((fw_event = dequeue_next_fw_event(ioc))) {
++		/*
++		 * Wait on the fw_event to complete. If this returns 1, then
++		 * the event was never executed, and we need a put for the
++		 * reference the delayed_work had on the fw_event.
++		 *
++		 * If it did execute, we wait for it to finish, and the put will
++		 * happen from _firmware_event_work()
++		 */
++		if (cancel_work_sync(&fw_event->work))
++			fw_event_work_put(fw_event);
++
++		fw_event_work_put(fw_event);
+ 	}
+ }
+ 
+@@ -4071,13 +4130,14 @@ _scsih_send_event_to_turn_on_pfa_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ {
+ 	struct fw_event_work *fw_event;
+ 
+-	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(0);
+ 	if (!fw_event)
+ 		return;
+ 	fw_event->event = MPT3SAS_TURN_ON_PFA_LED;
+ 	fw_event->device_handle = handle;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -7200,10 +7260,11 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
+ static void
+ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ {
++	_scsih_fw_event_del_from_list(ioc, fw_event);
++
+ 	/* the queue is being flushed so ignore this event */
+-	if (ioc->remove_host ||
+-	    ioc->pci_error_recovery) {
+-		_scsih_fw_event_free(ioc, fw_event);
++	if (ioc->remove_host || ioc->pci_error_recovery) {
++		fw_event_work_put(fw_event);
+ 		return;
+ 	}
+ 
+@@ -7214,8 +7275,17 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 			fw_event->event_data);
+ 		break;
+ 	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
+-		while (scsi_host_in_recovery(ioc->shost) || ioc->shost_recovery)
++		while (scsi_host_in_recovery(ioc->shost) ||
++				ioc->shost_recovery) {
++			/*
++			 * If we're unloading, bail. Otherwise, this can become
++			 * an infinite loop.
++			 */
++			if (ioc->remove_host)
++				goto out;
++
+ 			ssleep(1);
++		}
+ 		_scsih_remove_unresponding_sas_devices(ioc);
+ 		_scsih_scan_for_devices_after_reset(ioc);
+ 		break;
+@@ -7260,7 +7330,8 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 		_scsih_sas_ir_operation_status_event(ioc, fw_event);
+ 		break;
+ 	}
+-	_scsih_fw_event_free(ioc, fw_event);
++out:
++	fw_event_work_put(fw_event);
+ }
+ 
+ /**
+@@ -7376,7 +7447,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	}
+ 
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+-	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
++	fw_event = alloc_fw_event_work(sz);
+ 	if (!fw_event) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+@@ -7389,6 +7460,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	fw_event->VP_ID = mpi_reply->VP_ID;
+ 	fw_event->event = event;
+ 	_scsih_fw_event_add(ioc, fw_event);
++	fw_event_work_put(fw_event);
+ 	return 1;
+ }
+ 
+-- 
+1.9.1
+
