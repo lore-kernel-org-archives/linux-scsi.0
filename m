@@ -1,73 +1,61 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH] cxlflash: Remove unused variable from queuecommand
-Date: Wed, 26 Aug 2015 18:36:12 -0500
-Message-ID: <1440632172-10180-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:60421 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbbHZXgb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 19:36:31 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 26 Aug 2015 17:36:30 -0600
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id F088638C8039
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 19:36:27 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7QNaRTm56033348
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 23:36:27 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7QNaQ1H020307
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 19:36:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
+ check
+Date: Wed, 26 Aug 2015 16:38:00 -0700
+Message-ID: <1440632280.2196.94.camel@HansenPartnership.com>
+References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
+	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
+	 <1440532371.23183.81.camel@localhost.localdomain>
+	 <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: "emilne@redhat.com" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, mikey@neuling.org, kbuild-all@01.org
-Cc: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-The queuecommand routine has a local dev pointer used for the
-dev_* prints. The two prints that currently exist are tucked
-under a debug define and thus can be left out. Use the actual
-location instead of a local to avoid this warning.
+On Tue, 2015-08-25 at 21:03 +0000, Winkler, Tomas wrote:
+>=20
+> > > +	/* this should never happen */
+> > > +	if (WARN_ON(!cmnd))
+> > > +		return SCSI_MLQUEUE_HOST_BUSY;
+> > >
+> > > -	if (NULL =3D=3D cmnd || NULL =3D=3D devip) {
+> > > -		pr_warn("called with NULL cmnd or devip pointer\n");
+> > > +	if (NULL =3D=3D devip) {
+> > > +		pr_warn("called devip =3D=3D NULL\n");
+> > >  		/* no particularly good error to report back */
+> > >  		return SCSI_MLQUEUE_HOST_BUSY;
+> > >  	}
+> >=20
+> > Please refer to the patch I just posted, we can't return _HOST_BUSY=
+ here
+> > if devip =3D=3D NULL.  I posted a fix against the current "misc" br=
+anch as
+> > I don't see this patch applied, let me know if I need to update it.
+>=20
+>=20
+> I'm just not sure why the patches are not merged or even rejected.
 
-This patch is intended to be applied after the "CXL Flash Error
-Recovery and Superpipe" series.
+Because ideally I want a Maintainer ack.  That's Doug Gilbert.
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
----
- drivers/scsi/cxlflash/main.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> I'm submitting patches to the Linux kernel for more than 10 years to
+> various trees and  I can agree that these are not some  urgent fixes,
+> but  this is the first time my effort is ignored for such long time b=
+y
+> the maintainer.=20
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 458ed83..3ccb546 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -354,7 +354,6 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
- 	struct afu *afu = cfg->afu;
- 	struct pci_dev *pdev = cfg->dev;
--	struct device *dev = &cfg->dev->dev;
- 	struct afu_cmd *cmd;
- 	u32 port_sel = scp->device->channel + 1;
- 	int nseg, i, ncount;
-@@ -384,11 +383,13 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 
- 	switch (cfg->state) {
- 	case STATE_LIMBO:
--		dev_dbg_ratelimited(dev, "%s: device in limbo!\n", __func__);
-+		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device in limbo!\n",
-+				    __func__);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	case STATE_FAILTERM:
--		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
-+		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device has failed!\n",
-+				    __func__);
- 		scp->result = (DID_NO_CONNECT << 16);
- 		scp->scsi_done(scp);
- 		rc = 0;
--- 
-2.1.0
+Well, OK, I trust martin, I'll override the lack of Maintainer ack if
+you fix as Ewan suggests.
 
+James
+
+
+> Thanks
+> Tomas
+>=20
+> NrybX=C7=A7v^)=DE=BA{.n+{"{ay=1D=CA=87=DA=99,j=07fhz=1Ew=0Cj:+vwjm=07=
+zZ+=DD=A2j"!
