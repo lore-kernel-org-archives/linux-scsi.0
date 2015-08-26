@@ -1,110 +1,73 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: IO failures with SMR drives at latest kernel versions
-Date: Wed, 26 Aug 2015 15:52:35 -0700
-Message-ID: <1440629555.2196.92.camel@HansenPartnership.com>
-References: <CAOMFOmVFqOvr7AZQ0hie3LB3ReUcNV3rav5Dk_uf2aHoq-LK4A@mail.gmail.com>
-		<CAOMFOmXSrG82TFmHFTiCQoG3hkwJ69+U5Z=fXfbbgdf=xjTaJQ@mail.gmail.com>
-		<55DAB673.10903@suse.de>
-	 <CAOMFOmUHzLad4wLMJdAxj+CPKM_GCY3dTZUqpD2icoEJKdJ8uw@mail.gmail.com>
-	 <55DD5F45.7010905@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH] cxlflash: Remove unused variable from queuecommand
+Date: Wed, 26 Aug 2015 18:36:12 -0500
+Message-ID: <1440632172-10180-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49876 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752221AbbHZWwh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2015 18:52:37 -0400
-In-Reply-To: <55DD5F45.7010905@suse.de>
+Received: from e39.co.us.ibm.com ([32.97.110.160]:60421 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbbHZXgb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 19:36:31 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Wed, 26 Aug 2015 17:36:30 -0600
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id F088638C8039
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 19:36:27 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7QNaRTm56033348
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 23:36:27 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7QNaQ1H020307
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 19:36:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Anatol Pomozov <anatol.pomozov@gmail.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, hch@lst.de, Tejun Heo <tj@kernel.org>
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, mikey@neuling.org, kbuild-all@01.org
+Cc: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On Wed, 2015-08-26 at 08:40 +0200, Hannes Reinecke wrote:
-> On 08/26/2015 06:53 AM, Anatol Pomozov wrote:
-> > Hi
-> > 
-> > On Sun, Aug 23, 2015 at 11:15 PM, Hannes Reinecke <hare@suse.de> wrote:
-> >>> I looked at this commit and it actually adds SMR support to SCSI
-> >>> layer. Reverting ATA_DEV_ZAC means going back to zones-unaware
-> >>> algorithms. It is suboptimal but still much better than IO failures
-> >>> and "BTRFS: lost page write due to I/O error on /dev/sdc" errors I see
-> >>> at my computer.
-> >>>
-> >>> If this SMR support is considered as non-stable, can we at least get a
-> >>> kernel boot (or config) option that disables ZAC?
-> >>>
-> >> Again: Has anybody actually _tested_ that reverting this patch fixes
-> >> this issue?
-> > 
-> > Yes I tested it.
-> > 
-> > This error happens only under heavy load with a lot of read/writes
-> > (like btrfs rebalance).
-> > 
-> > With current Linux-4.1.6 'btrfs balance' fails after ~10 minutes after
-> > start. I reverted ZAC related changes and then ran rebalancing. The
-> > operation finished successfully after 3 hours of running.
-> > 
-> Can you be a bit more specific about the 'ZAC related changes'?
-> There have been several patches, and we really would need to know
-> which one was the offending one.
-> Can you try to bisect things here?
+The queuecommand routine has a local dev pointer used for the
+dev_* prints. The two prints that currently exist are tucked
+under a debug define and thus can be left out. Use the actual
+location instead of a local to avoid this warning.
 
-OK, let's stop shooting the messenger here.  There are multiple reports
-of this problem.  The pattern seems to be some type of error causes
-everything to die.
+This patch is intended to be applied after the "CXL Flash Error
+Recovery and Superpipe" series.
 
-There looks to be an obvious bug in
-9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb in that there's no
-ATA_DEV_ZAC_UNSUP class which means that any attempt to disable the
-device pushes it up to ATA_DEV_NONE.  I'm not sure ... don't have time
-to follow the code ... but doesn't this interfere with the speed
-dropping routines which seems to disable then re-enable the device?
-Does adding ATA_DEV_ZAC_UNSUP fix this problem? patch (compile tested
-only) below.
-
-James
-
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
 ---
+ drivers/scsi/cxlflash/main.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index d6c37bc..fa83320 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -144,6 +144,7 @@ static struct {
- 	{ ATA_DEV_SEMB,			"semb" },
- 	{ ATA_DEV_SEMB_UNSUP,		"semb" },
- 	{ ATA_DEV_ZAC,			"zac" },
-+	{ ATA_DEV_ZAC_UNSUP,		"zac" },
- 	{ ATA_DEV_NONE,			"none" }
- };
- ata_bitfield_name_search(class, ata_class_names)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 36ce37b..49c5b98 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -191,7 +191,8 @@ enum {
- 	ATA_DEV_SEMB		= 7,	/* SEMB */
- 	ATA_DEV_SEMB_UNSUP	= 8,	/* SEMB (unsupported) */
- 	ATA_DEV_ZAC		= 9,	/* ZAC device */
--	ATA_DEV_NONE		= 10,	/* no device */
-+	ATA_DEV_ZAC_UNSUP	= 10,	/* ZAC (unsupported) */
-+	ATA_DEV_NONE		= 11,	/* no device */
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 458ed83..3ccb546 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -354,7 +354,6 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
+ 	struct afu *afu = cfg->afu;
+ 	struct pci_dev *pdev = cfg->dev;
+-	struct device *dev = &cfg->dev->dev;
+ 	struct afu_cmd *cmd;
+ 	u32 port_sel = scp->device->channel + 1;
+ 	int nseg, i, ncount;
+@@ -384,11 +383,13 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
  
- 	/* struct ata_link flags */
- 	ATA_LFLAG_NO_HRST	= (1 << 1), /* avoid hardreset */
-@@ -1517,7 +1518,8 @@ static inline unsigned int ata_class_enabled(unsigned int class)
- static inline unsigned int ata_class_disabled(unsigned int class)
- {
- 	return class == ATA_DEV_ATA_UNSUP || class == ATA_DEV_ATAPI_UNSUP ||
--		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP;
-+		class == ATA_DEV_PMP_UNSUP || class == ATA_DEV_SEMB_UNSUP ||
-+		class == ATA_DEV_ZAC_UNSUP;
- }
- 
- static inline unsigned int ata_class_absent(unsigned int class)
-
+ 	switch (cfg->state) {
+ 	case STATE_LIMBO:
+-		dev_dbg_ratelimited(dev, "%s: device in limbo!\n", __func__);
++		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device in limbo!\n",
++				    __func__);
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
+ 	case STATE_FAILTERM:
+-		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
++		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device has failed!\n",
++				    __func__);
+ 		scp->result = (DID_NO_CONNECT << 16);
+ 		scp->scsi_done(scp);
+ 		rc = 0;
+-- 
+2.1.0
 
