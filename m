@@ -1,69 +1,91 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] aic94xx: Skip reading user settings if flash is not
- found
-Date: Wed, 26 Aug 2015 07:14:16 -0700
-Message-ID: <1440598456.2196.7.camel@HansenPartnership.com>
-References: <1436180878-81565-1-git-send-email-hare@suse.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] megaraid_sas: init tasklet earlier
+Date: Wed, 26 Aug 2015 16:14:32 +0200
+Message-ID: <55DDC9C8.8070507@redhat.com>
+References: <1440509507-3337-1-git-send-email-thenzl@redhat.com>
+ <a237279f3ee2f546dfc71ae3fe6beaef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48257 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751982AbbHZOOS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2015 10:14:18 -0400
-In-Reply-To: <1436180878-81565-1-git-send-email-hare@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:39570 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752802AbbHZOOe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2015 10:14:34 -0400
+In-Reply-To: <a237279f3ee2f546dfc71ae3fe6beaef@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>
 
-On Mon, 2015-07-06 at 13:07 +0200, Hannes Reinecke wrote:
-> If no user settings are found it's pointless trying to
-> read them from flash. So skip that step.
-> This also fixes a compilation warning about uninitialized variables in
-> aic94xx.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+On 26.8.2015 15:15, Sumit Saxena wrote:
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com]
+>> Sent: Tuesday, August 25, 2015 7:02 PM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
+>> Sumit.Saxena@avagotech.com
+>> Subject: [PATCH] megaraid_sas: init tasklet earlier
+>>
+>> It may happen (kdump), that an interrupt is invoked just after the
+> setup_irqs
+>> function was called but before the tasklet was initialised.
+>> At this phase the hw ints should have been disabled, but for unknown
+> reason this
+>> mechanism seems to not work properly.
+>>
+>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>> ---
+>>  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>> b/drivers/scsi/megaraid/megaraid_sas_base.c
+>> index 71b884dae2..c8e0c6de80 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>> @@ -4627,6 +4627,9 @@ static int megasas_init_fw(struct megasas_instance
+>> *instance)
+>>  		"current msix/online cpus\t: (%d/%d)\n",
+>>  		instance->msix_vectors, (unsigned int)num_online_cpus());
+>>
+>> +	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+>> +		(unsigned long)instance);
+>> +
+>>  	if (instance->msix_vectors ?
+>>  		megasas_setup_irqs_msix(instance, 1) :
+>>  		megasas_setup_irqs_ioapic(instance))
+>> @@ -4647,9 +4650,6 @@ static int megasas_init_fw(struct megasas_instance
+>> *instance)
+>>  	if (instance->instancet->init_adapter(instance))
+>>  		goto fail_init_adapter;
+>>
+>> -	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+>> -		(unsigned long)instance);
+>> -
+>>  	instance->instancet->enable_intr(instance);
+>>
+>>  	printk(KERN_ERR "megasas: INIT adapter done\n");
+>
+> Patch looks harmless and it fixes your problem then it's fine. But we need
+> to know the reason why interrupts are coming even if they are not enabled
+> by that time. Can you provide controller's FW version ? I would like to
+> try this locally.
 
-This patch looks fine to me but needs a second review, please.
+It is a "PERC 6/i Integrated" with
+FW Version         : 1.22.02-0612
+BIOS Version       : 2.04.00
+------------------
 
-James
+Even when you'll be able to fix it by another means, we can take
+my patch too, just because it calls the init functions in proper order and so it
+is safe(r). 
 
->  drivers/scsi/aic94xx/aic94xx_sds.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-> index edb43fd..c831e30 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_sds.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-> @@ -983,7 +983,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
->  {
->  	int err, i;
->  	u32 offs, size;
-> -	struct asd_ll_el *el;
-> +	struct asd_ll_el *el = NULL;
->  	struct asd_ctrla_phy_settings *ps;
->  	struct asd_ctrla_phy_settings dflt_ps;
->  
-> @@ -1004,6 +1004,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
->  
->  		size = sizeof(struct asd_ctrla_phy_settings);
->  		ps = &dflt_ps;
-> +		goto out_process;
->  	}
->  
->  	if (size == 0)
-> @@ -1028,7 +1029,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
->  		ASD_DPRINTK("couldn't find ctrla phy settings struct\n");
->  		goto out2;
->  	}
-> -
-> +out_process:
->  	err = asd_process_ctrla_phy_settings(asd_ha, ps);
->  	if (err) {
->  		ASD_DPRINTK("couldn't process ctrla phy settings\n");
-
-
+>
+>> --
+>> 2.4.3
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
