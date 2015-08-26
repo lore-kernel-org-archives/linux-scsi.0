@@ -1,76 +1,41 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas: init tasklet earlier
-Date: Wed, 26 Aug 2015 18:45:40 +0530
-Message-ID: <a237279f3ee2f546dfc71ae3fe6beaef@mail.gmail.com>
-References: <1440509507-3337-1-git-send-email-thenzl@redhat.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: SCSI scanning behavior
+Date: Wed, 26 Aug 2015 06:52:45 -0700
+Message-ID: <55DDC4AD.6040804@sandisk.com>
+References: <55D65082.6020504@linux.vnet.ibm.com> <55DDB8F3.3020308@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:36780 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378AbbHZNPo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 09:15:44 -0400
-Received: by lbbpu9 with SMTP id pu9so119717897lbb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2015 06:15:43 -0700 (PDT)
-In-Reply-To: <1440509507-3337-1-git-send-email-thenzl@redhat.com>
+Received: from mail-bn1bon0071.outbound.protection.outlook.com ([157.56.111.71]:64327
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755883AbbHZNwx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2015 09:52:53 -0400
+In-Reply-To: <55DDB8F3.3020308@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>
+To: Hannes Reinecke <hare@suse.de>, Brian King <brking@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Tuesday, August 25, 2015 7:02 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> Sumit.Saxena@avagotech.com
-> Subject: [PATCH] megaraid_sas: init tasklet earlier
->
-> It may happen (kdump), that an interrupt is invoked just after the
-setup_irqs
-> function was called but before the tasklet was initialised.
-> At this phase the hw ints should have been disabled, but for unknown
-reason this
-> mechanism seems to not work properly.
->
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 71b884dae2..c8e0c6de80 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4627,6 +4627,9 @@ static int megasas_init_fw(struct megasas_instance
-> *instance)
->  		"current msix/online cpus\t: (%d/%d)\n",
->  		instance->msix_vectors, (unsigned int)num_online_cpus());
->
-> +	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> +		(unsigned long)instance);
-> +
->  	if (instance->msix_vectors ?
->  		megasas_setup_irqs_msix(instance, 1) :
->  		megasas_setup_irqs_ioapic(instance))
-> @@ -4647,9 +4650,6 @@ static int megasas_init_fw(struct megasas_instance
-> *instance)
->  	if (instance->instancet->init_adapter(instance))
->  		goto fail_init_adapter;
->
-> -	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> -		(unsigned long)instance);
-> -
->  	instance->instancet->enable_intr(instance);
->
->  	printk(KERN_ERR "megasas: INIT adapter done\n");
+On 08/26/15 06:02, Hannes Reinecke wrote:
+> On 08/21/2015 12:11 AM, Brian King wrote:
+>> However, I'm still left wondering why we are adding PQ=1, PDT=0 devices in the sequential LUN scan at all.
+>> Are there media changer devices out there that we've seen respond like this? Even so, does it make sense
+>> to add PQ=1, PDT=0 LUNs for LUN > 0?
+>>
+> Yes, unfortunately we need this. NetApp arrays have a habit of
+> returning 'PQ=1' for unconnected LUN 0, even though higher LUNs are
+> present. So we need to add devices for PQ=1, otherwise we wouldn't
+> be able to scan them.
+> We _might_ be able to tweak this by ignoring devices with PQ=1 and
+> LUN!=0; however, it might break other things.
 
+Hello Hannes,
 
-Patch looks harmless and it fixes your problem then it's fine. But we need
-to know the reason why interrupts are coming even if they are not enabled
-by that time. Can you provide controller's FW version ? I would like to
-try this locally.
+The code in scsi_scan.c already skips LUNs with PQ=1 and PDT=0x1f. I'm 
+not sure we should skip LUNS with PQ=1 and a PDT value other than 0x1f.
 
-> --
-> 2.4.3
+Thanks,
+
+Bart.
+
