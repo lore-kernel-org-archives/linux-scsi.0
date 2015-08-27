@@ -1,135 +1,86 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/23] scsi_dh_alua: use unique device id
-Date: Thu, 27 Aug 2015 14:41:15 +0200
-Message-ID: <1440679281-13234-18-git-send-email-hare@suse.de>
-References: <1440679281-13234-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47956 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754043AbbH0Ml3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 08:41:29 -0400
-In-Reply-To: <1440679281-13234-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v2 03/15] scsi: ufs: verify command tag validity
+Date: Thu, 27 Aug 2015 15:40:54 +0300
+Message-ID: <1440679266-13218-4-git-send-email-ygardi@codeaurora.org>
+References: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Use scsi_vpd_lun_id() to assign a unique device identification
-to the alua port group structure.
+A race condition appear to exist between request completion when
+scsi_done() is called to end the request and set the tag back to
+-1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
+handling which aborts the command and reuses it to request sense
+data. Sending the request sense is done with tag which was set to -1
+and so it is invalid.
+Assert command tag passed from scsi layer is valid.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 70 +++++++++++++++++++++++++++---
- 1 file changed, 65 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index dbe9ff2..c2b2100b 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -70,6 +70,8 @@ static DEFINE_SPINLOCK(port_group_lock);
- struct alua_port_group {
- 	struct kref		kref;
- 	struct list_head	node;
-+	unsigned char		device_id_str[256];
-+	int			device_id_size;
- 	int			group_id;
- 	int			tpgs;
- 	int			state;
-@@ -229,7 +231,9 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2d3ebca..8860a57 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
++static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
++{
++	return tag >= 0 && tag < hba->nutrs;
++}
+ 
+ static inline int ufshcd_enable_irq(struct ufs_hba *hba)
  {
- 	unsigned char *d;
- 	int group_id = -1;
--	struct alua_port_group *pg = NULL;
-+	char device_id_str[256];
-+	int device_id_size;
-+	struct alua_port_group *tmp_pg, *pg = NULL;
+@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	hba = shost_priv(host);
  
- 	if (!sdev->vpd_pg83)
- 		return SCSI_DH_DEV_UNSUPP;
-@@ -266,9 +270,39 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 		h->tpgs = TPGS_MODE_NONE;
- 		return SCSI_DH_DEV_UNSUPP;
- 	}
-+	device_id_size = scsi_vpd_lun_id(sdev, device_id_str, 256);
-+	if (device_id_size <= 0) {
-+		/*
-+		 * Internal error: TPGS supported by no
-+		 * device identifcation found.
-+		 * Disable ALUA support.
-+		 */
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: No device descriptors found\n",
-+			    ALUA_DH_NAME);
-+		h->tpgs = TPGS_MODE_NONE;
-+		return SCSI_DH_DEV_UNSUPP;
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
 +	}
- 	sdev_printk(KERN_INFO, sdev,
--		    "%s: port group %02x rel port %02x\n",
--		    ALUA_DH_NAME, group_id, h->rel_port);
-+		    "%s: device %s port group %02x "
-+		    "rel port %02x\n", ALUA_DH_NAME,
-+		    device_id_str, group_id, h->rel_port);
-+	spin_lock(&port_group_lock);
-+	list_for_each_entry(tmp_pg, &port_group_list, node) {
-+		if (tmp_pg->group_id != group_id)
-+			continue;
-+		if (tmp_pg->device_id_size != device_id_size)
-+			continue;
-+		if (strncmp(tmp_pg->device_id_str, device_id_str,
-+			    device_id_size))
-+			continue;
-+		h->pg = tmp_pg;
-+		kref_get(&tmp_pg->kref);
-+		break;
-+	}
-+	spin_unlock(&port_group_lock);
-+	if (h->pg)
-+		return SCSI_DH_OK;
  
- 	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
- 	if (!pg) {
-@@ -278,13 +312,39 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 		/* Temporary failure, bypass */
- 		return SCSI_DH_DEV_TEMP_BUSY;
- 	}
-+	if (device_id_size)
-+		strncpy(pg->device_id_str, device_id_str, 256);
-+	else
-+		pg->device_id_str[0] = '\0';
-+
-+	pg->device_id_size = device_id_size;
- 	pg->group_id = group_id;
- 	pg->tpgs = h->tpgs;
- 	pg->state = TPGS_STATE_OPTIMIZED;
- 	kref_init(&pg->kref);
- 	spin_lock(&port_group_lock);
--	list_add(&pg->node, &port_group_list);
--	h->pg = pg;
-+	/*
-+	 * Re-check list again to catch
-+	 * concurrent updates
-+	 */
-+	list_for_each_entry(tmp_pg, &port_group_list, node) {
-+		if (tmp_pg->group_id != pg->group_id)
-+			continue;
-+		if (tmp_pg->device_id_size != pg->device_id_size)
-+			continue;
-+		if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
-+			    device_id_size))
-+			continue;
-+		h->pg = tmp_pg;
-+		kref_get(&tmp_pg->kref);
-+		kfree(pg);
-+		pg = NULL;
-+		break;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	switch (hba->ufshcd_state) {
+@@ -3862,13 +3872,23 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
 +	}
-+	if (pg) {
-+		list_add(&pg->node, &port_group_list);
-+		h->pg = pg;
-+	}
- 	spin_unlock(&port_group_lock);
  
- 	return SCSI_DH_OK;
+ 	ufshcd_hold(hba, false);
++	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* If command is already aborted/completed, return SUCCESS */
+-	if (!(test_bit(tag, &hba->outstanding_reqs)))
++	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++		dev_err(hba->dev,
++			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
++			__func__, tag, hba->outstanding_reqs, reg);
+ 		goto out;
++	}
+ 
+-	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	if (!(reg & (1 << tag))) {
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag = %d",
 -- 
-1.8.5.6
+1.8.5.2
 
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
