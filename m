@@ -1,65 +1,88 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Patch] scsi_error: should not get sense for timeout IO in scsi
- error handler
-Date: Wed, 26 Aug 2015 17:31:29 -0700
-Message-ID: <1440635489.2196.98.camel@HansenPartnership.com>
-References: <OFAF74C95C.6058723F-ON48257E93.00322982-48257E93.00363C6C@zte.com.cn>
+Subject: Re: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage
+ protocol negotiation from the vmbus protocol negotiation.
+Date: Wed, 26 Aug 2015 18:40:25 -0700
+Message-ID: <1440639625.2196.100.camel@HansenPartnership.com>
+References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
+ <1439480632-11144-1-git-send-email-kys@microsoft.com>
+ <1439480632-11144-3-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50148 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751452AbbH0Abb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Aug 2015 20:31:31 -0400
-In-Reply-To: <OFAF74C95C.6058723F-ON48257E93.00322982-48257E93.00363C6C@zte.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1439480632-11144-3-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hch@infradead.org, apw@canonical.com, devel@linuxdriverproject.org, Keith Mange <keith.mange@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jiang.biao2@zte.com.cn
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2015-07-31 at 17:52 +0800, jiang.biao2@zte.com.cn wrote:
-> scsi_error: should not get sense for timeout IO in scsi error handler
+On Thu, 2015-08-13 at 08:43 -0700, K. Y. Srinivasan wrote:
+> From: Keith Mange <keith.mange@microsoft.com>
 > 
-> When an IO timeout occurs, the IO will be aborted in
-> scsi_abort_command() and SCSI_EH_ABORT_SCHEDULED will be set. Because
-> of that, the SCSI_EH_CANCEL_CMD will be clear in scsi_eh_scmd_add().
-> So when scsi error handler starts, it will get sense for this
-> timeout IO and the scmd of the IO request will be reused. In that
-> case, the scmd may be double released when racing with io_done(),
-> which will result in crash.
-> SO SCSI_EH_ABORT_SCHEDULED should also be checked when getting sense.
-> The bug maybe reproduced when the link between host and disk is
-> unstable.
+> Currently we are making decisions based on vmbus protocol versions
+> that have been negotiated; use storage potocol versions instead.
 > 
-> Signed-off-by: Jiang Biao <jiang.biao2@zte.com.cn>
-> Signed-off-by: Long Chun <long.chun@zte.com.cn>
-> Reviewed-by: Tan Hu <tan.hu@zte.com.cn>
-> Reviewed-by: Chen Donghai <chen.donghai@zte.com.cn>
-> Reviewed-by: Cai Qu <cai.qu@zte.com.cn>
+> Tested-by: Alex Ng <alexng@microsoft.com>
+> Signed-off-by: Keith Mange <keith.mange@microsoft.com>
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c |  109 +++++++++++++++++++++++++++++++++++---------
+>  1 files changed, 87 insertions(+), 22 deletions(-)
 > 
-> diff -uprN drivers/scsi/scsi_error.c drivers_new/scsi/scsi_error.c
-
-to apply easily, diffs need to start at the top of the tree, please.
-
-> --- scsi/scsi_error.c   2015-07-31 16:03:18.000000000 +0800
-> +++ scsi_new/scsi_error.c       2015-07-31 16:29:25.000000000 +0800
-> @@ -1156,9 +1156,14 @@ int scsi_eh_get_sense(struct list_head *
->         struct Scsi_Host *shost;
->         int rtn;
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 5f9d133..f29871e 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -56,14 +56,18 @@
+>   * V1 RC > 2008/1/31:  2.0
+>   * Win7: 4.2
+>   * Win8: 5.1
+> + * Win8.1: 6.0
+> + * Win10: 6.2
+>   */
+>  
+>  #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
+>  						(((MINOR_) & 0xff)))
+>  
+> +#define VMSTOR_PROTO_VERSION_WIN6	VMSTOR_PROTO_VERSION(2, 0)
+>  #define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
+>  #define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
+> -
+> +#define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
+> +#define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
+>  
+>  /*  Packet structure describing virtual storage requests. */
+>  enum vstor_packet_operation {
+> @@ -205,6 +209,46 @@ struct vmscsi_request {
+>  
 > 
-> +       /*
-> +        * If SCSI_EH_ABORT_SCHEDULED has been set, it is timeout IO,
-> +        * should not get sense.
-> +        */
->         list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+>  /*
+> + * The list of storage protocols in order of preference.
+> + */
+> +struct vmstor_protocol {
+> +	int protocol_version;
+> +	int sense_buffer_size;
+> +	int vmscsi_size_delta;
+> +};
+> +
+> +#define VMSTOR_NUM_PROTOCOLS    5
+> +
+> +const struct vmstor_protocol vmstor_protocols[VMSTOR_NUM_PROTOCOLS] = {
 
-and here all the tabs have been converted to spaces; you need to read
-Documentation/email-clients.txt for details on how to avoid this.
+Sparse doesn't like this not being static:
 
-I managed to fix it up this time, but won't again.
+  CHECK   drivers/scsi/storvsc_drv.c
+drivers/scsi/storvsc_drv.c:221:30: warning: symbol 'vmstor_protocols'
+was not declared. Should it be static?
+ 
+I fixed it up.
 
 James
-
-
