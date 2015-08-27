@@ -1,56 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH V7 1/9] [SCSI] aacraid: Fix for logical device name and
- UID not exposed to the OS
-Date: Thu, 27 Aug 2015 08:08:26 -0700
-Message-ID: <1440688106.2196.114.camel@HansenPartnership.com>
-References: <1440672667-8203-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-	 <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+From: messakahawai <rbioffice003@gmail.com>
+Subject: GREETINGS,
+Date: Thu, 27 Aug 2015 09:45:33 -0700
+Message-ID: <CAKLkw+89RMzJE_Te=3e4MK2a4k1Z13SnyFMp6mp1O-rf36Yz0Q__3157.01685981384$1440693969$gmane$org@mail.gmail.com>
+Reply-To: messakahawai@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52515 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753733AbbH0PI1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 11:08:27 -0400
-In-Reply-To: <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:36853 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711AbbH0Qpe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2015 12:45:34 -0400
+Received: by qkcn187 with SMTP id n187so1302881qkc.3
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2015 09:45:33 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, thenzl@redhat.com, Murthy.Bhat@pmcs.com, Karthikeya.Sunkesula@pmcs.com, aacraid@pmc-sierra.com, Harry.Yang@pmcs.com, Rich.Bono@pmcs.com
 
-On Thu, 2015-08-27 at 06:50 -0400, Mahesh Rajashekhara wrote:
-> Description:
-> 	Driver sends the right size of the response buffer.
-> 
-> Changes from V2:
-> None
-> 
-> Reviewed By: Tomas Henzl <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
-> 
-> Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Hello,
 
-You've had hundreds of upstream confirmation emails over the years.
-They've all had one line per tag with no spaces.  Next time can we
-please use the right format so I don't have to keep editing your commit
-messages.  That is:
+I am Mr. Messaka Hawai, from Burkina Faso in West African region. I
+work with the Islamic Development Bank(IDB) here in the nation. I am
+writing you from my office which will be of an immense benefit to both
+of us. In my department, being the accountant manager I discovered an
+abandoned sum of $8 million United States Dollars in an account that
+belongs to one of the bank late foreign customers, a German citizen
+who unfortunately lost his life in a plane crash. Now our bank has
+been waiting for any of the relatives to come-up for
 
-Subject: One line summary
+the claim but nobody has done that. I personally have been
+unsuccessful in locating the relatives for many
+years now, I seek your consent to present you as the next of kin
+/beneficiary to the deceased so that the proceeds of this account
+valued at $8 Million Dollars can be done and pay to you for both of
+This will be disbursed or shared between both of us in these us.
+percentages, 55% for me and 35% to you while 10% will be for expenses
+both parties might have incurred during the process of transferring.
 
-Detailed Description of the change (without a Description: prefix)
+I have secured necessary information=E2=80=99s and the certificate of d=
+eposit
+that can be used to back up this claim we are making.
+All I require now is your honest Co-operation, Confidentiality and
+trust to enable us sees this transaction through. I guarantee you that
+this will be executed under a legitimate arrangement that will protect
+you from any breach of the law. Having gone through a methodical
+search, I decided to contact you so that you will find this proposal
+interesting. Please on your confirmation of this message and
+indicating your interest, I will
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+furnish you with more details and you can contact me through this
+myprivate E-mail address (messakahawai@gmail.com).Please i will like
+you to write me back through my Private email address as
+follows;(messakahawai@gmail.com) for further discussion.Pls do not
+forget to contact me through this mail, so that all the details
+concerning to the transaction can be giving to you.Endeavour to let me
+know your decision rather than to keep me waiting or exposing me.
 
----
+Regrds,
 
-Version notices and other context relevant only to the upstream process
-come here after the three dashes so it doesn't appear in the patch
-detailed description
-
-James
- 
-
+Mr.Messaka Hawai
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
