@@ -1,183 +1,101 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/23] scsi_dh_alua: allocate RTPG buffer separately
-Date: Thu, 27 Aug 2015 14:41:12 +0200
-Message-ID: <1440679281-13234-15-git-send-email-hare@suse.de>
-References: <1440679281-13234-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47974 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754023AbbH0Ml2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 08:41:28 -0400
-In-Reply-To: <1440679281-13234-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v2 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+Date: Thu, 27 Aug 2015 15:40:52 +0300
+Message-ID: <1440679266-13218-2-git-send-email-ygardi@codeaurora.org>
+References: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The RTPG buffer will only evaluated within alua_rtpg(),
-so we can allocate it locally there and avoid having to
-put it into the global structure.
+Clear the UFS data structures before sending new request.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+The SCSI command is sent to the device within the UFS UPIU request.
+As part of the transfer UPIU preparation, the SCSI command is copied
+to the UPIU structure according to the SCSI command size.
+As different SCSI commands differ in size from each other, we need
+to clear the whole SCSI command field to prevent sending uninitialized
+data to the device.
+
+The UPIU response doesn't always include the sense data and can differ
+in size.
+Hence, the UPIU response should also be cleared before the transfer.
+
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 56 +++++++++++-------------------
- 1 file changed, 21 insertions(+), 35 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index d1010dd..4157fe2 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -56,7 +56,7 @@
- #define TPGS_MODE_IMPLICIT		0x1
- #define TPGS_MODE_EXPLICIT		0x2
- 
--#define ALUA_INQUIRY_SIZE		36
-+#define ALUA_RTPG_SIZE			128
- #define ALUA_FAILOVER_TIMEOUT		60
- #define ALUA_FAILOVER_RETRIES		5
- 
-@@ -75,9 +75,6 @@ struct alua_port_group {
- 	int			state;
- 	int			pref;
- 	unsigned		flags; /* used for optimizing STPG */
--	unsigned char		inq[ALUA_INQUIRY_SIZE];
--	unsigned char		*buff;
--	int			bufflen;
- 	unsigned char		transition_tmo;
- };
- 
-@@ -96,21 +93,6 @@ struct alua_dh_data {
- static char print_alua_state(int);
- static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
- 
--static int realloc_buffer(struct alua_port_group *pg, unsigned len)
--{
--	if (pg->buff && pg->buff != pg->inq)
--		kfree(pg->buff);
--
--	pg->buff = kmalloc(len, GFP_NOIO);
--	if (!pg->buff) {
--		pg->buff = pg->inq;
--		pg->bufflen = ALUA_INQUIRY_SIZE;
--		return 1;
--	}
--	pg->bufflen = len;
--	return 0;
--}
--
- static void release_port_group(struct kref *kref)
- {
- 	struct alua_port_group *pg;
-@@ -120,8 +102,6 @@ static void release_port_group(struct kref *kref)
- 	spin_lock(&port_group_lock);
- 	list_del(&pg->node);
- 	spin_unlock(&port_group_lock);
--	if (pg->buff && pg->inq != pg->buff)
--		kfree(pg->buff);
- 	kfree(pg);
- }
- 
-@@ -300,8 +280,6 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
- 		return SCSI_DH_DEV_TEMP_BUSY;
- 	}
- 	pg->group_id = group_id;
--	pg->buff = pg->inq;
--	pg->bufflen = ALUA_INQUIRY_SIZE;
- 	pg->tpgs = h->tpgs;
- 	pg->state = TPGS_STATE_OPTIMIZED;
- 	kref_init(&pg->kref);
-@@ -424,8 +402,8 @@ static int alua_check_sense(struct scsi_device *sdev,
- static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
- {
- 	struct scsi_sense_hdr sense_hdr;
--	int len, k, off, valid_states = 0;
--	unsigned char *ucp;
-+	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
-+	unsigned char *ucp, *buff;
- 	unsigned err, retval;
- 	unsigned long expiry, interval = 0;
- 	unsigned int tpg_desc_tbl_off;
-@@ -436,9 +414,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 	else
- 		expiry = round_jiffies_up(jiffies + pg->transition_tmo * HZ);
- 
-+	buff = kzalloc(bufflen, GFP_KERNEL);
-+	if (!buff)
-+		return SCSI_DH_DEV_TEMP_BUSY;
-+
-  retry:
--	retval = submit_rtpg(sdev, pg->buff, pg->bufflen,
--			     &sense_hdr, pg->flags);
-+	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
- 
- 	if (retval) {
- 		if (!scsi_sense_valid(&sense_hdr)) {
-@@ -449,6 +430,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 				err = SCSI_DH_DEV_TEMP_BUSY;
- 			else
- 				err = SCSI_DH_IO;
-+			kfree(buff);
- 			return err;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 131c720..3428f72 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3,7 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 				cpu_to_le32(lower_32_bits(sg->dma_address));
+ 			prd_table[i].upper_addr =
+ 				cpu_to_le32(upper_32_bits(sg->dma_address));
++			prd_table[i].reserved = 0;
  		}
+ 	} else {
+ 		lrbp->utr_descriptor_ptr->prd_table_length = 0;
+@@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
  
-@@ -477,14 +459,18 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
- 			    ALUA_DH_NAME);
- 		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-+		kfree(buff);
- 		return SCSI_DH_IO;
- 	}
- 
--	len = get_unaligned_be32(&pg->buff[0]) + 4;
-+	len = get_unaligned_be32(&buff[0]) + 4;
- 
--	if (len > pg->bufflen) {
-+	if (len > bufflen) {
- 		/* Resubmit with the correct length */
--		if (realloc_buffer(pg, len)) {
-+		kfree(buff);
-+		bufflen = len;
-+		buff = kmalloc(bufflen, GFP_KERNEL);
-+		if (!buff) {
- 			sdev_printk(KERN_WARNING, sdev,
- 				    "%s: kmalloc buffer failed\n",__func__);
- 			/* Temporary failure, bypass */
-@@ -494,9 +480,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 	}
- 
- 	orig_transition_tmo = pg->transition_tmo;
--	if ((pg->buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR &&
--	    pg->buff[5] != 0)
--		pg->transition_tmo = pg->buff[5];
-+	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR && buff[5] != 0)
-+		pg->transition_tmo = buff[5];
- 	else
- 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
- 
-@@ -508,12 +493,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 		expiry = jiffies + pg->transition_tmo * HZ;
- 	}
- 
--	if ((pg->buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR)
-+	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR)
- 		tpg_desc_tbl_off = 8;
- 	else
- 		tpg_desc_tbl_off = 4;
- 
--	for (k = tpg_desc_tbl_off, ucp = pg->buff + tpg_desc_tbl_off;
-+	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
- 	     k < len;
- 	     k += off, ucp += off) {
- 
-@@ -563,6 +548,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 		err = SCSI_DH_OK;
- 		break;
- 	}
-+	kfree(buff);
- 	return err;
+ 	/* Transfer request descriptor header fields */
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+-
++	/* dword_1 is reserved, hence it is set to 0 */
++	req_desc->header.dword_1 = 0;
+ 	/*
+ 	 * assigning invalid value for command status. Controller
+ 	 * updates OCS on command completion, with the command
+@@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 	 */
+ 	req_desc->header.dword_2 =
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
++	/* dword_3 is reserved, hence it is set to 0 */
++	req_desc->header.dword_3 = 0;
  }
  
+ /**
+@@ -1137,6 +1141,7 @@ static
+ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ {
+ 	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
++	unsigned short cdb_len;
+ 
+ 	/* command descriptor fields */
+ 	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+@@ -1151,8 +1156,12 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ 	ucd_req_ptr->sc.exp_data_transfer_len =
+ 		cpu_to_be32(lrbp->cmd->sdb.length);
+ 
+-	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
+-		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
++	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
++	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
++	if (cdb_len < MAX_CDB_SIZE)
++		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
++		       (MAX_CDB_SIZE - cdb_len));
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
+ 
+ /**
 -- 
-1.8.5.6
+1.8.5.2
 
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
