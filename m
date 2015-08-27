@@ -1,48 +1,106 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 00/15] Big fixes, retries, handle a race condition
-Date: Thu, 27 Aug 2015 15:40:51 +0300
-Message-ID: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 09/23] scsi_dh_alua: use unaligned access macros
+Date: Thu, 27 Aug 2015 14:41:07 +0200
+Message-ID: <1440679281-13234-10-git-send-email-hare@suse.de>
+References: <1440679281-13234-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47969 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753972AbbH0Ml1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2015 08:41:27 -0400
+In-Reply-To: <1440679281-13234-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Important:
-This serie of 15 small patches should be pushed after the series of 8 patches
-"Fix error message and present UFS variant probe"
+Use 'get_unaligned_XX' and 'put_unaligned_XX' instead of
+open-coding it.
 
-V2:
-a few minor changes
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
-V1:
-This serie of 15 small patches should be pushed after the series of 8 patches
-I have uploaded to the upstream a week ago:
-"Fix error message and present UFS variant probe"
-
-Yaniv Gardi (15):
-  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: verify command tag validity
-  scsi: ufs: clear outstanding_request bit in case query timeout
-  scsi: ufs: increase fDeviceInit query response timeout
-  scsi: ufs: avoid exception event handler racing with PM callbacks
-  scsi: ufs: set REQUEST_SENSE command size to 18 bytes
-  scsi: ufs: add retries to dme_peer get and set attribute
-  scsi: ufs: add retries for hibern8 enter
-  scsi: ufs: fix error recovery after the hibern8 exit failure
-  scsi: ufs: retry failed query flag requests
-  scsi: ufs: reduce the interrupts for power mode change requests
-  scsi: ufs: add missing memory barriers
-  scsi: ufs: commit descriptors before setting the doorbell
-  scsi: ufs: add wrapper for retrying sending query attribute
-
- drivers/scsi/ufs/ufshcd.c | 413 ++++++++++++++++++++++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h |   4 +
- 2 files changed, 332 insertions(+), 85 deletions(-)
-
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 9d8fc53..0636721 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -22,6 +22,7 @@
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/module.h>
++#include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_eh.h>
+@@ -153,10 +154,7 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	rq->cmd[6] = (h->bufflen >> 24) & 0xff;
+-	rq->cmd[7] = (h->bufflen >> 16) & 0xff;
+-	rq->cmd[8] = (h->bufflen >>  8) & 0xff;
+-	rq->cmd[9] = h->bufflen & 0xff;
++	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+ 
+ 	rq->sense = h->sense;
+@@ -239,8 +237,7 @@ static unsigned submit_stpg(struct alua_dh_data *h)
+ 	/* Prepare the data buffer */
+ 	memset(h->buff, 0, stpg_len);
+ 	h->buff[4] = TPGS_STATE_OPTIMIZED & 0x0f;
+-	h->buff[6] = (h->group_id >> 8) & 0xff;
+-	h->buff[7] = h->group_id & 0xff;
++	put_unaligned_be16(h->group_id, &h->buff[6]);
+ 
+ 	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
+ 	if (!rq)
+@@ -249,10 +246,7 @@ static unsigned submit_stpg(struct alua_dh_data *h)
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_OUT;
+ 	rq->cmd[1] = MO_SET_TARGET_PGS;
+-	rq->cmd[6] = (stpg_len >> 24) & 0xff;
+-	rq->cmd[7] = (stpg_len >> 16) & 0xff;
+-	rq->cmd[8] = (stpg_len >>  8) & 0xff;
+-	rq->cmd[9] = stpg_len & 0xff;
++	put_unaligned_be32(stpg_len, &rq->cmd[6]);
+ 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
+ 
+ 	rq->sense = h->sense;
+@@ -341,11 +335,11 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		switch (d[1] & 0xf) {
+ 		case 0x4:
+ 			/* Relative target port */
+-			h->rel_port = (d[6] << 8) + d[7];
++			h->rel_port = get_unaligned_be16(&d[6]);
+ 			break;
+ 		case 0x5:
+ 			/* Target port group */
+-			h->group_id = (d[6] << 8) + d[7];
++			h->group_id = get_unaligned_be16(&d[6]);
+ 			break;
+ 		default:
+ 			break;
+@@ -540,8 +534,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		return SCSI_DH_IO;
+ 	}
+ 
+-	len = (h->buff[0] << 24) + (h->buff[1] << 16) +
+-		(h->buff[2] << 8) + h->buff[3] + 4;
++	len = get_unaligned_be32(&h->buff[0]) + 4;
+ 
+ 	if (len > h->bufflen) {
+ 		/* Resubmit with the correct length */
+@@ -576,7 +569,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 	     k < len;
+ 	     k += off, ucp += off) {
+ 
+-		if (h->group_id == (ucp[2] << 8) + ucp[3]) {
++		if (h->group_id == get_unaligned_be16(&ucp[2])) {
+ 			h->state = ucp[0] & 0x0f;
+ 			h->pref = ucp[0] >> 7;
+ 			valid_states = ucp[1];
 -- 
-1.8.5.2
+1.8.5.6
 
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
