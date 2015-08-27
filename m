@@ -1,88 +1,83 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND V2 3/7] scsi: storvsc: Untangle the storage
- protocol negotiation from the vmbus protocol negotiation.
-Date: Wed, 26 Aug 2015 18:40:25 -0700
-Message-ID: <1440639625.2196.100.camel@HansenPartnership.com>
-References: <1439480609-11099-1-git-send-email-kys@microsoft.com>
- <1439480632-11144-1-git-send-email-kys@microsoft.com>
- <1439480632-11144-3-git-send-email-kys@microsoft.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v6 0/3] CXL Flash Error Recovery and Superpipe
+Date: Wed, 26 Aug 2015 18:57:03 -0700
+Message-ID: <1440640623.31814.5.camel@haakon3.risingtidesystems.com>
+References: <1439520443-56720-1-git-send-email-mrochs@linux.vnet.ibm.com>
+	 <1440572202.8608.10.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1439480632-11144-3-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org, jasowang@redhat.com, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hch@infradead.org, apw@canonical.com, devel@linuxdriverproject.org, Keith Mange <keith.mange@microsoft.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51602 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999AbbH0B5G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2015 21:57:06 -0400
+In-Reply-To: <1440572202.8608.10.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, mikey@neuling.org, dja@ozlabs.au.ibm.com, benh@kernel.crashing.org, hch@infradead.org, imunsie@au1.ibm.com
 
-On Thu, 2015-08-13 at 08:43 -0700, K. Y. Srinivasan wrote:
-> From: Keith Mange <keith.mange@microsoft.com>
+On Tue, 2015-08-25 at 23:56 -0700, Nicholas A. Bellinger wrote:
+> Hi Matthew & Co,
 > 
-> Currently we are making decisions based on vmbus protocol versions
-> that have been negotiated; use storage potocol versions instead.
-> 
-> Tested-by: Alex Ng <alexng@microsoft.com>
-> Signed-off-by: Keith Mange <keith.mange@microsoft.com>
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c |  109 +++++++++++++++++++++++++++++++++++---------
->  1 files changed, 87 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 5f9d133..f29871e 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -56,14 +56,18 @@
->   * V1 RC > 2008/1/31:  2.0
->   * Win7: 4.2
->   * Win8: 5.1
-> + * Win8.1: 6.0
-> + * Win10: 6.2
->   */
->  
->  #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
->  						(((MINOR_) & 0xff)))
->  
-> +#define VMSTOR_PROTO_VERSION_WIN6	VMSTOR_PROTO_VERSION(2, 0)
->  #define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
->  #define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
-> -
-> +#define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
-> +#define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
->  
->  /*  Packet structure describing virtual storage requests. */
->  enum vstor_packet_operation {
-> @@ -205,6 +209,46 @@ struct vmscsi_request {
->  
-> 
->  /*
-> + * The list of storage protocols in order of preference.
-> + */
-> +struct vmstor_protocol {
-> +	int protocol_version;
-> +	int sense_buffer_size;
-> +	int vmscsi_size_delta;
-> +};
-> +
-> +#define VMSTOR_NUM_PROTOCOLS    5
-> +
-> +const struct vmstor_protocol vmstor_protocols[VMSTOR_NUM_PROTOCOLS] = {
+> On Thu, 2015-08-13 at 21:47 -0500, Matthew R. Ochs wrote:
+> > This patch set is intended for the 4.3 release and adds support for
+> > error recovery and the superpipe features provided by the IBM CXL
+> > Flash adapter. The superpipe function was originally presented in an
+> > RFC patch set in late April. To aid with the review of the superpipe
+> > portion of these enhancements, we have further split it across the
+> > last two patches in this set. Please reference the changelog below
+> > for details on what has been altered from previous versions of this
+> > patchset.
+> > 
 
-Sparse doesn't like this not being static:
+<SNIP>
 
-  CHECK   drivers/scsi/storvsc_drv.c
-drivers/scsi/storvsc_drv.c:221:30: warning: symbol 'vmstor_protocols'
-was not declared. Should it be static?
- 
-I fixed it up.
+> > Matthew R. Ochs (3):
+> >   cxlflash: Base error recovery support
+> >   cxlflash: Superpipe support
+> >   cxlflash: Virtual LUN support
+> > 
+> >  Documentation/ioctl/ioctl-number.txt |    1 +
+> >  Documentation/powerpc/cxlflash.txt   |  318 ++++++
+> >  drivers/scsi/cxlflash/Kconfig        |    2 +-
+> >  drivers/scsi/cxlflash/Makefile       |    2 +-
+> >  drivers/scsi/cxlflash/common.h       |   34 +-
+> >  drivers/scsi/cxlflash/lunmgt.c       |  266 +++++
+> >  drivers/scsi/cxlflash/main.c         |  221 +++-
+> >  drivers/scsi/cxlflash/main.h         |    6 +-
+> >  drivers/scsi/cxlflash/sislite.h      |   25 +-
+> >  drivers/scsi/cxlflash/superpipe.c    | 2084 ++++++++++++++++++++++++++++++++++
+> >  drivers/scsi/cxlflash/superpipe.h    |  147 +++
+> >  drivers/scsi/cxlflash/vlun.c         | 1243 ++++++++++++++++++++
+> >  drivers/scsi/cxlflash/vlun.h         |   86 ++
+> >  include/uapi/scsi/Kbuild             |    1 +
+> >  include/uapi/scsi/cxlflash_ioctl.h   |  174 +++
+> >  15 files changed, 4584 insertions(+), 27 deletions(-)
+> >  create mode 100644 Documentation/powerpc/cxlflash.txt
+> >  create mode 100644 drivers/scsi/cxlflash/lunmgt.c
+> >  mode change 100755 => 100644 drivers/scsi/cxlflash/sislite.h
+> >  create mode 100644 drivers/scsi/cxlflash/superpipe.c
+> >  create mode 100644 drivers/scsi/cxlflash/superpipe.h
+> >  create mode 100644 drivers/scsi/cxlflash/vlun.c
+> >  create mode 100644 drivers/scsi/cxlflash/vlun.h
+> >  create mode 100644 include/uapi/scsi/cxlflash_ioctl.h
+> > 
+> 
+> Thanks for including the full review history.
+> 
+> This series has been added to target-pending.git/for-next-merge atop
+> current scsi.git/for-next code so it can be picked up by sfr for
+> tomorrow's linux-next build.
+> 
+> James, please include this for v4.3-rc1 code.
+> 
 
-James
+As this series + associated follow-up patches have been included into
+scsi.git/for-next code, I'll drop these from target-pending.git.
+
+Thanks folks,
+
+--nab
+
