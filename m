@@ -1,65 +1,60 @@
-From: messakahawai <rbioffice003@gmail.com>
-Subject: GREETINGS,
-Date: Thu, 27 Aug 2015 09:45:58 -0700
-Message-ID: <CAKLkw+_bsuFa6Cc1K-M9pbdpe1B0EsLFBX53rDwN-FR9ejqSKw__20992.8571283401$1440693984$gmane$org@mail.gmail.com>
-Reply-To: messakahawai@gmail.com
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: [PATCH v1 14/15] scsi: ufs: commit descriptors before setting the doorbell
+Date: Thu, 27 Aug 2015 12:02:46 -0500
+Message-ID: <CAL_JsqL9+oVFu3Gty1UaCLRR3P4jfDZKaf5oEkfMjp=-J5TQdw@mail.gmail.com>
+References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
+ <1440194989-28835-15-git-send-email-ygardi@codeaurora.org>
+ <CAL_JsqJELy5jKpkN6GRJqAEVK-rvRxttUg4aLQhFjjkhPxxo8g@mail.gmail.com>
+ <1408ea96f7b8f33aef73e0f84abd8792.squirrel@www.codeaurora.org> <de3d715f3d469c1799a3c9ff0f00291c.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:35655 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753418AbbH0QqA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2015 12:46:00 -0400
-Received: by qgeb6 with SMTP id b6so1344448qge.2
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2015 09:46:00 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <de3d715f3d469c1799a3c9ff0f00291c.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <james.bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <jbottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On Thu, Aug 27, 2015 at 7:28 AM,  <ygardi@codeaurora.org> wrote:
+>>> On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
+>>>>
+>>>> Add a write memory barrier to make sure descriptors prepared are
+>>>> actually
+>>>> written to memory before ringing the doorbell. We have also added the
+>>>> write memory barrier after ringing the doorbell register so that
+>>>> controller sees the new request immediately.
 
-I am Mr. Messaka Hawai, from Burkina Faso in West African region. I
-work with the Islamic Development Bank(IDB) here in the nation. I am
-writing you from my office which will be of an immense benefit to both
-of us. In my department, being the accountant manager I discovered an
-abandoned sum of $8 million United States Dollars in an account that
-belongs to one of the bank late foreign customers, a German citizen
-who unfortunately lost his life in a plane crash. Now our bank has
-been waiting for any of the relatives to come-up for
+[...]
 
-the claim but nobody has done that. I personally have been
-unsuccessful in locating the relatives for many
-years now, I seek your consent to present you as the next of kin
-/beneficiary to the deceased so that the proceeds of this account
-valued at $8 Million Dollars can be done and pay to you for both of
-This will be disbursed or shared between both of us in these us.
-percentages, 55% for me and 35% to you while 10% will be for expenses
-both parties might have incurred during the process of transferring.
+>>>> +       /* Make sure descriptors are ready before ringing the doorbell
+>>>> */
+>>>> +       wmb();
+>>>
+>>> The writel for the doorbell will do a barrier first. (I didn't check
+>>> what exactly ufshcd_writel does, but that is why I don't like these
+>>> private access wrappers.)
+>
+> the barrier here is important and a must.
+> before it we prepare descriptors.
+> after it we write to DOOR-BELL.
+> (and after the DOOR-BELL we have another one.)
+> if we remove it, we might get the DOOR-BELL written, before the
+> descriptors written.
 
-I have secured necessary information=E2=80=99s and the certificate of d=
-eposit
-that can be used to back up this claim we are making.
-All I require now is your honest Co-operation, Confidentiality and
-trust to enable us sees this transaction through. I guarantee you that
-this will be executed under a legitimate arrangement that will protect
-you from any breach of the law. Having gone through a methodical
-search, I decided to contact you so that you will find this proposal
-interesting. Please on your confirmation of this message and
-indicating your interest, I will
+If you dig into what writel does, you will see that what the code here
+ends up being is:
 
-furnish you with more details and you can contact me through this
-myprivate E-mail address (messakahawai@gmail.com).Please i will like
-you to write me back through my Private email address as
-follows;(messakahawai@gmail.com) for further discussion.Pls do not
-forget to contact me through this mail, so that all the details
-concerning to the transaction can be giving to you.Endeavour to let me
-know your decision rather than to keep me waiting or exposing me.
+descriptor setup
+wmb()
+__iomwb() -> wmb on arm64
+doorbell register write
 
-Regrds,
+So explain why you need 2 barriers.
 
-Mr.Messaka Hawai
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Barriers in a driver are a red flag. Usually they are not needed, but
+sometimes they are. You have to be able to explain why if they are.
+Pretty much every descriptor based DMA device works as you describe
+and has the ordering problem. Because of that, the core code takes
+care of this.
+
+Rob
