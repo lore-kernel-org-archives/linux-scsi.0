@@ -1,167 +1,108 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 11/15] scsi: ufs: retry failed query flag requests
-Date: Thu, 27 Aug 2015 15:41:02 +0300
-Message-ID: <1440679266-13218-12-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 08/15] scsi: ufs: add retries to dme_peer get and set attribute
+Date: Thu, 27 Aug 2015 15:40:59 +0300
+Message-ID: <1440679266-13218-9-git-send-email-ygardi@codeaurora.org>
 References: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1440679266-13218-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-UFS flag query requests may fail sometimes due to timeouts etc.
-Add a wrapper function to retry up to 10 times in case of such
-failure, similar to retries being made for attribute queries.
+The dme_peer get/set attribute commands are prone to errors, therefore
+we add three retries for the UIC command sending.
+Error code returned from ufshcd_send_uic_cmd() is checked, and unless
+it was successful or the retries have finished, another command will be
+sent.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Lee Susman <lsusman@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 63 ++++++++++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h |  4 +++
- 2 files changed, 41 insertions(+), 26 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1dbef7d..f2d4301 100644
+index 217b5cf..8d5bdf0 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1662,6 +1662,29 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
- 	(*request)->upiu_req.selector = selector;
- }
+@@ -69,6 +69,9 @@
+ /* Task management command timeout */
+ #define TM_CMD_TIMEOUT	100 /* msecs */
  
-+static int ufshcd_query_flag_retry(struct ufs_hba *hba,
-+	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
-+{
-+	int ret;
-+	int retries;
++/* maximum number of retries for a general UIC command  */
++#define UFS_UIC_COMMAND_RETRIES 3
 +
-+	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
-+		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
+ /* maximum number of link-startup retries */
+ #define DME_LINKSTARTUP_RETRIES 3
+ 
+@@ -2184,6 +2187,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *set = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 
+ 	uic_cmd.command = peer ?
+ 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
+@@ -2191,10 +2195,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
+ 	uic_cmd.argument3 = mib_val;
+ 
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret)
+-		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
+-			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
 +		if (ret)
-+			dev_dbg(hba->dev,
-+				"%s: failed with error %d, retries %d\n",
-+				__func__, ret, retries);
-+		else
-+			break;
-+	}
++			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	} while (ret && peer && --retries);
 +
-+	if (ret)
-+		dev_err(hba->dev,
-+			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retires\n",
-+			__func__, opcode, idn, ret, retries);
-+	return ret;
-+}
-+
- /**
-  * ufshcd_query_flag() - API function for sending flag query requests
-  * hba: per-adapter instance
-@@ -1671,7 +1694,7 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
-  *
-  * Returns 0 for success, non-zero in case of failure
-  */
--static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
-+int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 			enum flag_idn idn, bool *flag_res)
- {
- 	struct ufs_query_req *request = NULL;
-@@ -2656,17 +2679,12 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-  */
- static int ufshcd_complete_dev_init(struct ufs_hba *hba)
- {
--	int i, retries, err = 0;
-+	int i;
-+	int err;
- 	bool flag_res = 1;
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
++				retries);
  
--	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--		/* Set the fDeviceInit flag */
--		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
--					QUERY_FLAG_IDN_FDEVICEINIT, NULL);
--		if (!err || err == -ETIMEDOUT)
--			break;
--		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
--	}
-+	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-+		QUERY_FLAG_IDN_FDEVICEINIT, NULL);
- 	if (err) {
- 		dev_err(hba->dev,
- 			"%s setting fDeviceInit flag failed with error %d\n",
-@@ -2674,18 +2692,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	/* poll for max. 100 iterations for fDeviceInit flag to clear */
--	for (i = 0; i < 100 && !err && flag_res; i++) {
--		for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--			err = ufshcd_query_flag(hba,
--					UPIU_QUERY_OPCODE_READ_FLAG,
--					QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
--			if (!err || err == -ETIMEDOUT)
--				break;
--			dev_dbg(hba->dev, "%s: error %d retrying\n", __func__,
--					err);
--		}
--	}
-+	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
-+	for (i = 0; i < 1000 && !err && flag_res; i++)
-+		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-+			QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
-+
- 	if (err)
- 		dev_err(hba->dev,
- 			"%s reading fDeviceInit flag failed with error %d\n",
-@@ -3432,7 +3443,7 @@ static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
- 	if (hba->auto_bkops_enabled)
- 		goto out;
- 
--	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-+	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
- 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed to enable bkops %d\n",
-@@ -3481,7 +3492,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-+	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
- 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed to disable bkops %d\n",
-@@ -4452,8 +4463,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 
- 		/* clear any previous UFS device information */
- 		memset(&hba->dev_info, 0, sizeof(hba->dev_info));
--		if (!ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
--				       QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
-+		if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-+				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
- 			hba->dev_info.f_power_on_wp_en = flag;
- 
- 		if (!hba->is_init_prefetch)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2570d94..f8ce680 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -3,6 +3,7 @@
-  *
-  * This code is based on drivers/scsi/ufs/ufshcd.h
-  * Copyright (C) 2011-2013 Samsung India Software Operations
-+ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
-  *
-  * Authors:
-  *	Santosh Yaraganavi <santosh.sy@samsung.com>
-@@ -681,6 +682,9 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ 	return ret;
  }
+@@ -2219,6 +2231,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *get = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 	struct ufs_pa_layer_attr orig_pwr_info;
+ 	struct ufs_pa_layer_attr temp_pwr_info;
+ 	bool pwr_mode_change = false;
+@@ -2249,14 +2262,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
+ 	uic_cmd.argument1 = attr_sel;
  
-+/* Expose Query-Request API */
-+int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
-+	enum flag_idn idn, bool *flag_res);
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret) {
+-		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
+-			get, UIC_GET_ATTR_ID(attr_sel), ret);
+-		goto out;
+-	}
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++		if (ret)
++			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
++				get, UIC_GET_ATTR_ID(attr_sel), ret);
++	} while (ret && peer && --retries);
++
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
++				get, UIC_GET_ATTR_ID(attr_sel), retries);
  
+-	if (mib_val)
++	if (mib_val && !ret)
+ 		*mib_val = uic_cmd.argument3;
+ 
+ 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
 -- 
 1.8.5.2
 
