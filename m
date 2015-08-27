@@ -1,65 +1,61 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH v3 6/8] scsi: ufs: make the UFS variant a platform device
-Date: Thu, 27 Aug 2015 12:56:06 -0500
-Message-ID: <CAL_JsqLYeM3fbU5jHq-+7SbwHH7T80bETZpkkjR_hbg=un1BBg@mail.gmail.com>
-References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org> <1440335381-5122-7-git-send-email-ygardi@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: mhocko@kernel.org
+Subject: [PATCH] scsi: fix scsi_error_handler vs. scsi_host_dev_release race
+Date: Thu, 27 Aug 2015 20:16:37 +0200
+Message-ID: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440335381-5122-7-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, hch@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, open list:OPEN F
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Aug 23, 2015 at 8:09 AM, Yaniv Gardi <ygardi@codeaurora.org> wrote:
-> This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
-> a platform device.
-> In order to do so a few additional changes are required:
-> 1. The ufshcd-pltfrm is no longer serves as a platform device.
->    Now it only serves as a group of platform APIs such as PM APIs
->    (runtime suspend/resume, system suspend/resume etc), parsers of
->    clocks, regulators and pm_levels from DT.
-> 2. What used to be the old platform "probe" is now "only"
->    a pltfrm_init() routine, that does exactly the same, but only
->    being called by the new probe function of the UFS variant.
->
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  2 +-
->  drivers/scsi/ufs/ufs-qcom.c                        | 78 +++++++++++++++++-
->  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 92 ++++++----------------
->  drivers/scsi/ufs/ufshcd-pltfrm.h                   | 41 ++++++++++
->  drivers/scsi/ufs/ufshcd.c                          | 10 +++
->  drivers/scsi/ufs/ufshcd.h                          |  1 +
->  6 files changed, 152 insertions(+), 72 deletions(-)
->  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
->
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index 5357919..b39e765 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -4,7 +4,7 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
->  Each UFS controller instance should have its own node.
->
->  Required properties:
-> -- compatible        : compatible list, contains "jedec,ufs-1.1"
-> +- compatible        : compatible list, contains "jedec,ufs-1.1" or "qcom,ufshc"
+From: Michal Hocko <mhocko@suse.com>
 
-Replying again as I inadvertently dropped everyone.
+b9d5c6b7ef57 ("[SCSI] cleanup setting task state in
+scsi_error_handler()") has introduced a race between scsi_error_handler
+and scsi_host_dev_release resulting in the hang when the device goes
+away because scsi_error_handler might miss a wake up:
 
-This should also have a more specific compatible string with the SOC
-name/number in it. It may be "the same in all SOCs", but there is
-always the possibility for bugs/limitations to be found that are
-specific to an SOC even if all RTL versions are identical (e.g.
-different max clock speeds). It is about making the dtb future proof,
-not about what exactly you need today. You can keep qcom,ufshc for
-driver matching if you want.
+CPU0					CPU1
+scsi_error_handler			scsi_host_dev_release
+  					  kthread_stop()
+  kthread_should_stop()
+    test_bit(KTHREAD_SHOULD_STOP)
+					    set_bit(KTHREAD_SHOULD_STOP)
+					    wake_up_process()
+					    wait_for_completion()
 
->  - interrupts        : <interrupt mapping for UFS host controller IRQ>
->  - reg               : <registers mapping>
+  set_current_state(TASK_INTERRUPTIBLE)
+  schedule()
 
-What about phy properties? No Unipro PHY block that requires setup?
+The most straightforward solution seems to be to invert the ordering of
+the set_current_state and kthread_should_stop.
 
-Rob
+The issue has been noticed during reboot test on a 3.0 based kernel but
+the current code seems to be affected in the same way.
+
+Cc: stable # 3.6+
+Reported-and-Debugged-by: Mike Mayer <Mike.Meyer@teradata.com>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ drivers/scsi/scsi_error.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 6457a8a0db9c..2c0a817d5dbe 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2169,8 +2169,11 @@ int scsi_error_handler(void *data)
+ 	 * We never actually get interrupted because kthread_run
+ 	 * disables signal delivery for the created thread.
+ 	 */
+-	while (!kthread_should_stop()) {
++	while (true) {
+ 		set_current_state(TASK_INTERRUPTIBLE);
++		if (kthread_should_stop())
++			break;
++
+ 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
+ 		    shost->host_failed != atomic_read(&shost->host_busy)) {
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+-- 
+2.5.0
