@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/23] scsi: Add scsi_vpd_lun_id()
-Date: Thu, 27 Aug 2015 14:41:14 +0200
-Message-ID: <1440679281-13234-17-git-send-email-hare@suse.de>
+Subject: [PATCH 21/23] scsi_dh_alua: update all port states
+Date: Thu, 27 Aug 2015 14:41:19 +0200
+Message-ID: <1440679281-13234-22-git-send-email-hare@suse.de>
 References: <1440679281-13234-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47987 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47966 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754082AbbH0Ml3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754092AbbH0Ml3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 27 Aug 2015 08:41:29 -0400
 In-Reply-To: <1440679281-13234-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,171 +14,66 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Add a function scsi_vpd_lun_id() to return a unique device
-identifcation based on the designation descriptors of
-VPD page 0x83.
-
-As devices might implement several descriptors the order
-of preference is:
-- NAA IEE Registered Extended
-- EUI-64 based 16-byte
-- EUI-64 based 12-byte
-- NAA IEEE Registered
-- NAA IEEE Extended
-A SCSI name string descriptor is preferred to all of them
-if the identification is longer than 16 bytes.
-
-The returned unique device identification will be formatted
-as a SCSI Name string to avoid clashes between different
-designator types.
+When we read in the target port group state we should be
+updating all affected port groups, otherwise we risk
+running out of sync.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_lib.c    | 121 +++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |   1 +
- 2 files changed, 122 insertions(+)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2a864b8..48d6ff6 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3145,3 +3145,124 @@ void sdev_enable_disk_events(struct scsi_device *sdev)
- 	atomic_dec(&sdev->disk_events_disable_depth);
- }
- EXPORT_SYMBOL(sdev_enable_disk_events);
-+
-+/*
-+ * scsi_vpd_lun_id - return a unique device identification
-+ * @sdev: SCSI device
-+ * @id:   buffer for the identification
-+ * @id_len:  length of the buffer
-+ *
-+ * Copies a unique device identification into @id based
-+ * on the information in the VPD page 0x83 of the device.
-+ * The string will be formatted as a SCSI name string.
-+ *
-+ * Returns the length of the identification or error on failure.
-+ */
-+int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
-+{
-+	u8 cur_id_type = 0xff;
-+	u8 cur_id_size = 0;
-+	unsigned char *d, *cur_id_str;
-+	int id_size = -EAGAIN;
-+
-+	/*
-+	 * Look for the correct descriptor.
-+	 * Order of preference for lun descriptor:
-+	 * - SCSI name string
-+	 * - NAA IEEE Registered Extended
-+	 * - EUI-64 based 16-byte
-+	 * - EUI-64 based 12-byte
-+	 * - NAA IEEE Registered
-+	 * - NAA IEEE Extended
-+	 * as longer descriptors reduce the likelyhood
-+	 * of identification clashes.
-+	 */
-+
-+	/* The id string must be at least 20 bytes + terminating NULL byte */
-+	if (id_len < 21)
-+		return -EINVAL;
-+
-+	memset(id, 0, id_len);
-+	d = sdev->vpd_pg83 + 4;
-+	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
-+		/* Skip designators not referring to the LUN */
-+		if ((d[1] & 0x30) != 0x00)
-+			goto next_desig;
-+
-+		switch (d[1] & 0xf) {
-+		case 0x2:
-+			/* EUI-64 */
-+			if (cur_id_size > d[3])
-+				break;
-+			/* Prefer NAA IEEE Registered Extended */
-+			if (cur_id_type == 0x3 &&
-+			    cur_id_size == d[3])
-+				break;
-+			cur_id_size = d[3];
-+			cur_id_str = d + 4;
-+			cur_id_type = d[1] & 0xf;
-+			switch (cur_id_size) {
-+			case 8:
-+				id_size = snprintf(id, id_len,
-+						   "eui.%8phN",
-+						   cur_id_str);
-+				break;
-+			case 12:
-+				id_size = snprintf(id, id_len,
-+						   "eui.%12phN",
-+						   cur_id_str);
-+				break;
-+			case 16:
-+				id_size = snprintf(id, id_len,
-+						   "eui.%16phN",
-+						   cur_id_str);
-+				break;
-+			default:
-+				cur_id_size = 0;
-+				break;
-+			}
-+			break;
-+		case 0x3:
-+			/* NAA */
-+			if (cur_id_size > d[3])
-+				break;
-+			cur_id_size = d[3];
-+			cur_id_str = d + 4;
-+			cur_id_type = d[1] & 0xf;
-+			switch (cur_id_size) {
-+			case 8:
-+				id_size = snprintf(id, id_len,
-+						   "naa.%8phN",
-+						   cur_id_str);
-+				break;
-+			case 16:
-+				id_size = snprintf(id, id_len,
-+						   "naa.%16phN",
-+						   cur_id_str);
-+				break;
-+			default:
-+				cur_id_size = 0;
-+				break;
-+			}
-+			break;
-+		case 0x8:
-+			/* SCSI name string */
-+			if (cur_id_size + 4 > d[3])
-+				break;
-+			cur_id_size = d[3];
-+			cur_id_str = d + 4;
-+			cur_id_type = d[1] & 0xf;
-+			if (cur_id_size >= id_len)
-+				cur_id_size = id_len - 1;
-+			memcpy(id, cur_id_str, cur_id_size);
-+			break;
-+		default:
-+			break;
-+		}
-+next_desig:
-+		d += d[3] + 4;
-+	}
-+
-+	return id_size;
-+}
-+EXPORT_SYMBOL(scsi_vpd_lun_id);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b6b1dc4..595a9be 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -413,6 +413,7 @@ static inline int scsi_execute_req(struct scsi_device *sdev,
- }
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
-+extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 8717fd3..2fa985e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -477,11 +477,13 @@ static int alua_check_sense(struct scsi_device *sdev,
+ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
++	struct alua_port_group *tmp_pg;
+ 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+ 	unsigned char *ucp, *buff;
+ 	unsigned err, retval;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
++	unsigned long flags;
  
- #ifdef CONFIG_PM
- extern int scsi_autopm_get_device(struct scsi_device *);
+ 	if (!pg->expiry) {
+ 		if (!pg->transition_tmo)
+@@ -584,17 +586,28 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	else
+ 		tpg_desc_tbl_off = 4;
+ 
++	spin_lock_irqsave(&port_group_lock, flags);
+ 	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
+ 	     k < len;
+ 	     k += off, ucp += off) {
+ 
+-		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
+-			pg->state = ucp[0] & 0x0f;
+-			pg->pref = ucp[0] >> 7;
+-			valid_states = ucp[1];
++		list_for_each_entry(tmp_pg, &port_group_list, node) {
++			u16 group_id = get_unaligned_be16(&ucp[2]);
++			if (tmp_pg->group_id != group_id)
++				continue;
++			if (tmp_pg->device_id_size != pg->device_id_size)
++				continue;
++			if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
++				    tmp_pg->device_id_size))
++				continue;
++			tmp_pg->state = ucp[0] & 0x0f;
++			tmp_pg->pref = ucp[0] >> 7;
++			if (tmp_pg == pg)
++				valid_states = ucp[1];
+ 		}
+ 		off = 8 + (ucp[7] * 4);
+ 	}
++	spin_unlock_irqrestore(&port_group_lock, flags);
+ 
+ 	sdev_printk(KERN_INFO, sdev,
+ 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
 -- 
 1.8.5.6
 
