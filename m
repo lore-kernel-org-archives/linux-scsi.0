@@ -1,30 +1,50 @@
-From: "Email" <amelrekic@live.com>
-Subject: Transakce /
-Date: Wed, 26 Aug 2015 22:32:55 -0000
-Message-ID: <4fd833f08f2a584069cf4f72596a5647.squirrel__43191.0072606572$1440658712$gmane$org@204.151.225.58>
-Reply-To: chn.jg57@gmail.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight
+ mpt2sas
+Date: Thu, 27 Aug 2015 00:07:39 -0700
+Message-ID: <1440659259.9807.24.camel@haakon3.risingtidesystems.com>
+References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
+	 <20150826235434.GA8843@mail.thefacebook.com>
+	 <1440633514.31814.3.camel@haakon3.risingtidesystems.com>
+	 <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [204.151.225.58] ([204.151.225.58]:36813 "EHLO mail.abc.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753231AbbH0G5v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 02:57:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: Calvin Owens <calvinowens@fb.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Sreekanth,
 
+On Thu, 2015-08-27 at 10:37 +0530, Sreekanth Reddy wrote:
+> HI Nicholas & Calvin,
+> 
+> Thanks for the patchset. Sure We will review and we do some unit
+> testing on this patch series. Currently my bandwidth is occupied with
+> some internal activity, so by end of next week I will acknowledge this
+> series if all the thing are fine with this patch series.
+> 
 
+Thanks for the quick response.
 
-Mam vzajemne mit prospech podnik pro nas oba. pokud mate zajem, muzete =
-mi
-dostat na e-mailovou adresu a pro detaily a vysvetlen=ED.
+So Calvin's mpt2sas series has been merged into scsi.git/for-next.
 
-E-mail: chn.jg57@gmail.com
+Since this series is AFAICT functionally identical to Calvin's changes,
+I assume JEJB will be merging it up for v4.3-rc1 soon too.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, we're probably not the only ones hitting this class of OOPsen, so
+it will certainly need to be picked up for stable at some point, and any
+further regressions will need to be addressed.
+
+Please keep the list posted of your testing progress.
+
+For reference, here are prerequisites need to apply atop v3.14.y:
+
+4dc06fd mpt3sas: delay scsi_add_host call to work with scsi-mq
+35b6236 mpt3sas: combine fw_event_work and its event_data
+62c4da4 mpt3sas: correct scsi_{target,device} hostdata allocation
+
+--nab
