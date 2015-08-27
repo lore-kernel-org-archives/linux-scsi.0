@@ -1,35 +1,40 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: fix failure to probe with scsi_level=1 or 2
- due to NULL devip
-Date: Thu, 27 Aug 2015 10:14:20 -0400
-Message-ID: <55DF1B3C.3020607@interlog.com>
-References: <1440532074-28321-1-git-send-email-emilne@redhat.com>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight
+ mpt2sas
+Date: Thu, 27 Aug 2015 07:40:14 -0700
+Message-ID: <1440686414.2196.107.camel@HansenPartnership.com>
+References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
+	 <20150826235434.GA8843@mail.thefacebook.com>
+	 <1440633514.31814.3.camel@haakon3.risingtidesystems.com>
+	 <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:59008 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752753AbbH0OXY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 10:23:24 -0400
-In-Reply-To: <1440532074-28321-1-git-send-email-emilne@redhat.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52367 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751779AbbH0OkR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2015 10:40:17 -0400
+In-Reply-To: <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Calvin Owens <calvinowens@fb.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com
 
-On 15-08-25 03:47 PM, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
->
-> commit cbf67842c3d9 ("scsi_debug: support scsi-mq, queues and locks")
-> added a test for devip == NULL in schedule_resp which returned
-> SCSI_MLQUEUE_HOST_BUSY.  Unfortunately, if scsi_level 1 or 2 is specified,
-> devip will be NULL for the INQUIRY command for the next LUN above the
-> configured value and it will be retried indefinitely with an error message.
-> Fix this by returning the command in the same context if no devip exists.
->
-> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+On Thu, 2015-08-27 at 10:37 +0530, Sreekanth Reddy wrote:
+> HI Nicholas & Calvin,
+> 
+> Thanks for the patchset. Sure We will review and we do some unit
+> testing on this patch series. Currently my bandwidth is occupied with
+> some internal activity, so by end of next week I will acknowledge this
+> series if all the thing are fine with this patch series.
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Calvin responded to your review feedback and that series has been
+outstanding for a while, so I'm not going to drop it from the misc tree.
+However, I will reorder to make it ready for the second push. You have
+until Friday week to find a problem with it.
+
+James
 
 
