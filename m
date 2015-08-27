@@ -1,18 +1,18 @@
 From: messakahawai <rbioffice003@gmail.com>
 Subject: GREETINGS,
-Date: Thu, 27 Aug 2015 09:45:33 -0700
-Message-ID: <CAKLkw+89RMzJE_Te=3e4MK2a4k1Z13SnyFMp6mp1O-rf36Yz0Q__3157.01685981384$1440693969$gmane$org@mail.gmail.com>
+Date: Thu, 27 Aug 2015 09:45:58 -0700
+Message-ID: <CAKLkw+_bsuFa6Cc1K-M9pbdpe1B0EsLFBX53rDwN-FR9ejqSKw__20992.8571283401$1440693984$gmane$org@mail.gmail.com>
 Reply-To: messakahawai@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36853 "EHLO
-	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbbH0Qpe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2015 12:45:34 -0400
-Received: by qkcn187 with SMTP id n187so1302881qkc.3
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2015 09:45:33 -0700 (PDT)
+Received: from mail-qg0-f65.google.com ([209.85.192.65]:35655 "EHLO
+	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbbH0QqA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2015 12:46:00 -0400
+Received: by qgeb6 with SMTP id b6so1344448qge.2
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2015 09:46:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
