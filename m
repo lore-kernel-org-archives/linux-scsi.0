@@ -1,60 +1,85 @@
 From: Rob Herring <robherring2@gmail.com>
 Subject: Re: [PATCH v1 14/15] scsi: ufs: commit descriptors before setting the doorbell
-Date: Thu, 27 Aug 2015 12:02:46 -0500
-Message-ID: <CAL_JsqL9+oVFu3Gty1UaCLRR3P4jfDZKaf5oEkfMjp=-J5TQdw@mail.gmail.com>
+Date: Thu, 27 Aug 2015 12:19:24 -0500
+Message-ID: <CAL_JsqJp4xb6zw6tavkxPR+nrC=qFqXLGPy6GDBezJ9ixjDzFw@mail.gmail.com>
 References: <1440194989-28835-1-git-send-email-ygardi@codeaurora.org>
  <1440194989-28835-15-git-send-email-ygardi@codeaurora.org>
  <CAL_JsqJELy5jKpkN6GRJqAEVK-rvRxttUg4aLQhFjjkhPxxo8g@mail.gmail.com>
- <1408ea96f7b8f33aef73e0f84abd8792.squirrel@www.codeaurora.org> <de3d715f3d469c1799a3c9ff0f00291c.squirrel@www.codeaurora.org>
+ <1408ea96f7b8f33aef73e0f84abd8792.squirrel@www.codeaurora.org>
+ <CAL_JsqKPz85_6_Q0Q8kJBhi6oDAHnf8LpdvCy+-qbyfEHK1cQQ@mail.gmail.com> <bda781000a13a1b72fa811c191a40a51.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <de3d715f3d469c1799a3c9ff0f00291c.squirrel@www.codeaurora.org>
+In-Reply-To: <bda781000a13a1b72fa811c191a40a51.squirrel@www.codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: Yaniv Gardi <ygardi@codeaurora.org>
 Cc: linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-scsi@vger.kernel.org, Dolev Raviv <draviv@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, linux-scsi-owner@vger.kernel.org, Jej B <james.bottomley@hansenpartnership.com>, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, hch@infradead.org, Paul Bolle <pebolle@tiscali.nl>, "James E.J. Bottomley" <jbottomley@odin.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 27, 2015 at 7:28 AM,  <ygardi@codeaurora.org> wrote:
->>> On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
+On Thu, Aug 27, 2015 at 7:11 AM,  <ygardi@codeaurora.org> wrote:
+>> On Tue, Aug 25, 2015 at 7:36 AM,  <ygardi@codeaurora.org> wrote:
+>>>> On Aug 21, 2015 3:10 PM, "Yaniv Gardi" <ygardi@codeaurora.org> wrote:
+>>>>>
+>>>>> Add a write memory barrier to make sure descriptors prepared are
+>>>>> actually
+>>>>> written to memory before ringing the doorbell. We have also added the
+>>>>> write memory barrier after ringing the doorbell register so that
+>>>>> controller sees the new request immediately.
+>>>>>
+>>>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>>>>
+>>>>> ---
+>>>>>  drivers/scsi/ufs/ufshcd.c | 6 ++++++
+>>>>>  1 file changed, 6 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>>>> index fef0660..876148b 100644
+>>>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>>>> @@ -833,6 +833,8 @@ void ufshcd_send_command(struct ufs_hba *hba,
+>>>>> unsigned int task_tag)
+>>>>>         ufshcd_clk_scaling_start_busy(hba);
+>>>>>         __set_bit(task_tag, &hba->outstanding_reqs);
+>>>>>         ufshcd_writel(hba, 1 << task_tag,
+>>>>> REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>>>>> +       /* Make sure that doorbell is committed immediately */
+>>>>> +       wmb();
 >>>>
->>>> Add a write memory barrier to make sure descriptors prepared are
->>>> actually
->>>> written to memory before ringing the doorbell. We have also added the
->>>> write memory barrier after ringing the doorbell register so that
->>>> controller sees the new request immediately.
-
-[...]
-
->>>> +       /* Make sure descriptors are ready before ringing the doorbell
->>>> */
->>>> +       wmb();
+>>>> Is this really necessary? Is there a measurable difference?
 >>>
->>> The writel for the doorbell will do a barrier first. (I didn't check
->>> what exactly ufshcd_writel does, but that is why I don't like these
->>> private access wrappers.)
+>>> I'm not sure if there is a measurable difference, but as the Door-Bell
+>>> register is the one that actually responsible for the HW execution of
+>>> the
+>>> requests, anyhow, it's recommended to its value will be written
+>>> instantly to the memory.
+>>
+>> A barrier doesn't guarantee speed, only ordering. Unless you can
+>> measure the difference, you should not have it.
 >
-> the barrier here is important and a must.
-> before it we prepare descriptors.
-> after it we write to DOOR-BELL.
-> (and after the DOOR-BELL we have another one.)
-> if we remove it, we might get the DOOR-BELL written, before the
-> descriptors written.
+> Rob,
+> let me have an example:
+> context#1 updates outstanding_reqs variable and write(DOOR_BELL)
+> context#2 upon interrupt of a request completion the following happens:
+>   report completion on each one of the bits in:
+>   outstanding_reqs ^ read(DOOR_BELL);
+>
+> 0. let's assume the DOOR_BELL = 0x1 (which means 1 active request in slot 0)
+> 1. context#1: update the DOOR_BELL to be 0x3; (2 active requests: in slot
+> 0 and 1)
+> 2. the new value 0x3 is still not written to the DR so DORR_BELL is still
+> 0x1, but outstanding_reqs is already updated = 0x3
+> 3. the request in slot 0 just completed, and interrupt happens, so
+> DORR_BELL is now 0 (request in slot 0 completed)
+> 4. context#2: outstanding_reqs ^ read(DOOR_BELL) = 0x3 ^ 0x0 = 0x3 =>
+> wrong conclusion since the request in slot 1 never completed, and actually
+> never started.
 
-If you dig into what writel does, you will see that what the code here
-ends up being is:
-
-descriptor setup
-wmb()
-__iomwb() -> wmb on arm64
-doorbell register write
-
-So explain why you need 2 barriers.
-
-Barriers in a driver are a red flag. Usually they are not needed, but
-sometimes they are. You have to be able to explain why if they are.
-Pretty much every descriptor based DMA device works as you describe
-and has the ordering problem. Because of that, the core code takes
-care of this.
+Barriers alone will never solve this problem. They may narrow the
+window possibly, but the problem is still there. What you have to have
+is a spinlock around all accesses to both outstanding_reqs and
+doorbell register. And guess what, spinlocks have appropriate barriers
+to ensure visibility of what they protect. Or perhaps the h/w provides
+another way to signal what slots have completed. Using the same
+register for doorbell and completion status is not ideal.
 
 Rob
