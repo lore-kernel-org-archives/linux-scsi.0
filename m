@@ -1,47 +1,65 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight
- mpt2sas
-Date: Wed, 26 Aug 2015 16:58:34 -0700
-Message-ID: <1440633514.31814.3.camel@haakon3.risingtidesystems.com>
-References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
-	 <20150826235434.GA8843@mail.thefacebook.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Patch] scsi_error: should not get sense for timeout IO in scsi
+ error handler
+Date: Wed, 26 Aug 2015 17:31:29 -0700
+Message-ID: <1440635489.2196.98.camel@HansenPartnership.com>
+References: <OFAF74C95C.6058723F-ON48257E93.00322982-48257E93.00363C6C@zte.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150826235434.GA8843@mail.thefacebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50148 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751452AbbH0Abb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Aug 2015 20:31:31 -0400
+In-Reply-To: <OFAF74C95C.6058723F-ON48257E93.00322982-48257E93.00363C6C@zte.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jiang.biao2@zte.com.cn
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2015-08-26 at 16:54 -0700, Calvin Owens wrote:
-> On Wednesday 08/26 at 04:09 +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hi James & Co,
-> > 
-> > This series is a mpt3sas forward port of Calvin Owens' in-flight
-> > reference counting bugfixes for mpt2sas LLD code here:
-> > 
-> > [PATCH v4 0/2] Fixes for memory corruption in mpt2sas
-> > http://marc.info/?l=linux-scsi&m=143951695904115&w=2
+On Fri, 2015-07-31 at 17:52 +0800, jiang.biao2@zte.com.cn wrote:
+> scsi_error: should not get sense for timeout IO in scsi error handler
 > 
-> Nicholas,
+> When an IO timeout occurs, the IO will be aborted in
+> scsi_abort_command() and SCSI_EH_ABORT_SCHEDULED will be set. Because
+> of that, the SCSI_EH_CANCEL_CMD will be clear in scsi_eh_scmd_add().
+> So when scsi error handler starts, it will get sense for this
+> timeout IO and the scmd of the IO request will be reused. In that
+> case, the scmd may be double released when racing with io_done(),
+> which will result in crash.
+> SO SCSI_EH_ABORT_SCHEDULED should also be checked when getting sense.
+> The bug maybe reproduced when the link between host and disk is
+> unstable.
 > 
-> I'm glad to hear these fixes were helpful! I was planning on porting to
-> mpt3sas in the near future, thanks for saving me the trouble :)
+> Signed-off-by: Jiang Biao <jiang.biao2@zte.com.cn>
+> Signed-off-by: Long Chun <long.chun@zte.com.cn>
+> Reviewed-by: Tan Hu <tan.hu@zte.com.cn>
+> Reviewed-by: Chen Donghai <chen.donghai@zte.com.cn>
+> Reviewed-by: Cai Qu <cai.qu@zte.com.cn>
 > 
+> diff -uprN drivers/scsi/scsi_error.c drivers_new/scsi/scsi_error.c
 
-Would you mind giving this series the once over, and add your
-Reviewed-by as well..?
+to apply easily, diffs need to start at the top of the tree, please.
 
-Sreekanth + Avago folks, can you please do the same for Calvin's mpt2sas
-series and this series..?
+> --- scsi/scsi_error.c   2015-07-31 16:03:18.000000000 +0800
+> +++ scsi_new/scsi_error.c       2015-07-31 16:29:25.000000000 +0800
+> @@ -1156,9 +1156,14 @@ int scsi_eh_get_sense(struct list_head *
+>         struct Scsi_Host *shost;
+>         int rtn;
+> 
+> +       /*
+> +        * If SCSI_EH_ABORT_SCHEDULED has been set, it is timeout IO,
+> +        * should not get sense.
+> +        */
+>         list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
 
-This has been a long-standing issue with mpt*sas LLD code and really
-needs to be addressed for upstream.
+and here all the tabs have been converted to spaces; you need to read
+Documentation/email-clients.txt for details on how to avoid this.
 
-Thank you,
+I managed to fix it up this time, but won't again.
 
---nab
+James
+
+
