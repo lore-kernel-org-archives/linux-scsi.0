@@ -1,42 +1,56 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight mpt2sas
-Date: Thu, 27 Aug 2015 20:18:19 +0530
-Message-ID: <CAK=zhgouToWHWzkNrocBJ-h9U+9kttX=58GaGPq2jd3VnQQ0LA@mail.gmail.com>
-References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
-	<20150826235434.GA8843@mail.thefacebook.com>
-	<1440633514.31814.3.camel@haakon3.risingtidesystems.com>
-	<CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
-	<1440686414.2196.107.camel@HansenPartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH V7 1/9] [SCSI] aacraid: Fix for logical device name and
+ UID not exposed to the OS
+Date: Thu, 27 Aug 2015 08:08:26 -0700
+Message-ID: <1440688106.2196.114.camel@HansenPartnership.com>
+References: <1440672667-8203-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	 <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440686414.2196.107.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Calvin Owens <calvinowens@fb.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com, Krishnaraddi Mankani <krishnaraddi.mankani@avagotech.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52515 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753733AbbH0PI1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2015 11:08:27 -0400
+In-Reply-To: <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, thenzl@redhat.com, Murthy.Bhat@pmcs.com, Karthikeya.Sunkesula@pmcs.com, aacraid@pmc-sierra.com, Harry.Yang@pmcs.com, Rich.Bono@pmcs.com
 
-Ok James, by 9/4/2015 we will provide our feedback over this patch series.
+On Thu, 2015-08-27 at 06:50 -0400, Mahesh Rajashekhara wrote:
+> Description:
+> 	Driver sends the right size of the response buffer.
+> 
+> Changes from V2:
+> None
+> 
+> Reviewed By: Tomas Henzl <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
+> 
+> Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
-Thanks,
-Sreekanth
+You've had hundreds of upstream confirmation emails over the years.
+They've all had one line per tag with no spaces.  Next time can we
+please use the right format so I don't have to keep editing your commit
+messages.  That is:
 
+Subject: One line summary
 
-On Thu, Aug 27, 2015 at 8:10 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Thu, 2015-08-27 at 10:37 +0530, Sreekanth Reddy wrote:
->> HI Nicholas & Calvin,
->>
->> Thanks for the patchset. Sure We will review and we do some unit
->> testing on this patch series. Currently my bandwidth is occupied with
->> some internal activity, so by end of next week I will acknowledge this
->> series if all the thing are fine with this patch series.
->
-> Calvin responded to your review feedback and that series has been
-> outstanding for a while, so I'm not going to drop it from the misc tree.
-> However, I will reorder to make it ready for the second push. You have
-> until Friday week to find a problem with it.
->
-> James
->
->
+Detailed Description of the change (without a Description: prefix)
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
+Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
+Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+
+---
+
+Version notices and other context relevant only to the upstream process
+come here after the three dashes so it doesn't appear in the patch
+detailed description
+
+James
+ 
+
