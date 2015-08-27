@@ -1,59 +1,68 @@
 From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH V6 08/10] [SCSI] aacraid: Send commit-config to
- controller firmware
-Date: Thu, 27 Aug 2015 10:46:27 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AEC5FE76F@BBYEXM02.pmc-sierra.internal>
-References: <1439272701-15344-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1439272701-15344-9-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <55DC8256.4060102@redhat.com> <20150825151114.GA25134@infradead.org>
+Subject: [PATCH V7 0/9] [SCSI] aacraid: Patchset for aacraid driver version 41010
+Date: Thu, 27 Aug 2015 06:50:58 -0400
+Message-ID: <1440672667-8203-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:33603 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751559AbbH0Kqa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Aug 2015 06:46:30 -0400
-In-Reply-To: <20150825151114.GA25134@infradead.org>
-Content-Language: en-US
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55543 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751507AbbH0KvL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Aug 2015 06:51:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Tomas Henzl <thenzl@redhat.com>
-Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com, Murthy.Bhat@pmcs.com, Karthikeya.Sunkesula@pmcs.com, aacraid@pmc-sierra.com, Harry.Yang@pmcs.com, Rich.Bono@pmcs.com
 
-Hi Christoph, Hi Tomas,
+This patchset includes the following changes (bug fixes and new feature support) specific to aacraid driver.
 
-After discussed internally, this driver patch is required only if "auto commit" support is not available in the controller firmware.  
+V7:
+Removed patch 08 of V6.
+Keep the review-tags going V6->V7.
 
-We have fix in the released controller firmware, so this driver patch is not needed. 
+V6:
+Applied driver update change at the end.
+Merged 10 and 11 of V5 into 9 of V6.
+AAC_MAX_MSIX definition change.
+aac_msi option description and subject change.
+Removed 'reviewed-by' tag.
 
-I'm removing this patch in V7.
+V5:
+Splited patch 10 from V4 into 2
+Added one more patch to request minimum 2 MSIx.
 
-Hi James,
+V4:
+Updated code with pci_enable_msix_range instead of exact.
 
-As you suggested, will keep the review-tags going V6->V7 and add reviewers in CC list.
+V3:
+Increased msleep() time from 1 to 20.
+Created new patch for pci_enable_msix() replacement.
+Changed subject/description of patch 03.
 
-Thanks,
-Mahesh
+Mahesh Rajashekhara (9):
+  [SCSI] aacraid: Fix for logical device name and UID not exposed to the
+    OS
+  [SCSI] aacraid: Add Power Management support
+  [SCSI] aacraid: Change interrupt mode to MSI for series-6 controller
+  [SCSI] aacraid: Enable 64-bit write to controller register
+  [SCSI] aacraid: Tune response path if IsFastPath bit set
+  [SCSI] aacraid: Reset irq affinity hints before releasing irq
+  [SCSI] aacraid: Unblock IOCTLs to controller once system resumed from
+    suspend
+  [SCSI] aacraid: Replace pci_enable_msix() with pci_enable_msix_range()
+  [SCSI] aacraid: Update driver version
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Tuesday, August 25, 2015 8:41 PM
-To: Tomas Henzl
-Cc: Mahesh Rajashekhara; JBottomley@Parallels.com; linux-scsi@vger.kernel.org; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
-Subject: Re: [PATCH V6 08/10] [SCSI] aacraid: Send commit-config to controller firmware
+ drivers/scsi/aacraid/aachba.c   | 265 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/aacraid.h  |  20 ++-
+ drivers/scsi/aacraid/comminit.c | 147 +++++++++++-----------
+ drivers/scsi/aacraid/commsup.c  | 113 ++++++++++++-----
+ drivers/scsi/aacraid/linit.c    | 152 +++++++++++++++++++++++
+ drivers/scsi/aacraid/rx.c       |   1 +
+ drivers/scsi/aacraid/sa.c       |   1 +
+ drivers/scsi/aacraid/src.c      |  64 +++-------
+ 8 files changed, 480 insertions(+), 283 deletions(-)
 
-On Tue, Aug 25, 2015 at 04:57:26PM +0200, Tomas Henzl wrote:
-> On 11.8.2015 07:58, Mahesh Rajashekhara wrote:
-> > +#if defined(__powerpc__) || defined(__PPC__) || defined(__ppc__)
-> > +	aac_get_config_status(aac, 1);
-> > +#else
-> >  	aac_get_config_status(aac, 0);
-> > +#endif
-> 
-> If we use instead
-> +	aac_get_config_status(aac, 1);
-> on all archs will it make problems ?
+-- 
+1.9.3
 
-Yes, that should be our first choice.  If that doesn't work it should be a #ifndef CONFIG_X86 with a comment explaining it.
