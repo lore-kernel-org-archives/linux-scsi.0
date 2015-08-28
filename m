@@ -1,54 +1,69 @@
 From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH V7 1/9] [SCSI] aacraid: Fix for logical device name and
- UID not exposed to the OS
-Date: Fri, 28 Aug 2015 10:35:40 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AEC5FF141@BBYEXM02.pmc-sierra.internal>
-References: <1440672667-8203-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-	 <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1440688106.2196.114.camel@HansenPartnership.com>
+Subject: [PATCH V8 0/9] aacraid: Patchset for aacraid driver version 41010
+Date: Fri, 28 Aug 2015 06:38:32 -0400
+Message-ID: <1440758321-2996-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51571 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51929 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752065AbbH1Kfm (ORCPT
+	by vger.kernel.org with ESMTP id S1751648AbbH1Kio (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Aug 2015 06:35:42 -0400
-In-Reply-To: <1440688106.2196.114.camel@HansenPartnership.com>
-Content-Language: en-US
+	Fri, 28 Aug 2015 06:38:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com, Murthy.Bhat@pmcs.com, Karthikeya.Sunkesula@pmcs.com, aacraid@pmc-sierra.com, Harry.Yang@pmcs.com, Rich.Bono@pmcs.com
 
-SGkgSmFtZXMsDQoNCkkgaGF2ZSB0YWtlbiBjYXJlIHlvdXIgcmV2aWV3IGNvbW1lbnRzIGluIFY4
-IHBhdGNoIHNlcmllcy4NCg0KVGhhbmtzLA0KTWFoZXNoDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBI
-YW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0KU2VudDogVGh1cnNkYXksIEF1Z3VzdCAyNywgMjAxNSA4
-OjM4IFBNDQpUbzogTWFoZXNoIFJhamFzaGVraGFyYQ0KQ2M6IEpCb3R0b21sZXlAUGFyYWxsZWxz
-LmNvbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHRoZW56bEByZWRoYXQuY29tOyBNdXJ0
-aHkgQmhhdDsgS2FydGhpa2V5YSBTdW5rZXN1bGE7IGFhY3JhaWRAcG1jLXNpZXJyYS5jb207IEhh
-cnJ5IFlhbmc7IFJpY2ggQm9ubw0KU3ViamVjdDogUmU6IFtQQVRDSCBWNyAxLzldIFtTQ1NJXSBh
-YWNyYWlkOiBGaXggZm9yIGxvZ2ljYWwgZGV2aWNlIG5hbWUgYW5kIFVJRCBub3QgZXhwb3NlZCB0
-byB0aGUgT1MNCg0KT24gVGh1LCAyMDE1LTA4LTI3IGF0IDA2OjUwIC0wNDAwLCBNYWhlc2ggUmFq
-YXNoZWtoYXJhIHdyb3RlOg0KPiBEZXNjcmlwdGlvbjoNCj4gCURyaXZlciBzZW5kcyB0aGUgcmln
-aHQgc2l6ZSBvZiB0aGUgcmVzcG9uc2UgYnVmZmVyLg0KPiANCj4gQ2hhbmdlcyBmcm9tIFYyOg0K
-PiBOb25lDQo+IA0KPiBSZXZpZXdlZCBCeTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29t
-PiwgTXVydGh5IEJoYXQgDQo+IDxNdXJ0aHkuQmhhdEBwbWNzLmNvbT4sIEthcnRoaWtleWEgU3Vu
-a2VzdWxhIA0KPiA8S2FydGhpa2V5YS5TdW5rZXN1bGFAcG1jcy5jb20+DQo+IA0KPiBTaWduZWQt
-b2ZmLWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2guUmFqYXNoZWtoYXJhQHBtY3MuY29t
-Pg0KDQpZb3UndmUgaGFkIGh1bmRyZWRzIG9mIHVwc3RyZWFtIGNvbmZpcm1hdGlvbiBlbWFpbHMg
-b3ZlciB0aGUgeWVhcnMuDQpUaGV5J3ZlIGFsbCBoYWQgb25lIGxpbmUgcGVyIHRhZyB3aXRoIG5v
-IHNwYWNlcy4gIE5leHQgdGltZSBjYW4gd2UgcGxlYXNlIHVzZSB0aGUgcmlnaHQgZm9ybWF0IHNv
-IEkgZG9uJ3QgaGF2ZSB0byBrZWVwIGVkaXRpbmcgeW91ciBjb21taXQgbWVzc2FnZXMuICBUaGF0
-IGlzOg0KDQpTdWJqZWN0OiBPbmUgbGluZSBzdW1tYXJ5DQoNCkRldGFpbGVkIERlc2NyaXB0aW9u
-IG9mIHRoZSBjaGFuZ2UgKHdpdGhvdXQgYSBEZXNjcmlwdGlvbjogcHJlZml4KQ0KDQpSZXZpZXdl
-ZC1ieTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29tPg0KUmV2aWV3ZWQtYnk6IE11cnRo
-eSBCaGF0IDxNdXJ0aHkuQmhhdEBwbWNzLmNvbT4NClJldmlld2VkLWJ5OiBLYXJ0aGlrZXlhIFN1
-bmtlc3VsYSA8S2FydGhpa2V5YS5TdW5rZXN1bGFAcG1jcy5jb20+DQpTaWduZWQtb2ZmLWJ5OiBN
-YWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2guUmFqYXNoZWtoYXJhQHBtY3MuY29tPg0KDQotLS0N
-Cg0KVmVyc2lvbiBub3RpY2VzIGFuZCBvdGhlciBjb250ZXh0IHJlbGV2YW50IG9ubHkgdG8gdGhl
-IHVwc3RyZWFtIHByb2Nlc3MgY29tZSBoZXJlIGFmdGVyIHRoZSB0aHJlZSBkYXNoZXMgc28gaXQg
-ZG9lc24ndCBhcHBlYXIgaW4gdGhlIHBhdGNoIGRldGFpbGVkIGRlc2NyaXB0aW9uDQoNCkphbWVz
-DQogDQoNCg==
+This patchset includes the following changes (bug fixes and new feature support) specific to aacraid driver.
+
+V8:
+Right format for commit messages.
+
+V7:
+Removed patch 08 of V6.
+Keep the review-tags going V6->V7.
+
+V6:
+Applied driver update change at the end.
+Merged 10 and 11 of V5 into 9 of V6.
+AAC_MAX_MSIX definition change.
+aac_msi option description and subject change.
+Removed 'reviewed-by' tag.
+
+V5:
+Splited patch 10 from V4 into 2
+Added one more patch to request minimum 2 MSIx.
+
+V4:
+Updated code with pci_enable_msix_range instead of exact.
+
+V3:
+Increased msleep() time from 1 to 20.
+Created new patch for pci_enable_msix() replacement.
+Changed subject/description of patch 03.
+
+Mahesh Rajashekhara (9):
+  aacraid: Fix for LD name and UID not exposed to OS
+  aacraid: Add Power Management support
+  aacraid: Change interrupt mode to MSI for Series 6
+  aacraid: Enable 64bit write to controller register
+  aacraid: Tune response path if IsFastPath bit set
+  aacraid: Reset irq affinity hints
+  aacraid: IOCTL fix
+  aacraid: Use pci_enable_msix_range()
+  aacraid: Update driver version
+
+ drivers/scsi/aacraid/aachba.c   | 265 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/aacraid.h  |  20 ++-
+ drivers/scsi/aacraid/comminit.c | 147 +++++++++++-----------
+ drivers/scsi/aacraid/commsup.c  | 113 ++++++++++++-----
+ drivers/scsi/aacraid/linit.c    | 152 +++++++++++++++++++++++
+ drivers/scsi/aacraid/rx.c       |   1 +
+ drivers/scsi/aacraid/sa.c       |   1 +
+ drivers/scsi/aacraid/src.c      |  64 +++-------
+ 8 files changed, 480 insertions(+), 283 deletions(-)
+
+-- 
+1.9.3
+
