@@ -1,46 +1,34 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] scsi: fix scsi_error_handler vs. scsi_host_dev_release
- race
-Date: Fri, 28 Aug 2015 17:17:24 +0200
-Message-ID: <20150828151724.GH5301@dhcp22.suse.cz>
-References: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
- <1440773773.2202.9.camel@HansenPartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] Patches for scsi "misc" branch
+Date: Fri, 28 Aug 2015 12:09:33 -0700
+Message-ID: <1440788973.2202.43.camel@HansenPartnership.com>
+References: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1440773773.2202.9.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56559 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752699AbbH1TJf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Aug 2015 15:09:35 -0400
+In-Reply-To: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: anil.gurumurthy@qlogic.com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com
 
-On Fri 28-08-15 07:56:13, James Bottomley wrote:
-[...]
-> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> > index 6457a8a0db9c..2c0a817d5dbe 100644
-> > --- a/drivers/scsi/scsi_error.c
-> > +++ b/drivers/scsi/scsi_error.c
-> > @@ -2169,8 +2169,11 @@ int scsi_error_handler(void *data)
-> >  	 * We never actually get interrupted because kthread_run
-> >  	 * disables signal delivery for the created thread.
-> >  	 */
-> > -	while (!kthread_should_stop()) {
-> > +	while (true) {
+On Thu, 2015-08-13 at 06:41 -0400, anil.gurumurthy@qlogic.com wrote:
+> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 > 
-> Comment here, I think, please to avoid any other erroneous tidying
-> attempts.  How about
+> Hi James, Christoph,
 > 
-> /* 
->  * The sequence in kthread_stop() sets the stop flag first then 
->  * wakes the process.  To avoid missed wakeups, the task should always
->  * be in a non running state before the stop flag is checked
->  */
-> 
-> Otherwise this looks fine.
+> Please apply the following patches to the scsi tree, misc branch  at your
+> earliest convenience.
 
-I do not have objections to the added comment.
+Both of these patches look OK to me.  Could I get a second review,
+please?
 
--- 
-Michal Hocko
-SUSE Labs
+James
+
+
