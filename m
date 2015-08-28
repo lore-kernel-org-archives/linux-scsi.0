@@ -1,82 +1,133 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: fix scsi_error_handler vs. scsi_host_dev_release
- race
-Date: Fri, 28 Aug 2015 08:40:38 +0200
-Message-ID: <55E00266.8030809@suse.de>
-References: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH 02/10] scsi: ufs: add quirk to contain unconformable utrd
+ field
+Date: Fri, 28 Aug 2015 15:03:33 +0530
+Message-ID: <55E02AED.8060209@samsung.com>
+References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
+ <1440149281-26336-3-git-send-email-alim.akhtar@samsung.com>
+ <CADGdYn4NFms4bjOf+EBnzH3umz4wSPSn9dGGnVgNbs3v6u4m+g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
+In-reply-to: <CADGdYn4NFms4bjOf+EBnzH3umz4wSPSn9dGGnVgNbs3v6u4m+g@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: mhocko@kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: amit daniel kachhap <amit.daniel@samsung.com>
+Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, vinholikatti@gmail.com, JBottomley@odin.com, Seungwon Jeon <tgih.jun@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/27/2015 08:16 PM, mhocko@kernel.org wrote:
-> From: Michal Hocko <mhocko@suse.com>
->=20
-> b9d5c6b7ef57 ("[SCSI] cleanup setting task state in
-> scsi_error_handler()") has introduced a race between scsi_error_handl=
-er
-> and scsi_host_dev_release resulting in the hang when the device goes
-> away because scsi_error_handler might miss a wake up:
->=20
-> CPU0					CPU1
-> scsi_error_handler			scsi_host_dev_release
->   					  kthread_stop()
->   kthread_should_stop()
->     test_bit(KTHREAD_SHOULD_STOP)
-> 					    set_bit(KTHREAD_SHOULD_STOP)
-> 					    wake_up_process()
-> 					    wait_for_completion()
->=20
->   set_current_state(TASK_INTERRUPTIBLE)
->   schedule()
->=20
-> The most straightforward solution seems to be to invert the ordering =
-of
-> the set_current_state and kthread_should_stop.
->=20
-> The issue has been noticed during reboot test on a 3.0 based kernel b=
-ut
-> the current code seems to be affected in the same way.
->=20
-> Cc: stable # 3.6+
-> Reported-and-Debugged-by: Mike Mayer <Mike.Meyer@teradata.com>
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
-> ---
->  drivers/scsi/scsi_error.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 6457a8a0db9c..2c0a817d5dbe 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2169,8 +2169,11 @@ int scsi_error_handler(void *data)
->  	 * We never actually get interrupted because kthread_run
->  	 * disables signal delivery for the created thread.
->  	 */
-> -	while (!kthread_should_stop()) {
-> +	while (true) {
->  		set_current_state(TASK_INTERRUPTIBLE);
-> +		if (kthread_should_stop())
-> +			break;
-> +
->  		if ((shost->host_failed =3D=3D 0 && shost->host_eh_scheduled =3D=3D=
- 0) ||
->  		    shost->host_failed !=3D atomic_read(&shost->host_busy)) {
->  			SCSI_LOG_ERROR_RECOVERY(1,
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi Amit,
+Thanks for your review comments.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+On 08/26/2015 11:43 AM, amit daniel kachhap wrote:
+> Few minor comments below,
+>
+> On Fri, Aug 21, 2015 at 2:57 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
+>> From: Seungwon Jeon <tgih.jun@samsung.com>
+>>
+>> UTRD(UTP Transfer Request Descriptor)'s field such as offset/length,
+>> especially response's has DWORD expression. This quirk can be specified
+>> for host controller not to conform standard.
+>>
+>> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
+>> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+>> ---
+>>   drivers/scsi/ufs/ufshcd.c |   28 +++++++++++++++++++++-------
+>>   drivers/scsi/ufs/ufshcd.h |    7 +++++++
+>>   2 files changed, 28 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index b0ade73..f882bf0 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -1009,7 +1009,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+>>    *
+>>    * Returns 0 in case of success, non-zero value in case of failure
+>>    */
+>> -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+>> +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>>   {
+>>          struct ufshcd_sg_entry *prd_table;
+>>          struct scatterlist *sg;
+>> @@ -1023,8 +1023,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+>>                  return sg_segments;
+>>
+>>          if (sg_segments) {
+>> -               lrbp->utr_descriptor_ptr->prd_table_length =
+>> -                                       cpu_to_le16((u16) (sg_segments));
+>> +               if (hba->quirks & UFSHCI_QUIRK_BROKEN_UTRD)
+>> +                       lrbp->utr_descriptor_ptr->prd_table_length =
+>> +                               cpu_to_le16((u16)(sg_segments *
+>> +                                       sizeof(struct ufshcd_sg_entry)));
+>> +               else
+>> +                       lrbp->utr_descriptor_ptr->prd_table_length =
+>> +                               cpu_to_le16((u16) (sg_segments));
+>>
+>>                  prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+>>
+>> @@ -1347,7 +1352,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>>
+>>          /* form UPIU before issuing the command */
+>>          ufshcd_compose_upiu(hba, lrbp);
+>> -       err = ufshcd_map_sg(lrbp);
+>> +       err = ufshcd_map_sg(hba, lrbp);
+>>          if (err) {
+>>                  lrbp->cmd = NULL;
+>>                  clear_bit_unlock(tag, &hba->lrb_in_use);
+>> @@ -2035,12 +2040,21 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+>>                                  cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
+>>
+>>                  /* Response upiu and prdt offset should be in double words */
+> This comment can be moved below for the else case.
+ok
+>> -               utrdlp[i].response_upiu_offset =
+>> +               if (hba->quirks & UFSHCI_QUIRK_BROKEN_UTRD) {
+>> +                       utrdlp[i].response_upiu_offset =
+>> +                               cpu_to_le16(response_offset);
+>> +                       utrdlp[i].prd_table_offset =
+>> +                               cpu_to_le16(prdt_offset);
+>> +                       utrdlp[i].response_upiu_length =
+>> +                               cpu_to_le16(ALIGNED_UPIU_SIZE);
+>> +               } else {
+>> +                       utrdlp[i].response_upiu_offset =
+>>                                  cpu_to_le16((response_offset >> 2));
+>> -               utrdlp[i].prd_table_offset =
+>> +                       utrdlp[i].prd_table_offset =
+>>                                  cpu_to_le16((prdt_offset >> 2));
+>> -               utrdlp[i].response_upiu_length =
+>> +                       utrdlp[i].response_upiu_length =
+>>                                  cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
+>> +               }
+>>
+>>                  hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+>>                  hba->lrb[i].ucd_req_ptr =
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index c40a0e7..1fa5ac1 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -459,6 +459,13 @@ struct ufs_hba {
+>>           */
+>>          #define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION             UFS_BIT(5)
+>>
+>> +       /*
+>> +        * This quirk needs to be enabled if host controller doesn't conform
+>> +        * with UTRD. Some fields such as offset/length might not be in double word,
+>> +        * but in byte.
+>> +        */
+>> +       #define UFSHCI_QUIRK_BROKEN_UTRD                        UFS_BIT(6)
+> This macro name may be given more meaningful name such as
+> UFSHCI_QUIRK_BYTE_ALIGN_UTRD or something similar.
+ok, will change
+>> +
+>>          unsigned int quirks;    /* Deviations from standard UFSHCI spec. */
+>>
+>>          wait_queue_head_t tm_wq;
+>> --
+>> 1.7.10.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>
