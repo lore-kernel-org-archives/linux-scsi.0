@@ -1,50 +1,82 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH scsi] mpt3sas: mpt3sas_base_unmap_resources can be static
-Date: Fri, 28 Aug 2015 10:02:48 +0530
-Message-ID: <CAK=zhgpWgOvWw2b91wBYgwWH0x3cJBpa+ntUysPEY9n=k44D=A@mail.gmail.com>
-References: <201508280958.jLBYjhIZ%fengguang.wu@intel.com>
-	<20150828012022.GA6922@ivytown2>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: fix scsi_error_handler vs. scsi_host_dev_release
+ race
+Date: Fri, 28 Aug 2015 08:40:38 +0200
+Message-ID: <55E00266.8030809@suse.de>
+References: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:36633 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbbH1Ecs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2015 00:32:48 -0400
-Received: by obkg7 with SMTP id g7so33639120obk.3
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2015 21:32:48 -0700 (PDT)
-In-Reply-To: <20150828012022.GA6922@ivytown2>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440699420-30499-1-git-send-email-mhocko@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: mhocko@kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, James Bottomley <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chaitra Basappa <chaitra.basappa@avagotech.com>
 
-Hi,
-
-Please consider this patch as Ack-by: Sreekanth Reddy
-<sreekanth.reddy@avagotech.com>
-
-Thanks,
-Sreekanth
-
-On Fri, Aug 28, 2015 at 6:50 AM, kbuild test robot
-<fengguang.wu@intel.com> wrote:
->
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+On 08/27/2015 08:16 PM, mhocko@kernel.org wrote:
+> From: Michal Hocko <mhocko@suse.com>
+>=20
+> b9d5c6b7ef57 ("[SCSI] cleanup setting task state in
+> scsi_error_handler()") has introduced a race between scsi_error_handl=
+er
+> and scsi_host_dev_release resulting in the hang when the device goes
+> away because scsi_error_handler might miss a wake up:
+>=20
+> CPU0					CPU1
+> scsi_error_handler			scsi_host_dev_release
+>   					  kthread_stop()
+>   kthread_should_stop()
+>     test_bit(KTHREAD_SHOULD_STOP)
+> 					    set_bit(KTHREAD_SHOULD_STOP)
+> 					    wake_up_process()
+> 					    wait_for_completion()
+>=20
+>   set_current_state(TASK_INTERRUPTIBLE)
+>   schedule()
+>=20
+> The most straightforward solution seems to be to invert the ordering =
+of
+> the set_current_state and kthread_should_stop.
+>=20
+> The issue has been noticed during reboot test on a 3.0 based kernel b=
+ut
+> the current code seems to be affected in the same way.
+>=20
+> Cc: stable # 3.6+
+> Reported-and-Debugged-by: Mike Mayer <Mike.Meyer@teradata.com>
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
 > ---
->  mpt3sas_base.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 7e8ede2..6ee54dd 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -1816,7 +1816,7 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
->   * mpt3sas_base_unmap_resources - free controller resources
->   * @ioc: per adapter object
->   */
-> -void
-> +static void
->  mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
->  {
->         struct pci_dev *pdev = ioc->pdev;
+>  drivers/scsi/scsi_error.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 6457a8a0db9c..2c0a817d5dbe 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -2169,8 +2169,11 @@ int scsi_error_handler(void *data)
+>  	 * We never actually get interrupted because kthread_run
+>  	 * disables signal delivery for the created thread.
+>  	 */
+> -	while (!kthread_should_stop()) {
+> +	while (true) {
+>  		set_current_state(TASK_INTERRUPTIBLE);
+> +		if (kthread_should_stop())
+> +			break;
+> +
+>  		if ((shost->host_failed =3D=3D 0 && shost->host_eh_scheduled =3D=3D=
+ 0) ||
+>  		    shost->host_failed !=3D atomic_read(&shost->host_busy)) {
+>  			SCSI_LOG_ERROR_RECOVERY(1,
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
