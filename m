@@ -1,104 +1,54 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas: init tasklet earlier
-Date: Fri, 28 Aug 2015 15:52:18 +0530
-Message-ID: <847e68adfa31d716c3d69aeff9adcca6@mail.gmail.com>
-References: <1440509507-3337-1-git-send-email-thenzl@redhat.com>
- <a237279f3ee2f546dfc71ae3fe6beaef@mail.gmail.com> <55DDC9C8.8070507@redhat.com>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH V7 1/9] [SCSI] aacraid: Fix for logical device name and
+ UID not exposed to the OS
+Date: Fri, 28 Aug 2015 10:35:40 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AEC5FF141@BBYEXM02.pmc-sierra.internal>
+References: <1440672667-8203-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	 <1440672667-8203-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <1440688106.2196.114.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:33229 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbbH1KWW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2015 06:22:22 -0400
-Received: by laboe4 with SMTP id oe4so3639615lab.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2015 03:22:21 -0700 (PDT)
-In-Reply-To: <55DDC9C8.8070507@redhat.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51571 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752065AbbH1Kfm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Aug 2015 06:35:42 -0400
+In-Reply-To: <1440688106.2196.114.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Wednesday, August 26, 2015 7:45 PM
-> To: Sumit Saxena; linux-scsi@vger.kernel.org
-> Cc: Kashyap Desai; Kiran Kumar Kasturi
-> Subject: Re: [PATCH] megaraid_sas: init tasklet earlier
->
-> On 26.8.2015 15:15, Sumit Saxena wrote:
-> >> -----Original Message-----
-> >> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> >> Sent: Tuesday, August 25, 2015 7:02 PM
-> >> To: linux-scsi@vger.kernel.org
-> >> Cc: kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> >> Sumit.Saxena@avagotech.com
-> >> Subject: [PATCH] megaraid_sas: init tasklet earlier
-> >>
-> >> It may happen (kdump), that an interrupt is invoked just after the
-> > setup_irqs
-> >> function was called but before the tasklet was initialised.
-> >> At this phase the hw ints should have been disabled, but for unknown
-> > reason this
-> >> mechanism seems to not work properly.
-> >>
-> >> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> >> ---
-> >>  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
-> >>  1 file changed, 3 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> >> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> >> index 71b884dae2..c8e0c6de80 100644
-> >> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> >> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> >> @@ -4627,6 +4627,9 @@ static int megasas_init_fw(struct
-> >> megasas_instance
-> >> *instance)
-> >>  		"current msix/online cpus\t: (%d/%d)\n",
-> >>  		instance->msix_vectors, (unsigned int)num_online_cpus());
-> >>
-> >> +	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> >> +		(unsigned long)instance);
-> >> +
-> >>  	if (instance->msix_vectors ?
-> >>  		megasas_setup_irqs_msix(instance, 1) :
-> >>  		megasas_setup_irqs_ioapic(instance))
-> >> @@ -4647,9 +4650,6 @@ static int megasas_init_fw(struct
-> >> megasas_instance
-> >> *instance)
-> >>  	if (instance->instancet->init_adapter(instance))
-> >>  		goto fail_init_adapter;
-> >>
-> >> -	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> >> -		(unsigned long)instance);
-> >> -
-> >>  	instance->instancet->enable_intr(instance);
-> >>
-> >>  	printk(KERN_ERR "megasas: INIT adapter done\n");
-> >
-> > Patch looks harmless and it fixes your problem then it's fine. But we
-> > need to know the reason why interrupts are coming even if they are not
-> > enabled by that time. Can you provide controller's FW version ? I
-> > would like to try this locally.
->
-> It is a "PERC 6/i Integrated" with
-> FW Version         : 1.22.02-0612
-> BIOS Version       : 2.04.00
-> ------------------
->
-> Even when you'll be able to fix it by another means, we can take my patch
-> too,
-> just because it calls the init functions in proper order and so it is
-> safe(r).
-Looks good.
-Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
-
->
-> >
-> >> --
-> >> 2.4.3
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+SGkgSmFtZXMsDQoNCkkgaGF2ZSB0YWtlbiBjYXJlIHlvdXIgcmV2aWV3IGNvbW1lbnRzIGluIFY4
+IHBhdGNoIHNlcmllcy4NCg0KVGhhbmtzLA0KTWFoZXNoDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRvbWxleUBI
+YW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0KU2VudDogVGh1cnNkYXksIEF1Z3VzdCAyNywgMjAxNSA4
+OjM4IFBNDQpUbzogTWFoZXNoIFJhamFzaGVraGFyYQ0KQ2M6IEpCb3R0b21sZXlAUGFyYWxsZWxz
+LmNvbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHRoZW56bEByZWRoYXQuY29tOyBNdXJ0
+aHkgQmhhdDsgS2FydGhpa2V5YSBTdW5rZXN1bGE7IGFhY3JhaWRAcG1jLXNpZXJyYS5jb207IEhh
+cnJ5IFlhbmc7IFJpY2ggQm9ubw0KU3ViamVjdDogUmU6IFtQQVRDSCBWNyAxLzldIFtTQ1NJXSBh
+YWNyYWlkOiBGaXggZm9yIGxvZ2ljYWwgZGV2aWNlIG5hbWUgYW5kIFVJRCBub3QgZXhwb3NlZCB0
+byB0aGUgT1MNCg0KT24gVGh1LCAyMDE1LTA4LTI3IGF0IDA2OjUwIC0wNDAwLCBNYWhlc2ggUmFq
+YXNoZWtoYXJhIHdyb3RlOg0KPiBEZXNjcmlwdGlvbjoNCj4gCURyaXZlciBzZW5kcyB0aGUgcmln
+aHQgc2l6ZSBvZiB0aGUgcmVzcG9uc2UgYnVmZmVyLg0KPiANCj4gQ2hhbmdlcyBmcm9tIFYyOg0K
+PiBOb25lDQo+IA0KPiBSZXZpZXdlZCBCeTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29t
+PiwgTXVydGh5IEJoYXQgDQo+IDxNdXJ0aHkuQmhhdEBwbWNzLmNvbT4sIEthcnRoaWtleWEgU3Vu
+a2VzdWxhIA0KPiA8S2FydGhpa2V5YS5TdW5rZXN1bGFAcG1jcy5jb20+DQo+IA0KPiBTaWduZWQt
+b2ZmLWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2guUmFqYXNoZWtoYXJhQHBtY3MuY29t
+Pg0KDQpZb3UndmUgaGFkIGh1bmRyZWRzIG9mIHVwc3RyZWFtIGNvbmZpcm1hdGlvbiBlbWFpbHMg
+b3ZlciB0aGUgeWVhcnMuDQpUaGV5J3ZlIGFsbCBoYWQgb25lIGxpbmUgcGVyIHRhZyB3aXRoIG5v
+IHNwYWNlcy4gIE5leHQgdGltZSBjYW4gd2UgcGxlYXNlIHVzZSB0aGUgcmlnaHQgZm9ybWF0IHNv
+IEkgZG9uJ3QgaGF2ZSB0byBrZWVwIGVkaXRpbmcgeW91ciBjb21taXQgbWVzc2FnZXMuICBUaGF0
+IGlzOg0KDQpTdWJqZWN0OiBPbmUgbGluZSBzdW1tYXJ5DQoNCkRldGFpbGVkIERlc2NyaXB0aW9u
+IG9mIHRoZSBjaGFuZ2UgKHdpdGhvdXQgYSBEZXNjcmlwdGlvbjogcHJlZml4KQ0KDQpSZXZpZXdl
+ZC1ieTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29tPg0KUmV2aWV3ZWQtYnk6IE11cnRo
+eSBCaGF0IDxNdXJ0aHkuQmhhdEBwbWNzLmNvbT4NClJldmlld2VkLWJ5OiBLYXJ0aGlrZXlhIFN1
+bmtlc3VsYSA8S2FydGhpa2V5YS5TdW5rZXN1bGFAcG1jcy5jb20+DQpTaWduZWQtb2ZmLWJ5OiBN
+YWhlc2ggUmFqYXNoZWtoYXJhIDxNYWhlc2guUmFqYXNoZWtoYXJhQHBtY3MuY29tPg0KDQotLS0N
+Cg0KVmVyc2lvbiBub3RpY2VzIGFuZCBvdGhlciBjb250ZXh0IHJlbGV2YW50IG9ubHkgdG8gdGhl
+IHVwc3RyZWFtIHByb2Nlc3MgY29tZSBoZXJlIGFmdGVyIHRoZSB0aHJlZSBkYXNoZXMgc28gaXQg
+ZG9lc24ndCBhcHBlYXIgaW4gdGhlIHBhdGNoIGRldGFpbGVkIGRlc2NyaXB0aW9uDQoNCkphbWVz
+DQogDQoNCg==
