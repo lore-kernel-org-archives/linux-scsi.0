@@ -1,57 +1,49 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 0/10] megaraid_sas : Updates for scsi for-next
-Date: Fri, 28 Aug 2015 12:32:50 -0700
-Message-ID: <1440790370.2202.46.camel@HansenPartnership.com>
-References: <201508201319.t7KDJDpc028522@palmhbs0.lsi.com>
+Subject: Re: [PATCH 02/10] dm-mpath, scsi_dh: request scsi_dh modules in
+ scsi_dh, not dm-mpath
+Date: Fri, 28 Aug 2015 12:53:17 -0700
+Message-ID: <1440791597.2202.49.camel@HansenPartnership.com>
+References: <1440677823-11695-1-git-send-email-hare@suse.de>
+	 <1440677823-11695-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56612 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56690 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752164AbbH1Tcw (ORCPT
+	by vger.kernel.org with ESMTP id S1752552AbbH1TxS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Aug 2015 15:32:52 -0400
-In-Reply-To: <201508201319.t7KDJDpc028522@palmhbs0.lsi.com>
+	Fri, 28 Aug 2015 15:53:18 -0400
+In-Reply-To: <1440677823-11695-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com, uday.lingala@avagotech.com, Bjorn Helgaas <bhelgaas@google.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2015-08-20 at 18:43 +0530, Sumit.Saxena@avagotech.com wrote:
-> MegaRaid driver changes. This patch set is resent based on feedback received by Martin Petersen.
-> Please consider this patch set for next kernel release.
-> 
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> ---
-> [PATCH v2 00/10] megaraid_sas : Updates for scsi for-next.
-> [PATCH v2 01/10] megaraid_sas : Synchronize driver headers with firmware APIs.
-> [PATCH v2 02/10] megaraid_sas : Increase timeout to 60 secs for abort frames during shutdown.
-> [PATCH v2 03/10] megaraid_sas : Jbod sequence number support.
-> [PATCH v2 04/10] megaraid_sas : Code cleanup-use local variable drv_ops inside megasas_ioc_init_fusion.
-> [PATCH v2 05/10] megaraid_sas : Support for max_io_size 1MB.
-> [PATCH v2 06/10] megaraid_sas : Chip reset if driver fail to bring ioc ready.
-> [PATCH v2 07/10] megaraid_sas : Print critical fw event message.
-> [PATCH v2 08/10] megaraid_sas : Fix validHandles check in io path.
-> [PATCH v2 09/10] megaraid_sas : Code refactor for use of requestorId.
-> [PATCH v2 10/10] megaraid_sas : Version upgrade.
+On Thu, 2015-08-27 at 14:16 +0200, Hannes Reinecke wrote:
+> @@ -158,7 +171,7 @@ store_dh_state(struct device *dev, struct device_attribute *attr,
+>  		/*
+>  		 * Attach to a device handler
+>  		 */
+> -		if (!(scsi_dh = get_device_handler(buf)))
+> +		if (!(scsi_dh = scsi_dh_lookup(buf)))
 
-I'm getting a ton of rejects in this series because of
+This one's a checkpatch error:
 
-commit da0dc9fb4e6b0ad5a947c27a3c48985f6a2377eb
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Jul 7 15:52:45 2015 -0500
+ERROR: do not use assignment in if condition
+#71: FILE: drivers/scsi/device_handler/scsi_dh.c:174:
++               if (!(scsi_dh = scsi_dh_lookup(buf)))
 
-    megaraid_sas: fix whitespace errors
 
-Please fix.
+For very good reason.  The meaning is obvious from the previous code, so
+I fixed it up as
 
-Useful rules of thumb are don't ack whitespace patches because they
-inevitably cause this type of issue.  If you do decide to ack, make sure
-you don't cause conflicts with your own outstanding patches.
+		scsi_dh = scsi_dh_lookup(buf);
+		if (!scsi_dh)
+
+But running the series through checkpatch and acting on at least the
+errors would have been appreciated.
 
 James
-
 
 
