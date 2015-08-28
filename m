@@ -1,39 +1,51 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 10/10] scsi_dh: move 'dh_state' sysfs attribute to
- generic code
-Date: Fri, 28 Aug 2015 13:14:02 -0700
-Message-ID: <1440792842.2202.50.camel@HansenPartnership.com>
-References: <1440677823-11695-1-git-send-email-hare@suse.de>
-	 <1440677823-11695-11-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight
+ mpt2sas
+Date: Fri, 28 Aug 2015 13:25:38 -0700
+Message-ID: <1440793538.2202.55.camel@HansenPartnership.com>
+References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
+	 <20150826235434.GA8843@mail.thefacebook.com>
+	 <1440633514.31814.3.camel@haakon3.risingtidesystems.com>
+	 <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
+	 <1440686414.2196.107.camel@HansenPartnership.com>
+	 <1440702941.24282.2.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56730 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752164AbbH1UOE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Aug 2015 16:14:04 -0400
-In-Reply-To: <1440677823-11695-11-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440702941.24282.2.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Calvin Owens <calvinowens@fb.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2015-08-27 at 14:17 +0200, Hannes Reinecke wrote:
-> As scsi_dh.c is now always compiled in we should be moving
-> the 'dh_state' attribute to the generic code.
+On Thu, 2015-08-27 at 12:15 -0700, Nicholas A. Bellinger wrote:
+> On Thu, 2015-08-27 at 07:40 -0700, James Bottomley wrote:
+> > On Thu, 2015-08-27 at 10:37 +0530, Sreekanth Reddy wrote:
+> > > HI Nicholas & Calvin,
+> > > 
+> > > Thanks for the patchset. Sure We will review and we do some unit
+> > > testing on this patch series. Currently my bandwidth is occupied with
+> > > some internal activity, so by end of next week I will acknowledge this
+> > > series if all the thing are fine with this patch series.
+> > 
+> > Calvin responded to your review feedback and that series has been
+> > outstanding for a while, so I'm not going to drop it from the misc tree.
+> > However, I will reorder to make it ready for the second push. You have
+> > until Friday week to find a problem with it.
+> > 
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> James, as mentioned this series is functionally identical to Calvin's
+> mpt2sas series.
+> 
+> Please consider merging it to scsi.git/for-next, so both series are
+> together and in-sync.
 
-This looks OK, but needs another reviewer.  If you could also fix up the
-rejections caused by the if (!(scsi_dh = ...)) as well, that would be
-great.
-
-It's independent, so I pulled in the rest.
-
-Thanks,
+Unfortunately, the driver isn't, thanks to drift between v2 and v3 of
+the mpt_sas code bases.  This patch is also dangerous: the early
+versions left unremoved objects lying around, so  getting some stress
+testing from avago is very useful.  At this point in the cycle, the risk
+vs reward of doing a blind upport to mpt3_sas is just too great and the
+time for review and stress testing too limited within the merge window.
 
 James
-
-
