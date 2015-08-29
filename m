@@ -1,51 +1,75 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] mpt3sas: Reference counting fixes from in-flight
- mpt2sas
-Date: Fri, 28 Aug 2015 13:25:38 -0700
-Message-ID: <1440793538.2202.55.camel@HansenPartnership.com>
-References: <1440562184-23945-1-git-send-email-nab@daterainc.com>
-	 <20150826235434.GA8843@mail.thefacebook.com>
-	 <1440633514.31814.3.camel@haakon3.risingtidesystems.com>
-	 <CAK=zhgr6gpyW9-+VYcW4Aiv8-m-qdQ=fTeEAm2=OPUDN0FbOAQ@mail.gmail.com>
-	 <1440686414.2196.107.camel@HansenPartnership.com>
-	 <1440702941.24282.2.camel@haakon3.risingtidesystems.com>
+From: Jeremy Linton <jlinton-WMdfZNuR64nqlBn2x/YWAg@public.gmane.org>
+Subject: Re: Persistent Reservation API V3
+Date: Fri, 28 Aug 2015 20:33:24 -0500
+Message-ID: <55E10BE4.6080400@tributary.com>
+References: <1440608214-14497-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440702941.24282.2.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Calvin Owens <calvinowens@fb.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team@fb.com
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1440608214-14497-1-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-08-27 at 12:15 -0700, Nicholas A. Bellinger wrote:
-> On Thu, 2015-08-27 at 07:40 -0700, James Bottomley wrote:
-> > On Thu, 2015-08-27 at 10:37 +0530, Sreekanth Reddy wrote:
-> > > HI Nicholas & Calvin,
-> > > 
-> > > Thanks for the patchset. Sure We will review and we do some unit
-> > > testing on this patch series. Currently my bandwidth is occupied with
-> > > some internal activity, so by end of next week I will acknowledge this
-> > > series if all the thing are fine with this patch series.
-> > 
-> > Calvin responded to your review feedback and that series has been
-> > outstanding for a while, so I'm not going to drop it from the misc tree.
-> > However, I will reorder to make it ready for the second push. You have
-> > until Friday week to find a problem with it.
-> > 
-> 
-> James, as mentioned this series is functionally identical to Calvin's
-> mpt2sas series.
-> 
-> Please consider merging it to scsi.git/for-next, so both series are
-> together and in-sync.
+Hello,
+	So, looking at this, I don't see how it supports the algorithm I've been using
+for years. For that algorithm to successfully migrate PRs across multiple paths
+on a single machine without affecting other possible users (who may legitimately
+have PR'ed the same device) I need PR_IN SA 1, READ RESERVATIONS to assure the
+current node owns the reservation before attempting to preempt it on another
+path. This can also assure that the device hasn't been reserved with a legacy
+reservation.
 
-Unfortunately, the driver isn't, thanks to drift between v2 and v3 of
-the mpt_sas code bases.  This patch is also dangerous: the early
-versions left unremoved objects lying around, so  getting some stress
-testing from avago is very useful.  At this point in the cycle, the risk
-vs reward of doing a blind upport to mpt3_sas is just too great and the
-time for review and stress testing too limited within the merge window.
+	So, this leads me to two more general questions. The first is why isn't the PR
+API simply exported to filesystems as a general reserve/release so that the PR
+happens during mount/dismount. Then DM and friends can be setup to transparently
+migrate or share the reservation, rather than depending on userspace to handle
+these operations...
+	Also, it seems to me the use of CLEAR is extremely dangerous in any environment
+where actual arbitration or sharing of the resource is taking place.
 
-James
+
+	thanks,
+
+On 8/26/2015 11:56 AM, Christoph Hellwig wrote:
+> This series adds support for a simplified Persistent Reservation API
+> to the block layer.  The intent is that both in-kernel and userspace
+> consumers can use the API instead of having to hand craft SCSI or NVMe
+> command through the various pass through interfaces.  It also adds
+> DM support as getting reservations through dm-multipath is a major
+> pain with the current scheme.
+> 
+> NVMe support currently isn't included as I don't have a multihost
+> NVMe setup to test on, but Keith offered to test it and I'll have
+> a patch for it shortly.
+> 
+> The ioctl API is documented in Documentation/block/pr.txt, but to
+> fully understand the concept you'll have to read up the SPC spec,
+> PRs are too complicated that trying to rephrase them into different
+> terminology is just going to create confusion.
+> 
+> Note that Mike wants to include the DM patches so through the DM
+> tree, so they are only included for reference.
+> 
+> I also have a set of simple test tools available at:
+> 
+> 	git://git.infradead.org/users/hch/pr-tests.git
+> 
+> Changes since V2:
+>   - added an ignore flag to the reserve opertion as well, and redid
+>     the ioctl API to have general flags fields
+>   - rebased on top of the latest block layer tree updates
+> Changes since V1:
+>   - rename DM ->ioctl to ->prepare_ioctl
+>   - rename dm_get_ioctl_table to dm_get_live_table_for_ioctl
+>   - merge two DM patches into one
+>   - various spelling fixes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> .
+> 
