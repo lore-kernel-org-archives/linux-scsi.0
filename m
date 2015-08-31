@@ -1,60 +1,46 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi_scan: move 'INQUIRY result too short' message to
- debug level
-Date: Mon, 31 Aug 2015 13:21:26 +0000
-Message-ID: <BY2PR0301MB1654D30E1FBE69F83F97F172A06B0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1441025401-30044-1-git-send-email-vkuznets@redhat.com>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] storvsc: Don't set the SRB_FLAGS_QUEUE_ACTION_ENABLE flag
+Date: Mon, 31 Aug 2015 08:21:54 -0700
+Message-ID: <1441034514-18853-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441025401-30044-1-git-send-email-vkuznets@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
+Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
-> Sent: Monday, August 31, 2015 5:50 AM
-> To: James E.J. Bottomley <JBottomley@odin.com>
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Long Li <longli@microsoft.com>; Dexuan Cui
-> <decui@microsoft.com>
-> Subject: [PATCH] scsi_scan: move 'INQUIRY result too short' message to
-> debug level
-> 
-> Some Hyper-V hosts are known for ignoring SPC-2/3/4 requirement
-> for 'INQUIRY data (see table ...) shall contain at least 36 bytes'. As a
-> result we get tons on 'scsi 0:7:1:1: scsi scan: INQUIRY result too short
-> (5), using 36' messages on console. As Hyper-V is also known for its
-> serial port being extremely slow multi-VCPU guests we get CPU blocked
-> putting these (useless) messages on console (e.g. happens when we add
-> multiple disks). Move them to debug level.
-> 
-> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Don't set the SRB_FLAGS_QUEUE_ACTION_ENABLE flag since we are not specifying
+tags.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/scsi/scsi_scan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index f9f3f82..cb5c50a 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -701,7 +701,7 @@ static int scsi_probe_lun(struct scsi_device *sdev,
-> unsigned char *inq_result,
->  	 * strings.
->  	 */
->  	if (sdev->inquiry_len < 36) {
-> -		sdev_printk(KERN_INFO, sdev,
-> +		sdev_printk(KERN_DEBUG, sdev,
->  			    "scsi scan: INQUIRY result too short (%d),"
->  			    " using 36\n", sdev->inquiry_len);
->  		sdev->inquiry_len = 36;
-> --
-> 2.4.3
+Cc: stable@vger.kernel.org
+---
+ drivers/scsi/storvsc_drv.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 40c43ae..ad8c4bc 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1647,8 +1647,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	vm_srb->win8_extension.time_out_value = 60;
+ 
+ 	vm_srb->win8_extension.srb_flags |=
+-		(SRB_FLAGS_QUEUE_ACTION_ENABLE |
+-		SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
++		SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+ 
+ 	/* Build the SRB */
+ 	switch (scmnd->sc_data_direction) {
+-- 
+1.7.4.1
