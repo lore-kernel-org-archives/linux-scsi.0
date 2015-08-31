@@ -1,139 +1,71 @@
-From: leeman.duncan@gmail.com
-Subject: [PATCH] Update scsi host to use ida for host number
-Date: Mon, 31 Aug 2015 13:28:10 -0700
-Message-ID: <1441052890-3600-1-git-send-email-leeman.duncan@gmail.com>
+From: james.smart@avagotech.com (James Smart)
+Subject: [PATCH 00/14] lpfc: Update to revision 11.0.0.0
+Date: Mon, 31 Aug 2015 16:48:07 -0400
+Message-ID: <55e4bd87.eie8hCFdLGKHWB6x%james.smart@avagotech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44726 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751129AbbHaU24 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2015 16:28:56 -0400
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:34262 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbbHaUsX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 16:48:23 -0400
+Received: by qkct7 with SMTP id t7so16737981qkc.1
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 13:48:22 -0700 (PDT)
+Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
+        by smtp.gmail.com with ESMTPSA id 144sm9447391qhu.11.2015.08.31.13.48.21
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 31 Aug 2015 13:48:21 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: hare@suse.com, JBottomley@Parallels.com, Lee Duncan <lduncan@suse.com>
 
-From: Lee Duncan <lduncan@suse.com>
 
-Each Scsi_host instance gets a host number starting
-at 0, but this is implemented with an atomic integer,
-and rollover doesn't seem to have been considered.
-Another side-effect of this design is that scsi host
-numbers used by iscsi are never reused, thereby  making
-rollover more likely. This patch converts Scsi_host
-instances to use ida to manage their instance
-numbers.
+This patch set updates the lpfc driver to revision 11.0.0.0
 
-This also means that host instance numbers will be
-reused, when available.
+The patches were cut against scsi-misc
 
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/hosts.c | 43 +++++++++++++++++++++++++++++++++++--------
- 1 file changed, 35 insertions(+), 8 deletions(-)
+-- james s
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e01084..dade75478541 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -33,7 +33,7 @@
- #include <linux/transport_class.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
--
-+#include <linux/idr.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -42,7 +42,8 @@
- #include "scsi_logging.h"
- 
- 
--static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
-+static DEFINE_SPINLOCK(host_index_lock);
-+static DEFINE_IDA(host_index_ida);
- 
- 
- static void scsi_host_cls_release(struct device *dev)
-@@ -337,6 +338,10 @@ static void scsi_host_dev_release(struct device *dev)
- 
- 	kfree(shost->shost_data);
- 
-+	spin_lock(&host_index_lock);
-+	ida_remove(&host_index_ida, shost->host_no);
-+	spin_unlock(&host_index_lock);
-+
- 	if (parent)
- 		put_device(parent);
- 	kfree(shost);
-@@ -353,6 +358,22 @@ static struct device_type scsi_host_type = {
- 	.release =	scsi_host_dev_release,
- };
- 
-+static int host_get_index(int *index)
-+{
-+	int error = -ENOMEM;
-+
-+	do {
-+		if (!ida_pre_get(&host_index_ida, GFP_KERNEL))
-+			break;
-+		spin_lock(&host_index_lock);
-+		error = ida_get_new(&host_index_ida, index);
-+		spin_unlock(&host_index_lock);
-+	} while (error == -EAGAIN);
-+
-+	return error;
-+}
-+
-+
- /**
-  * scsi_host_alloc - register a scsi host adapter instance.
-  * @sht:	pointer to scsi host template
-@@ -370,6 +391,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
- 	struct Scsi_Host *shost;
- 	gfp_t gfp_mask = GFP_KERNEL;
-+	int index;
-+	int error;
- 
- 	if (sht->unchecked_isa_dma && privsize)
- 		gfp_mask |= __GFP_DMA;
-@@ -388,11 +411,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	init_waitqueue_head(&shost->host_wait);
- 	mutex_init(&shost->scan_mutex);
- 
--	/*
--	 * subtract one because we increment first then return, but we need to
--	 * know what the next host number was before increment
--	 */
--	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
-+	error = host_get_index(&index);
-+	if (error < 0)
-+		goto fail_kfree;
-+	shost->host_no = index;
-+
- 	shost->dma_channel = 0xff;
- 
- 	/* These three are default values which can be overridden */
-@@ -477,7 +500,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 		shost_printk(KERN_WARNING, shost,
- 			"error handler thread failed to spawn, error = %ld\n",
- 			PTR_ERR(shost->ehandler));
--		goto fail_kfree;
-+		goto fail_free_index;
- 	}
- 
- 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
-@@ -493,6 +516,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 
-  fail_kthread:
- 	kthread_stop(shost->ehandler);
-+ fail_free_index:
-+	spin_lock(&host_index_lock);
-+	ida_remove(&host_index_ida, index);
-+	spin_unlock(&host_index_lock);
-  fail_kfree:
- 	kfree(shost);
- 	return NULL;
+
+James Smart (14):
+  Pull in patches posted to linux-scsi prior:
+    lpfc: fix model description
+    lpfc: Remove unnessary cast
+    lpfc: in sli3 use configured sg_seg_cnt for sg_tablesize
+    lpfc: Destroy lpfc_hba_index IDR on module exit
+    Fix kmalloc overflow in LPFC driver at large core count
+    lpfc:Make the function lpfc_sli4_mbox_completions_pending static in
+      order to comply with function prototype
+    lpfc: remove set but not used variables
+    lpfc: Fix possible use-after-free and double free in
+      lpfc_mbx_cmpl_rdp_page_a2()
+    fix: lpfc_send_rscn_event sends bigger buffer size
+  Add support for Lancer G6 and 32G FC links
+  Fix for discovery failure in PT2PT when FLOGI's ELS ACC response gets
+    aborted
+  The linux driver does not reinitiate discovery after a failed FLOGI
+  Fix default RA_TOV and ED_TOV in the FC/FCoE driver for all
+    topologies
+  Update version to 11.0.0.0 for upstream patch set
+
+ drivers/scsi/lpfc/lpfc.h           |   8 +--
+ drivers/scsi/lpfc/lpfc_attr.c      |  23 +++++----
+ drivers/scsi/lpfc/lpfc_bsg.c       |  20 --------
+ drivers/scsi/lpfc/lpfc_ct.c        |  11 ++--
+ drivers/scsi/lpfc/lpfc_els.c       | 100 +++++++++++--------------------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  27 +++++++---
+ drivers/scsi/lpfc/lpfc_hw.h        |   6 ++-
+ drivers/scsi/lpfc/lpfc_init.c      |  36 ++++++++-----
+ drivers/scsi/lpfc/lpfc_mbox.c      |  26 ++++++----
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   2 -
+ drivers/scsi/lpfc/lpfc_scsi.c      |  14 +-----
+ drivers/scsi/lpfc/lpfc_sli.c       |  10 +---
+ drivers/scsi/lpfc/lpfc_sli4.h      |   1 -
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 14 files changed, 117 insertions(+), 169 deletions(-)
+
 -- 
-2.1.4
+1.7.11.7
 
