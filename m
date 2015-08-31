@@ -1,52 +1,54 @@
 From: james.smart@avagotech.com (James Smart)
-Subject: [PATCH 02/14] lpfc: Remove unnessary cast
-Date: Mon, 31 Aug 2015 16:48:09 -0400
-Message-ID: <55e4bd89.wnXoOtgVrknAjUqh%james.smart@avagotech.com>
+Subject: [PATCH 09/14] fix: lpfc_send_rscn_event sends bigger buffer size
+Date: Mon, 31 Aug 2015 16:48:16 -0400
+Message-ID: <55e4bd90.zlcxDDRSu3edLd6S%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:33836 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094AbbHaUsZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 16:48:25 -0400
-Received: by qgtt94 with SMTP id t94so22801481qgt.1
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 13:48:24 -0700 (PDT)
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35104 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753231AbbHaUsd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 16:48:33 -0400
+Received: by qkcj187 with SMTP id j187so16804631qkc.2
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 13:48:32 -0700 (PDT)
 Received: from myfc17 (c-75-67-235-135.hsd1.nh.comcast.net. [75.67.235.135])
-        by smtp.gmail.com with ESMTPSA id n10sm9523373qki.24.2015.08.31.13.48.23
+        by smtp.gmail.com with ESMTPSA id b82sm9430307qhc.46.2015.08.31.13.48.31
         for <linux-scsi@vger.kernel.org>
         (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Mon, 31 Aug 2015 13:48:23 -0700 (PDT)
+        Mon, 31 Aug 2015 13:48:31 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-From: Firo Yang <firogm@gmail.com>
+From: Ales Novak <alnovak@suse.cz>
 
-kzalloc() returns a void pointer - no need to cast it in
-drivers/scsi/lpfc/lpfc_init.c::lpfc_sli_driver_resource_setup()
+lpfc_send_rscn_event() allocates data for sizeof(struct
+lpfc_rscn_event_header) + payload_len, but claims that the data has size
+of sizeof(struct lpfc_els_event_header) + payload_len. That leads to
+buffer overruns.
 
-Signed-off-by: Firo Yang <firogm@gmail.com>
+Signed-off-by: Ales Novak <alnovak@suse.cz>
 Signed-off-by: James Smart <james.smart@avagotech.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 1992e74..da9b6fc 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4982,8 +4982,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index c859aa3..f9c957d 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5401,7 +5401,7 @@ lpfc_send_rscn_event(struct lpfc_vport *vport,
  
- 	if (!phba->sli.ring)
--		phba->sli.ring = (struct lpfc_sli_ring *)
--			kzalloc(LPFC_SLI3_MAX_RING *
-+		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
- 			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
- 	if (!phba->sli.ring)
- 		return -ENOMEM;
+ 	fc_host_post_vendor_event(shost,
+ 		fc_get_event_number(),
+-		sizeof(struct lpfc_els_event_header) + payload_len,
++		sizeof(struct lpfc_rscn_event_header) + payload_len,
+ 		(char *)rscn_event_data,
+ 		LPFC_NL_VENDOR_ID);
+ 
 -- 
 1.7.11.7
 
