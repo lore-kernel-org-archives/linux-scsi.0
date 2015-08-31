@@ -1,93 +1,210 @@
 From: sumit.saxena@avagotech.com
-Subject: [PATCH v3 01/10] megaraid_sas : Synchronize driver headers with
- firmware APIs
-Date: Mon, 31 Aug 2015 17:22:51 +0530
-Message-ID: <201508311158.t7VBwK6C031362@palmhbs0.lsi.com>
+Subject: [PATCH v3 6/10] megaraid_sas : Chip reset if driver fail to bring ioc ready
+Date: Mon, 31 Aug 2015 17:23:41 +0530
+Message-ID: <201508311159.t7VBxAP7031418@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([199.3.246.86]:52693 "EHLO
-	sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977AbbHaLyO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:14 -0400
+Received: from bastion.smtp.avagotech.com ([202.86.248.61]:41225 "EHLO
+	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110AbbHaLyU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
 Cc: uday.lingala@avagotech.com
 
+Patch which fix the issue reported as below.
+
+http://marc.info/?l=linux-scsi&m=143694494104544&w=2
+
+This patch will try to do chip reset from driver load time.
+Driver load time, if firmware is not comming to ready state, driver try chip reset calling
+adp_reset() callback. For fusion adapter, that call back was void, so it will not do any chip reset.
+
+Now, using this patch megasas_adp_reset_fusion() will have chip reset logic for Fusion adapter.
+
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-Reviewed-by: Martin Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   18 ++++++++++++++----
- drivers/scsi/megaraid/megaraid_sas_fusion.h |    3 ++-
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  145 +++++++++++++--------------
+ 1 files changed, 69 insertions(+), 76 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 20c3754..b0d373d 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -973,7 +973,11 @@ struct megasas_ctrl_info {
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 78e252a..1d73d30 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2509,6 +2509,70 @@ static int
+ megasas_adp_reset_fusion(struct megasas_instance *instance,
+ 			 struct megasas_register_set __iomem *regs)
+ {
++	u32 host_diag, abs_state, retry;
++
++	/* Now try to reset the chip */
++	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_1ST_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_2ND_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_3RD_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_4TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_5TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++	writel(MPI2_WRSEQ_6TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
++
++	/* Check that the diag write enable (DRWE) bit is on */
++	host_diag = readl(&instance->reg_set->fusion_host_diag);
++	retry = 0;
++	while (!(host_diag & HOST_DIAG_WRITE_ENABLE)) {
++		msleep(100);
++		host_diag = readl(&instance->reg_set->fusion_host_diag);
++		if (retry++ == 100) {
++			dev_warn(&instance->pdev->dev,
++				"Host diag unlock failed from %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++	}
++	if (!(host_diag & HOST_DIAG_WRITE_ENABLE))
++		return -1;
++
++	/* Send chip reset command */
++	writel(host_diag | HOST_DIAG_RESET_ADAPTER,
++		&instance->reg_set->fusion_host_diag);
++	msleep(3000);
++
++	/* Make sure reset adapter bit is cleared */
++	host_diag = readl(&instance->reg_set->fusion_host_diag);
++	retry = 0;
++	while (host_diag & HOST_DIAG_RESET_ADAPTER) {
++		msleep(100);
++		host_diag = readl(&instance->reg_set->fusion_host_diag);
++		if (retry++ == 1000) {
++			dev_warn(&instance->pdev->dev,
++				"Diag reset adapter never cleared %s %d\n",
++				__func__, __LINE__);
++			break;
++		}
++	}
++	if (host_diag & HOST_DIAG_RESET_ADAPTER)
++		return -1;
++
++	abs_state = instance->instancet->read_fw_status_reg(instance->reg_set)
++			& MFI_STATE_MASK;
++	retry = 0;
++
++	while ((abs_state <= MFI_STATE_FW_INIT) && (retry++ < 1000)) {
++		msleep(100);
++		abs_state = instance->instancet->
++			read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
++	}
++	if (abs_state <= MFI_STATE_FW_INIT) {
++		dev_warn(&instance->pdev->dev,
++			"fw state < MFI_STATE_FW_INIT, state = 0x%x %s %d\n",
++			abs_state, __func__, __LINE__);
++		return -1;
++	}
++
+ 	return 0;
+ }
  
- 	struct {
- #if defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:12;
-+		u32     reserved:8;
-+		u32     supportExtendedSSCSize:1;
-+		u32     supportDiskCacheSettingForSysPDs:1;
-+		u32     supportCPLDUpdate:1;
-+		u32     supportTTYLogCompression:1;
- 		u32     discardCacheDuringLDDelete:1;
- 		u32     supportSecurityonJBOD:1;
- 		u32     supportCacheBypassModes:1;
-@@ -1013,7 +1017,11 @@ struct megasas_ctrl_info {
- 		u32     supportCacheBypassModes:1;
- 		u32     supportSecurityonJBOD:1;
- 		u32     discardCacheDuringLDDelete:1;
--		u32     reserved:12;
-+		u32     supportTTYLogCompression:1;
-+		u32     supportCPLDUpdate:1;
-+		u32     supportDiskCacheSettingForSysPDs:1;
-+		u32     supportExtendedSSCSize:1;
-+		u32     reserved:8;
- #endif
- 	} adapterOperations3;
+@@ -2674,11 +2738,11 @@ out:
+ /* Core fusion reset function */
+ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ {
+-	int retval = SUCCESS, i, retry = 0, convert = 0;
++	int retval = SUCCESS, i, convert = 0;
+ 	struct megasas_instance *instance;
+ 	struct megasas_cmd_fusion *cmd_fusion;
+ 	struct fusion_context *fusion;
+-	u32 host_diag, abs_state, status_reg, reset_adapter;
++	u32 abs_state, status_reg, reset_adapter;
+ 	u32 io_timeout_in_crash_mode = 0;
+ 	struct scsi_cmnd *scmd_local = NULL;
  
-@@ -1229,7 +1237,8 @@ union megasas_sgl_frame {
- typedef union _MFI_CAPABILITIES {
- 	struct {
- #if   defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:25;
-+		u32     reserved:24;
-+		u32	support_ext_queue_depth:1;
- 		u32     security_protocol_cmds_fw:1;
- 		u32     support_core_affinity:1;
- 		u32     support_ndrive_r1_lb:1;
-@@ -1245,7 +1254,8 @@ typedef union _MFI_CAPABILITIES {
- 		u32     support_ndrive_r1_lb:1;
- 		u32     support_core_affinity:1;
- 		u32     security_protocol_cmds_fw:1;
--		u32     reserved:25;
-+		u32	support_ext_queue_depth:1;
-+		u32     reserved:24;
- #endif
- 	} mfi_capabilities;
- 	__le32		reg;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index ced6dc0..be1be8e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -117,7 +117,8 @@ struct RAID_CONTEXT {
- 	u8      numSGE;
- 	__le16	configSeqNum;
- 	u8      spanArm;
--	u8      resvd2[3];
-+	u8      priority;
-+	u8      resvd2[2];
- };
+@@ -2832,81 +2896,10 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
  
- #define RAID_CTX_SPANARM_ARM_SHIFT	(0)
+ 		/* Now try to reset the chip */
+ 		for (i = 0; i < MEGASAS_FUSION_MAX_RESET_TRIES; i++) {
+-			writel(MPI2_WRSEQ_FLUSH_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_1ST_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_2ND_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_3RD_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_4TH_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_5TH_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-			writel(MPI2_WRSEQ_6TH_KEY_VALUE,
+-			       &instance->reg_set->fusion_seq_offset);
+-
+-			/* Check that the diag write enable (DRWE) bit is on */
+-			host_diag = readl(&instance->reg_set->fusion_host_diag);
+-			retry = 0;
+-			while (!(host_diag & HOST_DIAG_WRITE_ENABLE)) {
+-				msleep(100);
+-				host_diag =
+-				readl(&instance->reg_set->fusion_host_diag);
+-				if (retry++ == 100) {
+-					dev_warn(&instance->pdev->dev,
+-					       "Host diag unlock failed! "
+-					       "for scsi%d\n",
+-						instance->host->host_no);
+-					break;
+-				}
+-			}
+-			if (!(host_diag & HOST_DIAG_WRITE_ENABLE))
+-				continue;
+ 
+-			/* Send chip reset command */
+-			writel(host_diag | HOST_DIAG_RESET_ADAPTER,
+-			       &instance->reg_set->fusion_host_diag);
+-			msleep(3000);
+-
+-			/* Make sure reset adapter bit is cleared */
+-			host_diag = readl(&instance->reg_set->fusion_host_diag);
+-			retry = 0;
+-			while (host_diag & HOST_DIAG_RESET_ADAPTER) {
+-				msleep(100);
+-				host_diag =
+-				readl(&instance->reg_set->fusion_host_diag);
+-				if (retry++ == 1000) {
+-					dev_warn(&instance->pdev->dev,
+-					       "Diag reset adapter never "
+-					       "cleared for scsi%d!\n",
+-						instance->host->host_no);
+-					break;
+-				}
+-			}
+-			if (host_diag & HOST_DIAG_RESET_ADAPTER)
+-				continue;
+-
+-			abs_state =
+-				instance->instancet->read_fw_status_reg(
+-					instance->reg_set) & MFI_STATE_MASK;
+-			retry = 0;
+-
+-			while ((abs_state <= MFI_STATE_FW_INIT) &&
+-			       (retry++ < 1000)) {
+-				msleep(100);
+-				abs_state =
+-				instance->instancet->read_fw_status_reg(
+-					instance->reg_set) & MFI_STATE_MASK;
+-			}
+-			if (abs_state <= MFI_STATE_FW_INIT) {
+-				dev_warn(&instance->pdev->dev, "firmware "
+-				       "state < MFI_STATE_FW_INIT, state = "
+-				       "0x%x for scsi%d\n", abs_state,
+-					instance->host->host_no);
+-				continue;
+-			}
++			if (instance->instancet->adp_reset
++				(instance, instance->reg_set))
++				continue;
+ 
+ 			/* Wait for FW to become ready */
+ 			if (megasas_transition_to_ready(instance, 1)) {
 -- 
 1.7.1
 
