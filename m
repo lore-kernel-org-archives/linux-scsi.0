@@ -1,540 +1,232 @@
 From: sumit.saxena@avagotech.com
-Subject: [PATCH v3 3/10] megaraid_sas : Jbod sequence number support
-Date: Mon, 31 Aug 2015 17:23:11 +0530
-Message-ID: <201508311158.t7VBwenY031389@palmhbs0.lsi.com>
+Subject: [PATCH v3 5/10] megaraid_sas : Support for max_io_size 1MB
+Date: Mon, 31 Aug 2015 17:23:31 +0530
+Message-ID: <201508311159.t7VBx0co031410@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([202.86.248.61]:41203 "EHLO
-	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbHaLyA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:00 -0400
+Received: from smtp.avagotech.com ([199.3.246.86]:52695 "EHLO
+	sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbbHaLyO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
 Cc: uday.lingala@avagotech.com
 
-Implemented JBOD map which will provide quick access for JBOD path and also provide sequence number.
-This will help hardware to fail command to the FW in case of any sequence mismatch.
-
-Fast Path IO for JBOD will refer JBOD map (which has sequence number per JBOD devices) 
-instead of Raid map.  Earlier, driver use Raid map to get device handle for fast path IO,
-which does not have sequence number information. Now, driver will use JBOD map for the same purpose.
-As part of error handling, if JBOD map is failed/not supported by firmware; driver will continue legacy behavior.
-
-Now there will be three IO path for JBOD (syspd)
-
-JBOD map with sequence number (Fast Path)
-Raid map without sequence number (Fast Path)
-FW path via h/w exceptional queue deliberately setup devhandle 0xFFFF (FW path).
-
-
-Relevant data structures:
--Driver send new DCMD MR_DCMD_SYSTEM_PD_MAP_GET_INFO for this purpose.
--struct MR_PD_CFG_SEQ- This structure represent map of single physical device.
--struct MR_PD_CFG_SEQ_NUM_SYNC- This structure represent whole JBOD map in general(size, count of sysPDs configured,
- struct MR_PD_CFG_SEQ of syspD with 0 index).
-
--JBOD sequnce map size is: sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) + (sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1))
- which is allocated while setting up JBOD map at driver load time.
+Driver will expose max sge = 256 (earlier it was 64), if firmware support 
+extended IO size upto 1M. 
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Reviewed-by: Martin Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   13 +++-
- drivers/scsi/megaraid/megaraid_sas_base.c   |  100 +++++++++++++++++++++-
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  126 ++++++++++++++++++++++++---
- drivers/scsi/megaraid/megaraid_sas_fusion.h |   19 ++++
- 4 files changed, 242 insertions(+), 16 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |    7 ++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   61 ++++++++++++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |   10 ++++-
+ 3 files changed, 58 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index b0d373d..811fc4a 100644
+index 811fc4a..5db31c6 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -973,7 +973,8 @@ struct megasas_ctrl_info {
- 
+@@ -1239,7 +1239,8 @@ union megasas_sgl_frame {
+ typedef union _MFI_CAPABILITIES {
  	struct {
- #if defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:8;
-+		u32     reserved:7;
-+		u32     useSeqNumJbodFP:1;
- 		u32     supportExtendedSSCSize:1;
- 		u32     supportDiskCacheSettingForSysPDs:1;
- 		u32     supportCPLDUpdate:1;
-@@ -1021,7 +1022,8 @@ struct megasas_ctrl_info {
- 		u32     supportCPLDUpdate:1;
- 		u32     supportDiskCacheSettingForSysPDs:1;
- 		u32     supportExtendedSSCSize:1;
--		u32     reserved:8;
-+		u32     useSeqNumJbodFP:1;
-+		u32     reserved:7;
+ #if   defined(__BIG_ENDIAN_BITFIELD)
+-		u32     reserved:24;
++		u32     reserved:23;
++		u32     support_ext_io_size:1;
+ 		u32	support_ext_queue_depth:1;
+ 		u32     security_protocol_cmds_fw:1;
+ 		u32     support_core_affinity:1;
+@@ -1257,7 +1258,8 @@ typedef union _MFI_CAPABILITIES {
+ 		u32     support_core_affinity:1;
+ 		u32     security_protocol_cmds_fw:1;
+ 		u32	support_ext_queue_depth:1;
+-		u32     reserved:24;
++		u32     support_ext_io_size:1;
++		u32     reserved:23;
  #endif
- 	} adapterOperations3;
- 
-@@ -1700,6 +1702,7 @@ struct megasas_instance {
- 	u32 crash_dump_drv_support;
- 	u32 crash_dump_app_support;
- 	u32 secure_jbod_support;
-+	bool use_seqnum_jbod_fp;   /* Added for PD sequence */
- 	spinlock_t crashdump_lock;
- 
- 	struct megasas_register_set __iomem *reg_set;
-@@ -1779,7 +1782,9 @@ struct megasas_instance {
- 	struct msix_entry msixentry[MEGASAS_MAX_MSIX_QUEUES];
- 	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
- 	u64 map_id;
-+	u64 pd_seq_map_id;
- 	struct megasas_cmd *map_update_cmd;
-+	struct megasas_cmd *jbod_seq_cmd;
- 	unsigned long bar;
- 	long reset_flags;
- 	struct mutex reset_mutex;
-@@ -1995,6 +2000,9 @@ __le16 get_updated_dev_handle(struct megasas_instance *instance,
- void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
- 	struct LD_LOAD_BALANCE_INFO *lbInfo);
- int megasas_get_ctrl_info(struct megasas_instance *instance);
-+/* PD sequence */
-+int
-+megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend);
- int megasas_set_crash_dump_params(struct megasas_instance *instance,
- 	u8 crash_buf_state);
- void megasas_free_host_crash_buffer(struct megasas_instance *instance);
-@@ -2010,5 +2018,6 @@ void __megasas_return_cmd(struct megasas_instance *instance,
- void megasas_return_mfi_mpt_pthr(struct megasas_instance *instance,
- 	struct megasas_cmd *cmd_mfi, struct megasas_cmd_fusion *cmd_fusion);
- int megasas_cmd_type(struct scsi_cmnd *cmd);
-+void megasas_setup_jbod_map(struct megasas_instance *instance);
- 
- #endif				/*LSI_MEGARAID_SAS_H */
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 1bcb59a..1943c14 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2837,7 +2837,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	struct megasas_header *hdr = &cmd->frame->hdr;
- 	unsigned long flags;
- 	struct fusion_context *fusion = instance->ctrl_context;
--	u32 opcode;
-+	u32 opcode, status;
- 
- 	/* flag for the retry reset */
- 	cmd->retry_for_fw_reset = 0;
-@@ -2945,6 +2945,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 			&& (cmd->frame->dcmd.mbox.b[1] == 1)) {
- 			fusion->fast_path_io = 0;
- 			spin_lock_irqsave(instance->host->host_lock, flags);
-+			instance->map_update_cmd = NULL;
- 			if (cmd->frame->hdr.cmd_status != 0) {
- 				if (cmd->frame->hdr.cmd_status !=
- 				    MFI_STAT_NOT_FOUND)
-@@ -2982,6 +2983,27 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 			spin_unlock_irqrestore(&poll_aen_lock, flags);
- 		}
- 
-+		/* FW has an updated PD sequence */
-+		if ((opcode == MR_DCMD_SYSTEM_PD_MAP_GET_INFO) &&
-+			(cmd->frame->dcmd.mbox.b[0] == 1)) {
-+
-+			spin_lock_irqsave(instance->host->host_lock, flags);
-+			status = cmd->frame->hdr.cmd_status;
-+			instance->jbod_seq_cmd = NULL;
-+			megasas_return_cmd(instance, cmd);
-+
-+			if (status == MFI_STAT_OK) {
-+				instance->pd_seq_map_id++;
-+				/* Re-register a pd sync seq num cmd */
-+				if (megasas_sync_pd_seq_num(instance, true))
-+					instance->use_seqnum_jbod_fp = false;
-+			} else
-+				instance->use_seqnum_jbod_fp = false;
-+
-+			spin_unlock_irqrestore(instance->host->host_lock, flags);
-+			break;
-+		}
-+
- 		/*
- 		 * See if got an event notification
- 		 */
-@@ -4136,6 +4158,8 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
- 		le32_to_cpus((u32 *)&ctrl_info->adapterOperations2);
- 		le32_to_cpus((u32 *)&ctrl_info->adapterOperations3);
- 		megasas_update_ext_vd_details(instance);
-+		instance->use_seqnum_jbod_fp =
-+			ctrl_info->adapterOperations3.useSeqNumJbodFP;
- 		instance->is_imr = (ctrl_info->memory_size ? 0 : 1);
- 		dev_info(&instance->pdev->dev,
- 				"controller type\t: %s(%dMB)\n",
-@@ -4481,6 +4505,62 @@ megasas_destroy_irqs(struct megasas_instance *instance) {
- }
- 
- /**
-+ * megasas_setup_jbod_map -	setup jbod map for FP seq_number.
-+ * @instance:				Adapter soft state
-+ * @is_probe:				Driver probe check
-+ *
-+ * Return 0 on success.
-+ */
-+void
-+megasas_setup_jbod_map(struct megasas_instance *instance)
-+{
-+	int i;
-+	struct fusion_context *fusion = instance->ctrl_context;
-+	u32 pd_seq_map_sz;
-+
-+	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
-+		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1));
-+
-+	if (reset_devices || !fusion ||
-+		!instance->ctrl_info->adapterOperations3.useSeqNumJbodFP) {
-+		dev_info(&instance->pdev->dev,
-+			"Jbod map is not supported %s %d\n",
-+			__func__, __LINE__);
-+		instance->use_seqnum_jbod_fp = false;
-+		return;
-+	}
-+
-+	if (fusion->pd_seq_sync[0])
-+		goto skip_alloc;
-+
-+	for (i = 0; i < JBOD_MAPS_COUNT; i++) {
-+		fusion->pd_seq_sync[i] = dma_alloc_coherent
-+			(&instance->pdev->dev, pd_seq_map_sz,
-+			&fusion->pd_seq_phys[i], GFP_KERNEL);
-+		if (!fusion->pd_seq_sync[i]) {
-+			dev_err(&instance->pdev->dev,
-+				"Failed to allocate memory from %s %d\n",
-+				__func__, __LINE__);
-+			if (i == 1) {
-+				dma_free_coherent(&instance->pdev->dev,
-+					pd_seq_map_sz, fusion->pd_seq_sync[0],
-+					fusion->pd_seq_phys[0]);
-+				fusion->pd_seq_sync[0] = NULL;
-+			}
-+			instance->use_seqnum_jbod_fp = false;
-+			return;
-+		}
-+	}
-+
-+skip_alloc:
-+	if (!megasas_sync_pd_seq_num(instance, false) &&
-+		!megasas_sync_pd_seq_num(instance, true))
-+		instance->use_seqnum_jbod_fp = true;
-+	else
-+		instance->use_seqnum_jbod_fp = false;
-+}
-+
-+/**
-  * megasas_init_fw -	Initializes the FW
-  * @instance:		Adapter soft state
-  *
-@@ -4653,6 +4733,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 
- 	dev_err(&instance->pdev->dev, "INIT adapter done\n");
- 
-+	megasas_setup_jbod_map(instance);
-+
- 	/** for passthrough
- 	 * the following function will get the PD LIST.
- 	 */
-@@ -4749,6 +4831,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		instance->crash_dump_drv_support ? "yes" : "no");
- 	dev_info(&instance->pdev->dev, "secure jbod		: %s\n",
- 		instance->secure_jbod_support ? "yes" : "no");
-+	dev_info(&instance->pdev->dev, "jbod sync map		: %s\n",
-+		instance->use_seqnum_jbod_fp ? "yes" : "no");
- 
- 
- 	instance->max_sectors_per_req = instance->max_num_sge *
-@@ -5510,6 +5594,10 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- 	if (instance->map_update_cmd)
- 		megasas_issue_blocked_abort_cmd(instance,
- 			instance->map_update_cmd, MEGASAS_BLOCKED_CMD_TIMEOUT);
-+	if (instance->jbod_seq_cmd)
-+		megasas_issue_blocked_abort_cmd(instance,
-+			instance->jbod_seq_cmd, MEGASAS_BLOCKED_CMD_TIMEOUT);
-+
- 	dcmd = &cmd->frame->dcmd;
- 
- 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
-@@ -5674,6 +5762,7 @@ megasas_resume(struct pci_dev *pdev)
- 	}
- 
- 	instance->instancet->enable_intr(instance);
-+	megasas_setup_jbod_map(instance);
- 	instance->unload = 0;
- 
- 	/*
-@@ -5721,6 +5810,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	struct Scsi_Host *host;
- 	struct megasas_instance *instance;
- 	struct fusion_context *fusion;
-+	u32 pd_seq_map_sz;
- 
- 	instance = pci_get_drvdata(pdev);
- 	instance->unload = 1;
-@@ -5775,6 +5865,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	case PCI_DEVICE_ID_LSI_INVADER:
- 	case PCI_DEVICE_ID_LSI_FURY:
- 		megasas_release_fusion(instance);
-+			pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
-+				(sizeof(struct MR_PD_CFG_SEQ) *
-+					(MAX_PHYSICAL_DEVICES - 1));
- 		for (i = 0; i < 2 ; i++) {
- 			if (fusion->ld_map[i])
- 				dma_free_coherent(&instance->pdev->dev,
-@@ -5784,6 +5877,11 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 			if (fusion->ld_drv_map[i])
- 				free_pages((ulong)fusion->ld_drv_map[i],
- 					fusion->drv_map_pages);
-+				if (fusion->pd_seq_sync)
-+					dma_free_coherent(&instance->pdev->dev,
-+						pd_seq_map_sz,
-+						fusion->pd_seq_sync[i],
-+						fusion->pd_seq_phys[i]);
- 		}
- 		free_pages((ulong)instance->ctrl_context,
- 			instance->ctrl_context_pages);
+ 	} mfi_capabilities;
+ 	__le32		reg;
+@@ -1795,6 +1797,7 @@ struct megasas_instance {
+ 	char mpio;
+ 	u16 throttlequeuedepth;
+ 	u8 mask_interrupts;
++	u16 max_chain_frame_sz;
+ 	u8 is_imr;
+ 	bool dev_handle;
+ };
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f0837cc..016b245 100644
+index 2038aae..78e252a 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -726,6 +726,83 @@ fail_get_cmd:
- 	return ret;
- }
+@@ -316,26 +316,23 @@ static int megasas_create_frame_pool_fusion(struct megasas_instance *instance)
+ 	u32 max_cmd;
+ 	struct fusion_context *fusion;
+ 	struct megasas_cmd_fusion *cmd;
+-	u32 total_sz_chain_frame;
  
-+/**
-+ * megasas_sync_pd_seq_num -	JBOD SEQ MAP
-+ * @instance:		Adapter soft state
-+ * @pend:		set to 1, if it is pended jbod map.
-+ *
-+ * Issue Jbod map to the firmware. If it is pended command,
-+ * issue command and return. If it is first instance of jbod map
-+ * issue and receive command.
-+ */
-+int
-+megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
-+	int ret = 0;
-+	u32 pd_seq_map_sz;
-+	struct megasas_cmd *cmd;
-+	struct megasas_dcmd_frame *dcmd;
-+	struct fusion_context *fusion = instance->ctrl_context;
-+	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
-+	dma_addr_t pd_seq_h;
+ 	fusion = instance->ctrl_context;
+ 	max_cmd = instance->max_fw_cmds;
+ 
+-	total_sz_chain_frame = MEGASAS_MAX_SZ_CHAIN_FRAME;
+ 
+ 	/*
+ 	 * Use DMA pool facility provided by PCI layer
+ 	 */
+ 
+-	fusion->sg_dma_pool = pci_pool_create("megasas sg pool fusion",
+-					      instance->pdev,
+-					      total_sz_chain_frame, 4,
+-					      0);
++	fusion->sg_dma_pool = pci_pool_create("sg_pool_fusion", instance->pdev,
++						instance->max_chain_frame_sz,
++						4, 0);
+ 	if (!fusion->sg_dma_pool) {
+ 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "failed to setup request pool fusion\n");
+ 		return -ENOMEM;
+ 	}
+-	fusion->sense_dma_pool = pci_pool_create("megasas sense pool fusion",
++	fusion->sense_dma_pool = pci_pool_create("sense pool fusion",
+ 						 instance->pdev,
+ 						 SCSI_SENSE_BUFFERSIZE, 64, 0);
+ 
+@@ -666,6 +663,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 	drv_ops->mfi_capabilities.support_ndrive_r1_lb = 1;
+ 	drv_ops->mfi_capabilities.security_protocol_cmds_fw = 1;
+ 
++	if (instance->max_chain_frame_sz > MEGASAS_CHAIN_FRAME_SZ_MIN)
++		drv_ops->mfi_capabilities.support_ext_io_size = 1;
 +
-+	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id & 1)];
-+	pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
-+	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
-+			(sizeof(struct MR_PD_CFG_SEQ) *
-+			(MAX_PHYSICAL_DEVICES - 1));
-+
-+	cmd = megasas_get_cmd(instance);
-+	if (!cmd) {
-+		dev_err(&instance->pdev->dev,
-+			"Could not get mfi cmd. Fail from %s %d\n",
-+			__func__, __LINE__);
-+		return -ENOMEM;
-+	}
-+
-+	dcmd = &cmd->frame->dcmd;
-+
-+	memset(pd_sync, 0, pd_seq_map_sz);
-+	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
-+	dcmd->cmd = MFI_CMD_DCMD;
-+	dcmd->cmd_status = 0xFF;
-+	dcmd->sge_count = 1;
-+	dcmd->timeout = 0;
-+	dcmd->pad_0 = 0;
-+	dcmd->data_xfer_len = cpu_to_le32(pd_seq_map_sz);
-+	dcmd->opcode = cpu_to_le32(MR_DCMD_SYSTEM_PD_MAP_GET_INFO);
-+	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(pd_seq_h);
-+	dcmd->sgl.sge32[0].length = cpu_to_le32(pd_seq_map_sz);
-+
-+	if (pend) {
-+		dcmd->mbox.b[0] = MEGASAS_DCMD_MBOX_PEND_FLAG;
-+		dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_WRITE);
-+		instance->jbod_seq_cmd = cmd;
-+		instance->instancet->issue_dcmd(instance, cmd);
-+		return 0;
-+	}
-+
-+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_READ);
-+
-+	/* Below code is only for non pended DCMD */
-+	if (instance->ctrl_context && !instance->mask_interrupts)
-+		ret = megasas_issue_blocked_cmd(instance, cmd, 60);
+ 	/* Convert capability to LE32 */
+ 	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
+ 
+@@ -1054,7 +1054,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ {
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct fusion_context *fusion;
+-	u32 max_cmd;
++	u32 max_cmd, scratch_pad_2;
+ 	int i = 0, count;
+ 
+ 	fusion = instance->ctrl_context;
+@@ -1093,15 +1093,40 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE *
+ 		 (max_cmd + 1)); /* Extra 1 for SMID 0 */
+ 
++	scratch_pad_2 = readl(&instance->reg_set->outbound_scratch_pad_2);
++	/* If scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK is set,
++	 * Firmware support extended IO chain frame which is 4 times more than
++	 * legacy Firmware.
++	 * Legacy Firmware - Frame size is (8 * 128) = 1K
++	 * 1M IO Firmware  - Frame size is (8 * 128 * 4)  = 4K
++	 */
++	if (scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK)
++		instance->max_chain_frame_sz =
++			((scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_MASK) >>
++			MEGASAS_MAX_CHAIN_SHIFT) * MEGASAS_1MB_IO;
 +	else
-+		ret = megasas_issue_polled(instance, cmd);
++		instance->max_chain_frame_sz =
++			((scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_MASK) >>
++			MEGASAS_MAX_CHAIN_SHIFT) * MEGASAS_256K_IO;
 +
-+	if (le32_to_cpu(pd_sync->count) > MAX_PHYSICAL_DEVICES) {
-+		dev_warn(&instance->pdev->dev,
-+			"driver supports max %d JBOD, but FW reports %d\n",
-+			MAX_PHYSICAL_DEVICES, le32_to_cpu(pd_sync->count));
-+		ret = -EINVAL;
++	if (instance->max_chain_frame_sz < MEGASAS_CHAIN_FRAME_SZ_MIN) {
++		dev_warn(&instance->pdev->dev, "frame size %d invalid, fall back to legacy max frame size %d\n",
++			instance->max_chain_frame_sz,
++			MEGASAS_CHAIN_FRAME_SZ_MIN);
++		instance->max_chain_frame_sz = MEGASAS_CHAIN_FRAME_SZ_MIN;
 +	}
 +
-+	if (!ret)
-+		instance->pd_seq_map_id++;
-+
-+	megasas_return_cmd(instance, cmd);
-+	return ret;
-+}
-+
- /*
-  * megasas_get_ld_map_info -	Returns FW's ld_map structure
-  * @instance:				Adapter soft state
-@@ -1722,7 +1799,9 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 	u16 timeout_limit;
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
- 	struct RAID_CONTEXT	*pRAID_Context;
-+	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
- 	struct fusion_context *fusion = instance->ctrl_context;
-+	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id - 1) & 1];
+ 	fusion->max_sge_in_main_msg =
+-	  (MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE -
+-	   offsetof(struct MPI2_RAID_SCSI_IO_REQUEST, SGL))/16;
++		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE
++			- offsetof(struct MPI2_RAID_SCSI_IO_REQUEST, SGL))/16;
  
- 	device_id = MEGASAS_DEV_INDEX(scmd);
- 	pd_index = MEGASAS_PD_INDEX(scmd);
-@@ -1731,16 +1810,38 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 	io_request = cmd->io_request;
- 	/* get RAID_Context pointer */
- 	pRAID_Context = &io_request->RaidContext;
-+	pRAID_Context->regLockFlags = 0;
-+	pRAID_Context->regLockRowLBA = 0;
-+	pRAID_Context->regLockLength = 0;
- 	io_request->DataLength = cpu_to_le32(scsi_bufflen(scmd));
- 	io_request->LUN[1] = scmd->device->lun;
- 	pRAID_Context->RAIDFlags = MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD
- 		<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 	fusion->max_sge_in_chain =
+-		MEGASAS_MAX_SZ_CHAIN_FRAME / sizeof(union MPI2_SGE_IO_UNION);
++		instance->max_chain_frame_sz
++			/ sizeof(union MPI2_SGE_IO_UNION);
  
--	pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
--	pRAID_Context->configSeqNum = 0;
--	local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
--	io_request->DevHandle =
--		local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
-+	/* If FW supports PD sequence number */
-+	if (instance->use_seqnum_jbod_fp &&
-+		instance->pd_list[pd_index].driveType == TYPE_DISK) {
-+		/* TgtId must be incremented by 255 as jbod seq number is index
-+		 * below raid map
-+		 */
-+		pRAID_Context->VirtualDiskTgtId =
-+			cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
-+		pRAID_Context->configSeqNum = pd_sync->seq[pd_index].seqNum;
-+		io_request->DevHandle = pd_sync->seq[pd_index].devHandle;
-+		pRAID_Context->regLockFlags |=
-+			(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
-+	} else if (fusion->fast_path_io) {
-+		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
-+		pRAID_Context->configSeqNum = 0;
-+		local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
-+		io_request->DevHandle =
-+			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
-+	} else {
-+		/* Want to send all IO via FW path */
-+		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
-+		pRAID_Context->configSeqNum = 0;
-+		io_request->DevHandle = le16_to_cpu(0xFFFF);
-+	}
+-	instance->max_num_sge = rounddown_pow_of_two(
+-		fusion->max_sge_in_main_msg + fusion->max_sge_in_chain - 2);
++	instance->max_num_sge =
++		rounddown_pow_of_two(fusion->max_sge_in_main_msg
++			+ fusion->max_sge_in_chain - 2);
  
- 	cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
- 	cmd->request_desc->SCSIIO.MSIxIndex =
-@@ -1755,12 +1856,10 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 			(MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
- 				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 		pRAID_Context->timeoutValue = cpu_to_le16(os_timeout_value);
-+		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
- 	} else {
- 		/* system pd Fast Path */
- 		io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
--		pRAID_Context->regLockFlags = 0;
--		pRAID_Context->regLockRowLBA = 0;
--		pRAID_Context->regLockLength = 0;
- 		timeout_limit = (scmd->device->type == TYPE_DISK) ?
- 				255 : 0xFFFF;
- 		pRAID_Context->timeoutValue =
-@@ -1768,9 +1867,6 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 			timeout_limit : os_timeout_value);
- 		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
- 			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
--			cmd->request_desc->SCSIIO.RequestFlags |=
--				(MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK <<
--				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 			pRAID_Context->Type = MPI2_TYPE_CUDA;
- 			pRAID_Context->nseg = 0x1;
- 			io_request->IoFlags |=
-@@ -2512,8 +2608,10 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
- 			continue;
- 		req_desc = megasas_get_request_descriptor
- 					(instance, smid - 1);
--		if (req_desc && (cmd_mfi->frame->dcmd.opcode !=
--				cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO)))
-+		if (req_desc && ((cmd_mfi->frame->dcmd.opcode !=
-+				cpu_to_le32(MR_DCMD_LD_MAP_GET_INFO)) &&
-+				 (cmd_mfi->frame->dcmd.opcode !=
-+				cpu_to_le32(MR_DCMD_SYSTEM_PD_MAP_GET_INFO))))
- 			megasas_fire_cmd_fusion(instance, req_desc);
- 		else
- 			megasas_return_cmd(instance, cmd_mfi);
-@@ -2816,6 +2914,8 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
- 			if (!megasas_get_map_info(instance))
- 				megasas_sync_map_info(instance);
+ 	/* Used for pass thru MFI frame (DCMD) */
+ 	fusion->chain_offset_mfi_pthru =
+@@ -1327,7 +1352,7 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
  
-+			megasas_setup_jbod_map(instance);
-+
- 			clear_bit(MEGASAS_FUSION_IN_RESET,
- 				  &instance->reset_flags);
- 			instance->instancet->enable_intr(instance);
+ 			sgl_ptr =
+ 			  (struct MPI25_IEEE_SGE_CHAIN64 *)cmd->sg_frame;
+-			memset(sgl_ptr, 0, MEGASAS_MAX_SZ_CHAIN_FRAME);
++			memset(sgl_ptr, 0, instance->max_chain_frame_sz);
+ 		}
+ 	}
+ 
+@@ -1892,7 +1917,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 			struct scsi_cmnd *scp,
+ 			struct megasas_cmd_fusion *cmd)
+ {
+-	u32 sge_count;
++	u16 sge_count;
+ 	u8  cmd_type;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request = cmd->io_request;
+ 
+@@ -1950,7 +1975,11 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 		return 1;
+ 	}
+ 
++	/* numSGE store lower 8 bit of sge_count.
++	 * numSGEExt store higher 8 bit of sge_count
++	 */
+ 	io_request->RaidContext.numSGE = sge_count;
++	io_request->RaidContext.numSGEExt = (u8)(sge_count >> 8);
+ 
+ 	io_request->SGLFlags = cpu_to_le16(MPI2_SGE_FLAGS_64_BIT_ADDRESSING);
+ 
+@@ -2344,7 +2373,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+ 	mpi25_ieee_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT |
+ 		MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR;
+ 
+-	mpi25_ieee_chain->Length = cpu_to_le32(MEGASAS_MAX_SZ_CHAIN_FRAME);
++	mpi25_ieee_chain->Length = cpu_to_le32(instance->max_chain_frame_sz);
+ 
+ 	return 0;
+ }
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index be1be8e..41f3d8b 100644
+index 41f3d8b..7d89c1c 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -89,6 +89,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
- #define MEGASAS_FP_CMD_LEN	16
- #define MEGASAS_FUSION_IN_RESET 0
- #define THRESHOLD_REPLY_COUNT 50
-+#define JBOD_MAPS_COUNT	2
+@@ -35,8 +35,13 @@
+ #define _MEGARAID_SAS_FUSION_H_
  
- /*
-  * Raid Context structure which describes MegaRAID specific IO Parameters
-@@ -487,6 +488,7 @@ struct MPI2_IOC_INIT_REQUEST {
- #define MAX_PHYSICAL_DEVICES 256
- #define MAX_RAIDMAP_PHYSICAL_DEVICES (MAX_PHYSICAL_DEVICES)
- #define MR_DCMD_LD_MAP_GET_INFO             0x0300e101
-+#define MR_DCMD_SYSTEM_PD_MAP_GET_INFO      0x0200e102
- #define MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC  0x010e8485   /* SR-IOV HB alloc*/
- #define MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111   0x03200200
- #define MR_DCMD_LD_VF_MAP_GET_ALL_LDS       0x03150200
-@@ -790,6 +792,21 @@ struct MR_FW_RAID_MAP_EXT {
- 	struct MR_LD_SPAN_MAP      ldSpanMap[MAX_LOGICAL_DRIVES_EXT];
+ /* Fusion defines */
+-#define MEGASAS_MAX_SZ_CHAIN_FRAME 1024
++#define MEGASAS_CHAIN_FRAME_SZ_MIN 1024
+ #define MFI_FUSION_ENABLE_INTERRUPT_MASK (0x00000009)
++#define MEGASAS_MAX_CHAIN_SHIFT			5
++#define MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK	0x400000
++#define MEGASAS_MAX_CHAIN_SIZE_MASK		0x3E0
++#define MEGASAS_256K_IO				128
++#define MEGASAS_1MB_IO				(MEGASAS_256K_IO * 4)
+ #define MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE 256
+ #define MEGASAS_MPI2_FUNCTION_PASSTHRU_IO_REQUEST   0xF0
+ #define MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST         0xF1
+@@ -119,7 +124,8 @@ struct RAID_CONTEXT {
+ 	__le16	configSeqNum;
+ 	u8      spanArm;
+ 	u8      priority;
+-	u8      resvd2[2];
++	u8	numSGEExt;
++	u8      resvd2;
  };
  
-+/*
-+ *  * define MR_PD_CFG_SEQ structure for system PDs
-+ *   */
-+struct MR_PD_CFG_SEQ {
-+	__le16 seqNum;
-+	__le16 devHandle;
-+	u8  reserved[4];
-+} __packed;
-+
-+struct MR_PD_CFG_SEQ_NUM_SYNC {
-+	__le32 size;
-+	__le32 count;
-+	struct MR_PD_CFG_SEQ seq[1];
-+} __packed;
-+
- struct fusion_context {
- 	struct megasas_cmd_fusion **cmd_list;
- 	dma_addr_t req_frames_desc_phys;
-@@ -829,6 +846,8 @@ struct fusion_context {
- 	u32 current_map_sz;
- 	u32 drv_map_sz;
- 	u32 drv_map_pages;
-+	struct MR_PD_CFG_SEQ_NUM_SYNC	*pd_seq_sync[JBOD_MAPS_COUNT];
-+	dma_addr_t pd_seq_phys[JBOD_MAPS_COUNT];
- 	u8 fast_path_io;
- 	struct LD_LOAD_BALANCE_INFO load_balance_info[MAX_LOGICAL_DRIVES_EXT];
- 	LD_SPAN_INFO log_to_span[MAX_LOGICAL_DRIVES_EXT];
+ #define RAID_CTX_SPANARM_ARM_SHIFT	(0)
 -- 
 1.7.1
 
