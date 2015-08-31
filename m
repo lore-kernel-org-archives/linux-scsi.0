@@ -1,65 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/10] dm-mpath, scsi_dh: request scsi_dh modules in
- scsi_dh, not dm-mpath
-Date: Mon, 31 Aug 2015 08:39:35 +0200
-Message-ID: <55E3F6A7.3050207@suse.de>
-References: <1440677823-11695-1-git-send-email-hare@suse.de>
- <1440677823-11695-3-git-send-email-hare@suse.de>
- <1440791597.2202.49.camel@HansenPartnership.com>
+From: Sony John <sony.john@avagotech.com>
+Subject: Re: [PATCH 0/2] be2iscsi driver update to 10.6.0.1
+Date: Mon, 31 Aug 2015 12:26:38 +0530
+Message-ID: <CAJRCtXfLXjdStrWZeHkSdc8SeEbtjFDhHYr9gdApVxTVWZv8=Q@mail.gmail.com>
+References: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53510 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476AbbHaGji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2015 02:39:38 -0400
-In-Reply-To: <1440791597.2202.49.camel@HansenPartnership.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:36528 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934AbbHaG4j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 02:56:39 -0400
+Received: by igboj15 with SMTP id oj15so18570700igb.1
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2015 23:56:39 -0700 (PDT)
+In-Reply-To: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: John Soni Jose <sony.john@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>
 
-On 08/28/2015 09:53 PM, James Bottomley wrote:
-> On Thu, 2015-08-27 at 14:16 +0200, Hannes Reinecke wrote:
->> @@ -158,7 +171,7 @@ store_dh_state(struct device *dev, struct device=
-_attribute *attr,
->>  		/*
->>  		 * Attach to a device handler
->>  		 */
->> -		if (!(scsi_dh =3D get_device_handler(buf)))
->> +		if (!(scsi_dh =3D scsi_dh_lookup(buf)))
->=20
-> This one's a checkpatch error:
->=20
-> ERROR: do not use assignment in if condition
-> #71: FILE: drivers/scsi/device_handler/scsi_dh.c:174:
-> +               if (!(scsi_dh =3D scsi_dh_lookup(buf)))
->=20
->=20
-> For very good reason.  The meaning is obvious from the previous code,=
- so
-> I fixed it up as
->=20
-> 		scsi_dh =3D scsi_dh_lookup(buf);
-> 		if (!scsi_dh)
->=20
-> But running the series through checkpatch and acting on at least the
-> errors would have been appreciated.
->=20
-You're right, sorry. Thanks for fixing it up.
+Hi Mike
 
-Cheers,
+Any review updates for this patchset.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+
+On Thu, Aug 20, 2015 at 4:44 AM, John Soni Jose <sony.john@avagotech.com> wrote:
+> This patch is generated against the for-next branch.
+>
+> John Soni Jose (1):
+>   be2iscsi: Bump the driver version
+>
+> John Soni Jose (1):
+>   be2iscsi: Fix updating the next pointer during WRB posting
+>
+>  drivers/scsi/be2iscsi/be_main.c |   62 +++++++++++++++++++++++++++++---------
+>  drivers/scsi/be2iscsi/be_main.h |    7 ++--
+>  drivers/scsi/be2iscsi/be_mgmt.c |   24 ++++++++++++--
+>  drivers/scsi/be2iscsi/be_mgmt.h |    7 +++-
+>  4 files changed, 76 insertions(+), 24 deletions(-)
+>
