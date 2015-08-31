@@ -1,39 +1,81 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [scsi 5/7 RESEND] scsi_debug: schedule_resp fix input variable
- check
-Date: Mon, 31 Aug 2015 08:07:42 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B3D43282E@hasmsx108.ger.corp.intel.com>
-References: <1438091666-18113-1-git-send-email-tomas.winkler@intel.com>
-	 <1438091666-18113-5-git-send-email-tomas.winkler@intel.com>
-	 <1440532371.23183.81.camel@localhost.localdomain>
-	 <5B8DA87D05A7694D9FA63FD143655C1B3D42E9D0@hasmsx108.ger.corp.intel.com>
-	 <1440632280.2196.94.camel@HansenPartnership.com>
-	 <1440705369.23183.142.camel@localhost.localdomain>
-	 <5B8DA87D05A7694D9FA63FD143655C1B3D432483@hasmsx108.ger.corp.intel.com>
- <1440953692.2204.35.camel@HansenPartnership.com>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
+Subject: RE: [PATCH v2 0/10] megaraid_sas : Updates for scsi for-next
+Date: Mon, 31 Aug 2015 17:19:27 +0530
+Message-ID: <b3d1563dd6f29ea69add36a0b75c193f@mail.gmail.com>
+References: <201508201319.t7KDJDpc028522@palmhbs0.lsi.com> <1440790370.2202.46.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:7163 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752036AbbHaIHs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Aug 2015 04:07:48 -0400
-In-Reply-To: <1440953692.2204.35.camel@HansenPartnership.com>
-Content-Language: en-US
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:33457 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbbHaLtc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:49:32 -0400
+Received: by lbbsx3 with SMTP id sx3so58827154lbb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 04:49:30 -0700 (PDT)
+In-Reply-To: <1440790370.2202.46.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "emilne@redhat.com" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-PiANCj4gT24gU3VuLCAyMDE1LTA4LTMwIGF0IDEwOjM2ICswMDAwLCBXaW5rbGVyLCBUb21hcyB3
-cm90ZToNCj4gPiA+ID4gPg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gSSdtIGp1c3Qgbm90IHN1cmUg
-d2h5IHRoZSBwYXRjaGVzIGFyZSBub3QgbWVyZ2VkIG9yIGV2ZW4gcmVqZWN0ZWQuDQo+ID4gPiA+
-DQo+ID4gPiA+IEJlY2F1c2UgaWRlYWxseSBJIHdhbnQgYSBNYWludGFpbmVyIGFjay4gIFRoYXQn
-cyBEb3VnIEdpbGJlcnQuDQo+ID4NCj4gPiBKYW1lcw0KPiA+IFRoZSBwYXRjaGVzIHdlcmUgZGlz
-Y3Vzc2VkIGFuZCB0aGUgQUNrZWQgYnkgRG91ZyBpbiBGZWJydWFyeQ0KPiANCj4gNy83IHdhc24n
-dC4NCkphbWVzLCBmYWlyIGVub3VnaCwgIHRoZSByZXNldCB0aG91Z2ggY2FuIGJlIG1lcmdlZCwg
-cmlnaHQgPyANCg0KPiANCj4gPiAgYW5kIHJldmlld2VkIGFnYWluIGFmdGVyIHJlc2VuZCAgYnkg
-TWFydGluIFBldGVyc2VuDQo+IA0KPiBZZXMsIHRoYXQncyB3aHkgSSdtIHdpbGxpbmcgdG8gb3Zl
-cnJpZGUgdGhlIGxhY2sgb2YgbWFpbnRhaW5lciBhY2suDQo+IEknbGwgZ2l2ZSBEb3VnIHVudGls
-IE1vbmRheSBmaXJzdC4NCg0KT2theS4NCg0KVGhhbmtzDQpUb21hcw0KDQoNCg==
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> Sent: Saturday, August 29, 2015 1:03 AM
+> To: Sumit.Saxena@avagotech.com
+> Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
+> martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
+> kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
+> uday.lingala@avagotech.com; Bjorn Helgaas
+> Subject: Re: [PATCH v2 0/10] megaraid_sas : Updates for scsi for-next
+>
+> On Thu, 2015-08-20 at 18:43 +0530, Sumit.Saxena@avagotech.com wrote:
+> > MegaRaid driver changes. This patch set is resent based on feedback
+> > received
+> by Martin Petersen.
+> > Please consider this patch set for next kernel release.
+> >
+> > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> > ---
+> > [PATCH v2 00/10] megaraid_sas : Updates for scsi for-next.
+> > [PATCH v2 01/10] megaraid_sas : Synchronize driver headers with firmware
+> APIs.
+> > [PATCH v2 02/10] megaraid_sas : Increase timeout to 60 secs for abort
+> > frames
+> during shutdown.
+> > [PATCH v2 03/10] megaraid_sas : Jbod sequence number support.
+> > [PATCH v2 04/10] megaraid_sas : Code cleanup-use local variable drv_ops
+> inside megasas_ioc_init_fusion.
+> > [PATCH v2 05/10] megaraid_sas : Support for max_io_size 1MB.
+> > [PATCH v2 06/10] megaraid_sas : Chip reset if driver fail to bring ioc
+> > ready.
+> > [PATCH v2 07/10] megaraid_sas : Print critical fw event message.
+> > [PATCH v2 08/10] megaraid_sas : Fix validHandles check in io path.
+> > [PATCH v2 09/10] megaraid_sas : Code refactor for use of requestorId.
+> > [PATCH v2 10/10] megaraid_sas : Version upgrade.
+>
+> I'm getting a ton of rejects in this series because of
+>
+> commit da0dc9fb4e6b0ad5a947c27a3c48985f6a2377eb
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Tue Jul 7 15:52:45 2015 -0500
+>
+>     megaraid_sas: fix whitespace errors
+>
+> Please fix.
+
+I am about to resend patches rebased with latest repo.
+>
+> Useful rules of thumb are don't ack whitespace patches because they
+> inevitably
+> cause this type of issue.  If you do decide to ack, make sure you don't
+> cause
+> conflicts with your own outstanding patches.
+I will make sure not to ack whitespace patches further.
+
+Thanks,
+Sumit
+>
+> James
+>
+>
