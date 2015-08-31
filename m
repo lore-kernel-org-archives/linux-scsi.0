@@ -1,210 +1,136 @@
 From: sumit.saxena@avagotech.com
-Subject: [PATCH v3 6/10] megaraid_sas : Chip reset if driver fail to bring ioc ready
-Date: Mon, 31 Aug 2015 17:23:41 +0530
-Message-ID: <201508311159.t7VBxAP7031418@palmhbs0.lsi.com>
+Subject: [PATCH v3 7/10] megaraid_sas : Print critical fw event message
+Date: Mon, 31 Aug 2015 17:23:51 +0530
+Message-ID: <201508311159.t7VBxK5W031425@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([202.86.248.61]:41225 "EHLO
+Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:41236 "EHLO
 	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbbHaLyU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:20 -0400
+	with ESMTP id S1753083AbbHaLy3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 07:54:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
 Cc: uday.lingala@avagotech.com
 
-Patch which fix the issue reported as below.
+Print firmware event in readable format. This will help user to track any
+critical firmware event without any application support.
 
-http://marc.info/?l=linux-scsi&m=143694494104544&w=2
+sample syslogd output -
 
-This patch will try to do chip reset from driver load time.
-Driver load time, if firmware is not comming to ready state, driver try chip reset calling
-adp_reset() callback. For fusion adapter, that call back was void, so it will not do any chip reset.
+megaraid_sas 0000:02:00.0: 8619 (491648347s/0x0020/WARN) - Controller temperature threshold exceeded. This may indicate inadequate system cooling. Switching to low performance mode
 
-Now, using this patch megasas_adp_reset_fusion() will have chip reset logic for Fusion adapter.
+Format of print is - "<pci_dev_id>: <sequence_number> (<timestamp>/<locale>/<class>) - <description>"
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  145 +++++++++++++--------------
- 1 files changed, 69 insertions(+), 76 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h      |   10 +++++
+ drivers/scsi/megaraid/megaraid_sas_base.c |   61 +++++++++++++++++++++++++++++
+ 2 files changed, 71 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 78e252a..1d73d30 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2509,6 +2509,70 @@ static int
- megasas_adp_reset_fusion(struct megasas_instance *instance,
- 			 struct megasas_register_set __iomem *regs)
- {
-+	u32 host_diag, abs_state, retry;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 5db31c6..ccda60d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -273,6 +273,16 @@ enum MFI_STAT {
+ 	MFI_STAT_INVALID_STATUS = 0xFF
+ };
+ 
++enum mfi_evt_class {
++	MFI_EVT_CLASS_DEBUG =		-2,
++	MFI_EVT_CLASS_PROGRESS =	-1,
++	MFI_EVT_CLASS_INFO =		0,
++	MFI_EVT_CLASS_WARNING =		1,
++	MFI_EVT_CLASS_CRITICAL =	2,
++	MFI_EVT_CLASS_FATAL =		3,
++	MFI_EVT_CLASS_DEAD =		4
++};
 +
-+	/* Now try to reset the chip */
-+	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_1ST_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_2ND_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_3RD_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_4TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_5TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+	writel(MPI2_WRSEQ_6TH_KEY_VALUE, &instance->reg_set->fusion_seq_offset);
-+
-+	/* Check that the diag write enable (DRWE) bit is on */
-+	host_diag = readl(&instance->reg_set->fusion_host_diag);
-+	retry = 0;
-+	while (!(host_diag & HOST_DIAG_WRITE_ENABLE)) {
-+		msleep(100);
-+		host_diag = readl(&instance->reg_set->fusion_host_diag);
-+		if (retry++ == 100) {
-+			dev_warn(&instance->pdev->dev,
-+				"Host diag unlock failed from %s %d\n",
-+				__func__, __LINE__);
-+			break;
-+		}
-+	}
-+	if (!(host_diag & HOST_DIAG_WRITE_ENABLE))
-+		return -1;
-+
-+	/* Send chip reset command */
-+	writel(host_diag | HOST_DIAG_RESET_ADAPTER,
-+		&instance->reg_set->fusion_host_diag);
-+	msleep(3000);
-+
-+	/* Make sure reset adapter bit is cleared */
-+	host_diag = readl(&instance->reg_set->fusion_host_diag);
-+	retry = 0;
-+	while (host_diag & HOST_DIAG_RESET_ADAPTER) {
-+		msleep(100);
-+		host_diag = readl(&instance->reg_set->fusion_host_diag);
-+		if (retry++ == 1000) {
-+			dev_warn(&instance->pdev->dev,
-+				"Diag reset adapter never cleared %s %d\n",
-+				__func__, __LINE__);
-+			break;
-+		}
-+	}
-+	if (host_diag & HOST_DIAG_RESET_ADAPTER)
-+		return -1;
-+
-+	abs_state = instance->instancet->read_fw_status_reg(instance->reg_set)
-+			& MFI_STATE_MASK;
-+	retry = 0;
-+
-+	while ((abs_state <= MFI_STATE_FW_INIT) && (retry++ < 1000)) {
-+		msleep(100);
-+		abs_state = instance->instancet->
-+			read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
-+	}
-+	if (abs_state <= MFI_STATE_FW_INIT) {
-+		dev_warn(&instance->pdev->dev,
-+			"fw state < MFI_STATE_FW_INIT, state = 0x%x %s %d\n",
-+			abs_state, __func__, __LINE__);
-+		return -1;
-+	}
-+
- 	return 0;
+ /*
+  * Crash dump related defines
+  */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 1943c14..3a824cb 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -260,6 +260,66 @@ megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ 
  }
  
-@@ -2674,11 +2738,11 @@ out:
- /* Core fusion reset function */
- int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
- {
--	int retval = SUCCESS, i, retry = 0, convert = 0;
-+	int retval = SUCCESS, i, convert = 0;
- 	struct megasas_instance *instance;
- 	struct megasas_cmd_fusion *cmd_fusion;
- 	struct fusion_context *fusion;
--	u32 host_diag, abs_state, status_reg, reset_adapter;
-+	u32 abs_state, status_reg, reset_adapter;
- 	u32 io_timeout_in_crash_mode = 0;
- 	struct scsi_cmnd *scmd_local = NULL;
++static const char *
++format_timestamp(uint32_t timestamp)
++{
++	static char buffer[32];
++
++	if ((timestamp & 0xff000000) == 0xff000000)
++		snprintf(buffer, sizeof(buffer), "boot + %us", timestamp &
++		0x00ffffff);
++	else
++		snprintf(buffer, sizeof(buffer), "%us", timestamp);
++	return buffer;
++}
++
++static const char *
++format_class(int8_t class)
++{
++	static char buffer[6];
++
++	switch (class) {
++	case MFI_EVT_CLASS_DEBUG:
++		return "debug";
++	case MFI_EVT_CLASS_PROGRESS:
++		return "progress";
++	case MFI_EVT_CLASS_INFO:
++		return "info";
++	case MFI_EVT_CLASS_WARNING:
++		return "WARN";
++	case MFI_EVT_CLASS_CRITICAL:
++		return "CRIT";
++	case MFI_EVT_CLASS_FATAL:
++		return "FATAL";
++	case MFI_EVT_CLASS_DEAD:
++		return "DEAD";
++	default:
++		snprintf(buffer, sizeof(buffer), "%d", class);
++		return buffer;
++	}
++}
++
++/**
++  * megasas_decode_evt: Decode FW AEN event and print critical event
++  * for information.
++  * @instance:			Adapter soft state
++  */
++static void
++megasas_decode_evt(struct megasas_instance *instance)
++{
++	struct megasas_evt_detail *evt_detail = instance->evt_detail;
++	union megasas_evt_class_locale class_locale;
++	class_locale.word = le32_to_cpu(evt_detail->cl.word);
++
++	if (class_locale.members.class >= MFI_EVT_CLASS_CRITICAL)
++		dev_info(&instance->pdev->dev, "%d (%s/0x%04x/%s) - %s\n",
++			le32_to_cpu(evt_detail->seq_num),
++			format_timestamp(le32_to_cpu(evt_detail->time_stamp)),
++			(class_locale.members.locale),
++			format_class(class_locale.members.class),
++			evt_detail->description);
++}
++
+ /**
+ *	The following functions are defined for xscale
+ *	(deviceid : 1064R, PERC5) controllers
+@@ -6602,6 +6662,7 @@ megasas_aen_polling(struct work_struct *work)
+ 	instance->ev = NULL;
+ 	host = instance->host;
+ 	if (instance->evt_detail) {
++		megasas_decode_evt(instance);
  
-@@ -2832,81 +2896,10 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
- 
- 		/* Now try to reset the chip */
- 		for (i = 0; i < MEGASAS_FUSION_MAX_RESET_TRIES; i++) {
--			writel(MPI2_WRSEQ_FLUSH_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_1ST_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_2ND_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_3RD_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_4TH_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_5TH_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--			writel(MPI2_WRSEQ_6TH_KEY_VALUE,
--			       &instance->reg_set->fusion_seq_offset);
--
--			/* Check that the diag write enable (DRWE) bit is on */
--			host_diag = readl(&instance->reg_set->fusion_host_diag);
--			retry = 0;
--			while (!(host_diag & HOST_DIAG_WRITE_ENABLE)) {
--				msleep(100);
--				host_diag =
--				readl(&instance->reg_set->fusion_host_diag);
--				if (retry++ == 100) {
--					dev_warn(&instance->pdev->dev,
--					       "Host diag unlock failed! "
--					       "for scsi%d\n",
--						instance->host->host_no);
--					break;
--				}
--			}
--			if (!(host_diag & HOST_DIAG_WRITE_ENABLE))
--				continue;
- 
--			/* Send chip reset command */
--			writel(host_diag | HOST_DIAG_RESET_ADAPTER,
--			       &instance->reg_set->fusion_host_diag);
--			msleep(3000);
--
--			/* Make sure reset adapter bit is cleared */
--			host_diag = readl(&instance->reg_set->fusion_host_diag);
--			retry = 0;
--			while (host_diag & HOST_DIAG_RESET_ADAPTER) {
--				msleep(100);
--				host_diag =
--				readl(&instance->reg_set->fusion_host_diag);
--				if (retry++ == 1000) {
--					dev_warn(&instance->pdev->dev,
--					       "Diag reset adapter never "
--					       "cleared for scsi%d!\n",
--						instance->host->host_no);
--					break;
--				}
--			}
--			if (host_diag & HOST_DIAG_RESET_ADAPTER)
--				continue;
--
--			abs_state =
--				instance->instancet->read_fw_status_reg(
--					instance->reg_set) & MFI_STATE_MASK;
--			retry = 0;
--
--			while ((abs_state <= MFI_STATE_FW_INIT) &&
--			       (retry++ < 1000)) {
--				msleep(100);
--				abs_state =
--				instance->instancet->read_fw_status_reg(
--					instance->reg_set) & MFI_STATE_MASK;
--			}
--			if (abs_state <= MFI_STATE_FW_INIT) {
--				dev_warn(&instance->pdev->dev, "firmware "
--				       "state < MFI_STATE_FW_INIT, state = "
--				       "0x%x for scsi%d\n", abs_state,
--					instance->host->host_no);
--				continue;
--			}
-+			if (instance->instancet->adp_reset
-+				(instance, instance->reg_set))
-+				continue;
- 
- 			/* Wait for FW to become ready */
- 			if (megasas_transition_to_ready(instance, 1)) {
+ 		switch (le32_to_cpu(instance->evt_detail->code)) {
+ 		case MR_EVT_PD_INSERTED:
 -- 
 1.7.1
 
