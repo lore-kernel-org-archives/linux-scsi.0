@@ -1,81 +1,139 @@
-From: Jordan Hargrave <jharg93@gmail.com>
-Subject: Re: [PATCH] Remove check for SAS expander when querying bay/enclosure IDs.
-Date: Mon, 31 Aug 2015 11:26:02 -0500
-Message-ID: <CAC1AzdfFMVMps5XyYt-9iEbZYCeyK7JKzjhPdimgs4Q+FNpukA@mail.gmail.com>
-References: <1436797653-9822-1-git-send-email-jordan_hargrave@dell.com>
-	<55A4F137.8010100@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: leeman.duncan@gmail.com
+Subject: [PATCH] Update scsi host to use ida for host number
+Date: Mon, 31 Aug 2015 13:28:10 -0700
+Message-ID: <1441052890-3600-1-git-send-email-leeman.duncan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:33851 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbbHaQ0E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 12:26:04 -0400
-In-Reply-To: <55A4F137.8010100@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:44726 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751129AbbHaU24 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Aug 2015 16:28:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@odin.com, Jordan Hargrave <jordan_hargrave@dell.com>
+To: linux-scsi@vger.kernel.org
+Cc: hare@suse.com, JBottomley@Parallels.com, Lee Duncan <lduncan@suse.com>
 
-On Tue, Jul 14, 2015 at 6:23 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 07/13/2015 04:27 PM, Jordan Hargrave wrote:
->> Dell Server backplanes can report bay/enclosure IDs without an
->> expander present.  This patch allows the bay/enclosure IDs to be
->> propagaged to sysfs.we
->>
->> Signed-off-by: Jordan Hargrave <jordan_hargrave@dell.com>
->> ---
->>  drivers/scsi/scsi_transport_sas.c | 10 ----------
->>  1 file changed, 10 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_t=
-ransport_sas.c
->> index 9a05819..30d26e3 100644
->> --- a/drivers/scsi/scsi_transport_sas.c
->> +++ b/drivers/scsi/scsi_transport_sas.c
->> @@ -1222,13 +1222,6 @@ show_sas_rphy_enclosure_identifier(struct dev=
-ice *dev,
->>       u64 identifier;
->>       int error;
->>
->> -     /*
->> -      * Only devices behind an expander are supported, because the
->> -      * enclosure identifier is a SMP feature.
->> -      */
->> -     if (scsi_is_sas_phy_local(phy))
->> -             return -EINVAL;
->> -
->>       error =3D i->f->get_enclosure_identifier(rphy, &identifier);
->>       if (error)
->>               return error;
->> @@ -1248,9 +1241,6 @@ show_sas_rphy_bay_identifier(struct device *de=
-v,
->>       struct sas_internal *i =3D to_sas_internal(shost->transportt);
->>       int val;
->>
->> -     if (scsi_is_sas_phy_local(phy))
->> -             return -EINVAL;
->> -
->>       val =3D i->f->get_bay_identifier(rphy);
->>       if (val < 0)
->>               return val;
->>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                            zSeries & Storage
-> hare@suse.de                                   +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> HRB 21284 (AG N=C3=BCrnberg)
+From: Lee Duncan <lduncan@suse.com>
 
-Any updates on getting this included?
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Each Scsi_host instance gets a host number starting
+at 0, but this is implemented with an atomic integer,
+and rollover doesn't seem to have been considered.
+Another side-effect of this design is that scsi host
+numbers used by iscsi are never reused, thereby  making
+rollover more likely. This patch converts Scsi_host
+instances to use ida to manage their instance
+numbers.
+
+This also means that host instance numbers will be
+reused, when available.
+
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+---
+ drivers/scsi/hosts.c | 43 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 35 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8bb173e01084..dade75478541 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -33,7 +33,7 @@
+ #include <linux/transport_class.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+-
++#include <linux/idr.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+@@ -42,7 +42,8 @@
+ #include "scsi_logging.h"
+ 
+ 
+-static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
++static DEFINE_SPINLOCK(host_index_lock);
++static DEFINE_IDA(host_index_ida);
+ 
+ 
+ static void scsi_host_cls_release(struct device *dev)
+@@ -337,6 +338,10 @@ static void scsi_host_dev_release(struct device *dev)
+ 
+ 	kfree(shost->shost_data);
+ 
++	spin_lock(&host_index_lock);
++	ida_remove(&host_index_ida, shost->host_no);
++	spin_unlock(&host_index_lock);
++
+ 	if (parent)
+ 		put_device(parent);
+ 	kfree(shost);
+@@ -353,6 +358,22 @@ static struct device_type scsi_host_type = {
+ 	.release =	scsi_host_dev_release,
+ };
+ 
++static int host_get_index(int *index)
++{
++	int error = -ENOMEM;
++
++	do {
++		if (!ida_pre_get(&host_index_ida, GFP_KERNEL))
++			break;
++		spin_lock(&host_index_lock);
++		error = ida_get_new(&host_index_ida, index);
++		spin_unlock(&host_index_lock);
++	} while (error == -EAGAIN);
++
++	return error;
++}
++
++
+ /**
+  * scsi_host_alloc - register a scsi host adapter instance.
+  * @sht:	pointer to scsi host template
+@@ -370,6 +391,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ {
+ 	struct Scsi_Host *shost;
+ 	gfp_t gfp_mask = GFP_KERNEL;
++	int index;
++	int error;
+ 
+ 	if (sht->unchecked_isa_dma && privsize)
+ 		gfp_mask |= __GFP_DMA;
+@@ -388,11 +411,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	init_waitqueue_head(&shost->host_wait);
+ 	mutex_init(&shost->scan_mutex);
+ 
+-	/*
+-	 * subtract one because we increment first then return, but we need to
+-	 * know what the next host number was before increment
+-	 */
+-	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
++	error = host_get_index(&index);
++	if (error < 0)
++		goto fail_kfree;
++	shost->host_no = index;
++
+ 	shost->dma_channel = 0xff;
+ 
+ 	/* These three are default values which can be overridden */
+@@ -477,7 +500,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_kfree;
++		goto fail_free_index;
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -493,6 +516,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 
+  fail_kthread:
+ 	kthread_stop(shost->ehandler);
++ fail_free_index:
++	spin_lock(&host_index_lock);
++	ida_remove(&host_index_ida, index);
++	spin_unlock(&host_index_lock);
+  fail_kfree:
+ 	kfree(shost);
+ 	return NULL;
+-- 
+2.1.4
+
