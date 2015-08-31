@@ -1,49 +1,105 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] storvsc: Don't set the SRB_FLAGS_QUEUE_ACTION_ENABLE
- flag
-Date: Mon, 31 Aug 2015 14:09:40 +0000
-Message-ID: <BY2PR0301MB16549C26F531D533786C15C8A06B0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1441034514-18853-1-git-send-email-kys@microsoft.com>
- <1441029718.13930.4.camel@HansenPartnership.com>
+From: =?iso-2022-jp?B?GyRCSy04NjVIOSgbKEIgLyBUT1lPSEFSQRskQiEkGyhCWU9TSElISVJP?=
+	<yoshihiro.toyohara.qs@hitachi.com>
+Subject: [PATCH] hfcldd: Add Hitachi FC driver.
+Date: Mon, 31 Aug 2015 14:25:25 +0000
+Message-ID: <4E270F2FD2FF914680A5846BB512683C82F285@GSjpTK1DCembx01.service.hitachi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441029718.13930.4.camel@HansenPartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail9.hitachi.co.jp ([133.145.228.44]:37369 "EHLO
+	mail9.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbbHaOZ3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2015 10:25:29 -0400
+Received: from mlsv6.hitachi.co.jp (unknown [133.144.234.166])
+	by mail9.hitachi.co.jp (Postfix) with ESMTP id F29E5109BD82
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 23:25:27 +0900 (JST)
+Received: from vshuts02.hitachi.co.jp (vshuts02.hitachi.co.jp [10.201.6.84])
+	by mfilter06.hitachi.co.jp (Switch-3.3.4/Switch-3.3.4) with ESMTP id t7VEPQrP027515
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 23:25:27 +0900
+Received: from GSjpTK1DCehcs03.service.hitachi.net (unknown [158.213.41.12])
+	by vshuts02.hitachi.co.jp (Postfix) with ESMTP id 65EC3490052
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2015 23:25:26 +0900 (JST)
+Content-Language: ja-JP
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: =?iso-2022-jp?B?GyRCSy04NjVIOSgbKEIgLyBUT1lPSEFSQRskQiEkGyhCWU9TSElISVJP?= <yoshihiro.toyohara.qs@hitachi.com>, =?iso-2022-jp?B?GyRCOzNFRE1bMnAbKEIgLyBZQU1BREEbJEIhJBsoQllPVVNVS0U=?= <yosuke.yamada.no@hitachi.com>, =?iso-2022-jp?B?GyRCMGY+bEUwGyhCIC8gSUJBGyRCISQbKEJUT09SVQ==?= <toru.iba.uj@hitachi.com>, =?iso-2022-jp?B?GyRCO3syMEJzO0obKEIgLyBURVJBWUEbJEIhJBsoQlRBS1VKSQ==?= <takuji.teraya.dg@hitachi.com>, =?iso-2022-jp?B?GyRCOF5MQD4tOSwbKEIgLyBHT01ZTxskQiEkGyhCTUFTQVlVS0k=?= <masayuki.gomyo.pf@hitachi.com>, =?iso-2022-jp?B?GyRCMTo+ZTk4GyhCIC8gVVJBS0FNSRskQiEkGyhCQUtJUkE=?= <akira.urakami.pk@hitachi.com>, =?iso-2022-jp?B?GyRCPj5LXE5HGyhCIC8gTUFUU1VNT1RPGyRCISQbKEJSWU8=?= <ryo.matsumoto.ch@hitachi.com>, =?iso-2022-jp?B?GyRCTlM+OzksGyhCIC8gSEFZQVNISRskQiEkGyhCTUFTQVlVS0k=?= <masayuki.hayashi.zh@hitachi.com>, =?iso-2022-jp?B?GyRCMCQ4fUA/O0obKEIgLyBBR1VDSEkbJEIhJBso
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-TW9uZGF5LCBBdWd1c3QgMzEsIDIwMTUgNzowMiBBTQ0KPiBUbzogS1kgU3Jpbml2YXNhbiA8a3lz
-QG1pY3Jvc29mdC5jb20+DQo+IENjOiBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgt
-a2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsg
-b2hlcmluZ0BzdXNlLmNvbTsNCj4gamJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyBoY2hAaW5mcmFk
-ZWFkLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGFwd0BjYW5vbmljYWwuY29t
-OyB2a3V6bmV0c0ByZWRoYXQuY29tOyBqYXNvd2FuZ0ByZWRoYXQuY29tOw0KPiBzdGFibGVAdmdl
-ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBzdG9ydnNjOiBEb24ndCBz
-ZXQgdGhlDQo+IFNSQl9GTEFHU19RVUVVRV9BQ1RJT05fRU5BQkxFIGZsYWcNCj4gDQo+IE9uIE1v
-biwgMjAxNS0wOC0zMSBhdCAwODoyMSAtMDcwMCwgSy4gWS4gU3Jpbml2YXNhbiB3cm90ZToNCj4g
-PiBEb24ndCBzZXQgdGhlIFNSQl9GTEFHU19RVUVVRV9BQ1RJT05fRU5BQkxFIGZsYWcgc2luY2Ug
-d2UgYXJlIG5vdA0KPiBzcGVjaWZ5aW5nDQo+ID4gdGFncy4NCj4gDQo+IFdoYXQncyB0aGUgYWN0
-dWFsIHByb2JsZW0gZGVzY3JpcHRpb24gdGhpcyBjYXVzZXM/DQpRbG9naWMgZHJpdmVyIGRvZXMg
-bm90IHdvcmsgY29ycmVjdGx5IGlmIHRoZSBTUkJfRkxBR1NfUVVFVUVfQUNUSU9OX0VOQUJMRQ0K
-aXMgc2V0IGFuZCBubyBhY3Rpb24gdGFnIGlzIHNwZWNpZmllZC4NCg0KUmVnYXJkcywNCg0KSy4g
-WQ0KDQo+IA0KPiBKYW1lcw0KPiANCj4gDQo+ID4gU2lnbmVkLW9mZi1ieTogSy4gWS4gU3Jpbml2
-YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcN
-Cj4gPiAtLS0NCj4gPiAgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgICAzICstLQ0KPiA+
-ICAxIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gPg0K
-PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2Nz
-aS9zdG9ydnNjX2Rydi5jDQo+ID4gaW5kZXggNDBjNDNhZS4uYWQ4YzRiYyAxMDA2NDQNCj4gPiAt
-LS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9z
-dG9ydnNjX2Rydi5jDQo+ID4gQEAgLTE2NDcsOCArMTY0Nyw3IEBAIHN0YXRpYyBpbnQgc3RvcnZz
-Y19xdWV1ZWNvbW1hbmQoc3RydWN0DQo+IFNjc2lfSG9zdCAqaG9zdCwgc3RydWN0IHNjc2lfY21u
-ZCAqc2NtbmQpDQo+ID4gIAl2bV9zcmItPndpbjhfZXh0ZW5zaW9uLnRpbWVfb3V0X3ZhbHVlID0g
-NjA7DQo+ID4NCj4gPiAgCXZtX3NyYi0+d2luOF9leHRlbnNpb24uc3JiX2ZsYWdzIHw9DQo+ID4g
-LQkJKFNSQl9GTEFHU19RVUVVRV9BQ1RJT05fRU5BQkxFIHwNCj4gPiAtCQlTUkJfRkxBR1NfRElT
-QUJMRV9TWU5DSF9UUkFOU0ZFUik7DQo+ID4gKwkJU1JCX0ZMQUdTX0RJU0FCTEVfU1lOQ0hfVFJB
-TlNGRVI7DQo+ID4NCj4gPiAgCS8qIEJ1aWxkIHRoZSBTUkIgKi8NCj4gPiAgCXN3aXRjaCAoc2Nt
-bmQtPnNjX2RhdGFfZGlyZWN0aW9uKSB7DQo+IA0KPiANCg0K
+I am an engineer in Hitachi. ,
+We committed the following files newly
+and mailed the patch by one mail.
+
+But the mail has about 4,600,000 characters,
+and is blocked beyond 100,000 character of the mail permission.
+There are also source file beyond 20,000 lines. 
+
+Could you advise how to do and send patch?
+
+Yoshihiro Toyohara
+Hitachi Ltd.
+
+----------------------------------------------------------------------------------------------
+hfcldd is a driver of Hitachi FC Adapter and committed newly.
+
+Signed-off-by: Yoshihiro Toyohara <yoshihiro.toyohara.qs@hitachi.com>
+---
+drivers/scsi/hfcldd/Makefile                   |    15 +
+drivers/scsi/hfcldd/hfcddwwn.h                 |   134 +
+drivers/scsi/hfcldd/hfcl_conf.c                |   198 +
+drivers/scsi/hfcldd/hfcl_detect.c              | 20642 +++++++++++++++++++++++
+drivers/scsi/hfcldd/hfcl_detect.h              |   267 +
+drivers/scsi/hfcldd/hfcl_detect_fx.c           | 11269 +++++++++++++
+drivers/scsi/hfcldd/hfcl_detect_fx.h           |   172 +
+drivers/scsi/hfcldd/hfcl_diag.c                |  4296 +++++
+drivers/scsi/hfcldd/hfcl_diag_fx.c             |  6062 +++++++
+drivers/scsi/hfcldd/hfcl_hand_timer_trace.h    |   301 +
+drivers/scsi/hfcldd/hfcl_hand_timer_trace_fx.h |  1657 ++
+drivers/scsi/hfcldd/hfcl_handler.c             |  3680 ++++
+drivers/scsi/hfcldd/hfcl_handler.h             |    66 +
+drivers/scsi/hfcldd/hfcl_handler_fx.c          |  9809 +++++++++++
+drivers/scsi/hfcldd/hfcl_handler_fx.h          |   135 +
+drivers/scsi/hfcldd/hfcl_handler_trace.h       |   164 +
+drivers/scsi/hfcldd/hfcl_ioctl.c               |  5501 ++++++
+drivers/scsi/hfcldd/hfcl_ioctl.h               |   188 +
+drivers/scsi/hfcldd/hfcl_ioctl_fx.c            |  3640 ++++
+drivers/scsi/hfcldd/hfcl_ioctl_fx.h            |   167 +
+drivers/scsi/hfcldd/hfcl_mlpf.c                |  3234 ++++
+drivers/scsi/hfcldd/hfcl_mlpf.h                |   309 +
+drivers/scsi/hfcldd/hfcl_mlpf_fx.c             |  3493 ++++
+drivers/scsi/hfcldd/hfcl_mlpf_fx.h             |   345 +
+drivers/scsi/hfcldd/hfcl_moduleparam.h         |  2590 +++
+drivers/scsi/hfcldd/hfcl_modulever.h           |    17 +
+drivers/scsi/hfcldd/hfcl_npiv_fx.c             |  1015 ++
+drivers/scsi/hfcldd/hfcl_npiv_fx.h             |    53 +
+drivers/scsi/hfcldd/hfcl_stra_trace.h          |   256 +
+drivers/scsi/hfcldd/hfcl_stra_trace_fx.h       |   200 +
+drivers/scsi/hfcldd/hfcl_strategy.c            |  5830 +++++++
+drivers/scsi/hfcldd/hfcl_strategy.h            |   141 +
+drivers/scsi/hfcldd/hfcl_strategy_fx.c         |  5650 +++++++
+drivers/scsi/hfcldd/hfcl_strategy_fx.h         |   211 +
+drivers/scsi/hfcldd/hfcl_tbol.h                |   191 +
+drivers/scsi/hfcldd/hfcl_timer_recovery.c      |  7431 ++++++++
+drivers/scsi/hfcldd/hfcl_timer_recovery.h      |   103 +
+drivers/scsi/hfcldd/hfcl_timer_recovery_fx.c   |  7606 +++++++++
+drivers/scsi/hfcldd/hfcl_timer_recovery_fx.h   |   133 +
+drivers/scsi/hfcldd/hfcl_top.c                 |  4304 +++++
+drivers/scsi/hfcldd/hfcl_top.h                 |   261 +
+drivers/scsi/hfcldd/hfcl_top_fx.c              |  8807 ++++++++++
+drivers/scsi/hfcldd/hfcl_top_fx.h              |   753 +
+drivers/scsi/hfcldd/hfcl_version.c             |   165 +
+drivers/scsi/hfcldd/hfcl_version.h             |    19 +
+drivers/scsi/hfcldd/hfcldd.h                   |  2516 +++
+drivers/scsi/hfcldd/hfcldd_conf.c              |   243 +
+drivers/scsi/hfcldd/hfcldd_conf.h              |    20 +
+drivers/scsi/hfcldd/hfcldd_fx.h                |  2167 +++
+drivers/scsi/hfcldd/hfclddcom.h                |  1644 ++
+drivers/scsi/hfcldd/hfclddcom_fx.h             |  1546 ++
+drivers/scsi/hfcldd/hfclddioc.h                |  2030 +++
+drivers/scsi/hfcldd/hfclddutil.h               |    48 +
+drivers/scsi/hfcldd/hfcmpcfg.h                 |    78 +
+drivers/scsi/hfcldd/hraslog.h                  |    52 +
+drivers/scsi/hfcldd/hraslog_link.c             |    83 +
+56 files changed, 131907 insertions(+)
+
+
