@@ -1,61 +1,85 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/23] scsi_dh_alua: Use separate alua_port_group
- structure
-Date: Tue, 1 Sep 2015 16:01:32 +0200
-Message-ID: <55E5AFBC.5080100@suse.de>
-References: <1440679281-13234-1-git-send-email-hare@suse.de>
- <1440679281-13234-14-git-send-email-hare@suse.de>
- <20150901102055.GC9838@lst.de> <55E5A1E5.8000701@suse.de>
- <20150901134439.GA13566@lst.de>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH] scsi_scan: move 'INQUIRY result too short' message to debug level
+Date: Tue, 01 Sep 2015 17:43:50 +0200
+Message-ID: <87io7udu15.fsf@vitty.brq.redhat.com>
+References: <1441025401-30044-1-git-send-email-vkuznets@redhat.com>
+	<1441115361.2682.2.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33717 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbbIAOBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Sep 2015 10:01:35 -0400
-In-Reply-To: <20150901134439.GA13566@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1441115361.2682.2.camel@HansenPartnership.com> (James
+	Bottomley's message of "Tue, 01 Sep 2015 07:49:21 -0600")
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 09/01/2015 03:44 PM, Christoph Hellwig wrote:
-> On Tue, Sep 01, 2015 at 03:02:29PM +0200, Hannes Reinecke wrote:
->>>> +	rcu_read_lock();
->>>> +	pg =3D rcu_dereference(h->pg);
->>>> +	if (!pg) {
->>>> +		rcu_read_unlock();
->>>> +		return -ENXIO;
->>>> +	}
->>>
->>> What is this rcu_read_lock supposed to protect against given
->>> that struct alua_port_group isn't RCU freed?  I think this needs
->>> to be another kref_get_unless_zero.
->>>
->> It's not freed now, but it'll be with one of the next patches (ie wi=
-th
->> the 'rescan' patch).
->> I just kept it here for consistency, following the rule to always
->> enclose 'rcu_dereference' with 'rcu_read_lock()/rcu_read_unlock()'
->> pairs. Irrespective on whether it's being freed or not.
->=20
-> After this patch this is the only RCU call in the driver.  I don't
-> think adding it here make any sense.
->=20
-Right, I'll be moving it to the rescan patch then.
+James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Cheers,
+> On Mon, 2015-08-31 at 14:50 +0200, Vitaly Kuznetsov wrote:
+>> Some Hyper-V hosts are known for ignoring SPC-2/3/4 requirement
+>> for 'INQUIRY data (see table ...) shall contain at least 36 bytes'. As a
+>> result we get tons on 'scsi 0:7:1:1: scsi scan: INQUIRY result too short
+>> (5), using 36' messages on console. As Hyper-V is also known for its
+>> serial port being extremely slow multi-VCPU guests we get CPU blocked
+>> putting these (useless) messages on console (e.g. happens when we add
+>> multiple disks). Move them to debug level.
+>
+> This isn't an ignorable debug message.  It means the inquiry information
+> the system relies on will be false, so it's fairly essential for bug
+> reports.  It could be made a once per device print, but I don't think we
+> can eliminate it.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I see. What if we introduce a special flag to mark such known-as-broken
+hosts? E.g.:
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f9f3f82..c6ffb5c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -701,9 +701,10 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "scsi scan: INQUIRY result too short (%d),"
+-			    " using 36\n", sdev->inquiry_len);
++		if (!sdev->host->hostt->short_inquiry)
++			sdev_printk(KERN_INFO, sdev,
++				    "scsi scan: INQUIRY result too short (%d),"
++				    " using 36\n", sdev->inquiry_len);
+ 		sdev->inquiry_len = 36;
+ 	}
+ 
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 3c6584f..f3b4d0f 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1711,6 +1711,7 @@ static struct scsi_host_template scsi_driver = {
+ 	/* Make sure we dont get a sg segment crosses a page boundary */
+ 	.dma_boundary =		PAGE_SIZE-1,
+ 	.no_write_same =	1,
++	.short_inquiry =	1,
+ };
+ 
+ enum {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e113c75..04aefad 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -454,6 +454,12 @@ struct scsi_host_template {
+ 	unsigned no_async_abort:1;
+ 
+ 	/*
++	 * True if this host adapter returns short (<36 bytes) resposes to
++	 * INQUIRY requests.
++	 */
++	unsigned short_inquiry:1;
++
++	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
+ 	unsigned int max_host_blocked;
+
+-- 
+  Vitaly
