@@ -1,17 +1,18 @@
 From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH 02/14] lpfc: Remove unnessary cast
-Date: Tue, 1 Sep 2015 23:24:39 +0200
-Message-ID: <20150901232439.000053dd@localhost>
-References: <55e4bd89.wnXoOtgVrknAjUqh%james.smart@avagotech.com>
+Subject: Re: [PATCH 03/14] lpfc: in sli3 use configured sg_seg_cnt for
+ sg_tablesize
+Date: Tue, 1 Sep 2015 23:27:57 +0200
+Message-ID: <20150901232757.00000e1f@localhost>
+References: <55e4bd8a.9Holn3dFdEAEsMk9%james.smart@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:51371 "EHLO mout.gmx.net"
+Received: from mout.gmx.net ([212.227.17.22]:55623 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752344AbbIAVYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Sep 2015 17:24:51 -0400
-In-Reply-To: <55e4bd89.wnXoOtgVrknAjUqh%james.smart@avagotech.com>
+	id S1750969AbbIAV2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Sep 2015 17:28:09 -0400
+In-Reply-To: <55e4bd8a.9Holn3dFdEAEsMk9%james.smart@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@avagotech.com>
@@ -19,30 +20,51 @@ Cc: linux-scsi@vger.kernel.org
 
 James Smart wrote:
 > 
-> From: Firo Yang <firogm@gmail.com>
+> From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 > 
-> kzalloc() returns a void pointer - no need to cast it in
-> drivers/scsi/lpfc/lpfc_init.c::lpfc_sli_driver_resource_setup()
+> Hi James,
 > 
-> Signed-off-by: Firo Yang <firogm@gmail.com>
+> We had some performance problems with RAID systems connected to LPe12k.
+> AFAICS, the reason is a small bug in lpfc.ko, causing the IO-size to
+> be smaller than expected.
+> 
+> The patch below fixes it for us.
+> 
+> Please CC me, I'm not on the list.
+> 
+> Best regards
+> Bodo
+> 
+> ------------------------------------------------------
+> 
+> Currently the module parameter lpfc_sg_seg_count does not have effect
+> for sli3 devices.
+> 
+> In lpfc_sli_driver_resource_setup(), which is used for sli3, the code
+> writes the configured sg_seg_cnt into lpfc_template.sg_tablesize.
+> But lpfc_template is the template used for sli4 only. Thus the value should
+> correctly be written to lpfc_template_s3->sg_tablesize.
+> 
+> This patch is for kernel 4.1-rc5, but is tested with lpfc 10.2.405.26 only.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 > Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->  drivers/scsi/lpfc/lpfc_init.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+>  drivers/scsi/lpfc/lpfc_init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 1992e74..da9b6fc 100644
+> index da9b6fc..81bfb2d 100644
 > --- a/drivers/scsi/lpfc/lpfc_init.c
 > +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -4982,8 +4982,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
->  	}
+> @@ -4994,7 +4994,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
 >  
->  	if (!phba->sli.ring)
-> -		phba->sli.ring = (struct lpfc_sli_ring *)
-> -			kzalloc(LPFC_SLI3_MAX_RING *
-> +		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
->  			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
->  	if (!phba->sli.ring)
->  		return -ENOMEM;
+>  	/* Initialize the host templates the configured values. */
+>  	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+> -	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+> +	lpfc_template_s3.sg_tablesize = phba->cfg_sg_seg_cnt;
+>  
+>  	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp */
+>  	if (phba->cfg_enable_bg) {
 
 Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
