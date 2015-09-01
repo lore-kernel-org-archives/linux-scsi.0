@@ -1,72 +1,48 @@
-From: Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v4 6/8] scsi: ufs: make the UFS variant a platform device
-Date: Tue, 1 Sep 2015 15:43:09 -0500
-Message-ID: <CAL_JsqJ2w3Czutb7vkT5Mt0Fs5jG_Lsm82-SD0Oe511X5-68Eg@mail.gmail.com>
-References: <1440946354-16071-1-git-send-email-ygardi@codeaurora.org> <1440946354-16071-7-git-send-email-ygardi@codeaurora.org>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH 02/14] lpfc: Remove unnessary cast
+Date: Tue, 1 Sep 2015 23:24:39 +0200
+Message-ID: <20150901232439.000053dd@localhost>
+References: <55e4bd89.wnXoOtgVrknAjUqh%james.smart@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1440946354-16071-7-git-send-email-ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: Jej B <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Paul Bolle <pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm <linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Santosh Y <santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-wo1vFcy6AUs@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sahitya Tummala <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, open list:OPEN F
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.17.22]:51371 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752344AbbIAVYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Sep 2015 17:24:51 -0400
+In-Reply-To: <55e4bd89.wnXoOtgVrknAjUqh%james.smart@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@avagotech.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Aug 30, 2015 at 9:52 AM, Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org> wrote:
-> This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
-> a platform device.
-> In order to do so a few additional changes are required:
-> 1. The ufshcd-pltfrm is no longer serves as a platform device.
->    Now it only serves as a group of platform APIs such as PM APIs
->    (runtime suspend/resume, system suspend/resume etc), parsers of
->    clocks, regulators and pm_levels from DT.
-> 2. What used to be the old platform "probe" is now "only"
->    a pltfrm_init() routine, that does exactly the same, but only
->    being called by the new probe function of the UFS variant.
->
-> Signed-off-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
->
+James Smart wrote:
+> 
+> From: Firo Yang <firogm@gmail.com>
+> 
+> kzalloc() returns a void pointer - no need to cast it in
+> drivers/scsi/lpfc/lpfc_init.c::lpfc_sli_driver_resource_setup()
+> 
+> Signed-off-by: Firo Yang <firogm@gmail.com>
+> Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->  Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 57 ++++++++++++++
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +-
+>  drivers/scsi/lpfc/lpfc_init.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 1992e74..da9b6fc 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -4982,8 +4982,7 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+>  	}
+>  
+>  	if (!phba->sli.ring)
+> -		phba->sli.ring = (struct lpfc_sli_ring *)
+> -			kzalloc(LPFC_SLI3_MAX_RING *
+> +		phba->sli.ring = kzalloc(LPFC_SLI3_MAX_RING *
+>  			sizeof(struct lpfc_sli_ring), GFP_KERNEL);
+>  	if (!phba->sli.ring)
+>  		return -ENOMEM;
 
-For the binding:
-
-Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-A comment on the driver part still.
-
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 329ac84..8027435 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-
-[...]
-
-> +static int ufs_qcom_probe(struct platform_device *pdev)
-> +{
-> +       int err;
-> +       struct device *dev = &pdev->dev;
-> +       struct ufs_hba *hba;
-> +
-> +       /* Perform generic probe */
-> +       err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
-> +       if (err) {
-> +               dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
-> +               goto out;
-> +       }
-> +
-> +       hba = platform_get_drvdata(pdev);
-
-I thought this was not necessary?
-
-> +       if (unlikely(!hba)) {
-> +               dev_err(dev, "no hba structure after successful probing\n");
-> +               goto dealloc_host;
-> +       }
-> +
-> +       return 0;
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
