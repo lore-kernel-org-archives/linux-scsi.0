@@ -1,51 +1,59 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH 09/14] fix: lpfc_send_rscn_event sends bigger buffer
- size
-Date: Tue, 1 Sep 2015 23:41:11 +0200
-Message-ID: <20150901234111.00006b62@localhost>
-References: <55e4bd90.zlcxDDRSu3edLd6S%james.smart@avagotech.com>
+From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH] scsi: fcoe: Convert use of __constant_htons
+ to htons
+Date: Tue, 01 Sep 2015 15:43:24 -0700
+Message-ID: <1441147404.19451.52.camel@lin-nd1-054.jf.intel.com>
+References: <20150819054844.GA21960@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:60125 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752699AbbIAVlV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Sep 2015 17:41:21 -0400
-In-Reply-To: <55e4bd90.zlcxDDRSu3edLd6S%james.smart@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20150819054844.GA21960@localhost>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Vaishali Thakkar <vthakkar1994-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, "James E.J.
+ Bottomley" <JBottomley-wo1vFcy6AUs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>
-Cc: linux-scsi@vger.kernel.org
 
-James Smart wrote:
+On Wed, 2015-08-19 at 11:18 +0530, Vaishali Thakkar wrote:
+> In little endian cases, the macro htons unfolds to __swab16 which
+> provides special case for constants. In big endian cases,
+> __constant_htons and htons expand directly to the same expression.
+> So, replace __constant_htons with htons with the goal of getting
+> rid of the definition of __constant_htons completely.
 > 
-> From: Ales Novak <alnovak@suse.cz>
+> The semantic patch that performs this transformation is as follows:
 > 
-> lpfc_send_rscn_event() allocates data for sizeof(struct
-> lpfc_rscn_event_header) + payload_len, but claims that the data has size
-> of sizeof(struct lpfc_els_event_header) + payload_len. That leads to
-> buffer overruns.
+> @@expression x;@@
 > 
-> Signed-off-by: Ales Novak <alnovak@suse.cz>
-> Signed-off-by: James Smart <james.smart@avagotech.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> - __constant_htons(x)
+> + htons(x)
+> 
+> Signed-off-by: Vaishali Thakkar <vthakkar1994-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > ---
->  drivers/scsi/lpfc/lpfc_els.c | 2 +-
+>  drivers/scsi/fcoe/fcoe.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index c859aa3..f9c957d 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -5401,7 +5401,7 @@ lpfc_send_rscn_event(struct lpfc_vport *vport,
->  
->  	fc_host_post_vendor_event(shost,
->  		fc_get_event_number(),
-> -		sizeof(struct lpfc_els_event_header) + payload_len,
-> +		sizeof(struct lpfc_rscn_event_header) + payload_len,
->  		(char *)rscn_event_data,
->  		LPFC_NL_VENDOR_ID);
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index ec193a8..d3eb80c 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -364,7 +364,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+>  	 * on the ethertype for the given device
+>  	 */
+>  	fcoe->fcoe_packet_type.func = fcoe_rcv;
+> -	fcoe->fcoe_packet_type.type = __constant_htons(ETH_P_FCOE);
+> +	fcoe->fcoe_packet_type.type = htons(ETH_P_FCOE);
+>  	fcoe->fcoe_packet_type.dev = netdev;
+>  	dev_add_pack(&fcoe->fcoe_packet_type);
 >  
 
-Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
+Acked-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
