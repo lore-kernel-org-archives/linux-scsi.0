@@ -1,78 +1,60 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCHv2] Update scsi host to use ida for host number
-Date: Tue, 1 Sep 2015 20:49:33 +0300
-Message-ID: <55E5E52D.5090009@dev.mellanox.co.il>
-References: <1441129120-31398-1-git-send-email-lduncan@suse.com>
+From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
+Subject: Re: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in mvs_slot_task_free
+Date: Tue, 1 Sep 2015 23:08:25 +0300
+Message-ID: <CAOE4rSwWQJ=-CxMic66+q-vuOwPWEYQR5S6p1FxkBccNPRaeuQ@mail.gmail.com>
+References: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:34445 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546AbbIARtX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2015 13:49:23 -0400
-Received: by wicjd9 with SMTP id jd9so41410657wic.1
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2015 10:49:22 -0700 (PDT)
-In-Reply-To: <1441129120-31398-1-git-send-email-lduncan@suse.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:36632 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbbIAUI0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2015 16:08:26 -0400
+Received: by qgx61 with SMTP id 61so5137115qgx.3
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2015 13:08:25 -0700 (PDT)
+In-Reply-To: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lduncan@suse.com, linux-scsi@vger.kernel.org
-Cc: JBottomley@Parallels.com, hare@suse.com, jthumshirn@suse.de
+To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
 
-On 9/1/2015 8:38 PM, lduncan@suse.com wrote:
-> From: Lee Duncan <lduncan@suse.com>
+2015-08-21 7:29 GMT+03:00 D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>:
+> When pci_pool_alloc fails in mvs_task_prep then task->lldd_task stays
+> NULL but it's later used in mvs_abort_task as slot which is passed
+> to mvs_slot_task_free causing NULL pointer dereference.
 >
-> Each Scsi_host instance gets a host number starting
-> at 0, but this is implemented with an atomic integer,
-> and rollover doesn't seem to have been considered.
-> Another side-effect of this design is that scsi host
-> numbers used by iscsi are never reused, thereby  making
-> rollover more likely. This patch converts Scsi_host
-> instances to use ida to manage their instance
-> numbers.
+> Just return from mvs_slot_task_free when passed with NULL slot.
 >
-> This also means that host instance numbers will be
-> reused, when available.
->
-> Changes from v1:
-> * Added inline host_put_index() and its use
->
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
+> Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
 > ---
->   drivers/scsi/hosts.c | 47 +++++++++++++++++++++++++++++++++++++++--------
->   1 file changed, 39 insertions(+), 8 deletions(-)
+>  drivers/scsi/mvsas/mv_sas.c | 2 ++
+>  1 file changed, 2 insertions(+)
 >
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 8bb173e01084..36cb65612821 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -33,7 +33,7 @@
->   #include <linux/transport_class.h>
->   #include <linux/platform_device.h>
->   #include <linux/pm_runtime.h>
-> -
-> +#include <linux/idr.h>
->   #include <scsi/scsi_device.h>
->   #include <scsi/scsi_host.h>
->   #include <scsi/scsi_transport.h>
-> @@ -42,7 +42,8 @@
->   #include "scsi_logging.h"
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.=
+c
+> index 454536c..9c78074 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi, u=
+32 rx_desc)
+>  static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task=
+ *task,
+>                           struct mvs_slot_info *slot, u32 slot_idx)
+>  {
+> +       if (!slot)
+> +               return;
+>         if (!slot->task)
+>                 return;
+>         if (!sas_protocol_ata(task->task_proto))
+> --
+> 2.5.0
 >
->
-> -static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
-> +static DEFINE_SPINLOCK(host_index_lock);
-> +static DEFINE_IDA(host_index_ida);
->
->
->   static void scsi_host_cls_release(struct device *dev)
-> @@ -337,6 +338,10 @@ static void scsi_host_dev_release(struct device *dev)
->
->   	kfree(shost->shost_data);
->
-> +	spin_lock(&host_index_lock);
-> +	ida_remove(&host_index_ida, shost->host_no);
-> +	spin_unlock(&host_index_lock);
 
-Why not host_put_index(index)?
+ping? do I need to CC someone else?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
