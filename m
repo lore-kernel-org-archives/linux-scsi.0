@@ -1,37 +1,53 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 3/8] scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
-Date: Wed,  2 Sep 2015 17:45:32 +0300
-Message-ID: <1441205138-12664-4-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 2/8] scsi: ufs-qcom: fix compilation warning if compiled as a module
+Date: Wed,  2 Sep 2015 17:45:31 +0300
+Message-ID: <1441205138-12664-3-git-send-email-ygardi@codeaurora.org>
 References: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This change is required in order to be able to build the component
-as a module.
+This change fixes a compilation warning that happens if SCSI_UFS_QCOM
+is compiled as a module.
+Also this patch fixes an error happens when insmod the module:
+"ufs_qcom: module license 'unspecified' taints kernel."
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufs-qcom.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index e945383..5f45307 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -72,7 +72,7 @@ config SCSI_UFSHCD_PLATFORM
- 	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4cdffa4..6c23bbf 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -917,12 +917,15 @@ out:
  
- config SCSI_UFS_QCOM
--	bool "QCOM specific hooks to UFS controller platform driver"
-+	tristate "QCOM specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
- 	select PHY_QCOM_UFS
- 	help
+ #define	ANDROID_BOOT_DEV_MAX	30
+ static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+-static int get_android_boot_dev(char *str)
++
++#ifndef MODULE
++static int __init get_android_boot_dev(char *str)
+ {
+ 	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
+ 	return 1;
+ }
+ __setup("androidboot.bootdevice=", get_android_boot_dev);
++#endif
+ 
+ /**
+  * ufs_qcom_init - bind phy with controller
+@@ -1047,3 +1050,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.resume			= ufs_qcom_resume,
+ };
+ EXPORT_SYMBOL(ufs_hba_qcom_vops);
++
++MODULE_LICENSE("GPL v2");
 -- 
 1.8.5.2
 
