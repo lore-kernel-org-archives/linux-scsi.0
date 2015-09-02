@@ -1,99 +1,85 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH v5 6/8] scsi: ufs: make the UFS variant a platform device
-Date: Wed, 2 Sep 2015 08:14:01 -0500
-Message-ID: <CAL_JsqL8GKa+YPzFHaL=5_x5Pt7WpveU_y87hPO17pO-oXGs=A@mail.gmail.com>
-References: <1441182744-28477-1-git-send-email-ygardi@codeaurora.org> <1441182744-28477-7-git-send-email-ygardi@codeaurora.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH] SCSI: Scale up REPORT_LUNS timeout on failure
+Date: Wed, 02 Sep 2015 09:31:46 -0500
+Message-ID: <55E70852.9050506@linux.vnet.ibm.com>
+References: <55D65082.6020504@linux.vnet.ibm.com> <55DDB8F3.3020308@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:34409 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754476AbbIBNOW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2015 09:14:22 -0400
-In-Reply-To: <1441182744-28477-7-git-send-email-ygardi@codeaurora.org>
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:34415 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbbIBOb6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2015 10:31:58 -0400
+Received: from /spool/local
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 2 Sep 2015 10:31:58 -0400
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 2ABF738C8046
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2015 10:31:56 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t82EVuhR49610764
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Sep 2015 14:31:56 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t82EVs3r018959
+	for <linux-scsi@vger.kernel.org>; Wed, 2 Sep 2015 10:31:55 -0400
+In-Reply-To: <55DDB8F3.3020308@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, hch@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, open list:OPEN F
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On Wed, Sep 2, 2015 at 3:32 AM, Yaniv Gardi <ygardi@codeaurora.org> wrote:
-> This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
-> a platform device.
-> In order to do so a few additional changes are required:
-> 1. The ufshcd-pltfrm is no longer serves as a platform device.
->    Now it only serves as a group of platform APIs such as PM APIs
->    (runtime suspend/resume, system suspend/resume etc), parsers of
->    clocks, regulators and pm_levels from DT.
-> 2. What used to be the old platform "probe" is now "only"
->    a pltfrm_init() routine, that does exactly the same, but only
->    being called by the new probe function of the UFS variant.
->
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-[...]
+This patch fixes an issue seen with an IBM 2145 (SVC) where, following an error
+injection test which results in paths going offline, when they came
+back online, the path would timeout the REPORT_LUNS issued during the
+scan. This timeout situation continued until retries were expired, resulting in
+falling back to a sequential LUN scan. Then, since the target responds
+with PQ=1, PDT=0 for all possible LUNs, due to the way the sequential
+LUN scan code works, we end up adding 512 LUNs for each target, when there
+is really only a small handful of LUNs that are actually present.
 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 329ac84..5179250 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -19,6 +19,7 @@
->
->  #include <linux/phy/phy-qcom-ufs.h>
->  #include "ufshcd.h"
-> +#include "ufshcd-pltfrm.h"
->  #include "unipro.h"
->  #include "ufs-qcom.h"
->  #include "ufshci.h"
-> @@ -1036,7 +1037,7 @@ void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
->   * The variant operations configure the necessary controller and PHY
->   * handshake during initialization.
->   */
-> -static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
-> +static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
->         .name                   = "qcom",
->         .init                   = ufs_qcom_init,
->         .exit                   = ufs_qcom_exit,
-> @@ -1050,4 +1051,75 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
->         .resume                 = ufs_qcom_resume,
->  };
->
-> +/**
-> + * ufs_qcom_probe - probe routine of the driver
-> + * @pdev: pointer to Platform device handle
-> + *
-> + * Always return 0
-> + */
-> +static int ufs_qcom_probe(struct platform_device *pdev)
-> +{
-> +       int err;
-> +       struct device *dev = &pdev->dev;
-> +       struct ufs_hba *hba;
-> +
-> +       /* Perform generic probe */
-> +       err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
-> +       if (err) {
-> +               dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
-> +               goto out;
-> +       }
-> +
+This patch doubles the timeout used on the REPORT_LUNS for each retry
+after a timeout is seen on a REPORT_LUNS. This patch solves the issue
+of 512 non existent LUNs showing up after this event. Running the test
+with this patch still showed that we were regularly hitting two timeouts,
+but the third, and final, REPORT_LUNS was always successful.
 
-All of this:
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-> +       hba = platform_get_drvdata(pdev);
-> +
-> +       return 0;
-> +
-> +dealloc_host:
-> +       /* disconnect the bind between the qcom host and the hba */
-> +       ufshcd_set_variant(hba, NULL);
-> +       ufshcd_dealloc_host(hba);
+ drivers/scsi/scsi_scan.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-To this is dead code. You should get a warning that dealloc_host is
-unused. Please check and fix all warnings.
+diff -puN drivers/scsi/scsi_scan.c~scsi_report_luns_timeout_escalate drivers/scsi/scsi_scan.c
+--- linux/drivers/scsi/scsi_scan.c~scsi_report_luns_timeout_escalate	2015-09-02 08:49:07.268243497 -0500
++++ linux-bjking1/drivers/scsi/scsi_scan.c	2015-09-02 08:49:07.272243461 -0500
+@@ -1304,6 +1304,7 @@ static int scsi_report_lun_scan(struct s
+ 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+ 	int ret = 0;
++	int timeout = SCSI_TIMEOUT + 4 * HZ;
+ 
+ 	/*
+ 	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
+@@ -1383,7 +1384,7 @@ retry:
+ 
+ 		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
+ 					  lun_data, length, &sshdr,
+-					  SCSI_TIMEOUT + 4 * HZ, 3, NULL);
++					  timeout, 3, NULL);
+ 
+ 		SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
+ 				"scsi scan: REPORT LUNS"
+@@ -1392,6 +1393,8 @@ retry:
+ 				retries, result));
+ 		if (result == 0)
+ 			break;
++		else if (host_byte(result) == DID_TIME_OUT)
++			timeout = timeout * 2;
+ 		else if (scsi_sense_valid(&sshdr)) {
+ 			if (sshdr.sense_key != UNIT_ATTENTION)
+ 				break;
+_
 
-Rob
-
-> +out:
-> +       return err;
-> +}
-> +
