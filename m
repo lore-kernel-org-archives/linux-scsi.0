@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 09/15] scsi: ufs: add retries for hibern8 enter
-Date: Wed,  2 Sep 2015 13:13:09 +0300
-Message-ID: <1441188795-4600-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v3 14/15] scsi: ufs: commit descriptors before setting the doorbell
+Date: Wed,  2 Sep 2015 13:13:14 +0300
+Message-ID: <1441188795-4600-15-git-send-email-ygardi@codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
@@ -10,71 +10,32 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If hibern8 enter command fails then UFS link state may be unknown which
-may result into timeout of all the commands issued after failure.
+Add a write memory barrier to make sure descriptors prepared are actually
+written to memory before ringing the doorbell. We have also added the
+write memory barrier after ringing the doorbell register so that
+controller sees the new request immediately.
 
-This change does 2 things (for pre-defined number of retry counts) after
-hibern8 enter failure:
-1. Recovers the UFS link to active state
-2. If link is recovered to active state, tries to put the UFS link in
-   hibern8 enter again until retry count expires.
-
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8d5bdf0..5800b08 100644
+index 298511a..eaf98bb 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -75,6 +75,9 @@
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
+@@ -1627,6 +1627,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
  
-+/* Maximum retries for Hibern8 enter */
-+#define UIC_HIBERN8_ENTER_RETRIES 3
-+
- /* maximum number of reset retries before giving up */
- #define MAX_HOST_RESET_RETRIES 5
+ 	hba->dev_cmd.complete = &wait;
  
-@@ -2389,13 +2392,32 @@ out:
- 	return ret;
- }
- 
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
-+	int ret;
- 	struct uic_command uic_cmd = {0};
- 
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
-+	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+
-+	if (ret)
-+		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d",
-+			__func__, ret);
-+
-+	return ret;
-+}
-+
-+static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+{
-+	int ret = 0, retries;
- 
--	return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
-+		ret = __ufshcd_uic_hibern8_enter(hba);
-+		if (!ret || ret == -ENOLINK)
-+			goto out;
-+	}
-+out:
-+	return ret;
- }
- 
- static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
++	/* Make sure descriptors are ready before ringing the doorbell */
++	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_send_command(hba, tag);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
 -- 
 1.8.5.2
 
