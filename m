@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 07/15] scsi: ufs: set REQUEST_SENSE command size to 18 bytes
-Date: Wed,  2 Sep 2015 13:13:07 +0300
-Message-ID: <1441188795-4600-8-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v3 03/15] scsi: ufs: verify command tag validity
+Date: Wed,  2 Sep 2015 13:13:03 +0300
+Message-ID: <1441188795-4600-4-git-send-email-ygardi@codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
@@ -10,69 +10,75 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-According to UFS device specification REQUEST_SENSE command can
-only report back up to 18 bytes of data.
+A race condition appear to exist between request completion when
+scsi_done() is called to end the request and set the tag back to
+-1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
+handling which aborts the command and reuses it to request sense
+data. Sending the request sense is done with tag which was set to -1
+and so it is invalid.
+Assert command tag passed from scsi layer is valid.
 
 Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0e54183..217b5cf 100644
+index 2d3ebca..8860a57 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -42,6 +42,7 @@
+@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
++static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
++{
++	return tag >= 0 && tag < hba->nutrs;
++}
  
- #include "ufshcd.h"
- #include "unipro.h"
-+#define UFSHCD_REQ_SENSE_SIZE	18
+ static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+ {
+@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	hba = shost_priv(host);
  
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
-@@ -836,7 +837,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
- 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sr.sense_data_len);
- 		memcpy(lrbp->sense_buffer,
- 			lrbp->ucd_rsp_ptr->sr.sense_data,
--			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
-+			min_t(int, len, UFSHCD_REQ_SENSE_SIZE));
- 	}
- }
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
-@@ -1381,7 +1382,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	switch (hba->ufshcd_state) {
+@@ -3862,13 +3872,23 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
- 	WARN_ON(lrbp->cmd);
- 	lrbp->cmd = cmd;
--	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
-+	lrbp->sense_bufflen = UFSHCD_REQ_SENSE_SIZE;
- 	lrbp->sense_buffer = cmd->sense_buffer;
- 	lrbp->task_tag = tag;
- 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
-@@ -4817,19 +4818,19 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
- 				0,
- 				0,
- 				0,
--				SCSI_SENSE_BUFFERSIZE,
-+				UFSHCD_REQ_SENSE_SIZE,
- 				0};
- 	char *buffer;
- 	int ret;
- 
--	buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
-+	buffer = kzalloc(UFSHCD_REQ_SENSE_SIZE, GFP_KERNEL);
- 	if (!buffer) {
- 		ret = -ENOMEM;
+ 	ufshcd_hold(hba, false);
++	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* If command is already aborted/completed, return SUCCESS */
+-	if (!(test_bit(tag, &hba->outstanding_reqs)))
++	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++		dev_err(hba->dev,
++			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
++			__func__, tag, hba->outstanding_reqs, reg);
  		goto out;
- 	}
++	}
  
- 	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
--				SCSI_SENSE_BUFFERSIZE, NULL,
-+				UFSHCD_REQ_SENSE_SIZE, NULL,
- 				msecs_to_jiffies(1000), 3, NULL, REQ_PM);
- 	if (ret)
- 		pr_err("%s: failed with err %d\n", __func__, ret);
+-	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	if (!(reg & (1 << tag))) {
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag = %d",
 -- 
 1.8.5.2
 
