@@ -1,41 +1,90 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v3 14/15] scsi: ufs: commit descriptors before setting the doorbell
-Date: Wed,  2 Sep 2015 13:13:14 +0300
-Message-ID: <1441188795-4600-15-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v3 13/15] scsi: ufs: add missing memory barriers
+Date: Wed,  2 Sep 2015 13:13:13 +0300
+Message-ID: <1441188795-4600-14-git-send-email-ygardi@codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:32815 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754333AbbIBKO1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2015 06:14:27 -0400
 In-Reply-To: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Add a write memory barrier to make sure descriptors prepared are actually
-written to memory before ringing the doorbell. We have also added the
-write memory barrier after ringing the doorbell register so that
-controller sees the new request immediately.
+Performing several writes to UFS host controller registers has
+no gurrantee of ordering, so we must make sure register writes
+to setup request list base address etc. are performed before the
+run/stop register is enabled.
+In addition, when setting up a task request, we must make sure
+the updating of descriptors takes places before ringing the
+doorbell, similarly to setting up a transfer request.
 
 Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 298511a..eaf98bb 100644
+index fc2a52d..298511a 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1627,6 +1627,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+@@ -401,11 +401,9 @@ static inline int ufshcd_get_lists_status(u32 reg)
+ 	 *  1		UTRLRDY
+ 	 *  2		UTMRLRDY
+ 	 *  3		UCRDY
+-	 *  4		HEI
+-	 *  5		DEI
+-	 * 6-7		reserved
++	 * 4-7		reserved
+ 	 */
+-	return (((reg) & (0xFF)) >> 1) ^ (0x07);
++	return ((reg & 0xFF) >> 1) ^ 0x07;
+ }
  
- 	hba->dev_cmd.complete = &wait;
+ /**
+@@ -2726,7 +2724,7 @@ out:
+  * To bring UFS host controller to operational state,
+  * 1. Enable required interrupts
+  * 2. Configure interrupt aggregation
+- * 3. Program UTRL and UTMRL base addres
++ * 3. Program UTRL and UTMRL base address
+  * 4. Configure run-stop-registers
+  *
+  * Returns 0 on success, non-zero value on failure
+@@ -2756,8 +2754,13 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 			REG_UTP_TASK_REQ_LIST_BASE_H);
  
-+	/* Make sure descriptors are ready before ringing the doorbell */
+ 	/*
++	 * Make sure base address and interrupt setup are updated before
++	 * enabling the run/stop registers below.
++	 */
 +	wmb();
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	ufshcd_send_command(hba, tag);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	/*
+ 	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
+-	 * DEI, HEI bits must be 0
+ 	 */
+ 	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+ 	if (!(ufshcd_get_lists_status(reg))) {
+@@ -3920,7 +3923,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 
+ 	/* send command to the controller */
+ 	__set_bit(free_slot, &hba->outstanding_tasks);
++
++	/* Make sure descriptors are ready before ringing the task doorbell */
++	wmb();
++
+ 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
++	/* Make sure that doorbell is committed immediately */
++	wmb();
+ 
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
 -- 
 1.8.5.2
 
