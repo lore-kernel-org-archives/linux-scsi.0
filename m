@@ -1,48 +1,88 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv3] Update scsi host to use ida for host number
-Date: Tue, 1 Sep 2015 23:48:30 -0700
-Message-ID: <20150902064830.GA17978@infradead.org>
-References: <1441152208-20634-1-git-send-email-lduncan@suse.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v4 6/8] scsi: ufs: make the UFS variant a platform
+ device
+Date: Wed, 2 Sep 2015 08:18:09 -0000
+Message-ID: <dd0c8afc696db852e57b7559eb6361df.squirrel@www.codeaurora.org>
+References: <1440946354-16071-1-git-send-email-ygardi@codeaurora.org>
+    <1440946354-16071-7-git-send-email-ygardi@codeaurora.org>
+    <CAL_JsqJ2w3Czutb7vkT5Mt0Fs5jG_Lsm82-SD0Oe511X5-68Eg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41888 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592AbbIBGsa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2015 02:48:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1441152208-20634-1-git-send-email-lduncan@suse.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53784 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbbIBISL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2015 04:18:11 -0400
+In-Reply-To: <CAL_JsqJ2w3Czutb7vkT5Mt0Fs5jG_Lsm82-SD0Oe511X5-68Eg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, hare@suse.com, jthumshirn@suse.de
+To: Rob Herring <robherring2@gmail.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, hch@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaur>
 
-On Tue, Sep 01, 2015 at 05:03:28PM -0700, Lee Duncan wrote:
-> +static int host_get_index(int *index)
-> +{
-> +	int error = -ENOMEM;
-> +
-> +	do {
-> +		if (!ida_pre_get(&host_index_ida, GFP_KERNEL))
-> +			break;
-> +		spin_lock(&host_index_lock);
-> +		error = ida_get_new(&host_index_ida, index);
-> +		spin_unlock(&host_index_lock);
-> +	} while (error == -EAGAIN);
-> +
-> +	return error;
-> +}
-> +
-> +static inline void host_put_index(int index)
-> +{
-> +	spin_lock(&host_index_lock);
-> +	ida_remove(&host_index_ida, index);
-> +	spin_unlock(&host_index_lock);
-> +}
+> On Sun, Aug 30, 2015 at 9:52 AM, Yaniv Gardi <ygardi@codeaurora.org>
+> wrote:
+>> This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
+>> a platform device.
+>> In order to do so a few additional changes are required:
+>> 1. The ufshcd-pltfrm is no longer serves as a platform device.
+>>    Now it only serves as a group of platform APIs such as PM APIs
+>>    (runtime suspend/resume, system suspend/resume etc), parsers of
+>>    clocks, regulators and pm_levels from DT.
+>> 2. What used to be the old platform "probe" is now "only"
+>>    a pltfrm_init() routine, that does exactly the same, but only
+>>    being called by the new probe function of the UFS variant.
+>>
+>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>
+>> ---
+>>  Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 57 ++++++++++++++
+>>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  4 +-
+>
+> For the binding:
+>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+>
+> A comment on the driver part still.
+>
+>> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+>> index 329ac84..8027435 100644
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>
+> [...]
+>
+>> +static int ufs_qcom_probe(struct platform_device *pdev)
+>> +{
+>> +       int err;
+>> +       struct device *dev = &pdev->dev;
+>> +       struct ufs_hba *hba;
+>> +
+>> +       /* Perform generic probe */
+>> +       err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
+>> +       if (err) {
+>> +               dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
+>> +               goto out;
+>> +       }
+>> +
+>> +       hba = platform_get_drvdata(pdev);
+>
+> I thought this was not necessary?
 
-I really hate how this pattern (and the equivalent for IDA) are
-spread all over.  Any chance to have some simple_ida/simple_idr helpers
-instead of duplicating it again an again.
+skipped my eye. i'm uploading another version without this redundant check
 
-Besides that why aren't we using and idr here and use it for host lookup
-as well?
+>
+>> +       if (unlikely(!hba)) {
+>> +               dev_err(dev, "no hba structure after successful
+>> probing\n");
+>> +               goto dealloc_host;
+>> +       }
+>> +
+>> +       return 0;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
