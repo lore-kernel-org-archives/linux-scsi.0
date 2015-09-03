@@ -1,165 +1,121 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [PATCH 3/3] scsi:stex.c Add S3/S4 support
-Date: Thu, 03 Sep 2015 09:50:24 +0800
-Message-ID: <55E7A760.1040404@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Thu, 03 Sep 2015 08:49:45 +0200
+Message-ID: <mqd8u8oc7zq.fsf@c203.arch.suse.de>
+References: <55E7A65C.4090609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <55E7A65C.4090609@gmail.com> (Charles Chiou's message of "Thu, 03
+	Sep 2015 09:46:04 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>, Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>
-Cc: ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Charles Chiou <ch1102chiou@gmail.com> writes:
 
- From 7d98f8c500de452277e2700a950b23bf4685ed64 Mon Sep 17 00:00:00 2001
-From: Charles <charles.chiou@tw.promise.com>
-Date: Wed, 2 Sep 2015 20:54:45 +0800
-Subject: [PATCH 3/3] scsi:stex.c Add S3/S4 support
+> From 63f806abc43237285a918f559ce6e5e410d90d85 Mon Sep 17 00:00:00 200=
+1
+> From: Charles <charles.chiou@tw.promise.com>
+> Date: Wed, 2 Sep 2015 20:41:56 +0800
+> Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
+>
+> Pegasus is a high performace hardware RAID solution designed to unlea=
+sh
+> the raw power of Thunderbolt technology.
+>
+> 1. Add code to distinct SuperTrack and Pegasus series by sub device I=
+D.
+>    It should support backward compatibility.
+>
+> 2. Change the driver version.
+>
+> Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
+> ---
+>  drivers/scsi/stex.c | 35 +++++++++++++++++++++++++++++------
+>  1 file changed, 29 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+> index 98a62bc..657e3ae 100644
+> --- a/drivers/scsi/stex.c
+> +++ b/drivers/scsi/stex.c
+> @@ -1,7 +1,7 @@
+>  /*
+>   * SuperTrak EX Series Storage Controller driver for Linux
+>   *
+> - *	Copyright (C) 2005-2009 Promise Technology Inc.
+> + *	Copyright (C) 2005-2015 Promise Technology Inc.
+>   *
+>   *	This program is free software; you can redistribute it and/or
+>   *	modify it under the terms of the GNU General Public License
+> @@ -37,11 +37,11 @@
+>  #include <scsi/scsi_eh.h>
+>
+>  #define DRV_NAME "stex"
+> -#define ST_DRIVER_VERSION "4.6.0000.4"
+> -#define ST_VER_MAJOR		4
+> -#define ST_VER_MINOR		6
+> -#define ST_OEM			0
+> -#define ST_BUILD_VER		4
+> +#define ST_DRIVER_VERSION	"5.00.0000.01"
+> +#define ST_VER_MAJOR		5
+> +#define ST_VER_MINOR		00
+> +#define ST_OEM				0000
+> +#define ST_BUILD_VER		01
+>
+>  enum {
+>  	/* MU register offset */
+> @@ -327,6 +327,7 @@ struct st_hba {
+>  	u16 rq_count;
+>  	u16 rq_size;
+>  	u16 sts_count;
+> +	u8  supports_pm;
+>  };
+>
+>  struct st_card_info {
+> @@ -1566,8 +1567,30 @@ static int stex_probe(struct pci_dev *pdev, co=
+nst struct
+> pci_device_id *id)
+>  		goto out_iounmap;
+>  	}
+>
+> +
+> +
+> +
 
-Add S3/S4 support, add .suspend and .resume function in pci_driver.
-In .suspend handler, driver send S3/S4 signal to the device.
+Please no quad blank lines, one's enough :-(
 
-Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
----
-  drivers/scsi/stex.c | 65 
-++++++++++++++++++++++++++++++++++++++++++++++++++---
-  1 file changed, 62 insertions(+), 3 deletions(-)
+>  	hba->cardtype =3D (unsigned int) id->driver_data;
+>  	ci =3D &stex_card_info[hba->cardtype];
+> +	switch (id->subdevice) {
+> +	case 0x4221:
+> +	case 0x4222:
+> +	case 0x4223:
+> +	case 0x4224:
+> +	case 0x4225:
+> +	case 0x4226:
+> +	case 0x4227:
+> +	case 0x4261:
+> +	case 0x4262:
+> +	case 0x4263:
+> +	case 0x4264:
+> +	case 0x4265:
+> +		break;
+> +	default:
+> +		if (hba->cardtype =3D=3D st_yel)
+> +			hba->supports_pm =3D 1;
+> +	}
+> +
+>  	sts_offset =3D scratch_offset =3D (ci->rq_count+1) * ci->rq_size;
+>  	if (hba->cardtype =3D=3D st_yel)
+>  		sts_offset +=3D (ci->sts_count+1) * sizeof(u32);
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 6578f3d..45482d5 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -166,6 +166,13 @@ enum {
-
-  	ST_ADDITIONAL_MEM			= 0x200000,
-  	ST_ADDITIONAL_MEM_MIN			= 0x80000,
-+	PMIC_SHUTDOWN				= 0x0D,
-+	PMIC_REUMSE					= 0x10,
-+	ST_IGNORED					= -1,
-+	ST_S3						= 3,
-+	ST_S4						= 4,
-+	ST_S5						= 5,
-+	ST_S6						= 6,
-  };
-
-  struct st_sgitem {
-@@ -360,6 +367,8 @@ static const char console_inq_page[] =
-  	0x0C,0x20,0x20,0x20,0x20,0x20,0x20,0x20
-  };
-
-+
-+
-  MODULE_AUTHOR("Ed Lin");
-  MODULE_DESCRIPTION("Promise Technology SuperTrak EX Controllers");
-  MODULE_LICENSE("GPL");
-@@ -1359,6 +1368,9 @@ static void stex_reset_work(struct work_struct *work)
-  	stex_do_reset(hba);
-  }
-
-+
-+
-+
-  static int stex_biosparam(struct scsi_device *sdev,
-  	struct block_device *bdev, sector_t capacity, int geom[])
-  {
-@@ -1736,7 +1748,7 @@ out_disable:
-  	return err;
-  }
-
--static void stex_hba_stop(struct st_hba *hba)
-+static void stex_hba_stop(struct st_hba *hba, int st_sleep_mic)
-  {
-  	struct req_msg *req;
-  	struct st_msg_header *msg_h;
-@@ -1752,11 +1764,18 @@ static void stex_hba_stop(struct st_hba *hba)
-  	} else
-  		memset(req, 0, hba->rq_size);
-
--	if (hba->cardtype == st_yosemite || hba->cardtype == st_yel) {
-+	if ((hba->cardtype == st_yosemite || hba->cardtype == st_yel)
-+		&& st_sleep_mic == ST_IGNORED) {
-  		req->cdb[0] = MGT_CMD;
-  		req->cdb[1] = MGT_CMD_SIGNATURE;
-  		req->cdb[2] = CTLR_CONFIG_CMD;
-  		req->cdb[3] = CTLR_SHUTDOWN;
-+	} else if (hba->cardtype == st_yel && st_sleep_mic != ST_IGNORED) {
-+		req->cdb[0] = MGT_CMD;
-+		req->cdb[1] = MGT_CMD_SIGNATURE;
-+		req->cdb[2] = CTLR_CONFIG_CMD;
-+		req->cdb[3] = PMIC_SHUTDOWN;
-+		req->cdb[4] = st_sleep_mic;
-  	} else {
-  		req->cdb[0] = CONTROLLER_CMD;
-  		req->cdb[1] = CTLR_POWER_STATE_CHANGE;
-@@ -1776,10 +1795,12 @@ static void stex_hba_stop(struct st_hba *hba)
-  	while (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE) {
-  		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
-  			hba->ccb[tag].req_type = 0;
-+			hba->mu_status = MU_STATE_STOP;
-  			return;
-  		}
-  		msleep(1);
-  	}
-+	hba->mu_status = MU_STATE_STOP;
-  }
-
-  static void stex_hba_free(struct st_hba *hba)
-@@ -1819,9 +1840,45 @@ static void stex_shutdown(struct pci_dev *pdev)
-  {
-  	struct st_hba *hba = pci_get_drvdata(pdev);
-
--	stex_hba_stop(hba);
-+	if (hba->supports_pm == 0)
-+		stex_hba_stop(hba, ST_IGNORED);
-+	else
-+		stex_hba_stop(hba, ST_S5);
-+}
-+
-+static int stex_choice_sleep_mic(pm_message_t state)
-+{
-+	switch (state.event) {
-+	case PM_EVENT_SUSPEND:
-+		return ST_S3;
-+	case PM_EVENT_FREEZE:
-+	case PM_EVENT_HIBERNATE:
-+		return ST_S4;
-+	default:
-+		return ST_S4;
-+	}
-+}
-+
-+static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
-+{
-+	struct st_hba *hba = pci_get_drvdata(pdev);
-+
-+	if (hba->cardtype == st_yel && hba->supports_pm == 1)
-+		stex_hba_stop(hba, stex_choice_sleep_mic(state));
-+	else
-+		stex_hba_stop(hba, ST_IGNORED);
-+	return 0;
-  }
-
-+
-+static int stex_resume(struct pci_dev *pdev)
-+{
-+	struct st_hba *hba = pci_get_drvdata(pdev);
-+
-+	hba->mu_status = MU_STATE_STARTING;
-+	stex_handshake(hba);
-+	return 0;
-+}
-  MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
-
-  static struct pci_driver stex_pci_driver = {
-@@ -1830,6 +1887,8 @@ static struct pci_driver stex_pci_driver = {
-  	.probe		= stex_probe,
-  	.remove		= stex_remove,
-  	.shutdown	= stex_shutdown,
-+	.suspend	= stex_suspend,
-+	.resume		= stex_resume,
-  };
-
-  static int __init stex_init(void)
--- 
-1.9.1
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
