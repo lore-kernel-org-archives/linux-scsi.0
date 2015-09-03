@@ -1,58 +1,104 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH] csiostor:Fix locking issues in the function
- csio_scsim_cleanup_io_lnode
-Date: Thu, 3 Sep 2015 01:37:13 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D893E417F9@nice.asicdesigners.com>
-References: <1441215365-27112-1-git-send-email-xerofoify@gmail.com>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Thu, 03 Sep 2015 09:46:04 +0800
+Message-ID: <55E7A65C.4090609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441215365-27112-1-git-send-email-xerofoify@gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>, "JBottomley@odin.com" <JBottomley@odin.com>
-Cc: "hare@suse.de" <hare@suse.de>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "davem@davemloft.net" <davem@davemloft.net>, Hariprasad S <hariprasad@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Charles Chiou <ch1102chiou@gmail.com>, Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>
+Cc: ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Nicholas Krause [mailto:xerofoify@gmail.com]
-> Sent: Wednesday, September 2, 2015 10:36 AM
-> To: JBottomley@odin.com
-> Cc: hare@suse.de; michaelc@cs.wisc.edu; davem@davemloft.net; Anish
-> Bhatt; Hariprasad S; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH] csiostor:Fix locking issues in the function
-> csio_scsim_cleanup_io_lnode
-> 
-> This fixes locking issues in the function csio_scsim_cleanup_io_lnode by
-> locking around the call to the function csio_csci_gather_active_ios with the
-> function pair spin_lock_irq/spin_unlock_irq as any function calling this
-> particular function must do in order to avoid concurrent threads of execution
-> on the passed structure pointer of type csio_hw as this structure pointer can
-> be shared across mutliple threads in the kernel.
-> 
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->  drivers/scsi/csiostor/csio_scsi.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-> index 2c4562d..c318855 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-> @@ -1327,7 +1327,9 @@ csio_scsim_cleanup_io_lnode(struct csio_scsim
-> *scm, struct csio_lnode *ln)
->  	sld.level = CSIO_LEV_LNODE;
->  	sld.lnode = ln;
->  	INIT_LIST_HEAD(&ln->cmpl_q);
-> +	spin_lock_irq(&hw->lock);
->  	csio_scsi_gather_active_ios(scm, &sld, &ln->cmpl_q);
-> +	spin_unlock_irq(&hw->lock);
-> 
->  	/* No I/Os pending on this lnode  */
->  	if (list_empty(&ln->cmpl_q))
-> --
-> 2.1.4
 
-Acked-By:  Anish Bhatt <anish@chelsio.com>
+ From 63f806abc43237285a918f559ce6e5e410d90d85 Mon Sep 17 00:00:00 2001
+From: Charles <charles.chiou@tw.promise.com>
+Date: Wed, 2 Sep 2015 20:41:56 +0800
+Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
+
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
+
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+    It should support backward compatibility.
+
+2. Change the driver version.
+
+Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
+---
+  drivers/scsi/stex.c | 35 +++++++++++++++++++++++++++++------
+  1 file changed, 29 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 98a62bc..657e3ae 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+  /*
+   * SuperTrak EX Series Storage Controller driver for Linux
+   *
+- *	Copyright (C) 2005-2009 Promise Technology Inc.
++ *	Copyright (C) 2005-2015 Promise Technology Inc.
+   *
+   *	This program is free software; you can redistribute it and/or
+   *	modify it under the terms of the GNU General Public License
+@@ -37,11 +37,11 @@
+  #include <scsi/scsi_eh.h>
+
+  #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION	"5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM				0000
++#define ST_BUILD_VER		01
+
+  enum {
+  	/* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+  	u16 rq_count;
+  	u16 rq_size;
+  	u16 sts_count;
++	u8  supports_pm;
+  };
+
+  struct st_card_info {
+@@ -1566,8 +1567,30 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+  		goto out_iounmap;
+  	}
+
++
++
++
+  	hba->cardtype = (unsigned int) id->driver_data;
+  	ci = &stex_card_info[hba->cardtype];
++	switch (id->subdevice) {
++	case 0x4221:
++	case 0x4222:
++	case 0x4223:
++	case 0x4224:
++	case 0x4225:
++	case 0x4226:
++	case 0x4227:
++	case 0x4261:
++	case 0x4262:
++	case 0x4263:
++	case 0x4264:
++	case 0x4265:
++		break;
++	default:
++		if (hba->cardtype == st_yel)
++			hba->supports_pm = 1;
++	}
++
+  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+  	if (hba->cardtype == st_yel)
+  		sts_offset += (ci->sts_count+1) * sizeof(u32);
+-- 
+1.9.1
