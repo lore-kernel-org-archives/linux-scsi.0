@@ -1,47 +1,66 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 2/2] bfa: Fix incorrect de-reference of pointer
-Date: Thu, 03 Sep 2015 10:32:03 -0400
-Message-ID: <1441290723.23183.323.camel@localhost.localdomain>
-References: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
-	 <1439462512-1911-3-git-send-email-anil.gurumurthy@qlogic.com>
-Reply-To: emilne@redhat.com
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCHv3] Update scsi host to use ida for host number
+Date: Thu, 3 Sep 2015 09:06:41 -0700
+Message-ID: <55E87011.2030401@suse.com>
+References: <1441152208-20634-1-git-send-email-lduncan@suse.com>
+ <20150902064830.GA17978@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45910 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755456AbbICOcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Sep 2015 10:32:05 -0400
-In-Reply-To: <1439462512-1911-3-git-send-email-anil.gurumurthy@qlogic.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:46013 "EHLO
+	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755579AbbICQGy (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Thu, 3 Sep 2015 12:06:54 -0400
+In-Reply-To: <20150902064830.GA17978@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: anil.gurumurthy@qlogic.com
-Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, hare@suse.com, jthumshirn@suse.de
 
-On Thu, 2015-08-13 at 06:41 -0400, anil.gurumurthy@qlogic.com wrote:
-> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+On 09/01/2015 11:48 PM, Christoph Hellwig wrote:
+> On Tue, Sep 01, 2015 at 05:03:28PM -0700, Lee Duncan wrote:
+>> +static int host_get_index(int *index)
+>> +{
+>> +	int error = -ENOMEM;
+>> +
+>> +	do {
+>> +		if (!ida_pre_get(&host_index_ida, GFP_KERNEL))
+>> +			break;
+>> +		spin_lock(&host_index_lock);
+>> +		error = ida_get_new(&host_index_ida, index);
+>> +		spin_unlock(&host_index_lock);
+>> +	} while (error == -EAGAIN);
+>> +
+>> +	return error;
+>> +}
+>> +
+>> +static inline void host_put_index(int index)
+>> +{
+>> +	spin_lock(&host_index_lock);
+>> +	ida_remove(&host_index_ida, index);
+>> +	spin_unlock(&host_index_lock);
+>> +}
 > 
-> Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-> Tested-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-> ---
->  drivers/scsi/bfa/bfa_ioc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> I really hate how this pattern (and the equivalent for IDA) are
+> spread all over.  Any chance to have some simple_ida/simple_idr helpers
+> instead of duplicating it again an again.
 > 
-> diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-> index 4e71044..98f7e8c 100644
-> --- a/drivers/scsi/bfa/bfa_ioc.c
-> +++ b/drivers/scsi/bfa/bfa_ioc.c
-> @@ -3878,7 +3878,7 @@ bfa_sfp_show_comp(struct bfa_sfp_s *sfp, struct bfi_mbmsg_s *msg)
->  		bfa_trc(sfp, sfp->data_valid);
->  		if (sfp->data_valid) {
->  			u32	size = sizeof(struct sfp_mem_s);
-> -			u8 *des = (u8 *) &(sfp->sfpmem);
-> +			u8 *des = (u8 *)(sfp->sfpmem);
->  			memcpy(des, sfp->dbuf_kva, size);
->  		}
->  		/*
+> Besides that why aren't we using and idr here and use it for host lookup
+> as well?
+> .
+> 
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Good question. My original goal was just to fix the host_no wrap-around
+problem, but I agree, the hosts.c module could benefit from using idr,
+making scsi_host_lookup(hostnum) much simpler, and possible faster.
 
+I will submit another patch.
+
+This means I won't need the sequence any longer that you wanted made
+into helper functions, though I'd still be glad to create the helper
+functions and convert some of the ida users, if you wish.
+-- 
+Lee Duncan
 
