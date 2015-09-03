@@ -1,120 +1,69 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [v2 PATCH 1/3] scsi:stex.c Support to Pegasus series.
-Date: Thu, 03 Sep 2015 16:16:11 +0200
-Message-ID: <mqd37yvbnbo.fsf@c203.arch.suse.de>
-References: <55E83D39.4030107@gmail.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 1/2] bfa: Fix indentation
+Date: Thu, 03 Sep 2015 10:31:48 -0400
+Message-ID: <1441290708.23183.322.camel@localhost.localdomain>
+References: <1439462512-1911-1-git-send-email-anil.gurumurthy@qlogic.com>
+	 <1439462512-1911-2-git-send-email-anil.gurumurthy@qlogic.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55E83D39.4030107@gmail.com> (Charles Chiou's message of "Thu, 03
-	Sep 2015 20:29:45 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51847 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753497AbbICObu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Sep 2015 10:31:50 -0400
+In-Reply-To: <1439462512-1911-2-git-send-email-anil.gurumurthy@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: anil.gurumurthy@qlogic.com
+Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com
 
-Charles Chiou <ch1102chiou@gmail.com> writes:
-
-> From 9d7973dfa05a7785d0eb1e9bcfb0fb6d2c493209 Mon Sep 17 00:00:00 200=
-1
-> From: Charles <charles.chiou@tw.promise.com>
-> Date: Wed, 2 Sep 2015 20:41:56 +0800
-> Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
->
-> Pegasus is a high performace hardware RAID solution designed to unlea=
-sh
-> the raw power of Thunderbolt technology.
->
-> 1. Add code to distinct SuperTrack and Pegasus series by sub device I=
-D.
->    It should support backward compatibility.
->
-> 2. Change the driver version.
->
-> V2: Remove blank lines
->
-> Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
+On Thu, 2015-08-13 at 06:41 -0400, anil.gurumurthy@qlogic.com wrote:
+> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> 
+> Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> Tested-by : Sudarasana Kalluru <sudarsana.kalluru@qlogic.com>
 > ---
->  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
->  1 file changed, 26 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 98a62bc..0c93f1f 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -1,7 +1,7 @@
->  /*
->   * SuperTrak EX Series Storage Controller driver for Linux
->   *
-> - *	Copyright (C) 2005-2009 Promise Technology Inc.
-> + *	Copyright (C) 2005-2015 Promise Technology Inc.
->   *
->   *	This program is free software; you can redistribute it and/or
->   *	modify it under the terms of the GNU General Public License
-> @@ -37,11 +37,11 @@
->  #include <scsi/scsi_eh.h>
->
->  #define DRV_NAME "stex"
-> -#define ST_DRIVER_VERSION "4.6.0000.4"
-> -#define ST_VER_MAJOR		4
-> -#define ST_VER_MINOR		6
-> -#define ST_OEM			0
-> -#define ST_BUILD_VER		4
-> +#define ST_DRIVER_VERSION	"5.00.0000.01"
-> +#define ST_VER_MAJOR		5
-> +#define ST_VER_MINOR		00
-> +#define ST_OEM				0000
-> +#define ST_BUILD_VER		01
->
->  enum {
->  	/* MU register offset */
-> @@ -327,6 +327,7 @@ struct st_hba {
->  	u16 rq_count;
->  	u16 rq_size;
->  	u16 sts_count;
-> +	u8  supports_pm;
->  };
->
->  struct st_card_info {
-> @@ -1568,6 +1569,25 @@ static int stex_probe(struct pci_dev *pdev, co=
-nst struct
-> pci_device_id *id)
->
->  	hba->cardtype =3D (unsigned int) id->driver_data;
->  	ci =3D &stex_card_info[hba->cardtype];
-> +	switch (id->subdevice) {
-> +	case 0x4221:
-> +	case 0x4222:
-> +	case 0x4223:
-> +	case 0x4224:
-> +	case 0x4225:
-> +	case 0x4226:
-> +	case 0x4227:
-> +	case 0x4261:
-> +	case 0x4262:
-> +	case 0x4263:
-> +	case 0x4264:
-> +	case 0x4265:
-> +		break;
-> +	default:
-> +		if (hba->cardtype =3D=3D st_yel)
-> +			hba->supports_pm =3D 1;
+>  drivers/scsi/bfa/bfa_ioc.c |   22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+> index 315d6d6..4e71044 100644
+> --- a/drivers/scsi/bfa/bfa_ioc.c
+> +++ b/drivers/scsi/bfa/bfa_ioc.c
+> @@ -3665,19 +3665,19 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+>  		if (sfp->state_query_cbfn)
+>  			sfp->state_query_cbfn(sfp->state_query_cbarg,
+>  					sfp->status);
+> -			sfp->media = NULL;
+> -		}
+> +		sfp->media = NULL;
 > +	}
-> +
->  	sts_offset =3D scratch_offset =3D (ci->rq_count+1) * ci->rq_size;
->  	if (hba->cardtype =3D=3D st_yel)
->  		sts_offset +=3D (ci->sts_count+1) * sizeof(u32);
+>  
+> -		if (sfp->portspeed) {
+> -			sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+> -			if (sfp->state_query_cbfn)
+> -				sfp->state_query_cbfn(sfp->state_query_cbarg,
+> -						sfp->status);
+> -				sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
+> -		}
+> +	if (sfp->portspeed) {
+> +		sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+> +		if (sfp->state_query_cbfn)
+> +			sfp->state_query_cbfn(sfp->state_query_cbarg,
+> +					sfp->status);
+> +		sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
+> +	}
+>  
+> -		sfp->state_query_lock = 0;
+> -		sfp->state_query_cbfn = NULL;
+> +	sfp->state_query_lock = 0;
+> +	sfp->state_query_cbfn = NULL;
+>  }
+>  
+>  /*
 
-I somehow find that switch() above awkward to read, but if no-one else
-objects, who am I to do.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
---=20
-Johannes Thumshirn                                           Storage
-jthumshirn@suse.de                                 +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
