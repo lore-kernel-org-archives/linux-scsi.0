@@ -1,14 +1,14 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/3] scsi:stex.c Add S3/S4 support
-Date: Thu, 03 Sep 2015 16:03:54 +0200
-Message-ID: <mqd8u8nbnw5.fsf@c203.arch.suse.de>
-References: <55E83F66.2060300@gmail.com>
+Subject: Re: [v2 PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Thu, 03 Sep 2015 16:16:11 +0200
+Message-ID: <mqd37yvbnbo.fsf@c203.arch.suse.de>
+References: <55E83D39.4030107@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55E83F66.2060300@gmail.com> (Charles Chiou's message of "Thu, 03
-	Sep 2015 20:39:02 +0800")
+In-Reply-To: <55E83D39.4030107@gmail.com> (Charles Chiou's message of "Thu, 03
+	Sep 2015 20:29:45 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Charles Chiou <ch1102chiou@gmail.com>
 Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -16,144 +16,99 @@ List-Id: linux-scsi@vger.kernel.org
 
 Charles Chiou <ch1102chiou@gmail.com> writes:
 
-> From f442518879f8f41d103b684046d912eca13844e7 Mon Sep 17 00:00:00 200=
+> From 9d7973dfa05a7785d0eb1e9bcfb0fb6d2c493209 Mon Sep 17 00:00:00 200=
 1
 > From: Charles <charles.chiou@tw.promise.com>
-> Date: Wed, 2 Sep 2015 20:54:45 +0800
-> Subject: [PATCH 3/3] scsi:stex.c Add S3/S4 support
+> Date: Wed, 2 Sep 2015 20:41:56 +0800
+> Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
 >
-> Add S3/S4 support, add .suspend and .resume function in pci_driver.
-> In .suspend handler, driver send S3/S4 signal to the device.
+> Pegasus is a high performace hardware RAID solution designed to unlea=
+sh
+> the raw power of Thunderbolt technology.
+>
+> 1. Add code to distinct SuperTrack and Pegasus series by sub device I=
+D.
+>    It should support backward compatibility.
+>
+> 2. Change the driver version.
 >
 > V2: Remove blank lines
 >
 > Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
 > ---
->  drivers/scsi/stex.c | 59 +++++++++++++++++++++++++++++++++++++++++++=
-+++++++---
->  1 file changed, 56 insertions(+), 3 deletions(-)
+>  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+>  1 file changed, 26 insertions(+), 6 deletions(-)
 >
 > diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 4ef0c80..c96a86d 100644
+> index 98a62bc..0c93f1f 100644
 > --- a/drivers/scsi/stex.c
 > +++ b/drivers/scsi/stex.c
-> @@ -166,6 +166,13 @@ enum {
+> @@ -1,7 +1,7 @@
+>  /*
+>   * SuperTrak EX Series Storage Controller driver for Linux
+>   *
+> - *	Copyright (C) 2005-2009 Promise Technology Inc.
+> + *	Copyright (C) 2005-2015 Promise Technology Inc.
+>   *
+>   *	This program is free software; you can redistribute it and/or
+>   *	modify it under the terms of the GNU General Public License
+> @@ -37,11 +37,11 @@
+>  #include <scsi/scsi_eh.h>
 >
->  	ST_ADDITIONAL_MEM			=3D 0x200000,
->  	ST_ADDITIONAL_MEM_MIN			=3D 0x80000,
-> +	PMIC_SHUTDOWN				=3D 0x0D,
-> +	PMIC_REUMSE					=3D 0x10,
-> +	ST_IGNORED					=3D -1,
-> +	ST_S3						=3D 3,
-> +	ST_S4						=3D 4,
-> +	ST_S5						=3D 5,
-> +	ST_S6						=3D 6,
+>  #define DRV_NAME "stex"
+> -#define ST_DRIVER_VERSION "4.6.0000.4"
+> -#define ST_VER_MAJOR		4
+> -#define ST_VER_MINOR		6
+> -#define ST_OEM			0
+> -#define ST_BUILD_VER		4
+> +#define ST_DRIVER_VERSION	"5.00.0000.01"
+> +#define ST_VER_MAJOR		5
+> +#define ST_VER_MINOR		00
+> +#define ST_OEM				0000
+> +#define ST_BUILD_VER		01
+>
+>  enum {
+>  	/* MU register offset */
+> @@ -327,6 +327,7 @@ struct st_hba {
+>  	u16 rq_count;
+>  	u16 rq_size;
+>  	u16 sts_count;
+> +	u8  supports_pm;
 >  };
 >
->  struct st_sgitem {
-> @@ -1733,7 +1740,7 @@ out_disable:
->  	return err;
->  }
+>  struct st_card_info {
+> @@ -1568,6 +1569,25 @@ static int stex_probe(struct pci_dev *pdev, co=
+nst struct
+> pci_device_id *id)
 >
-> -static void stex_hba_stop(struct st_hba *hba)
-> +static void stex_hba_stop(struct st_hba *hba, int st_sleep_mic)
->  {
->  	struct req_msg *req;
->  	struct st_msg_header *msg_h;
-> @@ -1749,11 +1756,18 @@ static void stex_hba_stop(struct st_hba *hba)
->  	} else
->  		memset(req, 0, hba->rq_size);
->
-> -	if (hba->cardtype =3D=3D st_yosemite || hba->cardtype =3D=3D st_yel=
-) {
-> +	if ((hba->cardtype =3D=3D st_yosemite || hba->cardtype =3D=3D st_ye=
-l)
-> +		&& st_sleep_mic =3D=3D ST_IGNORED) {
->  		req->cdb[0] =3D MGT_CMD;
->  		req->cdb[1] =3D MGT_CMD_SIGNATURE;
->  		req->cdb[2] =3D CTLR_CONFIG_CMD;
->  		req->cdb[3] =3D CTLR_SHUTDOWN;
-> +	} else if (hba->cardtype =3D=3D st_yel && st_sleep_mic !=3D ST_IGNO=
-RED) {
-> +		req->cdb[0] =3D MGT_CMD;
-> +		req->cdb[1] =3D MGT_CMD_SIGNATURE;
-> +		req->cdb[2] =3D CTLR_CONFIG_CMD;
-> +		req->cdb[3] =3D PMIC_SHUTDOWN;
-> +		req->cdb[4] =3D st_sleep_mic;
->  	} else {
->  		req->cdb[0] =3D CONTROLLER_CMD;
->  		req->cdb[1] =3D CTLR_POWER_STATE_CHANGE;
-> @@ -1773,10 +1787,12 @@ static void stex_hba_stop(struct st_hba *hba)
->  	while (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE) {
->  		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
->  			hba->ccb[tag].req_type =3D 0;
-> +			hba->mu_status =3D MU_STATE_STOP;
->  			return;
->  		}
->  		msleep(1);
->  	}
-> +	hba->mu_status =3D MU_STATE_STOP;
->  }
->
->  static void stex_hba_free(struct st_hba *hba)
-> @@ -1816,9 +1832,44 @@ static void stex_shutdown(struct pci_dev *pdev=
-)
->  {
->  	struct st_hba *hba =3D pci_get_drvdata(pdev);
->
-> -	stex_hba_stop(hba);
-> +	if (hba->supports_pm =3D=3D 0)
-> +		stex_hba_stop(hba, ST_IGNORED);
-> +	else
-> +		stex_hba_stop(hba, ST_S5);
-> +}
-> +
-> +static int stex_choice_sleep_mic(pm_message_t state)
-> +{
-> +	switch (state.event) {
-> +	case PM_EVENT_SUSPEND:
-> +		return ST_S3;
-> +	case PM_EVENT_FREEZE:
-> +	case PM_EVENT_HIBERNATE:
-> +		return ST_S4;
+>  	hba->cardtype =3D (unsigned int) id->driver_data;
+>  	ci =3D &stex_card_info[hba->cardtype];
+> +	switch (id->subdevice) {
+> +	case 0x4221:
+> +	case 0x4222:
+> +	case 0x4223:
+> +	case 0x4224:
+> +	case 0x4225:
+> +	case 0x4226:
+> +	case 0x4227:
+> +	case 0x4261:
+> +	case 0x4262:
+> +	case 0x4263:
+> +	case 0x4264:
+> +	case 0x4265:
+> +		break;
 > +	default:
-> +		return ST_S4;
+> +		if (hba->cardtype =3D=3D st_yel)
+> +			hba->supports_pm =3D 1;
 > +	}
-> +}
 > +
-> +static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
-> +{
-> +	struct st_hba *hba =3D pci_get_drvdata(pdev);
-> +
-> +	if (hba->cardtype =3D=3D st_yel && hba->supports_pm =3D=3D 1)
-> +		stex_hba_stop(hba, stex_choice_sleep_mic(state));
-> +	else
-> +		stex_hba_stop(hba, ST_IGNORED);
-> +	return 0;
->  }
->
-> +static int stex_resume(struct pci_dev *pdev)
-> +{
-> +	struct st_hba *hba =3D pci_get_drvdata(pdev);
-> +
-> +	hba->mu_status =3D MU_STATE_STARTING;
-> +	stex_handshake(hba);
-> +	return 0;
-> +}
->  MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
->
->  static struct pci_driver stex_pci_driver =3D {
-> @@ -1827,6 +1878,8 @@ static struct pci_driver stex_pci_driver =3D {
->  	.probe		=3D stex_probe,
->  	.remove		=3D stex_remove,
->  	.shutdown	=3D stex_shutdown,
-> +	.suspend	=3D stex_suspend,
-> +	.resume		=3D stex_resume,
->  };
->
->  static int __init stex_init(void)
+>  	sts_offset =3D scratch_offset =3D (ci->rq_count+1) * ci->rq_size;
+>  	if (hba->cardtype =3D=3D st_yel)
+>  		sts_offset +=3D (ci->sts_count+1) * sizeof(u32);
 
-Looks OK from my side
+I somehow find that switch() above awkward to read, but if no-one else
+objects, who am I to do.
+
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 --=20
