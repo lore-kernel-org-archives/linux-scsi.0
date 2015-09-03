@@ -1,79 +1,73 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: [PATCH v2] scsi: introduce short_inquiry flag for broken host adapters
-Date: Thu,  3 Sep 2015 18:11:13 +0200
-Message-ID: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [Patch] scsi_ioctl: support persistent reserve commands through
+ ioctl for non-root user.
+Date: Thu, 3 Sep 2015 09:13:25 -0700
+Message-ID: <55E871A5.6020701@suse.com>
+References: <OF31114848.5C193F0C-ON48257E94.00359001-48257E94.00363255@zte.com.cn>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:44470 "EHLO
+	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932787AbbICQNl (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Thu, 3 Sep 2015 12:13:41 -0400
+In-Reply-To: <OF31114848.5C193F0C-ON48257E94.00359001-48257E94.00363255@zte.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jiang.biao2@zte.com.cn, linux-scsi@vger.kernel.org, JBottomley@odin.com
 
-Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
-SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
-least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
-INQUIRY result too short (5), using 36' messages on console. This can be
-problematic for slow consoles. Introduce short_inquiry host template flag
-to avoid printing error messages for such adapters.
+On 08/01/2015 02:51 AM, jiang.biao2@zte.com.cn wrote:
+> scsi_ioctl: support persistent reserve commands through ioctl for
+> non-root user.
+>=20
+> Scsi persistent reserve commands need to be used for non-root user in
+> many scenarios.
+> EPERM error will be returned by sg_io() when PERSISTENT_RESERVE_OUT
+> or PERSISTENT_RESERVE_IN command is sent through ioctl() for
+> non-root user.
+> Add PERSISTENT_RESERVE_OUT and PERSISTENT_RESERVE_IN into
+> blk_default_cmd_filter in blk_set_cmd_filter_defaults() to support=20
+> persistent reserve commands for non-root user.
+>=20
+> Signed-off-by: Jiang Biao <jiang.biao2@zte.com.cn>
+> Signed-off-by: Li Ping <li.ping288@zte.com.cn>
+> Reviewed-by: Liu Jianjun <liu.jianjun3@zte.com.cn>
+>=20
+> diff -urpN block/scsi_ioctl.c block_new/scsi_ioctl.c
+> --- block/scsi_ioctl.c  2015-08-01 17:07:47.000000000 +0800
+> +++ block_new/scsi_ioctl.c      2015-08-01 17:09:56.000000000 +0800
+> @@ -202,6 +202,9 @@ static void blk_set_cmd_filter_defaults(
+>         __set_bit(GPCMD_LOAD_UNLOAD, filter->write_ok);
+>         __set_bit(GPCMD_SET_STREAMING, filter->write_ok);
+>         __set_bit(GPCMD_SET_READ_AHEAD, filter->write_ok);
+> +       /* Persistent reserve command*/
+> +       __set_bit(PERSISTENT_RESERVE_IN, filter->read_ok);
+> +       __set_bit(PERSISTENT_RESERVE_OUT, filter->write_ok);
+>  }
+>=20
+>  int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm)
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
+=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
+>=20
 
-Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
----
-Changes since v1:
-- This is a successor of previously sent "scsi_scan: move 'INQUIRY result
-  too short' message to debug level" patch. Instead of moving the message
-  to debug level for all adapters introduce a special 'short_inquiry' flag
-  for host template [inspired by James Bottomley].
----
- drivers/scsi/scsi_scan.c   | 7 ++++---
- drivers/scsi/storvsc_drv.c | 1 +
- include/scsi/scsi_host.h   | 6 ++++++
- 3 files changed, 11 insertions(+), 3 deletions(-)
+I disagree that it is a good idea to give non-root users permanent
+access to the reservation commands. This can be used to coopt a disc,
+including the root disc.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f9f3f82..f1d00a0 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -701,9 +701,10 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	 * strings.
- 	 */
- 	if (sdev->inquiry_len < 36) {
--		sdev_printk(KERN_INFO, sdev,
--			    "scsi scan: INQUIRY result too short (%d),"
--			    " using 36\n", sdev->inquiry_len);
-+		if (!sdev->host->hostt->short_inquiry)
-+			sdev_printk(KERN_INFO, sdev,
-+				    "scsi scan: INQUIRY result too short (%d),"
-+				    " using 36\n", sdev->inquiry_len);
- 		sdev->inquiry_len = 36;
- 	}
- 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3c6584f..f3b4d0f 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1711,6 +1711,7 @@ static struct scsi_host_template scsi_driver = {
- 	/* Make sure we dont get a sg segment crosses a page boundary */
- 	.dma_boundary =		PAGE_SIZE-1,
- 	.no_write_same =	1,
-+	.short_inquiry =	1,
- };
- 
- enum {
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index e113c75..7b022af 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -454,6 +454,12 @@ struct scsi_host_template {
- 	unsigned no_async_abort:1;
- 
- 	/*
-+	 * True if this host adapter returns short (<36 bytes) responses to
-+	 * some INQUIRY requests.
-+	 */
-+	unsigned short_inquiry:1;
-+
-+	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
- 	unsigned int max_host_blocked;
--- 
-2.4.3
+--=20
+Lee Duncan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
