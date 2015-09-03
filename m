@@ -1,66 +1,79 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv3] Update scsi host to use ida for host number
-Date: Thu, 3 Sep 2015 09:06:41 -0700
-Message-ID: <55E87011.2030401@suse.com>
-References: <1441152208-20634-1-git-send-email-lduncan@suse.com>
- <20150902064830.GA17978@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:46013 "EHLO
-	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755579AbbICQGy (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Thu, 3 Sep 2015 12:06:54 -0400
-In-Reply-To: <20150902064830.GA17978@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: [PATCH v2] scsi: introduce short_inquiry flag for broken host adapters
+Date: Thu,  3 Sep 2015 18:11:13 +0200
+Message-ID: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, hare@suse.com, jthumshirn@suse.de
 
-On 09/01/2015 11:48 PM, Christoph Hellwig wrote:
-> On Tue, Sep 01, 2015 at 05:03:28PM -0700, Lee Duncan wrote:
->> +static int host_get_index(int *index)
->> +{
->> +	int error = -ENOMEM;
->> +
->> +	do {
->> +		if (!ida_pre_get(&host_index_ida, GFP_KERNEL))
->> +			break;
->> +		spin_lock(&host_index_lock);
->> +		error = ida_get_new(&host_index_ida, index);
->> +		spin_unlock(&host_index_lock);
->> +	} while (error == -EAGAIN);
->> +
->> +	return error;
->> +}
->> +
->> +static inline void host_put_index(int index)
->> +{
->> +	spin_lock(&host_index_lock);
->> +	ida_remove(&host_index_ida, index);
->> +	spin_unlock(&host_index_lock);
->> +}
-> 
-> I really hate how this pattern (and the equivalent for IDA) are
-> spread all over.  Any chance to have some simple_ida/simple_idr helpers
-> instead of duplicating it again an again.
-> 
-> Besides that why aren't we using and idr here and use it for host lookup
-> as well?
-> .
-> 
+Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
+SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
+least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+INQUIRY result too short (5), using 36' messages on console. This can be
+problematic for slow consoles. Introduce short_inquiry host template flag
+to avoid printing error messages for such adapters.
 
-Good question. My original goal was just to fix the host_no wrap-around
-problem, but I agree, the hosts.c module could benefit from using idr,
-making scsi_host_lookup(hostnum) much simpler, and possible faster.
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+Changes since v1:
+- This is a successor of previously sent "scsi_scan: move 'INQUIRY result
+  too short' message to debug level" patch. Instead of moving the message
+  to debug level for all adapters introduce a special 'short_inquiry' flag
+  for host template [inspired by James Bottomley].
+---
+ drivers/scsi/scsi_scan.c   | 7 ++++---
+ drivers/scsi/storvsc_drv.c | 1 +
+ include/scsi/scsi_host.h   | 6 ++++++
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-I will submit another patch.
-
-This means I won't need the sequence any longer that you wanted made
-into helper functions, though I'd still be glad to create the helper
-functions and convert some of the ida users, if you wish.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f9f3f82..f1d00a0 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -701,9 +701,10 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "scsi scan: INQUIRY result too short (%d),"
+-			    " using 36\n", sdev->inquiry_len);
++		if (!sdev->host->hostt->short_inquiry)
++			sdev_printk(KERN_INFO, sdev,
++				    "scsi scan: INQUIRY result too short (%d),"
++				    " using 36\n", sdev->inquiry_len);
+ 		sdev->inquiry_len = 36;
+ 	}
+ 
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 3c6584f..f3b4d0f 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1711,6 +1711,7 @@ static struct scsi_host_template scsi_driver = {
+ 	/* Make sure we dont get a sg segment crosses a page boundary */
+ 	.dma_boundary =		PAGE_SIZE-1,
+ 	.no_write_same =	1,
++	.short_inquiry =	1,
+ };
+ 
+ enum {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e113c75..7b022af 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -454,6 +454,12 @@ struct scsi_host_template {
+ 	unsigned no_async_abort:1;
+ 
+ 	/*
++	 * True if this host adapter returns short (<36 bytes) responses to
++	 * some INQUIRY requests.
++	 */
++	unsigned short_inquiry:1;
++
++	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
+ 	unsigned int max_host_blocked;
 -- 
-Lee Duncan
-
+2.4.3
