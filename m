@@ -1,187 +1,78 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/3] scsi:stex.c Add S3/S4 support
-Date: Thu, 03 Sep 2015 08:52:16 +0200
-Message-ID: <mqd37ywc7vj.fsf@c203.arch.suse.de>
-References: <55E7A760.1040404@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55E7A760.1040404@gmail.com> (Charles Chiou's message of "Thu, 03
-	Sep 2015 09:50:24 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] target: Attach EXTENDED_COPY local I/O descriptors to xcopy_pt_sess
+Date: Thu,  3 Sep 2015 06:58:25 +0000
+Message-ID: <1441263505-19277-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33921 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbbICHEY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2015 03:04:24 -0400
+Received: by oiev17 with SMTP id v17so20590399oie.1
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2015 00:04:23 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Alex Gorbachev <ag@iss-integration.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 
-Charles Chiou <ch1102chiou@gmail.com> writes:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> From 7d98f8c500de452277e2700a950b23bf4685ed64 Mon Sep 17 00:00:00 200=
-1
-> From: Charles <charles.chiou@tw.promise.com>
-> Date: Wed, 2 Sep 2015 20:54:45 +0800
-> Subject: [PATCH 3/3] scsi:stex.c Add S3/S4 support
->
-> Add S3/S4 support, add .suspend and .resume function in pci_driver.
-> In .suspend handler, driver send S3/S4 signal to the device.
->
-> Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
-> ---
->  drivers/scsi/stex.c | 65 +++++++++++++++++++++++++++++++++++++++++++=
-+++++++---
->  1 file changed, 62 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 6578f3d..45482d5 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -166,6 +166,13 @@ enum {
->
->  	ST_ADDITIONAL_MEM			=3D 0x200000,
->  	ST_ADDITIONAL_MEM_MIN			=3D 0x80000,
-> +	PMIC_SHUTDOWN				=3D 0x0D,
-> +	PMIC_REUMSE					=3D 0x10,
-> +	ST_IGNORED					=3D -1,
-> +	ST_S3						=3D 3,
-> +	ST_S4						=3D 4,
-> +	ST_S5						=3D 5,
-> +	ST_S6						=3D 6,
->  };
->
->  struct st_sgitem {
-> @@ -360,6 +367,8 @@ static const char console_inq_page[] =3D
->  	0x0C,0x20,0x20,0x20,0x20,0x20,0x20,0x20
->  };
->
-> +
-> +
+This patch is a >= v4.1 regression bug-fix where control CDB
+emulation logic in commit 38b57f82 now expects a se_cmd->se_sess
+pointer to exist when determining T10-PI support is to be exposed
+for initiator host ports.
 
-Same as with 1/1
+To address this bug, go ahead and add locally generated se_cmd
+descriptors for copy-offload block-copy to it's own stand-alone
+se_session nexus, while the parent EXTENDED_COPY se_cmd descriptor
+remains associated with it's originating se_cmd->se_sess nexus.
 
->  MODULE_AUTHOR("Ed Lin");
->  MODULE_DESCRIPTION("Promise Technology SuperTrak EX Controllers");
->  MODULE_LICENSE("GPL");
-> @@ -1359,6 +1368,9 @@ static void stex_reset_work(struct work_struct =
-*work)
->  	stex_do_reset(hba);
->  }
->
-> +
-> +
-> +
+Note a valid se_cmd->se_sess is also required for future support
+of WRITE_INSERT and READ_STRIP software emulation when submitting
+backend I/O to se_device that exposes T10-PI suport.
 
-Again
+Reported-by: Alex Gorbachev <ag@iss-integration.com>
+Cc: Alex Gorbachev <ag@iss-integration.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: <stable@vger.kernel.org> # v4.1+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_xcopy.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
->  static int stex_biosparam(struct scsi_device *sdev,
->  	struct block_device *bdev, sector_t capacity, int geom[])
->  {
-> @@ -1736,7 +1748,7 @@ out_disable:
->  	return err;
->  }
->
-> -static void stex_hba_stop(struct st_hba *hba)
-> +static void stex_hba_stop(struct st_hba *hba, int st_sleep_mic)
->  {
->  	struct req_msg *req;
->  	struct st_msg_header *msg_h;
-> @@ -1752,11 +1764,18 @@ static void stex_hba_stop(struct st_hba *hba)
->  	} else
->  		memset(req, 0, hba->rq_size);
->
-> -	if (hba->cardtype =3D=3D st_yosemite || hba->cardtype =3D=3D st_yel=
-) {
-> +	if ((hba->cardtype =3D=3D st_yosemite || hba->cardtype =3D=3D st_ye=
-l)
-> +		&& st_sleep_mic =3D=3D ST_IGNORED) {
->  		req->cdb[0] =3D MGT_CMD;
->  		req->cdb[1] =3D MGT_CMD_SIGNATURE;
->  		req->cdb[2] =3D CTLR_CONFIG_CMD;
->  		req->cdb[3] =3D CTLR_SHUTDOWN;
-> +	} else if (hba->cardtype =3D=3D st_yel && st_sleep_mic !=3D ST_IGNO=
-RED) {
-> +		req->cdb[0] =3D MGT_CMD;
-> +		req->cdb[1] =3D MGT_CMD_SIGNATURE;
-> +		req->cdb[2] =3D CTLR_CONFIG_CMD;
-> +		req->cdb[3] =3D PMIC_SHUTDOWN;
-> +		req->cdb[4] =3D st_sleep_mic;
->  	} else {
->  		req->cdb[0] =3D CONTROLLER_CMD;
->  		req->cdb[1] =3D CTLR_POWER_STATE_CHANGE;
-> @@ -1776,10 +1795,12 @@ static void stex_hba_stop(struct st_hba *hba)
->  	while (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE) {
->  		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
->  			hba->ccb[tag].req_type =3D 0;
-> +			hba->mu_status =3D MU_STATE_STOP;
->  			return;
->  		}
->  		msleep(1);
->  	}
-> +	hba->mu_status =3D MU_STATE_STOP;
->  }
->
->  static void stex_hba_free(struct st_hba *hba)
-> @@ -1819,9 +1840,45 @@ static void stex_shutdown(struct pci_dev *pdev=
-)
->  {
->  	struct st_hba *hba =3D pci_get_drvdata(pdev);
->
-> -	stex_hba_stop(hba);
-> +	if (hba->supports_pm =3D=3D 0)
-> +		stex_hba_stop(hba, ST_IGNORED);
-> +	else
-> +		stex_hba_stop(hba, ST_S5);
-> +}
-> +
-> +static int stex_choice_sleep_mic(pm_message_t state)
-> +{
-> +	switch (state.event) {
-> +	case PM_EVENT_SUSPEND:
-> +		return ST_S3;
-> +	case PM_EVENT_FREEZE:
-> +	case PM_EVENT_HIBERNATE:
-> +		return ST_S4;
-> +	default:
-> +		return ST_S4;
-> +	}
-> +}
-> +
-> +static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
-> +{
-> +	struct st_hba *hba =3D pci_get_drvdata(pdev);
-> +
-> +	if (hba->cardtype =3D=3D st_yel && hba->supports_pm =3D=3D 1)
-> +		stex_hba_stop(hba, stex_choice_sleep_mic(state));
-> +	else
-> +		stex_hba_stop(hba, ST_IGNORED);
-> +	return 0;
->  }
->
-> +
-> +static int stex_resume(struct pci_dev *pdev)
-> +{
-> +	struct st_hba *hba =3D pci_get_drvdata(pdev);
-> +
-> +	hba->mu_status =3D MU_STATE_STARTING;
-> +	stex_handshake(hba);
-> +	return 0;
-> +}
->  MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
->
->  static struct pci_driver stex_pci_driver =3D {
-> @@ -1830,6 +1887,8 @@ static struct pci_driver stex_pci_driver =3D {
->  	.probe		=3D stex_probe,
->  	.remove		=3D stex_remove,
->  	.shutdown	=3D stex_shutdown,
-> +	.suspend	=3D stex_suspend,
-> +	.resume		=3D stex_resume,
->  };
->
->  static int __init stex_init(void)
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 4515f52..47fe94e 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -450,6 +450,8 @@ int target_xcopy_setup_pt(void)
+ 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
+ 	INIT_LIST_HEAD(&xcopy_pt_sess.sess_list);
+ 	INIT_LIST_HEAD(&xcopy_pt_sess.sess_acl_list);
++	INIT_LIST_HEAD(&xcopy_pt_sess.sess_cmd_list);
++	spin_lock_init(&xcopy_pt_sess.sess_cmd_lock);
+ 
+ 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
+ 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
+@@ -644,7 +646,7 @@ static int target_xcopy_read_source(
+ 	pr_debug("XCOPY: Built READ_16: LBA: %llu Sectors: %u Length: %u\n",
+ 		(unsigned long long)src_lba, src_sectors, length);
+ 
+-	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, NULL, length,
++	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, &xcopy_pt_sess, length,
+ 			      DMA_FROM_DEVICE, 0, &xpt_cmd->sense_buffer[0]);
+ 	xop->src_pt_cmd = xpt_cmd;
+ 
+@@ -704,7 +706,7 @@ static int target_xcopy_write_destination(
+ 	pr_debug("XCOPY: Built WRITE_16: LBA: %llu Sectors: %u Length: %u\n",
+ 		(unsigned long long)dst_lba, dst_sectors, length);
+ 
+-	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, NULL, length,
++	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, &xcopy_pt_sess, length,
+ 			      DMA_TO_DEVICE, 0, &xpt_cmd->sense_buffer[0]);
+ 	xop->dst_pt_cmd = xpt_cmd;
+ 
+-- 
+1.7.10.4
 
---=20
-Johannes Thumshirn                                           Storage
-jthumshirn@suse.de                                 +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
