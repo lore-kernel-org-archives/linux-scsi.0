@@ -1,78 +1,100 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] target: Attach EXTENDED_COPY local I/O descriptors to xcopy_pt_sess
-Date: Thu,  3 Sep 2015 06:58:25 +0000
-Message-ID: <1441263505-19277-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:33921 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbbICHEY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2015 03:04:24 -0400
-Received: by oiev17 with SMTP id v17so20590399oie.1
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2015 00:04:23 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [v2 PATCH 1/3] scsi:stex.c Support to Pegasus series.
+Date: Thu, 03 Sep 2015 20:29:45 +0800
+Message-ID: <55E83D39.4030107@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>, Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>
+Cc: grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Alex Gorbachev <ag@iss-integration.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+ From 9d7973dfa05a7785d0eb1e9bcfb0fb6d2c493209 Mon Sep 17 00:00:00 2001
+From: Charles <charles.chiou@tw.promise.com>
+Date: Wed, 2 Sep 2015 20:41:56 +0800
+Subject: [PATCH 1/3] scsi:stex.c Support to Pegasus series.
 
-This patch is a >= v4.1 regression bug-fix where control CDB
-emulation logic in commit 38b57f82 now expects a se_cmd->se_sess
-pointer to exist when determining T10-PI support is to be exposed
-for initiator host ports.
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
 
-To address this bug, go ahead and add locally generated se_cmd
-descriptors for copy-offload block-copy to it's own stand-alone
-se_session nexus, while the parent EXTENDED_COPY se_cmd descriptor
-remains associated with it's originating se_cmd->se_sess nexus.
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+    It should support backward compatibility.
 
-Note a valid se_cmd->se_sess is also required for future support
-of WRITE_INSERT and READ_STRIP software emulation when submitting
-backend I/O to se_device that exposes T10-PI suport.
+2. Change the driver version.
 
-Reported-by: Alex Gorbachev <ag@iss-integration.com>
-Cc: Alex Gorbachev <ag@iss-integration.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: <stable@vger.kernel.org> # v4.1+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+V2: Remove blank lines
+
+Signed-off-by: Charles Chiou <charles.chiou@tw.promise.com>
 ---
- drivers/target/target_core_xcopy.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+  1 file changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 4515f52..47fe94e 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -450,6 +450,8 @@ int target_xcopy_setup_pt(void)
- 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
- 	INIT_LIST_HEAD(&xcopy_pt_sess.sess_list);
- 	INIT_LIST_HEAD(&xcopy_pt_sess.sess_acl_list);
-+	INIT_LIST_HEAD(&xcopy_pt_sess.sess_cmd_list);
-+	spin_lock_init(&xcopy_pt_sess.sess_cmd_lock);
- 
- 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
- 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
-@@ -644,7 +646,7 @@ static int target_xcopy_read_source(
- 	pr_debug("XCOPY: Built READ_16: LBA: %llu Sectors: %u Length: %u\n",
- 		(unsigned long long)src_lba, src_sectors, length);
- 
--	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, NULL, length,
-+	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, &xcopy_pt_sess, length,
- 			      DMA_FROM_DEVICE, 0, &xpt_cmd->sense_buffer[0]);
- 	xop->src_pt_cmd = xpt_cmd;
- 
-@@ -704,7 +706,7 @@ static int target_xcopy_write_destination(
- 	pr_debug("XCOPY: Built WRITE_16: LBA: %llu Sectors: %u Length: %u\n",
- 		(unsigned long long)dst_lba, dst_sectors, length);
- 
--	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, NULL, length,
-+	transport_init_se_cmd(se_cmd, &xcopy_pt_tfo, &xcopy_pt_sess, length,
- 			      DMA_TO_DEVICE, 0, &xpt_cmd->sense_buffer[0]);
- 	xop->dst_pt_cmd = xpt_cmd;
- 
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 98a62bc..0c93f1f 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+  /*
+   * SuperTrak EX Series Storage Controller driver for Linux
+   *
+- *	Copyright (C) 2005-2009 Promise Technology Inc.
++ *	Copyright (C) 2005-2015 Promise Technology Inc.
+   *
+   *	This program is free software; you can redistribute it and/or
+   *	modify it under the terms of the GNU General Public License
+@@ -37,11 +37,11 @@
+  #include <scsi/scsi_eh.h>
+
+  #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION	"5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM				0000
++#define ST_BUILD_VER		01
+
+  enum {
+  	/* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+  	u16 rq_count;
+  	u16 rq_size;
+  	u16 sts_count;
++	u8  supports_pm;
+  };
+
+  struct st_card_info {
+@@ -1568,6 +1569,25 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+
+  	hba->cardtype = (unsigned int) id->driver_data;
+  	ci = &stex_card_info[hba->cardtype];
++	switch (id->subdevice) {
++	case 0x4221:
++	case 0x4222:
++	case 0x4223:
++	case 0x4224:
++	case 0x4225:
++	case 0x4226:
++	case 0x4227:
++	case 0x4261:
++	case 0x4262:
++	case 0x4263:
++	case 0x4264:
++	case 0x4265:
++		break;
++	default:
++		if (hba->cardtype == st_yel)
++			hba->supports_pm = 1;
++	}
++
+  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+  	if (hba->cardtype == st_yel)
+  		sts_offset += (ci->sts_count+1) * sizeof(u32);
 -- 
-1.7.10.4
-
+1.9.1
