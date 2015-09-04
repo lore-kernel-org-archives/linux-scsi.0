@@ -1,74 +1,60 @@
 From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: RE: [PATCH] csiostor:Fix locking issues in the function
- csio_scsim_cleanup_io_lnode
-Date: Fri, 4 Sep 2015 13:11:38 +0000
-Message-ID: <24C222ADD7729F4FB5113B41FF0028A193C1505F@nice.asicdesigners.com>
-References: <1441215365-27112-1-git-send-email-xerofoify@gmail.com>
- <525DB349B3FB5444AE057A887CB2A8D893E417F9@nice.asicdesigners.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D893E417F9@nice.asicdesigners.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>, Nicholas Krause <xerofoify@gmail.com>, "JBottomley@odin.com" <JBottomley@odin.com>
-Cc: "hare@suse.de" <hare@suse.de>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "davem@davemloft.net" <davem@davemloft.net>, Hariprasad S <hariprasad@chelsio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/1] csiostor:Don't ignore the newly alloced lnode
+Date: Fri,  4 Sep 2015 19:29:45 +0530
+Message-ID: <1441375185-9630-1-git-send-email-praveenm@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:22058 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759243AbbIDN76 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2015 09:59:58 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: praveenm@chelsio.com, varun@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com
 
-csio_scsim_cleanup_io_lnode always called with spin_lock_irq held.
-Please refer:
-csio_attr.c:624:        csio_scsim_cleanup_io_lnode(csio_hw_to_scsim(hw), ln);
-csio_attr.c:649:                csio_scsim_cleanup_io_lnode(csio_hw_to_scsim(hw), ln);
+In case of  multiple FCFs, the newly allocated lnode by
+csio_lnode_alloc() is completely ignored during link up event. Fix it.
+This patch also fixes mbox memory reference after free.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Anish Bhatt
-Sent: Thursday, September 03, 2015 7:07 AM
-To: Nicholas Krause; JBottomley@odin.com
-Cc: hare@suse.de; michaelc@cs.wisc.edu; davem@davemloft.net; Hariprasad S; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: RE: [PATCH] csiostor:Fix locking issues in the function csio_scsim_cleanup_io_lnode
+Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
+---
+ drivers/scsi/csiostor/csio_hw.c    | 2 +-
+ drivers/scsi/csiostor/csio_lnode.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> -----Original Message-----
-> From: Nicholas Krause [mailto:xerofoify@gmail.com]
-> Sent: Wednesday, September 2, 2015 10:36 AM
-> To: JBottomley@odin.com
-> Cc: hare@suse.de; michaelc@cs.wisc.edu; davem@davemloft.net; Anish 
-> Bhatt; Hariprasad S; linux-scsi@vger.kernel.org; linux- 
-> kernel@vger.kernel.org
-> Subject: [PATCH] csiostor:Fix locking issues in the function 
-> csio_scsim_cleanup_io_lnode
-> 
-> This fixes locking issues in the function csio_scsim_cleanup_io_lnode 
-> by locking around the call to the function csio_csci_gather_active_ios 
-> with the function pair spin_lock_irq/spin_unlock_irq as any function 
-> calling this particular function must do in order to avoid concurrent 
-> threads of execution on the passed structure pointer of type csio_hw 
-> as this structure pointer can be shared across mutliple threads in the kernel.
-> 
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->  drivers/scsi/csiostor/csio_scsi.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c 
-> b/drivers/scsi/csiostor/csio_scsi.c
-> index 2c4562d..c318855 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-> @@ -1327,7 +1327,9 @@ csio_scsim_cleanup_io_lnode(struct csio_scsim 
-> *scm, struct csio_lnode *ln)
->  	sld.level = CSIO_LEV_LNODE;
->  	sld.lnode = ln;
->  	INIT_LIST_HEAD(&ln->cmpl_q);
-> +	spin_lock_irq(&hw->lock);
->  	csio_scsi_gather_active_ios(scm, &sld, &ln->cmpl_q);
-> +	spin_unlock_irq(&hw->lock);
-> 
->  	/* No I/Os pending on this lnode  */
->  	if (list_empty(&ln->cmpl_q))
-> --
-> 2.1.4
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 622bdab..d920267 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -1769,7 +1769,6 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
+ 		goto bye;
+ 	}
+ 
+-	mempool_free(mbp, hw->mb_mempool);
+ 	if (finicsum != cfcsum) {
+ 		csio_warn(hw,
+ 		      "Config File checksum mismatch: csum=%#x, computed=%#x\n",
+@@ -1805,6 +1804,7 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
+ 	csio_info(hw, "Successfully configure using Firmware "
+ 		  "Configuration File %s, version %#x, computed checksum %#x\n",
+ 		  config_name, finiver, cfcsum);
++	mempool_free(mbp, hw->mb_mempool);
+ 	return 0;
+ 
+ 	/*
+diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+index c00b2ff..3b02188 100644
+--- a/drivers/scsi/csiostor/csio_lnode.c
++++ b/drivers/scsi/csiostor/csio_lnode.c
+@@ -873,7 +873,7 @@ csio_handle_link_up(struct csio_hw *hw, uint8_t portid, uint32_t fcfi,
+ 		if (ln->vnp_flowid != CSIO_INVALID_IDX) {
+ 			/* New VN-Port */
+ 			spin_unlock_irq(&hw->lock);
+-			csio_lnode_alloc(hw);
++			ln = csio_lnode_alloc(hw);
+ 			spin_lock_irq(&hw->lock);
+ 			if (!ln) {
+ 				csio_err(hw,
+-- 
+2.0.2
 
-Acked-By:  Anish Bhatt <anish@chelsio.com>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
