@@ -1,23 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 10/10] megaraid_sas : Version upgrade
-Date: Thu, 03 Sep 2015 23:35:38 -0400
-Message-ID: <yq1h9na97qt.fsf@sermon.lab.mkp.net>
-References: <201508311159.t7VBxow6031460@palmhbs0.lsi.com>
+Subject: Re: [PATCH 01/23] scsi_dh_alua: Disable ALUA handling for non-disk devices
+Date: Thu, 03 Sep 2015 23:36:52 -0400
+Message-ID: <yq1d1xy97or.fsf@sermon.lab.mkp.net>
+References: <1440679281-13234-1-git-send-email-hare@suse.de>
+	<1440679281-13234-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19787 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbbIDDgL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2015 23:36:11 -0400
-In-Reply-To: <201508311159.t7VBxow6031460@palmhbs0.lsi.com> (sumit saxena's
-	message of "Mon, 31 Aug 2015 17:24:21 +0530")
+Received: from aserp1040.oracle.com ([141.146.126.69]:22240 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbbIDDhD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2015 23:37:03 -0400
+In-Reply-To: <1440679281-13234-2-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Thu, 27 Aug 2015 14:40:59 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sumit.saxena@avagotech.com
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com, uday.lingala@avagotech.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
->>>>> "Sumit" == sumit saxena <sumit.saxena@avagotech.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+
+Hannes> Non-disk devices might support ALUA, but the firmware
+Hannes> implementation is untested and frequently broken.  As we're
+Hannes> don't actually need it disable ALUA support for non-disk device
+Hannes> for now.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
