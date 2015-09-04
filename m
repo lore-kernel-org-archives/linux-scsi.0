@@ -1,60 +1,40 @@
-From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: [PATCH 1/1] csiostor:Don't ignore the newly alloced lnode
-Date: Fri,  4 Sep 2015 19:29:45 +0530
-Message-ID: <1441375185-9630-1-git-send-email-praveenm@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:22058 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1759243AbbIDN76 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2015 09:59:58 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH] scsi: sim710: fix build warning
+Date: Fri,  4 Sep 2015 19:40:29 +0530
+Message-ID: <1441375829-6061-1-git-send-email-sudipm.mukherjee@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: praveenm@chelsio.com, varun@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com
 
-In case of  multiple FCFs, the newly allocated lnode by
-csio_lnode_alloc() is completely ignored during link up event. Fix it.
-This patch also fixes mbox memory reference after free.
+We were getting build warning about:
+ "Section mismatch in reference from the variable sim710_eisa_driver to
+ the function .init.text:sim710_eisa_probe()
+ The variable sim710_eisa_driver references the function __init
+ sim710_eisa_probe()"
 
-Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
+sim710_eisa_probe() was having __init but that was being referenced from
+sim710_eisa_driver.
+
+Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
 ---
- drivers/scsi/csiostor/csio_hw.c    | 2 +-
- drivers/scsi/csiostor/csio_lnode.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sim710.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 622bdab..d920267 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -1769,7 +1769,6 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
- 		goto bye;
- 	}
+diff --git a/drivers/scsi/sim710.c b/drivers/scsi/sim710.c
+index 3b3b56f..82ed998 100644
+--- a/drivers/scsi/sim710.c
++++ b/drivers/scsi/sim710.c
+@@ -176,8 +176,7 @@ static struct eisa_device_id sim710_eisa_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(eisa, sim710_eisa_ids);
  
--	mempool_free(mbp, hw->mb_mempool);
- 	if (finicsum != cfcsum) {
- 		csio_warn(hw,
- 		      "Config File checksum mismatch: csum=%#x, computed=%#x\n",
-@@ -1805,6 +1804,7 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
- 	csio_info(hw, "Successfully configure using Firmware "
- 		  "Configuration File %s, version %#x, computed checksum %#x\n",
- 		  config_name, finiver, cfcsum);
-+	mempool_free(mbp, hw->mb_mempool);
- 	return 0;
- 
- 	/*
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
-index c00b2ff..3b02188 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -873,7 +873,7 @@ csio_handle_link_up(struct csio_hw *hw, uint8_t portid, uint32_t fcfi,
- 		if (ln->vnp_flowid != CSIO_INVALID_IDX) {
- 			/* New VN-Port */
- 			spin_unlock_irq(&hw->lock);
--			csio_lnode_alloc(hw);
-+			ln = csio_lnode_alloc(hw);
- 			spin_lock_irq(&hw->lock);
- 			if (!ln) {
- 				csio_err(hw,
+-static __init int
+-sim710_eisa_probe(struct device *dev)
++static int sim710_eisa_probe(struct device *dev)
+ {
+ 	struct eisa_device *edev = to_eisa_device(dev);
+ 	unsigned long io_addr = edev->base_addr;
 -- 
-2.0.2
-
+1.9.1
