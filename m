@@ -1,55 +1,42 @@
-From: Unknown <unknown@unknown.invalid>
-Subject: (unknown)
-Date: Sun, 6 Sep 2015 00:28:06 +0530
-Message-ID: <KL1PR04MB1125ADB4D0F3BA203562F5E0B8560@KL1PR04MB1125.apcprd04.prod.outlook.com>
-Reply-To: <montageglobalpvtltd@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Lee Duncan <lduncan@suse.com>
+Subject: [PATCH 0/1] Update scsi hosts to use idr for host number mgmt
+Date: Sat,  5 Sep 2015 13:44:52 -0700
+Message-ID: <cover.1441412268.git.lduncan@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sg2apc01hn0238.outbound.protection.outlook.com ([104.47.125.238]:28608
-	"EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753431AbbIES6j convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2015 14:58:39 -0400
-Content-Description: Mail message body
-Subject: 
-From: <>
+Received: from mx2.suse.de ([195.135.220.15]:35957 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751359AbbIEUpC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Sep 2015 16:45:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com, Lee Duncan <lduncan@suse.com>
 
- We offer both personal and business loan to any interested=20
+This is an updated version of a patch I submitted a few days ago.
 
-individual or company who will be able to pay back the loan when=20
+The previous versions of this patch updated the scsi hosts module
+to use the ida helper routines to allocate host numbers, instead
+of using a simple integer.
 
-due for repayment. should Fill and return the application=20
+Based on a suggestion by Christoph Hellwig, I decided to use the
+idr helper routines instead of the ida set, since the idr functions
+can also associate a pointer with an index.
 
-details below to my e-mail at ( montageglobalpvtltd@gmail.com ).
+This patch uses idr to manage the host number index as well
+as to simplify looking up a host based on that index.
 
-APPLICATION DETAILS
+No helper routines were supplied/needed since the users
+of these APIs do not seem to have uniform calling sequences.
 
-1) FULL NAMES:
-2) CONTACT ADDRESS:
-3) COUNTRY:
-4) PHONE NUMBER:
-5) SEX:
-6) AGE:
-7) AMOUNT NEEDED AS LOAN:
-8) LOAN DURATION:
-9) OCCUPATION:
-10)MONTHLY INCOME:
-11)PURPOSE OF LOAN:
+A separate patch sequence follows which will add helper routines
+for the ida index functions.
 
+Lee Duncan (1):
+  Update scsi hosts to use idr for host number mgmt
 
-Warm regard.
-William Allen.
-Phone: +91-7838915074
-(Chairman, Montage Global Pvt Ltd.)
+ drivers/scsi/hosts.c | 59 +++++++++++++++++++++++++---------------------------
+ 1 file changed, 28 insertions(+), 31 deletions(-)
 
-=A9 2015 Montage Global Pvt Ltd.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+2.1.4
+
