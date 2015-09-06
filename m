@@ -1,74 +1,45 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 1/1] Update scsi hosts to use idr for host number mgmt
-Date: Sun, 6 Sep 2015 10:34:55 +0300
-Message-ID: <55EBEC9F.7020600@dev.mellanox.co.il>
-References: <cover.1441412268.git.lduncan@suse.com>
- <05a1b95993cbb2b0ce9be8e088203c23f0e49107.1441412269.git.lduncan@suse.com>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: eata fails to load on post 4.2 kernels
+Date: Sun, 06 Sep 2015 18:34:31 +0930
+Message-ID: <55EC019F.4010209@internode.on.net>
+References: <v03tbc-ufe.ln1@ppp14-2-48-242.lns21.adl2.internode.on.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:33803 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888AbbIFHen (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2015 03:34:43 -0400
-Received: by wicfx3 with SMTP id fx3so58391412wic.1
-        for <linux-scsi@vger.kernel.org>; Sun, 06 Sep 2015 00:34:42 -0700 (PDT)
-In-Reply-To: <05a1b95993cbb2b0ce9be8e088203c23f0e49107.1441412269.git.lduncan@suse.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:20574 "EHLO
+	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751096AbbIFJEl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2015 05:04:41 -0400
+In-Reply-To: <v03tbc-ufe.ln1@ppp14-2-48-242.lns21.adl2.internode.on.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com
+To: linux-scsi@vger.kernel.org
 
-On 9/5/2015 11:44 PM, Lee Duncan wrote:
-> Each Scsi_host instance gets a host number starting
-> at 0, but this was implemented with an atomic integer,
-> and rollover wasn't considered. Another problem with
-> this design is that scsi host numbers used by iscsi
-> are never reused, thereby making rollover more likely.
-> This patch converts Scsi_host instances to use idr
-> to manage their instance numbers and to simplify
-> instance number to pointer lookups.
->
-> This also means that host instance numbers will be
-> reused, when available.
->
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->   drivers/scsi/hosts.c | 59 +++++++++++++++++++++++++---------------------------
->   1 file changed, 28 insertions(+), 31 deletions(-)
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 8bb173e01084..1127a50e5942 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -33,7 +33,7 @@
->   #include <linux/transport_class.h>
->   #include <linux/platform_device.h>
->   #include <linux/pm_runtime.h>
-> -
-> +#include <linux/idr.h>
->   #include <scsi/scsi_device.h>
->   #include <scsi/scsi_host.h>
->   #include <scsi/scsi_transport.h>
-> @@ -41,8 +41,8 @@
->   #include "scsi_priv.h"
->   #include "scsi_logging.h"
->
-> -
-> -static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
-> +static DEFINE_SPINLOCK(host_index_lock);
-> +static DEFINE_IDR(host_index_idr);
->
->
->   static void scsi_host_cls_release(struct device *dev)
-> @@ -337,6 +337,10 @@ static void scsi_host_dev_release(struct device *dev)
->
->   	kfree(shost->shost_data);
->
-> +	spin_lock(&host_index_lock);
-> +	idr_remove(&host_index_idr, shost->host_no);
-> +	spin_unlock(&host_index_lock);
-> +
+Arthur Marsh wrote on 06/09/15 15:58:
+> Hi, I'm seeing the following on post 4.2 kernels, am currently bisecting
+> to find where it started:
 
-Did you change your mind on having host_[get|put]_idx() helpers?
+an error message suggested trying setting irqpoll on the kernel command 
+line, which worked:
+
+[   85.230148] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
+[   85.255929] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n, 
+ip:n, ep:n, pp:y.
+[   85.282472] EATA0: 2.0C, PCI 0xd890, IRQ 10, BMST, SG 122, MB 64.
+[   85.308281] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
+[   85.333237] EATA0: SCSI channel 0 enabled, host target ID 7.
+[   85.358097] scsi host3: EATA/DMA 2.0x rev. 8.10.00
+[   86.950246] scsi 3:0:6:0: Direct-Access     IBM      DCAS-34330W 
+  S65A PQ: 0 ANSI: 2
+[   86.975531] scsi 3:0:6:0: cmds/lun 16, sorted, simple tags.
+[   89.075921] sd 3:0:6:0: Attached scsi generic sg4 type 0
+[   89.101628] sd 3:0:6:0: [sdd] 8466688 512-byte logical blocks: (4.33 
+GB/4.03 GiB)
+[   89.166331] sd 3:0:6:0: [sdd] Write Protect is off
+[   89.192023] sd 3:0:6:0: [sdd] Mode Sense: b3 00 00 08
+[   89.209400] sd 3:0:6:0: [sdd] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
+[   89.312977]  sdd: sdd1 sdd2 < sdd5 >
+[   89.402386] sd 3:0:6:0: [sdd] Attached SCSI disk
+
