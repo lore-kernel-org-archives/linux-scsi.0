@@ -1,13 +1,13 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 1/6] Add ida helper routines
-Date: Sun,  6 Sep 2015 10:59:29 -0700
-Message-ID: <f79198e4da3db4a3dc2b602f71dfc05c3cef956c.1441416572.git.lduncan@suse.com>
+Subject: [PATCH 5/6] Update nvme-core driver to use new ida helper functions
+Date: Sun,  6 Sep 2015 10:59:33 -0700
+Message-ID: <90505dd4055db214efa70ad36b78d0c4b4d500ba.1441416572.git.lduncan@suse.com>
 References: <cover.1441416571.git.lduncan@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46817 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46822 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753223AbbIFR7p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Sep 2015 13:59:45 -0400
+	id S1753218AbbIFR7t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Sep 2015 13:59:49 -0400
 In-Reply-To: <cover.1441416571.git.lduncan@suse.com>
 In-Reply-To: <cover.1441416571.git.lduncan@suse.com>
 References: <cover.1441416571.git.lduncan@suse.com>
@@ -16,75 +16,46 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com, Lee Duncan <lduncan@suse.com>
 
-Clients of the ida API routinely follow the
-same steps to allocate and ida index, as well
-as to free said index. These helper routines
-should make it a little easier to use these
-APIs.
+This simplifies the calling sequence to
+acquire and to release an ida-managed index.
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- include/linux/idr.h | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ drivers/block/nvme-core.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/idr.h b/include/linux/idr.h
-index 013fd9bc4cb6..5a9526dc6298 100644
---- a/include/linux/idr.h
-+++ b/include/linux/idr.h
-@@ -16,6 +16,8 @@
- #include <linux/bitops.h>
- #include <linux/init.h>
- #include <linux/rcupdate.h>
-+#include <linux/spinlock.h>
-+#include <linux/gfp.h>
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index d1d6141920d3..ab13833d4fde 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -2715,15 +2715,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
+ {
+ 	int instance, error;
  
- /*
-  * We want shallower trees and thus more bits covered at each layer.  8
-@@ -183,4 +185,44 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
+-	do {
+-		if (!ida_pre_get(&nvme_instance_ida, GFP_KERNEL))
+-			return -ENODEV;
+-
+-		spin_lock(&dev_list_lock);
+-		error = ida_get_new(&nvme_instance_ida, &instance);
+-		spin_unlock(&dev_list_lock);
+-	} while (error == -EAGAIN);
+-
++	error = ida_get_index(&nvme_instance_ida, &dev_list_lock, &instance);
+ 	if (error)
+ 		return -ENODEV;
  
- void __init idr_init_cache(void);
+@@ -2733,9 +2725,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
  
-+/**
-+ * ida_get_index - allocate a ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @p_id	pointer to allocated index value
-+ *
-+ * A helper function for safely allocating an index value (id),
-+ * returning a negative errno value on failure, else 0.
-+ */
-+static inline int ida_get_index(struct ida *ida, spinlock_t *lock, int *p_id)
-+{
-+	int error = -ENOMEM;
-+
-+	do {
-+		if (!ida_pre_get(ida, GFP_KERNEL))
-+			break;
-+		spin_lock(lock);
-+		error = ida_get_new(ida, p_id);
-+		spin_unlock(lock);
-+	} while (error == -EAGAIN);
-+
-+	return error;
-+}
-+
-+/**
-+ * ida_put_index - free an allocated ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @id		the value of the allocated index
-+ *
-+ * A helper function that goes with @ida_get_index, which safely
-+ * frees a previously-allocated index value.
-+ */
-+static inline void ida_put_index(struct ida *ida, spinlock_t *lock, int id)
-+{
-+	spin_lock(lock);
-+	ida_remove(ida, id);
-+	spin_unlock(lock);
-+}
-+
- #endif /* __IDR_H__ */
+ static void nvme_release_instance(struct nvme_dev *dev)
+ {
+-	spin_lock(&dev_list_lock);
+-	ida_remove(&nvme_instance_ida, dev->instance);
+-	spin_unlock(&dev_list_lock);
++	ida_put_index(&nvme_instance_ida, &dev_list_lock, dev->instance);
+ }
+ 
+ static void nvme_free_namespaces(struct nvme_dev *dev)
 -- 
 2.1.4
 
