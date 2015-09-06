@@ -1,17 +1,17 @@
 From: iSayor <iSayor@iSayor.com>
 Subject: usually 3000 customers/Where 100,000+ customers worldwide?
-Date: Sun, 06 Sep 2015 05:27:41 +0800
-Message-ID: <01d0e821$Blat.v3.2.4$b226f90f$586c4e23@localhost>
+Date: Sun, 06 Sep 2015 08:25:29 +0800
+Message-ID: <01d0e83a$Blat.v3.2.4$88df0a26$d7c6dd7@localhost>
 Reply-To: iSayor <iSayor@163.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 246.117.212.118.adsl-pool.jx.chinaunicom.com ([118.212.117.246]:10050
-	"EHLO iSayor.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753357AbbIEV1s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2015 17:27:48 -0400
-Received: from andy.iSayor.com (127.0.0.1) by iSayor.com for <linux-scsi@vger.kernel.org>; Sun, 6 Sep 2015 05:27:41 +0800 (envelope-from <iSayor@iSayor.com>)
+Received: from [118.212.117.246] ([118.212.117.246]:29369 "EHLO iSayor.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751044AbbIFAZo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Sep 2015 20:25:44 -0400
+Received: from andy.iSayor.com (127.0.0.1) by iSayor.com for <linux-scsi@vger.kernel.org>; Sun, 6 Sep 2015 08:25:29 +0800 (envelope-from <iSayor@iSayor.com>)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
