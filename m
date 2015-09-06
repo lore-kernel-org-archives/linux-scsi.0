@@ -1,39 +1,75 @@
-From: iSayor <iSayor@iSayor.com>
-Subject: usually 3000 customers/Where 100,000+ customers worldwide?
-Date: Sun, 06 Sep 2015 16:59:49 -0700
-Message-ID: <01d0e900$Blat.v3.2.4$1d649104$110505507@localhost>
-Reply-To: iSayor <iSayor@163.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Lee Duncan <lduncan@suse.com>
+Subject: [PATCH 3/6] Update soc driver to use new ida helper functions
+Date: Sun,  6 Sep 2015 10:59:31 -0700
+Message-ID: <145dc6d9918fe55a50afd10e22b336a041e8f692.1441416572.git.lduncan@suse.com>
+References: <cover.1441416571.git.lduncan@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [106.6.186.155] ([106.6.186.155]:1289 "EHLO iSayor.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752497AbbIFQ5D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Sep 2015 12:57:03 -0400
-Received: from sun (127.0.0.1) by iSayor.com for <linux-scsi@vger.kernel.org>; Sun, 6 Sep 2015 16:59:49 -0700 (envelope-from <iSayor@iSayor.com>)
+Received: from mx2.suse.de ([195.135.220.15]:46813 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233AbbIFR7p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Sep 2015 13:59:45 -0400
+In-Reply-To: <cover.1441416571.git.lduncan@suse.com>
+In-Reply-To: <cover.1441416571.git.lduncan@suse.com>
+References: <cover.1441416571.git.lduncan@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com, Lee Duncan <lduncan@suse.com>
 
-Hi
-=C2=A0=C2=A0Are you still develop foreign customers with alibaba, exhib=
-ition?
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0You out of!!!
-=C2=A0 Are you looking other channel beside exhibition/B2B when you fee=
-l difficult to find foreign customers?
-=C2=A0 Industry hundreds of thousands of customers worldwide, usually w=
-e can only contact three thousand, do you want to rest also developed?
-=C2=A0 Guangdong General Chamber of Commerce recommended the initiative=
- customer develop first brand, nearly ten thousand companies are benefi=
-ting.
-  the first benefit with first use, nearly twenty thousand companies le=
-ad you!
-  You can not use, but not without understanding.
-=C2=A0 Add QQ2652697913/Skype:iSayor let's show you the initiative cust=
-omer develop means.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This simplifies the calling sequence to
+acquire and to release an ida-managed index.
+
+Note that the ida_destroy() calls here previously
+had no locking, so this may close a race condition
+when errors occur or when removing a soc.
+
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+---
+ drivers/base/soc.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/base/soc.c b/drivers/base/soc.c
+index 39fca01c8fa1..7b632f086524 100644
+--- a/drivers/base/soc.c
++++ b/drivers/base/soc.c
+@@ -122,18 +122,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
+ 	}
+ 
+ 	/* Fetch a unique (reclaimable) SOC ID. */
+-	do {
+-		if (!ida_pre_get(&soc_ida, GFP_KERNEL)) {
+-			ret = -ENOMEM;
+-			goto out2;
+-		}
+-
+-		spin_lock(&soc_lock);
+-		ret = ida_get_new(&soc_ida, &soc_dev->soc_dev_num);
+-		spin_unlock(&soc_lock);
+-
+-	} while (ret == -EAGAIN);
+-
++	ret = ida_get_index(&soc_ida, &soc_lock, &soc_dev->soc_dev_num);
+ 	if (ret)
+ 		goto out2;
+ 
+@@ -151,7 +140,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
+ 	return soc_dev;
+ 
+ out3:
+-	ida_remove(&soc_ida, soc_dev->soc_dev_num);
++	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
+ out2:
+ 	kfree(soc_dev);
+ out1:
+@@ -161,7 +150,7 @@ out1:
+ /* Ensure soc_dev->attr is freed prior to calling soc_device_unregister. */
+ void soc_device_unregister(struct soc_device *soc_dev)
+ {
+-	ida_remove(&soc_ida, soc_dev->soc_dev_num);
++	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
+ 
+ 	device_unregister(&soc_dev->dev);
+ }
+-- 
+2.1.4
+
