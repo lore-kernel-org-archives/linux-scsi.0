@@ -1,85 +1,94 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 3/6] Update soc driver to use new ida helper functions
-Date: Tue, 8 Sep 2015 09:01:57 -0700
-Message-ID: <55EF0675.7060601@suse.com>
-References: <cover.1441416571.git.lduncan@suse.com>
- <145dc6d9918fe55a50afd10e22b336a041e8f692.1441416572.git.lduncan@suse.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
+ managed by non-PCI drivers
+Date: Tue, 8 Sep 2015 11:27:35 -0500
+Message-ID: <20150908162735.GK829@google.com>
+References: <55EE8106.6060100@internode.on.net>
+ <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:46214 "EHLO
-	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753551AbbIHQCF (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Tue, 8 Sep 2015 12:02:05 -0400
-In-Reply-To: <145dc6d9918fe55a50afd10e22b336a041e8f692.1441416572.git.lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Arthur Marsh <arthur.marsh@internode.on.net>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com
 
-Oops. I see the subject is wrong on this patch.
+Hi Jiang,
 
-I will wait for comments (if any) then re-submit the sequence.
+I object to subject lines like "Correctly do such and such."  Nobody
+writes code to do things *incorrectly*, so the word "correctly" takes
+up space without contributing meaning.  In this case, it's at least
+debatable whether this is even the "correct" approach; see below.
 
-On 09/06/2015 10:59 AM, Lee Duncan wrote:
-> This simplifies the calling sequence to
-> acquire and to release an ida-managed index.
+On Tue, Sep 08, 2015 at 03:26:29PM +0800, Jiang Liu wrote:
+> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+> for PCI devices on x86 platforms. Instead of allocating PCI legacy
+> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+> will be called by pci_device_probe() to allocate PCI legacy IRQs
+> when binding PCI drivers to PCI devices.
 > 
-> Note that the ida_destroy() calls here previously
-> had no locking, so this may close a race condition
-> when errors occur or when removing a soc.
+> But some device drivers, such as eata, directly access PCI devices
+> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
+> won't be called for those PCI devices and wrong IRQ number may be
+> used to manage the PCI device.
+
+I'm not sure this is wise.  
+
+We normally call pcibios_alloc_irq() from pci_device_probe(), just
+before we call the driver's .probe() method.
+
+The eata driver does not use pci_register_driver(), so there is no
+.probe() method (also no .remove(), .suspend(), etc.)  But eata *does*
+use pci_enable_device() and other PCI interfaces.  So this patch adds
+code in the x86 pci_enable_device() path for this case.
+
+AFAICT, there's no real reason why eata doesn't register a PCI driver;
+it's just a case of legacy code where nobody has been motivated to
+update it.  I'm not in favor of catering to code like that because
+then we have random special cases like this that clutter up the core
+code.
+
+I don't think we should necessarily expect the PCI core to support
+calls to PCI interfaces when it hasn't had a chance to initialize
+itself via driver registration.
+
+> So detect such a case in pcibios_enable_device() by checking
+> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
+> legacy IRQs.
 > 
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
->  drivers/base/soc.c | 17 +++--------------
->  1 file changed, 3 insertions(+), 14 deletions(-)
+>  arch/x86/pci/common.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> diff --git a/drivers/base/soc.c b/drivers/base/soc.c
-> index 39fca01c8fa1..7b632f086524 100644
-> --- a/drivers/base/soc.c
-> +++ b/drivers/base/soc.c
-> @@ -122,18 +122,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
->  	}
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 09d3afc0a181..60b237783582 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
 >  
->  	/* Fetch a unique (reclaimable) SOC ID. */
-> -	do {
-> -		if (!ida_pre_get(&soc_ida, GFP_KERNEL)) {
-> -			ret = -ENOMEM;
-> -			goto out2;
-> -		}
-> -
-> -		spin_lock(&soc_lock);
-> -		ret = ida_get_new(&soc_ida, &soc_dev->soc_dev_num);
-> -		spin_unlock(&soc_lock);
-> -
-> -	} while (ret == -EAGAIN);
-> -
-> +	ret = ida_get_index(&soc_ida, &soc_lock, &soc_dev->soc_dev_num);
->  	if (ret)
->  		goto out2;
->  
-> @@ -151,7 +140,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
->  	return soc_dev;
->  
->  out3:
-> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-> +	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
->  out2:
->  	kfree(soc_dev);
->  out1:
-> @@ -161,7 +150,7 @@ out1:
->  /* Ensure soc_dev->attr is freed prior to calling soc_device_unregister. */
->  void soc_device_unregister(struct soc_device *soc_dev)
+>  int pcibios_enable_device(struct pci_dev *dev, int mask)
 >  {
-> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-> +	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
->  
->  	device_unregister(&soc_dev->dev);
->  }
-> 
+> +	/*
+> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
+> +	 * when binding a PCI device to a PCI driver. But some device drivers,
+> +	 * such as eata, directly make use of PCI devices without implementing
+> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
+> +	 * PCI devices.
+> +	 */
+> +	if (!dev->driver)
+> +		pcibios_alloc_irq(dev);
 
--- 
-Lee Duncan
-SUSE Labs
+This is a point fix for x86 only, but I think eata can be built for
+any architecture.  Won't other architectures still have the same
+problem?
+
+>  	return pci_enable_resources(dev, mask);
+>  }
+>  
+> -- 
+> 1.7.10.4
+> 
