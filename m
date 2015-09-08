@@ -1,45 +1,66 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] hpsa: move lockup_detected attribute to host attr
-Date: Mon,  7 Sep 2015 18:14:49 +0200
-Message-ID: <1441642489-5036-1-git-send-email-thenzl@redhat.com>
+From: Ken Xue <Ken.Xue@amd.com>
+Subject: Re: [PATCH] SCSI: Fix NULL pointer dereference in runtime PM
+Date: Tue, 8 Sep 2015 09:53:56 +0800
+Message-ID: <1441677236.5845.6.camel@kxue-X58A-UD3R>
+References: <Pine.LNX.4.44L0.1509071039430.32284-100000@netrider.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49079 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818AbbIGQOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Sep 2015 12:14:52 -0400
+Received: from mail-by2on0082.outbound.protection.outlook.com ([207.46.100.82]:50176
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751952AbbIHCMg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Sep 2015 22:12:36 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1509071039430.32284-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: don.brace@pmcs.com, Justin.Lindley@pmcs.com, elliott@hp.com, Kevin.Barnett@pmcs.com, scott.teel@pmcs.com, hch@infradead.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "JBottomley@Odin.com" <JBottomley@Odin.com>, "Huang, Shane" <Shane.Huang@amd.com>, "Yu, Xiangliang" <Xiangliang.Yu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch fixes a 'general protection fault' issue by
-moving the attribute to where it was likely meant.
+On Mon, 2015-09-07 at 10:48 -0400, Alan Stern wrote:
+> On Mon, 7 Sep 2015, Xue, Ken wrote:
+> 
+> > Hi Alan and James,
+> > I found a bug about sr device runtime suspend & resume which is introduced by your patch about fixing NULL pointer dereference in runtime PM.
+> > You know that sr device only has runtime suspend routine but doesn't have resume routine.
+> > After your patch, blk_ *_ runtime_suspend  will be called when runtime suspend. But blk_ *_ runtime_resume cannot be called when resume.
+> > So, sr device cannot work correctly after 1st runtime suspend.
+> 
+> Argh.  Things just get more and more complicated...
+> 
+> > I want to make a dummy runtime resume routine in sr.c for fixing this runtime issue of sr device.
+> > If you guys think a dummy runtime routine for resume is acceptable, I can submit patch later.
+> 
+> A dummy routine isn't the greatest solution.  Eventually someone will 
+> see it, wonder why it's there, and remove it.
+> 
+> The real issue we need to address here is whether the driver has asked
+> for request-queue-oriented runtime PM by calling blk_pm_runtime_init().  
+> If it hasn't then we need to skip at least the calls to
+> blk_{pre|post}_runtime_{suspend|resume}.
+> 
+> The patch I wrote uses the existence of runtime-PM callbacks as an 
+> indicator for this, but evidently it isn't adequate.  A more direct 
+> approach would be to test whether sdev->request_queue->dev is non-NULL, 
+> but this would be a layering violation.
+> 
+> Should we add a SCSI-level flag to indicate that blk_pm_runtime_init() 
+> has been called?
+ Can we check whether sdev->request_queue->dev is non-NULL in blk_{pre|
+post}_runtime_{suspend|resume}?
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+just use simple codes like:
+int blk_pre_runtime_suspend(struct request_queue *q)
+{
+...
+	if(!q->dev)
+	  return -ENODEV;
+..
+}
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 40669f8dd0..0f96bf1082 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -848,7 +848,6 @@ static struct device_attribute *hpsa_sdev_attrs[] = {
- 	&dev_attr_unique_id,
- 	&dev_attr_hp_ssd_smart_path_enabled,
- 	&dev_attr_path_info,
--	&dev_attr_lockup_detected,
- 	NULL,
- };
- 
-@@ -860,6 +859,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
- 	&dev_attr_resettable,
- 	&dev_attr_hp_ssd_smart_path_status,
- 	&dev_attr_raid_offload_debug,
-+	&dev_attr_lockup_detected,
- 	NULL,
- };
- 
--- 
-2.4.3
+> 
+> Alan Stern
+> 
+
 
