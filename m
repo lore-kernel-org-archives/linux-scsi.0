@@ -1,76 +1,85 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI: Fix NULL pointer dereference in runtime PM
-Date: Tue, 8 Sep 2015 10:25:07 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1509081018520.1533-100000@iolanthe.rowland.org>
-References: <1441677236.5845.6.camel@kxue-X58A-UD3R>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 3/6] Update soc driver to use new ida helper functions
+Date: Tue, 8 Sep 2015 09:01:57 -0700
+Message-ID: <55EF0675.7060601@suse.com>
+References: <cover.1441416571.git.lduncan@suse.com>
+ <145dc6d9918fe55a50afd10e22b336a041e8f692.1441416572.git.lduncan@suse.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:42204 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754430AbbIHOZH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2015 10:25:07 -0400
-In-Reply-To: <1441677236.5845.6.camel@kxue-X58A-UD3R>
+Received: from victor.provo.novell.com ([137.65.250.26]:46214 "EHLO
+	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753551AbbIHQCF (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Tue, 8 Sep 2015 12:02:05 -0400
+In-Reply-To: <145dc6d9918fe55a50afd10e22b336a041e8f692.1441416572.git.lduncan@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ken Xue <Ken.Xue@amd.com>
-Cc: "JBottomley@Odin.com" <JBottomley@Odin.com>, "Huang, Shane" <Shane.Huang@amd.com>, "Yu, Xiangliang" <Xiangliang.Yu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com
 
-On Tue, 8 Sep 2015, Ken Xue wrote:
+Oops. I see the subject is wrong on this patch.
 
-> On Mon, 2015-09-07 at 10:48 -0400, Alan Stern wrote:
-> > On Mon, 7 Sep 2015, Xue, Ken wrote:
-> > 
-> > > Hi Alan and James,
-> > > I found a bug about sr device runtime suspend & resume which is introduced by your patch about fixing NULL pointer dereference in runtime PM.
-> > > You know that sr device only has runtime suspend routine but doesn't have resume routine.
-> > > After your patch, blk_ *_ runtime_suspend  will be called when runtime suspend. But blk_ *_ runtime_resume cannot be called when resume.
-> > > So, sr device cannot work correctly after 1st runtime suspend.
-> > 
-> > Argh.  Things just get more and more complicated...
-> > 
-> > > I want to make a dummy runtime resume routine in sr.c for fixing this runtime issue of sr device.
-> > > If you guys think a dummy runtime routine for resume is acceptable, I can submit patch later.
-> > 
-> > A dummy routine isn't the greatest solution.  Eventually someone will 
-> > see it, wonder why it's there, and remove it.
-> > 
-> > The real issue we need to address here is whether the driver has asked
-> > for request-queue-oriented runtime PM by calling blk_pm_runtime_init().  
-> > If it hasn't then we need to skip at least the calls to
-> > blk_{pre|post}_runtime_{suspend|resume}.
-> > 
-> > The patch I wrote uses the existence of runtime-PM callbacks as an 
-> > indicator for this, but evidently it isn't adequate.  A more direct 
-> > approach would be to test whether sdev->request_queue->dev is non-NULL, 
-> > but this would be a layering violation.
-> > 
-> > Should we add a SCSI-level flag to indicate that blk_pm_runtime_init() 
-> > has been called?
->  Can we check whether sdev->request_queue->dev is non-NULL in blk_{pre|
-> post}_runtime_{suspend|resume}?
+I will wait for comments (if any) then re-submit the sequence.
+
+On 09/06/2015 10:59 AM, Lee Duncan wrote:
+> This simplifies the calling sequence to
+> acquire and to release an ida-managed index.
 > 
-> just use simple codes like:
-> int blk_pre_runtime_suspend(struct request_queue *q)
-> {
-> ...
-> 	if(!q->dev)
+> Note that the ida_destroy() calls here previously
+> had no locking, so this may close a race condition
+> when errors occur or when removing a soc.
+> 
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> ---
+>  drivers/base/soc.c | 17 +++--------------
+>  1 file changed, 3 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/base/soc.c b/drivers/base/soc.c
+> index 39fca01c8fa1..7b632f086524 100644
+> --- a/drivers/base/soc.c
+> +++ b/drivers/base/soc.c
+> @@ -122,18 +122,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
+>  	}
+>  
+>  	/* Fetch a unique (reclaimable) SOC ID. */
+> -	do {
+> -		if (!ida_pre_get(&soc_ida, GFP_KERNEL)) {
+> -			ret = -ENOMEM;
+> -			goto out2;
+> -		}
+> -
+> -		spin_lock(&soc_lock);
+> -		ret = ida_get_new(&soc_ida, &soc_dev->soc_dev_num);
+> -		spin_unlock(&soc_lock);
+> -
+> -	} while (ret == -EAGAIN);
+> -
+> +	ret = ida_get_index(&soc_ida, &soc_lock, &soc_dev->soc_dev_num);
+>  	if (ret)
+>  		goto out2;
+>  
+> @@ -151,7 +140,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
+>  	return soc_dev;
+>  
+>  out3:
+> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
+> +	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
+>  out2:
+>  	kfree(soc_dev);
+>  out1:
+> @@ -161,7 +150,7 @@ out1:
+>  /* Ensure soc_dev->attr is freed prior to calling soc_device_unregister. */
+>  void soc_device_unregister(struct soc_device *soc_dev)
+>  {
+> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
+> +	ida_put_index(&soc_ida, &sock_lock, soc_dev->soc_dev_num);
+>  
+>  	device_unregister(&soc_dev->dev);
+>  }
+> 
 
-Missing space between "if" and "(".  :-)
-
-> 	  return -ENODEV;
-
-Return ret (i.e., 0), not -ENODEV.  If, for some reason, a device uses
-runtime PM that's not based on the state of the request queue, we don't
-want to subvert that other mechanism.
-
-> ..
-> }
-
-I agree, this appears to be the best solution.  (That, plus reverting
-my earlier patch.)  I originally avoided putting in this test because 
-it seemed like unnecessary overhead.  Now we see that the overhead is 
-necessary after all.
-
-Alan Stern
-
+-- 
+Lee Duncan
+SUSE Labs
