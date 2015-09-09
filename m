@@ -1,136 +1,60 @@
-From: Huang Rui <ray.huang@amd.com>
-Subject: Re: [PATCH]SCSI:Refine the way to fix NULL pointer dereference in
- runtime PM
-Date: Wed, 9 Sep 2015 16:30:59 +0800
-Message-ID: <20150909083058.GA6425@hr-slim.amd.com>
-References: <1441782131.5845.73.camel@kxue-X58A-UD3R>
+From: Ken Xue <Ken.Xue@amd.com>
+Subject: [PATCH 1/1] SCSI:Fix  rpm_status of request_queue  in S3 resume of
+ SCSI device
+Date: Wed, 9 Sep 2015 18:09:29 +0800
+Message-ID: <1441793369.5845.87.camel@kxue-X58A-UD3R>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0093.outbound.protection.outlook.com ([65.55.169.93]:7554
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-by2on0065.outbound.protection.outlook.com ([207.46.100.65]:30400
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752119AbbIIKEg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Sep 2015 06:04:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1441782131.5845.73.camel@kxue-X58A-UD3R>
+	id S1752694AbbIIK1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Sep 2015 06:27:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ken Xue <Ken.Xue@amd.com>
-Cc: stern@rowland.harvard.edu, Shane.Huang@amd.com, Xiangliang.Yu@amd.com, aaron.lu@intel.com, linux-scsi@vger.kernel.org, JBottomley@Odin.com, SPG_Linux_Kernel@amd.com
+To: stern@rowland.harvard.edu
+Cc: Shane.Huang@amd.com, Xiangliang.Yu@amd.com, linux-scsi@vger.kernel.org, aaron.lu@intel.com, SPG_Linux_Kernel@amd.com
 
-On Wed, Sep 09, 2015 at 03:02:11PM +0800, Ken Xue wrote:
-> From 844ebfcecad7ddaf7206e0474c600b0146b4ef21 Mon Sep 17 00:00:00 2001
-> From: Ken Xue <Ken.Xue@amd.com>
-> Date: Wed, 9 Sep 2015 14:55:21 +0800
-> Subject: [PATCH] SCSI:Refine the way to fix NULL pointer dereference in
->  runtime PM
-> 
-> There was a patch about Bugzilla #101371.
+>From d0b7698dda596831aa6a7efca1075a231f1ac5db Mon Sep 17 00:00:00 2001
+From: Ken Xue <Ken.Xue@amd.com>
+Date: Wed, 9 Sep 2015 17:36:59 +0800
+Subject: [PATCH] SCSI:Fix rpm_status of request_queue in S3 resume
+ of SCSI device
 
-Which Bugzilla? I guess you should put a link or oops message of NULL
-pointer dereference here. Then other guys can know detail infomation
-of this fix.
+rpm_status of the request_queue is set to be RPM_SUSPENDED in
+runtime suspend before S3. But there is a chance that rpm_status
+is not recovered to be RPM_ACTIVE after S3 resume even the power
+status of device already became active.
 
-Thanks,
-Rui
+This leads to new request in request_queue cannot be handled and
+device cannot goto runtime suspend anymore.
 
-> That patch introduced a possibility that can not call
-> blk_{pre|post}_runtime_suspend and blk_{pre|post}_runtime_resume in
-> pairs.
-> 
-> Signed-off-by: Ken Xue <Ken.Xue@amd.com>
-> ---
->  block/blk-core.c       | 12 ++++++++++++
->  drivers/scsi/scsi_pm.c | 20 ++++++++++----------
->  2 files changed, 22 insertions(+), 10 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 60912e9..a07ab18 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -3280,6 +3280,9 @@ int blk_pre_runtime_suspend(struct request_queue *q)
->  {
->  	int ret = 0;
->  
-> +	if (!q->dev)
-> +		return ret;
-> +
->  	spin_lock_irq(q->queue_lock);
->  	if (q->nr_pending) {
->  		ret = -EBUSY;
-> @@ -3307,6 +3310,9 @@ EXPORT_SYMBOL(blk_pre_runtime_suspend);
->   */
->  void blk_post_runtime_suspend(struct request_queue *q, int err)
->  {
-> +	if (!q->dev)
-> +		return;
-> +
->  	spin_lock_irq(q->queue_lock);
->  	if (!err) {
->  		q->rpm_status = RPM_SUSPENDED;
-> @@ -3331,6 +3337,9 @@ EXPORT_SYMBOL(blk_post_runtime_suspend);
->   */
->  void blk_pre_runtime_resume(struct request_queue *q)
->  {
-> +	if (!q->dev)
-> +		return;
-> +
->  	spin_lock_irq(q->queue_lock);
->  	q->rpm_status = RPM_RESUMING;
->  	spin_unlock_irq(q->queue_lock);
-> @@ -3353,6 +3362,9 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
->   */
->  void blk_post_runtime_resume(struct request_queue *q, int err)
->  {
-> +	if (!q->dev)
-> +		return;
-> +
->  	spin_lock_irq(q->queue_lock);
->  	if (!err) {
->  		q->rpm_status = RPM_ACTIVE;
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index e4b7998..459abe1 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -219,13 +219,13 @@ static int sdev_runtime_suspend(struct device *dev)
->  	struct scsi_device *sdev = to_scsi_device(dev);
->  	int err = 0;
->  
-> -	if (pm && pm->runtime_suspend) {
-> -		err = blk_pre_runtime_suspend(sdev->request_queue);
-> -		if (err)
-> -			return err;
-> +	err = blk_pre_runtime_suspend(sdev->request_queue);
-> +	if (err)
-> +		return err;
-> +	if (pm && pm->runtime_suspend)
->  		err = pm->runtime_suspend(dev);
-> -		blk_post_runtime_suspend(sdev->request_queue, err);
-> -	}
-> +	blk_post_runtime_suspend(sdev->request_queue, err);
-> +
->  	return err;
->  }
->  
-> @@ -248,11 +248,11 @@ static int sdev_runtime_resume(struct device *dev)
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  	int err = 0;
->  
-> -	if (pm && pm->runtime_resume) {
-> -		blk_pre_runtime_resume(sdev->request_queue);
-> +	blk_pre_runtime_resume(sdev->request_queue);
-> +	if (pm && pm->runtime_resume)
->  		err = pm->runtime_resume(dev);
-> -		blk_post_runtime_resume(sdev->request_queue, err);
-> -	}
-> +	blk_post_runtime_resume(sdev->request_queue, err);
-> +
->  	return err;
->  }
->  
-> -- 
-> 1.9.1
-> 
-> 
-> 
+So, if device is suspended, keep this status until status of
+request_queue and device all can be updated.
+
+Signed-off-by: Ken Xue <Ken.Xue@amd.com>
+---
+ drivers/scsi/scsi_pm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index e4b7998..cfda027 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -110,7 +110,8 @@ scsi_bus_suspend_common(struct device *dev,
+ 
+ static void async_sdev_resume(void *dev, async_cookie_t cookie)
+ {
+-	scsi_dev_type_resume(dev, do_scsi_resume);
++	if (!pm_runtime_suspended(dev))
++		scsi_dev_type_resume(dev, do_scsi_resume);
+ }
+ 
+ static void async_sdev_thaw(void *dev, async_cookie_t cookie)
+-- 
+1.9.1
+
+
+
