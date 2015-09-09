@@ -1,77 +1,117 @@
-From: Chang Limin <changlimin@h3c.com>
-Subject: Re: LSI SAS2008 SATA TRIM not working
-Date: Wed, 9 Sep 2015 01:45:57 +0000 (UTC)
-Message-ID: <loom.20150909T034002-827@post.gmane.org>
-References: <1391730975.3449.16.camel@sonic.justonedata.com> <1391805990.2761.4.camel@sonic.justonedata.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
+ unsafe list usage
+Date: Tue, 08 Sep 2015 23:21:27 -0700
+Message-ID: <1441779687.26610.6.camel@haakon3.risingtidesystems.com>
+References: <1440921279-9973-1-git-send-email-nab@daterainc.com>
+	 <1440921279-9973-2-git-send-email-nab@daterainc.com>
+	 <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:42660 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750820AbbIIBza (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Sep 2015 21:55:30 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1ZZUbG-0004uC-OC
-	for linux-scsi@vger.kernel.org; Wed, 09 Sep 2015 03:55:27 +0200
-Received: from 60.191.123.55 ([60.191.123.55])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2015 03:55:02 +0200
-Received: from changlimin by 60.191.123.55 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2015 03:55:02 +0200
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34772 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbbIIGXi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2015 02:23:38 -0400
+In-Reply-To: <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, "MPT-FusionLinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, kernel-team <kernel-team@fb.com>, Chaitra Basappa <chaitra.basappa@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Kurt Miller <kurt <at> intricatesoftware.com> writes:
+Hi Sreekanth,
 
-> 
-> On Thu, 2014-02-06 at 18:56 -0500, Kurt Miller wrote:
-> > Various sources indicate that LSI's SAS2008 controllers support TRIM
-> > when running their IT firmware (LSI [1] and this list [2]). However, I
-> > have not been able to get it working with Dell PERC H200 or H310 cross
-> > flashed into LSI IT firmware. Currently I'm testing with Samsung 840 EVO
-> > SATA SSDs. I have tried various LSI IT firmware versions (P14, P16, P18)
-> > and various Linux distributions (Ubuntu 13.10, Ubuntu 12.04, Ubuntu 14
-> > beta, RHEL 7 beta, Fedora 19).
+On Tue, 2015-09-08 at 17:25 +0530, Sreekanth Reddy wrote:
+> On Sun, Aug 30, 2015 at 1:24 PM, Nicholas A. Bellinger
+> <nab@daterainc.com> wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > >
-> > Is TRIM working for anyone using LSI SAS2008 controllers?
+> > These objects can be referenced concurrently throughout the driver, we
+> > need a way to make sure threads can't delete them out from under
+> > each other. This patch adds the refcount, and refactors the code to use
+> > it.
+> >
+> > Additionally, we cannot iterate over the sas_device_list without
+> > holding the lock, or we risk corrupting random memory if items are
+> > added or deleted as we iterate. This patch refactors _scsih_probe_sas()
+> > to use the sas_device_list in a safe way.
+> >
+> > This patch is a port of Calvin's PATCH-v4 for mpt2sas code, atop
+> > mpt3sas changes in scsi.git/for-next.
+> >
+> > Cc: Calvin Owens <calvinowens@fb.com>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+> > Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  25 +-
+> >  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 479 +++++++++++++++++++++----------
+> >  drivers/scsi/mpt3sas/mpt3sas_transport.c |  18 +-
+> >  3 files changed, 364 insertions(+), 158 deletions(-)
+
+
+<SNIP>
+
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> > index 70fd019..6074b11 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> > @@ -734,7 +734,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+> >         rphy->identify = mpt3sas_port->remote_identify;
+> >
+> >         if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
 > 
-> It turns out yes, TRIM is working for LSI SAS2008 controllers. However,
-> the Samsung 840 EVO's are not compatible with it and are also missing
-> from the LSI compatibility list for the controller [1]. When I got my
-> hands on an SSD that is on the list, TRIM worked as expected.
-> 
-> [1] http://www.lsi.com/downloads/Public/Host%20Bus%20Adapters/Host%20Bus
-> %20Adapters%20Common%20Files/LSI_6Gb_SAS_SATA_HBA_Compatibility_List.pdf
-> 
-> Regards,
-> -Kurt
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo <at> vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> [Sreekanth] Here also sas_device_lock spin lock needs to be acquired
+> before calling
+>                   __mpt3sas_get_sdev_by_addr() function.
 > 
 
-I find the Hitachi HUS110 disk storage also does not support fstrim, 
-actually it supports unmap. 
-The reason is the lbpme in 'sg_readcap -16' return 0, but the unmap in 
-'sg_vpd -p 0xb2' return 1. 
-Maybe the storage is not fully compatible to the SCSI standard.
+Thanks for your review.
 
-# sg_readcap -16 /dev/dm-2
-Read Capacity results:
-   Protection: prot_en=0, p_type=0, p_i_exponent=0
-   Logical block provisioning: lbpme=0, lbprz=1
+Fixed with the following incremental patch atop for-next-merge code.
 
-# sg_vpd --page=0xb2 /dev/dm-2
-Logical block provisioning VPD page (SBC):
-  Unmap command supported (LBPU): 1
-  Write same (16) with unmap bit supported (LBWS): 1
+Please review.
 
+Thank you,
+
+>From 4004584675d24d8e886b03c013074cdfb76a0864 Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Tue, 8 Sep 2015 23:05:49 -0700
+Subject: [PATCH] mpt3sas: Add missing ioc->sas_device_lock in
+ mpt3sas_transport_port_add
+
+This patch adds the missing struct MPT3SAS_ADAPTER->sas_device_lock
+usage in __mpt3sas_get_sdev_by_addr() lookup to avoid a NULL pointer
+dereference when &ioc->sas_device_list or &ioc->sas_device_init_list
+changes from below without a proper sas_device_get(sas_device)
+reference held.
+
+Reported-by: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: Calvin Owens <calvinowens@fb.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 6074b11..cc55907 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -734,8 +734,10 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	rphy->identify = mpt3sas_port->remote_identify;
+ 
+ 	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 		sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+ 				    mpt3sas_port->remote_identify.sas_address);
++		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 		if (!sas_device) {
+ 			dfailprintk(ioc, printk(MPT3SAS_FMT
+ 				"failure at %s:%d/%s()!\n",
+-- 
+1.9.1
 
