@@ -1,59 +1,92 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH V8 9/9] aacraid: Update driver version
-Date: Wed, 9 Sep 2015 13:20:46 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AEC603C55@BBYEXM02.pmc-sierra.internal>
-References: <1440758321-2996-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1440758321-2996-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+From: Chaitra Basappa <chaitra.basappa@avagotech.com>
+Subject: RE: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
+ unsafe list usage
+Date: Wed, 9 Sep 2015 19:59:14 +0530
+Message-ID: <e0bde29b9384f924b2868cd81b7b1c8d@mail.gmail.com>
+References: <1440921279-9973-1-git-send-email-nab@daterainc.com>
+	<1440921279-9973-2-git-send-email-nab@daterainc.com> <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:58510 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753028AbbIINUs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Sep 2015 09:20:48 -0400
-In-Reply-To: <1440758321-2996-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-Content-Language: en-US
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:35807 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753915AbbIIO3v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2015 10:29:51 -0400
+Received: by ykdu9 with SMTP id u9so17815790ykd.2
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2015 07:29:50 -0700 (PDT)
+In-Reply-To: <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "thenzl@redhat.com" <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, kernel-team <kernel-team@fb.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi James,
+From: Sreekanth Reddy [mailto:sreekanth.reddy@avagotech.com]
+Sent: Tuesday, September 08, 2015 5:26 PM
+To: Nicholas A. Bellinger
+Cc: linux-scsi; linux-kernel; James Bottomley; Calvin Owens; Christoph
+Hellwig; MPT-FusionLinux.pdl; kernel-team; Nicholas Bellinger; Chaitra
+Basappa
+Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
+unsafe list usage
 
-Please let me know the status of V8 patchset.
+On Sun, Aug 30, 2015 at 1:24 PM, Nicholas A. Bellinger <nab@daterainc.com>
+wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> These objects can be referenced concurrently throughout the driver, we
+> need a way to make sure threads can't delete them out from under each
+> other. This patch adds the refcount, and refactors the code to use it.
+>
+> Additionally, we cannot iterate over the sas_device_list without
+> holding the lock, or we risk corrupting random memory if items are
+> added or deleted as we iterate. This patch refactors
+> _scsih_probe_sas() to use the sas_device_list in a safe way.
+>
+> This patch is a port of Calvin's PATCH-v4 for mpt2sas code, atop
+> mpt3sas changes in scsi.git/for-next.
+>
+> Cc: Calvin Owens <calvinowens@fb.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+> Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.h      |  25 +-
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 479
+> +++++++++++++++++++++----------
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c |  18 +-
+>  3 files changed, 364 insertions(+), 158 deletions(-)
+>
+> @@ -2763,7 +2874,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,
+> u16 handle)
+>         struct scsi_device *sdev;
+>         struct _sas_device *sas_device;
+>
 
-Thanks,
-Mahesh
+[Sreekanth] Here sas_device_lock spin lock needs to be acquired before
+calling
+                  __mpt3sas_get_sdev_by_addr() function.
 
------Original Message-----
-From: Mahesh Rajashekhara [mailto:Mahesh.Rajashekhara@pmcs.com] 
-Sent: Friday, August 28, 2015 4:09 PM
-To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: thenzl@redhat.com; Murthy Bhat; Karthikeya Sunkesula; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
-Subject: [PATCH V8 9/9] aacraid: Update driver version
+[Chaitra]Here instead of calling " __mpt3sas_get_sdev_by_handle()" function
+calling
+	"mpt3sas_get_sdev_by_handle()" function will fixes "invalid page access"
+type of kernel panic
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
----
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> -       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> +       sas_device = __mpt3sas_get_sdev_by_handle(ioc, handle);
+>         if (!sas_device)
+>                 return;
+>
+> @@ -2779,6 +2890,8 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,
+> u16 handle)
+>                         continue;
+>                 _scsih_internal_device_block(sdev, sas_device_priv_data);
+>         }
+> +
+> +       sas_device_put(sas_device);
+>  }
+>
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 2de5ebc..074878b 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
- 
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
---
-1.9.3
 
+Regards,
+Chaitra
