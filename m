@@ -1,61 +1,77 @@
-From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [PATCH] hpsa: move lockup_detected attribute to host attr
-Date: Tue, 8 Sep 2015 19:34:29 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB7CD3D454@BBYEXM02.pmc-sierra.internal>
-References: <1441642489-5036-1-git-send-email-thenzl@redhat.com>
+From: Chang Limin <changlimin@h3c.com>
+Subject: Re: LSI SAS2008 SATA TRIM not working
+Date: Wed, 9 Sep 2015 01:45:57 +0000 (UTC)
+Message-ID: <loom.20150909T034002-827@post.gmane.org>
+References: <1391730975.3449.16.camel@sonic.justonedata.com> <1391805990.2761.4.camel@sonic.justonedata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:39420 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751756AbbIHTeb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Sep 2015 15:34:31 -0400
-In-Reply-To: <1441642489-5036-1-git-send-email-thenzl@redhat.com>
-Content-Language: en-US
+Received: from plane.gmane.org ([80.91.229.3]:42660 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820AbbIIBza (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Sep 2015 21:55:30 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1ZZUbG-0004uC-OC
+	for linux-scsi@vger.kernel.org; Wed, 09 Sep 2015 03:55:27 +0200
+Received: from 60.191.123.55 ([60.191.123.55])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2015 03:55:02 +0200
+Received: from changlimin by 60.191.123.55 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2015 03:55:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Justin Lindley <Justin.Lindley@pmcs.com>, "elliott@hp.com" <elliott@hp.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, Scott Teel <Scott.Teel@pmcs.com>, "hch@infradead.org" <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Monday, September 07, 2015 11:15 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: Don Brace; Justin Lindley; elliott@hp.com; Kevin Barnett; Scott Teel;
-> hch@infradead.org
-> Subject: [PATCH] hpsa: move lockup_detected attribute to host attr
+Kurt Miller <kurt <at> intricatesoftware.com> writes:
+
 > 
-> This patch fixes a 'general protection fault' issue by
-> moving the attribute to where it was likely meant.
+> On Thu, 2014-02-06 at 18:56 -0500, Kurt Miller wrote:
+> > Various sources indicate that LSI's SAS2008 controllers support TRIM
+> > when running their IT firmware (LSI [1] and this list [2]). However, I
+> > have not been able to get it working with Dell PERC H200 or H310 cross
+> > flashed into LSI IT firmware. Currently I'm testing with Samsung 840 EVO
+> > SATA SSDs. I have tried various LSI IT firmware versions (P14, P16, P18)
+> > and various Linux distributions (Ubuntu 13.10, Ubuntu 12.04, Ubuntu 14
+> > beta, RHEL 7 beta, Fedora 19).
+> >
+> > Is TRIM working for anyone using LSI SAS2008 controllers?
 > 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> It turns out yes, TRIM is working for LSI SAS2008 controllers. However,
+> the Samsung 840 EVO's are not compatible with it and are also missing
+> from the LSI compatibility list for the controller [1]. When I got my
+> hands on an SSD that is on the list, TRIM worked as expected.
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 40669f8dd0..0f96bf1082 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -848,7 +848,6 @@ static struct device_attribute *hpsa_sdev_attrs[] = {
->  	&dev_attr_unique_id,
->  	&dev_attr_hp_ssd_smart_path_enabled,
->  	&dev_attr_path_info,
-> -	&dev_attr_lockup_detected,
->  	NULL,
->  };
+> [1] http://www.lsi.com/downloads/Public/Host%20Bus%20Adapters/Host%20Bus
+> %20Adapters%20Common%20Files/LSI_6Gb_SAS_SATA_HBA_Compatibility_List.pdf
 > 
-> @@ -860,6 +859,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
->  	&dev_attr_resettable,
->  	&dev_attr_hp_ssd_smart_path_status,
->  	&dev_attr_raid_offload_debug,
-> +	&dev_attr_lockup_detected,
->  	NULL,
->  };
+> Regards,
+> -Kurt
 > 
 > --
-> 2.4.3
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo <at> vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Signed-off-by: Don Brace <don.brace@pmcs.com>
+I find the Hitachi HUS110 disk storage also does not support fstrim, 
+actually it supports unmap. 
+The reason is the lbpme in 'sg_readcap -16' return 0, but the unmap in 
+'sg_vpd -p 0xb2' return 1. 
+Maybe the storage is not fully compatible to the SCSI standard.
+
+# sg_readcap -16 /dev/dm-2
+Read Capacity results:
+   Protection: prot_en=0, p_type=0, p_i_exponent=0
+   Logical block provisioning: lbpme=0, lbprz=1
+
+# sg_vpd --page=0xb2 /dev/dm-2
+Logical block provisioning VPD page (SBC):
+  Unmap command supported (LBPU): 1
+  Write same (16) with unmap bit supported (LBWS): 1
+
+
