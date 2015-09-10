@@ -1,85 +1,94 @@
 From: Ken Xue <Ken.Xue@amd.com>
-Subject: [PATCH 1/2]Revert "SCSI: Fix NULL pointer dereference in runtime PM"
-Date: Thu, 10 Sep 2015 10:23:46 +0800
-Message-ID: <1441851826.5845.105.camel@kxue-X58A-UD3R>
-References: <1441782131.5845.73.camel@kxue-X58A-UD3R>
+Subject: [PATCH 2/2] SCSI: Fix NULL pointer dereference in  RTPM of block
+ layer
+Date: Thu, 10 Sep 2015 10:24:03 +0800
+Message-ID: <1441851843.5845.106.camel@kxue-X58A-UD3R>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0078.outbound.protection.outlook.com ([157.56.111.78]:26945
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0090.outbound.protection.outlook.com ([65.55.169.90]:23168
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752666AbbIJC1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Sep 2015 22:27:45 -0400
-In-Reply-To: <1441782131.5845.73.camel@kxue-X58A-UD3R>
+	id S1752666AbbIJC2D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Sep 2015 22:28:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Shane.Huang@amd.com, Xiangliang.Yu@amd.com, aaron.lu@intel.com, linux-scsi@vger.kernel.org, JBottomley@Odin.com, SPG_Linux_Kernel@amd.com, stable@vger.kernel.org
 
-Revert "SCSI: Fix NULL pointer dereference in runtime PM"
+SCSI: Fix NULL pointer dereference in RTPM of block layer
 
-This reverts commit 49718f0fb8c9 ("SCSI: Fix NULL pointer dereference in
-runtime PM")
+The routines in scsi_pm.c assume that if a runtime-PM callback is
+invoked for a SCSI device, it can only mean that the device's driver
+has asked the block layer to handle the runtime power management (by
+calling blk_pm_runtime_init(), which among other things sets q->dev).
 
-The old commit may lead to a issue that blk_{pre|post}_runtime_suspend and
-blk_{pre|post}_runtime_resume can not be called in pairs.
+However, this assumption turns out to be wrong for things like the ses
+driver.  Normally ses devices are not allowed to do runtime PM, but
+userspace can override this setting.  If this happens, the kernel gets
+a NULL pointer dereference when blk_post_runtime_resume() tries to use
+the uninitialized q->dev pointer.
 
-Take sr device as example, when sr device goes to runtime suspend, 
-blk_{pre|post}_runtime_suspend will be called since sr device defined
-pm->runtime_suspend. But blk_{pre|post}_runtime_resume will not be called
-since sr device doesn't have pm->runtime_resume. Then sr device can not
-resume correctly anymore.
+This patch fixes the problem by checking q->dev in block layer before
+handle runtime PM. Since ses doesn't define any PM callbacks and call
+blk_pm_runtime_init(), the crash won't occur.
+
+This fixes Bugzilla #101371.
+https://bugzilla.kernel.org/show_bug.cgi?id=101371
 
 Signed-off-by: Ken Xue <Ken.Xue@amd.com>
 Acked-by: Alan Stern <stern@rowland.harvard.edu>
 Cc: stable@vger.kernel.org
 
 ---
- drivers/scsi/scsi_pm.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ block/blk-core.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index e4b7998..459abe1 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -219,13 +219,13 @@ static int sdev_runtime_suspend(struct device *dev)
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	int err = 0;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 60912e9..a07ab18 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -3280,6 +3280,9 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+ {
+ 	int ret = 0;
  
--	if (pm && pm->runtime_suspend) {
--		err = blk_pre_runtime_suspend(sdev->request_queue);
--		if (err)
--			return err;
-+	err = blk_pre_runtime_suspend(sdev->request_queue);
-+	if (err)
-+		return err;
-+	if (pm && pm->runtime_suspend)
- 		err = pm->runtime_suspend(dev);
--		blk_post_runtime_suspend(sdev->request_queue, err);
--	}
-+	blk_post_runtime_suspend(sdev->request_queue, err);
++	if (!q->dev)
++		return ret;
 +
- 	return err;
- }
- 
-@@ -248,11 +248,11 @@ static int sdev_runtime_resume(struct device *dev)
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int err = 0;
- 
--	if (pm && pm->runtime_resume) {
--		blk_pre_runtime_resume(sdev->request_queue);
-+	blk_pre_runtime_resume(sdev->request_queue);
-+	if (pm && pm->runtime_resume)
- 		err = pm->runtime_resume(dev);
--		blk_post_runtime_resume(sdev->request_queue, err);
--	}
-+	blk_post_runtime_resume(sdev->request_queue, err);
+ 	spin_lock_irq(q->queue_lock);
+ 	if (q->nr_pending) {
+ 		ret = -EBUSY;
+@@ -3307,6 +3310,9 @@ EXPORT_SYMBOL(blk_pre_runtime_suspend);
+  */
+ void blk_post_runtime_suspend(struct request_queue *q, int err)
+ {
++	if (!q->dev)
++		return;
 +
- 	return err;
- }
- 
+ 	spin_lock_irq(q->queue_lock);
+ 	if (!err) {
+ 		q->rpm_status = RPM_SUSPENDED;
+@@ -3331,6 +3337,9 @@ EXPORT_SYMBOL(blk_post_runtime_suspend);
+  */
+ void blk_pre_runtime_resume(struct request_queue *q)
+ {
++	if (!q->dev)
++		return;
++
+ 	spin_lock_irq(q->queue_lock);
+ 	q->rpm_status = RPM_RESUMING;
+ 	spin_unlock_irq(q->queue_lock);
+@@ -3353,6 +3362,9 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+  */
+ void blk_post_runtime_resume(struct request_queue *q, int err)
+ {
++	if (!q->dev)
++		return;
++
+ 	spin_lock_irq(q->queue_lock);
+ 	if (!err) {
+ 		q->rpm_status = RPM_ACTIVE;
 -- 
 1.9.1
 
