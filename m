@@ -1,58 +1,107 @@
-From: David Gibson <dgibson@redhat.com>
-Subject: Re: [PATCH] ibmvsci: make parameters max_id and max_channel
- read-only
-Date: Thu, 10 Sep 2015 10:55:13 +1000
-Message-ID: <20150910105513.36c32053@voom.fritz.box>
-References: <1441812060-14694-1-git-send-email-lvivier@redhat.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 1/1] Update scsi hosts to use idr for host number mgmt
+Date: Wed, 9 Sep 2015 18:31:24 -0700
+Message-ID: <55F0DD6C.7000109@suse.com>
+References: <cover.1441412268.git.lduncan@suse.com>
+ <05a1b95993cbb2b0ce9be8e088203c23f0e49107.1441412269.git.lduncan@suse.com>
+ <55EBEC9F.7020600@dev.mellanox.co.il> <55EC58D8.7010605@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/U2HBXZXVx5/=7pee.AN6rbX"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441812060-14694-1-git-send-email-lvivier@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Laurent Vivier <lvivier@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, thuth@redhat.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:51521 "EHLO
+	prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752422AbbIJBbf (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Wed, 9 Sep 2015 21:31:35 -0400
+In-Reply-To: <55EC58D8.7010605@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, hare@suse.com, jthumshirn@suse.de, JBottomley@Parallels.com
 
---Sig_/U2HBXZXVx5/=7pee.AN6rbX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 09/06/2015 08:16 AM, Lee Duncan wrote:
+> On 09/06/2015 12:34 AM, Sagi Grimberg wrote:
+>> On 9/5/2015 11:44 PM, Lee Duncan wrote:
+>>> Each Scsi_host instance gets a host number starting
+>>> at 0, but this was implemented with an atomic integer,
+>>> and rollover wasn't considered. Another problem with
+>>> this design is that scsi host numbers used by iscsi
+>>> are never reused, thereby making rollover more likely.
+>>> This patch converts Scsi_host instances to use idr
+>>> to manage their instance numbers and to simplify
+>>> instance number to pointer lookups.
+>>>
+>>> This also means that host instance numbers will be
+>>> reused, when available.
+>>>
+>>> Signed-off-by: Lee Duncan <lduncan@suse.com>
+>>> ---
+>>>   drivers/scsi/hosts.c | 59
+>>> +++++++++++++++++++++++++---------------------------
+>>>   1 file changed, 28 insertions(+), 31 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>>> index 8bb173e01084..1127a50e5942 100644
+>>> --- a/drivers/scsi/hosts.c
+>>> +++ b/drivers/scsi/hosts.c
+>>> @@ -33,7 +33,7 @@
+>>>   #include <linux/transport_class.h>
+>>>   #include <linux/platform_device.h>
+>>>   #include <linux/pm_runtime.h>
+>>> -
+>>> +#include <linux/idr.h>
+>>>   #include <scsi/scsi_device.h>
+>>>   #include <scsi/scsi_host.h>
+>>>   #include <scsi/scsi_transport.h>
+>>> @@ -41,8 +41,8 @@
+>>>   #include "scsi_priv.h"
+>>>   #include "scsi_logging.h"
+>>>
+>>> -
+>>> -static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);    /* host_no for
+>>> next new host */
+>>> +static DEFINE_SPINLOCK(host_index_lock);
+>>> +static DEFINE_IDR(host_index_idr);
+>>>
+>>>
+>>>   static void scsi_host_cls_release(struct device *dev)
+>>> @@ -337,6 +337,10 @@ static void scsi_host_dev_release(struct device
+>>> *dev)
+>>>
+>>>       kfree(shost->shost_data);
+>>>
+>>> +    spin_lock(&host_index_lock);
+>>> +    idr_remove(&host_index_idr, shost->host_no);
+>>> +    spin_unlock(&host_index_lock);
+>>> +
+>>
+>> Did you change your mind on having host_[get|put]_idx() helpers?
+> 
 
-On Wed,  9 Sep 2015 17:21:00 +0200
-Laurent Vivier <lvivier@redhat.com> wrote:
+Sagi: I may have answered you incorrectly.
 
-> The value of the parameter is never re-read by the driver,
-> so a new value is ignored. Let know the user he
-> can't modify it by removing writable attribute.
->=20
-> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
+Yes, when I switched from using ida routines to using idr, I dropped the
+helper functions. But I think you are right, the code is cleaner with
+them present, so I will resubmit.
 
-Reviewed-by: David Gibson <dgibson@redhat.com>
+> No. As I said on the description:
+> 
+>> A separate patch sequence follows which will add helper routines
+>> for the ida index functions.
+> 
+> I'll be sending out that patch series today (I hope).
+> 
+> I *do* believe it would be useful to add some ida helper routines, since
+> callers of these routines seem mostly to use a uniform calling sequence.
+> But even so some of the callers do things differently enough so that I
+> was not comfortable changing them to use the helper routines.
+> 
+> But the "idr" routines, i.e. the ones that manage both an index *and* a
+> pointer, which are the ones I'm using in hosts.c, are not called so
+> uniformly, so helper routines did not seem like a good idea.
+> 
 
---=20
-David Gibson <dgibson@redhat.com>
-Senior Software Engineer, Virtualization, Red Hat
-
---Sig_/U2HBXZXVx5/=7pee.AN6rbX
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJV8NTxAAoJEGw4ysog2bOSKSoP/jfMs79WoVDrLyxHbtBhpHUg
-vXYLzgzCyGFNqmQOcYrfCP8CeuL6Q6h7gJfcsuv5ox8LBnO1I2ldw/Z1caGY+ySP
-vDnG2mJwB5EuV3thT3U2S/PhpHwNLV/Amg8r3yRc6A966XjRdUNkhonfnkbmVpKY
-6slYA6mrhBV5cfQCHgYh1Q+XijchUZYVdhPwXuF7+BUBty8px2rd4r7ajLmsWV/f
-RLIsSRnAjH/NzExALWo62tkMTi5ERpN36Q3Bh2g5uM+NfSZ2DJ70zyVM7gf8w3KN
-O7yMDxO3TG/LHbHJ+DI9Hu20mAzXRLNniK6ROhlN0GLscbXgNz7ueY8s4rt7lw7n
-5otHGt6ltOge1lhzPj+lpdrtdMc7Xp2zCUgclSfBJwUlPB2KdeLxGuOCikmc30aJ
-WJR5AQK6Q/AZp6J1tNqKw7wYrbg6Z+3qNlivFOFToYtnHcw0v3atsze6zGvWMr+L
-qmpZiW0EPrl7WPCnJUjinseqPFQSGrYHl4voVMtVJ+KBx1s6wb6Ay4+/Gyx0dI6D
-YqM5VTBtEaenpgKrN5ckT3CQiP9zuh1WBcjWJtcW2JbIsK2Exq2ksMehFWYRzubI
-aNlBLmgwCjEuak0JwQ7YgwGeGXOel00wopjtRzfzQTU0SzprGAbOCqYgkH/aaLPg
-W52w5ET8cVLnI4hxRMJD
-=T1m+
------END PGP SIGNATURE-----
-
---Sig_/U2HBXZXVx5/=7pee.AN6rbX--
+-- 
+Lee Duncan
+SUSE Labs
