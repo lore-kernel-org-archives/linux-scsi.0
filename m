@@ -1,96 +1,50 @@
-From: Ken Xue <Ken.Xue@amd.com>
-Subject: [PATCH 2/2] SCSI: Fix NULL pointer dereference in  RTPM of block
- layer
-Date: Thu, 10 Sep 2015 10:24:03 +0800
-Message-ID: <1441851843.5845.106.camel@kxue-X58A-UD3R>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH -resend 1/1] cxgbi: fix build with EXTRA_CFLAGS
+Date: Thu, 10 Sep 2015 09:32:35 +0200
+Message-ID: <1441870355-25237-1-git-send-email-jslaby@suse.cz>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0090.outbound.protection.outlook.com ([65.55.169.90]:23168
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752666AbbIJC2D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Sep 2015 22:28:03 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51179 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101AbbIJHci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Sep 2015 03:32:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Shane.Huang@amd.com, Xiangliang.Yu@amd.com, aaron.lu@intel.com, linux-scsi@vger.kernel.org, JBottomley@Odin.com, SPG_Linux_Kernel@amd.com, stable@vger.kernel.org
+To: JBottomley@odin.com
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, kxie@chelsio.com, linux-scsi@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
 
-SCSI: Fix NULL pointer dereference in RTPM of block layer
+EXTRA_CFLAGS are intended to be used on the command line, not by
+Kbuild. In case of cxgbi drivers, use of EXTRA_CFLAGS results in a
+compilation failure:
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:24:21: fatal error: t4_regs.h: No such file or directory
+when building like:
+$ make drivers/scsi/cxgbi/ EXTRA_CFLAGS=-Wwhatever
 
-The routines in scsi_pm.c assume that if a runtime-PM callback is
-invoked for a SCSI device, it can only mean that the device's driver
-has asked the block layer to handle the runtime power management (by
-calling blk_pm_runtime_init(), which among other things sets q->dev).
+Use ccflags-y instead of EXTRA_CFLAGS.
 
-However, this assumption turns out to be wrong for things like the ses
-driver.  Normally ses devices are not allowed to do runtime PM, but
-userspace can override this setting.  If this happens, the kernel gets
-a NULL pointer dereference when blk_post_runtime_resume() tries to use
-the uninitialized q->dev pointer.
-
-This patch fixes the problem by checking q->dev in block layer before
-handle runtime PM. Since ses doesn't define any PM callbacks and call
-blk_pm_runtime_init(), the crash won't occur.
-
-This fixes Bugzilla #101371.
-https://bugzilla.kernel.org/show_bug.cgi?id=101371
-
-Signed-off-by: Ken Xue <Ken.Xue@amd.com>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Cc: stable@vger.kernel.org
-
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- block/blk-core.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/scsi/cxgbi/cxgb3i/Kbuild | 2 +-
+ drivers/scsi/cxgbi/cxgb4i/Kbuild | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 60912e9..a07ab18 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -3280,6 +3280,9 @@ int blk_pre_runtime_suspend(struct request_queue *q)
- {
- 	int ret = 0;
+diff --git a/drivers/scsi/cxgbi/cxgb3i/Kbuild b/drivers/scsi/cxgbi/cxgb3i/Kbuild
+index 6f095e28a974..961a12f6d318 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/Kbuild
++++ b/drivers/scsi/cxgbi/cxgb3i/Kbuild
+@@ -1,3 +1,3 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/net/ethernet/chelsio/cxgb3
++ccflags-y += -I$(srctree)/drivers/net/ethernet/chelsio/cxgb3
  
-+	if (!q->dev)
-+		return ret;
-+
- 	spin_lock_irq(q->queue_lock);
- 	if (q->nr_pending) {
- 		ret = -EBUSY;
-@@ -3307,6 +3310,9 @@ EXPORT_SYMBOL(blk_pre_runtime_suspend);
-  */
- void blk_post_runtime_suspend(struct request_queue *q, int err)
- {
-+	if (!q->dev)
-+		return;
-+
- 	spin_lock_irq(q->queue_lock);
- 	if (!err) {
- 		q->rpm_status = RPM_SUSPENDED;
-@@ -3331,6 +3337,9 @@ EXPORT_SYMBOL(blk_post_runtime_suspend);
-  */
- void blk_pre_runtime_resume(struct request_queue *q)
- {
-+	if (!q->dev)
-+		return;
-+
- 	spin_lock_irq(q->queue_lock);
- 	q->rpm_status = RPM_RESUMING;
- 	spin_unlock_irq(q->queue_lock);
-@@ -3353,6 +3362,9 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
-  */
- void blk_post_runtime_resume(struct request_queue *q, int err)
- {
-+	if (!q->dev)
-+		return;
-+
- 	spin_lock_irq(q->queue_lock);
- 	if (!err) {
- 		q->rpm_status = RPM_ACTIVE;
+ obj-$(CONFIG_SCSI_CXGB3_ISCSI) += cxgb3i.o
+diff --git a/drivers/scsi/cxgbi/cxgb4i/Kbuild b/drivers/scsi/cxgbi/cxgb4i/Kbuild
+index 8290cdaa4652..37458643749b 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/Kbuild
++++ b/drivers/scsi/cxgbi/cxgb4i/Kbuild
+@@ -1,3 +1,3 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/net/ethernet/chelsio/cxgb4
++ccflags-y += -I$(srctree)/drivers/net/ethernet/chelsio/cxgb4
+ 
+ obj-$(CONFIG_SCSI_CXGB4_ISCSI) += cxgb4i.o
 -- 
-1.9.1
-
-
+2.5.1
 
