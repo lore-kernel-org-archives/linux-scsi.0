@@ -1,153 +1,112 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v4.3-rc1
-Date: Fri, 11 Sep 2015 14:07:56 -0700
-Message-ID: <1442005676.19349.61.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH 03/29] cxlflash: Increase timeout value for read capacity to 30 seconds
+Date: Fri, 11 Sep 2015 16:10:09 -0500
+Message-ID: <1442005809-46422-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:43612 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbbIKVK0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:10:26 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 11 Sep 2015 15:10:26 -0600
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 2EB061FF0049
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:01:34 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BL9Zr737421064
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 14:09:35 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLANFN007587
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:10:24 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
+Cc: mikey@neuling.org, Manoj Kumar <kumarmn@us.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-(RESENDING)
+From: Manoj Kumar <kumarmn@us.ibm.com>
 
-Hi Linus.
+Make literals for number of retries as well.
 
-Here are the outstanding target-pending updates for v4.3-rc1 code.
-Please go ahead and PULL from:
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+---
+ drivers/scsi/cxlflash/superpipe.c | 8 ++++----
+ drivers/scsi/cxlflash/superpipe.h | 3 ++-
+ drivers/scsi/cxlflash/vlun.c      | 5 +++--
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index affec2d..fa513ba 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -296,7 +296,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	int rc = 0;
+ 	int result = 0;
+ 	int retry_cnt = 0;
+-	u32 tout = (MC_DISCOVERY_TIMEOUT * HZ);
++	u32 to = (CMD_TIMEOUT * HZ);
+ 
+ retry:
+ 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
+@@ -315,7 +315,7 @@ retry:
+ 		retry_cnt ? "re" : "", scsi_cmd[0]);
+ 
+ 	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
+-			      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
++			      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES, 0, NULL);
+ 
+ 	if (driver_byte(result) == DRIVER_SENSE) {
+ 		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
+@@ -1375,8 +1375,8 @@ out_attach:
+ 	attach->block_size = gli->blk_len;
+ 	attach->mmio_size = sizeof(afu->afu_map->hosts[0].harea);
+ 	attach->last_lba = gli->max_lba;
+-	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT) /
+-		gli->blk_len;
++	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT);
++	attach->max_xfer /= gli->blk_len;
+ 
+ out:
+ 	attach->adap_fd = fd;
+diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
+index 5c39f2c..fffb179 100644
+--- a/drivers/scsi/cxlflash/superpipe.h
++++ b/drivers/scsi/cxlflash/superpipe.h
+@@ -28,7 +28,8 @@ extern struct cxlflash_global global;
+ */
+ #define MC_CHUNK_SIZE     (1 << MC_RHT_NMASK)	/* in LBAs */
+ 
+-#define MC_DISCOVERY_TIMEOUT 5  /* 5 secs */
++#define CMD_TIMEOUT 30  /* 30 secs */
++#define CMD_RETRIES 5   /* 5 retries for scsi_execute */
+ 
+ #define MAX_SECTOR_UNIT  512 /* max_sector is in 512 byte multiples */
+ 
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 6155cb1..68994c4 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -414,7 +414,7 @@ static int write_same16(struct scsi_device *sdev,
+ 	int ws_limit = SISLITE_MAX_WS_BLOCKS;
+ 	u64 offset = lba;
+ 	int left = nblks;
+-	u32 tout = sdev->request_queue->rq_timeout;
++	u32 to = sdev->request_queue->rq_timeout;
+ 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
+ 	struct device *dev = &cfg->dev->dev;
+ 
+@@ -434,7 +434,8 @@ static int write_same16(struct scsi_device *sdev,
+ 				   &scsi_cmd[10]);
+ 
+ 		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
+-				      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
++				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
++				      0, NULL);
+ 		if (result) {
+ 			dev_err_ratelimited(dev, "%s: command failed for "
+ 					    "offset %lld result=0x%x\n",
+-- 
+2.1.0
 
-There are two small conflicts noted by SFR due to a revert in libata.git
-code:
-
-http://marc.info/?l=linux-kernel&m=143865933819312&w=2
-http://marc.info/?l=linux-kernel&m=143865935919329&w=2
-
-The resolution should be self explanatory.
-
-Mostly bug-fixes and minor changes this round.  The fallout from the big
-v4.2-rc1 RCU conversion have (thus far) been minimal.
-
-The highlights this round include:
-
-  - Move sense handling routines into scsi_common code (Sagi)
-  - Return ABORTED_COMMAND sense key for PI errors (Sagi)
-  - Add tpg_enabled_sendtargets attribute for disabled iscsi-target discovery (David)
-  - Shrink target struct se_cmd by rearranging fields (Roland)
-  - Drop iSCSI use of mutex around max_cmd_sn increment (Roland)
-  - Replace iSCSI __kernel_sockaddr_storage with sockaddr_storage (Andy + Chris)
-  - Honor fabric max_data_sg_nents I/O transfer limit (Arun + Himanshu + nab)
-  - Fix EXTENDED_COPY >= v4.1 regression OOPsen (Alex + nab)
-
-Thank you,
-
---nab
-
-Alexei Potashnik (1):
-  target/iscsi: Use proper SGL accessors for digest computation
-
-Andy Grover (7):
-  target/iscsi: Fix np_ip bracket issue by removing np_ip
-  target/iscsi: Keep local_ip as the actual sockaddr
-  target/iscsi: Replace conn->login_ip with login_sockaddr
-  target/iscsi: Replace __kernel_sockaddr_storage with sockaddr_storage
-  target/user: Remove unused variable
-  target: Remove no-op conditional
-  target/user: Fix UFLAG_UNKNOWN_OP handling
-
-Bart Van Assche (3):
-  target: Inline transport_get_sense_codes()
-  target: Split transport_send_check_condition_and_sense()
-  tcm_qla2xxx: Remove set-but-not-used variables
-
-Brian Bunker (1):
-  target: add support for START_STOP_UNIT SCSI opcode
-
-Chris Zankel (2):
-  target: remove unused lun_flags field from se_lun
-  target: remove initiatorname field in se_acl_lun
-
-David Disseldorp (3):
-  target: check DPO/FUA usage for COMPARE AND WRITE
-  iscsi-target: Add tpg_enabled_sendtargets for disabled discovery
-  target: use stringify.h instead of own definition
-
-Hannes Reinecke (2):
-  tcm_loop: Remove SAS vestigies
-  tcm_loop: Send I_T_NEXUS_LOSS_OCCURRED UA
-
-Joern Engel (1):
-  target: improve unsupported opcode message
-
-Nicholas Bellinger (2):
-  target/qla2xxx: Honor max_data_sg_nents I/O transfer limit
-  target: Attach EXTENDED_COPY local I/O descriptors to xcopy_pt_sess
-
-Roland Dreier (5):
-  target: allow underflow/overflow for PR OUT etc. commands
-  target: Remove cmd->se_ordered_id (unused except debug log lines)
-  target: Shrink struct se_cmd by rearranging fields
-  target: Drop iSCSI use of mutex around max_cmd_sn increment
-  target: Fix max_cmd_sn increment w/o cmdsn mutex regressions
-
-Sagi Grimberg (8):
-  target: Use struct t10_pi_tuple
-  scsi: Move sense handling routines to scsi_common
-  target: Use scsi helpers to build the sense data correctly
-  target: Return ABORTED_COMMAND sense key for PI errors
-  scsi: Fix wrong additional sense length in descriptor format
-  scsi: Protect against buffer possible overflow in
-    scsi_set_sense_information
-  target: Return descriptor format sense data in case the LU spans 64bit
-    sectors
-  libiscsi: Use scsi helper to set information descriptor
-
-Sebastian Herbszt (1):
-  qla2xxx: Update tcm_qla2xxx module description to 24xx+
-
-Viresh Kumar (1):
-  drivers: target: Drop unlikely before IS_ERR(_OR_NULL)
-
- drivers/ata/libata-scsi.c                    |   4 +-
- drivers/infiniband/ulp/isert/ib_isert.c      |  29 +-
- drivers/scsi/libiscsi.c                      |   9 +-
- drivers/scsi/qla2xxx/Kconfig                 |   4 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c           |  13 +-
- drivers/scsi/scsi_common.c                   | 109 ++++++
- drivers/scsi/scsi_error.c                    |  99 +-----
- drivers/target/iscsi/iscsi_target.c          |  86 ++---
- drivers/target/iscsi/iscsi_target.h          |   6 +-
- drivers/target/iscsi/iscsi_target_configfs.c |  34 +-
- drivers/target/iscsi/iscsi_target_device.c   |  10 +-
- drivers/target/iscsi/iscsi_target_login.c    |  78 ++---
- drivers/target/iscsi/iscsi_target_login.h    |   4 +-
- drivers/target/iscsi/iscsi_target_nego.c     |   7 +-
- drivers/target/iscsi/iscsi_target_stat.c     |   2 +-
- drivers/target/iscsi/iscsi_target_tmr.c      |   2 +-
- drivers/target/iscsi/iscsi_target_tpg.c      |  38 +-
- drivers/target/iscsi/iscsi_target_tpg.h      |   3 +-
- drivers/target/iscsi/iscsi_target_util.c     |  39 ++-
- drivers/target/loopback/tcm_loop.c           |  22 +-
- drivers/target/target_core_device.c          |  11 +-
- drivers/target/target_core_fabric_configfs.c |   2 +-
- drivers/target/target_core_hba.c             |   5 +
- drivers/target/target_core_sbc.c             |  49 ++-
- drivers/target/target_core_spc.c             |  55 ++-
- drivers/target/target_core_tpg.c             |  17 +
- drivers/target/target_core_transport.c       | 507 ++++++++++++---------------
- drivers/target/target_core_user.c            |  14 +-
- drivers/target/target_core_xcopy.c           |   6 +-
- drivers/target/tcm_fc/tfc_cmd.c              |   2 +-
- include/scsi/scsi_common.h                   |   5 +
- include/scsi/scsi_eh.h                       |   7 +-
- include/target/iscsi/iscsi_target_core.h     |  15 +-
- include/target/iscsi/iscsi_target_stat.h     |   2 +-
- include/target/iscsi/iscsi_transport.h       |   2 +-
- include/target/target_core_backend.h         |   2 +
- include/target/target_core_base.h            |  27 +-
- include/target/target_core_fabric.h          |  14 +
- include/uapi/linux/target_core_user.h        |   4 -
- 39 files changed, 678 insertions(+), 666 deletions(-)
