@@ -1,145 +1,153 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
- unsafe list usage
-Date: Fri, 11 Sep 2015 13:01:03 -0700
-Message-ID: <1442001663.19349.39.camel@haakon3.risingtidesystems.com>
-References: <1440921279-9973-1-git-send-email-nab@daterainc.com>
-	 <1440921279-9973-2-git-send-email-nab@daterainc.com>
-	 <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
-	 <e0bde29b9384f924b2868cd81b7b1c8d@mail.gmail.com>
-	 <1441836181.6836.4.camel@haakon3.risingtidesystems.com>
-	 <1441954537.21634.21.camel@haakon3.risingtidesystems.com>
-	 <1441993818.6276.2.camel@HansenPartnership.com>
+Subject: [GIT PULL] target updates for v4.3-rc1
+Date: Fri, 11 Sep 2015 14:07:56 -0700
+Message-ID: <1442005676.19349.61.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441993818.6276.2.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, kernel-team <kernel-team@fb.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-09-11 at 10:50 -0700, James Bottomley wrote:
-> On Thu, 2015-09-10 at 23:55 -0700, Nicholas A. Bellinger wrote:
-> > On Wed, 2015-09-09 at 15:03 -0700, Nicholas A. Bellinger wrote:
-> > > On Wed, 2015-09-09 at 19:59 +0530, Chaitra Basappa wrote:
-> > > > From: Sreekanth Reddy [mailto:sreekanth.reddy@avagotech.com]
-> > > > Sent: Tuesday, September 08, 2015 5:26 PM
-> > > > To: Nicholas A. Bellinger
-> > > > Cc: linux-scsi; linux-kernel; James Bottomley; Calvin Owens; Christoph
-> > > > Hellwig; MPT-FusionLinux.pdl; kernel-team; Nicholas Bellinger; Chaitra
-> > > > Basappa
-> > > > Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
-> > > > unsafe list usage
-> > > > 
-> > > > On Sun, Aug 30, 2015 at 1:24 PM, Nicholas A. Bellinger <nab@daterainc.com>
-> > > > wrote:
-> > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > >
-> > > > > These objects can be referenced concurrently throughout the driver, we
-> > > > > need a way to make sure threads can't delete them out from under each
-> > > > > other. This patch adds the refcount, and refactors the code to use it.
-> > > > >
-> > > > > Additionally, we cannot iterate over the sas_device_list without
-> > > > > holding the lock, or we risk corrupting random memory if items are
-> > > > > added or deleted as we iterate. This patch refactors
-> > > > > _scsih_probe_sas() to use the sas_device_list in a safe way.
-> > > > >
-> > > > > This patch is a port of Calvin's PATCH-v4 for mpt2sas code, atop
-> > > > > mpt3sas changes in scsi.git/for-next.
-> > > > >
-> > > > > Cc: Calvin Owens <calvinowens@fb.com>
-> > > > > Cc: Christoph Hellwig <hch@infradead.org>
-> > > > > Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-> > > > > Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
-> > > > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > > ---
-> > > > >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  25 +-
-> > > > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 479
-> > > > > +++++++++++++++++++++----------
-> > > > >  drivers/scsi/mpt3sas/mpt3sas_transport.c |  18 +-
-> > > > >  3 files changed, 364 insertions(+), 158 deletions(-)
-> > > > >
-> > > > > @@ -2763,7 +2874,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,
-> > > > > u16 handle)
-> > > > >         struct scsi_device *sdev;
-> > > > >         struct _sas_device *sas_device;
-> > > > >
-> > > > 
-> > > > [Sreekanth] Here sas_device_lock spin lock needs to be acquired before
-> > > > calling
-> > > >                   __mpt3sas_get_sdev_by_addr() function.
-> > > > 
-> > > > [Chaitra]Here instead of calling " __mpt3sas_get_sdev_by_handle()" function
-> > > > calling
-> > > > 	"mpt3sas_get_sdev_by_handle()" function will fixes "invalid page access"
-> > > > type of kernel panic
-> > > > 
-> > > > > -       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-> > > > > +       sas_device = __mpt3sas_get_sdev_by_handle(ioc, handle);
-> > > > >         if (!sas_device)
-> > > > >                 return;
-> > > > >
-> > > 
-> > > Whoops, missed this comment in _scsih_block_io_device() from Sreekanth's
-> > > earlier reply.
-> > > 
-> > > Here's the updated incremental patch atop target-pending/for-next-merge
-> > > to use the protected callers for both cases.
-> > > 
-> > > Please review + ACK ASAP.
-> > 
-> > The mpt3sas -v2 series + v4.3-rc0 breakage incremental patch here made
-> > it into linux-next-09102015, and at this point I don't see a scenario
-> > where keeping around the broken list_head dereferences makes sense.
-> 
-> I already explained the dangers of what the patch does.  Separated
-> lifetime objects need to be treated very carefully.  Rushing this in to
-> -rc1 without an Avago soak test is irresponsible.  Two issues have
-> already turned up in this thanks to inspection and as a bug fix it's not
-> bound by the merge window anyway so there's no reason to rush it into
-> -rc1 without the proper testing.
-> 
+(RESENDING)
 
-It's not being 'rushed in'.  The changes have being run continuously on
-60+ HBAs w/ 720+ HDDs using v3.14.y code for the last 3 weeks.
+Hi Linus.
 
-Calvin reviewed the code, the Avago folks have commented on the code,
-and it's in linux-next.
+Here are the outstanding target-pending updates for v4.3-rc1 code.
+Please go ahead and PULL from:
 
-Currently there are no outstanding comments to be addressed for -v2.  
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-> The reason for wanting to do this right is not to create a bisection
-> black hole: if we create an unreliable base storage driver by rushing
-> this into -rc1 it makes bisection very difficult for people who use mpt3
-> gear because they won't know if it's the bug they're chasing or the one
-> we introduced which they can't avoid because they have to use a storage
-> driver to boot the kernel.
-> 
+There are two small conflicts noted by SFR due to a revert in libata.git
+code:
 
-As mentioned, there is not a scenario where keeping this broken list
-handling code around for -rc1 makes any sense, when the exact same
-change for mpt2sas minus two simple cases is (I assume) going to Linus
-shortly.
+http://marc.info/?l=linux-kernel&m=143865933819312&w=2
+http://marc.info/?l=linux-kernel&m=143865935919329&w=2
 
-Do you have any specific code comments on the series, or not..?
+The resolution should be self explanatory.
 
-> 
-> > So that said, I'd like to send a target-pending/for-next-merge PULL
-> > request out to Linus in the next 48 hours.
-> 
-> How about no: it's not a target patch, it's an initiator patch, which
-> makes it my decision not yours.  The Maintainers are being responsive,
-> so there's no reason to override their request for a soak test, even if
-> you are the patch author.  It will get pushed once they confirm.
-> 
+Mostly bug-fixes and minor changes this round.  The fallout from the big
+v4.2-rc1 RCU conversion have (thus far) been minimal.
 
-Believe me, fixing up LLD code and arguing with you over why utterly
-broken list handling code should be left as-is for another few weeks in
-mainline is the last thing I'd like to be spending time on right now.
+The highlights this round include:
 
-Unfortunately, I've got 100+ HBAs that use this driver, and the current
-state of broken list handling is completely unacceptable.
+  - Move sense handling routines into scsi_common code (Sagi)
+  - Return ABORTED_COMMAND sense key for PI errors (Sagi)
+  - Add tpg_enabled_sendtargets attribute for disabled iscsi-target discovery (David)
+  - Shrink target struct se_cmd by rearranging fields (Roland)
+  - Drop iSCSI use of mutex around max_cmd_sn increment (Roland)
+  - Replace iSCSI __kernel_sockaddr_storage with sockaddr_storage (Andy + Chris)
+  - Honor fabric max_data_sg_nents I/O transfer limit (Arun + Himanshu + nab)
+  - Fix EXTENDED_COPY >= v4.1 regression OOPsen (Alex + nab)
+
+Thank you,
 
 --nab
+
+Alexei Potashnik (1):
+  target/iscsi: Use proper SGL accessors for digest computation
+
+Andy Grover (7):
+  target/iscsi: Fix np_ip bracket issue by removing np_ip
+  target/iscsi: Keep local_ip as the actual sockaddr
+  target/iscsi: Replace conn->login_ip with login_sockaddr
+  target/iscsi: Replace __kernel_sockaddr_storage with sockaddr_storage
+  target/user: Remove unused variable
+  target: Remove no-op conditional
+  target/user: Fix UFLAG_UNKNOWN_OP handling
+
+Bart Van Assche (3):
+  target: Inline transport_get_sense_codes()
+  target: Split transport_send_check_condition_and_sense()
+  tcm_qla2xxx: Remove set-but-not-used variables
+
+Brian Bunker (1):
+  target: add support for START_STOP_UNIT SCSI opcode
+
+Chris Zankel (2):
+  target: remove unused lun_flags field from se_lun
+  target: remove initiatorname field in se_acl_lun
+
+David Disseldorp (3):
+  target: check DPO/FUA usage for COMPARE AND WRITE
+  iscsi-target: Add tpg_enabled_sendtargets for disabled discovery
+  target: use stringify.h instead of own definition
+
+Hannes Reinecke (2):
+  tcm_loop: Remove SAS vestigies
+  tcm_loop: Send I_T_NEXUS_LOSS_OCCURRED UA
+
+Joern Engel (1):
+  target: improve unsupported opcode message
+
+Nicholas Bellinger (2):
+  target/qla2xxx: Honor max_data_sg_nents I/O transfer limit
+  target: Attach EXTENDED_COPY local I/O descriptors to xcopy_pt_sess
+
+Roland Dreier (5):
+  target: allow underflow/overflow for PR OUT etc. commands
+  target: Remove cmd->se_ordered_id (unused except debug log lines)
+  target: Shrink struct se_cmd by rearranging fields
+  target: Drop iSCSI use of mutex around max_cmd_sn increment
+  target: Fix max_cmd_sn increment w/o cmdsn mutex regressions
+
+Sagi Grimberg (8):
+  target: Use struct t10_pi_tuple
+  scsi: Move sense handling routines to scsi_common
+  target: Use scsi helpers to build the sense data correctly
+  target: Return ABORTED_COMMAND sense key for PI errors
+  scsi: Fix wrong additional sense length in descriptor format
+  scsi: Protect against buffer possible overflow in
+    scsi_set_sense_information
+  target: Return descriptor format sense data in case the LU spans 64bit
+    sectors
+  libiscsi: Use scsi helper to set information descriptor
+
+Sebastian Herbszt (1):
+  qla2xxx: Update tcm_qla2xxx module description to 24xx+
+
+Viresh Kumar (1):
+  drivers: target: Drop unlikely before IS_ERR(_OR_NULL)
+
+ drivers/ata/libata-scsi.c                    |   4 +-
+ drivers/infiniband/ulp/isert/ib_isert.c      |  29 +-
+ drivers/scsi/libiscsi.c                      |   9 +-
+ drivers/scsi/qla2xxx/Kconfig                 |   4 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |  13 +-
+ drivers/scsi/scsi_common.c                   | 109 ++++++
+ drivers/scsi/scsi_error.c                    |  99 +-----
+ drivers/target/iscsi/iscsi_target.c          |  86 ++---
+ drivers/target/iscsi/iscsi_target.h          |   6 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |  34 +-
+ drivers/target/iscsi/iscsi_target_device.c   |  10 +-
+ drivers/target/iscsi/iscsi_target_login.c    |  78 ++---
+ drivers/target/iscsi/iscsi_target_login.h    |   4 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |   7 +-
+ drivers/target/iscsi/iscsi_target_stat.c     |   2 +-
+ drivers/target/iscsi/iscsi_target_tmr.c      |   2 +-
+ drivers/target/iscsi/iscsi_target_tpg.c      |  38 +-
+ drivers/target/iscsi/iscsi_target_tpg.h      |   3 +-
+ drivers/target/iscsi/iscsi_target_util.c     |  39 ++-
+ drivers/target/loopback/tcm_loop.c           |  22 +-
+ drivers/target/target_core_device.c          |  11 +-
+ drivers/target/target_core_fabric_configfs.c |   2 +-
+ drivers/target/target_core_hba.c             |   5 +
+ drivers/target/target_core_sbc.c             |  49 ++-
+ drivers/target/target_core_spc.c             |  55 ++-
+ drivers/target/target_core_tpg.c             |  17 +
+ drivers/target/target_core_transport.c       | 507 ++++++++++++---------------
+ drivers/target/target_core_user.c            |  14 +-
+ drivers/target/target_core_xcopy.c           |   6 +-
+ drivers/target/tcm_fc/tfc_cmd.c              |   2 +-
+ include/scsi/scsi_common.h                   |   5 +
+ include/scsi/scsi_eh.h                       |   7 +-
+ include/target/iscsi/iscsi_target_core.h     |  15 +-
+ include/target/iscsi/iscsi_target_stat.h     |   2 +-
+ include/target/iscsi/iscsi_transport.h       |   2 +-
+ include/target/target_core_backend.h         |   2 +
+ include/target/target_core_base.h            |  27 +-
+ include/target/target_core_fabric.h          |  14 +
+ include/uapi/linux/target_core_user.h        |   4 -
+ 39 files changed, 678 insertions(+), 666 deletions(-)
