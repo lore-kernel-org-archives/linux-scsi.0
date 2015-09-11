@@ -1,100 +1,107 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
- unsafe list usage
-Date: Thu, 10 Sep 2015 23:55:37 -0700
-Message-ID: <1441954537.21634.21.camel@haakon3.risingtidesystems.com>
-References: <1440921279-9973-1-git-send-email-nab@daterainc.com>
-	 <1440921279-9973-2-git-send-email-nab@daterainc.com>
-	 <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
-	 <e0bde29b9384f924b2868cd81b7b1c8d@mail.gmail.com>
-	 <1441836181.6836.4.camel@haakon3.risingtidesystems.com>
+From: Arun Easi <arun.easi@qlogic.com>
+Subject: Re: [PATCH] target/qla2xxx: Honor max_data_sg_nents I/O transfer
+ limit
+Date: Thu, 10 Sep 2015 23:56:42 -0700
+Message-ID: <alpine.LRH.2.00.1509102344590.25345@mvluser04.mv.qlogic.com>
+References: <1439455550-2626-1-git-send-email-nab@daterainc.com>  <alpine.LRH.2.00.1508171724150.19116@mvluser04.mv.qlogic.com>  <1440112633.14304.23.camel@haakon3.risingtidesystems.com>  <1441842255.6836.13.camel@haakon3.risingtidesystems.com>
+ <D2174D86.B2810%himanshu.madhani@qlogic.com> <1441953394.21634.12.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441836181.6836.4.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chaitra Basappa <chaitra.basappa@avagotech.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, kernel-team <kernel-team@fb.com>
+Content-Type: multipart/mixed;
+	boundary="487198220-1369232053-1441954602=:25345"
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1441953394.21634.12.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Craig Watson <craig.watson@vanguard-rugged.com>, Roland Dreier <roland@purestorage.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-09-09 at 15:03 -0700, Nicholas A. Bellinger wrote:
-> On Wed, 2015-09-09 at 19:59 +0530, Chaitra Basappa wrote:
-> > From: Sreekanth Reddy [mailto:sreekanth.reddy@avagotech.com]
-> > Sent: Tuesday, September 08, 2015 5:26 PM
-> > To: Nicholas A. Bellinger
-> > Cc: linux-scsi; linux-kernel; James Bottomley; Calvin Owens; Christoph
-> > Hellwig; MPT-FusionLinux.pdl; kernel-team; Nicholas Bellinger; Chaitra
-> > Basappa
-> > Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
-> > unsafe list usage
-> > 
-> > On Sun, Aug 30, 2015 at 1:24 PM, Nicholas A. Bellinger <nab@daterainc.com>
-> > wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > >
-> > > These objects can be referenced concurrently throughout the driver, we
-> > > need a way to make sure threads can't delete them out from under each
-> > > other. This patch adds the refcount, and refactors the code to use it.
-> > >
-> > > Additionally, we cannot iterate over the sas_device_list without
-> > > holding the lock, or we risk corrupting random memory if items are
-> > > added or deleted as we iterate. This patch refactors
-> > > _scsih_probe_sas() to use the sas_device_list in a safe way.
-> > >
-> > > This patch is a port of Calvin's PATCH-v4 for mpt2sas code, atop
-> > > mpt3sas changes in scsi.git/for-next.
-> > >
-> > > Cc: Calvin Owens <calvinowens@fb.com>
-> > > Cc: Christoph Hellwig <hch@infradead.org>
-> > > Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-> > > Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
-> > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > ---
-> > >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  25 +-
-> > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 479
-> > > +++++++++++++++++++++----------
-> > >  drivers/scsi/mpt3sas/mpt3sas_transport.c |  18 +-
-> > >  3 files changed, 364 insertions(+), 158 deletions(-)
-> > >
-> > > @@ -2763,7 +2874,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,
-> > > u16 handle)
-> > >         struct scsi_device *sdev;
-> > >         struct _sas_device *sas_device;
-> > >
-> > 
-> > [Sreekanth] Here sas_device_lock spin lock needs to be acquired before
-> > calling
-> >                   __mpt3sas_get_sdev_by_addr() function.
-> > 
-> > [Chaitra]Here instead of calling " __mpt3sas_get_sdev_by_handle()" function
-> > calling
-> > 	"mpt3sas_get_sdev_by_handle()" function will fixes "invalid page access"
-> > type of kernel panic
-> > 
-> > > -       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-> > > +       sas_device = __mpt3sas_get_sdev_by_handle(ioc, handle);
-> > >         if (!sas_device)
-> > >                 return;
-> > >
-> 
-> Whoops, missed this comment in _scsih_block_io_device() from Sreekanth's
-> earlier reply.
-> 
-> Here's the updated incremental patch atop target-pending/for-next-merge
-> to use the protected callers for both cases.
-> 
-> Please review + ACK ASAP.
+--487198220-1369232053-1441954602=:25345
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-The mpt3sas -v2 series + v4.3-rc0 breakage incremental patch here made
-it into linux-next-09102015, and at this point I don't see a scenario
-where keeping around the broken list_head dereferences makes sense.
+On Thu, 10 Sep 2015, 11:36pm -0700, Nicholas A. Bellinger wrote:
 
-So that said, I'd like to send a target-pending/for-next-merge PULL
-request out to Linus in the next 48 hours.
+> On Thu, 2015-09-10 at 22:16 +0000, Himanshu Madhani wrote:
+>> Hi Nic,
+>>
+>> Sorry about the delay in response.
+>>
+>> I have tested with RHEL 6.5 and noticed that IO were not able to complete
+>> with 16M and 32M read/write. IO¹s were getting error due to Mid-layer
+>> underflow
+>>
+>> With initiator running upstream kernel version 4.2 as well I was seeing
+>> error with Mid-layer reporting under-run.
+>>
+>> I made change in the driver to report DID_OK to Mid-layer with residual
+>> count and I was able to see IO completed without any error.
+>> Basically, overriding driver¹s logic of failing an I/O, when residual
+>> makes it an error with scsi_cmnd->underflow set.
+>> In reality, though, with scsi_cmnd->underflow being set, Linux Qlogic
+>> initiator will always see this as an error.
+>> Maybe this is useful in other OSes. We have verified both read and write
+>> data on FC trace and it looks good.
+>>
+>
+> Great.  Thanks for the update.
+>
+>> Here¹s diff that was done in qla2xxx driver to report response to
+>> mid-layer as DID_OK.
+>>
+>>
+>> # git diff
+>> diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+>> b/drivers/scsi/qla2xxx/qla_isr.c
+>> index ccf6a7f..fc7b6a2 100644
+>> --- a/drivers/scsi/qla2xxx/qla_isr.c
+>> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+>> @@ -2257,7 +2257,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct
+>> rsp_que *rsp, void *pkt)
+>>                                     "detected (0x%x of 0x%x bytes).\n",
+>>                                     resid, scsi_bufflen(cp));
+>>
+>> -                               res = DID_ERROR << 16;
+>> +                               res = DID_OK << 16;
+>>                                 break;
+>>                         }
+>>                 } else if (lscsi_status != SAM_STAT_TASK_SET_FULL &&
+>> (END)
+>>
+>>
+>> Please go ahead and add patch to mainline kernel.
+>>
+>
+> This missed the last linux-next build by a day, but with your Tested-by
+> + Signed-off-by on this patch, I think it's still safe enough to queue
+> for v4.3-rc1 code.  (Adding JEJB CC')
+>
+> qla2xxx: Allow DID_OK status for residual under/overflow completion
+> https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/commit/?h=for-next&id=46376bdc1e8a77c6d2cc65b77a1e340d4b4c9f1c
+>
+> The target-pending/for-next PULL request will be going out in the next
+> 48 hours.
+>
+> Please let me know ASAP if you hit any regressions.
+>
 
-Any objections from Avago folks..?
+With existing scsi_cmnd->underflow semantics, LLDs are required (I 
+believe) to treat the I/O as error if data transferred is less than 
+underflow. "underflow", I think, is set to scsi_bufflen() today making any 
+non-zero residual cases an error. So the above patch would break that 
+semantic. We were not planning to push that change when we made that 
+internally for testing.
 
-Thank you,
+>From scsi_cmnd.h:
+--8<-- struct scsi_cmnd --
+         unsigned underflow;     /* Return error if less than
+                                    this amount is transferred */
+--8<--
 
---nab
+That said, I think moving the check (of scsi_cmnd->underflow) to upper 
+layers make more sense to me. LLDs would continue to set residual, if 
+there is a residual. SCSI M/L or sd/st can do the enforcement of 
+"scsi_cmnd->underflow" requirement.
+
+Regards,
+-Arun
+--487198220-1369232053-1441954602=:25345--
