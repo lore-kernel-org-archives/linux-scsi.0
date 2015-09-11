@@ -1,58 +1,35 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH 29/29] MAINTAINERS: Add cxlflash driver
-Date: Fri, 11 Sep 2015 16:18:35 -0500
-Message-ID: <1442006315-47537-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:60244 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbbIKVTu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:19:50 -0400
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 11 Sep 2015 15:19:50 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 2B7623E4003B
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:19:47 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLGe5v37683408
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 14:16:48 -0700
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLJD6D008762
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:19:14 -0600
-Sender: linux-scsi-owner@vger.kernel.org
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] target updates for v4.3-rc1
+Date: Fri, 11 Sep 2015 14:28:51 -0700
+Message-ID: <CA+55aFx=dcfaufv-Bk=Az8j6pdz-o5rfn46nLZb3ZdHamthM1w@mail.gmail.com>
+References: <1442005676.19349.61.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1442005676.19349.61.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
-Cc: mikey@neuling.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Add stanza for cxlflash SCSI driver.
+On Fri, Sep 11, 2015 at 2:07 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> (RESENDING)
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
----
- MAINTAINERS | 9 +++++++++
- 1 file changed, 9 insertions(+)
+This is not a re-send as far as I'm concerned. I've not seen the
+original. The last email I saw from you was from Aug 18, the subject
+being "target fixes for v4.2-rc7".
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 67a4443..49084ad 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3153,6 +3153,15 @@ F:	Documentation/powerpc/cxl.txt
- F:	Documentation/powerpc/cxl.txt
- F:	Documentation/ABI/testing/sysfs-class-cxl
- 
-+CXLFLASH (IBM Coherent Accelerator Processor Interface CAPI Flash) SCSI DRIVER
-+M:	Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-+M:	Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+F:	drivers/scsi/cxlflash/
-+F:	include/uapi/scsi/cxlflash_ioctls.h
-+F:	Documentation/powerpc/cxlflash.txt
-+
- STMMAC ETHERNET DRIVER
- M:	Giuseppe Cavallaro <peppe.cavallaro@st.com>
- L:	netdev@vger.kernel.org
--- 
-2.1.0
+I also don't think I saw this in my spam-box. The gmail spam trapping
+has actually been working fairly well, and I've been checking it. I
+also don't find your email on the web in any mail archives, but maybe
+you changed the subject line.
 
+In other words, I think you never sent it originally, or there's
+something wrong at your end and you sent it but it never went out. Or
+maybe google hates you *so* much that it not only marks you as spam
+and hides it, but even hides you from web searches.
+
+Hmm.
+
+                      Linus
