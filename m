@@ -1,260 +1,238 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH 24/29] cxlflash: Update function prologs
-Date: Fri, 11 Sep 2015 16:17:58 -0500
-Message-ID: <1442006278-47347-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH 25/29] cxlflash: Fix MMIO and endianness errors
+Date: Fri, 11 Sep 2015 16:18:01 -0500
+Message-ID: <1442006281-47385-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:34138 "EHLO
+Received: from e39.co.us.ibm.com ([32.97.110.160]:34149 "EHLO
 	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754030AbbIKVSS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:18:18 -0400
+	with ESMTP id S1754030AbbIKVSU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:18:20 -0400
 Received: from /spool/local
 	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 11 Sep 2015 15:18:17 -0600
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 30CDB6E8040
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:09:58 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLIEef55509236
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 21:18:14 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLICQc007209
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:18:13 -0400
+	Fri, 11 Sep 2015 15:18:19 -0600
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 0CDF238C804F
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:18:17 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLIGpm48038042
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 21:18:17 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLIFm0031836
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:18:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
 Cc: mikey@neuling.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Update the function prologs to properly reflect parameter names
-and return codes.
+Introduce __iomem and proper endianness tags/swaps where
+appropriate to make driver sparse clean.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 68 ++++++++++++++++----------------------------
- 1 file changed, 25 insertions(+), 43 deletions(-)
+ drivers/scsi/cxlflash/common.h    | 10 +++++-----
+ drivers/scsi/cxlflash/main.c      | 25 +++++++++++++------------
+ drivers/scsi/cxlflash/superpipe.c |  6 +++---
+ drivers/scsi/cxlflash/superpipe.h |  2 +-
+ drivers/scsi/cxlflash/vlun.c      |  4 ++--
+ 5 files changed, 24 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index f392319..b893046 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -165,9 +165,9 @@ struct afu {
+ 
+ 	/* AFU HW */
+ 	struct cxl_ioctl_start_work work;
+-	struct cxlflash_afu_map *afu_map;	/* entire MMIO map */
+-	struct sisl_host_map *host_map;		/* MC host map */
+-	struct sisl_ctrl_map *ctrl_map;		/* MC control map */
++	struct cxlflash_afu_map __iomem *afu_map;	/* entire MMIO map */
++	struct sisl_host_map __iomem *host_map;		/* MC host map */
++	struct sisl_ctrl_map __iomem *ctrl_map;		/* MC control map */
+ 
+ 	ctx_hndl_t ctx_hndl;	/* master's context handle */
+ 	u64 *hrrq_start;
+@@ -189,10 +189,10 @@ struct afu {
+ 
+ static inline u64 lun_to_lunid(u64 lun)
+ {
+-	u64 lun_id;
++	__be64 lun_id;
+ 
+ 	int_to_scsilun(lun, (struct scsi_lun *)&lun_id);
+-	return swab64(lun_id);
++	return be64_to_cpu(lun_id);
+ }
+ 
+ int cxlflash_afu_sync(struct afu *, ctx_hndl_t, res_hndl_t, u8);
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 24ff8dc..e22fc7e 100644
+index e22fc7e..770c515 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -401,8 +401,7 @@ static void wait_resp(struct afu *afu, struct afu_cmd *cmd)
-  * @tmfcmd:	TMF command to send.
-  *
-  * Return:
-- *	0 on success
-- *	SCSI_MLQUEUE_HOST_BUSY when host is busy
-+ *	0 on success or SCSI_MLQUEUE_HOST_BUSY
+@@ -644,7 +644,7 @@ static void stop_afu(struct cxlflash_cfg *cfg)
+ 			complete(&afu->cmd[i].cevent);
+ 
+ 		if (likely(afu->afu_map)) {
+-			cxl_psa_unmap((void *)afu->afu_map);
++			cxl_psa_unmap((void __iomem *)afu->afu_map);
+ 			afu->afu_map = NULL;
+ 		}
+ 	}
+@@ -915,7 +915,7 @@ out:
+  * that the FC link layer has synced, completed the handshaking process, and
+  * is ready for login to start.
   */
- static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+-static void set_port_online(u64 *fc_regs)
++static void set_port_online(__be64 __iomem *fc_regs)
  {
-@@ -491,9 +490,7 @@ static const char *cxlflash_driver_info(struct Scsi_Host *host)
-  * @host:	SCSI host associated with device.
-  * @scp:	SCSI command to send.
+ 	u64 cmdcfg;
+ 
+@@ -931,7 +931,7 @@ static void set_port_online(u64 *fc_regs)
   *
-- * Return:
-- *	0 on success
-- *	SCSI_MLQUEUE_HOST_BUSY when host is busy
-+ * Return: 0 on success or SCSI_MLQUEUE_HOST_BUSY
+  * The provided MMIO region must be mapped prior to call.
   */
- static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+-static void set_port_offline(u64 *fc_regs)
++static void set_port_offline(__be64 __iomem *fc_regs)
  {
-@@ -597,7 +594,7 @@ out:
+ 	u64 cmdcfg;
  
- /**
-  * cxlflash_wait_for_pci_err_recovery() - wait for error recovery during probe
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
+@@ -955,7 +955,7 @@ static void set_port_offline(u64 *fc_regs)
+  *	FALSE (0) when the specified port fails to come online after timeout
+  *	-EINVAL when @delay_us is less than 1000
   */
- static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+-static int wait_port_online(u64 *fc_regs, u32 delay_us, u32 nretry)
++static int wait_port_online(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
  {
-@@ -611,7 +608,7 @@ static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+ 	u64 status;
  
- /**
-  * free_mem() - free memory associated with the AFU
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
+@@ -986,7 +986,7 @@ static int wait_port_online(u64 *fc_regs, u32 delay_us, u32 nretry)
+  *	FALSE (0) when the specified port fails to go offline after timeout
+  *	-EINVAL when @delay_us is less than 1000
   */
- static void free_mem(struct cxlflash_cfg *cfg)
+-static int wait_port_offline(u64 *fc_regs, u32 delay_us, u32 nretry)
++static int wait_port_offline(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
  {
-@@ -633,7 +630,7 @@ static void free_mem(struct cxlflash_cfg *cfg)
+ 	u64 status;
  
- /**
-  * stop_afu() - stops the AFU command timers and unmaps the MMIO space
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * Safe to call with AFU in a partially allocated/initialized state.
+@@ -1021,7 +1021,8 @@ static int wait_port_offline(u64 *fc_regs, u32 delay_us, u32 nretry)
+  *	0 when the WWPN is successfully written and the port comes back online
+  *	-1 when the port fails to go offline or come back up online
   */
-@@ -655,7 +652,7 @@ static void stop_afu(struct cxlflash_cfg *cfg)
- 
- /**
-  * term_mc() - terminates the master context
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  * @level:	Depth of allocation, where to begin waterfall tear down.
-  *
-  * Safe to call with AFU/MC in partially allocated/initialized state.
-@@ -691,7 +688,7 @@ static void term_mc(struct cxlflash_cfg *cfg, enum undo_level level)
- 
- /**
-  * term_afu() - terminates the AFU
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * Safe to call with AFU/MC in partially allocated/initialized state.
-  */
-@@ -752,7 +749,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
- 
- /**
-  * alloc_mem() - allocates the AFU and its command pool
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * A partially allocated state remains on failure.
-  *
-@@ -805,12 +802,9 @@ out:
- 
- /**
-  * init_pci() - initializes the host as a PCI device
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-- * Return:
-- *	0 on success
-- *	-EIO on unable to communicate with device
-- *	A return code from the PCI sub-routines
-+ * Return: 0 on success, -errno on failure
-  */
- static int init_pci(struct cxlflash_cfg *cfg)
+-static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
++static int afu_set_wwpn(struct afu *afu, int port, __be64 __iomem *fc_regs,
++			u64 wwpn)
  {
-@@ -890,11 +884,9 @@ out_release_regions:
+ 	int rc = 0;
  
- /**
-  * init_scsi() - adds the host to the SCSI stack and kicks off host scan
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-- * Return:
-- *	0 on success
-- *	A return code from adding the host
-+ * Return: 0 on success, -errno on failure
+@@ -1066,7 +1067,7 @@ static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
+  * the alternate port exclusively while the reset takes place.
+  * failure to come online is overridden.
   */
- static int init_scsi(struct cxlflash_cfg *cfg)
+-static void afu_link_reset(struct afu *afu, int port, u64 *fc_regs)
++static void afu_link_reset(struct afu *afu, int port, __be64 __iomem *fc_regs)
  {
-@@ -1368,7 +1360,7 @@ out:
+ 	u64 port_sel;
  
- /**
-  * start_context() - starts the master context
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * Return: A success or failure value from CXL services.
-  */
-@@ -1386,12 +1378,10 @@ static int start_context(struct cxlflash_cfg *cfg)
+@@ -1288,7 +1289,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 	struct device *dev = &cfg->dev->dev;
+ 	u64 reg_unmasked;
+ 	const struct asyc_intr_info *info;
+-	struct sisl_global_map *global = &afu->afu_map->global;
++	struct sisl_global_map __iomem *global = &afu->afu_map->global;
+ 	u64 reg;
+ 	u8 port;
+ 	int i;
+@@ -1477,7 +1478,7 @@ out:
+ static void init_pcr(struct cxlflash_cfg *cfg)
+ {
+ 	struct afu *afu = cfg->afu;
+-	struct sisl_ctrl_map *ctrl_map;
++	struct sisl_ctrl_map __iomem *ctrl_map;
+ 	int i;
  
- /**
-  * read_vpd() - obtains the WWPNs from VPD
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  * @wwpn:	Array of size NUM_FC_PORTS to pass back WWPNs
-  *
-- * Return:
-- *	0 on success
-- *	-ENODEV when VPD or WWPN keywords not found
-+ * Return: 0 on success, -errno on failure
-  */
- static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- {
-@@ -1479,7 +1469,7 @@ out:
+ 	for (i = 0; i < MAX_CONTEXT; i++) {
+@@ -1766,7 +1767,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 		dev_err(dev, "%s: call to start_afu failed, rc=%d!\n",
+ 			__func__, rc);
+ 		term_mc(cfg, UNDO_START);
+-		cxl_psa_unmap((void *)afu->afu_map);
++		cxl_psa_unmap((void __iomem *)afu->afu_map);
+ 		afu->afu_map = NULL;
+ 		goto err1;
+ 	}
+@@ -1846,8 +1847,8 @@ retry:
+ 	cmd->rcb.cdb[1] = mode;
  
- /**
-  * init_pcr() - initialize the provisioning and control registers
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * Also sets up fast access to the mapped registers and initializes AFU
-  * command fields that never change.
-@@ -1518,7 +1508,7 @@ static void init_pcr(struct cxlflash_cfg *cfg)
+ 	/* The cdb is aligned, no unaligned accessors required */
+-	*((u16 *)&cmd->rcb.cdb[2]) = swab16(ctx_hndl_u);
+-	*((u32 *)&cmd->rcb.cdb[4]) = swab32(res_hndl_u);
++	*((__be16 *)&cmd->rcb.cdb[2]) = cpu_to_be16(ctx_hndl_u);
++	*((__be32 *)&cmd->rcb.cdb[4]) = cpu_to_be32(res_hndl_u);
  
- /**
-  * init_global() - initialize AFU global registers
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  */
- static int init_global(struct cxlflash_cfg *cfg)
+ 	rc = send_cmd(afu, cmd);
+ 	if (unlikely(rc))
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 5d51c65..fb79b79fe 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -253,7 +253,7 @@ static int afu_attach(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
  {
-@@ -1603,7 +1593,7 @@ out:
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu *afu = cfg->afu;
+-	struct sisl_ctrl_map *ctrl_map = ctxi->ctrl_map;
++	struct sisl_ctrl_map __iomem *ctrl_map = ctxi->ctrl_map;
+ 	int rc = 0;
+ 	u64 val;
  
- /**
-  * start_afu() - initializes and starts the AFU
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  */
- static int start_afu(struct cxlflash_cfg *cfg)
- {
-@@ -1637,12 +1627,9 @@ static int start_afu(struct cxlflash_cfg *cfg)
+@@ -365,8 +365,8 @@ retry:
+ 	 * as the buffer is allocated on an aligned boundary.
+ 	 */
+ 	mutex_lock(&gli->mutex);
+-	gli->max_lba = be64_to_cpu(*((u64 *)&cmd_buf[0]));
+-	gli->blk_len = be32_to_cpu(*((u32 *)&cmd_buf[8]));
++	gli->max_lba = be64_to_cpu(*((__be64 *)&cmd_buf[0]));
++	gli->blk_len = be32_to_cpu(*((__be32 *)&cmd_buf[8]));
+ 	mutex_unlock(&gli->mutex);
  
- /**
-  * init_mc() - create and register as the master context
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-- * Return:
-- *	0 on success
-- *	-ENOMEM when unable to obtain a context from CXL services
-- *	A failure value from CXL services.
-+ * Return: 0 on success, -errno on failure
-  */
- static int init_mc(struct cxlflash_cfg *cfg)
- {
-@@ -1726,15 +1713,12 @@ out:
+ out:
+diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
+index 7947091..7df88ee 100644
+--- a/drivers/scsi/cxlflash/superpipe.h
++++ b/drivers/scsi/cxlflash/superpipe.h
+@@ -91,7 +91,7 @@ enum ctx_ctrl {
+ #define DECODE_CTXID(_val)	(_val & 0xFFFFFFFF)
  
- /**
-  * init_afu() - setup as master context and start AFU
-- * @cxlflash:	Internal structure associated with the host.
-+ * @cfg:	Internal structure associated with the host.
-  *
-  * This routine is a higher level of control for configuring the
-  * AFU on probe and reset paths.
-  *
-- * Return:
-- *	0 on success
-- *	-ENOMEM when unable to map the AFU MMIO space
-- *	A failure value from internal services.
-+ * Return: 0 on success, -errno on failure
-  */
- static int init_afu(struct cxlflash_cfg *cfg)
- {
-@@ -1887,9 +1871,7 @@ out:
-  * afu_reset() - resets the AFU
-  * @cfg:	Internal structure associated with the host.
-  *
-- * Return:
-- *	0 on success
-- *	A failure value from internal services.
-+ * Return: 0 on success, -errno on failure
-  */
- static int afu_reset(struct cxlflash_cfg *cfg)
- {
-@@ -2374,7 +2356,7 @@ static void cxlflash_worker_thread(struct work_struct *work)
-  * @pdev:	PCI device associated with the host.
-  * @dev_id:	PCI device id associated with device.
-  *
-- * Return: 0 on success / non-zero on failure
-+ * Return: 0 on success, -errno on failure
-  */
- static int cxlflash_probe(struct pci_dev *pdev,
- 			  const struct pci_device_id *dev_id)
-@@ -2608,7 +2590,7 @@ static struct pci_driver cxlflash_driver = {
- /**
-  * init_cxlflash() - module entry point
-  *
-- * Return: 0 on success / non-zero on failure
-+ * Return: 0 on success, -errno on failure
-  */
- static int __init init_cxlflash(void)
- {
+ struct ctx_info {
+-	struct sisl_ctrl_map *ctrl_map; /* initialized at startup */
++	struct sisl_ctrl_map __iomem *ctrl_map; /* initialized at startup */
+ 	struct sisl_rht_entry *rht_start; /* 1 page (req'd for alignment),
+ 					     alloc/free on attach/detach */
+ 	u32 rht_out;		/* Number of checked out RHT entries */
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 96b074f..f91b5b3 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -786,7 +786,7 @@ void cxlflash_restore_luntable(struct cxlflash_cfg *cfg)
+ 	u32 chan;
+ 	u32 lind;
+ 	struct afu *afu = cfg->afu;
+-	struct sisl_global_map *agm = &afu->afu_map->global;
++	struct sisl_global_map __iomem *agm = &afu->afu_map->global;
+ 
+ 	mutex_lock(&global.mutex);
+ 
+@@ -831,7 +831,7 @@ static int init_luntable(struct cxlflash_cfg *cfg, struct llun_info *lli)
+ 	u32 lind;
+ 	int rc = 0;
+ 	struct afu *afu = cfg->afu;
+-	struct sisl_global_map *agm = &afu->afu_map->global;
++	struct sisl_global_map __iomem *agm = &afu->afu_map->global;
+ 
+ 	mutex_lock(&global.mutex);
+ 
 -- 
 2.1.0
 
