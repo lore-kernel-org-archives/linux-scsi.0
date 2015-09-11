@@ -1,95 +1,58 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH 18/29] cxlflash: Remove dual port online dependency
-Date: Fri, 11 Sep 2015 16:16:33 -0500
-Message-ID: <1442006193-47115-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH 21/29] cxlflash: Move workq termination earlier on remove
+Date: Fri, 11 Sep 2015 16:17:52 -0500
+Message-ID: <1442006272-47233-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:42674 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125AbbIKVRr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:17:47 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:44541 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125AbbIKVSJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:18:09 -0400
 Received: from /spool/local
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 11 Sep 2015 17:17:46 -0400
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 7153C6E8040
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:09:28 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLHapI63504552
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 21:17:44 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLHBJR002234
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:17:11 -0400
+	Fri, 11 Sep 2015 15:18:08 -0600
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 2A7D43E40030
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:18:07 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLI76O27525242
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 14:18:07 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLI5sX011070
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:18:06 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
 Cc: mikey@neuling.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-At present, both ports must be online for the device to
-configure properly. Remove this dependency and the unnecessary
-internal LUN override logic as well. Additionally, change the
-return code variable to match that used throughout the driver.
+The workq should be terminated prior to freeing memory. Move the
+termination call earlier in remove and use cancel_work_sync() instead
+of flush_work().
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/scsi/cxlflash/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 74eb742..e2cc410 100644
+index 1856a73..1625aea 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -1031,7 +1031,7 @@ static int wait_port_offline(u64 *fc_regs, u32 delay_us, u32 nretry)
-  */
- static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
- {
--	int ret = 0;
-+	int rc = 0;
- 
- 	set_port_offline(fc_regs);
- 
-@@ -1039,33 +1039,26 @@ static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
- 			       FC_PORT_STATUS_RETRY_CNT)) {
- 		pr_debug("%s: wait on port %d to go offline timed out\n",
- 			 __func__, port);
--		ret = -1; /* but continue on to leave the port back online */
-+		rc = -1; /* but continue on to leave the port back online */
- 	}
- 
--	if (ret == 0)
-+	if (rc == 0)
- 		writeq_be(wwpn, &fc_regs[FC_PNAME / 8]);
- 
-+	/* Always return success after programming WWPN */
-+	rc = 0;
-+
- 	set_port_online(fc_regs);
- 
- 	if (!wait_port_online(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
- 			      FC_PORT_STATUS_RETRY_CNT)) {
- 		pr_debug("%s: wait on port %d to go online timed out\n",
- 			 __func__, port);
--		ret = -1;
--
--		/*
--		 * Override for internal lun!!!
--		 */
--		if (afu->internal_lun) {
--			pr_debug("%s: Overriding port %d online timeout!!!\n",
--				 __func__, port);
--			ret = 0;
--		}
- 	}
- 
--	pr_debug("%s: returning rc=%d\n", __func__, ret);
-+	pr_debug("%s: returning rc=%d\n", __func__, rc);
- 
--	return ret;
-+	return rc;
- }
- 
- /**
+@@ -736,12 +736,12 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 		scsi_remove_host(cfg->host);
+ 		/* Fall through */
+ 	case INIT_STATE_AFU:
++		cancel_work_sync(&cfg->work_q);
+ 		term_afu(cfg);
+ 	case INIT_STATE_PCI:
+ 		pci_release_regions(cfg->dev);
+ 		pci_disable_device(pdev);
+ 	case INIT_STATE_NONE:
+-		flush_work(&cfg->work_q);
+ 		free_mem(cfg);
+ 		scsi_host_put(cfg->host);
+ 		break;
 -- 
 2.1.0
 
