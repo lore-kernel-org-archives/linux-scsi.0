@@ -1,396 +1,171 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH 13/29] cxlflash: Refine print statements
-Date: Fri, 11 Sep 2015 16:16:21 -0500
-Message-ID: <1442006181-46923-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH 14/29] cxlflash: Protect TMF waitq with spinlock
+Date: Fri, 11 Sep 2015 16:16:23 -0500
+Message-ID: <1442006183-46961-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:33575 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753944AbbIKVQi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:16:38 -0400
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:57317 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944AbbIKVQl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2015 17:16:41 -0400
 Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 11 Sep 2015 15:16:37 -0600
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 0B2871FF002D
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:07:45 -0600 (MDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLFkYe44892162
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 14:15:46 -0700
-Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLGYG3015271
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 15:16:35 -0600
+	Fri, 11 Sep 2015 17:16:40 -0400
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id C82C538C804F
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:16:38 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8BLGcGx56688874
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 21:16:38 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8BLGabZ032439
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2015 17:16:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
 Cc: mikey@neuling.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Various print changes: pr_* to dev_*, *_dbg to *_devel, and
-*_dbg to *_dbg_ratelimited.
+Use a spinlock to protect the TMF waitq instead of borrowing
+the internal waitq lock. Also introduce a timeout for when the
+TMF fails to complete so the appropriate status can be sent back
+to the stack.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 105 ++++++++++++++++++++++++-------------------
- 1 file changed, 58 insertions(+), 47 deletions(-)
+ drivers/scsi/cxlflash/common.h |  1 +
+ drivers/scsi/cxlflash/main.c   | 55 +++++++++++++++++++++++++-----------------
+ 2 files changed, 34 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 2855b09..c8327ac 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -126,6 +126,7 @@ struct cxlflash_cfg {
+ 	struct list_head lluns; /* list of llun_info structs */
+ 
+ 	wait_queue_head_t tmf_waitq;
++	spinlock_t tmf_slock;
+ 	bool tmf_active;
+ 	wait_queue_head_t reset_waitq;
+ 	enum cxlflash_state state;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 919dfb1..600c7f9 100644
+index 600c7f9..29e40cc 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -58,8 +58,8 @@ static struct afu_cmd *cmd_checkout(struct afu *afu)
- 		cmd = &afu->cmd[k];
+@@ -249,11 +249,10 @@ static void cmd_complete(struct afu_cmd *cmd)
+ 		scp->scsi_done(scp);
  
- 		if (!atomic_dec_if_positive(&cmd->free)) {
--			pr_debug("%s: returning found index=%d\n",
--				 __func__, cmd->slot);
-+			pr_devel("%s: returning found index=%d cmd=%p\n",
-+				 __func__, cmd->slot, cmd);
- 			memset(cmd->buf, 0, CMD_BUFSIZE);
- 			memset(cmd->rcb.cdb, 0, sizeof(cmd->rcb.cdb));
- 			return cmd;
-@@ -93,7 +93,7 @@ static void cmd_checkin(struct afu_cmd *cmd)
- 		return;
- 	}
- 
--	pr_debug("%s: released cmd %p index=%d\n", __func__, cmd, cmd->slot);
-+	pr_devel("%s: released cmd %p index=%d\n", __func__, cmd, cmd->slot);
- }
- 
- /**
-@@ -127,7 +127,7 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- 	}
- 
- 	pr_debug("%s: cmd failed afu_rc=%d scsi_rc=%d fc_rc=%d "
--		 "afu_extra=0x%X, scsi_entra=0x%X, fc_extra=0x%X\n",
-+		 "afu_extra=0x%X, scsi_extra=0x%X, fc_extra=0x%X\n",
- 		 __func__, ioasa->rc.afu_rc, ioasa->rc.scsi_rc,
- 		 ioasa->rc.fc_rc, ioasa->afu_extra, ioasa->scsi_extra,
- 		 ioasa->fc_extra);
-@@ -240,9 +240,9 @@ static void cmd_complete(struct afu_cmd *cmd)
- 		cmd_is_tmf = cmd->cmd_tmf;
- 		cmd_checkin(cmd); /* Don't use cmd after here */
- 
--		pr_debug("%s: calling scsi_set_resid, scp=%p "
--			 "result=%X resid=%d\n", __func__,
--			 scp, scp->result, resid);
-+		pr_debug_ratelimited("%s: calling scsi_done scp=%p result=%X "
-+				     "ioasc=%d\n", __func__, scp, scp->result,
-+				     cmd->sa.ioasc);
- 
- 		scsi_set_resid(scp, resid);
- 		scsi_dma_unmap(scp);
-@@ -417,12 +417,13 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- 	short lflag = 0;
- 	struct Scsi_Host *host = scp->device->host;
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
-+	struct device *dev = &cfg->dev->dev;
+ 		if (cmd_is_tmf) {
+-			spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
++			spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 			cfg->tmf_active = false;
+ 			wake_up_all_locked(&cfg->tmf_waitq);
+-			spin_unlock_irqrestore(&cfg->tmf_waitq.lock,
+-					       lock_flags);
++			spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ 		}
+ 	} else
+ 		complete(&cmd->cevent);
+@@ -420,6 +419,7 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 	struct device *dev = &cfg->dev->dev;
  	ulong lock_flags;
  	int rc = 0;
++	ulong to;
  
  	cmd = cmd_checkout(afu);
  	if (unlikely(!cmd)) {
--		pr_err("%s: could not get a free command\n", __func__);
-+		dev_err(dev, "%s: could not get a free command\n", __func__);
+@@ -428,15 +428,15 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 		goto out;
+ 	}
+ 
+-	/* If a Task Management Function is active, do not send one more.
+-	 */
+-	spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
++	/* When Task Management Function is active do not send another */
++	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 	if (cfg->tmf_active)
+-		wait_event_interruptible_locked_irq(cfg->tmf_waitq,
+-						    !cfg->tmf_active);
++		wait_event_interruptible_lock_irq(cfg->tmf_waitq,
++						  !cfg->tmf_active,
++						  cfg->tmf_slock);
+ 	cfg->tmf_active = true;
+ 	cmd->cmd_tmf = true;
+-	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ 
+ 	cmd->rcb.ctx_id = afu->ctx_hndl;
+ 	cmd->rcb.port_sel = port_sel;
+@@ -457,15 +457,24 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 	rc = send_cmd(afu, cmd);
+ 	if (unlikely(rc)) {
+ 		cmd_checkin(cmd);
+-		spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
++		spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 		cfg->tmf_active = false;
+-		spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++		spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ 		goto out;
+ 	}
+ 
+-	spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
+-	wait_event_interruptible_locked_irq(cfg->tmf_waitq, !cfg->tmf_active);
+-	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
++	to = msecs_to_jiffies(5000);
++	to = wait_event_interruptible_lock_irq_timeout(cfg->tmf_waitq,
++						       !cfg->tmf_active,
++						       cfg->tmf_slock,
++						       to);
++	if (!to) {
++		cfg->tmf_active = false;
++		dev_err(dev, "%s: TMF timed out!\n", __func__);
++		rc = -1;
++	}
++	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ out:
+ 	return rc;
+ }
+@@ -512,16 +521,17 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 			    get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+ 			    get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 
+-	/* If a Task Management Function is active, wait for it to complete
++	/*
++	 * If a Task Management Function is active, wait for it to complete
+ 	 * before continuing with regular commands.
+ 	 */
+-	spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
++	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 	if (cfg->tmf_active) {
+-		spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++		spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
  		rc = SCSI_MLQUEUE_HOST_BUSY;
  		goto out;
  	}
-@@ -493,7 +494,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- {
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
- 	struct afu *afu = cfg->afu;
--	struct pci_dev *pdev = cfg->dev;
-+	struct device *dev = &cfg->dev->dev;
- 	struct afu_cmd *cmd;
- 	u32 port_sel = scp->device->channel + 1;
- 	int nseg, i, ncount;
-@@ -502,13 +503,14 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	short lflag = 0;
- 	int rc = 0;
- 
--	pr_debug("%s: (scp=%p) %d/%d/%d/%llu cdb=(%08X-%08X-%08X-%08X)\n",
--		 __func__, scp, host->host_no, scp->device->channel,
--		 scp->device->id, scp->device->lun,
--		 get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
--		 get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
--		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
--		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
-+	dev_dbg_ratelimited(dev, "%s: (scp=%p) %d/%d/%d/%llu "
-+			    "cdb=(%08X-%08X-%08X-%08X)\n",
-+			    __func__, scp, host->host_no, scp->device->channel,
-+			    scp->device->id, scp->device->lun,
-+			    get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
-+			    get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
-+			    get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
-+			    get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
- 
- 	/* If a Task Management Function is active, wait for it to complete
- 	 * before continuing with regular commands.
-@@ -523,13 +525,11 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+-	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
  
  	switch (cfg->state) {
  	case STATE_RESET:
--		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device is in reset!\n",
--				    __func__);
-+		dev_dbg_ratelimited(dev, "%s: device is in reset!\n", __func__);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	case STATE_FAILTERM:
--		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device has failed!\n",
--				    __func__);
-+		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
- 		scp->result = (DID_NO_CONNECT << 16);
- 		scp->scsi_done(scp);
- 		rc = 0;
-@@ -540,7 +540,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 
- 	cmd = cmd_checkout(afu);
- 	if (unlikely(!cmd)) {
--		pr_err("%s: could not get a free command\n", __func__);
-+		dev_err(dev, "%s: could not get a free command\n", __func__);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	}
-@@ -562,7 +562,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 
- 	nseg = scsi_dma_map(scp);
- 	if (unlikely(nseg < 0)) {
--		dev_err(&pdev->dev, "%s: Fail DMA map! nseg=%d\n",
-+		dev_err(dev, "%s: Fail DMA map! nseg=%d\n",
- 			__func__, nseg);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
-@@ -585,6 +585,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	}
- 
- out:
-+	pr_devel("%s: returning rc=%d\n", __func__, rc);
- 	return rc;
- }
- 
-@@ -657,9 +658,10 @@ static void term_mc(struct cxlflash_cfg *cfg, enum undo_level level)
- {
- 	int rc = 0;
- 	struct afu *afu = cfg->afu;
-+	struct device *dev = &cfg->dev->dev;
- 
- 	if (!afu || !cfg->mcctx) {
--		pr_err("%s: returning from term_mc with NULL afu or MC\n",
-+		dev_err(dev, "%s: returning from term_mc with NULL afu or MC\n",
- 		       __func__);
- 		return;
- 	}
-@@ -756,6 +758,7 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
- 	int rc = 0;
- 	int i;
- 	char *buf = NULL;
-+	struct device *dev = &cfg->dev->dev;
- 
- 	/* This allocation is about 12K, i.e. only 1 64k page
- 	 * and upto 4 4k pages
-@@ -763,8 +766,8 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
- 	cfg->afu = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
- 					    get_order(sizeof(struct afu)));
- 	if (unlikely(!cfg->afu)) {
--		pr_err("%s: cannot get %d free pages\n",
--		       __func__, get_order(sizeof(struct afu)));
-+		dev_err(dev, "%s: cannot get %d free pages\n",
-+			__func__, get_order(sizeof(struct afu)));
- 		rc = -ENOMEM;
- 		goto out;
- 	}
-@@ -775,7 +778,8 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
- 		if (!((u64)buf & (PAGE_SIZE - 1))) {
- 			buf = (void *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
- 			if (unlikely(!buf)) {
--				pr_err("%s: Allocate command buffers fail!\n",
-+				dev_err(dev,
-+					"%s: Allocate command buffers fail!\n",
- 				       __func__);
- 				rc = -ENOMEM;
- 				free_mem(cfg);
-@@ -1289,6 +1293,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- {
- 	struct afu *afu = (struct afu *)data;
- 	struct cxlflash_cfg *cfg = afu->parent;
-+	struct device *dev = &cfg->dev->dev;
- 	u64 reg_unmasked;
- 	const struct asyc_intr_info *info;
- 	struct sisl_global_map *global = &afu->afu_map->global;
-@@ -1303,8 +1308,8 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- 	reg_unmasked = (reg & SISL_ASTATUS_UNMASK);
- 
- 	if (reg_unmasked == 0) {
--		pr_err("%s: spurious interrupt, aintr_status 0x%016llX\n",
--		       __func__, reg);
-+		dev_err(dev, "%s: spurious interrupt, aintr_status 0x%016llX\n",
-+			__func__, reg);
- 		goto out;
- 	}
- 
-@@ -1319,8 +1324,8 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- 
- 		port = info->port;
- 
--		pr_err("%s: FC Port %d -> %s, fc_status 0x%08llX\n",
--		       __func__, port, info->desc,
-+		dev_err(dev, "%s: FC Port %d -> %s, fc_status 0x%08llX\n",
-+			__func__, port, info->desc,
- 		       readq_be(&global->fc_regs[port][FC_STATUS / 8]));
- 
- 		/*
-@@ -1328,8 +1333,8 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- 		 * again if cleared before or w/o a reset
- 		 */
- 		if (info->action & LINK_RESET) {
--			pr_err("%s: FC Port %d: resetting link\n",
--			       __func__, port);
-+			dev_err(dev, "%s: FC Port %d: resetting link\n",
-+				__func__, port);
- 			cfg->lr_state = LINK_RESET_REQUIRED;
- 			cfg->lr_port = port;
- 			schedule_work(&cfg->work_q);
-@@ -1343,8 +1348,8 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- 			 * should be the same and tracing one is sufficient.
- 			 */
- 
--			pr_err("%s: fc %d: clearing fc_error 0x%08llX\n",
--			       __func__, port, reg);
-+			dev_err(dev, "%s: fc %d: clearing fc_error 0x%08llX\n",
-+				__func__, port, reg);
- 
- 			writeq_be(reg, &global->fc_regs[port][FC_ERROR / 8]);
- 			writeq_be(0, &global->fc_regs[port][FC_ERRCAP / 8]);
-@@ -1352,7 +1357,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
- 	}
- 
- out:
--	pr_debug("%s: returning rc=%d, afu=%p\n", __func__, IRQ_HANDLED, afu);
-+	dev_dbg(dev, "%s: returning IRQ_HANDLED, afu=%p\n", __func__, afu);
- 	return IRQ_HANDLED;
- }
- 
-@@ -1396,7 +1401,7 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 	/* Get the VPD data from the device */
- 	vpd_size = pci_read_vpd(dev, 0, sizeof(vpd_data), vpd_data);
- 	if (unlikely(vpd_size <= 0)) {
--		pr_err("%s: Unable to read VPD (size = %ld)\n",
-+		dev_err(&dev->dev, "%s: Unable to read VPD (size = %ld)\n",
- 		       __func__, vpd_size);
- 		rc = -ENODEV;
- 		goto out;
-@@ -1406,7 +1411,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 	ro_start = pci_vpd_find_tag(vpd_data, 0, vpd_size,
- 				    PCI_VPD_LRDT_RO_DATA);
- 	if (unlikely(ro_start < 0)) {
--		pr_err("%s: VPD Read-only data not found\n", __func__);
-+		dev_err(&dev->dev, "%s: VPD Read-only data not found\n",
-+			__func__);
- 		rc = -ENODEV;
- 		goto out;
- 	}
-@@ -1435,8 +1441,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 
- 		i = pci_vpd_find_info_keyword(vpd_data, i, j, wwpn_vpd_tags[k]);
- 		if (unlikely(i < 0)) {
--			pr_err("%s: Port %d WWPN not found in VPD\n",
--			       __func__, k);
-+			dev_err(&dev->dev, "%s: Port %d WWPN not found "
-+				"in VPD\n", __func__, k);
- 			rc = -ENODEV;
- 			goto out;
- 		}
-@@ -1444,7 +1450,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 		j = pci_vpd_info_field_size(&vpd_data[i]);
- 		i += PCI_VPD_INFO_FLD_HDR_SIZE;
- 		if (unlikely((i + j > vpd_size) || (j != WWPN_LEN))) {
--			pr_err("%s: Port %d WWPN incomplete or VPD corrupt\n",
-+			dev_err(&dev->dev, "%s: Port %d WWPN incomplete or "
-+				"VPD corrupt\n",
- 			       __func__, k);
- 			rc = -ENODEV;
- 			goto out;
-@@ -1453,8 +1460,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 		memcpy(tmp_buf, &vpd_data[i], WWPN_LEN);
- 		rc = kstrtoul(tmp_buf, WWPN_LEN, (ulong *)&wwpn[k]);
- 		if (unlikely(rc)) {
--			pr_err("%s: Fail to convert port %d WWPN to integer\n",
--			       __func__, k);
-+			dev_err(&dev->dev, "%s: Fail to convert port %d WWPN "
-+				"to integer\n", __func__, k);
- 			rc = -ENODEV;
- 			goto out;
- 		}
-@@ -1511,6 +1518,7 @@ static void init_pcr(struct cxlflash_cfg *cfg)
- static int init_global(struct cxlflash_cfg *cfg)
- {
- 	struct afu *afu = cfg->afu;
-+	struct device *dev = &cfg->dev->dev;
- 	u64 wwpn[NUM_FC_PORTS];	/* wwpn of AFU ports */
- 	int i = 0, num_ports = 0;
- 	int rc = 0;
-@@ -1518,7 +1526,7 @@ static int init_global(struct cxlflash_cfg *cfg)
- 
- 	rc = read_vpd(cfg, &wwpn[0]);
- 	if (rc) {
--		pr_err("%s: could not read vpd rc=%d\n", __func__, rc);
-+		dev_err(dev, "%s: could not read vpd rc=%d\n", __func__, rc);
- 		goto out;
- 	}
- 
-@@ -1561,7 +1569,7 @@ static int init_global(struct cxlflash_cfg *cfg)
- 		    afu_set_wwpn(afu, i,
- 				 &afu->afu_map->global.fc_regs[i][0],
- 				 wwpn[i])) {
--			pr_err("%s: failed to set WWPN on port %d\n",
-+			dev_err(dev, "%s: failed to set WWPN on port %d\n",
- 			       __func__, i);
- 			rc = -EIO;
- 			goto out;
-@@ -1804,6 +1812,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
- 		      res_hndl_t res_hndl_u, u8 mode)
- {
- 	struct cxlflash_cfg *cfg = afu->parent;
-+	struct device *dev = &cfg->dev->dev;
- 	struct afu_cmd *cmd = NULL;
- 	int rc = 0;
- 	int retry_cnt = 0;
-@@ -1822,7 +1831,7 @@ retry:
- 		udelay(1000 * retry_cnt);
- 		if (retry_cnt < MC_RETRY_CNT)
- 			goto retry;
--		pr_err("%s: could not get a free command\n", __func__);
-+		dev_err(dev, "%s: could not get a free command\n", __func__);
- 		rc = -1;
- 		goto out;
- 	}
-@@ -2310,6 +2319,7 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 	struct cxlflash_cfg *cfg = container_of(work, struct cxlflash_cfg,
- 						work_q);
- 	struct afu *afu = cfg->afu;
-+	struct device *dev = &cfg->dev->dev;
- 	int port;
- 	ulong lock_flags;
- 
-@@ -2323,7 +2333,8 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 	if (cfg->lr_state == LINK_RESET_REQUIRED) {
- 		port = cfg->lr_port;
- 		if (port < 0)
--			pr_err("%s: invalid port index %d\n", __func__, port);
-+			dev_err(dev, "%s: invalid port index %d\n",
-+				__func__, port);
- 		else {
- 			spin_unlock_irqrestore(cfg->host->host_lock,
- 					       lock_flags);
-@@ -2428,7 +2439,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+@@ -713,11 +723,12 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 	/* If a Task Management Function is active, wait for it to complete
+ 	 * before continuing with remove.
  	 */
- 	phys_dev = cxl_get_phys_dev(pdev);
- 	if (!dev_is_pci(phys_dev)) {
--		pr_err("%s: not a pci dev\n", __func__);
-+		dev_err(&pdev->dev, "%s: not a pci dev\n", __func__);
- 		rc = -ENODEV;
- 		goto out_remove;
- 	}
+-	spin_lock_irqsave(&cfg->tmf_waitq.lock, lock_flags);
++	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 	if (cfg->tmf_active)
+-		wait_event_interruptible_locked_irq(cfg->tmf_waitq,
+-						    !cfg->tmf_active);
+-	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
++		wait_event_interruptible_lock_irq(cfg->tmf_waitq,
++						  !cfg->tmf_active,
++						  cfg->tmf_slock);
++	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ 
+ 	cfg->state = STATE_FAILTERM;
+ 	atomic_inc(&cfg->remove_active);
 -- 
 2.1.0
 
