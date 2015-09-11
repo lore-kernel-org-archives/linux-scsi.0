@@ -1,52 +1,118 @@
-From: iSayor <iSayor@iSayor.com>
-Subject: =?UTF-8?B?5bmz5pe25pyA5aSa5Lmf5bCx6IGU57O75LqG5LiJ5Y2D5a6277yM5YWo?=
- =?UTF-8?B?55CD6L+Y5pyJ5Y2B5Yeg5LiH5a6i5oi35Zyo5ZOq6YeM77yf?=
-Date: Sat, 12 Sep 2015 00:39:49 +0800
-Message-ID: <01d0ecb0$Blat.v3.2.4$797e9fea$8dac404d@localhost>
-Reply-To: iSayor <iSayor@163.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
+ unsafe list usage
+Date: Fri, 11 Sep 2015 10:50:18 -0700
+Message-ID: <1441993818.6276.2.camel@HansenPartnership.com>
+References: <1440921279-9973-1-git-send-email-nab@daterainc.com>
+	 <1440921279-9973-2-git-send-email-nab@daterainc.com>
+	 <CAK=zhgrTpxiiEbHCvLL09EhyLq+xAdteMU1Gzd3jPg9UGo=BDA@mail.gmail.com>
+	 <e0bde29b9384f924b2868cd81b7b1c8d@mail.gmail.com>
+	 <1441836181.6836.4.camel@haakon3.risingtidesystems.com>
+	 <1441954537.21634.21.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [118.212.112.89] ([118.212.112.89]:13279 "EHLO iSayor.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751532AbbIKQlB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2015 12:41:01 -0400
-Received: from andy.iSayor.com (127.0.0.1) by iSayor.com for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2015 00:39:49 +0800 (envelope-from <iSayor@iSayor.com>)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1441954537.21634.21.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Chaitra Basappa <chaitra.basappa@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Calvin Owens <calvinowens@fb.com>, Christoph Hellwig <hch@infradead.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@avagotech.com>, kernel-team <kernel-team@fb.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-=E6=82=A8=E5=A5=BD:
-    =E6=82=A8=E8=BF=98=E5=9C=A8=E7=94=A8ali=E5=B9=B3=E5=8F=B0=E5=BC=80=E5=
-=8F=91=E5=A4=96=E8=B4=B8=E5=AE=A2=E6=88=B7?
-       =E8=BF=98=E5=9C=A8=E4=BD=BF=E7=94=A8=E5=B1=95=E4=BC=9A=E5=AE=A3=E4=
-=BC=A0=E4=BC=81=E4=B8=9A=E5=92=8C=E4=BA=A7=E5=93=81?
-             =E4=BD=A0out=E4=BA=86!!!
- =E5=BD=93=E5=89=8D=E5=A4=96=E8=B4=B8=E5=AE=A2=E6=88=B7=E5=BC=80=E5=8F=91=
-=E9=9A=BE=EF=BC=8C=E6=82=A8=E6=98=AF=E5=90=A6=E4=B9=9F=E5=9C=A8=E5=AF=BB=
-=E6=89=BE=E5=B1=95=E4=BC=9A=EF=BC=8CB2B=E4=B9=8B=E5=A4=96=E5=A5=BD=E7=9A=
-=84=E6=B8=A0=E9=81=93=EF=BC=9F=20
- =E8=A1=8C=E4=B8=9A=E5=85=A8=E7=90=83=E5=8D=81=E5=87=A0=E4=B8=87=E5=AE=A2=
-=E6=88=B7=EF=BC=8C=E5=B9=B3=E6=97=B6=E6=9C=80=E5=A4=9A=E4=B9=9F=E5=B0=B1=
-=E8=81=94=E7=B3=BB=E4=BA=86=E4=B8=89=E5=8D=83=E5=AE=B6=EF=BC=8C=E6=82=A8=
-=E6=98=AF=E5=90=A6=E6=83=B3=E6=8A=8A=E5=89=A9=E4=B8=8B=E7=9A=84=E4=B9=9F=
-=E5=BC=80=E5=8F=91=E5=88=B0=EF=BC=9F
- =E5=8A=A0QQ2652697913=E7=BB=99=E6=82=A8=E6=BC=94=E7=A4=BA=E4=B8=8B=E4=B8=
-=BB=E5=8A=A8=E5=BC=80=E5=8F=91=E5=AE=A2=E6=88=B7=E7=9A=84=E6=96=B9=E6=B3=
-=95=EF=BC=8C=E5=85=88=E7=94=A8=E5=85=88=E5=8F=97=E7=9B=8A=EF=BC=8C=E5=B7=
-=B2=E7=BB=8F=E6=9C=89=E8=BF=91=E4=B8=87=E5=AE=B6=E4=BC=81=E4=B8=9A=E9=A2=
-=86=E5=85=88=E6=82=A8=E4=BD=BF=E7=94=A8=EF=BC=81=EF=BC=81=E3=80=82
- =E5=B9=BF=E4=B8=9C=E7=9C=81=E5=95=86=E4=B8=9A=E8=81=94=E5=90=88=E4=BC=9A=
-=E6=8E=A8=E8=8D=90=EF=BC=8C=E4=B8=BB=E5=8A=A8=E5=BC=80=E5=8F=91=E5=AE=A2=
-=E6=88=B7=E7=AC=AC=E4=B8=80=E5=93=81=E7=89=8C=EF=BC=8C=E8=BF=91=E4=B8=87=
-=E5=AE=B6=E4=BC=81=E4=B8=9A=E6=AD=A3=E5=9C=A8=E8=8E=B7=E7=9B=8A=E3=80=82=
-=E6=82=A8=E5=8F=AF=E4=BB=A5=E6=B2=A1=E6=9C=89=E4=BD=BF=E7=94=A8=EF=BC=8C=
-=E4=BD=86=E6=98=AF=E4=B8=8D=E8=83=BD=E6=B2=A1=E6=9C=89=E4=BA=86=E8=A7=A3=
-=E3=80=82
+On Thu, 2015-09-10 at 23:55 -0700, Nicholas A. Bellinger wrote:
+> On Wed, 2015-09-09 at 15:03 -0700, Nicholas A. Bellinger wrote:
+> > On Wed, 2015-09-09 at 19:59 +0530, Chaitra Basappa wrote:
+> > > From: Sreekanth Reddy [mailto:sreekanth.reddy@avagotech.com]
+> > > Sent: Tuesday, September 08, 2015 5:26 PM
+> > > To: Nicholas A. Bellinger
+> > > Cc: linux-scsi; linux-kernel; James Bottomley; Calvin Owens; Christoph
+> > > Hellwig; MPT-FusionLinux.pdl; kernel-team; Nicholas Bellinger; Chaitra
+> > > Basappa
+> > > Subject: Re: [PATCH-v2 1/2] mpt3sas: Refcount sas_device objects and fix
+> > > unsafe list usage
+> > > 
+> > > On Sun, Aug 30, 2015 at 1:24 PM, Nicholas A. Bellinger <nab@daterainc.com>
+> > > wrote:
+> > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > >
+> > > > These objects can be referenced concurrently throughout the driver, we
+> > > > need a way to make sure threads can't delete them out from under each
+> > > > other. This patch adds the refcount, and refactors the code to use it.
+> > > >
+> > > > Additionally, we cannot iterate over the sas_device_list without
+> > > > holding the lock, or we risk corrupting random memory if items are
+> > > > added or deleted as we iterate. This patch refactors
+> > > > _scsih_probe_sas() to use the sas_device_list in a safe way.
+> > > >
+> > > > This patch is a port of Calvin's PATCH-v4 for mpt2sas code, atop
+> > > > mpt3sas changes in scsi.git/for-next.
+> > > >
+> > > > Cc: Calvin Owens <calvinowens@fb.com>
+> > > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > > Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+> > > > Cc: MPT-FusionLinux.pdl <MPT-FusionLinux.pdl@avagotech.com>
+> > > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > > ---
+> > > >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  25 +-
+> > > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 479
+> > > > +++++++++++++++++++++----------
+> > > >  drivers/scsi/mpt3sas/mpt3sas_transport.c |  18 +-
+> > > >  3 files changed, 364 insertions(+), 158 deletions(-)
+> > > >
+> > > > @@ -2763,7 +2874,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,
+> > > > u16 handle)
+> > > >         struct scsi_device *sdev;
+> > > >         struct _sas_device *sas_device;
+> > > >
+> > > 
+> > > [Sreekanth] Here sas_device_lock spin lock needs to be acquired before
+> > > calling
+> > >                   __mpt3sas_get_sdev_by_addr() function.
+> > > 
+> > > [Chaitra]Here instead of calling " __mpt3sas_get_sdev_by_handle()" function
+> > > calling
+> > > 	"mpt3sas_get_sdev_by_handle()" function will fixes "invalid page access"
+> > > type of kernel panic
+> > > 
+> > > > -       sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> > > > +       sas_device = __mpt3sas_get_sdev_by_handle(ioc, handle);
+> > > >         if (!sas_device)
+> > > >                 return;
+> > > >
+> > 
+> > Whoops, missed this comment in _scsih_block_io_device() from Sreekanth's
+> > earlier reply.
+> > 
+> > Here's the updated incremental patch atop target-pending/for-next-merge
+> > to use the protected callers for both cases.
+> > 
+> > Please review + ACK ASAP.
+> 
+> The mpt3sas -v2 series + v4.3-rc0 breakage incremental patch here made
+> it into linux-next-09102015, and at this point I don't see a scenario
+> where keeping around the broken list_head dereferences makes sense.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I already explained the dangers of what the patch does.  Separated
+lifetime objects need to be treated very carefully.  Rushing this in to
+-rc1 without an Avago soak test is irresponsible.  Two issues have
+already turned up in this thanks to inspection and as a bug fix it's not
+bound by the merge window anyway so there's no reason to rush it into
+-rc1 without the proper testing.
+
+The reason for wanting to do this right is not to create a bisection
+black hole: if we create an unreliable base storage driver by rushing
+this into -rc1 it makes bisection very difficult for people who use mpt3
+gear because they won't know if it's the bug they're chasing or the one
+we introduced which they can't avoid because they have to use a storage
+driver to boot the kernel.
+
+
+> So that said, I'd like to send a target-pending/for-next-merge PULL
+> request out to Linus in the next 48 hours.
+
+How about no: it's not a target patch, it's an initiator patch, which
+makes it my decision not yours.  The Maintainers are being responsive,
+so there's no reason to override their request for a soak test, even if
+you are the patch author.  It will get pushed once they confirm.
+
+James
