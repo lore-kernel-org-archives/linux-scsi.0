@@ -1,90 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: randconfig build error with next-20150908, in
- drivers/md/dm-mpath.c
-Date: Sun, 13 Sep 2015 16:29:38 +0200
-Message-ID: <55F58852.7070108@suse.de>
-References: <CA+r1ZhgR=dO0ezk0Nm0JuAb1D0AU7K2Am=Pyy9aPqCMsLW9Y0w@mail.gmail.com>
- <20150908172356.GA1584@redhat.com> <1441733672.5932.1.camel@Odin.com>
- <20150908183021.GA3019@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60526 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752466AbbIMO3o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Sep 2015 10:29:44 -0400
-In-Reply-To: <20150908183021.GA3019@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v1 00/17] add fixes, device quirks, error recovery,
+Date: Sun, 13 Sep 2015 17:52:40 +0300
+Message-ID: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, James Bottomley <jbottomley@odin.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "agk@redhat.com" <agk@redhat.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "jim.epost@gmail.com" <jim.epost@gmail.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On 09/08/2015 08:30 PM, Mike Snitzer wrote:
-> On Tue, Sep 08 2015 at  1:34pm -0400,
-> James Bottomley <jbottomley@odin.com> wrote:
->=20
->> On Tue, 2015-09-08 at 13:23 -0400, Mike Snitzer wrote:
->>> On Tue, Sep 08 2015 at  1:10pm -0400,
->>> Jim Davis <jim.epost@gmail.com> wrote:
->>>
->>>> Building with the attached random configuration file,
->>>>
->>>> drivers/built-in.o: In function `activate_path':
->>>> /home/jim/linux-next/drivers/md/dm-mpath.c:1225: undefined referen=
-ce
->>>> to `scsi_dh_activate'
->>>> drivers/built-in.o: In function `parse_path':
->>>> /home/jim/linux-next/drivers/md/dm-mpath.c:581: undefined referenc=
-e to
->>>> `scsi_dh_attached_handler_name'
->>>> /home/jim/linux-next/drivers/md/dm-mpath.c:600: undefined referenc=
-e to
->>>> `scsi_dh_attach'
->>>> /home/jim/linux-next/drivers/md/dm-mpath.c:615: undefined referenc=
-e to
->>>> `scsi_dh_set_params'
->>>
->>> These DM-mpath changes were staged via linux-scsi.  Cc'ing James an=
-d Christoph.
->>
->> [adding linux-scsi]
->>
->> It must be Hannes' dm changes ... you acked them.  I take it the pro=
-blem
->> is now dm-mpath won't build without CONFIG_SCSI?  How do you want it
->> fixed?  We can either add a Kconfig dependency or try to disentangle
->> them again.
->=20
-> OK (Hannes' changes).  I'm fine with seeing DM_MULTIPATH depend on
-> CONFIG_SCSI.
->=20
-Indeed, with the switch for having scsi_dh being moved into struct
-scsi_device DM_MULTIPATH will now depend on SCSI.
+V1:
+This series should be pushed on top of 15 patches series:
+"Big fixes, retries, handle a race condition"
 
-> The Kconfig for DM_MULTIPATH is clearly stale:
->=20
->         # nasty syntax but means make DM_MULTIPATH independent
->         # of SCSI_DH if the latter isn't defined but if
->         # it is, DM_MULTIPATH must depend on it.  We get a build
->         # error if SCSI_DH=3Dm and DM_MULTIPATH=3Dy
->         depends on SCSI_DH || !SCSI_DH
->=20
-> James, if you have a vision for how to fix this please feel free.
-> Otherwise, Hannes, care to send a patch to fix this?
->=20
-Yep, once I'm back in the office on Monday.
+Yaniv Gardi (17):
+  scsi: ufs-qcom: add number of lanes per direction
+  scsi: ufs: add option to change default UFS power management level
+  scsi: ufs: optimize system suspend handling
+  scsi: ufs: avoid spurious UFS host controller interrupts
+  scsi: ufs: implement scsi host timeout handler
+  scsi :ufs: verify hba controller hce reg value
+  scsi: ufs: separate device and host quirks
+  scsi: ufs: split broken LCC quirk
+  scsi: ufs: disable vccq if it's not needed by UFS device
+  scsi: ufs: make error handling bit faster
+  scsi: ufs: add error recovery after DL NAC error
+  scsi: ufs: add retry for query descriptors
+  scsi: ufs: handle non spec compliant bkops behaviour by device
+  scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
+  scsi: ufs: fix leakage during link off state
+  scsi: ufs: add delay before putting UFS rails in low power modes
+  scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
 
-Cheers,
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  11 +
+ drivers/scsi/ufs/Makefile                          |   2 +-
+ drivers/scsi/ufs/ufs-qcom.c                        | 163 +++-
+ drivers/scsi/ufs/ufs-qcom.h                        |   9 +
+ drivers/scsi/ufs/ufs.h                             |  32 +
+ drivers/scsi/ufs/ufs_quirks.c                      | 101 +++
+ drivers/scsi/ufs/ufs_quirks.h                      | 123 +++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  17 +-
+ drivers/scsi/ufs/ufshcd.c                          | 829 ++++++++++++++++++---
+ drivers/scsi/ufs/ufshcd.h                          |  44 +-
+ drivers/scsi/ufs/ufshci.h                          |   4 +
+ drivers/scsi/ufs/unipro.h                          |  22 +
+ 12 files changed, 1215 insertions(+), 142 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.c
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.h
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
