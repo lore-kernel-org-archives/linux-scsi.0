@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 17/17] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
-Date: Sun, 13 Sep 2015 17:52:57 +0300
-Message-ID: <1442155977-7686-18-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 11/17] scsi: ufs: add error recovery after DL NAC error
+Date: Sun, 13 Sep 2015 17:52:51 +0300
+Message-ID: <1442155977-7686-12-git-send-email-ygardi@codeaurora.org>
 References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
@@ -10,293 +10,176 @@ To: James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices (and may be host) have issues if LCC is
-enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-before link startup which will make sure that both host
-and device TX LCC are disabled once link startup is
-completed.
+Some vendor's UFS device sends back to back NACs for the DL data frames
+causing the host controller to raise the DFES error status. Sometimes
+such UFS devices send back to back NAC without waiting for new
+retransmitted DL frame from the host and in such cases it might be
+possible the Host UniPro goes into bad state without raising the DFES
+error interrupt. If this happens then all the pending commands would
+timeout only after respective SW command (which is generally too
+large).
 
-This change also:
-- enables the device ref clock before changing to HS mode
-  and disables it if entered to PWM mode
-- adds printouts of testbus debug registers
+This change workarounds such device behaviour like this:
+- As soon as SW sees the DL NAC error, it would schedule the error
+  handler
+- Error handler would sleep for 50ms to see if there any fatal errors
+  raised by UFS controller.
+   - If there are fatal errors then SW does normal error recovery.
+   - If there are no fatal errors then SW sends the NOP command to
+     device to check if link is alive.
+       - If NOP command times out, SW does normal error recovery
+       - If NOP command succeed, skip the error handling.
 
+If DL NAC error is seen multiple times with some vendor's UFS devices
+then enable this quirk to initiate quick error recovery and also
+silence related error logs to reduce spamming of kernel logs.
+
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c | 116 +++++++++++++++++++++++++++++++++++++++++---
- drivers/scsi/ufs/ufs-qcom.h |   9 ++++
- drivers/scsi/ufs/ufshcd.h   |   9 ++++
- drivers/scsi/ufs/unipro.h   |   1 +
- 4 files changed, 128 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshci.h |  2 +
+ 2 files changed, 95 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 1d26e49..f70b581 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -16,8 +16,8 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
--
- #include <linux/phy/phy-qcom-ufs.h>
-+
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
- #include "unipro.h"
-@@ -58,6 +58,12 @@ static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
- 			len * 4, false);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 6a1a8cd..a649250 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3837,6 +3837,79 @@ static void ufshcd_complete_requests(struct ufs_hba *hba)
  }
  
-+static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
-+		char *prefix, void *priv)
+ /**
++ * ufshcd_quirk_dl_nac_errors - This function checks if error handling is
++ *				to recover from the DL NAC errors or not.
++ * @hba: per-adapter instance
++ *
++ * Returns true if error handling is required, false otherwise
++ */
++static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
 +{
-+	ufs_qcom_dump_regs(hba, offset, len, prefix);
++	unsigned long flags;
++	bool err_handling = true;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	/*
++	 * UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS only workaround the
++	 * device fatal error and/or DL NAC & REPLAY timeout errors.
++	 */
++	if (hba->saved_err & (CONTROLLER_FATAL_ERROR | SYSTEM_BUS_FATAL_ERROR))
++		goto out;
++
++	if ((hba->saved_err & DEVICE_FATAL_ERROR) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	     (hba->saved_uic_err & UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))
++		goto out;
++
++	if ((hba->saved_err & UIC_ERROR) &&
++	    (hba->saved_uic_err & UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)) {
++		int err;
++		/*
++		 * wait for 50ms to see if we can get any other errors or not.
++		 */
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		msleep(50);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++
++		/*
++		 * now check if we have got any other severe errors other than
++		 * DL NAC error?
++		 */
++		if ((hba->saved_err & INT_FATAL_ERRORS) ||
++		    ((hba->saved_err & UIC_ERROR) &&
++		    (hba->saved_uic_err & ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)))
++			goto out;
++
++		/*
++		 * As DL NAC is the only error received so far, send out NOP
++		 * command to confirm if link is still active or not.
++		 *   - If we don't get any response then do error recovery.
++		 *   - If we get response then clear the DL NAC error bit.
++		 */
++
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		err = ufshcd_verify_dev_init(hba);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++
++		if (err)
++			goto out;
++
++		/* Link seems to be alive hence ignore the DL NAC errors */
++		if (hba->saved_uic_err == UFSHCD_UIC_DL_NAC_RECEIVED_ERROR)
++			hba->saved_err &= ~UIC_ERROR;
++		/* clear NAC error */
++		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
++		if (!hba->saved_uic_err) {
++			err_handling = false;
++			goto out;
++		}
++	}
++out:
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	return err_handling;
 +}
 +
- static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
- {
- 	int err = 0;
-@@ -106,9 +112,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
- 	if (!host->is_lane_clks_enabled)
- 		return;
++/**
+  * ufshcd_err_handler - handle UFS errors that require s/w attention
+  * @work: pointer to work structure
+  */
+@@ -3864,6 +3937,17 @@ static void ufshcd_err_handler(struct work_struct *work)
  
--	clk_disable_unprepare(host->tx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->tx_l1_sync_clk);
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- 	clk_disable_unprepare(host->rx_l0_sync_clk);
- 
- 	host->is_lane_clks_enabled = false;
-@@ -271,9 +279,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
- 
- 	if (ret) {
--		dev_err(hba->dev,
--		"%s: ufs_qcom_phy_calibrate_phy()failed, ret = %d\n",
--		__func__, ret);
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
-+			__func__, ret);
- 		goto out;
+ 	/* Complete requests that have door-bell cleared by h/w */
+ 	ufshcd_complete_requests(hba);
++
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
++		bool ret;
++
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
++		ret = ufshcd_quirk_dl_nac_errors(hba);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		if (!ret)
++			goto skip_err_handling;
++	}
+ 	if ((hba->saved_err & INT_FATAL_ERRORS) ||
+ 	    ((hba->saved_err & UIC_ERROR) &&
+ 	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
+@@ -3939,6 +4023,7 @@ skip_pending_xfer_clear:
+ 		hba->saved_uic_err = 0;
  	}
  
-@@ -523,6 +530,18 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
- 									  150);
- 
-+		/*
-+		 * Some UFS devices (and may be host) have issues if LCC is
-+		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-+		 * before link startup which will make sure that both host
-+		 * and device TX LCC are disabled once link startup is
-+		 * completed.
-+		 */
-+		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
-+			err = ufshcd_dme_set(hba,
-+					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
-+					0);
-+
- 		break;
- 	case POST_CHANGE:
- 		ufs_qcom_link_startup_post_change(hba);
-@@ -966,6 +985,10 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 			goto out;
- 		}
- 
-+		/* enable the device ref clock before changing to HS mode */
-+		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
-+			ufshcd_is_hs_mode(dev_req_params))
-+			ufs_qcom_dev_ref_clk_ctrl(host, true);
- 		break;
- 	case POST_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
-@@ -993,6 +1016,11 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 		memcpy(&host->dev_req_params,
- 				dev_req_params, sizeof(*dev_req_params));
- 		ufs_qcom_update_bus_bw_vote(host);
-+
-+		/* disable the device ref clock if entered PWM mode */
-+		if (ufshcd_is_hs_mode(&hba->pwr_info) &&
-+			!ufshcd_is_hs_mode(dev_req_params))
-+			ufs_qcom_dev_ref_clk_ctrl(host, false);
- 		break;
- 	default:
- 		ret = -EINVAL;
-@@ -1094,6 +1122,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
- 			goto out;
- 		}
-+		/* enable the device ref clock for HS mode*/
-+		if (ufshcd_is_hs_mode(&hba->pwr_info))
-+			ufs_qcom_dev_ref_clk_ctrl(host, true);
- 		vote = host->bus_vote.saved_vote;
- 		if (vote == host->bus_vote.min_bw_vote)
- 			ufs_qcom_update_bus_bw_vote(host);
-@@ -1372,6 +1403,74 @@ out:
- 	return err;
- }
- 
-+static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
-+		void *priv, void (*print_fn)(struct ufs_hba *hba,
-+		int offset, int num_regs, char *str, void *priv))
-+{
-+	u32 reg;
-+	struct ufs_qcom_host *host;
-+
-+	if (unlikely(!hba)) {
-+		pr_err("%s: hba is NULL\n", __func__);
-+		return;
++skip_err_handling:
+ 	if (!needs_reset) {
+ 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 		if (hba->saved_err || hba->saved_uic_err)
+@@ -3967,6 +4052,14 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_DATA_LINK_LAYER);
+ 	if (reg & UIC_DATA_LINK_LAYER_ERROR_PA_INIT)
+ 		hba->uic_error |= UFSHCD_UIC_DL_PA_INIT_ERROR;
++	else if (hba->dev_quirks &
++		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
++		if (reg & UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED)
++			hba->uic_error |=
++				UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
++		else if (reg & UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT)
++			hba->uic_error |= UFSHCD_UIC_DL_TCx_REPLAY_ERROR;
 +	}
-+	if (unlikely(!print_fn)) {
-+		dev_err(hba->dev, "%s: print_fn is NULL\n", __func__);
-+		return;
-+	}
-+
-+	host = ufshcd_get_variant(hba);
-+	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
-+		return;
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
-+	print_fn(hba, reg, 44, "UFS_UFS_DBG_RD_REG_OCSC ", priv);
-+
-+	reg = ufshcd_readl(hba, REG_UFS_CFG1);
-+	reg |= UFS_BIT(17);
-+	ufshcd_writel(hba, reg, REG_UFS_CFG1);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_EDTL_RAM);
-+	print_fn(hba, reg, 32, "UFS_UFS_DBG_RD_EDTL_RAM ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_DESC_RAM);
-+	print_fn(hba, reg, 128, "UFS_UFS_DBG_RD_DESC_RAM ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
-+	print_fn(hba, reg, 64, "UFS_UFS_DBG_RD_PRDT_RAM ", priv);
-+
-+	ufshcd_writel(hba, (reg & ~UFS_BIT(17)), REG_UFS_CFG1);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
-+	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UAWM ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UARM);
-+	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UARM ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TXUC);
-+	print_fn(hba, reg, 48, "UFS_DBG_RD_REG_TXUC ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_RXUC);
-+	print_fn(hba, reg, 27, "UFS_DBG_RD_REG_RXUC ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_DFC);
-+	print_fn(hba, reg, 19, "UFS_DBG_RD_REG_DFC ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TRLUT);
-+	print_fn(hba, reg, 34, "UFS_DBG_RD_REG_TRLUT ", priv);
-+
-+	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
-+	print_fn(hba, reg, 9, "UFS_DBG_RD_REG_TMRLUT ", priv);
-+}
-+
-+static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
-+{
-+	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
-+		ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
-+	else
-+		ufshcd_rmwl(host->hba, TEST_BUS_EN, 0, REG_UFS_CFG1);
-+}
-+
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host)
- {
- 	/* provide a legal default configuration */
-@@ -1480,6 +1579,7 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	ufshcd_rmwl(host->hba, mask,
- 		    (u32)host->testbus.select_minor << offset,
- 		    reg);
-+	ufs_qcom_enable_test_bus(host);
- 	ufshcd_release(host->hba);
- 	pm_runtime_put_sync(host->hba->dev);
  
-@@ -1496,8 +1596,10 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- 	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
- 			"HCI Vendor Specific Registers ");
+ 	/* UIC NL/TL/DME errors needs software retry */
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_NETWORK_LAYER);
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 0ae0967..2b05bfb 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -170,6 +170,8 @@ enum {
+ #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
+ #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+ #define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
++#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
++#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
  
-+	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
- 	ufs_qcom_testbus_read(hba);
- }
-+
- /**
-  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
-  *
-@@ -1558,7 +1660,7 @@ out:
-  * ufs_qcom_remove - set driver_data of the device to NULL
-  * @pdev: pointer to platform device handle
-  *
-- * Always return 0
-+ * Always returns 0
-  */
- static int ufs_qcom_remove(struct platform_device *pdev)
- {
-diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
-index 36249b3..a19307a 100644
---- a/drivers/scsi/ufs/ufs-qcom.h
-+++ b/drivers/scsi/ufs/ufs-qcom.h
-@@ -241,6 +241,15 @@ struct ufs_qcom_host {
- 	struct ufs_qcom_testbus testbus;
- };
- 
-+static inline u32
-+ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
-+{
-+	if (host->hw_ver.major <= 0x02)
-+		return UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(reg);
-+
-+	return UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(reg);
-+};
-+
- #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
- #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
- #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index aa1f3e5..cba580c 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -54,6 +54,7 @@
- #include <linux/clk.h>
- #include <linux/completion.h>
- #include <linux/regulator/consumer.h>
-+#include "unipro.h"
- 
- #include <asm/irq.h>
- #include <asm/byteorder.h>
-@@ -689,6 +690,14 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
- 
- int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
- 
-+static inline bool ufshcd_is_hs_mode(struct ufs_pa_layer_attr *pwr_info)
-+{
-+	return (pwr_info->pwr_rx == FAST_MODE ||
-+		pwr_info->pwr_rx == FASTAUTO_MODE) &&
-+		(pwr_info->pwr_tx == FAST_MODE ||
-+		pwr_info->pwr_tx == FASTAUTO_MODE);
-+}
-+
- #define ASCII_STD true
- 
- int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 8082020..e2854e4 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -75,6 +75,7 @@
- #define PA_MAXRXSPEEDFAST	0x1541
- #define PA_MAXRXSPEEDSLOW	0x1542
- #define PA_TXLINKSTARTUPHS	0x1544
-+#define PA_LOCAL_TX_LCC_ENABLE	0x155E
- #define PA_TXSPEEDFAST		0x1565
- #define PA_TXSPEEDSLOW		0x1566
- #define PA_REMOTEVERINFO	0x15A0
+ /* UECN - Host UIC Error Code Network Layer 40h */
+ #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
 -- 
 1.8.5.2
 
