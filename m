@@ -1,52 +1,66 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 00/17] add fixes, device quirks, error recovery,
-Date: Sun, 13 Sep 2015 17:52:40 +0300
-Message-ID: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 03/17] scsi: ufs: optimize system suspend handling
+Date: Sun, 13 Sep 2015 17:52:43 +0300
+Message-ID: <1442155977-7686-4-git-send-email-ygardi@codeaurora.org>
+References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-V1:
-This series should be pushed on top of 15 patches series:
-"Big fixes, retries, handle a race condition"
+Consider following sequence of events:
+1. UFS is runtime suspended, link_state = Hibern8, device_state = sleep
+2. System goes into system suspend, ufshcd_system_suspend() brings both
+   link and device to active state and then puts the device in
+   Power_Down state and link in OFF state.
+3. System resumes at some later point in time, ufshcd_system_resume()
+   doesn't do anything as UFS state is runtime suspended. Note that
+   link is still on OFF state and device is in Power_Down state.
+4. Now system again goes into suspend without any UFS accesses
+   before it.
+   ufshcd_system_suspend() again brings both link and device to active
+   state and then puts the device in Power_Down state and link if OFF
+   state. But it's unnecessary to bring the link & device in active
+   state as both link and device are already in desired low power
+   states. This change fixes this issue by adding proper state checks
+   in ufshcd_system_suspend().
 
-Yaniv Gardi (17):
-  scsi: ufs-qcom: add number of lanes per direction
-  scsi: ufs: add option to change default UFS power management level
-  scsi: ufs: optimize system suspend handling
-  scsi: ufs: avoid spurious UFS host controller interrupts
-  scsi: ufs: implement scsi host timeout handler
-  scsi :ufs: verify hba controller hce reg value
-  scsi: ufs: separate device and host quirks
-  scsi: ufs: split broken LCC quirk
-  scsi: ufs: disable vccq if it's not needed by UFS device
-  scsi: ufs: make error handling bit faster
-  scsi: ufs: add error recovery after DL NAC error
-  scsi: ufs: add retry for query descriptors
-  scsi: ufs: handle non spec compliant bkops behaviour by device
-  scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
-  scsi: ufs: fix leakage during link off state
-  scsi: ufs: add delay before putting UFS rails in low power modes
-  scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  11 +
- drivers/scsi/ufs/Makefile                          |   2 +-
- drivers/scsi/ufs/ufs-qcom.c                        | 163 +++-
- drivers/scsi/ufs/ufs-qcom.h                        |   9 +
- drivers/scsi/ufs/ufs.h                             |  32 +
- drivers/scsi/ufs/ufs_quirks.c                      | 101 +++
- drivers/scsi/ufs/ufs_quirks.h                      | 123 +++
- drivers/scsi/ufs/ufshcd-pltfrm.c                   |  17 +-
- drivers/scsi/ufs/ufshcd.c                          | 829 ++++++++++++++++++---
- drivers/scsi/ufs/ufshcd.h                          |  44 +-
- drivers/scsi/ufs/ufshci.h                          |   4 +
- drivers/scsi/ufs/unipro.h                          |  22 +
- 12 files changed, 1215 insertions(+), 142 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufs_quirks.c
- create mode 100644 drivers/scsi/ufs/ufs_quirks.h
+---
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 388536e..9e3ec01 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5464,16 +5464,13 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 	if (!hba || !hba->is_powered)
+ 		return 0;
+ 
+-	if (pm_runtime_suspended(hba->dev)) {
+-		if (hba->rpm_lvl == hba->spm_lvl)
+-			/*
+-			 * There is possibility that device may still be in
+-			 * active state during the runtime suspend.
+-			 */
+-			if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
+-			    hba->curr_dev_pwr_mode) && !hba->auto_bkops_enabled)
+-				goto out;
++	if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
++	     hba->curr_dev_pwr_mode) &&
++	    (ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl) ==
++	     hba->uic_link_state))
++		goto out;
+ 
++	if (pm_runtime_suspended(hba->dev)) {
+ 		/*
+ 		 * UFS device and/or UFS link low power states during runtime
+ 		 * suspend seems to be different than what is expected during
 -- 
 1.8.5.2
 
