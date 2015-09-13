@@ -1,91 +1,59 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v1 05/17] scsi: ufs: implement scsi host timeout handler
-Date: Sun, 13 Sep 2015 17:52:45 +0300
-Message-ID: <1442155977-7686-6-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v1 04/17] scsi: ufs: avoid spurious UFS host controller interrupts
+Date: Sun, 13 Sep 2015 17:52:44 +0300
+Message-ID: <1442155977-7686-5-git-send-email-ygardi@codeaurora.org>
 References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49001 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753557AbbIMOxq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2015 10:53:46 -0400
 In-Reply-To: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-List-Id: linux-scsi@vger.kernel.org
 
-A race condition exists between request requeueing and scsi layer
-error handling:
-When UFS driver queuecommand returns a busy status for a request,
-it will be requeued and its tag will be freed and set to -1.
-At the same time it is possible that the request will timeout and
-scsi layer will start error handling for it. The scsi layer reuses
-the request and its tag to send error related commands to the device,
-however its tag is no longer valid.
-As this request was never really sent to the device, there is no
-point to start error handling with the device.
-Implement the scsi error handling timeout callback and bypass SCSI
-error handling for request that were not actually sent to the device.
-For such requests simply reset the block layer timer. Otherwise, let
-SCSI layer perform the usual error handling.
+When control reaches to Linux UFS driver during UFS boot mode, UFS host
+controller interrupt status/enable registers may have left over
+settings.
+In order to avoid any spurious interrupts due to these left overs,
+it's important to clear these interrupt status/enable registers before
+enabling UFS interrupt handling.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7d20dac..6171da8 100644
+index 9e3ec01..7d20dac 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4602,6 +4602,41 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	ufshcd_probe_hba(hba);
- }
+@@ -5886,6 +5886,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	init_waitqueue_head(&hba->dev_cmd.tag_wq);
  
-+static enum blk_eh_timer_return ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-+{
-+	unsigned long flags;
-+	struct Scsi_Host *host;
-+	struct ufs_hba *hba;
-+	int index;
-+	bool found = false;
-+
-+	if (!scmd || !scmd->device || !scmd->device->host)
-+		return BLK_EH_NOT_HANDLED;
-+
-+	host = scmd->device->host;
-+	hba = shost_priv(host);
-+	if (!hba)
-+		return BLK_EH_NOT_HANDLED;
-+
-+	spin_lock_irqsave(host->host_lock, flags);
-+
-+	for_each_set_bit(index, &hba->outstanding_reqs, hba->nutrs) {
-+		if (hba->lrb[index].cmd == scmd) {
-+			found = true;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(host->host_lock, flags);
+ 	ufshcd_init_clk_gating(hba);
 +
 +	/*
-+	 * Bypass SCSI error handling and reset the block layer timer if this
-+	 * SCSI command was not actually dispatched to UFS driver, otherwise
-+	 * let SCSI layer handle the error as usual.
++	 * In order to avoid any spurious interrupt immediately after
++	 * registering UFS controller interrupt handler, clear any pending UFS
++	 * interrupt status and disable all the UFS interrupts.
 +	 */
-+	return found ? BLK_EH_NOT_HANDLED : BLK_EH_RESET_TIMER;
-+}
++	ufshcd_writel(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS),
++		      REG_INTERRUPT_STATUS);
++	ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
++	/*
++	 * Make sure that UFS interrupts are disabled and any pending interrupt
++	 * status is cleared before registering UFS interrupt handler.
++	 */
++	mb();
 +
- static struct scsi_host_template ufshcd_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
-@@ -4614,6 +4649,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.eh_abort_handler	= ufshcd_abort,
- 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
- 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
-+	.eh_timed_out		= ufshcd_eh_timed_out,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+ 	/* IRQ registration */
+ 	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+ 	if (err) {
 -- 
 1.8.5.2
 
