@@ -1,178 +1,283 @@
-From: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: [PATCH v1 01/17] scsi: ufs-qcom: add number of lanes per direction
-Date: Sun, 13 Sep 2015 17:52:41 +0300
-Message-ID: <1442155977-7686-2-git-send-email-ygardi@codeaurora.org>
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v1 10/17] scsi: ufs: make error handling bit faster
+Date: Sun, 13 Sep 2015 17:52:50 +0300
+Message-ID: <1442155977-7686-11-git-send-email-ygardi@codeaurora.org>
 References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1442155977-7686-1-git-send-email-ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-wo1vFcy6AUs@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sahitya Tummala <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:OPEN FIRMWARE AND FLATTENED
-	DEVICE TREE BINDINGS" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49074 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754651AbbIMOyK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2015 10:54:10 -0400
+In-Reply-To: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-Different platform may have different number of lanes
-for the UFS link.
-Add parameter to device tree specifying how many lanes
-should be configured for the UFS link.
+UFS driver's error handler forcefully tries to clear all the pending
+requests. For each pending request in the queue, it waits 1 sec for it
+to get cleared. If we have multiple requests in the queue then it's
+possible that we might end up waiting for those many seconds before
+resetting the host. But note that resetting host would any way clear
+all the pending requests from the hardware. Hence this change skips
+the forceful clear of the pending requests if we are anyway going to
+reset the host (for fatal errors).
 
-Signed-off-by: Gilad Broner <gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Signed-off-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
- drivers/scsi/ufs/ufs-qcom.c                        | 38 ++++++++++++----------
- drivers/scsi/ufs/ufshcd.c                          | 20 ++++++++++++
- drivers/scsi/ufs/ufshcd.h                          |  2 ++
- 4 files changed, 46 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 155 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 112 insertions(+), 43 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index b39e765..56b105f 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -31,6 +31,9 @@ Optional properties:
- 			  defined or a value in the array is "0" then it is assumed
- 			  that the frequency is set by the parent clock or a
- 			  fixed rate clock source.
-+- lanes-per-direction:	number of lanes available per direction - either 1 or 2.
-+			Note that it is assume same number of lanes is used both directions at once.
-+			If not specified, default is 2 lanes per direction.
- 
- Note: If above properties are not defined it can be assumed that the supply
- regulators or clocks are always on.
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index c99eac9..3196197 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -132,21 +132,23 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto disable_rx_l0;
- 
--	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
--		host->rx_l1_sync_clk);
--	if (err)
--		goto disable_tx_l0;
--
--	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
--		host->tx_l1_sync_clk);
--	if (err)
--		goto disable_rx_l1;
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
-+			host->rx_l1_sync_clk);
-+		if (err)
-+			goto disable_tx_l0;
- 
-+		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
-+			host->tx_l1_sync_clk);
-+		if (err)
-+			goto disable_rx_l1;
-+	}
- 	host->is_lane_clks_enabled = true;
- 	goto out;
- 
- disable_rx_l1:
--	clk_disable_unprepare(host->rx_l1_sync_clk);
-+	if (host->hba->lanes_per_direction > 1)
-+		clk_disable_unprepare(host->rx_l1_sync_clk);
- disable_tx_l0:
- 	clk_disable_unprepare(host->tx_l0_sync_clk);
- disable_rx_l0:
-@@ -170,14 +172,16 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	if (err)
- 		goto out;
- 
--	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
--		&host->rx_l1_sync_clk);
--	if (err)
--		goto out;
--
--	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
--		&host->tx_l1_sync_clk);
-+	/* In case of single lane per direction, don't read lane1 clocks */
-+	if (host->hba->lanes_per_direction > 1) {
-+		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
-+			&host->rx_l1_sync_clk);
-+		if (err)
-+			goto out;
- 
-+		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
-+			&host->tx_l1_sync_clk);
-+	}
- out:
- 	return err;
- }
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1c37a7d..9638553 100644
+index 101648f..6a1a8cd 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -40,6 +40,7 @@
- #include <linux/async.h>
- #include <linux/devfreq.h>
- 
-+#include <linux/of.h>
- #include "ufshcd.h"
- #include "unipro.h"
- #define UFSHCD_REQ_SENSE_SIZE	18
-@@ -87,6 +88,8 @@
- /* Interrupt aggregation default timeout, unit: 40us */
- #define INT_AGGR_DEF_TO	0x02
- 
-+#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
-+
- #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
- 	({                                                              \
- 		int _ret;                                               \
-@@ -5765,6 +5768,21 @@ static struct devfreq_dev_profile ufs_devfreq_profile = {
- 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
+@@ -136,9 +136,11 @@ enum {
+ /* UFSHCD UIC layer error flags */
+ enum {
+ 	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
+-	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
+-	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
+-	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
++	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR = (1 << 1), /* Data link layer error */
++	UFSHCD_UIC_DL_TCx_REPLAY_ERROR = (1 << 2), /* Data link layer error */
++	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
++	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
++	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
  };
  
-+static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+ /* Interrupt configuration options */
+@@ -3507,31 +3509,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+ }
+ 
+ /**
+- * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
++ * @completed_reqs: requests to complete
+  */
+-static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
++					unsigned long completed_reqs)
+ {
+ 	struct ufshcd_lrb *lrbp;
+ 	struct scsi_cmnd *cmd;
+-	unsigned long completed_reqs;
+-	u32 tr_doorbell;
+ 	int result;
+ 	int index;
+ 
+-	/* Resetting interrupt aggregation counters first and reading the
+-	 * DOOR_BELL afterward allows us to handle all the completed requests.
+-	 * In order to prevent other interrupts starvation the DB is read once
+-	 * after reset. The down side of this solution is the possibility of
+-	 * false interrupt if device completes another request after resetting
+-	 * aggregation and before reading the DB.
+-	 */
+-	if (ufshcd_is_intr_aggr_allowed(hba))
+-		ufshcd_reset_intr_aggr(hba);
+-
+-	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
+-
+ 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+ 		lrbp = &hba->lrb[index];
+ 		cmd = lrbp->cmd;
+@@ -3561,6 +3550,31 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ }
+ 
+ /**
++ * ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * @hba: per adapter instance
++ */
++static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
 +{
-+	struct device *dev = hba->dev;
-+	int ret;
++	unsigned long completed_reqs;
++	u32 tr_doorbell;
 +
-+	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
-+		&hba->lanes_per_direction);
-+	if (ret) {
-+		dev_dbg(hba->dev,
-+			"%s: failed to read lanes-per-direction, ret=%d\n",
-+			__func__, ret);
-+		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
-+	}
++	/* Resetting interrupt aggregation counters first and reading the
++	 * DOOR_BELL afterward allows us to handle all the completed requests.
++	 * In order to prevent other interrupts starvation the DB is read once
++	 * after reset. The down side of this solution is the possibility of
++	 * false interrupt if device completes another request after resetting
++	 * aggregation and before reading the DB.
++	 */
++	if (ufshcd_is_intr_aggr_allowed(hba))
++		ufshcd_reset_intr_aggr(hba);
++
++	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
++
++	__ufshcd_transfer_req_compl(hba, completed_reqs);
++}
++
++/**
+  * ufshcd_disable_ee - disable exception event
+  * @hba: per-adapter instance
+  * @mask: exception event to disable
+@@ -3815,6 +3829,13 @@ out:
+ 	return;
+ }
+ 
++/* Complete requests that have door-bell cleared */
++static void ufshcd_complete_requests(struct ufs_hba *hba)
++{
++	ufshcd_transfer_req_compl(hba);
++	ufshcd_tmc_handler(hba);
 +}
 +
  /**
-  * ufshcd_init - Driver initialization routine
-  * @hba: per-adapter instance
-@@ -5788,6 +5806,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	hba->mmio_base = mmio_base;
- 	hba->irq = irq;
+  * ufshcd_err_handler - handle UFS errors that require s/w attention
+  * @work: pointer to work structure
+@@ -3827,6 +3848,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	u32 err_tm = 0;
+ 	int err = 0;
+ 	int tag;
++	bool needs_reset = false;
  
-+	ufshcd_init_lanes_per_dir(hba);
+ 	hba = container_of(work, struct ufs_hba, eh_work);
+ 
+@@ -3834,40 +3856,75 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_hold(hba, false);
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+ 		goto out;
+-	}
+ 
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 	ufshcd_set_eh_in_progress(hba);
+ 
+ 	/* Complete requests that have door-bell cleared by h/w */
+-	ufshcd_transfer_req_compl(hba);
+-	ufshcd_tmc_handler(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ufshcd_complete_requests(hba);
++	if ((hba->saved_err & INT_FATAL_ERRORS) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
++				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
++				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
++		needs_reset = true;
+ 
++	/*
++	 * if host reset is required then skip clearing the pending
++	 * transfers forcefully because they will automatically get
++	 * cleared after link startup.
++	 */
++	if (needs_reset)
++		goto skip_pending_xfer_clear;
 +
- 	err = ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index f8ce680..e7bcf65 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -509,6 +509,8 @@ struct ufs_hba {
++	/* release lock as clear command might sleep */
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	/* Clear pending transfer requests */
+-	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
+-		if (ufshcd_clear_cmd(hba, tag))
+-			err_xfer |= 1 << tag;
++	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
++		if (ufshcd_clear_cmd(hba, tag)) {
++			err_xfer = true;
++			goto lock_skip_pending_xfer_clear;
++		}
++	}
  
- 	bool wlun_dev_clr_ua;
+ 	/* Clear pending task management requests */
+-	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
+-		if (ufshcd_clear_tm_cmd(hba, tag))
+-			err_tm |= 1 << tag;
++	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
++		if (ufshcd_clear_tm_cmd(hba, tag)) {
++			err_tm = true;
++			goto lock_skip_pending_xfer_clear;
++		}
++	}
  
-+	/* Number of lanes available (1 or 2) for Rx/Tx */
-+	u32 lanes_per_direction;
- 	struct ufs_pa_layer_attr pwr_info;
- 	struct ufs_pwr_mode_info max_pwr_info;
+-	/* Complete the requests that are cleared by s/w */
++lock_skip_pending_xfer_clear:
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_transfer_req_compl(hba);
+-	ufshcd_tmc_handler(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
++	/* Complete the requests that are cleared by s/w */
++	ufshcd_complete_requests(hba);
++
++	if (err_xfer || err_tm)
++		needs_reset = true;
++
++skip_pending_xfer_clear:
+ 	/* Fatal errors need reset */
+-	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
+-			((hba->saved_err & UIC_ERROR) &&
+-			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
++	if (needs_reset) {
++		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
++
++		/*
++		 * ufshcd_reset_and_restore() does the link reinitialization
++		 * which will need atleast one empty doorbell slot to send the
++		 * device management commands (NOP and query commands).
++		 * If there is no slot empty at this moment then free up last
++		 * slot forcefully.
++		 */
++		if (hba->outstanding_reqs == max_doorbells)
++			__ufshcd_transfer_req_compl(hba,
++						    (1UL << (hba->nutrs - 1)));
++
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 		err = ufshcd_reset_and_restore(hba);
++		spin_lock_irqsave(hba->host->host_lock, flags);
+ 		if (err) {
+ 			dev_err(hba->dev, "%s: reset and restore failed\n",
+ 					__func__);
+@@ -3881,9 +3938,18 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		hba->saved_err = 0;
+ 		hba->saved_uic_err = 0;
+ 	}
++
++	if (!needs_reset) {
++		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
++		if (hba->saved_err || hba->saved_uic_err)
++			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
++			    __func__, hba->saved_err, hba->saved_uic_err);
++	}
++
+ 	ufshcd_clear_eh_in_progress(hba);
+ 
+ out:
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	scsi_unblock_requests(hba->host);
+ 	ufshcd_release(hba);
+ 	pm_runtime_put_sync(hba->dev);
+@@ -3938,15 +4004,18 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
+ 	}
+ 
+ 	if (queue_eh_work) {
++		/*
++		 * update the transfer error masks to sticky bits, let's do this
++		 * irrespective of current ufshcd_state.
++		 */
++		hba->saved_err |= hba->errors;
++		hba->saved_uic_err |= hba->uic_error;
++
+ 		/* handle fatal errors only when link is functional */
+ 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+ 			/* block commands from scsi mid-layer */
+ 			scsi_block_requests(hba->host);
+ 
+-			/* transfer error masks to sticky bits */
+-			hba->saved_err |= hba->errors;
+-			hba->saved_uic_err |= hba->uic_error;
+-
+ 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
+ 			schedule_work(&hba->eh_work);
+ 		}
 -- 
 1.8.5.2
 
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
