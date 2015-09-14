@@ -1,80 +1,122 @@
 From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Bugfix 3/3] eata: Enhance eata driver to support PCI device hot-removal
-Date: Mon, 14 Sep 2015 11:08:59 +0800
-Message-ID: <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Bugfix 1/3] eata: Use IDA to manage eata board IDs
+Date: Mon, 14 Sep 2015 11:08:57 +0800
+Message-ID: <1442200140-30808-2-git-send-email-jiang.liu@linux.intel.com>
 References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
  <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33946 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754396AbbINDGG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:06:06 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Arthur Marsh <arthur.marsh@internode.on.net>, Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Due to having no hardware for testing, this is just a sample code
-to support PCI device hot-removal. It just passing compilation,
-no any tests.
+Use IDA to manage eata board IDs, so we could dynamically allocate
+and free board IDs later.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/scsi/eata.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/scsi/eata.c |   46 ++++++++++++++++++++++++++++++----------------
+ 1 file changed, 30 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index b92e6856f909..f3bd7cbf260e 100644
+index 227dd2c2ec2f..b45d3b532b70 100644
 --- a/drivers/scsi/eata.c
 +++ b/drivers/scsi/eata.c
-@@ -1474,6 +1474,21 @@ static unsigned int port_probe(unsigned long port_base,
- #ifdef CONFIG_PCI
- static int eata2x_pci_device_count;
+@@ -491,6 +491,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/slab.h>
++#include <linux/idr.h>
+ #include <asm/byteorder.h>
+ #include <asm/dma.h>
+ #include <asm/io.h>
+@@ -837,9 +838,8 @@ struct hostdata {
+ static struct Scsi_Host *sh[MAX_BOARDS];
+ static const char *driver_name = "EATA";
+ static char sha[MAX_BOARDS];
+-
+-/* Initialize num_boards so that ihdlr can work while detect is in progress */
+-static unsigned int num_boards = MAX_BOARDS;
++static DEFINE_IDA(eata_ida);
++static DECLARE_BITMAP(eata_board_bitmap, MAX_BOARDS);
  
-+/* TODO: need help here to shutdown the scsi host and release resources */
-+static void port_remove(unsigned int id, resource_size_t port_base,
-+			struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = sh[id];
-+
-+	/* TODO: stop scsi device */
-+	scsi_unregister(shost);
-+	/* TODO: clean up resources allocated by port_detect() */
-+	clear_bit(id, eata_board_bitmap);
-+	free_irq(shost->irq, &sha[id]);
-+	release_region(port_base, REGION_SIZE);
-+	ida_simple_remove(&eata_ida, id);
-+}
-+
- static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	int i, ret = -ENXIO;
-@@ -1521,6 +1536,16 @@ out_error:
- 	return ret;
+ static unsigned long io_port[] = {
+ 
+@@ -1509,6 +1509,23 @@ static int option_setup(char *str)
+ 	return 1;
  }
  
-+static void eata2x_pci_remove(struct pci_dev *pdev)
++static unsigned int port_probe(unsigned long port_base,
++			       struct scsi_host_template *tpnt)
 +{
-+	int id = (int)(long)dev_get_drvdata(&pdev->dev);
-+	resource_size_t port_base;
++	int id;
 +
-+	port_base = pci_resource_start(pdev, 0) + PCI_BASE_ADDRESS_0;
-+	port_remove(id, port_base, pdev);
-+	pci_disable_device(pdev);
++	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
++	if (id >= 0) {
++		set_bit(id, eata_board_bitmap);
++		if (port_detect(port_base, id, tpnt))
++			return id;
++		clear_bit(id, eata_board_bitmap);
++		ida_simple_remove(&eata_ida, id);
++	}
++
++	return -1;
 +}
 +
- static struct pci_device_id eata2x_tbl[] = {
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
- 	{ },
-@@ -1531,6 +1556,7 @@ static struct pci_driver eata2x_pci_driver = {
- 	.name		= "eata",
- 	.id_table	= eata2x_tbl,
- 	.probe		= eata2x_pci_probe,
-+	.remove		= eata2x_pci_remove,
- };
+ static void add_pci_ports(void)
+ {
+ #if defined(CONFIG_PCI)
+@@ -1548,7 +1565,7 @@ static void add_pci_ports(void)
  
- static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
+ static int eata2x_detect(struct scsi_host_template *tpnt)
+ {
+-	unsigned int j = 0, k;
++	unsigned int k, count = 0;
+ 
+ 	tpnt->proc_name = "eata2x";
+ 
+@@ -1582,17 +1599,12 @@ static int eata2x_detect(struct scsi_host_template *tpnt)
+ 			enable_pci_ports();
+ 	}
+ 
+-	for (k = 0; io_port[k]; k++) {
++	for (k = 0; io_port[k]; k++)
++		if (io_port[k] != SKIP &&
++		    port_probe(io_port[k], tpnt) >= 0)
++			count++;
+ 
+-		if (io_port[k] == SKIP)
+-			continue;
+-
+-		if (j < MAX_BOARDS && port_detect(io_port[k], j, tpnt))
+-			j++;
+-	}
+-
+-	num_boards = j;
+-	return j;
++	return count;
+ }
+ 
+ static void map_dma(unsigned int i, struct hostdata *ha)
+@@ -2530,14 +2542,16 @@ static irqreturn_t ihdlr(struct Scsi_Host *shost)
+ static irqreturn_t do_interrupt_handler(int dummy, void *shap)
+ {
+ 	struct Scsi_Host *shost;
+-	unsigned int j;
++	unsigned int j = (unsigned int)((char *)shap - sha);
+ 	unsigned long spin_flags;
+ 	irqreturn_t ret;
+ 
+ 	/* Check if the interrupt must be processed by this handler */
+-	if ((j = (unsigned int)((char *)shap - sha)) >= num_boards)
++	if (j >= MAX_BOARDS || !test_bit(j, eata_board_bitmap))
+ 		return IRQ_NONE;
+ 	shost = sh[j];
++	if (!shost)
++		return IRQ_NONE;
+ 
+ 	spin_lock_irqsave(shost->host_lock, spin_flags);
+ 	ret = ihdlr(shost);
 -- 
 1.7.10.4
-
