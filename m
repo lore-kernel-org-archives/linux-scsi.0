@@ -1,122 +1,236 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Bugfix 1/3] eata: Use IDA to manage eata board IDs
-Date: Mon, 14 Sep 2015 11:08:57 +0800
-Message-ID: <1442200140-30808-2-git-send-email-jiang.liu@linux.intel.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Arthur Marsh <arthur.marsh@internode.on.net>, Dario Ballabio <ballabio_dario@emc.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] target: Fix PR registration + APTPL RCU conversion regression
+Date: Mon, 14 Sep 2015 03:43:58 +0000
+Message-ID: <1442202238-32708-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, "Scott L. Lykens" <scott@lykens.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use IDA to manage eata board IDs, so we could dynamically allocate
-and free board IDs later.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch fixes a v4.2+ regression introduced by commit 79dc9c9e86
+where lookup of t10_pr_registration->pr_reg_deve and associated
+->pr_kref get was missing from __core_scsi3_do_alloc_registration(),
+which is responsible for setting DEF_PR_REG_ACTIVE.
+
+This would result in REGISTER operations completing successfully,
+but subsequent core_scsi3_pr_seq_non_holder() checking would fail
+with !DEF_PR_REG_ACTIVE -> RESERVATION CONFLICT status.
+
+Update __core_scsi3_add_registration() to drop ->pr_kref reference
+after registration and any optional ALL_TG_PT=1 processing has
+completed.  Update core_scsi3_decode_spec_i_port() to release
+the new parent local_pr_reg->pr_kref as well.
+
+Also, update __core_scsi3_check_aptpl_registration() to perform
+the same target_nacl_find_deve() lookup + ->pr_kref get, now that
+__core_scsi3_add_registration() expects to drop the reference.
+
+Finally, since there are cases when se_dev_entry->se_lun_acl can
+still be dereferenced in core_scsi3_lunacl_undepend_item() while
+holding ->pr_kref, go ahead and move explicit rcu_assign_pointer()
+NULL assignments within core_disable_device_list_for_node() until
+after orig->pr_comp finishes.
+
+Reported-by: Scott L. Lykens <scott@lykens.org>
+Cc: Scott L. Lykens <scott@lykens.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/eata.c |   46 ++++++++++++++++++++++++++++++----------------
- 1 file changed, 30 insertions(+), 16 deletions(-)
+ drivers/target/target_core_device.c |  5 +-
+ drivers/target/target_core_pr.c     | 91 +++++++++++++++++++++++++++----------
+ 2 files changed, 70 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 227dd2c2ec2f..b45d3b532b70 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -491,6 +491,7 @@
- #include <linux/spinlock.h>
- #include <linux/dma-mapping.h>
- #include <linux/slab.h>
-+#include <linux/idr.h>
- #include <asm/byteorder.h>
- #include <asm/dma.h>
- #include <asm/io.h>
-@@ -837,9 +838,8 @@ struct hostdata {
- static struct Scsi_Host *sh[MAX_BOARDS];
- static const char *driver_name = "EATA";
- static char sha[MAX_BOARDS];
--
--/* Initialize num_boards so that ihdlr can work while detect is in progress */
--static unsigned int num_boards = MAX_BOARDS;
-+static DEFINE_IDA(eata_ida);
-+static DECLARE_BITMAP(eata_board_bitmap, MAX_BOARDS);
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index dcc424a..abf2076 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -427,8 +427,6 @@ void core_disable_device_list_for_node(
  
- static unsigned long io_port[] = {
+ 	hlist_del_rcu(&orig->link);
+ 	clear_bit(DEF_PR_REG_ACTIVE, &orig->deve_flags);
+-	rcu_assign_pointer(orig->se_lun, NULL);
+-	rcu_assign_pointer(orig->se_lun_acl, NULL);
+ 	orig->lun_flags = 0;
+ 	orig->creation_time = 0;
+ 	orig->attach_count--;
+@@ -439,6 +437,9 @@ void core_disable_device_list_for_node(
+ 	kref_put(&orig->pr_kref, target_pr_kref_release);
+ 	wait_for_completion(&orig->pr_comp);
  
-@@ -1509,6 +1509,23 @@ static int option_setup(char *str)
- 	return 1;
- }
- 
-+static unsigned int port_probe(unsigned long port_base,
-+			       struct scsi_host_template *tpnt)
-+{
-+	int id;
++	rcu_assign_pointer(orig->se_lun, NULL);
++	rcu_assign_pointer(orig->se_lun_acl, NULL);
 +
-+	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
-+	if (id >= 0) {
-+		set_bit(id, eata_board_bitmap);
-+		if (port_detect(port_base, id, tpnt))
-+			return id;
-+		clear_bit(id, eata_board_bitmap);
-+		ida_simple_remove(&eata_ida, id);
+ 	kfree_rcu(orig, rcu_head);
+ 
+ 	core_scsi3_free_pr_reg_from_nacl(dev, nacl);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 5ab7100..e793311 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -618,7 +618,7 @@ static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 	struct se_device *dev,
+ 	struct se_node_acl *nacl,
+ 	struct se_lun *lun,
+-	struct se_dev_entry *deve,
++	struct se_dev_entry *dest_deve,
+ 	u64 mapped_lun,
+ 	unsigned char *isid,
+ 	u64 sa_res_key,
+@@ -640,7 +640,29 @@ static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_atp_mem_list);
+ 	atomic_set(&pr_reg->pr_res_holders, 0);
+ 	pr_reg->pr_reg_nacl = nacl;
+-	pr_reg->pr_reg_deve = deve;
++	/*
++	 * For destination registrations for ALL_TG_PT=1 and SPEC_I_PT=1,
++	 * the se_dev_entry->pr_ref will have been already obtained by
++	 * core_get_se_deve_from_rtpi() or __core_scsi3_alloc_registration().
++	 *
++	 * Otherwise, locate se_dev_entry now and obtain a reference until
++	 * registration completes in __core_scsi3_add_registration().
++	 */
++	if (dest_deve) {
++		pr_reg->pr_reg_deve = dest_deve;
++	} else {
++		rcu_read_lock();
++		pr_reg->pr_reg_deve = target_nacl_find_deve(nacl, mapped_lun);
++		if (!pr_reg->pr_reg_deve) {
++			rcu_read_unlock();
++			pr_err("Unable to locate PR deve %s mapped_lun: %llu\n",
++				nacl->initiatorname, mapped_lun);
++			kmem_cache_free(t10_pr_reg_cache, pr_reg);
++			return NULL;
++		}
++		kref_get(&pr_reg->pr_reg_deve->pr_kref);
++		rcu_read_unlock();
 +	}
-+
-+	return -1;
-+}
-+
- static void add_pci_ports(void)
- {
- #if defined(CONFIG_PCI)
-@@ -1548,7 +1565,7 @@ static void add_pci_ports(void)
+ 	pr_reg->pr_res_mapped_lun = mapped_lun;
+ 	pr_reg->pr_aptpl_target_lun = lun->unpacked_lun;
+ 	pr_reg->tg_pt_sep_rtpi = lun->lun_rtpi;
+@@ -936,17 +958,29 @@ static int __core_scsi3_check_aptpl_registration(
+ 		    !(strcmp(pr_reg->pr_tport, t_port)) &&
+ 		     (pr_reg->pr_reg_tpgt == tpgt) &&
+ 		     (pr_reg->pr_aptpl_target_lun == target_lun)) {
++			/*
++			 * Obtain the ->pr_reg_deve pointer + reference, that
++			 * is released by __core_scsi3_add_registration() below.
++			 */
++			rcu_read_lock();
++			pr_reg->pr_reg_deve = target_nacl_find_deve(nacl, mapped_lun);
++			if (!pr_reg->pr_reg_deve) {
++				pr_err("Unable to locate PR APTPL %s mapped_lun:"
++					" %llu\n", nacl->initiatorname, mapped_lun);
++				rcu_read_unlock();
++				continue;
++			}
++			kref_get(&pr_reg->pr_reg_deve->pr_kref);
++			rcu_read_unlock();
  
- static int eata2x_detect(struct scsi_host_template *tpnt)
- {
--	unsigned int j = 0, k;
-+	unsigned int k, count = 0;
+ 			pr_reg->pr_reg_nacl = nacl;
+ 			pr_reg->tg_pt_sep_rtpi = lun->lun_rtpi;
+-
+ 			list_del(&pr_reg->pr_reg_aptpl_list);
+ 			spin_unlock(&pr_tmpl->aptpl_reg_lock);
+ 			/*
+ 			 * At this point all of the pointers in *pr_reg will
+ 			 * be setup, so go ahead and add the registration.
+ 			 */
+-
+ 			__core_scsi3_add_registration(dev, nacl, pr_reg, 0, 0);
+ 			/*
+ 			 * If this registration is the reservation holder,
+@@ -1044,18 +1078,11 @@ static void __core_scsi3_add_registration(
  
- 	tpnt->proc_name = "eata2x";
- 
-@@ -1582,17 +1599,12 @@ static int eata2x_detect(struct scsi_host_template *tpnt)
- 			enable_pci_ports();
+ 	__core_scsi3_dump_registration(tfo, dev, nacl, pr_reg, register_type);
+ 	spin_unlock(&pr_tmpl->registration_lock);
+-
+-	rcu_read_lock();
+-	deve = pr_reg->pr_reg_deve;
+-	if (deve)
+-		set_bit(DEF_PR_REG_ACTIVE, &deve->deve_flags);
+-	rcu_read_unlock();
+-
+ 	/*
+ 	 * Skip extra processing for ALL_TG_PT=0 or REGISTER_AND_MOVE.
+ 	 */
+ 	if (!pr_reg->pr_reg_all_tg_pt || register_move)
+-		return;
++		goto out;
+ 	/*
+ 	 * Walk pr_reg->pr_reg_atp_list and add registrations for ALL_TG_PT=1
+ 	 * allocated in __core_scsi3_alloc_registration()
+@@ -1075,19 +1102,31 @@ static void __core_scsi3_add_registration(
+ 		__core_scsi3_dump_registration(tfo, dev, nacl_tmp, pr_reg_tmp,
+ 					       register_type);
+ 		spin_unlock(&pr_tmpl->registration_lock);
+-
++		/*
++		 * Drop configfs group dependency reference and deve->pr_kref
++		 * obtained from  __core_scsi3_alloc_registration() code.
++		 */
+ 		rcu_read_lock();
+ 		deve = pr_reg_tmp->pr_reg_deve;
+-		if (deve)
++		if (deve) {
+ 			set_bit(DEF_PR_REG_ACTIVE, &deve->deve_flags);
++			core_scsi3_lunacl_undepend_item(deve);
++			pr_reg_tmp->pr_reg_deve = NULL;
++		}
+ 		rcu_read_unlock();
+-
+-		/*
+-		 * Drop configfs group dependency reference from
+-		 * __core_scsi3_alloc_registration()
+-		 */
+-		core_scsi3_lunacl_undepend_item(pr_reg_tmp->pr_reg_deve);
  	}
- 
--	for (k = 0; io_port[k]; k++) {
-+	for (k = 0; io_port[k]; k++)
-+		if (io_port[k] != SKIP &&
-+		    port_probe(io_port[k], tpnt) >= 0)
-+			count++;
- 
--		if (io_port[k] == SKIP)
--			continue;
--
--		if (j < MAX_BOARDS && port_detect(io_port[k], j, tpnt))
--			j++;
--	}
--
--	num_boards = j;
--	return j;
-+	return count;
++out:
++	/*
++	 * Drop deve->pr_kref obtained in __core_scsi3_do_alloc_registration()
++	 */
++	rcu_read_lock();
++	deve = pr_reg->pr_reg_deve;
++	if (deve) {
++		set_bit(DEF_PR_REG_ACTIVE, &deve->deve_flags);
++		kref_put(&deve->pr_kref, target_pr_kref_release);
++		pr_reg->pr_reg_deve = NULL;
++	}
++	rcu_read_unlock();
  }
  
- static void map_dma(unsigned int i, struct hostdata *ha)
-@@ -2530,14 +2542,16 @@ static irqreturn_t ihdlr(struct Scsi_Host *shost)
- static irqreturn_t do_interrupt_handler(int dummy, void *shap)
- {
- 	struct Scsi_Host *shost;
--	unsigned int j;
-+	unsigned int j = (unsigned int)((char *)shap - sha);
- 	unsigned long spin_flags;
- 	irqreturn_t ret;
+ static int core_scsi3_alloc_registration(
+@@ -1785,9 +1824,11 @@ core_scsi3_decode_spec_i_port(
+ 			dest_node_acl->initiatorname, i_buf, (dest_se_deve) ?
+ 			dest_se_deve->mapped_lun : 0);
  
- 	/* Check if the interrupt must be processed by this handler */
--	if ((j = (unsigned int)((char *)shap - sha)) >= num_boards)
-+	if (j >= MAX_BOARDS || !test_bit(j, eata_board_bitmap))
- 		return IRQ_NONE;
- 	shost = sh[j];
-+	if (!shost)
-+		return IRQ_NONE;
+-		if (!dest_se_deve)
++		if (!dest_se_deve) {
++			kref_put(&local_pr_reg->pr_reg_deve->pr_kref,
++				 target_pr_kref_release);
+ 			continue;
+-
++		}
+ 		core_scsi3_lunacl_undepend_item(dest_se_deve);
+ 		core_scsi3_nodeacl_undepend_item(dest_node_acl);
+ 		core_scsi3_tpg_undepend_item(dest_tpg);
+@@ -1823,9 +1864,11 @@ out:
  
- 	spin_lock_irqsave(shost->host_lock, spin_flags);
- 	ret = ihdlr(shost);
+ 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+ 
+-		if (!dest_se_deve)
++		if (!dest_se_deve) {
++			kref_put(&local_pr_reg->pr_reg_deve->pr_kref,
++				 target_pr_kref_release);
+ 			continue;
+-
++		}
+ 		core_scsi3_lunacl_undepend_item(dest_se_deve);
+ 		core_scsi3_nodeacl_undepend_item(dest_node_acl);
+ 		core_scsi3_tpg_undepend_item(dest_tpg);
 -- 
-1.7.10.4
+1.9.1
