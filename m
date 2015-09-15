@@ -1,158 +1,62 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 01/17] Add ida and idr helper routines.
-Date: Tue, 15 Sep 2015 09:46:01 -0700
-Message-ID: <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263512.git.lduncan@suse.com>
-References: <cover.1442263512.git.lduncan@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52812 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752740AbbIOQrp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Sep 2015 12:47:45 -0400
-In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
-In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
-References: <cover.1442263512.git.lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
+Date: Tue, 15 Sep 2015 10:38:32 -0700
+Message-ID: <CA+55aFxVQ9jD=jUqPZt76EMe_Tb-_SA8v=rOHeR9Ljdsc6=xGQ@mail.gmail.com>
+References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
+	<27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
+	<1442313464.1914.21.camel@sipsolutions.net>
+	<20150915110447.GI6350@linux>
+	<20150915094509.46cca84d@gandalf.local.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20150915094509.46cca84d-f9ZlEuEWxVcJvu8Pb33WZ0EMvNT87kid@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Cc: "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, "Altman, Avri" <avri.altman-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, "Grumbach,
+	Emmanuel" <emmanuel.grumbach-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Coelho,
+	Luciano" <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Wang Long <long.wanglong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Richard Fitzgerald <rf-yzvPICuk2AATkU/dhu1WVueM+bqZidxxQQ4Iyu8u01E@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open list <linux-kerne>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
 
-Clients of the ida and idr index-management routines
-tend to use the same calling sequences much of the time,
-so this change adds helper functions for allocating and
-releasing indexes of either flavor, i.e. with or
-without pointer management.
+On Tue, Sep 15, 2015 at 6:45 AM, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org> wrote:
+>
+> Linus, This patch changes a lot of u32s into bools in structures.
+> What's your take on that?
 
-Inline functions added for idr:
-  idr_get_index_in_range
-  idr_get_index (in range 0,0)
-  idr_put_index
-And for ida:
-  ida_get_index
-  ida_put_index
+So in general, I'd tend to prefer "bool" to be used primarily as a
+return value for functions, but I have to say, in the case of
+something that is explicitly called "debugfs_create_bool()" it kind of
+makes sense to actually take a bool pointer.
 
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- include/linux/idr.h | 102 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 102 insertions(+)
+In structures, it depends a bit on usage. If the intent is to pack
+things better, I tend to prefer using "char" etc that is explicitly a
+byte. Or just use explicit bits in an "unsigned int flags" or
+something. Because while "bool" is _typically_ one byte, but it's very
+very explicitly documented to not be guaranteed that way, and there
+are legacy models where "bool" ends up being "int".
 
-diff --git a/include/linux/idr.h b/include/linux/idr.h
-index 013fd9bc4cb6..341c4f2d9874 100644
---- a/include/linux/idr.h
-+++ b/include/linux/idr.h
-@@ -16,6 +16,8 @@
- #include <linux/bitops.h>
- #include <linux/init.h>
- #include <linux/rcupdate.h>
-+#include <linux/spinlock.h>
-+#include <linux/gfp.h>
- 
- /*
-  * We want shallower trees and thus more bits covered at each layer.  8
-@@ -183,4 +185,104 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
- 
- void __init idr_init_cache(void);
- 
-+/**
-+ * ida_get_index - allocate a ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @p_id	pointer to allocated index value
-+ *
-+ * A helper function for safely allocating an index value (id),
-+ * returning a negative errno value on failure, else 0.
-+ */
-+static inline int ida_get_index(struct ida *ida, spinlock_t *lock, int *p_id)
-+{
-+	int error = -ENOMEM;
-+
-+	do {
-+		if (!ida_pre_get(ida, GFP_KERNEL))
-+			break;
-+		spin_lock(lock);
-+		error = ida_get_new(ida, p_id);
-+		spin_unlock(lock);
-+	} while (error == -EAGAIN);
-+
-+	return error;
-+}
-+
-+/**
-+ * ida_put_index - free an allocated ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @id		the value of the allocated index
-+ *
-+ * A helper function that goes with @ida_get_index, which safely
-+ * frees a previously-allocated index value.
-+ */
-+static inline void ida_put_index(struct ida *ida, spinlock_t *lock, int id)
-+{
-+	spin_lock(lock);
-+	ida_remove(ida, id);
-+	spin_unlock(lock);
-+}
-+
-+/**
-+ * idr_get_index_in_range - allocate a new index, with locking
-+ *		            within a range
-+ * @idr:	idr handle
-+ * @lock:	spin lock handle protecting the index
-+ * @ptr:	pointer to associate with allocated index
-+ * @start:	starting index (see idr_alloc)
-+ * @end:	ending index (0 -> use default max)
-+ *
-+ * This is a helper routine meant to make the common
-+ * calling sequence to allocate an idr index easier.
-+ * It uses a spin lock, and allocates a positive index
-+ * in the range of [start,end), returning a negative
-+ * errno on failure, else 0.
-+ */
-+static inline int idr_get_index_in_range(struct idr *idr, spinlock_t *lock,
-+					 void *ptr, int start, int end)
-+{
-+	int ret;
-+
-+	idr_preload(GFP_KERNEL);
-+	spin_lock(lock);
-+	ret = idr_alloc(idr, ptr, start, end, GFP_NOWAIT);
-+	spin_unlock(lock);
-+	idr_preload_end();
-+
-+	return ret;
-+}
-+
-+/**
-+ * idr_get_index - allocate new index, with locking, using the
-+ *		   default range (zero to max-1)
-+ * @idr:	idr handle
-+ * @lock:	spin lock handle protecting the index
-+ * @ptr:	pointer to associate with allocated index
-+ *
-+ * Simple wrapper around idr_get_index_in_range() w/ @start and
-+ * @end of 0, since this is a common case
-+ */
-+static inline int idr_get_index(struct idr *idr, spinlock_t *lock, void *ptr)
-+{
-+	return idr_get_index_in_range(idr, lock, ptr, 0, 0);
-+}
-+
-+/**
-+ * idr_put_index - free an allocated idr index value
-+ * @idr		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @id		the value of the allocated index
-+ *
-+ * A helper function that goes with @idr_get_index, which safely
-+ * frees a previously-allocated index value.
-+ */
-+static inline void idr_put_index(struct idr *idr, spinlock_t *lock, int id)
-+{
-+	spin_lock(lock);
-+	idr_remove(idr, id);
-+	spin_unlock(lock);
-+}
-+
- #endif /* __IDR_H__ */
--- 
-2.1.4
+But in this case, the use of "bool" is not about packing or anything
+like that, it is more about the logical data type for
+"debugfs_create_bool()", and so I don't mind "bool" in this context
+even in structures.
 
+But exactly because of the whole ambiguoity about "bool", what I do
+*not* want to see in any way is "bool" in structures that are exported
+to user space. That's when we want primarily those explicitly sized
+types like "u32" etc. We should generally try to avoid even things
+like "int" in those kinds of structures, and bool is even _less_ well
+defined than "int" is.
+
+But that user interface issue doesn't seem to be the case here, an I
+can't say that I mind the patch. It looks fairly sane.
+
+                    Linus
