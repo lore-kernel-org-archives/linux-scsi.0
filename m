@@ -1,114 +1,66 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Charles Keepax <ckeepax@opensource.wolfsonmicro.com>
 Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
-Date: Tue, 15 Sep 2015 16:34:47 +0530
-Message-ID: <20150915110447.GI6350@linux>
+Date: Tue, 15 Sep 2015 10:13:19 +0100
+Message-ID: <20150915091319.GH11200@ck-lbox>
 References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
-	<27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
-	<1442313464.1914.21.camel@sipsolutions.net>
+ <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <ath10k-bounces+gldad-ath10k=m.gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <1442313464.1914.21.camel-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Cc: "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, "Altman, Avri" <avri.altman-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, "Grumbach,
-	Emmanuel" <emmanuel.grumbach-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Coelho,
-	Luciano" <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Wang Long <long.wanglong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Richard Fitzgerald <rf-yzvPICuk2AATkU/dhu1WVueM+bqZidxxQQ4Iyu8u01E@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open list <linux-kerne>
+In-Reply-To: <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/ath10k>,
+ <mailto:ath10k-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/ath10k/>
+List-Post: <mailto:ath10k@lists.infradead.org>
+List-Help: <mailto:ath10k-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/ath10k>,
+ <mailto:ath10k-request@lists.infradead.org?subject=subscribe>
+Sender: "ath10k" <ath10k-bounces@lists.infradead.org>
+Errors-To: ath10k-bounces+gldad-ath10k=m.gmane.org@lists.infradead.org
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: "open list:NETWORKING DRIVERS
+ (WIRELESS)" <linux-wireless@vger.kernel.org>, "moderated list:SOUND - SOC LAYER /
+ DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Avri Altman <avri.altman@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>, Jiri Slaby <jirislaby@gmail.com>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Catalin Marinas <catalin.marinas@arm.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Will Deacon <will.deacon@arm.com>, Jaroslav Kysela <perex@perex.cz>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>, Kalle Valo <kvalo@qca.qualcomm.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Luciano Coelho <luciano.coelho@intel.com>, Wang Long <long.wanglong@huawei.com>, Richard Fitzgerald <rf@opensource.wolfsonmicro.com>, Ingo Molnar <mingo@kernel.org>, open list <linux-kernel@vger.>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Johannes,
+On Tue, Sep 15, 2015 at 02:04:59PM +0530, Viresh Kumar wrote:
+> Long back 'bool' type used to be a typecast to 'int', but that changed
+> in v2.6.19. And that is a typecast to _Bool now, which (mostly) takes
+> just a byte. Anyway, the bool type is implementation defined, and better
+> we don't assume its size to be 4 bytes or 1.
+> 
+> The problem with current code is that it reads/writes 4 bytes for a
+> boolean, which will read/update 3 excess bytes following the boolean
+> variable (when sizeof(bool) is 1 byte). And that can lead to hard to fix
+> bugs. It was a nightmare cracking this one.
+> 
+> The debugfs code had this bug since the first time it got introduced,
+> but was never got caught, strange. Maybe the bool variables (monitored
+> by debugfs) were followed by an 'int' or something bigger and the pad
+> bytes made sure, we never see this issue.
+> 
+> But the OPP (Operating performance points) library have three booleans
+> allocated to contiguous bytes and this bug got hit quite soon (The
+> debugfs support for OPP is yet to be merged). It showed up as corruption
+> of the debugfs boolean symbols, where Y were becoming N and vice versa.
+> 
+> Fix it properly by changing the last argument of debugfs_create_bool(),
+> to type 'bool *' instead of 'u32 *', so that it doesn't depend on sizeof
+> bool at all.
+> 
+> That required updates to all user sites as well in a single commit.
+> regmap core was also using debugfs_{read|write}_file_bool(), directly
+> and variable types were updated for that to be bool as well.
+> 
+> Acked-by: Mark Brown <broonie@kernel.org>
+> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> ---
 
-On 15-09-15, 12:37, Johannes Berg wrote:
-> This email has far too many people Cc'ed on it - I don't think vger is
-> even accepting it for that reason. You should probably restrict it to
-> just a few lists when you resubmit.
+For the minor wm_adsp change:
 
-Hmm, I know the list is too long and yes its blocked for Admin's
-approval on most of the lists. But that's what was generated by
-get_maintainers and I didn't wanted to miss cc'ing anybody who might
-be able to catch a bug in there.
+Acked-by: Charles Keepax <ckeepax@opensource.wolfsonmicro.com>
 
-> > The problem with current code is that it reads/writes 4 bytes for a
-> > boolean, which will read/update 3 excess bytes following the boolean
-> > variable (when sizeof(bool) is 1 byte). And that can lead to hard to 
-> > fix bugs. It was a nightmare cracking this one.
-> 
-> Unless you're ignoring (or worse, casting away) type warnings, there's
-> no problem/bug at all, you just have to define all the variables used
-> with debugfs_create_bool() as actual u32 variables.
-> 
-> It sounds like you are/were doing something like the following:
-> 
-> bool a, b, c;
-> ...
-> debugfs_create_bool("a", 0600, dir, (u32 *)&a);
-> 
-> which is quite clearly invalid.
-> 
-> Had you properly defined them as u32, as everyone (except for the ACPI
-> case) does, there wouldn't have been any problem:
-> 
-> u32 a, b, c;
-> ...
-> debugfs_create_bool("a", 0600, dir, &a);
-> 
-> 
-> As far as I can tell, there's no bug in the API. It might be a bit
-> strange to have a set of functions called debugfs_create_<type> and
-> then one of them doesn't actually use the type from the name, but
-> that's only a problem if you blindly add casts or ignore the compiler
-> warnings you'd get without casts.
-> 
-> In other words, I think your commit log is extremely misleading. The
-> API perhaps has some inconsistent naming, but all this talk about the
-> sizeof(bool) etc. is simply completely irrelevant since "bool" is not
-> the type used here at all. There's nothing to fix in any of the code
-> you're changing (again, apart from ACPI.)
-> 
-> That said, I don't actually object to this change itself, being able to
-> actually use bool variables with debugfs_create_bool would be nice.
-> However, that shouldn't be documented as a bugfix or anything like
-> that, merely as a cleanup to make the API naming more consistent and to
-> be able to use the (smaller and often more convenient) bool type.
-> 
-> Clearly, it would also lead to less confusion, as we see in ACPI and
-> hear from your OPP code. Note that ACPI is even more confused though
-> since it uses "unsigned long", so it's entirely possible that somebody
-> actually thought about that case and decided not to worry about 64-bit
-> big-endian platforms.
-> 
-> Of course this also means that only the ACPI patch is a candidate for s
-> table.
-
-Yeah, that's right. Its just a trivial cleanup rather. What about this
-simple changelog instead?
-
---
-viresh
-
--------------------------8<-------------------------
-
-Subject: [PATCH] debugfs: Pass bool pointer to debugfs_create_bool()
-
-Its a bit odd that debugfs_create_bool() takes 'u32 *' as an argument,
-when all it needs is a boolean pointer.
-
-It would be better to update this API to make it accept 'bool *'
-instead, as that will make it more consistent and often more convenient.
-Over that bool takes just a byte.
-
-That required updates to all user sites as well in a single commit.
-regmap core was also using debugfs_{read|write}_file_bool(), directly
-and variable types were updated for that to be bool as well.
-
-Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Thanks,
+Charles
