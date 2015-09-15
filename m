@@ -1,591 +1,95 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH] scsi: provide UAPI version of scsi/sg.h and scsi/scsi_ioctl.h
-Date: Tue, 15 Sep 2015 11:21:28 +0200
-Message-ID: <1442308888-17911-1-git-send-email-pbonzini@redhat.com>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH] x86: Fix gfp flags for coherent DMA memory allocation
+Date: Tue, 15 Sep 2015 09:36:23 +0000
+Message-ID: <20150915093621.GA13060@xzibit.linux.bs1.fc.nec.co.jp>
+References: <20150914073834.GA13077@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150914073834.GA13077@xzibit.linux.bs1.fc.nec.co.jp>
+Content-Language: ja-JP
+Content-ID: <E220C12E63714D48990BE3CE81073319@gisp.nec.co.jp>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: houcheng@gmail.com, Andy Grover <agrover@redhat.com>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dgilbert@interlog.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "mingo@redhat.com" <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, "hpa@zytor.com" <hpa@zytor.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Provide a UAPI version of the header in the kernel, making it easier
-for interested projects to use an up-to-date version of the header.
+On 09/14/15 16:38, Junichi Nomura wrote:
+> Commit 6894258eda2f reversed the order of gfp_flags adjustment in
+> dma_alloc_attrs() for x86 [arch/x86/kernel/pci-dma.c]
+> As a result, relevant flags set by dma_alloc_coherent_gfp_flags()
+> is just discarded and causes coherent DMA memory allocation failure
+> on some devices.
+> 
+> Fixes: 6894258eda2f ("dma-mapping: consolidate dma_{alloc,free}_{attrs,coherent}")
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> 
+> diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
+> index 84b8ef8..1b55de1 100644
+> --- a/arch/x86/kernel/pci-dma.c
+> +++ b/arch/x86/kernel/pci-dma.c
+> @@ -131,8 +131,8 @@ void dma_generic_free_coherent(struct device *dev, size_t size, void *vaddr,
+>  
+>  bool arch_dma_alloc_attrs(struct device **dev, gfp_t *gfp)
+>  {
+> -	*gfp = dma_alloc_coherent_gfp_flags(*dev, *gfp);
+>  	*gfp &= ~(__GFP_DMA | __GFP_HIGHMEM | __GFP_DMA32);
+> +	*gfp = dma_alloc_coherent_gfp_flags(*dev, *gfp);
 
-The new headers are placed under uapi/linux/scsi/ so as not to conflict
-with the glibc-provided headers in /usr/include/scsi.
+Additional note:
 
-Cc: Andy Grover <agrover@redhat.com>
-Cc: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
-        Similar to Andy Grover's patch from last January, though develo=
-ped
-        independently.  Based on the remarks to Andy's patch, I'm leavi=
-ng
-        scsi.h aside (Christoph), leaving the internal header in scsi/s=
-g.h
-        (James) and moving the headers to include/linux/scsi/ (Douglas)=
-=2E
+I noticed this problem because megaraid driver, which uses 32-bit
+dma mask for coherent buffers, failed initialization and my system
+didn't boot.
 
- MAINTAINERS                                |   1 +
- include/scsi/scsi_ioctl.h                  |  17 +-
- include/scsi/sg.h                          | 267 +--------------------=
---------
- include/uapi/linux/Kbuild                  |   1 +
- include/uapi/linux/scsi/Kbuild             |   2 +
- include/{ =3D> uapi/linux}/scsi/scsi_ioctl.h |  36 +---
- include/{ =3D> uapi/linux}/scsi/sg.h         |  18 +-
- 7 files changed, 17 insertions(+), 325 deletions(-)
- create mode 100644 include/uapi/linux/scsi/Kbuild
- copy include/{ =3D> uapi/linux}/scsi/scsi_ioctl.h (41%)
- copy include/{ =3D> uapi/linux}/scsi/sg.h (97%)
+But there can be other drivers which are silently and unnecessarily
+falling back to swiotlb due to this problem.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 67a4443daed9..b40764d43dde 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9173,6 +9173,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/=
-git/jejb/scsi.git
- S:	Maintained
- F:	drivers/scsi/
- F:	include/scsi/
-+F:	include/uapi/linux/scsi/
-=20
- SCSI TAPE DRIVER
- M:	Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
-diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
-index 8d19d1d233c3..5b07a0a91675 100644
---- a/include/scsi/scsi_ioctl.h
-+++ b/include/scsi/scsi_ioctl.h
-@@ -1,21 +1,7 @@
- #ifndef _SCSI_IOCTL_H
- #define _SCSI_IOCTL_H=20
-=20
--#define SCSI_IOCTL_SEND_COMMAND 1
--#define SCSI_IOCTL_TEST_UNIT_READY 2
--#define SCSI_IOCTL_BENCHMARK_COMMAND 3
--#define SCSI_IOCTL_SYNC 4			/* Request synchronous parameters */
--#define SCSI_IOCTL_START_UNIT 5
--#define SCSI_IOCTL_STOP_UNIT 6
--/* The door lock/unlock constants are compatible with Sun constants fo=
-r
--   the cdrom */
--#define SCSI_IOCTL_DOORLOCK 0x5380		/* lock the eject mechanism */
--#define SCSI_IOCTL_DOORUNLOCK 0x5381		/* unlock the mechanism	  */
--
--#define	SCSI_REMOVAL_PREVENT	1
--#define	SCSI_REMOVAL_ALLOW	0
--
--#ifdef __KERNEL__
-+#include <uapi/linux/scsi/scsi_ioctl.h>
-=20
- struct scsi_device;
-=20
-@@ -44,5 +30,4 @@ int scsi_ioctl_block_when_processing_errors(struct sc=
-si_device *sdev,
- 		int cmd, bool ndelay);
- extern int scsi_ioctl(struct scsi_device *, int, void __user *);
-=20
--#endif /* __KERNEL__ */
- #endif /* _SCSI_IOCTL_H */
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index 3afec7032448..87b35e7c4c31 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -1,274 +1,11 @@
- #ifndef _SCSI_GENERIC_H
- #define _SCSI_GENERIC_H
-=20
--#include <linux/compiler.h>
-+#include <uapi/linux/scsi/sg.h>
-=20
--/*
-- * History:
-- *  Started: Aug 9 by Lawrence Foard (entropy@world.std.com), to allow=
- user
-- *   process control of SCSI devices.
-- *  Development Sponsored by Killy Corp. NY NY
-- *
-- * Original driver (sg.h):
-- *       Copyright (C) 1992 Lawrence Foard
-- * Version 2 and 3 extensions to driver:
-- *	Copyright (C) 1998 - 2014 Douglas Gilbert
-- *
-- *  Version: 3.5.36 (20140603)
-- *  This version is for 2.6 and 3 series kernels.
-- *
-- * Documentation
-- * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-- * A web site for the SG device driver can be found at:
-- *	http://sg.danny.cz/sg  [alternatively check the MAINTAINERS file]
-- * The documentation for the sg version 3 driver can be found at:
-- *	http://sg.danny.cz/sg/p/sg_v3_ho.html
-- * Also see: <kernel_source>/Documentation/scsi/scsi-generic.txt
-- *
-- * For utility and test programs see: http://sg.danny.cz/sg/sg3_utils.=
-html
-- */
--
--#ifdef __KERNEL__
- extern int sg_big_buff; /* for sysctl */
--#endif
--
--
--typedef struct sg_iovec /* same structure as used by readv() Linux sys=
-tem */
--{                       /* call. It defines one scatter-gather element=
-=2E */
--    void __user *iov_base;      /* Starting address  */
--    size_t iov_len;             /* Length in bytes  */
--} sg_iovec_t;
--
--
--typedef struct sg_io_hdr
--{
--    int interface_id;           /* [i] 'S' for SCSI generic (required)=
- */
--    int dxfer_direction;        /* [i] data transfer direction  */
--    unsigned char cmd_len;      /* [i] SCSI command length */
--    unsigned char mx_sb_len;    /* [i] max length to write to sbp */
--    unsigned short iovec_count; /* [i] 0 implies no scatter gather */
--    unsigned int dxfer_len;     /* [i] byte count of data transfer */
--    void __user *dxferp;	/* [i], [*io] points to data transfer memory
--					      or scatter gather list */
--    unsigned char __user *cmdp; /* [i], [*i] points to command to perf=
-orm */
--    void __user *sbp;		/* [i], [*o] points to sense_buffer memory */
--    unsigned int timeout;       /* [i] MAX_UINT->no timeout (unit: mil=
-lisec) */
--    unsigned int flags;         /* [i] 0 -> default, see SG_FLAG... */
--    int pack_id;                /* [i->o] unused internally (normally)=
- */
--    void __user * usr_ptr;      /* [i->o] unused internally */
--    unsigned char status;       /* [o] scsi status */
--    unsigned char masked_status;/* [o] shifted, masked scsi status */
--    unsigned char msg_status;   /* [o] messaging level data (optional)=
- */
--    unsigned char sb_len_wr;    /* [o] byte count actually written to =
-sbp */
--    unsigned short host_status; /* [o] errors from host adapter */
--    unsigned short driver_status;/* [o] errors from software driver */
--    int resid;                  /* [o] dxfer_len - actual_transferred =
-*/
--    unsigned int duration;      /* [o] time taken by cmd (unit: millis=
-ec) */
--    unsigned int info;          /* [o] auxiliary information */
--} sg_io_hdr_t;  /* 64 bytes long (on i386) */
--
--#define SG_INTERFACE_ID_ORIG 'S'
--
--/* Use negative values to flag difference from original sg_header stru=
-cture */
--#define SG_DXFER_NONE (-1)      /* e.g. a SCSI Test Unit Ready command=
- */
--#define SG_DXFER_TO_DEV (-2)    /* e.g. a SCSI WRITE command */
--#define SG_DXFER_FROM_DEV (-3)  /* e.g. a SCSI READ command */
--#define SG_DXFER_TO_FROM_DEV (-4) /* treated like SG_DXFER_FROM_DEV wi=
-th the
--				   additional property than during indirect
--				   IO the user buffer is copied into the
--				   kernel buffers before the transfer */
--#define SG_DXFER_UNKNOWN (-5)   /* Unknown data direction */
--
--/* following flag values can be "or"-ed together */
--#define SG_FLAG_DIRECT_IO 1     /* default is indirect IO */
--#define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in =
-SCSI */
--				/* command block (when <=3D SCSI_2) */
--#define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
--#define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/f=
-rom */
--				/* user space (debug indirect IO) */
--/* defaults:: for sg driver: Q_AT_HEAD; for block layer: Q_AT_TAIL */
--#define SG_FLAG_Q_AT_TAIL 0x10
--#define SG_FLAG_Q_AT_HEAD 0x20
--
--/* following 'info' values are "or"-ed together */
--#define SG_INFO_OK_MASK 0x1
--#define SG_INFO_OK 0x0          /* no sense, host nor driver "noise" *=
-/
--#define SG_INFO_CHECK 0x1       /* something abnormal happened */
--
--#define SG_INFO_DIRECT_IO_MASK 0x6
--#define SG_INFO_INDIRECT_IO 0x0 /* data xfer via kernel buffers (or no=
- xfer) */
--#define SG_INFO_DIRECT_IO 0x2   /* direct IO requested and performed *=
-/
--#define SG_INFO_MIXED_IO 0x4    /* part direct, part indirect IO */
--
--
--typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
--    int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2=
- etc */
--    int channel;
--    int scsi_id;        /* scsi id of target device */
--    int lun;
--    int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
--    short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
--    short d_queue_depth;/* device (or adapter) maximum queue length */
--    int unused[2];      /* probably find a good use, set 0 for now */
--} sg_scsi_id_t; /* 32 bytes long on i386 */
--
--typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() *=
-/
--    char req_state;     /* 0 -> not used, 1 -> written, 2 -> ready to =
-read */
--    char orphan;        /* 0 -> normal request, 1 -> from interruped S=
-G_IO */
--    char sg_io_owned;   /* 0 -> complete with read(), 1 -> owned by SG=
-_IO */
--    char problem;       /* 0 -> no problem detected, 1 -> error to rep=
-ort */
--    int pack_id;        /* pack_id associated with request */
--    void __user *usr_ptr;     /* user provided pointer (in new interfa=
-ce) */
--    unsigned int duration; /* millisecs elapsed since written (req_sta=
-te=3D=3D1)
--			      or request duration (req_state=3D=3D2) */
--    int unused;
--} sg_req_info_t; /* 20 bytes long on i386 */
--
--
--/* IOCTLs: Those ioctls that are relevant to the SG 3.x drivers follow=
-=2E
-- [Those that only apply to the SG 2.x drivers are at the end of the fi=
-le.]
-- (_GET_s yield result via 'int *' 3rd argument unless otherwise indica=
-ted) */
--
--#define SG_EMULATED_HOST 0x2203 /* true for emulated host adapter (ATA=
-PI) */
--
--/* Used to configure SCSI command transformation layer for ATAPI devic=
-es */
--/* Only supported by the ide-scsi driver */
--#define SG_SET_TRANSFORM 0x2204 /* N.B. 3rd arg is not pointer but val=
-ue: */
--		      /* 3rd arg =3D 0 to disable transform, 1 to enable it */
--#define SG_GET_TRANSFORM 0x2205
--
--#define SG_SET_RESERVED_SIZE 0x2275  /* request a new reserved buffer =
-size */
--#define SG_GET_RESERVED_SIZE 0x2272  /* actual size of reserved buffer=
- */
--
--/* The following ioctl has a 'sg_scsi_id_t *' object as its 3rd argume=
-nt. */
--#define SG_GET_SCSI_ID 0x2276   /* Yields fd's bus, chan, dev, lun + t=
-ype */
--/* SCSI id information can also be obtained from SCSI_IOCTL_GET_IDLUN =
-*/
--
--/* Override host setting and always DMA using low memory ( <16MB on i3=
-86) */
--#define SG_SET_FORCE_LOW_DMA 0x2279  /* 0-> use adapter setting, 1-> f=
-orce */
--#define SG_GET_LOW_DMA 0x227a   /* 0-> use all ram for dma; 1-> low dm=
-a ram */
--
--/* When SG_SET_FORCE_PACK_ID set to 1, pack_id is input to read() whic=
-h
--   tries to fetch a packet with a matching pack_id, waits, or returns =
-EAGAIN.
--   If pack_id is -1 then read oldest waiting. When ...FORCE_PACK_ID se=
-t to 0
--   then pack_id ignored by read() and oldest readable fetched. */
--#define SG_SET_FORCE_PACK_ID 0x227b
--#define SG_GET_PACK_ID 0x227c /* Yields oldest readable pack_id (or -1=
-) */
--
--#define SG_GET_NUM_WAITING 0x227d /* Number of commands awaiting read(=
-) */
--
--/* Yields max scatter gather tablesize allowed by current host adapter=
- */
--#define SG_GET_SG_TABLESIZE 0x227F  /* 0 implies can't do scatter gath=
-er */
--
--#define SG_GET_VERSION_NUM 0x2282 /* Example: version 2.1.34 yields 20=
-134 */
-=20
--/* Returns -EBUSY if occupied. 3rd argument pointer to int (see next) =
-*/
--#define SG_SCSI_RESET 0x2284
--/* Associated values that can be given to SG_SCSI_RESET follow.
-- * SG_SCSI_RESET_NO_ESCALATE may be OR-ed to the _DEVICE, _TARGET, _BU=
-S
-- * or _HOST reset value so only that action is attempted. */
--#define		SG_SCSI_RESET_NOTHING	0
--#define		SG_SCSI_RESET_DEVICE	1
--#define		SG_SCSI_RESET_BUS	2
--#define		SG_SCSI_RESET_HOST	3
--#define		SG_SCSI_RESET_TARGET	4
--#define		SG_SCSI_RESET_NO_ESCALATE	0x100
--
--/* synchronous SCSI command ioctl, (only in version 3 interface) */
--#define SG_IO 0x2285   /* similar effect as write() followed by read()=
- */
--
--#define SG_GET_REQUEST_TABLE 0x2286   /* yields table of active reques=
-ts */
--
--/* How to treat EINTR during SG_IO ioctl(), only in SG 3.x series */
--#define SG_SET_KEEP_ORPHAN 0x2287 /* 1 -> hold for read(), 0 -> drop (=
-def) */
--#define SG_GET_KEEP_ORPHAN 0x2288
--
--/* yields scsi midlevel's access_count for this SCSI device */
--#define SG_GET_ACCESS_COUNT 0x2289 =20
--
--
--#define SG_SCATTER_SZ (8 * 4096)
--/* Largest size (in bytes) a single scatter-gather list element can ha=
-ve.
--   The value used by the driver is 'max(SG_SCATTER_SZ, PAGE_SIZE)'.
--   This value should be a power of 2 (and may be rounded up internally=
-).
--   If scatter-gather is not supported by adapter then this value is th=
-e
--   largest data block that can be read/written by a single scsi comman=
-d. */
--
--#define SG_DEFAULT_RETRIES 0
--
--/* Defaults, commented if they differ from original sg driver */
--#define SG_DEF_FORCE_LOW_DMA 0  /* was 1 -> memory below 16MB on i386 =
-*/
--#define SG_DEF_FORCE_PACK_ID 0
--#define SG_DEF_KEEP_ORPHAN 0
--#define SG_DEF_RESERVED_SIZE SG_SCATTER_SZ /* load time option */
--
--/* maximum outstanding requests, write() yields EDOM if exceeded */
--#define SG_MAX_QUEUE 16
--
--#define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatibil=
-ity */
--
--/* Alternate style type names, "..._t" variants preferred */
--typedef struct sg_io_hdr Sg_io_hdr;
--typedef struct sg_io_vec Sg_io_vec;
--typedef struct sg_scsi_id Sg_scsi_id;
--typedef struct sg_req_info Sg_req_info;
--
--
--/* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv=
-vvv */
--/*   The older SG interface based on the 'sg_header' structure follows=
-=2E   */
--/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
-^^^ */
--
--#define SG_MAX_SENSE 16   /* this only applies to the sg_header interf=
-ace */
--
--struct sg_header
--{
--    int pack_len;    /* [o] reply_len (ie useless), ignored as input *=
-/
--    int reply_len;   /* [i] max length of expected reply (inc. sg_head=
-er) */
--    int pack_id;     /* [io] id number of packet (use ints >=3D 0) */
--    int result;      /* [o] 0=3D=3Dok, else (+ve) Unix errno (best ign=
-ored) */
--    unsigned int twelve_byte:1;
--	/* [i] Force 12 byte command length for group 6 & 7 commands  */
--    unsigned int target_status:5;   /* [o] scsi status from target */
--    unsigned int host_status:8;     /* [o] host status (see "DID" code=
-s) */
--    unsigned int driver_status:8;   /* [o] driver status+suggestion */
--    unsigned int other_flags:10;    /* unused */
--    unsigned char sense_buffer[SG_MAX_SENSE]; /* [o] Output in 3 cases=
-:
--	   when target_status is CHECK_CONDITION or
--	   when target_status is COMMAND_TERMINATED or
--	   when (driver_status & DRIVER_SENSE) is true. */
--};      /* This structure is 36 bytes long on i386 */
--
--
--/* IOCTLs: The following are not required (or ignored) when the sg_io_=
-hdr_t
--	   interface is used. They are kept for backward compatibility with
--	   the original and version 2 drivers. */
--
--#define SG_SET_TIMEOUT 0x2201  /* unit: jiffies (10ms on i386) */
--#define SG_GET_TIMEOUT 0x2202  /* yield timeout as _return_ value */
--
--/* Get/set command queuing state per fd (default is SG_DEF_COMMAND_Q.
--   Each time a sg_io_hdr_t object is seen on this file descriptor, thi=
-s
--   command queuing flag is set on (overriding the previous setting). *=
-/
--#define SG_GET_COMMAND_Q 0x2270   /* Yields 0 (queuing off) or 1 (on) =
-*/
--#define SG_SET_COMMAND_Q 0x2271   /* Change queuing state with 0 or 1 =
-*/
--
--/* Turn on/off error sense trace (1 and 0 respectively, default is off=
-).
--   Try using: "# cat /proc/scsi/sg/debug" instead in the v3 driver */
--#define SG_SET_DEBUG 0x227e    /* 0 -> turn off debug */
--
--#define SG_NEXT_CMD_LEN 0x2283  /* override SCSI command length with g=
-iven
--		   number on the next write() on this file descriptor */
--
--
--/* Defaults, commented if they differ from original sg driver */
--#ifdef __KERNEL__
-+/* Keep in sync with SG_DEFAULT_TIMEOUT of uapi/linux/sg.h  */
- #define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ =3D=3D 'jiffies in =
-1 second' */
--#else
--#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ =3D=3D 'jiffies in 1 sec=
-ond' */
--#endif
--
--#define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
--				  the new interface is used */
--#define SG_DEF_UNDERRUN_FLAG 0
-=20
- #endif
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index 70ff1d9abf0d..47e642753a71 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -11,6 +11,7 @@ header-y +=3D isdn/
- header-y +=3D mmc/
- header-y +=3D nfsd/
- header-y +=3D raid/
-+header-y +=3D scsi/
- header-y +=3D spi/
- header-y +=3D sunrpc/
- header-y +=3D tc_act/
-diff --git a/include/uapi/linux/scsi/Kbuild b/include/uapi/linux/scsi/K=
-build
-new file mode 100644
-index 000000000000..56d1848a0962
---- /dev/null
-+++ b/include/uapi/linux/scsi/Kbuild
-@@ -0,0 +1,2 @@
-+header-y +=3D sg.h
-+header-y +=3D scsi_ioctl.h
-diff --git a/include/scsi/scsi_ioctl.h b/include/uapi/linux/scsi/scsi_i=
-octl.h
-similarity index 41%
-copy from include/scsi/scsi_ioctl.h
-copy to include/uapi/linux/scsi/scsi_ioctl.h
-index 8d19d1d233c3..90ba8d9c5418 100644
---- a/include/scsi/scsi_ioctl.h
-+++ b/include/uapi/linux/scsi/scsi_ioctl.h
-@@ -1,5 +1,5 @@
--#ifndef _SCSI_IOCTL_H
--#define _SCSI_IOCTL_H=20
-+#ifndef _UAPI_LINUX_SCSI_IOCTL_H
-+#define _UAPI_LINUX_SCSI_IOCTL_H
-=20
- #define SCSI_IOCTL_SEND_COMMAND 1
- #define SCSI_IOCTL_TEST_UNIT_READY 2
-@@ -15,34 +15,4 @@
- #define	SCSI_REMOVAL_PREVENT	1
- #define	SCSI_REMOVAL_ALLOW	0
-=20
--#ifdef __KERNEL__
--
--struct scsi_device;
--
--/*
-- * Structures used for scsi_ioctl et al.
-- */
--
--typedef struct scsi_ioctl_command {
--	unsigned int inlen;
--	unsigned int outlen;
--	unsigned char data[0];
--} Scsi_Ioctl_Command;
--
--typedef struct scsi_idlun {
--	__u32 dev_id;
--	__u32 host_unique_id;
--} Scsi_Idlun;
--
--/* Fibre Channel WWN, port_id struct */
--typedef struct scsi_fctargaddress {
--	__u32 host_port_id;
--	unsigned char host_wwn[8]; // include NULL term.
--} Scsi_FCTargAddress;
--
--int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
--		int cmd, bool ndelay);
--extern int scsi_ioctl(struct scsi_device *, int, void __user *);
--
--#endif /* __KERNEL__ */
--#endif /* _SCSI_IOCTL_H */
-+#endif /* _UAPI_LINUX_SCSI_IOCTL_H */
-diff --git a/include/scsi/sg.h b/include/uapi/linux/scsi/sg.h
-similarity index 97%
-copy from include/scsi/sg.h
-copy to include/uapi/linux/scsi/sg.h
-index 3afec7032448..4433d20d2d18 100644
---- a/include/scsi/sg.h
-+++ b/include/uapi/linux/scsi/sg.h
-@@ -1,5 +1,5 @@
--#ifndef _SCSI_GENERIC_H
--#define _SCSI_GENERIC_H
-+#ifndef _UAPI_LINUX_SG_H
-+#define _UAPI_LINUX_SG_H
-=20
- #include <linux/compiler.h>
-=20
-@@ -28,10 +28,6 @@
-  * For utility and test programs see: http://sg.danny.cz/sg/sg3_utils.=
-html
-  */
-=20
--#ifdef __KERNEL__
--extern int sg_big_buff; /* for sysctl */
--#endif
--
-=20
- typedef struct sg_iovec /* same structure as used by readv() Linux sys=
-tem */
- {                       /* call. It defines one scatter-gather element=
-=2E */
-@@ -184,7 +180,7 @@ typedef struct sg_req_info { /* used by SG_GET_REQU=
-EST_TABLE ioctl() */
- #define SG_GET_KEEP_ORPHAN 0x2288
-=20
- /* yields scsi midlevel's access_count for this SCSI device */
--#define SG_GET_ACCESS_COUNT 0x2289 =20
-+#define SG_GET_ACCESS_COUNT 0x2289
-=20
-=20
- #define SG_SCATTER_SZ (8 * 4096)
-@@ -261,9 +257,9 @@ struct sg_header
-=20
-=20
- /* Defaults, commented if they differ from original sg driver */
--#ifdef __KERNEL__
--#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ =3D=3D 'jiffies in =
-1 second' */
--#else
-+
-+/* Keep in sync with SG_DEFAULT_TIMEOUT of scsi/sg.h  */
-+#ifndef __KERNEL__
- #define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ =3D=3D 'jiffies in 1 sec=
-ond' */
- #endif
-=20
-@@ -271,4 +267,4 @@ struct sg_header
- 				  the new interface is used */
- #define SG_DEF_UNDERRUN_FLAG 0
-=20
--#endif
-+#endif /* _UAPI_LINUX_SG_H */
---=20
-2.5.0
+megaraid_sas 0000:10:00.0: FW now in Ready state 
+megaraid_sas 0000:10:00.0: firmware supports msix	: (16) 
+megaraid_sas 0000:10:00.0: current msix/online cpus	: (16/32) 
+megaraid_sas 0000:10:00.0: Init cmd success 
+megaraid_sas 0000:10:00.0: firmware type	: Legacy(64 VD) firmware 
+megaraid_sas 0000:10:00.0: controller type	: MR(512MB) 
+megaraid_sas 0000:10:00.0: swiotlb buffer is full (sz: 665896 bytes) 
+swiotlb: coherent allocation failed for device 0000:10:00.0 size=665896 
+CPU: 0 PID: 657 Comm: modprobe Tainted: G            E   4.3.0-rc1 #1 
+Hardware name: 
+ ffff88046e99f098 ffff88046db8f9c8 ffffffff812a7904 ffffffffffffffff 
+ 00000000ffffffff ffff88046db8fa18 ffffffff812cfe74 ffff88046cd00188 
+ 0000000800000008 ffff88046dfce8c0 00000000000002d0 ffff88046cd00188 
+Call Trace: 
+ [<ffffffff812a7904>] dump_stack+0x48/0x64 
+ [<ffffffff812cfe74>] swiotlb_alloc_coherent+0x154/0x170 
+ [<ffffffff8104a2af>] x86_swiotlb_alloc_coherent+0x5f/0x70 
+ [<ffffffffa000f9b5>] megasas_init_adapter_fusion+0x375/0x4b0 [megaraid_sas] 
+ [<ffffffffa0005a06>] megasas_init_fw+0x2e6/0x940 [megaraid_sas] 
+ [<ffffffffa0007795>] megasas_probe_one+0x745/0xb60 [megaraid_sas] 
+ [<ffffffff812e913c>] local_pci_probe+0x4c/0xa0 
+ [<ffffffff812e9213>] pci_call_probe+0x83/0xa0 
+ [<ffffffff812e9744>] ? pci_match_device+0xe4/0x110 
+ [<ffffffff812e982f>] pci_device_probe+0x7f/0xb0 
+ [<ffffffff813ce2f3>] really_probe+0x133/0x390 
+ [<ffffffff813ce5a9>] driver_probe_device+0x59/0xd0 
+ [<ffffffff813ce6bd>] __driver_attach+0x9d/0xa0 
+ [<ffffffff813ce620>] ? driver_probe_device+0xd0/0xd0 
+ [<ffffffff813ce620>] ? driver_probe_device+0xd0/0xd0 
+ [<ffffffff813cc2fa>] bus_for_each_dev+0x8a/0xb0 
+ [<ffffffff813cdd6e>] driver_attach+0x1e/0x20 
+ [<ffffffff813cd7cf>] bus_add_driver+0x1cf/0x290 
+ [<ffffffff813cee50>] driver_register+0x60/0xe0 
+ [<ffffffff812e952c>] __pci_register_driver+0x4c/0x50 
+ [<ffffffffa001d0a4>] megasas_init+0xa4/0x1ba [megaraid_sas] 
+ [<ffffffffa001d000>] ? 0xffffffffa001d000 
+ [<ffffffff8100027d>] do_one_initcall+0xad/0x1c0 
+ [<ffffffff810dba39>] do_init_module+0x69/0x210 
+ [<ffffffff810de19a>] load_module+0x5aa/0x730 
+ [<ffffffff810dad60>] ? mod_sysfs_teardown+0x140/0x140 
+ [<ffffffff810da790>] ? module_sect_show+0x30/0x30 
+ [<ffffffff810de4a2>] SyS_init_module+0x92/0xc0 
+ [<ffffffff815ce697>] entry_SYSCALL_64_fastpath+0x12/0x6a 
+megaraid_sas 0000:10:00.0: Could not allocate memory for map info 
+
+-- 
+Jun'ichi Nomura, NEC Corporation
