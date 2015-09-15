@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 05/17] Update the md driver to use idr helper functions.
-Date: Tue, 15 Sep 2015 09:46:05 -0700
-Message-ID: <6798bc818d81b24058b9c0a70990149d96002646.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 07/17] Update the memstick driver to use idr helper functions.
+Date: Tue, 15 Sep 2015 09:46:07 -0700
+Message-ID: <09696655141544933a380e88afe3c3ecf31e4f8d.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
@@ -9,60 +9,57 @@ In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/md/dm.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+ drivers/memstick/core/memstick.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index f331d888e7f5..53d6895eb13d 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -2202,9 +2202,7 @@ static int dm_any_congested(void *congested_data, int bdi_bits)
-  *---------------------------------------------------------------*/
- static void free_minor(int minor)
+diff --git a/drivers/memstick/core/memstick.c b/drivers/memstick/core/memstick.c
+index a0547dbf9806..8f40a3d5108b 100644
+--- a/drivers/memstick/core/memstick.c
++++ b/drivers/memstick/core/memstick.c
+@@ -512,25 +512,16 @@ int memstick_add_host(struct memstick_host *host)
  {
--	spin_lock(&_minor_lock);
--	idr_remove(&_minor_idr, minor);
--	spin_unlock(&_minor_lock);
-+	idr_put_index(&_minor_idr, &_minor_lock, minor);
+ 	int rc;
+ 
+-	idr_preload(GFP_KERNEL);
+-	spin_lock(&memstick_host_lock);
+-
+-	rc = idr_alloc(&memstick_host_idr, host, 0, 0, GFP_NOWAIT);
+-	if (rc >= 0)
+-		host->id = rc;
+-
+-	spin_unlock(&memstick_host_lock);
+-	idr_preload_end();
++	rc = idr_get_index(&memstick_host_idr, &memstick_host_lock, host);
+ 	if (rc < 0)
+ 		return rc;
++	host->id = rc;
+ 
+ 	dev_set_name(&host->dev, "memstick%u", host->id);
+ 
+ 	rc = device_add(&host->dev);
+ 	if (rc) {
+-		spin_lock(&memstick_host_lock);
+-		idr_remove(&memstick_host_idr, host->id);
+-		spin_unlock(&memstick_host_lock);
++		idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
+ 		return rc;
+ 	}
+ 
+@@ -554,9 +545,7 @@ void memstick_remove_host(struct memstick_host *host)
+ 	host->set_param(host, MEMSTICK_POWER, MEMSTICK_POWER_OFF);
+ 	mutex_unlock(&host->lock);
+ 
+-	spin_lock(&memstick_host_lock);
+-	idr_remove(&memstick_host_idr, host->id);
+-	spin_unlock(&memstick_host_lock);
++	idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
+ 	device_del(&host->dev);
  }
- 
- /*
-@@ -2217,13 +2215,8 @@ static int specific_minor(int minor)
- 	if (minor >= (1 << MINORBITS))
- 		return -EINVAL;
- 
--	idr_preload(GFP_KERNEL);
--	spin_lock(&_minor_lock);
--
--	r = idr_alloc(&_minor_idr, MINOR_ALLOCED, minor, minor + 1, GFP_NOWAIT);
--
--	spin_unlock(&_minor_lock);
--	idr_preload_end();
-+	r = idr_get_index_in_range(&_minor_idr, &_minor_lock, MINOR_ALLOCED,
-+				   minor, minor + 1);
- 	if (r < 0)
- 		return r == -ENOSPC ? -EBUSY : r;
- 	return 0;
-@@ -2233,13 +2226,8 @@ static int next_free_minor(int *minor)
- {
- 	int r;
- 
--	idr_preload(GFP_KERNEL);
--	spin_lock(&_minor_lock);
--
--	r = idr_alloc(&_minor_idr, MINOR_ALLOCED, 0, 1 << MINORBITS, GFP_NOWAIT);
--
--	spin_unlock(&_minor_lock);
--	idr_preload_end();
-+	r = idr_get_index_in_range(&_minor_idr, &_minor_lock, MINOR_ALLOCED,
-+				   0, 1 << MINORBITS);
- 	if (r < 0)
- 		return r;
- 	*minor = r;
+ EXPORT_SYMBOL(memstick_remove_host);
 -- 
 2.1.4
