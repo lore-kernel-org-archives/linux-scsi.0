@@ -1,68 +1,68 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 17/17] Update the ARM soc base driver to use ida helper functions.
-Date: Tue, 15 Sep 2015 09:46:17 -0700
-Message-ID: <522c5aff9c4fe616a39115624ac09484446a6bed.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 05/17] Update the md driver to use idr helper functions.
+Date: Tue, 15 Sep 2015 09:46:05 -0700
+Message-ID: <6798bc818d81b24058b9c0a70990149d96002646.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52904 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbbIOQrz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Sep 2015 12:47:55 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Mike Snitzer <snitzer@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/base/soc.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+ drivers/md/dm.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/base/soc.c b/drivers/base/soc.c
-index 39fca01c8fa1..cf70c3246123 100644
---- a/drivers/base/soc.c
-+++ b/drivers/base/soc.c
-@@ -122,18 +122,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
- 	}
- 
- 	/* Fetch a unique (reclaimable) SOC ID. */
--	do {
--		if (!ida_pre_get(&soc_ida, GFP_KERNEL)) {
--			ret = -ENOMEM;
--			goto out2;
--		}
--
--		spin_lock(&soc_lock);
--		ret = ida_get_new(&soc_ida, &soc_dev->soc_dev_num);
--		spin_unlock(&soc_lock);
--
--	} while (ret == -EAGAIN);
--
-+	ret = ida_get_index(&soc_ida, &soc_lock, &soc_dev->soc_dev_num);
- 	if (ret)
- 		goto out2;
- 
-@@ -151,7 +140,7 @@ struct soc_device *soc_device_register(struct soc_device_attribute *soc_dev_attr
- 	return soc_dev;
- 
- out3:
--	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-+	ida_put_index(&soc_ida, &soc_lock, soc_dev->soc_dev_num);
- out2:
- 	kfree(soc_dev);
- out1:
-@@ -161,7 +150,7 @@ out1:
- /* Ensure soc_dev->attr is freed prior to calling soc_device_unregister. */
- void soc_device_unregister(struct soc_device *soc_dev)
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index f331d888e7f5..53d6895eb13d 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2202,9 +2202,7 @@ static int dm_any_congested(void *congested_data, int bdi_bits)
+  *---------------------------------------------------------------*/
+ static void free_minor(int minor)
  {
--	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-+	ida_put_index(&soc_ida, &soc_lock, soc_dev->soc_dev_num);
- 
- 	device_unregister(&soc_dev->dev);
+-	spin_lock(&_minor_lock);
+-	idr_remove(&_minor_idr, minor);
+-	spin_unlock(&_minor_lock);
++	idr_put_index(&_minor_idr, &_minor_lock, minor);
  }
+ 
+ /*
+@@ -2217,13 +2215,8 @@ static int specific_minor(int minor)
+ 	if (minor >= (1 << MINORBITS))
+ 		return -EINVAL;
+ 
+-	idr_preload(GFP_KERNEL);
+-	spin_lock(&_minor_lock);
+-
+-	r = idr_alloc(&_minor_idr, MINOR_ALLOCED, minor, minor + 1, GFP_NOWAIT);
+-
+-	spin_unlock(&_minor_lock);
+-	idr_preload_end();
++	r = idr_get_index_in_range(&_minor_idr, &_minor_lock, MINOR_ALLOCED,
++				   minor, minor + 1);
+ 	if (r < 0)
+ 		return r == -ENOSPC ? -EBUSY : r;
+ 	return 0;
+@@ -2233,13 +2226,8 @@ static int next_free_minor(int *minor)
+ {
+ 	int r;
+ 
+-	idr_preload(GFP_KERNEL);
+-	spin_lock(&_minor_lock);
+-
+-	r = idr_alloc(&_minor_idr, MINOR_ALLOCED, 0, 1 << MINORBITS, GFP_NOWAIT);
+-
+-	spin_unlock(&_minor_lock);
+-	idr_preload_end();
++	r = idr_get_index_in_range(&_minor_idr, &_minor_lock, MINOR_ALLOCED,
++				   0, 1 << MINORBITS);
+ 	if (r < 0)
+ 		return r;
+ 	*minor = r;
 -- 
 2.1.4
-
