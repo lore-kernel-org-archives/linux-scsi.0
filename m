@@ -1,70 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2] scsi: introduce short_inquiry flag for broken host
- adapters
-Date: Tue, 15 Sep 2015 11:24:05 -0700
-Message-ID: <1442341445.2177.9.camel@HansenPartnership.com>
-References: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
-	 <87k2rryczs.fsf@vitty.brq.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 01/17] Add ida and idr helper routines.
+Date: Tue, 15 Sep 2015 14:27:55 -0400
+Message-ID: <20150915182755.GA31484@htj.duckdns.org>
+References: <cover.1442263512.git.lduncan@suse.com>
+ <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263512.git.lduncan@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55599 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751601AbbIOSYH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Sep 2015 14:24:07 -0400
-In-Reply-To: <87k2rryczs.fsf@vitty.brq.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263512.git.lduncan@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 
-On Tue, 2015-09-15 at 16:27 +0200, Vitaly Kuznetsov wrote:
-> Vitaly Kuznetsov <vkuznets@redhat.com> writes:
-> 
-> > Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
-> > SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
-> > least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
-> > INQUIRY result too short (5), using 36' messages on console. This can be
-> > problematic for slow consoles. Introduce short_inquiry host template flag
-> > to avoid printing error messages for such adapters.
-> >
-> > Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-> > ---
-> > Changes since v1:
-> > - This is a successor of previously sent "scsi_scan: move 'INQUIRY result
-> >   too short' message to debug level" patch. Instead of moving the message
-> >   to debug level for all adapters introduce a special 'short_inquiry' flag
-> >   for host template [inspired by James Bottomley].
-> 
-> James,
-> 
-> sorry for the ping but can you please let me know your opinion? This is
-> not a 'cosmetic fix', serial port on Hyper-V is extremely slow and users
-> get softlockups just because we output too much. Here is a freshly
-> booted guest with SCSI and FC adapters connected:
-> 
-> # dmesg | grep -c INQUIRY
-> 2076
+Hello,
 
-It needs a review ... preferably from someone who validates that we
-don't get any adverse impact from the missing inquiry data
+On Tue, Sep 15, 2015 at 09:46:01AM -0700, Lee Duncan wrote:
+> +/**
+> + * ida_get_index - allocate a ida index value
+> + * @ida		idr handle
+> + * @lock	spinlock handle protecting this index
+> + * @p_id	pointer to allocated index value
+> + *
+> + * A helper function for safely allocating an index value (id),
+> + * returning a negative errno value on failure, else 0.
+> + */
+> +static inline int ida_get_index(struct ida *ida, spinlock_t *lock, int *p_id)
+> +{
+> +	int error = -ENOMEM;
+> +
+> +	do {
+> +		if (!ida_pre_get(ida, GFP_KERNEL))
+> +			break;
+> +		spin_lock(lock);
+> +		error = ida_get_new(ida, p_id);
+> +		spin_unlock(lock);
+> +	} while (error == -EAGAIN);
+> +
+> +	return error;
+> +}
 
-> (my other pernding '[PATCH] scsi_scan: don't dump trace when
-> scsi_prep_async_scan() is called twice' is related to the same issue).
+Obviously ida allocation doesn't need to be synchronized against
+anything else.  Why not just use ida_simple_get/remove()?
 
-So does this.
+Thanks.
 
-James
-
-
-> See also: https://lkml.org/lkml/2015/9/6/119
-> 
-> Thanks,
-> 
-> [...]
-> 
-
-
-
+-- 
+tejun
