@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 07/17] Update the memstick driver to use idr helper functions.
-Date: Tue, 15 Sep 2015 09:46:07 -0700
-Message-ID: <09696655141544933a380e88afe3c3ecf31e4f8d.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 13/17] Update the SCSI disk driver to use ida helper functions.
+Date: Tue, 15 Sep 2015 09:46:13 -0700
+Message-ID: <e21b683ed63452966a04fab599f5626b66fbe5ba.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
@@ -14,52 +14,53 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/memstick/core/memstick.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+ drivers/scsi/sd.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/memstick/core/memstick.c b/drivers/memstick/core/memstick.c
-index a0547dbf9806..8f40a3d5108b 100644
---- a/drivers/memstick/core/memstick.c
-+++ b/drivers/memstick/core/memstick.c
-@@ -512,25 +512,16 @@ int memstick_add_host(struct memstick_host *host)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3b2fcb4fada0..60b2ad918208 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2948,15 +2948,7 @@ static int sd_probe(struct device *dev)
+ 	if (!gd)
+ 		goto out_free;
+ 
+-	do {
+-		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
+-			goto out_put;
+-
+-		spin_lock(&sd_index_lock);
+-		error = ida_get_new(&sd_index_ida, &index);
+-		spin_unlock(&sd_index_lock);
+-	} while (error == -EAGAIN);
+-
++	error = ida_get_index(&sd_index_ida, &sd_index_lock, &index);
+ 	if (error) {
+ 		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
+ 		goto out_put;
+@@ -3001,9 +2993,7 @@ static int sd_probe(struct device *dev)
+ 	return 0;
+ 
+  out_free_index:
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, index);
+-	spin_unlock(&sd_index_lock);
++	ida_put_index(&sd_index_ida, &sd_index_lock, index);
+  out_put:
+ 	put_disk(gd);
+  out_free:
+@@ -3063,10 +3053,8 @@ static void scsi_disk_release(struct device *dev)
  {
- 	int rc;
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	struct gendisk *disk = sdkp->disk;
+-	
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, sdkp->index);
+-	spin_unlock(&sd_index_lock);
++
++	ida_put_index(&sd_index_ida, &sd_index_lock, sdkp->index);
  
--	idr_preload(GFP_KERNEL);
--	spin_lock(&memstick_host_lock);
--
--	rc = idr_alloc(&memstick_host_idr, host, 0, 0, GFP_NOWAIT);
--	if (rc >= 0)
--		host->id = rc;
--
--	spin_unlock(&memstick_host_lock);
--	idr_preload_end();
-+	rc = idr_get_index(&memstick_host_idr, &memstick_host_lock, host);
- 	if (rc < 0)
- 		return rc;
-+	host->id = rc;
- 
- 	dev_set_name(&host->dev, "memstick%u", host->id);
- 
- 	rc = device_add(&host->dev);
- 	if (rc) {
--		spin_lock(&memstick_host_lock);
--		idr_remove(&memstick_host_idr, host->id);
--		spin_unlock(&memstick_host_lock);
-+		idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
- 		return rc;
- 	}
- 
-@@ -554,9 +545,7 @@ void memstick_remove_host(struct memstick_host *host)
- 	host->set_param(host, MEMSTICK_POWER, MEMSTICK_POWER_OFF);
- 	mutex_unlock(&host->lock);
- 
--	spin_lock(&memstick_host_lock);
--	idr_remove(&memstick_host_idr, host->id);
--	spin_unlock(&memstick_host_lock);
-+	idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
- 	device_del(&host->dev);
- }
- EXPORT_SYMBOL(memstick_remove_host);
+ 	blk_integrity_unregister(disk);
+ 	disk->private_data = NULL;
 -- 
 2.1.4
