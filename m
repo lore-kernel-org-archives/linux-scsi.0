@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 15/17] Update the NVMe SSD driver to use ida helper functions.
-Date: Tue, 15 Sep 2015 09:46:15 -0700
-Message-ID: <7aa6d6793c6771b69a9cf093e80937669f5fcb4e.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 16/17] Update the Micron PCIe SSD driver to use ida helper functions.
+Date: Tue, 15 Sep 2015 09:46:16 -0700
+Message-ID: <cf60d82bf8a4f7e8ed92fda68638176dae188efc.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
@@ -9,45 +9,67 @@ In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Matthew Wilcox <willy@linux.intel.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/block/nvme-core.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ drivers/block/mtip32xx/mtip32xx.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index d1d6141920d3..ab13833d4fde 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -2715,15 +2715,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
- {
- 	int instance, error;
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 4a2ef09e6704..ccff4119b554 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -3821,15 +3821,7 @@ static int mtip_block_initialize(struct driver_data *dd)
+ 	}
  
+ 	/* Generate the disk name, implemented same as in sd.c */
 -	do {
--		if (!ida_pre_get(&nvme_instance_ida, GFP_KERNEL))
--			return -ENODEV;
+-		if (!ida_pre_get(&rssd_index_ida, GFP_KERNEL))
+-			goto ida_get_error;
 -
--		spin_lock(&dev_list_lock);
--		error = ida_get_new(&nvme_instance_ida, &instance);
--		spin_unlock(&dev_list_lock);
--	} while (error == -EAGAIN);
+-		spin_lock(&rssd_index_lock);
+-		rv = ida_get_new(&rssd_index_ida, &index);
+-		spin_unlock(&rssd_index_lock);
+-	} while (rv == -EAGAIN);
 -
-+	error = ida_get_index(&nvme_instance_ida, &dev_list_lock, &instance);
- 	if (error)
- 		return -ENODEV;
++	rv = ida_get_index(&rssd_index_ida, &rssd_index_lock, &index);
+ 	if (rv)
+ 		goto ida_get_error;
  
-@@ -2733,9 +2725,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
+@@ -3981,9 +3973,7 @@ init_hw_cmds_error:
+ block_queue_alloc_init_error:
+ 	mtip_hw_debugfs_exit(dd);
+ disk_index_error:
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, index);
+-	spin_unlock(&rssd_index_lock);
++	ida_put_index(&rssd_index_ida, &rssd_index_lock, index);
  
- static void nvme_release_instance(struct nvme_dev *dev)
- {
--	spin_lock(&dev_list_lock);
--	ida_remove(&nvme_instance_ida, dev->instance);
--	spin_unlock(&dev_list_lock);
-+	ida_put_index(&nvme_instance_ida, &dev_list_lock, dev->instance);
+ ida_get_error:
+ 	put_disk(dd->disk);
+@@ -4051,9 +4041,7 @@ static int mtip_block_remove(struct driver_data *dd)
+ 	}
+ 	dd->disk  = NULL;
+ 
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, dd->index);
+-	spin_unlock(&rssd_index_lock);
++	ida_put_index(&rssd_index_ida, &rssd_index_lock, dd->index);
+ 
+ 	/* De-initialize the protocol layer. */
+ 	mtip_hw_exit(dd);
+@@ -4092,9 +4080,7 @@ static int mtip_block_shutdown(struct driver_data *dd)
+ 		dd->queue = NULL;
+ 	}
+ 
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, dd->index);
+-	spin_unlock(&rssd_index_lock);
++	ida_put_index(&rssd_index_ida, &rssd_index_lock, dd->index);
+ 	return 0;
  }
  
- static void nvme_free_namespaces(struct nvme_dev *dev)
 -- 
 2.1.4
