@@ -1,47 +1,53 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
-Date: Tue, 15 Sep 2015 19:42:08 +0530
-Message-ID: <20150915141208.GK6350@linux>
-References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
- <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
- <20150915100454.70dcc04d@gandalf.local.home>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH v2] scsi: introduce short_inquiry flag for broken host adapters
+Date: Tue, 15 Sep 2015 16:27:03 +0200
+Message-ID: <87k2rryczs.fsf@vitty.brq.redhat.com>
+References: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20150915100454.70dcc04d@gandalf.local.home>
-Sender: owner-linux-mm@kvack.org
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: gregkh@linuxfoundation.org, linaro-kernel@lists.linaro.org, Rafael Wysocki <rjw@rjwysocki.net>, sboyd@codeaurora.org, arnd@arndb.de, Mark Brown <broonie@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Alexander Duyck <alexander.h.duyck@redhat.com>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@amacapital.net>, Arik Nemtsov <arik@wizery.com>, "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" <ath10k@lists.infradead.org>, "open list:QUALCOMM ATHEROS ATH9K WIRELESS DRIVER" <ath9k-devel@lists.ath9k.org>, Avri Altman <avri.altman@intel.com>, "open list:B43 WIRELESS DRIVER" <b43-dev@lists.infradead.org>, Borislav Petkov <bp@alien8.de>, Brian Silverman <bsilver16384@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>, Charles Keepax <ckeepax@opensourc>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1441296673-14315-1-git-send-email-vkuznets@redhat.com> (Vitaly
+	Kuznetsov's message of "Thu, 3 Sep 2015 18:11:13 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 15-09-15, 10:04, Steven Rostedt wrote:
-> On Tue, 15 Sep 2015 14:04:59 +0530
-> Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> 
-> > diff --git a/drivers/acpi/ec.c b/drivers/acpi/ec.c
-> > index 2614a839c60d..f11e17ad7834 100644
-> > --- a/drivers/acpi/ec.c
-> > +++ b/drivers/acpi/ec.c
-> > @@ -1237,7 +1237,7 @@ ec_parse_device(acpi_handle handle, u32 Level, void *context, void **retval)
-> >  	/* Use the global lock for all EC transactions? */
-> >  	tmp = 0;
-> >  	acpi_evaluate_integer(handle, "_GLK", NULL, &tmp);
-> > -	ec->global_lock = tmp;
-> > +	ec->global_lock = !!tmp;
-> 
-> BTW, the above is equivalent if global_lock is of type bool.
+Vitaly Kuznetsov <vkuznets@redhat.com> writes:
 
-Ah, yes. Thanks for letting me know (I just testedit as well).
+> Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
+> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
+> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+> INQUIRY result too short (5), using 36' messages on console. This can be
+> problematic for slow consoles. Introduce short_inquiry host template flag
+> to avoid printing error messages for such adapters.
+>
+> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+> ---
+> Changes since v1:
+> - This is a successor of previously sent "scsi_scan: move 'INQUIRY result
+>   too short' message to debug level" patch. Instead of moving the message
+>   to debug level for all adapters introduce a special 'short_inquiry' flag
+>   for host template [inspired by James Bottomley].
 
-But will it look sane enough to set a boolean to anything apart from
-true/false or 1/0? Yes, it will always be set to 0/1 only, but still..
+James,
+
+sorry for the ping but can you please let me know your opinion? This is
+not a 'cosmetic fix', serial port on Hyper-V is extremely slow and users
+get softlockups just because we output too much. Here is a freshly
+booted guest with SCSI and FC adapters connected:
+
+# dmesg | grep -c INQUIRY
+2076
+
+(my other pernding '[PATCH] scsi_scan: don't dump trace when
+scsi_prep_async_scan() is called twice' is related to the same issue).
+
+See also: https://lkml.org/lkml/2015/9/6/119
+
+Thanks,
+
+[...]
 
 -- 
-viresh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  Vitaly
