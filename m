@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 14/17] Update the rsxx flash adapter driver to use ida helper functions.
-Date: Tue, 15 Sep 2015 09:46:14 -0700
-Message-ID: <049a0c72418d1e2854d315bf8b583a562dbd9264.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 12/17] Update the TI Flash Media driver to use idr helper functions.
+Date: Tue, 15 Sep 2015 09:46:12 -0700
+Message-ID: <1660d98f948e952cc62793619c45f764912e87ab.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
@@ -9,47 +9,54 @@ In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Joshua Morris <josh.h.morris@us.ibm.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Alex Dubov <oakad@yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/block/rsxx/core.c | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+ drivers/misc/tifm_core.c | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
-index d8b2488aaade..dd23a0e85040 100644
---- a/drivers/block/rsxx/core.c
-+++ b/drivers/block/rsxx/core.c
-@@ -774,17 +774,7 @@ static int rsxx_pci_probe(struct pci_dev *dev,
- 	card->dev = dev;
- 	pci_set_drvdata(dev, card);
+diff --git a/drivers/misc/tifm_core.c b/drivers/misc/tifm_core.c
+index a511b2a713b3..46385f828a8f 100644
+--- a/drivers/misc/tifm_core.c
++++ b/drivers/misc/tifm_core.c
+@@ -198,22 +198,15 @@ int tifm_add_adapter(struct tifm_adapter *fm)
+ {
+ 	int rc;
  
--	do {
--		if (!ida_pre_get(&rsxx_disk_ida, GFP_KERNEL)) {
--			st = -ENOMEM;
--			goto failed_ida_get;
--		}
--
--		spin_lock(&rsxx_ida_lock);
--		st = ida_get_new(&rsxx_disk_ida, &card->disk_id);
--		spin_unlock(&rsxx_ida_lock);
--	} while (st == -EAGAIN);
--
-+	st = ida_get_index(&rsxx_disk_ida, &rsxx_ida_lock, &card->disk_id);
- 	if (st)
- 		goto failed_ida_get;
+-	idr_preload(GFP_KERNEL);
+-	spin_lock(&tifm_adapter_lock);
+-	rc = idr_alloc(&tifm_adapter_idr, fm, 0, 0, GFP_NOWAIT);
+-	if (rc >= 0)
+-		fm->id = rc;
+-	spin_unlock(&tifm_adapter_lock);
+-	idr_preload_end();
++	rc = idr_get_index(&tifm_adapter_idr, &tifm_adapter_lock, fm);
+ 	if (rc < 0)
+ 		return rc;
++	fm->id = rc;
  
-@@ -987,9 +977,7 @@ failed_request_regions:
- failed_dma_mask:
- 	pci_disable_device(dev);
- failed_enable:
--	spin_lock(&rsxx_ida_lock);
--	ida_remove(&rsxx_disk_ida, card->disk_id);
--	spin_unlock(&rsxx_ida_lock);
-+	ida_put_index(&rsxx_disk_ida, &rsxx_ida_lock, card->disk_id);
- failed_ida_get:
- 	kfree(card);
+ 	dev_set_name(&fm->dev, "tifm%u", fm->id);
+ 	rc = device_add(&fm->dev);
+ 	if (rc) {
+-		spin_lock(&tifm_adapter_lock);
+-		idr_remove(&tifm_adapter_idr, fm->id);
+-		spin_unlock(&tifm_adapter_lock);
++		idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
+ 	}
  
+ 	return rc;
+@@ -230,9 +223,7 @@ void tifm_remove_adapter(struct tifm_adapter *fm)
+ 			device_unregister(&fm->sockets[cnt]->dev);
+ 	}
+ 
+-	spin_lock(&tifm_adapter_lock);
+-	idr_remove(&tifm_adapter_idr, fm->id);
+-	spin_unlock(&tifm_adapter_lock);
++	idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
+ 	device_del(&fm->dev);
+ }
+ EXPORT_SYMBOL(tifm_remove_adapter);
 -- 
 2.1.4
