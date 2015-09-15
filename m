@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 09/17] Update the virtgpu driver to use idr helper functions.
-Date: Tue, 15 Sep 2015 09:46:09 -0700
-Message-ID: <83e5daa0708729d4a3b6fda61c6ab8d70e501606.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 15/17] Update the NVMe SSD driver to use ida helper functions.
+Date: Tue, 15 Sep 2015 09:46:15 -0700
+Message-ID: <7aa6d6793c6771b69a9cf093e80937669f5fcb4e.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
@@ -9,43 +9,45 @@ In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
 References: <cover.1442263512.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Gerd Hoffmann <kraxel@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/gpu/drm/virtio/virtgpu_vq.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/block/nvme-core.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/gpu/drm/virtio/virtgpu_vq.c b/drivers/gpu/drm/virtio/virtgpu_vq.c
-index 1698669f4185..380947dad306 100644
---- a/drivers/gpu/drm/virtio/virtgpu_vq.c
-+++ b/drivers/gpu/drm/virtio/virtgpu_vq.c
-@@ -41,21 +41,14 @@
- void virtio_gpu_resource_id_get(struct virtio_gpu_device *vgdev,
- 				uint32_t *resid)
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index d1d6141920d3..ab13833d4fde 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -2715,15 +2715,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
  {
--	int handle;
+ 	int instance, error;
+ 
+-	do {
+-		if (!ida_pre_get(&nvme_instance_ida, GFP_KERNEL))
+-			return -ENODEV;
 -
--	idr_preload(GFP_KERNEL);
--	spin_lock(&vgdev->resource_idr_lock);
--	handle = idr_alloc(&vgdev->resource_idr, NULL, 1, 0, GFP_NOWAIT);
--	spin_unlock(&vgdev->resource_idr_lock);
--	idr_preload_end();
--	*resid = handle;
-+	*resid = idr_get_index_in_range(&vgdev->resource_idr,
-+					&vgdev->resource_idr_lock,
-+					NULL, 1, 0);
- }
+-		spin_lock(&dev_list_lock);
+-		error = ida_get_new(&nvme_instance_ida, &instance);
+-		spin_unlock(&dev_list_lock);
+-	} while (error == -EAGAIN);
+-
++	error = ida_get_index(&nvme_instance_ida, &dev_list_lock, &instance);
+ 	if (error)
+ 		return -ENODEV;
  
- void virtio_gpu_resource_id_put(struct virtio_gpu_device *vgdev, uint32_t id)
+@@ -2733,9 +2725,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
+ 
+ static void nvme_release_instance(struct nvme_dev *dev)
  {
--	spin_lock(&vgdev->resource_idr_lock);
--	idr_remove(&vgdev->resource_idr, id);
--	spin_unlock(&vgdev->resource_idr_lock);
-+	idr_put_index(&vgdev->resource_idr, &vgdev->resource_idr_lock, id);
+-	spin_lock(&dev_list_lock);
+-	ida_remove(&nvme_instance_ida, dev->instance);
+-	spin_unlock(&dev_list_lock);
++	ida_put_index(&nvme_instance_ida, &dev_list_lock, dev->instance);
  }
  
- void virtio_gpu_ctrl_ack(struct virtqueue *vq)
+ static void nvme_free_namespaces(struct nvme_dev *dev)
 -- 
 2.1.4
