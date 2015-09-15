@@ -1,764 +1,591 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
-Date: Tue, 15 Sep 2015 14:04:59 +0530
-Message-ID: <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
-References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH] scsi: provide UAPI version of scsi/sg.h and scsi/scsi_ioctl.h
+Date: Tue, 15 Sep 2015 11:21:28 +0200
+Message-ID: <1442308888-17911-1-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-In-Reply-To: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
-Cc: "open list:NETWORKING DRIVERS WIRELESS" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Avri Altman <avri.altman-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Emmanuel Grumbach <emmanuel.grumbach-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Luciano Coelho <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Wang Long <long.wanglong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Richard Fitzgerald <rf-yzvPICuk2AATkU/dhu1WVueM+bqZidxxQQ4Iyu8u01E@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open list <linux-kernel-u79uwXL29TZUIDd8j+nm9g@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: houcheng@gmail.com, Andy Grover <agrover@redhat.com>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dgilbert@interlog.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Long back 'bool' type used to be a typecast to 'int', but that changed
-in v2.6.19. And that is a typecast to _Bool now, which (mostly) takes
-just a byte. Anyway, the bool type is implementation defined, and better
-we don't assume its size to be 4 bytes or 1.
+Provide a UAPI version of the header in the kernel, making it easier
+for interested projects to use an up-to-date version of the header.
 
-The problem with current code is that it reads/writes 4 bytes for a
-boolean, which will read/update 3 excess bytes following the boolean
-variable (when sizeof(bool) is 1 byte). And that can lead to hard to fix
-bugs. It was a nightmare cracking this one.
+The new headers are placed under uapi/linux/scsi/ so as not to conflict
+with the glibc-provided headers in /usr/include/scsi.
 
-The debugfs code had this bug since the first time it got introduced,
-but was never got caught, strange. Maybe the bool variables (monitored
-by debugfs) were followed by an 'int' or something bigger and the pad
-bytes made sure, we never see this issue.
-
-But the OPP (Operating performance points) library have three booleans
-allocated to contiguous bytes and this bug got hit quite soon (The
-debugfs support for OPP is yet to be merged). It showed up as corruption
-of the debugfs boolean symbols, where Y were becoming N and vice versa.
-
-Fix it properly by changing the last argument of debugfs_create_bool(),
-to type 'bool *' instead of 'u32 *', so that it doesn't depend on sizeof
-bool at all.
-
-That required updates to all user sites as well in a single commit.
-regmap core was also using debugfs_{read|write}_file_bool(), directly
-and variable types were updated for that to be bool as well.
-
-Acked-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
+        Similar to Andy Grover's patch from last January, though develo=
+ped
+        independently.  Based on the remarks to Andy's patch, I'm leavi=
+ng
+        scsi.h aside (Christoph), leaving the internal header in scsi/s=
+g.h
+        (James) and moving the headers to include/linux/scsi/ (Douglas)=
+=2E
 
-V2->V3:
-- Moved a bug fix in a separate patch 1/2, so that it can be backported.
-- Added Ack from Mark.
+ MAINTAINERS                                |   1 +
+ include/scsi/scsi_ioctl.h                  |  17 +-
+ include/scsi/sg.h                          | 267 +--------------------=
+--------
+ include/uapi/linux/Kbuild                  |   1 +
+ include/uapi/linux/scsi/Kbuild             |   2 +
+ include/{ =3D> uapi/linux}/scsi/scsi_ioctl.h |  36 +---
+ include/{ =3D> uapi/linux}/scsi/sg.h         |  18 +-
+ 7 files changed, 17 insertions(+), 325 deletions(-)
+ create mode 100644 include/uapi/linux/scsi/Kbuild
+ copy include/{ =3D> uapi/linux}/scsi/scsi_ioctl.h (41%)
+ copy include/{ =3D> uapi/linux}/scsi/sg.h (97%)
 
- Documentation/filesystems/debugfs.txt      |  2 +-
- arch/arm64/kernel/debug-monitors.c         |  4 ++--
- drivers/acpi/ec.c                          |  2 +-
- drivers/acpi/internal.h                    |  2 +-
- drivers/base/regmap/internal.h             |  6 +++---
- drivers/base/regmap/regcache-lzo.c         |  4 ++--
- drivers/base/regmap/regcache.c             | 24 ++++++++++++------------
- drivers/bluetooth/hci_qca.c                |  4 ++--
- drivers/iommu/amd_iommu_init.c             |  2 +-
- drivers/iommu/amd_iommu_types.h            |  2 +-
- drivers/misc/mei/mei_dev.h                 |  2 +-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h |  4 ++--
- drivers/net/wireless/ath/ath10k/core.h     |  2 +-
- drivers/net/wireless/ath/ath5k/ath5k.h     |  2 +-
- drivers/net/wireless/ath/ath9k/hw.c        |  2 +-
- drivers/net/wireless/ath/ath9k/hw.h        |  4 ++--
- drivers/net/wireless/b43/debugfs.c         | 18 +++++++++---------
- drivers/net/wireless/b43/debugfs.h         |  2 +-
- drivers/net/wireless/b43legacy/debugfs.c   | 10 +++++-----
- drivers/net/wireless/b43legacy/debugfs.h   |  2 +-
- drivers/net/wireless/iwlegacy/common.h     |  6 +++---
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |  6 +++---
- drivers/scsi/snic/snic_trc.c               |  4 ++--
- drivers/scsi/snic/snic_trc.h               |  2 +-
- drivers/uwb/uwb-debug.c                    |  2 +-
- fs/debugfs/file.c                          |  6 +++---
- include/linux/debugfs.h                    |  4 ++--
- include/linux/edac.h                       |  2 +-
- include/linux/fault-inject.h               |  2 +-
- kernel/futex.c                             |  4 ++--
- lib/dma-debug.c                            |  2 +-
- mm/failslab.c                              |  8 ++++----
- mm/page_alloc.c                            |  8 ++++----
- sound/soc/codecs/wm_adsp.h                 |  2 +-
- 34 files changed, 79 insertions(+), 79 deletions(-)
-
-diff --git a/Documentation/filesystems/debugfs.txt b/Documentation/filesystems/debugfs.txt
-index 463f595733e8..4f45f71149cb 100644
---- a/Documentation/filesystems/debugfs.txt
-+++ b/Documentation/filesystems/debugfs.txt
-@@ -105,7 +105,7 @@ a variable of type size_t.
- Boolean values can be placed in debugfs with:
- 
-     struct dentry *debugfs_create_bool(const char *name, umode_t mode,
--				       struct dentry *parent, u32 *value);
-+				       struct dentry *parent, bool *value);
- 
- A read on the resulting file will yield either Y (for non-zero values) or
- N, followed by a newline.  If written to, it will accept either upper- or
-diff --git a/arch/arm64/kernel/debug-monitors.c b/arch/arm64/kernel/debug-monitors.c
-index 9b3b62ac9c24..1f4f4e346f38 100644
---- a/arch/arm64/kernel/debug-monitors.c
-+++ b/arch/arm64/kernel/debug-monitors.c
-@@ -58,7 +58,7 @@ static u32 mdscr_read(void)
-  * Allow root to disable self-hosted debug from userspace.
-  * This is useful if you want to connect an external JTAG debugger.
-  */
--static u32 debug_enabled = 1;
-+static bool debug_enabled = true;
- 
- static int create_debug_debugfs_entry(void)
- {
-@@ -69,7 +69,7 @@ fs_initcall(create_debug_debugfs_entry);
- 
- static int __init early_debug_disable(char *buf)
- {
--	debug_enabled = 0;
-+	debug_enabled = false;
- 	return 0;
- }
- 
-diff --git a/drivers/acpi/ec.c b/drivers/acpi/ec.c
-index 2614a839c60d..f11e17ad7834 100644
---- a/drivers/acpi/ec.c
-+++ b/drivers/acpi/ec.c
-@@ -1237,7 +1237,7 @@ ec_parse_device(acpi_handle handle, u32 Level, void *context, void **retval)
- 	/* Use the global lock for all EC transactions? */
- 	tmp = 0;
- 	acpi_evaluate_integer(handle, "_GLK", NULL, &tmp);
--	ec->global_lock = tmp;
-+	ec->global_lock = !!tmp;
- 	ec->handle = handle;
- 	return AE_CTRL_TERMINATE;
- }
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 9db196de003c..5a72e2b140fc 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -138,7 +138,7 @@ struct acpi_ec {
- 	unsigned long gpe;
- 	unsigned long command_addr;
- 	unsigned long data_addr;
--	u32 global_lock;
-+	bool global_lock;
- 	unsigned long flags;
- 	unsigned long reference_count;
- 	struct mutex mutex;
-diff --git a/drivers/base/regmap/internal.h b/drivers/base/regmap/internal.h
-index cc557886ab23..5b907f2c62b9 100644
---- a/drivers/base/regmap/internal.h
-+++ b/drivers/base/regmap/internal.h
-@@ -122,9 +122,9 @@ struct regmap {
- 	unsigned int num_reg_defaults_raw;
- 
- 	/* if set, only the cache is modified not the HW */
--	u32 cache_only;
-+	bool cache_only;
- 	/* if set, only the HW is modified not the cache */
--	u32 cache_bypass;
-+	bool cache_bypass;
- 	/* if set, remember to free reg_defaults_raw */
- 	bool cache_free;
- 
-@@ -132,7 +132,7 @@ struct regmap {
- 	const void *reg_defaults_raw;
- 	void *cache;
- 	/* if set, the cache contains newer data than the HW */
--	u32 cache_dirty;
-+	bool cache_dirty;
- 	/* if set, the HW registers are known to match map->reg_defaults */
- 	bool no_sync_defaults;
- 
-diff --git a/drivers/base/regmap/regcache-lzo.c b/drivers/base/regmap/regcache-lzo.c
-index 2d53f6f138e1..736e0d378567 100644
---- a/drivers/base/regmap/regcache-lzo.c
-+++ b/drivers/base/regmap/regcache-lzo.c
-@@ -355,9 +355,9 @@ static int regcache_lzo_sync(struct regmap *map, unsigned int min,
- 		if (ret > 0 && val == map->reg_defaults[ret].def)
- 			continue;
- 
--		map->cache_bypass = 1;
-+		map->cache_bypass = true;
- 		ret = _regmap_write(map, i, val);
--		map->cache_bypass = 0;
-+		map->cache_bypass = false;
- 		if (ret)
- 			return ret;
- 		dev_dbg(map->dev, "Synced register %#x, value %#x\n",
-diff --git a/drivers/base/regmap/regcache.c b/drivers/base/regmap/regcache.c
-index 6f8a13ec32a4..4c07802986b2 100644
---- a/drivers/base/regmap/regcache.c
-+++ b/drivers/base/regmap/regcache.c
-@@ -54,11 +54,11 @@ static int regcache_hw_init(struct regmap *map)
- 		return -ENOMEM;
- 
- 	if (!map->reg_defaults_raw) {
--		u32 cache_bypass = map->cache_bypass;
-+		bool cache_bypass = map->cache_bypass;
- 		dev_warn(map->dev, "No cache defaults, reading back from HW\n");
- 
- 		/* Bypass the cache access till data read from HW*/
--		map->cache_bypass = 1;
-+		map->cache_bypass = true;
- 		tmp_buf = kmalloc(map->cache_size_raw, GFP_KERNEL);
- 		if (!tmp_buf) {
- 			ret = -ENOMEM;
-@@ -285,9 +285,9 @@ static int regcache_default_sync(struct regmap *map, unsigned int min,
- 		if (!regcache_reg_needs_sync(map, reg, val))
- 			continue;
- 
--		map->cache_bypass = 1;
-+		map->cache_bypass = true;
- 		ret = _regmap_write(map, reg, val);
--		map->cache_bypass = 0;
-+		map->cache_bypass = false;
- 		if (ret) {
- 			dev_err(map->dev, "Unable to sync register %#x. %d\n",
- 				reg, ret);
-@@ -315,7 +315,7 @@ int regcache_sync(struct regmap *map)
- 	int ret = 0;
- 	unsigned int i;
- 	const char *name;
--	unsigned int bypass;
-+	bool bypass;
- 
- 	BUG_ON(!map->cache_ops);
- 
-@@ -333,7 +333,7 @@ int regcache_sync(struct regmap *map)
- 	map->async = true;
- 
- 	/* Apply any patch first */
--	map->cache_bypass = 1;
-+	map->cache_bypass = true;
- 	for (i = 0; i < map->patch_regs; i++) {
- 		ret = _regmap_write(map, map->patch[i].reg, map->patch[i].def);
- 		if (ret != 0) {
-@@ -342,7 +342,7 @@ int regcache_sync(struct regmap *map)
- 			goto out;
- 		}
- 	}
--	map->cache_bypass = 0;
-+	map->cache_bypass = false;
- 
- 	if (map->cache_ops->sync)
- 		ret = map->cache_ops->sync(map, 0, map->max_register);
-@@ -384,7 +384,7 @@ int regcache_sync_region(struct regmap *map, unsigned int min,
- {
- 	int ret = 0;
- 	const char *name;
--	unsigned int bypass;
-+	bool bypass;
- 
- 	BUG_ON(!map->cache_ops);
- 
-@@ -637,11 +637,11 @@ static int regcache_sync_block_single(struct regmap *map, void *block,
- 		if (!regcache_reg_needs_sync(map, regtmp, val))
- 			continue;
- 
--		map->cache_bypass = 1;
-+		map->cache_bypass = true;
- 
- 		ret = _regmap_write(map, regtmp, val);
- 
--		map->cache_bypass = 0;
-+		map->cache_bypass = false;
- 		if (ret != 0) {
- 			dev_err(map->dev, "Unable to sync register %#x. %d\n",
- 				regtmp, ret);
-@@ -668,14 +668,14 @@ static int regcache_sync_block_raw_flush(struct regmap *map, const void **data,
- 	dev_dbg(map->dev, "Writing %zu bytes for %d registers from 0x%x-0x%x\n",
- 		count * val_bytes, count, base, cur - map->reg_stride);
- 
--	map->cache_bypass = 1;
-+	map->cache_bypass = true;
- 
- 	ret = _regmap_raw_write(map, base, *data, count * val_bytes);
- 	if (ret)
- 		dev_err(map->dev, "Unable to sync registers %#x-%#x. %d\n",
- 			base, cur - map->reg_stride, ret);
- 
--	map->cache_bypass = 0;
-+	map->cache_bypass = false;
- 
- 	*data = NULL;
- 
-diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-index 6b9b91267959..509477681661 100644
---- a/drivers/bluetooth/hci_qca.c
-+++ b/drivers/bluetooth/hci_qca.c
-@@ -80,8 +80,8 @@ struct qca_data {
- 	spinlock_t hci_ibs_lock;	/* HCI_IBS state lock	*/
- 	u8 tx_ibs_state;	/* HCI_IBS transmit side power state*/
- 	u8 rx_ibs_state;	/* HCI_IBS receive side power state */
--	u32 tx_vote;		/* Clock must be on for TX */
--	u32 rx_vote;		/* Clock must be on for RX */
-+	bool tx_vote;		/* Clock must be on for TX */
-+	bool rx_vote;		/* Clock must be on for RX */
- 	struct timer_list tx_idle_timer;
- 	u32 tx_idle_delay;
- 	struct timer_list wake_retrans_timer;
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index 5ef347a13cb5..c59314523f4c 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -138,7 +138,7 @@ u16 amd_iommu_last_bdf;			/* largest PCI device id we have
- 					   to handle */
- LIST_HEAD(amd_iommu_unity_map);		/* a list of required unity mappings
- 					   we find in ACPI */
--u32 amd_iommu_unmap_flush;		/* if true, flush on every unmap */
-+bool amd_iommu_unmap_flush;		/* if true, flush on every unmap */
- 
- LIST_HEAD(amd_iommu_list);		/* list of all AMD IOMMUs in the
- 					   system */
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index f65908841be0..861550a1ad1f 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -674,7 +674,7 @@ extern unsigned long *amd_iommu_pd_alloc_bitmap;
-  * If true, the addresses will be flushed on unmap time, not when
-  * they are reused
-  */
--extern u32 amd_iommu_unmap_flush;
-+extern bool amd_iommu_unmap_flush;
- 
- /* Smallest max PASID supported by any IOMMU in the system */
- extern u32 amd_iommu_max_pasid;
-diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
-index e25ee16c658e..d74b6aa8ae27 100644
---- a/drivers/misc/mei/mei_dev.h
-+++ b/drivers/misc/mei/mei_dev.h
-@@ -528,7 +528,7 @@ struct mei_device {
- 	DECLARE_BITMAP(host_clients_map, MEI_CLIENTS_MAX);
- 	unsigned long me_client_index;
- 
--	u32 allow_fixed_address;
-+	bool allow_fixed_address;
- 
- 	struct mei_cl wd_cl;
- 	enum mei_wd_states wd_state;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index fa0c7b54ec7a..5384f999c24b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -767,8 +767,8 @@ struct adapter {
- 	bool tid_release_task_busy;
- 
- 	struct dentry *debugfs_root;
--	u32 use_bd;     /* Use SGE Back Door intfc for reading SGE Contexts */
--	u32 trace_rss;	/* 1 implies that different RSS flit per filter is
-+	bool use_bd;     /* Use SGE Back Door intfc for reading SGE Contexts */
-+	bool trace_rss;	/* 1 implies that different RSS flit per filter is
- 			 * used per filter else if 0 default RSS flit is
- 			 * used for all 4 filters.
- 			 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 12542144fe12..b6a08177b6ee 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -680,7 +680,7 @@ struct ath10k {
- 	bool monitor_started;
- 	unsigned int filter_flags;
- 	unsigned long dev_flags;
--	u32 dfs_block_radar_events;
-+	bool dfs_block_radar_events;
- 
- 	/* protected by conf_mutex */
- 	bool radar_enabled;
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index fa6e89e5c421..ba12f7f4061d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1367,7 +1367,7 @@ struct ath5k_hw {
- 	u8			ah_retry_long;
- 	u8			ah_retry_short;
- 
--	u32			ah_use_32khz_clock;
-+	bool			ah_use_32khz_clock;
- 
- 	u8			ah_coverage_class;
- 	bool			ah_ack_bitrate_high;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1dd0339de372..8823fadada89 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -385,7 +385,7 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 
- 	ah->config.dma_beacon_response_time = 1;
- 	ah->config.sw_beacon_response_time = 6;
--	ah->config.cwm_ignore_extcca = 0;
-+	ah->config.cwm_ignore_extcca = false;
- 	ah->config.analog_shiftreg = 1;
- 
- 	ah->config.rx_intr_mitigation = true;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e8454db17634..52971b48ab6a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -332,14 +332,14 @@ enum ath9k_hw_hang_checks {
- struct ath9k_ops_config {
- 	int dma_beacon_response_time;
- 	int sw_beacon_response_time;
--	u32 cwm_ignore_extcca;
-+	bool cwm_ignore_extcca;
- 	u32 pcie_waen;
- 	u8 analog_shiftreg;
- 	u32 ofdm_trig_low;
- 	u32 ofdm_trig_high;
- 	u32 cck_trig_high;
- 	u32 cck_trig_low;
--	u32 enable_paprd;
-+	bool enable_paprd;
- 	int serialize_regmode;
- 	bool rx_intr_mitigation;
- 	bool tx_intr_mitigation;
-diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/b43/debugfs.c
-index e807bd930647..b4bcd94aff6c 100644
---- a/drivers/net/wireless/b43/debugfs.c
-+++ b/drivers/net/wireless/b43/debugfs.c
-@@ -676,15 +676,15 @@ static void b43_add_dynamic_debug(struct b43_wldev *dev)
- 		e->dyn_debug_dentries[id] = d;		\
- 				} while (0)
- 
--	add_dyn_dbg("debug_xmitpower", B43_DBG_XMITPOWER, 0);
--	add_dyn_dbg("debug_dmaoverflow", B43_DBG_DMAOVERFLOW, 0);
--	add_dyn_dbg("debug_dmaverbose", B43_DBG_DMAVERBOSE, 0);
--	add_dyn_dbg("debug_pwork_fast", B43_DBG_PWORK_FAST, 0);
--	add_dyn_dbg("debug_pwork_stop", B43_DBG_PWORK_STOP, 0);
--	add_dyn_dbg("debug_lo", B43_DBG_LO, 0);
--	add_dyn_dbg("debug_firmware", B43_DBG_FIRMWARE, 0);
--	add_dyn_dbg("debug_keys", B43_DBG_KEYS, 0);
--	add_dyn_dbg("debug_verbose_stats", B43_DBG_VERBOSESTATS, 0);
-+	add_dyn_dbg("debug_xmitpower", B43_DBG_XMITPOWER, false);
-+	add_dyn_dbg("debug_dmaoverflow", B43_DBG_DMAOVERFLOW, false);
-+	add_dyn_dbg("debug_dmaverbose", B43_DBG_DMAVERBOSE, false);
-+	add_dyn_dbg("debug_pwork_fast", B43_DBG_PWORK_FAST, false);
-+	add_dyn_dbg("debug_pwork_stop", B43_DBG_PWORK_STOP, false);
-+	add_dyn_dbg("debug_lo", B43_DBG_LO, false);
-+	add_dyn_dbg("debug_firmware", B43_DBG_FIRMWARE, false);
-+	add_dyn_dbg("debug_keys", B43_DBG_KEYS, false);
-+	add_dyn_dbg("debug_verbose_stats", B43_DBG_VERBOSESTATS, false);
- 
- #undef add_dyn_dbg
- }
-diff --git a/drivers/net/wireless/b43/debugfs.h b/drivers/net/wireless/b43/debugfs.h
-index 50517b801cb4..d05377745011 100644
---- a/drivers/net/wireless/b43/debugfs.h
-+++ b/drivers/net/wireless/b43/debugfs.h
-@@ -68,7 +68,7 @@ struct b43_dfsentry {
- 	u32 shm32read_addr_next;
- 
- 	/* Enabled/Disabled list for the dynamic debugging features. */
--	u32 dyn_debug[__B43_NR_DYNDBG];
-+	bool dyn_debug[__B43_NR_DYNDBG];
- 	/* Dentries for the dynamic debugging entries. */
- 	struct dentry *dyn_debug_dentries[__B43_NR_DYNDBG];
- };
-diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
-index 1965edb765a2..090910ea259e 100644
---- a/drivers/net/wireless/b43legacy/debugfs.c
-+++ b/drivers/net/wireless/b43legacy/debugfs.c
-@@ -369,11 +369,11 @@ static void b43legacy_add_dynamic_debug(struct b43legacy_wldev *dev)
- 		e->dyn_debug_dentries[id] = d;		\
- 				} while (0)
- 
--	add_dyn_dbg("debug_xmitpower", B43legacy_DBG_XMITPOWER, 0);
--	add_dyn_dbg("debug_dmaoverflow", B43legacy_DBG_DMAOVERFLOW, 0);
--	add_dyn_dbg("debug_dmaverbose", B43legacy_DBG_DMAVERBOSE, 0);
--	add_dyn_dbg("debug_pwork_fast", B43legacy_DBG_PWORK_FAST, 0);
--	add_dyn_dbg("debug_pwork_stop", B43legacy_DBG_PWORK_STOP, 0);
-+	add_dyn_dbg("debug_xmitpower", B43legacy_DBG_XMITPOWER, false);
-+	add_dyn_dbg("debug_dmaoverflow", B43legacy_DBG_DMAOVERFLOW, false);
-+	add_dyn_dbg("debug_dmaverbose", B43legacy_DBG_DMAVERBOSE, false);
-+	add_dyn_dbg("debug_pwork_fast", B43legacy_DBG_PWORK_FAST, false);
-+	add_dyn_dbg("debug_pwork_stop", B43legacy_DBG_PWORK_STOP, false);
- 
- #undef add_dyn_dbg
- }
-diff --git a/drivers/net/wireless/b43legacy/debugfs.h b/drivers/net/wireless/b43legacy/debugfs.h
-index ae3b0d0fa849..9ee32158b947 100644
---- a/drivers/net/wireless/b43legacy/debugfs.h
-+++ b/drivers/net/wireless/b43legacy/debugfs.h
-@@ -47,7 +47,7 @@ struct b43legacy_dfsentry {
- 	struct b43legacy_txstatus_log txstatlog;
- 
- 	/* Enabled/Disabled list for the dynamic debugging features. */
--	u32 dyn_debug[__B43legacy_NR_DYNDBG];
-+	bool dyn_debug[__B43legacy_NR_DYNDBG];
- 	/* Dentries for the dynamic debugging entries. */
- 	struct dentry *dyn_debug_dentries[__B43legacy_NR_DYNDBG];
- };
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 5b972798bdff..ce52cf114fde 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1425,9 +1425,9 @@ struct il_priv {
- #endif				/* CONFIG_IWLEGACY_DEBUGFS */
- 
- 	struct work_struct txpower_work;
--	u32 disable_sens_cal;
--	u32 disable_chain_noise_cal;
--	u32 disable_tx_power_cal;
-+	bool disable_sens_cal;
-+	bool disable_chain_noise_cal;
-+	bool disable_tx_power_cal;
- 	struct work_struct run_time_calib_work;
- 	struct timer_list stats_periodic;
- 	struct timer_list watchdog;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index b95a07ec9e36..72e8a03a5293 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -649,7 +649,7 @@ struct iwl_mvm {
- 	const struct iwl_fw_bcast_filter *bcast_filters;
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct {
--		u32 override; /* u32 for debugfs_create_bool */
-+		bool override;
- 		struct iwl_bcast_filter_cmd cmd;
- 	} dbgfs_bcast_filtering;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 67a4443daed9..b40764d43dde 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9173,6 +9173,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/=
+git/jejb/scsi.git
+ S:	Maintained
+ F:	drivers/scsi/
+ F:	include/scsi/
++F:	include/uapi/linux/scsi/
+=20
+ SCSI TAPE DRIVER
+ M:	Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi>
+diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+index 8d19d1d233c3..5b07a0a91675 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/scsi/scsi_ioctl.h
+@@ -1,21 +1,7 @@
+ #ifndef _SCSI_IOCTL_H
+ #define _SCSI_IOCTL_H=20
+=20
+-#define SCSI_IOCTL_SEND_COMMAND 1
+-#define SCSI_IOCTL_TEST_UNIT_READY 2
+-#define SCSI_IOCTL_BENCHMARK_COMMAND 3
+-#define SCSI_IOCTL_SYNC 4			/* Request synchronous parameters */
+-#define SCSI_IOCTL_START_UNIT 5
+-#define SCSI_IOCTL_STOP_UNIT 6
+-/* The door lock/unlock constants are compatible with Sun constants fo=
+r
+-   the cdrom */
+-#define SCSI_IOCTL_DOORLOCK 0x5380		/* lock the eject mechanism */
+-#define SCSI_IOCTL_DOORUNLOCK 0x5381		/* unlock the mechanism	  */
+-
+-#define	SCSI_REMOVAL_PREVENT	1
+-#define	SCSI_REMOVAL_ALLOW	0
+-
+-#ifdef __KERNEL__
++#include <uapi/linux/scsi/scsi_ioctl.h>
+=20
+ struct scsi_device;
+=20
+@@ -44,5 +30,4 @@ int scsi_ioctl_block_when_processing_errors(struct sc=
+si_device *sdev,
+ 		int cmd, bool ndelay);
+ extern int scsi_ioctl(struct scsi_device *, int, void __user *);
+=20
+-#endif /* __KERNEL__ */
+ #endif /* _SCSI_IOCTL_H */
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 3afec7032448..87b35e7c4c31 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -1,274 +1,11 @@
+ #ifndef _SCSI_GENERIC_H
+ #define _SCSI_GENERIC_H
+=20
+-#include <linux/compiler.h>
++#include <uapi/linux/scsi/sg.h>
+=20
+-/*
+- * History:
+- *  Started: Aug 9 by Lawrence Foard (entropy@world.std.com), to allow=
+ user
+- *   process control of SCSI devices.
+- *  Development Sponsored by Killy Corp. NY NY
+- *
+- * Original driver (sg.h):
+- *       Copyright (C) 1992 Lawrence Foard
+- * Version 2 and 3 extensions to driver:
+- *	Copyright (C) 1998 - 2014 Douglas Gilbert
+- *
+- *  Version: 3.5.36 (20140603)
+- *  This version is for 2.6 and 3 series kernels.
+- *
+- * Documentation
+- * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+- * A web site for the SG device driver can be found at:
+- *	http://sg.danny.cz/sg  [alternatively check the MAINTAINERS file]
+- * The documentation for the sg version 3 driver can be found at:
+- *	http://sg.danny.cz/sg/p/sg_v3_ho.html
+- * Also see: <kernel_source>/Documentation/scsi/scsi-generic.txt
+- *
+- * For utility and test programs see: http://sg.danny.cz/sg/sg3_utils.=
+html
+- */
+-
+-#ifdef __KERNEL__
+ extern int sg_big_buff; /* for sysctl */
+-#endif
+-
+-
+-typedef struct sg_iovec /* same structure as used by readv() Linux sys=
+tem */
+-{                       /* call. It defines one scatter-gather element=
+=2E */
+-    void __user *iov_base;      /* Starting address  */
+-    size_t iov_len;             /* Length in bytes  */
+-} sg_iovec_t;
+-
+-
+-typedef struct sg_io_hdr
+-{
+-    int interface_id;           /* [i] 'S' for SCSI generic (required)=
+ */
+-    int dxfer_direction;        /* [i] data transfer direction  */
+-    unsigned char cmd_len;      /* [i] SCSI command length */
+-    unsigned char mx_sb_len;    /* [i] max length to write to sbp */
+-    unsigned short iovec_count; /* [i] 0 implies no scatter gather */
+-    unsigned int dxfer_len;     /* [i] byte count of data transfer */
+-    void __user *dxferp;	/* [i], [*io] points to data transfer memory
+-					      or scatter gather list */
+-    unsigned char __user *cmdp; /* [i], [*i] points to command to perf=
+orm */
+-    void __user *sbp;		/* [i], [*o] points to sense_buffer memory */
+-    unsigned int timeout;       /* [i] MAX_UINT->no timeout (unit: mil=
+lisec) */
+-    unsigned int flags;         /* [i] 0 -> default, see SG_FLAG... */
+-    int pack_id;                /* [i->o] unused internally (normally)=
+ */
+-    void __user * usr_ptr;      /* [i->o] unused internally */
+-    unsigned char status;       /* [o] scsi status */
+-    unsigned char masked_status;/* [o] shifted, masked scsi status */
+-    unsigned char msg_status;   /* [o] messaging level data (optional)=
+ */
+-    unsigned char sb_len_wr;    /* [o] byte count actually written to =
+sbp */
+-    unsigned short host_status; /* [o] errors from host adapter */
+-    unsigned short driver_status;/* [o] errors from software driver */
+-    int resid;                  /* [o] dxfer_len - actual_transferred =
+*/
+-    unsigned int duration;      /* [o] time taken by cmd (unit: millis=
+ec) */
+-    unsigned int info;          /* [o] auxiliary information */
+-} sg_io_hdr_t;  /* 64 bytes long (on i386) */
+-
+-#define SG_INTERFACE_ID_ORIG 'S'
+-
+-/* Use negative values to flag difference from original sg_header stru=
+cture */
+-#define SG_DXFER_NONE (-1)      /* e.g. a SCSI Test Unit Ready command=
+ */
+-#define SG_DXFER_TO_DEV (-2)    /* e.g. a SCSI WRITE command */
+-#define SG_DXFER_FROM_DEV (-3)  /* e.g. a SCSI READ command */
+-#define SG_DXFER_TO_FROM_DEV (-4) /* treated like SG_DXFER_FROM_DEV wi=
+th the
+-				   additional property than during indirect
+-				   IO the user buffer is copied into the
+-				   kernel buffers before the transfer */
+-#define SG_DXFER_UNKNOWN (-5)   /* Unknown data direction */
+-
+-/* following flag values can be "or"-ed together */
+-#define SG_FLAG_DIRECT_IO 1     /* default is indirect IO */
+-#define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in =
+SCSI */
+-				/* command block (when <=3D SCSI_2) */
+-#define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
+-#define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/f=
+rom */
+-				/* user space (debug indirect IO) */
+-/* defaults:: for sg driver: Q_AT_HEAD; for block layer: Q_AT_TAIL */
+-#define SG_FLAG_Q_AT_TAIL 0x10
+-#define SG_FLAG_Q_AT_HEAD 0x20
+-
+-/* following 'info' values are "or"-ed together */
+-#define SG_INFO_OK_MASK 0x1
+-#define SG_INFO_OK 0x0          /* no sense, host nor driver "noise" *=
+/
+-#define SG_INFO_CHECK 0x1       /* something abnormal happened */
+-
+-#define SG_INFO_DIRECT_IO_MASK 0x6
+-#define SG_INFO_INDIRECT_IO 0x0 /* data xfer via kernel buffers (or no=
+ xfer) */
+-#define SG_INFO_DIRECT_IO 0x2   /* direct IO requested and performed *=
+/
+-#define SG_INFO_MIXED_IO 0x4    /* part direct, part indirect IO */
+-
+-
+-typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
+-    int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2=
+ etc */
+-    int channel;
+-    int scsi_id;        /* scsi id of target device */
+-    int lun;
+-    int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
+-    short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
+-    short d_queue_depth;/* device (or adapter) maximum queue length */
+-    int unused[2];      /* probably find a good use, set 0 for now */
+-} sg_scsi_id_t; /* 32 bytes long on i386 */
+-
+-typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() *=
+/
+-    char req_state;     /* 0 -> not used, 1 -> written, 2 -> ready to =
+read */
+-    char orphan;        /* 0 -> normal request, 1 -> from interruped S=
+G_IO */
+-    char sg_io_owned;   /* 0 -> complete with read(), 1 -> owned by SG=
+_IO */
+-    char problem;       /* 0 -> no problem detected, 1 -> error to rep=
+ort */
+-    int pack_id;        /* pack_id associated with request */
+-    void __user *usr_ptr;     /* user provided pointer (in new interfa=
+ce) */
+-    unsigned int duration; /* millisecs elapsed since written (req_sta=
+te=3D=3D1)
+-			      or request duration (req_state=3D=3D2) */
+-    int unused;
+-} sg_req_info_t; /* 20 bytes long on i386 */
+-
+-
+-/* IOCTLs: Those ioctls that are relevant to the SG 3.x drivers follow=
+=2E
+- [Those that only apply to the SG 2.x drivers are at the end of the fi=
+le.]
+- (_GET_s yield result via 'int *' 3rd argument unless otherwise indica=
+ted) */
+-
+-#define SG_EMULATED_HOST 0x2203 /* true for emulated host adapter (ATA=
+PI) */
+-
+-/* Used to configure SCSI command transformation layer for ATAPI devic=
+es */
+-/* Only supported by the ide-scsi driver */
+-#define SG_SET_TRANSFORM 0x2204 /* N.B. 3rd arg is not pointer but val=
+ue: */
+-		      /* 3rd arg =3D 0 to disable transform, 1 to enable it */
+-#define SG_GET_TRANSFORM 0x2205
+-
+-#define SG_SET_RESERVED_SIZE 0x2275  /* request a new reserved buffer =
+size */
+-#define SG_GET_RESERVED_SIZE 0x2272  /* actual size of reserved buffer=
+ */
+-
+-/* The following ioctl has a 'sg_scsi_id_t *' object as its 3rd argume=
+nt. */
+-#define SG_GET_SCSI_ID 0x2276   /* Yields fd's bus, chan, dev, lun + t=
+ype */
+-/* SCSI id information can also be obtained from SCSI_IOCTL_GET_IDLUN =
+*/
+-
+-/* Override host setting and always DMA using low memory ( <16MB on i3=
+86) */
+-#define SG_SET_FORCE_LOW_DMA 0x2279  /* 0-> use adapter setting, 1-> f=
+orce */
+-#define SG_GET_LOW_DMA 0x227a   /* 0-> use all ram for dma; 1-> low dm=
+a ram */
+-
+-/* When SG_SET_FORCE_PACK_ID set to 1, pack_id is input to read() whic=
+h
+-   tries to fetch a packet with a matching pack_id, waits, or returns =
+EAGAIN.
+-   If pack_id is -1 then read oldest waiting. When ...FORCE_PACK_ID se=
+t to 0
+-   then pack_id ignored by read() and oldest readable fetched. */
+-#define SG_SET_FORCE_PACK_ID 0x227b
+-#define SG_GET_PACK_ID 0x227c /* Yields oldest readable pack_id (or -1=
+) */
+-
+-#define SG_GET_NUM_WAITING 0x227d /* Number of commands awaiting read(=
+) */
+-
+-/* Yields max scatter gather tablesize allowed by current host adapter=
+ */
+-#define SG_GET_SG_TABLESIZE 0x227F  /* 0 implies can't do scatter gath=
+er */
+-
+-#define SG_GET_VERSION_NUM 0x2282 /* Example: version 2.1.34 yields 20=
+134 */
+=20
+-/* Returns -EBUSY if occupied. 3rd argument pointer to int (see next) =
+*/
+-#define SG_SCSI_RESET 0x2284
+-/* Associated values that can be given to SG_SCSI_RESET follow.
+- * SG_SCSI_RESET_NO_ESCALATE may be OR-ed to the _DEVICE, _TARGET, _BU=
+S
+- * or _HOST reset value so only that action is attempted. */
+-#define		SG_SCSI_RESET_NOTHING	0
+-#define		SG_SCSI_RESET_DEVICE	1
+-#define		SG_SCSI_RESET_BUS	2
+-#define		SG_SCSI_RESET_HOST	3
+-#define		SG_SCSI_RESET_TARGET	4
+-#define		SG_SCSI_RESET_NO_ESCALATE	0x100
+-
+-/* synchronous SCSI command ioctl, (only in version 3 interface) */
+-#define SG_IO 0x2285   /* similar effect as write() followed by read()=
+ */
+-
+-#define SG_GET_REQUEST_TABLE 0x2286   /* yields table of active reques=
+ts */
+-
+-/* How to treat EINTR during SG_IO ioctl(), only in SG 3.x series */
+-#define SG_SET_KEEP_ORPHAN 0x2287 /* 1 -> hold for read(), 0 -> drop (=
+def) */
+-#define SG_GET_KEEP_ORPHAN 0x2288
+-
+-/* yields scsi midlevel's access_count for this SCSI device */
+-#define SG_GET_ACCESS_COUNT 0x2289 =20
+-
+-
+-#define SG_SCATTER_SZ (8 * 4096)
+-/* Largest size (in bytes) a single scatter-gather list element can ha=
+ve.
+-   The value used by the driver is 'max(SG_SCATTER_SZ, PAGE_SIZE)'.
+-   This value should be a power of 2 (and may be rounded up internally=
+).
+-   If scatter-gather is not supported by adapter then this value is th=
+e
+-   largest data block that can be read/written by a single scsi comman=
+d. */
+-
+-#define SG_DEFAULT_RETRIES 0
+-
+-/* Defaults, commented if they differ from original sg driver */
+-#define SG_DEF_FORCE_LOW_DMA 0  /* was 1 -> memory below 16MB on i386 =
+*/
+-#define SG_DEF_FORCE_PACK_ID 0
+-#define SG_DEF_KEEP_ORPHAN 0
+-#define SG_DEF_RESERVED_SIZE SG_SCATTER_SZ /* load time option */
+-
+-/* maximum outstanding requests, write() yields EDOM if exceeded */
+-#define SG_MAX_QUEUE 16
+-
+-#define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatibil=
+ity */
+-
+-/* Alternate style type names, "..._t" variants preferred */
+-typedef struct sg_io_hdr Sg_io_hdr;
+-typedef struct sg_io_vec Sg_io_vec;
+-typedef struct sg_scsi_id Sg_scsi_id;
+-typedef struct sg_req_info Sg_req_info;
+-
+-
+-/* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv=
+vvv */
+-/*   The older SG interface based on the 'sg_header' structure follows=
+=2E   */
+-/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
+^^^ */
+-
+-#define SG_MAX_SENSE 16   /* this only applies to the sg_header interf=
+ace */
+-
+-struct sg_header
+-{
+-    int pack_len;    /* [o] reply_len (ie useless), ignored as input *=
+/
+-    int reply_len;   /* [i] max length of expected reply (inc. sg_head=
+er) */
+-    int pack_id;     /* [io] id number of packet (use ints >=3D 0) */
+-    int result;      /* [o] 0=3D=3Dok, else (+ve) Unix errno (best ign=
+ored) */
+-    unsigned int twelve_byte:1;
+-	/* [i] Force 12 byte command length for group 6 & 7 commands  */
+-    unsigned int target_status:5;   /* [o] scsi status from target */
+-    unsigned int host_status:8;     /* [o] host status (see "DID" code=
+s) */
+-    unsigned int driver_status:8;   /* [o] driver status+suggestion */
+-    unsigned int other_flags:10;    /* unused */
+-    unsigned char sense_buffer[SG_MAX_SENSE]; /* [o] Output in 3 cases=
+:
+-	   when target_status is CHECK_CONDITION or
+-	   when target_status is COMMAND_TERMINATED or
+-	   when (driver_status & DRIVER_SENSE) is true. */
+-};      /* This structure is 36 bytes long on i386 */
+-
+-
+-/* IOCTLs: The following are not required (or ignored) when the sg_io_=
+hdr_t
+-	   interface is used. They are kept for backward compatibility with
+-	   the original and version 2 drivers. */
+-
+-#define SG_SET_TIMEOUT 0x2201  /* unit: jiffies (10ms on i386) */
+-#define SG_GET_TIMEOUT 0x2202  /* yield timeout as _return_ value */
+-
+-/* Get/set command queuing state per fd (default is SG_DEF_COMMAND_Q.
+-   Each time a sg_io_hdr_t object is seen on this file descriptor, thi=
+s
+-   command queuing flag is set on (overriding the previous setting). *=
+/
+-#define SG_GET_COMMAND_Q 0x2270   /* Yields 0 (queuing off) or 1 (on) =
+*/
+-#define SG_SET_COMMAND_Q 0x2271   /* Change queuing state with 0 or 1 =
+*/
+-
+-/* Turn on/off error sense trace (1 and 0 respectively, default is off=
+).
+-   Try using: "# cat /proc/scsi/sg/debug" instead in the v3 driver */
+-#define SG_SET_DEBUG 0x227e    /* 0 -> turn off debug */
+-
+-#define SG_NEXT_CMD_LEN 0x2283  /* override SCSI command length with g=
+iven
+-		   number on the next write() on this file descriptor */
+-
+-
+-/* Defaults, commented if they differ from original sg driver */
+-#ifdef __KERNEL__
++/* Keep in sync with SG_DEFAULT_TIMEOUT of uapi/linux/sg.h  */
+ #define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ =3D=3D 'jiffies in =
+1 second' */
+-#else
+-#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ =3D=3D 'jiffies in 1 sec=
+ond' */
+-#endif
+-
+-#define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
+-				  the new interface is used */
+-#define SG_DEF_UNDERRUN_FLAG 0
+=20
  #endif
-@@ -673,7 +673,7 @@ struct iwl_mvm {
- 	bool disable_power_off;
- 	bool disable_power_off_d3;
- 
--	u32 scan_iter_notif_enabled; /* must be u32 for debugfs_create_bool */
-+	bool scan_iter_notif_enabled;
- 
- 	struct debugfs_blob_wrapper nvm_hw_blob;
- 	struct debugfs_blob_wrapper nvm_sw_blob;
-@@ -729,7 +729,7 @@ struct iwl_mvm {
- 	int n_nd_channels;
- 	bool net_detect;
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--	u32 d3_wake_sysassert; /* must be u32 for debugfs_create_bool */
-+	bool d3_wake_sysassert;
- 	bool d3_test_active;
- 	bool store_d3_resume_sram;
- 	void *d3_resume_sram;
-diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
-index 28a40a7ade38..f00ebf4717e0 100644
---- a/drivers/scsi/snic/snic_trc.c
-+++ b/drivers/scsi/snic/snic_trc.c
-@@ -148,7 +148,7 @@ snic_trc_init(void)
- 
- 	trc->max_idx = (tbuf_sz / SNIC_TRC_ENTRY_SZ);
- 	trc->rd_idx = trc->wr_idx = 0;
--	trc->enable = 1;
-+	trc->enable = true;
- 	SNIC_INFO("Trace Facility Enabled.\n Trace Buffer SZ %lu Pages.\n",
- 		  tbuf_sz / PAGE_SIZE);
- 	ret = 0;
-@@ -169,7 +169,7 @@ snic_trc_free(void)
- {
- 	struct snic_trc *trc = &snic_glob->trc;
- 
--	trc->enable = 0;
-+	trc->enable = false;
- 	snic_trc_debugfs_term();
- 
- 	if (trc->buf) {
-diff --git a/drivers/scsi/snic/snic_trc.h b/drivers/scsi/snic/snic_trc.h
-index 427faee5f97e..b37f8867bfde 100644
---- a/drivers/scsi/snic/snic_trc.h
-+++ b/drivers/scsi/snic/snic_trc.h
-@@ -45,7 +45,7 @@ struct snic_trc {
- 	u32	max_idx;		/* Max Index into trace buffer */
- 	u32	rd_idx;
- 	u32	wr_idx;
--	u32	enable;			/* Control Variable for Tracing */
-+	bool	enable;			/* Control Variable for Tracing */
- 
- 	struct dentry *trc_enable;	/* debugfs file object */
- 	struct dentry *trc_file;
-diff --git a/drivers/uwb/uwb-debug.c b/drivers/uwb/uwb-debug.c
-index 0b1e5a9449b5..991374b13571 100644
---- a/drivers/uwb/uwb-debug.c
-+++ b/drivers/uwb/uwb-debug.c
-@@ -55,7 +55,7 @@
- struct uwb_dbg {
- 	struct uwb_pal pal;
- 
--	u32 accept;
-+	bool accept;
- 	struct list_head rsvs;
- 
- 	struct dentry *root_d;
-diff --git a/fs/debugfs/file.c b/fs/debugfs/file.c
-index 6c55ade071c3..b70c20fae502 100644
---- a/fs/debugfs/file.c
-+++ b/fs/debugfs/file.c
-@@ -439,7 +439,7 @@ ssize_t debugfs_read_file_bool(struct file *file, char __user *user_buf,
- 			       size_t count, loff_t *ppos)
- {
- 	char buf[3];
--	u32 *val = file->private_data;
-+	bool *val = file->private_data;
- 
- 	if (*val)
- 		buf[0] = 'Y';
-@@ -457,7 +457,7 @@ ssize_t debugfs_write_file_bool(struct file *file, const char __user *user_buf,
- 	char buf[32];
- 	size_t buf_size;
- 	bool bv;
--	u32 *val = file->private_data;
-+	bool *val = file->private_data;
- 
- 	buf_size = min(count, (sizeof(buf)-1));
- 	if (copy_from_user(buf, user_buf, buf_size))
-@@ -503,7 +503,7 @@ static const struct file_operations fops_bool = {
-  * code.
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index 70ff1d9abf0d..47e642753a71 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -11,6 +11,7 @@ header-y +=3D isdn/
+ header-y +=3D mmc/
+ header-y +=3D nfsd/
+ header-y +=3D raid/
++header-y +=3D scsi/
+ header-y +=3D spi/
+ header-y +=3D sunrpc/
+ header-y +=3D tc_act/
+diff --git a/include/uapi/linux/scsi/Kbuild b/include/uapi/linux/scsi/K=
+build
+new file mode 100644
+index 000000000000..56d1848a0962
+--- /dev/null
++++ b/include/uapi/linux/scsi/Kbuild
+@@ -0,0 +1,2 @@
++header-y +=3D sg.h
++header-y +=3D scsi_ioctl.h
+diff --git a/include/scsi/scsi_ioctl.h b/include/uapi/linux/scsi/scsi_i=
+octl.h
+similarity index 41%
+copy from include/scsi/scsi_ioctl.h
+copy to include/uapi/linux/scsi/scsi_ioctl.h
+index 8d19d1d233c3..90ba8d9c5418 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/uapi/linux/scsi/scsi_ioctl.h
+@@ -1,5 +1,5 @@
+-#ifndef _SCSI_IOCTL_H
+-#define _SCSI_IOCTL_H=20
++#ifndef _UAPI_LINUX_SCSI_IOCTL_H
++#define _UAPI_LINUX_SCSI_IOCTL_H
+=20
+ #define SCSI_IOCTL_SEND_COMMAND 1
+ #define SCSI_IOCTL_TEST_UNIT_READY 2
+@@ -15,34 +15,4 @@
+ #define	SCSI_REMOVAL_PREVENT	1
+ #define	SCSI_REMOVAL_ALLOW	0
+=20
+-#ifdef __KERNEL__
+-
+-struct scsi_device;
+-
+-/*
+- * Structures used for scsi_ioctl et al.
+- */
+-
+-typedef struct scsi_ioctl_command {
+-	unsigned int inlen;
+-	unsigned int outlen;
+-	unsigned char data[0];
+-} Scsi_Ioctl_Command;
+-
+-typedef struct scsi_idlun {
+-	__u32 dev_id;
+-	__u32 host_unique_id;
+-} Scsi_Idlun;
+-
+-/* Fibre Channel WWN, port_id struct */
+-typedef struct scsi_fctargaddress {
+-	__u32 host_port_id;
+-	unsigned char host_wwn[8]; // include NULL term.
+-} Scsi_FCTargAddress;
+-
+-int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
+-		int cmd, bool ndelay);
+-extern int scsi_ioctl(struct scsi_device *, int, void __user *);
+-
+-#endif /* __KERNEL__ */
+-#endif /* _SCSI_IOCTL_H */
++#endif /* _UAPI_LINUX_SCSI_IOCTL_H */
+diff --git a/include/scsi/sg.h b/include/uapi/linux/scsi/sg.h
+similarity index 97%
+copy from include/scsi/sg.h
+copy to include/uapi/linux/scsi/sg.h
+index 3afec7032448..4433d20d2d18 100644
+--- a/include/scsi/sg.h
++++ b/include/uapi/linux/scsi/sg.h
+@@ -1,5 +1,5 @@
+-#ifndef _SCSI_GENERIC_H
+-#define _SCSI_GENERIC_H
++#ifndef _UAPI_LINUX_SG_H
++#define _UAPI_LINUX_SG_H
+=20
+ #include <linux/compiler.h>
+=20
+@@ -28,10 +28,6 @@
+  * For utility and test programs see: http://sg.danny.cz/sg/sg3_utils.=
+html
   */
- struct dentry *debugfs_create_bool(const char *name, umode_t mode,
--				   struct dentry *parent, u32 *value)
-+				   struct dentry *parent, bool *value)
- {
- 	return debugfs_create_file(name, mode, parent, value, &fops_bool);
- }
-diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
-index 9beb636b97eb..8321fe3058d6 100644
---- a/include/linux/debugfs.h
-+++ b/include/linux/debugfs.h
-@@ -92,7 +92,7 @@ struct dentry *debugfs_create_size_t(const char *name, umode_t mode,
- struct dentry *debugfs_create_atomic_t(const char *name, umode_t mode,
- 				     struct dentry *parent, atomic_t *value);
- struct dentry *debugfs_create_bool(const char *name, umode_t mode,
--				  struct dentry *parent, u32 *value);
-+				  struct dentry *parent, bool *value);
- 
- struct dentry *debugfs_create_blob(const char *name, umode_t mode,
- 				  struct dentry *parent,
-@@ -243,7 +243,7 @@ static inline struct dentry *debugfs_create_atomic_t(const char *name, umode_t m
- 
- static inline struct dentry *debugfs_create_bool(const char *name, umode_t mode,
- 						 struct dentry *parent,
--						 u32 *value)
-+						 bool *value)
- {
- 	return ERR_PTR(-ENODEV);
- }
-diff --git a/include/linux/edac.h b/include/linux/edac.h
-index da3b72e95db3..7c6b7ba55589 100644
---- a/include/linux/edac.h
-+++ b/include/linux/edac.h
-@@ -772,7 +772,7 @@ struct mem_ctl_info {
- #ifdef CONFIG_EDAC_DEBUG
- 	struct dentry *debugfs;
- 	u8 fake_inject_layer[EDAC_MAX_LAYERS];
--	u32 fake_inject_ue;
-+	bool fake_inject_ue;
- 	u16 fake_inject_count;
+=20
+-#ifdef __KERNEL__
+-extern int sg_big_buff; /* for sysctl */
+-#endif
+-
+=20
+ typedef struct sg_iovec /* same structure as used by readv() Linux sys=
+tem */
+ {                       /* call. It defines one scatter-gather element=
+=2E */
+@@ -184,7 +180,7 @@ typedef struct sg_req_info { /* used by SG_GET_REQU=
+EST_TABLE ioctl() */
+ #define SG_GET_KEEP_ORPHAN 0x2288
+=20
+ /* yields scsi midlevel's access_count for this SCSI device */
+-#define SG_GET_ACCESS_COUNT 0x2289 =20
++#define SG_GET_ACCESS_COUNT 0x2289
+=20
+=20
+ #define SG_SCATTER_SZ (8 * 4096)
+@@ -261,9 +257,9 @@ struct sg_header
+=20
+=20
+ /* Defaults, commented if they differ from original sg driver */
+-#ifdef __KERNEL__
+-#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ =3D=3D 'jiffies in =
+1 second' */
+-#else
++
++/* Keep in sync with SG_DEFAULT_TIMEOUT of scsi/sg.h  */
++#ifndef __KERNEL__
+ #define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ =3D=3D 'jiffies in 1 sec=
+ond' */
  #endif
- };
-diff --git a/include/linux/fault-inject.h b/include/linux/fault-inject.h
-index 798fad9e420d..3159a7dba034 100644
---- a/include/linux/fault-inject.h
-+++ b/include/linux/fault-inject.h
-@@ -18,7 +18,7 @@ struct fault_attr {
- 	atomic_t times;
- 	atomic_t space;
- 	unsigned long verbose;
--	u32 task_filter;
-+	bool task_filter;
- 	unsigned long stacktrace_depth;
- 	unsigned long require_start;
- 	unsigned long require_end;
-diff --git a/kernel/futex.c b/kernel/futex.c
-index 6e443efc65f4..395b967841b4 100644
---- a/kernel/futex.c
-+++ b/kernel/futex.c
-@@ -267,10 +267,10 @@ static struct futex_hash_bucket *futex_queues;
- static struct {
- 	struct fault_attr attr;
- 
--	u32 ignore_private;
-+	bool ignore_private;
- } fail_futex = {
- 	.attr = FAULT_ATTR_INITIALIZER,
--	.ignore_private = 0,
-+	.ignore_private = false,
- };
- 
- static int __init setup_fail_futex(char *str)
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index dace71fe41f7..fcb65d2a0b94 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -100,7 +100,7 @@ static LIST_HEAD(free_entries);
- static DEFINE_SPINLOCK(free_entries_lock);
- 
- /* Global disable flag - will be set in case of an error */
--static u32 global_disable __read_mostly;
-+static bool global_disable __read_mostly;
- 
- /* Early initialization disable flag, set at the end of dma_debug_init */
- static bool dma_debug_initialized __read_mostly;
-diff --git a/mm/failslab.c b/mm/failslab.c
-index fefaabaab76d..98fb490311eb 100644
---- a/mm/failslab.c
-+++ b/mm/failslab.c
-@@ -3,12 +3,12 @@
- 
- static struct {
- 	struct fault_attr attr;
--	u32 ignore_gfp_wait;
--	int cache_filter;
-+	bool ignore_gfp_wait;
-+	bool cache_filter;
- } failslab = {
- 	.attr = FAULT_ATTR_INITIALIZER,
--	.ignore_gfp_wait = 1,
--	.cache_filter = 0,
-+	.ignore_gfp_wait = true,
-+	.cache_filter = false,
- };
- 
- bool should_failslab(size_t size, gfp_t gfpflags, unsigned long cache_flags)
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 48aaf7b9f253..805bbad2e24e 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2159,13 +2159,13 @@ struct page *buffered_rmqueue(struct zone *preferred_zone,
- static struct {
- 	struct fault_attr attr;
- 
--	u32 ignore_gfp_highmem;
--	u32 ignore_gfp_wait;
-+	bool ignore_gfp_highmem;
-+	bool ignore_gfp_wait;
- 	u32 min_order;
- } fail_page_alloc = {
- 	.attr = FAULT_ATTR_INITIALIZER,
--	.ignore_gfp_wait = 1,
--	.ignore_gfp_highmem = 1,
-+	.ignore_gfp_wait = true,
-+	.ignore_gfp_highmem = true,
- 	.min_order = 1,
- };
- 
-diff --git a/sound/soc/codecs/wm_adsp.h b/sound/soc/codecs/wm_adsp.h
-index 579a6350fb01..2d117cf0e953 100644
---- a/sound/soc/codecs/wm_adsp.h
-+++ b/sound/soc/codecs/wm_adsp.h
-@@ -53,7 +53,7 @@ struct wm_adsp {
- 
- 	int fw;
- 	int fw_ver;
--	u32 running;
-+	bool running;
- 
- 	struct list_head ctl_list;
- 
--- 
-2.4.0
+=20
+@@ -271,4 +267,4 @@ struct sg_header
+ 				  the new interface is used */
+ #define SG_DEF_UNDERRUN_FLAG 0
+=20
+-#endif
++#endif /* _UAPI_LINUX_SG_H */
+--=20
+2.5.0
