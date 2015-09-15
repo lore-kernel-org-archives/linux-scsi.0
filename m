@@ -1,139 +1,64 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Block, SCSI: notify block layer about runtime PM status
- change following system resume
-Date: Tue, 15 Sep 2015 15:33:09 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1509151526410.1420-100000@iolanthe.rowland.org>
-References: <1442297293.3050.14.camel@kxue-X58A-UD3R>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2] scsi: introduce short_inquiry flag for broken host
+ adapters
+Date: Tue, 15 Sep 2015 19:55:42 +0000
+Message-ID: <BY2PR0301MB1654CC4424F54EE671799E5FA05C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
+	 <87k2rryczs.fsf@vitty.brq.redhat.com>
+ <1442341445.2177.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56161 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751014AbbIOTdK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2015 15:33:10 -0400
-In-Reply-To: <1442297293.3050.14.camel@kxue-X58A-UD3R>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1442341445.2177.9.camel@HansenPartnership.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>
-Cc: Ken Xue <Ken.Xue@amd.com>, SCSI development list <linux-scsi@vger.kernel.org>, Shane.Huang@amd.com, SPG_Linux_Kernel@amd.com
 
-The request-queue-based runtime PM implementation is missing an
-ingredient.  There's no way to tell the block layer that a device has
-passed directly from runtime-suspended to runtime-resumed without
-invoking any runtime-PM callbacks.
-
-Typically this happens during a system resume.  A resume callback
-routine will contain some variant of the following:
-
-	if (err == 0) {
-		pm_runtime_disable(dev);
-		pm_runtime_set_active(dev);
-		pm_runtime_enable(dev);
-	}
-
-This lets the runtime-PM core know that following the system resume,
-the device is back in the active state.  Without a corresponding way
-to inform the block layer, the device will become unusable.  Requests
-added to the queue will never be dispatched because the device still
-appears to be suspended, and attempts to perform a runtime resume will
-fail because the runtime-PM core knows the device is already active.
-To make matters worse, any attempt to use the device will prevent it
-from going back into runtime suspend, because now the request queue
-will be non-empty.
-
-This patch remedies the situation by adding a blk_runtime_activate()
-function and calling it at the appropriate place in the
-scsi_dev_type_resume() routine.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-by: Ken Xue <Ken.Xue@amd.com>
-Tested-by: Ken Xue <Ken.Xue@amd.com>
-CC: <stable@vger.kernel.org>
-
----
-
-
-[as1785]
-
-
- block/blk-core.c       |   19 +++++++++++++++++++
- drivers/scsi/scsi_pm.c |    4 +++-
- include/linux/blkdev.h |    2 ++
- 3 files changed, 24 insertions(+), 1 deletion(-)
-
-Index: usb-4.2/include/linux/blkdev.h
-===================================================================
---- usb-4.2.orig/include/linux/blkdev.h
-+++ usb-4.2/include/linux/blkdev.h
-@@ -1017,6 +1017,7 @@ extern int blk_pre_runtime_suspend(struc
- extern void blk_post_runtime_suspend(struct request_queue *q, int err);
- extern void blk_pre_runtime_resume(struct request_queue *q);
- extern void blk_post_runtime_resume(struct request_queue *q, int err);
-+extern void blk_runtime_activate(struct request_queue *q);
- #else
- static inline void blk_pm_runtime_init(struct request_queue *q,
- 	struct device *dev) {}
-@@ -1027,6 +1028,7 @@ static inline int blk_pre_runtime_suspen
- static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
- static inline void blk_pre_runtime_resume(struct request_queue *q) {}
- static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
-+static inline void blk_runtime_activate(struct request_queue *q) {}
- #endif
- 
- /*
-Index: usb-4.2/block/blk-core.c
-===================================================================
---- usb-4.2.orig/block/blk-core.c
-+++ usb-4.2/block/blk-core.c
-@@ -3377,6 +3377,25 @@ void blk_post_runtime_resume(struct requ
- 	spin_unlock_irq(q->queue_lock);
- }
- EXPORT_SYMBOL(blk_post_runtime_resume);
-+
-+/**
-+ * blk_runtime_activate - Runtime activation processing
-+ * @q: the queue of the device
-+ *
-+ * Description:
-+ *	Tell the block layer that the device has changed directly to the
-+ *	runtime-resumed state without executing any runtime-PM callbacks,
-+ *	(for example, during system resume).  Does the same things as
-+ *	blk_post_runtime_resume().
-+ *
-+ *	This function should be called after pm_runtime_set_active() and
-+ *	pm_runtime_enable().
-+ */
-+void blk_runtime_activate(struct request_queue *q)
-+{
-+	blk_post_runtime_resume(q, 0);
-+}
-+EXPORT_SYMBOL(blk_runtime_activate);
- #endif
- 
- int __init blk_dev_init(void)
-Index: usb-4.2/drivers/scsi/scsi_pm.c
-===================================================================
---- usb-4.2.orig/drivers/scsi/scsi_pm.c
-+++ usb-4.2/drivers/scsi/scsi_pm.c
-@@ -70,17 +70,19 @@ static int scsi_dev_type_suspend(struct
- static int scsi_dev_type_resume(struct device *dev,
- 		int (*cb)(struct device *, const struct dev_pm_ops *))
- {
-+	struct scsi_device *sdev = to_scsi_device(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int err = 0;
- 
- 	err = cb(dev, pm);
--	scsi_device_resume(to_scsi_device(dev));
-+	scsi_device_resume(sdev);
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 
- 	if (err == 0) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
- 		pm_runtime_enable(dev);
-+		blk_runtime_activate(sdev->request_queue);
- 	}
- 
- 	return err;
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+VHVlc2RheSwgU2VwdGVtYmVyIDE1LCAyMDE1IDExOjI0IEFNDQo+IFRvOiBWaXRhbHkgS3V6bmV0
+c292IDx2a3V6bmV0c0ByZWRoYXQuY29tPg0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
+cmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtZIFNyaW5pdmFzYW4NCj4gPGt5c0Bt
+aWNyb3NvZnQuY29tPjsgTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBEZXh1YW4gQ3Vp
+DQo+IDxkZWN1aUBtaWNyb3NvZnQuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBzY3Np
+OiBpbnRyb2R1Y2Ugc2hvcnRfaW5xdWlyeSBmbGFnIGZvciBicm9rZW4gaG9zdA0KPiBhZGFwdGVy
+cw0KPiANCj4gT24gVHVlLCAyMDE1LTA5LTE1IGF0IDE2OjI3ICswMjAwLCBWaXRhbHkgS3V6bmV0
+c292IHdyb3RlOg0KPiA+IFZpdGFseSBLdXpuZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+IHdy
+aXRlczoNCj4gPg0KPiA+ID4gU29tZSBob3N0IGFkYXB0ZXJzIChlLmcuIEh5cGVyLVYgc3RvcnZz
+YykgYXJlIGtub3duIGZvciBub3QgcmVzcGVjdGluZw0KPiB0aGUNCj4gPiA+IFNQQy0yLzMvNCBy
+ZXF1aXJlbWVudCBmb3IgJ0lOUVVJUlkgZGF0YSAoc2VlIHRhYmxlIC4uLikgc2hhbGwgY29udGFp
+biBhdA0KPiA+ID4gbGVhc3QgMzYgYnl0ZXMnLiBBcyBhIHJlc3VsdCB3ZSBnZXQgdG9ucyBvbiAn
+c2NzaSAwOjc6MToxOiBzY3NpIHNjYW46DQo+ID4gPiBJTlFVSVJZIHJlc3VsdCB0b28gc2hvcnQg
+KDUpLCB1c2luZyAzNicgbWVzc2FnZXMgb24gY29uc29sZS4gVGhpcyBjYW4gYmUNCj4gPiA+IHBy
+b2JsZW1hdGljIGZvciBzbG93IGNvbnNvbGVzLiBJbnRyb2R1Y2Ugc2hvcnRfaW5xdWlyeSBob3N0
+IHRlbXBsYXRlIGZsYWcNCj4gPiA+IHRvIGF2b2lkIHByaW50aW5nIGVycm9yIG1lc3NhZ2VzIGZv
+ciBzdWNoIGFkYXB0ZXJzLg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFZpdGFseSBLdXpu
+ZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+DQo+ID4gPiAtLS0NCj4gPiA+IENoYW5nZXMgc2lu
+Y2UgdjE6DQo+ID4gPiAtIFRoaXMgaXMgYSBzdWNjZXNzb3Igb2YgcHJldmlvdXNseSBzZW50ICJz
+Y3NpX3NjYW46IG1vdmUgJ0lOUVVJUlkgcmVzdWx0DQo+ID4gPiAgIHRvbyBzaG9ydCcgbWVzc2Fn
+ZSB0byBkZWJ1ZyBsZXZlbCIgcGF0Y2guIEluc3RlYWQgb2YgbW92aW5nIHRoZQ0KPiBtZXNzYWdl
+DQo+ID4gPiAgIHRvIGRlYnVnIGxldmVsIGZvciBhbGwgYWRhcHRlcnMgaW50cm9kdWNlIGEgc3Bl
+Y2lhbCAnc2hvcnRfaW5xdWlyeScgZmxhZw0KPiA+ID4gICBmb3IgaG9zdCB0ZW1wbGF0ZSBbaW5z
+cGlyZWQgYnkgSmFtZXMgQm90dG9tbGV5XS4NCj4gPg0KPiA+IEphbWVzLA0KPiA+DQo+ID4gc29y
+cnkgZm9yIHRoZSBwaW5nIGJ1dCBjYW4geW91IHBsZWFzZSBsZXQgbWUga25vdyB5b3VyIG9waW5p
+b24/IFRoaXMgaXMNCj4gPiBub3QgYSAnY29zbWV0aWMgZml4Jywgc2VyaWFsIHBvcnQgb24gSHlw
+ZXItViBpcyBleHRyZW1lbHkgc2xvdyBhbmQgdXNlcnMNCj4gPiBnZXQgc29mdGxvY2t1cHMganVz
+dCBiZWNhdXNlIHdlIG91dHB1dCB0b28gbXVjaC4gSGVyZSBpcyBhIGZyZXNobHkNCj4gPiBib290
+ZWQgZ3Vlc3Qgd2l0aCBTQ1NJIGFuZCBGQyBhZGFwdGVycyBjb25uZWN0ZWQ6DQo+ID4NCj4gPiAj
+IGRtZXNnIHwgZ3JlcCAtYyBJTlFVSVJZDQo+ID4gMjA3Ng0KPiANCj4gSXQgbmVlZHMgYSByZXZp
+ZXcgLi4uIHByZWZlcmFibHkgZnJvbSBzb21lb25lIHdobyB2YWxpZGF0ZXMgdGhhdCB3ZQ0KPiBk
+b24ndCBnZXQgYW55IGFkdmVyc2UgaW1wYWN0IGZyb20gdGhlIG1pc3NpbmcgaW5xdWlyeSBkYXRh
+DQo+IA0KPiA+IChteSBvdGhlciBwZXJuZGluZyAnW1BBVENIXSBzY3NpX3NjYW46IGRvbid0IGR1
+bXAgdHJhY2Ugd2hlbg0KPiA+IHNjc2lfcHJlcF9hc3luY19zY2FuKCkgaXMgY2FsbGVkIHR3aWNl
+JyBpcyByZWxhdGVkIHRvIHRoZSBzYW1lIGlzc3VlKS4NCj4gDQo+IFNvIGRvZXMgdGhpcy4NCg0K
+SmFtZXMsDQoNCkkgd2lsbCByZXZpZXcgdGhlIGNvZGUgYW5kIHRlc3QgdGhpcyBhcyB3ZWxsLg0K
+DQpSZWdhcmRzLA0KDQpLLiBZDQo+IA0KPiBKYW1lcw0KPiANCj4gDQo+ID4gU2VlIGFsc286DQo+
+IGh0dHBzOi8vbmEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29rLmNvbS8/dXJsPWh0dHBz
+JTNhJTJmJTJmbGttbC5vcg0KPiBnJTJmbGttbCUyZjIwMTUlMmY5JTJmNiUyZjExOSZkYXRhPTAx
+JTdjMDElN2NreXMlNDBtaWNyb3NvZnQuY29tDQo+ICU3YzdhNmU5Y2NhYmIyZjQzYzBhMDExMDhk
+MmJkZmFkODI2JTdjNzJmOTg4YmY4NmYxNDFhZjkxYWIyZDdjZDAxMQ0KPiBkYjQ3JTdjMSZzZGF0
+YT10M0lHTE1pRzJzVTRWSmZtR2lZS0dNeTIyZDNJeEhiR1Fab3A2M25yVjdZJTNkDQo+ID4NCj4g
+PiBUaGFua3MsDQo+ID4NCj4gPiBbLi4uXQ0KPiA+DQo+IA0KPiANCg0K
