@@ -1,95 +1,88 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: [PATCH] x86: Fix gfp flags for coherent DMA memory allocation
-Date: Tue, 15 Sep 2015 09:36:23 +0000
-Message-ID: <20150915093621.GA13060@xzibit.linux.bs1.fc.nec.co.jp>
-References: <20150914073834.GA13077@xzibit.linux.bs1.fc.nec.co.jp>
+From: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
+Date: Tue, 15 Sep 2015 12:37:44 +0200
+Message-ID: <1442313464.1914.21.camel@sipsolutions.net>
+References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
+	<27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150914073834.GA13077@xzibit.linux.bs1.fc.nec.co.jp>
-Content-Language: ja-JP
-Content-ID: <E220C12E63714D48990BE3CE81073319@gisp.nec.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "mingo@redhat.com" <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, "hpa@zytor.com" <hpa@zytor.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: "open list:NETWORKING DRIVERS
+	(WIRELESS)" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:SOUND - SOC LAYER /
+	DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, "Altman,
+	Avri" <avri.altman-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jiri Slaby <jirislaby-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kalle Valo <kvalo-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, "Grumbach,
+	Emmanuel" <emmanuel.grumbach-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Coelho,
+	Luciano" <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Wang Long <long.wanglong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Richard Fitzgerald <rf-yzvPICuk2AATkU/dhu1WVueM+bqZidxxQQ4Iyu8u01E@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, open list <linux-kern>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/14/15 16:38, Junichi Nomura wrote:
-> Commit 6894258eda2f reversed the order of gfp_flags adjustment in
-> dma_alloc_attrs() for x86 [arch/x86/kernel/pci-dma.c]
-> As a result, relevant flags set by dma_alloc_coherent_gfp_flags()
-> is just discarded and causes coherent DMA memory allocation failure
-> on some devices.
-> 
-> Fixes: 6894258eda2f ("dma-mapping: consolidate dma_{alloc,free}_{attrs,coherent}")
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> 
-> diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
-> index 84b8ef8..1b55de1 100644
-> --- a/arch/x86/kernel/pci-dma.c
-> +++ b/arch/x86/kernel/pci-dma.c
-> @@ -131,8 +131,8 @@ void dma_generic_free_coherent(struct device *dev, size_t size, void *vaddr,
->  
->  bool arch_dma_alloc_attrs(struct device **dev, gfp_t *gfp)
->  {
-> -	*gfp = dma_alloc_coherent_gfp_flags(*dev, *gfp);
->  	*gfp &= ~(__GFP_DMA | __GFP_HIGHMEM | __GFP_DMA32);
-> +	*gfp = dma_alloc_coherent_gfp_flags(*dev, *gfp);
+Hi,
 
-Additional note:
+This email has far too many people Cc'ed on it - I don't think vger is
+even accepting it for that reason. You should probably restrict it to
+just a few lists when you resubmit.
 
-I noticed this problem because megaraid driver, which uses 32-bit
-dma mask for coherent buffers, failed initialization and my system
-didn't boot.
+> The problem with current code is that it reads/writes 4 bytes for a
+> boolean, which will read/update 3 excess bytes following the boolean
+> variable (when sizeof(bool) is 1 byte). And that can lead to hard to 
+> fix bugs. It was a nightmare cracking this one.
 
-But there can be other drivers which are silently and unnecessarily
-falling back to swiotlb due to this problem.
+Unless you're ignoring (or worse, casting away) type warnings, there's
+no problem/bug at all, you just have to define all the variables used
+with debugfs_create_bool() as actual u32 variables.
 
-megaraid_sas 0000:10:00.0: FW now in Ready state 
-megaraid_sas 0000:10:00.0: firmware supports msix	: (16) 
-megaraid_sas 0000:10:00.0: current msix/online cpus	: (16/32) 
-megaraid_sas 0000:10:00.0: Init cmd success 
-megaraid_sas 0000:10:00.0: firmware type	: Legacy(64 VD) firmware 
-megaraid_sas 0000:10:00.0: controller type	: MR(512MB) 
-megaraid_sas 0000:10:00.0: swiotlb buffer is full (sz: 665896 bytes) 
-swiotlb: coherent allocation failed for device 0000:10:00.0 size=665896 
-CPU: 0 PID: 657 Comm: modprobe Tainted: G            E   4.3.0-rc1 #1 
-Hardware name: 
- ffff88046e99f098 ffff88046db8f9c8 ffffffff812a7904 ffffffffffffffff 
- 00000000ffffffff ffff88046db8fa18 ffffffff812cfe74 ffff88046cd00188 
- 0000000800000008 ffff88046dfce8c0 00000000000002d0 ffff88046cd00188 
-Call Trace: 
- [<ffffffff812a7904>] dump_stack+0x48/0x64 
- [<ffffffff812cfe74>] swiotlb_alloc_coherent+0x154/0x170 
- [<ffffffff8104a2af>] x86_swiotlb_alloc_coherent+0x5f/0x70 
- [<ffffffffa000f9b5>] megasas_init_adapter_fusion+0x375/0x4b0 [megaraid_sas] 
- [<ffffffffa0005a06>] megasas_init_fw+0x2e6/0x940 [megaraid_sas] 
- [<ffffffffa0007795>] megasas_probe_one+0x745/0xb60 [megaraid_sas] 
- [<ffffffff812e913c>] local_pci_probe+0x4c/0xa0 
- [<ffffffff812e9213>] pci_call_probe+0x83/0xa0 
- [<ffffffff812e9744>] ? pci_match_device+0xe4/0x110 
- [<ffffffff812e982f>] pci_device_probe+0x7f/0xb0 
- [<ffffffff813ce2f3>] really_probe+0x133/0x390 
- [<ffffffff813ce5a9>] driver_probe_device+0x59/0xd0 
- [<ffffffff813ce6bd>] __driver_attach+0x9d/0xa0 
- [<ffffffff813ce620>] ? driver_probe_device+0xd0/0xd0 
- [<ffffffff813ce620>] ? driver_probe_device+0xd0/0xd0 
- [<ffffffff813cc2fa>] bus_for_each_dev+0x8a/0xb0 
- [<ffffffff813cdd6e>] driver_attach+0x1e/0x20 
- [<ffffffff813cd7cf>] bus_add_driver+0x1cf/0x290 
- [<ffffffff813cee50>] driver_register+0x60/0xe0 
- [<ffffffff812e952c>] __pci_register_driver+0x4c/0x50 
- [<ffffffffa001d0a4>] megasas_init+0xa4/0x1ba [megaraid_sas] 
- [<ffffffffa001d000>] ? 0xffffffffa001d000 
- [<ffffffff8100027d>] do_one_initcall+0xad/0x1c0 
- [<ffffffff810dba39>] do_init_module+0x69/0x210 
- [<ffffffff810de19a>] load_module+0x5aa/0x730 
- [<ffffffff810dad60>] ? mod_sysfs_teardown+0x140/0x140 
- [<ffffffff810da790>] ? module_sect_show+0x30/0x30 
- [<ffffffff810de4a2>] SyS_init_module+0x92/0xc0 
- [<ffffffff815ce697>] entry_SYSCALL_64_fastpath+0x12/0x6a 
-megaraid_sas 0000:10:00.0: Could not allocate memory for map info 
+It sounds like you are/were doing something like the following:
 
--- 
-Jun'ichi Nomura, NEC Corporation
+bool a, b, c;
+...
+debugfs_create_bool("a", 0600, dir, (u32 *)&a);
+
+which is quite clearly invalid.
+
+Had you properly defined them as u32, as everyone (except for the ACPI
+case) does, there wouldn't have been any problem:
+
+u32 a, b, c;
+...
+debugfs_create_bool("a", 0600, dir, &a);
+
+
+As far as I can tell, there's no bug in the API. It might be a bit
+strange to have a set of functions called debugfs_create_<type> and
+then one of them doesn't actually use the type from the name, but
+that's only a problem if you blindly add casts or ignore the compiler
+warnings you'd get without casts.
+
+In other words, I think your commit log is extremely misleading. The
+API perhaps has some inconsistent naming, but all this talk about the
+sizeof(bool) etc. is simply completely irrelevant since "bool" is not
+the type used here at all. There's nothing to fix in any of the code
+you're changing (again, apart from ACPI.)
+
+That said, I don't actually object to this change itself, being able to
+actually use bool variables with debugfs_create_bool would be nice.
+However, that shouldn't be documented as a bugfix or anything like
+that, merely as a cleanup to make the API naming more consistent and to
+be able to use the (smaller and often more convenient) bool type.
+
+Clearly, it would also lead to less confusion, as we see in ACPI and
+hear from your OPP code. Note that ACPI is even more confused though
+since it uses "unsigned long", so it's entirely possible that somebody
+actually thought about that case and decided not to worry about 64-bit
+big-endian platforms.
+
+Of course this also means that only the ACPI patch is a candidate for s
+table.
+
+johannes
