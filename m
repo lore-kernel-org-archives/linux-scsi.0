@@ -1,85 +1,158 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 00/17] Create and use ida and idr helper routines
-Date: Tue, 15 Sep 2015 09:46:00 -0700
-Message-ID: <cover.1442263512.git.lduncan@suse.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Kai.Makisara@kolumbus.fi, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Ulf Hansson <ulf.hansson@linaro.org>, Gerd Hoffmann <kraxel@redhat.com>, Samuel Ortiz <sameo@linux.intel.com>, Alex Dubov <oakad@yahoo.com>, Joshua Morris <josh.h.morris@us.ibm.com>, Matthew Wilcox <willy@linux.intel.com>
+Subject: [PATCH 01/17] Add ida and idr helper routines.
+Date: Tue, 15 Sep 2015 09:46:01 -0700
+Message-ID: <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263512.git.lduncan@suse.com>
+References: <cover.1442263512.git.lduncan@suse.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52812 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752740AbbIOQrp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Sep 2015 12:47:45 -0400
+In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
+In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
+References: <cover.1442263512.git.lduncan@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
 
-The idr index management library supplies two sets of routines
-for managing monotonically increasing index numbers. The "ida"
-set of routines manage allocating and freeing simple index
-numbers. The "idr" set of routines add the ability to save
-an arbitrary pointer with each index.
+Clients of the ida and idr index-management routines
+tend to use the same calling sequences much of the time,
+so this change adds helper functions for allocating and
+releasing indexes of either flavor, i.e. with or
+without pointer management.
 
-Both sets of routines are used throughout the kernel, and it
-was noted that many of them use the same or similar calling
-sequences, making a helper function a useful addition.
+Inline functions added for idr:
+  idr_get_index_in_range
+  idr_get_index (in range 0,0)
+  idr_put_index
+And for ida:
+  ida_get_index
+  ida_put_index
 
-This set of patches adds some helper functions, defined
-as inline in <linux/idr.h>. In addition, any of the clients
-of these idr library functions that could benefit from
-using these helper functions where modified to use them.
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+---
+ include/linux/idr.h | 102 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 102 insertions(+)
 
-In addition to cleaning up the code in the clients of these
-functions, the SCSI hosts module, which used to use a simple
-atomic integer for index management is converted to using
-the idr set of routines to manage its index values as
-well as to simplify and speed up host number to instance
-lookups.
-
-I have functionally tested the SCSI host indexing change,
-and I have compile tested all of the other changes. The
-maintainers of each driver are cc-ed on the patch series,
-where available.
-
-Note: I did not mark this patch series as "v2" since
-the scope of the patch set has grown considerably
-since my first submissions.
-
-Summary: There is one patch that adds helper functions, 11
-patches that use the new "idr" helper functions, and 5 that
-use the new "ida" helper functions.
-
-Lee Duncan (17):
-   1. Add ida and idr helper routines.
-   2. Update scsi hosts to use idr for host number mgmt
-   3. Update the st driver to use idr helper functions.
-   4. Update the ch driver to use idr helper functions.
-   5. Update the md driver to use idr helper functions.
-   6. Update the infiniband uverbs driver to use idr helper functions.
-   7. Update the memstick driver to use idr helper functions.
-   8. Update the mmc driver to use idr helper functions.
-   9. Update the virtgpu driver to use idr helper functions.
-  10. Update the DCA DMA driver to use idr helper functions.
-  11. Update the rtsx multifunction driver to use idr helper functions.
-  12. Update the TI Flash Media driver to use idr helper functions.
-  13. Update the SCSI disk driver to use ida helper functions.
-  14. Update the rsxx flash adapter driver to use ida helper functions.
-  15. Update the NVMe SSD driver to use ida helper functions.
-  16. Update the Micron PCIe SSD driver to use ida helper functions.
-  17. Update the ARM soc base driver to use ida helper functions.
-
- drivers/base/soc.c                   |  17 ++----
- drivers/block/mtip32xx/mtip32xx.c    |  22 ++------
- drivers/block/nvme-core.c            |  14 +----
- drivers/block/rsxx/core.c            |  16 +-----
- drivers/dca/dca-sysfs.c              |  19 ++-----
- drivers/gpu/drm/virtio/virtgpu_vq.c  |  15 ++----
- drivers/infiniband/core/uverbs_cmd.c |  12 +----
- drivers/md/dm.c                      |  22 ++------
- drivers/memstick/core/memstick.c     |  19 ++-----
- drivers/mfd/rtsx_pcr.c               |  13 ++---
- drivers/misc/tifm_core.c             |  17 ++----
- drivers/mmc/core/host.c              |  14 ++---
- drivers/scsi/ch.c                    |  14 ++---
- drivers/scsi/hosts.c                 |  59 ++++++++++----------
- drivers/scsi/sd.c                    |  20 ++-----
- drivers/scsi/st.c                    |  15 ++----
- include/linux/idr.h                  | 102 +++++++++++++++++++++++++++++++++++
- 17 files changed, 182 insertions(+), 228 deletions(-)
-
+diff --git a/include/linux/idr.h b/include/linux/idr.h
+index 013fd9bc4cb6..341c4f2d9874 100644
+--- a/include/linux/idr.h
++++ b/include/linux/idr.h
+@@ -16,6 +16,8 @@
+ #include <linux/bitops.h>
+ #include <linux/init.h>
+ #include <linux/rcupdate.h>
++#include <linux/spinlock.h>
++#include <linux/gfp.h>
+ 
+ /*
+  * We want shallower trees and thus more bits covered at each layer.  8
+@@ -183,4 +185,104 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
+ 
+ void __init idr_init_cache(void);
+ 
++/**
++ * ida_get_index - allocate a ida index value
++ * @ida		idr handle
++ * @lock	spinlock handle protecting this index
++ * @p_id	pointer to allocated index value
++ *
++ * A helper function for safely allocating an index value (id),
++ * returning a negative errno value on failure, else 0.
++ */
++static inline int ida_get_index(struct ida *ida, spinlock_t *lock, int *p_id)
++{
++	int error = -ENOMEM;
++
++	do {
++		if (!ida_pre_get(ida, GFP_KERNEL))
++			break;
++		spin_lock(lock);
++		error = ida_get_new(ida, p_id);
++		spin_unlock(lock);
++	} while (error == -EAGAIN);
++
++	return error;
++}
++
++/**
++ * ida_put_index - free an allocated ida index value
++ * @ida		idr handle
++ * @lock	spinlock handle protecting this index
++ * @id		the value of the allocated index
++ *
++ * A helper function that goes with @ida_get_index, which safely
++ * frees a previously-allocated index value.
++ */
++static inline void ida_put_index(struct ida *ida, spinlock_t *lock, int id)
++{
++	spin_lock(lock);
++	ida_remove(ida, id);
++	spin_unlock(lock);
++}
++
++/**
++ * idr_get_index_in_range - allocate a new index, with locking
++ *		            within a range
++ * @idr:	idr handle
++ * @lock:	spin lock handle protecting the index
++ * @ptr:	pointer to associate with allocated index
++ * @start:	starting index (see idr_alloc)
++ * @end:	ending index (0 -> use default max)
++ *
++ * This is a helper routine meant to make the common
++ * calling sequence to allocate an idr index easier.
++ * It uses a spin lock, and allocates a positive index
++ * in the range of [start,end), returning a negative
++ * errno on failure, else 0.
++ */
++static inline int idr_get_index_in_range(struct idr *idr, spinlock_t *lock,
++					 void *ptr, int start, int end)
++{
++	int ret;
++
++	idr_preload(GFP_KERNEL);
++	spin_lock(lock);
++	ret = idr_alloc(idr, ptr, start, end, GFP_NOWAIT);
++	spin_unlock(lock);
++	idr_preload_end();
++
++	return ret;
++}
++
++/**
++ * idr_get_index - allocate new index, with locking, using the
++ *		   default range (zero to max-1)
++ * @idr:	idr handle
++ * @lock:	spin lock handle protecting the index
++ * @ptr:	pointer to associate with allocated index
++ *
++ * Simple wrapper around idr_get_index_in_range() w/ @start and
++ * @end of 0, since this is a common case
++ */
++static inline int idr_get_index(struct idr *idr, spinlock_t *lock, void *ptr)
++{
++	return idr_get_index_in_range(idr, lock, ptr, 0, 0);
++}
++
++/**
++ * idr_put_index - free an allocated idr index value
++ * @idr		idr handle
++ * @lock	spinlock handle protecting this index
++ * @id		the value of the allocated index
++ *
++ * A helper function that goes with @idr_get_index, which safely
++ * frees a previously-allocated index value.
++ */
++static inline void idr_put_index(struct idr *idr, spinlock_t *lock, int id)
++{
++	spin_lock(lock);
++	idr_remove(idr, id);
++	spin_unlock(lock);
++}
++
+ #endif /* __IDR_H__ */
 -- 
 2.1.4
+
