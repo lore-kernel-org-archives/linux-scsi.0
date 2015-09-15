@@ -1,68 +1,85 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 04/17] Update the ch driver to use idr helper functions.
-Date: Tue, 15 Sep 2015 09:46:04 -0700
-Message-ID: <1a6d624b850fa7543c9c1fcca647ddb654954296.1442263512.git.lduncan@suse.com>
-References: <cover.1442263512.git.lduncan@suse.com>
+Subject: [PATCH 00/17] Create and use ida and idr helper routines
+Date: Tue, 15 Sep 2015 09:46:00 -0700
+Message-ID: <cover.1442263512.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
-In-Reply-To: <cover.1442263512.git.lduncan@suse.com>
-References: <cover.1442263512.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>
+Cc: Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Lee Duncan <lduncan@suse.com>, Kai.Makisara@kolumbus.fi, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Ulf Hansson <ulf.hansson@linaro.org>, Gerd Hoffmann <kraxel@redhat.com>, Samuel Ortiz <sameo@linux.intel.com>, Alex Dubov <oakad@yahoo.com>, Joshua Morris <josh.h.morris@us.ibm.com>, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Note: when allocating an index, in the error case,
-where the just-allocated index has to be released,
-the required locking around the index removal was
-not present, so this conversion has the side effect
-of adding locking for that error condition. This
-should close a possible race condition that could
-have resulted in duplicate index allocation.
+The idr index management library supplies two sets of routines
+for managing monotonically increasing index numbers. The "ida"
+set of routines manage allocating and freeing simple index
+numbers. The "idr" set of routines add the ability to save
+an arbitrary pointer with each index.
 
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/ch.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+Both sets of routines are used throughout the kernel, and it
+was noted that many of them use the same or similar calling
+sequences, making a helper function a useful addition.
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index dad959fcf6d8..2edf1f8883f9 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -909,12 +909,8 @@ static int ch_probe(struct device *dev)
- 	if (NULL == ch)
- 		return -ENOMEM;
- 
--	idr_preload(GFP_KERNEL);
--	spin_lock(&ch_index_lock);
--	ret = idr_alloc(&ch_index_idr, ch, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
--	spin_unlock(&ch_index_lock);
--	idr_preload_end();
--
-+	ret = idr_get_index_in_range(&ch_index_idr, &ch_index_lock, ch,
-+				     0, CH_MAX_DEVS + 1);
- 	if (ret < 0) {
- 		if (ret == -ENOSPC)
- 			ret = -ENODEV;
-@@ -945,7 +941,7 @@ static int ch_probe(struct device *dev)
- 
- 	return 0;
- remove_idr:
--	idr_remove(&ch_index_idr, ch->minor);
-+	idr_put_index(&ch_index_idr, &ch_index_lock, ch->minor);
- free_ch:
- 	kfree(ch);
- 	return ret;
-@@ -955,9 +951,7 @@ static int ch_remove(struct device *dev)
- {
- 	scsi_changer *ch = dev_get_drvdata(dev);
- 
--	spin_lock(&ch_index_lock);
--	idr_remove(&ch_index_idr, ch->minor);
--	spin_unlock(&ch_index_lock);
-+	idr_put_index(&ch_index_idr, &ch_index_lock, ch->minor);
- 
- 	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
- 	kfree(ch->dt);
+This set of patches adds some helper functions, defined
+as inline in <linux/idr.h>. In addition, any of the clients
+of these idr library functions that could benefit from
+using these helper functions where modified to use them.
+
+In addition to cleaning up the code in the clients of these
+functions, the SCSI hosts module, which used to use a simple
+atomic integer for index management is converted to using
+the idr set of routines to manage its index values as
+well as to simplify and speed up host number to instance
+lookups.
+
+I have functionally tested the SCSI host indexing change,
+and I have compile tested all of the other changes. The
+maintainers of each driver are cc-ed on the patch series,
+where available.
+
+Note: I did not mark this patch series as "v2" since
+the scope of the patch set has grown considerably
+since my first submissions.
+
+Summary: There is one patch that adds helper functions, 11
+patches that use the new "idr" helper functions, and 5 that
+use the new "ida" helper functions.
+
+Lee Duncan (17):
+   1. Add ida and idr helper routines.
+   2. Update scsi hosts to use idr for host number mgmt
+   3. Update the st driver to use idr helper functions.
+   4. Update the ch driver to use idr helper functions.
+   5. Update the md driver to use idr helper functions.
+   6. Update the infiniband uverbs driver to use idr helper functions.
+   7. Update the memstick driver to use idr helper functions.
+   8. Update the mmc driver to use idr helper functions.
+   9. Update the virtgpu driver to use idr helper functions.
+  10. Update the DCA DMA driver to use idr helper functions.
+  11. Update the rtsx multifunction driver to use idr helper functions.
+  12. Update the TI Flash Media driver to use idr helper functions.
+  13. Update the SCSI disk driver to use ida helper functions.
+  14. Update the rsxx flash adapter driver to use ida helper functions.
+  15. Update the NVMe SSD driver to use ida helper functions.
+  16. Update the Micron PCIe SSD driver to use ida helper functions.
+  17. Update the ARM soc base driver to use ida helper functions.
+
+ drivers/base/soc.c                   |  17 ++----
+ drivers/block/mtip32xx/mtip32xx.c    |  22 ++------
+ drivers/block/nvme-core.c            |  14 +----
+ drivers/block/rsxx/core.c            |  16 +-----
+ drivers/dca/dca-sysfs.c              |  19 ++-----
+ drivers/gpu/drm/virtio/virtgpu_vq.c  |  15 ++----
+ drivers/infiniband/core/uverbs_cmd.c |  12 +----
+ drivers/md/dm.c                      |  22 ++------
+ drivers/memstick/core/memstick.c     |  19 ++-----
+ drivers/mfd/rtsx_pcr.c               |  13 ++---
+ drivers/misc/tifm_core.c             |  17 ++----
+ drivers/mmc/core/host.c              |  14 ++---
+ drivers/scsi/ch.c                    |  14 ++---
+ drivers/scsi/hosts.c                 |  59 ++++++++++----------
+ drivers/scsi/sd.c                    |  20 ++-----
+ drivers/scsi/st.c                    |  15 ++----
+ include/linux/idr.h                  | 102 +++++++++++++++++++++++++++++++++++
+ 17 files changed, 182 insertions(+), 228 deletions(-)
+
 -- 
 2.1.4
