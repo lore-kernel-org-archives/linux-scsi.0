@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 01/17] Add ida and idr helper routines.
-Date: Wed, 16 Sep 2015 10:50:19 -0700
-Message-ID: <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 02/17] Update scsi hosts to use idr for host number mgmt
+Date: Wed, 16 Sep 2015 10:50:20 -0700
+Message-ID: <c5ece2397e004538d993bff03afe39f09aae10cf.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -12,142 +12,164 @@ To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Clients of the ida and idr index-management routines
-tend to use the same calling sequences much of the time,
-so this change adds helper functions for allocating and
-releasing indexes of either flavor, i.e. with or
-without pointer management.
+Each Scsi_Host instance gets a host number starting
+at 0, but this was implemented with an atomic integer,
+and rollover wasn't considered. Another problem with
+this design is that scsi host numbers used by iscsi
+are never reused, thereby making rollover more likely.
+This patch converts Scsi_Host instances to use idr
+to manage their instance numbers and to simplify
+instance number to pointer lookups.
 
-Inline functions added for idr:
-  idr_get_index_in_range
-  idr_get_index (in range 0,0)
-  idr_put_index
-And for ida:
-  ida_get_index
-  ida_put_index
+This also means that host instance numbers will be
+reused, when available.
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- include/linux/idr.h | 102 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 102 insertions(+)
+ drivers/scsi/hosts.c | 59 ++++++++++++++++++++++++----------------------------
+ 1 file changed, 27 insertions(+), 32 deletions(-)
 
-diff --git a/include/linux/idr.h b/include/linux/idr.h
-index 013fd9bc4cb6..341c4f2d9874 100644
---- a/include/linux/idr.h
-+++ b/include/linux/idr.h
-@@ -16,6 +16,8 @@
- #include <linux/bitops.h>
- #include <linux/init.h>
- #include <linux/rcupdate.h>
-+#include <linux/spinlock.h>
-+#include <linux/gfp.h>
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8bb173e01084..61201bc03b98 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -33,7 +33,7 @@
+ #include <linux/transport_class.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+-
++#include <linux/idr.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+@@ -42,8 +42,6 @@
+ #include "scsi_logging.h"
  
- /*
-  * We want shallower trees and thus more bits covered at each layer.  8
-@@ -183,4 +185,104 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
  
- void __init idr_init_cache(void);
+-static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
+-
  
-+/**
-+ * ida_get_index - allocate a ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @p_id	pointer to allocated index value
-+ *
-+ * A helper function for safely allocating an index value (id),
-+ * returning a negative errno value on failure, else 0.
-+ */
-+static inline int ida_get_index(struct ida *ida, spinlock_t *lock, int *p_id)
+ static void scsi_host_cls_release(struct device *dev)
+ {
+@@ -304,6 +302,19 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ }
+ EXPORT_SYMBOL(scsi_add_host_with_dma);
+ 
++static DEFINE_SPINLOCK(host_index_lock);
++static DEFINE_IDR(host_index_idr);
++
++static inline int host_get_index(void *ptr)
 +{
-+	int error = -ENOMEM;
-+
-+	do {
-+		if (!ida_pre_get(ida, GFP_KERNEL))
-+			break;
-+		spin_lock(lock);
-+		error = ida_get_new(ida, p_id);
-+		spin_unlock(lock);
-+	} while (error == -EAGAIN);
-+
-+	return error;
++	return idr_get_index(&host_index_idr, &host_index_lock, ptr);
 +}
 +
-+/**
-+ * ida_put_index - free an allocated ida index value
-+ * @ida		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @id		the value of the allocated index
-+ *
-+ * A helper function that goes with @ida_get_index, which safely
-+ * frees a previously-allocated index value.
-+ */
-+static inline void ida_put_index(struct ida *ida, spinlock_t *lock, int id)
++static inline void host_put_index(int index)
 +{
-+	spin_lock(lock);
-+	ida_remove(ida, id);
-+	spin_unlock(lock);
++	idr_put_index(&host_index_idr, &host_index_lock, index);
 +}
 +
-+/**
-+ * idr_get_index_in_range - allocate a new index, with locking
-+ *		            within a range
-+ * @idr:	idr handle
-+ * @lock:	spin lock handle protecting the index
-+ * @ptr:	pointer to associate with allocated index
-+ * @start:	starting index (see idr_alloc)
-+ * @end:	ending index (0 -> use default max)
-+ *
-+ * This is a helper routine meant to make the common
-+ * calling sequence to allocate an idr index easier.
-+ * It uses a spin lock, and allocates a positive index
-+ * in the range of [start,end), returning a negative
-+ * errno on failure, else 0.
-+ */
-+static inline int idr_get_index_in_range(struct idr *idr, spinlock_t *lock,
-+					 void *ptr, int start, int end)
-+{
-+	int ret;
+ static void scsi_host_dev_release(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+@@ -337,6 +348,8 @@ static void scsi_host_dev_release(struct device *dev)
+ 
+ 	kfree(shost->shost_data);
+ 
++	host_put_index(shost->host_no);
 +
-+	idr_preload(GFP_KERNEL);
-+	spin_lock(lock);
-+	ret = idr_alloc(idr, ptr, start, end, GFP_NOWAIT);
-+	spin_unlock(lock);
-+	idr_preload_end();
+ 	if (parent)
+ 		put_device(parent);
+ 	kfree(shost);
+@@ -370,6 +383,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ {
+ 	struct Scsi_Host *shost;
+ 	gfp_t gfp_mask = GFP_KERNEL;
++	int index;
+ 
+ 	if (sht->unchecked_isa_dma && privsize)
+ 		gfp_mask |= __GFP_DMA;
+@@ -388,11 +402,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	init_waitqueue_head(&shost->host_wait);
+ 	mutex_init(&shost->scan_mutex);
+ 
+-	/*
+-	 * subtract one because we increment first then return, but we need to
+-	 * know what the next host number was before increment
+-	 */
+-	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
++	index = host_get_index(shost);
++	if (index < 0)
++		goto fail_kfree;
++	shost->host_no = index;
 +
-+	return ret;
-+}
-+
-+/**
-+ * idr_get_index - allocate new index, with locking, using the
-+ *		   default range (zero to max-1)
-+ * @idr:	idr handle
-+ * @lock:	spin lock handle protecting the index
-+ * @ptr:	pointer to associate with allocated index
-+ *
-+ * Simple wrapper around idr_get_index_in_range() w/ @start and
-+ * @end of 0, since this is a common case
-+ */
-+static inline int idr_get_index(struct idr *idr, spinlock_t *lock, void *ptr)
-+{
-+	return idr_get_index_in_range(idr, lock, ptr, 0, 0);
-+}
-+
-+/**
-+ * idr_put_index - free an allocated idr index value
-+ * @idr		idr handle
-+ * @lock	spinlock handle protecting this index
-+ * @id		the value of the allocated index
-+ *
-+ * A helper function that goes with @idr_get_index, which safely
-+ * frees a previously-allocated index value.
-+ */
-+static inline void idr_put_index(struct idr *idr, spinlock_t *lock, int id)
-+{
-+	spin_lock(lock);
-+	idr_remove(idr, id);
-+	spin_unlock(lock);
-+}
-+
- #endif /* __IDR_H__ */
+ 	shost->dma_channel = 0xff;
+ 
+ 	/* These three are default values which can be overridden */
+@@ -477,7 +491,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_kfree;
++		goto fail_idr_remove;
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -493,6 +507,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 
+  fail_kthread:
+ 	kthread_stop(shost->ehandler);
++ fail_idr_remove:
++	host_put_index(shost->host_no);
+  fail_kfree:
+ 	kfree(shost);
+ 	return NULL;
+@@ -522,38 +538,16 @@ void scsi_unregister(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_unregister);
+ 
+-static int __scsi_host_match(struct device *dev, const void *data)
+-{
+-	struct Scsi_Host *p;
+-	const unsigned short *hostnum = data;
+-
+-	p = class_to_shost(dev);
+-	return p->host_no == *hostnum;
+-}
+-
+ /**
+  * scsi_host_lookup - get a reference to a Scsi_Host by host no
+  * @hostnum:	host number to locate
+  *
+  * Return value:
+  *	A pointer to located Scsi_Host or NULL.
+- *
+- *	The caller must do a scsi_host_put() to drop the reference
+- *	that scsi_host_get() took. The put_device() below dropped
+- *	the reference from class_find_device().
+  **/
+ struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+ {
+-	struct device *cdev;
+-	struct Scsi_Host *shost = NULL;
+-
+-	cdev = class_find_device(&shost_class, NULL, &hostnum,
+-				 __scsi_host_match);
+-	if (cdev) {
+-		shost = scsi_host_get(class_to_shost(cdev));
+-		put_device(cdev);
+-	}
+-	return shost;
++	return idr_find(&host_index_idr, hostnum);
+ }
+ EXPORT_SYMBOL(scsi_host_lookup);
+ 
+@@ -588,6 +582,7 @@ int scsi_init_hosts(void)
+ void scsi_exit_hosts(void)
+ {
+ 	class_unregister(&shost_class);
++	idr_destroy(&host_index_idr);
+ }
+ 
+ int scsi_is_host_device(const struct device *dev)
 -- 
 2.1.4
