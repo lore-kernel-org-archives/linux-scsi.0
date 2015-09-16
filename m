@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 13/17] Update the SCSI disk driver to use ida helper functions.
-Date: Wed, 16 Sep 2015 10:50:31 -0700
-Message-ID: <e21b683ed63452966a04fab599f5626b66fbe5ba.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 14/17] Update the rsxx flash adapter driver to use ida helper functions.
+Date: Wed, 16 Sep 2015 10:50:32 -0700
+Message-ID: <049a0c72418d1e2854d315bf8b583a562dbd9264.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,58 +9,47 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Joshua Morris <josh.h.morris@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/scsi/sd.c | 20 ++++----------------
- 1 file changed, 4 insertions(+), 16 deletions(-)
+ drivers/block/rsxx/core.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3b2fcb4fada0..60b2ad918208 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2948,15 +2948,7 @@ static int sd_probe(struct device *dev)
- 	if (!gd)
- 		goto out_free;
+diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
+index d8b2488aaade..dd23a0e85040 100644
+--- a/drivers/block/rsxx/core.c
++++ b/drivers/block/rsxx/core.c
+@@ -774,17 +774,7 @@ static int rsxx_pci_probe(struct pci_dev *dev,
+ 	card->dev = dev;
+ 	pci_set_drvdata(dev, card);
  
 -	do {
--		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
--			goto out_put;
+-		if (!ida_pre_get(&rsxx_disk_ida, GFP_KERNEL)) {
+-			st = -ENOMEM;
+-			goto failed_ida_get;
+-		}
 -
--		spin_lock(&sd_index_lock);
--		error = ida_get_new(&sd_index_ida, &index);
--		spin_unlock(&sd_index_lock);
--	} while (error == -EAGAIN);
+-		spin_lock(&rsxx_ida_lock);
+-		st = ida_get_new(&rsxx_disk_ida, &card->disk_id);
+-		spin_unlock(&rsxx_ida_lock);
+-	} while (st == -EAGAIN);
 -
-+	error = ida_get_index(&sd_index_ida, &sd_index_lock, &index);
- 	if (error) {
- 		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
- 		goto out_put;
-@@ -3001,9 +2993,7 @@ static int sd_probe(struct device *dev)
- 	return 0;
++	st = ida_get_index(&rsxx_disk_ida, &rsxx_ida_lock, &card->disk_id);
+ 	if (st)
+ 		goto failed_ida_get;
  
-  out_free_index:
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, index);
--	spin_unlock(&sd_index_lock);
-+	ida_put_index(&sd_index_ida, &sd_index_lock, index);
-  out_put:
- 	put_disk(gd);
-  out_free:
-@@ -3063,10 +3053,8 @@ static void scsi_disk_release(struct device *dev)
- {
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	struct gendisk *disk = sdkp->disk;
--	
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, sdkp->index);
--	spin_unlock(&sd_index_lock);
-+
-+	ida_put_index(&sd_index_ida, &sd_index_lock, sdkp->index);
+@@ -987,9 +977,7 @@ failed_request_regions:
+ failed_dma_mask:
+ 	pci_disable_device(dev);
+ failed_enable:
+-	spin_lock(&rsxx_ida_lock);
+-	ida_remove(&rsxx_disk_ida, card->disk_id);
+-	spin_unlock(&rsxx_ida_lock);
++	ida_put_index(&rsxx_disk_ida, &rsxx_ida_lock, card->disk_id);
+ failed_ida_get:
+ 	kfree(card);
  
- 	blk_integrity_unregister(disk);
- 	disk->private_data = NULL;
 -- 
 2.1.4
