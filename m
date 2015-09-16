@@ -1,41 +1,65 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
-Date: Wed, 16 Sep 2015 10:02:18 +0200
-Message-ID: <20150916080218.GA8155@gmail.com>
-References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
- <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
- <1442313464.1914.21.camel@sipsolutions.net>
- <20150915110447.GI6350@linux>
- <20150915094509.46cca84d@gandalf.local.home>
- <CA+55aFxVQ9jD=jUqPZt76EMe_Tb-_SA8v=rOHeR9Ljdsc6=xGQ@mail.gmail.com>
- <20150915134732.7ff50d03@gandalf.local.home>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+Date: Wed, 16 Sep 2015 16:21:00 +0800
+Message-ID: <55F9266C.5060609@linux.intel.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com>
+ <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com>
+ <55F91C34.4070800@internode.on.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20150915134732.7ff50d03@gandalf.local.home>
-Sender: owner-linux-mm@kvack.org
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Viresh Kumar <viresh.kumar@linaro.org>, Johannes Berg <johannes@sipsolutions.net>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>, Rafael Wysocki <rjw@rjwysocki.net>, "sboyd@codeaurora.org" <sboyd@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Alexander Duyck <alexander.h.duyck@redhat.com>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@amacapital.net>, Arik Nemtsov <arik@wizery.com>, "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" <ath10k@lists.infradead.org>, "open list:QUALCOMM ATHEROS ATH9K WIRELESS DRIVER" <ath9k-devel@lists.ath9k.org>, Altman, A
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <55F91C34.4070800@internode.on.net>
+Sender: linux-pci-owner@vger.kernel.org
+To: Arthur Marsh <arthur.marsh@internode.on.net>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On 2015/9/16 15:37, Arthur Marsh wrote:
+> 
+> 
+> Jiang Liu wrote on 16/09/15 14:37:
+>> On 2015/9/15 15:19, Arthur Marsh wrote:
+>>>
+>>>
+>>> Jiang Liu wrote on 15/09/15 12:01:
+>>>
+>>>> HI Arthur,
+>>>>      Really appreciate your help to test the patches. That's
+>>>> a good sign we have moved forward a bit:)
+>>>>      For kexec, it's always challenging to me. So could you
+>>>> please help to provide full dmesg logs with working kernels
+>>>> so I could try to figure out the order among scsi and PCI devices.
+>>>> It may be shutdown order related.
+>>>> Thanks!
+>>>> Gerry
+>>>
+>>> OK, attached is the dmesg output from the 4.2.0 kernel where kexec
+>>> worked.
+>> Hi Arthur,
+>>     Could you please also help to capture the log messages
+>> of kexec, I need to those log messages to figure out the order
+>> to shutdown PCI devices and scsi devices during kexec.
+>> Thanks!
+>> Gerry
+>>
+> 
+> How would I capture the log messages of kexec (assuming that there are
+> any, I couldn't see from the manual page entries and haven't seen
+> anything beyond the screen images that I have already sent you)?
+Hi Arthur,
+	It would be great if we could capture the text as in the
+picture posted by you at:
+	http://www.users.on.net/~arthur.marsh/20150915547.jpg
+	I guess a serial console could help us to capture those
+log messages. To use serial console, we need to setup serial cable,
+configure grub and kernel to use serial port as console.
+Thanks!
+Gerry
 
-* Steven Rostedt <rostedt@goodmis.org> wrote:
-
-> But please, next time, go easy on the Cc list. Maybe just use bcc for those not 
-> on the list, stating that you BCC'd a lot of people to make sure this is sane, 
-> but didn't want to spam everyone with every reply.
-
-Not just that, such a long Cc: list is a semi-guarantee that various list engines 
-(vger included I think) would drop the mail as spam and nobody else would get the 
-mail...
-
-Thanks,
-
-	Ingo
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
+> Regards,
+> 
+> Arthur.
