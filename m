@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 07/17] Update the memstick driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 10:50:25 -0700
-Message-ID: <09696655141544933a380e88afe3c3ecf31e4f8d.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 06/17] Update the infiniband uverbs driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:24 -0700
+Message-ID: <da24a58bf9766c2cf1d2fe4019c9efc586306a9c.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,57 +9,44 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/memstick/core/memstick.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+ drivers/infiniband/core/uverbs_cmd.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/memstick/core/memstick.c b/drivers/memstick/core/memstick.c
-index a0547dbf9806..8f40a3d5108b 100644
---- a/drivers/memstick/core/memstick.c
-+++ b/drivers/memstick/core/memstick.c
-@@ -512,25 +512,16 @@ int memstick_add_host(struct memstick_host *host)
+diff --git a/drivers/infiniband/core/uverbs_cmd.c b/drivers/infiniband/core/uverbs_cmd.c
+index bbb02ffe87df..1e5b2a66a501 100644
+--- a/drivers/infiniband/core/uverbs_cmd.c
++++ b/drivers/infiniband/core/uverbs_cmd.c
+@@ -120,24 +120,16 @@ static int idr_add_uobj(struct idr *idr, struct ib_uobject *uobj)
  {
- 	int rc;
+ 	int ret;
  
 -	idr_preload(GFP_KERNEL);
--	spin_lock(&memstick_host_lock);
+-	spin_lock(&ib_uverbs_idr_lock);
 -
--	rc = idr_alloc(&memstick_host_idr, host, 0, 0, GFP_NOWAIT);
--	if (rc >= 0)
--		host->id = rc;
--
--	spin_unlock(&memstick_host_lock);
+-	ret = idr_alloc(idr, uobj, 0, 0, GFP_NOWAIT);
++	ret = idr_get_index(idr, &ib_uverbs_idr_lock, uobj);
+ 	if (ret >= 0)
+ 		uobj->id = ret;
+ 
+-	spin_unlock(&ib_uverbs_idr_lock);
 -	idr_preload_end();
-+	rc = idr_get_index(&memstick_host_idr, &memstick_host_lock, host);
- 	if (rc < 0)
- 		return rc;
-+	host->id = rc;
- 
- 	dev_set_name(&host->dev, "memstick%u", host->id);
- 
- 	rc = device_add(&host->dev);
- 	if (rc) {
--		spin_lock(&memstick_host_lock);
--		idr_remove(&memstick_host_idr, host->id);
--		spin_unlock(&memstick_host_lock);
-+		idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
- 		return rc;
- 	}
- 
-@@ -554,9 +545,7 @@ void memstick_remove_host(struct memstick_host *host)
- 	host->set_param(host, MEMSTICK_POWER, MEMSTICK_POWER_OFF);
- 	mutex_unlock(&host->lock);
- 
--	spin_lock(&memstick_host_lock);
--	idr_remove(&memstick_host_idr, host->id);
--	spin_unlock(&memstick_host_lock);
-+	idr_put_index(&memstick_host_idr, &memstick_host_lock, host->id);
- 	device_del(&host->dev);
+-
+ 	return ret < 0 ? ret : 0;
  }
- EXPORT_SYMBOL(memstick_remove_host);
+ 
+ void idr_remove_uobj(struct idr *idr, struct ib_uobject *uobj)
+ {
+-	spin_lock(&ib_uverbs_idr_lock);
+-	idr_remove(idr, uobj->id);
+-	spin_unlock(&ib_uverbs_idr_lock);
++	idr_put_index(idr, &ib_uverbs_idr_lock, uobj->id);
+ }
+ 
+ static struct ib_uobject *__idr_get_uobj(struct idr *idr, int id,
 -- 
 2.1.4
