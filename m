@@ -1,120 +1,128 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v2 15/30] cxlflash: Fix location of setting resid
-Date: Wed, 16 Sep 2015 16:30:27 -0500
-Message-ID: <1442439027-49780-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v2 16/30] cxlflash: Fix host link up event handling
+Date: Wed, 16 Sep 2015 16:30:30 -0500
+Message-ID: <1442439030-49818-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:59018 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227AbbIPVay (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2015 17:30:54 -0400
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:53089 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753227AbbIPVa6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2015 17:30:58 -0400
 Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 16 Sep 2015 15:30:54 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id AB9AE19D803F
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 15:21:44 -0600 (MDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8GLTgZw10486114
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 14:29:42 -0700
-Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8GLUnXk002552
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 15:30:50 -0600
+	Wed, 16 Sep 2015 17:30:57 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 254FFC90041
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 17:21:59 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8GLUtWM32506074
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 21:30:55 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8GLUrsL010140
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 17:30:55 -0400
 In-Reply-To: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-The resid is incorrectly set which can lead to unnecessary retry
-attempts by the stack. This is due to resid _always_ being set
-using a value returned from the adapter. Instead, the value
-should only be interpreted and set when in an underrun scenario.
+Following a link up event, the LUNs available to the host may
+have changed. Without rescanning the host, the LUN topology is
+unknown to the user. In such a state, the user would be unable
+to locate provisioned resources.
+
+To remedy, the host should be rescanned after a link up event.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ drivers/scsi/cxlflash/common.h |  2 +-
+ drivers/scsi/cxlflash/main.c   | 17 +++++++++++++----
+ drivers/scsi/cxlflash/main.h   |  1 +
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index c8327ac..517da25 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -102,7 +102,7 @@ struct cxlflash_cfg {
+ 	enum cxlflash_init_state init_state;
+ 	enum cxlflash_lr_state lr_state;
+ 	int lr_port;
+-
++	atomic_t scan_host_needed;
+ 	atomic_t remove_active;
+ 
+ 	struct cxl_afu *cxl_afu;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 29e40cc..b3838af 100644
+index b3838af..39ad7a3 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -107,6 +107,7 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- {
- 	struct sisl_ioarcb *ioarcb;
- 	struct sisl_ioasa *ioasa;
-+	u32 resid;
+@@ -1120,17 +1120,17 @@ static const struct asyc_intr_info ainfo[] = {
+ 	{SISL_ASTATUS_FC0_CRC_T, "CRC threshold exceeded", 0, LINK_RESET},
+ 	{SISL_ASTATUS_FC0_LOGI_R, "login timed out, retrying", 0, 0},
+ 	{SISL_ASTATUS_FC0_LOGI_F, "login failed", 0, CLR_FC_ERROR},
+-	{SISL_ASTATUS_FC0_LOGI_S, "login succeeded", 0, 0},
++	{SISL_ASTATUS_FC0_LOGI_S, "login succeeded", 0, SCAN_HOST},
+ 	{SISL_ASTATUS_FC0_LINK_DN, "link down", 0, 0},
+-	{SISL_ASTATUS_FC0_LINK_UP, "link up", 0, 0},
++	{SISL_ASTATUS_FC0_LINK_UP, "link up", 0, SCAN_HOST},
+ 	{SISL_ASTATUS_FC1_OTHER, "other error", 1, CLR_FC_ERROR | LINK_RESET},
+ 	{SISL_ASTATUS_FC1_LOGO, "target initiated LOGO", 1, 0},
+ 	{SISL_ASTATUS_FC1_CRC_T, "CRC threshold exceeded", 1, LINK_RESET},
+ 	{SISL_ASTATUS_FC1_LOGI_R, "login timed out, retrying", 1, 0},
+ 	{SISL_ASTATUS_FC1_LOGI_F, "login failed", 1, CLR_FC_ERROR},
+-	{SISL_ASTATUS_FC1_LOGI_S, "login succeeded", 1, 0},
++	{SISL_ASTATUS_FC1_LOGI_S, "login succeeded", 1, SCAN_HOST},
+ 	{SISL_ASTATUS_FC1_LINK_DN, "link down", 1, 0},
+-	{SISL_ASTATUS_FC1_LINK_UP, "link up", 1, 0},
++	{SISL_ASTATUS_FC1_LINK_UP, "link up", 1, SCAN_HOST},
+ 	{0x0, "", 0, 0}		/* terminator */
+ };
  
- 	if (unlikely(!cmd))
- 		return;
-@@ -115,9 +116,10 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- 	ioasa = &(cmd->sa);
- 
- 	if (ioasa->rc.flags & SISL_RC_FLAGS_UNDERRUN) {
--		pr_debug("%s: cmd underrun cmd = %p scp = %p\n",
--			 __func__, cmd, scp);
--		scp->result = (DID_ERROR << 16);
-+		resid = ioasa->resid;
-+		scsi_set_resid(scp, resid);
-+		pr_debug("%s: cmd underrun cmd = %p scp = %p, resid = %d\n",
-+			 __func__, cmd, scp, resid);
+@@ -1361,6 +1361,11 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 			writeq_be(reg, &global->fc_regs[port][FC_ERROR / 8]);
+ 			writeq_be(0, &global->fc_regs[port][FC_ERRCAP / 8]);
+ 		}
++
++		if (info->action & SCAN_HOST) {
++			atomic_inc(&cfg->scan_host_needed);
++			schedule_work(&cfg->work_q);
++		}
  	}
  
- 	if (ioasa->rc.flags & SISL_RC_FLAGS_OVERRUN) {
-@@ -158,8 +160,7 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- 				/* If the SISL_RC_FLAGS_OVERRUN flag was set,
- 				 * then we will handle this error else where.
- 				 * If not then we must handle it here.
--				 * This is probably an AFU bug. We will
--				 * attempt a retry to see if that resolves it.
-+				 * This is probably an AFU bug.
- 				 */
- 				scp->result = (DID_ERROR << 16);
- 			}
-@@ -183,7 +184,7 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- 		/* We have an AFU error */
- 		switch (ioasa->rc.afu_rc) {
- 		case SISL_AFU_RC_NO_CHANNELS:
--			scp->result = (DID_MEDIUM_ERROR << 16);
-+			scp->result = (DID_NO_CONNECT << 16);
- 			break;
- 		case SISL_AFU_RC_DATA_DMA_ERR:
- 			switch (ioasa->afu_extra) {
-@@ -217,7 +218,6 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
- static void cmd_complete(struct afu_cmd *cmd)
+ out:
+@@ -2320,6 +2325,7 @@ MODULE_DEVICE_TABLE(pci, cxlflash_pci_table);
+  * - Link reset which cannot be performed on interrupt context due to
+  * blocking up to a few seconds
+  * - Read AFU command room
++ * - Rescan the host
+  */
+ static void cxlflash_worker_thread(struct work_struct *work)
  {
- 	struct scsi_cmnd *scp;
--	u32 resid;
- 	ulong lock_flags;
- 	struct afu *afu = cmd->parent;
- 	struct cxlflash_cfg *cfg = afu->parent;
-@@ -229,14 +229,11 @@ static void cmd_complete(struct afu_cmd *cmd)
+@@ -2362,6 +2368,9 @@ static void cxlflash_worker_thread(struct work_struct *work)
+ 	}
  
- 	if (cmd->rcb.scp) {
- 		scp = cmd->rcb.scp;
--		if (unlikely(cmd->sa.rc.afu_rc ||
--			     cmd->sa.rc.scsi_rc ||
--			     cmd->sa.rc.fc_rc))
-+		if (unlikely(cmd->sa.ioasc))
- 			process_cmd_err(cmd, scp);
- 		else
- 			scp->result = (DID_OK << 16);
+ 	spin_unlock_irqrestore(cfg->host->host_lock, lock_flags);
++
++	if (atomic_dec_if_positive(&cfg->scan_host_needed) >= 0)
++		scsi_scan_host(cfg->host);
+ }
  
--		resid = cmd->sa.resid;
- 		cmd_is_tmf = cmd->cmd_tmf;
- 		cmd_checkin(cmd); /* Don't use cmd after here */
+ /**
+diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+index cf0e809..6032456 100644
+--- a/drivers/scsi/cxlflash/main.h
++++ b/drivers/scsi/cxlflash/main.h
+@@ -99,6 +99,7 @@ struct asyc_intr_info {
+ 	u8 action;
+ #define CLR_FC_ERROR	0x01
+ #define LINK_RESET	0x02
++#define SCAN_HOST	0x04
+ };
  
-@@ -244,7 +241,6 @@ static void cmd_complete(struct afu_cmd *cmd)
- 				     "ioasc=%d\n", __func__, scp, scp->result,
- 				     cmd->sa.ioasc);
- 
--		scsi_set_resid(scp, resid);
- 		scsi_dma_unmap(scp);
- 		scp->scsi_done(scp);
- 
+ #ifndef CONFIG_CXL_EEH
 -- 
 2.1.0
 
