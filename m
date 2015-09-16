@@ -1,66 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RESEND] csiostor:Fix error handling in the function
- csio_device_reset
-Date: Wed, 16 Sep 2015 08:49:17 +0200
-Message-ID: <55F910ED.7000001@suse.de>
-References: <1442355274-22410-1-git-send-email-xerofoify@gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
+Date: Wed, 16 Sep 2015 09:24:59 +0200
+Message-ID: <20150916072459.GC4113@nazgul.tnic>
+References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
+ <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
+ <1442313464.1914.21.camel@sipsolutions.net>
+ <20150915110447.GI6350@linux>
+ <20150915094509.46cca84d@gandalf.local.home>
+ <CA+55aFxVQ9jD=jUqPZt76EMe_Tb-_SA8v=rOHeR9Ljdsc6=xGQ@mail.gmail.com>
+ <20150915134732.7ff50d03@gandalf.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442355274-22410-1-git-send-email-xerofoify@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Krause <xerofoify@gmail.com>, JBottomley@odin.com
-Cc: michaelc@cs.wisc.edu, davem@davemloft.net, anish@chelsio.com, martin.petersen@oracle.com, hariprasad@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20150915134732.7ff50d03@gandalf.local.home>
+Sender: owner-linux-mm@kvack.org
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Viresh Kumar <viresh.kumar@linaro.org>, Johannes Berg <johannes@sipsolutions.net>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>, Rafael Wysocki <rjw@rjwysocki.net>, "sboyd@codeaurora.org" <sboyd@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Alexander Duyck <alexander.h.duyck@redhat.com>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@amacapital.net>, Arik Nemtsov <arik@wizery.com>, "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" <ath10k@lists.infradead.org>, "open list:QUALCOMM ATHEROS ATH9K WIRELESS DRIVER" <ath9k-devel@lists.ath9k.org>, Altman, A
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/16/2015 12:14 AM, Nicholas Krause wrote:
-> This fixes error handling in the function csio_device_reset to
-> check the return value of aftering the function csio_hw_reset
-> to check if it returned a error code and if so unlock the irq
-> spinlock for the hardware plus return the hardware error code
-> immediately.
->=20
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->  drivers/scsi/csiostor/csio_scsi.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiosto=
-r/csio_scsi.c
-> index 2c4562d..faea4e7 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-> @@ -1378,6 +1378,7 @@ csio_device_reset(struct device *dev,
->  {
->  	struct csio_lnode *ln =3D shost_priv(class_to_shost(dev));
->  	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-> +	int ret;
-> =20
->  	if (*buf !=3D '1')
->  		return -EINVAL;
-> @@ -1389,7 +1390,11 @@ csio_device_reset(struct device *dev,
->  	csio_lnodes_block_request(hw);
-> =20
->  	spin_lock_irq(&hw->lock);
-> -	csio_hw_reset(hw);
-> +	ret =3D csio_hw_reset(hw);
-> +	if (ret) {
-> +			spin_unlock_irq(&hw->lock);
-> +			return ret;
-> +	}
->  	spin_unlock_irq(&hw->lock);
-> =20
->  	/* Unblock upper IOs */
->=20
-No sure if that is correct; wouldn't the device stay blocked
-if csio_hw_reset() fails?
+On Tue, Sep 15, 2015 at 01:47:32PM -0400, Steven Rostedt wrote:
+> What do others think when there's a change that goes across the board
+> this much? BCC OK with you, as just an FYI, I'm doing this? Or should
+> just the lists be enough and if you don't see it, too bad?
 
-Cheers,
+Bcc sounds good to me.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+(Let's see how many bounces I get when I reply to such a huge CC list.
+:-))
+
+-- 
+Regards/Gruss,
+    Boris.
+
+ECO tip #101: Trim your mails when you reply.
+--
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
