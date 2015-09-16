@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 12/17] Update the TI Flash Media driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 10:50:30 -0700
-Message-ID: <1660d98f948e952cc62793619c45f764912e87ab.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 11/17] Update the rtsx multifunction driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:29 -0700
+Message-ID: <07029fe6d1206aa0e6aa0e539173bf3289920ca8.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,54 +9,46 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Alex Dubov <oakad@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Samuel Ortiz <sameo@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/misc/tifm_core.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+ drivers/mfd/rtsx_pcr.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/misc/tifm_core.c b/drivers/misc/tifm_core.c
-index a511b2a713b3..46385f828a8f 100644
---- a/drivers/misc/tifm_core.c
-+++ b/drivers/misc/tifm_core.c
-@@ -198,22 +198,15 @@ int tifm_add_adapter(struct tifm_adapter *fm)
- {
- 	int rc;
+diff --git a/drivers/mfd/rtsx_pcr.c b/drivers/mfd/rtsx_pcr.c
+index a66540a49079..8ddefb8c5e64 100644
+--- a/drivers/mfd/rtsx_pcr.c
++++ b/drivers/mfd/rtsx_pcr.c
+@@ -1191,15 +1191,10 @@ static int rtsx_pci_probe(struct pci_dev *pcidev,
+ 	}
+ 	handle->pcr = pcr;
  
 -	idr_preload(GFP_KERNEL);
--	spin_lock(&tifm_adapter_lock);
--	rc = idr_alloc(&tifm_adapter_idr, fm, 0, 0, GFP_NOWAIT);
--	if (rc >= 0)
--		fm->id = rc;
--	spin_unlock(&tifm_adapter_lock);
+-	spin_lock(&rtsx_pci_lock);
+-	ret = idr_alloc(&rtsx_pci_idr, pcr, 0, 0, GFP_NOWAIT);
+-	if (ret >= 0)
+-		pcr->id = ret;
+-	spin_unlock(&rtsx_pci_lock);
 -	idr_preload_end();
-+	rc = idr_get_index(&tifm_adapter_idr, &tifm_adapter_lock, fm);
- 	if (rc < 0)
- 		return rc;
-+	fm->id = rc;
++	ret = idr_get_index(&rtsx_pci_idr, &rtsc_pci_lock, pcr);
+ 	if (ret < 0)
+ 		goto free_handle;
++	pcr->id = ret;
  
- 	dev_set_name(&fm->dev, "tifm%u", fm->id);
- 	rc = device_add(&fm->dev);
- 	if (rc) {
--		spin_lock(&tifm_adapter_lock);
--		idr_remove(&tifm_adapter_idr, fm->id);
--		spin_unlock(&tifm_adapter_lock);
-+		idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
- 	}
+ 	pcr->pci = pcidev;
+ 	dev_set_drvdata(&pcidev->dev, handle);
+@@ -1311,9 +1306,7 @@ static void rtsx_pci_remove(struct pci_dev *pcidev)
+ 	pci_release_regions(pcidev);
+ 	pci_disable_device(pcidev);
  
- 	return rc;
-@@ -230,9 +223,7 @@ void tifm_remove_adapter(struct tifm_adapter *fm)
- 			device_unregister(&fm->sockets[cnt]->dev);
- 	}
+-	spin_lock(&rtsx_pci_lock);
+-	idr_remove(&rtsx_pci_idr, pcr->id);
+-	spin_unlock(&rtsx_pci_lock);
++	idr_put_index(&rtsx_pci_idr, &rtsx_pci_lock, pcr->id);
  
--	spin_lock(&tifm_adapter_lock);
--	idr_remove(&tifm_adapter_idr, fm->id);
--	spin_unlock(&tifm_adapter_lock);
-+	idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
- 	device_del(&fm->dev);
- }
- EXPORT_SYMBOL(tifm_remove_adapter);
+ 	kfree(pcr->slots);
+ 	kfree(pcr);
 -- 
 2.1.4
