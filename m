@@ -1,67 +1,66 @@
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH 08/17] Update the mmc driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 08:48:38 +0200
-Message-ID: <CAPDyKFrkNTrufr1rQduN2o+25JF9wYp2TfPLExnvudv3VTSRbg@mail.gmail.com>
-References: <cover.1442263512.git.lduncan@suse.com>
-	<5e015e43f03ba302ded85e71db48a8ed6fdc1ac6.1442263512.git.lduncan@suse.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH RESEND] csiostor:Fix error handling in the function
+ csio_device_reset
+Date: Wed, 16 Sep 2015 08:49:17 +0200
+Message-ID: <55F910ED.7000001@suse.de>
+References: <1442355274-22410-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5e015e43f03ba302ded85e71db48a8ed6fdc1ac6.1442263512.git.lduncan@suse.com>
+In-Reply-To: <1442355274-22410-1-git-send-email-xerofoify@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+To: Nicholas Krause <xerofoify@gmail.com>, JBottomley@odin.com
+Cc: michaelc@cs.wisc.edu, davem@davemloft.net, anish@chelsio.com, martin.petersen@oracle.com, hariprasad@chelsio.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 15 September 2015 at 18:46, Lee Duncan <lduncan@suse.com> wrote:
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-
-Please change the prefix of the commit message header to "mmc: core"
-and resend to linux-mmc.
-
-Kind regards
-Uffe
-
+On 09/16/2015 12:14 AM, Nicholas Krause wrote:
+> This fixes error handling in the function csio_device_reset to
+> check the return value of aftering the function csio_hw_reset
+> to check if it returned a error code and if so unlock the irq
+> spinlock for the hardware plus return the hardware error code
+> immediately.
+>=20
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 > ---
->  drivers/mmc/core/host.c | 14 ++++----------
->  1 file changed, 4 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/mmc/core/host.c b/drivers/mmc/core/host.c
-> index 99a9c9011c50..5aa2330f074c 100644
-> --- a/drivers/mmc/core/host.c
-> +++ b/drivers/mmc/core/host.c
-> @@ -40,9 +40,8 @@ static DEFINE_SPINLOCK(mmc_host_lock);
->  static void mmc_host_classdev_release(struct device *dev)
+>  drivers/scsi/csiostor/csio_scsi.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiosto=
+r/csio_scsi.c
+> index 2c4562d..faea4e7 100644
+> --- a/drivers/scsi/csiostor/csio_scsi.c
+> +++ b/drivers/scsi/csiostor/csio_scsi.c
+> @@ -1378,6 +1378,7 @@ csio_device_reset(struct device *dev,
 >  {
->         struct mmc_host *host = cls_dev_to_mmc_host(dev);
-> -       spin_lock(&mmc_host_lock);
-> -       idr_remove(&mmc_host_idr, host->index);
-> -       spin_unlock(&mmc_host_lock);
-> +
-> +       idr_put_index(&mmc_host_idr, &mmc_host_lock, host->index);
->         kfree(host);
->  }
->
-> @@ -559,17 +558,12 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
->
->         /* scanning will be enabled when we're ready */
->         host->rescan_disable = 1;
-> -       idr_preload(GFP_KERNEL);
-> -       spin_lock(&mmc_host_lock);
-> -       err = idr_alloc(&mmc_host_idr, host, 0, 0, GFP_NOWAIT);
-> -       if (err >= 0)
-> -               host->index = err;
-> -       spin_unlock(&mmc_host_lock);
-> -       idr_preload_end();
-> +       err = idr_get_index(&mmc_host_idr, &mmc_host_lock, host);
->         if (err < 0) {
->                 kfree(host);
->                 return NULL;
->         }
-> +       host->index = err;
->
->         dev_set_name(&host->class_dev, "mmc%d", host->index);
->
-> --
-> 2.1.4
->
+>  	struct csio_lnode *ln =3D shost_priv(class_to_shost(dev));
+>  	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
+> +	int ret;
+> =20
+>  	if (*buf !=3D '1')
+>  		return -EINVAL;
+> @@ -1389,7 +1390,11 @@ csio_device_reset(struct device *dev,
+>  	csio_lnodes_block_request(hw);
+> =20
+>  	spin_lock_irq(&hw->lock);
+> -	csio_hw_reset(hw);
+> +	ret =3D csio_hw_reset(hw);
+> +	if (ret) {
+> +			spin_unlock_irq(&hw->lock);
+> +			return ret;
+> +	}
+>  	spin_unlock_irq(&hw->lock);
+> =20
+>  	/* Unblock upper IOs */
+>=20
+No sure if that is correct; wouldn't the device stay blocked
+if csio_hw_reset() fails?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
