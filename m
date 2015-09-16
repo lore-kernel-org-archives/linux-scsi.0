@@ -1,40 +1,40 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
-Date: Wed, 16 Sep 2015 13:07:25 +0800
-Message-ID: <55F8F90D.2050703@linux.intel.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com>
- <55F7C691.8000406@internode.on.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55F7C691.8000406@internode.on.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arthur Marsh <arthur.marsh@internode.on.net>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] target: Fix target_sense_desc_format NULL pointer dereference
+Date: Wed, 16 Sep 2015 06:31:19 +0000
+Message-ID: <1442385079-749-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2015/9/15 15:19, Arthur Marsh wrote:
-> 
-> 
-> Jiang Liu wrote on 15/09/15 12:01:
-> 
->> HI Arthur,
->>     Really appreciate your help to test the patches. That's
->> a good sign we have moved forward a bit:)
->>     For kexec, it's always challenging to me. So could you
->> please help to provide full dmesg logs with working kernels
->> so I could try to figure out the order among scsi and PCI devices.
->> It may be shutdown order related.
->> Thanks!
->> Gerry
-> 
-> OK, attached is the dmesg output from the 4.2.0 kernel where kexec worked.
-Hi Arthur,
-	Could you please also help to capture the log messages
-of kexec, I need to those log messages to figure out the order
-to shutdown PCI devices and scsi devices during kexec.
-Thanks!
-Gerry
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+This patch allows target_sense_desc_format() to be called without a
+valid se_device pointer, which can occur during an early exception
+ahead of transport_lookup_cmd_lun() setting up se_cmd->se_device.
+
+This addresses a v4.3-rc1 specific NULL pointer dereference
+regression introduced by commit 4e4937e8.
+
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_hba.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 9522960..22390e0 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -187,5 +187,5 @@ core_delete_hba(struct se_hba *hba)
+ 
+ bool target_sense_desc_format(struct se_device *dev)
+ {
+-	return dev->transport->get_blocks(dev) > U32_MAX;
++	return (dev) ? dev->transport->get_blocks(dev) > U32_MAX : false;
+ }
+-- 
+1.9.1
