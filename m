@@ -1,65 +1,52 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
-Date: Wed, 16 Sep 2015 16:21:00 +0800
-Message-ID: <55F9266C.5060609@linux.intel.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com>
- <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com>
- <55F91C34.4070800@internode.on.net>
+From: Andrzej Hajda <a.hajda@samsung.com>
+Subject: Re: [PATCH 14/31] message/fusion: use kmemdup rather than duplicating
+ its implementation
+Date: Wed, 16 Sep 2015 12:01:03 +0200
+Message-ID: <55F93DDF.3060507@samsung.com>
+References: <1438934377-4922-1-git-send-email-a.hajda@samsung.com>
+ <1438934377-4922-15-git-send-email-a.hajda@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <55F91C34.4070800@internode.on.net>
-Sender: linux-pci-owner@vger.kernel.org
-To: Arthur Marsh <arthur.marsh@internode.on.net>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1438934377-4922-15-git-send-email-a.hajda@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2015/9/16 15:37, Arthur Marsh wrote:
-> 
-> 
-> Jiang Liu wrote on 16/09/15 14:37:
->> On 2015/9/15 15:19, Arthur Marsh wrote:
->>>
->>>
->>> Jiang Liu wrote on 15/09/15 12:01:
->>>
->>>> HI Arthur,
->>>>      Really appreciate your help to test the patches. That's
->>>> a good sign we have moved forward a bit:)
->>>>      For kexec, it's always challenging to me. So could you
->>>> please help to provide full dmesg logs with working kernels
->>>> so I could try to figure out the order among scsi and PCI devices.
->>>> It may be shutdown order related.
->>>> Thanks!
->>>> Gerry
->>>
->>> OK, attached is the dmesg output from the 4.2.0 kernel where kexec
->>> worked.
->> Hi Arthur,
->>     Could you please also help to capture the log messages
->> of kexec, I need to those log messages to figure out the order
->> to shutdown PCI devices and scsi devices during kexec.
->> Thanks!
->> Gerry
->>
-> 
-> How would I capture the log messages of kexec (assuming that there are
-> any, I couldn't see from the manual page entries and haven't seen
-> anything beyond the screen images that I have already sent you)?
-Hi Arthur,
-	It would be great if we could capture the text as in the
-picture posted by you at:
-	http://www.users.on.net/~arthur.marsh/20150915547.jpg
-	I guess a serial console could help us to capture those
-log messages. To use serial console, we need to setup serial cable,
-configure grub and kernel to use serial port as console.
-Thanks!
-Gerry
+Ping.
 
-> 
-> Regards,
-> 
-> Arthur.
+Regards
+Andrzej
+
+On 08/07/2015 09:59 AM, Andrzej Hajda wrote:
+> The patch was generated using fixed coccinelle semantic patch
+> scripts/coccinelle/api/memdup.cocci [1].
+>
+> [1]: http://permalink.gmane.org/gmane.linux.kernel/2014320
+>
+> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+> ---
+>  drivers/message/fusion/mptbase.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index 5dcc031..1551f51 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -5971,13 +5971,12 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
+>  	if (mpt_config(ioc, &cfg) != 0)
+>  		goto out;
+>  
+> -	mem = kmalloc(iocpage2sz, GFP_KERNEL);
+> +	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
+>  	if (!mem) {
+>  		rc = -ENOMEM;
+>  		goto out;
+>  	}
+>  
+> -	memcpy(mem, (u8 *)pIoc2, iocpage2sz);
+>  	ioc->raid_data.pIocPg2 = (IOCPage2_t *) mem;
+>  
+>  	mpt_read_ioc_pg_3(ioc);
