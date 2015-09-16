@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 14/17] Update the rsxx flash adapter driver to use ida helper functions.
-Date: Wed, 16 Sep 2015 10:50:32 -0700
-Message-ID: <049a0c72418d1e2854d315bf8b583a562dbd9264.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 03/17] Update the st driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:21 -0700
+Message-ID: <0999c39931090daa5a78996039b5d58812a71e34.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,47 +9,53 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Joshua Morris <josh.h.morris@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Kai.Makisara@kolumbus.fi
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/block/rsxx/core.c | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+ drivers/scsi/st.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
-index d8b2488aaade..dd23a0e85040 100644
---- a/drivers/block/rsxx/core.c
-+++ b/drivers/block/rsxx/core.c
-@@ -774,17 +774,7 @@ static int rsxx_pci_probe(struct pci_dev *dev,
- 	card->dev = dev;
- 	pci_set_drvdata(dev, card);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index b37b9b00c4b4..51e1ce721d9f 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4265,11 +4265,8 @@ static int st_probe(struct device *dev)
+ 	    tpnt->blksize_changed = 0;
+ 	mutex_init(&tpnt->lock);
  
--	do {
--		if (!ida_pre_get(&rsxx_disk_ida, GFP_KERNEL)) {
--			st = -ENOMEM;
--			goto failed_ida_get;
--		}
--
--		spin_lock(&rsxx_ida_lock);
--		st = ida_get_new(&rsxx_disk_ida, &card->disk_id);
--		spin_unlock(&rsxx_ida_lock);
--	} while (st == -EAGAIN);
--
-+	st = ida_get_index(&rsxx_disk_ida, &rsxx_ida_lock, &card->disk_id);
- 	if (st)
- 		goto failed_ida_get;
- 
-@@ -987,9 +977,7 @@ failed_request_regions:
- failed_dma_mask:
- 	pci_disable_device(dev);
- failed_enable:
--	spin_lock(&rsxx_ida_lock);
--	ida_remove(&rsxx_disk_ida, card->disk_id);
--	spin_unlock(&rsxx_ida_lock);
-+	ida_put_index(&rsxx_disk_ida, &rsxx_ida_lock, card->disk_id);
- failed_ida_get:
- 	kfree(card);
+-	idr_preload(GFP_KERNEL);
+-	spin_lock(&st_index_lock);
+-	error = idr_alloc(&st_index_idr, tpnt, 0, ST_MAX_TAPES + 1, GFP_NOWAIT);
+-	spin_unlock(&st_index_lock);
+-	idr_preload_end();
++	error = idr_get_index_in_range(&st_index_idr, &st_index_lock, tpnt,
++				       0, ST_MAX_TAPES + 1);
+ 	if (error < 0) {
+ 		pr_warn("st: idr allocation failed: %d\n", error);
+ 		goto out_put_queue;
+@@ -4303,9 +4300,7 @@ out_remove_devs:
+ 	remove_cdevs(tpnt);
+ 	kfree(tpnt->stats);
+ out_idr_remove:
+-	spin_lock(&st_index_lock);
+-	idr_remove(&st_index_idr, tpnt->index);
+-	spin_unlock(&st_index_lock);
++	idr_put_index(&st_index_idr, &st_index_lock, tpnt->index);
+ out_put_queue:
+ 	blk_put_queue(disk->queue);
+ out_put_disk:
+@@ -4330,9 +4325,7 @@ static int st_remove(struct device *dev)
+ 	mutex_lock(&st_ref_mutex);
+ 	kref_put(&tpnt->kref, scsi_tape_release);
+ 	mutex_unlock(&st_ref_mutex);
+-	spin_lock(&st_index_lock);
+-	idr_remove(&st_index_idr, index);
+-	spin_unlock(&st_index_lock);
++	idr_put_index(&st_index_idr, &st_index_lock, index);
+ 	return 0;
+ }
  
 -- 
 2.1.4
