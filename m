@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 03/17] Update the st driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 10:50:21 -0700
-Message-ID: <0999c39931090daa5a78996039b5d58812a71e34.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 09/17] Update the virtgpu driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:27 -0700
+Message-ID: <83e5daa0708729d4a3b6fda61c6ab8d70e501606.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,53 +9,43 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Kai.Makisara@kolumbus.fi
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Gerd Hoffmann <kraxel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/scsi/st.c | 15 ++++-----------
+ drivers/gpu/drm/virtio/virtgpu_vq.c | 15 ++++-----------
  1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index b37b9b00c4b4..51e1ce721d9f 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4265,11 +4265,8 @@ static int st_probe(struct device *dev)
- 	    tpnt->blksize_changed = 0;
- 	mutex_init(&tpnt->lock);
- 
+diff --git a/drivers/gpu/drm/virtio/virtgpu_vq.c b/drivers/gpu/drm/virtio/virtgpu_vq.c
+index 1698669f4185..380947dad306 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_vq.c
++++ b/drivers/gpu/drm/virtio/virtgpu_vq.c
+@@ -41,21 +41,14 @@
+ void virtio_gpu_resource_id_get(struct virtio_gpu_device *vgdev,
+ 				uint32_t *resid)
+ {
+-	int handle;
+-
 -	idr_preload(GFP_KERNEL);
--	spin_lock(&st_index_lock);
--	error = idr_alloc(&st_index_idr, tpnt, 0, ST_MAX_TAPES + 1, GFP_NOWAIT);
--	spin_unlock(&st_index_lock);
+-	spin_lock(&vgdev->resource_idr_lock);
+-	handle = idr_alloc(&vgdev->resource_idr, NULL, 1, 0, GFP_NOWAIT);
+-	spin_unlock(&vgdev->resource_idr_lock);
 -	idr_preload_end();
-+	error = idr_get_index_in_range(&st_index_idr, &st_index_lock, tpnt,
-+				       0, ST_MAX_TAPES + 1);
- 	if (error < 0) {
- 		pr_warn("st: idr allocation failed: %d\n", error);
- 		goto out_put_queue;
-@@ -4303,9 +4300,7 @@ out_remove_devs:
- 	remove_cdevs(tpnt);
- 	kfree(tpnt->stats);
- out_idr_remove:
--	spin_lock(&st_index_lock);
--	idr_remove(&st_index_idr, tpnt->index);
--	spin_unlock(&st_index_lock);
-+	idr_put_index(&st_index_idr, &st_index_lock, tpnt->index);
- out_put_queue:
- 	blk_put_queue(disk->queue);
- out_put_disk:
-@@ -4330,9 +4325,7 @@ static int st_remove(struct device *dev)
- 	mutex_lock(&st_ref_mutex);
- 	kref_put(&tpnt->kref, scsi_tape_release);
- 	mutex_unlock(&st_ref_mutex);
--	spin_lock(&st_index_lock);
--	idr_remove(&st_index_idr, index);
--	spin_unlock(&st_index_lock);
-+	idr_put_index(&st_index_idr, &st_index_lock, index);
- 	return 0;
+-	*resid = handle;
++	*resid = idr_get_index_in_range(&vgdev->resource_idr,
++					&vgdev->resource_idr_lock,
++					NULL, 1, 0);
  }
  
+ void virtio_gpu_resource_id_put(struct virtio_gpu_device *vgdev, uint32_t id)
+ {
+-	spin_lock(&vgdev->resource_idr_lock);
+-	idr_remove(&vgdev->resource_idr, id);
+-	spin_unlock(&vgdev->resource_idr_lock);
++	idr_put_index(&vgdev->resource_idr, &vgdev->resource_idr_lock, id);
+ }
+ 
+ void virtio_gpu_ctrl_ack(struct virtqueue *vq)
 -- 
 2.1.4
