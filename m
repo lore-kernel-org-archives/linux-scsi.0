@@ -1,64 +1,70 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH v2] scsi: introduce short_inquiry flag for broken host
- adapters
-Date: Tue, 15 Sep 2015 19:55:42 +0000
-Message-ID: <BY2PR0301MB1654CC4424F54EE671799E5FA05C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1441296673-14315-1-git-send-email-vkuznets@redhat.com>
-	 <87k2rryczs.fsf@vitty.brq.redhat.com>
- <1442341445.2177.9.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442341445.2177.9.camel@HansenPartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+From: Ian Munsie <imunsie@au1.ibm.com>
+Subject: Re: [PATCH 00/29] cxlflash: Miscellaneous bug fixes and corrections
+Date: Wed, 16 Sep 2015 12:50:22 +1000
+Message-ID: <1442371641-sup-310@delenn.ozlabs.ibm.com>
+References: <1442006012-46803-1-git-send-email-mrochs@linux.vnet.ibm.com> <1442188796-sup-7396@delenn.ozlabs.ibm.com> <8867AAC7-E67D-48B6-93DD-454B96F5979A@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34538 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbbIPCvb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2015 22:51:31 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <imunsie@au1.ibm.com>;
+	Wed, 16 Sep 2015 12:51:29 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 951C42BB0054
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 12:51:26 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8G2pJIs62062630
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 12:51:27 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8G2orDa022741
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 12:50:54 +1000
+In-reply-to: <8867AAC7-E67D-48B6-93DD-454B96F5979A@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@HansenPartnership.com>, nab <nab@linux-iscsi.org>, brking <brking@linux.vnet.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, "andrew.donnellan" <andrew.donnellan@au1.ibm.com>, mikey <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VHVlc2RheSwgU2VwdGVtYmVyIDE1LCAyMDE1IDExOjI0IEFNDQo+IFRvOiBWaXRhbHkgS3V6bmV0
-c292IDx2a3V6bmV0c0ByZWRoYXQuY29tPg0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
-cmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtZIFNyaW5pdmFzYW4NCj4gPGt5c0Bt
-aWNyb3NvZnQuY29tPjsgTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBEZXh1YW4gQ3Vp
-DQo+IDxkZWN1aUBtaWNyb3NvZnQuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBzY3Np
-OiBpbnRyb2R1Y2Ugc2hvcnRfaW5xdWlyeSBmbGFnIGZvciBicm9rZW4gaG9zdA0KPiBhZGFwdGVy
-cw0KPiANCj4gT24gVHVlLCAyMDE1LTA5LTE1IGF0IDE2OjI3ICswMjAwLCBWaXRhbHkgS3V6bmV0
-c292IHdyb3RlOg0KPiA+IFZpdGFseSBLdXpuZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+IHdy
-aXRlczoNCj4gPg0KPiA+ID4gU29tZSBob3N0IGFkYXB0ZXJzIChlLmcuIEh5cGVyLVYgc3RvcnZz
-YykgYXJlIGtub3duIGZvciBub3QgcmVzcGVjdGluZw0KPiB0aGUNCj4gPiA+IFNQQy0yLzMvNCBy
-ZXF1aXJlbWVudCBmb3IgJ0lOUVVJUlkgZGF0YSAoc2VlIHRhYmxlIC4uLikgc2hhbGwgY29udGFp
-biBhdA0KPiA+ID4gbGVhc3QgMzYgYnl0ZXMnLiBBcyBhIHJlc3VsdCB3ZSBnZXQgdG9ucyBvbiAn
-c2NzaSAwOjc6MToxOiBzY3NpIHNjYW46DQo+ID4gPiBJTlFVSVJZIHJlc3VsdCB0b28gc2hvcnQg
-KDUpLCB1c2luZyAzNicgbWVzc2FnZXMgb24gY29uc29sZS4gVGhpcyBjYW4gYmUNCj4gPiA+IHBy
-b2JsZW1hdGljIGZvciBzbG93IGNvbnNvbGVzLiBJbnRyb2R1Y2Ugc2hvcnRfaW5xdWlyeSBob3N0
-IHRlbXBsYXRlIGZsYWcNCj4gPiA+IHRvIGF2b2lkIHByaW50aW5nIGVycm9yIG1lc3NhZ2VzIGZv
-ciBzdWNoIGFkYXB0ZXJzLg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFZpdGFseSBLdXpu
-ZXRzb3YgPHZrdXpuZXRzQHJlZGhhdC5jb20+DQo+ID4gPiAtLS0NCj4gPiA+IENoYW5nZXMgc2lu
-Y2UgdjE6DQo+ID4gPiAtIFRoaXMgaXMgYSBzdWNjZXNzb3Igb2YgcHJldmlvdXNseSBzZW50ICJz
-Y3NpX3NjYW46IG1vdmUgJ0lOUVVJUlkgcmVzdWx0DQo+ID4gPiAgIHRvbyBzaG9ydCcgbWVzc2Fn
-ZSB0byBkZWJ1ZyBsZXZlbCIgcGF0Y2guIEluc3RlYWQgb2YgbW92aW5nIHRoZQ0KPiBtZXNzYWdl
-DQo+ID4gPiAgIHRvIGRlYnVnIGxldmVsIGZvciBhbGwgYWRhcHRlcnMgaW50cm9kdWNlIGEgc3Bl
-Y2lhbCAnc2hvcnRfaW5xdWlyeScgZmxhZw0KPiA+ID4gICBmb3IgaG9zdCB0ZW1wbGF0ZSBbaW5z
-cGlyZWQgYnkgSmFtZXMgQm90dG9tbGV5XS4NCj4gPg0KPiA+IEphbWVzLA0KPiA+DQo+ID4gc29y
-cnkgZm9yIHRoZSBwaW5nIGJ1dCBjYW4geW91IHBsZWFzZSBsZXQgbWUga25vdyB5b3VyIG9waW5p
-b24/IFRoaXMgaXMNCj4gPiBub3QgYSAnY29zbWV0aWMgZml4Jywgc2VyaWFsIHBvcnQgb24gSHlw
-ZXItViBpcyBleHRyZW1lbHkgc2xvdyBhbmQgdXNlcnMNCj4gPiBnZXQgc29mdGxvY2t1cHMganVz
-dCBiZWNhdXNlIHdlIG91dHB1dCB0b28gbXVjaC4gSGVyZSBpcyBhIGZyZXNobHkNCj4gPiBib290
-ZWQgZ3Vlc3Qgd2l0aCBTQ1NJIGFuZCBGQyBhZGFwdGVycyBjb25uZWN0ZWQ6DQo+ID4NCj4gPiAj
-IGRtZXNnIHwgZ3JlcCAtYyBJTlFVSVJZDQo+ID4gMjA3Ng0KPiANCj4gSXQgbmVlZHMgYSByZXZp
-ZXcgLi4uIHByZWZlcmFibHkgZnJvbSBzb21lb25lIHdobyB2YWxpZGF0ZXMgdGhhdCB3ZQ0KPiBk
-b24ndCBnZXQgYW55IGFkdmVyc2UgaW1wYWN0IGZyb20gdGhlIG1pc3NpbmcgaW5xdWlyeSBkYXRh
-DQo+IA0KPiA+IChteSBvdGhlciBwZXJuZGluZyAnW1BBVENIXSBzY3NpX3NjYW46IGRvbid0IGR1
-bXAgdHJhY2Ugd2hlbg0KPiA+IHNjc2lfcHJlcF9hc3luY19zY2FuKCkgaXMgY2FsbGVkIHR3aWNl
-JyBpcyByZWxhdGVkIHRvIHRoZSBzYW1lIGlzc3VlKS4NCj4gDQo+IFNvIGRvZXMgdGhpcy4NCg0K
-SmFtZXMsDQoNCkkgd2lsbCByZXZpZXcgdGhlIGNvZGUgYW5kIHRlc3QgdGhpcyBhcyB3ZWxsLg0K
-DQpSZWdhcmRzLA0KDQpLLiBZDQo+IA0KPiBKYW1lcw0KPiANCj4gDQo+ID4gU2VlIGFsc286DQo+
-IGh0dHBzOi8vbmEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29rLmNvbS8/dXJsPWh0dHBz
-JTNhJTJmJTJmbGttbC5vcg0KPiBnJTJmbGttbCUyZjIwMTUlMmY5JTJmNiUyZjExOSZkYXRhPTAx
-JTdjMDElN2NreXMlNDBtaWNyb3NvZnQuY29tDQo+ICU3YzdhNmU5Y2NhYmIyZjQzYzBhMDExMDhk
-MmJkZmFkODI2JTdjNzJmOTg4YmY4NmYxNDFhZjkxYWIyZDdjZDAxMQ0KPiBkYjQ3JTdjMSZzZGF0
-YT10M0lHTE1pRzJzVTRWSmZtR2lZS0dNeTIyZDNJeEhiR1Fab3A2M25yVjdZJTNkDQo+ID4NCj4g
-PiBUaGFua3MsDQo+ID4NCj4gPiBbLi4uXQ0KPiA+DQo+IA0KPiANCg0K
+Hi Matt & Manoj,
+
+Can you also add linuxppc-dev@lists.ozlabs.org to the Cc list for
+version 2?
+
+Cheers,
+-Ian
+
+Excerpts from Matthew R. Ochs's message of 2015-09-15 06:12:29 +1000:
+> > On Sep 13, 2015, at 8:12 PM, Ian Munsie <imunsie@au1.ibm.com> wrote:
+> > 
+> > Hi Matt & Manoj,
+> > 
+> > Just a general comment about this series - I'd like to see more detailed
+> > commit messages for almost all these patches. Of course James is the
+> > scsi maintainer and it's up to him whether to take these as is or not,
+> > but generally when you write a commit message for a bug fix you want to
+> > explain:
+> > 
+> > - What problem can occur, possibly including an example
+> > - Why it occurs
+> > - How this patch addresses it
+> > 
+> > You don't necessarily need to go overboard because at some point people
+> > can just read the code, but some of these patches don't have any detail
+> > beyond a single subject line, which is too little.
+> > 
+> > Speaking of the subject line - if the patch is fixing a bug there should
+> > be some indication of that in the subject (it should probably include
+> > the word "fix" somewhere). If the subject just states what you are
+> > changing then it's not immediately obvious that it is a bug fix.
+> 
+> This is a reasonable request. Will incorporate your suggestions
+> and send out in a v2 series. Thanks for the examples of what you
+> would like to see.
+> 
+> 
+> -matt
+
