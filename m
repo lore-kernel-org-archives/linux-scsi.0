@@ -1,47 +1,41 @@
-From: Sergiu <constantin.srg@gmail.com>
-Subject: Re: Why using configfs as the only interface is wrong for a storage target
-Date: Wed, 16 Sep 2015 07:34:13 +0000 (UTC)
-Message-ID: <loom.20150916T091909-802@post.gmane.org>
-References: <AANLkTi=b0mcWp3ergh=GvUF2CvgXUDv3Rq1fHY=xKf9L@mail.gmail.com>	 <20110207115347.GA7503@noexit> <1297089709.3012.19.camel@mulgrave.site> <4D500B66.5000103@suse.de>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH V3 2/2] debugfs: don't assume sizeof(bool) to be 4 bytes
+Date: Wed, 16 Sep 2015 10:02:18 +0200
+Message-ID: <20150916080218.GA8155@gmail.com>
+References: <9b705747a138c96c26faee5218f7b47403195b28.1442305897.git.viresh.kumar@linaro.org>
+ <27d37898b4be6b9b9f31b90135f8206ca079a868.1442305897.git.viresh.kumar@linaro.org>
+ <1442313464.1914.21.camel@sipsolutions.net>
+ <20150915110447.GI6350@linux>
+ <20150915094509.46cca84d@gandalf.local.home>
+ <CA+55aFxVQ9jD=jUqPZt76EMe_Tb-_SA8v=rOHeR9Ljdsc6=xGQ@mail.gmail.com>
+ <20150915134732.7ff50d03@gandalf.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:39570 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752286AbbIPHkO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Sep 2015 03:40:14 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1Zc7K2-000311-8V
-	for linux-scsi@vger.kernel.org; Wed, 16 Sep 2015 09:40:06 +0200
-Received: from gate2.itcnetworks.ro ([82.78.3.253])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 09:40:06 +0200
-Received: from constantin.srg by gate2.itcnetworks.ro with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 09:40:06 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20150915134732.7ff50d03@gandalf.local.home>
+Sender: owner-linux-mm@kvack.org
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Viresh Kumar <viresh.kumar@linaro.org>, Johannes Berg <johannes@sipsolutions.net>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>, Rafael Wysocki <rjw@rjwysocki.net>, "sboyd@codeaurora.org" <sboyd@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, Mark Brown <broonie@kernel.org>, Akinobu Mita <akinobu.mita@gmail.com>, Alexander Duyck <alexander.h.duyck@redhat.com>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@amacapital.net>, Arik Nemtsov <arik@wizery.com>, "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" <ath10k@lists.infradead.org>, "open list:QUALCOMM ATHEROS ATH9K WIRELESS DRIVER" <ath9k-devel@lists.ath9k.org>, Altman, A
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
 
-Hello all,
+* Steven Rostedt <rostedt@goodmis.org> wrote:
 
-I have an issue related to this topic. I am trying to detect via a libudev
-wrapper if device based on configfs is mounted. 
-I have a small usb detector based on libudev and libudev(the wapper),
-"udev_enumerate_add_match_subsystem( enumerate, "usb" )" is used as a filter
-and I mount the a device using 'mount none /cfg1 -t configfs'.
-Linux detects the device as mounted but udev detector does not. Do you know
-if what I am trying to do is possible, to mount a file based on configfs,
-and edit the structure so that it is detected by udev? I edited the vendor
-id, the product id, class id in the configfs structure but the detector does
-not see it.
+> But please, next time, go easy on the Cc list. Maybe just use bcc for those not 
+> on the list, stating that you BCC'd a lot of people to make sure this is sane, 
+> but didn't want to spam everyone with every reply.
 
-Thank in advance,
-Sergiu
+Not just that, such a long Cc: list is a semi-guarantee that various list engines 
+(vger included I think) would drop the mail as spam and nobody else would get the 
+mail...
 
+Thanks,
 
+	Ingo
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
