@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 09/17] Update the virtgpu driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 10:50:27 -0700
-Message-ID: <83e5daa0708729d4a3b6fda61c6ab8d70e501606.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 12/17] Update the TI Flash Media driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:30 -0700
+Message-ID: <1660d98f948e952cc62793619c45f764912e87ab.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
@@ -9,43 +9,54 @@ In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Gerd Hoffmann <kraxel@redhat.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Alex Dubov <oakad@yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/gpu/drm/virtio/virtgpu_vq.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/misc/tifm_core.c | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/gpu/drm/virtio/virtgpu_vq.c b/drivers/gpu/drm/virtio/virtgpu_vq.c
-index 1698669f4185..380947dad306 100644
---- a/drivers/gpu/drm/virtio/virtgpu_vq.c
-+++ b/drivers/gpu/drm/virtio/virtgpu_vq.c
-@@ -41,21 +41,14 @@
- void virtio_gpu_resource_id_get(struct virtio_gpu_device *vgdev,
- 				uint32_t *resid)
+diff --git a/drivers/misc/tifm_core.c b/drivers/misc/tifm_core.c
+index a511b2a713b3..46385f828a8f 100644
+--- a/drivers/misc/tifm_core.c
++++ b/drivers/misc/tifm_core.c
+@@ -198,22 +198,15 @@ int tifm_add_adapter(struct tifm_adapter *fm)
  {
--	int handle;
--
+ 	int rc;
+ 
 -	idr_preload(GFP_KERNEL);
--	spin_lock(&vgdev->resource_idr_lock);
--	handle = idr_alloc(&vgdev->resource_idr, NULL, 1, 0, GFP_NOWAIT);
--	spin_unlock(&vgdev->resource_idr_lock);
+-	spin_lock(&tifm_adapter_lock);
+-	rc = idr_alloc(&tifm_adapter_idr, fm, 0, 0, GFP_NOWAIT);
+-	if (rc >= 0)
+-		fm->id = rc;
+-	spin_unlock(&tifm_adapter_lock);
 -	idr_preload_end();
--	*resid = handle;
-+	*resid = idr_get_index_in_range(&vgdev->resource_idr,
-+					&vgdev->resource_idr_lock,
-+					NULL, 1, 0);
- }
++	rc = idr_get_index(&tifm_adapter_idr, &tifm_adapter_lock, fm);
+ 	if (rc < 0)
+ 		return rc;
++	fm->id = rc;
  
- void virtio_gpu_resource_id_put(struct virtio_gpu_device *vgdev, uint32_t id)
- {
--	spin_lock(&vgdev->resource_idr_lock);
--	idr_remove(&vgdev->resource_idr, id);
--	spin_unlock(&vgdev->resource_idr_lock);
-+	idr_put_index(&vgdev->resource_idr, &vgdev->resource_idr_lock, id);
- }
+ 	dev_set_name(&fm->dev, "tifm%u", fm->id);
+ 	rc = device_add(&fm->dev);
+ 	if (rc) {
+-		spin_lock(&tifm_adapter_lock);
+-		idr_remove(&tifm_adapter_idr, fm->id);
+-		spin_unlock(&tifm_adapter_lock);
++		idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
+ 	}
  
- void virtio_gpu_ctrl_ack(struct virtqueue *vq)
+ 	return rc;
+@@ -230,9 +223,7 @@ void tifm_remove_adapter(struct tifm_adapter *fm)
+ 			device_unregister(&fm->sockets[cnt]->dev);
+ 	}
+ 
+-	spin_lock(&tifm_adapter_lock);
+-	idr_remove(&tifm_adapter_idr, fm->id);
+-	spin_unlock(&tifm_adapter_lock);
++	idr_put_index(&tifm_adapter_idr, &tifm_adapter_lock, fm->id);
+ 	device_del(&fm->dev);
+ }
+ EXPORT_SYMBOL(tifm_remove_adapter);
 -- 
 2.1.4
