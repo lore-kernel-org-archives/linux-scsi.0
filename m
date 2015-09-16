@@ -1,54 +1,68 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 11/17] Update the rtsx multifunction driver to use idr helper functions.
-Date: Wed, 16 Sep 2015 10:50:29 -0700
-Message-ID: <07029fe6d1206aa0e6aa0e539173bf3289920ca8.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 10/17] Update the DCA DMA driver to use idr helper functions.
+Date: Wed, 16 Sep 2015 10:50:28 -0700
+Message-ID: <77238f931cd168e25f836e0d0fdf0eeab4eb9056.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51413 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754270AbbIPRvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Sep 2015 13:51:19 -0400
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Samuel Ortiz <sameo@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/mfd/rtsx_pcr.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/dca/dca-sysfs.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/mfd/rtsx_pcr.c b/drivers/mfd/rtsx_pcr.c
-index a66540a49079..8ddefb8c5e64 100644
---- a/drivers/mfd/rtsx_pcr.c
-+++ b/drivers/mfd/rtsx_pcr.c
-@@ -1191,15 +1191,10 @@ static int rtsx_pci_probe(struct pci_dev *pcidev,
- 	}
- 	handle->pcr = pcr;
+diff --git a/drivers/dca/dca-sysfs.c b/drivers/dca/dca-sysfs.c
+index 126cf295b198..8930707df295 100644
+--- a/drivers/dca/dca-sysfs.c
++++ b/drivers/dca/dca-sysfs.c
+@@ -55,23 +55,14 @@ int dca_sysfs_add_provider(struct dca_provider *dca, struct device *dev)
+ 	struct device *cd;
+ 	int ret;
  
 -	idr_preload(GFP_KERNEL);
--	spin_lock(&rtsx_pci_lock);
--	ret = idr_alloc(&rtsx_pci_idr, pcr, 0, 0, GFP_NOWAIT);
+-	spin_lock(&dca_idr_lock);
+-
+-	ret = idr_alloc(&dca_idr, dca, 0, 0, GFP_NOWAIT);
 -	if (ret >= 0)
--		pcr->id = ret;
--	spin_unlock(&rtsx_pci_lock);
+-		dca->id = ret;
+-
+-	spin_unlock(&dca_idr_lock);
 -	idr_preload_end();
-+	ret = idr_get_index(&rtsx_pci_idr, &rtsc_pci_lock, pcr);
++	ret = idr_get_index(&dca_idr, &dca_idr_lock, dca);
  	if (ret < 0)
- 		goto free_handle;
-+	pcr->id = ret;
+ 		return ret;
++	dca->id = ret;
  
- 	pcr->pci = pcidev;
- 	dev_set_drvdata(&pcidev->dev, handle);
-@@ -1311,9 +1306,7 @@ static void rtsx_pci_remove(struct pci_dev *pcidev)
- 	pci_release_regions(pcidev);
- 	pci_disable_device(pcidev);
+ 	cd = device_create(dca_class, dev, MKDEV(0, 0), NULL, "dca%d", dca->id);
+ 	if (IS_ERR(cd)) {
+-		spin_lock(&dca_idr_lock);
+-		idr_remove(&dca_idr, dca->id);
+-		spin_unlock(&dca_idr_lock);
++		idr_put_index(&dca_idr, &dca_idr_lock, dca->id);
+ 		return PTR_ERR(cd);
+ 	}
+ 	dca->cd = cd;
+@@ -82,9 +73,7 @@ void dca_sysfs_remove_provider(struct dca_provider *dca)
+ {
+ 	device_unregister(dca->cd);
+ 	dca->cd = NULL;
+-	spin_lock(&dca_idr_lock);
+-	idr_remove(&dca_idr, dca->id);
+-	spin_unlock(&dca_idr_lock);
++	idr_put_index(&dca_idr, &dca_idr_lock, dca->id);
+ }
  
--	spin_lock(&rtsx_pci_lock);
--	idr_remove(&rtsx_pci_idr, pcr->id);
--	spin_unlock(&rtsx_pci_lock);
-+	idr_put_index(&rtsx_pci_idr, &rtsx_pci_lock, pcr->id);
- 
- 	kfree(pcr->slots);
- 	kfree(pcr);
+ int __init dca_sysfs_init(void)
 -- 
 2.1.4
+
