@@ -1,68 +1,63 @@
-From: Andrzej Hajda <a.hajda@samsung.com>
-Subject: Re: [PATCH 18/31] scsi/aic7xxx: use kmemdup rather than duplicating
- its implementation
-Date: Wed, 16 Sep 2015 12:02:53 +0200
-Message-ID: <55F93E4D.8060809@samsung.com>
-References: <1438934377-4922-1-git-send-email-a.hajda@samsung.com>
- <1438934377-4922-19-git-send-email-a.hajda@samsung.com>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+Date: Wed, 16 Sep 2015 20:59:54 +0930
+Message-ID: <55F952B2.6080102@internode.on.net>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com> <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com> <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com> <55F91C34.4070800@internode.on.net> <55F9266C.5060609@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1438934377-4922-19-git-send-email-a.hajda@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <55F9266C.5060609@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Ping.
 
-Regards
-Andrzej
 
-On 08/07/2015 09:59 AM, Andrzej Hajda wrote:
-> The patch was generated using fixed coccinelle semantic patch
-> scripts/coccinelle/api/memdup.cocci [1].
+Jiang Liu wrote on 16/09/15 17:51:
+
+> Hi Arthur,
+> 	It would be great if we could capture the text as in the
+> picture posted by you at:
+> 	http://www.users.on.net/~arthur.marsh/20150915547.jpg
+> 	I guess a serial console could help us to capture those
+> log messages. To use serial console, we need to setup serial cable,
+> configure grub and kernel to use serial port as console.
+> Thanks!
+> Gerry
 >
-> [1]: http://permalink.gmane.org/gmane.linux.kernel/2014320
+>>
+>> Regards,
+>>
+>> Arthur.
 >
-> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
-> ---
->  drivers/scsi/aic7xxx/aic79xx_core.c | 4 ++--
->  drivers/scsi/aic7xxx/aic7xxx_core.c | 4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-> index 109e2c9..8592448 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_core.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-> @@ -9494,10 +9494,10 @@ ahd_loadseq(struct ahd_softc *ahd)
->  	if (cs_count != 0) {
->  
->  		cs_count *= sizeof(struct cs);
-> -		ahd->critical_sections = kmalloc(cs_count, GFP_ATOMIC);
-> +		ahd->critical_sections = kmemdup(cs_table, cs_count,
-> +						 GFP_ATOMIC);
->  		if (ahd->critical_sections == NULL)
->  			panic("ahd_loadseq: Could not malloc");
-> -		memcpy(ahd->critical_sections, cs_table, cs_count);
->  	}
->  	ahd_outb(ahd, SEQCTL0, PERRORDIS|FAILDIS|FASTMODE);
->  
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> index c4829d8..3178730 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-> @@ -6940,10 +6940,10 @@ ahc_loadseq(struct ahc_softc *ahc)
->  	if (cs_count != 0) {
->  
->  		cs_count *= sizeof(struct cs);
-> -		ahc->critical_sections = kmalloc(cs_count, GFP_ATOMIC);
-> +		ahc->critical_sections = kmemdup(cs_table, cs_count,
-> +						 GFP_ATOMIC);
->  		if (ahc->critical_sections == NULL)
->  			panic("ahc_loadseq: Could not malloc");
-> -		memcpy(ahc->critical_sections, cs_table, cs_count);
->  	}
->  	ahc_outb(ahc, SEQCTL, PERRORDIS|FAILDIS|FASTMODE);
->  
+
+I've already included the text of what appeaered in the image above:
+
+sd 0:0:6:0: abort, mbox 63.
+EATA0: abort, mbox 63 is in use.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, mbox 63 in reset.
+EATA0: reset, board reset done, enabling interrupts.
+EATA0: reset, interrupts disabled, loops 100469.
+EATA0: reset, mbox 63 locked, DID_RESET, done.
+EATA0: reset, exit, done.
+sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
+sd 0:0:6:0: abort, mbox 0.
+EATA0: abort, timeout error.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, exit, timeout error.
+sd 0:0:6:0 Device offlinled - not ready after error recovery
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result: 
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+starting new kernel
+
+As mentioned previously this occurred after the normal Synchronizing 
+SCSI cache messages.
+
+I don't think that there is anything else that gets sent to the console.
+
+Arthur.
