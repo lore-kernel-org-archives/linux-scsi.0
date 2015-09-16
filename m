@@ -1,58 +1,66 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 15/17] Update the NVMe SSD driver to use ida helper functions.
-Date: Wed, 16 Sep 2015 10:50:33 -0700
-Message-ID: <7aa6d6793c6771b69a9cf093e80937669f5fcb4e.1442263513.git.lduncan@suse.com>
+Subject: [PATCH 13/17] Update the SCSI disk driver to use ida helper functions.
+Date: Wed, 16 Sep 2015 10:50:31 -0700
+Message-ID: <e21b683ed63452966a04fab599f5626b66fbe5ba.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51413 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310AbbIPRvV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Sep 2015 13:51:21 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 In-Reply-To: <cover.1442263513.git.lduncan@suse.com>
 References: <cover.1442263513.git.lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>, Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, jthumshirn@suse.de, hch@infradead.org, Lee Duncan <lduncan@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/block/nvme-core.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ drivers/scsi/sd.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index d1d6141920d3..ab13833d4fde 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -2715,15 +2715,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
- {
- 	int instance, error;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3b2fcb4fada0..60b2ad918208 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2948,15 +2948,7 @@ static int sd_probe(struct device *dev)
+ 	if (!gd)
+ 		goto out_free;
  
 -	do {
--		if (!ida_pre_get(&nvme_instance_ida, GFP_KERNEL))
--			return -ENODEV;
+-		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
+-			goto out_put;
 -
--		spin_lock(&dev_list_lock);
--		error = ida_get_new(&nvme_instance_ida, &instance);
--		spin_unlock(&dev_list_lock);
+-		spin_lock(&sd_index_lock);
+-		error = ida_get_new(&sd_index_ida, &index);
+-		spin_unlock(&sd_index_lock);
 -	} while (error == -EAGAIN);
 -
-+	error = ida_get_index(&nvme_instance_ida, &dev_list_lock, &instance);
- 	if (error)
- 		return -ENODEV;
++	error = ida_get_index(&sd_index_ida, &sd_index_lock, &index);
+ 	if (error) {
+ 		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
+ 		goto out_put;
+@@ -3001,9 +2993,7 @@ static int sd_probe(struct device *dev)
+ 	return 0;
  
-@@ -2733,9 +2725,7 @@ static int nvme_set_instance(struct nvme_dev *dev)
- 
- static void nvme_release_instance(struct nvme_dev *dev)
+  out_free_index:
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, index);
+-	spin_unlock(&sd_index_lock);
++	ida_put_index(&sd_index_ida, &sd_index_lock, index);
+  out_put:
+ 	put_disk(gd);
+  out_free:
+@@ -3063,10 +3053,8 @@ static void scsi_disk_release(struct device *dev)
  {
--	spin_lock(&dev_list_lock);
--	ida_remove(&nvme_instance_ida, dev->instance);
--	spin_unlock(&dev_list_lock);
-+	ida_put_index(&nvme_instance_ida, &dev_list_lock, dev->instance);
- }
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+ 	struct gendisk *disk = sdkp->disk;
+-	
+-	spin_lock(&sd_index_lock);
+-	ida_remove(&sd_index_ida, sdkp->index);
+-	spin_unlock(&sd_index_lock);
++
++	ida_put_index(&sd_index_ida, &sd_index_lock, sdkp->index);
  
- static void nvme_free_namespaces(struct nvme_dev *dev)
+ 	blk_integrity_unregister(disk);
+ 	disk->private_data = NULL;
 -- 
 2.1.4
-
