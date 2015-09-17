@@ -1,97 +1,77 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 09/30] cxlflash: Fix to stop interrupt processing on remove
-Date: Thu, 17 Sep 2015 12:16:45 -0500
-Message-ID: <97A059A7-2054-4DBD-B993-BBF47AC105E0@linux.vnet.ibm.com>
-References: <1442422399-41262-1-git-send-email-mrochs@linux.vnet.ibm.com> <55FAB43B.8050306@redhat.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:46343 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbbIQRQx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 13:16:53 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 17 Sep 2015 11:16:52 -0600
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 558DE19D803F
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 11:07:44 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8HHFhci53018874
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 10:15:43 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8HHGleX017208
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 11:16:50 -0600
-In-Reply-To: <55FAB43B.8050306@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: DEFINE_IDA causing memory leaks? (was  Re: [PATCH 1/2] virtio:
+ fix memory leak of virtio ida cache layers)
+Date: Thu, 17 Sep 2015 10:58:29 -0700
+Message-ID: <1442512709.4073.24.camel@HansenPartnership.com>
+References: <1442449758-14594-1-git-send-email-s-anna@ti.com>
+	 <1442449758-14594-2-git-send-email-s-anna@ti.com>
+	 <20150917082425-mutt-send-email-mst@redhat.com>
+	 <1442499344.4073.0.camel@HansenPartnership.com>
+	 <20150917190538-mutt-send-email-mst@redhat.com>
+	 <1442508517.4073.13.camel@HansenPartnership.com>
+	 <20150917171529.GA15447@htj.duckdns.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDMOV25X7AMRBSH65OXQKGQE464HEAI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20150917171529.GA15447-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Suman Anna <s-anna-l0cyMroinI0@public.gmane.org>, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com, mikey@neuling.org, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-> On Sep 17, 2015, at 7:38 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+On Thu, 2015-09-17 at 13:15 -0400, Tejun Heo wrote:
+> Hello,
 > 
-> On 16.9.2015 18:53, Matthew R. Ochs wrote:
->> Interrupt processing can run in parallel to a remove operation. This
->> can lead to a condition where the interrupt handler is processing with
->> memory that has been freed.
->> 
->> To avoid processing an interrupt while memory may be yanked, check for
->> removal while in the interrupt handler. Bail when removal is imminent.
->> 
->> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
->> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
->> ---
->> drivers/scsi/cxlflash/common.h |  2 ++
->> drivers/scsi/cxlflash/main.c   | 21 +++++++++++++++------
->> 2 files changed, 17 insertions(+), 6 deletions(-)
->> 
->> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
->> index 1abe4e0..03d2cc6 100644
->> --- a/drivers/scsi/cxlflash/common.h
->> +++ b/drivers/scsi/cxlflash/common.h
->> @@ -103,6 +103,8 @@ struct cxlflash_cfg {
->> 	enum cxlflash_lr_state lr_state;
->> 	int lr_port;
->> 
->> +	atomic_t remove_active;
->> +
->> 	struct cxl_afu *cxl_afu;
->> 
->> 	struct pci_pool *cxlflash_cmd_pool;
->> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
->> index 6e85c77..89ee648 100644
->> --- a/drivers/scsi/cxlflash/main.c
->> +++ b/drivers/scsi/cxlflash/main.c
->> @@ -892,6 +892,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
->> 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
->> 
->> 	cfg->state = STATE_FAILTERM;
->> +	atomic_inc(&cfg->remove_active);
+> On Thu, Sep 17, 2015 at 09:48:37AM -0700, James Bottomley wrote:
+> > Well, there's an easy fix for that.  We could have ida_remove() actually
+> > free the bitmap and not cache it if it's the last layer.  That way ida
+> > would naturally empty and we wouldn't need a destructor.   Tejun, would
+> > that work?
 > 
-> Hi Matthew,
-> you could just call term_afu at this point, this way you don't
-> need an additional check in all irq functions.
-> Cheers,
-> Tomas
+> Yeah, that definitely is one way to go about it.  It kinda muddles the
+> purpose of ida_destroy() tho.  I suppose we can rename it to
+> idr_remove_all() and then do the same to idr.  I'm not particularly
+> objecting to all that but what's wrong with just calling idr_destroy()
+> on exit paths?  If missing the call in modules is an issue, maybe we
+> can just annotate idr/ida with debugobj?
 
-Hi Tomas,
+The argument is that we shouldn't have to explicitly destroy a
+statically initialized object, so 
 
-We actually do call term_afu() a few lines down from here. I don't follow
-how moving it here would help things.
+DEFINE_IDA(someida);
 
-The reason for the atomic was to provide something lightweight that we
-could check _inside_ the processing loop for the read-response queue
-handler. A check outside that loop doesn't really provide much in terms
-of closing or narrowing down the window of when freed memory can be
-accessed.
+Should just work without having to explicitly do
 
-As David Laight correctly pointed out, this approach does not completely
-close the window. We'd need something heavier to fully protect (e.g. a lock
-to wrap around the entire loop). I will look into adding this in a future cycle
-when I can adequately test.
+ida_destory(someida);
+
+somewhere in the exit code.  It's about usage patterns.  Michael's
+argument is that if we can't follow the no destructor pattern for
+DEFINE_IDA() then we shouldn't have it at all, because it's confusing
+kernel design patterns.  The pattern we would have would be
+
+struct ida someida:
+
+ida_init(&someida);
+
+...
+
+ida_destroy(&someida);
+
+so the object explicitly has a constructor matched to a destructor.
+
+James
 
 
--matt
-
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
