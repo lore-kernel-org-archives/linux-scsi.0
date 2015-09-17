@@ -1,58 +1,51 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v2 04/11] scsi: ufs: add quirk not to allow reset of interrupt
- aggregation
-Date: Thu, 17 Sep 2015 15:15:30 +0530
-Message-ID: <1442483137-32376-5-git-send-email-alim.akhtar@samsung.com>
+From: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH v2 11/11] scsi: ufs: Add exynos ufs platform data
+Date: Thu, 17 Sep 2015 15:15:37 +0530
+Message-ID: <1442483137-32376-12-git-send-email-alim.akhtar@samsung.com>
 References: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <1442483137-32376-1-git-send-email-alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, amit.daniel-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Seungwon Jeon <essuuj@gmail.com>
+This adds ufs_hba_exynos_ops{} to platform data, so that
+exynos ufs driver can be probed.
 
-Some host controller supports interrupt aggregation, but doesn't
-allow to reset counter and timer by s/w.
-
-Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 ---
- drivers/scsi/ufs/ufshcd.c |    3 ++-
- drivers/scsi/ufs/ufshcd.h |    6 ++++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c |    2 ++
+ drivers/scsi/ufs/ufshcd.h        |    1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 257bffc..7b87075 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3204,7 +3204,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	 * false interrupt if device completes another request after resetting
- 	 * aggregation and before reading the DB.
- 	 */
--	if (ufshcd_is_intr_aggr_allowed(hba))
-+	if (ufshcd_is_intr_aggr_allowed(hba) &&
-+	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
- 		ufshcd_reset_intr_aggr(hba);
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 7db9564..39dae76 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -373,6 +373,8 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
  
- 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ static const struct of_device_id ufs_of_match[] = {
+ 	{ .compatible = "jedec,ufs-1.1"},
++	{ .compatible = "samsung,exynos7-ufs",
++	 .data	= &ufs_hba_exynos_ops},
+ 	{},
+ };
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index ba38842..c59f8ae 100644
+index 83fe605..15f2a7c 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -471,6 +471,12 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		UFS_BIT(7)
+@@ -687,4 +687,5 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
  
-+	/*
-+	 * This quirk needs to be enabled if host controller doesn't allow
-+	 * that the interrupt aggregation timer and counter are reset by s/w.
-+	 */
-+	#define UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		UFS_BIT(8)
-+
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	wait_queue_head_t tm_wq;
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
++extern const struct ufs_hba_variant_ops ufs_hba_exynos_ops;
+ #endif /* End of Header */
 -- 
 1.7.10.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
