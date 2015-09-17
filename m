@@ -1,70 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND] scsi: Fix sense information setting in fixed
- sized format
-Date: Thu, 17 Sep 2015 07:24:23 -0700
-Message-ID: <1442499863.4073.4.camel@HansenPartnership.com>
-References: <1441298973-27735-1-git-send-email-sagig@mellanox.com>
-	 <1441306948.23183.328.camel@localhost.localdomain>
-	 <55FAB53C.3080102@dev.mellanox.co.il>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: DEFINE_IDA causing memory leaks? (was  Re: [PATCH 1/2] virtio:
+ fix memory leak of virtio ida cache layers)
+Date: Thu, 17 Sep 2015 11:10:26 -0400
+Message-ID: <20150917151026.GB7205@mtj.duckdns.org>
+References: <1442449758-14594-1-git-send-email-s-anna@ti.com>
+ <1442449758-14594-2-git-send-email-s-anna@ti.com>
+ <20150917082425-mutt-send-email-mst@redhat.com>
+ <1442499344.4073.0.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33987 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751643AbbIQOYY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Sep 2015 10:24:24 -0400
-In-Reply-To: <55FAB53C.3080102@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1442499344.4073.0.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Suman Anna <s-anna@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: emilne@redhat.com, linux-scsi@vger.kernel.org
 
-On Thu, 2015-09-17 at 15:42 +0300, Sagi Grimberg wrote:
-> On 9/3/2015 10:02 PM, Ewan Milne wrote:
-> > On Thu, 2015-09-03 at 19:49 +0300, Sagi Grimberg wrote:
-> >> In fixed size sense format the information field is a four byte
-> >> field.
-> >>
-> >> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
-> >> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> >> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> >> ---
-> >>   drivers/scsi/scsi_common.c | 2 +-
-> >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-> >> index 41432c10dda2..8cfb7eeb5bbc 100644
-> >> --- a/drivers/scsi/scsi_common.c
-> >> +++ b/drivers/scsi/scsi_common.c
-> >> @@ -270,7 +270,7 @@ void scsi_set_sense_information(u8 *buf, u64 info)
-> >>   		put_unaligned_be64(info, &ucp[4]);
-> >>   	} else if ((buf[0] & 0x7f) == 0x70) {
-> >>   		buf[0] |= 0x80;
-> >> -		put_unaligned_be64(info, &buf[3]);
-> >> +		put_unaligned_be32(info, &buf[3]);
-> >>   	}
-> >>   }
-> >>   EXPORT_SYMBOL(scsi_set_sense_information);
-> >
-> > Looks correct per SPC-4 4.5.3
-> >
-> > And you did post a patch to target for the case where the sector
-> > did not fit in 32 bits, which requires descriptor format sense, so...
-> >
-> > Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> 
-> James, can you pick this up please?
+Hello,
 
-It went quietly via the target tree.  I did keep an eye on it because
-the target disruption in scsi_sommon.c was why I couldn't send the rest
-of your sense descriptor patches via scsi.
+On Thu, Sep 17, 2015 at 07:15:44AM -0700, James Bottomley wrote:
+> I don't understand why you'd want to forbid DEFINE_IDA ... all it does
 
-commit 12306b425d0dbab7b60f54e02d67cf3dfae494d1
+I guess to require the use of explicit init / creation so that it's
+clear the data structure needs to be destroyed?
 
-James
+> is pre-initialise a usually static ida structure.  The initialised
+> structure will have a NULL bitmap cache that's allocated in the first
+> ida_pre_get() ... that all seems to work as expected and no different
+> from a dynamically allocated struct ida.  Or are you thinking because
+> ida_destory() doesn't set bitmap to NULL, it damages the reuse?  In
+> which case I'm not sure there's much benefit to making it reusable, but
+> I suppose we could by adding a memset into ida_destroy().
 
+I don't know.  Data structures which do lazy anything would likely
+need explicit destruction and I'm not sure we'd wanna ban static
+initialization for all such cases.  Seems like an unnecessary
+restriction.
 
+Thanks.
 
+-- 
+tejun
