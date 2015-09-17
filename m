@@ -1,81 +1,109 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: DEFINE_IDA causing memory leaks? (was Re: [PATCH 1/2] virtio: fix
- memory leak of virtio ida cache layers)
-Date: Thu, 17 Sep 2015 08:51:54 +0200
-Message-ID: <55FA630A.4020707@suse.de>
-References: <1442449758-14594-1-git-send-email-s-anna@ti.com>
- <1442449758-14594-2-git-send-email-s-anna@ti.com>
- <20150917082425-mutt-send-email-mst@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH] target: Fix target_sense_desc_format NULL pointer
+ dereference
+Date: Thu, 17 Sep 2015 09:53:27 +0300
+Message-ID: <55FA6367.7020105@dev.mellanox.co.il>
+References: <1442385079-749-1-git-send-email-nab@daterainc.com>
+ <55F95BC2.8090104@dev.mellanox.co.il>
+ <1442462652.23132.25.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCHZVHVFVMARBDGG5GXQKGQEKAPENRA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20150917082425-mutt-send-email-mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Suman Anna <s-anna-l0cyMroinI0@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-O3H1v1f1dlM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1442462652.23132.25.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/17/2015 07:33 AM, Michael S. Tsirkin wrote:
-> On Wed, Sep 16, 2015 at 07:29:17PM -0500, Suman Anna wrote:
->> The virtio core uses a static ida named virtio_index_ida for
->> assigning index numbers to virtio devices during registration.
->> The ida core may allocate some internal idr cache layers and
->> an ida bitmap upon any ida allocation, and all these layers are
->> truely freed only upon the ida destruction. The virtio_index_ida
->> is not destroyed at present, leading to a memory leak when using
->> the virtio core as a module and atleast one virtio device is
->> registered and unregistered.
->>
->> Fix this by invoking ida_destroy() in the virtio core module
->> exit.
->>
->> Cc: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Signed-off-by: Suman Anna <s-anna-l0cyMroinI0@public.gmane.org>
->=20
-> Interesting.
-> Will the same apply to e.g. sd_index_ida in drivers/scsi/sd.c
-> or iscsi_sess_ida in drivers/scsi/scsi_transport_iscsi.c?
->=20
-> If no, why not?
->=20
-> One doesn't generally expect to have to free global variables.
-> Maybe we should forbid DEFINE_IDA in modules?
->=20
-> James, could you comment on this please?
->=20
-Well, looking at the code 'ida_destroy' only need to be called
-if you want/need to do a general cleanup.
-It shouldn't be required if you do correct reference counting
-on your objects, and call idr_remove() on each of them.
+> How about the following to fix up TCM_WRITE_PROTECT + D_SENSE..?
+>
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index abf2076..ba102c5 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -62,22 +62,13 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+>   	struct se_session *se_sess = se_cmd->se_sess;
+>   	struct se_node_acl *nacl = se_sess->se_node_acl;
+>   	struct se_dev_entry *deve;
+> +	sense_reason_t ret = TCM_NO_SENSE;
+>
+>   	rcu_read_lock();
+>   	deve = target_nacl_find_deve(nacl, unpacked_lun);
+>   	if (deve) {
+>   		atomic_long_inc(&deve->total_cmds);
+>
+> -		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
+> -		    (deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY)) {
+> -			pr_err("TARGET_CORE[%s]: Detected WRITE_PROTECTED LUN"
+> -				" Access for 0x%08llx\n",
+> -				se_cmd->se_tfo->get_fabric_name(),
+> -				unpacked_lun);
+> -			rcu_read_unlock();
+> -			return TCM_WRITE_PROTECTED;
+> -		}
+> -
+>   		if (se_cmd->data_direction == DMA_TO_DEVICE)
+>   			atomic_long_add(se_cmd->data_length,
+>   					&deve->write_bytes);
+> @@ -93,6 +84,17 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+>
+>   		percpu_ref_get(&se_lun->lun_ref);
+>   		se_cmd->lun_ref_active = true;
+> +
+> +		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
+> +		    (deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY)) {
+> +			pr_err("TARGET_CORE[%s]: Detected WRITE_PROTECTED LUN"
+> +				" Access for 0x%08llx\n",
+> +				se_cmd->se_tfo->get_fabric_name(),
+> +				unpacked_lun);
+> +			rcu_read_unlock();
+> +			ret = TCM_WRITE_PROTECTED;	
+> +			goto ref_dev;
+> +		}
+>   	}
+>   	rcu_read_unlock();
+>
+> @@ -109,12 +111,6 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+>   				unpacked_lun);
+>   			return TCM_NON_EXISTENT_LUN;
+>   		}
+> -		/*
+> -		 * Force WRITE PROTECT for virtual LUN 0
+> -		 */
+> -		if ((se_cmd->data_direction != DMA_FROM_DEVICE) &&
+> -		    (se_cmd->data_direction != DMA_NONE))
+> -			return TCM_WRITE_PROTECTED;
+>
+>   		se_lun = se_sess->se_tpg->tpg_virt_lun0;
+>   		se_cmd->se_lun = se_sess->se_tpg->tpg_virt_lun0;
+> @@ -123,6 +119,15 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+>
+>   		percpu_ref_get(&se_lun->lun_ref);
+>   		se_cmd->lun_ref_active = true;
+> +
+> +		/*
+> +		 * Force WRITE PROTECT for virtual LUN 0
+> +		 */
+> +		if ((se_cmd->data_direction != DMA_FROM_DEVICE) &&
+> +		    (se_cmd->data_direction != DMA_NONE)) {
+> +			ret = TCM_WRITE_PROTECTED;
+> +			goto ref_dev;
+> +		}
+>   	}
+>   	/*
+>   	 * RCU reference protected by percpu se_lun->lun_ref taken above that
+> @@ -130,6 +135,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+>   	 * pointer can be kfree_rcu() by the final se_lun->lun_group put via
+>   	 * target_core_fabric_configfs.c:target_fabric_port_release
+>   	 */
+> +ref_dev:
+>   	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
+>   	atomic_long_inc(&se_cmd->se_dev->num_cmds);
 
-Unless I'm misreading something.
+So transport_lookup_cmd_lun() will always assign se_dev. Looks fine.
 
-Seems like a topic for KS; Johannes had a larger patchset recently to
-clean up idr, which run into very much the same issues.
+You can add when resubmitting:
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
 
-Cheers,
-
-Hannes
-
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg)
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Thanks Nic.
