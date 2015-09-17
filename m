@@ -1,248 +1,163 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v2 29/30] cxlflash: Fix to avoid state change collision
-Date: Wed, 16 Sep 2015 16:32:38 -0500
-Message-ID: <1442439158-50453-1-git-send-email-mrochs@linux.vnet.ibm.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:47381 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbbIPVeB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2015 17:34:01 -0400
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 16 Sep 2015 15:34:01 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 184C13E40041
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 15:33:59 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8GLUn0k4194742
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 14:30:57 -0700
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8GLXPSt017475
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2015 15:33:26 -0600
-In-Reply-To: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Fix target_sense_desc_format NULL pointer
+ dereference
+Date: Wed, 16 Sep 2015 21:04:12 -0700
+Message-ID: <1442462652.23132.25.camel@haakon3.risingtidesystems.com>
+References: <1442385079-749-1-git-send-email-nab@daterainc.com>
+	 <55F95BC2.8090104@dev.mellanox.co.il>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <55F95BC2.8090104@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-The adapter state machine is susceptible to missing and/or
-corrupting state updates at runtime. This can lead to a variety
-of unintended issues and is due to the lack of a serialization
-mechanism to protect the adapter state.
+On Wed, 2015-09-16 at 15:08 +0300, Sagi Grimberg wrote:
+> On 9/16/2015 9:31 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >
+> > This patch allows target_sense_desc_format() to be called without a
+> > valid se_device pointer, which can occur during an early exception
+> > ahead of transport_lookup_cmd_lun() setting up se_cmd->se_device.
+> >
+> > This addresses a v4.3-rc1 specific NULL pointer dereference
+> > regression introduced by commit 4e4937e8.
+> >
+> > Cc: Sagi Grimberg <sagig@mellanox.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> > ---
+> >   drivers/target/target_core_hba.c | 2 +-
+> >   1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+> > index 9522960..22390e0 100644
+> > --- a/drivers/target/target_core_hba.c
+> > +++ b/drivers/target/target_core_hba.c
+> > @@ -187,5 +187,5 @@ core_delete_hba(struct se_hba *hba)
+> >
+> >   bool target_sense_desc_format(struct se_device *dev)
+> >   {
+> > -	return dev->transport->get_blocks(dev) > U32_MAX;
+> > +	return (dev) ? dev->transport->get_blocks(dev) > U32_MAX : false;
+> >   }
+> >
+> 
+> Can we be sure that the only case we'll call target_sense_desc_format()
+> with a NULL se_device will be when returning a CHECK_CONDITION on a
+> non-existing LUN?
 
-Use an adapter-wide mutex to serialize state changes.
+WRITE_PROTECTED returns with a NULL se_device pointer as well.
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Suggested-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/common.h    |  1 +
- drivers/scsi/cxlflash/main.c      | 40 +++++++++++++++++++++++++++++++++------
- drivers/scsi/cxlflash/superpipe.c |  7 ++++++-
- 3 files changed, 41 insertions(+), 7 deletions(-)
+> 
+> We return the sense format in the D_SENSE of the control modepage
+> response and if some future bug will happen to call this function with
+> a NULL se_device we might violate what we reported to the initiator.
+> 
+> Maybe we should enforce this by having transport_lookup_cmd_lun() set
+> se_cmd->se_device = TARGET_NON_EXISTENT_LUN reserved identifier and 
+> check for that rather then NULL?
+> 
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index e6041b9..c9b1ec6 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -128,6 +128,7 @@ struct cxlflash_cfg {
- 	bool tmf_active;
- 	wait_queue_head_t reset_waitq;
- 	enum cxlflash_state state;
-+	struct mutex mutex;
- };
+No objection.
+
+> 
+> Thoughts?
+
+How about the following to fix up TCM_WRITE_PROTECT + D_SENSE..?
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index abf2076..ba102c5 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -62,22 +62,13 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 	struct se_session *se_sess = se_cmd->se_sess;
+ 	struct se_node_acl *nacl = se_sess->se_node_acl;
+ 	struct se_dev_entry *deve;
++	sense_reason_t ret = TCM_NO_SENSE;
  
- struct afu_cmd {
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 0487fac..a94340d 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -496,6 +496,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
- 	struct afu *afu = cfg->afu;
- 	struct device *dev = &cfg->dev->dev;
-+	enum cxlflash_state state;
- 	struct afu_cmd *cmd;
- 	u32 port_sel = scp->device->channel + 1;
- 	int nseg, i, ncount;
-@@ -525,7 +526,11 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	}
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+ 	rcu_read_lock();
+ 	deve = target_nacl_find_deve(nacl, unpacked_lun);
+ 	if (deve) {
+ 		atomic_long_inc(&deve->total_cmds);
  
--	switch (cfg->state) {
-+	mutex_lock(&cfg->mutex);
-+	state = cfg->state;
-+	mutex_unlock(&cfg->mutex);
+-		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
+-		    (deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY)) {
+-			pr_err("TARGET_CORE[%s]: Detected WRITE_PROTECTED LUN"
+-				" Access for 0x%08llx\n",
+-				se_cmd->se_tfo->get_fabric_name(),
+-				unpacked_lun);
+-			rcu_read_unlock();
+-			return TCM_WRITE_PROTECTED;
+-		}
+-
+ 		if (se_cmd->data_direction == DMA_TO_DEVICE)
+ 			atomic_long_add(se_cmd->data_length,
+ 					&deve->write_bytes);
+@@ -93,6 +84,17 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 
+ 		percpu_ref_get(&se_lun->lun_ref);
+ 		se_cmd->lun_ref_active = true;
 +
-+	switch (state) {
- 	case STATE_RESET:
- 		dev_dbg_ratelimited(dev, "%s: device is in reset!\n", __func__);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
-@@ -722,7 +727,9 @@ static void cxlflash_remove(struct pci_dev *pdev)
- 						  cfg->tmf_slock);
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
- 
-+	mutex_lock(&cfg->mutex);
- 	cfg->state = STATE_FAILTERM;
-+	mutex_unlock(&cfg->mutex);
- 	atomic_inc(&cfg->remove_active);
- 	cxlflash_stop_term_user_contexts(cfg);
- 
-@@ -1811,12 +1818,13 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
- 	int retry_cnt = 0;
- 	static DEFINE_MUTEX(sync_active);
- 
-+	mutex_lock(&sync_active);
-+	mutex_lock(&cfg->mutex);
- 	if (cfg->state != STATE_NORMAL) {
- 		pr_debug("%s: Sync not required! (%u)\n", __func__, cfg->state);
--		return 0;
-+		goto out;
++		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
++		    (deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY)) {
++			pr_err("TARGET_CORE[%s]: Detected WRITE_PROTECTED LUN"
++				" Access for 0x%08llx\n",
++				se_cmd->se_tfo->get_fabric_name(),
++				unpacked_lun);
++			rcu_read_unlock();
++			ret = TCM_WRITE_PROTECTED;	
++			goto ref_dev;
++		}
  	}
+ 	rcu_read_unlock();
  
--	mutex_lock(&sync_active);
- retry:
- 	cmd = cmd_checkout(afu);
- 	if (unlikely(!cmd)) {
-@@ -1858,6 +1866,7 @@ retry:
- 		     (cmd->sa.host_use_b[0] & B_ERROR)))
- 		rc = -1;
- out:
-+	mutex_unlock(&cfg->mutex);
- 	mutex_unlock(&sync_active);
- 	if (cmd)
- 		cmd_checkin(cmd);
-@@ -1900,6 +1909,7 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
- 	struct Scsi_Host *host = scp->device->host;
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
- 	struct afu *afu = cfg->afu;
-+	enum cxlflash_state state;
- 	int rcr = 0;
+@@ -109,12 +111,6 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 				unpacked_lun);
+ 			return TCM_NON_EXISTENT_LUN;
+ 		}
+-		/*
+-		 * Force WRITE PROTECT for virtual LUN 0
+-		 */
+-		if ((se_cmd->data_direction != DMA_FROM_DEVICE) &&
+-		    (se_cmd->data_direction != DMA_NONE))
+-			return TCM_WRITE_PROTECTED;
  
- 	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
-@@ -1912,7 +1922,11 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
- 		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 		se_lun = se_sess->se_tpg->tpg_virt_lun0;
+ 		se_cmd->se_lun = se_sess->se_tpg->tpg_virt_lun0;
+@@ -123,6 +119,15 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
  
- retry:
--	switch (cfg->state) {
-+	mutex_lock(&cfg->mutex);
-+	state = cfg->state;
-+	mutex_unlock(&cfg->mutex);
+ 		percpu_ref_get(&se_lun->lun_ref);
+ 		se_cmd->lun_ref_active = true;
 +
-+	switch (state) {
- 	case STATE_NORMAL:
- 		rcr = send_tmf(afu, scp, TMF_LUN_RESET);
- 		if (unlikely(rcr))
-@@ -1954,6 +1968,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
- 		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
- 		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
- 
-+	mutex_lock(&cfg->mutex);
- 	switch (cfg->state) {
- 	case STATE_NORMAL:
- 		cfg->state = STATE_RESET;
-@@ -1967,7 +1982,9 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
- 		wake_up_all(&cfg->reset_waitq);
- 		break;
- 	case STATE_RESET:
-+		mutex_unlock(&cfg->mutex);
- 		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
-+		mutex_lock(&cfg->mutex);
- 		if (cfg->state == STATE_NORMAL)
- 			break;
- 		/* fall through */
-@@ -1975,6 +1992,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
- 		rc = FAILED;
- 		break;
++		/*
++		 * Force WRITE PROTECT for virtual LUN 0
++		 */
++		if ((se_cmd->data_direction != DMA_FROM_DEVICE) &&
++		    (se_cmd->data_direction != DMA_NONE)) {
++			ret = TCM_WRITE_PROTECTED;
++			goto ref_dev;
++		}
  	}
-+	mutex_unlock(&cfg->mutex);
+ 	/*
+ 	 * RCU reference protected by percpu se_lun->lun_ref taken above that
+@@ -130,6 +135,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 	 * pointer can be kfree_rcu() by the final se_lun->lun_group put via
+ 	 * target_core_fabric_configfs.c:target_fabric_port_release
+ 	 */
++ref_dev:
+ 	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
+ 	atomic_long_inc(&se_cmd->se_dev->num_cmds);
  
- 	pr_debug("%s: returning rc=%d\n", __func__, rc);
- 	return rc;
-@@ -2312,10 +2330,11 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 	int port;
- 	ulong lock_flags;
+@@ -140,7 +146,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 		atomic_long_add(se_cmd->data_length,
+ 				&se_cmd->se_dev->read_bytes);
  
--	/* Avoid MMIO if the device has failed */
-+	mutex_lock(&cfg->mutex);
- 
-+	/* Avoid MMIO if the device has failed */
- 	if (cfg->state != STATE_NORMAL)
--		return;
-+		goto out;
- 
- 	spin_lock_irqsave(cfg->host->host_lock, lock_flags);
- 
-@@ -2346,6 +2365,8 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 
- 	if (atomic_dec_if_positive(&cfg->scan_host_needed) >= 0)
- 		scsi_scan_host(cfg->host);
-+out:
-+	mutex_unlock(&cfg->mutex);
+-	return 0;
++	return ret;
  }
- 
- /**
-@@ -2416,6 +2437,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
- 	cfg->lr_state = LINK_RESET_INVALID;
- 	cfg->lr_port = -1;
-+	mutex_init(&cfg->mutex);
- 	mutex_init(&cfg->ctx_tbl_list_mutex);
- 	mutex_init(&cfg->ctx_recovery_mutex);
- 	init_rwsem(&cfg->ioctl_rwsem);
-@@ -2503,7 +2525,9 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
- 
- 	switch (state) {
- 	case pci_channel_io_frozen:
-+		mutex_lock(&cfg->mutex);
- 		cfg->state = STATE_RESET;
-+		mutex_unlock(&cfg->mutex);
- 		scsi_block_requests(cfg->host);
- 		drain_ioctls(cfg);
- 		rc = cxlflash_mark_contexts_error(cfg);
-@@ -2514,7 +2538,9 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
- 		stop_afu(cfg);
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
-+		mutex_lock(&cfg->mutex);
- 		cfg->state = STATE_FAILTERM;
-+		mutex_unlock(&cfg->mutex);
- 		wake_up_all(&cfg->reset_waitq);
- 		scsi_unblock_requests(cfg->host);
- 		return PCI_ERS_RESULT_DISCONNECT;
-@@ -2561,7 +2587,9 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
- 
- 	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
- 
-+	mutex_lock(&cfg->mutex);
- 	cfg->state = STATE_NORMAL;
-+	mutex_unlock(&cfg->mutex);
- 	wake_up_all(&cfg->reset_waitq);
- 	scsi_unblock_requests(cfg->host);
- }
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 9844788..c3aaadf 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -1229,10 +1229,15 @@ static const struct file_operations null_fops = {
- static int check_state(struct cxlflash_cfg *cfg, bool ioctl)
- {
- 	struct device *dev = &cfg->dev->dev;
-+	enum cxlflash_state state;
- 	int rc = 0;
- 
- retry:
--	switch (cfg->state) {
-+	mutex_lock(&cfg->mutex);
-+	state = cfg->state;
-+	mutex_unlock(&cfg->mutex);
-+
-+	switch (state) {
- 	case STATE_RESET:
- 		dev_dbg(dev, "%s: Reset state, going to wait...\n", __func__);
- 		if (ioctl)
--- 
-2.1.0
-
+ EXPORT_SYMBOL(transport_lookup_cmd_lun);
