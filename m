@@ -1,73 +1,58 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v2 00/11] exynos-ufs: add support for Exynos
-Date: Thu, 17 Sep 2015 15:15:26 +0530
-Message-ID: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:49424 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbbIQJyn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 05:54:43 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v2 04/11] scsi: ufs: add quirk not to allow reset of interrupt
+ aggregation
+Date: Thu, 17 Sep 2015 15:15:30 +0530
+Message-ID: <1442483137-32376-5-git-send-email-alim.akhtar@samsung.com>
+References: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-This patch-set introduces UFS (Universal Flash Storage) host support
-for Samsung Exynos SoC. Mostly, it consists of UFS PHY and host specific driver.
-And it also contains some quirks handling for Exynos.
+From: Seungwon Jeon <essuuj@gmail.com>
 
--Changes since v1:
-* Addressed review comments from Alexey[1] and various review comments from Amit.
-* Updated email id of Seungwon as his samsung id is void now.
-* Added ufs platform data
+Some host controller supports interrupt aggregation, but doesn't
+allow to reset counter and timer by s/w.
 
-[1]-> https://lkml.org/lkml/2015/8/23/124
+Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c |    3 ++-
+ drivers/scsi/ufs/ufshcd.h |    6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-Alim Akhtar (1):
-  scsi: ufs: Add exynos ufs platform data
-
-Seungwon Jeon (10):
-  phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
-  scsi: ufs: add quirk to contain unconformable utrd field
-  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
-  scsi: ufs: add quirk not to allow reset of interrupt aggregation
-  scsi: ufs: add quirk to enable host controller without hce
-  scsi: ufs: add specific callback for nexus type
-  scsi: ufs: add add specific callback for hibern8
-  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
-  scsi: ufs: return value of pwr_change_notify
-  scsi: ufs-exynos: add UFS host support for Exynos SoCs
-
- .../devicetree/bindings/phy/samsung-phy.txt        |   22 +
- .../devicetree/bindings/ufs/ufs-exynos.txt         |   93 ++
- drivers/phy/Kconfig                                |    7 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-exynos-ufs.c                       |  262 +++++
- drivers/phy/phy-exynos-ufs.h                       |   85 ++
- drivers/phy/phy-exynos7-ufs.h                      |   89 ++
- drivers/scsi/ufs/Kconfig                           |   12 +
- drivers/scsi/ufs/Makefile                          |    1 +
- drivers/scsi/ufs/ufs-exynos-hw.c                   |  147 +++
- drivers/scsi/ufs/ufs-exynos-hw.h                   |   43 +
- drivers/scsi/ufs/ufs-exynos.c                      | 1173 ++++++++++++++++++++
- drivers/scsi/ufs/ufs-exynos.h                      |  463 ++++++++
- drivers/scsi/ufs/ufshcd-pltfrm.c                   |    2 +
- drivers/scsi/ufs/ufshcd.c                          |  196 +++-
- drivers/scsi/ufs/ufshcd.h                          |   35 +
- drivers/scsi/ufs/ufshci.h                          |   26 +-
- drivers/scsi/ufs/unipro.h                          |   47 +
- include/linux/phy/phy-exynos-ufs.h                 |  107 ++
- 19 files changed, 2784 insertions(+), 27 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
- create mode 100644 drivers/phy/phy-exynos-ufs.c
- create mode 100644 drivers/phy/phy-exynos-ufs.h
- create mode 100644 drivers/phy/phy-exynos7-ufs.h
- create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.c
- create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.h
- create mode 100644 drivers/scsi/ufs/ufs-exynos.c
- create mode 100644 drivers/scsi/ufs/ufs-exynos.h
- create mode 100644 include/linux/phy/phy-exynos-ufs.h
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 257bffc..7b87075 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3204,7 +3204,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	 * false interrupt if device completes another request after resetting
+ 	 * aggregation and before reading the DB.
+ 	 */
+-	if (ufshcd_is_intr_aggr_allowed(hba))
++	if (ufshcd_is_intr_aggr_allowed(hba) &&
++	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
+ 		ufshcd_reset_intr_aggr(hba);
+ 
+ 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index ba38842..c59f8ae 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -471,6 +471,12 @@ struct ufs_hba {
+ 	 */
+ 	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		UFS_BIT(7)
+ 
++	/*
++	 * This quirk needs to be enabled if host controller doesn't allow
++	 * that the interrupt aggregation timer and counter are reset by s/w.
++	 */
++	#define UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		UFS_BIT(8)
++
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
+ 	wait_queue_head_t tm_wq;
 -- 
 1.7.10.4
-
