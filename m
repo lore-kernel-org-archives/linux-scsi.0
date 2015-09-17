@@ -1,78 +1,135 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH 04/10] scsi: ufs: add quirk not to allow reset of interrupt
- aggregation
-Date: Thu, 17 Sep 2015 14:00:23 +0530
-Message-ID: <55FA7A1F.7050604@samsung.com>
+Subject: Re: [PATCH 07/10] scsi: ufs: add add specific callback for hibern8
+Date: Thu, 17 Sep 2015 14:01:50 +0530
+Message-ID: <55FA7A76.2080705@samsung.com>
 References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
- <1440149281-26336-5-git-send-email-alim.akhtar@samsung.com>
- <CADGdYn4pqqSz_7zT8SQX+w3nSKALbLkH7Vf_ZbT69XQdGNUwCw@mail.gmail.com>
+ <1440149281-26336-8-git-send-email-alim.akhtar@samsung.com>
+ <CADGdYn4Vuz9ruC0y2mQrMOCRpWJfk9aF61Uk+AGKBgBSO1UZSg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:39740 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199AbbIQIi6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 04:38:58 -0400
-In-reply-to: <CADGdYn4pqqSz_7zT8SQX+w3nSKALbLkH7Vf_ZbT69XQdGNUwCw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <CADGdYn4Vuz9ruC0y2mQrMOCRpWJfk9aF61Uk+AGKBgBSO1UZSg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: amit daniel kachhap <amit.daniel@samsung.com>
 Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, vinholikatti@gmail.com, JBottomley@odin.com, essuuj@gmail.com
+List-Id: linux-scsi@vger.kernel.org
 
-Hi Amit
+Hi Amit,
 
-On 08/26/2015 11:46 AM, amit daniel kachhap wrote:
-> Few comments below,
->
+On 08/26/2015 11:51 AM, amit daniel kachhap wrote:
 > On Fri, Aug 21, 2015 at 2:57 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
 >> From: Seungwon Jeon <tgih.jun@samsung.com>
 >>
->> Some host controller supports interrupt aggregation, but doesn't
->> allow to reset counter and timer by s/w.
+>> Some host controller needs specific handling before/after
+>> (un)hibernation, This change adds specific callback function
+>> to support vendor's implementation.
 >>
 >> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
 >> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 >> ---
->>   drivers/scsi/ufs/ufshcd.c |    3 ++-
->>   drivers/scsi/ufs/ufshcd.h |    6 ++++++
->>   2 files changed, 8 insertions(+), 1 deletion(-)
+>>   drivers/scsi/ufs/ufshcd.c |   36 ++++++++++++++++++++++++++++++++----
+>>   drivers/scsi/ufs/ufshcd.h |    3 +++
+>>   2 files changed, 35 insertions(+), 4 deletions(-)
 >>
 >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b441a39..35380aa 100644
+>> index bc27f5e..d425ea1 100644
 >> --- a/drivers/scsi/ufs/ufshcd.c
 >> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -3204,7 +3204,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
->>           * false interrupt if device completes another request after resetting
->>           * aggregation and before reading the DB.
->>           */
->> -       if (ufshcd_is_intr_aggr_allowed(hba))
->> +       if (ufshcd_is_intr_aggr_allowed(hba) &&
->> +           !(hba->quirks & UFSHCI_QUIRK_BROKEN_RESET_INTR_AGGR))
-> How about to rename this quirk as UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR as
-> there are some drawbacks about the existing method also as per the
-> comments above. Or this can be also put as opts instead as quirk.
-Ok will rename this. Thanks
->>                  ufshcd_reset_intr_aggr(hba);
+>> @@ -181,8 +181,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+>>   static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+>>                                   bool skip_ref_clk);
+>>   static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+>> -static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+>> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+>> +static int ufshcd_uic_hibern8_ctrl(struct ufs_hba *hba, bool en);
+>>   static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+>>   static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+>>   static irqreturn_t ufshcd_intr(int irq, void *__hba);
+>> @@ -215,6 +214,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+>>          }
+>>   }
 >>
->>          tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> +static inline int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>> +{
+>> +       return ufshcd_uic_hibern8_ctrl(hba, true);
+>> +}
+>> +
+>> +static inline int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>> +{
+>> +       return ufshcd_uic_hibern8_ctrl(hba, false);
+>> +}
+>> +
+>>   /*
+>>    * ufshcd_wait_for_register - wait for register value to change
+>>    * @hba - per-adapter interface
+>> @@ -2395,7 +2404,7 @@ out:
+>>          return ret;
+>>   }
+>>
+>> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>> +static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>>   {
+>>          struct uic_command uic_cmd = {0};
+>>
+>> @@ -2404,7 +2413,7 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>>          return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>>   }
+>>
+>> -static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>> +static int __ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>>   {
+>>          struct uic_command uic_cmd = {0};
+>>          int ret;
+>> @@ -2419,6 +2428,25 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>>          return ret;
+>>   }
+>>
+>> +static int ufshcd_uic_hibern8_ctrl(struct ufs_hba *hba, bool en)
+>> +{
+>> +       int ret;
+>> +
+>> +       if (hba->vops && hba->vops->hibern8_notify)
+>> +               hba->vops->hibern8_notify(hba, en, PRE_CHANGE);
+> Return of hibern8_notify is not checked. Otherwise make the return type void.
+ok will change.
+>> +
+>> +       ret = en ? __ufshcd_uic_hibern8_enter(hba) :
+>> +                       __ufshcd_uic_hibern8_exit(hba);
+>> +       if (ret)
+>> +               goto out;
+>> +
+>> +       if (hba->vops && hba->vops->hibern8_notify)
+>> +               hba->vops->hibern8_notify(hba, en, POST_CHANGE);
+>> +
+>> +out:
+>> +       return ret;
+>> +}
+>> +
+>>    /**
+>>    * ufshcd_init_pwr_info - setting the POR (power on reset)
+>>    * values in hba power info
 >> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 24245c9..7986a54 100644
+>> index 0b7dde0..045968e 100644
 >> --- a/drivers/scsi/ufs/ufshcd.h
 >> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -471,6 +471,12 @@ struct ufs_hba {
->>           */
->>          #define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(7)
->>
->> +       /*
->> +        * This quirk needs to be enabled if host controller doesn't allow
->> +        * that the interrupt aggregation timer and counter are reset by s/w.
->> +        */
->> +       #define UFSHCI_QUIRK_BROKEN_RESET_INTR_AGGR             UFS_BIT(8)
->> +
->>          unsigned int quirks;    /* Deviations from standard UFSHCI spec. */
->>
->>          wait_queue_head_t tm_wq;
+>> @@ -260,6 +260,8 @@ struct ufs_pwr_mode_info {
+>>    * @specify_nexus_t_xfer_req:
+>>    * @specify_nexus_t_tm_req: called before command is issued to allow vendor
+>>    *                     specific handling to be set for nexus type.
+>> + * @hibern8_notify: called before and after hibernate/unhibernate is carried out
+>> + *                 to allow vendor spesific implementation.
+>>    * @suspend: called during host controller PM callback
+>>    * @resume: called during host controller PM callback
+>>    */
+>> @@ -276,6 +278,7 @@ struct ufs_hba_variant_ops {
+>>          int     (*pwr_change_notify)(struct ufs_hba *,
+>>                                          bool, struct ufs_pa_layer_attr *,
+>>                                          struct ufs_pa_layer_attr *);
+>> +       int     (*hibern8_notify)(struct ufs_hba *, bool, bool);
+>>          void    (*specify_nexus_t_xfer_req)(struct ufs_hba *,
+>>                                              int, struct scsi_cmnd *);
+>>          void    (*specify_nexus_t_tm_req)(struct ufs_hba *, int, u8);
 >> --
 >> 1.7.10.4
 >>
