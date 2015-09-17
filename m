@@ -1,71 +1,46 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 2/4] scsi: cleanup scsi/scsi_ioctl.h
-Date: Thu, 17 Sep 2015 15:42:16 +0200
-Message-ID: <1442497338-17019-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 1/4] scsi: remove old-style type names from sg.h
+Date: Thu, 17 Sep 2015 15:42:15 +0200
+Message-ID: <1442497338-17019-2-git-send-email-pbonzini@redhat.com>
 References: <1442497338-17019-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36083 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbbIQNmb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 09:42:31 -0400
 In-Reply-To: <1442497338-17019-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-SCSI_REMOVAL_* goes together with other SCSI command constants in
-include/scsi/scsi.h.  It is also used outside the implementation
-of the ioctls (and it is not part of the user API).
-
-scsi_fctargaddress/Scsi_FCTargAddress has had no in-tree use since
-commit ca61f10ab2b8 ("[SCSI] remove broken driver cpqfc", 2005-10-29).
-Remove it, just in time for the the tenth anniversary of its demise.
+These will not be exported by the new linux/sg.h header, and scsi/sg.h will
+not have any user API after linux/sg.h is created.  Since they have no
+user in the kernel, they can be zapped.
 
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- include/scsi/scsi.h       | 6 ++++++
- include/scsi/scsi_ioctl.h | 8 --------
- 2 files changed, 6 insertions(+), 8 deletions(-)
+ include/scsi/sg.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index e0a3398b1547..5e2bafdbd96f 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -279,6 +279,12 @@ static inline int scsi_is_wlun(u64 lun)
- #define SCSI_INQ_PQ_NOT_CON     0x01
- #define SCSI_INQ_PQ_NOT_CAP     0x03
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 3afec7032448..370c78c37926 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -207,12 +207,6 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
  
-+/*
-+ * PREVENT/ALLOW MEDIUM REMOVAL
-+ */
-+#define	SCSI_REMOVAL_PREVENT	1
-+#define	SCSI_REMOVAL_ALLOW	0
-+
+ #define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatibility */
  
- /*
-  * Here are some scsi specific ioctl commands which are sometimes useful.
-diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
-index 8d19d1d233c3..c81962bef7a0 100644
---- a/include/scsi/scsi_ioctl.h
-+++ b/include/scsi/scsi_ioctl.h
-@@ -12,9 +12,6 @@
- #define SCSI_IOCTL_DOORLOCK 0x5380		/* lock the eject mechanism */
- #define SCSI_IOCTL_DOORUNLOCK 0x5381		/* unlock the mechanism	  */
- 
--#define	SCSI_REMOVAL_PREVENT	1
--#define	SCSI_REMOVAL_ALLOW	0
+-/* Alternate style type names, "..._t" variants preferred */
+-typedef struct sg_io_hdr Sg_io_hdr;
+-typedef struct sg_io_vec Sg_io_vec;
+-typedef struct sg_scsi_id Sg_scsi_id;
+-typedef struct sg_req_info Sg_req_info;
 -
- #ifdef __KERNEL__
  
- struct scsi_device;
-@@ -34,11 +31,6 @@ typedef struct scsi_idlun {
- 	__u32 host_unique_id;
- } Scsi_Idlun;
- 
--/* Fibre Channel WWN, port_id struct */
--typedef struct scsi_fctargaddress {
--	__u32 host_port_id;
--	unsigned char host_wwn[8]; // include NULL term.
--} Scsi_FCTargAddress;
- 
- int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
- 		int cmd, bool ndelay);
+ /* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv */
+ /*   The older SG interface based on the 'sg_header' structure follows.   */
 -- 
 2.5.0
+
+
