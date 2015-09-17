@@ -1,62 +1,40 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 09/30] cxlflash: Fix to stop interrupt processing on remove
-Date: Thu, 17 Sep 2015 11:55:25 -0500
-Message-ID: <F82115EC-8D08-40D7-B4BD-DE1796A865B5@linux.vnet.ibm.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com> <1442438881-49507-1-git-send-email-mrochs@linux.vnet.ibm.com> <063D6719AE5E284EB5DD2968C1650D6D1CB98C57@AcuExch.aculab.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: DEFINE_IDA causing memory leaks? (was  Re: [PATCH 1/2] virtio:
+ fix memory leak of virtio ida cache layers)
+Date: Thu, 17 Sep 2015 13:15:29 -0400
+Message-ID: <20150917171529.GA15447@htj.duckdns.org>
+References: <1442449758-14594-1-git-send-email-s-anna@ti.com>
+ <1442449758-14594-2-git-send-email-s-anna@ti.com>
+ <20150917082425-mutt-send-email-mst@redhat.com>
+ <1442499344.4073.0.camel@HansenPartnership.com>
+ <20150917190538-mutt-send-email-mst@redhat.com>
+ <1442508517.4073.13.camel@HansenPartnership.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:50142 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbbIQQze convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 12:55:34 -0400
-Received: from /spool/local
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 17 Sep 2015 12:55:33 -0400
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id C44416E8041
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 12:47:13 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8HGtU5W58458196
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 16:55:30 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8HGtRMt002403
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 12:55:29 -0400
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CB98C57@AcuExch.aculab.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1442508517.4073.13.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Suman Anna <s-anna@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
 
-> On Sep 17, 2015, at 6:58 AM, David Laight <David.Laight@ACULAB.COM> wrote:
-> 
-> From: Linuxppc-dev Matthew R. Ochs
->> Sent: 16 September 2015 22:28
->> Interrupt processing can run in parallel to a remove operation. This
->> can lead to a condition where the interrupt handler is processing with
->> memory that has been freed.
->> 
->> To avoid processing an interrupt while memory may be yanked, check for
->> removal while in the interrupt handler. Bail when removal is imminent.
-> 
-> On the face of it this just reduces the size of the window somewhat.
+Hello,
 
-Agreed.
+On Thu, Sep 17, 2015 at 09:48:37AM -0700, James Bottomley wrote:
+> Well, there's an easy fix for that.  We could have ida_remove() actually
+> free the bitmap and not cache it if it's the last layer.  That way ida
+> would naturally empty and we wouldn't need a destructor.   Tejun, would
+> that work?
 
-> 
-> What happens if the interrupt routine reads the flag just before it is set
-> (so is processing the entry that is being removed) and is then (say)
-> interrupted by a higher priority interrupt that takes longer to execute than
-> the remove code?
+Yeah, that definitely is one way to go about it.  It kinda muddles the
+purpose of ida_destroy() tho.  I suppose we can rename it to
+idr_remove_all() and then do the same to idr.  I'm not particularly
+objecting to all that but what's wrong with just calling idr_destroy()
+on exit paths?  If missing the call in modules is an issue, maybe we
+can just annotate idr/ida with debugobj?
 
-Understood. To completely close we'd need to either introduce a lock or a
-reciprocal flag/count such that the remove doesn't make forward progress
-until after interrupt processing has completed. I can look at introducing such
-a mechanism in a later patch to fully remove the exposure.
+Thanks.
 
-
--matt
-
-
+-- 
+tejun
