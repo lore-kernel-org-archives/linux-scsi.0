@@ -1,93 +1,73 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH 09/10] scsi: ufs: return value of pwr_change_notify
-Date: Thu, 17 Sep 2015 14:03:42 +0530
-Message-ID: <55FA7AE6.3000801@samsung.com>
-References: <1440149281-26336-1-git-send-email-alim.akhtar@samsung.com>
- <1440149281-26336-10-git-send-email-alim.akhtar@samsung.com>
- <CADGdYn4u3bG8vxP09Jjvjh3tEyn5B6=3_7y3iSqi=dfkqLWjSQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <CADGdYn4u3bG8vxP09Jjvjh3tEyn5B6=3_7y3iSqi=dfkqLWjSQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: amit daniel kachhap <amit.daniel@samsung.com>
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, vinholikatti@gmail.com, JBottomley@odin.com, essuuj@gmail.com
+Subject: [PATCH v2 00/11] exynos-ufs: add support for Exynos
+Date: Thu, 17 Sep 2015 15:15:26 +0530
+Message-ID: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:49424 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbbIQJyn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 05:54:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 
+This patch-set introduces UFS (Universal Flash Storage) host support
+for Samsung Exynos SoC. Mostly, it consists of UFS PHY and host specific driver.
+And it also contains some quirks handling for Exynos.
 
-Hi Amit
-On 08/26/2015 11:55 AM, amit daniel kachhap wrote:
-> On Fri, Aug 21, 2015 at 2:58 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
->> From: Seungwon Jeon <tgih.jun@samsung.com>
->>
->> Behavior of the "powwer mode change" contains vendor specific
-> s/powwer/power
-ok
->> operation known as pwr_change_notify. This change adds return
->> for pwr_change_notify to find success or failure.
->>
->> Signed-off-by: Seungwon Jeon <tgih.jun@samsung.com>
->> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
->> ---
->>   drivers/scsi/ufs/ufshcd.c |   22 +++++++++++++++-------
->>   1 file changed, 15 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 8982da9..142a927 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -2579,14 +2579,18 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
->>                  dev_err(hba->dev,
->>                          "%s: power mode change failed %d\n", __func__, ret);
->>          } else {
->> -               if (hba->vops && hba->vops->pwr_change_notify)
->> -                       hba->vops->pwr_change_notify(hba,
->> -                               POST_CHANGE, NULL, pwr_mode);
->> +               if (hba->vops && hba->vops->pwr_change_notify) {
->> +                       ret = hba->vops->pwr_change_notify(hba,
->> +                                       POST_CHANGE, NULL, pwr_mode);
->> +                       if (ret)
->> +                               goto out;
->> +               }
->>
->>                  memcpy(&hba->pwr_info, pwr_mode,
->>                          sizeof(struct ufs_pa_layer_attr));
->>          }
->>
->> +out:
->>          return ret;
->>   }
->>
->> @@ -2601,14 +2605,18 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
->>          struct ufs_pa_layer_attr final_params = { 0 };
->>          int ret;
->>
->> -       if (hba->vops && hba->vops->pwr_change_notify)
->> -               hba->vops->pwr_change_notify(hba,
->> -                    PRE_CHANGE, desired_pwr_mode, &final_params);
->> -       else
->> +       if (hba->vops && hba->vops->pwr_change_notify) {
->> +               ret = hba->vops->pwr_change_notify(hba,
->> +                       PRE_CHANGE, desired_pwr_mode, &final_params);
->> +               if (ret)
->> +                       goto out;
->> +       } else {
->>                  memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
->> +       }
->>
->>          ret = ufshcd_change_power_mode(hba, &final_params);
->>
->> +out:
->>          return ret;
->>   }
->>   EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
->> --
->> 1.7.10.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->
+-Changes since v1:
+* Addressed review comments from Alexey[1] and various review comments from Amit.
+* Updated email id of Seungwon as his samsung id is void now.
+* Added ufs platform data
+
+[1]-> https://lkml.org/lkml/2015/8/23/124
+
+Alim Akhtar (1):
+  scsi: ufs: Add exynos ufs platform data
+
+Seungwon Jeon (10):
+  phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
+  scsi: ufs: add quirk to contain unconformable utrd field
+  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
+  scsi: ufs: add quirk not to allow reset of interrupt aggregation
+  scsi: ufs: add quirk to enable host controller without hce
+  scsi: ufs: add specific callback for nexus type
+  scsi: ufs: add add specific callback for hibern8
+  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
+  scsi: ufs: return value of pwr_change_notify
+  scsi: ufs-exynos: add UFS host support for Exynos SoCs
+
+ .../devicetree/bindings/phy/samsung-phy.txt        |   22 +
+ .../devicetree/bindings/ufs/ufs-exynos.txt         |   93 ++
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-exynos-ufs.c                       |  262 +++++
+ drivers/phy/phy-exynos-ufs.h                       |   85 ++
+ drivers/phy/phy-exynos7-ufs.h                      |   89 ++
+ drivers/scsi/ufs/Kconfig                           |   12 +
+ drivers/scsi/ufs/Makefile                          |    1 +
+ drivers/scsi/ufs/ufs-exynos-hw.c                   |  147 +++
+ drivers/scsi/ufs/ufs-exynos-hw.h                   |   43 +
+ drivers/scsi/ufs/ufs-exynos.c                      | 1173 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                      |  463 ++++++++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |    2 +
+ drivers/scsi/ufs/ufshcd.c                          |  196 +++-
+ drivers/scsi/ufs/ufshcd.h                          |   35 +
+ drivers/scsi/ufs/ufshci.h                          |   26 +-
+ drivers/scsi/ufs/unipro.h                          |   47 +
+ include/linux/phy/phy-exynos-ufs.h                 |  107 ++
+ 19 files changed, 2784 insertions(+), 27 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/phy/phy-exynos-ufs.c
+ create mode 100644 drivers/phy/phy-exynos-ufs.h
+ create mode 100644 drivers/phy/phy-exynos7-ufs.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+ create mode 100644 include/linux/phy/phy-exynos-ufs.h
+
+-- 
+1.7.10.4
+
