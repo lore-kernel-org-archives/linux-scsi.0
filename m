@@ -1,147 +1,61 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v2 09/30] cxlflash: Fix to stop interrupt processing on
- remove
-Date: Thu, 17 Sep 2015 14:38:19 +0200
-Message-ID: <55FAB43B.8050306@redhat.com>
-References: <1442422399-41262-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH RESEND] scsi: Fix sense information setting in fixed sized
+ format
+Date: Thu, 17 Sep 2015 15:42:36 +0300
+Message-ID: <55FAB53C.3080102@dev.mellanox.co.il>
+References: <1441298973-27735-1-git-send-email-sagig@mellanox.com>
+ <1441306948.23183.328.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38222 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751477AbbIQMiY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Sep 2015 08:38:24 -0400
-In-Reply-To: <1442422399-41262-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37290 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751477AbbIQMmT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 08:42:19 -0400
+Received: by wicfx3 with SMTP id fx3so25601720wic.0
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 05:42:18 -0700 (PDT)
+In-Reply-To: <1441306948.23183.328.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com
-Cc: mikey@neuling.org, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: emilne@redhat.com, linux-scsi@vger.kernel.org
 
-On 16.9.2015 18:53, Matthew R. Ochs wrote:
-> Interrupt processing can run in parallel to a remove operation. This
-> can lead to a condition where the interrupt handler is processing with
-> memory that has been freed.
->     
-> To avoid processing an interrupt while memory may be yanked, check for
-> removal while in the interrupt handler. Bail when removal is imminent.
+On 9/3/2015 10:02 PM, Ewan Milne wrote:
+> On Thu, 2015-09-03 at 19:49 +0300, Sagi Grimberg wrote:
+>> In fixed size sense format the information field is a four byte
+>> field.
+>>
+>> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+>> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+>> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>   drivers/scsi/scsi_common.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+>> index 41432c10dda2..8cfb7eeb5bbc 100644
+>> --- a/drivers/scsi/scsi_common.c
+>> +++ b/drivers/scsi/scsi_common.c
+>> @@ -270,7 +270,7 @@ void scsi_set_sense_information(u8 *buf, u64 info)
+>>   		put_unaligned_be64(info, &ucp[4]);
+>>   	} else if ((buf[0] & 0x7f) == 0x70) {
+>>   		buf[0] |= 0x80;
+>> -		put_unaligned_be64(info, &buf[3]);
+>> +		put_unaligned_be32(info, &buf[3]);
+>>   	}
+>>   }
+>>   EXPORT_SYMBOL(scsi_set_sense_information);
 >
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxlflash/common.h |  2 ++
->  drivers/scsi/cxlflash/main.c   | 21 +++++++++++++++------
->  2 files changed, 17 insertions(+), 6 deletions(-)
+> Looks correct per SPC-4 4.5.3
 >
-> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-> index 1abe4e0..03d2cc6 100644
-> --- a/drivers/scsi/cxlflash/common.h
-> +++ b/drivers/scsi/cxlflash/common.h
-> @@ -103,6 +103,8 @@ struct cxlflash_cfg {
->  	enum cxlflash_lr_state lr_state;
->  	int lr_port;
->  
-> +	atomic_t remove_active;
-> +
->  	struct cxl_afu *cxl_afu;
->  
->  	struct pci_pool *cxlflash_cmd_pool;
-> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-> index 6e85c77..89ee648 100644
-> --- a/drivers/scsi/cxlflash/main.c
-> +++ b/drivers/scsi/cxlflash/main.c
-> @@ -892,6 +892,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
->  	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
->  
->  	cfg->state = STATE_FAILTERM;
-> +	atomic_inc(&cfg->remove_active);
+> And you did post a patch to target for the case where the sector
+> did not fit in 32 bits, which requires descriptor format sense, so...
+>
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-Hi Matthew,
-you could just call term_afu at this point, this way you don't
-need an additional check in all irq functions.
-Cheers,
-Tomas
+James, can you pick this up please?
 
->  	cxlflash_stop_term_user_contexts(cfg);
->  
->  	switch (cfg->init_state) {
-> @@ -1380,16 +1381,20 @@ static void afu_err_intr_init(struct afu *afu)
->  static irqreturn_t cxlflash_sync_err_irq(int irq, void *data)
->  {
->  	struct afu *afu = (struct afu *)data;
-> +	struct cxlflash_cfg *cfg = afu->parent;
->  	u64 reg;
->  	u64 reg_unmasked;
->  
-> +	if (atomic_read(&cfg->remove_active))
-> +		goto out;
-> +
->  	reg = readq_be(&afu->host_map->intr_status);
->  	reg_unmasked = (reg & SISL_ISTATUS_UNMASK);
->  
->  	if (reg_unmasked == 0UL) {
->  		pr_err("%s: %llX: spurious interrupt, intr_status %016llX\n",
->  		       __func__, (u64)afu, reg);
-> -		goto cxlflash_sync_err_irq_exit;
-> +		goto out;
->  	}
->  
->  	pr_err("%s: %llX: unexpected interrupt, intr_status %016llX\n",
-> @@ -1397,7 +1402,7 @@ static irqreturn_t cxlflash_sync_err_irq(int irq, void *data)
->  
->  	writeq_be(reg_unmasked, &afu->host_map->intr_clear);
->  
-> -cxlflash_sync_err_irq_exit:
-> +out:
->  	pr_debug("%s: returning rc=%d\n", __func__, IRQ_HANDLED);
->  	return IRQ_HANDLED;
->  }
-> @@ -1412,6 +1417,7 @@ cxlflash_sync_err_irq_exit:
->  static irqreturn_t cxlflash_rrq_irq(int irq, void *data)
->  {
->  	struct afu *afu = (struct afu *)data;
-> +	struct cxlflash_cfg *cfg = afu->parent;
->  	struct afu_cmd *cmd;
->  	bool toggle = afu->toggle;
->  	u64 entry,
-> @@ -1421,8 +1427,10 @@ static irqreturn_t cxlflash_rrq_irq(int irq, void *data)
->  
->  	/* Process however many RRQ entries that are ready */
->  	while (true) {
-> -		entry = *hrrq_curr;
-> +		if (atomic_read(&cfg->remove_active))
-> +			goto out;
->  
-> +		entry = *hrrq_curr;
->  		if ((entry & SISL_RESP_HANDLE_T_BIT) != toggle)
->  			break;
->  
-> @@ -1440,7 +1448,7 @@ static irqreturn_t cxlflash_rrq_irq(int irq, void *data)
->  
->  	afu->hrrq_curr = hrrq_curr;
->  	afu->toggle = toggle;
-> -
-> +out:
->  	return IRQ_HANDLED;
->  }
->  
-> @@ -1454,7 +1462,7 @@ static irqreturn_t cxlflash_rrq_irq(int irq, void *data)
->  static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
->  {
->  	struct afu *afu = (struct afu *)data;
-> -	struct cxlflash_cfg *cfg;
-> +	struct cxlflash_cfg *cfg = afu->parent;
->  	u64 reg_unmasked;
->  	const struct asyc_intr_info *info;
->  	struct sisl_global_map *global = &afu->afu_map->global;
-> @@ -1462,7 +1470,8 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
->  	u8 port;
->  	int i;
->  
-> -	cfg = afu->parent;
-> +	if (atomic_read(&cfg->remove_active))
-> +		goto out;
->  
->  	reg = readq_be(&global->regs.aintr_status);
->  	reg_unmasked = (reg & SISL_ASTATUS_UNMASK);
-
+Thanks,
+Sagi.
