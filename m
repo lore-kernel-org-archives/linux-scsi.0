@@ -1,31 +1,24 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Fwd: [lkp] [dma] 6894258eda: mpt2sas0: reply_post_free pool:
- pci_pool_alloc failed
-Date: Thu, 17 Sep 2015 13:08:45 -0700
-Message-ID: <CA+55aFz-a+U+dmo9yaYMm0p751Q6xkfuUUV9Zwta87dhY4iRvQ@mail.gmail.com>
-References: <87lhc5g3a6.fsf@yhuang-dev.intel.com>
-	<CA+55aFwbbRxBMA7p+NC-g6VuKkSJQjgrJ-y0nngRseARFXcxFA@mail.gmail.com>
-	<20150917200609.GA14601@infradead.org>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 05/17] Update the md driver to use idr helper functions.
+Date: Thu, 17 Sep 2015 13:51:16 -0700
+Message-ID: <55FB27C4.3090702@suse.com>
+References: <cover.1442263512.git.lduncan@suse.com>
+ <6798bc818d81b24058b9c0a70990149d96002646.1442263512.git.lduncan@suse.com>
+ <20150915180556.GA18972@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33356 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792AbbIQUIq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2015 16:08:46 -0400
-Received: by iofh134 with SMTP id h134so34822143iof.0
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2015 13:08:45 -0700 (PDT)
-In-Reply-To: <20150917200609.GA14601@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150915180556.GA18972@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Guenter Roeck <linux@roeck-us.net>, Max Filippov <jcmvbkbc@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, James Bottomley <jbottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Junichi Nomura <j-nomura@ce.jp.nec.com>, Thomas Gleixner <tglx@linutronix.de>
 
-On Thu, Sep 17, 2015 at 1:06 PM, Christoph Hellwig <hch@infradead.org> wrote:
->
-> This was caused by my commit, and I already acked a patch from Junichi
-> Nomura to fix which should land in your inbox ASAP.
+On 09/15/2015 11:05 AM, Mike Snitzer wrote:
+> Subject should really be:
+> "dm: update to use idr helper functions"
 
-Thanks,
+Yes, I grabbed the wrong part of the driver pathname.
 
-                 Linus
+Would it be better to resubmit just this patch, or to resubmit the series?
