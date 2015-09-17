@@ -1,101 +1,70 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: DEFINE_IDA causing memory leaks? (was  Re: [PATCH 1/2] virtio:
- fix memory leak of virtio ida cache layers)
-Date: Thu, 17 Sep 2015 07:15:44 -0700
-Message-ID: <1442499344.4073.0.camel@HansenPartnership.com>
-References: <1442449758-14594-1-git-send-email-s-anna@ti.com>
-	 <1442449758-14594-2-git-send-email-s-anna@ti.com>
-	 <20150917082425-mutt-send-email-mst@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND] scsi: Fix sense information setting in fixed
+ sized format
+Date: Thu, 17 Sep 2015 07:24:23 -0700
+Message-ID: <1442499863.4073.4.camel@HansenPartnership.com>
+References: <1441298973-27735-1-git-send-email-sagig@mellanox.com>
+	 <1441306948.23183.328.camel@localhost.localdomain>
+	 <55FAB53C.3080102@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDMOV25X7AMRBE4W5OXQKGQEV276QRY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20150917082425-mutt-send-email-mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Suman Anna <s-anna-l0cyMroinI0@public.gmane.org>, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33987 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751643AbbIQOYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2015 10:24:24 -0400
+In-Reply-To: <55FAB53C.3080102@dev.mellanox.co.il>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: emilne@redhat.com, linux-scsi@vger.kernel.org
 
-On Thu, 2015-09-17 at 08:33 +0300, Michael S. Tsirkin wrote:
-> On Wed, Sep 16, 2015 at 07:29:17PM -0500, Suman Anna wrote:
-> > The virtio core uses a static ida named virtio_index_ida for
-> > assigning index numbers to virtio devices during registration.
-> > The ida core may allocate some internal idr cache layers and
-> > an ida bitmap upon any ida allocation, and all these layers are
-> > truely freed only upon the ida destruction. The virtio_index_ida
-> > is not destroyed at present, leading to a memory leak when using
-> > the virtio core as a module and atleast one virtio device is
-> > registered and unregistered.
-> > 
-> > Fix this by invoking ida_destroy() in the virtio core module
-> > exit.
-> > 
-> > Cc: "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > Signed-off-by: Suman Anna <s-anna-l0cyMroinI0@public.gmane.org>
+On Thu, 2015-09-17 at 15:42 +0300, Sagi Grimberg wrote:
+> On 9/3/2015 10:02 PM, Ewan Milne wrote:
+> > On Thu, 2015-09-03 at 19:49 +0300, Sagi Grimberg wrote:
+> >> In fixed size sense format the information field is a four byte
+> >> field.
+> >>
+> >> Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+> >> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> >> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> ---
+> >>   drivers/scsi/scsi_common.c | 2 +-
+> >>   1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+> >> index 41432c10dda2..8cfb7eeb5bbc 100644
+> >> --- a/drivers/scsi/scsi_common.c
+> >> +++ b/drivers/scsi/scsi_common.c
+> >> @@ -270,7 +270,7 @@ void scsi_set_sense_information(u8 *buf, u64 info)
+> >>   		put_unaligned_be64(info, &ucp[4]);
+> >>   	} else if ((buf[0] & 0x7f) == 0x70) {
+> >>   		buf[0] |= 0x80;
+> >> -		put_unaligned_be64(info, &buf[3]);
+> >> +		put_unaligned_be32(info, &buf[3]);
+> >>   	}
+> >>   }
+> >>   EXPORT_SYMBOL(scsi_set_sense_information);
+> >
+> > Looks correct per SPC-4 4.5.3
+> >
+> > And you did post a patch to target for the case where the sector
+> > did not fit in 32 bits, which requires descriptor format sense, so...
+> >
+> > Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 > 
-> Interesting.
-> Will the same apply to e.g. sd_index_ida in drivers/scsi/sd.c
-> or iscsi_sess_ida in drivers/scsi/scsi_transport_iscsi.c?
-> 
-> If no, why not?
-> 
-> One doesn't generally expect to have to free global variables.
-> Maybe we should forbid DEFINE_IDA in modules?
-> 
-> James, could you comment on this please?
+> James, can you pick this up please?
 
-ida is Tejun's baby (cc'd).  However, it does look like without
-ida_destroy() you will leave a cached ida->bitmap dangling because we're
-trying to be a bit clever in ida_remove() so we cache the bitmap to
-relieve ida_pre_get() of the burden if we would otherwise free it.
+It went quietly via the target tree.  I did keep an eye on it because
+the target disruption in scsi_sommon.c was why I couldn't send the rest
+of your sense descriptor patches via scsi.
 
-I don't understand why you'd want to forbid DEFINE_IDA ... all it does
-is pre-initialise a usually static ida structure.  The initialised
-structure will have a NULL bitmap cache that's allocated in the first
-ida_pre_get() ... that all seems to work as expected and no different
-from a dynamically allocated struct ida.  Or are you thinking because
-ida_destory() doesn't set bitmap to NULL, it damages the reuse?  In
-which case I'm not sure there's much benefit to making it reusable, but
-I suppose we could by adding a memset into ida_destroy().
+commit 12306b425d0dbab7b60f54e02d67cf3dfae494d1
 
 James
 
-> > ---
-> >  drivers/virtio/virtio.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
-> > index b1877d73fa56..7062bb0975a5 100644
-> > --- a/drivers/virtio/virtio.c
-> > +++ b/drivers/virtio/virtio.c
-> > @@ -412,6 +412,7 @@ static int virtio_init(void)
-> >  static void __exit virtio_exit(void)
-> >  {
-> >  	bus_unregister(&virtio_bus);
-> > +	ida_destroy(&virtio_index_ida);
-> >  }
-> >  core_initcall(virtio_init);
-> >  module_exit(virtio_exit);
-> > -- 
-> > 2.5.0
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
 
-
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
