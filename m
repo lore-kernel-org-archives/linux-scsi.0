@@ -1,51 +1,70 @@
-From: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v2 11/11] scsi: ufs: Add exynos ufs platform data
-Date: Thu, 17 Sep 2015 15:15:37 +0530
-Message-ID: <1442483137-32376-12-git-send-email-alim.akhtar@samsung.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v2 08/11] scsi: ufs: make ufshcd_config_pwr_mode of non-static
+ func
+Date: Thu, 17 Sep 2015 15:15:34 +0530
+Message-ID: <1442483137-32376-9-git-send-email-alim.akhtar@samsung.com>
 References: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <1442483137-32376-1-git-send-email-alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, amit.daniel-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This adds ufs_hba_exynos_ops{} to platform data, so that
-exynos ufs driver can be probed.
+From: Seungwon Jeon <essuuj@gmail.com>
 
-Signed-off-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+This makes ufshcd_config_pwr_mode non-static so that other vendors
+like exynos can use the same.
+
+Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c |    2 ++
- drivers/scsi/ufs/ufshcd.h        |    1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/ufs/ufshcd.c |    5 ++---
+ drivers/scsi/ufs/ufshcd.h |    2 ++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 7db9564..39dae76 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -373,6 +373,8 @@ static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index ccf7c83..da52c45 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -185,8 +185,6 @@ static int ufshcd_uic_hibern8_ctrl(struct ufs_hba *hba, bool en);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+ static irqreturn_t ufshcd_intr(int irq, void *__hba);
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+-		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
  
- static const struct of_device_id ufs_of_match[] = {
- 	{ .compatible = "jedec,ufs-1.1"},
-+	{ .compatible = "samsung,exynos7-ufs",
-+	 .data	= &ufs_hba_exynos_ops},
- 	{},
- };
+@@ -2597,7 +2595,7 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+  * @hba: per-adapter instance
+  * @desired_pwr_mode: desired power configuration
+  */
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode)
+ {
+ 	struct ufs_pa_layer_attr final_params = { 0 };
+@@ -2613,6 +2611,7 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
  
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
+ 
+ /**
+  * ufshcd_complete_dev_init() - checks device readiness
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 83fe605..15f2a7c 100644
+index 2fd0c3c..83fe605 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -687,4 +687,5 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+@@ -636,6 +636,8 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u8 attr_set, u32 mib_val, u8 peer);
+ extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u32 *mib_val, u8 peer);
++extern int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++			struct ufs_pa_layer_attr *desired_pwr_mode);
  
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
-+extern const struct ufs_hba_variant_ops ufs_hba_exynos_ops;
- #endif /* End of Header */
+ /* UIC command interfaces for DME primitives */
+ #define DME_LOCAL	0
 -- 
 1.7.10.4
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
