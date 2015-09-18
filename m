@@ -1,82 +1,104 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH v2 0/10] megaraid_sas : Updates for scsi for-next
-Date: Fri, 18 Sep 2015 14:35:24 +0530
-Message-ID: <f68a703e08f7ebcdbb801999af12e45e@mail.gmail.com>
-References: <201508201319.t7KDJDpc028522@palmhbs0.lsi.com> <1440790370.2202.46.camel@HansenPartnership.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 09/30] cxlflash: Fix to stop interrupt processing on
+ remove
+Date: Fri, 18 Sep 2015 13:59:07 +0200
+Message-ID: <55FBFC8B.9060305@redhat.com>
+References: <1442422399-41262-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <55FAB43B.8050306@redhat.com>
+ <97A059A7-2054-4DBD-B993-BBF47AC105E0@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:34787 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554AbbIRJHN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2015 05:07:13 -0400
-Received: by lbbmp1 with SMTP id mp1so22006222lbb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 02:07:11 -0700 (PDT)
-In-Reply-To: <1440790370.2202.46.camel@HansenPartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53937 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753160AbbIRL7M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2015 07:59:12 -0400
+In-Reply-To: <97A059A7-2054-4DBD-B993-BBF47AC105E0@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, Bjorn Helgaas <bhelgaas@google.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com, mikey@neuling.org, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Saturday, August 29, 2015 1:03 AM
-> To: Sumit.Saxena@avagotech.com
-> Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
-> martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
-> kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> uday.lingala@avagotech.com; Bjorn Helgaas
-> Subject: Re: [PATCH v2 0/10] megaraid_sas : Updates for scsi for-next
+On 17.9.2015 19:16, Matthew R. Ochs wrote:
+>> On Sep 17, 2015, at 7:38 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>>
+>> On 16.9.2015 18:53, Matthew R. Ochs wrote:
+>>> Interrupt processing can run in parallel to a remove operation. This
+>>> can lead to a condition where the interrupt handler is processing with
+>>> memory that has been freed.
+>>>
+>>> To avoid processing an interrupt while memory may be yanked, check for
+>>> removal while in the interrupt handler. Bail when removal is imminent.
+>>>
+>>> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+>>> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+>>> ---
+>>> drivers/scsi/cxlflash/common.h |  2 ++
+>>> drivers/scsi/cxlflash/main.c   | 21 +++++++++++++++------
+>>> 2 files changed, 17 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+>>> index 1abe4e0..03d2cc6 100644
+>>> --- a/drivers/scsi/cxlflash/common.h
+>>> +++ b/drivers/scsi/cxlflash/common.h
+>>> @@ -103,6 +103,8 @@ struct cxlflash_cfg {
+>>> 	enum cxlflash_lr_state lr_state;
+>>> 	int lr_port;
+>>>
+>>> +	atomic_t remove_active;
+>>> +
+>>> 	struct cxl_afu *cxl_afu;
+>>>
+>>> 	struct pci_pool *cxlflash_cmd_pool;
+>>> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+>>> index 6e85c77..89ee648 100644
+>>> --- a/drivers/scsi/cxlflash/main.c
+>>> +++ b/drivers/scsi/cxlflash/main.c
+>>> @@ -892,6 +892,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
+>>> 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+>>>
+>>> 	cfg->state = STATE_FAILTERM;
+>>> +	atomic_inc(&cfg->remove_active);
+>> Hi Matthew,
+>> you could just call term_afu at this point, this way you don't
+>> need an additional check in all irq functions.
+>> Cheers,
+>> Tomas
+> Hi Tomas,
 >
-> On Thu, 2015-08-20 at 18:43 +0530, Sumit.Saxena@avagotech.com wrote:
-> > MegaRaid driver changes. This patch set is resent based on feedback
-> > received
-> by Martin Petersen.
-> > Please consider this patch set for next kernel release.
-> >
-> > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> > ---
-> > [PATCH v2 00/10] megaraid_sas : Updates for scsi for-next.
-> > [PATCH v2 01/10] megaraid_sas : Synchronize driver headers with firmware
-> APIs.
-> > [PATCH v2 02/10] megaraid_sas : Increase timeout to 60 secs for abort
-> > frames
-> during shutdown.
-> > [PATCH v2 03/10] megaraid_sas : Jbod sequence number support.
-> > [PATCH v2 04/10] megaraid_sas : Code cleanup-use local variable drv_ops
-> inside megasas_ioc_init_fusion.
-> > [PATCH v2 05/10] megaraid_sas : Support for max_io_size 1MB.
-> > [PATCH v2 06/10] megaraid_sas : Chip reset if driver fail to bring ioc
-> > ready.
-> > [PATCH v2 07/10] megaraid_sas : Print critical fw event message.
-> > [PATCH v2 08/10] megaraid_sas : Fix validHandles check in io path.
-> > [PATCH v2 09/10] megaraid_sas : Code refactor for use of requestorId.
-> > [PATCH v2 10/10] megaraid_sas : Version upgrade.
->
-> I'm getting a ton of rejects in this series because of
->
-> commit da0dc9fb4e6b0ad5a947c27a3c48985f6a2377eb
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Jul 7 15:52:45 2015 -0500
->
->     megaraid_sas: fix whitespace errors
->
-> Please fix.
->
-> Useful rules of thumb are don't ack whitespace patches because they
-> inevitably
-> cause this type of issue.  If you do decide to ack, make sure you don't
-> cause
-> conflicts with your own outstanding patches.
->
-> James
+> We actually do call term_afu() a few lines down from here. I don't follow
+> how moving it here would help things.
 
-James,
-I have sent patches rebased on latest code few days back. Can you provide
-your feedback?
+When you disable ints sooner (that is what term_afu does ?) you'll get no
+more ints later isn't this what you want?
 
-Thanks,
-Sumit
+>
+> The reason for the atomic was to provide something lightweight that we
+> could check _inside_ the processing loop for the read-response queue
+> handler. A check outside that loop doesn't really provide much in terms
+> of closing or narrowing down the window of when freed memory can be
+> accessed.
+>
+> As David Laight correctly pointed out, this approach does not completely
+> close the window. We'd need something heavier to fully protect (e.g. a lock
+> to wrap around the entire loop). I will look into adding this in a future cycle
+> when I can adequately test.
+
+term_afu calls free_irq and this function
+does not return until any executing interrupts for have completed.
+This is the sync mechanism you need, it's lightweight
+(does not add an additional check to your irq functions)
+and closes the race window completely.
+
+--tm
+
 >
 >
+> -matt
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
