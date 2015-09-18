@@ -1,40 +1,51 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 11/30] cxlflash: Make functions static
-Date: Fri, 18 Sep 2015 10:34:20 -0500
-Message-ID: <55FC2EFC.2090401@linux.vnet.ibm.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1442438888-49583-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 01/17] Add ida and idr helper routines.
+Date: Fri, 18 Sep 2015 08:42:26 -0700
+Message-ID: <55FC30E2.8020000@suse.com>
+References: <cover.1442263512.git.lduncan@suse.com>
+ <915ec9ff5e9cc1fae0b36bf7d4c4cb115439e15d.1442263512.git.lduncan@suse.com>
+ <20150915182755.GA31484@htj.duckdns.org>
+ <1442342322.2177.13.camel@HansenPartnership.com>
+ <20150915184157.GA495@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:53463 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110AbbIRPfX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2015 11:35:23 -0400
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 18 Sep 2015 09:35:22 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id F410E3E4003E
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 09:35:19 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8IFY2Ci24117418
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 08:34:10 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8IFYk9e032035
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 09:34:47 -0600
-In-Reply-To: <1442438888-49583-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150915184157.GA495@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+On 09/15/2015 11:41 AM, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Sep 15, 2015 at 11:38:42AM -0700, James Bottomley wrote:
+>> For most of the SCSI stuff, yes.  I'm less sure about the sd numbers.
+>> They go up very high and get hammered a lot during system bring up and
+>> hot plug.  I think having their own lock rather than wrapping everything
+>> around simple_ida_lock makes more sense here just because the system is
+>> heavily contended on getting indexes at bring up.
+>>
+>> To continue the thought, why not move simple_ida_lock into struct ida so
+>> we don't have to worry about the contention and can sue ida_simple_...
+>> everywhere?
+> 
+> We sure can do that if necessary but I'm rather doubtful that even
+> with sd number hammering this is likely to be a problem.  Let's
+> convert the users to the simple interface and make the lock per-ida if
+> we actually see contention on the lock.
+> 
+> Thanks.
+> 
 
+To be clear: you would like a patch series that converts the users of
+the ida_* routines in my patches to instead use the ida_simple_*
+routines, correct? And of course the ida_* helper routines I was adding
+in idr.h would not be needed.
+
+If this is correct, I will supply a version 2 patch series that
+addresses this issue as well as the two patch-naming issues that were
+raised.
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+Lee Duncan
