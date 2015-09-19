@@ -1,62 +1,92 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 12/30] cxlflash: Refine host/device attributes
-Date: Fri, 18 Sep 2015 18:56:25 -0500
-Message-ID: <AA42C2F0-94E8-45D6-8438-7F7BE0C9E046@linux.vnet.ibm.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com> <1442438954-49663-1-git-send-email-mrochs@linux.vnet.ibm.com> <55FC8371.5010900@linux.vnet.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH] scsi: Fix a bdi reregistration race
+Date: Fri, 18 Sep 2015 17:23:42 -0700
+Message-ID: <55FCAB0E.3020707@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:36948 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589AbbIRX4a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2015 19:56:30 -0400
-Received: from /spool/local
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 18 Sep 2015 19:56:30 -0400
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 624B938C8026
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 19:56:27 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8INuR4M51839008
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 23:56:27 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8INuQqY018660
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2015 19:56:27 -0400
-In-Reply-To: <55FC8371.5010900@linux.vnet.ibm.com>
+Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:39917
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754078AbbISAZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2015 20:25:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Shane Seymour <shane.seymour@hp.com>, Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: James Bottomley <jbottomley@odin.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> On Sep 18, 2015, at 4:34 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
-> On 09/16/2015 04:29 PM, Matthew R. Ochs wrote:
->> 
->> +	ssize_t bytes = 0;
->> +	__be64 __iomem *fc_port;
->> +
->> +	if (port >= NUM_FC_PORTS)
->> +		return 0;
->> +
->> +	fc_port = &afu->afu_map->global.fc_port[port][0];
->> +
->> +	for (i = 0; i < CXLFLASH_NUM_VLUNS; i++, buf += 22)
-> 
-> Rather than this bug prone hard coded 22, how about never incrementing buf and do something
-> similar to this:
-> 
->> +		bytes += scnprintf(buf, PAGE_SIZE, "%03d: %016llX\n",
->> +				   i, readq_be(&fc_port[i]));
-> 
-> 		bytes += scnprintf(&buf[bytes], PAGE_SIZE, "%03d: %016llX\n",
-> 				   i, readq_be(&fc_port[i]));
-> 
->> +	return bytes;
->> +}
->> +
+Unregister and reregister BDI devices in the proper order. This patch
+avoids that the following kernel warning can get triggered:
 
-Great suggestion! Will fix in v3.
+WARNING: CPU: 7 PID: 203 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x68/0x80()
+sysfs: cannot create duplicate filename '/devices/virtual/bdi/8:32'
+Workqueue: events_unbound async_run_entry_fn
+Call Trace:
+[<ffffffff814ff5a4>] dump_stack+0x4c/0x65
+[<ffffffff810746ba>] warn_slowpath_common+0x8a/0xc0
+[<ffffffff81074736>] warn_slowpath_fmt+0x46/0x50
+[<ffffffff81237ca8>] sysfs_warn_dup+0x68/0x80
+[<ffffffff81237d8e>] sysfs_create_dir_ns+0x7e/0x90
+[<ffffffff81291f58>] kobject_add_internal+0xa8/0x320
+[<ffffffff812923a0>] kobject_add+0x60/0xb0
+[<ffffffff8138c937>] device_add+0x107/0x5e0
+[<ffffffff8138d018>] device_create_groups_vargs+0xd8/0x100
+[<ffffffff8138d05c>] device_create_vargs+0x1c/0x20
+[<ffffffff8117f233>] bdi_register+0x63/0x2a0
+[<ffffffff8117f497>] bdi_register_dev+0x27/0x30
+[<ffffffff81281549>] add_disk+0x1a9/0x4e0
+[<ffffffffa00c5739>] sd_probe_async+0x119/0x1d0 [sd_mod]
+[<ffffffff8109a81a>] async_run_entry_fn+0x4a/0x140
+[<ffffffff81091078>] process_one_work+0x1d8/0x7c0
+[<ffffffff81091774>] worker_thread+0x114/0x460
+[<ffffffff81097878>] kthread+0xf8/0x110
+[<ffffffff8150801f>] ret_from_fork+0x3f/0x70
 
+See also patch "block: destroy bdi before blockdev is unregistered"
+(commit ID 6cd18e711dd8).
 
--matt
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_sysfs.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..5e085d4 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1084,9 +1084,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		device_unregister(&sdev->sdev_dev);
+ 		transport_remove_device(dev);
+ 		scsi_dh_remove_device(sdev);
+-		device_del(dev);
+-	} else
+-		put_device(&sdev->sdev_dev);
++	}
+ 
+ 	/*
+ 	 * Stop accepting new requests and wait until all queuecommand() and
+@@ -1097,6 +1095,16 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
++	/*
++	 * Remove the device after blk_cleanup_queue() has been called such
++	 * a possible bdi_register() call with the same name occurs after
++	 * blk_cleanup_queue() has called bdi_destroy().
++	 */
++	if (sdev->is_visible)
++		device_del(dev);
++	else
++		put_device(&sdev->sdev_dev);
++
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(dev);
+-- 
+2.1.4
+
