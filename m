@@ -1,189 +1,166 @@
-From: Denys Vlasenko <dvlasenk@redhat.com>
-Subject: [PATCH] bfa: deinline __bfa_trc, wwn2str and fcid2str
-Date: Mon, 21 Sep 2015 14:04:31 +0200
-Message-ID: <1442837071-17803-1-git-send-email-dvlasenk@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krishna Gudipati <kgudipat@brocade.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>, James Bottomley <JBottomley@Parallels.com>, Fabian Frederick <fabf@skynet.be>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>, Ben Hutchings <ben@decadent.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 04/30] cxlflash: Fix potential oops following LUN
+ removal
+Date: Mon, 21 Sep 2015 14:11:26 +0200
+Message-ID: <55FFF3EE.9050202@redhat.com>
+References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1442438860-49316-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41273 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752385AbbIUMLb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2015 08:11:31 -0400
+In-Reply-To: <1442438860-49316-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
-after deinlining these functions have sizes and callsite counts
-as follows:
+On 16.9.2015 23:27, Matthew R. Ochs wrote:
+> When a LUN is removed, the sdev that is associated with the LUN
+> remains intact until its reference count drops to 0. In order
+> to prevent an sdev from being removed while a context is still
+> associated with it, obtain an additional reference per-context
+> for each LUN attached to the context.
+>
+> This resolves a potential Oops in the release handler when a
+> dealing with a LUN that has already been removed.
+>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> Suggested-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/cxlflash/superpipe.c | 36 ++++++++++++++++++++++++------------
+>  1 file changed, 24 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+> index fa513ba..1fa4af6 100644
+> --- a/drivers/scsi/cxlflash/superpipe.c
+> +++ b/drivers/scsi/cxlflash/superpipe.c
+> @@ -880,6 +880,9 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
+>  			sys_close(lfd);
+>  	}
+>  
+> +	/* Release the sdev reference that bound this LUN to the context */
+> +	scsi_device_put(sdev);
+> +
 
-__bfa_trc: 115 bytes, 1494 calls
-wwn2str: 108 bytes, 27 calls
-fcid2str: 46 bytes, 3 calls
+I'm not sure here with the use if scsi_device_get+put, also I don't quite well
+understand what you are going to fix here and how can it happen.
+The scsi_device_get takes an additional module reference, so if used from
+a module it shouldn't be held for a long time.
+Is it possible for a user to rmmod the czlflash module
+after the disk attach function is called?
 
-__bfa_trc32 is similar to __bfa_trc, so it should have been
-uninlined too. However, it is also unused.
-Anil Gurumurthy suggested I can just delete it, I did so.
+Cheers,
+--tm
 
-Change in code size is about 135,000 bytes:
+>  out:
+>  	if (put_ctx)
+>  		put_context(ctxi);
+> @@ -1287,11 +1290,18 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+>  			}
+>  	}
+>  
+> +	rc = scsi_device_get(sdev);
+> +	if (unlikely(rc)) {
+> +		dev_err(dev, "%s: Unable to get sdev reference!\n", __func__);
+> +		goto out;
+> +	}
+> +
+>  	lun_access = kzalloc(sizeof(*lun_access), GFP_KERNEL);
+>  	if (unlikely(!lun_access)) {
+>  		dev_err(dev, "%s: Unable to allocate lun_access!\n", __func__);
+> +		scsi_device_put(sdev);
+>  		rc = -ENOMEM;
+> -		goto out;
+> +		goto err0;
+>  	}
+>  
+>  	lun_access->lli = lli;
+> @@ -1311,21 +1321,21 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+>  		dev_err(dev, "%s: Could not initialize context %p\n",
+>  			__func__, ctx);
+>  		rc = -ENODEV;
+> -		goto err0;
+> +		goto err1;
+>  	}
+>  
+>  	ctxid = cxl_process_element(ctx);
+>  	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
+>  		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
+>  		rc = -EPERM;
+> -		goto err1;
+> +		goto err2;
+>  	}
+>  
+>  	file = cxl_get_fd(ctx, &cfg->cxl_fops, &fd);
+>  	if (unlikely(fd < 0)) {
+>  		rc = -ENODEV;
+>  		dev_err(dev, "%s: Could not get file descriptor\n", __func__);
+> -		goto err1;
+> +		goto err2;
+>  	}
+>  
+>  	/* Translate read/write O_* flags from fcntl.h to AFU permission bits */
+> @@ -1335,7 +1345,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+>  	if (unlikely(!ctxi)) {
+>  		dev_err(dev, "%s: Failed to create context! (%d)\n",
+>  			__func__, ctxid);
+> -		goto err2;
+> +		goto err3;
+>  	}
+>  
+>  	work = &ctxi->work;
+> @@ -1346,13 +1356,13 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+>  	if (unlikely(rc)) {
+>  		dev_dbg(dev, "%s: Could not start context rc=%d\n",
+>  			__func__, rc);
+> -		goto err3;
+> +		goto err4;
+>  	}
+>  
+>  	rc = afu_attach(cfg, ctxi);
+>  	if (unlikely(rc)) {
+>  		dev_err(dev, "%s: Could not attach AFU rc %d\n", __func__, rc);
+> -		goto err4;
+> +		goto err5;
+>  	}
+>  
+>  	/*
+> @@ -1388,13 +1398,13 @@ out:
+>  		__func__, ctxid, fd, attach->block_size, rc, attach->last_lba);
+>  	return rc;
+>  
+> -err4:
+> +err5:
+>  	cxl_stop_context(ctx);
+> -err3:
+> +err4:
+>  	put_context(ctxi);
+>  	destroy_context(cfg, ctxi);
+>  	ctxi = NULL;
+> -err2:
+> +err3:
+>  	/*
+>  	 * Here, we're overriding the fops with a dummy all-NULL fops because
+>  	 * fput() calls the release fop, which will cause us to mistakenly
+> @@ -1406,10 +1416,12 @@ err2:
+>  	fput(file);
+>  	put_unused_fd(fd);
+>  	fd = -1;
+> -err1:
+> +err2:
+>  	cxl_release_context(ctx);
+> -err0:
+> +err1:
+>  	kfree(lun_access);
+> +err0:
+> +	scsi_device_put(sdev);
+>  	goto out;
+>  }
+>  
 
-    text     data      bss       dec     hex filename
-91470054 19945080 36421632 147836766 8cfcf5e vmlinux.before
-91335078 19944984 36421632 147701694 8cdbfbe vmlinux
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: Krishna Gudipati <kgudipat@brocade.com>
-CC: Vijaya Mohan Guvva <vmohan@brocade.com>
-CC: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-CC: James Bottomley <JBottomley@Parallels.com>
-CC: Fabian Frederick <fabf@skynet.be>
-CC: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Guenter Roeck <linux@roeck-us.net>
-CC: Ben Hutchings <ben@decadent.org.uk>
-CC: James Bottomley <JBottomley@Parallels.com>
-CC: linux-kernel@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
----
- drivers/scsi/bfa/bfa_core.c | 45 ++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_cs.h   | 67 +++------------------------------------------
- 2 files changed, 49 insertions(+), 63 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index e3f67b0..fdf0f4e 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -90,6 +90,51 @@ static bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[BFI_MC_MAX] = {
- 
- 
- 
-+void
-+wwn2str(char *wwn_str, u64 wwn)
-+{
-+	union {
-+		u64 wwn;
-+		u8 byte[8];
-+	} w;
-+
-+	w.wwn = wwn;
-+	sprintf(wwn_str, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", w.byte[0],
-+		w.byte[1], w.byte[2], w.byte[3], w.byte[4], w.byte[5],
-+		w.byte[6], w.byte[7]);
-+}
-+
-+void
-+fcid2str(char *fcid_str, u32 fcid)
-+{
-+	union {
-+		u32 fcid;
-+		u8 byte[4];
-+	} f;
-+
-+	f.fcid = fcid;
-+	sprintf(fcid_str, "%02x:%02x:%02x", f.byte[1], f.byte[2], f.byte[3]);
-+}
-+
-+void
-+__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data)
-+{
-+	int		tail = trcm->tail;
-+	struct bfa_trc_s	*trc = &trcm->trc[tail];
-+
-+	if (trcm->stopped)
-+		return;
-+
-+	trc->fileno = (u16) fileno;
-+	trc->line = (u16) line;
-+	trc->data.u64 = data;
-+	trc->timestamp = BFA_TRC_TS(trcm);
-+
-+	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
-+	if (trcm->tail == trcm->head)
-+		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
-+}
-+
- static void
- bfa_com_port_attach(struct bfa_s *bfa)
- {
-diff --git a/drivers/scsi/bfa/bfa_cs.h b/drivers/scsi/bfa/bfa_cs.h
-index 91a8aa3..3f00eab 100644
---- a/drivers/scsi/bfa/bfa_cs.h
-+++ b/drivers/scsi/bfa/bfa_cs.h
-@@ -107,44 +107,8 @@ bfa_trc_stop(struct bfa_trc_mod_s *trcm)
- 	trcm->stopped = 1;
- }
- 
--static inline void
--__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data)
--{
--	int		tail = trcm->tail;
--	struct bfa_trc_s	*trc = &trcm->trc[tail];
--
--	if (trcm->stopped)
--		return;
--
--	trc->fileno = (u16) fileno;
--	trc->line = (u16) line;
--	trc->data.u64 = data;
--	trc->timestamp = BFA_TRC_TS(trcm);
--
--	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
--	if (trcm->tail == trcm->head)
--		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
--}
--
--
--static inline void
--__bfa_trc32(struct bfa_trc_mod_s *trcm, int fileno, int line, u32 data)
--{
--	int		tail = trcm->tail;
--	struct bfa_trc_s *trc = &trcm->trc[tail];
--
--	if (trcm->stopped)
--		return;
--
--	trc->fileno = (u16) fileno;
--	trc->line = (u16) line;
--	trc->data.u32.u32 = data;
--	trc->timestamp = BFA_TRC_TS(trcm);
--
--	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
--	if (trcm->tail == trcm->head)
--		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
--}
-+void
-+__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data);
- 
- #define bfa_sm_fault(__mod, __event)	do {				\
- 	bfa_trc(__mod, (((u32)0xDEAD << 16) | __event));		\
-@@ -324,31 +288,8 @@ bfa_wc_wait(struct bfa_wc_s *wc)
- 	bfa_wc_down(wc);
- }
- 
--static inline void
--wwn2str(char *wwn_str, u64 wwn)
--{
--	union {
--		u64 wwn;
--		u8 byte[8];
--	} w;
--
--	w.wwn = wwn;
--	sprintf(wwn_str, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", w.byte[0],
--		w.byte[1], w.byte[2], w.byte[3], w.byte[4], w.byte[5],
--		w.byte[6], w.byte[7]);
--}
--
--static inline void
--fcid2str(char *fcid_str, u32 fcid)
--{
--	union {
--		u32 fcid;
--		u8 byte[4];
--	} f;
--
--	f.fcid = fcid;
--	sprintf(fcid_str, "%02x:%02x:%02x", f.byte[1], f.byte[2], f.byte[3]);
--}
-+void wwn2str(char *wwn_str, u64 wwn);
-+void fcid2str(char *fcid_str, u32 fcid);
- 
- #define bfa_swap_3b(_x)				\
- 	((((_x) & 0xff) << 16) |		\
--- 
-1.8.1.4
