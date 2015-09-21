@@ -1,311 +1,122 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: Potential data race in __scsi_init_queue/ata_sg_setup
-Date: Mon, 21 Sep 2015 12:08:43 +0200
-Message-ID: <CACT4Y+a7qGmZ3sp5_MDZiYEKuUY29Oib6CwkQbG8NRwHhqtV8Q@mail.gmail.com>
-References: <CACT4Y+YTn7eGYaP1aHM1L+6CYoXOTe0ArnKHQs02ELzYPjnwhg@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 09/30] cxlflash: Fix to stop interrupt processing on
+ remove
+Date: Mon, 21 Sep 2015 13:33:58 +0200
+Message-ID: <55FFEB26.7020901@redhat.com>
+References: <1442422399-41262-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <55FAB43B.8050306@redhat.com>
+ <97A059A7-2054-4DBD-B993-BBF47AC105E0@linux.vnet.ibm.com>
+ <55FBFC8B.9060305@redhat.com>
+ <95497861-11B5-4A04-A35C-D6FE164543C4@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACT4Y+YTn7eGYaP1aHM1L+6CYoXOTe0ArnKHQs02ELzYPjnwhg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, Andrey Konovalov <andreyknvl@google.com>, ktsan@googlegroups.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34327 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752369AbbIULeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2015 07:34:02 -0400
+In-Reply-To: <95497861-11B5-4A04-A35C-D6FE164543C4@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, nab@linux-iscsi.org, brking@linux.vnet.ibm.com, imunsie@au1.ibm.com, dja@ozlabs.au.ibm.com, andrew.donnellan@au1.ibm.com, mikey@neuling.org, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Here is another data race in add_disk, maybe it is related.
-
-ThreadSanitizer: data-race in sysfs_create_dir_ns
-
-Write at 0xffff88048374eca8 of size 8 by thread 829 on CPU 4:
- [<ffffffff813292eb>] sysfs_create_dir_ns+0x7b/0xd0 fs/sysfs/dir.c:63
- [<     inline     >] create_dir lib/kobject.c:71
- [<ffffffff8154cb75>] kobject_add_internal+0x165/0x4a0 lib/kobject.c:22=
-9
- [<     inline     >] kobject_add_varg lib/kobject.c:352
- [<ffffffff8154cf31>] kobject_add+0x81/0xe0 lib/kobject.c:397
- [<ffffffff8151879c>] blk_register_queue+0xac/0x1a0 block/blk-sysfs.c:5=
-70
- [<ffffffff8152f6a8>] add_disk+0x348/0x760 block/genhd.c:620
- [<ffffffff818b72c8>] sd_probe_async+0x298/0x370 drivers/scsi/sd.c:2896
- [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:123
- [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c:2=
-036
- [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:2170
- [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
- [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64.S=
-:529
-
-Previous read at 0xffff88048374eca8 of size 8 by thread 6 on CPU 7:
- [<ffffffff81539d08>] bsg_register_queue+0x1a8/0x2a0 block/bsg.c:1021
- [<ffffffff818a5ef4>] scsi_sysfs_add_sdev+0x164/0x340
-drivers/scsi/scsi_sysfs.c:1044
- [<     inline     >] scsi_add_lun drivers/scsi/scsi_scan.c:995
- [<ffffffff818a1e5b>] scsi_probe_and_add_lun+0x116b/0x1180
-drivers/scsi/scsi_scan.c:1157
- [<ffffffff818a271d>] __scsi_add_device+0x13d/0x150
-drivers/scsi/scsi_scan.c:1487
- [<ffffffff818daf96>] ata_scsi_scan_host+0xf6/0x270
-drivers/ata/libata-scsi.c:3736
- [<ffffffff818d2f1e>] async_port_probe+0x6e/0x90 drivers/ata/libata-cor=
-e.c:6096
- [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:123
- [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c:2=
-036
- [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:2170
- [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
- [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64.S=
-:529
-
-
-The race is between:
-        if (q->kobj.sd) {
-and:
-        kobj->sd =3D kn;
-
-
-
-
-
-On Mon, Sep 21, 2015 at 11:58 AM, Dmitry Vyukov <dvyukov@google.com> wr=
-ote:
-> Hello,
+On 19.9.2015 01:26, Matthew R. Ochs wrote:
+>> On Sep 18, 2015, at 6:59 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>> On 17.9.2015 19:16, Matthew R. Ochs wrote:
+>>>> On Sep 17, 2015, at 7:38 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>>>>
+>>>> On 16.9.2015 18:53, Matthew R. Ochs wrote:
+>>>>> Interrupt processing can run in parallel to a remove operation. This
+>>>>> can lead to a condition where the interrupt handler is processing with
+>>>>> memory that has been freed.
+>>>>>
+>>>>> To avoid processing an interrupt while memory may be yanked, check for
+>>>>> removal while in the interrupt handler. Bail when removal is imminent.
+>>>>>
+>>>>> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+>>>>> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+>>>>> ---
+>>>>> drivers/scsi/cxlflash/common.h |  2 ++
+>>>>> drivers/scsi/cxlflash/main.c   | 21 +++++++++++++++------
+>>>>> 2 files changed, 17 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+>>>>> index 1abe4e0..03d2cc6 100644
+>>>>> --- a/drivers/scsi/cxlflash/common.h
+>>>>> +++ b/drivers/scsi/cxlflash/common.h
+>>>>> @@ -103,6 +103,8 @@ struct cxlflash_cfg {
+>>>>> 	enum cxlflash_lr_state lr_state;
+>>>>> 	int lr_port;
+>>>>>
+>>>>> +	atomic_t remove_active;
+>>>>> +
+>>>>> 	struct cxl_afu *cxl_afu;
+>>>>>
+>>>>> 	struct pci_pool *cxlflash_cmd_pool;
+>>>>> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+>>>>> index 6e85c77..89ee648 100644
+>>>>> --- a/drivers/scsi/cxlflash/main.c
+>>>>> +++ b/drivers/scsi/cxlflash/main.c
+>>>>> @@ -892,6 +892,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
+>>>>> 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+>>>>>
+>>>>> 	cfg->state = STATE_FAILTERM;
+>>>>> +	atomic_inc(&cfg->remove_active);
+>>>> Hi Matthew,
+>>>> you could just call term_afu at this point, this way you don't
+>>>> need an additional check in all irq functions.
+>>>> Cheers,
+>>>> Tomas
+>>> Hi Tomas,
+>>>
+>>> We actually do call term_afu() a few lines down from here. I don't follow
+>>> how moving it here would help things.
+>> When you disable ints sooner (that is what term_afu does ?) you'll get no
+>> more ints later isn't this what you want?
+> Correct, that's what we want.
 >
-> We are working on a data race detector for kernel, KernelThreadSaniti=
-zer (KTSAN.
-> I am getting the following reports (on 4.2 rc2) between
-> __scsi_init_queue and ata_sg_setup. The reports suggest that
-> dev->dma_parms->max_segment_size is being used before it is
-> initialized. I would expect that request_queue somehow becomes
-> accessible to other threads before all the associated data structures
-> are completely initialized. I've tried to verify that hypothesis but
-> got lost along the way.
-> Can somebody familiar with this code please take a look? I will
-> appreciate if you either confirm that this is a bug, or explain why
-> this is not a bug (how the accesses are synchronized with each other)=
-=2E
-> Thank you in advance.
+>>> The reason for the atomic was to provide something lightweight that we
+>>> could check _inside_ the processing loop for the read-response queue
+>>> handler. A check outside that loop doesn't really provide much in terms
+>>> of closing or narrowing down the window of when freed memory can be
+>>> accessed.
+>>>
+>>> As David Laight correctly pointed out, this approach does not completely
+>>> close the window. We'd need something heavier to fully protect (e.g. a lock
+>>> to wrap around the entire loop). I will look into adding this in a future cycle
+>>> when I can adequately test.
+>> term_afu calls free_irq and this function
+>> does not return until any executing interrupts for have completed.
+>> This is the sync mechanism you need, it's lightweight
+>> (does not add an additional check to your irq functions)
+>> and closes the race window completely.
+> Thanks for clarifying!
+>
+> I looked at this closer and you are correct, free_irq() guarantees not
+> to return until the interrupt handler has completed. The current location
+> of term_afu() is appropriate as the memory that the handler touches is
+> not freed until the very end [by free_mem() and scsi_host_put()] of the
+> remove. Thus we can simply ignore this patch (I'll remove it in a v3).
+
+OK. In some future patch please reorganize the remove function so,
+that it follows the template described in Documentation/PCI/pci.txt :
+	Disable the device from generating IRQs
+	Release the IRQ (free_irq())
+	Stop all DMA activity
+	Release DMA buffers (both streaming and coherent)
+	Unregister from other subsystems (e.g. scsi or netdev)
+	Release MMIO/IOP resources
+	Disable the device
+
 >
 >
-> ThreadSanitizer: data-race in __scsi_init_queue
->
-> Write at 0xffff880484c87070 of size 8 by thread 6 on CPU 0:
->  [<     inline     >] dma_set_seg_boundary include/linux/dma-mapping.=
-h:170
->  [<ffffffff81899e81>] __scsi_init_queue+0x151/0x290 drivers/scsi/scsi=
-_lib.c:2119
->  [<ffffffff81899ff3>] __scsi_alloc_queue+0x33/0x40 drivers/scsi/scsi_=
-lib.c:2142
->  [<ffffffff8189f43c>] scsi_alloc_queue+0x2c/0x90 drivers/scsi/scsi_li=
-b.c:2151
->  [<ffffffff818a098f>] scsi_alloc_sdev+0x3cf/0x600 drivers/scsi/scsi_s=
-can.c:266
->  [<ffffffff818a1a24>] scsi_probe_and_add_lun+0xd34/0x1180
-> drivers/scsi/scsi_scan.c:1079
->  [<ffffffff818a271d>] __scsi_add_device+0x13d/0x150
-> drivers/scsi/scsi_scan.c:1487
->  [<ffffffff818daf96>] ata_scsi_scan_host+0xf6/0x270
-> drivers/ata/libata-scsi.c:3736
->  [<ffffffff818d2f1e>] async_port_probe+0x6e/0x90 drivers/ata/libata-c=
-ore.c:6096
->  [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:12=
-3
->  [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c=
-:2036
->  [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:217=
-0
->  [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
->  [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64=
-=2ES:529
->
-> Previous read at 0xffff880484c87070 of size 8 by thread 763 on CPU 4:
->  [<     inline     >] dma_get_seg_boundary include/linux/dma-mapping.=
-h:164
->  [<ffffffff815843c0>] swiotlb_tbl_map_single+0x70/0x410 lib/swiotlb.c=
-:441
->  [<     inline     >] map_single lib/swiotlb.c:546
->  [<ffffffff81585972>] swiotlb_map_sg_attrs+0x172/0x240 lib/swiotlb.c:=
-893
->  [<     inline     >] dma_map_sg_attrs
-> include/asm-generic/dma-mapping-common.h:57
->  [<     inline     >] ata_sg_setup drivers/ata/libata-core.c:4719
->  [<ffffffff818cb5e3>] ata_qc_issue+0x533/0x750 drivers/ata/libata-cor=
-e.c:5078
->  [<ffffffff818d5999>] ata_scsi_translate+0x189/0x2c0
-> drivers/ata/libata-scsi.c:1864
->  [<     inline     >] __ata_scsi_queuecmd drivers/ata/libata-scsi.c:3=
-481
->  [<ffffffff818da62e>] ata_scsi_queuecmd+0x11e/0x370
-> drivers/ata/libata-scsi.c:3530
->  [<ffffffff8189a1d3>] scsi_dispatch_cmd+0x183/0x2f0 drivers/scsi/scsi=
-_lib.c:1718
->  [<ffffffff8189e823>] scsi_request_fn+0x903/0xb20 drivers/scsi/scsi_l=
-ib.c:1853
->  [<     inline     >] __blk_run_queue_uncond block/blk-core.c:310
->  [<ffffffff8150c06f>] __blk_run_queue+0x6f/0xa0 block/blk-core.c:328
->  [<ffffffff815099b1>] __elv_add_request+0x191/0x4e0 block/elevator.c:=
-633
->  [<     inline     >] add_acct_request block/blk-core.c:1336
->  [<ffffffff81516911>] blk_queue_bio+0x511/0x520 block/blk-core.c:1710
->  [<ffffffff8150e30b>] generic_make_request+0x17b/0x1f0 block/blk-core=
-=2Ec:1970
->  [<ffffffff8150e432>] submit_bio+0xb2/0x250 block/blk-core.c:2022
->  [<ffffffff812ba1fa>] submit_bh_wbc.isra.34+0x23a/0x270 fs/buffer.c:3=
-068
->  [<     inline     >] submit_bh fs/buffer.c:3080
->  [<ffffffff812ba7ad>] block_read_full_page+0x3ad/0x440 fs/buffer.c:22=
-62
->  [<ffffffff812be784>] blkdev_readpage+0x24/0x40 fs/block_dev.c:294
->  [<     inline     >] __read_cache_page mm/filemap.c:2188
->  [<ffffffff811cd3a1>] do_read_cache_page+0x81/0x1d0 mm/filemap.c:2210
->  [<ffffffff811cd535>] read_cache_page+0x45/0x60 mm/filemap.c:2257
->  [<     inline     >] read_mapping_page include/linux/pagemap.h:381
->  [<ffffffff81532798>] read_dev_sector+0x68/0xf0 block/partition-gener=
-ic.c:557
->  [<     inline     >] read_part_sector block/partitions/check.h:37
->  [<ffffffff815344f0>] amiga_partition+0xa0/0x6a0 block/partitions/ami=
-ga.c:42
->  [<ffffffff81534225>] check_partition+0x1b5/0x300 block/partitions/ch=
-eck.c:166
->  [<ffffffff81533377>] rescan_partitions+0x127/0x400
-> block/partition-generic.c:433 (discriminator 1)
->  [<ffffffff812c0758>] __blkdev_get+0x418/0x650 fs/block_dev.c:1220
->  [<ffffffff812c0e18>] blkdev_get+0x1c8/0x5f0 fs/block_dev.c:1324
->  [<     inline     >] register_disk block/genhd.c:557
->  [<ffffffff8152f9e8>] add_disk+0x688/0x760 block/genhd.c:619
->  [<ffffffff818b72c8>] sd_probe_async+0x298/0x370 drivers/scsi/sd.c:28=
-96
->  [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:12=
-3
->  [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c=
-:2036
->  [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:217=
-0
->  [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
->  [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64=
-=2ES:529
->
-> Mutexes locked by thread 6:
-> Mutex 98677 is locked here:
->  [<ffffffff81ee0407>] mutex_lock+0x57/0x70 kernel/locking/mutex.c:108
->  [<ffffffff818a268c>] __scsi_add_device+0xac/0x150 drivers/scsi/scsi_=
-scan.c:1482
->  [<ffffffff818daf96>] ata_scsi_scan_host+0xf6/0x270
-> drivers/ata/libata-scsi.c:3736
->  [<ffffffff818d2f1e>] async_port_probe+0x6e/0x90 drivers/ata/libata-c=
-ore.c:6096
->  [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:12=
-3
->  [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c=
-:2036
->  [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:217=
-0
->  [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
->  [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64=
-=2ES:529
->
-> Mutexes locked by thread 763:
-> Mutex 106894 is locked here:
->  [<ffffffff81ee0407>] mutex_lock+0x57/0x70 kernel/locking/mutex.c:108
->  [<ffffffff812c03c7>] __blkdev_get+0x87/0x650 fs/block_dev.c:1177
->  [<ffffffff812c0e18>] blkdev_get+0x1c8/0x5f0 fs/block_dev.c:1324
->  [<     inline     >] register_disk block/genhd.c:557
->  [<ffffffff8152f9e8>] add_disk+0x688/0x760 block/genhd.c:619
->  [<ffffffff818b72c8>] sd_probe_async+0x298/0x370 drivers/scsi/sd.c:28=
-96
->  [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:12=
-3
->  [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c=
-:2036
->  [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:217=
-0
->  [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
->  [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64=
-=2ES:529
->
-> Mutex 103680 is locked here:
->  [<     inline     >] __raw_spin_lock_irqsave
-> include/linux/spinlock_api_smp.h:129
->  [<ffffffff81ee3b84>] _raw_spin_lock_irqsave+0x64/0x80
-> kernel/locking/spinlock.c:159
->  [<ffffffff818da567>] ata_scsi_queuecmd+0x57/0x370
-> drivers/ata/libata-scsi.c:3524
->  [<ffffffff8189a1d3>] scsi_dispatch_cmd+0x183/0x2f0 drivers/scsi/scsi=
-_lib.c:1718
->  [<ffffffff8189e823>] scsi_request_fn+0x903/0xb20 drivers/scsi/scsi_l=
-ib.c:1853
->  [<     inline     >] __blk_run_queue_uncond block/blk-core.c:310
->  [<ffffffff8150c06f>] __blk_run_queue+0x6f/0xa0 block/blk-core.c:328
->  [<ffffffff815099b1>] __elv_add_request+0x191/0x4e0 block/elevator.c:=
-633
->  [<     inline     >] add_acct_request block/blk-core.c:1336
->  [<ffffffff81516911>] blk_queue_bio+0x511/0x520 block/blk-core.c:1710
->  [<ffffffff8150e30b>] generic_make_request+0x17b/0x1f0 block/blk-core=
-=2Ec:1970
->  [<ffffffff8150e432>] submit_bio+0xb2/0x250 block/blk-core.c:2022
->  [<ffffffff812ba1fa>] submit_bh_wbc.isra.34+0x23a/0x270 fs/buffer.c:3=
-068
->  [<     inline     >] submit_bh fs/buffer.c:3080
->  [<ffffffff812ba7ad>] block_read_full_page+0x3ad/0x440 fs/buffer.c:22=
-62
->  [<ffffffff812be784>] blkdev_readpage+0x24/0x40 fs/block_dev.c:294
->  [<     inline     >] __read_cache_page mm/filemap.c:2188
->  [<ffffffff811cd3a1>] do_read_cache_page+0x81/0x1d0 mm/filemap.c:2210
->  [<ffffffff811cd535>] read_cache_page+0x45/0x60 mm/filemap.c:2257
->  [<     inline     >] read_mapping_page include/linux/pagemap.h:381
->  [<ffffffff81532798>] read_dev_sector+0x68/0xf0 block/partition-gener=
-ic.c:557
->  [<     inline     >] read_part_sector block/partitions/check.h:37
->  [<ffffffff815344f0>] amiga_partition+0xa0/0x6a0 block/partitions/ami=
-ga.c:42
->  [<ffffffff81534225>] check_partition+0x1b5/0x300 block/partitions/ch=
-eck.c:166
->  [<ffffffff81533377>] rescan_partitions+0x127/0x400
-> block/partition-generic.c:433 (discriminator 1)
->  [<ffffffff812c0758>] __blkdev_get+0x418/0x650 fs/block_dev.c:1220
->  [<ffffffff812c0e18>] blkdev_get+0x1c8/0x5f0 fs/block_dev.c:1324
->  [<     inline     >] register_disk block/genhd.c:557
->  [<ffffffff8152f9e8>] add_disk+0x688/0x760 block/genhd.c:619
->  [<ffffffff818b72c8>] sd_probe_async+0x298/0x370 drivers/scsi/sd.c:28=
-96
->  [<ffffffff810c038d>] async_run_entry_fn+0x7d/0x1e0 kernel/async.c:12=
-3
->  [<ffffffff810b1d6e>] process_one_work+0x47e/0x930 kernel/workqueue.c=
-:2036
->  [<ffffffff810b22d0>] worker_thread+0xb0/0x900 kernel/workqueue.c:217=
-0
->  [<ffffffff810bba40>] kthread+0x150/0x170 kernel/kthread.c:209
->  [<ffffffff81ee420f>] ret_from_fork+0x3f/0x70 arch/x86/entry/entry_64=
-=2ES:529
+> -matt
 >
 >
 > --
-> Dmitry Vyukov, Software Engineer, dvyukov@google.com
-> Google Germany GmbH, Dienerstra=C3=9Fe 12, 80331, M=C3=BCnchen
-> Gesch=C3=A4ftsf=C3=BChrer: Graham Law, Christine Elizabeth Flores
-> Registergericht und -nummer: Hamburg, HRB 86891
-> Sitz der Gesellschaft: Hamburg
-> Diese E-Mail ist vertraulich. Wenn Sie nicht der richtige Adressat
-> sind, leiten Sie diese bitte nicht weiter, informieren Sie den
-> Absender und l=C3=B6schen Sie die E-Mail und alle Anh=C3=A4nge. Viele=
-n Dank.
-> This e-mail is confidential. If you are not the right addressee pleas=
-e
-> do not forward it, please inform the sender, and please erase this
-> e-mail including any attachments. Thanks.
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
---=20
-Dmitry Vyukov, Software Engineer, dvyukov@google.com
-Google Germany GmbH, Dienerstra=C3=9Fe 12, 80331, M=C3=BCnchen
-Gesch=C3=A4ftsf=C3=BChrer: Graham Law, Christine Elizabeth Flores
-Registergericht und -nummer: Hamburg, HRB 86891
-Sitz der Gesellschaft: Hamburg
-Diese E-Mail ist vertraulich. Wenn Sie nicht der richtige Adressat
-sind, leiten Sie diese bitte nicht weiter, informieren Sie den
-Absender und l=C3=B6schen Sie die E-Mail und alle Anh=C3=A4nge. Vielen =
-Dank.
-This e-mail is confidential. If you are not the right addressee please
-do not forward it, please inform the sender, and please erase this
-e-mail including any attachments. Thanks.
