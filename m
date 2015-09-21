@@ -1,70 +1,189 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v2 03/30] cxlflash: Fix read capacity timeout
-Date: Mon, 21 Sep 2015 13:36:32 +0200
-Message-ID: <55FFEBC0.5020507@redhat.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1442438806-49198-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54288 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932072AbbIULgg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2015 07:36:36 -0400
-In-Reply-To: <1442438806-49198-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: [PATCH] bfa: deinline __bfa_trc, wwn2str and fcid2str
+Date: Mon, 21 Sep 2015 14:04:31 +0200
+Message-ID: <1442837071-17803-1-git-send-email-dvlasenk@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Krishna Gudipati <kgudipat@brocade.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>, James Bottomley <JBottomley@Parallels.com>, Fabian Frederick <fabf@skynet.be>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>, Ben Hutchings <ben@decadent.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, Manoj Kumar <kumarmn@us.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On 16.9.2015 23:26, Matthew R. Ochs wrote:
-> From: Manoj Kumar <kumarmn@us.ibm.com>
->
-> The timeout value for read capacity is too small. Certain devices
-> may take longer to respond and thus the command may prematurely
-> timeout. Additionally the literal used for the timeout is stale.
->
-> Update the timeout to 30 seconds (matches the value used in sd.c)
-> and rework the timeout literal to a more appropriate description.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> Suggested-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxlflash/superpipe.c | 9 ++++-----
->  drivers/scsi/cxlflash/superpipe.h | 2 +-
->  drivers/scsi/cxlflash/vlun.c      | 4 ++--
->  3 files changed, 7 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index 7df985d..fa513ba 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -296,7 +296,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
->  	int rc = 0;
->  	int result = 0;
->  	int retry_cnt = 0;
-> -	u32 tout = (MC_DISCOVERY_TIMEOUT * HZ);
-> +	u32 to = (CMD_TIMEOUT * HZ);
+With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
+after deinlining these functions have sizes and callsite counts
+as follows:
 
-In V3 please remove the parenthesis here^ 
+__bfa_trc: 115 bytes, 1494 calls
+wwn2str: 108 bytes, 27 calls
+fcid2str: 46 bytes, 3 calls
 
->  
->  retry:
->  	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
-...
+__bfa_trc32 is similar to __bfa_trc, so it should have been
+uninlined too. However, it is also unused.
+Anil Gurumurthy suggested I can just delete it, I did so.
 
-> @@ -1376,8 +1375,8 @@ out_attach:
->  	attach->block_size = gli->blk_len;
->  	attach->mmio_size = sizeof(afu->afu_map->hosts[0].harea);
->  	attach->last_lba = gli->max_lba;
-> -	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT) /
-> -		gli->blk_len;
-> +	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT);
+Change in code size is about 135,000 bytes:
 
-and here^ too.
+    text     data      bss       dec     hex filename
+91470054 19945080 36421632 147836766 8cfcf5e vmlinux.before
+91335078 19944984 36421632 147701694 8cdbfbe vmlinux
 
-Thanks,
-Tomas
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Krishna Gudipati <kgudipat@brocade.com>
+CC: Vijaya Mohan Guvva <vmohan@brocade.com>
+CC: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+CC: James Bottomley <JBottomley@Parallels.com>
+CC: Fabian Frederick <fabf@skynet.be>
+CC: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Guenter Roeck <linux@roeck-us.net>
+CC: Ben Hutchings <ben@decadent.org.uk>
+CC: James Bottomley <JBottomley@Parallels.com>
+CC: linux-kernel@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/bfa/bfa_core.c | 45 ++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_cs.h   | 67 +++------------------------------------------
+ 2 files changed, 49 insertions(+), 63 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index e3f67b0..fdf0f4e 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -90,6 +90,51 @@ static bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[BFI_MC_MAX] = {
+ 
+ 
+ 
++void
++wwn2str(char *wwn_str, u64 wwn)
++{
++	union {
++		u64 wwn;
++		u8 byte[8];
++	} w;
++
++	w.wwn = wwn;
++	sprintf(wwn_str, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", w.byte[0],
++		w.byte[1], w.byte[2], w.byte[3], w.byte[4], w.byte[5],
++		w.byte[6], w.byte[7]);
++}
++
++void
++fcid2str(char *fcid_str, u32 fcid)
++{
++	union {
++		u32 fcid;
++		u8 byte[4];
++	} f;
++
++	f.fcid = fcid;
++	sprintf(fcid_str, "%02x:%02x:%02x", f.byte[1], f.byte[2], f.byte[3]);
++}
++
++void
++__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data)
++{
++	int		tail = trcm->tail;
++	struct bfa_trc_s	*trc = &trcm->trc[tail];
++
++	if (trcm->stopped)
++		return;
++
++	trc->fileno = (u16) fileno;
++	trc->line = (u16) line;
++	trc->data.u64 = data;
++	trc->timestamp = BFA_TRC_TS(trcm);
++
++	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
++	if (trcm->tail == trcm->head)
++		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
++}
++
+ static void
+ bfa_com_port_attach(struct bfa_s *bfa)
+ {
+diff --git a/drivers/scsi/bfa/bfa_cs.h b/drivers/scsi/bfa/bfa_cs.h
+index 91a8aa3..3f00eab 100644
+--- a/drivers/scsi/bfa/bfa_cs.h
++++ b/drivers/scsi/bfa/bfa_cs.h
+@@ -107,44 +107,8 @@ bfa_trc_stop(struct bfa_trc_mod_s *trcm)
+ 	trcm->stopped = 1;
+ }
+ 
+-static inline void
+-__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data)
+-{
+-	int		tail = trcm->tail;
+-	struct bfa_trc_s	*trc = &trcm->trc[tail];
+-
+-	if (trcm->stopped)
+-		return;
+-
+-	trc->fileno = (u16) fileno;
+-	trc->line = (u16) line;
+-	trc->data.u64 = data;
+-	trc->timestamp = BFA_TRC_TS(trcm);
+-
+-	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
+-	if (trcm->tail == trcm->head)
+-		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
+-}
+-
+-
+-static inline void
+-__bfa_trc32(struct bfa_trc_mod_s *trcm, int fileno, int line, u32 data)
+-{
+-	int		tail = trcm->tail;
+-	struct bfa_trc_s *trc = &trcm->trc[tail];
+-
+-	if (trcm->stopped)
+-		return;
+-
+-	trc->fileno = (u16) fileno;
+-	trc->line = (u16) line;
+-	trc->data.u32.u32 = data;
+-	trc->timestamp = BFA_TRC_TS(trcm);
+-
+-	trcm->tail = (trcm->tail + 1) & (BFA_TRC_MAX - 1);
+-	if (trcm->tail == trcm->head)
+-		trcm->head = (trcm->head + 1) & (BFA_TRC_MAX - 1);
+-}
++void
++__bfa_trc(struct bfa_trc_mod_s *trcm, int fileno, int line, u64 data);
+ 
+ #define bfa_sm_fault(__mod, __event)	do {				\
+ 	bfa_trc(__mod, (((u32)0xDEAD << 16) | __event));		\
+@@ -324,31 +288,8 @@ bfa_wc_wait(struct bfa_wc_s *wc)
+ 	bfa_wc_down(wc);
+ }
+ 
+-static inline void
+-wwn2str(char *wwn_str, u64 wwn)
+-{
+-	union {
+-		u64 wwn;
+-		u8 byte[8];
+-	} w;
+-
+-	w.wwn = wwn;
+-	sprintf(wwn_str, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", w.byte[0],
+-		w.byte[1], w.byte[2], w.byte[3], w.byte[4], w.byte[5],
+-		w.byte[6], w.byte[7]);
+-}
+-
+-static inline void
+-fcid2str(char *fcid_str, u32 fcid)
+-{
+-	union {
+-		u32 fcid;
+-		u8 byte[4];
+-	} f;
+-
+-	f.fcid = fcid;
+-	sprintf(fcid_str, "%02x:%02x:%02x", f.byte[1], f.byte[2], f.byte[3]);
+-}
++void wwn2str(char *wwn_str, u64 wwn);
++void fcid2str(char *fcid_str, u32 fcid);
+ 
+ #define bfa_swap_3b(_x)				\
+ 	((((_x) & 0xff) << 16) |		\
+-- 
+1.8.1.4
