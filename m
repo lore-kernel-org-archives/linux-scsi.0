@@ -1,48 +1,49 @@
-From: Nicholas Krause <xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] fcoe:Fix incorrect use of non wrapper version
-	of skb_buff helper function in fcoe_percpu_recieve_thread
-Date: Sun, 20 Sep 2015 18:22:39 -0400
-Message-ID: <1442787759-13033-1-git-send-email-xerofoify@gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 14/30] cxlflash: Fix to avoid stall while waiting on
+ TMF
+Date: Mon, 21 Sep 2015 13:24:23 -0500
+Message-ID: <56004B57.6080409@linux.vnet.ibm.com>
+References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1442439022-49742-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:55732 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932185AbbIUSZW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2015 14:25:22 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 21 Sep 2015 12:25:21 -0600
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id BDAFF3E40048
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 12:25:16 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8LIM5C12490810
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 11:22:13 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8LIOgZ2027477
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 12:24:43 -0600
+In-Reply-To: <1442439022-49742-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-This fixes the incorrect use of the non wrapper version of the
-function skb_dequeue in fcoe_percpu_receive_thread to use the
-wrapper version as we need to protect avoid other users from
-concurrently access on the sk_buff_head tmp used as the link
-list head for this call to skb_queue.
+On 09/16/2015 04:30 PM, Matthew R. Ochs wrote:
+> Borrowing the TMF waitq's spinlock causes a stall condition when
+> waiting for the TMF to complete. To remedy, introduce our own spin
+> lock to serialize TMF and use the appropriate wait services.
 
-Signed-off-by: Nicholas Krause <xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- drivers/scsi/fcoe/fcoe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Can you clarify what stall condition you were seeing. Its not obvious
+to me what this fixes. Do you have softlockup logs from the failure?
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index d3eb80c..f89bd4c 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1888,7 +1888,7 @@ retry:
- 
- 		spin_unlock_bh(&p->fcoe_rx_list.lock);
- 
--		while ((skb = __skb_dequeue(&tmp)) != NULL)
-+		while ((skb = skb_dequeue(&tmp)) != NULL)
- 			fcoe_recv_frame(skb);
- 
- 	}
+-Brian
+
 -- 
-2.1.4
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
