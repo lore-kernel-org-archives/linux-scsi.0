@@ -1,187 +1,173 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V3] fnic: check pci_map_single() return value
-Date: Mon, 21 Sep 2015 16:19:01 +0200
-Message-ID: <560011D5.1010108@redhat.com>
-References: <1439391623-11449-1-git-send-email-mlombard@redhat.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [RFC PATCH 0/3] fix *pbl format support
+Date: Mon, 21 Sep 2015 16:54:59 +0200
+Message-ID: <56001A43.6050501@redhat.com>
+References: <1442394523-19176-1-git-send-email-mlombard@redhat.com>
+ <87d1xi4kic.fsf@rasmusvillemoes.dk> <20150916174536.GE3243@mtj.duckdns.org>
+ <877fnq2jc0.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52335 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56082 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756431AbbIUOTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2015 10:19:03 -0400
-In-Reply-To: <1439391623-11449-1-git-send-email-mlombard@redhat.com>
+	id S1756481AbbIUOzD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2015 10:55:03 -0400
+In-Reply-To: <877fnq2jc0.fsf@rasmusvillemoes.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org
-Cc: sramars@cisco.com, jbottomley@parallels.com, jthumshirn@suse.de
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Tejun Heo <tj@kernel.org>
+Cc: joe@perches.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-On 12.8.2015 17:00, Maurizio Lombardi wrote:
-> the kernel prints some warnings when compiled with CONFIG_DMA_API_DEBUG.
-> This is because the fnic driver doesn't check the return value of
-> pci_map_single().
->
-> [   11.942770] scsi host12: fnic
-> [   11.950811] ------------[ cut here ]------------
-> [   11.950818] WARNING: at lib/dma-debug.c:937 check_unmap+0x47b/0x920()
-> [   11.950821] fnic 0000:0c:00.0: DMA-API: device driver failed to check map error[device address=0x0000002020a30040] [size=44 bytes] [mapped as single]
->
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Hi Rasmus,
+
+On 09/16/2015 10:35 PM, Rasmus Villemoes wrote:
+> 
+> I just remembered: I noticed a while ago that the qualifier member is
+> only used inside format_decode (in the end, the information is folded
+> into the type member), so one might as well use a local variable for
+> that. This gives option (3): Make field_width a 24 bit bitfield. I think
+> that should be sufficient for any realistic bitmap that one would
+> print. The patch is also rather small. Surprisingly, bloat-o-meter even
+> says that it's also a net win in code size:
+
+I tested your patch with scsi-debug and it works for me:
+
+# modprobe scsi-debug dev_size_mb=256 lbpu=1 lbpws10=1
+# cat /sys/bus/pseudo/drivers/scsi_debug/map
+
+# vgcreate tsvg /dev/sdb
+  Physical volume "/dev/sdb" successfully created
+  Volume group "tsvg" successfully created
+# cat /sys/bus/pseudo/drivers/scsi_debug/map
+0-15
+# lvcreate -V200m -l99%FREE -T tsvg/pool -n lv1 --discards ignore
+  Logical volume "lv1" created.
+# cat /sys/bus/pseudo/drivers/scsi_debug/map
+0-31,2048-2055,501760-501871
+
+Thanks,
+Maurizio Lombardi
+
+
+> 
+> add/remove: 18/16 grow/shrink: 3/2 up/down: 5551/-5775 (-224)
+> 
+> (the huge absolute numbers are due to stuff like 
+> 
+> pointer                                        -    1148   +1148
+> pointer.isra                                1116       -   -1116
+> 
+> so the functions haven't actually changed that much). I'll have to check
+> how this can be (smaller might still be worse), but at least it doesn't
+> seem to be a catastrophe in terms of .text bloat.
+> 
+> [Grr, why don't we have a way to do a compile-time assert outside
+> function context?]
+> 
+> Only compile-tested.
+> 
+> From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> Date: Wed, 16 Sep 2015 22:06:14 +0200
+> Subject: [RFC] lib/vsprintf.c: expand field_width to 24 bits
+> 
+> Maurizio Lombardi reported a problem with the %pb extension: It
+> doesn't work for sufficiently large bitmaps, since the size is stashed
+> in the field_width field of the struct printf_spec, which is currently
+> an s16. Concretely, this manifested itself in
+> /sys/bus/pseudo/drivers/scsi_debug/map being empty, since the bitmap
+> printer got a size of 0, which is the 16 bit truncation of the actual
+> bitmap size.
+> 
+> We do want to keep struct printf_spec at 8 bytes so that it can
+> cheaply be passed by value. The qualifier field is only used for
+> internal bookkeeping in format_decode, so we might as well use a local
+> variable for that. This gives us an additional 8 bits, which we can
+> then use for the field width. To stay in 8 bytes, we need to do a
+> little rearranging and make the type member a bitfield as well.
+> 
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 > ---
->  drivers/scsi/fnic/fnic_fcs.c  | 46 +++++++++++++++++++++++++++++++++++--------
->  drivers/scsi/fnic/fnic_scsi.c | 16 +++++++++++++++
->  2 files changed, 54 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-> index bf0bbd4..67669a9 100644
-> --- a/drivers/scsi/fnic/fnic_fcs.c
-> +++ b/drivers/scsi/fnic/fnic_fcs.c
-> @@ -939,6 +939,7 @@ int fnic_alloc_rq_frame(struct vnic_rq *rq)
->  	struct sk_buff *skb;
->  	u16 len;
->  	dma_addr_t pa;
-> +	int r;
+>  lib/vsprintf.c | 33 +++++++++++++++++----------------
+>  1 file changed, 17 insertions(+), 16 deletions(-)
+> 
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+> index 95cd63b43b99..cce2a780a82e 100644
+> --- a/lib/vsprintf.c
+> +++ b/lib/vsprintf.c
+> @@ -380,13 +380,13 @@ enum format_type {
+>  };
 >  
->  	len = FC_FRAME_HEADROOM + FC_MAX_FRAME + FC_FRAME_TAILROOM;
->  	skb = dev_alloc_skb(len);
-> @@ -952,8 +953,19 @@ int fnic_alloc_rq_frame(struct vnic_rq *rq)
->  	skb_reset_network_header(skb);
->  	skb_put(skb, len);
->  	pa = pci_map_single(fnic->pdev, skb->data, len, PCI_DMA_FROMDEVICE);
-> +
-> +	r = pci_dma_mapping_error(fnic->pdev, pa);
-> +	if (r) {
-> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
-> +		goto free_skb;
-> +	}
-> +
->  	fnic_queue_rq_desc(rq, skb, pa, len);
->  	return 0;
-> +
-> +free_skb:
-> +	kfree_skb(skb);
-> +	return r;
->  }
+>  struct printf_spec {
+> -	u8	type;		/* format_type enum */
+> +	u8	type:8;		/* format_type enum */
+> +	s32	field_width:24;	/* width of output field */
+>  	u8	flags;		/* flags to number() */
+>  	u8	base;		/* number base, 8, 10 or 16 only */
+> -	u8	qualifier;	/* number qualifier, one of 'hHlLtzZ' */
+> -	s16	field_width;	/* width of output field */
+>  	s16	precision;	/* # of digits/chars */
+>  };
+> +extern char __check_printf_spec[1-2*(sizeof(struct printf_spec) != 8)];
 >  
->  void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf)
-> @@ -981,6 +993,7 @@ void fnic_eth_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
->  	struct ethhdr *eth_hdr;
->  	struct vlan_ethhdr *vlan_hdr;
->  	unsigned long flags;
-> +	int r;
+>  static noinline_for_stack
+>  char *number(char *buf, char *end, unsigned long long num,
+> @@ -1633,6 +1633,7 @@ static noinline_for_stack
+>  int format_decode(const char *fmt, struct printf_spec *spec)
+>  {
+>  	const char *start = fmt;
+> +	char qualifier;
 >  
->  	if (!fnic->vlan_hw_insert) {
->  		eth_hdr = (struct ethhdr *)skb_mac_header(skb);
-> @@ -1003,18 +1016,27 @@ void fnic_eth_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
+>  	/* we finished early by reading the field width */
+>  	if (spec->type == FORMAT_TYPE_WIDTH) {
+> @@ -1715,16 +1716,16 @@ precision:
 >  
->  	pa = pci_map_single(fnic->pdev, skb->data, skb->len, PCI_DMA_TODEVICE);
->  
-> -	spin_lock_irqsave(&fnic->wq_lock[0], flags);
-> -	if (!vnic_wq_desc_avail(wq)) {
-> -		pci_unmap_single(fnic->pdev, pa, skb->len, PCI_DMA_TODEVICE);
-> -		spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
-> -		kfree_skb(skb);
-> -		return;
-> +	r = pci_dma_mapping_error(fnic->pdev, pa);
-> +	if (r) {
-> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
-> +		goto free_skb;
+>  qualifier:
+>  	/* get the conversion qualifier */
+> -	spec->qualifier = -1;
+> +	qualifier = 0;
+>  	if (*fmt == 'h' || _tolower(*fmt) == 'l' ||
+>  	    _tolower(*fmt) == 'z' || *fmt == 't') {
+> -		spec->qualifier = *fmt++;
+> -		if (unlikely(spec->qualifier == *fmt)) {
+> -			if (spec->qualifier == 'l') {
+> -				spec->qualifier = 'L';
+> +		qualifier = *fmt++;
+> +		if (unlikely(qualifier == *fmt)) {
+> +			if (qualifier == 'l') {
+> +				qualifier = 'L';
+>  				++fmt;
+> -			} else if (spec->qualifier == 'h') {
+> -				spec->qualifier = 'H';
+> +			} else if (qualifier == 'h') {
+> +				qualifier = 'H';
+>  				++fmt;
+>  			}
+>  		}
+> @@ -1781,19 +1782,19 @@ qualifier:
+>  		return fmt - start;
 >  	}
 >  
-> +	spin_lock_irqsave(&fnic->wq_lock[0], flags);
-> +	if (!vnic_wq_desc_avail(wq))
-> +		goto irq_restore;
-> +
->  	fnic_queue_wq_eth_desc(wq, skb, pa, skb->len,
->  			       0 /* hw inserts cos value */,
->  			       fnic->vlan_id, 1);
->  	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
-> +	return;
-> +
-> +irq_restore:
-> +	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
-> +	pci_unmap_single(fnic->pdev, pa, skb->len, PCI_DMA_TODEVICE);
-> +free_skb:
-> +	kfree_skb(skb);
->  }
->  
->  /*
-> @@ -1071,6 +1093,12 @@ static int fnic_send_frame(struct fnic *fnic, struct fc_frame *fp)
->  
->  	pa = pci_map_single(fnic->pdev, eth_hdr, tot_len, PCI_DMA_TODEVICE);
->  
-> +	ret = pci_dma_mapping_error(fnic->pdev, pa);
-> +	if (ret) {
-> +		printk(KERN_ERR "DMA map failed with error %d\n", ret);
-> +		goto free_skb_on_err;
-> +	}
-> +
->  	if ((fnic_fc_trace_set_data(fnic->lport->host->host_no, FNIC_FC_SEND,
->  				(char *)eth_hdr, tot_len)) != 0) {
->  		printk(KERN_ERR "fnic ctlr frame trace error!!!");
-> @@ -1082,15 +1110,17 @@ static int fnic_send_frame(struct fnic *fnic, struct fc_frame *fp)
->  		pci_unmap_single(fnic->pdev, pa,
->  				 tot_len, PCI_DMA_TODEVICE);
->  		ret = -1;
-> -		goto fnic_send_frame_end;
-> +		goto irq_restore;
->  	}
->  
->  	fnic_queue_wq_desc(wq, skb, pa, tot_len, fr_eof(fp),
->  			   0 /* hw inserts cos value */,
->  			   fnic->vlan_id, 1, 1, 1);
-> -fnic_send_frame_end:
-> +
-> +irq_restore:
->  	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
->  
-> +free_skb_on_err:
->  	if (ret)
->  		dev_kfree_skb_any(fp_skb(fp));
->  
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> index 155b286..2949d17 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -330,6 +330,7 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
->  	int flags;
->  	u8 exch_flags;
->  	struct scsi_lun fc_lun;
-> +	int r;
->  
->  	if (sg_count) {
->  		/* For each SGE, create a device desc entry */
-> @@ -346,6 +347,12 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
->  			 io_req->sgl_list,
->  			 sizeof(io_req->sgl_list[0]) * sg_count,
->  			 PCI_DMA_TODEVICE);
-> +
-> +		r = pci_dma_mapping_error(fnic->pdev, io_req->sgl_list_pa);
-> +		if (r) {
-> +			printk(KERN_ERR "PCI mapping failed with error %d\n", r);
-> +			return SCSI_MLQUEUE_HOST_BUSY;
-> +		}
->  	}
->  
->  	io_req->sense_buf_pa = pci_map_single(fnic->pdev,
-> @@ -353,6 +360,15 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
->  					      SCSI_SENSE_BUFFERSIZE,
->  					      PCI_DMA_FROMDEVICE);
->  
-> +	r = pci_dma_mapping_error(fnic->pdev, io_req->sense_buf_pa);
-> +	if (r) {
-> +		pci_unmap_single(fnic->pdev, io_req->sgl_list_pa,
-> +				sizeof(io_req->sgl_list[0]) * sg_count,
-> +				PCI_DMA_TODEVICE);
-> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
-> +		return SCSI_MLQUEUE_HOST_BUSY;
-> +	}
-> +
->  	int_to_scsilun(sc->device->lun, &fc_lun);
->  
->  	/* Enqueue the descriptor in the Copy WQ */
-
-Looks good,
-Reviewed By: Tomas Henzl <thenzl@redhat.com>
-
+> -	if (spec->qualifier == 'L')
+> +	if (qualifier == 'L')
+>  		spec->type = FORMAT_TYPE_LONG_LONG;
+> -	else if (spec->qualifier == 'l') {
+> +	else if (qualifier == 'l') {
+>  		BUILD_BUG_ON(FORMAT_TYPE_ULONG + SIGN != FORMAT_TYPE_LONG);
+>  		spec->type = FORMAT_TYPE_ULONG + (spec->flags & SIGN);
+> -	} else if (_tolower(spec->qualifier) == 'z') {
+> +	} else if (_tolower(qualifier) == 'z') {
+>  		spec->type = FORMAT_TYPE_SIZE_T;
+> -	} else if (spec->qualifier == 't') {
+> +	} else if (qualifier == 't') {
+>  		spec->type = FORMAT_TYPE_PTRDIFF;
+> -	} else if (spec->qualifier == 'H') {
+> +	} else if (qualifier == 'H') {
+>  		BUILD_BUG_ON(FORMAT_TYPE_UBYTE + SIGN != FORMAT_TYPE_BYTE);
+>  		spec->type = FORMAT_TYPE_UBYTE + (spec->flags & SIGN);
+> -	} else if (spec->qualifier == 'h') {
+> +	} else if (qualifier == 'h') {
+>  		BUILD_BUG_ON(FORMAT_TYPE_USHORT + SIGN != FORMAT_TYPE_SHORT);
+>  		spec->type = FORMAT_TYPE_USHORT + (spec->flags & SIGN);
+>  	} else {
+> 
