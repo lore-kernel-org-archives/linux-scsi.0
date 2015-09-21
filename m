@@ -1,99 +1,40 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2 01/11] phy: exynos-ufs: add UFS PHY driver for EXYNOS
- SoC
-Date: Mon, 21 Sep 2015 09:33:28 -0500
-Message-ID: <56001538.5030706@kernel.org>
-References: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
- <1442483137-32376-2-git-send-email-alim.akhtar@samsung.com>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] fcoe:Fix incorrect use of non wrapper
+ version of skb_buff helper function in fcoe_percpu_recieve_thread
+Date: Mon, 21 Sep 2015 13:09:28 -0700
+Message-ID: <20150921200928.GA29489@straylight.hirudinean.org>
+References: <1442787759-13033-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442483137-32376-2-git-send-email-alim.akhtar@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1442787759-13033-1-git-send-email-xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Nicholas Krause <xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/17/2015 04:45 AM, Alim Akhtar wrote:
-> From: Seungwon Jeon <essuuj@gmail.com>
-> 
-> This patch introduces Exynos UFS PHY driver. This driver
-> supports to deal with phy calibration and power control
-> according to UFS host driver's behavior.
-> 
-> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../devicetree/bindings/phy/samsung-phy.txt        |   22 ++
+On Sun, Sep 20, 2015 at 06:22:39PM -0400, Nicholas Krause wrote:
+> This fixes the incorrect use of the non wrapper version of the
+> function skb_dequeue in fcoe_percpu_receive_thread to use the
+> wrapper version as we need to protect avoid other users from
+> concurrently access on the sk_buff_head tmp used as the link
+> list head for this call to skb_queue.
 
-It is preferred to put the binding in a separate patch.
+The sk_buff_head tmp is a local reference on the stack, so not accessed
+concurrently from anywhere.  It's set with skb_queue_splice_init while
+holding the lock for the real fcoe_rx_list, specifically to batch
+process without repeatedly taking and dropping the lock.
 
->  drivers/phy/Kconfig                                |    7 +
->  drivers/phy/Makefile                               |    1 +
->  drivers/phy/phy-exynos-ufs.c                       |  262 ++++++++++++++++++++
->  drivers/phy/phy-exynos-ufs.h                       |   85 +++++++
->  drivers/phy/phy-exynos7-ufs.h                      |   89 +++++++
->  include/linux/phy/phy-exynos-ufs.h                 |  107 ++++++++
->  7 files changed, 573 insertions(+)
->  create mode 100644 drivers/phy/phy-exynos-ufs.c
->  create mode 100644 drivers/phy/phy-exynos-ufs.h
->  create mode 100644 drivers/phy/phy-exynos7-ufs.h
->  create mode 100644 include/linux/phy/phy-exynos-ufs.h
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> index 60c6f2a..1abe2c4 100644
-> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
-> @@ -174,3 +174,25 @@ Example:
->  		usbdrdphy0 = &usb3_phy0;
->  		usbdrdphy1 = &usb3_phy1;
->  	};
-> +
-> +Samsung Exynos7 soc serise UFS PHY Controller
+Nak, flawed reasoning for justification.
 
-s/serise/series/
-
-> +---------------------------------------------
-> +
-> +UFS PHY nodes are defined to describe on-chip UFS Physical layer controllers.
-> +Each UFS PHY controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains "samsung,exynos7-ufs-phy"
-> +- reg : offset and length of the UFS PHY register set;
-> +- reg-names : reg name(s) must be 'phy-pma';
-> +- #phy-cells : must be zero
-> +- samsung,syscon-phandle : a phandle to the PMU system controller, no arguments
-
-How about samsung,pmu-syscon as syscon can mean a variety of things?
-
-> +
-> +Example:
-> +	ufs_phy: ufs-phy@0x15571800 {
-> +		compatible = "samsung,exynos7-ufs-phy";
-> +		reg = <0x15571800 0x240>;
-> +		reg-names = "phy-pma";
-> +		samsung,syscon-phandle = <&pmu_system_controller>;
-> +		#phy-cells = <0>;
-> +	};
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index 6b8dd16..7449376 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -358,4 +358,11 @@ config PHY_BRCMSTB_SATA
->  	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
->  	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
->  
-> +config PHY_EXYNOS_UFS
-> +	tristate "EXYNOS SoC series UFS PHY driver"
-> +	depends on OF && ARCH_EXYNOS
-
-|| COMPILE_TEST
-
-> +	select GENERIC_PHY
-> +	help
-> +	  Support for UFS PHY on Samsung EXYNOS chipsets.
-> +
->  endmenu
+- Chris
