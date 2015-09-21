@@ -1,40 +1,41 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] fcoe:Fix incorrect use of non wrapper
- version of skb_buff helper function in fcoe_percpu_recieve_thread
-Date: Mon, 21 Sep 2015 13:09:28 -0700
-Message-ID: <20150921200928.GA29489@straylight.hirudinean.org>
-References: <1442787759-13033-1-git-send-email-xerofoify@gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 16/30] cxlflash: Fix host link up event handling
+Date: Mon, 21 Sep 2015 16:47:20 -0500
+Message-ID: <56007AE8.70307@linux.vnet.ibm.com>
+References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1442439030-49818-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1442787759-13033-1-git-send-email-xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Nicholas Krause <xerofoify-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:47168 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbbIUVr0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2015 17:47:26 -0400
+Received: from /spool/local
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 21 Sep 2015 17:47:25 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id E83D638C805F
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 17:47:23 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8LLlNVI57081890
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 21:47:23 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8LLlMxA019060
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2015 17:47:23 -0400
+In-Reply-To: <1442439030-49818-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On Sun, Sep 20, 2015 at 06:22:39PM -0400, Nicholas Krause wrote:
-> This fixes the incorrect use of the non wrapper version of the
-> function skb_dequeue in fcoe_percpu_receive_thread to use the
-> wrapper version as we need to protect avoid other users from
-> concurrently access on the sk_buff_head tmp used as the link
-> list head for this call to skb_queue.
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 
-The sk_buff_head tmp is a local reference on the stack, so not accessed
-concurrently from anywhere.  It's set with skb_queue_splice_init while
-holding the lock for the real fcoe_rx_list, specifically to batch
-process without repeatedly taking and dropping the lock.
 
-Nak, flawed reasoning for justification.
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-- Chris
