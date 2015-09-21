@@ -1,248 +1,187 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v2 29/30] cxlflash: Fix to avoid state change collision
-Date: Mon, 21 Sep 2015 14:44:33 +0200
-Message-ID: <55FFFBB1.9050802@redhat.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1442439158-50453-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH V3] fnic: check pci_map_single() return value
+Date: Mon, 21 Sep 2015 16:19:01 +0200
+Message-ID: <560011D5.1010108@redhat.com>
+References: <1439391623-11449-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60369 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52335 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751903AbbIUMoh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:44:37 -0400
-In-Reply-To: <1442439158-50453-1-git-send-email-mrochs@linux.vnet.ibm.com>
+	id S1756431AbbIUOTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2015 10:19:03 -0400
+In-Reply-To: <1439391623-11449-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org
+Cc: sramars@cisco.com, jbottomley@parallels.com, jthumshirn@suse.de
 
-On 16.9.2015 23:32, Matthew R. Ochs wrote:
-> The adapter state machine is susceptible to missing and/or
-> corrupting state updates at runtime. This can lead to a variety
-> of unintended issues and is due to the lack of a serialization
-> mechanism to protect the adapter state.
+On 12.8.2015 17:00, Maurizio Lombardi wrote:
+> the kernel prints some warnings when compiled with CONFIG_DMA_API_DEBUG.
+> This is because the fnic driver doesn't check the return value of
+> pci_map_single().
 >
-> Use an adapter-wide mutex to serialize state changes.
-
-I've just briefly looked into your code, but it seems to me that
-an atomic variable would serve your needs also and might be 
-more effective resulting in a faster code execution?
-
-If you keep the mutex way you don't need two mutexes
-in cxlflash_afu_sync - you should remove the mutex &sync_active
-
---tm
-
+> [   11.942770] scsi host12: fnic
+> [   11.950811] ------------[ cut here ]------------
+> [   11.950818] WARNING: at lib/dma-debug.c:937 check_unmap+0x47b/0x920()
+> [   11.950821] fnic 0000:0c:00.0: DMA-API: device driver failed to check map error[device address=0x0000002020a30040] [size=44 bytes] [mapped as single]
 >
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> Suggested-by: Brian King <brking@linux.vnet.ibm.com>
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 > ---
->  drivers/scsi/cxlflash/common.h    |  1 +
->  drivers/scsi/cxlflash/main.c      | 40 +++++++++++++++++++++++++++++++++------
->  drivers/scsi/cxlflash/superpipe.c |  7 ++++++-
->  3 files changed, 41 insertions(+), 7 deletions(-)
+>  drivers/scsi/fnic/fnic_fcs.c  | 46 +++++++++++++++++++++++++++++++++++--------
+>  drivers/scsi/fnic/fnic_scsi.c | 16 +++++++++++++++
+>  2 files changed, 54 insertions(+), 8 deletions(-)
 >
-> diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-> index e6041b9..c9b1ec6 100644
-> --- a/drivers/scsi/cxlflash/common.h
-> +++ b/drivers/scsi/cxlflash/common.h
-> @@ -128,6 +128,7 @@ struct cxlflash_cfg {
->  	bool tmf_active;
->  	wait_queue_head_t reset_waitq;
->  	enum cxlflash_state state;
-> +	struct mutex mutex;
->  };
+> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+> index bf0bbd4..67669a9 100644
+> --- a/drivers/scsi/fnic/fnic_fcs.c
+> +++ b/drivers/scsi/fnic/fnic_fcs.c
+> @@ -939,6 +939,7 @@ int fnic_alloc_rq_frame(struct vnic_rq *rq)
+>  	struct sk_buff *skb;
+>  	u16 len;
+>  	dma_addr_t pa;
+> +	int r;
 >  
->  struct afu_cmd {
-> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-> index 0487fac..a94340d 100644
-> --- a/drivers/scsi/cxlflash/main.c
-> +++ b/drivers/scsi/cxlflash/main.c
-> @@ -496,6 +496,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
->  	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
->  	struct afu *afu = cfg->afu;
->  	struct device *dev = &cfg->dev->dev;
-> +	enum cxlflash_state state;
->  	struct afu_cmd *cmd;
->  	u32 port_sel = scp->device->channel + 1;
->  	int nseg, i, ncount;
-> @@ -525,7 +526,11 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
->  	}
->  	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
->  
-> -	switch (cfg->state) {
-> +	mutex_lock(&cfg->mutex);
-> +	state = cfg->state;
-> +	mutex_unlock(&cfg->mutex);
+>  	len = FC_FRAME_HEADROOM + FC_MAX_FRAME + FC_FRAME_TAILROOM;
+>  	skb = dev_alloc_skb(len);
+> @@ -952,8 +953,19 @@ int fnic_alloc_rq_frame(struct vnic_rq *rq)
+>  	skb_reset_network_header(skb);
+>  	skb_put(skb, len);
+>  	pa = pci_map_single(fnic->pdev, skb->data, len, PCI_DMA_FROMDEVICE);
 > +
-> +	switch (state) {
->  	case STATE_RESET:
->  		dev_dbg_ratelimited(dev, "%s: device is in reset!\n", __func__);
->  		rc = SCSI_MLQUEUE_HOST_BUSY;
-> @@ -722,7 +727,9 @@ static void cxlflash_remove(struct pci_dev *pdev)
->  						  cfg->tmf_slock);
->  	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
->  
-> +	mutex_lock(&cfg->mutex);
->  	cfg->state = STATE_FAILTERM;
-> +	mutex_unlock(&cfg->mutex);
->  	atomic_inc(&cfg->remove_active);
->  	cxlflash_stop_term_user_contexts(cfg);
->  
-> @@ -1811,12 +1818,13 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
->  	int retry_cnt = 0;
->  	static DEFINE_MUTEX(sync_active);
->  
-> +	mutex_lock(&sync_active);
-> +	mutex_lock(&cfg->mutex);
->  	if (cfg->state != STATE_NORMAL) {
->  		pr_debug("%s: Sync not required! (%u)\n", __func__, cfg->state);
-> -		return 0;
-> +		goto out;
->  	}
->  
-> -	mutex_lock(&sync_active);
->  retry:
->  	cmd = cmd_checkout(afu);
->  	if (unlikely(!cmd)) {
-> @@ -1858,6 +1866,7 @@ retry:
->  		     (cmd->sa.host_use_b[0] & B_ERROR)))
->  		rc = -1;
->  out:
-> +	mutex_unlock(&cfg->mutex);
->  	mutex_unlock(&sync_active);
->  	if (cmd)
->  		cmd_checkin(cmd);
-> @@ -1900,6 +1909,7 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
->  	struct Scsi_Host *host = scp->device->host;
->  	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
->  	struct afu *afu = cfg->afu;
-> +	enum cxlflash_state state;
->  	int rcr = 0;
->  
->  	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
-> @@ -1912,7 +1922,11 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
->  		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
->  
->  retry:
-> -	switch (cfg->state) {
-> +	mutex_lock(&cfg->mutex);
-> +	state = cfg->state;
-> +	mutex_unlock(&cfg->mutex);
+> +	r = pci_dma_mapping_error(fnic->pdev, pa);
+> +	if (r) {
+> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
+> +		goto free_skb;
+> +	}
 > +
-> +	switch (state) {
->  	case STATE_NORMAL:
->  		rcr = send_tmf(afu, scp, TMF_LUN_RESET);
->  		if (unlikely(rcr))
-> @@ -1954,6 +1968,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
->  		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
->  		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+>  	fnic_queue_rq_desc(rq, skb, pa, len);
+>  	return 0;
+> +
+> +free_skb:
+> +	kfree_skb(skb);
+> +	return r;
+>  }
 >  
-> +	mutex_lock(&cfg->mutex);
->  	switch (cfg->state) {
->  	case STATE_NORMAL:
->  		cfg->state = STATE_RESET;
-> @@ -1967,7 +1982,9 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
->  		wake_up_all(&cfg->reset_waitq);
->  		break;
->  	case STATE_RESET:
-> +		mutex_unlock(&cfg->mutex);
->  		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
-> +		mutex_lock(&cfg->mutex);
->  		if (cfg->state == STATE_NORMAL)
->  			break;
->  		/* fall through */
-> @@ -1975,6 +1992,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
->  		rc = FAILED;
->  		break;
->  	}
-> +	mutex_unlock(&cfg->mutex);
+>  void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf)
+> @@ -981,6 +993,7 @@ void fnic_eth_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
+>  	struct ethhdr *eth_hdr;
+>  	struct vlan_ethhdr *vlan_hdr;
+>  	unsigned long flags;
+> +	int r;
 >  
->  	pr_debug("%s: returning rc=%d\n", __func__, rc);
->  	return rc;
-> @@ -2312,10 +2330,11 @@ static void cxlflash_worker_thread(struct work_struct *work)
->  	int port;
->  	ulong lock_flags;
+>  	if (!fnic->vlan_hw_insert) {
+>  		eth_hdr = (struct ethhdr *)skb_mac_header(skb);
+> @@ -1003,18 +1016,27 @@ void fnic_eth_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
 >  
-> -	/* Avoid MMIO if the device has failed */
-> +	mutex_lock(&cfg->mutex);
+>  	pa = pci_map_single(fnic->pdev, skb->data, skb->len, PCI_DMA_TODEVICE);
 >  
-> +	/* Avoid MMIO if the device has failed */
->  	if (cfg->state != STATE_NORMAL)
+> -	spin_lock_irqsave(&fnic->wq_lock[0], flags);
+> -	if (!vnic_wq_desc_avail(wq)) {
+> -		pci_unmap_single(fnic->pdev, pa, skb->len, PCI_DMA_TODEVICE);
+> -		spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+> -		kfree_skb(skb);
 > -		return;
-> +		goto out;
+> +	r = pci_dma_mapping_error(fnic->pdev, pa);
+> +	if (r) {
+> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
+> +		goto free_skb;
+>  	}
 >  
->  	spin_lock_irqsave(cfg->host->host_lock, lock_flags);
->  
-> @@ -2346,6 +2365,8 @@ static void cxlflash_worker_thread(struct work_struct *work)
->  
->  	if (atomic_dec_if_positive(&cfg->scan_host_needed) >= 0)
->  		scsi_scan_host(cfg->host);
-> +out:
-> +	mutex_unlock(&cfg->mutex);
->  }
->  
->  /**
-> @@ -2416,6 +2437,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
->  	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
->  	cfg->lr_state = LINK_RESET_INVALID;
->  	cfg->lr_port = -1;
-> +	mutex_init(&cfg->mutex);
->  	mutex_init(&cfg->ctx_tbl_list_mutex);
->  	mutex_init(&cfg->ctx_recovery_mutex);
->  	init_rwsem(&cfg->ioctl_rwsem);
-> @@ -2503,7 +2525,9 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
->  
->  	switch (state) {
->  	case pci_channel_io_frozen:
-> +		mutex_lock(&cfg->mutex);
->  		cfg->state = STATE_RESET;
-> +		mutex_unlock(&cfg->mutex);
->  		scsi_block_requests(cfg->host);
->  		drain_ioctls(cfg);
->  		rc = cxlflash_mark_contexts_error(cfg);
-> @@ -2514,7 +2538,9 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
->  		stop_afu(cfg);
->  		return PCI_ERS_RESULT_NEED_RESET;
->  	case pci_channel_io_perm_failure:
-> +		mutex_lock(&cfg->mutex);
->  		cfg->state = STATE_FAILTERM;
-> +		mutex_unlock(&cfg->mutex);
->  		wake_up_all(&cfg->reset_waitq);
->  		scsi_unblock_requests(cfg->host);
->  		return PCI_ERS_RESULT_DISCONNECT;
-> @@ -2561,7 +2587,9 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
->  
->  	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
->  
-> +	mutex_lock(&cfg->mutex);
->  	cfg->state = STATE_NORMAL;
-> +	mutex_unlock(&cfg->mutex);
->  	wake_up_all(&cfg->reset_waitq);
->  	scsi_unblock_requests(cfg->host);
->  }
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index 9844788..c3aaadf 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -1229,10 +1229,15 @@ static const struct file_operations null_fops = {
->  static int check_state(struct cxlflash_cfg *cfg, bool ioctl)
->  {
->  	struct device *dev = &cfg->dev->dev;
-> +	enum cxlflash_state state;
->  	int rc = 0;
->  
->  retry:
-> -	switch (cfg->state) {
-> +	mutex_lock(&cfg->mutex);
-> +	state = cfg->state;
-> +	mutex_unlock(&cfg->mutex);
+> +	spin_lock_irqsave(&fnic->wq_lock[0], flags);
+> +	if (!vnic_wq_desc_avail(wq))
+> +		goto irq_restore;
 > +
-> +	switch (state) {
->  	case STATE_RESET:
->  		dev_dbg(dev, "%s: Reset state, going to wait...\n", __func__);
->  		if (ioctl)
+>  	fnic_queue_wq_eth_desc(wq, skb, pa, skb->len,
+>  			       0 /* hw inserts cos value */,
+>  			       fnic->vlan_id, 1);
+>  	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+> +	return;
+> +
+> +irq_restore:
+> +	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+> +	pci_unmap_single(fnic->pdev, pa, skb->len, PCI_DMA_TODEVICE);
+> +free_skb:
+> +	kfree_skb(skb);
+>  }
+>  
+>  /*
+> @@ -1071,6 +1093,12 @@ static int fnic_send_frame(struct fnic *fnic, struct fc_frame *fp)
+>  
+>  	pa = pci_map_single(fnic->pdev, eth_hdr, tot_len, PCI_DMA_TODEVICE);
+>  
+> +	ret = pci_dma_mapping_error(fnic->pdev, pa);
+> +	if (ret) {
+> +		printk(KERN_ERR "DMA map failed with error %d\n", ret);
+> +		goto free_skb_on_err;
+> +	}
+> +
+>  	if ((fnic_fc_trace_set_data(fnic->lport->host->host_no, FNIC_FC_SEND,
+>  				(char *)eth_hdr, tot_len)) != 0) {
+>  		printk(KERN_ERR "fnic ctlr frame trace error!!!");
+> @@ -1082,15 +1110,17 @@ static int fnic_send_frame(struct fnic *fnic, struct fc_frame *fp)
+>  		pci_unmap_single(fnic->pdev, pa,
+>  				 tot_len, PCI_DMA_TODEVICE);
+>  		ret = -1;
+> -		goto fnic_send_frame_end;
+> +		goto irq_restore;
+>  	}
+>  
+>  	fnic_queue_wq_desc(wq, skb, pa, tot_len, fr_eof(fp),
+>  			   0 /* hw inserts cos value */,
+>  			   fnic->vlan_id, 1, 1, 1);
+> -fnic_send_frame_end:
+> +
+> +irq_restore:
+>  	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+>  
+> +free_skb_on_err:
+>  	if (ret)
+>  		dev_kfree_skb_any(fp_skb(fp));
+>  
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index 155b286..2949d17 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -330,6 +330,7 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+>  	int flags;
+>  	u8 exch_flags;
+>  	struct scsi_lun fc_lun;
+> +	int r;
+>  
+>  	if (sg_count) {
+>  		/* For each SGE, create a device desc entry */
+> @@ -346,6 +347,12 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+>  			 io_req->sgl_list,
+>  			 sizeof(io_req->sgl_list[0]) * sg_count,
+>  			 PCI_DMA_TODEVICE);
+> +
+> +		r = pci_dma_mapping_error(fnic->pdev, io_req->sgl_list_pa);
+> +		if (r) {
+> +			printk(KERN_ERR "PCI mapping failed with error %d\n", r);
+> +			return SCSI_MLQUEUE_HOST_BUSY;
+> +		}
+>  	}
+>  
+>  	io_req->sense_buf_pa = pci_map_single(fnic->pdev,
+> @@ -353,6 +360,15 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+>  					      SCSI_SENSE_BUFFERSIZE,
+>  					      PCI_DMA_FROMDEVICE);
+>  
+> +	r = pci_dma_mapping_error(fnic->pdev, io_req->sense_buf_pa);
+> +	if (r) {
+> +		pci_unmap_single(fnic->pdev, io_req->sgl_list_pa,
+> +				sizeof(io_req->sgl_list[0]) * sg_count,
+> +				PCI_DMA_TODEVICE);
+> +		printk(KERN_ERR "PCI mapping failed with error %d\n", r);
+> +		return SCSI_MLQUEUE_HOST_BUSY;
+> +	}
+> +
+>  	int_to_scsilun(sc->device->lun, &fc_lun);
+>  
+>  	/* Enqueue the descriptor in the Copy WQ */
+
+Looks good,
+Reviewed By: Tomas Henzl <thenzl@redhat.com>
 
