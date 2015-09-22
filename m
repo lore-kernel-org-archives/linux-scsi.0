@@ -1,204 +1,174 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 16/23] scsi: Add scsi_vpd_lun_id()
-Date: Tue, 22 Sep 2015 15:17:55 -0400
-Message-ID: <1442949475.4132.43.camel@localhost.localdomain>
+Subject: Re: [PATCH 17/23] scsi_dh_alua: use unique device id
+Date: Tue, 22 Sep 2015 15:31:47 -0400
+Message-ID: <1442950307.4132.53.camel@localhost.localdomain>
 References: <1440679281-13234-1-git-send-email-hare@suse.de>
-	 <1440679281-13234-17-git-send-email-hare@suse.de>
+	 <1440679281-13234-18-git-send-email-hare@suse.de>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49408 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53831 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756124AbbIVTR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Sep 2015 15:17:57 -0400
-In-Reply-To: <1440679281-13234-17-git-send-email-hare@suse.de>
+	id S1758275AbbIVTbs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Sep 2015 15:31:48 -0400
+In-Reply-To: <1440679281-13234-18-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
 On Thu, 2015-08-27 at 14:41 +0200, Hannes Reinecke wrote:
-> Add a function scsi_vpd_lun_id() to return a unique device
-> identifcation based on the designation descriptors of
-> VPD page 0x83.
-> 
-> As devices might implement several descriptors the order
-> of preference is:
-> - NAA IEE Registered Extended
-> - EUI-64 based 16-byte
-> - EUI-64 based 12-byte
-> - NAA IEEE Registered
-> - NAA IEEE Extended
-> A SCSI name string descriptor is preferred to all of them
-> if the identification is longer than 16 bytes.
-> 
-> The returned unique device identification will be formatted
-> as a SCSI Name string to avoid clashes between different
-> designator types.
+> Use scsi_vpd_lun_id() to assign a unique device identification
+> to the alua port group structure.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/scsi_lib.c    | 121 +++++++++++++++++++++++++++++++++++++++++++++
->  include/scsi/scsi_device.h |   1 +
->  2 files changed, 122 insertions(+)
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 70 +++++++++++++++++++++++++++---
+>  1 file changed, 65 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 2a864b8..48d6ff6 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -3145,3 +3145,124 @@ void sdev_enable_disk_events(struct scsi_device *sdev)
->  	atomic_dec(&sdev->disk_events_disable_depth);
->  }
->  EXPORT_SYMBOL(sdev_enable_disk_events);
-> +
-> +/*
-> + * scsi_vpd_lun_id - return a unique device identification
-> + * @sdev: SCSI device
-> + * @id:   buffer for the identification
-> + * @id_len:  length of the buffer
-> + *
-> + * Copies a unique device identification into @id based
-> + * on the information in the VPD page 0x83 of the device.
-> + * The string will be formatted as a SCSI name string.
-> + *
-> + * Returns the length of the identification or error on failure.
-> + */
-> +int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
-> +{
-> +	u8 cur_id_type = 0xff;
-> +	u8 cur_id_size = 0;
-> +	unsigned char *d, *cur_id_str;
-> +	int id_size = -EAGAIN;
-> +
-> +	/*
-> +	 * Look for the correct descriptor.
-> +	 * Order of preference for lun descriptor:
-> +	 * - SCSI name string
-> +	 * - NAA IEEE Registered Extended
-> +	 * - EUI-64 based 16-byte
-> +	 * - EUI-64 based 12-byte
-> +	 * - NAA IEEE Registered
-> +	 * - NAA IEEE Extended
-> +	 * as longer descriptors reduce the likelyhood
-> +	 * of identification clashes.
-> +	 */
-> +
-> +	/* The id string must be at least 20 bytes + terminating NULL byte */
-> +	if (id_len < 21)
-> +		return -EINVAL;
-> +
-> +	memset(id, 0, id_len);
-> +	d = sdev->vpd_pg83 + 4;
-> +	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
-> +		/* Skip designators not referring to the LUN */
-> +		if ((d[1] & 0x30) != 0x00)
-> +			goto next_desig;
-> +
-> +		switch (d[1] & 0xf) {
-> +		case 0x2:
-> +			/* EUI-64 */
-> +			if (cur_id_size > d[3])
-> +				break;
-> +			/* Prefer NAA IEEE Registered Extended */
-> +			if (cur_id_type == 0x3 &&
-> +			    cur_id_size == d[3])
-> +				break;
-> +			cur_id_size = d[3];
-> +			cur_id_str = d + 4;
-> +			cur_id_type = d[1] & 0xf;
-> +			switch (cur_id_size) {
-> +			case 8:
-> +				id_size = snprintf(id, id_len,
-> +						   "eui.%8phN",
-> +						   cur_id_str);
-> +				break;
-> +			case 12:
-> +				id_size = snprintf(id, id_len,
-> +						   "eui.%12phN",
-> +						   cur_id_str);
-> +				break;
-> +			case 16:
-> +				id_size = snprintf(id, id_len,
-> +						   "eui.%16phN",
-> +						   cur_id_str);
-> +				break;
-> +			default:
-> +				cur_id_size = 0;
-> +				break;
-> +			}
-> +			break;
-> +		case 0x3:
-> +			/* NAA */
-> +			if (cur_id_size > d[3])
-> +				break;
-> +			cur_id_size = d[3];
-> +			cur_id_str = d + 4;
-> +			cur_id_type = d[1] & 0xf;
-> +			switch (cur_id_size) {
-> +			case 8:
-> +				id_size = snprintf(id, id_len,
-> +						   "naa.%8phN",
-> +						   cur_id_str);
-> +				break;
-> +			case 16:
-> +				id_size = snprintf(id, id_len,
-> +						   "naa.%16phN",
-> +						   cur_id_str);
-> +				break;
-> +			default:
-> +				cur_id_size = 0;
-> +				break;
-> +			}
-> +			break;
-> +		case 0x8:
-> +			/* SCSI name string */
-> +			if (cur_id_size + 4 > d[3])
-> +				break;
-> +			cur_id_size = d[3];
-> +			cur_id_str = d + 4;
-> +			cur_id_type = d[1] & 0xf;
-> +			if (cur_id_size >= id_len)
-> +				cur_id_size = id_len - 1;
-> +			memcpy(id, cur_id_str, cur_id_size);
-> +			break;
-> +		default:
-> +			break;
-> +		}
-> +next_desig:
-> +		d += d[3] + 4;
-> +	}
-> +
-> +	return id_size;
-> +}
-> +EXPORT_SYMBOL(scsi_vpd_lun_id);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index b6b1dc4..595a9be 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -413,6 +413,7 @@ static inline int scsi_execute_req(struct scsi_device *sdev,
->  }
->  extern void sdev_disable_disk_events(struct scsi_device *sdev);
->  extern void sdev_enable_disk_events(struct scsi_device *sdev);
-> +extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index dbe9ff2..c2b2100b 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -70,6 +70,8 @@ static DEFINE_SPINLOCK(port_group_lock);
+>  struct alua_port_group {
+>  	struct kref		kref;
+>  	struct list_head	node;
+> +	unsigned char		device_id_str[256];
+> +	int			device_id_size;
+
+I prefer _len instead of _size, _size should refer to the size of the buffer,
+not the current length of the data in it.
+
+>  	int			group_id;
+>  	int			tpgs;
+>  	int			state;
+> @@ -229,7 +231,9 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+>  {
+>  	unsigned char *d;
+>  	int group_id = -1;
+> -	struct alua_port_group *pg = NULL;
+> +	char device_id_str[256];
+> +	int device_id_size;
+> +	struct alua_port_group *tmp_pg, *pg = NULL;
 >  
->  #ifdef CONFIG_PM
->  extern int scsi_autopm_get_device(struct scsi_device *);
+>  	if (!sdev->vpd_pg83)
+>  		return SCSI_DH_DEV_UNSUPP;
+> @@ -266,9 +270,39 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+>  		h->tpgs = TPGS_MODE_NONE;
+>  		return SCSI_DH_DEV_UNSUPP;
+>  	}
+> +	device_id_size = scsi_vpd_lun_id(sdev, device_id_str, 256);
 
-scsi_vpd_lun_id() is an exported function, but does not check if sdev->vpd_pg83 != NULL
-(i.e. no VPD 83 info), and we will crash if it is NULL.  Also, why return -EAGAIN?
-What will be different next time?  Maybe a different errno would be better, like
--ENOENT or -ENODATA, I'm not sure.
+should be sizeof(device_id_str) not hardcoded 256
 
-In the SCSI name string case, if the name has to be truncated to fit the supplied buffer,
-scsi_vpd_lun_id() does not ensure that the last byte is zero, it relies on the caller to
-have done this, (which alua_check_vpd() does not do).  I'm not sure if we should truncate
-the SCSI name string here or return an error here, as a truncated name will likely not
-be unique.
+> +	if (device_id_size <= 0) {
+> +		/*
+> +		 * Internal error: TPGS supported by no
+
+"Internal error: TPGS supported by no"  should be "but no"
+
+> +		 * device identifcation found.
+> +		 * Disable ALUA support.
+> +		 */
+> +		sdev_printk(KERN_INFO, sdev,
+> +			    "%s: No device descriptors found\n",
+> +			    ALUA_DH_NAME);
+> +		h->tpgs = TPGS_MODE_NONE;
+> +		return SCSI_DH_DEV_UNSUPP;
+> +	}
+>  	sdev_printk(KERN_INFO, sdev,
+> -		    "%s: port group %02x rel port %02x\n",
+> -		    ALUA_DH_NAME, group_id, h->rel_port);
+> +		    "%s: device %s port group %02x "
+> +		    "rel port %02x\n", ALUA_DH_NAME,
+> +		    device_id_str, group_id, h->rel_port);
+> +	spin_lock(&port_group_lock);
+> +	list_for_each_entry(tmp_pg, &port_group_list, node) {
+> +		if (tmp_pg->group_id != group_id)
+> +			continue;
+> +		if (tmp_pg->device_id_size != device_id_size)
+> +			continue;
+> +		if (strncmp(tmp_pg->device_id_str, device_id_str,
+> +			    device_id_size))
+> +			continue;
+> +		h->pg = tmp_pg;
+> +		kref_get(&tmp_pg->kref);
+> +		break;
+> +	}
+> +	spin_unlock(&port_group_lock);
+> +	if (h->pg)
+> +		return SCSI_DH_OK;
+
+The lookup checks whether h->pg == NULL but the function never
+explicitly sets it to NULL before iterating.
+
+>  
+>  	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
+>  	if (!pg) {
+> @@ -278,13 +312,39 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+>  		/* Temporary failure, bypass */
+>  		return SCSI_DH_DEV_TEMP_BUSY;
+>  	}
+> +	if (device_id_size)
+> +		strncpy(pg->device_id_str, device_id_str, 256);
+
+should be sizeof(device_id_str) not hardcoded 256
+
+> +	else
+> +		pg->device_id_str[0] = '\0';
+> +
+> +	pg->device_id_size = device_id_size;
+>  	pg->group_id = group_id;
+>  	pg->tpgs = h->tpgs;
+>  	pg->state = TPGS_STATE_OPTIMIZED;
+>  	kref_init(&pg->kref);
+>  	spin_lock(&port_group_lock);
+> -	list_add(&pg->node, &port_group_list);
+> -	h->pg = pg;
+> +	/*
+> +	 * Re-check list again to catch
+> +	 * concurrent updates
+> +	 */
+> +	list_for_each_entry(tmp_pg, &port_group_list, node) {
+> +		if (tmp_pg->group_id != pg->group_id)
+> +			continue;
+> +		if (tmp_pg->device_id_size != pg->device_id_size)
+> +			continue;
+> +		if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
+> +			    device_id_size))
+> +			continue;
+> +		h->pg = tmp_pg;
+> +		kref_get(&tmp_pg->kref);
+> +		kfree(pg);
+
+With the added check for an existing alua_port_group object, and the kfree() of
+the alua_port_group that had been allocated if an existing one is found, the code does not
+do a destroy_workqueue() on pg->work_q.  
+
+> +		pg = NULL;
+> +		break;
+> +	}
+> +	if (pg) {
+> +		list_add(&pg->node, &port_group_list);
+> +		h->pg = pg;
+> +	}
+>  	spin_unlock(&port_group_lock);
+>  
+>  	return SCSI_DH_OK;
+ 
+An explanation in the comments about the ALUA topology and what the device_id vs.
+the group_id represents might be helpful.  It occurred to me that if someone doesn't
+understand that you can have the same device_id behind different port groups they
+won't understand this code.
+
+HOST  ---->     STORAGE CTRL PG 1   ---->    LUN X
+      ---->                         ---->    LUN X
+      ---->     STORAGE CTRL PG 2   ---->    LUN X
+      ---->                         ---->    LUN X
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
 
 
