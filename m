@@ -1,57 +1,53 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [patch] cxlflash: a couple off by one bugs
-Date: Tue, 22 Sep 2015 10:41:23 -0500
-Message-ID: <118CEC5E-75FB-4140-A576-5B8D542CD624@linux.vnet.ibm.com>
-References: <20150922123206.GC27407@mwanda>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Adrian Palmer <adrian.palmer@seagate.com>
+Subject: [Announce] ZDM-Device-Mapper
+Date: Tue, 22 Sep 2015 09:56:58 -0600
+Message-ID: <CAKdFiL6BVaQcr7RHZFycKLfUSV+oLkvP9Abzy+y_3y14FwK-wQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:51409 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757576AbbIVPl3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2015 11:41:29 -0400
-Received: from /spool/local
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Tue, 22 Sep 2015 11:41:28 -0400
-In-Reply-To: <20150922123206.GC27407@mwanda>
+Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:16706 "EHLO
+	mx0b-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932929AbbIVP5C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Sep 2015 11:57:02 -0400
+Received: from pps.filterd (m0075028.ppops.net [127.0.0.1])
+	by mx0b-00003501.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8MFuMw5013176
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2015 11:56:59 -0400
+Received: from mail-ig0-f173.google.com (mail-ig0-f173.google.com [209.85.213.173])
+	by mx0b-00003501.pphosted.com with ESMTP id 1x34239x1e-5
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2015 11:56:59 -0400
+Received: by mail-ig0-f173.google.com with SMTP id x6so12134262igx.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2015 08:56:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Michael Neuling <mikey@neuling.org>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Josh Bingaman <josh.bingaman@seagate.com>, Roger J Kassab <roger.j.kassab@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Paul Paulson <paul.paulson@seagate.com>
 
-> On Sep 22, 2015, at 7:32 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> 
-> The "> MAX_CONTEXT" should be ">= MAX_CONTEXT".  Otherwise we go one
-> step beyond the end of the cfg->ctx_tbl[] array.
+All;
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index f1b62ce..05e0ecf 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -1315,7 +1315,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
-> 	}
-> 
-> 	ctxid = cxl_process_element(ctx);
-> -	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
-> +	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
-> 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
-> 		rc = -EPERM;
-> 		goto err1;
-> @@ -1440,7 +1440,7 @@ static int recover_context(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
-> 	}
-> 
-> 	ctxid = cxl_process_element(ctx);
-> -	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
-> +	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
-> 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
-> 		rc = -EPERM;
-> 		goto err1;
-> 
+Seagate is release the much requested device mapper shim for SMR.  In
+response to requests at Linux Plumber's Conference, we've make it
+available as soon as possible.
 
+We've held off releasing it to ensure stability and to remove
+frustration and reduce bring-up time to other developers who have
+shown interest in exploring SMR solutions.
+
+We encourage testing and collaboration to make this a great product
+for the first generation of SMR drive support.
+
+Please reply to me directly for questions.
+
+location:
+https://github.com/Seagate/ZDM-Device-Mapper
+
+
+
+Adrian Palmer
+Firmware Engineer II
+R&D Firmware
+Seagate, Longmont Colorado
+720-684-1307
+adrian.palmer@seagate.com
