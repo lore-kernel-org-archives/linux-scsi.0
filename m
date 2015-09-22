@@ -1,172 +1,94 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 20/23] scsi_dh_alua: Recheck state on unit attention
-Date: Tue, 22 Sep 2015 15:57:40 -0400
-Message-ID: <1442951860.4132.70.camel@localhost.localdomain>
+Subject: Re: [PATCH 21/23] scsi_dh_alua: update all port states
+Date: Tue, 22 Sep 2015 16:04:06 -0400
+Message-ID: <1442952246.4132.75.camel@localhost.localdomain>
 References: <1440679281-13234-1-git-send-email-hare@suse.de>
-	 <1440679281-13234-21-git-send-email-hare@suse.de>
+	 <1440679281-13234-22-git-send-email-hare@suse.de>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37112 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38407 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbbIVT5m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Sep 2015 15:57:42 -0400
-In-Reply-To: <1440679281-13234-21-git-send-email-hare@suse.de>
+	id S934302AbbIVUEI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Sep 2015 16:04:08 -0400
+In-Reply-To: <1440679281-13234-22-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
 On Thu, 2015-08-27 at 14:41 +0200, Hannes Reinecke wrote:
-> When we receive a unit attention code of 'ALUA state changed'
-> we should recheck the state, as it might be due to an implicit
-> ALUA state transition.
-> At the same time a workqueue item might already be queued, which
-> should be started immediately to avoid any delays.
+> When we read in the target port group state we should be
+> updating all affected port groups, otherwise we risk
+> running out of sync.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 48 +++++++++++++++---------------
->  1 file changed, 24 insertions(+), 24 deletions(-)
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 21 +++++++++++++++++----
+>  1 file changed, 17 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 85fd597..8717fd3 100644
+> index 8717fd3..2fa985e 100644
 > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -118,7 +118,7 @@ static char print_alua_state(int);
->  static void alua_rtpg_work(struct work_struct *work);
->  static void alua_stpg_work(struct work_struct *work);
->  static void alua_qdata_work(struct work_struct *work);
-> -static void alua_check(struct scsi_device *sdev);
-> +static void alua_check(struct scsi_device *sdev, bool force);
->  
->  static void release_port_group(struct kref *kref)
+> @@ -477,11 +477,13 @@ static int alua_check_sense(struct scsi_device *sdev,
+>  static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
 >  {
-> @@ -423,7 +423,7 @@ static char print_alua_state(int state)
->  }
+>  	struct scsi_sense_hdr sense_hdr;
+> +	struct alua_port_group *tmp_pg;
+>  	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+>  	unsigned char *ucp, *buff;
+>  	unsigned err, retval;
+>  	unsigned int tpg_desc_tbl_off;
+>  	unsigned char orig_transition_tmo;
+> +	unsigned long flags;
 >  
->  static int alua_check_sense(struct scsi_device *sdev,
-> -			    struct scsi_sense_hdr *sense_hdr)
-> +			     struct scsi_sense_hdr *sense_hdr)
->  {
->  	switch (sense_hdr->sense_key) {
->  	case NOT_READY:
-> @@ -432,36 +432,34 @@ static int alua_check_sense(struct scsi_device *sdev,
->  			 * LUN Not Accessible - ALUA state transition
->  			 * Kickoff worker to update internal state.
->  			 */
-> -			alua_check(sdev);
-> -			return ADD_TO_MLQUEUE;
-> +			alua_check(sdev, false);
-> +			return NEEDS_RETRY;
->  		}
->  		break;
->  	case UNIT_ATTENTION:
-> -		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-> -			/*
-> -			 * Power On, Reset, or Bus Device Reset, just retry.
-> -			 */
-> -			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
-> -			/*
-> -			 * Device internal reset
-> -			 */
-> -			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
-> +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
->  			/*
-> -			 * Mode Parameter Changed
-> +			 * Power On, Reset, or Bus Device Reset.
-> +			 * Might have obscured a state transition,
-> +			 * so schedule a recheck.
->  			 */
-> +			alua_check(sdev, true);
->  			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
-> +		}
-> +		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
->  			/*
->  			 * ALUA state changed
->  			 */
-> +			alua_check(sdev, true);
->  			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07)
-> +		}
-> +		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
->  			/*
->  			 * Implicit ALUA state transition failed
->  			 */
-> +			alua_check(sdev, true);
->  			return ADD_TO_MLQUEUE;
-> +		}
->  		break;
->  	}
+>  	if (!pg->expiry) {
+>  		if (!pg->transition_tmo)
+> @@ -584,17 +586,28 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>  	else
+>  		tpg_desc_tbl_off = 4;
 >  
-> @@ -811,7 +809,7 @@ static void alua_qdata_work(struct work_struct *work)
->  
->  static void alua_rtpg_queue(struct alua_port_group *pg,
->  			    struct scsi_device *sdev,
-> -			    struct alua_queue_data *qdata)
-> +			    struct alua_queue_data *qdata, bool force)
->  {
->  	int start_queue = 0;
->  	unsigned long flags;
-> @@ -832,7 +830,9 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  		pg->rtpg_sdev = sdev;
->  		scsi_device_get(sdev);
->  		start_queue = 1;
-> -	}
-> +	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force)
-> +		start_queue = 1;
-> +
->  	spin_unlock_irqrestore(&pg->rtpg_lock, flags);
->  
->  	if (start_queue)
-> @@ -873,7 +873,7 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
->  	mutex_unlock(&h->init_mutex);
->  	if (pg) {
->  		pg->expiry = 0;
-> -		alua_rtpg_queue(pg, sdev, NULL);
-> +		alua_rtpg_queue(pg, sdev, NULL, true);
->  		kref_put(&pg->kref, release_port_group);
->  	}
->  	return error;
-> @@ -982,7 +982,7 @@ static int alua_activate(struct scsi_device *sdev,
->  		pg->flags |= ALUA_OPTIMIZE_STPG;
->  		spin_unlock_irqrestore(&pg->rtpg_lock, flags);
->  	}
-> -	alua_rtpg_queue(pg, sdev, qdata);
-> +	alua_rtpg_queue(pg, sdev, qdata, true);
->  	kref_put(&pg->kref, release_port_group);
->  out:
->  	if (fn)
-> @@ -996,7 +996,7 @@ out:
->   *
->   * Check the device status
->   */
-> -static void alua_check(struct scsi_device *sdev)
-> +static void alua_check(struct scsi_device *sdev, bool force)
->  {
->  	struct alua_dh_data *h = sdev->handler_data;
->  	struct alua_port_group *pg;
-> @@ -1009,7 +1009,7 @@ static void alua_check(struct scsi_device *sdev)
->  	}
->  	kref_get(&pg->kref);
->  	rcu_read_unlock();
-> -	alua_rtpg_queue(pg, sdev, NULL);
-> +	alua_rtpg_queue(pg, sdev, NULL, force);
->  	kref_put(&pg->kref, release_port_group);
->  	rcu_read_unlock();
->  }
+> +	spin_lock_irqsave(&port_group_lock, flags);
+>  	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
+>  	     k < len;
+>  	     k += off, ucp += off) {
 
-I think this change goes along with the previous patch in terms of the
-design, so we'll have to see how that turns out.  Fundamentally, though,
-this changes the handling for LUN Not Accessible - ALUA state transition
-to be NEEDS_RETRY instead of ADD_TO_MLQUEUE, so what is the effect of that?
+"ucp" is not really a good variable name, it matches nothing in the T10
+spec.  The structure is a "Target Port Group Descriptor".  I realize it
+was already there, but maybe this is a good opportunity to change it?
+
+>  
+> -		if (pg->group_id == get_unaligned_be16(&ucp[2])) {
+> -			pg->state = ucp[0] & 0x0f;
+> -			pg->pref = ucp[0] >> 7;
+> -			valid_states = ucp[1];
+> +		list_for_each_entry(tmp_pg, &port_group_list, node) {
+> +			u16 group_id = get_unaligned_be16(&ucp[2]);
+
+This is invariant and should be outside the loop.
+
+> +			if (tmp_pg->group_id != group_id)
+> +				continue;
+> +			if (tmp_pg->device_id_size != pg->device_id_size)
+> +				continue;
+> +			if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
+> +				    tmp_pg->device_id_size))
+> +				continue;
+> +			tmp_pg->state = ucp[0] & 0x0f;
+> +			tmp_pg->pref = ucp[0] >> 7;
+> +			if (tmp_pg == pg)
+> +				valid_states = ucp[1];
+>  		}
+>  		off = 8 + (ucp[7] * 4);
+>  	}
+> +	spin_unlock_irqrestore(&port_group_lock, flags);
+>  
+>  	sdev_printk(KERN_INFO, sdev,
+>  		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
 
 
