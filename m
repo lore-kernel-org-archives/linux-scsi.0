@@ -1,80 +1,86 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Question about expected behavior of terminate_rport_io() in
- fc_function_template
-Date: Wed, 23 Sep 2015 23:05:33 +0200
-Message-ID: <5603141D.20000@suse.de>
-References: <20150923170616.GA16814@bblock-ThinkPad-W530>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54600 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755350AbbIWVGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Sep 2015 17:06:42 -0400
-In-Reply-To: <20150923170616.GA16814@bblock-ThinkPad-W530>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Zhengping Zhou <johnzzpcrystal@gmail.com>
+Subject: [PATCH 1/1] scsi subsystem : fix function __scsi_device_lookup
+Date: Thu, 24 Sep 2015 06:37:57 +0800
+Message-ID: <1443047877-16929-1-git-send-email-johnzzpcrystal@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, linux-kernel@vger.kernel.org, Zhengping Zhou <johnzzpcrystal@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-On 09/23/2015 07:06 PM, Benjamin Block wrote:
-> Hello,
->=20
-> just a short question. If a low-level driver implements the function
-> `terminate_rport_io()` in `struct fc_function_template`, and it gets
-> called after IO failed, is the low-level driver expected to handle th=
-is
-> request synchronously or can it just schedule an action that is worke=
-d on
-> asynchronously to the call to the function?
->=20
-Actually, it doesn't matter, as 'terminate_rport_io()' should cause the
-driver to about outstanding commands. The main idea behind this is that
-the driver clears up any additional state it might have tacked onto the
-command. And calling '->done()', obviously.
+when a scsi_device is unpluged from scsi controller, if the
+scsi_device is still be used by application layer,it won't be
+released until users release it. In this case, scsi_device_remove just set
+the scsi_device's state to be SDEV_DEL. But if you plug the disk
+just before the old scsi_device is released, then there will be two
+scsi_device structures in scsi_host->__devices. when the next unpluging 
+event happens,some low-level drivers will check whether the scsi_device 
+has been added to host (for example, the megaraid sas series controller) 
+by calling scsi_device_lookup(call __scsi_device_lookup). 
+__scsi_device_lookup will return the first scsi_device. Because its 
+state is SDEV_DEL, the scsi_device_lookup will return NULL finally, 
+making the low-level driver assume that the scsi_device has been 
+removed,and won't call scsi_device_remove,which will lead the 
+failure of hot swap.
+Signed-off-by: Zhengping Zhou <johnzzpcrystal@gmail.com>
+---
+Hi all:
+	I find a bug about the failure of hot swap when I am using 
+	megaraid sas series controller. Finally I have found that 
+	when controller receives the event of hot swap, it will firstly 
+	check whether the device is added to the system/host by calling 
+	scsi_device_lookup.The logics in function megasas_aen_polling 
+	is as follows:
+            case MR_EVT_PD_REMOVED:
+                    if (megasas_get_pd_list(instance) == 0) { 
+                    for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
+                            for (j = 0; 
+                            j < MEGASAS_MAX_DEV_PER_CHANNEL;
+                            j++) {
 
-Main goal is to have outstanding I/O returned to the upper layers, so
-that things like multipath can redirect outstanding I/O to other paths
-and facilitate quick failover.
+                            pd_index =
+                            (i * MEGASAS_MAX_DEV_PER_CHANNEL) + j; 
 
-> Trouble is, we are seeing problems with SCSI-Commands being used by t=
-he
-> upper layers when we expect them to still be ours, after we got a cal=
-l to
-> that function and didn't react upon it immediately. They do not conta=
-in
-> valid content anymore when they should.
->=20
-True; after terminate_rport_io() I/O should have been aborted.
-However, the SCSI layer really shouldn't reuse commands before ->done()
-has been invoked or the command itself has been aborted.
+                            sdev1 = scsi_device_lookup(host, i, j, 0);
 
-> I've looked into other implementations and it seems there are both
-> version, some LLDs explicitly wait upon completions of requests they
-> schedule and others just schedule work-items and return. That may
-> already be the answer, but I wanted to make sure I am not missing
-> something here. The documentation on it is not really existing, or I
-> missed it.
->=20
-As indicated, the driver is expected to call ->done() on outstanding
-commands when terminate_rport_io() is called.
-This smells more like an issue with the driver itself; if I were to
-guess I would think that some aborts are not handled correctly ...
+                            if (instance->pd_list[pd_index].driveState
+                                    == MR_PD_STATE_SYSTEM) {
+                                    if (sdev1)
+                                            scsi_device_put(sdev1);
+                            } else {
+                                    if (sdev1) {
+                                            scsi_remove_device(sdev1);
+                                            scsi_device_put(sdev1);
+                                    }    
+                            }    
+                            }    
+                    }    
+                    }    
+	If the previous scsi_device is not released, this will lead the 
+	appearance of two scsi_devices which correspond with the same disk.
+	And when the disk is unpluged afterwards, the controller will assume
+	that this disk has never been added into the system/host. Thus it won't 
+	call scsi_device_remove. When I finish this modification, this problem
+	is fixed.So far, I have successfully test PCI_DEVICE_ID_LSI_SAS0073SKINNY 
+	and PCI_DEVICE_ID_LSI_FURY.
+Thanks
+Zhengping
+---
+ drivers/scsi/scsi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-But it's hard to know without details. Do you have some message log or
-something?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 207d6a7..5251d6d 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1118,6 +1118,8 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
+ 	struct scsi_device *sdev;
+ 
+ 	list_for_each_entry(sdev, &shost->__devices, siblings) {
++		if (sdev->sdev_state == SDEV_DEL)
++			continue;
+ 		if (sdev->channel == channel && sdev->id == id &&
+ 				sdev->lun ==lun)
+ 			return sdev;
+-- 
+1.8.3.1
