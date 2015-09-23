@@ -1,65 +1,73 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Limit max concurrent sessions
-Date: Wed, 23 Sep 2015 17:18:48 +0200
-Message-ID: <20150923171848.3dd31edf@harpe.intellique.com>
-References: <554A34F3.5080507@assyoma.it>
-	<5602B511.8020502@assyoma.it>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Question about expected behavior of terminate_rport_io() in
+ fc_function_template
+Date: Wed, 23 Sep 2015 19:06:16 +0200
+Message-ID: <20150923170616.GA16814@bblock-ThinkPad-W530>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:19745 "EHLO mail1.g1.pair.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755343AbbIWP0q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2015 11:26:46 -0400
-In-Reply-To: <5602B511.8020502@assyoma.it>
+Received: from e06smtp07.uk.ibm.com ([195.75.94.103]:41429 "EHLO
+	e06smtp07.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934AbbIWRGW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2015 13:06:22 -0400
+Received: from /spool/local
+	by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+	Wed, 23 Sep 2015 18:06:21 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+	by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 118B1219005C
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 18:05:48 +0100 (BST)
+Received: from d06av05.portsmouth.uk.ibm.com (d06av05.portsmouth.uk.ibm.com [9.149.37.229])
+	by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8NH6HOv36896832
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 17:06:17 GMT
+Received: from d06av05.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+	by d06av05.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8NH6GCK030650
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 11:06:17 -0600
+Received: from bblock-ThinkPad-W530 (dyn-9-152-222-85.boeblingen.de.ibm.com [9.152.222.85])
+	by d06av05.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVin) with ESMTP id t8NH6GeC030645
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 11:06:16 -0600
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@odin.com>, Hannes Reinecke <hare@suse.de>
 
-Le Wed, 23 Sep 2015 16:20:01 +0200
-Gionatan Danti <g.danti@assyoma.it> =C3=A9crivait:
+Hello,
 
-> Hi all,
-> anyone with some ideas / infos ?
->=20
-> Thanks.
->=20
-> On 06/05/15 17:36, Gionatan Danti wrote:
-> > Hi all,
-> > I would like to understand if, and how to, limit the maximum number
-> > of simultaneous connections to a specific LUN, both with the old
-> > iSCSI stack (tgtadmin and friends) and the new one (targetcli and
-> > the likes).
-> >
-> > I am exporting a LUN with a general purpose filesystem (non cluster
-> > aware) and I would be 100% sure that only a single machine at a
-> > time can mount it.
-> >
-> > At the moment, I protected the iSCSI LUN with both an IP-based
-> > access list and a username/password combo, but hard limiting the
-> > maximum number of connections opened against it to 1 (one) would be
-> > a nice thing...
-> >
-> > As I have mixed RHEL 6 and 7 environment, I am interested in how to
-> > do that on both the old and new iSCSI stack.
-> >
+just a short question. If a low-level driver implements the function
+`terminate_rport_io()` in `struct fc_function_template`, and it gets
+called after IO failed, is the low-level driver expected to handle this
+request synchronously or can it just schedule an action that is worked =
+on
+asynchronously to the call to the function?
 
-Use XFS. XFS won't let you mount it several time on different machines
-without various "force" options.
-Alternatively, use a cluster-aware FS like ocfs2. Ocfs2 is quite easy
-to set up.
+Trouble is, we are seeing problems with SCSI-Commands being used by the
+upper layers when we expect them to still be ours, after we got a call =
+to
+that function and didn't react upon it immediately. They do not contain
+valid content anymore when they should.
 
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
+I've looked into other implementations and it seems there are both
+version, some LLDs explicitly wait upon completions of requests they
+schedule and others just schedule work-items and return. That may
+already be the answer, but I wanted to make sure I am not missing
+something here. The documentation on it is not really existing, or I
+missed it.
+
+
+                                                    Beste Gr=FC=DFe / B=
+est regards,
+                                                      - Benjamin Block
+--
+Linux on z Systems Development         /         IBM Systems & Technolo=
+gy Group
+                  IBM Deutschland Research & Development GmbH
+                Vorsitzende des Aufsichtsrats: Martina Koederitz
+       Gesch=E4ftsf=FChrung: Dirk Wittkopp / Sitz der Gesellschaft: B=F6=
+blingen
+               Registergericht: Amtsgericht Stuttgart, HRB 243294
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
