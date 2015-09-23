@@ -1,40 +1,80 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 28/30] cxlflash: Fix to prevent stale AFU RRQ
-Date: Wed, 23 Sep 2015 14:18:23 -0500
-Message-ID: <5602FAFF.8070900@linux.vnet.ibm.com>
-References: <1442438635-49044-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1442439130-50414-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Question about expected behavior of terminate_rport_io() in
+ fc_function_template
+Date: Wed, 23 Sep 2015 23:05:33 +0200
+Message-ID: <5603141D.20000@suse.de>
+References: <20150923170616.GA16814@bblock-ThinkPad-W530>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:60107 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754840AbbIWUqY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2015 16:46:24 -0400
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 23 Sep 2015 14:46:24 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 481A73E40048
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 14:46:20 -0600 (MDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8NKhF1X4784510
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 13:43:15 -0700
-Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8NKjqCM011265
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2015 14:46:19 -0600
-In-Reply-To: <1442439130-50414-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:54600 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755350AbbIWVGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Sep 2015 17:06:42 -0400
+In-Reply-To: <20150923170616.GA16814@bblock-ThinkPad-W530>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: Benjamin Block <bblock@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@odin.com>
 
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+On 09/23/2015 07:06 PM, Benjamin Block wrote:
+> Hello,
+>=20
+> just a short question. If a low-level driver implements the function
+> `terminate_rport_io()` in `struct fc_function_template`, and it gets
+> called after IO failed, is the low-level driver expected to handle th=
+is
+> request synchronously or can it just schedule an action that is worke=
+d on
+> asynchronously to the call to the function?
+>=20
+Actually, it doesn't matter, as 'terminate_rport_io()' should cause the
+driver to about outstanding commands. The main idea behind this is that
+the driver clears up any additional state it might have tacked onto the
+command. And calling '->done()', obviously.
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Main goal is to have outstanding I/O returned to the upper layers, so
+that things like multipath can redirect outstanding I/O to other paths
+and facilitate quick failover.
 
+> Trouble is, we are seeing problems with SCSI-Commands being used by t=
+he
+> upper layers when we expect them to still be ours, after we got a cal=
+l to
+> that function and didn't react upon it immediately. They do not conta=
+in
+> valid content anymore when they should.
+>=20
+True; after terminate_rport_io() I/O should have been aborted.
+However, the SCSI layer really shouldn't reuse commands before ->done()
+has been invoked or the command itself has been aborted.
+
+> I've looked into other implementations and it seems there are both
+> version, some LLDs explicitly wait upon completions of requests they
+> schedule and others just schedule work-items and return. That may
+> already be the answer, but I wanted to make sure I am not missing
+> something here. The documentation on it is not really existing, or I
+> missed it.
+>=20
+As indicated, the driver is expected to call ->done() on outstanding
+commands when terminate_rport_io() is called.
+This smells more like an issue with the driver itself; if I were to
+guess I would think that some aborts are not handled correctly ...
+
+But it's hard to know without details. Do you have some message log or
+something?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
