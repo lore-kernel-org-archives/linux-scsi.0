@@ -1,199 +1,205 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: [PATCH v2] storvsc: get rid of bounce buffer
-Date: Wed, 23 Sep 2015 14:59:16 +0200
-Message-ID: <1443013156-8612-1-git-send-email-vkuznets@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 20/23] scsi_dh_alua: Recheck state on unit attention
+Date: Wed, 23 Sep 2015 15:01:22 +0200
+Message-ID: <5602A2A2.7000105@suse.de>
+References: <1440679281-13234-1-git-send-email-hare@suse.de>
+ <1440679281-13234-21-git-send-email-hare@suse.de>
+ <1442951860.4132.70.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: linux-scsi@vger.kernel.org
-Cc: =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51317 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754368AbbIWNBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Sep 2015 09:01:35 -0400
+In-Reply-To: <1442951860.4132.70.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-U3RvcnZzYyBkcml2ZXIgbmVlZHMgdG8gZW5zdXJlIHRoZXJlIGFyZSBubyAnaG9sZXMnIGluIHRo
-ZSBwcmVzZW50ZWQKc2cgbGlzdCAoYWxsIHNlZ21lbnRzIGluIHRoZSBtaWRkbGUgb2YgdGhlIGxp
-c3QgbmVlZCB0byBiZSBvZiBQQUdFX1NJWkUpLgpXaGVuIGEgaG9sZSBpcyBkZXRlY3RlZCBzdG9y
-dnNjIGRyaXZlciBjcmVhdGVzIGEgJ2JvdW5jZSBzZ2wnIHdpdGhvdXQKaG9sZXMgYW5kIGNvcGll
-cyBkYXRhIG92ZXIgd2l0aCBjb3B5X3t0byxmcm9tfV9ib3VuY2VfYnVmZmVyKCkgZnVuY3Rpb25z
-LgpTZXR0aW5nIHZpcnRfYm91bmRhcnlfbWFzayB0byBQQUdFX1NJWkUgLSAxIGd1YXJhbnRlZXMg
-d2UnbGwgbmV2ZXIgc2VlCnN1Y2ggaG9sZXMgc28gd2UgY2FuIHNpZ25pZmljYW50bHkgc2ltcGxp
-ZnkgdGhlIGRyaXZlci4gVGhpcyBpcyBhbHNvCnN1cHBvc2VkIHRvIGJyaW5nIHVzIHNvbWUgcGVy
-Zm9ybWFuY2UgaW1wcm92ZW1lbnQgZm9yIGNlcnRhaW4gd29ya2xvYWRzCmFzIHdlIGVsaW1pbmF0
-ZSBjb3B5aW5nLgoKUmVwb3J0ZWQtYnk6IFJhZGltIEtyxI1tw6HFmSA8cmtyY21hckByZWRoYXQu
-Y29tPgpTaWduZWQtb2ZmLWJ5OiBWaXRhbHkgS3V6bmV0c292IDx2a3V6bmV0c0ByZWRoYXQuY29t
-PgotLS0KQ2hhbmdlcyBzaW5jZSB2MToKLSBUaGlzIHBhdGNoIGlzIGEgc3VjY2Vzc29yIG9mICdz
-dG9ydnNjOiBnZXQgcmlkIG9mIGhvbWVncm93bgogY29weV97dG8sZnJvbX1fYm91bmNlX2J1ZmZl
-cigpJy4gVXNlIHZpcnRfYm91bmRhcnkgaW5zdGVhZCB0bwogZWxpbWluYXRlIHRoZSBuZWVkIGZv
-ciBib3VuY2UgYnVmZmVyIGNvbXBsZXRlbHkgW0NocmlzdG9waCBIZWxsd2lnXS4KLS0tCiBkcml2
-ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDI4NiArLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDI4MSBk
-ZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2Ry
-aXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jCmluZGV4IDQwYzQzYWUuLmVlYWRlNDAgMTAwNjQ0Ci0t
-LSBhL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jCisrKyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNj
-X2Rydi5jCkBAIC0zOTMsOSArMzkzLDYgQEAgc3RhdGljIHZvaWQgc3RvcnZzY19vbl9jaGFubmVs
-X2NhbGxiYWNrKHZvaWQgKmNvbnRleHQpOwogc3RydWN0IHN0b3J2c2NfY21kX3JlcXVlc3Qgewog
-CXN0cnVjdCBzY3NpX2NtbmQgKmNtZDsKIAotCXVuc2lnbmVkIGludCBib3VuY2Vfc2dsX2NvdW50
-OwotCXN0cnVjdCBzY2F0dGVybGlzdCAqYm91bmNlX3NnbDsKLQogCXN0cnVjdCBodl9kZXZpY2Ug
-KmRldmljZTsKIAogCS8qIFN5bmNocm9uaXplIHRoZSByZXF1ZXN0L3Jlc3BvbnNlIGlmIG5lZWRl
-ZCAqLwpAQCAtNTg2LDI0MSArNTgzLDYgQEAgZ2V0X2luX2VycjoKIAogfQogCi1zdGF0aWMgdm9p
-ZCBkZXN0cm95X2JvdW5jZV9idWZmZXIoc3RydWN0IHNjYXR0ZXJsaXN0ICpzZ2wsCi0JCQkJICB1
-bnNpZ25lZCBpbnQgc2dfY291bnQpCi17Ci0JaW50IGk7Ci0Jc3RydWN0IHBhZ2UgKnBhZ2VfYnVm
-OwotCi0JZm9yIChpID0gMDsgaSA8IHNnX2NvdW50OyBpKyspIHsKLQkJcGFnZV9idWYgPSBzZ19w
-YWdlKCgmc2dsW2ldKSk7Ci0JCWlmIChwYWdlX2J1ZiAhPSBOVUxMKQotCQkJX19mcmVlX3BhZ2Uo
-cGFnZV9idWYpOwotCX0KLQotCWtmcmVlKHNnbCk7Ci19Ci0KLXN0YXRpYyBpbnQgZG9fYm91bmNl
-X2J1ZmZlcihzdHJ1Y3Qgc2NhdHRlcmxpc3QgKnNnbCwgdW5zaWduZWQgaW50IHNnX2NvdW50KQot
-ewotCWludCBpOwotCi0JLyogTm8gbmVlZCB0byBjaGVjayAqLwotCWlmIChzZ19jb3VudCA8IDIp
-Ci0JCXJldHVybiAtMTsKLQotCS8qIFdlIGhhdmUgYXQgbGVhc3QgMiBzZyBlbnRyaWVzICovCi0J
-Zm9yIChpID0gMDsgaSA8IHNnX2NvdW50OyBpKyspIHsKLQkJaWYgKGkgPT0gMCkgewotCQkJLyog
-bWFrZSBzdXJlIDFzdCBvbmUgZG9lcyBub3QgaGF2ZSBob2xlICovCi0JCQlpZiAoc2dsW2ldLm9m
-ZnNldCArIHNnbFtpXS5sZW5ndGggIT0gUEFHRV9TSVpFKQotCQkJCXJldHVybiBpOwotCQl9IGVs
-c2UgaWYgKGkgPT0gc2dfY291bnQgLSAxKSB7Ci0JCQkvKiBtYWtlIHN1cmUgbGFzdCBvbmUgZG9l
-cyBub3QgaGF2ZSBob2xlICovCi0JCQlpZiAoc2dsW2ldLm9mZnNldCAhPSAwKQotCQkJCXJldHVy
-biBpOwotCQl9IGVsc2UgewotCQkJLyogbWFrZSBzdXJlIG5vIGhvbGUgaW4gdGhlIG1pZGRsZSAq
-LwotCQkJaWYgKHNnbFtpXS5sZW5ndGggIT0gUEFHRV9TSVpFIHx8IHNnbFtpXS5vZmZzZXQgIT0g
-MCkKLQkJCQlyZXR1cm4gaTsKLQkJfQotCX0KLQlyZXR1cm4gLTE7Ci19Ci0KLXN0YXRpYyBzdHJ1
-Y3Qgc2NhdHRlcmxpc3QgKmNyZWF0ZV9ib3VuY2VfYnVmZmVyKHN0cnVjdCBzY2F0dGVybGlzdCAq
-c2dsLAotCQkJCQkJdW5zaWduZWQgaW50IHNnX2NvdW50LAotCQkJCQkJdW5zaWduZWQgaW50IGxl
-biwKLQkJCQkJCWludCB3cml0ZSkKLXsKLQlpbnQgaTsKLQlpbnQgbnVtX3BhZ2VzOwotCXN0cnVj
-dCBzY2F0dGVybGlzdCAqYm91bmNlX3NnbDsKLQlzdHJ1Y3QgcGFnZSAqcGFnZV9idWY7Ci0JdW5z
-aWduZWQgaW50IGJ1Zl9sZW4gPSAoKHdyaXRlID09IFdSSVRFX1RZUEUpID8gMCA6IFBBR0VfU0la
-RSk7Ci0KLQludW1fcGFnZXMgPSBBTElHTihsZW4sIFBBR0VfU0laRSkgPj4gUEFHRV9TSElGVDsK
-LQotCWJvdW5jZV9zZ2wgPSBrY2FsbG9jKG51bV9wYWdlcywgc2l6ZW9mKHN0cnVjdCBzY2F0dGVy
-bGlzdCksIEdGUF9BVE9NSUMpOwotCWlmICghYm91bmNlX3NnbCkKLQkJcmV0dXJuIE5VTEw7Ci0K
-LQlzZ19pbml0X3RhYmxlKGJvdW5jZV9zZ2wsIG51bV9wYWdlcyk7Ci0JZm9yIChpID0gMDsgaSA8
-IG51bV9wYWdlczsgaSsrKSB7Ci0JCXBhZ2VfYnVmID0gYWxsb2NfcGFnZShHRlBfQVRPTUlDKTsK
-LQkJaWYgKCFwYWdlX2J1ZikKLQkJCWdvdG8gY2xlYW51cDsKLQkJc2dfc2V0X3BhZ2UoJmJvdW5j
-ZV9zZ2xbaV0sIHBhZ2VfYnVmLCBidWZfbGVuLCAwKTsKLQl9Ci0KLQlyZXR1cm4gYm91bmNlX3Nn
-bDsKLQotY2xlYW51cDoKLQlkZXN0cm95X2JvdW5jZV9idWZmZXIoYm91bmNlX3NnbCwgbnVtX3Bh
-Z2VzKTsKLQlyZXR1cm4gTlVMTDsKLX0KLQotLyogQXNzdW1lIHRoZSBvcmlnaW5hbCBzZ2wgaGFz
-IGVub3VnaCByb29tICovCi1zdGF0aWMgdW5zaWduZWQgaW50IGNvcHlfZnJvbV9ib3VuY2VfYnVm
-ZmVyKHN0cnVjdCBzY2F0dGVybGlzdCAqb3JpZ19zZ2wsCi0JCQkJCSAgICBzdHJ1Y3Qgc2NhdHRl
-cmxpc3QgKmJvdW5jZV9zZ2wsCi0JCQkJCSAgICB1bnNpZ25lZCBpbnQgb3JpZ19zZ2xfY291bnQs
-Ci0JCQkJCSAgICB1bnNpZ25lZCBpbnQgYm91bmNlX3NnbF9jb3VudCkKLXsKLQlpbnQgaTsKLQlp
-bnQgaiA9IDA7Ci0JdW5zaWduZWQgbG9uZyBzcmMsIGRlc3Q7Ci0JdW5zaWduZWQgaW50IHNyY2xl
-biwgZGVzdGxlbiwgY29weWxlbjsKLQl1bnNpZ25lZCBpbnQgdG90YWxfY29waWVkID0gMDsKLQl1
-bnNpZ25lZCBsb25nIGJvdW5jZV9hZGRyID0gMDsKLQl1bnNpZ25lZCBsb25nIGRlc3RfYWRkciA9
-IDA7Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKLQlzdHJ1Y3Qgc2NhdHRlcmxpc3QgKmN1cl9kZXN0
-X3NnbDsKLQlzdHJ1Y3Qgc2NhdHRlcmxpc3QgKmN1cl9zcmNfc2dsOwotCi0JbG9jYWxfaXJxX3Nh
-dmUoZmxhZ3MpOwotCWN1cl9kZXN0X3NnbCA9IG9yaWdfc2dsOwotCWN1cl9zcmNfc2dsID0gYm91
-bmNlX3NnbDsKLQlmb3IgKGkgPSAwOyBpIDwgb3JpZ19zZ2xfY291bnQ7IGkrKykgewotCQlkZXN0
-X2FkZHIgPSAodW5zaWduZWQgbG9uZykKLQkJCQlrbWFwX2F0b21pYyhzZ19wYWdlKGN1cl9kZXN0
-X3NnbCkpICsKLQkJCQljdXJfZGVzdF9zZ2wtPm9mZnNldDsKLQkJZGVzdCA9IGRlc3RfYWRkcjsK
-LQkJZGVzdGxlbiA9IGN1cl9kZXN0X3NnbC0+bGVuZ3RoOwotCi0JCWlmIChib3VuY2VfYWRkciA9
-PSAwKQotCQkJYm91bmNlX2FkZHIgPSAodW5zaWduZWQgbG9uZylrbWFwX2F0b21pYygKLQkJCQkJ
-CQlzZ19wYWdlKGN1cl9zcmNfc2dsKSk7Ci0KLQkJd2hpbGUgKGRlc3RsZW4pIHsKLQkJCXNyYyA9
-IGJvdW5jZV9hZGRyICsgY3VyX3NyY19zZ2wtPm9mZnNldDsKLQkJCXNyY2xlbiA9IGN1cl9zcmNf
-c2dsLT5sZW5ndGggLSBjdXJfc3JjX3NnbC0+b2Zmc2V0OwotCi0JCQljb3B5bGVuID0gbWluKHNy
-Y2xlbiwgZGVzdGxlbik7Ci0JCQltZW1jcHkoKHZvaWQgKilkZXN0LCAodm9pZCAqKXNyYywgY29w
-eWxlbik7Ci0KLQkJCXRvdGFsX2NvcGllZCArPSBjb3B5bGVuOwotCQkJY3VyX3NyY19zZ2wtPm9m
-ZnNldCArPSBjb3B5bGVuOwotCQkJZGVzdGxlbiAtPSBjb3B5bGVuOwotCQkJZGVzdCArPSBjb3B5
-bGVuOwotCi0JCQlpZiAoY3VyX3NyY19zZ2wtPm9mZnNldCA9PSBjdXJfc3JjX3NnbC0+bGVuZ3Ro
-KSB7Ci0JCQkJLyogZnVsbCAqLwotCQkJCWt1bm1hcF9hdG9taWMoKHZvaWQgKilib3VuY2VfYWRk
-cik7Ci0JCQkJaisrOwotCi0JCQkJLyoKLQkJCQkgKiBJdCBpcyBwb3NzaWJsZSB0aGF0IHRoZSBu
-dW1iZXIgb2YgZWxlbWVudHMKLQkJCQkgKiBpbiB0aGUgYm91bmNlIGJ1ZmZlciBtYXkgbm90IGJl
-IGVxdWFsIHRvCi0JCQkJICogdGhlIG51bWJlciBvZiBlbGVtZW50cyBpbiB0aGUgb3JpZ2luYWwK
-LQkJCQkgKiBzY2F0dGVyIGxpc3QuIEhhbmRsZSB0aGlzIGNvcnJlY3RseS4KLQkJCQkgKi8KLQot
-CQkJCWlmIChqID09IGJvdW5jZV9zZ2xfY291bnQpIHsKLQkJCQkJLyoKLQkJCQkJICogV2UgYXJl
-IGRvbmU7IGNsZWFudXAgYW5kIHJldHVybi4KLQkJCQkJICovCi0JCQkJCWt1bm1hcF9hdG9taWMo
-KHZvaWQgKikoZGVzdF9hZGRyIC0KLQkJCQkJCWN1cl9kZXN0X3NnbC0+b2Zmc2V0KSk7Ci0JCQkJ
-CWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKLQkJCQkJcmV0dXJuIHRvdGFsX2NvcGllZDsKLQkJ
-CQl9Ci0KLQkJCQkvKiBpZiB3ZSBuZWVkIHRvIHVzZSBhbm90aGVyIGJvdW5jZSBidWZmZXIgKi8K
-LQkJCQlpZiAoZGVzdGxlbiB8fCBpICE9IG9yaWdfc2dsX2NvdW50IC0gMSkgewotCQkJCQljdXJf
-c3JjX3NnbCA9IHNnX25leHQoY3VyX3NyY19zZ2wpOwotCQkJCQlib3VuY2VfYWRkciA9ICh1bnNp
-Z25lZCBsb25nKQotCQkJCQkJCWttYXBfYXRvbWljKAotCQkJCQkJCXNnX3BhZ2UoY3VyX3NyY19z
-Z2wpKTsKLQkJCQl9Ci0JCQl9IGVsc2UgaWYgKGRlc3RsZW4gPT0gMCAmJiBpID09IG9yaWdfc2ds
-X2NvdW50IC0gMSkgewotCQkJCS8qIHVubWFwIHRoZSBsYXN0IGJvdW5jZSB0aGF0IGlzIDwgUEFH
-RV9TSVpFICovCi0JCQkJa3VubWFwX2F0b21pYygodm9pZCAqKWJvdW5jZV9hZGRyKTsKLQkJCX0K
-LQkJfQotCi0JCWt1bm1hcF9hdG9taWMoKHZvaWQgKikoZGVzdF9hZGRyIC0gY3VyX2Rlc3Rfc2ds
-LT5vZmZzZXQpKTsKLQkJY3VyX2Rlc3Rfc2dsID0gc2dfbmV4dChjdXJfZGVzdF9zZ2wpOwotCX0K
-LQotCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKLQotCXJldHVybiB0b3RhbF9jb3BpZWQ7Ci19
-Ci0KLS8qIEFzc3VtZSB0aGUgYm91bmNlX3NnbCBoYXMgZW5vdWdoIHJvb20gaWUgdXNpbmcgdGhl
-IGNyZWF0ZV9ib3VuY2VfYnVmZmVyKCkgKi8KLXN0YXRpYyB1bnNpZ25lZCBpbnQgY29weV90b19i
-b3VuY2VfYnVmZmVyKHN0cnVjdCBzY2F0dGVybGlzdCAqb3JpZ19zZ2wsCi0JCQkJCSAgc3RydWN0
-IHNjYXR0ZXJsaXN0ICpib3VuY2Vfc2dsLAotCQkJCQkgIHVuc2lnbmVkIGludCBvcmlnX3NnbF9j
-b3VudCkKLXsKLQlpbnQgaTsKLQlpbnQgaiA9IDA7Ci0JdW5zaWduZWQgbG9uZyBzcmMsIGRlc3Q7
-Ci0JdW5zaWduZWQgaW50IHNyY2xlbiwgZGVzdGxlbiwgY29weWxlbjsKLQl1bnNpZ25lZCBpbnQg
-dG90YWxfY29waWVkID0gMDsKLQl1bnNpZ25lZCBsb25nIGJvdW5jZV9hZGRyID0gMDsKLQl1bnNp
-Z25lZCBsb25nIHNyY19hZGRyID0gMDsKLQl1bnNpZ25lZCBsb25nIGZsYWdzOwotCXN0cnVjdCBz
-Y2F0dGVybGlzdCAqY3VyX3NyY19zZ2w7Ci0Jc3RydWN0IHNjYXR0ZXJsaXN0ICpjdXJfZGVzdF9z
-Z2w7Ci0KLQlsb2NhbF9pcnFfc2F2ZShmbGFncyk7Ci0KLQljdXJfc3JjX3NnbCA9IG9yaWdfc2ds
-OwotCWN1cl9kZXN0X3NnbCA9IGJvdW5jZV9zZ2w7Ci0KLQlmb3IgKGkgPSAwOyBpIDwgb3JpZ19z
-Z2xfY291bnQ7IGkrKykgewotCQlzcmNfYWRkciA9ICh1bnNpZ25lZCBsb25nKQotCQkJCWttYXBf
-YXRvbWljKHNnX3BhZ2UoY3VyX3NyY19zZ2wpKSArCi0JCQkJY3VyX3NyY19zZ2wtPm9mZnNldDsK
-LQkJc3JjID0gc3JjX2FkZHI7Ci0JCXNyY2xlbiA9IGN1cl9zcmNfc2dsLT5sZW5ndGg7Ci0KLQkJ
-aWYgKGJvdW5jZV9hZGRyID09IDApCi0JCQlib3VuY2VfYWRkciA9ICh1bnNpZ25lZCBsb25nKQot
-CQkJCQlrbWFwX2F0b21pYyhzZ19wYWdlKGN1cl9kZXN0X3NnbCkpOwotCi0JCXdoaWxlIChzcmNs
-ZW4pIHsKLQkJCS8qIGFzc3VtZSBib3VuY2Ugb2Zmc2V0IGFsd2F5cyA9PSAwICovCi0JCQlkZXN0
-ID0gYm91bmNlX2FkZHIgKyBjdXJfZGVzdF9zZ2wtPmxlbmd0aDsKLQkJCWRlc3RsZW4gPSBQQUdF
-X1NJWkUgLSBjdXJfZGVzdF9zZ2wtPmxlbmd0aDsKLQotCQkJY29weWxlbiA9IG1pbihzcmNsZW4s
-IGRlc3RsZW4pOwotCQkJbWVtY3B5KCh2b2lkICopZGVzdCwgKHZvaWQgKilzcmMsIGNvcHlsZW4p
-OwotCi0JCQl0b3RhbF9jb3BpZWQgKz0gY29weWxlbjsKLQkJCWN1cl9kZXN0X3NnbC0+bGVuZ3Ro
-ICs9IGNvcHlsZW47Ci0JCQlzcmNsZW4gLT0gY29weWxlbjsKLQkJCXNyYyArPSBjb3B5bGVuOwot
-Ci0JCQlpZiAoY3VyX2Rlc3Rfc2dsLT5sZW5ndGggPT0gUEFHRV9TSVpFKSB7Ci0JCQkJLyogZnVs
-bC4ubW92ZSB0byBuZXh0IGVudHJ5ICovCi0JCQkJa3VubWFwX2F0b21pYygodm9pZCAqKWJvdW5j
-ZV9hZGRyKTsKLQkJCQlib3VuY2VfYWRkciA9IDA7Ci0JCQkJaisrOwotCQkJfQotCi0JCQkvKiBp
-ZiB3ZSBuZWVkIHRvIHVzZSBhbm90aGVyIGJvdW5jZSBidWZmZXIgKi8KLQkJCWlmIChzcmNsZW4g
-JiYgYm91bmNlX2FkZHIgPT0gMCkgewotCQkJCWN1cl9kZXN0X3NnbCA9IHNnX25leHQoY3VyX2Rl
-c3Rfc2dsKTsKLQkJCQlib3VuY2VfYWRkciA9ICh1bnNpZ25lZCBsb25nKQotCQkJCQkJa21hcF9h
-dG9taWMoCi0JCQkJCQlzZ19wYWdlKGN1cl9kZXN0X3NnbCkpOwotCQkJfQotCi0JCX0KLQotCQlr
-dW5tYXBfYXRvbWljKCh2b2lkICopKHNyY19hZGRyIC0gY3VyX3NyY19zZ2wtPm9mZnNldCkpOwot
-CQljdXJfc3JjX3NnbCA9IHNnX25leHQoY3VyX3NyY19zZ2wpOwotCX0KLQotCWlmIChib3VuY2Vf
-YWRkcikKLQkJa3VubWFwX2F0b21pYygodm9pZCAqKWJvdW5jZV9hZGRyKTsKLQotCWxvY2FsX2ly
-cV9yZXN0b3JlKGZsYWdzKTsKLQotCXJldHVybiB0b3RhbF9jb3BpZWQ7Ci19Ci0KIHN0YXRpYyB2
-b2lkIGhhbmRsZV9zY19jcmVhdGlvbihzdHJ1Y3Qgdm1idXNfY2hhbm5lbCAqbmV3X3NjKQogewog
-CXN0cnVjdCBodl9kZXZpY2UgKmRldmljZSA9IG5ld19zYy0+cHJpbWFyeV9jaGFubmVsLT5kZXZp
-Y2Vfb2JqOwpAQCAtMTE3MSwxNSArOTMzLDYgQEAgc3RhdGljIHZvaWQgc3RvcnZzY19jb21tYW5k
-X2NvbXBsZXRpb24oc3RydWN0IHN0b3J2c2NfY21kX3JlcXVlc3QgKmNtZF9yZXF1ZXN0KQogCWhv
-c3QgPSBzdG9yX2Rldi0+aG9zdDsKIAogCXZtX3NyYiA9ICZjbWRfcmVxdWVzdC0+dnN0b3JfcGFj
-a2V0LnZtX3NyYjsKLQlpZiAoY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2xfY291bnQpIHsKLQkJaWYg
-KHZtX3NyYi0+ZGF0YV9pbiA9PSBSRUFEX1RZUEUpCi0JCQljb3B5X2Zyb21fYm91bmNlX2J1ZmZl
-cihzY3NpX3NnbGlzdChzY21uZCksCi0JCQkJCWNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsLAotCQkJ
-CQlzY3NpX3NnX2NvdW50KHNjbW5kKSwKLQkJCQkJY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2xfY291
-bnQpOwotCQlkZXN0cm95X2JvdW5jZV9idWZmZXIoY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2wsCi0J
-CQkJCWNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsX2NvdW50KTsKLQl9CiAKIAlzY21uZC0+cmVzdWx0
-ID0gdm1fc3JiLT5zY3NpX3N0YXR1czsKIApAQCAtMTQ3NCw2ICsxMjI3LDkgQEAgc3RhdGljIGlu
-dCBzdG9ydnNjX2RldmljZV9jb25maWd1cmUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2aWNlKQog
-CiAJYmxrX3F1ZXVlX3JxX3RpbWVvdXQoc2RldmljZS0+cmVxdWVzdF9xdWV1ZSwgKHN0b3J2c2Nf
-dGltZW91dCAqIEhaKSk7CiAKKwkvKiBFbnN1cmUgdGhlcmUgYXJlIG5vIGdhcHMgaW4gcHJlc2Vu
-dGVkIHNnbHMgKi8KKwlibGtfcXVldWVfdmlydF9ib3VuZGFyeShzZGV2aWNlLT5yZXF1ZXN0X3F1
-ZXVlLCBQQUdFX1NJWkUgLSAxKTsKKwogCXNkZXZpY2UtPm5vX3dyaXRlX3NhbWUgPSAxOwogCiAJ
-LyoKQEAgLTE2OTIsNDAgKzE0NDgsMTMgQEAgc3RhdGljIGludCBzdG9ydnNjX3F1ZXVlY29tbWFu
-ZChzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0LCBzdHJ1Y3Qgc2NzaV9jbW5kICpzY21uZCkKIAlwYXls
-b2FkX3N6ID0gc2l6ZW9mKGNtZF9yZXF1ZXN0LT5tcGIpOwogCiAJaWYgKHNnX2NvdW50KSB7Ci0J
-CS8qIGNoZWNrIGlmIHdlIG5lZWQgdG8gYm91bmNlIHRoZSBzZ2wgKi8KLQkJaWYgKGRvX2JvdW5j
-ZV9idWZmZXIoc2dsLCBzY3NpX3NnX2NvdW50KHNjbW5kKSkgIT0gLTEpIHsKLQkJCWNtZF9yZXF1
-ZXN0LT5ib3VuY2Vfc2dsID0KLQkJCQljcmVhdGVfYm91bmNlX2J1ZmZlcihzZ2wsIHNnX2NvdW50
-LAotCQkJCQkJICAgICBsZW5ndGgsCi0JCQkJCQkgICAgIHZtX3NyYi0+ZGF0YV9pbik7Ci0JCQlp
-ZiAoIWNtZF9yZXF1ZXN0LT5ib3VuY2Vfc2dsKQotCQkJCXJldHVybiBTQ1NJX01MUVVFVUVfSE9T
-VF9CVVNZOwotCi0JCQljbWRfcmVxdWVzdC0+Ym91bmNlX3NnbF9jb3VudCA9Ci0JCQkJQUxJR04o
-bGVuZ3RoLCBQQUdFX1NJWkUpID4+IFBBR0VfU0hJRlQ7Ci0KLQkJCWlmICh2bV9zcmItPmRhdGFf
-aW4gPT0gV1JJVEVfVFlQRSkKLQkJCQljb3B5X3RvX2JvdW5jZV9idWZmZXIoc2dsLAotCQkJCQlj
-bWRfcmVxdWVzdC0+Ym91bmNlX3NnbCwgc2dfY291bnQpOwotCi0JCQlzZ2wgPSBjbWRfcmVxdWVz
-dC0+Ym91bmNlX3NnbDsKLQkJCXNnX2NvdW50ID0gY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2xfY291
-bnQ7Ci0JCX0KLQotCiAJCWlmIChzZ19jb3VudCA+IE1BWF9QQUdFX0JVRkZFUl9DT1VOVCkgewog
-CiAJCQlwYXlsb2FkX3N6ID0gKHNnX2NvdW50ICogc2l6ZW9mKHZvaWQgKikgKwogCQkJCSAgICAg
-IHNpemVvZihzdHJ1Y3Qgdm1idXNfcGFja2V0X21wYl9hcnJheSkpOwogCQkJcGF5bG9hZCA9IGtt
-YWxsb2MocGF5bG9hZF9zeiwgR0ZQX0FUT01JQyk7Ci0JCQlpZiAoIXBheWxvYWQpIHsKLQkJCQlp
-ZiAoY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2xfY291bnQpCi0JCQkJCWRlc3Ryb3lfYm91bmNlX2J1
-ZmZlcigKLQkJCQkJY21kX3JlcXVlc3QtPmJvdW5jZV9zZ2wsCi0JCQkJCWNtZF9yZXF1ZXN0LT5i
-b3VuY2Vfc2dsX2NvdW50KTsKLQotCQkJCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0RFVklDRV9CVVNZ
-OwotCQkJfQorCQkJaWYgKCFwYXlsb2FkKQorCQkJCXJldHVybiBTQ1NJX01MUVVFVUVfREVWSUNF
-X0JVU1k7CiAJCX0KIAogCQlwYXlsb2FkLT5yYW5nZS5sZW4gPSBsZW5ndGg7CkBAIC0xNzU0LDEx
-ICsxNDgzLDYgQEAgc3RhdGljIGludCBzdG9ydnNjX3F1ZXVlY29tbWFuZChzdHJ1Y3QgU2NzaV9I
-b3N0ICpob3N0LCBzdHJ1Y3Qgc2NzaV9jbW5kICpzY21uZCkKIAogCWlmIChyZXQgPT0gLUVBR0FJ
-TikgewogCQkvKiBubyBtb3JlIHNwYWNlICovCi0KLQkJaWYgKGNtZF9yZXF1ZXN0LT5ib3VuY2Vf
-c2dsX2NvdW50KQotCQkJZGVzdHJveV9ib3VuY2VfYnVmZmVyKGNtZF9yZXF1ZXN0LT5ib3VuY2Vf
-c2dsLAotCQkJCQljbWRfcmVxdWVzdC0+Ym91bmNlX3NnbF9jb3VudCk7Ci0KIAkJcmV0dXJuIFND
-U0lfTUxRVUVVRV9ERVZJQ0VfQlVTWTsKIAl9CiAKLS0gCjIuNC4zCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkZXZlbCBtYWlsaW5nIGxpc3QKZGV2ZWxA
-bGludXhkcml2ZXJwcm9qZWN0Lm9yZwpodHRwOi8vZHJpdmVyZGV2LmxpbnV4ZHJpdmVycHJvamVj
-dC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcml2ZXJkZXYtZGV2ZWwK
+On 09/22/2015 09:57 PM, Ewan Milne wrote:
+> On Thu, 2015-08-27 at 14:41 +0200, Hannes Reinecke wrote:
+>> When we receive a unit attention code of 'ALUA state changed'
+>> we should recheck the state, as it might be due to an implicit
+>> ALUA state transition.
+>> At the same time a workqueue item might already be queued, which
+>> should be started immediately to avoid any delays.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/device_handler/scsi_dh_alua.c | 48 +++++++++++++++----=
+-----------
+>>  1 file changed, 24 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/sc=
+si/device_handler/scsi_dh_alua.c
+>> index 85fd597..8717fd3 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -118,7 +118,7 @@ static char print_alua_state(int);
+>>  static void alua_rtpg_work(struct work_struct *work);
+>>  static void alua_stpg_work(struct work_struct *work);
+>>  static void alua_qdata_work(struct work_struct *work);
+>> -static void alua_check(struct scsi_device *sdev);
+>> +static void alua_check(struct scsi_device *sdev, bool force);
+>> =20
+>>  static void release_port_group(struct kref *kref)
+>>  {
+>> @@ -423,7 +423,7 @@ static char print_alua_state(int state)
+>>  }
+>> =20
+>>  static int alua_check_sense(struct scsi_device *sdev,
+>> -			    struct scsi_sense_hdr *sense_hdr)
+>> +			     struct scsi_sense_hdr *sense_hdr)
+>>  {
+>>  	switch (sense_hdr->sense_key) {
+>>  	case NOT_READY:
+>> @@ -432,36 +432,34 @@ static int alua_check_sense(struct scsi_device=
+ *sdev,
+>>  			 * LUN Not Accessible - ALUA state transition
+>>  			 * Kickoff worker to update internal state.
+>>  			 */
+>> -			alua_check(sdev);
+>> -			return ADD_TO_MLQUEUE;
+>> +			alua_check(sdev, false);
+>> +			return NEEDS_RETRY;
+>>  		}
+>>  		break;
+>>  	case UNIT_ATTENTION:
+>> -		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x00)
+>> -			/*
+>> -			 * Power On, Reset, or Bus Device Reset, just retry.
+>> -			 */
+>> -			return ADD_TO_MLQUEUE;
+>> -		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x04)
+>> -			/*
+>> -			 * Device internal reset
+>> -			 */
+>> -			return ADD_TO_MLQUEUE;
+>> -		if (sense_hdr->asc =3D=3D 0x2a && sense_hdr->ascq =3D=3D 0x01)
+>> +		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x00) {
+>>  			/*
+>> -			 * Mode Parameter Changed
+>> +			 * Power On, Reset, or Bus Device Reset.
+>> +			 * Might have obscured a state transition,
+>> +			 * so schedule a recheck.
+>>  			 */
+>> +			alua_check(sdev, true);
+>>  			return ADD_TO_MLQUEUE;
+>> -		if (sense_hdr->asc =3D=3D 0x2a && sense_hdr->ascq =3D=3D 0x06)
+>> +		}
+>> +		if (sense_hdr->asc =3D=3D 0x2a && sense_hdr->ascq =3D=3D 0x06) {
+>>  			/*
+>>  			 * ALUA state changed
+>>  			 */
+>> +			alua_check(sdev, true);
+>>  			return ADD_TO_MLQUEUE;
+>> -		if (sense_hdr->asc =3D=3D 0x2a && sense_hdr->ascq =3D=3D 0x07)
+>> +		}
+>> +		if (sense_hdr->asc =3D=3D 0x2a && sense_hdr->ascq =3D=3D 0x07) {
+>>  			/*
+>>  			 * Implicit ALUA state transition failed
+>>  			 */
+>> +			alua_check(sdev, true);
+>>  			return ADD_TO_MLQUEUE;
+>> +		}
+>>  		break;
+>>  	}
+>> =20
+>> @@ -811,7 +809,7 @@ static void alua_qdata_work(struct work_struct *=
+work)
+>> =20
+>>  static void alua_rtpg_queue(struct alua_port_group *pg,
+>>  			    struct scsi_device *sdev,
+>> -			    struct alua_queue_data *qdata)
+>> +			    struct alua_queue_data *qdata, bool force)
+>>  {
+>>  	int start_queue =3D 0;
+>>  	unsigned long flags;
+>> @@ -832,7 +830,9 @@ static void alua_rtpg_queue(struct alua_port_gro=
+up *pg,
+>>  		pg->rtpg_sdev =3D sdev;
+>>  		scsi_device_get(sdev);
+>>  		start_queue =3D 1;
+>> -	}
+>> +	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force)
+>> +		start_queue =3D 1;
+>> +
+>>  	spin_unlock_irqrestore(&pg->rtpg_lock, flags);
+>> =20
+>>  	if (start_queue)
+>> @@ -873,7 +873,7 @@ static int alua_initialize(struct scsi_device *s=
+dev, struct alua_dh_data *h)
+>>  	mutex_unlock(&h->init_mutex);
+>>  	if (pg) {
+>>  		pg->expiry =3D 0;
+>> -		alua_rtpg_queue(pg, sdev, NULL);
+>> +		alua_rtpg_queue(pg, sdev, NULL, true);
+>>  		kref_put(&pg->kref, release_port_group);
+>>  	}
+>>  	return error;
+>> @@ -982,7 +982,7 @@ static int alua_activate(struct scsi_device *sde=
+v,
+>>  		pg->flags |=3D ALUA_OPTIMIZE_STPG;
+>>  		spin_unlock_irqrestore(&pg->rtpg_lock, flags);
+>>  	}
+>> -	alua_rtpg_queue(pg, sdev, qdata);
+>> +	alua_rtpg_queue(pg, sdev, qdata, true);
+>>  	kref_put(&pg->kref, release_port_group);
+>>  out:
+>>  	if (fn)
+>> @@ -996,7 +996,7 @@ out:
+>>   *
+>>   * Check the device status
+>>   */
+>> -static void alua_check(struct scsi_device *sdev)
+>> +static void alua_check(struct scsi_device *sdev, bool force)
+>>  {
+>>  	struct alua_dh_data *h =3D sdev->handler_data;
+>>  	struct alua_port_group *pg;
+>> @@ -1009,7 +1009,7 @@ static void alua_check(struct scsi_device *sde=
+v)
+>>  	}
+>>  	kref_get(&pg->kref);
+>>  	rcu_read_unlock();
+>> -	alua_rtpg_queue(pg, sdev, NULL);
+>> +	alua_rtpg_queue(pg, sdev, NULL, force);
+>>  	kref_put(&pg->kref, release_port_group);
+>>  	rcu_read_unlock();
+>>  }
+>=20
+> I think this change goes along with the previous patch in terms of th=
+e
+> design, so we'll have to see how that turns out.  Fundamentally, thou=
+gh,
+> this changes the handling for LUN Not Accessible - ALUA state transit=
+ion
+> to be NEEDS_RETRY instead of ADD_TO_MLQUEUE, so what is the effect of=
+ that?
+>=20
+ADD_TO_MLQUEUE will always be retried, NEEDS_RETRY is bounded by the
+number of retries.
+Originally we had to return ADD_TO_MLQUEUE so to be sure to retry until
+the transition is done, causing quite some retries.
+As now we're polling the device from a workqueue we can terminate
+the number of retries by returning NEEDS_RETRY, knowing that the pollin=
+g
+(and/or sense code evaluation) will tell us when the transition is fini=
+shed.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
