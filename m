@@ -1,284 +1,321 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v3 08/32] cxlflash: Fix to avoid CXL services during EEH
-Date: Thu, 24 Sep 2015 14:38:05 -0500
-Message-ID: <1443123485-16808-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v3 11/32] cxlflash: Refine host/device attributes
+Date: Thu, 24 Sep 2015 14:39:02 -0500
+Message-ID: <1443123542-17003-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:51767 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726AbbIXTis (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:38:48 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:40355 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578AbbIXTjp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:39:45 -0400
 Received: from localhost
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 24 Sep 2015 15:38:47 -0400
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 15D206E8045
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:30:28 -0400 (EDT)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJciSB64159792
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 19:38:44 GMT
-Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJcfD8008683
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:38:44 -0400
+	Thu, 24 Sep 2015 13:39:44 -0600
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 19BF01FF0042
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:30:51 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJcWqf7930258
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 12:38:32 -0700
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJddwR017903
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:39:41 -0600
 In-Reply-To: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-During an EEH freeze event, certain CXL services should not be
-called until after the hardware reset has taken place. Doing so
-can result in unnecessary failures and possibly cause other ill
-effects by triggering hardware accesses. This translates to a
-requirement to quiesce all threads that may potentially use CXL
-runtime service during this window. In particular, multiple ioctls
-make use of the CXL services when acting on contexts on behalf of
-the user. Thus, it is essential to 'drain' running ioctls _before_
-proceeding with handling the EEH freeze event.
+Implement the following suggestions and add two new attributes
+to allow for debugging the port LUN table.
 
-Create the ability to drain ioctls by wrapping the ioctl handler
-call in a read semaphore and then implementing a small routine that
-obtains the write semaphore, effectively creating a wait point for
-all currently executing ioctls.
+ - use scnprintf() instead of snprintf()
+ - use DEVICE_ATTR_RO and DEVICE_ATTR_RW
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h    |   2 +
- drivers/scsi/cxlflash/main.c      |  18 +++++--
- drivers/scsi/cxlflash/superpipe.c | 104 +++++++++++++++++++++++---------------
- 3 files changed, 81 insertions(+), 43 deletions(-)
+ drivers/scsi/cxlflash/main.c | 180 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 138 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 1c56037..1abe4e0 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -16,6 +16,7 @@
- #define _CXLFLASH_COMMON_H
- 
- #include <linux/list.h>
-+#include <linux/rwsem.h>
- #include <linux/types.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -110,6 +111,7 @@ struct cxlflash_cfg {
- 	atomic_t recovery_threads;
- 	struct mutex ctx_recovery_mutex;
- 	struct mutex ctx_tbl_list_mutex;
-+	struct rw_semaphore ioctl_rwsem;
- 	struct ctx_info *ctx_tbl[MAX_CONTEXT];
- 	struct list_head ctx_err_recovery; /* contexts w/ recovery pending */
- 	struct file_operations cxl_fops;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 3e3ccf1..6e85c77 100644
+index 226cefe..b44212b 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -2311,6 +2311,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	cfg->lr_port = -1;
- 	mutex_init(&cfg->ctx_tbl_list_mutex);
- 	mutex_init(&cfg->ctx_recovery_mutex);
-+	init_rwsem(&cfg->ioctl_rwsem);
- 	INIT_LIST_HEAD(&cfg->ctx_err_recovery);
- 	INIT_LIST_HEAD(&cfg->lluns);
- 
-@@ -2365,6 +2366,19 @@ out_remove:
- }
+@@ -1995,33 +1995,24 @@ static int cxlflash_change_queue_depth(struct scsi_device *sdev, int qdepth)
  
  /**
-+ * drain_ioctls() - wait until all currently executing ioctls have completed
-+ * @cfg:	Internal structure associated with the host.
-+ *
-+ * Obtain write access to read/write semaphore that wraps ioctl
-+ * handling to 'drain' ioctls currently executing.
-+ */
-+static void drain_ioctls(struct cxlflash_cfg *cfg)
-+{
-+	down_write(&cfg->ioctl_rwsem);
-+	up_write(&cfg->ioctl_rwsem);
+  * cxlflash_show_port_status() - queries and presents the current port status
+- * @dev:	Generic device associated with the host owning the port.
+- * @attr:	Device attribute representing the port.
++ * @port:	Desired port for status reporting.
++ * @afu:	AFU owning the specified port.
+  * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
+  *
+  * Return: The size of the ASCII string returned in @buf.
+  */
+-static ssize_t cxlflash_show_port_status(struct device *dev,
+-					 struct device_attribute *attr,
+-					 char *buf)
++static ssize_t cxlflash_show_port_status(u32 port, struct afu *afu, char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
+-	struct afu *afu = cfg->afu;
+-
+ 	char *disp_status;
+-	int rc;
+-	u32 port;
+ 	u64 status;
+-	u64 *fc_regs;
++	__be64 __iomem *fc_regs;
+ 
+-	rc = kstrtouint((attr->attr.name + 4), 10, &port);
+-	if (rc || (port >= NUM_FC_PORTS))
++	if (port >= NUM_FC_PORTS)
+ 		return 0;
+ 
+ 	fc_regs = &afu->afu_map->global.fc_regs[port][0];
+-	status =
+-	    (readq_be(&fc_regs[FC_MTIP_STATUS / 8]) & FC_MTIP_STATUS_MASK);
++	status = readq_be(&fc_regs[FC_MTIP_STATUS / 8]);
++	status &= FC_MTIP_STATUS_MASK;
+ 
+ 	if (status == FC_MTIP_STATUS_ONLINE)
+ 		disp_status = "online";
+@@ -2030,31 +2021,69 @@ static ssize_t cxlflash_show_port_status(struct device *dev,
+ 	else
+ 		disp_status = "unknown";
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", disp_status);
++	return scnprintf(buf, PAGE_SIZE, "%s\n", disp_status);
 +}
 +
 +/**
-  * cxlflash_pci_error_detected() - called when a PCI error is detected
-  * @pdev:	PCI device struct.
-  * @state:	PCI channel state.
-@@ -2383,16 +2397,14 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
- 	switch (state) {
- 	case pci_channel_io_frozen:
- 		cfg->state = STATE_LIMBO;
--
--		/* Turn off legacy I/O */
- 		scsi_block_requests(cfg->host);
-+		drain_ioctls(cfg);
- 		rc = cxlflash_mark_contexts_error(cfg);
- 		if (unlikely(rc))
- 			dev_err(dev, "%s: Failed to mark user contexts!(%d)\n",
- 				__func__, rc);
- 		term_mc(cfg, UNDO_START);
- 		stop_afu(cfg);
--
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
- 		cfg->state = STATE_FAILTERM;
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 28aa9d9..544ef09 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -1214,6 +1214,48 @@ static const struct file_operations null_fops = {
++ * port0_show() - queries and presents the current status of port 0
++ * @dev:	Generic device associated with the host owning the port.
++ * @attr:	Device attribute representing the port.
++ * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
++ *
++ * Return: The size of the ASCII string returned in @buf.
++ */
++static ssize_t port0_show(struct device *dev,
++			  struct device_attribute *attr,
++			  char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct afu *afu = cfg->afu;
++
++	return cxlflash_show_port_status(0, afu, buf);
+ }
+ 
+ /**
+- * cxlflash_show_lun_mode() - presents the current LUN mode of the host
++ * port1_show() - queries and presents the current status of port 1
++ * @dev:	Generic device associated with the host owning the port.
++ * @attr:	Device attribute representing the port.
++ * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
++ *
++ * Return: The size of the ASCII string returned in @buf.
++ */
++static ssize_t port1_show(struct device *dev,
++			  struct device_attribute *attr,
++			  char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct afu *afu = cfg->afu;
++
++	return cxlflash_show_port_status(1, afu, buf);
++}
++
++/**
++ * lun_mode_show() - presents the current LUN mode of the host
+  * @dev:	Generic device associated with the host.
+- * @attr:	Device attribute representing the lun mode.
++ * @attr:	Device attribute representing the LUN mode.
+  * @buf:	Buffer of length PAGE_SIZE to report back the LUN mode in ASCII.
+  *
+  * Return: The size of the ASCII string returned in @buf.
+  */
+-static ssize_t cxlflash_show_lun_mode(struct device *dev,
+-				      struct device_attribute *attr, char *buf)
++static ssize_t lun_mode_show(struct device *dev,
++			     struct device_attribute *attr, char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
+ 	struct afu *afu = cfg->afu;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%u\n", afu->internal_lun);
++	return scnprintf(buf, PAGE_SIZE, "%u\n", afu->internal_lun);
+ }
+ 
+ /**
+- * cxlflash_store_lun_mode() - sets the LUN mode of the host
++ * lun_mode_store() - sets the LUN mode of the host
+  * @dev:	Generic device associated with the host.
+- * @attr:	Device attribute representing the lun mode.
++ * @attr:	Device attribute representing the LUN mode.
+  * @buf:	Buffer of length PAGE_SIZE containing the LUN mode in ASCII.
+  * @count:	Length of data resizing in @buf.
+  *
+@@ -2073,9 +2102,9 @@ static ssize_t cxlflash_show_lun_mode(struct device *dev,
+  *
+  * Return: The size of the ASCII string returned in @buf.
+  */
+-static ssize_t cxlflash_store_lun_mode(struct device *dev,
+-				       struct device_attribute *attr,
+-				       const char *buf, size_t count)
++static ssize_t lun_mode_store(struct device *dev,
++			      struct device_attribute *attr,
++			      const char *buf, size_t count)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
+@@ -2094,58 +2123,125 @@ static ssize_t cxlflash_store_lun_mode(struct device *dev,
+ }
+ 
+ /**
+- * cxlflash_show_ioctl_version() - presents the hosts current ioctl version
++ * ioctl_version_show() - presents the current ioctl version of the host
+  * @dev:	Generic device associated with the host.
+  * @attr:	Device attribute representing the ioctl version.
+  * @buf:	Buffer of length PAGE_SIZE to report back the ioctl version.
+  *
+  * Return: The size of the ASCII string returned in @buf.
+  */
+-static ssize_t cxlflash_show_ioctl_version(struct device *dev,
+-					   struct device_attribute *attr,
+-					   char *buf)
++static ssize_t ioctl_version_show(struct device *dev,
++				  struct device_attribute *attr, char *buf)
+ {
+ 	return scnprintf(buf, PAGE_SIZE, "%u\n", DK_CXLFLASH_VERSION_0);
+ }
+ 
+ /**
+- * cxlflash_show_dev_mode() - presents the current mode of the device
++ * cxlflash_show_port_lun_table() - queries and presents the port LUN table
++ * @port:	Desired port for status reporting.
++ * @afu:	AFU owning the specified port.
++ * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
++ *
++ * Return: The size of the ASCII string returned in @buf.
++ */
++static ssize_t cxlflash_show_port_lun_table(u32 port,
++					    struct afu *afu,
++					    char *buf)
++{
++	int i;
++	ssize_t bytes = 0;
++	__be64 __iomem *fc_port;
++
++	if (port >= NUM_FC_PORTS)
++		return 0;
++
++	fc_port = &afu->afu_map->global.fc_port[port][0];
++
++	for (i = 0; i < CXLFLASH_NUM_VLUNS; i++)
++		bytes += scnprintf(buf + bytes, PAGE_SIZE - bytes,
++				   "%03d: %016llX\n", i, readq_be(&fc_port[i]));
++	return bytes;
++}
++
++/**
++ * port0_lun_table_show() - presents the current LUN table of port 0
++ * @dev:	Generic device associated with the host owning the port.
++ * @attr:	Device attribute representing the port.
++ * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
++ *
++ * Return: The size of the ASCII string returned in @buf.
++ */
++static ssize_t port0_lun_table_show(struct device *dev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct afu *afu = cfg->afu;
++
++	return cxlflash_show_port_lun_table(0, afu, buf);
++}
++
++/**
++ * port1_lun_table_show() - presents the current LUN table of port 1
++ * @dev:	Generic device associated with the host owning the port.
++ * @attr:	Device attribute representing the port.
++ * @buf:	Buffer of length PAGE_SIZE to report back port status in ASCII.
++ *
++ * Return: The size of the ASCII string returned in @buf.
++ */
++static ssize_t port1_lun_table_show(struct device *dev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct afu *afu = cfg->afu;
++
++	return cxlflash_show_port_lun_table(1, afu, buf);
++}
++
++/**
++ * mode_show() - presents the current mode of the device
+  * @dev:	Generic device associated with the device.
+  * @attr:	Device attribute representing the device mode.
+  * @buf:	Buffer of length PAGE_SIZE to report back the dev mode in ASCII.
+  *
+  * Return: The size of the ASCII string returned in @buf.
+  */
+-static ssize_t cxlflash_show_dev_mode(struct device *dev,
+-				      struct device_attribute *attr, char *buf)
++static ssize_t mode_show(struct device *dev,
++			 struct device_attribute *attr, char *buf)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
+-			sdev->hostdata ? "superpipe" : "legacy");
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
++			 sdev->hostdata ? "superpipe" : "legacy");
+ }
+ 
+ /*
+  * Host attributes
+  */
+-static DEVICE_ATTR(port0, S_IRUGO, cxlflash_show_port_status, NULL);
+-static DEVICE_ATTR(port1, S_IRUGO, cxlflash_show_port_status, NULL);
+-static DEVICE_ATTR(lun_mode, S_IRUGO | S_IWUSR, cxlflash_show_lun_mode,
+-		   cxlflash_store_lun_mode);
+-static DEVICE_ATTR(ioctl_version, S_IRUGO, cxlflash_show_ioctl_version, NULL);
++static DEVICE_ATTR_RO(port0);
++static DEVICE_ATTR_RO(port1);
++static DEVICE_ATTR_RW(lun_mode);
++static DEVICE_ATTR_RO(ioctl_version);
++static DEVICE_ATTR_RO(port0_lun_table);
++static DEVICE_ATTR_RO(port1_lun_table);
+ 
+ static struct device_attribute *cxlflash_host_attrs[] = {
+ 	&dev_attr_port0,
+ 	&dev_attr_port1,
+ 	&dev_attr_lun_mode,
+ 	&dev_attr_ioctl_version,
++	&dev_attr_port0_lun_table,
++	&dev_attr_port1_lun_table,
+ 	NULL
  };
  
- /**
-+ * check_state() - checks and responds to the current adapter state
-+ * @cfg:	Internal structure associated with the host.
-+ * @ioctl:	Indicates if on an ioctl thread.
-+ *
-+ * This routine can block and should only be used on process context.
-+ * When blocking on an ioctl thread, the ioctl read semaphore should be
-+ * let up to allow for draining actively running ioctls. Also note that
-+ * when waking up from waiting in reset, the state is unknown and must
-+ * be checked again before proceeding.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int check_state(struct cxlflash_cfg *cfg, bool ioctl)
-+{
-+	struct device *dev = &cfg->dev->dev;
-+	int rc = 0;
-+
-+retry:
-+	switch (cfg->state) {
-+	case STATE_LIMBO:
-+		dev_dbg(dev, "%s: Limbo state, going to wait...\n", __func__);
-+		if (ioctl)
-+			up_read(&cfg->ioctl_rwsem);
-+		rc = wait_event_interruptible(cfg->limbo_waitq,
-+					      cfg->state != STATE_LIMBO);
-+		if (ioctl)
-+			down_read(&cfg->ioctl_rwsem);
-+		if (unlikely(rc))
-+			break;
-+		goto retry;
-+	case STATE_FAILTERM:
-+		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
-+		rc = -ENODEV;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-  * cxlflash_disk_attach() - attach a LUN to a context
-  * @sdev:	SCSI device associated with LUN.
-  * @attach:	Attach ioctl data structure.
-@@ -1523,41 +1565,6 @@ err1:
- }
- 
- /**
-- * check_state() - checks and responds to the current adapter state
-- * @cfg:	Internal structure associated with the host.
-- *
-- * This routine can block and should only be used on process context.
-- * Note that when waking up from waiting in limbo, the state is unknown
-- * and must be checked again before proceeding.
-- *
-- * Return: 0 on success, -errno on failure
-- */
--static int check_state(struct cxlflash_cfg *cfg)
--{
--	struct device *dev = &cfg->dev->dev;
--	int rc = 0;
--
--retry:
--	switch (cfg->state) {
--	case STATE_LIMBO:
--		dev_dbg(dev, "%s: Limbo, going to wait...\n", __func__);
--		rc = wait_event_interruptible(cfg->limbo_waitq,
--					      cfg->state != STATE_LIMBO);
--		if (unlikely(rc))
--			break;
--		goto retry;
--	case STATE_FAILTERM:
--		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
--		rc = -ENODEV;
--		break;
--	default:
--		break;
--	}
--
--	return rc;
--}
--
--/**
-  * cxlflash_afu_recover() - initiates AFU recovery
-  * @sdev:	SCSI device associated with LUN.
-  * @recover:	Recover ioctl data structure.
-@@ -1646,12 +1653,17 @@ retry_recover:
- 	/* Test if in error state */
- 	reg = readq_be(&afu->ctrl_map->mbox_r);
- 	if (reg == -1) {
--		dev_dbg(dev, "%s: MMIO read fail! Wait for recovery...\n",
--			__func__);
--		mutex_unlock(&ctxi->mutex);
-+		dev_dbg(dev, "%s: MMIO fail, wait for recovery.\n", __func__);
-+
-+		/*
-+		 * Before checking the state, put back the context obtained with
-+		 * get_context() as it is no longer needed and sleep for a short
-+		 * period of time (see prolog notes).
-+		 */
-+		put_context(ctxi);
- 		ctxi = NULL;
- 		ssleep(1);
--		rc = check_state(cfg);
-+		rc = check_state(cfg, true);
- 		if (unlikely(rc))
- 			goto out;
- 		goto retry;
-@@ -1945,7 +1957,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
- 		goto out;
- 	}
- 
--	rc = check_state(cfg);
-+	rc = check_state(cfg, true);
- 	if (unlikely(rc) && (cfg->state == STATE_FAILTERM)) {
- 		switch (cmd) {
- 		case DK_CXLFLASH_VLUN_RESIZE:
-@@ -1967,6 +1979,14 @@ out:
-  * @cmd:	IOCTL command.
-  * @arg:	Userspace ioctl data structure.
-  *
-+ * A read/write semaphore is used to implement a 'drain' of currently
-+ * running ioctls. The read semaphore is taken at the beginning of each
-+ * ioctl thread and released upon concluding execution. Additionally the
-+ * semaphore should be released and then reacquired in any ioctl execution
-+ * path which will wait for an event to occur that is outside the scope of
-+ * the ioctl (i.e. an adapter reset). To drain the ioctls currently running,
-+ * a thread simply needs to acquire the write semaphore.
-+ *
-  * Return: 0 on success, -errno on failure
+ /*
+  * Device attributes
   */
- int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-@@ -2001,6 +2021,9 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
- 	{sizeof(struct dk_cxlflash_clone), (sioctl)cxlflash_disk_clone},
- 	};
+-static DEVICE_ATTR(mode, S_IRUGO, cxlflash_show_dev_mode, NULL);
++static DEVICE_ATTR_RO(mode);
  
-+	/* Hold read semaphore so we can drain if needed */
-+	down_read(&cfg->ioctl_rwsem);
-+
- 	/* Restrict command set to physical support only for internal LUN */
- 	if (afu->internal_lun)
- 		switch (cmd) {
-@@ -2082,6 +2105,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
- 	/* fall through to exit */
- 
- cxlflash_ioctl_exit:
-+	up_read(&cfg->ioctl_rwsem);
- 	if (unlikely(rc && known_ioctl))
- 		dev_err(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%llu) "
- 			"returned rc %d\n", __func__,
+ static struct device_attribute *cxlflash_dev_attrs[] = {
+ 	&dev_attr_mode,
 -- 
 2.1.0
 
