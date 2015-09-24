@@ -1,101 +1,206 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v3 02/32] cxlflash: Replace magic numbers with literals
-Date: Thu, 24 Sep 2015 14:37:04 -0500
-Message-ID: <1443123424-16579-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v3 09/32] cxlflash: Correct naming of limbo state and waitq
+Date: Thu, 24 Sep 2015 14:38:10 -0500
+Message-ID: <1443123490-16846-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:40235 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726AbbIXTiu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:38:50 -0400
+Received: from e39.co.us.ibm.com ([32.97.110.160]:60802 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726AbbIXTiz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:38:55 -0400
 Received: from localhost
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 24 Sep 2015 13:38:50 -0600
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 3C86C1FF002D
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:29:58 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJbVbs11862310
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 12:37:39 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJcDvY008509
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:38:16 -0600
+	Thu, 24 Sep 2015 13:38:55 -0600
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 5C22C6E805C
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:30:34 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJcpo356557648
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 19:38:51 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJcknN026179
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:38:50 -0400
 In-Reply-To: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, Manoj Kumar <kumarmn@us.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-From: Manoj Kumar <kumarmn@us.ibm.com>
-
-Magic numbers are not meaningful and can create confusion. As a
-remedy, replace them with descriptive literals.
-
-Replace 512 with literal MAX_SECTOR_UNIT.
-Replace 5 with literal CMD_RETRIES.
+Limbo is not an accurate representation of this state and is
+also not consistent with the terminology that other drivers
+use to represent this concept. Rename the state and and its
+associated waitq to 'reset'.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/superpipe.c | 6 ++++--
- drivers/scsi/cxlflash/superpipe.h | 3 +++
- drivers/scsi/cxlflash/vlun.c      | 3 ++-
- 3 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/cxlflash/common.h    |  4 ++--
+ drivers/scsi/cxlflash/main.c      | 26 +++++++++++++-------------
+ drivers/scsi/cxlflash/superpipe.c | 14 +++++++-------
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 1abe4e0..11318de 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -79,7 +79,7 @@ enum cxlflash_init_state {
+ 
+ enum cxlflash_state {
+ 	STATE_NORMAL,	/* Normal running state, everything good */
+-	STATE_LIMBO,	/* Limbo running state, trying to reset/recover */
++	STATE_RESET,	/* Reset state, trying to reset/recover */
+ 	STATE_FAILTERM	/* Failed/terminating state, error out users/threads */
+ };
+ 
+@@ -125,7 +125,7 @@ struct cxlflash_cfg {
+ 
+ 	wait_queue_head_t tmf_waitq;
+ 	bool tmf_active;
+-	wait_queue_head_t limbo_waitq;
++	wait_queue_head_t reset_waitq;
+ 	enum cxlflash_state state;
+ };
+ 
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 6e85c77..8940336 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -382,8 +382,8 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
+ 
+ 	switch (cfg->state) {
+-	case STATE_LIMBO:
+-		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device in limbo!\n",
++	case STATE_RESET:
++		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device is in reset!\n",
+ 				    __func__);
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
+@@ -479,8 +479,8 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+ 		if (unlikely(rcr))
+ 			rc = FAILED;
+ 		break;
+-	case STATE_LIMBO:
+-		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++	case STATE_RESET:
++		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
+ 		if (cfg->state == STATE_NORMAL)
+ 			break;
+ 		/* fall through */
+@@ -519,7 +519,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 
+ 	switch (cfg->state) {
+ 	case STATE_NORMAL:
+-		cfg->state = STATE_LIMBO;
++		cfg->state = STATE_RESET;
+ 		scsi_block_requests(cfg->host);
+ 		cxlflash_mark_contexts_error(cfg);
+ 		rcr = cxlflash_afu_reset(cfg);
+@@ -528,11 +528,11 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 			cfg->state = STATE_FAILTERM;
+ 		} else
+ 			cfg->state = STATE_NORMAL;
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		scsi_unblock_requests(cfg->host);
+ 		break;
+-	case STATE_LIMBO:
+-		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++	case STATE_RESET:
++		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
+ 		if (cfg->state == STATE_NORMAL)
+ 			break;
+ 		/* fall through */
+@@ -705,7 +705,7 @@ static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+ 	struct pci_dev *pdev = cfg->dev;
+ 
+ 	if (pci_channel_offline(pdev))
+-		wait_event_timeout(cfg->limbo_waitq,
++		wait_event_timeout(cfg->reset_waitq,
+ 				   !pci_channel_offline(pdev),
+ 				   CXLFLASH_PCI_ERROR_RECOVERY_TIMEOUT);
+ }
+@@ -2304,7 +2304,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	cfg->mcctx = NULL;
+ 
+ 	init_waitqueue_head(&cfg->tmf_waitq);
+-	init_waitqueue_head(&cfg->limbo_waitq);
++	init_waitqueue_head(&cfg->reset_waitq);
+ 
+ 	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
+ 	cfg->lr_state = LINK_RESET_INVALID;
+@@ -2396,7 +2396,7 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+ 
+ 	switch (state) {
+ 	case pci_channel_io_frozen:
+-		cfg->state = STATE_LIMBO;
++		cfg->state = STATE_RESET;
+ 		scsi_block_requests(cfg->host);
+ 		drain_ioctls(cfg);
+ 		rc = cxlflash_mark_contexts_error(cfg);
+@@ -2408,7 +2408,7 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+ 		return PCI_ERS_RESULT_NEED_RESET;
+ 	case pci_channel_io_perm_failure:
+ 		cfg->state = STATE_FAILTERM;
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		scsi_unblock_requests(cfg->host);
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	default:
+@@ -2455,7 +2455,7 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
+ 	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
+ 
+ 	cfg->state = STATE_NORMAL;
+-	wake_up_all(&cfg->limbo_waitq);
++	wake_up_all(&cfg->reset_waitq);
+ 	scsi_unblock_requests(cfg->host);
+ }
+ 
 diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 05e0ecf..4db15a4 100644
+index 544ef09..d7b9c76 100644
 --- a/drivers/scsi/cxlflash/superpipe.c
 +++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -315,7 +315,8 @@ retry:
- 		retry_cnt ? "re" : "", scsi_cmd[0]);
+@@ -100,7 +100,7 @@ void cxlflash_stop_term_user_contexts(struct cxlflash_cfg *cfg)
  
- 	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
--			      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
-+			      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
-+			      0, NULL);
+ 		dev_dbg(dev, "%s: Wait for user contexts to quiesce...\n",
+ 			__func__);
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		ssleep(1);
+ 	}
+ }
+@@ -1233,12 +1233,12 @@ static int check_state(struct cxlflash_cfg *cfg, bool ioctl)
  
- 	if (driver_byte(result) == DRIVER_SENSE) {
- 		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-@@ -1375,7 +1376,8 @@ out_attach:
- 	attach->block_size = gli->blk_len;
- 	attach->mmio_size = sizeof(afu->afu_map->hosts[0].harea);
- 	attach->last_lba = gli->max_lba;
--	attach->max_xfer = (sdev->host->max_sectors * 512) / gli->blk_len;
-+	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT) /
-+		gli->blk_len;
- 
- out:
- 	attach->adap_fd = fd;
-diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-index d7dc88b..3f7856b 100644
---- a/drivers/scsi/cxlflash/superpipe.h
-+++ b/drivers/scsi/cxlflash/superpipe.h
-@@ -29,6 +29,9 @@ extern struct cxlflash_global global;
- #define MC_CHUNK_SIZE     (1 << MC_RHT_NMASK)	/* in LBAs */
- 
- #define MC_DISCOVERY_TIMEOUT 5  /* 5 secs */
-+#define CMD_RETRIES 5   /* 5 retries for scsi_execute */
-+
-+#define MAX_SECTOR_UNIT  512 /* max_sector is in 512 byte multiples */
- 
- #define CHAN2PORT(_x)	((_x) + 1)
- #define PORT2CHAN(_x)	((_x) - 1)
-diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index 6155cb1..6d6608b 100644
---- a/drivers/scsi/cxlflash/vlun.c
-+++ b/drivers/scsi/cxlflash/vlun.c
-@@ -434,7 +434,8 @@ static int write_same16(struct scsi_device *sdev,
- 				   &scsi_cmd[10]);
- 
- 		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
--				      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
-+				      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
-+				      0, NULL);
- 		if (result) {
- 			dev_err_ratelimited(dev, "%s: command failed for "
- 					    "offset %lld result=0x%x\n",
+ retry:
+ 	switch (cfg->state) {
+-	case STATE_LIMBO:
+-		dev_dbg(dev, "%s: Limbo state, going to wait...\n", __func__);
++	case STATE_RESET:
++		dev_dbg(dev, "%s: Reset state, going to wait...\n", __func__);
+ 		if (ioctl)
+ 			up_read(&cfg->ioctl_rwsem);
+-		rc = wait_event_interruptible(cfg->limbo_waitq,
+-					      cfg->state != STATE_LIMBO);
++		rc = wait_event_interruptible(cfg->reset_waitq,
++					      cfg->state != STATE_RESET);
+ 		if (ioctl)
+ 			down_read(&cfg->ioctl_rwsem);
+ 		if (unlikely(rc))
+@@ -1580,10 +1580,10 @@ err1:
+  * quite possible for this routine to act as the kernel's EEH detection
+  * source (MMIO read of mbox_r). Because of this, there is a window of
+  * time where an EEH might have been detected but not yet 'serviced'
+- * (callback invoked, causing the device to enter limbo state). To avoid
++ * (callback invoked, causing the device to enter reset state). To avoid
+  * looping in this routine during that window, a 1 second sleep is in place
+  * between the time the MMIO failure is detected and the time a wait on the
+- * limbo wait queue is attempted via check_state().
++ * reset wait queue is attempted via check_state().
+  *
+  * Return: 0 on success, -errno on failure
+  */
 -- 
 2.1.0
 
