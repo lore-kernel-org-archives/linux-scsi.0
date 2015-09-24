@@ -1,69 +1,162 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v3 06/32] cxlflash: Fix to avoid sizeof(bool)
-Date: Thu, 24 Sep 2015 14:37:57 -0500
-Message-ID: <1443123477-16732-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v3 04/32] cxlflash: Fix potential oops following LUN removal
+Date: Thu, 24 Sep 2015 14:37:48 -0500
+Message-ID: <1443123468-16656-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:44031 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753777AbbIXTih (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:38:37 -0400
+Received: from e37.co.us.ibm.com ([32.97.110.158]:48026 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650AbbIXTi2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:38:28 -0400
 Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 24 Sep 2015 15:38:36 -0400
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 8C75B38C803B
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:38:34 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJcYLP65994816
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 19:38:34 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJcV5X023014
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:38:34 -0400
+	Thu, 24 Sep 2015 13:38:28 -0600
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 7E4591FF004B
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:29:35 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJZLVN30801924
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 12:35:21 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJcNh1026928
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:38:25 -0600
 In-Reply-To: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Using sizeof(bool) is considered poor form for various reasons and
-sparse warns us of that. Correct by changing type from bool to u8.
+When a LUN is removed, the sdev that is associated with the LUN
+remains intact until its reference count drops to 0. In order
+to prevent an sdev from being removed while a context is still
+associated with it, obtain an additional reference per-context
+for each LUN attached to the context.
+
+This resolves a potential Oops in the release handler when a
+dealing with a LUN that has already been removed.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/superpipe.c | 2 +-
- drivers/scsi/cxlflash/superpipe.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/superpipe.c | 35 +++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index ffa68cc..28aa9d9 100644
+index 4e44a48..ffa68cc 100644
 --- a/drivers/scsi/cxlflash/superpipe.c
 +++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -737,7 +737,7 @@ static struct ctx_info *create_context(struct cxlflash_cfg *cfg,
- 	struct afu *afu = cfg->afu;
- 	struct ctx_info *ctxi = NULL;
- 	struct llun_info **lli = NULL;
--	bool *ws = NULL;
-+	u8 *ws = NULL;
- 	struct sisl_rht_entry *rhte;
+@@ -880,6 +880,9 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
+ 			sys_close(lfd);
+ 	}
  
- 	ctxi = kzalloc(sizeof(*ctxi), GFP_KERNEL);
-diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-index fffb179..72d53cf 100644
---- a/drivers/scsi/cxlflash/superpipe.h
-+++ b/drivers/scsi/cxlflash/superpipe.h
-@@ -97,7 +97,7 @@ struct ctx_info {
- 	u32 rht_out;		/* Number of checked out RHT entries */
- 	u32 rht_perms;		/* User-defined permissions for RHT entries */
- 	struct llun_info **rht_lun;       /* Mapping of RHT entries to LUNs */
--	bool *rht_needs_ws;	/* User-desired write-same function per RHTE */
-+	u8 *rht_needs_ws;	/* User-desired write-same function per RHTE */
++	/* Release the sdev reference that bound this LUN to the context */
++	scsi_device_put(sdev);
++
+ out:
+ 	if (put_ctx)
+ 		put_context(ctxi);
+@@ -1287,11 +1290,17 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 			}
+ 	}
  
- 	struct cxl_ioctl_start_work work;
- 	u64 ctxid;
++	rc = scsi_device_get(sdev);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: Unable to get sdev reference!\n", __func__);
++		goto out;
++	}
++
+ 	lun_access = kzalloc(sizeof(*lun_access), GFP_KERNEL);
+ 	if (unlikely(!lun_access)) {
+ 		dev_err(dev, "%s: Unable to allocate lun_access!\n", __func__);
+ 		rc = -ENOMEM;
+-		goto out;
++		goto err0;
+ 	}
+ 
+ 	lun_access->lli = lli;
+@@ -1311,21 +1320,21 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 		dev_err(dev, "%s: Could not initialize context %p\n",
+ 			__func__, ctx);
+ 		rc = -ENODEV;
+-		goto err0;
++		goto err1;
+ 	}
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+ 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
+ 		rc = -EPERM;
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	file = cxl_get_fd(ctx, &cfg->cxl_fops, &fd);
+ 	if (unlikely(fd < 0)) {
+ 		rc = -ENODEV;
+ 		dev_err(dev, "%s: Could not get file descriptor\n", __func__);
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	/* Translate read/write O_* flags from fcntl.h to AFU permission bits */
+@@ -1335,7 +1344,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	if (unlikely(!ctxi)) {
+ 		dev_err(dev, "%s: Failed to create context! (%d)\n",
+ 			__func__, ctxid);
+-		goto err2;
++		goto err3;
+ 	}
+ 
+ 	work = &ctxi->work;
+@@ -1346,13 +1355,13 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	if (unlikely(rc)) {
+ 		dev_dbg(dev, "%s: Could not start context rc=%d\n",
+ 			__func__, rc);
+-		goto err3;
++		goto err4;
+ 	}
+ 
+ 	rc = afu_attach(cfg, ctxi);
+ 	if (unlikely(rc)) {
+ 		dev_err(dev, "%s: Could not attach AFU rc %d\n", __func__, rc);
+-		goto err4;
++		goto err5;
+ 	}
+ 
+ 	/*
+@@ -1388,13 +1397,13 @@ out:
+ 		__func__, ctxid, fd, attach->block_size, rc, attach->last_lba);
+ 	return rc;
+ 
+-err4:
++err5:
+ 	cxl_stop_context(ctx);
+-err3:
++err4:
+ 	put_context(ctxi);
+ 	destroy_context(cfg, ctxi);
+ 	ctxi = NULL;
+-err2:
++err3:
+ 	/*
+ 	 * Here, we're overriding the fops with a dummy all-NULL fops because
+ 	 * fput() calls the release fop, which will cause us to mistakenly
+@@ -1406,10 +1415,12 @@ err2:
+ 	fput(file);
+ 	put_unused_fd(fd);
+ 	fd = -1;
+-err1:
++err2:
+ 	cxl_release_context(ctx);
+-err0:
++err1:
+ 	kfree(lun_access);
++err0:
++	scsi_device_put(sdev);
+ 	goto out;
+ }
+ 
 -- 
 2.1.0
 
