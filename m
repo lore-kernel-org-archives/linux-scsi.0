@@ -1,108 +1,75 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v3 18/32] cxlflash: Fix AFU version access/storage and add check
-Date: Thu, 24 Sep 2015 14:39:50 -0500
-Message-ID: <1443123590-17307-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v3 19/32] cxlflash: Correct usage of scsi_host_put()
+Date: Thu, 24 Sep 2015 14:40:19 -0500
+Message-ID: <1443123619-17347-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:58963 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbbIXTl1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:41:27 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.149]:53887 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbIXTl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2015 15:41:59 -0400
 Received: from localhost
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 24 Sep 2015 15:41:26 -0400
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 5D2E038C8041
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:41:23 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJfFar59375754
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 19:41:23 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJenL7001776
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 15:40:50 -0400
+	Thu, 24 Sep 2015 13:41:59 -0600
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id D901F3E40041
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:41:56 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8OJchFS66650290
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 12:38:51 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8OJfL3t001797
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2015 13:41:24 -0600
 In-Reply-To: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-The AFU version is stored as a non-terminated string of bytes within
-a 64-bit little-endian register. Presently the value is read directly
-(no MMIO accessor) and is stored in a buffer that is not big enough
-to contain a NULL terminator. Additionally the version obtained is not
-evaluated against a known value to prevent usage with unsupported AFUs.
-All of these deficiencies can lead to a variety of problems.
+Currently, scsi_host_put() is being called prematurely in the
+remove path and is missing entirely in an error cleanup path.
+The former can lead to memory being freed too early with
+subsequent access potentially corrupting data whilst the former
+would result in a memory leak.
 
-To remedy, use the correct MMIO accessor to read the version value into
-a null-terminated buffer and add a check to prevent an incompatible AFU
-from being used with this driver.
+Move the usage on remove to be the last cleanup action taken
+and introduce a call to scsi_host_put() in the one initialization
+error path that does not use remove to cleanup.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h  |  2 +-
- drivers/scsi/cxlflash/main.c    | 18 ++++++++++++------
- drivers/scsi/cxlflash/sislite.h |  2 +-
- 3 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/scsi/cxlflash/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index faf7f56..3be5754 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -179,7 +179,7 @@ struct afu {
- 	u32 cmd_couts;		/* Number of command checkouts */
- 	u32 internal_lun;	/* User-desired LUN mode for this AFU */
- 
--	char version[8];
-+	char version[16];
- 	u64 interface_version;
- 
- 	struct cxlflash_cfg *parent; /* Pointer back to parent cxlflash_cfg */
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index d45388f..b6a2584 100644
+index b6a2584..0bb6629 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -1751,14 +1751,20 @@ static int init_afu(struct cxlflash_cfg *cfg)
- 		goto err1;
+@@ -733,7 +733,6 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 	case INIT_STATE_SCSI:
+ 		cxlflash_term_local_luns(cfg);
+ 		scsi_remove_host(cfg->host);
+-		scsi_host_put(cfg->host);
+ 		/* Fall through */
+ 	case INIT_STATE_AFU:
+ 		term_afu(cfg);
+@@ -743,6 +742,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 	case INIT_STATE_NONE:
+ 		flush_work(&cfg->work_q);
+ 		free_mem(cfg);
++		scsi_host_put(cfg->host);
+ 		break;
  	}
  
--	/* don't byte reverse on reading afu_version, else the string form */
--	/*     will be backwards */
--	reg = afu->afu_map->global.regs.afu_version;
--	memcpy(afu->version, &reg, 8);
-+	/* No byte reverse on reading afu_version or string will be backwards */
-+	reg = readq(&afu->afu_map->global.regs.afu_version);
-+	memcpy(afu->version, &reg, sizeof(reg));
- 	afu->interface_version =
- 	    readq_be(&afu->afu_map->global.regs.interface_version);
--	pr_debug("%s: afu version %s, interface version 0x%llX\n",
--		 __func__, afu->version, afu->interface_version);
-+	if ((afu->interface_version + 1) == 0) {
-+		pr_err("Back level AFU, please upgrade. AFU version %s "
-+		       "interface version 0x%llx\n", afu->version,
-+		       afu->interface_version);
-+		rc = -EINVAL;
-+		goto err1;
-+	} else
-+		pr_debug("%s: afu version %s, interface version 0x%llX\n",
-+			 __func__, afu->version, afu->interface_version);
- 
- 	rc = start_afu(cfg);
- 	if (rc) {
-diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
-index 63bf394..8425d1a 100644
---- a/drivers/scsi/cxlflash/sislite.h
-+++ b/drivers/scsi/cxlflash/sislite.h
-@@ -340,7 +340,7 @@ struct sisl_global_regs {
- #define SISL_AFUCONF_MBOX_CLR_READ     0x0010ULL
- 	__be64 afu_config;
- 	__be64 rsvd[0xf8];
--	__be64 afu_version;
-+	__le64 afu_version;
- 	__be64 interface_version;
- };
+@@ -2404,6 +2404,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 		dev_err(&pdev->dev, "%s: call to scsi_host_alloc failed!\n",
+ 			__func__);
+ 		rc = -ENOMEM;
++		scsi_host_put(cfg->host);
+ 		goto out;
+ 	}
  
 -- 
 2.1.0
