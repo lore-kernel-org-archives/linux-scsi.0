@@ -1,25 +1,47 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2] scsi: Export SCSI Inquiry data to sysfs
-Date: Thu, 24 Sep 2015 16:54:26 +0200
-Message-ID: <mqdh9mjyijh.fsf@c203.arch.suse.de>
-References: <1439537960-25085-1-git-send-email-jthumshirn@suse.de>
+From: Laurent Vivier <lvivier@redhat.com>
+Subject: Re: [PATCH 1/3] ibmvsci: make parameters max_id and max_channel
+ read-only
+Date: Thu, 24 Sep 2015 18:15:51 +0200
+Message-ID: <560421B7.9040207@redhat.com>
+References: <1441876994-16821-1-git-send-email-lvivier@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1439537960-25085-1-git-send-email-jthumshirn@suse.de> (Johannes
-	Thumshirn's message of "Fri, 14 Aug 2015 09:39:20 +0200")
+In-Reply-To: <1441876994-16821-1-git-send-email-lvivier@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, dgibson@redhat.com, thuth@redhat.com, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
+Ping ?
 
-Ping?
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On 10/09/2015 11:23, Laurent Vivier wrote:
+> The value of the parameter is never re-read by the driver,
+> so a new value is ignored. Let know the user he
+> can't modify it by removing writable attribute.
+> 
+> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
+> ---
+> I resend this patch as James was not cc'ed.
+> 
+>  drivers/scsi/ibmvscsi/ibmvscsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index 6a41c36..3e76490 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -105,9 +105,9 @@ MODULE_AUTHOR("Dave Boutcher");
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(IBMVSCSI_VERSION);
+>  
+> -module_param_named(max_id, max_id, int, S_IRUGO | S_IWUSR);
+> +module_param_named(max_id, max_id, int, S_IRUGO);
+>  MODULE_PARM_DESC(max_id, "Largest ID value for each channel");
+> -module_param_named(max_channel, max_channel, int, S_IRUGO | S_IWUSR);
+> +module_param_named(max_channel, max_channel, int, S_IRUGO);
+>  MODULE_PARM_DESC(max_channel, "Largest channel value");
+>  module_param_named(init_timeout, init_timeout, int, S_IRUGO | S_IWUSR);
+>  MODULE_PARM_DESC(init_timeout, "Initialization timeout in seconds");
+> 
