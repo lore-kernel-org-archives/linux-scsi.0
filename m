@@ -1,33 +1,52 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Thu, 24 Sep 2015 15:26:49 +0930
-Message-ID: <560390A1.5060503@internode.on.net>
-References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi_dh: avoid allowing dh_state to pass format specs when requesting a module
+Date: Thu, 24 Sep 2015 09:49:15 +0200
+Message-ID: <mqdvbb0uuis.fsf@c203.arch.suse.de>
+References: <1443056906-7306-1-git-send-email-sasha.levin@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <56037C09.5050201@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, Ballabio Dario <dario.ballabio@emc.com>, Christoph Hellwig <hch@infradead.org>, Dario Ballabio <ballabio_dario@emc.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1443056906-7306-1-git-send-email-sasha.levin@oracle.com> (Sasha
+	Levin's message of "Wed, 23 Sep 2015 21:08:26 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Sasha Levin <sasha.levin@oracle.com> writes:
 
+> A malicious string passed from userspace might contain format specifi=
+ers which
+> request_module() might try to handle, which is bad.
+>
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>  drivers/scsi/scsi_dh.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index edb044a..24be260 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -111,7 +111,7 @@ static struct scsi_device_handler *scsi_dh_lookup=
+(const char *name)
+> =20
+>  	dh =3D __scsi_dh_lookup(name);
+>  	if (!dh) {
+> -		request_module(name);
+> +		request_module("%s", name);
+>  		dh =3D __scsi_dh_lookup(name);
+>  	}
 
-Jiang Liu wrote on 24/09/15 13:58:
+Good catch.
 
-> Hi James,
-> 	Thanks for review. How about the attached patch which addresses
-> the three suggestions from you?
-> Thanks!
-> Gerry
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-I've applied the patch, rebuilt the kernel and verified that it allows 
-unloading of the eata module and reloading it, as well as a successful 
-kexec.
-
-Regards,
-
-Arthur.
+--=20
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
