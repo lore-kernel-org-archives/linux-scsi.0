@@ -1,138 +1,122 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCHv4 00/23] asynchronous ALUA device handler
-Date: Thu, 24 Sep 2015 09:25:19 -0700
-Message-ID: <560423EF.9030403@sandisk.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 10/23] scsi_dh_alua: Pass buffer as function argument
+Date: Thu, 24 Sep 2015 18:37:37 +0200
+Message-ID: <560426D0.8070406@suse.de>
 References: <1440679281-13234-1-git-send-email-hare@suse.de>
+ <1440679281-13234-11-git-send-email-hare@suse.de>
+ <1442947380.4132.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0098.outbound.protection.outlook.com ([207.46.100.98]:37629
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752285AbbIXQZa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2015 12:25:30 -0400
-In-Reply-To: <1440679281-13234-1-git-send-email-hare@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:34499 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753320AbbIXQiO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Sep 2015 12:38:14 -0400
+In-Reply-To: <1442947380.4132.15.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: emilne@redhat.com
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 08/27/2015 05:41 AM, Hannes Reinecke wrote:
-> here is an update to the ALUA device handler. 
+On 09/22/2015 08:43 PM, Ewan Milne wrote:
+> On Thu, 2015-08-27 at 14:41 +0200, Hannes Reinecke wrote:
+>> Pass in the buffer as a function argument for submit_rtpg().
+>>
+>> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/device_handler/scsi_dh_alua.c | 20 ++++++++++---------=
+-
+>>  1 file changed, 10 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/sc=
+si/device_handler/scsi_dh_alua.c
+>> index 0636721..9e2b3af 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -137,12 +137,13 @@ static struct request *get_alua_req(struct scs=
+i_device *sdev,
+>>   * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+>>   * @sdev: sdev the command should be sent to
+>>   */
+>> -static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_d=
+h_data *h)
+>> +static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char=
+ *buff,
+>> +			    int bufflen, unsigned char *sense, int flags)
+>>  {
+>>  	struct request *rq;
+>>  	int err =3D 0;
+>> =20
+>> -	rq =3D get_alua_req(sdev, h->buff, h->bufflen, READ);
+>> +	rq =3D get_alua_req(sdev, buff, bufflen, READ);
+>>  	if (!rq) {
+>>  		err =3D DRIVER_BUSY << 24;
+>>  		goto done;
+>> @@ -150,22 +151,21 @@ static unsigned submit_rtpg(struct scsi_device=
+ *sdev, struct alua_dh_data *h)
+>> =20
+>>  	/* Prepare the command. */
+>>  	rq->cmd[0] =3D MAINTENANCE_IN;
+>> -	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+>> +	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+>>  		rq->cmd[1] =3D MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+>>  	else
+>>  		rq->cmd[1] =3D MI_REPORT_TARGET_PGS;
+>> -	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
+>> +	put_unaligned_be32(bufflen, &rq->cmd[6]);
+>>  	rq->cmd_len =3D COMMAND_SIZE(MAINTENANCE_IN);
+>> =20
+>> -	rq->sense =3D h->sense;
+>> +	rq->sense =3D sense;
+>>  	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+>> -	rq->sense_len =3D h->senselen =3D 0;
+>> +	rq->sense_len =3D 0;
+>> =20
+>>  	blk_execute_rq(rq->q, NULL, rq, 1);
+>> -	if (rq->errors) {
+>> +	if (rq->errors)
+>>  		err =3D rq->errors;
+>> -		h->senselen =3D rq->sense_len;
+>> -	}
+>> +
+>>  	blk_put_request(rq);
+>>  done:
+>>  	return err;
+>> @@ -491,7 +491,7 @@ static int alua_rtpg(struct scsi_device *sdev, s=
+truct alua_dh_data *h, int wait_
+>>  		expiry =3D round_jiffies_up(jiffies + h->transition_tmo * HZ);
+>> =20
+>>   retry:
+>> -	retval =3D submit_rtpg(sdev, h);
+>> +	retval =3D submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->fla=
+gs);
+>> =20
+>>  	if (retval) {
+>>  		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+>=20
+> This patch also removes the setting of h->senselen, you should mentio=
+n
+> that in the patch description.  Or, perhaps the removal of h->sensele=
+n
+> should have been done as part of patch 12/23, which removed the sense=
+len
+> field (and the sense buffer field) from the alua_dh_data structure.
 
-Hello Hannes,
+Is already done with the next version of the patchset.
 
-Has this patch series been tested on an initiator system with
-kernel debugging enabled ? The message below appears if I boot
-a kernel on which this patch series has been applied. Sorry that
-I had not found the time before to test this patch series.
+Cheers,
 
-=================================
-[ INFO: inconsistent lock state ]
-sd 23:0:0:66: Attached scsi generic sg55 type 0
-4.2.0-rc8-debug+ #1 Not tainted
----------------------------------
-inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
-ksoftirqd/1/13 [HC1[1]:SC1[1]:HE0:SE0] takes:
- (&(&pg->rtpg_lock)->rlock){?.+...}, at: [<ffffffffa040b78c>] alua_rtpg_queue+0x4c/0x160 [scsi_dh_alua]
-{HARDIRQ-ON-W} state was registered at:
-  [<ffffffff810be862>] __lock_acquire+0xae2/0x1c70
-  [<ffffffff810c027b>] lock_acquire+0xcb/0x290
-  [<ffffffff815070e8>] _raw_spin_lock+0x38/0x50
-  [<ffffffffa040c5da>] alua_check_vpd+0x7da/0x860 [scsi_dh_alua]
-  [<ffffffffa040cfee>] alua_initialize+0xfe/0x340 [scsi_dh_alua]
-  [<ffffffffa040d2de>] alua_bus_attach+0x8e/0xc0 [scsi_dh_alua]
-  [<ffffffffa0026261>] scsi_dh_handler_attach+0x31/0x90 [scsi_mod]
-  [<ffffffffa0026683>] scsi_dh_attach+0x93/0xa0 [scsi_mod]
-  [<ffffffffa01298d2>] multipath_ctr+0x8e2/0xaec [dm_multipath]
-  [<ffffffffa041a324>] dm_table_add_target+0x124/0x370 [dm_mod]
-  [<ffffffffa041d681>] table_load+0x121/0x350 [dm_mod]
-  [<ffffffffa041e259>] ctl_ioctl+0x299/0x520 [dm_mod]
-  [<ffffffffa041e4f3>] dm_ctl_ioctl+0x13/0x20 [dm_mod]
-  [<ffffffff811d1d8d>] do_vfs_ioctl+0x30d/0x580
-  [<ffffffff811d2041>] SyS_ioctl+0x41/0x70
-  [<ffffffff81507cf2>] entry_SYSCALL_64_fastpath+0x16/0x7a
-irq event stamp: 940607
-hardirqs last  enabled at (940606): [<ffffffff81507366>] _raw_spin_unlock_irqrestore+0x36/0x60
-hardirqs last disabled at (940607): [<ffffffff815088ab>] common_interrupt+0x6b/0x70
-softirqs last  enabled at (940536): [<ffffffff8107a035>] __do_softirq+0x345/0x5d0
-softirqs last disabled at (940541): [<ffffffff8107a2e5>] run_ksoftirqd+0x25/0x70
-
-other info that might help us debug this:
- Possible unsafe locking scenario:
-
-       CPU0
-       ----
-  lock(&(&pg->rtpg_lock)->rlock);
-  <Interrupt>
-    lock(&(&pg->rtpg_lock)->rlock);
-
- *** DEADLOCK ***
-
-1 lock held by ksoftirqd/1/13:
- #0:  (rcu_callback){......}, at: [<ffffffff810d6716>] rcu_process_callbacks+0x2b6/0xa50
-
-stack backtrace:
-CPU: 1 PID: 13 Comm: ksoftirqd/1 Not tainted 4.2.0-rc8-debug+ #1
-Hardware name: Dell Inc. PowerEdge R430/03XKDV, BIOS 1.0.2 11/17/2014
- ffffffff824a0c90 ffff88047fc43918 ffffffff814ff6c4 0000000000000000
- ffff88045c66ac80 ffff88047fc43978 ffffffff814fc5a0 0000000000000001
- ffff880400000000 ffff880400000000 ffffffff8102bf6f 0000000000000000
-Call Trace:
- <IRQ>  [<ffffffff814ff6c4>] dump_stack+0x4c/0x65
- [<ffffffff814fc5a0>] print_usage_bug+0x1f2/0x203
- [<ffffffff8102bf6f>] ? save_stack_trace+0x2f/0x50
- [<ffffffff810bcda0>] ? check_usage_backwards+0x110/0x110
- [<ffffffff810bd762>] mark_lock+0x212/0x2a0
- [<ffffffff810be997>] __lock_acquire+0xc17/0x1c70
- [<ffffffff810be29d>] ? __lock_acquire+0x51d/0x1c70
- [<ffffffff810c027b>] lock_acquire+0xcb/0x290
- [<ffffffffa040b78c>] ? alua_rtpg_queue+0x4c/0x160 [scsi_dh_alua]
- [<ffffffff81507a50>] _raw_spin_lock_irqsave+0x50/0x70
- [<ffffffffa040b78c>] ? alua_rtpg_queue+0x4c/0x160 [scsi_dh_alua]
- [<ffffffffa040b78c>] alua_rtpg_queue+0x4c/0x160 [scsi_dh_alua]
- [<ffffffffa040bbed>] alua_check+0xdd/0x270 [scsi_dh_alua]
- [<ffffffffa040bb15>] ? alua_check+0x5/0x270 [scsi_dh_alua]
- [<ffffffffa040bde6>] alua_check_sense+0x66/0x80 [scsi_dh_alua]
- [<ffffffffa0016546>] scsi_check_sense+0x76/0x3e0 [scsi_mod]
- [<ffffffffa0018c4f>] scsi_decide_disposition+0x17f/0x1f0 [scsi_mod]
- [<ffffffffa001cfe7>] scsi_softirq_done+0x57/0x150 [scsi_mod]
- [<ffffffff8127a3ba>] __blk_mq_complete_request+0x8a/0x110
- [<ffffffff8127a456>] blk_mq_complete_request+0x16/0x20
- [<ffffffffa001c048>] scsi_mq_done+0x48/0x1b0 [scsi_mod]
- [<ffffffffa03d10d9>] srp_recv_completion+0x249/0x720 [ib_srp]
- [<ffffffffa02c13b7>] mlx4_ib_cq_comp+0x17/0x20 [mlx4_ib]
- [<ffffffffa00bd8e8>] mlx4_cq_completion+0x38/0x70 [mlx4_core]
- [<ffffffffa00bf1b3>] mlx4_eq_int+0x493/0xcb0 [mlx4_core]
- [<ffffffff810bbbdd>] ? __lock_is_held+0x4d/0x70
- [<ffffffffa00bfa74>] mlx4_msi_x_interrupt+0x14/0x20 [mlx4_core]
- [<ffffffff810cb030>] handle_irq_event_percpu+0x40/0x4b0
- [<ffffffff810cb4e4>] handle_irq_event+0x44/0x70
- [<ffffffff810ce470>] handle_edge_irq+0x90/0x140
- [<ffffffff8101e3d2>] handle_irq+0x22/0x40
- [<ffffffff8150aa11>] do_IRQ+0x51/0xe0
- [<ffffffff811d493c>] ? __d_free+0x1c/0x20
- [<ffffffff815088b0>] common_interrupt+0x70/0x70
- <EOI>  [<ffffffff811ad1d1>] ? set_track+0x61/0x100
- [<ffffffff8150736b>] ? _raw_spin_unlock_irqrestore+0x3b/0x60
- [<ffffffff814fe65d>] __slab_free+0x56/0x1ff
- [<ffffffff811d493c>] ? __d_free+0x1c/0x20
- [<ffffffff811b9987>] ? put_object+0x37/0x60
- [<ffffffff811af9d2>] ? kmem_cache_free+0xb2/0x370
- [<ffffffff811d493c>] ? __d_free+0x1c/0x20
- [<ffffffff811d493c>] ? __d_free+0x1c/0x20
- [<ffffffff811afc7f>] kmem_cache_free+0x35f/0x370
- [<ffffffff811d4920>] ? __d_free_external+0x40/0x40
- [<ffffffff811d493c>] __d_free+0x1c/0x20
- [<ffffffff810d6756>] rcu_process_callbacks+0x2f6/0xa50
- [<ffffffff810d6716>] ? rcu_process_callbacks+0x2b6/0xa50
- [<ffffffff81079dc2>] __do_softirq+0xd2/0x5d0
- [<ffffffff8107a2e5>] run_ksoftirqd+0x25/0x70
- [<ffffffff8109b279>] smpboot_thread_fn+0x139/0x200
- [<ffffffff8109b140>] ? sort_range+0x30/0x30
- [<ffffffff81097878>] kthread+0xf8/0x110
- [<ffffffff81097780>] ? kthread_create_on_node+0x210/0x210
- [<ffffffff8150815f>] ret_from_fork+0x3f/0x70
- [<ffffffff81097780>] ? kthread_create_on_node+0x210/0x210
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
