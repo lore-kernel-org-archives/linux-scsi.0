@@ -1,55 +1,67 @@
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Sat, 26 Sep 2015 00:19:56 +0200
-Message-ID: <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	<4357538.Wlf88yQie6@vostro.rjw.lan>
-	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
-	<2524822.pQu4UKMrlb@vostro.rjw.lan>
-	<20150925214438.GH5951@linux>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20150925214438.GH5951@linux>
-Sender: owner-linux-mm@kvack.org
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Johannes Berg <johannes@sipsolutions.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linaro Kernel Mailman List <linaro-kernel@lists.linaro.org>, QCA ath9k Development <ath9k-devel@qca.qualcomm.com>, Intel Linux Wireless <ilw@linux.intel.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Linux ACPI <linux-acpi@vger.kernel.org>, "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>, "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list:ULTRA-WIDEBAND
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 28/32] cxlflash: Fix to avoid state change collision
+Date: Fri, 25 Sep 2015 17:31:39 -0500
+Message-ID: <78FBC497-AFCC-4B6C-A7D7-D965EA1BF62C@linux.vnet.ibm.com>
+References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443123756-17736-1-git-send-email-mrochs@linux.vnet.ibm.com> <5605B846.5020101@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:45997 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280AbbIYWbm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 18:31:42 -0400
+Received: from localhost
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 25 Sep 2015 18:31:42 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 1B1B7C90048
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 18:22:43 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PMVdhf47382550
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 22:31:39 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PMVcLA021546
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 18:31:39 -0400
+In-Reply-To: <5605B846.5020101@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On Fri, Sep 25, 2015 at 11:44 PM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> On 25-09-15, 22:58, Rafael J. Wysocki wrote:
->> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
->> Initially, all of them are equal to 0.
->>
->> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
->>
->> What's the result?
->
-> But then two CPUs can update the same variable as well, and we must
-> have proper locking in place to fix that.
+> On Sep 25, 2015, at 4:10 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+> On 09/24/2015 02:42 PM, Matthew R. Ochs wrote:
+>> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+>> index ab11ee6..325ba31 100644
+>> --- a/drivers/scsi/cxlflash/main.c
+>> +++ b/drivers/scsi/cxlflash/main.c
+>> @@ -496,6 +496,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+>> 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
+>> 	struct afu *afu = cfg->afu;
+>> 	struct device *dev = &cfg->dev->dev;
+>> +	enum cxlflash_state state;
+>> 	struct afu_cmd *cmd;
+>> 	u32 port_sel = scp->device->channel + 1;
+>> 	int nseg, i, ncount;
+>> @@ -525,7 +526,11 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+>> 	}
+>> 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+>> 
+>> -	switch (cfg->state) {
+>> +	mutex_lock(&cfg->mutex);
+>> +	state = cfg->state;
+>> +	mutex_unlock(&cfg->mutex);
+> 
+> You can't grab a mutex in queuecommand, since it can sleep and queuecommand can be called from soft irq context.
+> 
+> Also, I'm not sure what to think about this patch in general. Obviously state can change immediately after
+> you drop the mutex, and according to Documentation/memory-barriers.txt, memory operations after the unlock can
+> occur before the unlock occurs. Is this a problem?
 
-Right.
+You bring up some good points.
 
-So if you allow something like debugfs to update your structure, how
-do you make sure there is the proper locking?
+I'm going to remove this patch from the set and rework it.
 
-Is that not a problem in all of the places modified by the [2/2]?
 
-How can the future users of the API know what to do to avoid potential
-problems with it?
-
->
-> Anyway, that problem isn't here for sure as its between two
-> unsigned-longs. So, should I just move it to bool and resend ?
-
-I guess it might be more convenient to fold this into the other patch,
-because we seem to be splitting hairs here.
-
-Thanks,
-Rafael
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-matt
