@@ -1,269 +1,163 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v4 08/32] cxlflash: Fix to avoid CXL services during EEH
-Date: Fri, 25 Sep 2015 18:14:12 -0500
-Message-ID: <1443222852-9229-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v4 04/32] cxlflash: Fix potential oops following LUN removal
+Date: Fri, 25 Sep 2015 18:13:26 -0500
+Message-ID: <1443222806-9072-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:50425 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755133AbbIYXOz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:14:55 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.150]:42544 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755180AbbIYXPG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:15:06 -0400
 Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 25 Sep 2015 19:14:54 -0400
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id A8D7F6E8048
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:06:35 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNEqlm48627802
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 23:14:52 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNEoCC000446
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:14:52 -0400
+	Fri, 25 Sep 2015 17:15:06 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 046D51FF0045
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:06:12 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNDgKG8585664
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 16:13:50 -0700
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNESiY025652
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:14:30 -0600
 In-Reply-To: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-During an EEH freeze event, certain CXL services should not be
-called until after the hardware reset has taken place. Doing so
-can result in unnecessary failures and possibly cause other ill
-effects by triggering hardware accesses. This translates to a
-requirement to quiesce all threads that may potentially use CXL
-runtime service during this window. In particular, multiple ioctls
-make use of the CXL services when acting on contexts on behalf of
-the user. Thus, it is essential to 'drain' running ioctls _before_
-proceeding with handling the EEH freeze event.
+When a LUN is removed, the sdev that is associated with the LUN
+remains intact until its reference count drops to 0. In order
+to prevent an sdev from being removed while a context is still
+associated with it, obtain an additional reference per-context
+for each LUN attached to the context.
 
-Create the ability to drain ioctls by wrapping the ioctl handler
-call in a read semaphore and then implementing a small routine that
-obtains the write semaphore, effectively creating a wait point for
-all currently executing ioctls.
+This resolves a potential Oops in the release handler when a
+dealing with a LUN that has already been removed.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h    |  2 +
- drivers/scsi/cxlflash/main.c      | 18 +++++--
- drivers/scsi/cxlflash/superpipe.c | 98 ++++++++++++++++++++++++---------------
- 3 files changed, 77 insertions(+), 41 deletions(-)
+ drivers/scsi/cxlflash/superpipe.c | 35 +++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 1c56037..1abe4e0 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -16,6 +16,7 @@
- #define _CXLFLASH_COMMON_H
- 
- #include <linux/list.h>
-+#include <linux/rwsem.h>
- #include <linux/types.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -110,6 +111,7 @@ struct cxlflash_cfg {
- 	atomic_t recovery_threads;
- 	struct mutex ctx_recovery_mutex;
- 	struct mutex ctx_tbl_list_mutex;
-+	struct rw_semaphore ioctl_rwsem;
- 	struct ctx_info *ctx_tbl[MAX_CONTEXT];
- 	struct list_head ctx_err_recovery; /* contexts w/ recovery pending */
- 	struct file_operations cxl_fops;
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 3e3ccf1..6e85c77 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2311,6 +2311,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	cfg->lr_port = -1;
- 	mutex_init(&cfg->ctx_tbl_list_mutex);
- 	mutex_init(&cfg->ctx_recovery_mutex);
-+	init_rwsem(&cfg->ioctl_rwsem);
- 	INIT_LIST_HEAD(&cfg->ctx_err_recovery);
- 	INIT_LIST_HEAD(&cfg->lluns);
- 
-@@ -2365,6 +2366,19 @@ out_remove:
- }
- 
- /**
-+ * drain_ioctls() - wait until all currently executing ioctls have completed
-+ * @cfg:	Internal structure associated with the host.
-+ *
-+ * Obtain write access to read/write semaphore that wraps ioctl
-+ * handling to 'drain' ioctls currently executing.
-+ */
-+static void drain_ioctls(struct cxlflash_cfg *cfg)
-+{
-+	down_write(&cfg->ioctl_rwsem);
-+	up_write(&cfg->ioctl_rwsem);
-+}
-+
-+/**
-  * cxlflash_pci_error_detected() - called when a PCI error is detected
-  * @pdev:	PCI device struct.
-  * @state:	PCI channel state.
-@@ -2383,16 +2397,14 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
- 	switch (state) {
- 	case pci_channel_io_frozen:
- 		cfg->state = STATE_LIMBO;
--
--		/* Turn off legacy I/O */
- 		scsi_block_requests(cfg->host);
-+		drain_ioctls(cfg);
- 		rc = cxlflash_mark_contexts_error(cfg);
- 		if (unlikely(rc))
- 			dev_err(dev, "%s: Failed to mark user contexts!(%d)\n",
- 				__func__, rc);
- 		term_mc(cfg, UNDO_START);
- 		stop_afu(cfg);
--
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
- 		cfg->state = STATE_FAILTERM;
 diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 28aa9d9..655cbf1 100644
+index 4e44a48..ffa68cc 100644
 --- a/drivers/scsi/cxlflash/superpipe.c
 +++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -1214,6 +1214,46 @@ static const struct file_operations null_fops = {
- };
+@@ -880,6 +880,9 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
+ 			sys_close(lfd);
+ 	}
  
- /**
-+ * check_state() - checks and responds to the current adapter state
-+ * @cfg:	Internal structure associated with the host.
-+ *
-+ * This routine can block and should only be used on process context.
-+ * It assumes that the caller is an ioctl thread and holding the ioctl
-+ * read semaphore. This is temporarily let up across the wait to allow
-+ * for draining actively running ioctls. Also note that when waking up
-+ * from waiting in reset, the state is unknown and must be checked again
-+ * before proceeding.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int check_state(struct cxlflash_cfg *cfg)
-+{
-+	struct device *dev = &cfg->dev->dev;
-+	int rc = 0;
++	/* Release the sdev reference that bound this LUN to the context */
++	scsi_device_put(sdev);
 +
-+retry:
-+	switch (cfg->state) {
-+	case STATE_LIMBO:
-+		dev_dbg(dev, "%s: Limbo state, going to wait...\n", __func__);
-+		up_read(&cfg->ioctl_rwsem);
-+		rc = wait_event_interruptible(cfg->limbo_waitq,
-+					      cfg->state != STATE_LIMBO);
-+		down_read(&cfg->ioctl_rwsem);
-+		if (unlikely(rc))
-+			break;
-+		goto retry;
-+	case STATE_FAILTERM:
-+		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
-+		rc = -ENODEV;
-+		break;
-+	default:
-+		break;
+ out:
+ 	if (put_ctx)
+ 		put_context(ctxi);
+@@ -1287,11 +1290,17 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 			}
+ 	}
+ 
++	rc = scsi_device_get(sdev);
++	if (unlikely(rc)) {
++		dev_err(dev, "%s: Unable to get sdev reference!\n", __func__);
++		goto out;
 +	}
 +
-+	return rc;
-+}
-+
-+/**
-  * cxlflash_disk_attach() - attach a LUN to a context
-  * @sdev:	SCSI device associated with LUN.
-  * @attach:	Attach ioctl data structure.
-@@ -1523,41 +1563,6 @@ err1:
+ 	lun_access = kzalloc(sizeof(*lun_access), GFP_KERNEL);
+ 	if (unlikely(!lun_access)) {
+ 		dev_err(dev, "%s: Unable to allocate lun_access!\n", __func__);
+ 		rc = -ENOMEM;
+-		goto out;
++		goto err0;
+ 	}
+ 
+ 	lun_access->lli = lli;
+@@ -1311,21 +1320,21 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 		dev_err(dev, "%s: Could not initialize context %p\n",
+ 			__func__, ctx);
+ 		rc = -ENODEV;
+-		goto err0;
++		goto err1;
+ 	}
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+ 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
+ 		rc = -EPERM;
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	file = cxl_get_fd(ctx, &cfg->cxl_fops, &fd);
+ 	if (unlikely(fd < 0)) {
+ 		rc = -ENODEV;
+ 		dev_err(dev, "%s: Could not get file descriptor\n", __func__);
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	/* Translate read/write O_* flags from fcntl.h to AFU permission bits */
+@@ -1335,7 +1344,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	if (unlikely(!ctxi)) {
+ 		dev_err(dev, "%s: Failed to create context! (%d)\n",
+ 			__func__, ctxid);
+-		goto err2;
++		goto err3;
+ 	}
+ 
+ 	work = &ctxi->work;
+@@ -1346,13 +1355,13 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	if (unlikely(rc)) {
+ 		dev_dbg(dev, "%s: Could not start context rc=%d\n",
+ 			__func__, rc);
+-		goto err3;
++		goto err4;
+ 	}
+ 
+ 	rc = afu_attach(cfg, ctxi);
+ 	if (unlikely(rc)) {
+ 		dev_err(dev, "%s: Could not attach AFU rc %d\n", __func__, rc);
+-		goto err4;
++		goto err5;
+ 	}
+ 
+ 	/*
+@@ -1388,13 +1397,13 @@ out:
+ 		__func__, ctxid, fd, attach->block_size, rc, attach->last_lba);
+ 	return rc;
+ 
+-err4:
++err5:
+ 	cxl_stop_context(ctx);
+-err3:
++err4:
+ 	put_context(ctxi);
+ 	destroy_context(cfg, ctxi);
+ 	ctxi = NULL;
+-err2:
++err3:
+ 	/*
+ 	 * Here, we're overriding the fops with a dummy all-NULL fops because
+ 	 * fput() calls the release fop, which will cause us to mistakenly
+@@ -1406,10 +1415,12 @@ err2:
+ 	fput(file);
+ 	put_unused_fd(fd);
+ 	fd = -1;
+-err1:
++err2:
+ 	cxl_release_context(ctx);
+-err0:
++err1:
+ 	kfree(lun_access);
++err0:
++	scsi_device_put(sdev);
+ 	goto out;
  }
  
- /**
-- * check_state() - checks and responds to the current adapter state
-- * @cfg:	Internal structure associated with the host.
-- *
-- * This routine can block and should only be used on process context.
-- * Note that when waking up from waiting in limbo, the state is unknown
-- * and must be checked again before proceeding.
-- *
-- * Return: 0 on success, -errno on failure
-- */
--static int check_state(struct cxlflash_cfg *cfg)
--{
--	struct device *dev = &cfg->dev->dev;
--	int rc = 0;
--
--retry:
--	switch (cfg->state) {
--	case STATE_LIMBO:
--		dev_dbg(dev, "%s: Limbo, going to wait...\n", __func__);
--		rc = wait_event_interruptible(cfg->limbo_waitq,
--					      cfg->state != STATE_LIMBO);
--		if (unlikely(rc))
--			break;
--		goto retry;
--	case STATE_FAILTERM:
--		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
--		rc = -ENODEV;
--		break;
--	default:
--		break;
--	}
--
--	return rc;
--}
--
--/**
-  * cxlflash_afu_recover() - initiates AFU recovery
-  * @sdev:	SCSI device associated with LUN.
-  * @recover:	Recover ioctl data structure.
-@@ -1646,9 +1651,14 @@ retry_recover:
- 	/* Test if in error state */
- 	reg = readq_be(&afu->ctrl_map->mbox_r);
- 	if (reg == -1) {
--		dev_dbg(dev, "%s: MMIO read fail! Wait for recovery...\n",
--			__func__);
--		mutex_unlock(&ctxi->mutex);
-+		dev_dbg(dev, "%s: MMIO fail, wait for recovery.\n", __func__);
-+
-+		/*
-+		 * Before checking the state, put back the context obtained with
-+		 * get_context() as it is no longer needed and sleep for a short
-+		 * period of time (see prolog notes).
-+		 */
-+		put_context(ctxi);
- 		ctxi = NULL;
- 		ssleep(1);
- 		rc = check_state(cfg);
-@@ -1967,6 +1977,14 @@ out:
-  * @cmd:	IOCTL command.
-  * @arg:	Userspace ioctl data structure.
-  *
-+ * A read/write semaphore is used to implement a 'drain' of currently
-+ * running ioctls. The read semaphore is taken at the beginning of each
-+ * ioctl thread and released upon concluding execution. Additionally the
-+ * semaphore should be released and then reacquired in any ioctl execution
-+ * path which will wait for an event to occur that is outside the scope of
-+ * the ioctl (i.e. an adapter reset). To drain the ioctls currently running,
-+ * a thread simply needs to acquire the write semaphore.
-+ *
-  * Return: 0 on success, -errno on failure
-  */
- int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-@@ -2001,6 +2019,9 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
- 	{sizeof(struct dk_cxlflash_clone), (sioctl)cxlflash_disk_clone},
- 	};
- 
-+	/* Hold read semaphore so we can drain if needed */
-+	down_read(&cfg->ioctl_rwsem);
-+
- 	/* Restrict command set to physical support only for internal LUN */
- 	if (afu->internal_lun)
- 		switch (cmd) {
-@@ -2082,6 +2103,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
- 	/* fall through to exit */
- 
- cxlflash_ioctl_exit:
-+	up_read(&cfg->ioctl_rwsem);
- 	if (unlikely(rc && known_ioctl))
- 		dev_err(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%llu) "
- 			"returned rc %d\n", __func__,
 -- 
 2.1.0
 
