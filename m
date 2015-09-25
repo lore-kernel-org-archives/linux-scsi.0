@@ -1,26 +1,26 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v4 02/32] cxlflash: Replace magic numbers with literals
-Date: Fri, 25 Sep 2015 18:12:22 -0500
-Message-ID: <1443222742-8995-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v4 03/32] cxlflash: Fix read capacity timeout
+Date: Fri, 25 Sep 2015 18:12:52 -0500
+Message-ID: <1443222772-9033-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:52088 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbbIYXOB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:14:01 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.151]:50389 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389AbbIYXOf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:14:35 -0400
 Received: from localhost
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 25 Sep 2015 19:14:01 -0400
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 05A5038C8041
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:13:59 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNDoR959834576
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 23:13:58 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNDOq8010860
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:13:26 -0400
+	Fri, 25 Sep 2015 17:14:35 -0600
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 0C8DF1FF002D
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:05:42 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNEO0b61669440
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 16:14:32 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNDwbt019406
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:14:00 -0600
 In-Reply-To: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -29,73 +29,91 @@ Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, Manoj Ku
 
 From: Manoj Kumar <kumarmn@us.ibm.com>
 
-Magic numbers are not meaningful and can create confusion. As a
-remedy, replace them with descriptive literals.
+The timeout value for read capacity is too small. Certain devices
+may take longer to respond and thus the command may prematurely
+timeout. Additionally the literal used for the timeout is stale.
 
-Replace 512 with literal MAX_SECTOR_UNIT.
-Replace 5 with literal CMD_RETRIES.
+Update the timeout to 30 seconds (matches the value used in sd.c)
+and rework the timeout literal to a more appropriate description.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/superpipe.c | 6 ++++--
- drivers/scsi/cxlflash/superpipe.h | 3 +++
- drivers/scsi/cxlflash/vlun.c      | 3 ++-
- 3 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/cxlflash/superpipe.c | 9 ++++-----
+ drivers/scsi/cxlflash/superpipe.h | 2 +-
+ drivers/scsi/cxlflash/vlun.c      | 4 ++--
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 05e0ecf..4db15a4 100644
+index 4db15a4..4e44a48 100644
 --- a/drivers/scsi/cxlflash/superpipe.c
 +++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -315,7 +315,8 @@ retry:
+@@ -296,7 +296,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	int rc = 0;
+ 	int result = 0;
+ 	int retry_cnt = 0;
+-	u32 tout = (MC_DISCOVERY_TIMEOUT * HZ);
++	u32 to = CMD_TIMEOUT * HZ;
+ 
+ retry:
+ 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
+@@ -315,8 +315,7 @@ retry:
  		retry_cnt ? "re" : "", scsi_cmd[0]);
  
  	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
--			      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
-+			      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
-+			      0, NULL);
+-			      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
+-			      0, NULL);
++			      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES, 0, NULL);
  
  	if (driver_byte(result) == DRIVER_SENSE) {
  		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-@@ -1375,7 +1376,8 @@ out_attach:
+@@ -1376,8 +1375,8 @@ out_attach:
  	attach->block_size = gli->blk_len;
  	attach->mmio_size = sizeof(afu->afu_map->hosts[0].harea);
  	attach->last_lba = gli->max_lba;
--	attach->max_xfer = (sdev->host->max_sectors * 512) / gli->blk_len;
-+	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT) /
-+		gli->blk_len;
+-	attach->max_xfer = (sdev->host->max_sectors * MAX_SECTOR_UNIT) /
+-		gli->blk_len;
++	attach->max_xfer = sdev->host->max_sectors * MAX_SECTOR_UNIT;
++	attach->max_xfer /= gli->blk_len;
  
  out:
  	attach->adap_fd = fd;
 diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-index d7dc88b..3f7856b 100644
+index 3f7856b..fffb179 100644
 --- a/drivers/scsi/cxlflash/superpipe.h
 +++ b/drivers/scsi/cxlflash/superpipe.h
-@@ -29,6 +29,9 @@ extern struct cxlflash_global global;
+@@ -28,7 +28,7 @@ extern struct cxlflash_global global;
+ */
  #define MC_CHUNK_SIZE     (1 << MC_RHT_NMASK)	/* in LBAs */
  
- #define MC_DISCOVERY_TIMEOUT 5  /* 5 secs */
-+#define CMD_RETRIES 5   /* 5 retries for scsi_execute */
-+
-+#define MAX_SECTOR_UNIT  512 /* max_sector is in 512 byte multiples */
+-#define MC_DISCOVERY_TIMEOUT 5  /* 5 secs */
++#define CMD_TIMEOUT 30  /* 30 secs */
+ #define CMD_RETRIES 5   /* 5 retries for scsi_execute */
  
- #define CHAN2PORT(_x)	((_x) + 1)
- #define PORT2CHAN(_x)	((_x) - 1)
+ #define MAX_SECTOR_UNIT  512 /* max_sector is in 512 byte multiples */
 diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index 6155cb1..6d6608b 100644
+index 6d6608b..68994c4 100644
 --- a/drivers/scsi/cxlflash/vlun.c
 +++ b/drivers/scsi/cxlflash/vlun.c
-@@ -434,7 +434,8 @@ static int write_same16(struct scsi_device *sdev,
+@@ -414,7 +414,7 @@ static int write_same16(struct scsi_device *sdev,
+ 	int ws_limit = SISLITE_MAX_WS_BLOCKS;
+ 	u64 offset = lba;
+ 	int left = nblks;
+-	u32 tout = sdev->request_queue->rq_timeout;
++	u32 to = sdev->request_queue->rq_timeout;
+ 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
+ 	struct device *dev = &cfg->dev->dev;
+ 
+@@ -434,7 +434,7 @@ static int write_same16(struct scsi_device *sdev,
  				   &scsi_cmd[10]);
  
  		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
--				      CMD_BUFSIZE, sense_buf, tout, 5, 0, NULL);
-+				      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
-+				      0, NULL);
+-				      CMD_BUFSIZE, sense_buf, tout, CMD_RETRIES,
++				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
+ 				      0, NULL);
  		if (result) {
  			dev_err_ratelimited(dev, "%s: command failed for "
- 					    "offset %lld result=0x%x\n",
 -- 
 2.1.0
 
