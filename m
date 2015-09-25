@@ -1,28 +1,23 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 2/4] scsi: cleanup scsi/scsi_ioctl.h
-Date: Sat, 26 Sep 2015 01:51:38 +0200
-Message-ID: <5605DE0A.9080607@suse.de>
+Subject: Re: [PATCH v3 3/4] scsi: move all obsolete ioctls to scsi_ioctl.h
+Date: Sat, 26 Sep 2015 01:52:26 +0200
+Message-ID: <5605DE3A.3040206@suse.de>
 References: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
- <1443173264-4105-3-git-send-email-pbonzini@redhat.com>
+ <1443173264-4105-4-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1443173264-4105-3-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <1443173264-4105-4-git-send-email-pbonzini@redhat.com>
+Sender: kvm-owner@vger.kernel.org
 To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
 Cc: bart.vanassche@sandisk.com, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 09/25/2015 11:27 AM, Paolo Bonzini wrote:
-> SCSI_REMOVAL_* goes together with other SCSI command constants in
-> include/scsi/scsi.h.  It is also used outside the implementation
-> of the ioctls (and it is not part of the user API).
->=20
-> scsi_fctargaddress/Scsi_FCTargAddress has had no in-tree use since
-> commit ca61f10ab2b8 ("[SCSI] remove broken driver cpqfc", 2005-10-29)=
-=2E
-> Remove it, just in time for the the tenth anniversary of its demise.
+> Some are in scsi.h.  Keep them together in preparation for exposing t=
+hem
+> in UAPI headers.
 >=20
 > Cc: James Bottomley <jbottomley@parallels.com>
 > Cc: Christoph Hellwig <hch@lst.de>
@@ -30,9 +25,9 @@ On 09/25/2015 11:27 AM, Paolo Bonzini wrote:
 > Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 > Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 > ---
->  include/scsi/scsi.h       | 6 ++++++
->  include/scsi/scsi_ioctl.h | 8 --------
->  2 files changed, 6 insertions(+), 8 deletions(-)
+>  include/scsi/scsi.h       | 20 --------------------
+>  include/scsi/scsi_ioctl.h | 20 ++++++++++++++++++++
+>  2 files changed, 20 insertions(+), 20 deletions(-)
 >=20
 [ .. ]
 
