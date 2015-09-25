@@ -1,163 +1,205 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v4 04/32] cxlflash: Fix potential oops following LUN removal
-Date: Fri, 25 Sep 2015 18:13:26 -0500
-Message-ID: <1443222806-9072-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Subject: [PATCH v4 09/32] cxlflash: Correct naming of limbo state and waitq
+Date: Fri, 25 Sep 2015 18:14:18 -0500
+Message-ID: <1443222858-9267-1-git-send-email-mrochs@linux.vnet.ibm.com>
 References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:42544 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755180AbbIYXPG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:15:06 -0400
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:50438 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755180AbbIYXPC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:15:02 -0400
 Received: from localhost
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 25 Sep 2015 17:15:06 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 046D51FF0045
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:06:12 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNDgKG8585664
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 16:13:50 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNESiY025652
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:14:30 -0600
+	Fri, 25 Sep 2015 19:15:01 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2F8096E803F
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:06:42 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNEwix56885288
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 23:14:58 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNEvHn032577
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 19:14:58 -0400
 In-Reply-To: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-When a LUN is removed, the sdev that is associated with the LUN
-remains intact until its reference count drops to 0. In order
-to prevent an sdev from being removed while a context is still
-associated with it, obtain an additional reference per-context
-for each LUN attached to the context.
-
-This resolves a potential Oops in the release handler when a
-dealing with a LUN that has already been removed.
+Limbo is not an accurate representation of this state and is
+also not consistent with the terminology that other drivers
+use to represent this concept. Rename the state and and its
+associated waitq to 'reset'.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/superpipe.c | 35 +++++++++++++++++++++++------------
- 1 file changed, 23 insertions(+), 12 deletions(-)
+ drivers/scsi/cxlflash/common.h    |  4 ++--
+ drivers/scsi/cxlflash/main.c      | 26 +++++++++++++-------------
+ drivers/scsi/cxlflash/superpipe.c | 14 +++++++-------
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 4e44a48..ffa68cc 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -880,6 +880,9 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
- 			sys_close(lfd);
- 	}
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 1abe4e0..11318de 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -79,7 +79,7 @@ enum cxlflash_init_state {
  
-+	/* Release the sdev reference that bound this LUN to the context */
-+	scsi_device_put(sdev);
-+
- out:
- 	if (put_ctx)
- 		put_context(ctxi);
-@@ -1287,11 +1290,17 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 			}
- 	}
+ enum cxlflash_state {
+ 	STATE_NORMAL,	/* Normal running state, everything good */
+-	STATE_LIMBO,	/* Limbo running state, trying to reset/recover */
++	STATE_RESET,	/* Reset state, trying to reset/recover */
+ 	STATE_FAILTERM	/* Failed/terminating state, error out users/threads */
+ };
  
-+	rc = scsi_device_get(sdev);
-+	if (unlikely(rc)) {
-+		dev_err(dev, "%s: Unable to get sdev reference!\n", __func__);
-+		goto out;
-+	}
-+
- 	lun_access = kzalloc(sizeof(*lun_access), GFP_KERNEL);
- 	if (unlikely(!lun_access)) {
- 		dev_err(dev, "%s: Unable to allocate lun_access!\n", __func__);
- 		rc = -ENOMEM;
--		goto out;
-+		goto err0;
- 	}
+@@ -125,7 +125,7 @@ struct cxlflash_cfg {
  
- 	lun_access->lli = lli;
-@@ -1311,21 +1320,21 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 		dev_err(dev, "%s: Could not initialize context %p\n",
- 			__func__, ctx);
- 		rc = -ENODEV;
--		goto err0;
-+		goto err1;
- 	}
+ 	wait_queue_head_t tmf_waitq;
+ 	bool tmf_active;
+-	wait_queue_head_t limbo_waitq;
++	wait_queue_head_t reset_waitq;
+ 	enum cxlflash_state state;
+ };
  
- 	ctxid = cxl_process_element(ctx);
- 	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
- 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
- 		rc = -EPERM;
--		goto err1;
-+		goto err2;
- 	}
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 6e85c77..8940336 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -382,8 +382,8 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	spin_unlock_irqrestore(&cfg->tmf_waitq.lock, lock_flags);
  
- 	file = cxl_get_fd(ctx, &cfg->cxl_fops, &fd);
- 	if (unlikely(fd < 0)) {
- 		rc = -ENODEV;
- 		dev_err(dev, "%s: Could not get file descriptor\n", __func__);
--		goto err1;
-+		goto err2;
- 	}
+ 	switch (cfg->state) {
+-	case STATE_LIMBO:
+-		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device in limbo!\n",
++	case STATE_RESET:
++		dev_dbg_ratelimited(&cfg->dev->dev, "%s: device is in reset!\n",
+ 				    __func__);
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
+@@ -479,8 +479,8 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+ 		if (unlikely(rcr))
+ 			rc = FAILED;
+ 		break;
+-	case STATE_LIMBO:
+-		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++	case STATE_RESET:
++		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
+ 		if (cfg->state == STATE_NORMAL)
+ 			break;
+ 		/* fall through */
+@@ -519,7 +519,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
  
- 	/* Translate read/write O_* flags from fcntl.h to AFU permission bits */
-@@ -1335,7 +1344,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 	if (unlikely(!ctxi)) {
- 		dev_err(dev, "%s: Failed to create context! (%d)\n",
- 			__func__, ctxid);
--		goto err2;
-+		goto err3;
- 	}
+ 	switch (cfg->state) {
+ 	case STATE_NORMAL:
+-		cfg->state = STATE_LIMBO;
++		cfg->state = STATE_RESET;
+ 		scsi_block_requests(cfg->host);
+ 		cxlflash_mark_contexts_error(cfg);
+ 		rcr = cxlflash_afu_reset(cfg);
+@@ -528,11 +528,11 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 			cfg->state = STATE_FAILTERM;
+ 		} else
+ 			cfg->state = STATE_NORMAL;
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		scsi_unblock_requests(cfg->host);
+ 		break;
+-	case STATE_LIMBO:
+-		wait_event(cfg->limbo_waitq, cfg->state != STATE_LIMBO);
++	case STATE_RESET:
++		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
+ 		if (cfg->state == STATE_NORMAL)
+ 			break;
+ 		/* fall through */
+@@ -705,7 +705,7 @@ static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+ 	struct pci_dev *pdev = cfg->dev;
  
- 	work = &ctxi->work;
-@@ -1346,13 +1355,13 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 	if (unlikely(rc)) {
- 		dev_dbg(dev, "%s: Could not start context rc=%d\n",
- 			__func__, rc);
--		goto err3;
-+		goto err4;
- 	}
+ 	if (pci_channel_offline(pdev))
+-		wait_event_timeout(cfg->limbo_waitq,
++		wait_event_timeout(cfg->reset_waitq,
+ 				   !pci_channel_offline(pdev),
+ 				   CXLFLASH_PCI_ERROR_RECOVERY_TIMEOUT);
+ }
+@@ -2304,7 +2304,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	cfg->mcctx = NULL;
  
- 	rc = afu_attach(cfg, ctxi);
- 	if (unlikely(rc)) {
- 		dev_err(dev, "%s: Could not attach AFU rc %d\n", __func__, rc);
--		goto err4;
-+		goto err5;
- 	}
+ 	init_waitqueue_head(&cfg->tmf_waitq);
+-	init_waitqueue_head(&cfg->limbo_waitq);
++	init_waitqueue_head(&cfg->reset_waitq);
  
- 	/*
-@@ -1388,13 +1397,13 @@ out:
- 		__func__, ctxid, fd, attach->block_size, rc, attach->last_lba);
- 	return rc;
+ 	INIT_WORK(&cfg->work_q, cxlflash_worker_thread);
+ 	cfg->lr_state = LINK_RESET_INVALID;
+@@ -2396,7 +2396,7 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
  
--err4:
-+err5:
- 	cxl_stop_context(ctx);
--err3:
-+err4:
- 	put_context(ctxi);
- 	destroy_context(cfg, ctxi);
- 	ctxi = NULL;
--err2:
-+err3:
- 	/*
- 	 * Here, we're overriding the fops with a dummy all-NULL fops because
- 	 * fput() calls the release fop, which will cause us to mistakenly
-@@ -1406,10 +1415,12 @@ err2:
- 	fput(file);
- 	put_unused_fd(fd);
- 	fd = -1;
--err1:
-+err2:
- 	cxl_release_context(ctx);
--err0:
-+err1:
- 	kfree(lun_access);
-+err0:
-+	scsi_device_put(sdev);
- 	goto out;
+ 	switch (state) {
+ 	case pci_channel_io_frozen:
+-		cfg->state = STATE_LIMBO;
++		cfg->state = STATE_RESET;
+ 		scsi_block_requests(cfg->host);
+ 		drain_ioctls(cfg);
+ 		rc = cxlflash_mark_contexts_error(cfg);
+@@ -2408,7 +2408,7 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+ 		return PCI_ERS_RESULT_NEED_RESET;
+ 	case pci_channel_io_perm_failure:
+ 		cfg->state = STATE_FAILTERM;
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		scsi_unblock_requests(cfg->host);
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	default:
+@@ -2455,7 +2455,7 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
+ 	dev_dbg(dev, "%s: pdev=%p\n", __func__, pdev);
+ 
+ 	cfg->state = STATE_NORMAL;
+-	wake_up_all(&cfg->limbo_waitq);
++	wake_up_all(&cfg->reset_waitq);
+ 	scsi_unblock_requests(cfg->host);
  }
  
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 655cbf1..8a7ec5d 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -100,7 +100,7 @@ void cxlflash_stop_term_user_contexts(struct cxlflash_cfg *cfg)
+ 
+ 		dev_dbg(dev, "%s: Wait for user contexts to quiesce...\n",
+ 			__func__);
+-		wake_up_all(&cfg->limbo_waitq);
++		wake_up_all(&cfg->reset_waitq);
+ 		ssleep(1);
+ 	}
+ }
+@@ -1233,11 +1233,11 @@ static int check_state(struct cxlflash_cfg *cfg)
+ 
+ retry:
+ 	switch (cfg->state) {
+-	case STATE_LIMBO:
+-		dev_dbg(dev, "%s: Limbo state, going to wait...\n", __func__);
++	case STATE_RESET:
++		dev_dbg(dev, "%s: Reset state, going to wait...\n", __func__);
+ 		up_read(&cfg->ioctl_rwsem);
+-		rc = wait_event_interruptible(cfg->limbo_waitq,
+-					      cfg->state != STATE_LIMBO);
++		rc = wait_event_interruptible(cfg->reset_waitq,
++					      cfg->state != STATE_RESET);
+ 		down_read(&cfg->ioctl_rwsem);
+ 		if (unlikely(rc))
+ 			break;
+@@ -1578,10 +1578,10 @@ err1:
+  * quite possible for this routine to act as the kernel's EEH detection
+  * source (MMIO read of mbox_r). Because of this, there is a window of
+  * time where an EEH might have been detected but not yet 'serviced'
+- * (callback invoked, causing the device to enter limbo state). To avoid
++ * (callback invoked, causing the device to enter reset state). To avoid
+  * looping in this routine during that window, a 1 second sleep is in place
+  * between the time the MMIO failure is detected and the time a wait on the
+- * limbo wait queue is attempted via check_state().
++ * reset wait queue is attempted via check_state().
+  *
+  * Return: 0 on success, -errno on failure
+  */
 -- 
 2.1.0
 
