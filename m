@@ -1,189 +1,64 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v4 32/32] cxlflash: Fix to avoid potential deadlock on EEH
-Date: Fri, 25 Sep 2015 18:19:57 -0500
-Message-ID: <1443223197-10153-1-git-send-email-mrochs@linux.vnet.ibm.com>
-References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:47283 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755116AbbIYXVj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 19:21:39 -0400
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Fri, 25 Sep 2015 17:21:39 -0600
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 7BDCD1FF002D
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:12:46 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PNKHfx3998002
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 16:20:25 -0700
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PNL3uO005241
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:21:04 -0600
-In-Reply-To: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 1/4] scsi: remove old-style type names from sg.h
+Date: Sat, 26 Sep 2015 01:50:10 +0200
+Message-ID: <5605DDB2.6070406@suse.de>
+References: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
+ <1443173264-4105-2-git-send-email-pbonzini@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1443173264-4105-2-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Cc: bart.vanassche@sandisk.com, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-Ioctl threads that use scsi_execute() can run for an excessive amount
-of time due to the fact that they have lengthy timeouts and retry logic
-built in. Under normal operation this is not an issue. However, once EEH
-enters the picture, a long execution time coupled with the possibility
-that a timeout can trigger entry to the driver via registered reset
-callbacks becomes a liability.
+On 09/25/2015 11:27 AM, Paolo Bonzini wrote:
+> These will not be exported by the new linux/sg.h header, and scsi/sg.=
+h will
+> not have any user API after linux/sg.h is created.  Since they have n=
+o
+> user in the kernel, they can be zapped.
+>=20
+> Cc: James Bottomley <jbottomley@parallels.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: linux-scsi@vger.kernel.org
+> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> ---
+>  include/scsi/sg.h | 6 ------
+>  1 file changed, 6 deletions(-)
+>=20
+> diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+> index 3afec7032448..370c78c37926 100644
+> --- a/include/scsi/sg.h
+> +++ b/include/scsi/sg.h
+> @@ -207,12 +207,6 @@ typedef struct sg_req_info { /* used by SG_GET_R=
+EQUEST_TABLE ioctl() */
+> =20
+>  #define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatib=
+ility */
+> =20
+> -/* Alternate style type names, "..._t" variants preferred */
+> -typedef struct sg_io_hdr Sg_io_hdr;
+> -typedef struct sg_io_vec Sg_io_vec;
+> -typedef struct sg_scsi_id Sg_scsi_id;
+> -typedef struct sg_req_info Sg_req_info;
+> -
+> =20
+>  /* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv=
+vvvvv */
+>  /*   The older SG interface based on the 'sg_header' structure follo=
+ws.   */
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-In particular, a deadlock can occur when an EEH event is encountered
-while in running in scsi_execute(). As part of the recovery, the EEH
-handler drains all currently running ioctls, waiting until they have
-completed before proceeding with a reset. As the scsi_execute()'s are
-situated on the ioctl path, the EEH handler will wait until they (and
-the remainder of the ioctl handler they're associated with) have
-completed. Normally this would not be much of an issue aside from the
-longer recovery period. Unfortunately, the scsi_execute() triggers a
-reset when it times out. The reset handler will see that the device is
-already being reset and wait until that reset completed. This creates
-a condition where the EEH handler becomes stuck, infinitely waiting for
-the ioctl thread to complete.
+Cheers,
 
-To avoid this behavior, temporarily unmark the scsi_execute() threads
-as an ioctl thread by releasing the ioctl read semaphore. This allows
-the EEH handler to proceed with a recovery while the thread is still
-running. Once the scsi_execute() returns, the ioctl read semaphore is
-reacquired and the adapter state is rechecked in case it changed while
-inside of scsi_execute(). The state check will wait if the adapter is
-still being recovered or returns a failure if the recovery failed. In
-the event that the adapter reset failed, the failure is simply returned
-as the ioctl would be unable to continue.
-
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/superpipe.c | 30 +++++++++++++++++++++++++++++-
- drivers/scsi/cxlflash/superpipe.h |  2 ++
- drivers/scsi/cxlflash/vlun.c      | 29 +++++++++++++++++++++++++++++
- 3 files changed, 60 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index f625e07..8af7cdc 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -283,6 +283,24 @@ out:
-  * @sdev:	SCSI device associated with LUN.
-  * @lli:	LUN destined for capacity request.
-  *
-+ * The READ_CAP16 can take quite a while to complete. Should an EEH occur while
-+ * in scsi_execute(), the EEH handler will attempt to recover. As part of the
-+ * recovery, the handler drains all currently running ioctls, waiting until they
-+ * have completed before proceeding with a reset. As this routine is used on the
-+ * ioctl path, this can create a condition where the EEH handler becomes stuck,
-+ * infinitely waiting for this ioctl thread. To avoid this behavior, temporarily
-+ * unmark this thread as an ioctl thread by releasing the ioctl read semaphore.
-+ * This will allow the EEH handler to proceed with a recovery while this thread
-+ * is still running. Once the scsi_execute() returns, reacquire the ioctl read
-+ * semaphore and check the adapter state in case it changed while inside of
-+ * scsi_execute(). The state check will wait if the adapter is still being
-+ * recovered or return a failure if the recovery failed. In the event that the
-+ * adapter reset failed, simply return the failure as the ioctl would be unable
-+ * to continue.
-+ *
-+ * Note that the above puts a requirement on this routine to only be called on
-+ * an ioctl thread.
-+ *
-  * Return: 0 on success, -errno on failure
-  */
- static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
-@@ -314,8 +332,18 @@ retry:
- 	dev_dbg(dev, "%s: %ssending cmd(0x%x)\n", __func__,
- 		retry_cnt ? "re" : "", scsi_cmd[0]);
- 
-+	/* Drop the ioctl read semahpore across lengthy call */
-+	up_read(&cfg->ioctl_rwsem);
- 	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
- 			      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES, 0, NULL);
-+	down_read(&cfg->ioctl_rwsem);
-+	rc = check_state(cfg);
-+	if (rc) {
-+		dev_err(dev, "%s: Failed state! result=0x08%X\n",
-+			__func__, result);
-+		rc = -ENODEV;
-+		goto out;
-+	}
- 
- 	if (driver_byte(result) == DRIVER_SENSE) {
- 		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-@@ -1221,7 +1249,7 @@ static const struct file_operations null_fops = {
-  *
-  * Return: 0 on success, -errno on failure
-  */
--static int check_state(struct cxlflash_cfg *cfg)
-+int check_state(struct cxlflash_cfg *cfg)
- {
- 	struct device *dev = &cfg->dev->dev;
- 	int rc = 0;
-diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-index 7df88ee..06a805a 100644
---- a/drivers/scsi/cxlflash/superpipe.h
-+++ b/drivers/scsi/cxlflash/superpipe.h
-@@ -147,4 +147,6 @@ void cxlflash_ba_terminate(struct ba_lun *);
- 
- int cxlflash_manage_lun(struct scsi_device *, struct dk_cxlflash_manage_lun *);
- 
-+int check_state(struct cxlflash_cfg *);
-+
- #endif /* ifndef _CXLFLASH_SUPERPIPE_H */
-diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index b0eaf55..a53f583 100644
---- a/drivers/scsi/cxlflash/vlun.c
-+++ b/drivers/scsi/cxlflash/vlun.c
-@@ -400,6 +400,24 @@ static int init_vlun(struct llun_info *lli)
-  * @lba:	Logical block address to start write same.
-  * @nblks:	Number of logical blocks to write same.
-  *
-+ * The SCSI WRITE_SAME16 can take quite a while to complete. Should an EEH occur
-+ * while in scsi_execute(), the EEH handler will attempt to recover. As part of
-+ * the recovery, the handler drains all currently running ioctls, waiting until
-+ * they have completed before proceeding with a reset. As this routine is used
-+ * on the ioctl path, this can create a condition where the EEH handler becomes
-+ * stuck, infinitely waiting for this ioctl thread. To avoid this behavior,
-+ * temporarily unmark this thread as an ioctl thread by releasing the ioctl read
-+ * semaphore. This will allow the EEH handler to proceed with a recovery while
-+ * this thread is still running. Once the scsi_execute() returns, reacquire the
-+ * ioctl read semaphore and check the adapter state in case it changed while
-+ * inside of scsi_execute(). The state check will wait if the adapter is still
-+ * being recovered or return a failure if the recovery failed. In the event that
-+ * the adapter reset failed, simply return the failure as the ioctl would be
-+ * unable to continue.
-+ *
-+ * Note that the above puts a requirement on this routine to only be called on
-+ * an ioctl thread.
-+ *
-  * Return: 0 on success, -errno on failure
-  */
- static int write_same16(struct scsi_device *sdev,
-@@ -433,9 +451,20 @@ static int write_same16(struct scsi_device *sdev,
- 		put_unaligned_be32(ws_limit < left ? ws_limit : left,
- 				   &scsi_cmd[10]);
- 
-+		/* Drop the ioctl read semahpore across lengthy call */
-+		up_read(&cfg->ioctl_rwsem);
- 		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
- 				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
- 				      0, NULL);
-+		down_read(&cfg->ioctl_rwsem);
-+		rc = check_state(cfg);
-+		if (rc) {
-+			dev_err(dev, "%s: Failed state! result=0x08%X\n",
-+				__func__, result);
-+			rc = -ENODEV;
-+			goto out;
-+		}
-+
- 		if (result) {
- 			dev_err_ratelimited(dev, "%s: command failed for "
- 					    "offset %lld result=0x%x\n",
--- 
-2.1.0
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
