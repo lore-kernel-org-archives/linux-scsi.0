@@ -1,71 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] Scsi: a100u2w.c: Use module_pci_driver
-Date: Fri, 25 Sep 2015 17:33:17 +0200
-Message-ID: <5605693D.9030006@suse.de>
-References: <1443193731-12587-1-git-send-email-shraddha.6596@gmail.com>
- <1443193731-12587-4-git-send-email-shraddha.6596@gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Bugs in multipath scsi in 4.3-rc2
+Date: Fri, 25 Sep 2015 09:28:12 -0700
+Message-ID: <5605761C.4070304@sandisk.com>
+References: <20150925121636.GC12540@fergus.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41399 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932213AbbIYPdV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Sep 2015 11:33:21 -0400
-In-Reply-To: <1443193731-12587-4-git-send-email-shraddha.6596@gmail.com>
+Received: from mail-bn1bon0097.outbound.protection.outlook.com ([157.56.111.97]:16208
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755763AbbIYQ2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Sep 2015 12:28:17 -0400
+In-Reply-To: <20150925121636.GC12540@fergus.ozlabs.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shraddha Barke <shraddha.6596@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Oliver Neukum <oliver@neukum.org>
-Cc: linux-scsi@vger.kernel.org
+To: Paul Mackerras <paulus@ozlabs.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 09/25/2015 05:08 PM, Shraddha Barke wrote:
-> Use module_pci_driver for drivers whose init and exit functions
-> only register and unregister respectively
->=20
-> Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
-> ---
->  drivers/scsi/a100u2w.c | 14 +-------------
->  1 file changed, 1 insertion(+), 13 deletions(-)
->=20
-> diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-> index 8086bd0..5ef776c 100644
-> --- a/drivers/scsi/a100u2w.c
-> +++ b/drivers/scsi/a100u2w.c
-> @@ -1222,19 +1222,7 @@ static struct pci_driver inia100_pci_driver =3D=
- {
->  	.remove		=3D inia100_remove_one,
->  };
-> =20
-> -static int __init inia100_init(void)
-> -{
-> -	return pci_register_driver(&inia100_pci_driver);
-> -}
-> -
-> -static void __exit inia100_exit(void)
-> -{
-> -	pci_unregister_driver(&inia100_pci_driver);
-> -}
-> -
->  MODULE_DESCRIPTION("Initio A100U2W SCSI driver");
->  MODULE_AUTHOR("Initio Corporation");
->  MODULE_LICENSE("Dual BSD/GPL");
-> -
-> -module_init(inia100_init);
-> -module_exit(inia100_exit);
-> +module_pci_driver(inia100_pci_driver);
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 09/25/2015 05:16 AM, Paul Mackerras wrote:
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index edb044a..86a3063 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -111,7 +111,7 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
+>
+>   	dh = __scsi_dh_lookup(name);
+>   	if (!dh) {
+> -		request_module(name);
+> +		request_module("scsi_dh_%s", name);
+>   		dh = __scsi_dh_lookup(name);
+>   	}
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tested-by: Bart Van Assche <bart.vanassche@sandisk.com>
