@@ -1,72 +1,73 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
-	'global_lock'
-Date: Fri, 25 Sep 2015 09:41:37 -0700
-Message-ID: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, QCA ath9k Development <ath9k-devel-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Intel Linux Wireless <ilw-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-edac-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 08/32] cxlflash: Fix to avoid CXL services during EEH
+Date: Fri, 25 Sep 2015 12:09:51 -0500
+Message-ID: <ACF85932-A3A7-42C1-9655-D3C571C84F9D@linux.vnet.ibm.com>
+References: <1443123193-16498-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443123485-16808-1-git-send-email-mrochs@linux.vnet.ibm.com> <5604A20C.4090000@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:49087 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbbIYRKv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 13:10:51 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 25 Sep 2015 13:10:50 -0400
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id F3E346E8040
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 13:02:31 -0400 (EDT)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8PHAegu61276340
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 17:10:48 GMT
+Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8PHAEfb006447
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2015 13:10:16 -0400
+In-Reply-To: <5604A20C.4090000@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-global_lock is defined as an unsigned long and accessing only its lower
-32 bits from sysfs is incorrect, as we need to consider other 32 bits
-for big endian 64 bit systems. There are no such platforms yet, but the
-code needs to be robust for such a case.
+> On Sep 24, 2015, at 8:23 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+> On 09/24/2015 02:38 PM, Matthew R. Ochs wrote:
+>> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+>> index 3e3ccf1..6e85c77 100644
+>> --- a/drivers/scsi/cxlflash/main.c
+>> +++ b/drivers/scsi/cxlflash/main.c
+>> @@ -2383,16 +2397,14 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+>> 	switch (state) {
+>> 	case pci_channel_io_frozen:
+>> 		cfg->state = STATE_LIMBO;
+>> -
+>> -		/* Turn off legacy I/O */
+>> 		scsi_block_requests(cfg->host);
+>> +		drain_ioctls(cfg);
+> 
+> I don't see this addressing the deadlock with an outstanding read_cap16 during EEH I identified
+> in the previous review. Am I missing something here?
 
-Fix that by passing a local variable to debugfs_create_bool() and
-assigning its value to global_lock later.
+I'll submit this in a separate patch in v4.
 
-Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
----
-V3->V4:
-- Create a local variable instead of changing type of global_lock
-  (Rafael)
-- Drop the stable tag
-- BCC'd a lot of people (rather than cc'ing them) to make sure
-  - the series reaches them
-  - mailing lists do not block the patchset due to long cc list
-  - and we don't spam the BCC'd people for every reply
----
- drivers/acpi/ec_sys.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>> /**
+>> + * check_state() - checks and responds to the current adapter state
+>> + * @cfg:	Internal structure associated with the host.
+>> + * @ioctl:	Indicates if on an ioctl thread.
+>> + *
+>> + * This routine can block and should only be used on process context.
+>> + * When blocking on an ioctl thread, the ioctl read semaphore should be
+>> + * let up to allow for draining actively running ioctls. Also note that
+>> + * when waking up from waiting in reset, the state is unknown and must
+>> + * be checked again before proceeding.
+>> + *
+>> + * Return: 0 on success, -errno on failure
+>> + */
+>> +static int check_state(struct cxlflash_cfg *cfg, bool ioctl)
+> 
+> Looks like you missed this cleanup. The second parameter is not needed, since all
+> the callers set it to true.
 
-diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
-index b4c216bab22b..b44b91331a56 100644
---- a/drivers/acpi/ec_sys.c
-+++ b/drivers/acpi/ec_sys.c
-@@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
- 	struct dentry *dev_dir;
- 	char name[64];
- 	umode_t mode = 0400;
-+	u32 val;
- 
- 	if (ec_device_count == 0) {
- 		acpi_ec_debugfs_dir = debugfs_create_dir("ec", NULL);
-@@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
- 
- 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
- 		goto error;
--	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
--				 (u32 *)&first_ec->global_lock))
-+	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
- 		goto error;
- 
-+	first_ec->global_lock = val;
-+
- 	if (write_support)
- 		mode = 0600;
- 	if (!debugfs_create_file("io", mode, dev_dir, ec, &acpi_ec_io_ops))
--- 
-2.4.0
+Yep, this was my mistake. I'll correct in a v4 as the change will
+ripple to the next patch in the series.
+
