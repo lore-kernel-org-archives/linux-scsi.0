@@ -1,39 +1,44 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 4/4] scsi: provide UAPI version of scsi/sg.h and
- scsi/scsi_ioctl.h
-Date: Fri, 25 Sep 2015 10:44:56 +0200
-Message-ID: <56050988.5000504@redhat.com>
-References: <1442497338-17019-1-git-send-email-pbonzini@redhat.com>
- <1442497647-17778-1-git-send-email-pbonzini@redhat.com>
- <55FADCFF.5000104@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38254 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073AbbIYIpL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2015 04:45:11 -0400
-In-Reply-To: <55FADCFF.5000104@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH v3 1/4] scsi: remove old-style type names from sg.h
+Date: Fri, 25 Sep 2015 11:27:41 +0200
+Message-ID: <1443173264-4105-2-git-send-email-pbonzini@redhat.com>
+References: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Cc: bart.vanassche@sandisk.com, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, linux-kernel@vger.kernel.org
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+These will not be exported by the new linux/sg.h header, and scsi/sg.h will
+not have any user API after linux/sg.h is created.  Since they have no
+user in the kernel, they can be zapped.
 
+Cc: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ include/scsi/sg.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-On 17/09/2015 17:32, Bart Van Assche wrote:
-> 
->> +
->> +#ifndef __KERNEL__
->> +/* Keep in sync with SG_DEFAULT_TIMEOUT of scsi/sg.h  */
->>   #define SG_DEFAULT_TIMEOUT    (60*HZ)         /* HZ == 'jiffies in 1
->> second' */
->>   #endif
-> 
-> Is it useful and/or necessary to export this constant ? To me this looks
-> like an implementation aspect rather than an aspect of the scsi-sg API.
-
-That's fine, I can remove it.
-
-Paolo
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 3afec7032448..370c78c37926 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -207,12 +207,6 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
+ 
+ #define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatibility */
+ 
+-/* Alternate style type names, "..._t" variants preferred */
+-typedef struct sg_io_hdr Sg_io_hdr;
+-typedef struct sg_io_vec Sg_io_vec;
+-typedef struct sg_scsi_id Sg_scsi_id;
+-typedef struct sg_req_info Sg_req_info;
+-
+ 
+ /* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv */
+ /*   The older SG interface based on the 'sg_header' structure follows.   */
+-- 
+2.5.0
