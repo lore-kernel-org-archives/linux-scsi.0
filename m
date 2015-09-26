@@ -1,97 +1,59 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Sat, 26 Sep 2015 15:57:03 +0930
-Message-ID: <56063AB7.9030309@internode.on.net>
-References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net>
+From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
+	'global_lock'
+Date: Sat, 26 Sep 2015 11:40:00 -0700
+Message-ID: <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+	<4357538.Wlf88yQie6@vostro.rjw.lan>
+	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
+	<2524822.pQu4UKMrlb@vostro.rjw.lan> <20150925214438.GH5951@linux>
+	<CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <560390A1.5060503@internode.on.net>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, Ballabio Dario <dario.ballabio@emc.com>, Christoph Hellwig <hch@infradead.org>, Dario Ballabio <ballabio_dario@emc.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <CAJZ5v0i+xJ4U13vCVsvXc7S8wP0AokbmNXPidBkDwbjXMM8fCw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Linaro Kernel Mailman List <linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, "open list:TARGET SUBSYSTEM" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, QCA ath9k Development <ath9k-devel-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Intel Linux Wireless <ilw-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:AMD IOMMU (AMD-VI)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "open list:BLUETOOTH DRIVERS" <linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netd>
 List-Id: linux-scsi@vger.kernel.org
 
+On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> So if you allow something like debugfs to update your structure, how
+> do you make sure there is the proper locking?
 
+Not really sure at all.. Isn't there some debugfs locking that will
+jump in, to avoid updation of fields to the same device?
 
-Arthur Marsh wrote on 24/09/15 15:26:
+> Is that not a problem in all of the places modified by the [2/2]?
+
+Right, but its not new AFAICT.
+
+We already have u32 fields in those structs and on 64 bit machines
+we have the same read-update-write problems for two consecutive
+u32's. Right?
+
+> How can the future users of the API know what to do to avoid potential
+> problems with it?
+
+No idea really :)
+
+>> Anyway, that problem isn't here for sure as its between two
+>> unsigned-longs. So, should I just move it to bool and resend ?
 >
->
-> Jiang Liu wrote on 24/09/15 13:58:
->
->> Hi James,
->>     Thanks for review. How about the attached patch which addresses
->> the three suggestions from you?
->> Thanks!
->> Gerry
->
-> I've applied the patch, rebuilt the kernel and verified that it allows
-> unloading of the eata module and reloading it, as well as a successful
-> kexec.
->
-> Regards,
->
-> Arthur.
+> I guess it might be more convenient to fold this into the other patch,
+> because we seem to be splitting hairs here.
 
-After some more thorough testing I've encountered an ongoing problem 
-trying to use kexec with filesystems mounted with the eata driver.
+I can and that's what I did. But then Arnd asked me to separate it
+out. I can fold it back if that's what you want.
 
-If I boot up and have the eata driver loaded but no filesystem check or 
-mounting of filesystems on the disk attached to the DPT2044W controller, 
-then attempt a kexec reboot I get the reboot pausing after the 
-"synchronizing scsi cache" messages and getting the errors that I have 
-included as pictures in my previous reports.
-
-If I do a normal boot which includes eata being loaded, the disk 
-attached to the DPT2044W controller having its filesystems checked and 
-mounted, then attempt a kexec reboot, I get the reboot pausing after the 
-"synchronizing SCSI cache" messages as before.
-
-If I un-mount the filesystems on the disk attached to the DPT2044W 
-controller after start-up and try a reboot I get the same problem.
-
-If I do modprobe -r eata after un-mounting the filesystems on the disk 
-attached to the DPT2044W controller after a start-up kexec *works fine*.
-
-If I do:
-
-start-up
-un-mount filesystems on disk attached to DPT2044W controller
-modprobe -r eata
-modprobe eata
-fsck -a of filesystems on disk attached to DPT2044W controller
-mount filesystems
-
-then a kexec reboot works fine.
-
-I did some more experimenting and found a workaround:
-
-I was unable to blacklist the eata module but if I did:
-
-modprobe -r eata
-modprobe eata
-
-in a cron job before the fsck and mount commands then
-I could then perform a kexec reboot successfully.
-
-I also verified that if I did:
-
-modprobe -r eata
-
-after eata was loaded on boot-up without any fsck or mounting of 
-filesystems on the disk attached to the DPT2044W controller using the 
-eata the kexec reboot worked fine.
-
-In summary:
-
-if eata is loaded kexec reboot will fail unless a modprobe -r eata is 
-done either manually or by a cron job.
-
-if a modprobe -r eata has been done, then even if I modprobe eata and 
-fsck and mount filesystems, kexec reboot works.
-
-Any suggestions for further tests or checks welcome.
-
-Arthur.
+--
+viresh
