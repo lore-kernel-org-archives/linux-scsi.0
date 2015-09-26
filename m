@@ -1,51 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 4/4] scsi: provide UAPI version of scsi/sg.h and
- scsi/scsi_ioctl.h
-Date: Sat, 26 Sep 2015 01:55:47 +0200
-Message-ID: <5605DF03.5080204@suse.de>
-References: <1443173264-4105-1-git-send-email-pbonzini@redhat.com>
- <1443173264-4105-5-git-send-email-pbonzini@redhat.com>
+From: Paul Mackerras <paulus@ozlabs.org>
+Subject: [PATCH] scsi_dh: Use the correct module name when loading device
+ handler
+Date: Sat, 26 Sep 2015 10:19:15 +1000
+Message-ID: <20150926001915.GD12540@fergus.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1443173264-4105-5-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: bart.vanassche@sandisk.com, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:38132 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887AbbIZATc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Sep 2015 20:19:32 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-On 09/25/2015 11:27 AM, Paolo Bonzini wrote:
-> Provide a UAPI version of the header in the kernel, making it easier
-> for interested projects to use an up-to-date version of the header.
->=20
-> The new headers are placed under uapi/linux/ so as not to conflict
-> with the glibc-provided headers in /usr/include/scsi.
->=20
-> /dev/sgN default values are implementation aspects, and are moved to
-> drivers/scsi/sg.c instead (together with e.g. SG_ALLOW_DIO_DEF).
-> However, SG_SCATTER_SZ is used by Wine so it is kept in linux/sg.h
-> SG_MAX_QUEUE could also be useful.
->=20
-> struct scsi_ioctl_command and struct scsi_idlun used to be under
-> "#ifdef __KERNEL__", but they are actually useful for userspace as
-> well.  Add them to the new header.
->=20
-> Cc: James Bottomley <jbottomley@parallels.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: Bart Van Assche <bart.vanassche@sandisk.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
-[ .. ]
+This fixes a bug in recent kernels which results in failure to boot
+on systems that have multipath SCSI disks.  I observed this failure
+on a POWER8 server where all the disks are multipath SCSI disks.
+The symptoms are several messages like this on the console:
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+[    3.018700] device-mapper: table: 253:0: multipath: error attaching hardware handler
+[    3.018828] device-mapper: ioctl: error adding target to table
 
-Cheers,
+and the system does not find its disks, and therefore fails to boot.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Bisection revealed that the bug was introduced in commit 566079c849cf,
+"dm-mpath, scsi_dh: request scsi_dh modules in scsi_dh, not dm-mpath".
+The specific reason for the failure is that where we previously loaded
+the "scsi_dh_alua" module, we are now trying to load the "alua" module,
+which doesn't exist.
+
+To fix this, we change the request_module call in scsi_dh_lookup()
+to prepend "scsi_dh_" to the name, just like the old code in
+drivers/md/dm-mpath.c:parse_hw_handler() used to do.
+
+Fixes: 566079c849cf
+Signed-off-by: Paul Mackerras <paulus@ozlabs.org>
+---
+ drivers/scsi/scsi_dh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index edb044a..0a2168e 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -111,7 +111,7 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
+ 
+ 	dh = __scsi_dh_lookup(name);
+ 	if (!dh) {
+-		request_module(name);
++		request_module("scsi_dh_%s", name);
+ 		dh = __scsi_dh_lookup(name);
+ 	}
+ 
+-- 
+2.1.4
+
