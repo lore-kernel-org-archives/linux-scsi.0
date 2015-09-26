@@ -1,65 +1,65 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of
-	'global_lock'
-Date: Sat, 26 Sep 2015 12:52:08 -0700
-Message-ID: <1443297128.2181.11.camel@HansenPartnership.com>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
-	<4357538.Wlf88yQie6@vostro.rjw.lan>
-	<CAKohpok2Z2m7GZt1GzZzofeHEioF=XJEq8YVgtY=VtS9tmpb_Q@mail.gmail.com>
-	<2524822.pQu4UKMrlb@vostro.rjw.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <2524822.pQu4UKMrlb-sKB8Sp2ER+y1GS7QM15AGw@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>
-Cc: "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO
-	POWER MANAGEM..." <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Linaro Kernel Mailman List <linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, "open list:TARGET SUBSYSTEM" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, QCA ath9k Development <ath9k-devel-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Intel Linux Wireless <ilw-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:AMD IOMMU (AMD-VI)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "open list:BLUETOOTH DRIVERS" <linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Greg Kroah-Hartman <gregkh@li>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V5 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Sat, 26 Sep 2015 15:04:06 -0700
+Message-ID: <8d3d3428c3a36f821e4c3d8563d094ca4b4763fd.1443304934.git.viresh.kumar@linaro.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linaro-kernel@lists.linaro.org, QCA ath9k Development <ath9k-devel@qca.qualcomm.com>, Intel Linux Wireless <ilw@linux.intel.com>, Viresh Kumar <viresh.kumar@linaro.org>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-edac@vger.kernel.org, linux-mm@kvack.org, alsa-devel@alsa-project.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-09-25 at 22:58 +0200, Rafael J. Wysocki wrote:
-> On Friday, September 25, 2015 01:25:49 PM Viresh Kumar wrote:
-> > On 25 September 2015 at 13:33, Rafael J. Wysocki <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org> wrote:
-> > > You're going to change that into bool in the next patch, right?
-> > 
-> > Yeah.
-> > 
-> > > So what if bool is a byte and the field is not word-aligned
-> > 
-> > Its between two 'unsigned long' variables today, and the struct isn't packed.
-> > So, it will be aligned, isn't it?
-> > 
-> > > and changing
-> > > that byte requires a read-modify-write.  How do we ensure that things remain
-> > > consistent in that case?
-> > 
-> > I didn't understood why a read-modify-write is special here? That's
-> > what will happen
-> > to most of the non-word-sized fields anyway?
-> > 
-> > Probably I didn't understood what you meant..
-> 
-> Say you have three adjacent fields in a structure, x, y, z, each one byte long.
-> Initially, all of them are equal to 0.
-> 
-> CPU A writes 1 to x and CPU B writes 2 to y at the same time.
-> 
-> What's the result?
+global_lock is defined as an unsigned long and accessing only its lower
+32 bits from sysfs is incorrect, as we need to consider other 32 bits
+for big endian 64-bit systems. There are no such platforms yet, but the
+code needs to be robust for such a case.
 
-I think every CPU's  cache architecure guarantees adjacent store
-integrity, even in the face of SMP, so it's x==1 and y==2.  If you're
-thinking of old alpha SMP system where the lowest store width is 32 bits
-and thus you have to do RMW to update a byte, this was usually fixed by
-padding (assuming the structure is not packed).  However, it was such a
-problem that even the later alpha chips had byte extensions.
+Fix that by changing type of 'global_lock' to u32.
 
-James
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+---
+BCC'd a lot of people (rather than cc'ing them) to make sure
+- the series reaches them
+- mailing lists do not block the patchset due to long cc list
+- and we don't spam the BCC'd people for every reply
+
+V4->V5:
+- Switch back to the original solution of making global_lock u32.
+---
+ drivers/acpi/ec_sys.c   | 2 +-
+ drivers/acpi/internal.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
+index b4c216bab22b..bea8e425a8de 100644
+--- a/drivers/acpi/ec_sys.c
++++ b/drivers/acpi/ec_sys.c
+@@ -128,7 +128,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
+ 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
+ 		goto error;
+ 	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+-				 (u32 *)&first_ec->global_lock))
++				 &first_ec->global_lock))
+ 		goto error;
+ 
+ 	if (write_support)
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 9e426210c2a8..9db196de003c 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -138,7 +138,7 @@ struct acpi_ec {
+ 	unsigned long gpe;
+ 	unsigned long command_addr;
+ 	unsigned long data_addr;
+-	unsigned long global_lock;
++	u32 global_lock;
+ 	unsigned long flags;
+ 	unsigned long reference_count;
+ 	struct mutex mutex;
+-- 
+2.4.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
