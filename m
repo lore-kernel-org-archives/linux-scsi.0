@@ -1,62 +1,169 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.3-rc3
-Date: Sat, 26 Sep 2015 15:16:01 -0700
-Message-ID: <1443305761.7042.14.camel@haakon3.risingtidesystems.com>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Sun, 27 Sep 2015 07:31:53 +0200
+Message-ID: <CAJPN1uvPyZ+hZ64_0ZXU9wPLuAR-qm06GrRmHTjc9+rgiChYDQ@mail.gmail.com>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/alternative; boundary=001a11402966fe4f180520b3e5c2
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org>
+Sender: owner-linux-mm@kvack.org
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: iommu@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-scsi@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>, alsa-devel@alsa-project.org, linux-usb@vger.kernel.org, linaro-kernel@lists.linaro.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org, QCA ath9k Development <ath9k-devel@qca.qualcomm.com>, linux-wireless@vger.kernel.org, linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+--001a11402966fe4f180520b3e5c2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Here are the outstanding target-pending fixes for v4.3-rc3 code.
+Dne 25. 9. 2015 18:42 napsal u=C5=BEivatel "Viresh Kumar" <
+viresh.kumar@linaro.org>:
+>
+> global_lock is defined as an unsigned long and accessing only its lower
+> 32 bits from sysfs is incorrect, as we need to consider other 32 bits
+> for big endian 64 bit systems. There are no such platforms yet, but the
+> code needs to be robust for such a case.
+>
+> Fix that by passing a local variable to debugfs_create_bool() and
+> assigning its value to global_lock later.
 
-Please go ahead and pull from:
+But this has to crash whenever the file is read as val's storage is gone at
+that moment already, right?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+> Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+> ---
+> V3->V4:
+> - Create a local variable instead of changing type of global_lock
+>   (Rafael)
+> - Drop the stable tag
+> - BCC'd a lot of people (rather than cc'ing them) to make sure
+>   - the series reaches them
+>   - mailing lists do not block the patchset due to long cc list
+>   - and we don't spam the BCC'd people for every reply
+> ---
+>  drivers/acpi/ec_sys.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
+> index b4c216bab22b..b44b91331a56 100644
+> --- a/drivers/acpi/ec_sys.c
+> +++ b/drivers/acpi/ec_sys.c
+> @@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec,
+unsigned int ec_device_count)
+>         struct dentry *dev_dir;
+>         char name[64];
+>         umode_t mode =3D 0400;
+> +       u32 val;
+>
+>         if (ec_device_count =3D=3D 0) {
+>                 acpi_ec_debugfs_dir =3D debugfs_create_dir("ec", NULL);
+> @@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec,
+unsigned int ec_device_count)
+>
+>         if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32
+*)&first_ec->gpe))
+>                 goto error;
+> -       if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
+> -                                (u32 *)&first_ec->global_lock))
+> +       if (!debugfs_create_bool("use_global_lock", 0444, dev_dir, &val))
+>                 goto error;
+>
+> +       first_ec->global_lock =3D val;
+> +
+>         if (write_support)
+>                 mode =3D 0600;
+>         if (!debugfs_create_file("io", mode, dev_dir, ec,
+&acpi_ec_io_ops))
+> --
+> 2.4.0
+>
 
-This includes a iser-target series from Jenny + Sagi @ Mellanox that
-addresses the few remaining active I/O shutdown bugs, along with a patch
-to support zero-copy for immediate data payloads that gives a nice
-performance improvement for small block WRITEs. 
+--001a11402966fe4f180520b3e5c2
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Also included are some recent >= v4.2 regression bug-fixes.  The most
-notable is a RCU conversion regression for SPC-3 PR registrations, and
-recent removal of obsolete RFC-3720 markers that introduced a login
-regression bug with MSFT iSCSI initiators.
+<p dir=3D"ltr"><br>
+Dne 25. 9. 2015 18:42 napsal u=C5=BEivatel &quot;Viresh Kumar&quot; &lt;<a =
+href=3D"mailto:viresh.kumar@linaro.org">viresh.kumar@linaro.org</a>&gt;:<br=
+>
+&gt;<br>
+&gt; global_lock is defined as an unsigned long and accessing only its lowe=
+r<br>
+&gt; 32 bits from sysfs is incorrect, as we need to consider other 32 bits<=
+br>
+&gt; for big endian 64 bit systems. There are no such platforms yet, but th=
+e<br>
+&gt; code needs to be robust for such a case.<br>
+&gt;<br>
+&gt; Fix that by passing a local variable to debugfs_create_bool() and<br>
+&gt; assigning its value to global_lock later.</p>
+<p dir=3D"ltr">But this has to crash whenever the file is read as val&#39;s=
+ storage is gone at that moment already, right?</p>
+<p dir=3D"ltr">&gt; Signed-off-by: Viresh Kumar &lt;<a href=3D"mailto:vires=
+h.kumar@linaro.org">viresh.kumar@linaro.org</a>&gt;<br>
+&gt; ---<br>
+&gt; V3-&gt;V4:<br>
+&gt; - Create a local variable instead of changing type of global_lock<br>
+&gt; =C2=A0 (Rafael)<br>
+&gt; - Drop the stable tag<br>
+&gt; - BCC&#39;d a lot of people (rather than cc&#39;ing them) to make sure=
+<br>
+&gt; =C2=A0 - the series reaches them<br>
+&gt; =C2=A0 - mailing lists do not block the patchset due to long cc list<b=
+r>
+&gt; =C2=A0 - and we don&#39;t spam the BCC&#39;d people for every reply<br=
+>
+&gt; ---<br>
+&gt; =C2=A0drivers/acpi/ec_sys.c | 6 ++++--<br>
+&gt; =C2=A01 file changed, 4 insertions(+), 2 deletions(-)<br>
+&gt;<br>
+&gt; diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c<br>
+&gt; index b4c216bab22b..b44b91331a56 100644<br>
+&gt; --- a/drivers/acpi/ec_sys.c<br>
+&gt; +++ b/drivers/acpi/ec_sys.c<br>
+&gt; @@ -110,6 +110,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec,=
+ unsigned int ec_device_count)<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct dentry *dev_dir;<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 char name[64];<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 umode_t mode =3D 0400;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0u32 val;<br>
+&gt;<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (ec_device_count =3D=3D 0) {<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 acpi_ec_debugf=
+s_dir =3D debugfs_create_dir(&quot;ec&quot;, NULL);<br>
+&gt; @@ -127,10 +128,11 @@ static int acpi_ec_add_debugfs(struct acpi_ec *e=
+c, unsigned int ec_device_count)<br>
+&gt;<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!debugfs_create_x32(&quot;gpe&quot;, 0=
+444, dev_dir, (u32 *)&amp;first_ec-&gt;gpe))<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto error;<br=
+>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0if (!debugfs_create_bool(&quot;use_global_=
+lock&quot;, 0444, dev_dir,<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (u32 *)&amp;first_ec-&gt;global_=
+lock))<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0if (!debugfs_create_bool(&quot;use_global_=
+lock&quot;, 0444, dev_dir, &amp;val))<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto error;<br=
+>
+&gt;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0first_ec-&gt;global_lock =3D val;<br>
+&gt; +<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (write_support)<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mode =3D 0600;=
+<br>
+&gt; =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!debugfs_create_file(&quot;io&quot;, m=
+ode, dev_dir, ec, &amp;acpi_ec_io_ops))<br>
+&gt; --<br>
+&gt; 2.4.0<br>
+&gt;<br>
+</p>
 
-Thanks to everyone who has been testing + reporting bugs for v4.x.
+--001a11402966fe4f180520b3e5c2--
 
---nab
-
-Jenny Derzhavetz (7):
-  iser-target: remove command with state ISTATE_REMOVE
-  iser-target: Put the reference on commands waiting for unsol data
-  iser-target: Remove unused variables
-  iser-target: Remove np_ prefix from isert_np members
-  iser-target: Fix pending connections handling in target stack shutdown
-    sequnce
-  iser-target: Change the recv buffers posting logic
-  iser-target: Skip data copy if all the command data comes as immediate
-
-Nicholas Bellinger (5):
-  target: Fix PR registration + APTPL RCU conversion regression
-  target: Propigate backend read-only to core_tpg_add_lun
-  target: Fix target_sense_desc_format NULL pointer dereference
-  target: Make TCM_WRITE_PROTECT failure honor D_SENSE bit
-  iscsi-target: Avoid OFMarker + IFMarker negotiation
-
- drivers/infiniband/ulp/isert/ib_isert.c        | 293 ++++++++++++++++---------
- drivers/infiniband/ulp/isert/ib_isert.h        |  21 +-
- drivers/target/iscsi/iscsi_target_parameters.c |   5 +-
- drivers/target/target_core_device.c            |  45 ++--
- drivers/target/target_core_hba.c               |   2 +-
- drivers/target/target_core_iblock.c            |   2 +
- drivers/target/target_core_pr.c                |  91 ++++++--
- drivers/target/target_core_tpg.c               |   5 +-
- include/target/target_core_base.h              |   1 +
- 9 files changed, 299 insertions(+), 166 deletions(-)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
