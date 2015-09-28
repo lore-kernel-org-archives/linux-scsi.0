@@ -1,209 +1,58 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 17/23] scsi_dh_alua: use unique device id
-Date: Mon, 28 Sep 2015 09:41:21 +0200
-Message-ID: <5608EF21.7060909@suse.de>
-References: <1440679281-13234-1-git-send-email-hare@suse.de>	 <1440679281-13234-18-git-send-email-hare@suse.de> <1442950307.4132.53.camel@localhost.localdomain>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
+Date: Mon, 28 Sep 2015 10:24:58 +0200
+Message-ID: <2003030.YkVHTCZahK@wuerfel>
+References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1540878.9slRi6Q7xb@wuerfel> <1578470.DLzaBp4j3T@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38171 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750864AbbI1HlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Sep 2015 03:41:24 -0400
-In-Reply-To: <1442950307.4132.53.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1578470.DLzaBp4j3T@vostro.rjw.lan>
+Sender: owner-linux-mm@kvack.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, linaro-kernel@lists.linaro.org, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless@vger.kernel.org>, QCA ath9k Development <ath9k-devel@qca.qualcomm.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Intel Linux Wireless <ilw@linux.intel.com>, Linux ACPI <linux-acpi@vger.kernel.org>, "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>, "open list:ULTRA-WIDEB
+ AND (UWB) SUBSYSTEM:" <linux-usb@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.or>
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 09/22/2015 09:31 PM, Ewan Milne wrote:
-> On Thu, 2015-08-27 at 14:41 +0200, Hannes Reinecke wrote:
->> Use scsi_vpd_lun_id() to assign a unique device identification
->> to the alua port group structure.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/scsi/device_handler/scsi_dh_alua.c | 70 +++++++++++++++++++=
-++++++++---
->>  1 file changed, 65 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/sc=
-si/device_handler/scsi_dh_alua.c
->> index dbe9ff2..c2b2100b 100644
->> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> @@ -70,6 +70,8 @@ static DEFINE_SPINLOCK(port_group_lock);
->>  struct alua_port_group {
->>  	struct kref		kref;
->>  	struct list_head	node;
->> +	unsigned char		device_id_str[256];
->> +	int			device_id_size;
->=20
-> I prefer _len instead of _size, _size should refer to the size of the=
- buffer,
-> not the current length of the data in it.
->=20
->>  	int			group_id;
->>  	int			tpgs;
->>  	int			state;
->> @@ -229,7 +231,9 @@ static int alua_check_vpd(struct scsi_device *sd=
-ev, struct alua_dh_data *h)
->>  {
->>  	unsigned char *d;
->>  	int group_id =3D -1;
->> -	struct alua_port_group *pg =3D NULL;
->> +	char device_id_str[256];
->> +	int device_id_size;
->> +	struct alua_port_group *tmp_pg, *pg =3D NULL;
->> =20
->>  	if (!sdev->vpd_pg83)
->>  		return SCSI_DH_DEV_UNSUPP;
->> @@ -266,9 +270,39 @@ static int alua_check_vpd(struct scsi_device *s=
-dev, struct alua_dh_data *h)
->>  		h->tpgs =3D TPGS_MODE_NONE;
->>  		return SCSI_DH_DEV_UNSUPP;
->>  	}
->> +	device_id_size =3D scsi_vpd_lun_id(sdev, device_id_str, 256);
->=20
-> should be sizeof(device_id_str) not hardcoded 256
->=20
-Okay.
->> +	if (device_id_size <=3D 0) {
->> +		/*
->> +		 * Internal error: TPGS supported by no
->=20
-> "Internal error: TPGS supported by no"  should be "but no"
->=20
-=46ixed now.
+On Sunday 27 September 2015 16:10:48 Rafael J. Wysocki wrote:
+> On Saturday, September 26, 2015 09:33:56 PM Arnd Bergmann wrote:
+> > On Saturday 26 September 2015 11:40:00 Viresh Kumar wrote:
+> > > On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > > > So if you allow something like debugfs to update your structure, how
+> > > > do you make sure there is the proper locking?
+> > > 
+> > > Not really sure at all.. Isn't there some debugfs locking that will
+> > > jump in, to avoid updation of fields to the same device?
+> > 
+> > No, if you need any locking to access variable, you cannot use the
+> > simple debugfs helpers but have to provide your own functions.
+> > 
+> > > >> Anyway, that problem isn't here for sure as its between two
+> > > >> unsigned-longs. So, should I just move it to bool and resend ?
+> > > >
+> > > > I guess it might be more convenient to fold this into the other patch,
+> > > > because we seem to be splitting hairs here.
+> > > 
+> > > I can and that's what I did. But then Arnd asked me to separate it
+> > > out. I can fold it back if that's what you want.
+> > 
+> > It still makes sense to keep it separate I think, the patch is clearly
+> > different from the other parts.
+> 
+> I just don't see much point in going from unsigned long to u32 and then
+> from 32 to bool if we can go directly to bool in one go.
 
->> +		 * device identifcation found.
->> +		 * Disable ALUA support.
->> +		 */
->> +		sdev_printk(KERN_INFO, sdev,
->> +			    "%s: No device descriptors found\n",
->> +			    ALUA_DH_NAME);
->> +		h->tpgs =3D TPGS_MODE_NONE;
->> +		return SCSI_DH_DEV_UNSUPP;
->> +	}
->>  	sdev_printk(KERN_INFO, sdev,
->> -		    "%s: port group %02x rel port %02x\n",
->> -		    ALUA_DH_NAME, group_id, h->rel_port);
->> +		    "%s: device %s port group %02x "
->> +		    "rel port %02x\n", ALUA_DH_NAME,
->> +		    device_id_str, group_id, h->rel_port);
->> +	spin_lock(&port_group_lock);
->> +	list_for_each_entry(tmp_pg, &port_group_list, node) {
->> +		if (tmp_pg->group_id !=3D group_id)
->> +			continue;
->> +		if (tmp_pg->device_id_size !=3D device_id_size)
->> +			continue;
->> +		if (strncmp(tmp_pg->device_id_str, device_id_str,
->> +			    device_id_size))
->> +			continue;
->> +		h->pg =3D tmp_pg;
->> +		kref_get(&tmp_pg->kref);
->> +		break;
->> +	}
->> +	spin_unlock(&port_group_lock);
->> +	if (h->pg)
->> +		return SCSI_DH_OK;
->=20
-> The lookup checks whether h->pg =3D=3D NULL but the function never
-> explicitly sets it to NULL before iterating.
->=20
-=46or my next iteration I've reworked this so that h->pg is explicitly
-set.
+It's only important to keep the 34-file multi-subsystem trivial cleanup
+that doesn't change any functionality separate from the bugfix. If you
+like to avoid patching one of the files twice, the alternative would
+be to first change the API for all other instances from u32 to bool
+and leave ACPI alone, and then do the second patch that changes ACPI
+from long to bool.
 
->> =20
->>  	pg =3D kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
->>  	if (!pg) {
->> @@ -278,13 +312,39 @@ static int alua_check_vpd(struct scsi_device *=
-sdev, struct alua_dh_data *h)
->>  		/* Temporary failure, bypass */
->>  		return SCSI_DH_DEV_TEMP_BUSY;
->>  	}
->> +	if (device_id_size)
->> +		strncpy(pg->device_id_str, device_id_str, 256);
->=20
-> should be sizeof(device_id_str) not hardcoded 256
->=20
-Okay.
+	Arnd
 
->> +	else
->> +		pg->device_id_str[0] =3D '\0';
->> +
->> +	pg->device_id_size =3D device_id_size;
->>  	pg->group_id =3D group_id;
->>  	pg->tpgs =3D h->tpgs;
->>  	pg->state =3D TPGS_STATE_OPTIMIZED;
->>  	kref_init(&pg->kref);
->>  	spin_lock(&port_group_lock);
->> -	list_add(&pg->node, &port_group_list);
->> -	h->pg =3D pg;
->> +	/*
->> +	 * Re-check list again to catch
->> +	 * concurrent updates
->> +	 */
->> +	list_for_each_entry(tmp_pg, &port_group_list, node) {
->> +		if (tmp_pg->group_id !=3D pg->group_id)
->> +			continue;
->> +		if (tmp_pg->device_id_size !=3D pg->device_id_size)
->> +			continue;
->> +		if (strncmp(tmp_pg->device_id_str, pg->device_id_str,
->> +			    device_id_size))
->> +			continue;
->> +		h->pg =3D tmp_pg;
->> +		kref_get(&tmp_pg->kref);
->> +		kfree(pg);
->=20
-> With the added check for an existing alua_port_group object, and the =
-kfree() of
-> the alua_port_group that had been allocated if an existing one is fou=
-nd, the code does not
-> do a destroy_workqueue() on pg->work_q. =20
->=20
-With the current rework I've removed the per-pg workqueues, so that
-issue doesn't occur anymore.
-
->> +		pg =3D NULL;
->> +		break;
->> +	}
->> +	if (pg) {
->> +		list_add(&pg->node, &port_group_list);
->> +		h->pg =3D pg;
->> +	}
->>  	spin_unlock(&port_group_lock);
->> =20
->>  	return SCSI_DH_OK;
-> =20
-> An explanation in the comments about the ALUA topology and what the d=
-evice_id vs.
-> the group_id represents might be helpful.  It occurred to me that if =
-someone doesn't
-> understand that you can have the same device_id behind different port=
- groups they
-> won't understand this code.
->=20
-> HOST  ---->     STORAGE CTRL PG 1   ---->    LUN X
->       ---->                         ---->    LUN X
->       ---->     STORAGE CTRL PG 2   ---->    LUN X
->       ---->                         ---->    LUN X
->=20
-Hmm. Someone willing to understand this code should be reasonable
-familiar with SPC, so I doubt that'll be an issue.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
