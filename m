@@ -1,58 +1,48 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/3] ibmvsci: Allow to configure maximum LUN
-Date: Mon, 28 Sep 2015 14:39:34 -0700
-Message-ID: <5609B396.70302@linux.vnet.ibm.com>
-References: <1441876994-16821-1-git-send-email-lvivier@redhat.com>
- <1441876994-16821-3-git-send-email-lvivier@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb stick
+Date: Mon, 28 Sep 2015 21:46:44 +0000
+Message-ID: <bug-101011-11613-Uz0KPVrfDB@https.bugzilla.kernel.org/>
+References: <bug-101011-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1441876994-16821-3-git-send-email-lvivier@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Laurent Vivier <lvivier@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: dgibson@redhat.com, thuth@redhat.com, pbonzini@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60634 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753196AbbI1Vqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Sep 2015 17:46:49 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E3CFC20755
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 21:46:45 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 6477520726
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 21:46:44 +0000 (UTC)
+In-Reply-To: <bug-101011-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 09/10/2015 02:23 AM, Laurent Vivier wrote:
-> QEMU allows until 32 LUNs.
-> 
-> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=101011
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Theodore Tso <tytso@mit.edu> changed:
 
-> ---
->  drivers/scsi/ibmvscsi/ibmvscsi.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> index f9d7ec4..e5478b0 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> @@ -84,6 +84,7 @@
->   */
->  static int max_id = 64;
->  static int max_channel = 3;
-> +static int max_lun = 8;
->  static int init_timeout = 300;
->  static int login_timeout = 60;
->  static int info_timeout = 30;
-> @@ -117,6 +118,8 @@ module_param_named(fast_fail, fast_fail, int, S_IRUGO | S_IWUSR);
->  MODULE_PARM_DESC(fast_fail, "Enable fast fail. [Default=1]");
->  module_param_named(client_reserve, client_reserve, int, S_IRUGO );
->  MODULE_PARM_DESC(client_reserve, "Attempt client managed reserve/release");
-> +module_param(max_lun, int, S_IRUGO);
-> +MODULE_PARM_DESC(max_lun, "Maximum LUN value [Default=8]");
-> 
->  static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
->  				struct ibmvscsi_host_data *hostdata);
-> @@ -2289,7 +2292,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
->  		goto init_pool_failed;
->  	}
-> 
-> -	host->max_lun = 8;
-> +	host->max_lun = max_lun;
->  	host->max_id = max_id;
->  	host->max_channel = max_channel;
->  	host->max_cmd_len = 16;
-> 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |tytso@mit.edu
+
+--- Comment #12 from Theodore Tso <tytso@mit.edu> ---
+The revert is upstream as commit bdfe0cbd746aa9 and will be showing up stable
+backport kernels very shortly (the deadline for commenting on the stable
+backports is tonight, so the next stable backport kernels should be released
+within a day or so with the revert).
+
+It's up to the distribution to update their kernels, and they don't have to
+wait for the stable kernel backports to be released.  So please feel free to
+request at each of the various distro-specific bug trackers that they include
+the revert found in upstream commit bdfe0cbd746aa9.  Especially if you are
+receiving paid support from the distribution, they are much more likely to
+listen to you.  :-)
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
