@@ -1,95 +1,64 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v4 17/32] cxlflash: Remove dual port online dependency
-Date: Tue, 29 Sep 2015 09:37:31 +1000
-Message-ID: <87a8s6und0.fsf@gamma.ozlabs.ibm.com>
-References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443223018-9577-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 32/32] cxlflash: Fix to avoid potential deadlock on EEH
+Date: Mon, 28 Sep 2015 18:41:49 -0500
+Message-ID: <5609D03D.6010709@linux.vnet.ibm.com>
+References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1443223197-10153-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36649 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752887AbbI1Xhp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2015 19:37:45 -0400
-Received: by pablk4 with SMTP id lk4so90212844pab.3
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 16:37:44 -0700 (PDT)
-In-Reply-To: <1443223018-9577-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:52293 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbbI1Xlz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2015 19:41:55 -0400
+Received: from localhost
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 28 Sep 2015 17:41:55 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id CBD0C19D8045
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 17:32:44 -0600 (MDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8SNed1e8388964
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 16:40:39 -0700
+Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8SNfoqM000370
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2015 17:41:52 -0600
+In-Reply-To: <1443223197-10153-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On 09/25/2015 06:19 PM, Matthew R. Ochs wrote:
+>  static int write_same16(struct scsi_device *sdev,
+> @@ -433,9 +451,20 @@ static int write_same16(struct scsi_device *sdev,
+>  		put_unaligned_be32(ws_limit < left ? ws_limit : left,
+>  				   &scsi_cmd[10]);
+> 
+> +		/* Drop the ioctl read semahpore across lengthy call */
+> +		up_read(&cfg->ioctl_rwsem);
+>  		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
+>  				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
+>  				      0, NULL);
+> +		down_read(&cfg->ioctl_rwsem);
+> +		rc = check_state(cfg);
+> +		if (rc) {
+> +			dev_err(dev, "%s: Failed state! result=0x08%X\n",
+> +				__func__, result);
+> +			rc = -ENODEV;
 
-Hi,
+Since check_state only returns 0 or -ENODEV, this is a bit redundant, but not worth redoing the
+patch in my mind.
 
->  static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
->  {
-> -	int ret = 0;
-> +	int rc = 0;
-I realise it's nice to have things consistent, but making this change
-now makes the rest of the patch quite difficult to follow.
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 
->  
->  	set_port_offline(fc_regs);
->  
-> @@ -1038,33 +1038,26 @@ static int afu_set_wwpn(struct afu *afu, int port, u64 *fc_regs, u64 wwpn)
->  			       FC_PORT_STATUS_RETRY_CNT)) {
->  		pr_debug("%s: wait on port %d to go offline timed out\n",
->  			 __func__, port);
-> -		ret = -1; /* but continue on to leave the port back online */
-> +		rc = -1; /* but continue on to leave the port back online */
->  	}
->  
-> -	if (ret == 0)
-> +	if (rc == 0)
->  		writeq_be(wwpn, &fc_regs[FC_PNAME / 8]);
->  
-> +	/* Always return success after programming WWPN */
-> +	rc = 0;
-> +
->  	set_port_online(fc_regs);
->  
->  	if (!wait_port_online(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
->  			      FC_PORT_STATUS_RETRY_CNT)) {
->  		pr_debug("%s: wait on port %d to go online timed out\n",
->  			 __func__, port);
-> -		ret = -1;
-> -
-> -		/*
-> -		 * Override for internal lun!!!
-> -		 */
-> -		if (afu->internal_lun) {
-> -			pr_debug("%s: Overriding port %d online timeout!!!\n",
-> -				 __func__, port);
-> -			ret = 0;
-> -		}
->  	}
->  
-> -	pr_debug("%s: returning rc=%d\n", __func__, ret);
-> +	pr_debug("%s: returning rc=%d\n", __func__, rc);
-I'm not sure I fully understand the flow of this function, but it looks
-like you set rc=0 regardless of how things actually go: is this ever
-going to print a return value other than zero?
 
-Regards,
-Daniel
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
 
-iQIcBAEBCgAGBQJWCc87AAoJEPC3R3P2I92FQNcP/RF+M8MGZ2PJ8heh98D84rb5
-Dx+Yq1czRJ+YZbK5tCfkyU66KspEzM7IIOiiXDLlBZ+AjcQtCUopTNMbL/UN+oVT
-5lWrvPZlWRJqRN5bA/RA3i/DSBRucucmP8n4pmTKqsMMqKwzk/f3sE+Uo5oAzS+y
-JaSywxm+Vd4dkW5T94kc6TXCeWcaD47tG0mgg0jHGwFtOioDEeWgf7Kie52+RV+o
-I6z7GlQj9dgcKs2NmVr67AoY1dfRYl1ZvvJN7bYoLbHnEgiSw1d6XZK/2cqHzIpE
-S1KEHOyuSZJh8Txwfg6oJ3sbpFZaurSIXDXfOhWuJ90OrOu4hgeODTPX/3o2CKae
-K+WhsL6XOhrxyMhfq/VWplF6Hjo7VqLcT9e0sYZ4YNkUJrGAza3iPOqngK9zmdsM
-80HLJdbsiZMkl+i55IOuisckCtvjUtVE+bDlzau6vwgBlgZ9DKByPPmqJGjS9I3L
-vCEKsRZryaSvaYSnK46kpqXsukN/+QMefXL25IfTf4wQQaV4O+mSJxkkLXPAKqfd
-cvCFg08MyAQS+YyNMBdFDJyj7tWVclGZhJkqlyjPjQ2YrFA5tQ7MoqY05NomxY9Q
-xo0JuaceNccFetKPg1LMmTp5Ag/2DCcnGq/0Z3ioGVJTFIVil0BnWIFctlGbquya
-n4Ylfe3h1T6hWJ7bjxwF
-=cZRI
------END PGP SIGNATURE-----
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
