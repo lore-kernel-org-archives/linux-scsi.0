@@ -1,52 +1,75 @@
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Subject: Re: [PATCH v4 02/32] cxlflash: Replace magic numbers with literals
-Date: Tue, 29 Sep 2015 15:40:58 +1000
-Message-ID: <560A246A.9000101@au1.ibm.com>
-References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443222742-8995-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [PATCH V8 9/9] aacraid: Update driver version
+Date: Tue, 29 Sep 2015 09:50:24 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AEC60A27F@BBYEXM02.pmc-sierra.internal>
+References: <1440758321-2996-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <1440758321-2996-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <B539A9786201A44A91E34268415A2B1AEC603C55@BBYEXM02.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56990 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399AbbI2Flj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2015 01:41:39 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-	Tue, 29 Sep 2015 15:41:37 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E39303578052
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 15:41:32 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8T5fQxZ65929272
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 15:41:34 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8T5exGG030902
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 15:41:00 +1000
-In-Reply-To: <1443222742-8995-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:45404 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933616AbbI2JuZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 05:50:25 -0400
+In-Reply-To: <B539A9786201A44A91E34268415A2B1AEC603C55@BBYEXM02.pmc-sierra.internal>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Manoj Kumar <kumarmn@us.ibm.com>, Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "thenzl@redhat.com" <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-On 26/09/15 09:12, Matthew R. Ochs wrote:
-> From: Manoj Kumar <kumarmn@us.ibm.com>
->
-> Magic numbers are not meaningful and can create confusion. As a
-> remedy, replace them with descriptive literals.
->
-> Replace 512 with literal MAX_SECTOR_UNIT.
-> Replace 5 with literal CMD_RETRIES.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+Hi James,
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Can you please let me know the status of V8 patch set.
 
--- 
-Andrew Donnellan              Software Engineer, OzLabs
-andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
-+61 2 6201 8874 (work)        IBM Australia Limited
+Thanks,
+Mahesh
+
+
+-----Original Message-----
+From: Mahesh Rajashekhara 
+Sent: Wednesday, September 09, 2015 6:51 PM
+To: Mahesh Rajashekhara; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com; Murthy Bhat; Karthikeya Sunkesula; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
+Subject: RE: [PATCH V8 9/9] aacraid: Update driver version
+
+Hi James,
+
+Please let me know the status of V8 patchset.
+
+Thanks,
+Mahesh
+
+-----Original Message-----
+From: Mahesh Rajashekhara [mailto:Mahesh.Rajashekhara@pmcs.com] 
+Sent: Friday, August 28, 2015 4:09 PM
+To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com; Murthy Bhat; Karthikeya Sunkesula; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
+Subject: [PATCH V8 9/9] aacraid: Update driver version
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
+Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
+Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+---
+ drivers/scsi/aacraid/aacraid.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 2de5ebc..074878b 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -62,7 +62,7 @@ enum {
+ #define	PMC_GLOBAL_INT_BIT0		0x00000001
+ 
+ #ifndef AAC_DRIVER_BUILD
+-# define AAC_DRIVER_BUILD 40709
++# define AAC_DRIVER_BUILD 41010
+ # define AAC_DRIVER_BRANCH "-ms"
+ #endif
+ #define MAXIMUM_NUM_CONTAINERS	32
+--
+1.9.3
 
