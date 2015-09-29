@@ -1,41 +1,40 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 33/36] scsi: Add 'access_state' attribute
-Date: Tue, 29 Sep 2015 21:51:26 +0800
-Message-ID: <201509292134.7QZ7bWBj%fengguang.wu@intel.com>
-References: <1443523658-87622-34-git-send-email-hare@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 101011] Kernel Oops when disconnecting a mounted ext4 usb stick
+Date: Tue, 29 Sep 2015 16:33:42 +0000
+Message-ID: <bug-101011-11613-bQL7F341J8@https.bugzilla.kernel.org/>
+References: <bug-101011-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:49007 "EHLO mga11.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:39927 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965201AbbI2Nv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 09:51:58 -0400
-Content-Disposition: inline
-In-Reply-To: <1443523658-87622-34-git-send-email-hare@suse.de>
+	id S932539AbbI2Qdp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 12:33:45 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CE5E5206F3
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 16:33:44 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 5BC46206DC
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 16:33:42 +0000 (UTC)
+In-Reply-To: <bug-101011-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: kbuild-all@01.org, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org
 
-Hi Hannes,
+https://bugzilla.kernel.org/show_bug.cgi?id=101011
 
-[auto build test results on v4.3-rc3 -- if it's inappropriate base, please ignore]
+--- Comment #14 from Ronny Standtke <ronny.standtke@gmx.net> ---
+> The revert is upstream as commit bdfe0cbd746aa9
 
-reproduce:
-  # apt-get install sparse
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
+Thanks for the info! I will apply the revert to 4.2.1.
 
+> Especially if you are receiving paid support from the distribution, they are 
+> much more likely to listen to you.  :-)
 
-sparse warnings: (new ones prefixed by >>)
+It's the other way around. I am maintaining a distribution and get paid for
+supporting it. :-)
 
->> drivers/scsi/scsi_sysfs.c:98:12: sparse: symbol 'scsi_access_state_name' was not declared. Should it be static?
-   drivers/scsi/scsi_sysfs.c:230:25: sparse: symbol 'dev_attr_hstate' was not declared. Should it be static?
-   drivers/scsi/scsi_sysfs.c:405:24: sparse: symbol 'scsi_shost_attr_group' was not declared. Should it be static?
-   drivers/scsi/scsi_sysfs.c:806:1: sparse: incompatible types in comparison expression (different address spaces)
-   drivers/scsi/scsi_sysfs.c:807:1: sparse: incompatible types in comparison expression (different address spaces)
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
