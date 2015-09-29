@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/36] scsi_dh_alua: use standard logging functions
-Date: Tue, 29 Sep 2015 12:47:09 +0200
-Message-ID: <1443523658-87622-8-git-send-email-hare@suse.de>
+Subject: [PATCH 11/36] scsi_dh_alua: use flag for RTPG extended header
+Date: Tue, 29 Sep 2015 12:47:13 +0200
+Message-ID: <1443523658-87622-12-git-send-email-hare@suse.de>
 References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41991 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41993 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934661AbbI2Kry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S934669AbbI2Kry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 29 Sep 2015 06:47:54 -0400
 In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,71 +14,81 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Use standard logging functions instead of hand-crafted ones.
+We should be using a flag when RTPG extended header is not
+supported, that saves us sending RTPG twice for older arrays.
 
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5334bba..018faf0 100644
+index 4ff9b90..a963f51 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -23,6 +23,7 @@
- #include <linux/delay.h>
- #include <linux/module.h>
- #include <scsi/scsi.h>
-+#include <scsi/scsi_dbg.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
+@@ -59,8 +59,9 @@
+ #define ALUA_FAILOVER_TIMEOUT		60
+ #define ALUA_FAILOVER_RETRIES		5
  
-@@ -194,19 +195,14 @@ static void stpg_endio(struct request *req, int error)
+-/* flags passed from user level */
++/* device handler flags */
+ #define ALUA_OPTIMIZE_STPG		1
++#define ALUA_RTPG_EXT_HDR_UNSUPP	2
  
- 	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
- 				 &sense_hdr)) {
--		if (!err) {
--			err = SCSI_DH_IO;
--			goto done;
--		}
- 		err = alua_check_sense(h->sdev, &sense_hdr);
- 		if (err == ADD_TO_MLQUEUE) {
- 			err = SCSI_DH_RETRY;
- 			goto done;
- 		}
--		sdev_printk(KERN_INFO, h->sdev,
--			    "%s: stpg sense code: %02x/%02x/%02x\n",
--			    ALUA_DH_NAME, sense_hdr.sense_key,
--			    sense_hdr.asc, sense_hdr.ascq);
-+		sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
-+			    ALUA_DH_NAME);
-+		scsi_print_sense_hdr(h->sdev, ALUA_DH_NAME, &sense_hdr);
- 		err = SCSI_DH_IO;
- 	} else if (error)
- 		err = SCSI_DH_IO;
-@@ -526,13 +522,16 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
- 		}
+ struct alua_dh_data {
+ 	int			group_id;
+@@ -134,8 +135,7 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
+-			    bool rtpg_ext_hdr_req)
++static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	struct request *rq;
+ 	int err = 0;
+@@ -148,7 +148,7 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h,
  
- 		err = alua_check_sense(sdev, &sense_hdr);
--		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry))
-+		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
-+			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
-+				    ALUA_DH_NAME);
-+			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_IN;
+-	if (rtpg_ext_hdr_req)
++	if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+ 		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+@@ -484,7 +484,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 	int len, k, off, valid_states = 0;
+ 	unsigned char *ucp;
+ 	unsigned err, retval;
+-	bool rtpg_ext_hdr_req = 1;
+ 	unsigned long expiry, interval = 0;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
+@@ -495,7 +494,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
+ 
+  retry:
+-	retval = submit_rtpg(sdev, h, rtpg_ext_hdr_req);
++	retval = submit_rtpg(sdev, h);
+ 	if (retval) {
+ 		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+ 					  &sense_hdr)) {
+@@ -515,10 +514,10 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		 * The retry without rtpg_ext_hdr_req set
+ 		 * handles this.
+ 		 */
+-		if (rtpg_ext_hdr_req == 1 &&
++		if (!(h->flags & ALUA_RTPG_EXT_HDR_UNSUPP) &&
+ 		    sense_hdr.sense_key == ILLEGAL_REQUEST &&
+ 		    sense_hdr.asc == 0x24 && sense_hdr.ascq == 0) {
+-			rtpg_ext_hdr_req = 0;
++			h->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
  			goto retry;
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: rtpg sense code %02x/%02x/%02x\n",
--			    ALUA_DH_NAME, sense_hdr.sense_key,
--			    sense_hdr.asc, sense_hdr.ascq);
--		err = SCSI_DH_IO;
-+		}
-+		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
-+			    ALUA_DH_NAME);
-+		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-+		return SCSI_DH_IO;
- 	}
- 	if (err != SCSI_DH_OK)
- 		return err;
+ 		}
+ 
 -- 
 1.8.5.6
 
