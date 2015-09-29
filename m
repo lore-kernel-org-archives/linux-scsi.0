@@ -1,166 +1,69 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 28/36] scsi_dh_alua: Recheck state on unit attention
-Date: Tue, 29 Sep 2015 12:47:30 +0200
-Message-ID: <1443523658-87622-29-git-send-email-hare@suse.de>
-References: <1443523658-87622-1-git-send-email-hare@suse.de>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 27/36] scsi_dh_alua: Use workqueue for RTPG
+Date: Tue, 29 Sep 2015 21:27:20 +0800
+Message-ID: <201509292148.9Blq2tHR%fengguang.wu@intel.com>
+References: <1443523658-87622-28-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42105 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:64208 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934710AbbI2KsF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:48:05 -0400
-In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
+	id S964919AbbI2N2G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 09:28:06 -0400
+Content-Disposition: inline
+In-Reply-To: <1443523658-87622-28-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+Cc: kbuild-all@01.org, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-When we receive a unit attention code of 'ALUA state changed'
-we should recheck the state, as it might be due to an implicit
-ALUA state transition. This allows us to return NEEDS_RETRY
-instead of ADD_TO_MLQUEUE, allowing to terminate the retries
-after a certain time.
-At the same time a workqueue item might already be queued, which
-should be started immediately to avoid any delays.
+Hi Hannes,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+[auto build test results on v4.3-rc3 -- if it's inappropriate base, please ignore]
+
+reproduce:
+  # apt-get install sparse
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/scsi/device_handler/scsi_dh_alua.c:142:16: sparse: Variable length array is used.
+   drivers/scsi/device_handler/scsi_dh_alua.c:171:16: sparse: Variable length array is used.
+   drivers/scsi/device_handler/scsi_dh_alua.c:194:24: sparse: symbol 'alua_lookup_pg' was not declared. Should it be static?
+   drivers/scsi/device_handler/scsi_dh_alua.c:222:24: sparse: symbol 'alua_get_pg' was not declared. Should it be static?
+>> drivers/scsi/device_handler/scsi_dh_alua.c:856:14: sparse: incompatible types in comparison expression (different address spaces)
+   drivers/scsi/device_handler/scsi_dh_alua.c:900:14: sparse: incompatible types in comparison expression (different address spaces)
+   drivers/scsi/device_handler/scsi_dh_alua.c:935:14: sparse: incompatible types in comparison expression (different address spaces)
+
+vim +856 drivers/scsi/device_handler/scsi_dh_alua.c
+
+   840		struct alua_dh_data *h = sdev->handler_data;
+   841		struct alua_port_group *pg = NULL;
+   842		unsigned int optimize = 0, argc;
+   843		const char *p = params;
+   844		int result = SCSI_DH_OK;
+   845		unsigned long flags;
+   846	
+   847		if ((sscanf(params, "%u", &argc) != 1) || (argc != 1))
+   848			return -EINVAL;
+   849	
+   850		while (*p++)
+   851			;
+   852		if ((sscanf(p, "%u", &optimize) != 1) || (optimize > 1))
+   853			return -EINVAL;
+   854	
+   855		rcu_read_lock();
+ > 856		pg = rcu_dereference(h->pg);
+   857		if (!pg) {
+   858			rcu_read_unlock();
+   859			return -ENXIO;
+   860		}
+   861		spin_lock_irqsave(&pg->lock, flags);
+   862		if (optimize)
+   863			pg->flags |= ALUA_OPTIMIZE_STPG;
+   864		else
+
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 58 ++++++++++++++++++++++++------
- 1 file changed, 47 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 1b7153f..21f0d20 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -117,7 +117,8 @@ struct alua_queue_data {
- static void alua_rtpg_work(struct work_struct *work);
- static void alua_rtpg_queue(struct alua_port_group *pg,
- 			    struct scsi_device *sdev,
--			    struct alua_queue_data *qdata);
-+			    struct alua_queue_data *qdata, bool force);
-+static void alua_check(struct scsi_device *sdev, bool force);
- 
- static void release_port_group(struct kref *kref)
- {
-@@ -387,7 +388,7 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 		rcu_assign_pointer(h->pg, pg);
- 		pg_found = true;
- 	}
--	alua_rtpg_queue(h->pg, sdev, NULL);
-+	alua_rtpg_queue(h->pg, sdev, NULL, true);
- 	spin_unlock(&h->pg_lock);
- 
- 	if (pg_found)
-@@ -428,18 +429,24 @@ static int alua_check_sense(struct scsi_device *sdev,
- {
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
- 			/*
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
--			return ADD_TO_MLQUEUE;
-+			alua_check(sdev, false);
-+			return NEEDS_RETRY;
-+		}
- 		break;
- 	case UNIT_ATTENTION:
--		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-+		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
- 			/*
--			 * Power On, Reset, or Bus Device Reset, just retry.
-+			 * Power On, Reset, or Bus Device Reset.
-+			 * Might have obscured a state transition,
-+			 * so schedule a recheck.
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
-+		}
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
- 			/*
- 			 * Device internal reset
-@@ -450,16 +457,20 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 * Mode Parameters Changed
- 			 */
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
-+		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
- 			/*
- 			 * ALUA state changed
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07)
-+		}
-+		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
- 			/*
- 			 * Implicit ALUA state transition failed
- 			 */
-+			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
-+		}
- 		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
- 			/*
- 			 * Inquiry data has changed
-@@ -775,7 +786,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 
- static void alua_rtpg_queue(struct alua_port_group *pg,
- 			    struct scsi_device *sdev,
--			    struct alua_queue_data *qdata)
-+			    struct alua_queue_data *qdata, bool force)
- {
- 	int start_queue = 0;
- 	unsigned long flags;
-@@ -795,7 +806,9 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		pg->rtpg_sdev = sdev;
- 		scsi_device_get(sdev);
- 		start_queue = 1;
--	}
-+	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force)
-+		start_queue = 1;
-+
- 	spin_unlock_irqrestore(&pg->lock, flags);
- 
- 	if (start_queue &&
-@@ -910,7 +923,7 @@ static int alua_activate(struct scsi_device *sdev,
- 	kref_get(&pg->kref);
- 	rcu_read_unlock();
- 
--	alua_rtpg_queue(pg, sdev, qdata);
-+	alua_rtpg_queue(pg, sdev, qdata, true);
- 	kref_put(&pg->kref, release_port_group);
- out:
- 	if (fn)
-@@ -919,6 +932,29 @@ out:
- }
- 
- /*
-+ * alua_check - check path status
-+ * @sdev: device on the path to be checked
-+ *
-+ * Check the device status
-+ */
-+static void alua_check(struct scsi_device *sdev, bool force)
-+{
-+	struct alua_dh_data *h = sdev->handler_data;
-+	struct alua_port_group *pg;
-+
-+	rcu_read_lock();
-+	pg = rcu_dereference(h->pg);
-+	if (!pg) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	kref_get(&pg->kref);
-+	rcu_read_unlock();
-+	alua_rtpg_queue(pg, sdev, NULL, force);
-+	kref_put(&pg->kref, release_port_group);
-+}
-+
-+/*
-  * alua_prep_fn - request callback
-  *
-  * Fail I/O to all paths not in state
--- 
-1.8.5.6
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
