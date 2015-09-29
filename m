@@ -1,69 +1,39 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 27/36] scsi_dh_alua: Use workqueue for RTPG
-Date: Tue, 29 Sep 2015 21:27:20 +0800
-Message-ID: <201509292148.9Blq2tHR%fengguang.wu@intel.com>
-References: <1443523658-87622-28-git-send-email-hare@suse.de>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH 0/3] scsi: Some miscellaneous fixes
+Date: Tue, 29 Sep 2015 15:33:57 +0200
+Message-ID: <87h9md2vui.fsf@vitty.brq.redhat.com>
+References: <1442528938-3252-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64208 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50837 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964919AbbI2N2G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 09:28:06 -0400
-Content-Disposition: inline
-In-Reply-To: <1443523658-87622-28-git-send-email-hare@suse.de>
+	id S964967AbbI2NeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 09:34:03 -0400
+In-Reply-To: <1442528938-3252-1-git-send-email-kys@microsoft.com>
+	(K. Y. Srinivasan's message of "Thu, 17 Sep 2015 15:28:58 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: kbuild-all@01.org, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, jasowang@redhat.com
 
-Hi Hannes,
+"K. Y. Srinivasan" <kys@microsoft.com> writes:
 
-[auto build test results on v4.3-rc3 -- if it's inappropriate base, please ignore]
+[...]
 
-reproduce:
-  # apt-get install sparse
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
+>
+> Vitaly Kuznetsov (2):
+>   scsi_scan: don't dump trace when scsi_prep_async_scan() is called
+>     twice
+>   scsi: introduce short_inquiry flag for broken host adapters
 
+James,
 
-sparse warnings: (new ones prefixed by >>)
+I'm sorry for the annoyance but when I asked about these patches last
+time you said we don't have them reviewed. Is it OK now when we have
+signed-off-by: from K. Y. or do we need to ask someone else?
 
-   drivers/scsi/device_handler/scsi_dh_alua.c:142:16: sparse: Variable length array is used.
-   drivers/scsi/device_handler/scsi_dh_alua.c:171:16: sparse: Variable length array is used.
-   drivers/scsi/device_handler/scsi_dh_alua.c:194:24: sparse: symbol 'alua_lookup_pg' was not declared. Should it be static?
-   drivers/scsi/device_handler/scsi_dh_alua.c:222:24: sparse: symbol 'alua_get_pg' was not declared. Should it be static?
->> drivers/scsi/device_handler/scsi_dh_alua.c:856:14: sparse: incompatible types in comparison expression (different address spaces)
-   drivers/scsi/device_handler/scsi_dh_alua.c:900:14: sparse: incompatible types in comparison expression (different address spaces)
-   drivers/scsi/device_handler/scsi_dh_alua.c:935:14: sparse: incompatible types in comparison expression (different address spaces)
+Thanks,
 
-vim +856 drivers/scsi/device_handler/scsi_dh_alua.c
-
-   840		struct alua_dh_data *h = sdev->handler_data;
-   841		struct alua_port_group *pg = NULL;
-   842		unsigned int optimize = 0, argc;
-   843		const char *p = params;
-   844		int result = SCSI_DH_OK;
-   845		unsigned long flags;
-   846	
-   847		if ((sscanf(params, "%u", &argc) != 1) || (argc != 1))
-   848			return -EINVAL;
-   849	
-   850		while (*p++)
-   851			;
-   852		if ((sscanf(p, "%u", &optimize) != 1) || (optimize > 1))
-   853			return -EINVAL;
-   854	
-   855		rcu_read_lock();
- > 856		pg = rcu_dereference(h->pg);
-   857		if (!pg) {
-   858			rcu_read_unlock();
-   859			return -ENXIO;
-   860		}
-   861		spin_lock_irqsave(&pg->lock, flags);
-   862		if (optimize)
-   863			pg->flags |= ALUA_OPTIMIZE_STPG;
-   864		else
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+  Vitaly
