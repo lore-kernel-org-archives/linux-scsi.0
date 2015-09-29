@@ -1,112 +1,157 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv5 00/36] asynchronous ALUA device handler
-Date: Tue, 29 Sep 2015 12:47:02 +0200
-Message-ID: <1443523658-87622-1-git-send-email-hare@suse.de>
+Subject: [PATCH 04/36] scsi_dh_alua: Use vpd_pg83 information
+Date: Tue, 29 Sep 2015 12:47:06 +0200
+Message-ID: <1443523658-87622-5-git-send-email-hare@suse.de>
+References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41875 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41848 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934636AbbI2Kru (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S934041AbbI2Kru (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 29 Sep 2015 06:47:50 -0400
+In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+The SCSI device now has the VPD page 0x83 information attached,
+so there is no need to query it again.
 
-here the next round of my update to the ALUA device handler. The main
-features are:
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 83 +++++-------------------------
+ 1 file changed, 13 insertions(+), 70 deletions(-)
 
-- Topology discovery: the device handler creates a separate
-  port_group structure, which is used to update all paths to
-  the same port group. With that we achieve a significant
-  reduction of the number of RTPGs.
-- Asynchronous state update: The ALUA state is now updated
-  from a workqueue item, so all concurrent RTPG calls are
-  coaleasced. The ALUA state update is also triggered by
-  sense codes indicating an ALUA state change.
-- Use the existing vpd page 0x83 to detect device IDs
-- Add generic 'access_state' attribute to discover the
-  current ALUA state from userspace.
-
-The entire tree can be found at
-
-kernel/hare/scsi-devel branch alua.v5
-
-on git.kernel.org
-
-As usual, reviews and comments are welcome.
-
-Changes to v1:
-  - Split off rtpg workqueue into separate items
-  - User per-port workqueues
-  - Incorporate review from Bart
-  - Incorporate review from hch
-Changes to v2:
-  - Fixup patch descriptions
-  - Split off 'Improve error handling' patch
-Changes to v3:
-  - Implement generic 'scsi_vpd_lun_id()' function to parse vpd page 0x83
-Changes to v4:
-  - Revert back to a single workqueue item
-  - Implement generic 'scsi_vpd_tpg_id()' function
-  - Add 'access_state' attribute to struct scsi_device
-  - Incorporate review from Ewan Milne
-  - Incorporate further reviews from hch
-  - Reshuffle patches
-
-Hannes Reinecke (36):
-  scsi_dh: move 'dh_state' sysfs attribute to generic code
-  scsi: ignore errors from scsi_dh_add_device()
-  scsi_dh_alua: Disable ALUA handling for non-disk devices
-  scsi_dh_alua: Use vpd_pg83 information
-  scsi_dh_alua: improved logging
-  scsi_dh_alua: sanitze sense code handling
-  scsi_dh_alua: use standard logging functions
-  scsi_dh_alua: return standard SCSI return codes in submit_rtpg
-  scsi_dh_alua: fixup description of stpg_endio()
-  scsi: remove scsi_show_sense_hdr()
-  scsi_dh_alua: use flag for RTPG extended header
-  scsi_dh_alua: use unaligned access macros
-  scsi_dh_alua: Pass buffer as function argument
-  scsi_dh_alua: separate out alua_stpg()
-  scsi_dh_alua: Make stpg synchronous
-  scsi_dh_alua: call alua_rtpg() if stpg fails
-  scsi_dh_alua: switch to scsi_execute_req_flags()
-  scsi_dh_alua: rework alua_check_tpgs() to return the tpgs mode
-  scsi_dh_alua: Use separate alua_port_group structure
-  scsi_dh_alua: allocate RTPG buffer separately
-  scsi_dh_alua: simplify sense code handling
-  scsi: Add scsi_vpd_lun_id()
-  scsi_dh_alua: use unique device id
-  scsi: Add scsi_vpd_tpg_id()
-  scsi_dh_alua: simplify alua_initialize()
-  revert "scsi_dh_alua: ALUA hander attach should succeed while TPG is
-    transitioning"
-  scsi_dh_alua: Use workqueue for RTPG
-  scsi_dh_alua: Recheck state on unit attention
-  scsi_dh_alua: update all port states
-  scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
-  scsi: rescan VPD attributes
-  scsi_dh: add 'rescan' callback
-  scsi: Add 'access_state' attribute
-  scsi_dh_alua: use common definitions for ALUA state
-  scsi_dh_alua: update 'access_state' field
-  scsi_dh_alua: Update version to 2.0
-
- drivers/scsi/device_handler/scsi_dh_alua.c | 1173 +++++++++++++++++-----------
- drivers/scsi/scsi.c                        |   20 +-
- drivers/scsi/scsi_dh.c                     |   68 +-
- drivers/scsi/scsi_lib.c                    |  184 +++++
- drivers/scsi/scsi_scan.c                   |   11 +
- drivers/scsi/scsi_sysfs.c                  |  122 ++-
- drivers/scsi/ses.c                         |   13 +-
- include/scsi/scsi_dbg.h                    |    2 -
- include/scsi/scsi_device.h                 |    4 +
- include/scsi/scsi_dh.h                     |    2 +
- include/scsi/scsi_proto.h                  |   13 +
- 11 files changed, 1081 insertions(+), 531 deletions(-)
-
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 7d01ef0..f15b977 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -131,43 +131,6 @@ static struct request *get_alua_req(struct scsi_device *sdev,
+ }
+ 
+ /*
+- * submit_vpd_inquiry - Issue an INQUIRY VPD page 0x83 command
+- * @sdev: sdev the command should be sent to
+- */
+-static int submit_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+-{
+-	struct request *rq;
+-	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+-
+-	rq = get_alua_req(sdev, h->buff, h->bufflen, READ);
+-	if (!rq)
+-		goto done;
+-
+-	/* Prepare the command. */
+-	rq->cmd[0] = INQUIRY;
+-	rq->cmd[1] = 1;
+-	rq->cmd[2] = 0x83;
+-	rq->cmd[4] = h->bufflen;
+-	rq->cmd_len = COMMAND_SIZE(INQUIRY);
+-
+-	rq->sense = h->sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = h->senselen = 0;
+-
+-	err = blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (err == -EIO) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: evpd inquiry failed with %x\n",
+-			    ALUA_DH_NAME, rq->errors);
+-		h->senselen = rq->sense_len;
+-		err = SCSI_DH_IO;
+-	}
+-	blk_put_request(rq);
+-done:
+-	return err;
+-}
+-
+-/*
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+@@ -359,43 +322,24 @@ static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
+ }
+ 
+ /*
+- * alua_vpd_inquiry - Evaluate INQUIRY vpd page 0x83
++ * alua_check_vpd - Evaluate INQUIRY vpd page 0x83
+  * @sdev: device to be checked
+  *
+  * Extract the relative target port and the target port group
+  * descriptor from the list of identificators.
+  */
+-static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
++static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+-	int len;
+-	unsigned err;
+ 	unsigned char *d;
+ 
+- retry:
+-	err = submit_vpd_inquiry(sdev, h);
+-
+-	if (err != SCSI_DH_OK)
+-		return err;
+-
+-	/* Check if vpd page exceeds initial buffer */
+-	len = (h->buff[2] << 8) + h->buff[3] + 4;
+-	if (len > h->bufflen) {
+-		/* Resubmit with the correct length */
+-		if (realloc_buffer(h, len)) {
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "%s: kmalloc buffer failed\n",
+-				    ALUA_DH_NAME);
+-			/* Temporary failure, bypass */
+-			return SCSI_DH_DEV_TEMP_BUSY;
+-		}
+-		goto retry;
+-	}
++	if (!sdev->vpd_pg83)
++		return SCSI_DH_DEV_UNSUPP;
+ 
+ 	/*
+-	 * Now look for the correct descriptor.
++	 * Look for the correct descriptor.
+ 	 */
+-	d = h->buff + 4;
+-	while (d < h->buff + len) {
++	d = sdev->vpd_pg83 + 4;
++	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
+ 		switch (d[1] & 0xf) {
+ 		case 0x4:
+ 			/* Relative target port */
+@@ -422,14 +366,13 @@ static int alua_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			    ALUA_DH_NAME);
+ 		h->state = TPGS_STATE_OPTIMIZED;
+ 		h->tpgs = TPGS_MODE_NONE;
+-		err = SCSI_DH_DEV_UNSUPP;
+-	} else {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: port group %02x rel port %02x\n",
+-			    ALUA_DH_NAME, h->group_id, h->rel_port);
++		return SCSI_DH_DEV_UNSUPP;
+ 	}
++	sdev_printk(KERN_INFO, sdev,
++		    "%s: port group %02x rel port %02x\n",
++		    ALUA_DH_NAME, h->group_id, h->rel_port);
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static char print_alua_state(int state)
+@@ -692,7 +635,7 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
+ 	if (err != SCSI_DH_OK)
+ 		goto out;
+ 
+-	err = alua_vpd_inquiry(sdev, h);
++	err = alua_check_vpd(sdev, h);
+ 	if (err != SCSI_DH_OK)
+ 		goto out;
+ 
 -- 
 1.8.5.6
 
