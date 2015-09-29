@@ -1,206 +1,160 @@
-From: =?utf-8?B?IlTDs3RoIEF0dGlsYSI=?= <atoth@atoth.sote.hu>
-Subject: Re: twa generates WARNING upon boot
-Date: Tue, 29 Sep 2015 21:17:58 +0200
-Message-ID: <72da6fd103a0504fe9cd0a3967345cc9.squirrel@atoth.sote.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 08/32] cxlflash: Fix to avoid CXL services during EEH
+Date: Tue, 29 Sep 2015 14:28:28 -0500
+Message-ID: <84B83AB3-F812-416B-9B98-70F6A4EEC880@linux.vnet.ibm.com>
+References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443222852-9229-1-git-send-email-mrochs@linux.vnet.ibm.com> <87h9meuouw.fsf@gamma.ozlabs.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atoth.sote.hu ([195.111.75.211]:36104 "EHLO atoth.sote.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965309AbbI2TSI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 15:18:08 -0400
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:53872 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964993AbbI2TdJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2015 15:33:09 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Tue, 29 Sep 2015 15:33:08 -0400
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 853BD38C81EC
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 15:28:31 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8TJSV3751511460
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 19:28:31 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8TJSTks002414
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 15:28:31 -0400
+In-Reply-To: <87h9meuouw.fsf@gamma.ozlabs.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Thx PaX Team <pageexec@freemail.hu>
+To: Daniel Axtens <dja@axtens.net>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-2015.Szeptember 29.(K) 20:33 id=C5=91pontban James Bottomley ezt =C3=AD=
-rta:
-> On Tue, 2015-09-29 at 20:25 +0200, "T=C3=B3th Attila" wrote:
->> 2015.Szeptember 29.(K) 20:02 id=C5=91pontban James Bottomley ezt =C3=
-=ADrta:
->> > On Tue, 2015-09-29 at 10:37 -0700, James Bottomley wrote:
->> >> On Tue, 2015-09-29 at 18:49 +0200, "T=C3=B3th Attila" wrote:
->> >> > 2015.Szeptember 27.(V) 23:19 id=C5=91pontban adam radford ezt =C3=
-=ADrta:
->> >> > > On Sun, Sep 27, 2015 at 4:56 AM, "T=C3=B3th Attila"
->> <atoth@atoth.sote.hu>
->> >> > > wrote:
->> >> > >> The 3ware card is a 9650SE-12ML running in a Asus Z8PE-D12X
->> >> > >>
->> >> > >
->> >> > > Can you re-try with Christoph's patch:
->> >> > >
->> >> > > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.g=
-it/commit/?id=3D118c855b5623f3e2e6204f02623d88c09e0c34de
->> >> >
->> >> > As I've told this patch has been already included in the kernel=
- I'm
->> >> using
->> >> > (4.1.7-hardened-r1, which is based on 4.1.7).
->> >> > Out of curiosity I've reverted the patch and the WARNING no lon=
-ger
->> >> appears
->> >> > during boot...
->> >>
->> >> Ah, it looks like there's a bug in the patch, it doesn't take int=
-o
->> >> account that the driver has a minimum sg map length and it copies=
- for
->> >> things under that, so we're likely unmapping something that wasn'=
-t
->> >> mapped.   It's slightly hard to fix given that the indicator flag
->> we'd
->> >> use for this is gone in that patch; does this fix the warning?
->> >
->> > Actually, strike that, it would still barf on internally generated
->> > commands (and it's recursively calling twa_scsi_dma_unmap).  This =
-does
->> a
->> > partial revert of the state check which should pick up all cases t=
-he
->> > input didn't go through the mapping.
->>
->> Just to be clear before I try something out.
->> In this latter patch you are resurrecting TW_PHASE_SGLIST, which has
->> been
->> ment to be removed in Christoph's patch from the header.
->> I guess I have to reintroduce those phase defines on top of the chan=
-ges
->> below in your latest email.
->> Or please let me know what should I exactly try out.
->
-> Heh, sorry forgot the header change.  This should be the complete pat=
-ch
-> attached.
+> On Sep 28, 2015, at 6:05 PM, Daniel Axtens <dja@axtens.net> wrote:
+> 
+> You have two versions of check_state() below, which is a bit
+> confusing. It looks like you've moved the function and also added the
+> up/down of the read semaphore. I assume that's all that changed?
 
-After applying your latest patch I can see no more WARNINGs upon reboot=
-!
+Correct.
 
-Please note, that apart from the culprit 3w-9xxx commit
-(https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D118c855b5623f3e2e6204f02623d88c09e0c34de),
-two other parent commits were introducing similar changes to 3w-xxxx an=
-d
-3w-sas drivers
-(https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D9cd9554615cba14f0877cc9972a6537ad2bdde61,
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/=
-?id=3D579d69bc1fd56d5af5761969aa529d1d1c188300).
-Those two may also need similar treatment.
+It was originally moved to meet a dependency due to it being defined statically.
 
-Many thanks:
-Dw.
---=20
-dr T=C3=B3th Attila, Radiol=C3=B3gus, 06-20-825-8057
-Attila Toth MD, Radiologist, +36-20-825-8057
+> 
+>> 
+>> /**
+>> + * check_state() - checks and responds to the current adapter state
+>> + * @cfg:	Internal structure associated with the host.
+>> + *
+>> + * This routine can block and should only be used on process context.
+>> + * It assumes that the caller is an ioctl thread and holding the ioctl
+>> + * read semaphore. This is temporarily let up across the wait to allow
+>> + * for draining actively running ioctls. Also note that when waking up
+>> + * from waiting in reset, the state is unknown and must be checked again
+>> + * before proceeding.
+>> + *
+>> + * Return: 0 on success, -errno on failure
+>> + */
+>> +static int check_state(struct cxlflash_cfg *cfg)
+>> +{
+>> +	struct device *dev = &cfg->dev->dev;
+>> +	int rc = 0;
+>> +
+>> +retry:
+>> +	switch (cfg->state) {
+>> +	case STATE_LIMBO:
+>> +		dev_dbg(dev, "%s: Limbo state, going to wait...\n", __func__);
+>> +		up_read(&cfg->ioctl_rwsem);
+>> +		rc = wait_event_interruptible(cfg->limbo_waitq,
+>> +					      cfg->state != STATE_LIMBO);
+>> +		down_read(&cfg->ioctl_rwsem);
+>> +		if (unlikely(rc))
+>> +			break;
+>> +		goto retry;
+>> +	case STATE_FAILTERM:
+>> +		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
+>> +		rc = -ENODEV;
+>> +		break;
+>> +	default:
+>> +		break;
+>> +	}
+>> +
+>> +	return rc;
+>> +}
+>> +
+>> +/**
+>>  * cxlflash_disk_attach() - attach a LUN to a context
+>>  * @sdev:	SCSI device associated with LUN.
+>>  * @attach:	Attach ioctl data structure.
+>> @@ -1523,41 +1563,6 @@ err1:
+>> }
+>> 
+>> /**
+>> - * check_state() - checks and responds to the current adapter state
+>> - * @cfg:	Internal structure associated with the host.
+>> - *
+>> - * This routine can block and should only be used on process context.
+>> - * Note that when waking up from waiting in limbo, the state is unknown
+>> - * and must be checked again before proceeding.
+>> - *
+>> - * Return: 0 on success, -errno on failure
+>> - */
+>> -static int check_state(struct cxlflash_cfg *cfg)
+>> -{
+>> -	struct device *dev = &cfg->dev->dev;
+>> -	int rc = 0;
+>> -
+>> -retry:
+>> -	switch (cfg->state) {
+>> -	case STATE_LIMBO:
+>> -		dev_dbg(dev, "%s: Limbo, going to wait...\n", __func__);
+>> -		rc = wait_event_interruptible(cfg->limbo_waitq,
+>> -					      cfg->state != STATE_LIMBO);
+>> -		if (unlikely(rc))
+>> -			break;
+>> -		goto retry;
+>> -	case STATE_FAILTERM:
+>> -		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
+>> -		rc = -ENODEV;
+>> -		break;
+>> -	default:
+>> -		break;
+>> -	}
+>> -
+>> -	return rc;
+>> -}
+>> -
+>> -/**
+>>  * cxlflash_afu_recover() - initiates AFU recovery
+>>  * @sdev:	SCSI device associated with LUN.
+>>  * @recover:	Recover ioctl data structure.
+>> @@ -1646,9 +1651,14 @@ retry_recover:
+>> 	/* Test if in error state */
+>> 	reg = readq_be(&afu->ctrl_map->mbox_r);
+>> 	if (reg == -1) {
+>> -		dev_dbg(dev, "%s: MMIO read fail! Wait for recovery...\n",
+>> -			__func__);
+>> -		mutex_unlock(&ctxi->mutex);
+>> +		dev_dbg(dev, "%s: MMIO fail, wait for recovery.\n", __func__);
+>> +
+>> +		/*
+>> +		 * Before checking the state, put back the context obtained with
+>> +		 * get_context() as it is no longer needed and sleep for a short
+>> +		 * period of time (see prolog notes).
+>> +		 */
+>> +		put_context(ctxi);
+> 
+> Is this needed for the drain to work? It looks like it fixes a
+> refcounting bug in the function, but I'm not sure I understand how it
+> interacts with the rest of this patch.
 
-> ---
->
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index add419d..751ed66 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -151,7 +151,13 @@ static void
-> twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int re
->  static char *twa_string_lookup(twa_message_type *table, unsigned int
-> aen_code);
->
->  /* Functions */
-> +static void twa_scsi_dma_unmap(struct scsi_cmnd *SCpnt)
-> +{
-> +	if (SCpnt->SCp.phase =3D=3D TW_PHASE_SGLIST)
-> +		scsi_dma_unmap(SCpnt);
-> +}
->
-> +
->  /* Show some statistics about the card */
->  static ssize_t twa_show_stats(struct device *dev,
->  			      struct device_attribute *attr, char *buf)
-> @@ -1339,7 +1345,7 @@ static irqreturn_t twa_interrupt(int irq, void
-> *dev_instance)
->  				}
->
->  				/* Now complete the io */
-> -				scsi_dma_unmap(cmd);
-> +				twa_scsi_dma_unmap(cmd);
->  				cmd->scsi_done(cmd);
->  				tw_dev->state[request_id] =3D TW_S_COMPLETED;
->  				twa_free_request_id(tw_dev, request_id);
-> @@ -1582,7 +1588,7 @@ static int
-> twa_reset_device_extension(TW_Device_Extension *tw_dev)
->  				struct scsi_cmnd *cmd =3D tw_dev->srb[i];
->
->  				cmd->result =3D (DID_RESET << 16);
-> -				scsi_dma_unmap(cmd);
-> +				twa_scsi_dma_unmap(cmd);
->  				cmd->scsi_done(cmd);
->  			}
->  		}
-> @@ -1762,15 +1768,18 @@ static int twa_scsi_queue_lck(struct scsi_cmn=
-d
-> *SCpnt, void (*done)(struct scsi_
->  	/* Save the scsi command for use by the ISR */
->  	tw_dev->srb[request_id] =3D SCpnt;
->
-> +	/* Initialize phase to zero */
-> +	SCpnt->SCp.phase =3D TW_PHASE_INITIAL;
-> +
->  	retval =3D twa_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NUL=
-L);
->  	switch (retval) {
->  	case SCSI_MLQUEUE_HOST_BUSY:
-> -		scsi_dma_unmap(SCpnt);
-> +		twa_scsi_dma_unmap(SCpnt);
->  		twa_free_request_id(tw_dev, request_id);
->  		break;
->  	case 1:
->  		SCpnt->result =3D (DID_ERROR << 16);
-> -		scsi_dma_unmap(SCpnt);
-> +		twa_scsi_dma_unmap(SCpnt);
->  		done(SCpnt);
->  		tw_dev->state[request_id] =3D TW_S_COMPLETED;
->  		twa_free_request_id(tw_dev, request_id);
-> @@ -1845,6 +1854,8 @@ static int
-> twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
->  				if (sg_count < 0)
->  					goto out;
->
-> +				srb->SCp.phase =3D TW_PHASE_SGLIST;
-> +
->  				scsi_for_each_sg(srb, sg, sg_count, i) {
->  					command_packet->sg_list[i].address =3D
-> TW_CPU_TO_SGL(sg_dma_address(sg));
->  					command_packet->sg_list[i].length =3D cpu_to_le32(sg_dma_len(sg=
-));
-> diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
-> index 0fdc83c..c88d5bd 100644
-> --- a/drivers/scsi/3w-9xxx.h
-> +++ b/drivers/scsi/3w-9xxx.h
-> @@ -324,6 +324,10 @@ static twa_message_type twa_error_table[] =3D {
->  #define TW_CURRENT_DRIVER_BUILD 0
->  #define TW_CURRENT_DRIVER_BRANCH 0
->
-> +/* Phase defines */
-> +#define TW_PHASE_INITIAL 0
-> +#define TW_PHASE_SGLIST  1
-> +
->  /* Misc defines */
->  #define TW_9550SX_DRAIN_COMPLETED	      0xFFFF
->  #define TW_SECTOR_SIZE                        512
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This was simply some "while I'm here" refactoring as the commit originally
+included a change here. The main point of this change was to replace the
+mutex_unlock() with put_context(), which is a wrapper around the unlocking
+of the context's mutex.
+> 
+> Anyway, the patch overall looks good to me, and makes your driver
+> interact with CXL's EEH support in the way I intended when I wrote it.
 
+Thanks for reviewing.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
