@@ -1,232 +1,226 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/36] scsi_dh_alua: Make stpg synchronous
-Date: Tue, 29 Sep 2015 12:47:17 +0200
-Message-ID: <1443523658-87622-16-git-send-email-hare@suse.de>
+Subject: [PATCH 17/36] scsi_dh_alua: switch to scsi_execute_req_flags()
+Date: Tue, 29 Sep 2015 12:47:19 +0200
+Message-ID: <1443523658-87622-18-git-send-email-hare@suse.de>
 References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42014 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41946 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934670AbbI2Krz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:47:55 -0400
+	id S934676AbbI2Kr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:47:56 -0400
 In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-The 'activate_complete' function needs to be executed after
-stpg has finished, so we can as well execute stpg synchronously
-and call the function directly.
+All commands are issued synchronously, so no need to open-code
+scsi_execute_req_flags() anymore. And we can get rid of the
+static sense code structure element. scsi_execute_req_flags()
+will be setting REQ_QUIET and REQ_PREEMPT, but that is
+perfectly fine as we're evaluating and logging any errors
+ourselves and we really need to send the command even if
+the device is quiesced.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ewan Milne <emilne@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 133 +++++++++++------------------
- 1 file changed, 50 insertions(+), 83 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 125 +++++++++--------------------
+ 1 file changed, 36 insertions(+), 89 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 59fe3e9..7c3789b 100644
+index b645593..b72cea6 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -170,76 +170,28 @@ done:
+@@ -75,7 +75,6 @@ struct alua_dh_data {
+ 	unsigned char		*buff;
+ 	int			bufflen;
+ 	unsigned char		transition_tmo;
+-	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+ 	struct scsi_device	*sdev;
+ 	activate_complete	callback_fn;
+ 	void			*callback_data;
+@@ -102,71 +101,30 @@ static int realloc_buffer(struct alua_dh_data *h, unsigned len)
+ 	return 0;
+ }
+ 
+-static struct request *get_alua_req(struct scsi_device *sdev,
+-				    void *buffer, unsigned buflen, int rw)
+-{
+-	struct request *rq;
+-	struct request_queue *q = sdev->request_queue;
+-
+-	rq = blk_get_request(q, rw, GFP_NOIO);
+-
+-	if (IS_ERR(rq)) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: blk_get_request failed\n", __func__);
+-		return NULL;
+-	}
+-	blk_rq_set_block_pc(rq);
+-
+-	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_NOIO)) {
+-		blk_put_request(rq);
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: blk_rq_map_kern failed\n", __func__);
+-		return NULL;
+-	}
+-
+-	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+-			 REQ_FAILFAST_DRIVER;
+-	rq->retries = ALUA_FAILOVER_RETRIES;
+-	rq->timeout = ALUA_FAILOVER_TIMEOUT * HZ;
+-
+-	return rq;
+-}
+-
+ /*
+  * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+  * @sdev: sdev the command should be sent to
+  */
+-static unsigned submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+-			    int bufflen, unsigned char *sense, int flags)
++static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
++		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
+ {
+-	struct request *rq;
+-	int err = 0;
+-
+-	rq = get_alua_req(sdev, buff, bufflen, READ);
+-	if (!rq) {
+-		err = DRIVER_BUSY << 24;
+-		goto done;
+-	}
++	u8 cdb[COMMAND_SIZE(MAINTENANCE_IN)];
++	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++		REQ_FAILFAST_DRIVER;
+ 
+ 	/* Prepare the command. */
+-	rq->cmd[0] = MAINTENANCE_IN;
++	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_IN));
++	cdb[0] = MAINTENANCE_IN;
+ 	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+-		rq->cmd[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
++		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+ 	else
+-		rq->cmd[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(bufflen, &rq->cmd[6]);
+-	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
+-
+-	rq->sense = sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (rq->errors)
+-		err = rq->errors;
+-	blk_put_request(rq);
+-done:
+-	return err;
++		cdb[1] = MI_REPORT_TARGET_PGS;
++	put_unaligned_be32(bufflen, &cdb[6]);
++
++	return scsi_execute_req_flags(sdev, cdb, DMA_FROM_DEVICE,
++				      buff, bufflen, sshdr,
++				      ALUA_FAILOVER_TIMEOUT * HZ,
++				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
  }
  
  /*
-- * stpg_endio - Evaluate SET TARGET GROUP STATES
-- * @sdev: the device to be evaluated
-- * @state: the new target group state
-- *
-- * Evaluate a SET TARGET GROUP STATES command response.
-- */
--static void stpg_endio(struct request *req, int error)
--{
--	struct alua_dh_data *h = req->end_io_data;
--	struct scsi_sense_hdr sense_hdr;
--	unsigned err = SCSI_DH_OK;
--
--	if (host_byte(req->errors) != DID_OK ||
--	    msg_byte(req->errors) != COMMAND_COMPLETE) {
--		err = SCSI_DH_IO;
--		goto done;
--	}
--
--	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
--				 &sense_hdr)) {
--		err = alua_check_sense(h->sdev, &sense_hdr);
--		if (err == ADD_TO_MLQUEUE) {
--			err = SCSI_DH_RETRY;
--			goto done;
--		}
--		sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
--			    ALUA_DH_NAME);
--		scsi_print_sense_hdr(h->sdev, ALUA_DH_NAME, &sense_hdr);
--		err = SCSI_DH_IO;
--	} else if (error)
--		err = SCSI_DH_IO;
--
--	if (err == SCSI_DH_OK) {
--		h->state = TPGS_STATE_OPTIMIZED;
--		sdev_printk(KERN_INFO, h->sdev,
--			    "%s: port group %02x switched to state %c\n",
--			    ALUA_DH_NAME, h->group_id,
--			    print_alua_state(h->state));
--	}
--done:
--	req->end_io_data = NULL;
--	__blk_put_request(req->q, req);
--	if (h->callback_fn) {
--		h->callback_fn(h->callback_data, err);
--		h->callback_fn = h->callback_data = NULL;
--	}
--	return;
--}
--
--/*
-  * submit_stpg - Issue a SET TARGET GROUP STATES command
-  *
-  * Currently we're only setting the current target port group state
+@@ -176,40 +134,30 @@ done:
   * to 'active/optimized' and let the array firmware figure out
   * the states of the remaining groups.
   */
--static unsigned submit_stpg(struct alua_dh_data *h)
-+static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
-+			    unsigned char *sense)
+-static unsigned submit_stpg(struct scsi_device *sdev, int group_id,
+-			    unsigned char *sense)
++static int submit_stpg(struct scsi_device *sdev, int group_id,
++		       struct scsi_sense_hdr *sshdr)
  {
- 	struct request *rq;
-+	unsigned char stpg_data[8];
+-	struct request *rq;
++	u8 cdb[COMMAND_SIZE(MAINTENANCE_OUT)];
+ 	unsigned char stpg_data[8];
  	int stpg_len = 8;
--	struct scsi_device *sdev = h->sdev;
-+	int err = 0;
+-	int err = 0;
++	int req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
++		REQ_FAILFAST_DRIVER;
  
  	/* Prepare the data buffer */
--	memset(h->buff, 0, stpg_len);
--	h->buff[4] = TPGS_STATE_OPTIMIZED & 0x0f;
--	put_unaligned_be16(h->group_id, &h->buff[6]);
-+	memset(stpg_data, 0, stpg_len);
-+	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
-+	put_unaligned_be16(group_id, &stpg_data[6]);
+ 	memset(stpg_data, 0, stpg_len);
+ 	stpg_data[4] = TPGS_STATE_OPTIMIZED & 0x0f;
+ 	put_unaligned_be16(group_id, &stpg_data[6]);
  
--	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
-+	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
- 	if (!rq)
--		return SCSI_DH_RES_TEMP_UNAVAIL;
-+		return DRIVER_BUSY << 24;
- 
+-	rq = get_alua_req(sdev, stpg_data, stpg_len, WRITE);
+-	if (!rq)
+-		return DRIVER_BUSY << 24;
+-
  	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_OUT;
-@@ -247,13 +199,17 @@ static unsigned submit_stpg(struct alua_dh_data *h)
- 	put_unaligned_be32(stpg_len, &rq->cmd[6]);
- 	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
- 
--	rq->sense = h->sense;
-+	rq->sense = sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
--	rq->end_io_data = h;
- 
--	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
--	return SCSI_DH_OK;
-+	blk_execute_rq(rq->q, NULL, rq, 1);
-+	if (rq->errors)
-+		err = rq->errors;
-+
-+	blk_put_request(rq);
-+
-+	return err;
- }
- 
- /*
-@@ -620,47 +576,59 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
-  * response. Returns SCSI_DH_RETRY per default to trigger
-  * a re-evaluation of the target group state.
-  */
--static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h,
--			  activate_complete fn, void *data)
-+static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
- {
--	int err = SCSI_DH_OK;
--	int stpg = 0;
-+	int retval;
-+	struct scsi_sense_hdr sense_hdr;
- 
- 	if (!(h->tpgs & TPGS_MODE_EXPLICIT)) {
--		/* Only implicit ALUA supported */
--		return err;
-+		/* Only implicit ALUA supported, retry */
-+		return SCSI_DH_RETRY;
- 	}
+-	rq->cmd[0] = MAINTENANCE_OUT;
+-	rq->cmd[1] = MO_SET_TARGET_PGS;
+-	put_unaligned_be32(stpg_len, &rq->cmd[6]);
+-	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
 -
- 	switch (h->state) {
-+	case TPGS_STATE_OPTIMIZED:
-+		return SCSI_DH_OK;
- 	case TPGS_STATE_NONOPTIMIZED:
--		stpg = 1;
- 		if ((h->flags & ALUA_OPTIMIZE_STPG) &&
- 		    !h->pref &&
- 		    (h->tpgs & TPGS_MODE_IMPLICIT))
--			stpg = 0;
-+			return SCSI_DH_OK;
- 		break;
- 	case TPGS_STATE_STANDBY:
- 	case TPGS_STATE_UNAVAILABLE:
--		stpg = 1;
- 		break;
- 	case TPGS_STATE_OFFLINE:
--		err = SCSI_DH_IO;
-+		return SCSI_DH_IO;
- 		break;
- 	case TPGS_STATE_TRANSITIONING:
--		err = SCSI_DH_RETRY;
- 		break;
- 	default:
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: stpg failed, unhandled TPGS state %d",
-+			    ALUA_DH_NAME, h->state);
-+		return SCSI_DH_NOSYS;
- 		break;
- 	}
-+	/* Set state to transitioning */
-+	h->state = TPGS_STATE_TRANSITIONING;
-+	retval = submit_stpg(sdev, h->group_id, h->sense);
- 
--	if (stpg) {
--		h->callback_fn = fn;
--		h->callback_data = data;
--		err = submit_stpg(h);
--		if (err != SCSI_DH_OK)
--			h->callback_fn = h->callback_data = NULL;
-+	if (retval) {
-+		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-+					  &sense_hdr)) {
-+			sdev_printk(KERN_INFO, sdev,
-+				    "%s: stpg failed, result %d",
-+				    ALUA_DH_NAME, retval);
-+			if (driver_byte(retval) == DRIVER_BUSY)
-+				return SCSI_DH_DEV_TEMP_BUSY;
-+		} else {
-+			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
-+				    ALUA_DH_NAME);
-+			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-+		}
- 	}
+-	rq->sense = sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (rq->errors)
+-		err = rq->errors;
+-
+-	blk_put_request(rq);
+-
 -	return err;
-+	/* Retry RTPG */
-+	return SCSI_DH_RETRY;
++	memset(cdb, 0x0, COMMAND_SIZE(MAINTENANCE_OUT));
++	cdb[0] = MAINTENANCE_OUT;
++	cdb[1] = MO_SET_TARGET_PGS;
++	put_unaligned_be32(stpg_len, &cdb[6]);
++
++	return scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
++				      stpg_data, stpg_len,
++				      sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
++				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
  }
  
  /*
-@@ -748,10 +716,9 @@ static int alua_activate(struct scsi_device *sdev,
- 	if (optimize_stpg)
- 		h->flags |= ALUA_OPTIMIZE_STPG;
+@@ -445,14 +393,14 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h, int wait_
+ 		expiry = round_jiffies_up(jiffies + h->transition_tmo * HZ);
  
--	err = alua_stpg(sdev, h, fn, data);
--
-+	err = alua_stpg(sdev, h);
- out:
--	if (err != SCSI_DH_OK && fn)
-+	if (fn)
- 		fn(data, err);
- 	return 0;
- }
+  retry:
+-	retval = submit_rtpg(sdev, h->buff, h->bufflen, h->sense, h->flags);
++	retval = submit_rtpg(sdev, h->buff, h->bufflen, &sense_hdr, h->flags);
++
+ 	if (retval) {
+-		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-					  &sense_hdr)) {
++		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_BUSY)
++			if (driver_byte(retval) == DRIVER_ERROR)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
+ 		}
+@@ -611,15 +559,14 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 	}
+ 	/* Set state to transitioning */
+ 	h->state = TPGS_STATE_TRANSITIONING;
+-	retval = submit_stpg(sdev, h->group_id, h->sense);
++	retval = submit_stpg(sdev, h->group_id, &sense_hdr);
+ 
+ 	if (retval) {
+-		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-					  &sense_hdr)) {
++		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: stpg failed, result %d",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_BUSY)
++			if (driver_byte(retval) == DRIVER_ERROR)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 		} else {
+ 			sdev_printk(KERN_INFO, h->sdev, "%s: stpg failed\n",
 -- 
 1.8.5.6
 
