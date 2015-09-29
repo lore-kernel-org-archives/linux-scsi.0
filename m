@@ -1,42 +1,202 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/36] scsi: remove scsi_show_sense_hdr()
-Date: Tue, 29 Sep 2015 12:47:12 +0200
-Message-ID: <1443523658-87622-11-git-send-email-hare@suse.de>
+Subject: [PATCH 01/36] scsi_dh: move 'dh_state' sysfs attribute to generic code
+Date: Tue, 29 Sep 2015 12:47:03 +0200
+Message-ID: <1443523658-87622-2-git-send-email-hare@suse.de>
 References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41994 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41949 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934666AbbI2Kry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:47:54 -0400
+	id S934645AbbI2Krw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:47:52 -0400
 In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so remove it.
+As scsi_dh.c is now always compiled in we should be moving
+the 'dh_state' attribute to the generic code.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- include/scsi/scsi_dbg.h | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/scsi_dh.c    | 68 +----------------------------------------------
+ drivers/scsi/scsi_sysfs.c | 58 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 59 insertions(+), 67 deletions(-)
 
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index f8170e9..56710e0 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -12,8 +12,6 @@ extern size_t __scsi_format_command(char *, size_t,
- 				   const unsigned char *, size_t);
- extern void scsi_show_extd_sense(const struct scsi_device *, const char *,
- 				 unsigned char, unsigned char);
--extern void scsi_show_sense_hdr(const struct scsi_device *, const char *,
--				const struct scsi_sense_hdr *);
- extern void scsi_print_sense_hdr(const struct scsi_device *, const char *,
- 				 const struct scsi_sense_hdr *);
- extern void scsi_print_sense(const struct scsi_cmnd *);
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index edb044a..1584080 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -153,76 +153,11 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
+ 	module_put(sdev->handler->module);
+ }
+ 
+-/*
+- * Functions for sysfs attribute 'dh_state'
+- */
+-static ssize_t
+-store_dh_state(struct device *dev, struct device_attribute *attr,
+-	       const char *buf, size_t count)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_device_handler *scsi_dh;
+-	int err = -EINVAL;
+-
+-	if (sdev->sdev_state == SDEV_CANCEL ||
+-	    sdev->sdev_state == SDEV_DEL)
+-		return -ENODEV;
+-
+-	if (!sdev->handler) {
+-		/*
+-		 * Attach to a device handler
+-		 */
+-		scsi_dh = scsi_dh_lookup(buf);
+-		if (!scsi_dh)
+-			return err;
+-		err = scsi_dh_handler_attach(sdev, scsi_dh);
+-	} else {
+-		if (!strncmp(buf, "detach", 6)) {
+-			/*
+-			 * Detach from a device handler
+-			 */
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "can't detach handler %s.\n",
+-				    sdev->handler->name);
+-			err = -EINVAL;
+-		} else if (!strncmp(buf, "activate", 8)) {
+-			/*
+-			 * Activate a device handler
+-			 */
+-			if (sdev->handler->activate)
+-				err = sdev->handler->activate(sdev, NULL, NULL);
+-			else
+-				err = 0;
+-		}
+-	}
+-
+-	return err<0?err:count;
+-}
+-
+-static ssize_t
+-show_dh_state(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-
+-	if (!sdev->handler)
+-		return snprintf(buf, 20, "detached\n");
+-
+-	return snprintf(buf, 20, "%s\n", sdev->handler->name);
+-}
+-
+-static struct device_attribute scsi_dh_state_attr =
+-	__ATTR(dh_state, S_IRUGO | S_IWUSR, show_dh_state,
+-	       store_dh_state);
+-
+ int scsi_dh_add_device(struct scsi_device *sdev)
+ {
+ 	struct scsi_device_handler *devinfo = NULL;
+ 	const char *drv;
+-	int err;
+-
+-	err = device_create_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+-	if (err)
+-		return err;
++	int err = 0;
+ 
+ 	drv = scsi_dh_find_driver(sdev);
+ 	if (drv)
+@@ -236,7 +171,6 @@ void scsi_dh_remove_device(struct scsi_device *sdev)
+ {
+ 	if (sdev->handler)
+ 		scsi_dh_handler_detach(sdev);
+-	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+ }
+ 
+ /*
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..5d64c3f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -17,6 +17,7 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
++#include <scsi/scsi_dh.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_driver.h>
+ 
+@@ -875,6 +876,60 @@ sdev_show_function(queue_depth, "%d\n");
+ static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
+ 		   sdev_store_queue_depth);
+ 
++#ifdef CONFIG_SCSI_DH
++static ssize_t
++sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
++		   char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->handler)
++		return snprintf(buf, 20, "detached\n");
++
++	return snprintf(buf, 20, "%s\n", sdev->handler->name);
++}
++
++static ssize_t
++sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
++		    const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int err = -EINVAL;
++
++	if (sdev->sdev_state == SDEV_CANCEL ||
++	    sdev->sdev_state == SDEV_DEL)
++		return -ENODEV;
++
++	if (!sdev->handler) {
++		/*
++		 * Attach to a device handler
++		 */
++		err = scsi_dh_attach(sdev->request_queue, buf);
++	} else if (!strncmp(buf, "activate", 8)) {
++		/*
++		 * Activate a device handler
++		 */
++		if (sdev->handler->activate)
++			err = sdev->handler->activate(sdev, NULL, NULL);
++		else
++			err = 0;
++	} else if (!strncmp(buf, "detach", 6)) {
++		/*
++		 * Detach from a device handler
++		 */
++		sdev_printk(KERN_WARNING, sdev,
++			    "can't detach handler %s.\n",
++			    sdev->handler->name);
++		err = -EINVAL;
++	}
++
++	return err < 0 ? err : count;
++}
++
++static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
++		   sdev_store_dh_state);
++#endif
++
+ static ssize_t
+ sdev_show_queue_ramp_up_period(struct device *dev,
+ 			       struct device_attribute *attr,
+@@ -944,6 +999,9 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_modalias.attr,
+ 	&dev_attr_queue_depth.attr,
+ 	&dev_attr_queue_type.attr,
++#ifdef CONFIG_SCSI_DH
++	&dev_attr_dh_state.attr,
++#endif
+ 	&dev_attr_queue_ramp_up_period.attr,
+ 	REF_EVT(media_change),
+ 	REF_EVT(inquiry_change_reported),
 -- 
 1.8.5.6
 
