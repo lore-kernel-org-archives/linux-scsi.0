@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/36] scsi_dh_alua: simplify sense code handling
-Date: Tue, 29 Sep 2015 12:47:23 +0200
-Message-ID: <1443523658-87622-22-git-send-email-hare@suse.de>
+Subject: [PATCH 23/36] scsi_dh_alua: use unique device id
+Date: Tue, 29 Sep 2015 12:47:25 +0200
+Message-ID: <1443523658-87622-24-git-send-email-hare@suse.de>
 References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41991 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42101 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934703AbbI2KsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S934706AbbI2KsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 29 Sep 2015 06:48:04 -0400
 In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,80 +14,131 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Most sense code is already handled in the generic
-code, so we shouldn't be adding special cases here.
-However, when doing so we need to check for
-unit attention whenever we're sending an internal
-command.
+Use scsi_vpd_lun_id() to assign a unique device identification
+to the alua port group structure.
 
-Reviewed-by: Ewan Milne <emilne@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 36 +++++++++---------------------
- 1 file changed, 10 insertions(+), 26 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 65 ++++++++++++++++++++++++++++--
+ 1 file changed, 62 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 5908ef2..398ea81 100644
+index 398ea81..e2e6177 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -91,7 +91,6 @@ struct alua_dh_data {
- #define ALUA_POLICY_SWITCH_ALL		1
+@@ -70,6 +70,8 @@ static DEFINE_SPINLOCK(port_group_lock);
+ struct alua_port_group {
+ 	struct kref		kref;
+ 	struct list_head	node;
++	unsigned char		device_id_str[256];
++	int			device_id_len;
+ 	int			group_id;
+ 	int			tpgs;
+ 	int			state;
+@@ -163,6 +165,25 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
+ 				      ALUA_FAILOVER_RETRIES, NULL, req_flags);
+ }
  
- static char print_alua_state(int);
--static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
- 
- static void release_port_group(struct kref *kref)
++struct alua_port_group *alua_lookup_pg(char *id_str, size_t id_size,
++				       int group_id)
++{
++	struct alua_port_group *pg = NULL;
++
++	list_for_each_entry(pg, &port_group_list, node) {
++		if (pg->group_id != group_id)
++			continue;
++		if (pg->device_id_len != id_size)
++			continue;
++		if (strncmp(pg->device_id_str, id_str, id_size))
++			continue;
++		kref_get(&pg->kref);
++		return pg;
++	}
++
++	return NULL;
++}
++
+ /*
+  * alua_get_pg - Allocate a new port_group structure
+  * @sdev: scsi device
+@@ -173,9 +194,16 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
+  * device.
+  */
+ struct alua_port_group *alua_get_pg(struct scsi_device *sdev,
+-				    int group_id, int tpgs)
++				    int group_id, int tpgs,
++				    char *id_str, size_t id_size)
  {
-@@ -332,28 +331,6 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
--			/*
--			 * LUN Not Accessible -- Target port in standby state
--			 */
--			return SUCCESS;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c)
--			/*
--			 * LUN Not Accessible -- Target port in unavailable state
--			 */
--			return SUCCESS;
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x12)
--			/*
--			 * LUN Not Ready -- Offline
--			 */
--			return SUCCESS;
--		if (sdev->allow_restart &&
--		    sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x02)
--			/*
--			 * if the device is not started, we need to wake
--			 * the error handler to start the motor
--			 */
--			return FAILED;
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-@@ -455,9 +432,16 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
- 			pg->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
- 			goto retry;
- 		}
--
--		err = alua_check_sense(sdev, &sense_hdr);
--		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
+-	struct alua_port_group *pg = NULL;
++	struct alua_port_group *pg = NULL, *tmp_pg;
++
++	spin_lock(&port_group_lock);
++	pg = alua_lookup_pg(id_str, id_size, group_id);
++	spin_unlock(&port_group_lock);
++	if (pg)
++		return pg;
+ 
+ 	pg = kzalloc(sizeof(struct alua_port_group), GFP_KERNEL);
+ 	if (!pg) {
+@@ -184,11 +212,22 @@ struct alua_port_group *alua_get_pg(struct scsi_device *sdev,
+ 			    ALUA_DH_NAME);
+ 		return NULL;
+ 	}
++	strncpy(pg->device_id_str, id_str, sizeof(pg->device_id_str));
++
++	pg->device_id_len = id_size;
+ 	pg->group_id = group_id;
+ 	pg->tpgs = tpgs;
+ 	pg->state = TPGS_STATE_OPTIMIZED;
+ 	kref_init(&pg->kref);
++
++	/* Re-check list again to catch concurrent updates */
+ 	spin_lock(&port_group_lock);
++	tmp_pg = alua_lookup_pg(id_str, id_size, group_id);
++	if (tmp_pg) {
++		spin_unlock(&port_group_lock);
++		kfree(pg);
++		return tmp_pg;
++	}
+ 	list_add(&pg->node, &port_group_list);
+ 	spin_unlock(&port_group_lock);
+ 
+@@ -614,6 +653,8 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	int err = SCSI_DH_DEV_UNSUPP, tpgs;
++	char device_id_str[256];
++	int device_id_len;
+ 
+ 	tpgs = alua_check_tpgs(sdev);
+ 	if (tpgs == TPGS_MODE_NONE)
+@@ -623,7 +664,25 @@ static int alua_initialize(struct scsi_device *sdev, struct alua_dh_data *h)
+ 	if (err != SCSI_DH_OK)
+ 		goto out;
+ 
+-	h->pg = alua_get_pg(sdev, h->group_id, tpgs);
++	device_id_len = scsi_vpd_lun_id(sdev, device_id_str,
++					sizeof(device_id_str));
++	if (device_id_len <= 0) {
 +		/*
-+		 * Retry on ALUA state transition or if any
-+		 * UNIT ATTENTION occurred.
++		 * Internal error: TPGS supported but no device
++		 * identifcation found. Disable ALUA support.
 +		 */
-+		if (sense_hdr.sense_key == NOT_READY &&
-+		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+			err = SCSI_DH_RETRY;
-+		else if (sense_hdr.sense_key == UNIT_ATTENTION)
-+			err = SCSI_DH_RETRY;
-+		if (err == SCSI_DH_RETRY && time_before(jiffies, expiry)) {
- 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
- 				    ALUA_DH_NAME);
- 			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: No device descriptors found\n",
++			    ALUA_DH_NAME);
++		goto out;
++	}
++	sdev_printk(KERN_INFO, sdev,
++		    "%s: device %s port group %02x "
++		    "rel port %02x\n", ALUA_DH_NAME,
++		    device_id_str, h->group_id, h->rel_port);
++
++	h->pg = alua_get_pg(sdev, h->group_id, tpgs,
++			    device_id_str, device_id_len);
+ 	if (!h->pg) {
+ 		err = SCSI_DH_NOMEM;
+ 		goto out;
 -- 
 1.8.5.6
 
