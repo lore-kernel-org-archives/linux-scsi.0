@@ -1,87 +1,151 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 30/36] scsi_dh_alua: Send TEST UNIT READY to poll for transitioning
-Date: Tue, 29 Sep 2015 12:47:32 +0200
-Message-ID: <1443523658-87622-31-git-send-email-hare@suse.de>
+Subject: [PATCH 33/36] scsi: Add 'access_state' attribute
+Date: Tue, 29 Sep 2015 12:47:35 +0200
+Message-ID: <1443523658-87622-34-git-send-email-hare@suse.de>
 References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41946 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42014 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934714AbbI2KsG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 06:48:06 -0400
+	id S934709AbbI2KsF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:48:05 -0400
 In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@hansenpartnership.com>
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Sending a 'REPORT TARGET PORT GROUP' command is a costly operation,
-as the array has to gather information about all ports.
-So instead of using RTPG to poll for a status update when a port
-is in transitioning we should be sending a TEST UNIT READY, and
-wait for the sense code to report success.
+Add an 'access_state' attribute to struct scsi_device to
+display the asymmetric LUN access state.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ewan Milne <emilne@redhat.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 37 ++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/scsi/scsi_scan.c   |  1 +
+ drivers/scsi/scsi_sysfs.c  | 49 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |  1 +
+ include/scsi/scsi_proto.h  | 13 ++++++++++++
+ 4 files changed, 64 insertions(+)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index dd8682e..7476c8a 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -490,6 +490,30 @@ static int alua_check_sense(struct scsi_device *sdev,
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 5d3e2ae..76e771e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -230,6 +230,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	sdev->lun = lun;
+ 	sdev->channel = starget->channel;
+ 	sdev->sdev_state = SDEV_CREATED;
++	sdev->access_state = SCSI_ACCESS_STATE_UNKNOWN;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+ 	INIT_LIST_HEAD(&sdev->cmd_list);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 37799dc..38e157a 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -81,6 +81,34 @@ const char *scsi_host_state_name(enum scsi_host_state state)
+ 	return name;
  }
  
- /*
-+ * alua_tur - Send a TEST UNIT READY
-+ * @sdev: device to which the TEST UNIT READY command should be send
-+ *
-+ * Send a TEST UNIT READY to @sdev to figure out the device state
-+ * Returns SCSI_DH_RETRY if the sense code is NOT READY/ALUA TRANSITIONING,
-+ * SCSI_DH_OK if no error occured, and SCSI_DH_IO otherwise.
-+ */
-+static int alua_tur(struct scsi_device *sdev)
-+{
-+	struct scsi_sense_hdr sense_hdr;
-+	int retval;
++static const struct {
++	enum scsi_access_state	value;
++	char			*name;
++} sdev_access_states[] = {
++	{ SCSI_ACCESS_STATE_OPTIMAL, "active/optimized" },
++	{ SCSI_ACCESS_STATE_ACTIVE, "active/non-optimized" },
++	{ SCSI_ACCESS_STATE_STANDBY, "standby" },
++	{ SCSI_ACCESS_STATE_UNAVAILABLE, "unavailable" },
++	{ SCSI_ACCESS_STATE_LBA, "lba-dependent" },
++	{ SCSI_ACCESS_STATE_OFFLINE, "offline" },
++	{ SCSI_ACCESS_STATE_TRANSITIONING, "transitioning" },
++	{ SCSI_ACCESS_STATE_UNKNOWN, "unknown" },
++};
 +
-+	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, &sense_hdr);
-+	if (sense_hdr.sense_key == NOT_READY &&
-+	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+		return SCSI_DH_RETRY;
-+	else if (retval)
-+		return SCSI_DH_IO;
-+	else
-+		return SCSI_DH_OK;
++const char *scsi_access_state_name(enum scsi_access_state state)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(sdev_access_states); i++) {
++		if (sdev_access_states[i].value == state) {
++			name = sdev_access_states[i].name;
++			break;
++		}
++	}
++	return name;
 +}
 +
-+/*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-  *
-@@ -750,7 +774,20 @@ static void alua_rtpg_work(struct work_struct *work)
- 	}
- 	pg->flags |= ALUA_PG_RUNNING;
- 	if (pg->flags & ALUA_PG_RUN_RTPG) {
-+		int state = pg->state;
+ static int check_set(unsigned long long *val, char *src)
+ {
+ 	char *last;
+@@ -932,6 +960,26 @@ sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
+ 
+ static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
+ 		   sdev_store_dh_state);
 +
- 		spin_unlock_irqrestore(&pg->lock, flags);
-+		if (state == TPGS_STATE_TRANSITIONING) {
-+			if (alua_tur(sdev) == SCSI_DH_RETRY) {
-+				spin_lock_irqsave(&pg->lock, flags);
-+				pg->flags &= ~ALUA_PG_RUNNING;
-+				spin_unlock_irqrestore(&pg->lock, flags);
-+				queue_delayed_work(kaluad_wq, &pg->rtpg_work,
-+						   pg->interval * HZ);
-+				return;
-+			}
-+			/* Send RTPG on failure or if TUR indicates SUCCESS */
-+		}
- 		err = alua_rtpg(sdev, pg);
- 		spin_lock_irqsave(&pg->lock, flags);
- 		if (err == SCSI_DH_RETRY) {
++static ssize_t
++sdev_show_access_state(struct device *dev,
++		       struct device_attribute *attr,
++		       char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	enum scsi_access_state access_state;
++	bool pref = false;
++
++	if (sdev->access_state & SCSI_ACCESS_STATE_PREFERRED)
++		pref = true;
++
++	access_state = (sdev->access_state & SCSI_ACCESS_STATE_MASK);
++
++	return snprintf(buf, 32, "%s%s\n",
++			scsi_access_state_name(access_state),
++			pref ? " preferred" :"");
++}
++static DEVICE_ATTR(access_state, S_IRUGO, sdev_show_access_state, NULL);
+ #endif
+ 
+ static ssize_t
+@@ -1005,6 +1053,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_queue_type.attr,
+ #ifdef CONFIG_SCSI_DH
+ 	&dev_attr_dh_state.attr,
++	&dev_attr_access_state.attr,
+ #endif
+ 	&dev_attr_queue_ramp_up_period.attr,
+ 	REF_EVT(media_change),
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index cfc23a4..666359f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -200,6 +200,7 @@ struct scsi_device {
+ 	struct scsi_device_handler *handler;
+ 	void			*handler_data;
+ 
++	enum scsi_access_state	access_state;
+ 	enum scsi_device_state sdev_state;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index a9fbf1b..80e85e7 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -277,5 +277,18 @@ struct scsi_lun {
+ 	__u8 scsi_lun[8];
+ };
+ 
++/* SPC asymmetric access states */
++enum scsi_access_state {
++	SCSI_ACCESS_STATE_OPTIMAL = 0,
++	SCSI_ACCESS_STATE_ACTIVE,
++	SCSI_ACCESS_STATE_STANDBY,
++	SCSI_ACCESS_STATE_UNAVAILABLE,
++	SCSI_ACCESS_STATE_LBA,
++	SCSI_ACCESS_STATE_OFFLINE = 0xe,
++	SCSI_ACCESS_STATE_TRANSITIONING = 0xf,
++	SCSI_ACCESS_STATE_UNKNOWN = 0x70,
++};
++#define SCSI_ACCESS_STATE_MASK 0x0f
++#define SCSI_ACCESS_STATE_PREFERRED 0x80
+ 
+ #endif /* _SCSI_PROTO_H_ */
 -- 
 1.8.5.6
 
