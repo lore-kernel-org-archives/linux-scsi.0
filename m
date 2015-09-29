@@ -1,75 +1,55 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [PATCH V8 9/9] aacraid: Update driver version
-Date: Tue, 29 Sep 2015 09:50:24 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AEC60A27F@BBYEXM02.pmc-sierra.internal>
-References: <1440758321-2996-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1440758321-2996-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <B539A9786201A44A91E34268415A2B1AEC603C55@BBYEXM02.pmc-sierra.internal>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 03/36] scsi_dh_alua: Disable ALUA handling for non-disk devices
+Date: Tue, 29 Sep 2015 12:47:05 +0200
+Message-ID: <1443523658-87622-4-git-send-email-hare@suse.de>
+References: <1443523658-87622-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:45404 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933616AbbI2JuZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2015 05:50:25 -0400
-In-Reply-To: <B539A9786201A44A91E34268415A2B1AEC603C55@BBYEXM02.pmc-sierra.internal>
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:41860 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934627AbbI2Kru (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2015 06:47:50 -0400
+In-Reply-To: <1443523658-87622-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "thenzl@redhat.com" <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
 
-Hi James,
+Non-disk devices might support ALUA, but the firmware
+implementation is untested and frequently broken.
+As we're don't actually need it disable ALUA support
+for non-disk device for now.
 
-Can you please let me know the status of V8 patch set.
-
-Thanks,
-Mahesh
-
-
------Original Message-----
-From: Mahesh Rajashekhara 
-Sent: Wednesday, September 09, 2015 6:51 PM
-To: Mahesh Rajashekhara; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: thenzl@redhat.com; Murthy Bhat; Karthikeya Sunkesula; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
-Subject: RE: [PATCH V8 9/9] aacraid: Update driver version
-
-Hi James,
-
-Please let me know the status of V8 patchset.
-
-Thanks,
-Mahesh
-
------Original Message-----
-From: Mahesh Rajashekhara [mailto:Mahesh.Rajashekhara@pmcs.com] 
-Sent: Friday, August 28, 2015 4:09 PM
-To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: thenzl@redhat.com; Murthy Bhat; Karthikeya Sunkesula; aacraid@pmc-sierra.com; Harry Yang; Rich Bono
-Subject: [PATCH V8 9/9] aacraid: Update driver version
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Reviewed-by: Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
-Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 2de5ebc..074878b 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index cc2773b..7d01ef0 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -320,6 +320,18 @@ static int alua_check_tpgs(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	int err = SCSI_DH_OK;
  
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 40709
-+# define AAC_DRIVER_BUILD 41010
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
---
-1.9.3
++	/*
++	 * ALUA support for non-disk devices is fraught with
++	 * difficulties, so disable it for now.
++	 */
++	if (sdev->type != TYPE_DISK) {
++		h->tpgs = TPGS_MODE_NONE;
++		sdev_printk(KERN_INFO, sdev,
++			    "%s: disable for non-disk devices\n",
++			    ALUA_DH_NAME);
++		return SCSI_DH_DEV_UNSUPP;
++	}
++
+ 	h->tpgs = scsi_device_tpgs(sdev);
+ 	switch (h->tpgs) {
+ 	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
+-- 
+1.8.5.6
 
