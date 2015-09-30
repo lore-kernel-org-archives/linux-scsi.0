@@ -1,135 +1,61 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi device
-Date: Wed, 30 Sep 2015 00:35:50 +0000
-Message-ID: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp>
+From: Hannes Reinecke <hare@suse.de>
+Subject: hpsa failure with 4.3.0-rc1
+Date: Wed, 30 Sep 2015 09:40:50 +0200
+Message-ID: <560B9202.9080703@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO200.gate.nec.co.jp ([210.143.35.50]:51691 "EHLO
-	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbbI3AiZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2015 20:38:25 -0400
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id t8U0cOQm023316
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 09:38:24 +0900 (JST)
-Content-Language: ja-JP
-Content-ID: <25A4FEFD6BBB6F49A0C000330A3F6532@gisp.nec.co.jp>
+Received: from mx2.suse.de ([195.135.220.15]:42477 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753960AbbI3Hkw (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Wed, 30 Sep 2015 03:40:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+To: Don Brace <don.brace@pmcs.com>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>, Borislav Petkov <bp@suse.de>
 
-With v4.3-rc3, stress testing of SCSI device addition/removal quickly
-trigger random crash in memory allocator (e.g. __kmalloc).  I found that
-a commit 086b91d052eb ("scsi_dh: integrate into the core SCSI code")
-moved the call of scsi_dh->detach() to very early part of sdev tear down
-process (scsi_remove_device()). As a result, related data structure such
-as alua_dh_data can be freed while rtpg/stpg are still in-flight.
+Hi all,
 
-Here is an example of crash log.  You can see strange rtpg log
-'port group 25a43100' for 514:0:0:0 after 'Detached':
+trying to boot 4.3.0-rc1 on a system with hpsa results in a swiotlb
+failure:
 
->> [  170.518427] sd 517:0:0:0: [sdd] Attached SCSI disk
->> [  170.528681] sd 514:0:0:0: alua: Detached
->> [  170.528720] sd 517:0:0:0: alua: Detached
->> [  170.528827] sd 515:0:0:0: alua: Detached
->> [  170.528922] sd 514:0:0:0: alua: port group 25a43100 state A non-preferred supports tolusna
->> [  170.528924] device-mapper: multipath: Failing path 8:16.
->> [  170.529059] device-mapper: table: 253:0: multipath: error getting device
->> [  170.529060] device-mapper: ioctl: error adding target to table
->> [  170.529212] device-mapper: multipath: Failing path 8:0.
->> [  170.540498] sd 516:0:0:0: alua: Detached
->> [  170.540543] sd 515:0:0:0: [sdb] Synchronizing SCSI cache
->> [  170.541849] sd 517:0:0:0: [sdd] Synchronizing SCSI cache
->> [  170.542393] sd 514:0:0:0: [sda] Synchronizing SCSI cache
->> [  170.546836] BUG: unable to handle kernel paging request at 0000001028000000
->> [  170.548499] IP: [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
->> [  170.550069] sd 516:0:0:0: [sdc] Synchronizing SCSI cache
->> [  170.551540] PGD 0 
->> [  170.552686] Oops: 0000 [#1] SMP 
->> [  170.553946] Modules linked in: dm_queue_length sd_mod iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi nls_utf8 isofs cirrus ttm drm_kms_helper syscopyarea crct10dif_pclmul sysfillrect crc32_pclmul sys imgblt ghash_clmulni_intel fb_sys_fops aesni_intel drm lrw gf128mul virtio_console glue_helper ablk_helper ppdev cryptd parport_pc i2c_piix4 serio_raw pcspkr parport i2c_core virtio_balloon acpi_cpufreq xfs l ibcrc32c sr_mod cdrom ata_generic pata_acpi virtio_blk virtio_net crc32c_intel floppy ata_piix virtio_pci libata virtio_ring virtio sunrpc dm_mirror dm_region_hash dm_log dm_multipath dm_mod
->> [  170.564500] CPU: 2 PID: 2255 Comm: systemd-udevd Not tainted 4.3.0-rc3 #1
->> [  170.566078] Hardware name: 
->> [  170.567655] task: ffff88002c729580 ti: ffff8802212e8000 task.ti: ffff8802212e8000
->> [  170.569320] RIP: 0010:[<ffffffff811dce0a>]  [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
->> [  170.571208] RSP: 0018:ffff8802212ebe40  EFLAGS: 00010282
->> [  170.572715] RAX: 0000000000000000 RBX: 00000000000080d0 RCX:
->> 0000000000017622
->> [  170.574461] RDX: 0000000000017621 RSI: 00000000000080d0 RDI:
->> ffff880237001800
->> [  170.576148] RBP: ffff8802212ebe78 R08: 000000000001a160 R09:
->> ffff8800afda5460
->> [  170.577902] R10: ffffffff81206740 R11: 0000000000000202 R12:
->> 00000000000080d0
->> [  170.579530] R13: ffff880237001800 R14: 0000001028000000 R15:
->> ffff880237001800
->> [  170.581276] FS:  00007fd7236ae880(0000) GS:ffff88023fd00000(0000)
->> knlGS:0000000000000000
->> [  170.583110] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [  170.584596] CR2: 0000001028000000 CR3: 0000000225199000 CR4:
->> 00000000001406e0
->> [  170.586320] Stack:
->> [  170.587495]  ffffffff81206740 0000000000000088 ffff8800bb1cec60
->> ffff8802212ebf28
->> [  170.589280]  0000000000000800 ffff8802212ebf20 0000558c20687b50
->> ffff8802212ebe90
->> [  170.591131]  ffffffff81206740 ffff8800bb1cec60 ffff8802212ebed8
->> ffffffff81206c56
->> [  170.592929] Call Trace:
->> [  170.594228]  [<ffffffff81206740>] ? alloc_pipe_info+0x20/0xb0
->> [  170.595895]  [<ffffffff81206740>] alloc_pipe_info+0x20/0xb0
->> [  170.597637]  [<ffffffff81206c56>] create_pipe_files+0x56/0x230
->> [  170.599337]  [<ffffffff8112408f>] ? __audit_syscall_entry+0xaf/0x100
->> [  170.601071]  [<ffffffff81206e64>] __do_pipe_flags+0x34/0xe0
->> [  170.602688]  [<ffffffff81206faf>] SyS_pipe2+0x2f/0xb0
->> [  170.604215]  [<ffffffff816859ae>] entry_SYSCALL_64_fastpath+0x12/0x71
->> [  170.605863] Code: 4c 03 05 2a d3 e2 7e 4d 8b 30 49 8b 40 10 4d 85 f6 0f 84 22 01 00 00 48 85 c0 0f 84 19 01 00 00 49 63 47 20 48 8d 4a 01 4d 8b 07 <49> 8b 1c 06 4c 89 f0 65 49 0f c7 08 0f 94 c0 84 c0 74 b9 49 63 
->> [  170.610895] RIP  [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
->> [  170.612728]  RSP <ffff8802212ebe40>
->> [  170.614244] CR2: 0000001028000000
->> [  170.615745] ---[ end trace 02faa1e1a864f6bd ]---
->> [  170.617351] Kernel panic - not syncing: Fatal exception
->> [  170.619462] Kernel Offset: disabled
->> [  170.620946] ---[ end Kernel panic - not syncing: Fatal exception
+hpsa 0000:22:00.0: Logical aborts not supported
+hpsa 0000:22:00.0: HP SSD Smart Path aborts not supported
+hpsa 0000:22:00.0: swiotlb buffer is full (sz: 786432 bytes)
+swiotlb: coherent allocation failed for device 0000:22:00.0 size=3D
+786432
+CPU: 43 PID: 566 Comm: systemd-udevd Not tainted 4.3.0-rc1-default+ #35=
+8
+Hardware name: HP ProLiant BL660c Gen8, BIOS I32 08/20/2012
+ ffff88181c314098 ffff8810194cba40 ffffffff8138fad2 00000000000c0
+ ffff8810194cba80 ffffffff813ba3d9 ffff881000000008 0000000000000
+220
+ ffff88181c314098 00000000000c0000 ffff8810184101e8 ffff881018410
+000
+Call Trace:
+ [<ffffffff8138fad2>] dump_stack+0x4b/0x69
+ [<ffffffff813ba3d9>] swiotlb_alloc_coherent+0x149/0x160
+ [<ffffffff8104b7ae>] x86_swiotlb_alloc_coherent+0x3e/0x50
+ [<ffffffffa030ef45>] hpsa_init_one+0x915/0x1c90 [hpsa]
+ [<ffffffff810d694c>] ? rcu_read_lock_sched_held+0x8c/0xa0
+ [<ffffffff813d8550>] local_pci_probe+0x40/0xa0
+ [<ffffffff813d951b>] ? pci_match_device+0xdb/0x100
 
+4.2.0-rc3 worked fine here.
+Needless to say, enabling IOMMU makes the problem go away :-)
 
-Attached below is a sample reproducer for ALUA capable storage.
+Cheers,
 
---- cut here --
-#!/bin/bash
-
-# Set appropriate values for your storage
-hostno=2
-host=host${hostno}
-dev=${hostno}:0:0:0
-
-service multipathd stop
-multipath -F
-
-n=1
-while true; do
-	echo "== loop $n ==" > /dev/kmsg
-
-	echo "-- scan $host --" > /dev/kmsg
-	echo '- - -' > /sys/class/scsi_host/${host}/scan
-
-	echo "-- activate $dev --" > /dev/kmsg
-	echo activate > /sys/class/scsi_device/${dev}/device/dh_state &
-
-	echo "-- delete $dev --" > /dev/kmsg
-	echo 1 > /sys/class/scsi_device/${dev}/device/delete
-
-	n=$((n + 1))
-done
---- cut here --
-
-# lsscsi
-[0:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     1.5.  /dev/sr0 
-[2:0:0:0]    disk    LIO-ORG  VirtioDisk       4.0   /dev/sda 
-# ./a.sh
-
-<system crash>
-
--- 
-Jun'ichi Nomura, NEC Corporation
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
