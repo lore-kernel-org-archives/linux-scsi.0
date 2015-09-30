@@ -1,186 +1,135 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v4 32/32] cxlflash: Fix to avoid potential deadlock on EEH
-Date: Wed, 30 Sep 2015 10:33:24 +1000
-Message-ID: <877fn8u4ob.fsf@gamma.ozlabs.ibm.com>
-References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443223197-10153-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi device
+Date: Wed, 30 Sep 2015 00:35:50 +0000
+Message-ID: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36732 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbbI3Add (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2015 20:33:33 -0400
-Received: by pablk4 with SMTP id lk4so20549077pab.3
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2015 17:33:33 -0700 (PDT)
-In-Reply-To: <1443223197-10153-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from TYO200.gate.nec.co.jp ([210.143.35.50]:51691 "EHLO
+	tyo200.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbbI3AiZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2015 20:38:25 -0400
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id t8U0cOQm023316
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 09:38:24 +0900 (JST)
+Content-Language: ja-JP
+Content-ID: <25A4FEFD6BBB6F49A0C000330A3F6532@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-"Matthew R. Ochs" <mrochs@linux.vnet.ibm.com> writes:
+With v4.3-rc3, stress testing of SCSI device addition/removal quickly
+trigger random crash in memory allocator (e.g. __kmalloc).  I found that
+a commit 086b91d052eb ("scsi_dh: integrate into the core SCSI code")
+moved the call of scsi_dh->detach() to very early part of sdev tear down
+process (scsi_remove_device()). As a result, related data structure such
+as alua_dh_data can be freed while rtpg/stpg are still in-flight.
 
-> Ioctl threads that use scsi_execute() can run for an excessive amount
-> of time due to the fact that they have lengthy timeouts and retry logic
-> built in. Under normal operation this is not an issue. However, once EEH
-> enters the picture, a long execution time coupled with the possibility
-> that a timeout can trigger entry to the driver via registered reset
-> callbacks becomes a liability.
->
-> In particular, a deadlock can occur when an EEH event is encountered
-> while in running in scsi_execute(). As part of the recovery, the EEH
-> handler drains all currently running ioctls, waiting until they have
-> completed before proceeding with a reset. As the scsi_execute()'s are
-> situated on the ioctl path, the EEH handler will wait until they (and
-> the remainder of the ioctl handler they're associated with) have
-> completed. Normally this would not be much of an issue aside from the
-> longer recovery period. Unfortunately, the scsi_execute() triggers a
-> reset when it times out. The reset handler will see that the device is
-> already being reset and wait until that reset completed. This creates
-> a condition where the EEH handler becomes stuck, infinitely waiting for
-> the ioctl thread to complete.
->
-> To avoid this behavior, temporarily unmark the scsi_execute() threads
-> as an ioctl thread by releasing the ioctl read semaphore. This allows
-> the EEH handler to proceed with a recovery while the thread is still
-> running. Once the scsi_execute() returns, the ioctl read semaphore is
-> reacquired and the adapter state is rechecked in case it changed while
-> inside of scsi_execute(). The state check will wait if the adapter is
-> still being recovered or returns a failure if the recovery failed. In
-> the event that the adapter reset failed, the failure is simply returned
-> as the ioctl would be unable to continue.
+Here is an example of crash log.  You can see strange rtpg log
+'port group 25a43100' for 514:0:0:0 after 'Detached':
 
-Yep, looks good.
+>> [  170.518427] sd 517:0:0:0: [sdd] Attached SCSI disk
+>> [  170.528681] sd 514:0:0:0: alua: Detached
+>> [  170.528720] sd 517:0:0:0: alua: Detached
+>> [  170.528827] sd 515:0:0:0: alua: Detached
+>> [  170.528922] sd 514:0:0:0: alua: port group 25a43100 state A non-preferred supports tolusna
+>> [  170.528924] device-mapper: multipath: Failing path 8:16.
+>> [  170.529059] device-mapper: table: 253:0: multipath: error getting device
+>> [  170.529060] device-mapper: ioctl: error adding target to table
+>> [  170.529212] device-mapper: multipath: Failing path 8:0.
+>> [  170.540498] sd 516:0:0:0: alua: Detached
+>> [  170.540543] sd 515:0:0:0: [sdb] Synchronizing SCSI cache
+>> [  170.541849] sd 517:0:0:0: [sdd] Synchronizing SCSI cache
+>> [  170.542393] sd 514:0:0:0: [sda] Synchronizing SCSI cache
+>> [  170.546836] BUG: unable to handle kernel paging request at 0000001028000000
+>> [  170.548499] IP: [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
+>> [  170.550069] sd 516:0:0:0: [sdc] Synchronizing SCSI cache
+>> [  170.551540] PGD 0 
+>> [  170.552686] Oops: 0000 [#1] SMP 
+>> [  170.553946] Modules linked in: dm_queue_length sd_mod iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi nls_utf8 isofs cirrus ttm drm_kms_helper syscopyarea crct10dif_pclmul sysfillrect crc32_pclmul sys imgblt ghash_clmulni_intel fb_sys_fops aesni_intel drm lrw gf128mul virtio_console glue_helper ablk_helper ppdev cryptd parport_pc i2c_piix4 serio_raw pcspkr parport i2c_core virtio_balloon acpi_cpufreq xfs l ibcrc32c sr_mod cdrom ata_generic pata_acpi virtio_blk virtio_net crc32c_intel floppy ata_piix virtio_pci libata virtio_ring virtio sunrpc dm_mirror dm_region_hash dm_log dm_multipath dm_mod
+>> [  170.564500] CPU: 2 PID: 2255 Comm: systemd-udevd Not tainted 4.3.0-rc3 #1
+>> [  170.566078] Hardware name: 
+>> [  170.567655] task: ffff88002c729580 ti: ffff8802212e8000 task.ti: ffff8802212e8000
+>> [  170.569320] RIP: 0010:[<ffffffff811dce0a>]  [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
+>> [  170.571208] RSP: 0018:ffff8802212ebe40  EFLAGS: 00010282
+>> [  170.572715] RAX: 0000000000000000 RBX: 00000000000080d0 RCX:
+>> 0000000000017622
+>> [  170.574461] RDX: 0000000000017621 RSI: 00000000000080d0 RDI:
+>> ffff880237001800
+>> [  170.576148] RBP: ffff8802212ebe78 R08: 000000000001a160 R09:
+>> ffff8800afda5460
+>> [  170.577902] R10: ffffffff81206740 R11: 0000000000000202 R12:
+>> 00000000000080d0
+>> [  170.579530] R13: ffff880237001800 R14: 0000001028000000 R15:
+>> ffff880237001800
+>> [  170.581276] FS:  00007fd7236ae880(0000) GS:ffff88023fd00000(0000)
+>> knlGS:0000000000000000
+>> [  170.583110] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> [  170.584596] CR2: 0000001028000000 CR3: 0000000225199000 CR4:
+>> 00000000001406e0
+>> [  170.586320] Stack:
+>> [  170.587495]  ffffffff81206740 0000000000000088 ffff8800bb1cec60
+>> ffff8802212ebf28
+>> [  170.589280]  0000000000000800 ffff8802212ebf20 0000558c20687b50
+>> ffff8802212ebe90
+>> [  170.591131]  ffffffff81206740 ffff8800bb1cec60 ffff8802212ebed8
+>> ffffffff81206c56
+>> [  170.592929] Call Trace:
+>> [  170.594228]  [<ffffffff81206740>] ? alloc_pipe_info+0x20/0xb0
+>> [  170.595895]  [<ffffffff81206740>] alloc_pipe_info+0x20/0xb0
+>> [  170.597637]  [<ffffffff81206c56>] create_pipe_files+0x56/0x230
+>> [  170.599337]  [<ffffffff8112408f>] ? __audit_syscall_entry+0xaf/0x100
+>> [  170.601071]  [<ffffffff81206e64>] __do_pipe_flags+0x34/0xe0
+>> [  170.602688]  [<ffffffff81206faf>] SyS_pipe2+0x2f/0xb0
+>> [  170.604215]  [<ffffffff816859ae>] entry_SYSCALL_64_fastpath+0x12/0x71
+>> [  170.605863] Code: 4c 03 05 2a d3 e2 7e 4d 8b 30 49 8b 40 10 4d 85 f6 0f 84 22 01 00 00 48 85 c0 0f 84 19 01 00 00 49 63 47 20 48 8d 4a 01 4d 8b 07 <49> 8b 1c 06 4c 89 f0 65 49 0f c7 08 0f 94 c0 84 c0 74 b9 49 63 
+>> [  170.610895] RIP  [<ffffffff811dce0a>] kmem_cache_alloc_trace+0x7a/0x1f0
+>> [  170.612728]  RSP <ffff8802212ebe40>
+>> [  170.614244] CR2: 0000001028000000
+>> [  170.615745] ---[ end trace 02faa1e1a864f6bd ]---
+>> [  170.617351] Kernel panic - not syncing: Fatal exception
+>> [  170.619462] Kernel Offset: disabled
+>> [  170.620946] ---[ end Kernel panic - not syncing: Fatal exception
 
-Reviewed-by: Daniel Axtens <dja@axtens.net>
 
->
-> Reported-by: Brian King <brking@linux.vnet.ibm.com>
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxlflash/superpipe.c | 30 +++++++++++++++++++++++++++++-
->  drivers/scsi/cxlflash/superpipe.h |  2 ++
->  drivers/scsi/cxlflash/vlun.c      | 29 +++++++++++++++++++++++++++++
->  3 files changed, 60 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index f625e07..8af7cdc 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -283,6 +283,24 @@ out:
->   * @sdev:	SCSI device associated with LUN.
->   * @lli:	LUN destined for capacity request.
->   *
-> + * The READ_CAP16 can take quite a while to complete. Should an EEH occur while
-> + * in scsi_execute(), the EEH handler will attempt to recover. As part of the
-> + * recovery, the handler drains all currently running ioctls, waiting until they
-> + * have completed before proceeding with a reset. As this routine is used on the
-> + * ioctl path, this can create a condition where the EEH handler becomes stuck,
-> + * infinitely waiting for this ioctl thread. To avoid this behavior, temporarily
-> + * unmark this thread as an ioctl thread by releasing the ioctl read semaphore.
-> + * This will allow the EEH handler to proceed with a recovery while this thread
-> + * is still running. Once the scsi_execute() returns, reacquire the ioctl read
-> + * semaphore and check the adapter state in case it changed while inside of
-> + * scsi_execute(). The state check will wait if the adapter is still being
-> + * recovered or return a failure if the recovery failed. In the event that the
-> + * adapter reset failed, simply return the failure as the ioctl would be unable
-> + * to continue.
-> + *
-> + * Note that the above puts a requirement on this routine to only be called on
-> + * an ioctl thread.
-> + *
->   * Return: 0 on success, -errno on failure
->   */
->  static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
-> @@ -314,8 +332,18 @@ retry:
->  	dev_dbg(dev, "%s: %ssending cmd(0x%x)\n", __func__,
->  		retry_cnt ? "re" : "", scsi_cmd[0]);
->  
-> +	/* Drop the ioctl read semahpore across lengthy call */
-> +	up_read(&cfg->ioctl_rwsem);
->  	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
->  			      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES, 0, NULL);
-> +	down_read(&cfg->ioctl_rwsem);
-> +	rc = check_state(cfg);
-> +	if (rc) {
-> +		dev_err(dev, "%s: Failed state! result=0x08%X\n",
-> +			__func__, result);
-> +		rc = -ENODEV;
-> +		goto out;
-> +	}
->  
->  	if (driver_byte(result) == DRIVER_SENSE) {
->  		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
-> @@ -1221,7 +1249,7 @@ static const struct file_operations null_fops = {
->   *
->   * Return: 0 on success, -errno on failure
->   */
-> -static int check_state(struct cxlflash_cfg *cfg)
-> +int check_state(struct cxlflash_cfg *cfg)
->  {
->  	struct device *dev = &cfg->dev->dev;
->  	int rc = 0;
-> diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-> index 7df88ee..06a805a 100644
-> --- a/drivers/scsi/cxlflash/superpipe.h
-> +++ b/drivers/scsi/cxlflash/superpipe.h
-> @@ -147,4 +147,6 @@ void cxlflash_ba_terminate(struct ba_lun *);
->  
->  int cxlflash_manage_lun(struct scsi_device *, struct dk_cxlflash_manage_lun *);
->  
-> +int check_state(struct cxlflash_cfg *);
-> +
->  #endif /* ifndef _CXLFLASH_SUPERPIPE_H */
-> diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-> index b0eaf55..a53f583 100644
-> --- a/drivers/scsi/cxlflash/vlun.c
-> +++ b/drivers/scsi/cxlflash/vlun.c
-> @@ -400,6 +400,24 @@ static int init_vlun(struct llun_info *lli)
->   * @lba:	Logical block address to start write same.
->   * @nblks:	Number of logical blocks to write same.
->   *
-> + * The SCSI WRITE_SAME16 can take quite a while to complete. Should an EEH occur
-> + * while in scsi_execute(), the EEH handler will attempt to recover. As part of
-> + * the recovery, the handler drains all currently running ioctls, waiting until
-> + * they have completed before proceeding with a reset. As this routine is used
-> + * on the ioctl path, this can create a condition where the EEH handler becomes
-> + * stuck, infinitely waiting for this ioctl thread. To avoid this behavior,
-> + * temporarily unmark this thread as an ioctl thread by releasing the ioctl read
-> + * semaphore. This will allow the EEH handler to proceed with a recovery while
-> + * this thread is still running. Once the scsi_execute() returns, reacquire the
-> + * ioctl read semaphore and check the adapter state in case it changed while
-> + * inside of scsi_execute(). The state check will wait if the adapter is still
-> + * being recovered or return a failure if the recovery failed. In the event that
-> + * the adapter reset failed, simply return the failure as the ioctl would be
-> + * unable to continue.
-> + *
-> + * Note that the above puts a requirement on this routine to only be called on
-> + * an ioctl thread.
-> + *
->   * Return: 0 on success, -errno on failure
->   */
->  static int write_same16(struct scsi_device *sdev,
-> @@ -433,9 +451,20 @@ static int write_same16(struct scsi_device *sdev,
->  		put_unaligned_be32(ws_limit < left ? ws_limit : left,
->  				   &scsi_cmd[10]);
->  
-> +		/* Drop the ioctl read semahpore across lengthy call */
-> +		up_read(&cfg->ioctl_rwsem);
->  		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
->  				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
->  				      0, NULL);
-> +		down_read(&cfg->ioctl_rwsem);
-> +		rc = check_state(cfg);
-> +		if (rc) {
-> +			dev_err(dev, "%s: Failed state! result=0x08%X\n",
-> +				__func__, result);
-> +			rc = -ENODEV;
-> +			goto out;
-> +		}
-> +
->  		if (result) {
->  			dev_err_ratelimited(dev, "%s: command failed for "
->  					    "offset %lld result=0x%x\n",
-> -- 
-> 2.1.0
+Attached below is a sample reproducer for ALUA capable storage.
+
+--- cut here --
+#!/bin/bash
+
+# Set appropriate values for your storage
+hostno=2
+host=host${hostno}
+dev=${hostno}:0:0:0
+
+service multipathd stop
+multipath -F
+
+n=1
+while true; do
+	echo "== loop $n ==" > /dev/kmsg
+
+	echo "-- scan $host --" > /dev/kmsg
+	echo '- - -' > /sys/class/scsi_host/${host}/scan
+
+	echo "-- activate $dev --" > /dev/kmsg
+	echo activate > /sys/class/scsi_device/${dev}/device/dh_state &
+
+	echo "-- delete $dev --" > /dev/kmsg
+	echo 1 > /sys/class/scsi_device/${dev}/device/delete
+
+	n=$((n + 1))
+done
+--- cut here --
+
+# lsscsi
+[0:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     1.5.  /dev/sr0 
+[2:0:0:0]    disk    LIO-ORG  VirtioDisk       4.0   /dev/sda 
+# ./a.sh
+
+<system crash>
+
+-- 
+Jun'ichi Nomura, NEC Corporation
