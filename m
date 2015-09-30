@@ -1,299 +1,203 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 15/18] mpt3sas: Refcount fw_events and fix unsafe list usage
-Date: Wed, 30 Sep 2015 21:17:15 +0530
-Message-ID: <1443628038-13552-16-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 13/18] mpt3sas: Ported the providing sysfs attribute to report Backup Rail Monitor Status
+Date: Wed, 30 Sep 2015 21:17:13 +0530
+Message-ID: <1443628038-13552-14-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1443628038-13552-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33857 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606AbbI3PtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 11:49:04 -0400
-Received: by padhy16 with SMTP id hy16so44238177pad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 08:49:03 -0700 (PDT)
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36695 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbbI3Psy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 11:48:54 -0400
+Received: by pablk4 with SMTP id lk4so43713046pab.3
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 08:48:53 -0700 (PDT)
 In-Reply-To: <1443628038-13552-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-The fw_event_work struct is concurrently referenced at shutdown, so
-add a refcount to protect it, and refactor the code to use it.
+A new sysfs shost attribute called "BMR_status" is implemented to
+report Backup Rail Monitor status.
 
-Additionally, refactor _scsih_fw_event_cleanup_queue() such that it
-no longer iterates over the list without holding the lock, since
-_firmware_event_work() concurrently deletes items from the list.
+This attribute is located in the path
+        /sys/class/scsi_host/host#/BMR_status
 
-This patch is ported from below mpt2sas driver patch, these changes
-also required for mpt3sas driver and we tested this on mpt3sas driver
-also,
+when reading this adapter attribute, then driver will output the state
+of GPIO[24]. It returns "0" if BMR is healthy and it returns "1" for
+failure.
 
-'commit 008549f6e8a1dc4aeea4a8d64184909786b27713
-("mpt2sas: Refcount fw_events and fix unsafe list usage")'
+if it returns an empty string then it means that there was an error while
+obtaining the BMR status. Then check dmesg for what error has occurred.
+
+This sysfs shost attribute is mainly for WarpDrive controllers.
+
+This changes are ported form below mpt2sas driver patch
+
+'commit 6c265660c26267754a02063642ae042d469b4ef9
+("mpt2sas: Provide sysfs attribute to report Backup Rail Monitor Status")
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 116 ++++++++++++++++++++++++++++-------
- 1 file changed, 94 insertions(+), 22 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |  4 ++
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 38 ++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c    | 74 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 116 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5dbf214..436e65e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -200,9 +200,37 @@ struct fw_event_work {
- 	u8			VP_ID;
- 	u8			ignore;
- 	u16			event;
-+	struct kref		refcount;
- 	char			event_data[0] __aligned(4);
- };
- 
-+static void fw_event_work_free(struct kref *r)
-+{
-+	kfree(container_of(r, struct fw_event_work, refcount));
-+}
-+
-+static void fw_event_work_get(struct fw_event_work *fw_work)
-+{
-+	kref_get(&fw_work->refcount);
-+}
-+
-+static void fw_event_work_put(struct fw_event_work *fw_work)
-+{
-+	kref_put(&fw_work->refcount, fw_event_work_free);
-+}
-+
-+static struct fw_event_work *alloc_fw_event_work(int len)
-+{
-+	struct fw_event_work *fw_event;
-+
-+	fw_event = kzalloc(sizeof(*fw_event) + len, GFP_ATOMIC);
-+	if (!fw_event)
-+		return NULL;
-+
-+	kref_init(&fw_event->refcount);
-+	return fw_event;
-+}
-+
- /**
-  * struct _scsi_io_transfer - scsi io transfer
-  * @handle: sas device handle (assigned by firmware)
-@@ -2598,32 +2626,36 @@ _scsih_fw_event_add(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 		return;
- 
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	fw_event_work_get(fw_event);
- 	INIT_LIST_HEAD(&fw_event->list);
- 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
- 	INIT_WORK(&fw_event->work, _firmware_event_work);
-+	fw_event_work_get(fw_event);
- 	queue_work(ioc->firmware_event_thread, &fw_event->work);
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 397f8a5..3b4aaa1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1224,6 +1224,10 @@ int mpt3sas_config_get_sas_iounit_pg0(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 sz);
+ int mpt3sas_config_get_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
++#ifdef SCSI_MPT2SAS
++int mpt3sas_config_get_iounit_pg3(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz);
++#endif
+ int mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
+ int mpt3sas_config_get_iounit_pg8(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 53eb701..2bbb034 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -865,6 +865,44 @@ mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
+ 	return r;
  }
  
++#ifdef SCSI_MPT2SAS
++/**
++ * mpt3sas_config_get_iounit_pg3 - obtain iounit page 3
++ * @ioc: per adapter object
++ * @mpi_reply: reply mf payload returned from firmware
++ * @config_page: contents of the config page
++ * @sz: size of buffer passed in config_page
++ * Context: sleep.
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
++int
++mpt3sas_config_get_iounit_pg3(struct MPT3SAS_ADAPTER *ioc,
++	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz)
++{
++	Mpi2ConfigRequest_t mpi_request;
++	int r;
++
++	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
++	mpi_request.Function = MPI2_FUNCTION_CONFIG;
++	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
++	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
++	mpi_request.Header.PageNumber = 3;
++	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE3_PAGEVERSION;
++	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
++	r = _config_request(ioc, &mpi_request, mpi_reply,
++	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
++	if (r)
++		goto out;
++
++	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
++	r = _config_request(ioc, &mpi_request, mpi_reply,
++	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
++ out:
++	return r;
++}
++#endif
++
  /**
-- * _scsih_fw_event_free - delete fw_event
-+ * _scsih_fw_event_del_from_list - delete fw_event from the list
+  * mpt3sas_config_get_iounit_pg8 - obtain iounit page 8
   * @ioc: per adapter object
-  * @fw_event: object describing the event
-  * Context: This function will acquire ioc->fw_event_lock.
-  *
-- * This removes firmware event object from link list, frees associated memory.
-+ * If the fw_event is on the fw_event_list, remove it and do a put.
-  *
-  * Return nothing.
-  */
- static void
--_scsih_fw_event_free(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
-+_scsih_fw_event_del_from_list(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
- 	*fw_event)
- {
- 	unsigned long flags;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 3f22754..1c62db8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2720,6 +2720,77 @@ _ctl_ioc_reply_queue_count_show(struct device *cdev,
+ static DEVICE_ATTR(reply_queue_count, S_IRUGO, _ctl_ioc_reply_queue_count_show,
+ 	NULL);
  
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
--	list_del(&fw_event->list);
--	kfree(fw_event);
-+	if (!list_empty(&fw_event->list)) {
-+		list_del_init(&fw_event->list);
-+		fw_event_work_put(fw_event);
-+	}
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
- }
- 
-@@ -2640,17 +2672,19 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data)
- {
- 	struct fw_event_work *fw_event;
-+	u16 sz;
- 
- 	if (ioc->is_driver_loading)
- 		return;
--	fw_event = kzalloc(sizeof(*fw_event) + sizeof(*event_data),
--			   GFP_ATOMIC);
-+	sz = sizeof(*event_data);
-+	fw_event = alloc_fw_event_work(sz);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
- 	fw_event->ioc = ioc;
- 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -2666,12 +2700,13 @@ _scsih_error_recovery_delete_devices(struct MPT3SAS_ADAPTER *ioc)
- 
- 	if (ioc->is_driver_loading)
- 		return;
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_REMOVE_UNRESPONDING_DEVICES;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -2685,12 +2720,29 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
- {
- 	struct fw_event_work *fw_event;
- 
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_PORT_ENABLE_COMPLETE;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
-+}
-+
-+static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
++#ifdef SCSI_MPT2SAS
++/**
++ * _ctl_BRM_status_show - Backup Rail Monitor Status
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * This is number of reply queues
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
++	char *buf)
 +{
-+	unsigned long flags;
-+	struct fw_event_work *fw_event = NULL;
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
++	Mpi2IOUnitPage3_t *io_unit_pg3 = NULL;
++	Mpi2ConfigReply_t mpi_reply;
++	u16 backup_rail_monitor_status = 0;
++	u16 ioc_status;
++	int sz;
++	ssize_t rc = 0;
 +
-+	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	if (!list_empty(&ioc->fw_event_list)) {
-+		fw_event = list_first_entry(&ioc->fw_event_list,
-+				struct fw_event_work, list);
-+		list_del_init(&fw_event->list);
++	if (!ioc->is_warpdrive) {
++		pr_err(MPT3SAS_FMT "%s: BRM attribute is only for"
++		    " warpdrive\n", ioc->name, __func__);
++		goto out;
 +	}
-+	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
 +
-+	return fw_event;
- }
- 
- /**
-@@ -2705,17 +2757,25 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
- static void
- _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
- {
--	struct fw_event_work *fw_event, *next;
-+	struct fw_event_work *fw_event;
- 
- 	if (list_empty(&ioc->fw_event_list) ||
- 	     !ioc->firmware_event_thread || in_interrupt())
- 		return;
- 
--	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
--		if (cancel_delayed_work_sync(&fw_event->delayed_work)) {
--			_scsih_fw_event_free(ioc, fw_event);
--			continue;
--		}
-+	while ((fw_event = dequeue_next_fw_event(ioc))) {
-+		/*
-+		 * Wait on the fw_event to complete. If this returns 1, then
-+		 * the event was never executed, and we need a put for the
-+		 * reference the delayed_work had on the fw_event.
-+		 *
-+		 * If it did execute, we wait for it to finish, and the put will
-+		 * happen from _firmware_event_work()
-+		 */
-+		if (cancel_delayed_work_sync(&fw_event->delayed_work))
-+			fw_event_work_put(fw_event);
++	/* allocate upto GPIOVal 36 entries */
++	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
++	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
++	if (!io_unit_pg3) {
++		pr_err(MPT3SAS_FMT "%s: failed allocating memory "
++		    "for iounit_pg3: (%d) bytes\n", ioc->name, __func__, sz);
++		goto out;
++	}
 +
-+		fw_event_work_put(fw_event);
- 	}
- }
- 
-@@ -4242,13 +4302,14 @@ _scsih_send_event_to_turn_on_pfa_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	struct fw_event_work *fw_event;
- 
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_TURN_ON_PFA_LED;
- 	fw_event->device_handle = handle;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -7498,10 +7559,11 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
- static void
- _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- {
-+	_scsih_fw_event_del_from_list(ioc, fw_event);
++	if (mpt3sas_config_get_iounit_pg3(ioc, &mpi_reply, io_unit_pg3, sz) !=
++	    0) {
++		pr_err(MPT3SAS_FMT
++		    "%s: failed reading iounit_pg3\n", ioc->name,
++		    __func__);
++		goto out;
++	}
 +
- 	/* the queue is being flushed so ignore this event */
--	if (ioc->remove_host ||
--	    ioc->pci_error_recovery) {
--		_scsih_fw_event_free(ioc, fw_event);
-+	if (ioc->remove_host || ioc->pci_error_recovery) {
-+		fw_event_work_put(fw_event);
- 		return;
- 	}
- 
-@@ -7512,8 +7574,16 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 			fw_event->event_data);
- 		break;
- 	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
--		while (scsi_host_in_recovery(ioc->shost) || ioc->shost_recovery)
-+		while (scsi_host_in_recovery(ioc->shost) ||
-+					 ioc->shost_recovery) {
-+			/*
-+			 * If we're unloading, bail. Otherwise, this can become
-+			 * an infinite loop.
-+			 */
-+			if (ioc->remove_host)
-+				goto out;
- 			ssleep(1);
-+		}
- 		_scsih_remove_unresponding_sas_devices(ioc);
- 		_scsih_scan_for_devices_after_reset(ioc);
- 		break;
-@@ -7558,7 +7628,8 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 		_scsih_sas_ir_operation_status_event(ioc, fw_event);
- 		break;
- 	}
--	_scsih_fw_event_free(ioc, fw_event);
-+out:
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -7720,7 +7791,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	}
- 
- 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
--	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(sz);
- 	if (!fw_event) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-@@ -7733,6 +7804,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	fw_event->VP_ID = mpi_reply->VP_ID;
- 	fw_event->event = event;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- 	return 1;
- }
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		pr_err(MPT3SAS_FMT "%s: iounit_pg3 failed with "
++		    "ioc_status(0x%04x)\n", ioc->name, __func__, ioc_status);
++		goto out;
++	}
++
++	if (io_unit_pg3->GPIOCount < 25) {
++		pr_err(MPT3SAS_FMT "%s: iounit_pg3->GPIOCount less than "
++		     "25 entries, detected (%d) entries\n", ioc->name, __func__,
++		    io_unit_pg3->GPIOCount);
++		goto out;
++	}
++
++	/* BRM status is in bit zero of GPIOVal[24] */
++	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3->GPIOVal[24]);
++	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
++
++ out:
++	kfree(io_unit_pg3);
++	return rc;
++}
++static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
++#endif
++
+ struct DIAG_BUFFER_START {
+ 	__le32	Size;
+ 	__le32	DiagVersion;
+@@ -3172,6 +3243,9 @@ struct device_attribute *mpt3sas_host_attrs[] = {
+ 	&dev_attr_diag_trigger_event,
+ 	&dev_attr_diag_trigger_scsi,
+ 	&dev_attr_diag_trigger_mpi,
++#ifdef SCSI_MPT2SAS
++	&dev_attr_BRM_status,
++#endif
+ 	NULL,
+ };
  
 -- 
 2.0.2
