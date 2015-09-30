@@ -1,544 +1,279 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 16/18] mpt3sas: Added OEMs Gen2 PnP ID Branding names
-Date: Wed, 30 Sep 2015 21:17:16 +0530
-Message-ID: <1443628038-13552-17-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 17/18] mpt3sas: setpci reset kernel oops fix
+Date: Wed, 30 Sep 2015 21:17:17 +0530
+Message-ID: <1443628038-13552-18-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1443628038-13552-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35886 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754669AbbI3PtI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 11:49:08 -0400
-Received: by pablk4 with SMTP id lk4so43718190pab.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 08:49:07 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1443628038-13552-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Added OEMs Gen2 PnP ID Branding names from mpt2sas driver.
+setpci reset on nytro warpdrive card along with sysfs access and
+cli ioctl access resulted in kernel oops
+
+1. pci_access_mutex lock added to provide synchronization between IOCTL,
+   sysfs, PCI resource handling path
+
+2. gioc_lock spinlock to protect list operations over multiple
+controllers
+
+This patch is ported from below mpt2sas driver patch,
+
+'commit 6229b414b3adb3aac0b54e67d72d6462fc230c0d
+("mpt2sas: setpci reset kernel oops fix")
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 326 ++++++++++++++++++++++++------------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  93 +++++++++-
- 2 files changed, 305 insertions(+), 114 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  6 ++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h  | 20 ++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 42 +++++++++++++++++++++++++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++++
+ 4 files changed, 71 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index f7f2ab5..bec3163 100644
+index bec3163..f5d589e 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2508,143 +2508,261 @@ mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+@@ -108,9 +108,12 @@ _scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
+ 	if (ret)
+ 		return ret;
+ 
++	/* global ioc spinlock to protect controller list on list operations */
+ 	pr_info("setting fwfault_debug(%d)\n", mpt3sas_fwfault_debug);
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list)
+ 		ioc->fwfault_debug = mpt3sas_fwfault_debug;
++	spin_unlock(&gioc_lock);
+ 	return 0;
  }
+ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
+@@ -5136,6 +5139,8 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+ 	    __func__));
  
- /**
-- * _base_display_intel_branding - Display branding string
-+ * _base_display_OEMs_branding - Display branding string
-  * @ioc: per adapter object
-  *
-  * Return nothing.
-  */
- static void
--_base_display_intel_branding(struct MPT3SAS_ADAPTER *ioc)
-+_base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
- {
- 	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_INTEL)
- 		return;
- 
--	switch (ioc->pdev->device) {
--	case MPI25_MFGPAGE_DEVID_SAS3008:
--		switch (ioc->pdev->subsystem_device) {
--		case MPT3SAS_INTEL_RMS3JC080_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_INTEL_RMS3JC080_BRANDING);
--			break;
--
--		case MPT3SAS_INTEL_RS3GC008_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_INTEL_RS3GC008_BRANDING);
--			break;
--		case MPT3SAS_INTEL_RS3FC044_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_INTEL_RS3FC044_BRANDING);
--			break;
--		case MPT3SAS_INTEL_RS3UC080_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_INTEL_RS3UC080_BRANDING);
-+	switch (ioc->pdev->subsystem_vendor) {
-+	case PCI_VENDOR_ID_INTEL:
-+		switch (ioc->pdev->device) {
-+		case MPI2_MFGPAGE_DEVID_SAS2008:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT2SAS_INTEL_RMS2LL080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS2LL080_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS2LL040_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS2LL040_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_SSD910_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_SSD910_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				 "Intel(R) Controller: Subsystem ID: 0x%X\n",
-+				 ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
-+		case MPI2_MFGPAGE_DEVID_SAS2308_2:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT2SAS_INTEL_RS25GB008_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RS25GB008_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25JB080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25JB080_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25JB040_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25JB040_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25KB080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25KB080_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25KB040_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25KB040_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25LB040_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25LB040_BRANDING);
-+				break;
-+			case MPT2SAS_INTEL_RMS25LB080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_INTEL_RMS25LB080_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				 "Intel(R) Controller: Subsystem ID: 0x%X\n",
-+				 ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
-+		case MPI25_MFGPAGE_DEVID_SAS3008:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT3SAS_INTEL_RMS3JC080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_INTEL_RMS3JC080_BRANDING);
-+				break;
-+
-+			case MPT3SAS_INTEL_RS3GC008_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_INTEL_RS3GC008_BRANDING);
-+				break;
-+			case MPT3SAS_INTEL_RS3FC044_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_INTEL_RS3FC044_BRANDING);
-+				break;
-+			case MPT3SAS_INTEL_RS3UC080_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_INTEL_RS3UC080_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				 "Intel(R) Controller: Subsystem ID: 0x%X\n",
-+				 ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
- 			break;
- 		default:
- 			pr_info(MPT3SAS_FMT
--				"Intel(R) Controller: Subsystem ID: 0x%X\n",
--				ioc->name, ioc->pdev->subsystem_device);
-+			 "Intel(R) Controller: Subsystem ID: 0x%X\n",
-+			 ioc->name, ioc->pdev->subsystem_device);
- 			break;
- 		}
- 		break;
--	default:
--		pr_info(MPT3SAS_FMT
--			"Intel(R) Controller: Subsystem ID: 0x%X\n",
--			ioc->name, ioc->pdev->subsystem_device);
--		break;
--	}
--}
--
--
--
--/**
-- * _base_display_dell_branding - Display branding string
-- * @ioc: per adapter object
-- *
-- * Return nothing.
-- */
--static void
--_base_display_dell_branding(struct MPT3SAS_ADAPTER *ioc)
--{
--	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_DELL)
--		return;
--
--	switch (ioc->pdev->device) {
--	case MPI25_MFGPAGE_DEVID_SAS3008:
--		switch (ioc->pdev->subsystem_device) {
--		case MPT3SAS_DELL_12G_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_DELL_12G_HBA_BRANDING);
-+	case PCI_VENDOR_ID_DELL:
-+		switch (ioc->pdev->device) {
-+		case MPI2_MFGPAGE_DEVID_SAS2008:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT2SAS_DELL_6GBPS_SAS_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_6GBPS_SAS_HBA_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_PERC_H200_ADAPTER_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_PERC_H200_ADAPTER_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_PERC_H200_INTEGRATED_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_PERC_H200_INTEGRATED_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_PERC_H200_MODULAR_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_PERC_H200_MODULAR_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_PERC_H200_EMBEDDED_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_PERC_H200_EMBEDDED_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_PERC_H200_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_PERC_H200_BRANDING);
-+				break;
-+			case MPT2SAS_DELL_6GBPS_SAS_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_DELL_6GBPS_SAS_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				   "Dell 6Gbps HBA: Subsystem ID: 0x%X\n",
-+				   ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
-+			break;
-+		case MPI25_MFGPAGE_DEVID_SAS3008:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT3SAS_DELL_12G_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_DELL_12G_HBA_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				   "Dell 12Gbps HBA: Subsystem ID: 0x%X\n",
-+				   ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
- 			break;
- 		default:
- 			pr_info(MPT3SAS_FMT
--			   "Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
-+			   "Dell HBA: Subsystem ID: 0x%X\n", ioc->name,
- 			   ioc->pdev->subsystem_device);
- 			break;
- 		}
- 		break;
--	default:
--		pr_info(MPT3SAS_FMT
--			"Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
--			ioc->pdev->subsystem_device);
--		break;
--	}
--}
--
--/**
-- * _base_display_cisco_branding - Display branding string
-- * @ioc: per adapter object
-- *
-- * Return nothing.
-- */
--static void
--_base_display_cisco_branding(struct MPT3SAS_ADAPTER *ioc)
--{
--	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_CISCO)
--		return;
--
--	switch (ioc->pdev->device) {
--	case MPI25_MFGPAGE_DEVID_SAS3008:
--		switch (ioc->pdev->subsystem_device) {
--		case MPT3SAS_CISCO_12G_8E_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_CISCO_12G_8E_HBA_BRANDING);
--			break;
--		case MPT3SAS_CISCO_12G_8I_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--				MPT3SAS_CISCO_12G_8I_HBA_BRANDING);
-+	case PCI_VENDOR_ID_CISCO:
-+		switch (ioc->pdev->device) {
-+		case MPI25_MFGPAGE_DEVID_SAS3008:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT3SAS_CISCO_12G_8E_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_CISCO_12G_8E_HBA_BRANDING);
-+				break;
-+			case MPT3SAS_CISCO_12G_8I_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_CISCO_12G_8I_HBA_BRANDING);
-+				break;
-+			case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+					MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				  "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+				  ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
- 			break;
--		case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+		case MPI25_MFGPAGE_DEVID_SAS3108_1:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 				MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING);
-+				break;
-+			case MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_BRANDING
-+				);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				 "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+				 ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
- 			break;
- 		default:
- 			pr_info(MPT3SAS_FMT
--			  "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
--			  ioc->name, ioc->pdev->subsystem_device);
-+			   "Cisco SAS HBA: Subsystem ID: 0x%X\n",
-+			   ioc->name, ioc->pdev->subsystem_device);
- 			break;
- 		}
- 		break;
--	case MPI25_MFGPAGE_DEVID_SAS3108_1:
--		switch (ioc->pdev->subsystem_device) {
--		case MPT3SAS_CISCO_12G_AVILA_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--			MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING);
--			break;
--		case MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_SSDID:
--			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
--			MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_BRANDING);
--			break;
-+	case MPT2SAS_HP_3PAR_SSVID:
-+		switch (ioc->pdev->device) {
-+		case MPI2_MFGPAGE_DEVID_SAS2004:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				   "HP 6Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+				   ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
-+		case MPI2_MFGPAGE_DEVID_SAS2308_2:
-+			switch (ioc->pdev->subsystem_device) {
-+			case MPT2SAS_HP_2_4_INTERNAL_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_HP_2_4_INTERNAL_BRANDING);
-+				break;
-+			case MPT2SAS_HP_2_4_EXTERNAL_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_HP_2_4_EXTERNAL_BRANDING);
-+				break;
-+			case MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				 MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_BRANDING);
-+				break;
-+			case MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_SSDID:
-+				pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				    MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_BRANDING);
-+				break;
-+			default:
-+				pr_info(MPT3SAS_FMT
-+				   "HP 6Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+				   ioc->name, ioc->pdev->subsystem_device);
-+				break;
-+			}
- 		default:
- 			pr_info(MPT3SAS_FMT
--			 "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
--			 ioc->name, ioc->pdev->subsystem_device);
-+			   "HP SAS HBA: Subsystem ID: 0x%X\n",
-+			   ioc->name, ioc->pdev->subsystem_device);
- 			break;
- 		}
--		break;
- 	default:
--		 pr_info(MPT3SAS_FMT
--			"Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
--			ioc->name, ioc->pdev->subsystem_device);
- 		break;
++	/* synchronizing freeing resource with pci_access_mutex lock */
++	mutex_lock(&ioc->pci_access_mutex);
+ 	if (ioc->chip_phys && ioc->chip) {
+ 		_base_mask_interrupts(ioc);
+ 		ioc->shost_recovery = 1;
+@@ -5144,6 +5149,7 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
  	}
+ 
+ 	mpt3sas_base_unmap_resources(ioc);
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return;
  }
-@@ -2678,9 +2796,7 @@ _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
- 	   (bios_version & 0x0000FF00) >> 8,
- 	    bios_version & 0x000000FF);
- 
--	_base_display_intel_branding(ioc);
--	_base_display_dell_branding(ioc);
--	_base_display_cisco_branding(ioc);
-+	_base_display_OEMs_branding(ioc);
- 
- 	pr_info(MPT3SAS_FMT "Protocol=(", ioc->name);
  
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index b61a785..c92be3c 100644
+index c92be3c..6d64fa8 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -158,6 +158,27 @@
- /*
-  * Intel HBA branding
+@@ -916,7 +916,13 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @replyPostRegisterIndex: index of next position in Reply Desc Post Queue
+  * @delayed_tr_list: target reset link list
+  * @delayed_tr_volume_list: volume target reset link list
+- * @@temp_sensors_count: flag to carry the number of temperature sensors
++ * @temp_sensors_count: flag to carry the number of temperature sensors
++ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
++ *	pci resource handling. PCI resource freeing will lead to free
++ *	vital hardware/memory resource, which might be in use by cli/sysfs
++ *	path functions resulting in Null pointer reference followed by kernel
++ *	crash. To avoid the above race condition we use mutex syncrhonization
++ *	which ensures the syncrhonization between cli/sysfs_show path.
   */
-+#define MPT2SAS_INTEL_RMS25JB080_BRANDING    \
-+	"Intel(R) Integrated RAID Module RMS25JB080"
-+#define MPT2SAS_INTEL_RMS25JB040_BRANDING    \
-+	"Intel(R) Integrated RAID Module RMS25JB040"
-+#define MPT2SAS_INTEL_RMS25KB080_BRANDING    \
-+	"Intel(R) Integrated RAID Module RMS25KB080"
-+#define MPT2SAS_INTEL_RMS25KB040_BRANDING    \
-+	"Intel(R) Integrated RAID Module RMS25KB040"
-+#define MPT2SAS_INTEL_RMS25LB040_BRANDING	\
-+	"Intel(R) Integrated RAID Module RMS25LB040"
-+#define MPT2SAS_INTEL_RMS25LB080_BRANDING	\
-+	"Intel(R) Integrated RAID Module RMS25LB080"
-+#define MPT2SAS_INTEL_RMS2LL080_BRANDING	\
-+	"Intel Integrated RAID Module RMS2LL080"
-+#define MPT2SAS_INTEL_RMS2LL040_BRANDING	\
-+	"Intel Integrated RAID Module RMS2LL040"
-+#define MPT2SAS_INTEL_RS25GB008_BRANDING       \
-+	"Intel(R) RAID Controller RS25GB008"
-+#define MPT2SAS_INTEL_SSD910_BRANDING          \
-+	"Intel(R) SSD 910 Series"
-+
- #define MPT3SAS_INTEL_RMS3JC080_BRANDING       \
- 	"Intel(R) Integrated RAID Module RMS3JC080"
- #define MPT3SAS_INTEL_RS3GC008_BRANDING       \
-@@ -170,33 +191,62 @@
- /*
-  * Intel HBA SSDIDs
-  */
--#define MPT3SAS_INTEL_RMS3JC080_SSDID	0x3521
--#define MPT3SAS_INTEL_RS3GC008_SSDID	0x3522
--#define MPT3SAS_INTEL_RS3FC044_SSDID	0x3523
--#define MPT3SAS_INTEL_RS3UC080_SSDID    0x3524
-+#define MPT2SAS_INTEL_RMS25JB080_SSDID		0x3516
-+#define MPT2SAS_INTEL_RMS25JB040_SSDID		0x3517
-+#define MPT2SAS_INTEL_RMS25KB080_SSDID		0x3518
-+#define MPT2SAS_INTEL_RMS25KB040_SSDID		0x3519
-+#define MPT2SAS_INTEL_RMS25LB040_SSDID		0x351A
-+#define MPT2SAS_INTEL_RMS25LB080_SSDID		0x351B
-+#define MPT2SAS_INTEL_RMS2LL080_SSDID		0x350E
-+#define MPT2SAS_INTEL_RMS2LL040_SSDID		0x350F
-+#define MPT2SAS_INTEL_RS25GB008_SSDID		0x3000
-+#define MPT2SAS_INTEL_SSD910_SSDID		0x3700
-+
-+#define MPT3SAS_INTEL_RMS3JC080_SSDID		0x3521
-+#define MPT3SAS_INTEL_RS3GC008_SSDID		0x3522
-+#define MPT3SAS_INTEL_RS3FC044_SSDID		0x3523
-+#define MPT3SAS_INTEL_RS3UC080_SSDID		0x3524
+ struct MPT3SAS_ADAPTER {
+ 	struct list_head list;
+@@ -1131,6 +1137,7 @@ struct MPT3SAS_ADAPTER {
+ 	struct list_head delayed_tr_list;
+ 	struct list_head delayed_tr_volume_list;
+ 	u8		temp_sensors_count;
++	struct mutex pci_access_mutex;
  
- /*
-  * Dell HBA branding
-  */
-+#define MPT2SAS_DELL_BRANDING_SIZE                 32
-+
-+#define MPT2SAS_DELL_6GBPS_SAS_HBA_BRANDING        "Dell 6Gbps SAS HBA"
-+#define MPT2SAS_DELL_PERC_H200_ADAPTER_BRANDING    "Dell PERC H200 Adapter"
-+#define MPT2SAS_DELL_PERC_H200_INTEGRATED_BRANDING "Dell PERC H200 Integrated"
-+#define MPT2SAS_DELL_PERC_H200_MODULAR_BRANDING    "Dell PERC H200 Modular"
-+#define MPT2SAS_DELL_PERC_H200_EMBEDDED_BRANDING   "Dell PERC H200 Embedded"
-+#define MPT2SAS_DELL_PERC_H200_BRANDING            "Dell PERC H200"
-+#define MPT2SAS_DELL_6GBPS_SAS_BRANDING            "Dell 6Gbps SAS"
-+
- #define MPT3SAS_DELL_12G_HBA_BRANDING       \
- 	"Dell 12Gbps HBA"
- 
- /*
-  * Dell HBA SSDIDs
-  */
--#define MPT3SAS_DELL_12G_HBA_SSDID	0x1F46
-+#define MPT2SAS_DELL_6GBPS_SAS_HBA_SSDID	0x1F1C
-+#define MPT2SAS_DELL_PERC_H200_ADAPTER_SSDID	0x1F1D
-+#define MPT2SAS_DELL_PERC_H200_INTEGRATED_SSDID	0x1F1E
-+#define MPT2SAS_DELL_PERC_H200_MODULAR_SSDID	0x1F1F
-+#define MPT2SAS_DELL_PERC_H200_EMBEDDED_SSDID	0x1F20
-+#define MPT2SAS_DELL_PERC_H200_SSDID		0x1F21
-+#define MPT2SAS_DELL_6GBPS_SAS_SSDID		0x1F22
-+
-+#define MPT3SAS_DELL_12G_HBA_SSDID		0x1F46
- 
- /*
-  * Cisco HBA branding
-  */
- #define MPT3SAS_CISCO_12G_8E_HBA_BRANDING		\
--		"Cisco 9300-8E 12G SAS HBA"
-+	"Cisco 9300-8E 12G SAS HBA"
- #define MPT3SAS_CISCO_12G_8I_HBA_BRANDING		\
--		"Cisco 9300-8i 12G SAS HBA"
-+	"Cisco 9300-8i 12G SAS HBA"
- #define MPT3SAS_CISCO_12G_AVILA_HBA_BRANDING	\
--		"Cisco 12G Modular SAS Pass through Controller"
-+	"Cisco 12G Modular SAS Pass through Controller"
- #define MPT3SAS_CISCO_12G_COLUSA_MEZZANINE_HBA_BRANDING		\
--		"UCS C3X60 12G SAS Pass through Controller"
-+	"UCS C3X60 12G SAS Pass through Controller"
- /*
-  * Cisco HBA SSSDIDs
-  */
-@@ -213,6 +263,31 @@
- #define MPT3_DIAG_BUFFER_IS_DIAG_RESET	(0x04)
- 
- /*
-+ * HP HBA branding
+ 	/* diag buffer support */
+ 	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
+@@ -1161,6 +1168,17 @@ typedef u8 (*MPT_CALLBACK)(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ /* base shared API */
+ extern struct list_head mpt3sas_ioc_list;
+ extern char    driver_name[MPT_NAME_LENGTH];
++/* spinlock on list operations over IOCs
++ * Case: when multiple warpdrive cards(IOCs) are in use
++ * Each IOC will added to the ioc list structure on initialization.
++ * Watchdog threads run at regular intervals to check IOC for any
++ * fault conditions which will trigger the dead_ioc thread to
++ * deallocate pci resource, resulting deleting the IOC netry from list,
++ * this deletion need to protected by spinlock to enusre that
++ * ioc removal is syncrhonized, if not synchronized it might lead to
++ * list_del corruption as the ioc list is traversed in cli path.
 + */
-+#define MPT2SAS_HP_3PAR_SSVID                0x1590
++extern spinlock_t gioc_lock;
+ 
+ void mpt3sas_base_start_watchdog(struct MPT3SAS_ADAPTER *ioc);
+ void mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 1c62db8..f257c96 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -416,13 +416,16 @@ static int
+ _ctl_verify_adapter(int ioc_number, struct MPT3SAS_ADAPTER **iocpp)
+ {
+ 	struct MPT3SAS_ADAPTER *ioc;
+-
++	/* global ioc lock to protect controller on list operations */
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list) {
+ 		if (ioc->id != ioc_number)
+ 			continue;
++		spin_unlock(&gioc_lock);
+ 		*iocpp = ioc;
+ 		return ioc_number;
+ 	}
++	spin_unlock(&gioc_lock);
+ 	*iocpp = NULL;
+ 	return -1;
+ }
+@@ -511,10 +514,15 @@ ctl_poll(struct file *filep, poll_table *wait)
+ 
+ 	poll_wait(filep, &ctl_poll_wait, wait);
+ 
++	/* global ioc lock to protect controller on list operations */
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list) {
+-		if (ioc->aen_event_read_flag)
++		if (ioc->aen_event_read_flag) {
++			spin_unlock(&gioc_lock);
+ 			return POLLIN | POLLRDNORM;
++		}
+ 	}
++	spin_unlock(&gioc_lock);
+ 	return 0;
+ }
+ 
+@@ -2211,16 +2219,25 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 	if (_ctl_verify_adapter(ioctl_header.ioc_number, &ioc) == -1 || !ioc)
+ 		return -ENODEV;
+ 
++	/* pci_access_mutex lock acquired by ioctl path */
++	mutex_lock(&ioc->pci_access_mutex);
 +
-+#define MPT2SAS_HP_2_4_INTERNAL_BRANDING	\
-+	"HP H220 Host Bus Adapter"
-+#define MPT2SAS_HP_2_4_EXTERNAL_BRANDING	\
-+	"HP H221 Host Bus Adapter"
-+#define MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_BRANDING	\
-+	"HP H222 Host Bus Adapter"
-+#define MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_BRANDING	\
-+	"HP H220i Host Bus Adapter"
-+#define MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_BRANDING	\
-+	"HP H210i Host Bus Adapter"
-+
-+/*
-+ * HO HBA SSDIDs
-+ */
-+#define MPT2SAS_HP_2_4_INTERNAL_SSDID			0x0041
-+#define MPT2SAS_HP_2_4_EXTERNAL_SSDID			0x0042
-+#define MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_SSDID	0x0043
-+#define MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_SSDID		0x0044
-+#define MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_SSDID		0x0046
-+
-+/*
-  * Combined Reply Queue constants,
-  * There are twelve Supplemental Reply Post Host Index Registers
-  * and each register is at offset 0x10 bytes from the previous one.
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery ||
+-	    ioc->is_driver_loading)
+-		return -EAGAIN;
++	    ioc->is_driver_loading || ioc->remove_host) {
++		ret = -EAGAIN;
++		goto out_unlock_pciaccess;
++	}
+ 
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+ 	if (state == NON_BLOCKING) {
+-		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
+-			return -EAGAIN;
+-	} else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+-		return -ERESTARTSYS;
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex)) {
++			ret = -EAGAIN;
++			goto out_unlock_pciaccess;
++		}
++	} else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex)) {
++		ret = -ERESTARTSYS;
++		goto out_unlock_pciaccess;
++	}
+ 
+ 
+ 	switch (cmd) {
+@@ -2301,6 +2318,8 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 	}
+ 
+ 	mutex_unlock(&ioc->ctl_cmds.mutex);
++out_unlock_pciaccess:
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return ret;
+ }
+ 
+@@ -2748,6 +2767,12 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 		    " warpdrive\n", ioc->name, __func__);
+ 		goto out;
+ 	}
++	/* pci_access_mutex lock acquired by sysfs show path */
++	mutex_lock(&ioc->pci_access_mutex);
++	if (ioc->pci_error_recovery || ioc->remove_host) {
++		mutex_unlock(&ioc->pci_access_mutex);
++		return 0;
++	}
+ 
+ 	/* allocate upto GPIOVal 36 entries */
+ 	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
+@@ -2786,6 +2811,7 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 
+  out:
+ 	kfree(io_unit_pg3);
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return rc;
+ }
+ static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 436e65e..d0ab002 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -90,6 +90,8 @@ _scsih_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ /* global parameters */
+ LIST_HEAD(mpt3sas_ioc_list);
+ char    driver_name[MPT_NAME_LENGTH];
++/* global ioc lock for list operations */
++DEFINE_SPINLOCK(gioc_lock);
+ 
+ /* local parameters */
+ static u8 scsi_io_cb_idx = -1;
+@@ -294,8 +296,10 @@ _scsih_set_debug_level(const char *val, struct kernel_param *kp)
+ 		return ret;
+ 
+ 	pr_info("setting logging_level(0x%08x)\n", logging_level);
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list)
+ 		ioc->logging_level = logging_level;
++	spin_unlock(&gioc_lock);
+ 	return 0;
+ }
+ module_param_call(logging_level, _scsih_set_debug_level, param_get_int,
+@@ -7997,7 +8001,9 @@ void scsih_remove(struct pci_dev *pdev)
+ 	sas_remove_host(shost);
+ 	scsi_remove_host(shost);
+ 	mpt3sas_base_detach(ioc);
++	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
++	spin_unlock(&gioc_lock);
+ 	scsi_host_put(shost);
+ }
+ 
+@@ -8384,7 +8390,9 @@ scsih_probe(struct pci_dev *pdev, struct Scsi_Host *shost)
+ 	ioc = shost_priv(shost);
+ 	memset(ioc, 0, sizeof(struct MPT3SAS_ADAPTER));
+ 	INIT_LIST_HEAD(&ioc->list);
++	spin_lock(&gioc_lock);
+ 	list_add_tail(&ioc->list, &mpt3sas_ioc_list);
++	spin_unlock(&gioc_lock);
+ 	ioc->shost = shost;
+ 	ioc->id = mpt_ids++;
+ 	ioc->pdev = pdev;
+@@ -8403,6 +8411,8 @@ scsih_probe(struct pci_dev *pdev, struct Scsi_Host *shost)
+ 	ioc->schedule_dead_ioc_flush_running_cmds = &_scsih_flush_running_cmds;
+ 	/* misc semaphores and spin locks */
+ 	mutex_init(&ioc->reset_in_progress_mutex);
++	/* initializing pci_access_mutex lock */
++	mutex_init(&ioc->pci_access_mutex);
+ 	spin_lock_init(&ioc->ioc_reset_in_progress_lock);
+ 	spin_lock_init(&ioc->scsi_lookup_lock);
+ 	spin_lock_init(&ioc->sas_device_lock);
+@@ -8510,7 +8520,9 @@ out_add_shost_fail:
+  out_attach_fail:
+ 	destroy_workqueue(ioc->firmware_event_thread);
+  out_thread_fail:
++	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
++	spin_unlock(&gioc_lock);
+ 	scsi_host_put(shost);
+ 	return rv;
+ }
 -- 
 2.0.2
-
