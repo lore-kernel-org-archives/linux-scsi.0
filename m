@@ -1,63 +1,71 @@
-From: Don Brace <brace77070@gmail.com>
-Subject: Re: hpsa failure with 4.3.0-rc1
-Date: Wed, 30 Sep 2015 09:32:50 -0500
-Message-ID: <560BF292.6090209@pmcs.com>
-References: <560B9202.9080703@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi
+ device
+Date: Wed, 30 Sep 2015 16:49:27 +0200
+Message-ID: <560BF677.20405@suse.de>
+References: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp> <560BAB2B.9050404@suse.de> <560BBB0A.3000300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:34363 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbbI3Ocw (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 10:32:52 -0400
-Received: by obbda8 with SMTP id da8so32885052obb.1
-        for <Linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 07:32:51 -0700 (PDT)
-In-Reply-To: <560B9202.9080703@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:42646 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750768AbbI3Ot3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Sep 2015 10:49:29 -0400
+In-Reply-To: <560BBB0A.3000300@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
-Cc: Joerg Roedel <jroedel@suse.de>, Borislav Petkov <bp@suse.de>
+To: Boaz Harrosh <openosd@gmail.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-I reported this a little while ago:
-http://marc.info/?l=linux-kernel&m=144284810906949&w=2
+On 09/30/2015 12:35 PM, Boaz Harrosh wrote:
+> On 09/30/2015 12:28 PM, Hannes Reinecke wrote:
+> <>
+>> Pushing things into the background is typically not the best of
+>> ideas; actually I've been running into issues with udev not being
+>> complete by the time the next round is started. So more often than
+>> not I would be greeted with messages:
+>>
+>> 'write: no such file or directory'
+>>
+>> when executing this line. Removing the '&' at the end made this
+>> warning go away.
+>>
+>> And actually I'm not sure if the above script is a valid testcase;
+>=20
+> So are you saying it is allowed to crash the Kernel with a crappy
+> script?
+>=20
+I'm just saying there might be race conditions lurking in the sysfs
+code which just now came to light, without the patch being the
+actual culprit.
 
-It did clear up between rc1 and rc3.
+>> from what I've seen there is no locking / reference counting when
+>> accessing sysfs attributes. So as soon as you _can_ access the sysfs
+>> attribute it is implicitly assumed to be valid.
+>> In your case you will be _removing_ the sysfs attribute even though
+>> it is still accessed, which of course will crash.
+>>
+>=20
+> Is that allowed? for usermode script to race and crash the Kernel?
+>=20
+> From the original email it sounds like this used to be fine and it
+> now crashes (with the &)
+>=20
+Yeah, it is not meant to be as an excuse. Just an observation.
+I still would like to see the results with my ALUA handler update;
+there's a fair chance the issue is solved with that.
 
-Not sure what changes were applied in-between.
+Cheers,
 
-
-On 09/30/2015 02:40 AM, Hannes Reinecke wrote:
-> Hi all,
->
-> trying to boot 4.3.0-rc1 on a system with hpsa results in a swiotlb
-> failure:
->
-> hpsa 0000:22:00.0: Logical aborts not supported
-> hpsa 0000:22:00.0: HP SSD Smart Path aborts not supported
-> hpsa 0000:22:00.0: swiotlb buffer is full (sz: 786432 bytes)
-> swiotlb: coherent allocation failed for device 0000:22:00.0 size=
-> 786432
-> CPU: 43 PID: 566 Comm: systemd-udevd Not tainted 4.3.0-rc1-default+ #358
-> Hardware name: HP ProLiant BL660c Gen8, BIOS I32 08/20/2012
->   ffff88181c314098 ffff8810194cba40 ffffffff8138fad2 00000000000c0
->   ffff8810194cba80 ffffffff813ba3d9 ffff881000000008 0000000000000
-> 220
->   ffff88181c314098 00000000000c0000 ffff8810184101e8 ffff881018410
-> 000
-> Call Trace:
->   [<ffffffff8138fad2>] dump_stack+0x4b/0x69
->   [<ffffffff813ba3d9>] swiotlb_alloc_coherent+0x149/0x160
->   [<ffffffff8104b7ae>] x86_swiotlb_alloc_coherent+0x3e/0x50
->   [<ffffffffa030ef45>] hpsa_init_one+0x915/0x1c90 [hpsa]
->   [<ffffffff810d694c>] ? rcu_read_lock_sched_held+0x8c/0xa0
->   [<ffffffff813d8550>] local_pci_probe+0x40/0xa0
->   [<ffffffff813d951b>] ? pci_match_device+0xdb/0x100
->
-> 4.2.0-rc3 worked fine here.
-> Needless to say, enabling IOMMU makes the problem go away :-)
->
-> Cheers,
->
-> Hannes
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
