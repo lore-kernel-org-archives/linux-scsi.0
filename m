@@ -1,113 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: twa generates WARNING upon boot
-Date: Wed, 30 Sep 2015 09:44:26 -0700
-Message-ID: <20150930164426.GA4169@infradead.org>
-References: <1443548266.2207.19.camel@HansenPartnership.com>
- <1443549768.2207.22.camel@HansenPartnership.com>
- <95d34bcc4c0fcf84d02d76a4443ba07c.squirrel@atoth.sote.hu>
- <1443551581.2207.26.camel@HansenPartnership.com>
- <20150930160835.GA16534@infradead.org>
- <1443629730.2185.25.camel@HansenPartnership.com>
- <20150930163147.GA2928@infradead.org>
- <1443630984.2185.27.camel@HansenPartnership.com>
- <20150930164123.GA24596@infradead.org>
- <1443631408.2185.32.camel@HansenPartnership.com>
+From: Ryan Attard <rattard@cleversafe.com>
+Subject: Odd Behavior in the enclosure module around the 2 fault bits
+Date: Wed, 30 Sep 2015 15:17:23 +0000
+Message-ID: <BN1PR04MB076C498417786FF22C034A1CB4D0@BN1PR04MB076.namprd04.prod.outlook.com>
+References: <BN1PR04MB07626753646D0AB2BBD9FF9CB4E0@BN1PR04MB076.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56163 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555AbbI3Qoh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 12:44:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1443631408.2185.32.camel@HansenPartnership.com>
+Received: from mail-bl2on0054.outbound.protection.outlook.com ([65.55.169.54]:9192
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932396AbbI3Qts convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 12:49:48 -0400
+In-Reply-To: <BN1PR04MB07626753646D0AB2BBD9FF9CB4E0@BN1PR04MB076.namprd04.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "\"T?th Attila\"" <atoth@atoth.sote.hu>, adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 30, 2015 at 09:43:28AM -0700, James Bottomley wrote:
-> OK, post a compilable version of the patch and lets get the reporter to
-> try it out.  Not resurrecting esoteric flags suits me.
 
-Right here:
+My coworkers and I were setting some enclosure states on our storage de=
+vices, and then reading the states back using sysfs, and came across th=
+e 'fault' field being set to 2. When we investigated into the ses.c fil=
+e, we found=A0this  wonderful comment:
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index add419d..a56a7b2 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -212,6 +212,17 @@ static const struct file_operations twa_fops = {
- 	.llseek		= noop_llseek,
- };
- 
-+/*
-+ * The controllers use an inline buffer instead of a mapped SGL for small,
-+ * single entry buffers.  Note that we treat a zero-length transfer like
-+ * a mapped SGL.
-+ */
-+static bool twa_command_mapped(struct scsi_cmnd *cmd)
-+{
-+	return scsi_sg_count(cmd) != 1 ||
-+		scsi_bufflen(cmd) >= TW_MIN_SGL_LENGTH;
-+}
-+
- /* This function will complete an aen request from the isr */
- static int twa_aen_complete(TW_Device_Extension *tw_dev, int request_id)
- {
-@@ -1339,7 +1350,8 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
- 				}
- 
- 				/* Now complete the io */
--				scsi_dma_unmap(cmd);
-+				if (twa_command_mapped(cmd))
-+					scsi_dma_unmap(cmd);
- 				cmd->scsi_done(cmd);
- 				tw_dev->state[request_id] = TW_S_COMPLETED;
- 				twa_free_request_id(tw_dev, request_id);
-@@ -1582,7 +1594,8 @@ static int twa_reset_device_extension(TW_Device_Extension *tw_dev)
- 				struct scsi_cmnd *cmd = tw_dev->srb[i];
- 
- 				cmd->result = (DID_RESET << 16);
--				scsi_dma_unmap(cmd);
-+				if (twa_command_mapped(cmd))
-+					scsi_dma_unmap(cmd);
- 				cmd->scsi_done(cmd);
- 			}
- 		}
-@@ -1765,12 +1778,14 @@ static int twa_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
- 	retval = twa_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NULL);
- 	switch (retval) {
- 	case SCSI_MLQUEUE_HOST_BUSY:
--		scsi_dma_unmap(SCpnt);
-+		if (twa_command_mapped(SCpnt))
-+			scsi_dma_unmap(SCpnt);
- 		twa_free_request_id(tw_dev, request_id);
- 		break;
- 	case 1:
- 		SCpnt->result = (DID_ERROR << 16);
--		scsi_dma_unmap(SCpnt);
-+		if (twa_command_mapped(SCpnt))
-+			scsi_dma_unmap(SCpnt);
- 		done(SCpnt);
- 		tw_dev->state[request_id] = TW_S_COMPLETED;
- 		twa_free_request_id(tw_dev, request_id);
-@@ -1831,8 +1846,7 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- 		/* Map sglist from scsi layer to cmd packet */
- 
- 		if (scsi_sg_count(srb)) {
--			if ((scsi_sg_count(srb) == 1) &&
--			    (scsi_bufflen(srb) < TW_MIN_SGL_LENGTH)) {
-+			if (!twa_command_mapped(srb)) {
- 				if (srb->sc_data_direction == DMA_TO_DEVICE ||
- 				    srb->sc_data_direction == DMA_BIDIRECTIONAL)
- 					scsi_sg_copy_to_buffer(srb,
-@@ -1905,7 +1919,7 @@ static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int re
- {
- 	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
- 
--	if (scsi_bufflen(cmd) < TW_MIN_SGL_LENGTH &&
-+	if (!twa_command_mapped(cmd) &&
- 	    (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	     cmd->sc_data_direction == DMA_BIDIRECTIONAL)) {
- 		if (scsi_sg_count(cmd) == 1) {
+/* For device slot and array device slot elements, byte 3 bit 6
+=A0* is "fault sensed" while byte 3 bit 5 is "fault reqstd". As this
+=A0* code stands these bits are shifted 4 positions right so in
+=A0* sysfs they will appear as bits 2 and 1 respectively. Strange. */
+static void ses_get_fault(struct enclosure_device *edev,
+			 =A0struct enclosure_component *ecomp)
+{
+	unsigned char *desc;
 
+
+	desc =3D ses_get_page2_descriptor(edev, ecomp);
+	if (desc)
+		ecomp->fault =3D (desc[3] & 0x60) >> 4;
+}
+
+I was hoping there might be an explanation=A0(purely for curiosity's sa=
+ke) why it was not shifted 5 positions? Or why it wasn't exported as 2 =
+fields in sysfs, each representing 1 bit in the SES page?=A0
+
+Thanks,
+Ryan Attard
+
+
+     --
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
