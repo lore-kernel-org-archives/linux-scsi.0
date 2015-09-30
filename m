@@ -1,88 +1,89 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH] scsi: fnic: use kernel's '%pM' format option to print
- MAC
-Date: Wed, 30 Sep 2015 20:17:08 +0300
-Message-ID: <1443633428.8361.317.camel@linux.intel.com>
-References: <1398782723-13433-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1426787642.14897.375.camel@linux.intel.com>
-	 <550B8B0D.6010901@opengridcomputing.com>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
+Date: Wed, 30 Sep 2015 19:30:34 +0200
+Message-ID: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <550B8B0D.6010901-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Hiral Patel <hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-03-19 at 21:50 -0500, Tom Tucker wrote:
-> Hi Andy,
-> 
-> On 3/19/15 12:54 PM, Andy Shevchenko wrote:
-> > On Tue, 2014-04-29 at 17:45 +0300, Andy Shevchenko wrote:
-> > > Instead of supplying each byte through stack let's use %pM 
-> > > specifier.
-> > Anyone to comment or apply this patch?
-> > 
-> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
-> > > >
-> > > Cc: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-> > > Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-> > > Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > > ---
-> > >   drivers/scsi/fnic/vnic_dev.c | 10 ++--------
-> > >   1 file changed, 2 insertions(+), 8 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/fnic/vnic_dev.c 
-> > > b/drivers/scsi/fnic/vnic_dev.c
-> > > index 9795d6f..ba69d61 100644
-> > > --- a/drivers/scsi/fnic/vnic_dev.c
-> > > +++ b/drivers/scsi/fnic/vnic_dev.c
-> > > @@ -499,10 +499,7 @@ void vnic_dev_add_addr(struct vnic_dev 
-> > > *vdev, u8 *addr)
-> > >   
-> > >   	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
-> > >   	if (err)
-> > > -		printk(KERN_ERR
-> > > -			"Can't add addr 
-> > > [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
-> > > -			addr[0], addr[1], addr[2], addr[3], 
-> > > addr[4], addr[5],
-> > > -			err);
-> > > +		pr_err("Can't add addr [%pM], %d\n", addr, err);
-> 
-> This looks completely reasonable to me.
+struct error_info has 6 bytes of padding on x86_64 (and I assume also
+other 64 bit platforms). This currently amounts to about 4k of wasted
+space (and presumably a third of that on 32 bit).
 
-Anyone to apply then?
+We can avoid that by keeping the codes and the strings in separate
+arrays. Keeping those in sync should be easy enough if we use the
+standard trick of including a table twice.
 
-> 
-> Tom
-> > >   }
-> > >   
-> > >   void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
-> > > @@ -517,10 +514,7 @@ void vnic_dev_del_addr(struct vnic_dev 
-> > > *vdev, u8 *addr)
-> > >   
-> > >   	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
-> > >   	if (err)
-> > > -		printk(KERN_ERR
-> > > -			"Can't del addr 
-> > > [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
-> > > -			addr[0], addr[1], addr[2], addr[3], 
-> > > addr[4], addr[5],
-> > > -			err);
-> > > +		pr_err("Can't del addr [%pM], %d\n", addr, err);
-> > >   }
-> > >   
-> > >   int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
-> > 
-> 
+Patch 2/2 would be something like below; 1/2 is a 1600 line purely
+mechanical thing which I won't spam the lists with unless someone else
+thinks this is a good idea.
 
--- 
-Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Intel Finland Oy
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What do you think?
+
+Subject: [PATCH 2/2] scsi: split additional[] array in two
+
+struct error_info has 6 bytes of padding (on 64 bit platforms), which
+amounts to over 4K of wasted space in the additional[]
+array. Splitting it in two avoids that waste. A BUILD_BUG_ON and the
+fact that the two arrays are generated from the same include file
+should keep these two arrays in sync.
+
+$ scripts/bloat-o-meter /tmp/vmlinux vmlinux
+add/remove: 2/1 grow/shrink: 1/0 up/down: 7073/-11312 (-4239)
+
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/constants.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 14d5069ca3ff..03f28cdcbc31 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -290,19 +290,19 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
+ 	return true;
+ }
+ 
+-struct error_info {
+-	unsigned short code12;	/* 0x0302 looks better than 0x03,0x02 */
+-	const char * text;
++static unsigned short additional_code12[] = {
++#define SENSE_CODE(c, s) c
++#include "sense_codes.h"
++#undef SENSE_CODE
+ };
+ 
+-
+-static const struct error_info additional[] =
+-{
+-#define SENSE_CODE(c, s) {c, s}
++static const char *additional_text[] = {
++#define SENSE_CODE(c, s) s
+ #include "sense_codes.h"
+ #undef SENSE_CODE
+ };
+ 
++
+ struct error_info2 {
+ 	unsigned char code1, code2_min, code2_max;
+ 	const char * str;
+@@ -364,11 +364,12 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
+ {
+ 	int i;
+ 	unsigned short code = ((asc << 8) | ascq);
++	BUILD_BUG_ON(ARRAY_SIZE(additional_code12) != ARRAY_SIZE(additional_text));
+ 
+ 	*fmt = NULL;
+-	for (i = 0; additional[i].text; i++)
+-		if (additional[i].code12 == code)
+-			return additional[i].text;
++	for (i = 0; additional_text[i]; i++)
++		if (additional_code12[i] == code)
++			return additional_text[i];
+ 	for (i = 0; additional2[i].fmt; i++) {
+ 		if (additional2[i].code1 == asc &&
+ 		    ascq >= additional2[i].code2_min &&
