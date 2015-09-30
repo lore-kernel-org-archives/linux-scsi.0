@@ -1,99 +1,88 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 1/1] scsi: qla4xxx: print MAC and SID via %p[mM][R]
-Date: Wed, 30 Sep 2015 20:14:44 +0300
-Message-ID: <1443633284-14633-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32408 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673AbbI3RPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Sep 2015 13:15:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH] scsi: fnic: use kernel's '%pM' format option to print
+ MAC
+Date: Wed, 30 Sep 2015 20:17:08 +0300
+Message-ID: <1443633428.8361.317.camel@linux.intel.com>
+References: <1398782723-13433-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1426787642.14897.375.camel@linux.intel.com>
+	 <550B8B0D.6010901@opengridcomputing.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <550B8B0D.6010901-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Hiral Patel <hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
+On Thu, 2015-03-19 at 21:50 -0500, Tom Tucker wrote:
+> Hi Andy,
+> 
+> On 3/19/15 12:54 PM, Andy Shevchenko wrote:
+> > On Tue, 2014-04-29 at 17:45 +0300, Andy Shevchenko wrote:
+> > > Instead of supplying each byte through stack let's use %pM 
+> > > specifier.
+> > Anyone to comment or apply this patch?
+> > 
+> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+> > > >
+> > > Cc: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+> > > Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+> > > Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > ---
+> > >   drivers/scsi/fnic/vnic_dev.c | 10 ++--------
+> > >   1 file changed, 2 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/fnic/vnic_dev.c 
+> > > b/drivers/scsi/fnic/vnic_dev.c
+> > > index 9795d6f..ba69d61 100644
+> > > --- a/drivers/scsi/fnic/vnic_dev.c
+> > > +++ b/drivers/scsi/fnic/vnic_dev.c
+> > > @@ -499,10 +499,7 @@ void vnic_dev_add_addr(struct vnic_dev 
+> > > *vdev, u8 *addr)
+> > >   
+> > >   	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
+> > >   	if (err)
+> > > -		printk(KERN_ERR
+> > > -			"Can't add addr 
+> > > [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+> > > -			addr[0], addr[1], addr[2], addr[3], 
+> > > addr[4], addr[5],
+> > > -			err);
+> > > +		pr_err("Can't add addr [%pM], %d\n", addr, err);
+> 
+> This looks completely reasonable to me.
 
-In the kernel we have nice specifier to print MAC by given pointer to the
-address in binary form.
+Anyone to apply then?
 
-Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
- drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
- drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
- 3 files changed, 7 insertions(+), 21 deletions(-)
+> 
+> Tom
+> > >   }
+> > >   
+> > >   void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+> > > @@ -517,10 +514,7 @@ void vnic_dev_del_addr(struct vnic_dev 
+> > > *vdev, u8 *addr)
+> > >   
+> > >   	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
+> > >   	if (err)
+> > > -		printk(KERN_ERR
+> > > -			"Can't del addr 
+> > > [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+> > > -			addr[0], addr[1], addr[2], addr[3], 
+> > > addr[4], addr[5],
+> > > -			err);
+> > > +		pr_err("Can't del addr [%pM], %d\n", addr, err);
+> > >   }
+> > >   
+> > >   int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
+> > 
+> 
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index c291fdf..1da04f3 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
- 	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
- 	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
- 
--	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
--			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
--			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
--			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
- 
- 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
- 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 7c33658..05a4b77 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
- 	ha->phy_port_num = sys_info->port_num;
- 	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
- 
--	DEBUG2(printk("scsi%ld: %s: "
--	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
--	    "serial %s\n", ha->host_no, __func__,
--	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
--	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
--	    ha->serial_number));
-+	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
-+	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
- 
- 	status = QLA_SUCCESS;
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6d25879..0cc230d 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -6305,13 +6305,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
- 	 * ISID would not match firmware generated ISID.
- 	 */
- 	if (is_isid_compare) {
--		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
--			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
--			__func__, old_tddb->isid[5], old_tddb->isid[4],
--			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
--			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
--			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
--			new_tddb->isid[0]));
-+		DEBUG2(ql4_printk(KERN_INFO, ha,
-+			"%s: old ISID [%pmR] New ISID [%pmR]\n",
-+			__func__, old_tddb->isid, new_tddb->isid));
- 
- 		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
- 			   sizeof(old_tddb->isid)))
-@@ -7926,10 +7922,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
- 		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
- 		break;
- 	case ISCSI_FLASHNODE_ISID:
--		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
--			     fnode_sess->isid[0], fnode_sess->isid[1],
--			     fnode_sess->isid[2], fnode_sess->isid[3],
--			     fnode_sess->isid[4], fnode_sess->isid[5]);
-+		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
- 		break;
- 	case ISCSI_FLASHNODE_TSID:
- 		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
 -- 
-2.5.1
-
+Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Intel Finland Oy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
