@@ -1,54 +1,99 @@
-From: Ryan Attard <rattard@cleversafe.com>
-Subject: Odd Behavior in the enclosure module around the 2 fault bits
-Date: Wed, 30 Sep 2015 15:17:23 +0000
-Message-ID: <BN1PR04MB076C498417786FF22C034A1CB4D0@BN1PR04MB076.namprd04.prod.outlook.com>
-References: <BN1PR04MB07626753646D0AB2BBD9FF9CB4E0@BN1PR04MB076.namprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 1/1] scsi: qla4xxx: print MAC and SID via %p[mM][R]
+Date: Wed, 30 Sep 2015 20:14:44 +0300
+Message-ID: <1443633284-14633-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0054.outbound.protection.outlook.com ([65.55.169.54]:9192
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932396AbbI3Qts convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 12:49:48 -0400
-In-Reply-To: <BN1PR04MB07626753646D0AB2BBD9FF9CB4E0@BN1PR04MB076.namprd04.prod.outlook.com>
-Content-Language: en-US
+Received: from mga11.intel.com ([192.55.52.93]:32408 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752673AbbI3RPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Sep 2015 13:15:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
+From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
 
-My coworkers and I were setting some enclosure states on our storage de=
-vices, and then reading the states back using sysfs, and came across th=
-e 'fault' field being set to 2. When we investigated into the ses.c fil=
-e, we found=A0this  wonderful comment:
+In the kernel we have nice specifier to print MAC by given pointer to the
+address in binary form.
 
-/* For device slot and array device slot elements, byte 3 bit 6
-=A0* is "fault sensed" while byte 3 bit 5 is "fault reqstd". As this
-=A0* code stands these bits are shifted 4 positions right so in
-=A0* sysfs they will appear as bits 2 and 1 respectively. Strange. */
-static void ses_get_fault(struct enclosure_device *edev,
-			 =A0struct enclosure_component *ecomp)
-{
-	unsigned char *desc;
+Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
+ drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
+ drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
+ 3 files changed, 7 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index c291fdf..1da04f3 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+ 	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
+ 	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
+ 
+-	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
+-			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
+-			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
+-			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
++	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
+ 
+ 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
+ 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 7c33658..05a4b77 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
+ 	ha->phy_port_num = sys_info->port_num;
+ 	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
+ 
+-	DEBUG2(printk("scsi%ld: %s: "
+-	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
+-	    "serial %s\n", ha->host_no, __func__,
+-	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
+-	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
+-	    ha->serial_number));
++	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
++	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
+ 
+ 	status = QLA_SUCCESS;
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 6d25879..0cc230d 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6305,13 +6305,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
+ 	 * ISID would not match firmware generated ISID.
+ 	 */
+ 	if (is_isid_compare) {
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
+-			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
+-			__func__, old_tddb->isid[5], old_tddb->isid[4],
+-			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
+-			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
+-			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
+-			new_tddb->isid[0]));
++		DEBUG2(ql4_printk(KERN_INFO, ha,
++			"%s: old ISID [%pmR] New ISID [%pmR]\n",
++			__func__, old_tddb->isid, new_tddb->isid));
+ 
+ 		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
+ 			   sizeof(old_tddb->isid)))
+@@ -7926,10 +7922,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+ 		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
+ 		break;
+ 	case ISCSI_FLASHNODE_ISID:
+-		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
+-			     fnode_sess->isid[0], fnode_sess->isid[1],
+-			     fnode_sess->isid[2], fnode_sess->isid[3],
+-			     fnode_sess->isid[4], fnode_sess->isid[5]);
++		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
+ 		break;
+ 	case ISCSI_FLASHNODE_TSID:
+ 		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
+-- 
+2.5.1
 
-	desc =3D ses_get_page2_descriptor(edev, ecomp);
-	if (desc)
-		ecomp->fault =3D (desc[3] & 0x60) >> 4;
-}
-
-I was hoping there might be an explanation=A0(purely for curiosity's sa=
-ke) why it was not shifted 5 positions? Or why it wasn't exported as 2 =
-fields in sysfs, each representing 1 bit in the SES page?=A0
-
-Thanks,
-Ryan Attard
-
-
-     --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
