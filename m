@@ -1,59 +1,41 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH v5 31/34] cxlflash: Correct trace string
-Date: Thu,  1 Oct 2015 10:58:39 -0500
-Message-ID: <1443715119-23374-1-git-send-email-mrochs@linux.vnet.ibm.com>
-References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: "Thomas D." <whissi@whissi.de>
+Subject: Re: req->nr_phys_segments > queue_max_segments (was Re: kernel BUG at
+ drivers/block/virtio_blk.c:172!)
+Date: Thu, 1 Oct 2015 18:06:19 +0200
+Message-ID: <560D59FB.7020501@whissi.de>
+References: <560C87F6.4080708@whissi.de>
+ <20151001114817-mutt-send-email-mst@redhat.com> <560CFAD3.1030607@suse.de>
+ <CAMM=eLcyT2JeWn4NJ6gjsHcRz_D8YcixLix64Spg9cVYFexGyA@mail.gmail.com>
+ <560D36DC.5050205@whissi.de> <560D52DE.3020303@whissi.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:48698 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbbJAP73 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 11:59:29 -0400
-Received: from localhost
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 1 Oct 2015 09:59:29 -0600
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id B4A8819D805C
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2015 09:47:38 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t91FxQcu11469064
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 08:59:26 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t91FxOYK029862
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 09:59:26 -0600
-In-Reply-To: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Received: from borg.tf-network.de ([62.75.218.204]:36760 "EHLO
+	borg.tf-network.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbbJAQGV (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 12:06:21 -0400
+In-Reply-To: <560D52DE.3020303@whissi.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, "virtualization@lists.linux-foundation.org" <virtualization@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-The trace following the failure of alloc_mem() incorrectly identifies
-which function failed. This can lead to misdiagnosing a failure.
+Hi
 
-Fix the string to correctly indicate that alloc_mem() failed.
+> seems like we have two problems:
+> 
+> The first (origin) problem seems to be already fixed by Mike's patch.
+> 
+> I applied the patch against linux-4.1.8, rebooted several times without
+> a problem. But I'll keep testing for sure.
 
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
----
- drivers/scsi/cxlflash/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I already experienced one freeze with linux-4.1.8 and Mike's patch (same
+like in 4.1.9). Doesn't mean that this is related to Mike's patch (I see
+the same freezes with vanilla 4.1.9 not containing the patch with a
+higher frequency).
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 3f43879..998373e 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2377,7 +2377,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	cfg->host = host;
- 	rc = alloc_mem(cfg);
- 	if (rc) {
--		dev_err(&pdev->dev, "%s: call to scsi_host_alloc failed!\n",
-+		dev_err(&pdev->dev, "%s: call to alloc_mem failed!\n",
- 			__func__);
- 		rc = -ENOMEM;
- 		scsi_host_put(cfg->host);
--- 
-2.1.0
+
+-Thomas
+
 
