@@ -1,7 +1,7 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 1/5] SCSI: sd: simplify ida usage
-Date: Thu,  1 Oct 2015 11:59:05 -0700
-Message-ID: <c832f76821c18fa953ff539b6e852bfd2cdc24b8.1443723136.git.lduncan@suse.com>
+Subject: [PATCH 4/5] block: mtip32xx: simplify ida usage
+Date: Thu,  1 Oct 2015 11:59:08 -0700
+Message-ID: <64f964663b1a35ff2352dc3cea76baaae03a2d13.1443723136.git.lduncan@suse.com>
 References: <cover.1443723136.git.lduncan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1443723136.git.lduncan@suse.com>
@@ -13,69 +13,78 @@ Cc: Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartne
 List-Id: linux-scsi@vger.kernel.org
 
 Simplify ida index allocation and removal by
-using the ida_simple_* helper functions.
+using the ida_simple_* helper functions
 
 Signed-off-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/scsi/sd.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+ drivers/block/mtip32xx/mtip32xx.c | 26 ++++++--------------------
+ 1 file changed, 6 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3b2fcb4fada0..3d77ac8f0d4c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -118,7 +118,6 @@ static void scsi_disk_release(struct device *cdev);
- static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
- static void sd_print_result(const struct scsi_disk *, const char *, int);
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 4a2ef09e6704..e62d170b0641 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -118,7 +118,6 @@ static struct dentry *dfs_device_status;
  
--static DEFINE_SPINLOCK(sd_index_lock);
- static DEFINE_IDA(sd_index_ida);
+ static u32 cpu_use[NR_CPUS];
  
- /* This semaphore is used to mediate the 0->1 reference get in the
-@@ -2948,19 +2947,12 @@ static int sd_probe(struct device *dev)
- 	if (!gd)
- 		goto out_free;
+-static DEFINE_SPINLOCK(rssd_index_lock);
+ static DEFINE_IDA(rssd_index_ida);
  
--	do {
--		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
--			goto out_put;
--
--		spin_lock(&sd_index_lock);
--		error = ida_get_new(&sd_index_ida, &index);
--		spin_unlock(&sd_index_lock);
--	} while (error == -EAGAIN);
--
--	if (error) {
-+	error = ida_simple_get(&sd_index_ida, 0, 0, GFP_KERNEL);
-+	if (error < 0) {
- 		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
- 		goto out_put;
+ static int mtip_block_initialize(struct driver_data *dd);
+@@ -3821,17 +3820,10 @@ static int mtip_block_initialize(struct driver_data *dd)
  	}
-+	index = error;
  
- 	error = sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME_LEN);
- 	if (error) {
-@@ -3001,9 +2993,7 @@ static int sd_probe(struct device *dev)
+ 	/* Generate the disk name, implemented same as in sd.c */
+-	do {
+-		if (!ida_pre_get(&rssd_index_ida, GFP_KERNEL))
+-			goto ida_get_error;
+-
+-		spin_lock(&rssd_index_lock);
+-		rv = ida_get_new(&rssd_index_ida, &index);
+-		spin_unlock(&rssd_index_lock);
+-	} while (rv == -EAGAIN);
+-
+-	if (rv)
++	rv = ida_simple_get(&rssd_index_ida, 0, 0, GFP_KERNEL);
++	if (rv < 0)
+ 		goto ida_get_error;
++	index = rv;
+ 
+ 	rv = rssd_disk_name_format("rssd",
+ 				index,
+@@ -3981,9 +3973,7 @@ init_hw_cmds_error:
+ block_queue_alloc_init_error:
+ 	mtip_hw_debugfs_exit(dd);
+ disk_index_error:
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, index);
+-	spin_unlock(&rssd_index_lock);
++	ida_simple_remove(&rssd_index_ida, index);
+ 
+ ida_get_error:
+ 	put_disk(dd->disk);
+@@ -4051,9 +4041,7 @@ static int mtip_block_remove(struct driver_data *dd)
+ 	}
+ 	dd->disk  = NULL;
+ 
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, dd->index);
+-	spin_unlock(&rssd_index_lock);
++	ida_simple_remove(&rssd_index_ida, dd->index);
+ 
+ 	/* De-initialize the protocol layer. */
+ 	mtip_hw_exit(dd);
+@@ -4092,9 +4080,7 @@ static int mtip_block_shutdown(struct driver_data *dd)
+ 		dd->queue = NULL;
+ 	}
+ 
+-	spin_lock(&rssd_index_lock);
+-	ida_remove(&rssd_index_ida, dd->index);
+-	spin_unlock(&rssd_index_lock);
++	ida_simple_remove(&rssd_index_ida, dd->index);
  	return 0;
+ }
  
-  out_free_index:
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, index);
--	spin_unlock(&sd_index_lock);
-+	ida_simple_remove(&sd_index_ida, index);
-  out_put:
- 	put_disk(gd);
-  out_free:
-@@ -3064,9 +3054,7 @@ static void scsi_disk_release(struct device *dev)
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	struct gendisk *disk = sdkp->disk;
- 	
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, sdkp->index);
--	spin_unlock(&sd_index_lock);
-+	ida_simple_remove(&sd_index_ida, sdkp->index);
- 
- 	blk_integrity_unregister(disk);
- 	disk->private_data = NULL;
 -- 
 2.1.4
