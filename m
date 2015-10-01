@@ -1,35 +1,57 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi
-	device
-Date: Thu, 1 Oct 2015 07:21:59 +0200
-Message-ID: <20151001052159.GA14247@lst.de>
-References: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp> <20150930151857.GA26594@lst.de> <20151001005640.GA4821@xzibit.linux.bs1.fc.nec.co.jp> <20151001043844.GA8397@xzibit.linux.bs1.fc.nec.co.jp>
+From: Joel Stanley <joel@jms.id.au>
+Subject: [PATCH] be2iscsi: Fix bad WARN_ON
+Date: Thu,  1 Oct 2015 17:32:58 +0930
+Message-ID: <1443686578-13030-1-git-send-email-joel@jms.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38104 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751933AbbJAFWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Oct 2015 01:22:01 -0400
-Content-Disposition: inline
-In-Reply-To: <20151001043844.GA8397@xzibit.linux.bs1.fc.nec.co.jp>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33679 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755937AbbJAID5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 04:03:57 -0400
+Received: by pacex6 with SMTP id ex6so67423749pac.0
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2015 01:03:56 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+To: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-On Thu, Oct 01, 2015 at 04:38:45AM +0000, Junichi Nomura wrote:
-> But another workload using dm-multipath still caues the same crash.
-> I think a patch like the following is needed.
-> What do you think?
+GCC 5 helpfully warns us that the WARN_ON check may be buggy:
 
-Thanks Junichi,
+drivers/scsi/be2iscsi/be_main.c: In function =E2=80=98be_sgl_create_con=
+tiguous=E2=80=99:
+drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only
+applied to the left hand side of comparison [-Wlogical-not-parentheses]
+  WARN_ON(!length > 0);
+                    ^
 
-I suspected that we should defer the release until we tear down
-the sdev instead of unregister time.  Give me a little more time
-to review your patch and actually reproduce your issue before a formal
-ACK, though.
+Add the brackets that the check was was looking for.
 
-Any chance you could share all your multipath tests in a git repository
-somewhere?  It seems like you're the only one actually having a good
-set of reproducable but minimalistic tests.
+Signed-off-by: Joel Stanley <joel@jms.id.au>
+---
+ drivers/scsi/be2iscsi/be_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
+_main.c
+index 7a6dbfb..0b87abb 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+ {
+ 	WARN_ON(!virtual_address);
+ 	WARN_ON(!physical_address);
+-	WARN_ON(!length > 0);
++	WARN_ON(!(length > 0));
+ 	WARN_ON(!sgl);
+=20
+ 	sgl->va =3D virtual_address;
+--=20
+2.5.0
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
