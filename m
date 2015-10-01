@@ -1,63 +1,37 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] storvsc: use small sg_tablesize on x86
-Date: Thu, 1 Oct 2015 21:27:42 +0000
-Message-ID: <BY2PR0301MB1654ED62794727AD7E45546EA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1441706801-15300-1-git-send-email-olaf@aepfle.de>
-	 <BY2PR0301MB16540206D42C1E00EC353D0EA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
- <1443732718.6886.23.camel@HansenPartnership.com>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 33/34] cxlflash: Fix to avoid leaving dangling
+ interrupt resources
+Date: Thu, 1 Oct 2015 17:17:34 -0500
+Message-ID: <560DB0FE.8040203@linux.vnet.ibm.com>
+References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1443715127-25776-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0145.outbound.protection.outlook.com ([207.46.100.145]:28306
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750745AbbJAVmd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Oct 2015 17:42:33 -0400
-In-Reply-To: <1443732718.6886.23.camel@HansenPartnership.com>
-Content-Language: en-US
+Received: from e39.co.us.ibm.com ([32.97.110.160]:50533 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbbJAWRf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 18:17:35 -0400
+Received: from localhost
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Thu, 1 Oct 2015 16:17:34 -0600
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id EC82719D8042
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2015 16:05:44 -0600 (MDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t91MGKiv11010332
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 15:16:20 -0700
+Received: from d03av05.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t91MHTW5024977
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 16:17:32 -0600
+In-Reply-To: <1443715127-25776-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Olaf Hering <olaf@aepfle.de>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIE9jdG9iZXIgMSwgMjAxNSAxOjUyIFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuIDxr
-eXNAbWljcm9zb2Z0LmNvbT4NCj4gQ2M6IE9sYWYgSGVyaW5nIDxvbGFmQGFlcGZsZS5kZT47IEhh
-aXlhbmcgWmhhbmcNCj4gPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+OyBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDog
-UmU6IFtQQVRDSF0gc3RvcnZzYzogdXNlIHNtYWxsIHNnX3RhYmxlc2l6ZSBvbiB4ODYNCj4gDQo+
-IE9uIFRodSwgMjAxNS0xMC0wMSBhdCAyMDozMCArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToN
-Cj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IE9sYWYg
-SGVyaW5nIFttYWlsdG86b2xhZkBhZXBmbGUuZGVdDQo+ID4gPiBTZW50OiBUdWVzZGF5LCBTZXB0
-ZW1iZXIgOCwgMjAxNSAzOjA3IEFNDQo+ID4gPiBUbzogS1kgU3Jpbml2YXNhbiA8a3lzQG1pY3Jv
-c29mdC5jb20+OyBIYWl5YW5nIFpoYW5nDQo+ID4gPiA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT47
-IEpCb3R0b21sZXlAb2Rpbi5jb20NCj4gPiA+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgT2xhZiBIZXJpbmcNCj4gPiA+IDxvbGFm
-QGFlcGZsZS5kZT4NCj4gPiA+IFN1YmplY3Q6IFtQQVRDSF0gc3RvcnZzYzogdXNlIHNtYWxsIHNn
-X3RhYmxlc2l6ZSBvbiB4ODYNCj4gPiA+DQo+ID4gPiBSZWR1Y2luZyB0aGUgc2dfdGFibGVzaXpl
-IGFsbG93cyBib290aW5nIG9mIDMyYml0IGtlcm5lbHMgaW4gVk1zLCBhZnRlcg0KPiA+ID4gY29t
-bWl0IGJlMGNmNmNhMzAxYzYxNDU4ZGM0YWExYTM3YWNmNGY1OGQyZWQzZDYgKCJzY3NpOiBzdG9y
-dnNjOiBTZXQNCj4gdGhlDQo+ID4gPiB0YWJsZXNpemUgYmFzZWQgb24gdGhlIGluZm9ybWF0aW9u
-IGdpdmVuIGJ5IHRoZSBob3N0IikNCj4gPiA+DQo+ID4gPiBbICAgIDUuNTY3MTM4XSBodl9zdG9y
-dnNjIHZtYnVzXzE6IGFkanVzdGluZyBzZ190YWJsZXNpemUgMHg4MDAgLT4gMHgyMA0KPiA+ID4N
-Cj4gPiA+IFNpZ25lZC1vZmYtYnk6IE9sYWYgSGVyaW5nIDxvbGFmQGFlcGZsZS5kZT4NCj4gPiBS
-ZXZpZXdlZC1ieTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4gPiAt
-LS0NCj4gPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDUgKysrKysNCj4gPiA+ICAx
-IGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIGIvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMN
-Cj4gPiA+IGluZGV4IDQwYzQzYWUuLjM2YmYxODMgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJz
-L3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+ID4gKysrIGIvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
-LmMNCj4gPiA+IEBAIC0xOTA3LDYgKzE5MDcsMTEgQEAgc3RhdGljIGludCBzdG9ydnNjX3Byb2Jl
-KHN0cnVjdCBodl9kZXZpY2UNCj4gKmRldmljZSwNCj4gPiA+ICAJICogZnJvbSB0aGUgaG9zdC4N
-Cj4gPiA+ICAJICovDQo+ID4gPiAgCWhvc3QtPnNnX3RhYmxlc2l6ZSA9IChzdG9yX2RldmljZS0+
-bWF4X3RyYW5zZmVyX2J5dGVzID4+DQo+ID4gPiBQQUdFX1NISUZUKTsNCj4gPiA+ICsjaWYgZGVm
-aW5lZChDT05GSUdfWDg2XzMyKQ0KPiA+ID4gKwlkZXZfd2FybigmZGV2aWNlLT5kZXZpY2UsICJh
-ZGp1c3Rpbmcgc2dfdGFibGVzaXplIDB4JXggLT4gMHgleCIsDQo+ID4gPiArCQkJaG9zdC0+c2df
-dGFibGVzaXplLA0KPiA+ID4gTUFYX01VTFRJUEFHRV9CVUZGRVJfQ09VTlQpOw0KPiA+ID4gKwlo
-b3N0LT5zZ190YWJsZXNpemUgPSBNQVhfTVVMVElQQUdFX0JVRkZFUl9DT1VOVDsNCj4gPiA+ICsj
-ZW5kaWYNCj4gDQo+IFVtLCB0aGlzIGlzIGEgYml0IGFyY2hpdGVjdHVyZSBzcGVjaWZpYyAoSSBr
-bm93IEF6dXJlIGlzIHg4NiwgYnV0DQo+IHN0aWxsKS4gIENhbiB5b3UgbWFrZSB0aGUgZGVmaW5l
-IGNoZWNrIENPTkZJR18zMkJJVCByYXRoZXIgdGhhbg0KPiBDT05GSUdfWDg2XzMyPw0KDQpUaGFu
-a3MsIHdpbGwgZG8uDQoNCksuIFkNCj4gDQo+IEphbWVzDQo+IA0KPiANCg0K
+Acked-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+
