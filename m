@@ -1,52 +1,54 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v4 25/32] cxlflash: Fix to prevent EEH recovery failure
-Date: Thu, 01 Oct 2015 09:53:06 +1000
-Message-ID: <87mvw3sbvh.fsf@gamma.ozlabs.ibm.com>
-References: <1443222593-8828-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443223134-9886-1-git-send-email-mrochs@linux.vnet.ibm.com> <87612uuich.fsf@gamma.ozlabs.ibm.com> <F4D4C09B-DEF2-485E-9453-671DF867AE37@linux.vnet.ibm.com>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi
+ device
+Date: Thu, 1 Oct 2015 00:56:41 +0000
+Message-ID: <20151001005640.GA4821@xzibit.linux.bs1.fc.nec.co.jp>
+References: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp>
+ <20150930151857.GA26594@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36051 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509AbbI3XxM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 19:53:12 -0400
-Received: by pablk4 with SMTP id lk4so54074903pab.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2015 16:53:11 -0700 (PDT)
-In-Reply-To: <F4D4C09B-DEF2-485E-9453-671DF867AE37@linux.vnet.ibm.com>
+Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:38107 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137AbbJAA6S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2015 20:58:18 -0400
+In-Reply-To: <20150930151857.GA26594@lst.de>
+Content-Language: ja-JP
+Content-ID: <2A023BCCBEF94144A5D02FF29F405EE1@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-"Matthew R. Ochs" <mrochs@linux.vnet.ibm.com> writes:
+On 10/01/15 00:18, Christoph Hellwig wrote:
+> On Wed, Sep 30, 2015 at 12:35:50AM +0000, Junichi Nomura wrote:
+>> With v4.3-rc3, stress testing of SCSI device addition/removal quickly
+>> trigger random crash in memory allocator (e.g. __kmalloc).  I found that
+>> a commit 086b91d052eb ("scsi_dh: integrate into the core SCSI code")
+>> moved the call of scsi_dh->detach() to very early part of sdev tear down
+>> process (scsi_remove_device()). As a result, related data structure such
+>> as alua_dh_data can be freed while rtpg/stpg are still in-flight.
+> 
+> Hi Junichi,
+> 
+> the code should have been called from that early in the process before,
+> as it was called from the bus notifier that was called first in device_del.
 
->>> The process_sense() routine can perform a read capacity which
->>> can take some time to complete. If an EEH occurs while waiting
->>> on the read capacity, the EEH handler is unable to obtain the
->>> context's mutex in order to put the context in an error state.
->>> The EEH handler will sit and wait until the context is free,
->>> but this wait can last longer than the EEH handler tolerates,
->>> leading to a failed recovery.
->> 
->> I'm not quite clear on what you mean by the EEH handler timing
->> out. AFAIK there's nothing in eehd and the EEH core that times out if a
->> driver doesn't respond - indeed, it's pretty easy to hang eehd with a
->> misbehaving driver.
->> 
->> Are you referring to your own internal timeouts?
->> cxlflash_wait_for_pci_err_recovery and anything else that uses
->> CXLFLASH_PCI_ERROR_RECOVERY_TIMEOUT?
->
-> Reading through this again I can see how this is misleading. This is
-> actually similar and related to the deadlock scenario described in
-> "Fix to avoid potential deadlock on EEH". Without this fix, you'd end
-> up in a similar situation but deadlocked on the context mutex instead
-> of the ioctl semaphore.
+With 4.2 kernel, scsi_dh->detach() was not called until the last
+reference has gone.  With 4.3-rc3, scsi_dh->detach() is directly called
+from the context of scsi_remove_device(). That's the point.
 
-That makes _much_ more sense. If you could please revise the commit
-message to explain that, you can include this in the next version:
-Reviewed-by: Daniel Axtens <dja@axtens.net>
+And in terms of that, my example script might not be reproducing the
+situation I'm claiming because activation via sysfs doesn't seem to take
+refcount anyway..  The original crash I saw happend when dm-mpath was
+involved, which used to take refcount of scsi_dh while in-use.
 
-Regards,
-Daniel
+> While something in this series obviously caused the regression are you
+> sure it's exactly this patch?
 
+So it might be the commit 1bab0de0274f ("dm-mpath, scsi_dh: don't let dm
+detach device handlers"), which eliminates refcounting of scsi_dh.
+
+-- 
+Jun'ichi Nomura, NEC Corporation
