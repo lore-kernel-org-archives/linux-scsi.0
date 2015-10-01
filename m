@@ -1,114 +1,103 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v2 01/11] phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
-Date: Thu, 01 Oct 2015 10:02:14 +0530
-Message-ID: <560CB74E.7070909@samsung.com>
-References: <1442483137-32376-1-git-send-email-alim.akhtar@samsung.com>
- <1442483137-32376-2-git-send-email-alim.akhtar@samsung.com>
- <56001538.5030706@kernel.org>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi
+ device
+Date: Thu, 1 Oct 2015 04:38:45 +0000
+Message-ID: <20151001043844.GA8397@xzibit.linux.bs1.fc.nec.co.jp>
+References: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp>
+ <20150930151857.GA26594@lst.de>
+ <20151001005640.GA4821@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:53687 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbbJAElW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 00:41:22 -0400
-In-reply-to: <56001538.5030706@kernel.org>
+Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:51849 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbbJAEmt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 00:42:49 -0400
+In-Reply-To: <20151001005640.GA4821@xzibit.linux.bs1.fc.nec.co.jp>
+Content-Language: ja-JP
+Content-ID: <B8F82CC315CE8744887B288F4F6B65B7@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-HI Rob,
-Thanks for your time.
+On 10/01/15 09:56, Junichi Nomura wrote:
+> With 4.2 kernel, scsi_dh->detach() was not called until the last
+> reference has gone.  With 4.3-rc3, scsi_dh->detach() is directly called
+> from the context of scsi_remove_device(). That's the point.
 
-On 09/21/2015 08:03 PM, Rob Herring wrote:
-> On 09/17/2015 04:45 AM, Alim Akhtar wrote:
->> From: Seungwon Jeon <essuuj@gmail.com>
->>
->> This patch introduces Exynos UFS PHY driver. This driver
->> supports to deal with phy calibration and power control
->> according to UFS host driver's behavior.
->>
->> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
->> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
->> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   .../devicetree/bindings/phy/samsung-phy.txt        |   22 ++
->
-> It is preferred to put the binding in a separate patch.
->
-Ok, will make a separate patch to add bindings.
->>   drivers/phy/Kconfig                                |    7 +
->>   drivers/phy/Makefile                               |    1 +
->>   drivers/phy/phy-exynos-ufs.c                       |  262 ++++++++++++++++++++
->>   drivers/phy/phy-exynos-ufs.h                       |   85 +++++++
->>   drivers/phy/phy-exynos7-ufs.h                      |   89 +++++++
->>   include/linux/phy/phy-exynos-ufs.h                 |  107 ++++++++
->>   7 files changed, 573 insertions(+)
->>   create mode 100644 drivers/phy/phy-exynos-ufs.c
->>   create mode 100644 drivers/phy/phy-exynos-ufs.h
->>   create mode 100644 drivers/phy/phy-exynos7-ufs.h
->>   create mode 100644 include/linux/phy/phy-exynos-ufs.h
->>
->> diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> index 60c6f2a..1abe2c4 100644
->> --- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> +++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
->> @@ -174,3 +174,25 @@ Example:
->>   		usbdrdphy0 = &usb3_phy0;
->>   		usbdrdphy1 = &usb3_phy1;
->>   	};
->> +
->> +Samsung Exynos7 soc serise UFS PHY Controller
->
-> s/serise/series/
->
-ok
+For my test script in the original post, I can't reproduce the crash
+by just swapping the order of scsi_dh_handler_detach() and
+device_remove_file() like this:
 
->> +---------------------------------------------
->> +
->> +UFS PHY nodes are defined to describe on-chip UFS Physical layer controllers.
->> +Each UFS PHY controller should have its own node.
->> +
->> +Required properties:
->> +- compatible        : compatible list, contains "samsung,exynos7-ufs-phy"
->> +- reg : offset and length of the UFS PHY register set;
->> +- reg-names : reg name(s) must be 'phy-pma';
->> +- #phy-cells : must be zero
->> +- samsung,syscon-phandle : a phandle to the PMU system controller, no arguments
->
-> How about samsung,pmu-syscon as syscon can mean a variety of things?
->
-agree, will change it.
->> +
->> +Example:
->> +	ufs_phy: ufs-phy@0x15571800 {
->> +		compatible = "samsung,exynos7-ufs-phy";
->> +		reg = <0x15571800 0x240>;
->> +		reg-names = "phy-pma";
->> +		samsung,syscon-phandle = <&pmu_system_controller>;
->> +		#phy-cells = <0>;
->> +	};
->> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->> index 6b8dd16..7449376 100644
->> --- a/drivers/phy/Kconfig
->> +++ b/drivers/phy/Kconfig
->> @@ -358,4 +358,11 @@ config PHY_BRCMSTB_SATA
->>   	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
->>   	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
->>
->> +config PHY_EXYNOS_UFS
->> +	tristate "EXYNOS SoC series UFS PHY driver"
->> +	depends on OF && ARCH_EXYNOS
->
-> || COMPILE_TEST
->
-ok will add
->> +	select GENERIC_PHY
->> +	help
->> +	  Support for UFS PHY on Samsung EXYNOS chipsets.
->> +
->>   endmenu
->
->
+  void scsi_dh_remove_device(struct scsi_device *sdev)
+  {
+        device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+        if (sdev->handler)
+                scsi_dh_handler_detach(sdev);
+  }
+
+But another workload using dm-multipath still caues the same crash.
+I think a patch like the following is needed.
+What do you think?
+
+
+The commit 1bab0de0274f ("dm-mpath, scsi_dh: don't let dm detach device
+handlers") removed reference counting of attached scsi device handler.
+As a result scsi_dh->detach() is directly called in the context of
+scsi_remove_device() where activation request can be still in flight.
+
+This patch moves scsi_dh_handler_detach() to
+scsi_device_dev_release_usercontext(), at that point the device
+is already in quiesced state.
+
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index edb044a..19bf9db 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -232,10 +232,14 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+ 	return err;
+ }
+ 
+-void scsi_dh_remove_device(struct scsi_device *sdev)
++void scsi_dh_release_device(struct scsi_device *sdev)
+ {
+ 	if (sdev->handler)
+ 		scsi_dh_handler_detach(sdev);
++}
++
++void scsi_dh_remove_device(struct scsi_device *sdev)
++{
+ 	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+ }
+ 
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 644bb73..4d01cdb 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -173,9 +173,11 @@ extern struct async_domain scsi_sd_probe_domain;
+ /* scsi_dh.c */
+ #ifdef CONFIG_SCSI_DH
+ int scsi_dh_add_device(struct scsi_device *sdev);
++void scsi_dh_release_device(struct scsi_device *sdev);
+ void scsi_dh_remove_device(struct scsi_device *sdev);
+ #else
+ static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
++static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
+ static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
+ #endif
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..dff8faf 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -399,6 +399,8 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 
+ 	sdev = container_of(work, struct scsi_device, ew.work);
+ 
++	scsi_dh_release_device(sdev);
++
+ 	parent = sdev->sdev_gendev.parent;
+ 
+ 	spin_lock_irqsave(sdev->host->host_lock, flags);
