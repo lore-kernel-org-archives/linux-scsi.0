@@ -1,57 +1,79 @@
-From: Joel Stanley <joel@jms.id.au>
-Subject: [PATCH] be2iscsi: Fix bad WARN_ON
-Date: Thu,  1 Oct 2015 17:32:58 +0930
-Message-ID: <1443686578-13030-1-git-send-email-joel@jms.id.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33679 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755937AbbJAID5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 04:03:57 -0400
-Received: by pacex6 with SMTP id ex6so67423749pac.0
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2015 01:03:56 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v3 00/13] exynos-ufs: add support for Exynos
+Date: Thu, 01 Oct 2015 13:39:17 +0530
+Message-ID: <1443686970-28104-1-git-send-email-alim.akhtar@samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com
-Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-GCC 5 helpfully warns us that the WARN_ON check may be buggy:
+This patch-set introduces UFS (Universal Flash Storage) host support
+for Samsung Exynos SoC. Mostly, it consists of UFS PHY and host specific driver.
+And it also contains some quirks handling for Exynos.
 
-drivers/scsi/be2iscsi/be_main.c: In function =E2=80=98be_sgl_create_con=
-tiguous=E2=80=99:
-drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only
-applied to the left hand side of comparison [-Wlogical-not-parentheses]
-  WARN_ON(!length > 0);
-                    ^
+-Chanes since v2:
+* Addressed review comments from Kishon[1] and Rob Herring [2]
+* Splited ufs dt binding documetation from ufs driver patch
 
-Add the brackets that the check was was looking for.
+-Changes since v1:
+* Addressed review comments from Alexey[3] and various review comments from Amit.
+* Updated email id of Seungwon as his samsung id is void now.
+* Added ufs platform data
 
-Signed-off-by: Joel Stanley <joel@jms.id.au>
----
- drivers/scsi/be2iscsi/be_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[1]-> https://lkml.org/lkml/2015/9/18/29
+[2]-> https://lkml.org/lkml/2015/9/21/668
+[3]-> https://lkml.org/lkml/2015/8/23/124
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
-_main.c
-index 7a6dbfb..0b87abb 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
- {
- 	WARN_ON(!virtual_address);
- 	WARN_ON(!physical_address);
--	WARN_ON(!length > 0);
-+	WARN_ON(!(length > 0));
- 	WARN_ON(!sgl);
-=20
- 	sgl->va =3D virtual_address;
---=20
-2.5.0
+This patch set is tested on exynos7-espresso board. 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alim Akhtar (2):
+  Documentation: samsung-phy: Add dt bindings for UFS
+  scsi: ufs: Add exynos ufs platform data
+
+Seungwon Jeon (11):
+  phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
+  scsi: ufs: add quirk to contain unconformable utrd field
+  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
+  scsi: ufs: add quirk not to allow reset of interrupt aggregation
+  scsi: ufs: add quirk to enable host controller without hce
+  scsi: ufs: add specific callback for nexus type
+  scsi: ufs: add add specific callback for hibern8
+  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
+  scsi: ufs: return value of pwr_change_notify
+  Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
+    controller
+  scsi: ufs-exynos: add UFS host support for Exynos SoCs
+
+ .../devicetree/bindings/phy/samsung-phy.txt        |   22 +
+ .../devicetree/bindings/ufs/ufs-exynos.txt         |   93 ++
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-exynos-ufs.c                       |  257 +++++
+ drivers/phy/phy-exynos-ufs.h                       |   87 ++
+ drivers/phy/phy-exynos7-ufs.h                      |   89 ++
+ drivers/scsi/ufs/Kconfig                           |   12 +
+ drivers/scsi/ufs/Makefile                          |    1 +
+ drivers/scsi/ufs/ufs-exynos-hw.c                   |  147 +++
+ drivers/scsi/ufs/ufs-exynos-hw.h                   |   43 +
+ drivers/scsi/ufs/ufs-exynos.c                      | 1186 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                      |  463 ++++++++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |    2 +
+ drivers/scsi/ufs/ufshcd.c                          |  196 +++-
+ drivers/scsi/ufs/ufshcd.h                          |   35 +
+ drivers/scsi/ufs/ufshci.h                          |   26 +-
+ drivers/scsi/ufs/unipro.h                          |   47 +
+ include/linux/phy/phy-exynos-ufs.h                 |  101 ++
+ 19 files changed, 2788 insertions(+), 27 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/phy/phy-exynos-ufs.c
+ create mode 100644 drivers/phy/phy-exynos-ufs.h
+ create mode 100644 drivers/phy/phy-exynos7-ufs.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+ create mode 100644 include/linux/phy/phy-exynos-ufs.h
+
+-- 
+1.7.10.4
