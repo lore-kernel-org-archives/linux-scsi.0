@@ -1,66 +1,35 @@
-From: Vaishali Thakkar <vthakkar1994@gmail.com>
-Subject: Re: [PATCH] wd719x: Remove use of macro DEFINE_PCI_DEVICE_TABLE
-Date: Thu, 1 Oct 2015 10:21:58 +0530
-Message-ID: <CAK-LDbKX4+s6jd8tyJbDrE-Jdo0mLvi-JgmtuuNieezVhi+ytQ@mail.gmail.com>
-References: <20150717054643.GA7209@vaishali-Ideapad-Z570>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [REGRESSION v4.3] scsi_dh: use-after-free when removing scsi
+	device
+Date: Thu, 1 Oct 2015 07:21:59 +0200
+Message-ID: <20151001052159.GA14247@lst.de>
+References: <20150930003549.GA4857@xzibit.linux.bs1.fc.nec.co.jp> <20150930151857.GA26594@lst.de> <20151001005640.GA4821@xzibit.linux.bs1.fc.nec.co.jp> <20151001043844.GA8397@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34716 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbbJAEwA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 00:52:00 -0400
-In-Reply-To: <20150717054643.GA7209@vaishali-Ideapad-Z570>
+Received: from verein.lst.de ([213.95.11.211]:38104 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751933AbbJAFWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Oct 2015 01:22:01 -0400
+Content-Disposition: inline
+In-Reply-To: <20151001043844.GA8397@xzibit.linux.bs1.fc.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-Ping!
+On Thu, Oct 01, 2015 at 04:38:45AM +0000, Junichi Nomura wrote:
+> But another workload using dm-multipath still caues the same crash.
+> I think a patch like the following is needed.
+> What do you think?
 
-On Fri, Jul 17, 2015 at 11:16 AM, Vaishali Thakkar
-<vthakkar1994@gmail.com> wrote:
-> Macro DEFINE_PCI_DEVICE_TABLE is deprecated. So, here use
-> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE with
-> the goal of getting rid of this macro completely.
->
-> The Coccinelle semantic patch that performs this transformation
-> is as follows:
->
-> @@
-> identifier a;
-> declarer name DEFINE_PCI_DEVICE_TABLE;
-> initializer i;
-> @@
-> - DEFINE_PCI_DEVICE_TABLE(a)
-> + const struct pci_device_id a[]
-> = i;
->
-> Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
-> ---
-> This patch is against linux-next branch
-> ---
->  drivers/scsi/wd719x.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-> index 61346aa..4655d16 100644
-> --- a/drivers/scsi/wd719x.c
-> +++ b/drivers/scsi/wd719x.c
-> @@ -962,7 +962,7 @@ static void wd719x_pci_remove(struct pci_dev *pdev)
->         scsi_host_put(sh);
->  }
->
-> -static DEFINE_PCI_DEVICE_TABLE(wd719x_pci_table) = {
-> +static const struct pci_device_id wd719x_pci_table[] = {
->         { PCI_DEVICE(PCI_VENDOR_ID_WD, 0x3296) },
->         {}
->  };
-> --
-> 1.9.1
->
+Thanks Junichi,
 
+I suspected that we should defer the release until we tear down
+the sdev instead of unregister time.  Give me a little more time
+to review your patch and actually reproduce your issue before a formal
+ACK, though.
 
-
--- 
-Vaishali
+Any chance you could share all your multipath tests in a git repository
+somewhere?  It seems like you're the only one actually having a good
+set of reproducable but minimalistic tests.
