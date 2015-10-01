@@ -1,54 +1,41 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 0/3] scsi: Some miscellaneous fixes
-Date: Thu, 1 Oct 2015 19:57:55 +0000
-Message-ID: <BY2PR0301MB1654C23980B44BB16A5331DDA04C0@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1442528938-3252-1-git-send-email-kys@microsoft.com>
- <87h9md2vui.fsf@vitty.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] [SCSI] fnic: use kzalloc in fnic_fcoe_process_vlan_resp
+Date: Thu,  1 Oct 2015 21:59:02 +0200
+Message-ID: <1443729543-19362-1-git-send-email-linux@rasmusvillemoes.dk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87h9md2vui.fsf@vitty.brq.redhat.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "jasowang@redhat.com" <jasowang@redhat.com>
+To: Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+This saves a little .text and avoids the sizeof(...) style
+inconsistency.
 
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/fnic/fnic_fcs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> -----Original Message-----
-> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
-> Sent: Tuesday, September 29, 2015 6:34 AM
-> To: James E.J. Bottomley <JBottomley@odin.com>; KY Srinivasan
-> <kys@microsoft.com>
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org;
-> apw@canonical.com; jasowang@redhat.com
-> Subject: Re: [PATCH 0/3] scsi: Some miscellaneous fixes
-> 
-> "K. Y. Srinivasan" <kys@microsoft.com> writes:
-> 
-> [...]
-> 
-> >
-> > Vitaly Kuznetsov (2):
-> >   scsi_scan: don't dump trace when scsi_prep_async_scan() is called
-> >     twice
-> >   scsi: introduce short_inquiry flag for broken host adapters
-> 
-> James,
-> 
-> I'm sorry for the annoyance but when I asked about these patches last
-> time you said we don't have them reviewed. Is it OK now when we have
-> signed-off-by: from K. Y. or do we need to ask someone else?
-
-We have tested these patches on various Hyper-V platforms. 
-
-K. Y
-> 
-> Thanks,
-> 
-> --
->   Vitaly
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index bf0bbd42efb5..2d013076bfba 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -415,15 +415,13 @@ static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *skb)
+ 			vid = ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
+ 			shost_printk(KERN_INFO, fnic->lport->host,
+ 				  "process_vlan_resp: FIP VLAN %d\n", vid);
+-			vlan = kmalloc(sizeof(*vlan),
+-							GFP_ATOMIC);
++			vlan = kzalloc(sizeof(*vlan), GFP_ATOMIC);
+ 			if (!vlan) {
+ 				/* retry from timer */
+ 				spin_unlock_irqrestore(&fnic->vlans_lock,
+ 							flags);
+ 				goto out;
+ 			}
+-			memset(vlan, 0, sizeof(struct fcoe_vlan));
+ 			vlan->vid = vid & 0x0fff;
+ 			vlan->state = FIP_VLAN_AVAIL;
+ 			list_add_tail(&vlan->list, &fnic->vlans);
+-- 
+2.1.3
