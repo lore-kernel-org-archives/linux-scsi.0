@@ -1,62 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Odd Behavior in the enclosure module around the 2 fault bits
-Date: Thu, 01 Oct 2015 14:00:01 -0700
-Message-ID: <1443733201.6886.27.camel@HansenPartnership.com>
-References: <BN1PR04MB07626753646D0AB2BBD9FF9CB4E0@BN1PR04MB076.namprd04.prod.outlook.com>
-	 <BN1PR04MB076C498417786FF22C034A1CB4D0@BN1PR04MB076.namprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 34/34] cxlflash: Fix to escalate to LINK_RESET on login timeout
+Date: Thu, 1 Oct 2015 16:20:29 -0500
+Message-ID: <8E58A4EE-EAE8-4C13-A4BF-0BAA19262BCA@linux.vnet.ibm.com>
+References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443715132-26119-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45839 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753537AbbJAVAS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 17:00:18 -0400
-In-Reply-To: <BN1PR04MB076C498417786FF22C034A1CB4D0@BN1PR04MB076.namprd04.prod.outlook.com>
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:45094 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750715AbbJAVUh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 17:20:37 -0400
+Received: from localhost
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Thu, 1 Oct 2015 17:20:36 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 19C74C90045
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2015 17:08:45 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t91LKW9E59310300
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 21:20:33 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t91LKUYG030487
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 17:20:32 -0400
+In-Reply-To: <1443715132-26119-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Attard <rattard@cleversafe.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
 
-On Wed, 2015-09-30 at 15:17 +0000, Ryan Attard wrote:
-> My coworkers and I were setting some enclosure states on our storage
-> devices, and then reading the states back using sysfs, and came across
-> the 'fault' field being set to 2. When we investigated into the ses.c
-> file, we found this  wonderful comment:
-> 
-> /* For device slot and array device slot elements, byte 3 bit 6
->  * is "fault sensed" while byte 3 bit 5 is "fault reqstd". As this
->  * code stands these bits are shifted 4 positions right so in
->  * sysfs they will appear as bits 2 and 1 respectively. Strange. */
-
-This comment is thanks to Doug Gilbert:
-
-commit 2a350cab9daf9a46322d83b091bb05cf54ccf6ab
-Author: Douglas Gilbert <dgilbert@interlog.com>
-Date:   Thu Jun 9 00:27:07 2011 -0400
-
-    [SCSI] ses: requesting a fault indication
-
-
-> static void ses_get_fault(struct enclosure_device *edev,
-> 			  struct enclosure_component *ecomp)
-> {
-> 	unsigned char *desc;
-> 
-> 
-> 	desc = ses_get_page2_descriptor(edev, ecomp);
-> 	if (desc)
-> 		ecomp->fault = (desc[3] & 0x60) >> 4;
-> }
-> 
-> I was hoping there might be an explanation (purely for curiosity's
-> sake) why it was not shifted 5 positions? Or why it wasn't exported as
-> 2 fields in sysfs, each representing 1 bit in the SES page? 
-
-If I remember correctly, the desire was to keep the nybble values.
-Because it's not an on off field, it didn't seem to matter much whether
-the fields were 0 2 4 6 or 0 1 2 3
-
-James
-
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
