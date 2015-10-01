@@ -1,70 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] be2iscsi: Fix bad WARN_ON
-Date: Thu, 01 Oct 2015 10:31:50 +0200
-Message-ID: <mqdh9mbm1l5.fsf@c203.arch.suse.de>
-References: <1443686578-13030-1-git-send-email-joel@jms.id.au>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 02/13] phy: exynos-ufs: add UFS PHY driver for EXYNOS
+ SoC
+Date: Thu, 1 Oct 2015 16:41:57 +0800
+Message-ID: <201510011631.Q7UQEJLT%fengguang.wu@intel.com>
+References: <1443686970-28104-3-git-send-email-alim.akhtar@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53794 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755701AbbJAIbx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 04:31:53 -0400
-In-Reply-To: <1443686578-13030-1-git-send-email-joel@jms.id.au> (Joel
-	Stanley's message of "Thu, 1 Oct 2015 17:32:58 +0930")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1443686970-28104-3-git-send-email-alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, amit.daniel-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Stanley <joel@jms.id.au>
-Cc: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-Joel Stanley <joel@jms.id.au> writes:
+Hi Seungwon,
 
-> GCC 5 helpfully warns us that the WARN_ON check may be buggy:
->
-> drivers/scsi/be2iscsi/be_main.c: In function =E2=80=98be_sgl_create_c=
-ontiguous=E2=80=99:
-> drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only
-> applied to the left hand side of comparison [-Wlogical-not-parenthese=
-s]
->   WARN_ON(!length > 0);
->                     ^
->
-> Add the brackets that the check was was looking for.
->
-> Signed-off-by: Joel Stanley <joel@jms.id.au>
-> ---
->  drivers/scsi/be2iscsi/be_main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/=
-be_main.c
-> index 7a6dbfb..0b87abb 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
->  {
->  	WARN_ON(!virtual_address);
->  	WARN_ON(!physical_address);
-> -	WARN_ON(!length > 0);
-> +	WARN_ON(!(length > 0));
+[auto build test results on v4.3-rc3 -- if it's inappropriate base, please ignore]
 
-Why aren't you doing WARN_ON(length <=3D 0); it's much nicer to read IM=
-HO
 
->  	WARN_ON(!sgl);
-> =20
->  	sgl->va =3D virtual_address;
+coccinelle warnings: (new ones prefixed by >>)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>> drivers/phy/phy-exynos-ufs.c:250:3-8: No need to set .owner here. The core will do it.
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
