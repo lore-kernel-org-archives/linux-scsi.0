@@ -1,61 +1,60 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5 18/34] cxlflash: Fix AFU version access/storage and add check
-Date: Thu, 1 Oct 2015 20:18:32 -0500
-Message-ID: <A8B191C3-D4C7-49ED-A058-95443BABDBDC@linux.vnet.ibm.com>
-References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443715012-18236-1-git-send-email-mrochs@linux.vnet.ibm.com> <87h9maay0s.fsf@gamma.ozlabs.ibm.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Joel Stanley <joel@jms.id.au>
+Subject: [PATCH v2] be2iscsi: Fix bad WARN_ON
+Date: Fri,  2 Oct 2015 11:02:45 +0930
+Message-ID: <1443749565-8438-1-git-send-email-joel@jms.id.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:49187 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbbJBBSm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 21:18:42 -0400
-Received: from localhost
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 1 Oct 2015 21:18:41 -0400
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id C453438C8046
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2015 21:18:37 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t921IbP254395020
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Oct 2015 01:18:37 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t921IYoB005104
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2015 21:18:37 -0400
-In-Reply-To: <87h9maay0s.fsf@gamma.ozlabs.ibm.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33473 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbbJBBdA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2015 21:33:00 -0400
+Received: by pacex6 with SMTP id ex6so91335442pac.0
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2015 18:33:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Axtens <dja@axtens.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+To: jthumshirn@suse.de, jayamohan.kallickal@avagotech.com, JBottomley@odin.com
+Cc: linux-scsi@vger.kernel.org
 
-> On Oct 1, 2015, at 7:56 PM, Daniel Axtens <dja@axtens.net> wrote:
-> 
-> "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com> writes:
-> 
->> The AFU version is stored as a non-terminated string of bytes within
->> a 64-bit little-endian register. Presently the value is read directly
->> (no MMIO accessor) and is stored in a buffer that is not big enough
->> to contain a NULL terminator. Additionally the version obtained is not
->> evaluated against a known value to prevent usage with unsupported AFUs.
->> All of these deficiencies can lead to a variety of problems.
->> 
->> +	if ((afu->interface_version + 1) == 0) {
->> +		pr_err("Back level AFU, please upgrade. AFU version %s "
->> +		       "interface version 0x%llx\n", afu->version,
->> +		       afu->interface_version);
->> +		rc = -EINVAL;
->> +		goto err1;
-> 
-> I'm confused by this if statement. If afu->interface_version + 1 == 0,
-> and interface_version is a 64bit unsigned int, that would mean that
-> afu->interface_version was 0xFFFF FFFF FFFF FFFF.
-> 
-> Are you trying to check against all Fs? Is that value significant in the
-> hardware?
+GCC 5 helpfully warns us that the WARN_ON check may be buggy:
 
-Correct, downlevel (unsupported) AFUs don't implement the interface_version
-register and thus will return -1 at that offset.
+drivers/scsi/be2iscsi/be_main.c: In function =E2=80=98be_sgl_create_con=
+tiguous=E2=80=99:
+drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only
+applied to the left hand side of comparison [-Wlogical-not-parentheses]
+  WARN_ON(!length > 0);
+                    ^
 
+Check that length is not zero (and not less than zero, but it's
+unsigned, so that will always be satisfied).
 
+Signed-off-by: Joel Stanley <joel@jms.id.au>
+---
+v2: invert the check to lose the ! as suggested by Johannes
+
+ drivers/scsi/be2iscsi/be_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
+_main.c
+index 7a6dbfb..c6110cb 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+ {
+ 	WARN_ON(!virtual_address);
+ 	WARN_ON(!physical_address);
+-	WARN_ON(!length > 0);
++	WARN_ON(length <=3D 0);
+ 	WARN_ON(!sgl);
+=20
+ 	sgl->va =3D virtual_address;
+--=20
+2.5.0
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
