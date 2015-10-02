@@ -1,39 +1,55 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 14/36] scsi_dh_alua: separate out alua_stpg()
-Date: Fri, 2 Oct 2015 08:03:53 -0700
-Message-ID: <560E9CD9.5020607@sandisk.com>
-References: <1443523658-87622-1-git-send-email-hare@suse.de>
- <1443523658-87622-15-git-send-email-hare@suse.de>
- <560DCAA6.1020404@sandisk.com> <560E1EE6.7090609@suse.de>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Limit max concurrent sessions
+Date: Fri, 2 Oct 2015 18:37:38 +0200
+Message-ID: <20151002183738.5bcb22ad@harpe.intellique.com>
+References: <554A34F3.5080507@assyoma.it>
+	<5602B511.8020502@assyoma.it>
+	<20150923171848.3dd31edf@harpe.intellique.com>
+	<c07f7ee2ae76d94eea580a60e3dacaa3@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0079.outbound.protection.outlook.com ([157.56.110.79]:33566
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752040AbbJBPEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2015 11:04:01 -0400
-In-Reply-To: <560E1EE6.7090609@suse.de>
+Received: from mail1.g1.pair.com ([66.39.3.162]:31769 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752534AbbJBQhf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2015 12:37:35 -0400
+In-Reply-To: <c07f7ee2ae76d94eea580a60e3dacaa3@assyoma.it>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-scsi@vger.kernel.org
 
-On 10/01/2015 11:06 PM, Hannes Reinecke wrote:
-> On 10/02/2015 02:07 AM, Bart Van Assche wrote:
->> The old implementation calls the callback function 'fn' if the flag
->> TPGS_MODE_EXPLICIT has not been set but the new implementation not.
->> Please mention this in the patch description if this behavior change
->> is intentional.
->>
-> Actually, this looks more like an error with the old implementation.
-> 'fn' is the callback signalling that the failover command has been
-> completed, and the caller (in most case dm-multipath) relies on 'fn'
-> to be executed for further processing.
-> So 'fn' should be executed, irrespective of the TPGS_MODE_EXPLICIT flag.
+Le Sun, 27 Sep 2015 12:28:41 +0200
+Gionatan Danti <g.danti@assyoma.it> =C3=A9crivait:
 
-Thank you for the feedback. I think reviewers would be grateful if this 
-change would be documented in the patch description.
+> Il 23-09-2015 17:18 Emmanuel Florac ha scritto:
+> >=20
+> > Use XFS. XFS won't let you mount it several time on different
+> > machines without various "force" options.
+> > Alternatively, use a cluster-aware FS like ocfs2. Ocfs2 is quite
+> > easy to set up.
+>=20
+> Thank you for the suggestion.
+> Unfortunately, due to specific requirements I must use EXT4.
+>=20
+> So, there is no methods to limit concurrent connections?
+> Thanks.
 
-Bart.
+Not that I know of using LIO. However, using ietd you can use the
+MaxSession parameter to limit the number of concurrent sessions.=20
+
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
