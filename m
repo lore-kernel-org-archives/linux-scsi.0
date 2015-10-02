@@ -1,95 +1,43 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 5/5] base: soc: siplify ida usage
-Date: Fri, 02 Oct 2015 12:16:19 +0200
-Message-ID: <mqdfv1t7ez0.fsf@c203.arch.suse.de>
-References: <cover.1443723136.git.lduncan@suse.com>
-	<cover.1443723136.git.lduncan@suse.com>
-	<bdf9231610686622d6a422e3c9dd8a615535afeb.1443723136.git.lduncan@suse.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] be2iscsi: Fix bad WARN_ON
+Date: Fri, 2 Oct 2015 14:22:40 +0200
+Message-ID: <560E7710.8080703@redhat.com>
+References: <1443686578-13030-1-git-send-email-joel@jms.id.au>
+ <mqdh9mbm1l5.fsf@c203.arch.suse.de>
+ <CACPK8XfROyJM_nuZdLEY49HZH+arQjqCmqiKNo+821gMPvCxMQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bdf9231610686622d6a422e3c9dd8a615535afeb.1443723136.git.lduncan@suse.com>
-	(Lee Duncan's message of "Thu, 1 Oct 2015 11:59:09 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50274 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750755AbbJBMWn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Oct 2015 08:22:43 -0400
+In-Reply-To: <CACPK8XfROyJM_nuZdLEY49HZH+arQjqCmqiKNo+821gMPvCxMQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joel Stanley <joel@jms.id.au>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: jayamohan.kallickal@avagotech.com, minh.tran@avagotech.com, sony.john-n@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-Lee Duncan <lduncan@suse.com> writes:
+On 2.10.2015 02:52, Joel Stanley wrote:
+> On Thu, Oct 1, 2015 at 6:01 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+>>> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+>>> index 7a6dbfb..0b87abb 100644
+>>> --- a/drivers/scsi/be2iscsi/be_main.c
+>>> +++ b/drivers/scsi/be2iscsi/be_main.c
+>>> @@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+>>>  {
+>>>       WARN_ON(!virtual_address);
+>>>       WARN_ON(!physical_address);
+>>> -     WARN_ON(!length > 0);
+>>> +     WARN_ON(!(length > 0));
+>> Why aren't you doing WARN_ON(length <= 0); it's much nicer to read IMHO
+> Sure, I'll resend.
 
-> Simplify ida index allocation and removal by
-> using the ida_simple_* helper functions
->
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->  drivers/base/soc.c | 21 +++++----------------
->  1 file changed, 5 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/base/soc.c b/drivers/base/soc.c
-> index 39fca01c8fa1..75b98aad6faf 100644
-> --- a/drivers/base/soc.c
-> +++ b/drivers/base/soc.c
-> @@ -16,7 +16,6 @@
->  #include <linux/err.h>
-> =20
->  static DEFINE_IDA(soc_ida);
-> -static DEFINE_SPINLOCK(soc_lock);
-> =20
->  static ssize_t soc_info_get(struct device *dev,
->  			    struct device_attribute *attr,
-> @@ -122,20 +121,10 @@ struct soc_device *soc_device_register(struct s=
-oc_device_attribute *soc_dev_attr
->  	}
-> =20
->  	/* Fetch a unique (reclaimable) SOC ID. */
-> -	do {
-> -		if (!ida_pre_get(&soc_ida, GFP_KERNEL)) {
-> -			ret =3D -ENOMEM;
-> -			goto out2;
-> -		}
-> -
-> -		spin_lock(&soc_lock);
-> -		ret =3D ida_get_new(&soc_ida, &soc_dev->soc_dev_num);
-> -		spin_unlock(&soc_lock);
-> -
-> -	} while (ret =3D=3D -EAGAIN);
-> -
-> -	if (ret)
-> +	ret =3D ida_simple_get(&soc_ida, 0, 0, GFP_KERNEL);
-> +	if (ret < 0)
->  		goto out2;
-> +	soc_dev->soc_dev_num =3D ret;
-> =20
->  	soc_dev->attr =3D soc_dev_attr;
->  	soc_dev->dev.bus =3D &soc_bus_type;
-> @@ -151,7 +140,7 @@ struct soc_device *soc_device_register(struct soc=
-_device_attribute *soc_dev_attr
->  	return soc_dev;
-> =20
->  out3:
-> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-> +	ida_simple_remove(&soc_ida, soc_dev->soc_dev_num);
->  out2:
->  	kfree(soc_dev);
->  out1:
-> @@ -161,7 +150,7 @@ out1:
->  /* Ensure soc_dev->attr is freed prior to calling soc_device_unregis=
-ter. */
->  void soc_device_unregister(struct soc_device *soc_dev)
->  {
-> -	ida_remove(&soc_ida, soc_dev->soc_dev_num);
-> +	ida_simple_remove(&soc_ida, soc_dev->soc_dev_num);
-> =20
->  	device_unregister(&soc_dev->dev);
->  }
+length is unsigned, so maybe just (!length) ?
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
