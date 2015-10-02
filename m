@@ -1,40 +1,31 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v5 10/34] cxlflash: Make functions static
-Date: Fri, 2 Oct 2015 15:16:03 +0200
-Message-ID: <560E8393.6060904@redhat.com>
-References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1443714936-15625-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] SCSI: Fix hard lockup in scsi_remove_target()
+Date: Fri, 2 Oct 2015 06:16:17 -0700
+Message-ID: <20151002131617.GA13860@infradead.org>
+References: <1443774062-15638-1-git-send-email-jthumshirn@suse.de>
+ <20151002124903.GA11987@infradead.org>
+ <mqdoagh5sdu.fsf@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36402 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751619AbbJBNQH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2015 09:16:07 -0400
-In-Reply-To: <1443714936-15625-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <mqdoagh5sdu.fsf@c203.arch.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On 1.10.2015 17:55, Matthew R. Ochs wrote:
-> Found during code inspection, that the following functions are not
-> being used outside of the file where they are defined. Make them static.
->
-> int cxlflash_send_cmd(struct afu *, struct afu_cmd *);
-> void cxlflash_wait_resp(struct afu *, struct afu_cmd *);
-> int cxlflash_afu_reset(struct cxlflash_cfg *);
-> struct afu_cmd *cxlflash_cmd_checkout(struct afu *);
-> void cxlflash_cmd_checkin(struct afu_cmd *);
-> void init_pcr(struct cxlflash_cfg *);
-> int init_global(struct cxlflash_cfg *);
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+On Fri, Oct 02, 2015 at 03:09:33PM +0200, Johannes Thumshirn wrote:
+> Having the list_move() outside of the host_lock was purely by
+> accident. Interestingly the stressing didn't mind it. But yes you're
+> right, __scsi_remove_target() should be made host_lock() save for being
+> called under the host_lock.
+> 
+> Regarding the list move, does it look OK for you (i.e. do we still need
+> it after reworking __scsi_remove_target())? IMHO yes, but I only have
+> half a year of experience in this area).
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Hi Johannes,
 
-Tomas
-
+your general approach looks fine, we just need to fix up the locking as
+far as I can tell.
