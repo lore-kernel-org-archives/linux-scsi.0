@@ -1,38 +1,38 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v5 02/34] cxlflash: Replace magic numbers with literals
-Date: Fri, 2 Oct 2015 14:44:48 +0200
-Message-ID: <560E7C40.9030504@redhat.com>
-References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1443714889-11735-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] SCSI: Fix hard lockup in scsi_remove_target()
+Date: Fri, 2 Oct 2015 05:49:03 -0700
+Message-ID: <20151002124903.GA11987@infradead.org>
+References: <1443774062-15638-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57256 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800AbbJBMow (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2015 08:44:52 -0400
-In-Reply-To: <1443714889-11735-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1443774062-15638-1-git-send-email-jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
-Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, Manoj Kumar <kumarmn@us.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 
-On 1.10.2015 17:54, Matthew R. Ochs wrote:
-> From: Manoj Kumar <kumarmn@us.ibm.com>
->
-> Magic numbers are not meaningful and can create confusion. As a
-> remedy, replace them with descriptive literals.
->
-> Replace 512 with literal MAX_SECTOR_UNIT.
-> Replace 5 with literal CMD_RETRIES.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-> Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
-> Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> -	list_for_each_entry(starget, &shost->__targets, siblings) {
+> +	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
+>  		if (starget->state == STARGET_DEL)
+>  			continue;
+>  		if (starget->dev.parent == dev || &starget->dev == dev) {
+>  			/* assuming new targets arrive at the end */
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Now that the last variable is gone this comments isn't needed.
 
-Tomas
+>  			kref_get(&starget->reap_ref);
+>  			spin_unlock_irqrestore(shost->host_lock, flags);
+> -			if (last)
+> -				scsi_target_reap(last);
+> -			last = starget;
+> +
+>  			__scsi_remove_target(starget);
+> +			list_move_tail(&starget->siblings, &reap_list);
+>  			spin_lock_irqsave(shost->host_lock, flags);
+>  		}
 
+What makes the list_move save after dropping host_lock?  I think this
+needs to be changed to not drop the host_lock and change
+__scsi_remove_target to expect host_lock held to be safe. 
