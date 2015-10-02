@@ -1,78 +1,44 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] SCSI: Fix hard lockup in scsi_remove_target()
-Date: Fri, 02 Oct 2015 15:09:33 +0200
-Message-ID: <mqdoagh5sdu.fsf@c203.arch.suse.de>
-References: <1443774062-15638-1-git-send-email-jthumshirn@suse.de>
-	<20151002124903.GA11987@infradead.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v5 05/34] cxlflash: Fix data corruption when vLUN used
+ over multiple cards
+Date: Fri, 2 Oct 2015 15:03:54 +0200
+Message-ID: <560E80BA.90906@redhat.com>
+References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1443714908-13176-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38424 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbbJBNJf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2015 09:09:35 -0400
-In-Reply-To: <20151002124903.GA11987@infradead.org> (Christoph Hellwig's
-	message of "Fri, 2 Oct 2015 05:49:03 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1443714908-13176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
+Cc: Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> writes:
-
->> -	list_for_each_entry(starget, &shost->__targets, siblings) {
->> +	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings=
-) {
->>  		if (starget->state =3D=3D STARGET_DEL)
->>  			continue;
->>  		if (starget->dev.parent =3D=3D dev || &starget->dev =3D=3D dev) {
->>  			/* assuming new targets arrive at the end */
->
-> Now that the last variable is gone this comments isn't needed.
-
-Yep, you're right. I'll remove it.
-
->
->>  			kref_get(&starget->reap_ref);
->>  			spin_unlock_irqrestore(shost->host_lock, flags);
->> -			if (last)
->> -				scsi_target_reap(last);
->> -			last =3D starget;
->> +
->>  			__scsi_remove_target(starget);
->> +			list_move_tail(&starget->siblings, &reap_list);
->>  			spin_lock_irqsave(shost->host_lock, flags);
->>  		}
->
-> What makes the list_move save after dropping host_lock?  I think this
-> needs to be changed to not drop the host_lock and change
-> __scsi_remove_target to expect host_lock held to be safe.=20
-
-Having the list_move() outside of the host_lock was purely by
-accident. Interestingly the stressing didn't mind it. But yes you're
-right, __scsi_remove_target() should be made host_lock() save for being
-called under the host_lock.
-
-Regarding the list move, does it look OK for you (i.e. do we still need
-it after reworking __scsi_remove_target())? IMHO yes, but I only have
-half a year of experience in this area).
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=C3=BCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gMS4xMC4yMDE1IDE3OjU1LCBNYXR0aGV3IFIuIE9jaHMgd3JvdGU6Cj4gSWYgdGhlIHNhbWUg
+dmlydHVhbCBMVU4gaXMgYWNjZXNzZWQgb3ZlciBtdWx0aXBsZSBjYXJkcywgb25seSBhY2Nlc3Nl
+cwo+IG1hZGUgb3ZlciB0aGUgZmlyc3QgY2FyZCB3aWxsIGJlIHZhbGlkLiBBY2Nlc3NlcyBtYWRl
+IG92ZXIgdGhlIHNlY29uZAo+IGNhcmQgd2lsbCBnbyB0byB0aGUgd3JvbmcgTFVOIGNhdXNpbmcg
+ZGF0YSBjb3JydXB0aW9uLgo+Cj4gVGhpcyBpcyBiZWNhdXNlIHRoZSBnbG9iYWwgTFVOJ3MgbW9k
+ZSB3b3JkIHdhcyBiZWluZyB1c2VkIHRvIGRldGVybWluZQo+IHdoZXRoZXIgdGhlIExVTiB0YWJs
+ZSBmb3IgdGhhdCBjYXJkIG5lZWRzIHRvIGJlIHByb2dyYW1tZWQuIFRoZSBtb2RlCj4gd29yZCB3
+b3VsZCBiZSBzZXR1cCBieSB0aGUgZmlyc3QgY2FyZCwgY2F1c2luZyB0aGUgTFVOIHRhYmxlIGZv
+ciB0aGUKPiBzZWNvbmQgY2FyZCB0byBub3QgYmUgcHJvZ3JhbW1lZC4KPgo+IEJ5IHVuY29uZGl0
+aW9uYWxseSBpbml0aWFsaXppbmcgdGhlIExVTiB0YWJsZSAobm90IGRlcGVuZGluZyBvbiB0aGUK
+PiBtb2RlIHdvcmQpLCB0aGUgcHJvYmxlbSBpcyBhdm9pZGVkLgo+Cj4gU2lnbmVkLW9mZi1ieTog
+TWF0dGhldyBSLiBPY2hzIDxtcm9jaHNAbGludXgudm5ldC5pYm0uY29tPgo+IFNpZ25lZC1vZmYt
+Ynk6IE1hbm9qIE4uIEt1bWFyIDxtYW5vakBsaW51eC52bmV0LmlibS5jb20+Cj4gUmV2aWV3ZWQt
+Ynk6IEJyaWFuIEtpbmcgPGJya2luZ0BsaW51eC52bmV0LmlibS5jb20+CgpSZXZpZXdlZC1ieTog
+VG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQuY29tPgoKVG9tYXMKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QK
+TGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xp
+c3RpbmZvL2xpbnV4cHBjLWRldg==
