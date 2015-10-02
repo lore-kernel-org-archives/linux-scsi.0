@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/5] SCSI: sd: simplify ida usage
-Date: Fri, 02 Oct 2015 12:15:04 +0200
-Message-ID: <mqd4mi98tlj.fsf@c203.arch.suse.de>
+Subject: Re: [PATCH 2/5] block: rsxx: core: simplify ida usage
+Date: Fri, 02 Oct 2015 12:15:26 +0200
+Message-ID: <mqdy4fl7f0h.fsf@c203.arch.suse.de>
 References: <cover.1443723136.git.lduncan@suse.com>
 	<cover.1443723136.git.lduncan@suse.com>
-	<c832f76821c18fa953ff539b6e852bfd2cdc24b8.1443723136.git.lduncan@suse.com>
+	<8d2f1dca7162a499d82de53be88110695334d8ef.1443723136.git.lduncan@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c832f76821c18fa953ff539b6e852bfd2cdc24b8.1443723136.git.lduncan@suse.com>
-	(Lee Duncan's message of "Thu, 1 Oct 2015 11:59:05 -0700")
+In-Reply-To: <8d2f1dca7162a499d82de53be88110695334d8ef.1443723136.git.lduncan@suse.com>
+	(Lee Duncan's message of "Thu, 1 Oct 2015 11:59:06 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>, Joshua Morris <josh.h.morris@us.ibm.com>, Philip Kelleher <pjk1939@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Lee Duncan <lduncan@suse.com> writes:
@@ -23,71 +23,55 @@ Lee Duncan <lduncan@suse.com> writes:
 >
 > Signed-off-by: Lee Duncan <lduncan@suse.com>
 > ---
->  drivers/scsi/sd.c | 22 +++++-----------------
->  1 file changed, 5 insertions(+), 17 deletions(-)
+>  drivers/block/rsxx/core.c | 20 ++++----------------
+>  1 file changed, 4 insertions(+), 16 deletions(-)
 >
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 3b2fcb4fada0..3d77ac8f0d4c 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -118,7 +118,6 @@ static void scsi_disk_release(struct device *cdev=
-);
->  static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense=
-_hdr *);
->  static void sd_print_result(const struct scsi_disk *, const char *, =
-int);
+> diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
+> index d8b2488aaade..d2279a759b2e 100644
+> --- a/drivers/block/rsxx/core.c
+> +++ b/drivers/block/rsxx/core.c
+> @@ -58,7 +58,6 @@ MODULE_PARM_DESC(sync_start, "On by Default: Driver=
+ load will not complete "
+>  			     "until the card startup has completed.");
 > =20
-> -static DEFINE_SPINLOCK(sd_index_lock);
->  static DEFINE_IDA(sd_index_ida);
+>  static DEFINE_IDA(rsxx_disk_ida);
+> -static DEFINE_SPINLOCK(rsxx_ida_lock);
 > =20
->  /* This semaphore is used to mediate the 0->1 reference get in the
-> @@ -2948,19 +2947,12 @@ static int sd_probe(struct device *dev)
->  	if (!gd)
->  		goto out_free;
+>  /* --------------------Debugfs Setup ------------------- */
+> =20
+> @@ -774,19 +773,10 @@ static int rsxx_pci_probe(struct pci_dev *dev,
+>  	card->dev =3D dev;
+>  	pci_set_drvdata(dev, card);
 > =20
 > -	do {
-> -		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
-> -			goto out_put;
+> -		if (!ida_pre_get(&rsxx_disk_ida, GFP_KERNEL)) {
+> -			st =3D -ENOMEM;
+> -			goto failed_ida_get;
+> -		}
 > -
-> -		spin_lock(&sd_index_lock);
-> -		error =3D ida_get_new(&sd_index_ida, &index);
-> -		spin_unlock(&sd_index_lock);
-> -	} while (error =3D=3D -EAGAIN);
+> -		spin_lock(&rsxx_ida_lock);
+> -		st =3D ida_get_new(&rsxx_disk_ida, &card->disk_id);
+> -		spin_unlock(&rsxx_ida_lock);
+> -	} while (st =3D=3D -EAGAIN);
 > -
-> -	if (error) {
-> +	error =3D ida_simple_get(&sd_index_ida, 0, 0, GFP_KERNEL);
-> +	if (error < 0) {
->  		sdev_printk(KERN_WARNING, sdp, "sd_probe: memory exhausted.\n");
->  		goto out_put;
->  	}
-> +	index =3D error;
+> -	if (st)
+> +	st =3D ida_simple_get(&rsxx_disk_ida, 0, 0, GFP_KERNEL);
+> +	if (st < 0)
+>  		goto failed_ida_get;
+> +	card->disk_id =3D st;
 > =20
->  	error =3D sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME=
-_LEN);
->  	if (error) {
-> @@ -3001,9 +2993,7 @@ static int sd_probe(struct device *dev)
->  	return 0;
-> =20
->   out_free_index:
-> -	spin_lock(&sd_index_lock);
-> -	ida_remove(&sd_index_ida, index);
-> -	spin_unlock(&sd_index_lock);
-> +	ida_simple_remove(&sd_index_ida, index);
->   out_put:
->  	put_disk(gd);
->   out_free:
-> @@ -3064,9 +3054,7 @@ static void scsi_disk_release(struct device *de=
-v)
->  	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
->  	struct gendisk *disk =3D sdkp->disk;
->  =09
-> -	spin_lock(&sd_index_lock);
-> -	ida_remove(&sd_index_ida, sdkp->index);
-> -	spin_unlock(&sd_index_lock);
-> +	ida_simple_remove(&sd_index_ida, sdkp->index);
-> =20
->  	blk_integrity_unregister(disk);
->  	disk->private_data =3D NULL;
+>  	st =3D pci_enable_device(dev);
+>  	if (st)
+> @@ -987,9 +977,7 @@ failed_request_regions:
+>  failed_dma_mask:
+>  	pci_disable_device(dev);
+>  failed_enable:
+> -	spin_lock(&rsxx_ida_lock);
+> -	ida_remove(&rsxx_disk_ida, card->disk_id);
+> -	spin_unlock(&rsxx_ida_lock);
+> +	ida_simple_remove(&rsxx_disk_ida, card->disk_id);
+>  failed_ida_get:
+>  	kfree(card);
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
