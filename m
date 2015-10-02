@@ -1,41 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Bugs in multipath scsi in 4.3-rc2
-Date: Fri, 2 Oct 2015 14:56:08 +0200
-Message-ID: <20151002125608.GB14899@lst.de>
-References: <20150925121636.GC12540@fergus.ozlabs.ibm.com> <20150925151802.GB20282@lst.de> <1443202278.2188.13.camel@HansenPartnership.com> <20150930151449.GC26299@lst.de> <20150930215303.GI2627@mtj.duckdns.org> <1443652494.2185.57.camel@HansenPartnership.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v5 07/34] cxlflash: Fix context encode mask width
+Date: Fri, 2 Oct 2015 15:07:09 +0200
+Message-ID: <560E817D.3010508@redhat.com>
+References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1443714920-15500-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43930 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751919AbbJBM4K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2015 08:56:10 -0400
-Content-Disposition: inline
-In-Reply-To: <1443652494.2185.57.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1443714920-15500-1-git-send-email-mrochs@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
+Cc: Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@ozlabs.org>, linux-scsi@vger.kernel.org
 
-On Wed, Sep 30, 2015 at 03:34:54PM -0700, James Bottomley wrote:
-> Perhaps we don't have to be that draconian.  There's no real reason we
-> can't autoload asynchronously.  If the module isn't ready by the time we
-> come to check the attachment, then it will attach to the device later
-> when the module init routine runs.
-
-I don't think this works.  We're attaching just after the request_module
-call, so modprobe doesn't really have a chance to finish before we
-return.
-
-> Should we do anything to limit the module_request floods?  This will
-> likely happen for every LUN of an ALUA system ... there can be hundreds
-> of those.
-
-Once the alua module is loaded there won't be any request_module calls.
-If you build with device handler support but without ALUA support
-you'll get a lot of calls, but that's not any different than probing
-for other optional features.
-
-Personally I think we probably should simple build ALUA support into
-scsi_mod if SCSI_DH is selected, as that's part of the standard and
-supported by any modern multi pathing device.
+T24gMS4xMC4yMDE1IDE3OjU1LCBNYXR0aGV3IFIuIE9jaHMgd3JvdGU6Cj4gVGhlIGNvbnRleHQg
+ZW5jb2RlIG1hc2sgY292ZXJzIG1vcmUgdGhhbiAzMi1iaXRzLCBtYWtpbmcgaXQKPiBhIGxvbmcg
+aW50ZWdlci4gVGhpcyBzaG91bGQgYmUgbm90ZWQgYnkgYXBwZW5kaW5nIHRoZSBVTEwKPiB3aWR0
+aCBzdWZmaXggdG8gdGhlIG1hc2suCj4KPiBTaWduZWQtb2ZmLWJ5OiBNYXR0aGV3IFIuIE9jaHMg
+PG1yb2Noc0BsaW51eC52bmV0LmlibS5jb20+Cj4gU2lnbmVkLW9mZi1ieTogTWFub2ogTi4gS3Vt
+YXIgPG1hbm9qQGxpbnV4LnZuZXQuaWJtLmNvbT4KPiBSZXZpZXdlZC1ieTogQnJpYW4gS2luZyA8
+YnJraW5nQGxpbnV4LnZuZXQuaWJtLmNvbT4KPiBSZXZpZXdlZC1ieTogRGFuaWVsIEF4dGVucyA8
+ZGphQGF4dGVucy5uZXQ+CgpSZXZpZXdlZC1ieTogVG9tYXMgSGVuemwgPHRoZW56bEByZWRoYXQu
+Y29tPgoKVG9tYXMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5v
+cmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
