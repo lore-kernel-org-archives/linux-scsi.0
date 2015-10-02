@@ -1,52 +1,59 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] [SCSI] fnic: use kzalloc in fnic_fcoe_process_vlan_resp
-Date: Fri, 02 Oct 2015 09:05:06 +0200
-Message-ID: <mqd8u7ln42l.fsf@c203.arch.suse.de>
-References: <1443729543-19362-1-git-send-email-linux@rasmusvillemoes.dk>
+Subject: Re: [PATCH v2] be2iscsi: Fix bad WARN_ON
+Date: Fri, 02 Oct 2015 09:31:50 +0200
+Message-ID: <mqdr3ldlo9l.fsf@c203.arch.suse.de>
+References: <1443749565-8438-1-git-send-email-joel@jms.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1443729543-19362-1-git-send-email-linux@rasmusvillemoes.dk>
-	(Rasmus Villemoes's message of "Thu, 1 Oct 2015 21:59:02 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:38270 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809AbbJBHbw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2015 03:31:52 -0400
+In-Reply-To: <1443749565-8438-1-git-send-email-joel@jms.id.au> (Joel Stanley's
+	message of "Fri, 2 Oct 2015 11:02:45 +0930")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joel Stanley <joel@jms.id.au>
+Cc: jayamohan.kallickal@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
+Joel Stanley <joel@jms.id.au> writes:
 
-> This saves a little .text and avoids the sizeof(...) style
-> inconsistency.
+> GCC 5 helpfully warns us that the WARN_ON check may be buggy:
 >
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> drivers/scsi/be2iscsi/be_main.c: In function =E2=80=98be_sgl_create_c=
+ontiguous=E2=80=99:
+> drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only
+> applied to the left hand side of comparison [-Wlogical-not-parenthese=
+s]
+>   WARN_ON(!length > 0);
+>                     ^
+>
+> Check that length is not zero (and not less than zero, but it's
+> unsigned, so that will always be satisfied).
+>
+> Signed-off-by: Joel Stanley <joel@jms.id.au>
 > ---
->  drivers/scsi/fnic/fnic_fcs.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> v2: invert the check to lose the ! as suggested by Johannes
 >
-> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fc=
-s.c
-> index bf0bbd42efb5..2d013076bfba 100644
-> --- a/drivers/scsi/fnic/fnic_fcs.c
-> +++ b/drivers/scsi/fnic/fnic_fcs.c
-> @@ -415,15 +415,13 @@ static void fnic_fcoe_process_vlan_resp(struct =
-fnic *fnic, struct sk_buff *skb)
->  			vid =3D ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
->  			shost_printk(KERN_INFO, fnic->lport->host,
->  				  "process_vlan_resp: FIP VLAN %d\n", vid);
-> -			vlan =3D kmalloc(sizeof(*vlan),
-> -							GFP_ATOMIC);
-> +			vlan =3D kzalloc(sizeof(*vlan), GFP_ATOMIC);
->  			if (!vlan) {
->  				/* retry from timer */
->  				spin_unlock_irqrestore(&fnic->vlans_lock,
->  							flags);
->  				goto out;
->  			}
-> -			memset(vlan, 0, sizeof(struct fcoe_vlan));
->  			vlan->vid =3D vid & 0x0fff;
->  			vlan->state =3D FIP_VLAN_AVAIL;
->  			list_add_tail(&vlan->list, &fnic->vlans);
+>  drivers/scsi/be2iscsi/be_main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/=
+be_main.c
+> index 7a6dbfb..c6110cb 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -3184,7 +3184,7 @@ be_sgl_create_contiguous(void *virtual_address,
+>  {
+>  	WARN_ON(!virtual_address);
+>  	WARN_ON(!physical_address);
+> -	WARN_ON(!length > 0);
+> +	WARN_ON(length <=3D 0);
+>  	WARN_ON(!sgl);
+> =20
+>  	sgl->va =3D virtual_address;
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
@@ -57,3 +64,8 @@ SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
 GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
 HRB 21284 (AG N=C3=BCrnberg)
 Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
