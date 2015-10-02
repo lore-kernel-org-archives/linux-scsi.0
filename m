@@ -1,61 +1,111 @@
-From: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v5 18/34] cxlflash: Fix AFU version access/storage and add check
-Date: Fri, 02 Oct 2015 14:17:01 +1000
-Message-ID: <87bnchc3b6.fsf@gamma.ozlabs.ibm.com>
-References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com> <1443715012-18236-1-git-send-email-mrochs@linux.vnet.ibm.com> <87h9maay0s.fsf@gamma.ozlabs.ibm.com> <A8B191C3-D4C7-49ED-A058-95443BABDBDC@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 27/36] scsi_dh_alua: Use workqueue for RTPG
+Date: Fri, 02 Oct 2015 07:59:11 +0200
+Message-ID: <560E1D2F.9050808@suse.de>
+References: <1443523658-87622-1-git-send-email-hare@suse.de> <1443523658-87622-28-git-send-email-hare@suse.de> <560DC309.90100@sandisk.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:35387 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802AbbJBERQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2015 00:17:16 -0400
-Received: by pacfv12 with SMTP id fv12so97170782pac.2
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2015 21:17:16 -0700 (PDT)
-In-Reply-To: <A8B191C3-D4C7-49ED-A058-95443BABDBDC@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:33931 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750968AbbJBF7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Oct 2015 01:59:14 -0400
+In-Reply-To: <560DC309.90100@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>, Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
---=-=-=
-Content-Type: text/plain
+On 10/02/2015 01:34 AM, Bart Van Assche wrote:
+> On 09/29/2015 03:48 AM, Hannes Reinecke wrote:
+>> +static void alua_rtpg_work(struct work_struct *work)
+>> +{
+>> +    struct alua_port_group *pg =3D
+>> +        container_of(work, struct alua_port_group, rtpg_work.work);
+>> +    struct scsi_device *sdev;
+>> +    LIST_HEAD(qdata_list);
+>> +    int err =3D SCSI_DH_OK;
+>> +    struct alua_queue_data *qdata, *tmp;
+>> +    unsigned long flags;
+>> +
+>> +    spin_lock_irqsave(&pg->lock, flags);
+>> +    sdev =3D pg->rtpg_sdev;
+>> +    if (!sdev) {
+>> +        WARN_ON(pg->flags & ALUA_PG_RUN_RTPG ||
+>> +            pg->flags & ALUA_PG_RUN_STPG);
+>> +        spin_unlock_irqrestore(&pg->lock, flags);
+>> +        return;
+>> +    }
+>> +    pg->flags |=3D ALUA_PG_RUNNING;
+>> +    if (pg->flags & ALUA_PG_RUN_RTPG) {
+>> +        spin_unlock_irqrestore(&pg->lock, flags);
+>> +        err =3D alua_rtpg(sdev, pg);
+>> +        spin_lock_irqsave(&pg->lock, flags);
+>> +        if (err =3D=3D SCSI_DH_RETRY) {
+>> +            pg->flags &=3D ~ALUA_PG_RUNNING;
+>> +            spin_unlock_irqrestore(&pg->lock, flags);
+>> +            queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+>> +                       pg->interval * HZ);
+>> +            return;
+>> +        }
+>> +        pg->flags &=3D ~ALUA_PG_RUN_RTPG;
+>> +        if (err !=3D SCSI_DH_OK)
+>> +            pg->flags &=3D ~ALUA_PG_RUN_STPG;
+>> +    }
+>> +    if (pg->flags & ALUA_PG_RUN_STPG) {
+>> +        spin_unlock_irqrestore(&pg->lock, flags);
+>> +        err =3D alua_stpg(sdev, pg);
+>> +        spin_lock_irqsave(&pg->lock, flags);
+>> +        pg->flags &=3D ~ALUA_PG_RUN_STPG;
+>> +        if (err =3D=3D SCSI_DH_RETRY) {
+>> +            pg->flags |=3D ALUA_PG_RUN_RTPG;
+>> +            pg->interval =3D 0;
+>> +            pg->flags &=3D ~ALUA_PG_RUNNING;
+>> +            spin_unlock_irqrestore(&pg->lock, flags);
+>> +            queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+>> +                       pg->interval * HZ);
+>> +            return;
+>> +        }
+>> +    }
+>> +
+>> +    list_splice_init(&pg->rtpg_list, &qdata_list);
+>> +    pg->rtpg_sdev =3D NULL;
+>> +    spin_unlock_irqrestore(&pg->lock, flags);
+>> +
+>> +    list_for_each_entry_safe(qdata, tmp, &qdata_list, entry) {
+>> +        list_del(&qdata->entry);
+>> +        if (qdata->callback_fn)
+>> +            qdata->callback_fn(qdata->callback_data, err);
+>> +        kfree(qdata);
+>> +    }
+>> +    spin_lock_irqsave(&pg->lock, flags);
+>> +    pg->flags &=3D ~ALUA_PG_RUNNING;
+>> +    spin_unlock_irqrestore(&pg->lock, flags);
+>> +    scsi_device_put(sdev);
+>> +    kref_put(&pg->kref, release_port_group);
+>> +}
+>=20
+> With this patch series applied kmemleak reports several leaks that
+> were not reported without this patch. Is scsi_device_put() +
+> kref_put() always called before this function returns without
+> requeueing the work item ? Shouldn't the return value of
+> queue_delayed_work() be checked ? The leaks reported by kmemleak are:
+>=20
+Yes, you are right. I need to check queue_delayed_work() and issue
+a scsi_device_put()/kref_put() if the item is already queued.
 
-"Matthew R. Ochs" <mrochs@linux.vnet.ibm.com> writes:
+Cheers,
 
-> Correct, downlevel (unsupported) AFUs don't implement the interface_version
-> register and thus will return -1 at that offset.
-Cool. It would be good to document that somewhere, either the comment or
-the commit message, but it's not worth holding up the series for it.
-
-I also tend to use the form (var == ~0ULL) for tests like this but
-that's an aesthetic thing.
-
-Reviewed-by: Daniel Axtens <dja@axtens.net>
-
-Regards,
-Daniel
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAEBCgAGBQJWDgU9AAoJEPC3R3P2I92FPbsP/1zuJwbxi1KeYKX3Abup47DU
-E8R4H7+lzYotRbNSZkGedsPTN3Jte2sYgpzO/xYJCuvtlH5dDDOADg/n3VVEcnFG
-yayZLnm2whHM4I+QjBKsEOMYHdKDQ2Y22Py8IrMDQFeivLHUgw3mqW40h8WChIdw
-WeMbcQJFer9+VU1pnXoUkL60/KP+7usA+Q169ahYlzneAcn19JdXneProBFAGzLm
-dMDJkaDmlvCJarp/VPwkOrQ54iKYqmOpY6mdvyeUpF4YLybfi8wOMOz0VQEbHuMt
-MbnfAq2Sf3xGpa1J5fIMCA4Rvruw1zgo1Ypa5scEsLhd40/V/kSbWKr0ETyecoHE
-K6Wb+HFUlXyqoytGFy04ORlXqLakP1V6exmNdFEnOy56RSZppviuHQR+YbeuYktT
-KZh/sL8L0x0s2CP6E99AGzgsh7Xl05Oa1xlQP7+jbQMhnX2bikewf7maNbPZwHHm
-i3419byQTKZxT5e8YpSddhWkSCIO2A/i6DBUIyk+lL80n5swJETlLiDbYD/+JhsY
-jx0uzbuqtVNgSLP9I4IgTDdwrdzOE9f8hgmb9OCXmwAvU25MJ/EgtyAxH8nAg8X6
-vQjhHXc9jF23SkKGuml76TjG6kWQ4pqPohYQKC4If3R7qYtyYsQInuSB6CnNNqBi
-Yz4ljx2xSkNJCMJWO6Jr
-=nAm2
------END PGP SIGNATURE-----
---=-=-=--
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
