@@ -1,21 +1,18 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
-Date: Sat, 3 Oct 2015 10:14:37 -0700
-Message-ID: <20151003171437.GA20847@infradead.org>
-References: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: 3w-9xxxx dma unmap fix
+Date: Sat,  3 Oct 2015 19:16:06 +0200
+Message-ID: <1443892567-9562-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:43658 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbbJCRTy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Oct 2015 13:19:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: atoth@atoth.sote.hu, aradford@gmail.com, linux-scsi@vger.kernel.org
 
-Hi Rasmus,
+This is the properly documented and signed off version of the 3w-9xxx
+fix.  From code inspection it seems like the two other 3ware drivers
+aren't affected as they never bounce buffer commands.
 
-I like this idea.  But maybe it's also time to just move the constants
-to a plain text file and auto-generate C headers from them?  That way
-the format in which they can be edited is decoupled from the
-representation in the kernel image.
