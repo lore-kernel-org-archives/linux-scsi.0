@@ -1,38 +1,21 @@
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-Date: Sat, 03 Oct 2015 20:44:10 +0930
-Message-ID: <560FB882.5050107@internode.on.net>
-References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net> <56063AB7.9030309@internode.on.net> <560F8DB0.8030704@linux.intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
+Date: Sat, 3 Oct 2015 10:14:37 -0700
+Message-ID: <20151003171437.GA20847@infradead.org>
+References: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <560F8DB0.8030704@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, Ballabio Dario <dario.ballabio@emc.com>, Christoph Hellwig <hch@infradead.org>, Dario Ballabio <ballabio_dario@emc.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Rasmus,
 
-
-Jiang Liu wrote on 03/10/15 17:41:
-
-> Hi Arthur,
-> 	The above results suggest that we need to shutdown eata
-> controller for kexec. So could you please try to apply the attached
-> patch upon the previous two patches?
-> Thanks!
-> Gerry
->
-
-Hi, I still get kexec shutdown errors like this with the 3rd patch applied:
-
-http://www.users.on.net/~arthur.marsh/20151003566.jpg
-
-I can still unmount filesystems, modprobe -r eata and modprobe eata to 
-get things into a state where a kexec reboot works.
-
-Regards,
-
-Arthur.
+I like this idea.  But maybe it's also time to just move the constants
+to a plain text file and auto-generate C headers from them?  That way
+the format in which they can be edited is decoupled from the
+representation in the kernel image.
