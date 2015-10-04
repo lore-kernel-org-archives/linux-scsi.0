@@ -1,21 +1,32 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 1/3] scsi: drop unlikely behind BUG_ON()
-Date: Sun, 4 Oct 2015 07:33:29 -0700
-Message-ID: <561138B9.6060004@sandisk.com>
-References: <a89c7bef0699c3d3f5e592c58ff3f0a4db482b69.1443937856.git.geliangtang@163.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] scsi: dpt: remove i2o header in uapi
+Date: Sun, 04 Oct 2015 21:04:37 +0200
+Message-ID: <9360762.QKG8Z6HBYY@wuerfel>
+References: <1443712510-6714-1-git-send-email-gabriel@lse.epita.fr> <1443914571-19312-1-git-send-email-gabriel@lse.epita.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a89c7bef0699c3d3f5e592c58ff3f0a4db482b69.1443937856.git.geliangtang@163.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geliang Tang <geliangtang@163.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:51767 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587AbbJDTFV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Oct 2015 15:05:21 -0400
+In-Reply-To: <1443914571-19312-1-git-send-email-gabriel@lse.epita.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gabriel Laskar <gabriel@lse.epita.fr>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "David S. Miller" <davem@davemloft.net>, Hans Verkuil <hans.verkuil@cisco.com>, "Michael S. Tsirkin" <mst@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Masahiro Yamada <yamada.m@jp.panasonic.com>, stephen hemminger <stephen@networkplumber.org>, Nicolas Dichtel <nicolas.dichtel@6wind.com>, "open list:DPT_I2O SCSI RAID DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:ABI/API" <linux-api@vger.kernel.org>
 
-On 10/03/15 23:18, Geliang Tang wrote:
-> BUG_ON() already contain an unlikely compiler flag. Drop it.
->
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
+On Sunday 04 October 2015 01:22:50 Gabriel Laskar wrote:
+> The i2o subsystem was removed by
+> commit 4a72a7af462d ("staging: remove i2o subsystem") but the header was
+> still used by drivers/scsi/dpt_i2o.c driver.
+> 
+> This patch moves the structures used from the header into dpti_i2o.h.
+> 
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Gabriel Laskar <gabriel@lse.epita.fr>
+> 
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
