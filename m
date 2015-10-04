@@ -1,40 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
-Date: Sun, 4 Oct 2015 01:02:17 -0700
-Message-ID: <20151004080217.GA22816@infradead.org>
-References: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
- <20151003171437.GA20847@infradead.org>
- <87bncf1u4p.fsf@rasmusvillemoes.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53927 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930AbbJDICV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Oct 2015 04:02:21 -0400
-Content-Disposition: inline
-In-Reply-To: <87bncf1u4p.fsf@rasmusvillemoes.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Geliang Tang <geliangtang@163.com>
+Subject: [PATCH] isci: fix two comment typos
+Date: Sun,  4 Oct 2015 16:53:55 +0800
+Message-ID: <dc5377b7094d5d50cfe037337b301a083869d0c0.1443948690.git.geliangtang@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, Oct 04, 2015 at 12:09:58AM +0200, Rasmus Villemoes wrote:
-> On Sat, Oct 03 2015, Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > Hi Rasmus,
-> >
-> > I like this idea.  But maybe it's also time to just move the constants
-> > to a plain text file and auto-generate C headers from them?  That way
-> > the format in which they can be edited is decoupled from the
-> > representation in the kernel image.
-> 
-> Well, I don't really have an opinion on that part.
-> 
-> In the meantime, I got another idea for doubling the saving to 8k. It
-> requires a few more code changes and is perhaps also more hacky. 2/2
-> would be something like below. Please let me know which version you'd
-> prefer, and I'll send both patches properly.
+Just fix two typos in the code comment.
 
-I don't think the new version is too bad, and the saving is impressive.
-So I'd opt for the new one.
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/scsi/isci/request.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index cfd0084..8fe106f 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3306,7 +3306,7 @@ sci_io_request_construct_smp(struct device *dev,
+  * @ireq: This parameter points to the isci_request allocated in the
+  *    request construct function.
+  *
+- * SCI_SUCCESS on successfull completion, or specific failure code.
++ * SCI_SUCCESS on successful completion, or specific failure code.
+  */
+ static enum sci_status isci_smp_request_build(struct isci_request *ireq)
+ {
+@@ -3332,7 +3332,7 @@ static enum sci_status isci_smp_request_build(struct isci_request *ireq)
+  * @sci_device: This parameter is the handle for the sci core's remote device
+  *    object that is the destination for this request.
+  *
+- * SCI_SUCCESS on successfull completion, or specific failure code.
++ * SCI_SUCCESS on successful completion, or specific failure code.
+  */
+ static enum sci_status isci_io_request_build(struct isci_host *ihost,
+ 					     struct isci_request *request,
+-- 
+2.5.0
