@@ -1,38 +1,165 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv2 0/1] Update SCSI hosts to use idr for host number mgmt
-Date: Mon,  5 Oct 2015 16:01:10 -0700
-Message-ID: <cover.1444085255.git.lduncan@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36101 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751770AbbJEXBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Oct 2015 19:01:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCHv2 1/1] SCSI: update hosts module to use idr index management
+Date: Mon,  5 Oct 2015 16:01:11 -0700
+Message-ID: <1a69690d615610c1dee725db7e6d81cf2db28266.1444085255.git.lduncan@suse.com>
+References: <cover.1444085255.git.lduncan@suse.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1444085255.git.lduncan@suse.com>
+In-Reply-To: <cover.1444085255.git.lduncan@suse.com>
+References: <cover.1444085255.git.lduncan@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch updates the SCSI hosts module to use the idr
-index-management routines to manage its host_no index instead
-of using an ATOMIC integer. This means that host numbers
-can now be reclaimed and re-used.
+Update the SCSI hosts module to use idr to manage
+its host_no index instead of an ATOMIC integer. This
+also allows using idr_find() to look up the SCSI
+host structure given the host number.
 
-It also updates the hosts module to use the idr routine idr_find()
-to lookup hosts based on the host number, hopefully speeding
-up said lookup.
+This means that the SCSI host number will now
+be reclaimable.
 
-After noticing that my idr calling sequences where very close
-to those in other modules, I considered creating some idr helper
-functions (and using them), but because idr usage almost always
-requires the caller to manage their own locks, I gave up on
-this approach (as suggested by Tejon -- thank you).
-
-Lee Duncan (1):
-  SCSI: update hosts module to use idr index management
-
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+---
  drivers/scsi/hosts.c | 60 +++++++++++++++++++++++++---------------------------
  1 file changed, 29 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8bb173e01084..9dc8ff971f5a 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -33,7 +33,7 @@
+ #include <linux/transport_class.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+-
++#include <linux/idr.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+@@ -41,8 +41,8 @@
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+ 
+-
+-static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/* host_no for next new host */
++static DEFINE_IDR(host_index_idr);
++static DEFINE_SPINLOCK(host_index_lock);
+ 
+ 
+ static void scsi_host_cls_release(struct device *dev)
+@@ -337,6 +337,10 @@ static void scsi_host_dev_release(struct device *dev)
+ 
+ 	kfree(shost->shost_data);
+ 
++	spin_lock(&host_index_lock);
++	idr_remove(&host_index_idr, shost->host_no);
++	spin_unlock(&host_index_lock);
++
+ 	if (parent)
+ 		put_device(parent);
+ 	kfree(shost);
+@@ -370,6 +374,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ {
+ 	struct Scsi_Host *shost;
+ 	gfp_t gfp_mask = GFP_KERNEL;
++	int index;
+ 
+ 	if (sht->unchecked_isa_dma && privsize)
+ 		gfp_mask |= __GFP_DMA;
+@@ -388,11 +393,15 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	init_waitqueue_head(&shost->host_wait);
+ 	mutex_init(&shost->scan_mutex);
+ 
+-	/*
+-	 * subtract one because we increment first then return, but we need to
+-	 * know what the next host number was before increment
+-	 */
+-	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
++	idr_preload(GFP_KERNEL);
++	spin_lock(&host_index_lock);
++	index = idr_alloc(&host_index_idr, shost, 0, 0, GFP_NOWAIT);
++	spin_unlock(&host_index_lock);
++	idr_preload_end();
++	if (index < 0)
++		goto fail_kfree;
++	shost->host_no = index;
++
+ 	shost->dma_channel = 0xff;
+ 
+ 	/* These three are default values which can be overridden */
+@@ -477,7 +486,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_kfree;
++		goto fail_idr_remove;
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -493,6 +502,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 
+  fail_kthread:
+ 	kthread_stop(shost->ehandler);
++ fail_idr_remove:
++	spin_lock(&host_index_lock);
++	idr_remove(&host_index_idr, shost->host_no);
++	spin_unlock(&host_index_lock);
+  fail_kfree:
+ 	kfree(shost);
+ 	return NULL;
+@@ -522,37 +535,21 @@ void scsi_unregister(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_unregister);
+ 
+-static int __scsi_host_match(struct device *dev, const void *data)
+-{
+-	struct Scsi_Host *p;
+-	const unsigned short *hostnum = data;
+-
+-	p = class_to_shost(dev);
+-	return p->host_no == *hostnum;
+-}
+-
+ /**
+  * scsi_host_lookup - get a reference to a Scsi_Host by host no
+  * @hostnum:	host number to locate
+  *
+  * Return value:
+  *	A pointer to located Scsi_Host or NULL.
+- *
+- *	The caller must do a scsi_host_put() to drop the reference
+- *	that scsi_host_get() took. The put_device() below dropped
+- *	the reference from class_find_device().
+  **/
+ struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+ {
+-	struct device *cdev;
+-	struct Scsi_Host *shost = NULL;
+-
+-	cdev = class_find_device(&shost_class, NULL, &hostnum,
+-				 __scsi_host_match);
+-	if (cdev) {
+-		shost = scsi_host_get(class_to_shost(cdev));
+-		put_device(cdev);
+-	}
++	struct Scsi_Host *shost;
++
++	spin_lock(&host_index_lock);
++	shost = idr_find(&host_index_idr, hostnum);
++	spin_unlock(&host_index_lock);
++
+ 	return shost;
+ }
+ EXPORT_SYMBOL(scsi_host_lookup);
+@@ -588,6 +585,7 @@ int scsi_init_hosts(void)
+ void scsi_exit_hosts(void)
+ {
+ 	class_unregister(&shost_class);
++	idr_destroy(&host_index_idr);
+ }
+ 
+ int scsi_is_host_device(const struct device *dev)
 -- 
 2.1.4
-
