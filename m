@@ -1,51 +1,56 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH] isci: fix two comment typos
-Date: Mon, 5 Oct 2015 14:31:32 +0200
-Message-ID: <56126DA4.6010906@intel.com>
-References: <dc5377b7094d5d50cfe037337b301a083869d0c0.1443948690.git.geliangtang@163.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <dc5377b7094d5d50cfe037337b301a083869d0c0.1443948690.git.geliangtang@163.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geliang Tang <geliangtang@163.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Geliang Tang <geliangtang@163.com>
+Subject: [PATCH v2 1/3] scsi: drop unlikely behind BUG_ON()
+Date: Mon,  5 Oct 2015 21:26:04 +0800
+Message-ID: <482d18783d6df356809b67431de95addfa20aa79.1444051018.git.geliangtang@163.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from m50-134.163.com ([123.125.50.134]:52336 "EHLO m50-134.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751936AbbJEN2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Oct 2015 09:28:25 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/04/2015 10:53 AM, Geliang Tang wrote:
-> Just fix two typos in the code comment.
-> 
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
-> ---
->  drivers/scsi/isci/request.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-> index cfd0084..8fe106f 100644
-> --- a/drivers/scsi/isci/request.c
-> +++ b/drivers/scsi/isci/request.c
-> @@ -3306,7 +3306,7 @@ sci_io_request_construct_smp(struct device *dev,
->   * @ireq: This parameter points to the isci_request allocated in the
->   *    request construct function.
->   *
-> - * SCI_SUCCESS on successfull completion, or specific failure code.
-> + * SCI_SUCCESS on successful completion, or specific failure code.
->   */
->  static enum sci_status isci_smp_request_build(struct isci_request *ireq)
->  {
-> @@ -3332,7 +3332,7 @@ static enum sci_status isci_smp_request_build(struct isci_request *ireq)
->   * @sci_device: This parameter is the handle for the sci core's remote device
->   *    object that is the destination for this request.
->   *
-> - * SCI_SUCCESS on successfull completion, or specific failure code.
-> + * SCI_SUCCESS on successful completion, or specific failure code.
->   */
->  static enum sci_status isci_io_request_build(struct isci_host *ihost,
->  					     struct isci_request *request,
-> 
+(1) For !CONFIG_BUG cases, the bug call is a no-op, so we couldn't care
+less and the change is ok.
 
-Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+(2) ppc and mips, which HAVE_ARCH_BUG_ON, do not rely on branch predictions
+as it seems to be pointless[1] and thus callers should not be trying to
+push an optimization in the first place.
 
-Thanks,
-Artur
+(3) For CONFIG_BUG and !HAVE_ARCH_BUG_ON cases, BUG_ON() contains an
+unlikely compiler flag already.
+
+Hence, we can drop unlikely behind BUG_ON().
+
+[1] http://lkml.iu.edu/hypermail/linux/kernel/1101.3/02289.html
+
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+---
+Changes in v2:
+ - Just rewrite the commit log.
+---
+ drivers/scsi/scsi_lib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f570b48..3b5faab 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1164,8 +1164,8 @@ int scsi_init_io(struct scsi_cmnd *cmd)
+ 
+ 		count = blk_rq_map_integrity_sg(rq->q, rq->bio,
+ 						prot_sdb->table.sgl);
+-		BUG_ON(unlikely(count > ivecs));
+-		BUG_ON(unlikely(count > queue_max_integrity_segments(rq->q)));
++		BUG_ON(count > ivecs);
++		BUG_ON(count > queue_max_integrity_segments(rq->q));
+ 
+ 		cmd->prot_sdb = prot_sdb;
+ 		cmd->prot_sdb->table.nents = count;
+-- 
+2.5.0
+
+
