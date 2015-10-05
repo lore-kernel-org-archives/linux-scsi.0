@@ -1,61 +1,51 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v3 13/13] scsi: ufs: Add exynos ufs platform data
-Date: Mon, 05 Oct 2015 13:44:29 +0530
-Message-ID: <56123165.2060500@samsung.com>
-References: <201510011845.GN7Kisc4%fengguang.wu@intel.com>
- <1790578.NZeHVGuJeN@wuerfel>
+From: Arthur Marsh <arthur.marsh@internode.on.net>
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
+Date: Mon, 05 Oct 2015 18:59:42 +1030
+Message-ID: <561234F6.6050805@internode.on.net>
+References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net> <56063AB7.9030309@internode.on.net> <560F8DB0.8030704@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1790578.NZeHVGuJeN@wuerfel>
+In-Reply-To: <560F8DB0.8030704@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, Rob Herring <robh@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, Ballabio Dario <dario.ballabio@emc.com>, Christoph Hellwig <hch@infradead.org>, Dario Ballabio <ballabio_dario@emc.com>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-CCing Rob Herring,
 
-Hi Arnd,
 
-On 10/01/2015 04:59 PM, Arnd Bergmann wrote:
-> On Thursday 01 October 2015 18:46:34 kbuild test robot wrote:
->> [auto build test results on v4.3-rc3 -- if it's inappropriate base, please ignore]
+Jiang Liu wrote on 03/10/15 17:41:
+
+>> If I do a normal boot which includes eata being loaded, the disk
+>> attached to the DPT2044W controller having its filesystems checked and
+>> mounted, then attempt a kexec reboot, I get the reboot pausing after the
+>> "synchronizing SCSI cache" messages as before.
 >>
->> config: x86_64-allmodconfig (attached as .config)
->> reproduce:
->>          git checkout 6e153e3bf7c68b019e987c5a0ffadebd9c7d4fbb
->>          # save the attached .config to linux build tree
->>          make ARCH=x86_64
+>> If I un-mount the filesystems on the disk attached to the DPT2044W
+>> controller after start-up and try a reboot I get the same problem.
 >>
->> All error/warnings (new ones prefixed by >>):
->>
->>>> ERROR: "ufs_hba_exynos_ops" [drivers/scsi/ufs/ufshcd-pltfrm.ko] undefined!
->>
->>
->
-> Ah, this seems to be a case of layering violation. It would be best to
-> restructure the code so that the exynos driver registers a platform_driver
-> by itself for the respective DT compatible string, and then calls
-> into the common code from its probe function, rather than having the
-> generic driver know about the specific backends.
->
-> That approach will also make the generic driver more scalable as we
-> add further chip-specific variations, and matches what we do in other
-> drivers.
+>> If I do modprobe -r eata after un-mounting the filesystems on the disk
+>> attached to the DPT2044W controller after a start-up kexec *works fine*.
+> Hi Arthur,
+> 	The above results suggest that we need to shutdown eata
+> controller for kexec. So could you please try to apply the attached
+> patch upon the previous two patches?
+> Thanks!
+> Gerry
 >
 
-Looks like some discussions on ufs variant driver probe method happened 
-here [1] few months back.
-[1]-> https://lkml.org/lkml/2015/6/3/180
+To clarify, if the eata driver gets loaded once and stays loaded, at a 
+kexec reboot attempt the "Synchronising SCSI cache" message is missing 
+for the SCSI disk attached to the controller using the eata driver and 
+eventually other error messages appear as seen in screen images that I 
+have previously posted.
 
-And since ufshcd-pltfrm is already a platform_driver, so I just add a 
-platform data for the variant driver.
-I should have add a IS_ENABLED for it to avoid the compilation error for 
-other ARCH.
+If the eata driver is loaded, unloaded via modprobe -r, then reloaded, a 
+kexec reboot shows 2 "Synchronising SCSI cache" messages for the SCSI 
+disk attached to the controller using the eata driver and the kexec 
+reboot is successful.
 
 
-Thanks!!
-
-> 	Arnd
->
+Arthur.
