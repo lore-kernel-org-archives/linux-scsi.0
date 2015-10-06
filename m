@@ -1,64 +1,62 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv3 1/1] SCSI: update hosts module to use idr index
- management
-Date: Tue, 6 Oct 2015 14:44:04 -0700
-Message-ID: <561440A4.1070704@suse.com>
-References: <cover.1444157464.git.lduncan@suse.com>
- <e86885050b0dd09b2ed47a5dd5fd705cd747cc94.1444157464.git.lduncan@suse.com>
- <1444159196.10564.11.camel@HansenPartnership.com>
+From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH -resend 1/1] fcoe: use continue instead of
+	goto+label
+Date: Tue, 06 Oct 2015 15:34:07 -0700
+Message-ID: <1444170847.5825.8.camel@lin-nd1-054.jf.intel.com>
+References: <1444134465-3693-1-git-send-email-jslaby@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444159196.10564.11.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1444134465-3693-1-git-send-email-jslaby-AlSwsSmVLrQ@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-O3H1v1f1dlM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/06/2015 12:19 PM, James Bottomley wrote:
-> On Tue, 2015-10-06 at 12:08 -0700, Lee Duncan wrote:
->> Update the SCSI hosts module to use idr to manage
->> its host_no index instead of an ATOMIC integer. This
->> also allows using idr_find() to look up the SCSI
->> host structure given the host number.
->>
->> This means that the SCSI host number will now
->> be reclaimable.
->>
->> Signed-off-by: Lee Duncan <lduncan@suse.com>
->> Reviewed-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/hosts.c | 61 ++++++++++++++++++++++++++--------------------------
->>  1 file changed, 31 insertions(+), 30 deletions(-
->>
->> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
->> index 8bb173e01084..afe7bd962ddb 100644
->> --- a/drivers/scsi/hosts.c
->> +++ b/drivers/scsi/hosts.c
-> [...]
->> +	spin_lock(&host_index_lock);
->> +	shost = idr_find(&host_index_idr, hostnum);
->> +	spin_unlock(&host_index_lock);
->> +
->> +	return shost ? scsi_host_get(shost) : NULL;
+On Tue, 2015-10-06 at 14:27 +0200, Jiri Slaby wrote:
+> There is a label pointing to the start of a while loop and a goto
+> nested only in the loop. The goto jumps to the label in some cases.
+> Replace the goto and the label by simple continue.
 > 
-> So the thing I don't like here is that there's a race between
-> scsi_host_get() and the final put.  What could happen is that idr_find()
-> returns the host just before but scsi_host_dev_release() is executed
-> before the return.  In that instance, we'll reference freed memory in
-> scsi_host_get() ... probably completely harmlessly, but it will show up
-> occasionally on some of the traces ... particularly the ones doing a
-> fuzz/stress test around host create/destroy.
+> Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+> ---
+> Sent on:
+> May 5
 > 
-> James
+>  drivers/scsi/fcoe/fcoe.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index d3eb80c46bbe..d187ba9b361d 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -1873,7 +1873,6 @@ static int fcoe_percpu_receive_thread(void *arg)
+>  
+>  	set_user_nice(current, MIN_NICE);
+>  
+> -retry:
+>  	while (!kthread_should_stop()) {
+>  
+>  		spin_lock_bh(&p->fcoe_rx_list.lock);
+> @@ -1883,7 +1882,7 @@ retry:
+>  			set_current_state(TASK_INTERRUPTIBLE);
+>  			spin_unlock_bh(&p->fcoe_rx_list.lock);
+>  			schedule();
+> -			goto retry;
+> +			continue;
+>  		}
+>  
+>  		spin_unlock_bh(&p->fcoe_rx_list.lock);
 
-Good point. The scenario you mention may be a corner case, but I also
-don't like it. I cannot see another good way to synchronize lookup and
-removal other than adding a new lock, which would be dumb.
-
-I will submit my "host number" patch again, without the change to
-scsi_host_lookup().
-
--- 
-Lee Duncan
+Acked-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
