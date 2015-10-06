@@ -1,60 +1,64 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: advansys: fix big-endian builds
-Date: Tue, 06 Oct 2015 23:24:28 +0200
-Message-ID: <5468884.cIlSBUgeTB@wuerfel>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCHv3 1/1] SCSI: update hosts module to use idr index
+ management
+Date: Tue, 6 Oct 2015 14:44:04 -0700
+Message-ID: <561440A4.1070704@suse.com>
+References: <cover.1444157464.git.lduncan@suse.com>
+ <e86885050b0dd09b2ed47a5dd5fd705cd747cc94.1444157464.git.lduncan@suse.com>
+ <1444159196.10564.11.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <willy@linux.intel.com>, Hannes Reinecke <hare@suse.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1444159196.10564.11.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Building the advansys driver in a big-endian configuration such as
-ARM allmodconfig shows a warning:
+On 10/06/2015 12:19 PM, James Bottomley wrote:
+> On Tue, 2015-10-06 at 12:08 -0700, Lee Duncan wrote:
+>> Update the SCSI hosts module to use idr to manage
+>> its host_no index instead of an ATOMIC integer. This
+>> also allows using idr_find() to look up the SCSI
+>> host structure given the host number.
+>>
+>> This means that the SCSI host number will now
+>> be reclaimable.
+>>
+>> Signed-off-by: Lee Duncan <lduncan@suse.com>
+>> Reviewed-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/hosts.c | 61 ++++++++++++++++++++++++++--------------------------
+>>  1 file changed, 31 insertions(+), 30 deletions(-
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 8bb173e01084..afe7bd962ddb 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+> [...]
+>> +	spin_lock(&host_index_lock);
+>> +	shost = idr_find(&host_index_idr, hostnum);
+>> +	spin_unlock(&host_index_lock);
+>> +
+>> +	return shost ? scsi_host_get(shost) : NULL;
+> 
+> So the thing I don't like here is that there's a race between
+> scsi_host_get() and the final put.  What could happen is that idr_find()
+> returns the host just before but scsi_host_dev_release() is executed
+> before the return.  In that instance, we'll reference freed memory in
+> scsi_host_get() ... probably completely harmlessly, but it will show up
+> occasionally on some of the traces ... particularly the ones doing a
+> fuzz/stress test around host create/destroy.
+> 
+> James
 
- drivers/scsi/advansys.c: In function 'adv_build_req':
- include/uapi/linux/byteorder/big_endian.h:32:26: warning: large integer implicitly truncated to unsigned type [-Woverflow]
-  #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
- drivers/scsi/advansys.c:7806:22: note: in expansion of macro 'cpu_to_le32'
-   scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
+Good point. The scenario you mention may be a corner case, but I also
+don't like it. I cannot see another good way to synchronize lookup and
+removal other than adding a new lock, which would be dumb.
 
-It turns out that the commit that introduced this used the cpu_to_le32()
-incorrectly on an 8-bit field, which results in the sense_len to always
-be set to zero, as the SCSI_SENSE_BUFFERSIZE value gets moved to upper
-byte of the 32-bit intermediate.
+I will submit my "host number" patch again, without the change to
+scsi_host_lookup().
 
-This removes the cpu_to_le32() call to restore the original version.
-
-I found this only by looking at the compiler output and have not done
-a full review for possible further endianess bugs in the same driver.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 811ddc057aac ("advansys: use DMA-API for mapping sense buffer")
----
-Using willy@linux.intel.com, as the address listed in MAINTAINERS
-failed:
-
-Failed to transport message. Message sending failed since the following recipients were rejected by the server: matthew@wil.cx (The server responded: Requested action not taken: mailbox unavailable invalid DNS MX or A/AAAA resource record)
-
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 4305178e4e01..1c1cd657c380 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7803,7 +7803,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 		return ASC_BUSY;
- 	}
- 	scsiqp->sense_addr = cpu_to_le32(sense_addr);
--	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
-+	scsiqp->sense_len = SCSI_SENSE_BUFFERSIZE;
- 
- 	/* Build ADV_SCSI_REQ_Q */
+-- 
+Lee Duncan
