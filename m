@@ -1,38 +1,52 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv3 0/1] Update SCSI hosts to use idr for host number mgmt
-Date: Tue,  6 Oct 2015 12:08:19 -0700
-Message-ID: <cover.1444157464.git.lduncan@suse.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHv3 1/1] SCSI: update hosts module to use idr index
+ management
+Date: Tue, 06 Oct 2015 12:19:56 -0700
+Message-ID: <1444159196.10564.11.camel@HansenPartnership.com>
+References: <cover.1444157464.git.lduncan@suse.com>
+	 <e86885050b0dd09b2ed47a5dd5fd705cd747cc94.1444157464.git.lduncan@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e86885050b0dd09b2ed47a5dd5fd705cd747cc94.1444157464.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+To: Lee Duncan <lduncan@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch updates the SCSI hosts module to use the idr
-index-management routines to manage its host_no index instead
-of using an ATOMIC integer. This means that host numbers
-can now be reclaimed and re-used.
+On Tue, 2015-10-06 at 12:08 -0700, Lee Duncan wrote:
+> Update the SCSI hosts module to use idr to manage
+> its host_no index instead of an ATOMIC integer. This
+> also allows using idr_find() to look up the SCSI
+> host structure given the host number.
+> 
+> This means that the SCSI host number will now
+> be reclaimable.
+> 
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/hosts.c | 61 ++++++++++++++++++++++++++--------------------------
+>  1 file changed, 31 insertions(+), 30 deletions(-
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 8bb173e01084..afe7bd962ddb 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+[...]
+> +	spin_lock(&host_index_lock);
+> +	shost = idr_find(&host_index_idr, hostnum);
+> +	spin_unlock(&host_index_lock);
+> +
+> +	return shost ? scsi_host_get(shost) : NULL;
 
-It also updates the hosts module to use the idr routine idr_find()
-to lookup hosts based on the host number, hopefully speeding
-up said lookup.
+So the thing I don't like here is that there's a race between
+scsi_host_get() and the final put.  What could happen is that idr_find()
+returns the host just before but scsi_host_dev_release() is executed
+before the return.  In that instance, we'll reference freed memory in
+scsi_host_get() ... probably completely harmlessly, but it will show up
+occasionally on some of the traces ... particularly the ones doing a
+fuzz/stress test around host create/destroy.
 
-After noticing that my idr calling sequences where very close
-to those in other modules, I considered creating some idr helper
-functions (and using them), but because idr usage almost always
-requires the caller to manage their own locks, I gave up on
-this approach (as suggested by Tejon -- thank you).
-
-Changes from v1:
- - no longer using helper routines
-Changes from v2:
- - added back missing scsi_host_get() in scsi_host_lookup()
-
-Lee Duncan (1):
-  SCSI: update hosts module to use idr index management
-
- drivers/scsi/hosts.c | 61 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 31 insertions(+), 30 deletions(-)
-
--- 
-2.1.4
+James
