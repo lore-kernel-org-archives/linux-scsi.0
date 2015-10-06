@@ -1,125 +1,109 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] 3w-9xxx: don't unmap bounce buffered commands
-Date: Mon, 5 Oct 2015 17:52:30 -0700
-Message-ID: <CAHtARFF3h+LnxMXTXg1pit2aRN1ucB-ztOQQahDB3=_i2Cpgdw@mail.gmail.com>
-References: <1443892567-9562-1-git-send-email-hch@lst.de>
-	<1443892567-9562-2-git-send-email-hch@lst.de>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
+Date: Tue, 6 Oct 2015 12:32:47 +1100
+Message-ID: <CAGRGNgXt6qt4K+O9u+Y45rZNh07X=6wh7CdCwJ4mwiYkjXyCWA@mail.gmail.com>
+References: <87h9mbg6h1.fsf@rasmusvillemoes.dk> <20151003171437.GA20847@infradead.org>
+ <87bncf1u4p.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:36528 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756AbbJFAwa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2015 20:52:30 -0400
-Received: by ykdt18 with SMTP id t18so188709230ykd.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2015 17:52:30 -0700 (PDT)
-In-Reply-To: <1443892567-9562-2-git-send-email-hch@lst.de>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:33670 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbbJFBdH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2015 21:33:07 -0400
+In-Reply-To: <87bncf1u4p.fsf@rasmusvillemoes.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, =?UTF-8?B?QXR0aWxhIFTDs3Ro?= <atoth@atoth.sote.hu>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, Oct 3, 2015 at 10:16 AM, Christoph Hellwig <hch@lst.de> wrote:
-> 3w controller don't dma map small single SGL entry commands but instead
-> bounce buffer them.  Add a helper to identify these commands and don't
-> call scsi_dma_unmap for them.
+Hi Rasmus,
+
+On Sun, Oct 4, 2015 at 9:09 AM, Rasmus Villemoes
+<linux@rasmusvillemoes.dk> wrote:
+> Subject: [PATCH 2/2] scsi: reduce CONFIG_SCSI_CONSTANTS=y impact by 8k
 >
-> Based on an earlier patch from James Bottomley.
+> On 64 bit, struct error_info has 6 bytes of padding, which amounts to
+> over 4k of wasted space in the additional[] array. We could easily get
+> rid of that by instead using separate arrays for the codes and the
+> pointers. However, we can do even better than that and save an
+> additional 6 bytes per entry: In the table, just store the sizeof()
+> the corresponding string literal. The cumulative sum of these is then
+> the appropriate offset into additional_text, which is built from the
+> concatenation (with '\0's inbetween) of the strings.
 >
-> Fixes: 118c85 ("3w-9xxx: fix command completion race")
-> Reported-by: T??th Attila <atoth@atoth.sote.hu>
-> Tested-by: T??th Attila <atoth@atoth.sote.hu>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> $ scripts/bloat-o-meter /tmp/vmlinux vmlinux
+> add/remove: 0/0 grow/shrink: 1/1 up/down: 24/-8488 (-8464)
+> function                                     old     new   delta
+> scsi_extd_sense_format                       136     160     +24
+> additional                                 11312    2824   -8488
+
+Quick question:
+
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 > ---
->  drivers/scsi/3w-9xxx.c | 28 +++++++++++++++++++++-------
->  1 file changed, 21 insertions(+), 7 deletions(-)
+>  drivers/scsi/constants.c   | 25 +++++++++++++++++++++----
+>  drivers/scsi/sense_codes.h |  2 --
+>  2 files changed, 21 insertions(+), 6 deletions(-)
 >
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index add419d..a56a7b2 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -212,6 +212,17 @@ static const struct file_operations twa_fops = {
->         .llseek         = noop_llseek,
+> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+> index 47aaccd5e68e..ccd34b0481cd 100644
+> --- a/drivers/scsi/constants.c
+> +++ b/drivers/scsi/constants.c
+> @@ -292,17 +292,31 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
+>
+>  struct error_info {
+>         unsigned short code12;  /* 0x0302 looks better than 0x03,0x02 */
+> -       const char * text;
+> +       unsigned short size;
 >  };
 >
+>
 > +/*
-> + * The controllers use an inline buffer instead of a mapped SGL for small,
-> + * single entry buffers.  Note that we treat a zero-length transfer like
-> + * a mapped SGL.
+> + * There are 700+ entries in this table. To save space, we don't store
+> + * (code, pointer) pairs, which would make sizeof(struct
+> + * error_info)==16 on 64 bits. Rather, the second element just stores
+> + * the size (including \0) of the corresponding string, and we use the
+> + * sum of these to get the appropriate offset into additional_text
+> + * defined below. This approach saves 12 bytes per entry.
 > + */
-> +static bool twa_command_mapped(struct scsi_cmnd *cmd)
-> +{
-> +       return scsi_sg_count(cmd) != 1 ||
-> +               scsi_bufflen(cmd) >= TW_MIN_SGL_LENGTH;
-> +}
+>  static const struct error_info additional[] =
+>  {
+> -#define SENSE_CODE(c, s) {c, s},
+> +#define SENSE_CODE(c, s) {c, sizeof(s)},
+>  #include "sense_codes.h"
+>  #undef SENSE_CODE
+>  };
+>
+> +static const char *additional_text =
+> +#define SENSE_CODE(c, s) s "\0"
+> +#include "sense_codes.h"
+> +#undef SENSE_CODE
+> +       ;
 > +
->  /* This function will complete an aen request from the isr */
->  static int twa_aen_complete(TW_Device_Extension *tw_dev, int request_id)
+>  struct error_info2 {
+>         unsigned char code1, code2_min, code2_max;
+>         const char * str;
+> @@ -364,11 +378,14 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
 >  {
-> @@ -1339,7 +1350,8 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
->                                 }
+>         int i;
+>         unsigned short code = ((asc << 8) | ascq);
+> +       unsigned offset = 0;
 >
->                                 /* Now complete the io */
-> -                               scsi_dma_unmap(cmd);
-> +                               if (twa_command_mapped(cmd))
-> +                                       scsi_dma_unmap(cmd);
->                                 cmd->scsi_done(cmd);
->                                 tw_dev->state[request_id] = TW_S_COMPLETED;
->                                 twa_free_request_id(tw_dev, request_id);
-> @@ -1582,7 +1594,8 @@ static int twa_reset_device_extension(TW_Device_Extension *tw_dev)
->                                 struct scsi_cmnd *cmd = tw_dev->srb[i];
->
->                                 cmd->result = (DID_RESET << 16);
-> -                               scsi_dma_unmap(cmd);
-> +                               if (twa_command_mapped(cmd))
-> +                                       scsi_dma_unmap(cmd);
->                                 cmd->scsi_done(cmd);
->                         }
->                 }
-> @@ -1765,12 +1778,14 @@ static int twa_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
->         retval = twa_scsiop_execute_scsi(tw_dev, request_id, NULL, 0, NULL);
->         switch (retval) {
->         case SCSI_MLQUEUE_HOST_BUSY:
-> -               scsi_dma_unmap(SCpnt);
-> +               if (twa_command_mapped(SCpnt))
-> +                       scsi_dma_unmap(SCpnt);
->                 twa_free_request_id(tw_dev, request_id);
->                 break;
->         case 1:
->                 SCpnt->result = (DID_ERROR << 16);
-> -               scsi_dma_unmap(SCpnt);
-> +               if (twa_command_mapped(SCpnt))
-> +                       scsi_dma_unmap(SCpnt);
->                 done(SCpnt);
->                 tw_dev->state[request_id] = TW_S_COMPLETED;
->                 twa_free_request_id(tw_dev, request_id);
-> @@ -1831,8 +1846,7 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
->                 /* Map sglist from scsi layer to cmd packet */
->
->                 if (scsi_sg_count(srb)) {
-> -                       if ((scsi_sg_count(srb) == 1) &&
-> -                           (scsi_bufflen(srb) < TW_MIN_SGL_LENGTH)) {
-> +                       if (!twa_command_mapped(srb)) {
->                                 if (srb->sc_data_direction == DMA_TO_DEVICE ||
->                                     srb->sc_data_direction == DMA_BIDIRECTIONAL)
->                                         scsi_sg_copy_to_buffer(srb,
-> @@ -1905,7 +1919,7 @@ static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int re
->  {
->         struct scsi_cmnd *cmd = tw_dev->srb[request_id];
->
-> -       if (scsi_bufflen(cmd) < TW_MIN_SGL_LENGTH &&
-> +       if (!twa_command_mapped(cmd) &&
->             (cmd->sc_data_direction == DMA_FROM_DEVICE ||
->              cmd->sc_data_direction == DMA_BIDIRECTIONAL)) {
->                 if (scsi_sg_count(cmd) == 1) {
-> --
-> 1.9.1
->
+>         *fmt = NULL;
+> -       for (i = 0; additional[i].text; i++)
+> +       for (i = 0; i < ARRAY_SIZE(additional); i++) {
+>                 if (additional[i].code12 == code)
+> -                       return additional[i].text;
+> +                       return additional_text + offset;
+> +               offset += additional[i].size;
 
-Christoph/James,
+You don't seem to be accounting for the null bytes here.
 
-Thanks for fixing this.  The patch looks good to me.
+Thanks,
 
-Acked-by: Adam Radford <aradford@gmail.com>
+-- 
+Julian Calaby
 
--Adam
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
