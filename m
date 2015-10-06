@@ -1,93 +1,42 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
-Date: Tue, 06 Oct 2015 17:39:09 +0200
-Message-ID: <878u7gm2g2.fsf@rasmusvillemoes.dk>
-References: <87h9mbg6h1.fsf@rasmusvillemoes.dk>
-	<20151003171437.GA20847@infradead.org>
-	<87bncf1u4p.fsf@rasmusvillemoes.dk>
-	<CAGRGNgXt6qt4K+O9u+Y45rZNh07X=6wh7CdCwJ4mwiYkjXyCWA@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/2] be2iscsi : Revert ownership and update MAINTAINER
+Date: Tue, 06 Oct 2015 10:43:39 -0500
+Message-ID: <5613EC2B.30208@cs.wisc.edu>
+References: <1435963328-29071-1-git-send-email-ketan.mukadam@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGRGNgXt6qt4K+O9u+Y45rZNh07X=6wh7CdCwJ4mwiYkjXyCWA@mail.gmail.com>
-	(Julian Calaby's message of "Tue, 6 Oct 2015 12:32:47 +1100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41745 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751829AbbJFPnr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Oct 2015 11:43:47 -0400
+In-Reply-To: <1435963328-29071-1-git-send-email-ketan.mukadam@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ketan Mukadam <ketan.mukadam@avagotech.com>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 06 2015, Julian Calaby <julian.calaby@gmail.com> wrote:
+On 07/03/2015 05:42 PM, Ketan Mukadam wrote:
+> Revert the ownership to Emulex and update the MAINTAINER for be2iscsi
+> 
+> Ketan Mukadam (2):
+>   MAINTAINERS: Update MAINTAINER list
+>   be2iscsi: Revert ownership to Emulex
+> 
+>  MAINTAINERS                      | 4 ++--
+>  drivers/scsi/be2iscsi/Kconfig    | 4 ++--
+>  drivers/scsi/be2iscsi/Makefile   | 2 +-
+>  drivers/scsi/be2iscsi/be.h       | 4 ++--
+>  drivers/scsi/be2iscsi/be_cmds.c  | 4 ++--
+>  drivers/scsi/be2iscsi/be_cmds.h  | 4 ++--
+>  drivers/scsi/be2iscsi/be_iscsi.c | 4 ++--
+>  drivers/scsi/be2iscsi/be_main.c  | 8 ++++----
+>  drivers/scsi/be2iscsi/be_main.h  | 6 +++---
+>  drivers/scsi/be2iscsi/be_mgmt.c  | 4 ++--
+>  drivers/scsi/be2iscsi/be_mgmt.h  | 4 ++--
+>  11 files changed, 24 insertions(+), 24 deletions(-)
+> 
 
-> Hi Rasmus,
->
->>
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index 47aaccd5e68e..ccd34b0481cd 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -292,17 +292,31 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
->>
->>  struct error_info {
->>         unsigned short code12;  /* 0x0302 looks better than 0x03,0x02 */
->> -       const char * text;
->> +       unsigned short size;
->>  };
->>
->>
->> +/*
->> + * There are 700+ entries in this table. To save space, we don't store
->> + * (code, pointer) pairs, which would make sizeof(struct
->> + * error_info)==16 on 64 bits. Rather, the second element just stores
->> + * the size (including \0) of the corresponding string, and we use the
->> + * sum of these to get the appropriate offset into additional_text
->> + * defined below. This approach saves 12 bytes per entry.
->> + */
->>  static const struct error_info additional[] =
->>  {
->> -#define SENSE_CODE(c, s) {c, s},
->> +#define SENSE_CODE(c, s) {c, sizeof(s)},
->>  #include "sense_codes.h"
->>  #undef SENSE_CODE
->>  };
->>
->> +static const char *additional_text =
->> +#define SENSE_CODE(c, s) s "\0"
->> +#include "sense_codes.h"
->> +#undef SENSE_CODE
->> +       ;
->> +
->>  struct error_info2 {
->>         unsigned char code1, code2_min, code2_max;
->>         const char * str;
->> @@ -364,11 +378,14 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
->>  {
->>         int i;
->>         unsigned short code = ((asc << 8) | ascq);
->> +       unsigned offset = 0;
->>
->>         *fmt = NULL;
->> -       for (i = 0; additional[i].text; i++)
->> +       for (i = 0; i < ARRAY_SIZE(additional); i++) {
->>                 if (additional[i].code12 == code)
->> -                       return additional[i].text;
->> +                       return additional_text + offset;
->> +               offset += additional[i].size;
->
-> You don't seem to be accounting for the null bytes here.
+Patches look fine to me.
 
-Well, no, I account for the nul bytes where I define the table (the
-comment actually says as much). sizeof("foo") is 4. Since
-additional_text ends up pointing to a string containing
-
-"foo" "\0" "xyzzy" "\0" "..." "\0"
-
-aka
-
-"foo\0xyzzy\0...\0"
-
-this is the right amount to skip. As I said in the cover letter, I did
-test this (so that I'd at least catch silly off-by-ones), and I do get
-the right strings out.
-
-Thanks,
-Rasmus
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
