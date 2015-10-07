@@ -1,37 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/2] be2iscsi driver update to 10.6.0.1
-Date: Wed, 07 Oct 2015 13:35:25 -0500
-Message-ID: <561565ED.5090404@cs.wisc.edu>
-References: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH] bnx2fc: reduce stack usage in __bnx2fc_enable
+Date: Wed, 7 Oct 2015 14:49:22 -0400
+Message-ID: <alpine.OSX.2.00.1510071441460.1714@dns1.prod.a4.vary.redhat.com>
+References: <5002023.QHmpbQ8s70@wuerfel> <56151E03.4050908@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42543 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503AbbJGSfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Oct 2015 14:35:33 -0400
-In-Reply-To: <1440026071-27748-1-git-send-email-sony.john@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <56151E03.4050908@redhat.com>
+Sender: netdev-owner@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Joe Carnuccio <joe.carnuccio@qlogic.com>, Yuval Mintz <Yuval.Mintz@qlogic.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Soni Jose <sony.john@avagotech.com>, linux-scsi@vger.kernel.org
 
-On 08/19/2015 06:14 PM, John Soni Jose wrote:
-> This patch is generated against the for-next branch.
-> 
-> John Soni Jose (1):
->   be2iscsi: Bump the driver version
-> 
-> John Soni Jose (1):
->   be2iscsi: Fix updating the next pointer during WRB posting
-> 
->  drivers/scsi/be2iscsi/be_main.c |   62 +++++++++++++++++++++++++++++---------
->  drivers/scsi/be2iscsi/be_main.h |    7 ++--
->  drivers/scsi/be2iscsi/be_mgmt.c |   24 ++++++++++++--
->  drivers/scsi/be2iscsi/be_mgmt.h |    7 +++-
->  4 files changed, 76 insertions(+), 24 deletions(-)
-> 
 
-Looks ok to me.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+On Wed, 7 Oct 2015, Maurizio Lombardi wrote:
+
+> Hi,
+>
+> On 10/07/2015 03:11 PM, Arnd Bergmann wrote:
+>> -	memset(&npiv_tbl, 0, sizeof(npiv_tbl));
+>> -	if (hba->cnic->get_fc_npiv_tbl(hba->cnic, &npiv_tbl))
+>> +	npiv_tbl = kzalloc(sizeof(struct cnic_fc_npiv_tbl), GFP_KERNEL);
+>> +	if (!npiv_tbl)
+>>  		goto done;
+>>
+>
+> If kzalloc() fails perhaps the function should return -ENOMEM, not zero.
+>
+
+The enablement of the fcoe interface can still proceed if this particular 
+allocation fails so returning 0 would be appropriate here.
+
+This patch looks good to me.
+
+>
+> Regards,
+> Maurizio Lombardi
+>
