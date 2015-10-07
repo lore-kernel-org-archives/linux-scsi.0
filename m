@@ -1,35 +1,48 @@
 From: Lee Duncan <lduncan@suse.com>
-Subject: [PATCHv4 0/1] Update SCSI hosts to use ida for host number mgmt
-Date: Wed,  7 Oct 2015 16:51:33 -0700
-Message-ID: <cover.1444241058.git.lduncan@suse.com>
+Subject: Re: [PATCHv3 0/1] Update SCSI hosts to use idr for host number mgmt
+Date: Wed, 7 Oct 2015 16:52:30 -0700
+Message-ID: <5615B03E.6080302@suse.com>
+References: <cover.1444157464.git.lduncan@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1444157464.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch updates the SCSI hosts module to use the ida
-index-management routines to manage its host_no index instead
-of using an ATOMIC integer. This means that host numbers
-can now be reclaimed and re-used.
+Duplicate email, please ignore
 
-NOTE: it was not feasible to use idr_*() functions instead of
-ida_*() functions, since using idr_find() without additional
-locking to find our Scsi_Host structure left a window between
-idr lookup and host structure deletion that would have
-required additional locking to close.
-
-Changes from v3:
- - Switched from idr to ida since managing our instance
-   pointer required extra locking
-Changes from v2 and v1:
- - First two version used idr instead of ida
-
-Lee Duncan (1):
-  SCSI: hosts: update to use ida_simple for host_no management
-
- drivers/scsi/hosts.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+On 10/07/2015 04:47 PM, Lee Duncan wrote:
+> This patch updates the SCSI hosts module to use the idr
+> index-management routines to manage its host_no index instead
+> of using an ATOMIC integer. This means that host numbers
+> can now be reclaimed and re-used.
+> 
+> It also updates the hosts module to use the idr routine idr_find()
+> to lookup hosts based on the host number, hopefully speeding
+> up said lookup.
+> 
+> After noticing that my idr calling sequences where very close
+> to those in other modules, I considered creating some idr helper
+> functions (and using them), but because idr usage almost always
+> requires the caller to manage their own locks, I gave up on
+> this approach (as suggested by Tejon -- thank you).
+> 
+> Changes from v1:
+>  - no longer using helper routines
+> Changes from v2:
+>  - added back missing scsi_host_get() in scsi_host_lookup()
+> 
+> Lee Duncan (1):
+>   SCSI: update hosts module to use idr index management
+> 
+>  drivers/scsi/hosts.c | 61 ++++++++++++++++++++++++++--------------------------
+>  1 file changed, 31 insertions(+), 30 deletions(-)
+> 
 
 -- 
-2.1.4
+Lee Duncan
+SUSE Labs
