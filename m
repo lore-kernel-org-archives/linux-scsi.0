@@ -1,40 +1,58 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] bnx2fc: reduce stack usage in __bnx2fc_enable
-Date: Wed, 7 Oct 2015 14:49:22 -0400
-Message-ID: <alpine.OSX.2.00.1510071441460.1714@dns1.prod.a4.vary.redhat.com>
-References: <5002023.QHmpbQ8s70@wuerfel> <56151E03.4050908@redhat.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCHv2 1/1] SCSI: update hosts module to use idr index
+ management
+Date: Wed, 7 Oct 2015 22:23:37 +0200
+Message-ID: <56157F49.5030101@suse.com>
+References: <cover.1444085255.git.lduncan@suse.com>
+ <1a69690d615610c1dee725db7e6d81cf2db28266.1444085255.git.lduncan@suse.com>
+ <20151006094040.GA24624@infradead.org> <56140188.6070107@suse.com>
+ <1444151854.2245.18.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <56151E03.4050908@redhat.com>
-Sender: netdev-owner@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Joe Carnuccio <joe.carnuccio@qlogic.com>, Yuval Mintz <Yuval.Mintz@qlogic.com>, "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1444151854.2245.18.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Lee Duncan <lduncan@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On Wed, 7 Oct 2015, Maurizio Lombardi wrote:
-
-> Hi,
->
-> On 10/07/2015 03:11 PM, Arnd Bergmann wrote:
->> -	memset(&npiv_tbl, 0, sizeof(npiv_tbl));
->> -	if (hba->cnic->get_fc_npiv_tbl(hba->cnic, &npiv_tbl))
->> +	npiv_tbl = kzalloc(sizeof(struct cnic_fc_npiv_tbl), GFP_KERNEL);
->> +	if (!npiv_tbl)
->>  		goto done;
+On 10/06/2015 07:17 PM, James Bottomley wrote:
+> On Tue, 2015-10-06 at 10:14 -0700, Lee Duncan wrote:
+>> On 10/06/2015 02:40 AM, Christoph Hellwig wrote:
+>>>>   struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+>>>>   {
+>>>> -	struct device *cdev;
+>>>> -	struct Scsi_Host *shost = NULL;
+>>>> -
+>>>> -	cdev = class_find_device(&shost_class, NULL, &hostnum,
+>>>> -				 __scsi_host_match);
+>>>> -	if (cdev) {
+>>>> -		shost = scsi_host_get(class_to_shost(cdev));
+>>>> -		put_device(cdev);
+>>>> -	}
+>>>> +	struct Scsi_Host *shost;
+>>>> +
+>>>> +	spin_lock(&host_index_lock);
+>>>> +	shost = idr_find(&host_index_idr, hostnum);
+>>>> +	spin_unlock(&host_index_lock);
+>>>> +
+>>>>   	return shost;
+>>>
+>>> How does this actually grab a reference to the host?
 >>
+>> Good catch -- I should have noticed that.
+>>
+>> I will resubmit the patch.
 >
-> If kzalloc() fails perhaps the function should return -ENOMEM, not zero.
+> I'll wait to see what you produce, but I don't think, using a separate
+> idr array, you can close the race window between lookup and get.  One of
+> the nice things about using the cdev iterator is that the get is part of
+> the lookup process.
 >
+Hmm. Should be possible if you free up the IDR in scsi_remove_host(), 
+just after setting the state to SHOST_DEL.
 
-The enablement of the fcoe interface can still proceed if this particular 
-allocation fails so returning 0 would be appropriate here.
+Cheers,
 
-This patch looks good to me.
-
->
-> Regards,
-> Maurizio Lombardi
->
+Hannes
