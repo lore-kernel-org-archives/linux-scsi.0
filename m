@@ -1,102 +1,64 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: RFC: reduce CONFIG_SCSI_CONSTANTS impact by 4k
-Date: Wed, 7 Oct 2015 10:01:40 +1100
-Message-ID: <CAGRGNgVrQY7dQbgBYE3Lp6nixXFjVFEDYk1FPi0i+p6cr2QT1Q@mail.gmail.com>
-References: <87h9mbg6h1.fsf@rasmusvillemoes.dk> <20151003171437.GA20847@infradead.org>
- <87bncf1u4p.fsf@rasmusvillemoes.dk> <CAGRGNgXt6qt4K+O9u+Y45rZNh07X=6wh7CdCwJ4mwiYkjXyCWA@mail.gmail.com>
- <878u7gm2g2.fsf@rasmusvillemoes.dk>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 1/1] scsi: storvsc: Fix a bug in the handling of SRB status
+ flags
+Date: Tue,  6 Oct 2015 18:04:01 -0700
+Message-ID: <1444179841-25411-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <878u7gm2g2.fsf@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Rasmus,
+SRB status can have additional information. Mask these out before processing SRB status.
 
-On Wed, Oct 7, 2015 at 2:39 AM, Rasmus Villemoes
-<linux@rasmusvillemoes.dk> wrote:
-> On Tue, Oct 06 2015, Julian Calaby <julian.calaby@gmail.com> wrote:
->
->> Hi Rasmus,
->>
->>>
->>> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->>> index 47aaccd5e68e..ccd34b0481cd 100644
->>> --- a/drivers/scsi/constants.c
->>> +++ b/drivers/scsi/constants.c
->>> @@ -292,17 +292,31 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
->>>
->>>  struct error_info {
->>>         unsigned short code12;  /* 0x0302 looks better than 0x03,0x02 */
->>> -       const char * text;
->>> +       unsigned short size;
->>>  };
->>>
->>>
->>> +/*
->>> + * There are 700+ entries in this table. To save space, we don't store
->>> + * (code, pointer) pairs, which would make sizeof(struct
->>> + * error_info)==16 on 64 bits. Rather, the second element just stores
->>> + * the size (including \0) of the corresponding string, and we use the
->>> + * sum of these to get the appropriate offset into additional_text
->>> + * defined below. This approach saves 12 bytes per entry.
->>> + */
->>>  static const struct error_info additional[] =
->>>  {
->>> -#define SENSE_CODE(c, s) {c, s},
->>> +#define SENSE_CODE(c, s) {c, sizeof(s)},
->>>  #include "sense_codes.h"
->>>  #undef SENSE_CODE
->>>  };
->>>
->>> +static const char *additional_text =
->>> +#define SENSE_CODE(c, s) s "\0"
->>> +#include "sense_codes.h"
->>> +#undef SENSE_CODE
->>> +       ;
->>> +
->>>  struct error_info2 {
->>>         unsigned char code1, code2_min, code2_max;
->>>         const char * str;
->>> @@ -364,11 +378,14 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
->>>  {
->>>         int i;
->>>         unsigned short code = ((asc << 8) | ascq);
->>> +       unsigned offset = 0;
->>>
->>>         *fmt = NULL;
->>> -       for (i = 0; additional[i].text; i++)
->>> +       for (i = 0; i < ARRAY_SIZE(additional); i++) {
->>>                 if (additional[i].code12 == code)
->>> -                       return additional[i].text;
->>> +                       return additional_text + offset;
->>> +               offset += additional[i].size;
->>
->> You don't seem to be accounting for the null bytes here.
->
-> Well, no, I account for the nul bytes where I define the table (the
-> comment actually says as much). sizeof("foo") is 4. Since
-> additional_text ends up pointing to a string containing
->
-> "foo" "\0" "xyzzy" "\0" "..." "\0"
->
-> aka
->
-> "foo\0xyzzy\0...\0"
->
-> this is the right amount to skip. As I said in the cover letter, I did
-> test this (so that I'd at least catch silly off-by-ones), and I do get
-> the right strings out.
+This patch was sent as part of a collection of patches more than a year ago.
+While the rest of the patches in the set were comitted, this patch was not.
+I woulod like to thank Olaf for noticing that this patch was not committed
+upstream.
 
-Ah, that makes sense. It just didn't look right.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Thanks,
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 072c11e..face2e6 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -349,11 +349,14 @@ enum storvsc_request_type {
+  */
+ 
+ #define SRB_STATUS_AUTOSENSE_VALID	0x80
++#define SRB_STATUS_QUEUE_FROZEN		0x40
+ #define SRB_STATUS_INVALID_LUN	0x20
+ #define SRB_STATUS_SUCCESS	0x01
+ #define SRB_STATUS_ABORTED	0x02
+ #define SRB_STATUS_ERROR	0x04
+ 
++#define SRB_STATUS(status) \
++	(status & ~(SRB_STATUS_AUTOSENSE_VALID | SRB_STATUS_QUEUE_FROZEN))
+ /*
+  * This is the end of Protocol specific defines.
+  */
+@@ -858,7 +861,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 	void (*process_err_fn)(struct work_struct *work);
+ 	bool do_work = false;
+ 
+-	switch (vm_srb->srb_status) {
++	switch (SRB_STATUS(vm_srb->srb_status)) {
+ 	case SRB_STATUS_ERROR:
+ 		/*
+ 		 * If there is an error; offline the device since all
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+1.7.4.1
