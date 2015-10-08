@@ -1,46 +1,181 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: SSP frame iu defines
-Date: Thu, 8 Oct 2015 15:47:36 +0100
-Message-ID: <56168208.2020404@huawei.com>
-References: <56167B0D.5040303@huawei.com> <5172892.J8LUuCdX1I@wuerfel>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
+Date: Thu, 8 Oct 2015 15:46:46 +0000
+Message-ID: <D23B3DD9.BA955%himanshu.madhani@qlogic.com>
+References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
+ <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
+ <56153682.1030801@gmail.com>
+ <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_000_D23B3DD9BA955himanshumadhaniqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:5000 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933257AbbJHOsC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 10:48:02 -0400
-In-Reply-To: <5172892.J8LUuCdX1I@wuerfel>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:27598 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933645AbbJHPqw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 11:46:52 -0400
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t98Fh2Le032488
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Oct 2015 08:46:48 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1xdu9yg0eq-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2015 08:46:48 -0700
+In-Reply-To: <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, hare@suse.de, zhangfei <zhangfei.gao@linaro.org>, john.garry2@mail.dcu.ie, "xuwei (O)" <xuwei5@hisilicon.com>
+To: Julian Calaby <julian.calaby@gmail.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On 08/10/2015 15:22, Arnd Bergmann wrote:
-> On Thursday 08 October 2015 15:17:49 John Garry wrote:
->> Hi,
+--_000_D23B3DD9BA955himanshumadhaniqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <270952742028FF4D98FA3EE4BA40BA41@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
+
+
+
+On 10/7/15, 4:41 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
+
+>Hi Xose,
+>
+>On Thu, Oct 8, 2015 at 2:13 AM, Xose Vazquez Perez
+><xose.vazquez@gmail.com> wrote:
+>> On Fri, May 22, 2015 at 10:00 AM, Julian Calaby
+>><julian.calaby@gmail.com> wrote:
 >>
->> For a new driver I am preparing for a SAS controller, I need defintions
->> for the SSP command and TMF iu structures. Currently these are defined
->> in the following:
->> ssp_command_iu, ssp_task_iu: drivers/scsi/aic94xx_sas.h
->> ssp_cmd_iu, ssp_task_iu: drivers/scsi/isci/sas.h
+>>> Some qla2xxx devices have firmware stored in flash on the device,
+>>> however for debugging and triage purposes, Qlogic staff like to
+>>> be able to load known-good versions of these firmwares through
+>>> request_firmware().
+>>>
+>>> These firmware files were never distributed and are unlikely to ever
+>>> be released publically, so to hide these missing firmware files from
+>>> scripts which check such things, (e.g. Debian's initramfs-tools) put
+>>> them behind a new EXPERT Kconfig option.
 >>
->> I plan to move them to include/scsi/sas.h . Any objections?
+>>
+>> What is state of this patch ?
 >
-> Hi John,
+>Apparently nobody cared, either from qLogic or linux-scsi.
 >
-> I think a question like this is better asked by sending a patch,
-> to make it easier to see what the resulting change is.
->
-> 	Arnd
->
->
-OK, can I put this together.
-I feel that the code may get messy due to byte-ordering difference in 
-isci versions.
+>I'm not overly fussed whether it goes in or not, it was more a point
+>in the discussion that proceeded it, however it does solve the
+>problems in the discussion that preceded it.
 
-Regards,
-John
+This patch Looks good.
 
+Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
+
+>
+>Thanks,
+>
+>--=20
+>Julian Calaby
+>
+>Email: julian.calaby@gmail.com
+>Profile: http://www.google.com/profiles/julian.calaby/
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--_000_D23B3DD9BA955himanshumadhaniqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IswEAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADk5QzkwMzY0
+MkU5QTVCNDk4RDNDQzAzQTJBQzlBOEEwAEIHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HCgAIAA8A
+LgAuAAQAZwEBIIADAA4AAADfBwoACAAPAC4ALgAEAGcBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAD4AAABSZTogW1BBVENIIGZvci1uZXh0XSBzY3NpOiBxbGEyeHh4OiBI
+aWRlIHVuYXZhaWxhYmxlIGZpcm13YXJlAIUVAQOQBgAoEwAANAAAAAIBfwABAAAALQAAADxEMjNC
+M0REOS5CQTk1NSVoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+AAAAAAsAHw4BAAAAAgEJEAEA
+AAAMBQAACAUAAAwIAABMWkZ1TQ05x2EACmZiaWQEAABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MC
+AARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBz
+CfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiAD
+UiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL
+8tpsC4BlCoEhpE8DoB6QAC83LzE1LCA0QDo0MSBQTSMQImxKdSGgA5FDB0ABoHnQIiA8aiPjLh5R
+JHE8QGcAwAMQJTADcD4gFncDYBAgOiGcPkhp5CBYGRBlLCc2JzYicUhUaHUjEE9jBUA4NyMQAdAi
+8CAYgCoQOjEYMyBBI5En4iBWYfR6cQpQeiNwBJAr0Cc25Dx4J/EudiuUJa8mtjY+JkAicUYFECMQ
+TWHaeSoQMioIHpA6HqAq438j2y7HJM8t3y7lLscmQFNLA3AZ4HELYDJ4NrAgewEAHWBjB5ER0Bow
+HHBp/RsAdwrAGeAfYAWwHFELgGMccAtgc2ggAiAcwGiPGeA29CgnLzFob3c3AIcbsRrhNuFidWdn
+C4C+ZypgHcAcwAchGdFwCHBqcCfxcyMQUQkAO/Bj1ThBYQEgICGgaxngGJB9NXliGeABoB5wPqE+
+UG8SYRxga2468G4tZ/pvBHAgGjEAkAIgBCAZMH85citRN8YEIDmAA2A70GgvNXkJcCuxH2BfN8Yo
+Kf4uNXg1eSlgQho3sR5wBCD/OwA4IRhQOyIN4TyBO8AcQtM8QjgSdW4+YmwwAEAB/zsSPtwJcB5w
+ORAcUTzwAmC/DlAHQEowIxAZID/yaA3Q+z6RQgNtBAE8Akb9A1I1eT8E9EfBTWARwBvQOZBja704
+QHVRITmAPAE9YSgtELBnLiBEO7AkAScEIKULgGk8gGFtA9AtGJDpBvBzKTzhdDV5OYEcsB8/gFIR
+STFIIQfgRVhQ4EVSVCBLG+E3wDwgvm8FMEFxRThX7yZAVxHQfwVABAA98hAgQbRZ8QqwdGVRIT8o
+PkFwCrEJ8HT3SjFAkAbgZDAAHlAJcSMQnmVTkDmQO0EcknFMPbPjBbEhoXV4LQTwAJBFN7knNkkn
+HLBAkAVAbxox+UoxZnUEEBxRUPASEF4y/VOQIEDgB5E4wQWxYVEjEP9i8TgABCAEYDghViA9IAuA
+71SnOME5gwQAY2IRQXE5cf0qcXADYDcwCYA4kmPxOubtYvFkYzIZIGw3kTmBJzb7Z0E/wW1jU2YP
+ZxMFkGeV30U2IZUpYFrXXtBvH1BjERsEcGztQVGACYAtQnlcOiAnsAOBOSB1L9Fk2xmhJ8A8TWBw
+1C4AwHFj/kA2cD2yNCMmzSc2KWAAcPMfUCgvLS0DMCdFMY8oer5FM+JwkDL/NAQnNlADYAtHgnCQ
+aAJAcDovL253fFBSoEDwZx5wNCIv62dBR4MveWsvdfh0h0AQ+0nQUbBiBPI/gRyEWsIhoP8fYHCQ
+EgA8UjmRIaIjsIAK/19oJKALgSdFOYJdQ0HBViDdB4FzPLJAAQDAagWwaNDJBGBAdhgwci4+gASg
+1UogLgWwZyc2TWSihmdfOLECECpie9aHDS+GZy31iWIue+BtCVAhqxVCjbAfAEIAAQAAACIAAABI
+AGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAGUAAQAAADgAAABoAGkAbQBhAG4A
+cwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAA
+AFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEA
+bgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBh
+AGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADgAAABoAGkAbQBhAG4A
+cwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAQAAA
+AHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAf
+AB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAfAAAAAAAAACBKx+kvqMQ
+GZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAA
+aABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMA
+LgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAAAA
+AB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB8AAAAAAAAAIErH6S+
+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAFMATQBUAFAA
+AABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8J
+BAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAJnJA2QumltJjTzAOirJqKADABcAAQAAAEAA
+OQAAN2eJ4AHRAUAACDBisfuJ4AHRAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAA
+gIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAA
+AQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwAB
+AAAAfAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIABmAG8AcgAtAG4AZQB4AHQAXQAgAHMAYwBzAGkA
+OgAgAHEAbABhADIAeAB4AHgAOgAgAEgAaQBkAGUAIAB1AG4AYQB2AGEAaQBsAGEAYgBsAGUAIABm
+AGkAcgBtAHcAYQByAGUAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAA
+igAAADwAQwBBAEcAUgBHAE4AZwBVAEIAVwBhAHgAVgBpADYAZABXAEcAPQBOAEEAYgAzAHQAKwBV
+AF8ASgArAEUAQgByAFYAPQBwAGcAeABSAG0ATgBxAEsAdABzAEsAUwBzAEUAVwBDAGcAQABtAGEA
+aQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAlAAAAAQHQlCMRaN+0CzAVfkSM
+HrWftdb+np5hcmgAgACODACAAJhFAAAAAB8AcAABAAAAdAAAAFsAUABBAFQAQwBIACAAZgBvAHIA
+LQBuAGUAeAB0AF0AIABzAGMAcwBpADoAIABxAGwAYQAyAHgAeAB4ADoAIABIAGkAZABlACAAdQBu
+AGEAdgBhAGkAbABhAGIAbABlACAAZgBpAHIAbQB3AGEAcgBlAAAAHwA1EAEAAABaAAAAPABEADIA
+MwBCADMARABEADkALgBCAEEAOQA1ADUAJQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBp
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+AAAAAAAfADkQAQAAAMQBAAA8ADEANAAzADIAMgA1ADIA
+OAAzADEALQA3ADUANQAxAC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGoAdQBs
+AGkAYQBuAC4AYwBhAGwAYQBiAHkAQABnAG0AYQBpAGwALgBjAG8AbQA+ACAAPABDAEEARwBSAEcA
+TgBnAFYAUwB1AE0ARAAzAEIANABCADAASgByAC0AVABPAFQANQBLAHIANABOAFIAdgBKAFIAPQAw
+AGUAMwB0AHUANwAxAE8AeABVAHoAUQB0AHIAcQAyAHMAZwBAAG0AYQBpAGwALgBnAG0AYQBpAGwA
+LgBjAG8AbQA+ACAAPAA1ADYAMQA1ADMANgA4ADIALgAxADAAMwAwADgAMAAxAEAAZwBtAGEAaQBs
+AC4AYwBvAG0APgAgADwAQwBBAEcAUgBHAE4AZwBVAEIAVwBhAHgAVgBpADYAZABXAEcAPQBOAEEA
+YgAzAHQAKwBVAF8ASgArAEUAQgByAFYAPQBwAGcAeABSAG0ATgBxAEsAdABzAEsAUwBzAEUAVwBD
+AGcAQABtAGEAaQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMOYr8ongAdEB
+AwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIzLTE1MTAwODE1NDY0
+NlotODI4MTQAAAAfABUQAQAAAFgAAAAyADcAMAA5ADUAMgA3ADQAMgAwADIAOABGAEYANABEADkA
+OABGAEEAMwBFAEUANABCAEEANAAwAEIAQQA0ADEAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEU
+MAEAAAAMAAAAsAAAADfsDsNPAAAAHwD6PwEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQA
+aABhAG4AaQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBu
+AHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8A
+MQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAA
+AEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAA
+AQAAAFoBAABJAEkAPQAwADEAMAAxAEQAMQAwADEARQAwADgAQQBDADkAOAAwAEQANAA2ADEAQQA1
+ADgANwA1ADcANAA5ADkANgAwAEMAOABCAEUANAA4ADcANQAwAEEAMwA0ADcAOwBTAEIATQBJAEQA
+PQAzADsAUwAxAD0APABDAEEARwBSAEcATgBnAFUAQgBXAGEAeABWAGkANgBkAFcARwA9AE4AQQBi
+ADMAdAArAFUAXwBKACsARQBCAHIAVgA9AHAAZwB4AFIAbQBOAHEASwB0AHMASwBTAHMARQBXAEMA
+ZwBAAG0AYQBpAGwALgBnAG0AYQBpAGwALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQBy
+AHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0AGEA
+ZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBz
+AC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABG
+AQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAw
+AC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwA
+YQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAAA+5A==
+
+--_000_D23B3DD9BA955himanshumadhaniqlogiccom_--
