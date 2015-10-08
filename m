@@ -1,89 +1,51 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
-Date: Fri, 9 Oct 2015 10:10:25 +1100
-Message-ID: <CAGRGNgXAO-ROeJ-OEcUH6v-1T5A+wkdQBk3sQAw0ytRt3K+ASQ@mail.gmail.com>
-References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
- <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
- <56153682.1030801@gmail.com> <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
- <D23B3DD9.BA955%himanshu.madhani@qlogic.com> <1444321066.2312.1.camel@HansenPartnership.com>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: dm-multipath test scripts
+Date: Thu, 8 Oct 2015 23:10:34 +0000
+Message-ID: <20151008231033.GA3952@xzibit.linux.bs1.fc.nec.co.jp>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+ <1444203081.3958.2.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34729 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909AbbJHXKp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 19:10:45 -0400
-Received: by igcpb10 with SMTP id pb10so26270874igc.1
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2015 16:10:44 -0700 (PDT)
-In-Reply-To: <1444321066.2312.1.camel@HansenPartnership.com>
+Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:60410 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753909AbbJHXLP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 19:11:15 -0400
+In-Reply-To: <1444203081.3958.2.camel@suse.de>
+Content-Language: ja-JP
+Content-ID: <EAC4FEFD2E06D24EAFF05934C2D296A0@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi James,
-
-On Fri, Oct 9, 2015 at 3:17 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Thu, 2015-10-08 at 15:46 +0000, Himanshu Madhani wrote:
+On 10/07/15 16:31, Johannes Thumshirn wrote:
+> On Wed, 2015-10-07 at 05:39 +0000, Junichi Nomura wrote:
+>> This is a set of scripts for kernel-side dm-multipath testing.
+>> Current
+>> set of scripts are stress testing of extreme situation and its
+>> coverage
+>> is limited. But recently found dm-mpath regressions should be
+>> detectable
+>> with this. I hope this helps people working on dm-multipath related
+>> code
+>> as a regression test set.
 >>
->> On 10/7/15, 4:41 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
->>
->> >Hi Xose,
->> >
->> >On Thu, Oct 8, 2015 at 2:13 AM, Xose Vazquez Perez
->> ><xose.vazquez@gmail.com> wrote:
->> >> On Fri, May 22, 2015 at 10:00 AM, Julian Calaby
->> >><julian.calaby@gmail.com> wrote:
->> >>
->> >>> Some qla2xxx devices have firmware stored in flash on the device,
->> >>> however for debugging and triage purposes, Qlogic staff like to
->> >>> be able to load known-good versions of these firmwares through
->> >>> request_firmware().
->> >>>
->> >>> These firmware files were never distributed and are unlikely to ever
->> >>> be released publically, so to hide these missing firmware files from
->> >>> scripts which check such things, (e.g. Debian's initramfs-tools) put
->> >>> them behind a new EXPERT Kconfig option.
->> >>
->> >>
->> >> What is state of this patch ?
->> >
->> >Apparently nobody cared, either from qLogic or linux-scsi.
->> >
->> >I'm not overly fussed whether it goes in or not, it was more a point
->> >in the discussion that proceeded it, however it does solve the
->> >problems in the discussion that preceded it.
->>
->> This patch Looks good.
->>
->> Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
->
-> Actually, this isn't helpful.  You now add another option over which the
-> distributions have to make a choice.  Is this interface necessary and
-> useful?  If yes, then it should be compiled in and if not, just remove
-> it ... don't do death by 1000 Kconfig options.
+>> Though this is created as a patch for linux kernel source, it's just
+>> for
+>> convenience of kernel developers (I don't have a place to host this
+>> kind
+>> of scripts). If there are better place to contribute this, please let
+>> me know.
+> 
+> Have you considered placing it under tools/testing/selftests/? I think
+> people are looking for testing there instead of Documentation.
 
-The original issue here was that the qla2xxx driver specifies two
-firmware files which are not publicly available.
+Yes, but I think (the current contents of) my scripts don't fit well for
+the purpose of 'tools/testing/selftests', which is a place for unit tests.
+My scripts are for long-run stress testing and may need parameter
+tuning depending on running environment.
 
-They aren't publicly available because the hardware that uses them
-always stores it's firmware in flash.
-
-The firmware files are specified in the driver because qLogic support
-likes to be able to load a known-good firmware file from disk for
-debugging faulty hardware.
-
-Some distributions (Debian is a good example) will complain vocally
-about missing firmware files when installing kernels or producing
-initramfs images.
-
-This patch was intended as an ugly compromise between all of this.
-
-Thanks,
-
+Thanks for the comment.
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Jun'ichi Nomura, NEC Corporation
