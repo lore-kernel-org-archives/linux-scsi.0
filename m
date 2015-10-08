@@ -1,842 +1,532 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi: use host wide tags by default
-Date: Thu,  8 Oct 2015 09:28:04 +0100
-Message-ID: <1444292884-8622-2-git-send-email-hch@lst.de>
-References: <1444292884-8622-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49714 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbbJHIby (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 04:31:54 -0400
-In-Reply-To: <1444292884-8622-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v3] scsi: ufs: add ioctl interface for query request
+Date: Thu,  8 Oct 2015 14:09:24 +0300
+Message-ID: <1444302569-30740-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Noa Rubens <noag@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:ABI/API" <linux-api@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: axboe@kernel.dk
 
-This patch changes the !blk-mq path to the same defaults as the blk-mq
-I/O path by always enabling block tagging, and always using host wide
-tags.  We've had blk-mq available for a few releases so bugs with
-this mode should have been ironed out, and this ensures we get better
-coverage of over tagging setup over different configs.
+This patch exposes the ioctl interface for UFS driver via SCSI device
+ioctl interface. As of now UFS driver would provide the ioctl for query
+interface to connected UFS device.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+Signed-off-by: Noa Rubens <noag@codeaurora.org>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+
 ---
- drivers/ata/libata-scsi.c                 |  3 -
- drivers/infiniband/ulp/srp/ib_srp.c       |  5 --
- drivers/message/fusion/mptsas.c           |  1 -
- drivers/scsi/53c700.c                     | 11 ++--
- drivers/scsi/advansys.c                   |  6 --
- drivers/scsi/aic7xxx/aic79xx_osm.c        |  1 -
- drivers/scsi/aic7xxx/aic7xxx_osm.c        |  1 -
- drivers/scsi/aic94xx/aic94xx_init.c       |  1 -
- drivers/scsi/bfa/bfad_im.c                |  2 -
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c         |  1 -
- drivers/scsi/csiostor/csio_scsi.c         |  2 -
- drivers/scsi/esas2r/esas2r_main.c         |  1 -
- drivers/scsi/esp_scsi.c                   |  1 -
- drivers/scsi/fcoe/fcoe.c                  |  1 -
- drivers/scsi/fnic/fnic_main.c             |  8 ---
- drivers/scsi/hosts.c                      |  7 +++
- drivers/scsi/hpsa.c                       | 10 +---
- drivers/scsi/ibmvscsi/ibmvfc.c            |  1 -
- drivers/scsi/ipr.c                        |  1 -
- drivers/scsi/isci/init.c                  |  1 -
- drivers/scsi/lpfc/lpfc_scsi.c             |  3 -
- drivers/scsi/megaraid/megaraid_sas_base.c |  8 ---
- drivers/scsi/mvsas/mv_init.c              |  1 -
- drivers/scsi/pm8001/pm8001_init.c         |  1 -
- drivers/scsi/pmcraid.c                    |  1 -
- drivers/scsi/qla2xxx/qla_os.c             |  1 -
- drivers/scsi/qla4xxx/ql4_os.c             |  8 ---
- drivers/scsi/scsi.c                       | 27 +--------
- drivers/scsi/scsi_scan.c                  |  3 +-
- drivers/scsi/snic/snic_main.c             | 10 ----
- drivers/scsi/stex.c                       |  8 ---
- drivers/scsi/ufs/ufshcd.c                 |  8 ---
- drivers/target/loopback/tcm_loop.c        |  1 -
- drivers/usb/storage/uas.c                 |  5 --
- include/scsi/scsi_host.h                  |  5 --
- include/scsi/scsi_tcq.h                   | 95 +++++++------------------------
- 36 files changed, 39 insertions(+), 211 deletions(-)
+ drivers/scsi/ufs/ufs.h        |  53 +++--------
+ drivers/scsi/ufs/ufshcd.c     | 208 +++++++++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi.h           |   1 +
+ include/uapi/scsi/Kbuild      |   1 +
+ include/uapi/scsi/ufs/Kbuild  |   3 +
+ include/uapi/scsi/ufs/ioctl.h |  58 ++++++++++++
+ include/uapi/scsi/ufs/ufs.h   |  67 ++++++++++++++
+ 7 files changed, 348 insertions(+), 43 deletions(-)
+ create mode 100644 include/uapi/scsi/ufs/Kbuild
+ create mode 100644 include/uapi/scsi/ufs/ioctl.h
+ create mode 100644 include/uapi/scsi/ufs/ufs.h
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3131adc..3050fc7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3705,9 +3705,6 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		 */
- 		shost->max_host_blocked = 1;
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 05e0f23..eab739d 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -38,6 +38,7 @@
  
--		if (scsi_init_shared_tag_map(shost, host->n_tags))
--			goto err_add;
--
- 		rc = scsi_add_host_with_dma(ap->scsi_host,
- 						&ap->tdev, ap->host->dev);
- 		if (rc)
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 267dc4f..b8a214a 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2745,7 +2745,6 @@ static struct scsi_host_template srp_template = {
- 	.cmd_per_lun			= SRP_DEFAULT_CMD_SQ_SIZE,
- 	.use_clustering			= ENABLE_CLUSTERING,
- 	.shost_attrs			= srp_host_attrs,
--	.use_blk_tags			= 1,
- 	.track_queue_depth		= 1,
+ #include <linux/mutex.h>
+ #include <linux/types.h>
++#include <scsi/ufs/ufs.h>
+ 
+ #define MAX_CDB_SIZE	16
+ #define GENERAL_UPIU_REQUEST_SIZE 32
+@@ -72,6 +73,16 @@ enum {
+ 	UFS_UPIU_RPMB_WLUN		= 0xC4,
  };
  
-@@ -3169,10 +3168,6 @@ static ssize_t srp_create_target(struct device *dev,
- 	if (ret)
- 		goto out;
- 
--	ret = scsi_init_shared_tag_map(target_host, target_host->can_queue);
--	if (ret)
--		goto out;
--
- 	target->req_ring_size = target->queue_size - SRP_TSK_MGMT_SQ_SIZE;
- 
- 	if (!srp_conn_unique(target->srp_host, target)) {
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 005a88b..7ebccfa 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1994,7 +1994,6 @@ static struct scsi_host_template mptsas_driver_template = {
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
- 	.shost_attrs			= mptscsih_host_attrs,
--	.use_blk_tags			= 1,
- };
- 
- static int mptsas_get_linkerrors(struct sas_phy *phy)
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 82abfce..c80d680 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -325,7 +325,6 @@ NCR_700_detect(struct scsi_host_template *tpnt,
- 	tpnt->slave_destroy = NCR_700_slave_destroy;
- 	tpnt->slave_alloc = NCR_700_slave_alloc;
- 	tpnt->change_queue_depth = NCR_700_change_queue_depth;
--	tpnt->use_blk_tags = 1;
- 
- 	if(tpnt->name == NULL)
- 		tpnt->name = "53c700";
-@@ -1107,7 +1106,9 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 			BUG();
- 		}
- 		if(hostdata->msgin[1] == A_SIMPLE_TAG_MSG) {
--			struct scsi_cmnd *SCp = scsi_find_tag(SDp, hostdata->msgin[2]);
-+			struct scsi_cmnd *SCp;
++/**
++ * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descriptor
++ * @lun: LU number to check
++ * @return: true if the lun has a matching unit descriptor, false otherwise
++ */
++static inline bool ufs_is_valid_unit_desc_lun(u8 lun)
++{
++	return lun == UFS_UPIU_RPMB_WLUN || (lun < UFS_UPIU_MAX_GENERAL_LUN);
++}
 +
-+			SCp = scsi_host_find_tag(SDp->host, hostdata->msgin[2]);
- 			if(unlikely(SCp == NULL)) {
- 				printk(KERN_ERR "scsi%d: (%d:%d) no saved request for tag %d\n", 
- 				       host->host_no, reselection_id, lun, hostdata->msgin[2]);
-@@ -1119,7 +1120,9 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 				"reselection is tag %d, slot %p(%d)\n",
- 				hostdata->msgin[2], slot, slot->tag);
- 		} else {
--			struct scsi_cmnd *SCp = scsi_find_tag(SDp, SCSI_NO_TAG);
-+			struct scsi_cmnd *SCp;
-+
-+			SCp = scsi_host_find_tag(SDp->host, SCSI_NO_TAG);
- 			if(unlikely(SCp == NULL)) {
- 				sdev_printk(KERN_ERR, SDp,
- 					"no saved request for untagged cmd\n");
-@@ -1823,7 +1826,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
- 		       slot->tag, slot);
- 	} else {
- 		slot->tag = SCSI_NO_TAG;
--		/* must populate current_cmnd for scsi_find_tag to work */
-+		/* must populate current_cmnd for scsi_host_find_tag to work */
- 		SCp->device->current_cmnd = SCp;
- 	}
- 	/* sanity check: some of the commands generated by the mid-layer
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 4305178..519f9a4 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -10819,7 +10819,6 @@ static struct scsi_host_template advansys_template = {
- 	 * by enabling clustering, I/O throughput increases as well.
- 	 */
- 	.use_clustering = ENABLE_CLUSTERING,
--	.use_blk_tags = 1,
- };
- 
- static int advansys_wide_init_chip(struct Scsi_Host *shost)
-@@ -11211,11 +11210,6 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
- 		/* Set maximum number of queues the adapter can handle. */
- 		shost->can_queue = adv_dvc_varp->max_host_qng;
- 	}
--	ret = scsi_init_shared_tag_map(shost, shost->can_queue);
--	if (ret) {
--		shost_printk(KERN_ERR, shost, "init tag map failed\n");
--		goto err_free_dma;
--	}
- 
- 	/*
- 	 * Set the maximum number of scatter-gather elements the
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index ce96a0b..2588b8f 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -925,7 +925,6 @@ struct scsi_host_template aic79xx_driver_template = {
- 	.slave_configure	= ahd_linux_slave_configure,
- 	.target_alloc		= ahd_linux_target_alloc,
- 	.target_destroy		= ahd_linux_target_destroy,
--	.use_blk_tags		= 1,
- };
- 
- /******************************** Bus DMA *************************************/
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index a2f2c77..b846a46 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -812,7 +812,6 @@ struct scsi_host_template aic7xxx_driver_template = {
- 	.slave_configure	= ahc_linux_slave_configure,
- 	.target_alloc		= ahc_linux_target_alloc,
- 	.target_destroy		= ahc_linux_target_destroy,
--	.use_blk_tags		= 1,
- };
- 
- /**************************** Tasklet Handler *********************************/
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 31e8576..ab1ef3c 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -73,7 +73,6 @@ static struct scsi_host_template aic94xx_sht = {
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 8367c11..299c6f8 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -800,7 +800,6 @@ struct scsi_host_template bfad_im_scsi_host_template = {
- 	.shost_attrs = bfad_im_host_attrs,
- 	.max_sectors = BFAD_MAX_SECTORS,
- 	.vendor_id = BFA_PCI_VENDOR_ID_BROCADE,
--	.use_blk_tags = 1,
- };
- 
- struct scsi_host_template bfad_im_vport_template = {
-@@ -822,7 +821,6 @@ struct scsi_host_template bfad_im_vport_template = {
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = bfad_im_vport_attrs,
- 	.max_sectors = BFAD_MAX_SECTORS,
--	.use_blk_tags = 1,
- };
- 
- bfa_status_t
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 98d06d1..c741d1c8 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2797,7 +2797,6 @@ static struct scsi_host_template bnx2fc_shost_template = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.sg_tablesize		= BNX2FC_MAX_BDS_PER_CMD,
- 	.max_sectors		= 1024,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 2c4562d..c2a6f9f 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2283,7 +2283,6 @@ struct scsi_host_template csio_fcoe_shost_template = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.shost_attrs		= csio_fcoe_lport_attrs,
- 	.max_sectors		= CSIO_MAX_SECTOR_SIZE,
--	.use_blk_tags		= 1,
- };
- 
- struct scsi_host_template csio_fcoe_shost_vport_template = {
-@@ -2303,7 +2302,6 @@ struct scsi_host_template csio_fcoe_shost_vport_template = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.shost_attrs		= csio_fcoe_vport_attrs,
- 	.max_sectors		= CSIO_MAX_SECTOR_SIZE,
--	.use_blk_tags		= 1,
- };
- 
  /*
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 31f8966..33581ba 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -256,7 +256,6 @@ static struct scsi_host_template driver_template = {
- 	.proc_name			= ESAS2R_DRVR_NAME,
- 	.change_queue_depth		= scsi_change_queue_depth,
- 	.max_sectors			= 0xFFFF,
--	.use_blk_tags			= 1,
- };
- 
- int sgl_page_size = 512;
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 065b25d..71cb05b 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -2694,7 +2694,6 @@ struct scsi_host_template scsi_esp_template = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.max_sectors		= 0xffff,
- 	.skip_settle_delay	= 1,
--	.use_blk_tags		= 1,
- };
- EXPORT_SYMBOL(scsi_esp_template);
- 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index d3eb80c..1d7eb60 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -287,7 +287,6 @@ static struct scsi_host_template fcoe_shost_template = {
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.sg_tablesize = SG_ALL,
- 	.max_sectors = 0xffff,
--	.use_blk_tags = 1,
- 	.track_queue_depth = 1,
- };
- 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 8a0d4d7..58ce902 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -118,7 +118,6 @@ static struct scsi_host_template fnic_host_template = {
- 	.sg_tablesize = FNIC_MAX_SG_DESC_CNT,
- 	.max_sectors = 0xffff,
- 	.shost_attrs = fnic_attrs,
--	.use_blk_tags = 1,
- 	.track_queue_depth = 1,
- };
- 
-@@ -697,13 +696,6 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 	fnic->fnic_max_tag_id = host->can_queue;
- 
--	err = scsi_init_shared_tag_map(host, fnic->fnic_max_tag_id);
--	if (err) {
--		shost_printk(KERN_ERR, fnic->lport->host,
--			  "Unable to alloc shared tag map\n");
--		goto err_out_dev_close;
--	}
--
- 	host->max_lun = fnic->config.luns_per_tgt;
- 	host->max_id = FNIC_MAX_FCP_TARGET;
- 	host->max_cmd_len = FCOE_MAX_CMD_LEN;
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..323982f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -217,6 +217,13 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		error = scsi_mq_setup_tags(shost);
- 		if (error)
- 			goto fail;
-+	} else {
-+		shost->bqt = blk_init_tags(shost->can_queue,
-+				shost->hostt->tag_alloc_policy);
-+		if (!shost->bqt) {
-+			error = -ENOMEM;
-+			goto fail;
-+		}
- 	}
- 
- 	/*
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 40669f8..7506b65 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4983,7 +4983,6 @@ static int hpsa_scan_finished(struct Scsi_Host *sh,
- static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- {
- 	struct Scsi_Host *sh;
--	int error;
- 
- 	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
- 	if (sh == NULL) {
-@@ -5004,14 +5003,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- 	sh->hostdata[0] = (unsigned long) h;
- 	sh->irq = h->intr[h->intr_mode];
- 	sh->unique_id = sh->irq;
--	error = scsi_init_shared_tag_map(sh, sh->can_queue);
--	if (error) {
--		dev_err(&h->pdev->dev,
--			"%s: scsi_init_shared_tag_map failed for controller %d\n",
--			__func__, h->ctlr);
--			scsi_host_put(sh);
--			return error;
--	}
-+
- 	h->scsi_host = sh;
- 	return 0;
- }
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 057d277..6aa317c 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3095,7 +3095,6 @@ static struct scsi_host_template driver_template = {
- 	.max_sectors = IBMVFC_MAX_SECTORS,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = ibmvfc_attrs,
--	.use_blk_tags = 1,
- 	.track_queue_depth = 1,
- };
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index b62836d..4f2c167 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -6502,7 +6502,6 @@ static struct scsi_host_template driver_template = {
- 	.shost_attrs = ipr_ioa_attrs,
- 	.sdev_attrs = ipr_dev_attrs,
- 	.proc_name = IPR_NAME,
--	.use_blk_tags = 1,
- };
- 
- /**
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 0dfcabe..2f973df 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -170,7 +170,6 @@ static struct scsi_host_template isci_sht = {
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
- 	.shost_attrs			= isci_host_attrs,
--	.use_blk_tags			= 1,
- 	.track_queue_depth		= 1,
- };
- 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index e5eb40d..d3665cf 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5926,7 +5926,6 @@ struct scsi_host_template lpfc_template_s3 = {
- 	.max_sectors		= 0xFFFF,
- 	.vendor_id		= LPFC_NL_VENDOR_ID,
- 	.change_queue_depth	= scsi_change_queue_depth,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-@@ -5952,7 +5951,6 @@ struct scsi_host_template lpfc_template = {
- 	.max_sectors		= 0xFFFF,
- 	.vendor_id		= LPFC_NL_VENDOR_ID,
- 	.change_queue_depth	= scsi_change_queue_depth,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-@@ -5976,6 +5974,5 @@ struct scsi_host_template lpfc_vport_template = {
- 	.shost_attrs		= lpfc_vport_attrs,
- 	.max_sectors		= 0xFFFF,
- 	.change_queue_depth	= scsi_change_queue_depth,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index eaa81e5..3b3f480 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5049,7 +5049,6 @@ static int megasas_start_aen(struct megasas_instance *instance)
- static int megasas_io_attach(struct megasas_instance *instance)
- {
- 	struct Scsi_Host *host = instance->host;
--	u32 error;
- 
- 	/*
- 	 * Export parameters required by SCSI mid-layer
-@@ -5099,13 +5098,6 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 		host->hostt->eh_device_reset_handler = NULL;
- 		host->hostt->eh_bus_reset_handler = NULL;
- 	}
--	error = scsi_init_shared_tag_map(host, host->can_queue);
--	if (error) {
--		dev_err(&instance->pdev->dev,
--			"Failed to shared tag from %s %d\n",
--			__func__, __LINE__);
--		return -ENODEV;
--	}
- 
- 	/*
- 	 * Notify the mid-layer about the new controller
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index f466a6a..1b069a3 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -65,7 +65,6 @@ static struct scsi_host_template mvs_sht = {
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= mvst_host_attrs,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 5c0356f..e64b8bf 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -88,7 +88,6 @@ static struct scsi_host_template pm8001_sht = {
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= pm8001_host_attrs,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index ed31d8c..48d6224 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4254,7 +4254,6 @@ static struct scsi_host_template pmcraid_host_template = {
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = pmcraid_host_attrs,
- 	.proc_name = PMCRAID_DRIVER_NAME,
--	.use_blk_tags = 1,
- };
- 
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 913a725..26614c2 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -267,7 +267,6 @@ struct scsi_host_template qla2xxx_driver_template = {
- 	.shost_attrs		= qla2x00_host_attrs,
- 
- 	.supported_mode		= MODE_INITIATOR,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6d25879..01c3610 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -212,7 +212,6 @@ static struct scsi_host_template qla4xxx_driver_template = {
- 	.shost_attrs		= qla4xxx_host_attrs,
- 	.host_reset		= qla4xxx_host_reset,
- 	.vendor_id		= SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC,
--	.use_blk_tags		= 1,
- };
- 
- static struct iscsi_transport qla4xxx_iscsi_transport = {
-@@ -8697,13 +8696,6 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	host->can_queue = MAX_SRBS ;
- 	host->transportt = qla4xxx_scsi_transport;
- 
--	ret = scsi_init_shared_tag_map(host, MAX_SRBS);
--	if (ret) {
--		ql4_printk(KERN_WARNING, ha,
--			   "%s: scsi_init_shared_tag_map failed\n", __func__);
--		goto probe_failed;
--	}
--
- 	pci_set_drvdata(pdev, ha);
- 
- 	ret = scsi_add_host(host, &pdev->dev);
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 207d6a7..d07fb65 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -616,32 +616,11 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+  * UFS Protocol Information Unit related definitions
   */
- int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
- {
--	unsigned long flags;
--
--	if (depth <= 0)
--		goto out;
--
--	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
--
--	/*
--	 * Check to see if the queue is managed by the block layer.
--	 * If it is, and we fail to adjust the depth, exit.
--	 *
--	 * Do not resize the tag map if it is a host wide share bqt,
--	 * because the size should be the hosts's can_queue. If there
--	 * is more IO than the LLD's can_queue (so there are not enuogh
--	 * tags) request_fn's host queue ready check will handle it.
--	 */
--	if (!shost_use_blk_mq(sdev->host) && !sdev->host->bqt) {
--		if (blk_queue_tagged(sdev->request_queue) &&
--		    blk_queue_resize_tags(sdev->request_queue, depth) != 0)
--			goto out_unlock;
-+	if (depth > 0) {
-+		sdev->queue_depth = depth;
-+		wmb();
- 	}
- 
--	sdev->queue_depth = depth;
--out_unlock:
--	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
--out:
- 	return sdev->queue_depth;
- }
- EXPORT_SYMBOL(scsi_change_queue_depth);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f9f3f82..998f378 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -274,8 +274,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
- 	sdev->request_queue->queuedata = sdev;
- 
--	if (!shost_use_blk_mq(sdev->host) &&
--	    (shost->bqt || shost->hostt->use_blk_tags)) {
-+	if (!shost_use_blk_mq(sdev->host)) {
- 		blk_queue_init_tags(sdev->request_queue,
- 				    sdev->host->cmd_per_lun, shost->bqt,
- 				    shost->hostt->tag_alloc_policy);
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index b2b87ce..2b3c253 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -124,7 +124,6 @@ static struct scsi_host_template snic_host_template = {
- 	.sg_tablesize = SNIC_MAX_SG_DESC_CNT,
- 	.max_sectors = 0x800,
- 	.shost_attrs = snic_attrs,
--	.use_blk_tags = 1,
- 	.track_queue_depth = 1,
- 	.cmd_size = sizeof(struct snic_internal_io_state),
- 	.proc_name = "snic_scsi",
-@@ -533,15 +532,6 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	snic->max_tag_id = shost->can_queue;
- 
--	ret = scsi_init_shared_tag_map(shost, snic->max_tag_id);
--	if (ret) {
--		SNIC_HOST_ERR(shost,
--			      "Unable to alloc shared tag map. %d\n",
--			      ret);
--
--		goto err_dev_close;
--	}
--
- 	shost->max_lun = snic->config.luns_per_tgt;
- 	shost->max_id = SNIC_MAX_TARGET;
- 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 98a62bc..56353cd 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1374,7 +1374,6 @@ static struct scsi_host_template driver_template = {
- 	.eh_abort_handler		= stex_abort,
- 	.eh_host_reset_handler		= stex_reset,
- 	.this_id			= -1,
--	.use_blk_tags			= 1,
+@@ -127,35 +138,6 @@ enum {
+ 	UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST          = 0x81,
  };
  
- static struct pci_device_id stex_pci_tbl[] = {
-@@ -1659,13 +1658,6 @@ static int stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (err)
- 		goto out_free_irq;
- 
--	err = scsi_init_shared_tag_map(host, host->can_queue);
--	if (err) {
--		printk(KERN_ERR DRV_NAME "(%s): init shared queue failed\n",
--			pci_name(pdev));
--		goto out_free_irq;
--	}
+-/* Flag idn for Query Requests*/
+-enum flag_idn {
+-	QUERY_FLAG_IDN_FDEVICEINIT      = 0x01,
+-	QUERY_FLAG_IDN_PWR_ON_WPE	= 0x03,
+-	QUERY_FLAG_IDN_BKOPS_EN         = 0x04,
+-};
 -
- 	pci_set_drvdata(pdev, hba);
+-/* Attribute idn for Query requests */
+-enum attr_idn {
+-	QUERY_ATTR_IDN_ACTIVE_ICC_LVL	= 0x03,
+-	QUERY_ATTR_IDN_BKOPS_STATUS	= 0x05,
+-	QUERY_ATTR_IDN_EE_CONTROL	= 0x0D,
+-	QUERY_ATTR_IDN_EE_STATUS	= 0x0E,
+-};
+-
+-/* Descriptor idn for Query requests */
+-enum desc_idn {
+-	QUERY_DESC_IDN_DEVICE		= 0x0,
+-	QUERY_DESC_IDN_CONFIGURAION	= 0x1,
+-	QUERY_DESC_IDN_UNIT		= 0x2,
+-	QUERY_DESC_IDN_RFU_0		= 0x3,
+-	QUERY_DESC_IDN_INTERCONNECT	= 0x4,
+-	QUERY_DESC_IDN_STRING		= 0x5,
+-	QUERY_DESC_IDN_RFU_1		= 0x6,
+-	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+-	QUERY_DESC_IDN_POWER		= 0x8,
+-	QUERY_DESC_IDN_MAX,
+-};
+-
+ enum desc_header_offset {
+ 	QUERY_DESC_LENGTH_OFFSET	= 0x00,
+ 	QUERY_DESC_DESC_TYPE_OFFSET	= 0x01,
+@@ -278,19 +260,6 @@ enum bkops_status {
+ 	BKOPS_STATUS_MAX		 = BKOPS_STATUS_CRITICAL,
+ };
  
- 	err = scsi_add_host(host, &pdev->dev);
+-/* UTP QUERY Transaction Specific Fields OpCode */
+-enum query_opcode {
+-	UPIU_QUERY_OPCODE_NOP		= 0x0,
+-	UPIU_QUERY_OPCODE_READ_DESC	= 0x1,
+-	UPIU_QUERY_OPCODE_WRITE_DESC	= 0x2,
+-	UPIU_QUERY_OPCODE_READ_ATTR	= 0x3,
+-	UPIU_QUERY_OPCODE_WRITE_ATTR	= 0x4,
+-	UPIU_QUERY_OPCODE_READ_FLAG	= 0x5,
+-	UPIU_QUERY_OPCODE_SET_FLAG	= 0x6,
+-	UPIU_QUERY_OPCODE_CLEAR_FLAG	= 0x7,
+-	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
+-};
+-
+ /* Query response result code */
+ enum {
+ 	QUERY_RESULT_SUCCESS                    = 0x00,
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b0ade73..9065eb4 100644
+index 786df28..efeb252 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4355,7 +4355,6 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
- 	.can_queue		= UFSHCD_CAN_QUEUE,
- 	.max_host_blocked	= 1,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
+@@ -38,6 +38,7 @@
+  */
  
-@@ -5619,13 +5618,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		hba->is_irq_enabled = true;
- 	}
- 
--	/* Enable SCSI tag mapping */
--	err = scsi_init_shared_tag_map(host, host->can_queue);
--	if (err) {
--		dev_err(hba->dev, "init shared queue failed\n");
--		goto exit_gating;
--	}
--
- 	err = scsi_add_host(host, hba->dev);
- 	if (err) {
- 		dev_err(hba->dev, "scsi_add_host failed\n");
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index a556bde..e482c1b 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -377,7 +377,6 @@ static struct scsi_host_template tcm_loop_driver_template = {
- 	.use_clustering		= DISABLE_CLUSTERING,
- 	.slave_alloc		= tcm_loop_slave_alloc,
- 	.module			= THIS_MODULE,
--	.use_blk_tags		= 1,
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index f689219..2850663 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -812,7 +812,6 @@ static struct scsi_host_template uas_host_template = {
- 	.this_id = -1,
- 	.sg_tablesize = SG_NONE,
- 	.skip_settle_delay = 1,
--	.use_blk_tags = 1,
- };
- 
- #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
-@@ -929,10 +928,6 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	if (result)
- 		goto set_alt0;
- 
--	result = scsi_init_shared_tag_map(shost, devinfo->qdepth - 2);
--	if (result)
--		goto free_streams;
--
- 	usb_set_intfdata(intf, shost);
- 	result = scsi_add_host(shost, &intf->dev);
- 	if (result)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index e113c75..ed52712 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -406,11 +406,6 @@ struct scsi_host_template {
- 	int tag_alloc_policy;
- 
- 	/*
--	 * Let the block layer assigns tags to all commands.
--	 */
--	unsigned use_blk_tags:1;
--
--	/*
- 	 * Track QUEUE_FULL events and reduce queue depth on demand.
+ #include <linux/async.h>
++#include <scsi/ufs/ioctl.h>
+ #include <linux/devfreq.h>
+ #include <linux/nls.h>
+ #include <linux/of.h>
+@@ -2208,7 +2209,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
+ 	 * Unit descriptors are only available for general purpose LUs (LUN id
+ 	 * from 0 to 7) and RPMB Well known LU.
  	 */
- 	unsigned track_queue_depth:1;
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index b27977e..4416b10 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -10,91 +10,36 @@
+-	if (lun != UFS_UPIU_RPMB_WLUN && (lun >= UFS_UPIU_MAX_GENERAL_LUN))
++	if (!ufs_is_valid_unit_desc_lun(lun))
+ 		return -EOPNOTSUPP;
  
- 
- #ifdef CONFIG_BLOCK
--static inline struct scsi_cmnd *scsi_mq_find_tag(struct Scsi_Host *shost,
--						 int unique_tag)
--{
--	u16 hwq = blk_mq_unique_tag_to_hwq(unique_tag);
--	struct request *req = NULL;
--
--	if (hwq < shost->tag_set.nr_hw_queues)
--		req = blk_mq_tag_to_rq(shost->tag_set.tags[hwq],
--				       blk_mq_unique_tag_to_tag(unique_tag));
--	return req ? (struct scsi_cmnd *)req->special : NULL;
--}
--
--/**
-- * scsi_find_tag - find a tagged command by device
-- * @SDpnt:	pointer to the ScSI device
-- * @tag:	tag generated by blk_mq_unique_tag()
-- *
-- * Notes:
-- *	Only works with tags allocated by the generic blk layer.
-- **/
--static inline struct scsi_cmnd *scsi_find_tag(struct scsi_device *sdev, int tag)
--{
--        struct request *req;
--
--        if (tag != SCSI_NO_TAG) {
--		if (shost_use_blk_mq(sdev->host))
--			return scsi_mq_find_tag(sdev->host, tag);
--
--		req = blk_queue_find_tag(sdev->request_queue, tag);
--	        return req ? (struct scsi_cmnd *)req->special : NULL;
--	}
--
--	/* single command, look in space */
--	return sdev->current_cmnd;
--}
--
--
--/**
-- * scsi_init_shared_tag_map - create a shared tag map
-- * @shost:	the host to share the tag map among all devices
-- * @depth:	the total depth of the map
-- */
--static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
--{
--	/*
--	 * We always have a shared tag map around when using blk-mq.
--	 */
--	if (shost_use_blk_mq(shost))
--		return 0;
--
--	/*
--	 * If the shared tag map isn't already initialized, do it now.
--	 * This saves callers from having to check ->bqt when setting up
--	 * devices on the shared host (for libata)
--	 */
--	if (!shost->bqt) {
--		shost->bqt = blk_init_tags(depth,
--			shost->hostt->tag_alloc_policy);
--		if (!shost->bqt)
--			return -ENOMEM;
--	}
--
--	return 0;
--}
--
- /**
-  * scsi_host_find_tag - find the tagged command by host
-  * @shost:	pointer to scsi_host
-- * @tag:	tag generated by blk_mq_unique_tag()
-+ * @tag:	tag
-  *
-- * Notes:
-- *	Only works with tags allocated by the generic blk layer.
-+ * Note: for devices using multiple hardware queues tag must have been
-+ * generated by blk_mq_unique_tag().
-  **/
- static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
--						int tag)
-+		int tag)
- {
--	struct request *req;
-+	struct request *req = NULL;
- 
--	if (tag != SCSI_NO_TAG) {
--		if (shost_use_blk_mq(shost))
--			return scsi_mq_find_tag(shost, tag);
-+	if (tag == SCSI_NO_TAG)
-+		return NULL;
-+
-+	if (shost_use_blk_mq(shost)) {
-+		u16 hwq = blk_mq_unique_tag_to_hwq(tag);
-+
-+		if (hwq < shost->tag_set.nr_hw_queues) {
-+			req = blk_mq_tag_to_rq(shost->tag_set.tags[hwq],
-+				blk_mq_unique_tag_to_tag(tag));
-+		}
-+	} else {
- 		req = blk_map_queue_find_tag(shost->bqt, tag);
--		return req ? (struct scsi_cmnd *)req->special : NULL;
- 	}
--	return NULL;
-+
-+	if (!req)
-+		return NULL;
-+	return req->special;
+ 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
+@@ -5047,6 +5048,207 @@ out:
  }
  
- #endif /* CONFIG_BLOCK */
+ /**
++ * ufshcd_query_ioctl - perform user read queries
++ * @hba: per-adapter instance
++ * @lun: used for lun specific queries
++ * @buffer: user space buffer for reading and submitting query data and params
++ * @return: 0 for success negative error code otherwise
++ *
++ * Expected/Submitted buffer structure is struct ufs_ioctl_query_data.
++ * It will read the opcode, idn and buf_length parameters, and, put the
++ * response in the buffer field while updating the used size in buf_length.
++ */
++static int ufshcd_query_ioctl(struct ufs_hba *hba, u8 lun, void __user *buffer)
++{
++	struct ufs_ioctl_query_data ioctl_data;
++	int err = 0;
++	int length = 0;
++	void *data_ptr;
++	bool flag;
++	u32 att;
++	u8 index;
++	u8 *desc = NULL;
++
++	/* extract params from user buffer */
++	if (copy_from_user(&ioctl_data, buffer,
++			sizeof(struct ufs_ioctl_query_data))) {
++		err = -EFAULT;
++		goto out;
++	}
++
++	/* verify legal parameters & send query */
++	switch (ioctl_data.opcode) {
++	case UPIU_QUERY_OPCODE_READ_DESC:
++		switch (ioctl_data.idn) {
++		case QUERY_DESC_IDN_DEVICE:
++		case QUERY_DESC_IDN_CONFIGURAION:
++		case QUERY_DESC_IDN_INTERCONNECT:
++		case QUERY_DESC_IDN_GEOMETRY:
++		case QUERY_DESC_IDN_POWER:
++			index = 0;
++			break;
++		case QUERY_DESC_IDN_UNIT:
++			if (!ufs_is_valid_unit_desc_lun(lun)) {
++				dev_err(hba->dev,
++					"%s: No unit descriptor for lun 0x%x\n",
++					__func__, lun);
++				err = -EINVAL;
++				goto out;
++			}
++			index = lun;
++			break;
++		default:
++			goto out;
++		}
++
++		if (ioctl_data.buf_size > QUERY_DESC_MAX_SIZE) {
++			err = -EINVAL;
++			goto out;
++		}
++
++		desc = kzalloc(ioctl_data.buf_size, GFP_KERNEL);
++		if (!desc) {
++			err = -ENOMEM;
++			goto out;
++		}
++
++		length = ioctl_data.buf_size;
++		err = ufshcd_query_descriptor(hba, ioctl_data.opcode,
++				ioctl_data.idn, index, 0, desc, &length);
++		break;
++	case UPIU_QUERY_OPCODE_READ_ATTR:
++		switch (ioctl_data.idn) {
++		case QUERY_ATTR_IDN_BOOT_LU_EN:
++		case QUERY_ATTR_IDN_POWER_MODE:
++		case QUERY_ATTR_IDN_ACTIVE_ICC_LVL:
++		case QUERY_ATTR_IDN_OOO_DATA_EN:
++		case QUERY_ATTR_IDN_BKOPS_STATUS:
++		case QUERY_ATTR_IDN_PURGE_STATUS:
++		case QUERY_ATTR_IDN_MAX_DATA_IN:
++		case QUERY_ATTR_IDN_MAX_DATA_OUT:
++		case QUERY_ATTR_IDN_REF_CLK_FREQ:
++		case QUERY_ATTR_IDN_CONF_DESC_LOCK:
++		case QUERY_ATTR_IDN_MAX_NUM_OF_RTT:
++		case QUERY_ATTR_IDN_EE_CONTROL:
++		case QUERY_ATTR_IDN_EE_STATUS:
++		case QUERY_ATTR_IDN_SECONDS_PASSED:
++			index = 0;
++			break;
++		case QUERY_ATTR_IDN_DYN_CAP_NEEDED:
++		case QUERY_ATTR_IDN_CORR_PRG_BLK_NUM:
++			index = lun;
++			break;
++		default:
++			goto out_einval;
++		}
++		err = ufshcd_query_attr(hba, ioctl_data.opcode,
++					ioctl_data.idn, index, 0, &att);
++		break;
++	case UPIU_QUERY_OPCODE_READ_FLAG:
++		switch (ioctl_data.idn) {
++		case QUERY_FLAG_IDN_FDEVICEINIT:
++		case QUERY_FLAG_IDN_PERMANENT_WPE:
++		case QUERY_FLAG_IDN_PWR_ON_WPE:
++		case QUERY_FLAG_IDN_BKOPS_EN:
++		case QUERY_FLAG_IDN_PURGE_ENABLE:
++		case QUERY_FLAG_IDN_FPHYRESOURCEREMOVAL:
++		case QUERY_FLAG_IDN_BUSY_RTC:
++			break;
++		default:
++			goto out_einval;
++		}
++		err = ufshcd_query_flag_retry(hba, ioctl_data.opcode,
++				ioctl_data.idn, &flag);
++		break;
++	default:
++		goto out_einval;
++	}
++
++	if (err) {
++		dev_err(hba->dev, "%s: Query for idn %d failed\n", __func__,
++				ioctl_data.idn);
++		goto out_release_mem;
++	}
++
++	/* copy response data */
++	switch (ioctl_data.opcode) {
++	case UPIU_QUERY_OPCODE_READ_DESC:
++		ioctl_data.buf_size = length;
++		data_ptr = desc;
++		break;
++	case UPIU_QUERY_OPCODE_READ_ATTR:
++		ioctl_data.buf_size = sizeof(u32);
++		data_ptr = &att;
++		break;
++	case UPIU_QUERY_OPCODE_READ_FLAG:
++		ioctl_data.buf_size = 1;
++		data_ptr = &flag;
++		break;
++	default:
++		BUG_ON(true);
++	}
++
++	/* copy to user */
++	err = copy_to_user(buffer, &ioctl_data,
++			sizeof(struct ufs_ioctl_query_data));
++	if (err)
++		dev_err(hba->dev, "%s: Failed copying back to user.\n",
++			__func__);
++	err = copy_to_user(buffer + sizeof(struct ufs_ioctl_query_data),
++			data_ptr, ioctl_data.buf_size);
++	if (err)
++		dev_err(hba->dev, "%s: err %d copying back to user.\n",
++				__func__, err);
++	goto out_release_mem;
++
++out_einval:
++	dev_err(hba->dev,
++		"%s: illegal ufs query ioctl data, opcode 0x%x, idn 0x%x\n",
++		__func__, ioctl_data.opcode, (unsigned int)ioctl_data.idn);
++	err = -EINVAL;
++out_release_mem:
++	kfree(desc);
++out:
++	return err;
++}
++
++/**
++ * ufshcd_ioctl - ufs ioctl callback registered in scsi_host
++ * @dev: scsi device required for per LUN queries
++ * @cmd: command opcode
++ * @buffer: user space buffer for transferring data
++ *
++ * Supported commands:
++ * UFS_IOCTL_QUERY
++ */
++static int ufshcd_ioctl(struct scsi_device *dev, int cmd, void __user *buffer)
++{
++	struct ufs_hba *hba = shost_priv(dev->host);
++	int err = 0;
++
++	BUG_ON(!hba);
++	if (!buffer)
++		return -EINVAL;
++
++	switch (cmd) {
++	case UFS_IOCTL_QUERY:
++		pm_runtime_get_sync(hba->dev);
++		err = ufshcd_query_ioctl(hba, ufshcd_scsi_to_upiu_lun(dev->lun),
++				buffer);
++		pm_runtime_put_sync(hba->dev);
++		break;
++	case BLKROSET:
++		err = -ENOIOCTLCMD;
++		break;
++	default:
++		err = -EINVAL;
++		break;
++	}
++
++	return err;
++}
++
++/**
+  * ufshcd_async_scan - asynchronous execution for probing hba
+  * @data: data pointer to pass to this function
+  * @cookie: cookie data
+@@ -5106,6 +5308,10 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
+ 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
+ 	.eh_timed_out		= ufshcd_eh_timed_out,
++	.ioctl			= ufshcd_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= ufshcd_ioctl,
++#endif
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index e0a3398..fada160 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -284,6 +284,7 @@ static inline int scsi_is_wlun(u64 lun)
+  * Here are some scsi specific ioctl commands which are sometimes useful.
+  *
+  * Note that include/linux/cdrom.h also defines IOCTL 0x5300 - 0x5395
++ * include/uapi/scsi/ufs/ioctl.h defines 0x5388
+  */
+ 
+ /* Used to obtain PUN and LUN info.  Conflicts with CDROMAUDIOBUFSIZ */
+diff --git a/include/uapi/scsi/Kbuild b/include/uapi/scsi/Kbuild
+index 75746d5..d404525 100644
+--- a/include/uapi/scsi/Kbuild
++++ b/include/uapi/scsi/Kbuild
+@@ -1,5 +1,6 @@
+ # UAPI Header export list
+ header-y += fc/
++header-y += ufs/
+ header-y += scsi_bsg_fc.h
+ header-y += scsi_netlink.h
+ header-y += scsi_netlink_fc.h
+diff --git a/include/uapi/scsi/ufs/Kbuild b/include/uapi/scsi/ufs/Kbuild
+new file mode 100644
+index 0000000..cc3ef20
+--- /dev/null
++++ b/include/uapi/scsi/ufs/Kbuild
+@@ -0,0 +1,3 @@
++# UAPI Header export list
++header-y += ioctl.h
++header-y += ufs.h
+diff --git a/include/uapi/scsi/ufs/ioctl.h b/include/uapi/scsi/ufs/ioctl.h
+new file mode 100644
+index 0000000..3a8fa77
+--- /dev/null
++++ b/include/uapi/scsi/ufs/ioctl.h
+@@ -0,0 +1,58 @@
++#ifndef UAPI_UFS_IOCTL_H_
++#define UAPI_UFS_IOCTL_H_
++
++#include <linux/types.h>
++
++/*
++ *  IOCTL opcode for ufs queries has the following opcode after
++ *  SCSI_IOCTL_GET_PCI
++ */
++#define UFS_IOCTL_QUERY		_IOWR('L', 0x88, struct ufs_ioctl_query_data)
++
++/**
++ * struct ufs_ioctl_query_data - used to transfer data to and from
++ * user via ioctl
++ * @opcode: type of data to query (descriptor/attribute/flag)
++ * @idn: id of the data structure
++ * @buf_size: number of allocated bytes/data size on return
++ * @buffer: data location
++ *
++ * Received: buffer and buf_size (available space for transferred data)
++ * Submitted: opcode, idn, length, buf_size
++ */
++struct ufs_ioctl_query_data {
++	/*
++	 * User should select one of the opcode defined in "enum query_opcode".
++	 * Please check include/uapi/scsi/ufs/ufs.h for the definition of it.
++	 * Note that only UPIU_QUERY_OPCODE_READ_DESC,
++	 * UPIU_QUERY_OPCODE_READ_ATTR & UPIU_QUERY_OPCODE_READ_FLAG are
++	 * supported as of now. All other query_opcode would be considered
++	 * invalid.
++	 * As of now only read query operations are supported.
++	 */
++	__u32 opcode;
++	/*
++	 * User should specify the size of the buffer (buffer[0] below) where
++	 * it wants to read the query data (attribute/flag/descriptor).
++	 * As we might end up reading less data then what is specified in
++	 * buf_size. So we are updating buf_size to what exactly we have read.
++	 */
++	__u16 buf_size;
++	/*
++	 * User should select one of the idn from "enum flag_idn" or "enum
++	 * attr_idn" or "enum desc_idn" based on whether opcode above is
++	 * attribute, flag or descriptor.
++	 * Please check include/uapi/scsi/ufs/ufs.h for the definition of it.
++	 */
++	__u8 idn;
++	/*
++	 * placeholder for the start of the data buffer where kernel will copy
++	 * the query data (attribute/flag/descriptor) read from the UFS device
++	 * Note:
++	 * For Read Attribute you will have to allocate 4 bytes
++	 * For Read Flag you will have to allocate 1 byte
++	 */
++	__u8 buffer[0];
++};
++
++#endif /* UAPI_UFS_IOCTL_H_ */
+diff --git a/include/uapi/scsi/ufs/ufs.h b/include/uapi/scsi/ufs/ufs.h
+new file mode 100644
+index 0000000..8e4baff
+--- /dev/null
++++ b/include/uapi/scsi/ufs/ufs.h
+@@ -0,0 +1,67 @@
++#ifndef UAPI_UFS_H_
++#define UAPI_UFS_H_
++
++/* Flag idn for Query Requests*/
++enum flag_idn {
++	QUERY_FLAG_IDN_FDEVICEINIT		= 0x01,
++	QUERY_FLAG_IDN_PERMANENT_WPE		= 0x02,
++	QUERY_FLAG_IDN_PWR_ON_WPE		= 0x03,
++	QUERY_FLAG_IDN_BKOPS_EN			= 0x04,
++	QUERY_FLAG_IDN_RESERVED1		= 0x05,
++	QUERY_FLAG_IDN_PURGE_ENABLE		= 0x06,
++	QUERY_FLAG_IDN_RESERVED2		= 0x07,
++	QUERY_FLAG_IDN_FPHYRESOURCEREMOVAL      = 0x08,
++	QUERY_FLAG_IDN_BUSY_RTC			= 0x09,
++};
++
++/* Attribute idn for Query requests */
++enum attr_idn {
++	QUERY_ATTR_IDN_BOOT_LU_EN		= 0x00,
++	QUERY_ATTR_IDN_RESERVED			= 0x01,
++	QUERY_ATTR_IDN_POWER_MODE		= 0x02,
++	QUERY_ATTR_IDN_ACTIVE_ICC_LVL		= 0x03,
++	QUERY_ATTR_IDN_OOO_DATA_EN		= 0x04,
++	QUERY_ATTR_IDN_BKOPS_STATUS		= 0x05,
++	QUERY_ATTR_IDN_PURGE_STATUS		= 0x06,
++	QUERY_ATTR_IDN_MAX_DATA_IN		= 0x07,
++	QUERY_ATTR_IDN_MAX_DATA_OUT		= 0x08,
++	QUERY_ATTR_IDN_DYN_CAP_NEEDED		= 0x09,
++	QUERY_ATTR_IDN_REF_CLK_FREQ		= 0x0A,
++	QUERY_ATTR_IDN_CONF_DESC_LOCK		= 0x0B,
++	QUERY_ATTR_IDN_MAX_NUM_OF_RTT		= 0x0C,
++	QUERY_ATTR_IDN_EE_CONTROL		= 0x0D,
++	QUERY_ATTR_IDN_EE_STATUS		= 0x0E,
++	QUERY_ATTR_IDN_SECONDS_PASSED		= 0x0F,
++	QUERY_ATTR_IDN_CNTX_CONF		= 0x10,
++	QUERY_ATTR_IDN_CORR_PRG_BLK_NUM		= 0x11,
++};
++
++/* Descriptor idn for Query requests */
++enum desc_idn {
++	QUERY_DESC_IDN_DEVICE		= 0x0,
++	QUERY_DESC_IDN_CONFIGURAION	= 0x1,
++	QUERY_DESC_IDN_UNIT		= 0x2,
++	QUERY_DESC_IDN_RFU_0		= 0x3,
++	QUERY_DESC_IDN_INTERCONNECT	= 0x4,
++	QUERY_DESC_IDN_STRING		= 0x5,
++	QUERY_DESC_IDN_RFU_1		= 0x6,
++	QUERY_DESC_IDN_GEOMETRY		= 0x7,
++	QUERY_DESC_IDN_POWER		= 0x8,
++	QUERY_DESC_IDN_RFU_2		= 0x9,
++	QUERY_DESC_IDN_MAX,
++};
++
++/* UTP QUERY Transaction Specific Fields OpCode */
++enum query_opcode {
++	UPIU_QUERY_OPCODE_NOP		= 0x0,
++	UPIU_QUERY_OPCODE_READ_DESC	= 0x1,
++	UPIU_QUERY_OPCODE_WRITE_DESC	= 0x2,
++	UPIU_QUERY_OPCODE_READ_ATTR	= 0x3,
++	UPIU_QUERY_OPCODE_WRITE_ATTR	= 0x4,
++	UPIU_QUERY_OPCODE_READ_FLAG	= 0x5,
++	UPIU_QUERY_OPCODE_SET_FLAG	= 0x6,
++	UPIU_QUERY_OPCODE_CLEAR_FLAG	= 0x7,
++	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
++	UPIU_QUERY_OPCODE_MAX,
++};
++#endif /* UAPI_UFS_H_ */
 -- 
-1.9.1
+1.8.5.2
 
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
