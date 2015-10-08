@@ -1,65 +1,65 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
-Date: Thu, 08 Oct 2015 09:17:46 -0700
-Message-ID: <1444321066.2312.1.camel@HansenPartnership.com>
-References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
-	 <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
-	 <56153682.1030801@gmail.com>
-	 <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
-	 <D23B3DD9.BA955%himanshu.madhani@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57258 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932929AbbJHQRt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 12:17:49 -0400
-In-Reply-To: <D23B3DD9.BA955%himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: [PATCH v3] scsi: report 'INQUIRY result too short' once per host
+Date: Thu,  8 Oct 2015 18:54:51 +0200
+Message-ID: <1444323291-16447-1-git-send-email-vkuznets@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On Thu, 2015-10-08 at 15:46 +0000, Himanshu Madhani wrote:
-> 
-> On 10/7/15, 4:41 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
-> 
-> >Hi Xose,
-> >
-> >On Thu, Oct 8, 2015 at 2:13 AM, Xose Vazquez Perez
-> ><xose.vazquez@gmail.com> wrote:
-> >> On Fri, May 22, 2015 at 10:00 AM, Julian Calaby
-> >><julian.calaby@gmail.com> wrote:
-> >>
-> >>> Some qla2xxx devices have firmware stored in flash on the device,
-> >>> however for debugging and triage purposes, Qlogic staff like to
-> >>> be able to load known-good versions of these firmwares through
-> >>> request_firmware().
-> >>>
-> >>> These firmware files were never distributed and are unlikely to ever
-> >>> be released publically, so to hide these missing firmware files from
-> >>> scripts which check such things, (e.g. Debian's initramfs-tools) put
-> >>> them behind a new EXPERT Kconfig option.
-> >>
-> >>
-> >> What is state of this patch ?
-> >
-> >Apparently nobody cared, either from qLogic or linux-scsi.
-> >
-> >I'm not overly fussed whether it goes in or not, it was more a point
-> >in the discussion that proceeded it, however it does solve the
-> >problems in the discussion that preceded it.
-> 
-> This patch Looks good.
-> 
-> Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
+SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
+least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+INQUIRY result too short (5), using 36' messages on console. This can be
+problematic for slow consoles. Introduce short_inquiry flag in struct
+Scsi_Host to print the message once per host.
 
-Actually, this isn't helpful.  You now add another option over which the
-distributions have to make a choice.  Is this interface necessary and
-useful?  If yes, then it should be compiled in and if not, just remove
-it ... don't do death by 1000 Kconfig options.
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+Changes since v2:
+- This is a successor of previously sent (and still not merged) "scsi:
+  introduce short_inquiry flag for broken host adapters" patch. I'm not
+  particularly sure which solution is better but I'm leaning towards this
+  one as it doesn't require changes to adapter drivers.
+---
+ drivers/scsi/scsi_scan.c | 9 ++++++---
+ include/scsi/scsi_host.h | 3 +++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-James
-
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f9f3f82..cd347e4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "scsi scan: INQUIRY result too short (%d),"
+-			    " using 36\n", sdev->inquiry_len);
++		if (!sdev->host->short_inquiry) {
++			shost_printk(KERN_INFO, sdev->host,
++				    "scsi scan: INQUIRY result too short (%d),"
++				    " using 36\n", sdev->inquiry_len);
++			sdev->host->short_inquiry = 1;
++		}
+ 		sdev->inquiry_len = 36;
+ 	}
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e113c75..3a22da7 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -673,6 +673,9 @@ struct Scsi_Host {
+ 	unsigned use_blk_mq:1;
+ 	unsigned use_cmd_list:1;
+ 
++	/* Host responded with short (<36 bytes) INQUIRY result */
++	unsigned short_inquiry:1;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
+-- 
+2.4.3
