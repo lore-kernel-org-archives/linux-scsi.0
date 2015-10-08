@@ -1,48 +1,47 @@
-From: Paul Mackerras <paulus@ozlabs.org>
-Subject: Re: Bugs in multipath scsi in 4.3-rc2
-Date: Thu, 8 Oct 2015 15:59:37 +1100
-Message-ID: <20151008045937.GB2952@iris.ozlabs.ibm.com>
-References: <20150925121636.GC12540@fergus.ozlabs.ibm.com>
- <20150925151802.GB20282@lst.de>
- <1443202278.2188.13.camel@HansenPartnership.com>
- <20150930151449.GC26299@lst.de>
- <20151001043453.GA2893@iris.ozlabs.ibm.com>
- <20151002125224.GA14899@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: don't try to load a device handler during async probing
+Date: Thu,  8 Oct 2015 09:25:32 +0100
+Message-ID: <1444292732-8571-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:50411 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750735AbbJHE7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Oct 2015 00:59:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20151002125224.GA14899@lst.de>
+Received: from bombadil.infradead.org ([198.137.202.9]:48424 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbbJHI3R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 04:29:17 -0400
+Received: from [193.120.165.186] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1Zk6Zg-0003aC-LG
+	for linux-scsi@vger.kernel.org; Thu, 08 Oct 2015 08:29:17 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Oct 02, 2015 at 02:52:24PM +0200, Christoph Hellwig wrote:
-> On Thu, Oct 01, 2015 at 02:34:54PM +1000, Paul Mackerras wrote:
-> > I still get the warning:
-> 
-> Ok, I sent you the wrong patch.  scsi_dh_add_device is the function that
-> needs to switch to use __scsi_dh_lookup.  New version below:
-> 
-> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-> index edb044a..cc9ea81 100644
-> --- a/drivers/scsi/scsi_dh.c
-> +++ b/drivers/scsi/scsi_dh.c
-> @@ -226,7 +226,7 @@ int scsi_dh_add_device(struct scsi_device *sdev)
->  
->  	drv = scsi_dh_find_driver(sdev);
->  	if (drv)
-> -		devinfo = scsi_dh_lookup(drv);
-> +		devinfo = __scsi_dh_lookup(drv);
->  	if (devinfo)
->  		err = scsi_dh_handler_attach(sdev, devinfo);
->  	return err;
+Request_module gets really unhappy when called from async probing, so
+revert to not auto load device handler modules during the SCSI bus
+scan.  While autoloading would be really useful we never did this
+until 4.3-rc and it turns out that functionality doesn't actually
+work.
 
-That boots up OK and there is no warning.
+Fixes: 566079 ("dm-mpath, scsi_dh: request scsi_dh modules in scsi_dh, not dm-mpath")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Paul Mackerras <paulus@ozlabs.org>
+Tested-by: Paul Mackerras <paulus@ozlabs.org>
+---
+ drivers/scsi/scsi_dh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Paul.
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 0a2168e..d771bec 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -226,7 +226,7 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+ 
+ 	drv = scsi_dh_find_driver(sdev);
+ 	if (drv)
+-		devinfo = scsi_dh_lookup(drv);
++		devinfo = __scsi_dh_lookup(drv);
+ 	if (devinfo)
+ 		err = scsi_dh_handler_attach(sdev, devinfo);
+ 	return err;
+-- 
+1.9.1
+
