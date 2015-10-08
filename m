@@ -1,36 +1,32 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: SSP frame iu defines
-Date: Thu, 08 Oct 2015 16:22:10 +0200
-Message-ID: <5172892.J8LUuCdX1I@wuerfel>
-References: <56167B0D.5040303@huawei.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 3/5] block: nvme-core: simplify ida usage
+Date: Thu, 8 Oct 2015 14:29:48 +0000 (UTC)
+Message-ID: <alpine.LNX.2.00.1510081424210.27742@localhost.lm.intel.com>
+References: <cover.1443723136.git.lduncan@suse.com> <cover.1443723136.git.lduncan@suse.com> <cb1a4e9a77ed39c98072c70a0bebc9b98067852a.1443723136.git.lduncan@suse.com> <mqdsi5t7ezy.fsf@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:59567 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932443AbbJHOWn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 10:22:43 -0400
-In-Reply-To: <56167B0D.5040303@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mqdsi5t7ezy.fsf@c203.arch.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Lee Duncan <lduncan@suse.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, hare@suse.de, zhangfei <zhangfei.gao@linaro.org>, john.garry2@mail.dcu.ie, "xuwei (O)" <xuwei5@hisilicon.com>
 
-On Thursday 08 October 2015 15:17:49 John Garry wrote:
-> Hi,
-> 
-> For a new driver I am preparing for a SAS controller, I need defintions 
-> for the SSP command and TMF iu structures. Currently these are defined 
-> in the following:
-> ssp_command_iu, ssp_task_iu: drivers/scsi/aic94xx_sas.h
-> ssp_cmd_iu, ssp_task_iu: drivers/scsi/isci/sas.h
-> 
-> I plan to move them to include/scsi/sas.h . Any objections?
+On Fri, 2 Oct 2015, Johannes Thumshirn wrote:
+> Lee Duncan <lduncan@suse.com> writes:
+>> Simplify ida index allocation and removal by
+>> using the ida_simple_* helper functions.
 
-Hi John,
+Looks good to me. Just one comment:
 
-I think a question like this is better asked by sending a patch,
-to make it easier to see what the resulting change is.
+>>  static void nvme_release_instance(struct nvme_dev *dev)
+>>  {
+>>  	spin_lock(&dev_list_lock);
+>> -	ida_remove(&nvme_instance_ida, dev->instance);
+>> +	ida_simple_remove(&nvme_instance_ida, dev->instance);
+>>  	spin_unlock(&dev_list_lock);
 
-	Arnd
+No harm from taking the nvme spin lock here, but it's not necessary with
+the simple interface.
+
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
