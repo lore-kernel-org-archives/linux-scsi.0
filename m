@@ -1,51 +1,34 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+From: Julian Calaby <julian.calaby@gmail.com>
 Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
-Date: Thu, 8 Oct 2015 17:38:39 +0000
-Message-ID: <D23BF7CF.BAF4F%himanshu.madhani@qlogic.com>
+Date: Fri, 9 Oct 2015 10:10:25 +1100
+Message-ID: <CAGRGNgXAO-ROeJ-OEcUH6v-1T5A+wkdQBk3sQAw0ytRt3K+ASQ@mail.gmail.com>
 References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
  <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
- <56153682.1030801@gmail.com>
- <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
- <D23B3DD9.BA955%himanshu.madhani@qlogic.com>
- <1444321066.2312.1.camel@HansenPartnership.com>
+ <56153682.1030801@gmail.com> <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
+ <D23B3DD9.BA955%himanshu.madhani@qlogic.com> <1444321066.2312.1.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D23BF7CFBAF4Fhimanshumadhaniqlogiccom_"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:64218 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932673AbbJHRin (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 13:38:43 -0400
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t98Hc12l011642
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Oct 2015 10:38:42 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1xdw2b0018-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2015 10:38:42 -0700
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:34729 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753909AbbJHXKp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 19:10:45 -0400
+Received: by igcpb10 with SMTP id pb10so26270874igc.1
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2015 16:10:44 -0700 (PDT)
 In-Reply-To: <1444321066.2312.1.camel@HansenPartnership.com>
-Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
-
---_000_D23BF7CFBAF4Fhimanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <BAB008BDE9BCED459A9C4FC231C08B59@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
 Hi James,
 
-
-
-On 10/8/15, 9:17 AM, "James Bottomley"
-<James.Bottomley@HansenPartnership.com> wrote:
-
->On Thu, 2015-10-08 at 15:46 +0000, Himanshu Madhani wrote:
->>=20
+On Fri, Oct 9, 2015 at 3:17 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Thu, 2015-10-08 at 15:46 +0000, Himanshu Madhani wrote:
+>>
 >> On 10/7/15, 4:41 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
->>=20
+>>
 >> >Hi Xose,
 >> >
 >> >On Thu, Oct 8, 2015 at 2:13 AM, Xose Vazquez Perez
@@ -71,125 +54,36 @@ On 10/8/15, 9:17 AM, "James Bottomley"
 >> >I'm not overly fussed whether it goes in or not, it was more a point
 >> >in the discussion that proceeded it, however it does solve the
 >> >problems in the discussion that preceded it.
->>=20
+>>
 >> This patch Looks good.
->>=20
+>>
 >> Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
 >
->Actually, this isn't helpful.  You now add another option over which the
->distributions have to make a choice.  Is this interface necessary and
->useful?  If yes, then it should be compiled in and if not, just remove
->it ... don't do death by 1000 Kconfig options.
+> Actually, this isn't helpful.  You now add another option over which the
+> distributions have to make a choice.  Is this interface necessary and
+> useful?  If yes, then it should be compiled in and if not, just remove
+> it ... don't do death by 1000 Kconfig options.
 
-I=B9ll send out patch to clean up firmware binaries which are not submitted
-to linux-firmware.git
+The original issue here was that the qla2xxx driver specifies two
+firmware files which are not publicly available.
 
->
->James
->
->
+They aren't publicly available because the hardware that uses them
+always stores it's firmware in flash.
 
+The firmware files are specified in the driver because qLogic support
+likes to be able to load a known-good firmware file from disk for
+debugging faulty hardware.
 
---_000_D23BF7CFBAF4Fhimanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Some distributions (Debian is a good example) will complain vocally
+about missing firmware files when installing kernels or producing
+initramfs images.
 
-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
-AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfAGUAAQAAADgAAABo
-AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
-ZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAA
-gEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMA
-aAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADgAAABo
-AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
-5V8BAAAAQAAAAHMAaQBwADoAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAfABoMAQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEA
-bgBpAAAAAAAfAB8MAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAfAAAAAAA
-AACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgAYQBuAGkAAABT
-AE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4A
-YwBvAG0AAAAfAAFdAQAAADgAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBkAGgA
-YQBuAGkAAAAAAB8AI0ABAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB8AAAA
-AAAAAIErH6S+oxAZnW4A3QEPVAIAAACASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAA
-AFMATQBUAFAAAABoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAB8ACV0BAAAAOAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAACwBAOgEAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUA
-AAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAACS7OYWNVNVAnpaTFbBL1QMD
-ABcAAQAAAEAAOQCAuakq8AHRAUAACDB6XyMr8AHRAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSF
-AAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBh
-AGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAA
-AAAAAB8ANwABAAAAfAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAIABmAG8AcgAtAG4AZQB4AHQAXQAg
-AHMAYwBzAGkAOgAgAHEAbABhADIAeAB4AHgAOgAgAEgAaQBkAGUAIAB1AG4AYQB2AGEAaQBsAGEA
-YgBsAGUAIABmAGkAcgBtAHcAYQByAGUAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAA
-AB8AQhABAAAAYAAAADwAMQA0ADQANAAzADIAMQAwADYANgAuADIAMwAxADIALgAxAC4AYwBhAG0A
-ZQBsAEAASABhAG4AcwBlAG4AUABhAHIAdABuAGUAcgBzAGgAaQBwAC4AYwBvAG0APgAAAAIBcQAB
-AAAALwAAAAEB0JQjEWjftAswFX5EjB61n7XW/p6eYXJoAIAAjgwAgACYRQCAAH4VAP//oTYAAB8A
-cAABAAAAdAAAAFsAUABBAFQAQwBIACAAZgBvAHIALQBuAGUAeAB0AF0AIABzAGMAcwBpADoAIABx
-AGwAYQAyAHgAeAB4ADoAIABIAGkAZABlACAAdQBuAGEAdgBhAGkAbABhAGIAbABlACAAZgBpAHIA
-bQB3AGEAcgBlAAAAHwA1EAEAAABaAAAAPABEADIAMwBCAEYANwBDAEYALgBCAEEARgA0AEYAJQBo
-AGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+AAAA
-AAAfADkQAQAAAH4CAAA8ADEANAAzADIAMgA1ADIAOAAzADEALQA3ADUANQAxAC0AMQAtAGcAaQB0
-AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGoAdQBsAGkAYQBuAC4AYwBhAGwAYQBiAHkAQABnAG0A
-YQBpAGwALgBjAG8AbQA+ACAAPABDAEEARwBSAEcATgBnAFYAUwB1AE0ARAAzAEIANABCADAASgBy
-AC0AVABPAFQANQBLAHIANABOAFIAdgBKAFIAPQAwAGUAMwB0AHUANwAxAE8AeABVAHoAUQB0AHIA
-cQAyAHMAZwBAAG0AYQBpAGwALgBnAG0AYQBpAGwALgBjAG8AbQA+ACAAPAA1ADYAMQA1ADMANgA4
-ADIALgAxADAAMwAwADgAMAAxAEAAZwBtAGEAaQBsAC4AYwBvAG0APgAgADwAQwBBAEcAUgBHAE4A
-ZwBVAEIAVwBhAHgAVgBpADYAZABXAEcAPQBOAEEAYgAzAHQAKwBVAF8ASgArAEUAQgByAFYAPQBw
-AGcAeABSAG0ATgBxAEsAdABzAEsAUwBzAEUAVwBDAGcAQABtAGEAaQBsAC4AZwBtAGEAaQBsAC4A
-YwBvAG0APgAgADwARAAyADMAQgAzAEQARAA5AC4AQgBBADkANQA1ACUAaABpAG0AYQBuAHMAaAB1
-AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMQA0ADQANAAzADIA
-MQAwADYANgAuADIAMwAxADIALgAxAC4AYwBhAG0AZQBsAEAASABhAG4AcwBlAG4AUABhAHIAdABu
-AGUAcgBzAGgAaQBwAC4AYwBvAG0APgAAAAAAAwDeP69vAABAAAcwXTscK/AB0QEDACYAAAAAAAIB
-RwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjMtMTUxMDA4MTczODM5Wi04MjkxOQAA
-AB8AFRABAAAAWAAAAEIAQQBCADAAMAA4AEIARABFADkAQgBDAEUARAA0ADUAOQBBADkAQwA0AEYA
-QwAyADMAMQBDADAAOABCADUAOQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwAAADk
-AAAAOAXz1kgAAAAfAPo/AQAAACIAAABIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAA
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAA
-AEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgAzAC4A
-OQAuADEAMwAxADAAMwAwAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBl
-AHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAAMAEAAEkA
-SQA9ADAAMQAwADEARAAxADAAMQBGADAAMgBCADMAQgAzAEEAMQA2AEUANgBCAEMANgA0AEMARgA0
-ADEAQgA4ADEAMQAzADAAQwA0AEIAMAA1ADkAOABDAEUANQA7AFMAQgBNAEkARAA9ADEAOwBTADEA
-PQA8ADEANAA0ADQAMwAyADEAMAA2ADYALgAyADMAMQAyAC4AMQAuAGMAYQBtAGUAbABAAEgAYQBu
-AHMAZQBuAFAAYQByAHQAbgBlAHIAcwBoAGkAcAAuAGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0A
-VgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABT
-AHQAYQBnAGUAPQBIADIAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
-bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
-MQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBj
-AGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAAACTw==
+This patch was intended as an ugly compromise between all of this.
 
---_000_D23BF7CFBAF4Fhimanshumadhaniqlogiccom_--
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
