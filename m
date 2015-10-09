@@ -1,51 +1,236 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: dm-multipath test scripts
-Date: Thu, 8 Oct 2015 23:10:34 +0000
-Message-ID: <20151008231033.GA3952@xzibit.linux.bs1.fc.nec.co.jp>
-References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
- <1444203081.3958.2.camel@suse.de>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH for-next] scsi: qla2xxx: Hide unavailable firmware
+Date: Fri, 9 Oct 2015 00:26:59 +0000
+Message-ID: <D23C5777.36FFB%giridhar.malavali@qlogic.com>
+References: <1432252831-7551-1-git-send-email-julian.calaby@gmail.com>
+ <CAGRGNgVSuMD3B4B0Jr-TOT5Kr4NRvJR=0e3tu71OxUzQtrq2sg@mail.gmail.com>
+ <56153682.1030801@gmail.com>
+ <CAGRGNgUBWaxVi6dWG=NAb3t+U_J+EBrV=pgxRmNqKtsKSsEWCg@mail.gmail.com>
+ <D23B3DD9.BA955%himanshu.madhani@qlogic.com>
+ <1444321066.2312.1.camel@HansenPartnership.com>
+ <CAGRGNgXAO-ROeJ-OEcUH6v-1T5A+wkdQBk3sQAw0ytRt3K+ASQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="_000_D23C577736FFBgiridharmalavaliqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:60410 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909AbbJHXLP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 19:11:15 -0400
-In-Reply-To: <1444203081.3958.2.camel@suse.de>
-Content-Language: ja-JP
-Content-ID: <EAC4FEFD2E06D24EAFF05934C2D296A0@gisp.nec.co.jp>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16725 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750932AbbJIA0L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2015 20:26:11 -0400
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t990O1Tw019809
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Oct 2015 17:26:10 -0700
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1xe30n0026-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2015 17:26:10 -0700
+In-Reply-To: <CAGRGNgXAO-ROeJ-OEcUH6v-1T5A+wkdQBk3sQAw0ytRt3K+ASQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Julian Calaby <julian.calaby@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Firmware Maintainers <linux-firmware@kernel.org>
 
-On 10/07/15 16:31, Johannes Thumshirn wrote:
-> On Wed, 2015-10-07 at 05:39 +0000, Junichi Nomura wrote:
->> This is a set of scripts for kernel-side dm-multipath testing.
->> Current
->> set of scripts are stress testing of extreme situation and its
->> coverage
->> is limited. But recently found dm-mpath regressions should be
->> detectable
->> with this. I hope this helps people working on dm-multipath related
->> code
->> as a regression test set.
+--_000_D23C577736FFBgiridharmalavaliqlogiccom_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <FDDCC52C83B7414FA9FD62FF36335B56@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
+
+
+
+On 10/8/15 4:10 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
+
+>Hi James,
+>
+>On Fri, Oct 9, 2015 at 3:17 AM, James Bottomley
+><James.Bottomley@hansenpartnership.com> wrote:
+>> On Thu, 2015-10-08 at 15:46 +0000, Himanshu Madhani wrote:
+>>>
+>>> On 10/7/15, 4:41 PM, "Julian Calaby" <julian.calaby@gmail.com> wrote:
+>>>
+>>> >Hi Xose,
+>>> >
+>>> >On Thu, Oct 8, 2015 at 2:13 AM, Xose Vazquez Perez
+>>> ><xose.vazquez@gmail.com> wrote:
+>>> >> On Fri, May 22, 2015 at 10:00 AM, Julian Calaby
+>>> >><julian.calaby@gmail.com> wrote:
+>>> >>
+>>> >>> Some qla2xxx devices have firmware stored in flash on the device,
+>>> >>> however for debugging and triage purposes, Qlogic staff like to
+>>> >>> be able to load known-good versions of these firmwares through
+>>> >>> request_firmware().
+>>> >>>
+>>> >>> These firmware files were never distributed and are unlikely to
+>>>ever
+>>> >>> be released publically, so to hide these missing firmware files
+>>>from
+>>> >>> scripts which check such things, (e.g. Debian's initramfs-tools)
+>>>put
+>>> >>> them behind a new EXPERT Kconfig option.
+>>> >>
+>>> >>
+>>> >> What is state of this patch ?
+>>> >
+>>> >Apparently nobody cared, either from qLogic or linux-scsi.
+>>> >
+>>> >I'm not overly fussed whether it goes in or not, it was more a point
+>>> >in the discussion that proceeded it, however it does solve the
+>>> >problems in the discussion that preceded it.
+>>>
+>>> This patch Looks good.
+>>>
+>>> Acked-By: Himanshu Madhani <himanshu.madhani@qlogic.com>
 >>
->> Though this is created as a patch for linux kernel source, it's just
->> for
->> convenience of kernel developers (I don't have a place to host this
->> kind
->> of scripts). If there are better place to contribute this, please let
->> me know.
-> 
-> Have you considered placing it under tools/testing/selftests/? I think
-> people are looking for testing there instead of Documentation.
+>> Actually, this isn't helpful.  You now add another option over which the
+>> distributions have to make a choice.  Is this interface necessary and
+>> useful?  If yes, then it should be compiled in and if not, just remove
+>> it ... don't do death by 1000 Kconfig options.
+>
+>The original issue here was that the qla2xxx driver specifies two
+>firmware files which are not publicly available.
+>
+>They aren't publicly available because the hardware that uses them
+>always stores it's firmware in flash.
+>
+>The firmware files are specified in the driver because qLogic support
+>likes to be able to load a known-good firmware file from disk for
+>debugging faulty hardware.
+>
+>Some distributions (Debian is a good example) will complain vocally
+>about missing firmware files when installing kernels or producing
+>initramfs images.
+>
+>This patch was intended as an ugly compromise between all of this.
 
-Yes, but I think (the current contents of) my scripts don't fit well for
-the purpose of 'tools/testing/selftests', which is a place for unit tests.
-My scripts are for long-run stress testing and may need parameter
-tuning depending on running environment.
+Julian, James,=20
 
-Thanks for the comment.
--- 
-Jun'ichi Nomura, NEC Corporation
+We will send a patch to remove such references in our driver.
+
+-- Giri
+
+
+>
+>Thanks,
+>
+>--=20
+>Julian Calaby
+>
+>Email: julian.calaby@gmail.com
+>Profile: http://www.google.com/profiles/julian.calaby/
+
+
+--_000_D23C577736FFBgiridharmalavaliqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+JGBBTFBIQVUCok9coZmB/3ZxkYGpvxngVNAeUJpxTkP9EdFkTNOBc5pxWCJuACcmuwdATNB5c0JN
+QWsBdGrx/0yXTZaq36NSXQ1M46alTXP/TlOmNK3WeIVpYHZACREnJv9TclghVWBU3m6gVdldCxx0
+fw3haUAa4ScmULiYsDaAdN9EEK6Wss9K85WMKGqUcyKfbqBWMxAwJ+ALUGUpJkD/AxADIJyiC2JW
+cIHgY4KwB/8G4F8QZO+oZ5uiAIABkGOQf1ESU5AEoGAwVvEFwIHBZP9pcFERJyZrJ02AAMAYMKI/
+/6NBdBd+kphiHcBfMrThA6D/UOBgQZyiA2EEAK2ypzAJ4f8qYMLRc8VaxiGVNnQrFTZA/SGcV6Sx
+wsIt4W6CdERVUdeedGlUCXBmP6FuTAJ9socIcKYVzz0tLSBHTKD/AKAhq8ovGaEfUCgv1qEnJvtF
+nyh6RUgyjDBHT0hUJyYuUANgXZKMMGgCQHA6+C8vd+BAalBWQM0QQOCtSIEvgcFdky/dWy8hnAMV
+QuPAAAAfAEIAAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfAGUA
+AQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAIAAAAAAAAAAgSsfpL6j
+EBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQ
+AAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAB8AAl0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABv
+AGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAQgAAAHMAaQBwADoAZwBpAHIAaQBkAGgAYQByAC4A
+bQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAkAAAARwBp
+AHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAfDAEAAAA6AAAAZwBpAHIAaQBkAGgA
+YQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgEZDAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIA
+aQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAu
+AG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADoAAABnAGkA
+cgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
+APg/AQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAAAfACNAAQAAADoA
+AABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDd
+AQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEAbABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBp
+AHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
+CV0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
+CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAAfoAAVj/+ZSJee1SgXrBMeAwAXAAEAAABA
+ADkAgAvNNSkC0QFAAAgwalvYNSkC0QELAACACCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAA
+AAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcA
+AQAAAHwAAABSAGUAOgAgAFsAUABBAFQAQwBIACAAZgBvAHIALQBuAGUAeAB0AF0AIABzAGMAcwBp
+ADoAIABxAGwAYQAyAHgAeAB4ADoAIABIAGkAZABlACAAdQBuAGEAdgBhAGkAbABhAGIAbABlACAA
+ZgBpAHIAbQB3AGEAcgBlAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAA
+AIoAAAA8AEMAQQBHAFIARwBOAGcAWABBAE8ALQBSAE8AZQBKAC0ATwBFAGMAVQBIADYAdgAtADEA
+VAA1AEEAKwB3AGsAZABRAEIAawAzAHMAUQBBAHcAMAB5AHQAUgB0ADMASwArAEEAUwBRAEAAbQBh
+AGkAbAAuAGcAbQBhAGkAbAAuAGMAbwBtAD4AAAAAAAIBcQABAAAAOQAAAAEB0JQiXBE6D/KSOXRO
+lv8sZ9sQ7nCdh5MTgIDZ31YAgACODACAAQ2xAIAACKoAgABzS4D//5/LgAAAAB8AcAABAAAAdAAA
+AFsAUABBAFQAQwBIACAAZgBvAHIALQBuAGUAeAB0AF0AIABzAGMAcwBpADoAIABxAGwAYQAyAHgA
+eAB4ADoAIABIAGkAZABlACAAdQBuAGEAdgBhAGkAbABhAGIAbABlACAAZgBpAHIAbQB3AGEAcgBl
+AAAAHwA1EAEAAABcAAAAPABEADIAMwBDADUANwA3ADcALgAzADYARgBGAEIAJQBnAGkAcgBpAGQA
+aABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AAAAfADkQAQAA
+AAgDAAA8ADEANAAzADIAMgA1ADIAOAAzADEALQA3ADUANQAxAC0AMQAtAGcAaQB0AC0AcwBlAG4A
+ZAAtAGUAbQBhAGkAbAAtAGoAdQBsAGkAYQBuAC4AYwBhAGwAYQBiAHkAQABnAG0AYQBpAGwALgBj
+AG8AbQA+ACAAPABDAEEARwBSAEcATgBnAFYAUwB1AE0ARAAzAEIANABCADAASgByAC0AVABPAFQA
+NQBLAHIANABOAFIAdgBKAFIAPQAwAGUAMwB0AHUANwAxAE8AeABVAHoAUQB0AHIAcQAyAHMAZwBA
+AG0AYQBpAGwALgBnAG0AYQBpAGwALgBjAG8AbQA+ACAAPAA1ADYAMQA1ADMANgA4ADIALgAxADAA
+MwAwADgAMAAxAEAAZwBtAGEAaQBsAC4AYwBvAG0APgAgADwAQwBBAEcAUgBHAE4AZwBVAEIAVwBh
+AHgAVgBpADYAZABXAEcAPQBOAEEAYgAzAHQAKwBVAF8ASgArAEUAQgByAFYAPQBwAGcAeABSAG0A
+TgBxAEsAdABzAEsAUwBzAEUAVwBDAGcAQABtAGEAaQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgAg
+ADwARAAyADMAQgAzAEQARAA5AC4AQgBBADkANQA1ACUAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQA
+aABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMQA0ADQANAAzADIAMQAwADYANgAu
+ADIAMwAxADIALgAxAC4AYwBhAG0AZQBsAEAASABhAG4AcwBlAG4AUABhAHIAdABuAGUAcgBzAGgA
+aQBwAC4AYwBvAG0APgAgADwAQwBBAEcAUgBHAE4AZwBYAEEATwAtAFIATwBlAEoALQBPAEUAYwBV
+AEgANgB2AC0AMQBUADUAQQArAHcAawBkAFEAQgBrADMAcwBRAEEAdwAwAHkAdABSAHQAMwBLACsA
+QQBTAFEAQABtAGEAaQBsAC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAMA3j+fTgAAQAAHMEk30TUp
+AtEBAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE1MTAwOTAw
+MjY1OVotNjE2NTYAAAAfABUQAQAAAFgAAABGAEQARABDAEMANQAyAEMAOAAzAEIANwA0ADEANABG
+AEEAOQBGAEQANgAyAEYARgAzADYAMwAzADUAQgA1ADYAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+AgEUMAEAAAAMAAAARQEAAHj9ZYBPAAAAHwD6PwEAAAAkAAAARwBpAHIAaQBkAGgAYQByACAATQBh
+AGwAYQB2AGEAbABpAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcA
+ZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBr
+AC8AMQA0AC4ANQAuADUALgAxADUAMAA4ADIAMQAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAA
+OAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4
+AAAAAQAAAFoBAABJAEkAPQAwADEAMAAxAEQAMQAwADIAMgA5ADEANwAyAEQAOQBEAEMARABEADAA
+OQBCADIANgAzAEIANABCAEEARQA5ADcANwA1ADIANgAyAEQANgA2ADEAOQAwAEYAOwBTAEIATQBJ
+AEQAPQAyADsAUwAxAD0APABDAEEARwBSAEcATgBnAFgAQQBPAC0AUgBPAGUASgAtAE8ARQBjAFUA
+SAA2AHYALQAxAFQANQBBACsAdwBrAGQAUQBCAGsAMwBzAFEAQQB3ADAAeQB0AFIAdAAzAEsAKwBB
+AFMAUQBAAG0AYQBpAGwALgBnAG0AYQBpAGwALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYA
+ZQByAHMAaQBvAG4AIAAxADQALgAzACAAKABCAHUAaQBsAGQAIAAyADMANQAuADAAKQAsACAAUwB0
+AGEAZwBlAD0ASAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0A
+bQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAA
+AABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsA
+MQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBj
+AGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAADoGA==
+
+--_000_D23C577736FFBgiridharmalavaliqlogiccom_--
