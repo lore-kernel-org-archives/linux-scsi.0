@@ -1,34 +1,39 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v3] scsi: ufs: add ioctl interface for query request
-Date: Sun, 11 Oct 2015 21:14:22 +0200
-Message-ID: <4997819.aH6H7EmMIs@wuerfel>
-References: <1444302569-30740-1-git-send-email-ygardi@codeaurora.org> <5970981.84uI3QIcdF@wuerfel> <96a76c637a4772997c149276632ed80d.squirrel@www.codeaurora.org>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: [PATCH] libfc: correct function name in comment
+Date: Sun, 11 Oct 2015 22:35:18 +0200
+Message-ID: <20151011223518.00000bdb@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <96a76c637a4772997c149276632ed80d.squirrel-mMfbam+mt9083fI46fginR2eb7JE58TQ@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Cc: james.bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, gbroner-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Noa Rubens <noag-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jbottomley-wo1vFcy6AUs@public.gmane.org>, "open list:ABI/API" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.19]:64380 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751176AbbJKUfY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Oct 2015 16:35:24 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
+Cc: Vasu Dev <vasu.dev@intel.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-On Sunday 11 October 2015 11:02:34 ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org wrote:
-> >
-> > no need for the #ifdef here.
-> 
-> in include\scsi\scsi_host.h
-> the hook - compat_ioctl is defined inside #ifdef CONFIG_COMPAT
-> 
-> #ifdef CONFIG_COMPAT
->         int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
-> #endif
-> 
-> 
-> 
+Use the correct function name in kernel-doc comment.
 
-Ah, sorry about that. I saw your v4 before I saw this reply here, and
-you are right. This is different from the normal file_operations
-compat_ioctl method that doesn't need the #ifdef.
+Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+Acked-by: Vasu Dev <vasu.dev@intel.com>
+---
 
-	Arnd
+diff -U 5 -rp a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
+--- a/drivers/scsi/libfc/fc_npiv.c	2014-09-03 19:30:11.760273300 +0200
++++ b/drivers/scsi/libfc/fc_npiv.c	2015-08-05 00:06:17.927753719 +0200
+@@ -23,11 +23,11 @@
+ 
+ #include <scsi/libfc.h>
+ #include <linux/export.h>
+ 
+ /**
+- * fc_vport_create() - Create a new NPIV vport instance
++ * libfc_vport_create() - Create a new NPIV vport instance
+  * @vport: fc_vport structure from scsi_transport_fc
+  * @privsize: driver private data size to allocate along with the Scsi_Host
+  */
+ 
+ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize)
