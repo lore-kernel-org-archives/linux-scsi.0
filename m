@@ -1,110 +1,65 @@
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-Subject: [PATCH] st: allow debug output to be enabled or disabled via sysfs
-Date: Mon, 12 Oct 2015 04:31:17 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB444ABDC8@G4W3219.americas.hpqcorp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: don't try to load a device handler during async
+ probing
+Date: Mon, 12 Oct 2015 14:21:11 +0200
+Message-ID: <561BA5B7.8050703@suse.de>
+References: <1444292732-8571-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:50982 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042AbbJLEb3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2015 00:31:29 -0400
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:36022 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751173AbbJLMVN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Oct 2015 08:21:13 -0400
+In-Reply-To: <1444292732-8571-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James Bottomley (JBottomley@Odin.com)" <JBottomley@Odin.com>
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+On 10/08/2015 10:25 AM, Christoph Hellwig wrote:
+> Request_module gets really unhappy when called from async probing, so
+> revert to not auto load device handler modules during the SCSI bus
+> scan.  While autoloading would be really useful we never did this
+> until 4.3-rc and it turns out that functionality doesn't actually
+> work.
+>=20
+> Fixes: 566079 ("dm-mpath, scsi_dh: request scsi_dh modules in scsi_dh=
+, not dm-mpath")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Paul Mackerras <paulus@ozlabs.org>
+> Tested-by: Paul Mackerras <paulus@ozlabs.org>
+> ---
+>  drivers/scsi/scsi_dh.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index 0a2168e..d771bec 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -226,7 +226,7 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+> =20
+>  	drv =3D scsi_dh_find_driver(sdev);
+>  	if (drv)
+> -		devinfo =3D scsi_dh_lookup(drv);
+> +		devinfo =3D __scsi_dh_lookup(drv);
+>  	if (devinfo)
+>  		err =3D scsi_dh_handler_attach(sdev, devinfo);
+>  	return err;
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Change st driver to allow enabling or disabling debug output
-via sysfs file /sys/bus/scsi/drivers/st/debug_flag.
+Cheers,
 
-Previously the only way to enable debug output was:
-
-1. loading the driver with the module parameter debug_flag=1
-2. an ioctl call (this method was also the only way to dynamically
-disable debug output).
-
-To use the ioctl you need a second tape drive (if you are
-actively testing the first tape drive) since a second process
-cannot open the first tape drive if it is in use.
-
-The this change is only functional if the value of the macro
-DEBUG in st.c is a non-zero value (which it is by default).
-
-Signed-off-by: Shane Seymour <shane.seymour@hpe.com>
----
---- a/drivers/scsi/st.c	2015-10-06 17:11:16.299801789 -0500
-+++ b/drivers/scsi/st.c	2015-10-11 14:45:10.595060995 -0500
-@@ -4452,11 +4452,41 @@ static ssize_t version_show(struct devic
- }
- static DRIVER_ATTR_RO(version);
- 
-+#if DEBUG
-+static ssize_t debug_flag_store(struct device_driver *ddp,
-+	const char *buf, size_t count)
-+{
-+/* We only care what the first byte of the data is the rest is unused.
-+ * if it's a '1' we turn on debug and if it's a '0' we disable it. All
-+ * other values have -EINVAL returned if they are passed in.
-+ */
-+	if (count > 0) {
-+		if (buf[0] == '0') {
-+			debugging = NO_DEBUG;
-+			return count;
-+		} else if (buf[0] == '1') {
-+			debugging = 1;
-+			return count;
-+		}
-+	}
-+	return -EINVAL;
-+}
-+
-+static ssize_t debug_flag_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", debugging);
-+}
-+static DRIVER_ATTR_RW(debug_flag);
-+#endif
-+
- static struct attribute *st_drv_attrs[] = {
- 	&driver_attr_try_direct_io.attr,
- 	&driver_attr_fixed_buffer_size.attr,
- 	&driver_attr_max_sg_segs.attr,
- 	&driver_attr_version.attr,
-+#if DEBUG
-+	&driver_attr_debug_flag.attr,
-+#endif
- 	NULL,
- };
- ATTRIBUTE_GROUPS(st_drv);
-diff -uprN a/Documentation/ABI/testing/sysfs-driver-st b/Documentation/ABI/testing/sysfs-driver-st
---- a/Documentation/ABI/testing/sysfs-driver-st	1969-12-31 18:00:00.000000000 -0600
-+++ b/Documentation/ABI/testing/sysfs-driver-st	2015-10-11 14:28:43.537128220 -0500
-@@ -0,0 +1,12 @@
-+What:		/sys/bus/scsi/drivers/st/debug_flag
-+Date:		October 2015
-+Kernel Version:	?.?
-+Contact:	shane.seymour@hpe.com
-+Description:
-+		This file allows you to turn debug output from the st driver
-+		off if you write a '0' to the file or on if you write a '1'.
-+		Note that debug output requires that the module be compiled
-+		with the #define DEBUG set to a non-zero value (this is the
-+		default). If DEBUG is set to 0 then this file will not
-+		appear in sysfs as its presence is conditional upon debug
-+		output support being compiled into the module.
---- a/Documentation/scsi/st.txt	2015-10-06 17:11:12.323802060 -0500
-+++ b/Documentation/scsi/st.txt	2015-10-11 14:19:48.176164681 -0500
-@@ -569,7 +569,9 @@ Debugging code is now compiled in by def
- with the kernel module parameter debug_flag defaulting to 0.  Debugging
- can still be switched on and off with an ioctl.  To enable debug at
- module load time add debug_flag=1 to the module load options, the
--debugging output is not voluminous.
-+debugging output is not voluminous. Debugging can also be enabled
-+and disabled by writing a '0' (disable) or '1' (enable) to the sysfs
-+file /sys/bus/scsi/drivers/st/debug_flag.
- 
- If the tape seems to hang, I would be very interested to hear where
- the driver is waiting. With the command 'ps -l' you can see the state
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
