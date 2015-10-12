@@ -1,178 +1,61 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 24/25] scsi: hisi_sas: add fatal irq handler
-Date: Mon, 12 Oct 2015 23:20:36 +0800
-Message-ID: <1444663237-238302-25-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Mon, 12 Oct 2015 23:20:21 +0800
+Message-ID: <1444663237-238302-10-git-send-email-john.garry@huawei.com>
 References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:11758 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbJLPFf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2015 11:05:35 -0400
-In-Reply-To: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1444663237-238302-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: linux-kernel-u79uwXL29TZ19SzzRMN9sA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.com, devicetree@vger.kernel.org, arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de, John Garry <john.garry@huawei.com>
 
-Add handlers for fatal interrupts.
+This SAS ID is chosen as Huawei IEEE id: 001882
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 118 +++++++++++++++++++++++++++++++++
- 1 file changed, 118 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_init.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index b5ba46a..bc8e23e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1621,6 +1621,91 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
- 	return IRQ_HANDLED;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_init.c b/drivers/scsi/hisi_sas/hisi_sas_init.c
+index 44fc524..c295c39 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_init.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_init.c
+@@ -283,6 +283,19 @@ err_out:
+ 	return NULL;
  }
  
-+static irqreturn_t fatal_ecc_int_v1_hw(int irq, void *p)
++static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
 +{
-+	struct hisi_hba *hisi_hba = p;
-+	u32 ecc_int = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
++	u8 i;
 +
-+	if (ecc_int & SAS_ECC_INTR_DQ_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++	/* Huawei IEEE id (001882) */
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		hisi_hba->phy[i].dev_sas_addr =
++			cpu_to_be64(0x5001882016072015ULL);
 +
-+		panic("Fatal DQ 1b ECC interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, ecc_err);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_DQ_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_DQ_ECC_ADDR) &
-+				HGC_DQ_ECC_ADDR_BAD_MSK) >>
-+				HGC_DQ_ECC_ADDR_BAD_OFF;
-+
-+		panic("Fatal DQ RAM ECC interrupt on controller %d @ 0x%08x\n",
-+			hisi_hba->id, addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_IOST_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
-+
-+		panic("Fatal IOST 1b ECC interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, ecc_err);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_IOST_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR) &
-+				HGC_IOST_ECC_ADDR_BAD_MSK) >>
-+				HGC_IOST_ECC_ADDR_BAD_OFF;
-+
-+		panic("Fatal IOST RAM ECC interrupt on controller %d @ 0x%08x\n",
-+			hisi_hba->id, addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_ITCT_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR) &
-+				HGC_ITCT_ECC_ADDR_BAD_MSK) >>
-+				HGC_ITCT_ECC_ADDR_BAD_OFF;
-+
-+		panic("Fatal TCT RAM ECC interrupt on controller %d @ 0x%08x\n",
-+			hisi_hba->id, addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_ITCT_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
-+
-+		panic("Fatal ITCT 1b ECC interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, ecc_err);
-+	}
-+
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR, ecc_int | 0x3f);
-+
-+	return IRQ_HANDLED;
++	memcpy(hisi_hba->sas_addr, &hisi_hba->phy[0].dev_sas_addr,
++	       SAS_ADDR_SIZE);
 +}
 +
-+static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
-+	u32 axi_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC2);
-+	u32 axi_info = hisi_sas_read32(hisi_hba, HGC_AXI_FIFO_ERR_INFO);
-+
-+	if (axi_int & ENT_INT_SRC2_DQ_CFG_ERR_MSK)
-+		panic("Fatal DQ_CFG_ERR interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_CQ_CFG_ERR_MSK)
-+		panic("Fatal CQ_CFG_ERR interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_AXI_WRONG_INT_MSK)
-+		panic("Fatal AXI_WRONG_INT interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_AXI_OVERLF_INT_MSK)
-+		panic("Fatal AXI_OVERLF_INT incorrect interrupt on controller %d (0x%x)\n",
-+			hisi_hba->id, axi_info);
-+
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, axi_int | 0x30000000);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
- 	{"Bcast"},
- 	{"Phy Up"},
-@@ -1628,6 +1713,10 @@ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
- };
- 
- static const char cq_int_name[32] = "cq";
-+static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
-+	"fatal ecc",
-+	"fatal axi"
-+};
- 
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_bcast_v1_hw,
-@@ -1635,6 +1724,11 @@ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_abnormal_v1_hw
- };
- 
-+static irq_handler_t fatal_interrupts[HISI_SAS_MAX_QUEUES] = {
-+	fatal_ecc_int_v1_hw,
-+	fatal_axi_int_v1_hw
-+};
-+
- int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ static int hisi_sas_probe(struct platform_device *pdev)
  {
- 	int i, j, irq, rc, id = hisi_hba->id;
-@@ -1697,6 +1791,30 @@ int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		idx++;
+ 	struct Scsi_Host *shost;
+@@ -339,6 +352,8 @@ static int hisi_sas_probe(struct platform_device *pdev)
+ 		sha->sas_phy[i] = &hisi_hba->phy[i].sas_phy;
+ 		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
  	}
- 
-+	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++) {
-+		int idx = (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) +
-+				hisi_hba->queue_count + i;
 +
-+		irq = irq_of_parse_and_map(np, idx);
-+		if (!irq) {
-+			dev_err(dev, "irq init: [%d] could not map fatal interrupt %d\n",
-+				hisi_hba->id, idx);
-+			return -ENOENT;
-+		}
-+		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
-+				HISI_SAS_NAME_LEN,
-+				DRV_NAME" %s [%d]", fatal_int_name[i], id);
-+		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-+				&int_names[idx * HISI_SAS_NAME_LEN],
-+				hisi_hba);
-+		if (rc) {
-+			dev_err(dev,
-+				"irq init: [%d] could not request fatal interrupt %d, rc=%d\n",
-+				hisi_hba->id, irq, rc);
-+			return -ENOENT;
-+		}
-+		idx++;
-+	}
- 
- 	return 0;
- }
++	hisi_sas_init_add(hisi_hba);
+ 	rc = scsi_add_host(shost, &pdev->dev);
+ 	if (rc)
+ 		goto err_out_ha;
 -- 
 1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
