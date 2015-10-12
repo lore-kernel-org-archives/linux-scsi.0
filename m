@@ -1,41 +1,72 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: advansys needs ISA dma api for ISA support
-Date: Mon, 12 Oct 2015 17:10:16 +0200
-Message-ID: <5081546.QjQ32dGX2L@wuerfel>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 08/25] scsi: hisi_sas: add cq structure initialization
+Date: Mon, 12 Oct 2015 23:20:20 +0800
+Message-ID: <1444663237-238302-9-git-send-email-john.garry@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, JBottomley@odin.com
-Cc: Hannes Reinecke <hare@suse.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:13446 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbbJLPK6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2015 11:10:58 -0400
+In-Reply-To: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.com, devicetree@vger.kernel.org, arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de, John Garry <john.garry@huawei.com>
 
-The advansys drvier uses the request_dma function that is used on ISA
-machines for the internal DMA controller, which causes build errors
-on platforms that have ISA slots but do not provide the ISA DMA API:
+Each completion queue has a structure. This is mainly for
+passing to irq handler so we know which queue the irq occured
+on.
 
-drivers/scsi/advansys.c: In function 'advansys_board_found':
-drivers/scsi/advansys.c:11300:10: error: implicit declaration of function 'request_dma' [-Werror=implicit-function-declaration]
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h      | 6 ++++++
+ drivers/scsi/hisi_sas/hisi_sas_init.c | 6 ++++++
+ 2 files changed, 12 insertions(+)
 
-The problem now showed up in ARM randconfig builds after commit
-6571fb3f8b7f ("advansys: Update to version 3.5 and remove compilation
-warning") made it possible to build on platforms that have neither
-VIRT_TO_BUS nor ISA_DMA_API but that do have ISA.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 5f72d98..6c5d22a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -44,6 +44,10 @@ struct hisi_sas_port {
+ 	struct asd_sas_port	sas_port;
+ };
+ 
++struct hisi_sas_cq {
++	struct hisi_hba *hisi_hba;
++	int	id;
++};
+ 
+ struct hisi_sas_slot {
+ 	struct list_head entry;
+@@ -92,6 +96,8 @@ struct hisi_hba {
+ 	/* SCSI/SAS glue */
+ 	struct sas_ha_struct sha;
+ 	struct Scsi_Host *shost;
++
++	struct hisi_sas_cq cq[HISI_SAS_MAX_QUEUES];
+ 	struct hisi_sas_phy phy[HISI_SAS_MAX_PHYS];
+ 	struct hisi_sas_port port[HISI_SAS_MAX_PHYS];
+ 	int	id;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_init.c b/drivers/scsi/hisi_sas/hisi_sas_init.c
+index 8f1e856..44fc524 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_init.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_init.c
+@@ -42,6 +42,12 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 	struct device *dev = &hisi_hba->pdev->dev;
+ 
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
++
++		/* Completion queue structure */
++		cq->id = i;
++		cq->hisi_hba = hisi_hba;
++
+ 		/* Delivery queue */
+ 		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
+ 		hisi_hba->cmd_hdr[i] = dma_alloc_coherent(dev, s,
+-- 
+1.9.1
 
-This adds the missing dependency.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index d2f480b04a52..d4aa6a1a806c 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -499,6 +499,7 @@ config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
- 	depends on ISA || EISA || PCI
-+	depends on ISA_DMA_API || !ISA
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
- 	  AdvanSys. It is documented in the kernel source in
