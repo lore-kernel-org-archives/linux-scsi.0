@@ -1,52 +1,33 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: don't try to load a device handler during async
- probing
-Date: Mon, 12 Oct 2015 14:21:11 +0200
-Message-ID: <561BA5B7.8050703@suse.de>
-References: <1444292732-8571-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH] scsi: use host wide tags by default
+Date: Mon, 12 Oct 2015 14:28:48 +0200
+Message-ID: <561BA780.5090006@suse.de>
+References: <1444292884-8622-1-git-send-email-hch@lst.de> <1444292884-8622-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36022 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36440 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbbJLMVN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Oct 2015 08:21:13 -0400
-In-Reply-To: <1444292732-8571-1-git-send-email-hch@lst.de>
+	id S1751346AbbJLM2u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Oct 2015 08:28:50 -0400
+In-Reply-To: <1444292884-8622-2-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: axboe@kernel.dk
 
-On 10/08/2015 10:25 AM, Christoph Hellwig wrote:
-> Request_module gets really unhappy when called from async probing, so
-> revert to not auto load device handler modules during the SCSI bus
-> scan.  While autoloading would be really useful we never did this
-> until 4.3-rc and it turns out that functionality doesn't actually
-> work.
+On 10/08/2015 10:28 AM, Christoph Hellwig wrote:
+> This patch changes the !blk-mq path to the same defaults as the blk-m=
+q
+> I/O path by always enabling block tagging, and always using host wide
+> tags.  We've had blk-mq available for a few releases so bugs with
+> this mode should have been ironed out, and this ensures we get better
+> coverage of over tagging setup over different configs.
 >=20
-> Fixes: 566079 ("dm-mpath, scsi_dh: request scsi_dh modules in scsi_dh=
-, not dm-mpath")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Paul Mackerras <paulus@ozlabs.org>
-> Tested-by: Paul Mackerras <paulus@ozlabs.org>
-> ---
->  drivers/scsi/scsi_dh.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-> index 0a2168e..d771bec 100644
-> --- a/drivers/scsi/scsi_dh.c
-> +++ b/drivers/scsi/scsi_dh.c
-> @@ -226,7 +226,7 @@ int scsi_dh_add_device(struct scsi_device *sdev)
-> =20
->  	drv =3D scsi_dh_find_driver(sdev);
->  	if (drv)
-> -		devinfo =3D scsi_dh_lookup(drv);
-> +		devinfo =3D __scsi_dh_lookup(drv);
->  	if (devinfo)
->  		err =3D scsi_dh_handler_attach(sdev, devinfo);
->  	return err;
->=20
+> Acked-by: Jens Axboe <axboe@kernel.dk>
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
