@@ -1,70 +1,48 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH v3] scsi: report 'INQUIRY result too short' once per host
-Date: Mon, 12 Oct 2015 17:16:15 +0200
-Message-ID: <87egh0yv5s.fsf@vitty.brq.redhat.com>
-References: <1444323291-16447-1-git-send-email-vkuznets@redhat.com>
-	<561BA89B.2040504@suse.de>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH 04/25] scsi: hisi_sas: add scsi host registration
+Date: Mon, 12 Oct 2015 17:21:34 +0200
+Message-ID: <5053179.dHmgEztyeB@wuerfel>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <1444663237-238302-5-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <561BA89B.2040504@suse.de> (Hannes Reinecke's message of "Mon, 12
-	Oct 2015 14:33:31 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1444663237-238302-5-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hannes Reinecke <hare@suse.de> writes:
+On Monday 12 October 2015 23:20:16 John Garry wrote:
+> +
+> +       shost = scsi_host_alloc(&hisi_sas_sht, sizeof(void *));
+> +       if (!shost)
+> +               return -ENOMEM;
+> +
+> +       hisi_hba = hisi_sas_hba_alloc(pdev, shost, np);
+> +       if (!hisi_hba) {
+> +               rc = -ENOMEM;
+> +               goto err_out_ha;
+> +       }
 
-> On 10/08/2015 06:54 PM, Vitaly Kuznetsov wrote:
->> Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
->> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
->> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
->> INQUIRY result too short (5), using 36' messages on console. This can be
->> problematic for slow consoles. Introduce short_inquiry flag in struct
->> Scsi_Host to print the message once per host.
->> 
->> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
->> ---
->> Changes since v2:
->> - This is a successor of previously sent (and still not merged) "scsi:
->>   introduce short_inquiry flag for broken host adapters" patch. I'm not
->>   particularly sure which solution is better but I'm leaning towards this
->>   one as it doesn't require changes to adapter drivers.
->> ---
->>  drivers/scsi/scsi_scan.c | 9 ++++++---
->>  include/scsi/scsi_host.h | 3 +++
->>  2 files changed, 9 insertions(+), 3 deletions(-)
->> 
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index f9f3f82..cd347e4 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
->>  	 * strings.
->>  	 */
->>  	if (sdev->inquiry_len < 36) {
->> -		sdev_printk(KERN_INFO, sdev,
->> -			    "scsi scan: INQUIRY result too short (%d),"
->> -			    " using 36\n", sdev->inquiry_len);
->> +		if (!sdev->host->short_inquiry) {
->> +			shost_printk(KERN_INFO, sdev->host,
->> +				    "scsi scan: INQUIRY result too short (%d),"
->> +				    " using 36\n", sdev->inquiry_len);
->> +			sdev->host->short_inquiry = 1;
->> +		}
->>  		sdev->inquiry_len = 36;
->>  	}
->>  
-> At least you need to check if you've received any valid data here;
-> 'INQUIRY result too short' is also a common error if the interrupt
-> is hosed when trying to access the device.
-> So please check for 'inquiry_len > 4' before setting 'short_inquiry'.
+You can collapse the allocations into one and just pass sizeof(*hisi_hba)
+instead of sizeof(void *) above.
 
-Currently we proceed even with a shorter reply... Should we abort the
-scan (and return -EOI?) in case we got inquiry_len <= 4?
 
-Thanks,
+> +       sha = SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
+> +       platform_set_drvdata(pdev, sha);
+> +
+> +       phy_nr = port_nr = HISI_SAS_MAX_PHYS;
+> +
+> +       arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
+> +       arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
+> +       if (!arr_phy || !arr_port)
+> +               return -ENOMEM;
 
--- 
-  Vitaly
+And since these are fixed-size arrays, they can be moved in there as well.
+
+	Arnd
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
