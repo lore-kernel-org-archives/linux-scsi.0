@@ -1,34 +1,73 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: use host wide tags by default
-Date: Mon, 12 Oct 2015 14:28:48 +0200
-Message-ID: <561BA780.5090006@suse.de>
-References: <1444292884-8622-1-git-send-email-hch@lst.de> <1444292884-8622-2-git-send-email-hch@lst.de>
+Subject: Re: [PATCH v3] scsi: report 'INQUIRY result too short' once per host
+Date: Mon, 12 Oct 2015 14:33:31 +0200
+Message-ID: <561BA89B.2040504@suse.de>
+References: <1444323291-16447-1-git-send-email-vkuznets@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36440 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36840 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346AbbJLM2u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Oct 2015 08:28:50 -0400
-In-Reply-To: <1444292884-8622-2-git-send-email-hch@lst.de>
+	id S1751255AbbJLMde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Oct 2015 08:33:34 -0400
+In-Reply-To: <1444323291-16447-1-git-send-email-vkuznets@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: axboe@kernel.dk
+To: Vitaly Kuznetsov <vkuznets@redhat.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 
-On 10/08/2015 10:28 AM, Christoph Hellwig wrote:
-> This patch changes the !blk-mq path to the same defaults as the blk-m=
-q
-> I/O path by always enabling block tagging, and always using host wide
-> tags.  We've had blk-mq available for a few releases so bugs with
-> this mode should have been ironed out, and this ensures we get better
-> coverage of over tagging setup over different configs.
+On 10/08/2015 06:54 PM, Vitaly Kuznetsov wrote:
+> Some host adapters (e.g. Hyper-V storvsc) are known for not respectin=
+g the
+> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain=
+ at
+> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+> INQUIRY result too short (5), using 36' messages on console. This can=
+ be
+> problematic for slow consoles. Introduce short_inquiry flag in struct
+> Scsi_Host to print the message once per host.
 >=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Jens Axboe <axboe@kernel.dk>
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+> ---
+> Changes since v2:
+> - This is a successor of previously sent (and still not merged) "scsi=
+:
+>   introduce short_inquiry flag for broken host adapters" patch. I'm n=
+ot
+>   particularly sure which solution is better but I'm leaning towards =
+this
+>   one as it doesn't require changes to adapter drivers.
+> ---
+>  drivers/scsi/scsi_scan.c | 9 ++++++---
+>  include/scsi/scsi_host.h | 3 +++
+>  2 files changed, 9 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f9f3f82..cd347e4 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sd=
+ev, unsigned char *inq_result,
+>  	 * strings.
+>  	 */
+>  	if (sdev->inquiry_len < 36) {
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "scsi scan: INQUIRY result too short (%d),"
+> -			    " using 36\n", sdev->inquiry_len);
+> +		if (!sdev->host->short_inquiry) {
+> +			shost_printk(KERN_INFO, sdev->host,
+> +				    "scsi scan: INQUIRY result too short (%d),"
+> +				    " using 36\n", sdev->inquiry_len);
+> +			sdev->host->short_inquiry =3D 1;
+> +		}
+>  		sdev->inquiry_len =3D 36;
+>  	}
+> =20
+At least you need to check if you've received any valid data here;
+'INQUIRY result too short' is also a common error if the interrupt
+is hosed when trying to access the device.
+So please check for 'inquiry_len > 4' before setting 'short_inquiry'.
 
 Cheers,
 
