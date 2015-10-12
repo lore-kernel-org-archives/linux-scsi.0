@@ -1,70 +1,49 @@
-From: James Smart <james.smart@avagotech.com>
-Subject: Re: [PATCH] lpfc: fix memory leak and NULL dereference
-Date: Mon, 12 Oct 2015 11:02:29 -0700
-Message-ID: <561BF5B5.4080901@avagotech.com>
-References: <1443015152-12301-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 12/25] scsi: hisi_sas: add v1 HW initialisation code
+Date: Mon, 12 Oct 2015 20:46:19 +0200
+Message-ID: <147982224.OvBbMyp8ci@wuerfel>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <1444663237-238302-13-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1443015152-12301-1-git-send-email-sudipm.mukherjee@gmail.com>
+In-Reply-To: <1444663237-238302-13-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-Looks Good - Thank you Sudip.
-
-Reviewed-by: James Smart <james.smart@avagotech.com>
-
--- james s
-
-
-On 9/23/2015 6:32 AM, Sudip Mukherjee wrote:
-> kmalloc() can return NULL and without checking we were dereferencing it.
-> Moreover if kmalloc succeeds but the function fails in other parts then
-> we were returning the error code but we missed freeing lcb_context.
-> While at it fixed one related checkpatch warning.
->
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> ---
->
-> I am not exactly sure if LSRJT_UNABLE_TPC is the right error code here.
-> But that was my best guess.
->
->   drivers/scsi/lpfc/lpfc_els.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 36bf58b..a27efd9 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -5209,7 +5209,6 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   		rjt_err = LSRJT_CMD_UNSUPPORTED;
->   		goto rjt;
->   	}
-> -	lcb_context = kmalloc(sizeof(struct lpfc_lcb_context), GFP_KERNEL);
->   
->   	if (phba->hba_flag & HBA_FCOE_MODE) {
->   		rjt_err = LSRJT_CMD_UNSUPPORTED;
-> @@ -5240,6 +5239,12 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   		goto rjt;
->   	}
->   
-> +	lcb_context = kmalloc(sizeof(*lcb_context), GFP_KERNEL);
-> +	if (!lcb_context) {
-> +		rjt_err = LSRJT_UNABLE_TPC;
-> +		goto rjt;
-> +	}
+On Monday 12 October 2015 23:20:24 John Garry wrote:
+> @@ -387,6 +392,21 @@ static int hisi_sas_probe(struct platform_device *pdev)
+>         }
+>  
+>         hisi_sas_init_add(hisi_hba);
 > +
->   	state = (beacon->lcb_sub_command == LPFC_LCB_ON) ? 1 : 0;
->   	lcb_context->sub_command = beacon->lcb_sub_command;
->   	lcb_context->type = beacon->lcb_type;
-> @@ -5250,6 +5255,7 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   	if (lpfc_sli4_set_beacon(vport, lcb_context, state)) {
->   		lpfc_printf_vlog(ndlp->vport, KERN_ERR,
->   				 LOG_ELS, "0193 failed to send mail box");
-> +		kfree(lcb_context);
->   		lpfc_nlp_put(ndlp);
->   		rjt_err = LSRJT_UNABLE_TPC;
->   		goto rjt;
+> +       rc = hw_init_v1_hw(hisi_hba);
+> +       if (rc)
+> +               goto err_out_ha;
+> +
+> +       rc = interrupt_init_v1_hw(hisi_hba);
+> +       if (rc)
+> +               goto err_out_ha;
+> +
+> +       rc = interrupt_openall_v1_hw(hisi_hba);
+> +       if (rc)
+> +               goto err_out_ha;
+> +
+> +       phys_init_v1_hw(hisi_hba);
+> +
+>         rc = scsi_add_host(shost, &pdev->dev);
+>         if (rc)
+>                 goto err_out_ha;
+> 
+
+As the probe function matches against the "hisilicon,sas-controller-v1"
+compatible string and contains mostly code that is specific to v1, I
+think it would be cleaner to move that to the hisi_sas_v1_hw.c as well
+and make the functions above static but make the common functions
+called here (hisi_sas_init_add etc) global.
+
+That would also include the hisi_sas_driver structure.
+
+	Arnd
