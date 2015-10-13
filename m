@@ -1,47 +1,69 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCHv5 00/36] asynchronous ALUA device handler
-Date: Tue, 13 Oct 2015 08:40:31 -0700
-Message-ID: <561D25EF.2060209@sandisk.com>
-References: <1443523658-87622-1-git-send-email-hare@suse.de>
- <560AD88B.9050902@sandisk.com> <560BE1DC.9060600@suse.de>
- <560C5509.6050206@sandisk.com> <561CD294.3080905@suse.de>
- <561D1E3E.5030201@sandisk.com> <561D1F7D.7070803@suse.de>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Tue, 13 Oct 2015 18:14:25 +0100
+Message-ID: <561D3BF1.8060600@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <1444663237-238302-10-git-send-email-john.garry@huawei.com>
+ <561CA0CB.5090802@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0086.outbound.protection.outlook.com ([157.56.111.86]:20352
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932341AbbJMPkh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Oct 2015 11:40:37 -0400
-In-Reply-To: <561D1F7D.7070803@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <561CA0CB.5090802-l3A5Bk7waGM@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 10/13/2015 08:13 AM, Hannes Reinecke wrote:
-> On 10/13/2015 05:07 PM, Bart Van Assche wrote:
->> On 10/13/2015 02:44 AM, Hannes Reinecke wrote:
->>> I have rebased my patches to 4.3.0-rc5 and didn't see any lockups;
->>> tested with hpsa and lpfc, both mq enabled and disabled.
->>>
->>> Can you check if it's specific to ib_srp? Is there a way to simulate
->>> an ib_srp setup?
+On 13/10/2015 07:12, Hannes Reinecke wrote:
+> On 10/12/2015 05:20 PM, John Garry wrote:
+>> This SAS ID is chosen as Huawei IEEE id: 001882
 >>
->> This infinite loop was due to the scsi_dh_alua handler not being
->> loaded during my test (as mentioned in
->> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg42645.html).
+>> Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   drivers/scsi/hisi_sas/hisi_sas_init.c | 15 +++++++++++++++
+>>   1 file changed, 15 insertions(+)
+>>
+>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_init.c b/drivers/scsi/hisi_sas/hisi_sas_init.c
+>> index 44fc524..c295c39 100644
+>> --- a/drivers/scsi/hisi_sas/hisi_sas_init.c
+>> +++ b/drivers/scsi/hisi_sas/hisi_sas_init.c
+>> @@ -283,6 +283,19 @@ err_out:
+>>   	return NULL;
+>>   }
+>>
+>> +static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+>> +{
+>> +	u8 i;
+>> +
+>> +	/* Huawei IEEE id (001882) */
+>> +	for (i = 0; i < hisi_hba->n_phy; i++)
+>> +		hisi_hba->phy[i].dev_sas_addr =
+>> +			cpu_to_be64(0x5001882016072015ULL);
+>> +
+> Ouch. Each phy has the same SAS address?
+> For all boards? Ever?
 >
-> So it works with that patch?
+> Not sure if that's a good idea, nor even valid.
+> It'll confuse the hell out of any SAS array.
+>
+> Please provide a means of having individual SAS addresses for each HBA.
+>
+> Cheers,
+>
+> Hannes
+>
+Hello,
 
-Hello Hannes,
+Are you saying we should be getting the SAS address from fw with 
+sas_request_addr() or the like?
 
-Manually loading the scsi_dh_alua handler or adding the patch that loads 
-that handler again automatically indeed fixed the infinite loop. But I'm 
-still very concerned about the scalability issues caused by submitting 
-RTPG commands synchronously instead of asynchronously.
+Marvell solution seems to hardcode it.
 
-Bart.
+thanks,
+John
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
