@@ -1,93 +1,215 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH v3] scsi: report 'INQUIRY result too short' once per host
-Date: Tue, 13 Oct 2015 13:17:05 +0200
-Message-ID: <87eggzxbke.fsf@vitty.brq.redhat.com>
-References: <1444323291-16447-1-git-send-email-vkuznets@redhat.com>
-	<561BA89B.2040504@suse.de> <87egh0yv5s.fsf@vitty.brq.redhat.com>
-	<561CA1C6.2010207@suse.de>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH v3 12/13] scsi: ufs-exynos: add UFS host support for Exynos
+ SoCs
+Date: Tue, 13 Oct 2015 16:49:39 +0530
+Message-ID: <561CE8CB.9010102@samsung.com>
+References: <1443686970-28104-1-git-send-email-alim.akhtar@samsung.com>
+ <1443686970-28104-13-git-send-email-alim.akhtar@samsung.com>
+ <2228323.jdbqnSKW75@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <561CA1C6.2010207@suse.de> (Hannes Reinecke's message of "Tue, 13
-	Oct 2015 08:16:38 +0200")
+In-reply-to: <2228323.jdbqnSKW75@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hannes Reinecke <hare@suse.de> writes:
+Hi Arnd,
 
-> On 10/12/2015 05:16 PM, Vitaly Kuznetsov wrote:
->> Hannes Reinecke <hare@suse.de> writes:
->> 
->>> On 10/08/2015 06:54 PM, Vitaly Kuznetsov wrote:
->>>> Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
->>>> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
->>>> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
->>>> INQUIRY result too short (5), using 36' messages on console. This can be
->>>> problematic for slow consoles. Introduce short_inquiry flag in struct
->>>> Scsi_Host to print the message once per host.
->>>>
->>>> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
->>>> ---
->>>> Changes since v2:
->>>> - This is a successor of previously sent (and still not merged) "scsi:
->>>>   introduce short_inquiry flag for broken host adapters" patch. I'm not
->>>>   particularly sure which solution is better but I'm leaning towards this
->>>>   one as it doesn't require changes to adapter drivers.
->>>> ---
->>>>  drivers/scsi/scsi_scan.c | 9 ++++++---
->>>>  include/scsi/scsi_host.h | 3 +++
->>>>  2 files changed, 9 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->>>> index f9f3f82..cd347e4 100644
->>>> --- a/drivers/scsi/scsi_scan.c
->>>> +++ b/drivers/scsi/scsi_scan.c
->>>> @@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
->>>>  	 * strings.
->>>>  	 */
->>>>  	if (sdev->inquiry_len < 36) {
->>>> -		sdev_printk(KERN_INFO, sdev,
->>>> -			    "scsi scan: INQUIRY result too short (%d),"
->>>> -			    " using 36\n", sdev->inquiry_len);
->>>> +		if (!sdev->host->short_inquiry) {
->>>> +			shost_printk(KERN_INFO, sdev->host,
->>>> +				    "scsi scan: INQUIRY result too short (%d),"
->>>> +				    " using 36\n", sdev->inquiry_len);
->>>> +			sdev->host->short_inquiry = 1;
->>>> +		}
->>>>  		sdev->inquiry_len = 36;
->>>>  	}
->>>>  
->>> At least you need to check if you've received any valid data here;
->>> 'INQUIRY result too short' is also a common error if the interrupt
->>> is hosed when trying to access the device.
->>> So please check for 'inquiry_len > 4' before setting 'short_inquiry'.
->> 
->> Currently we proceed even with a shorter reply... Should we abort the
->> scan (and return -EOI?) in case we got inquiry_len <= 4?
->> 
-> Yes please. We need to ensure that we actually received some data,
-> and not running into an error scenario here.
-> So we need to read at least five bytes of data, as byte 4 carries
-> the response length. If we read less than that we have no way of
-> figuring out if the response data is even remotely sane.
+On 10/01/2015 05:42 PM, Arnd Bergmann wrote:
+> On Thursday 01 October 2015 13:39:29 Alim Akhtar wrote:
 >
+>> +static int exynos7_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
+>> +{
+>> +	int ret;
+>> +	const char *const clks[] = {
+>> +		"mout_sclk_combo_phy_embedded",
+>> +		"top_sclk_phy_fsys1_26m",
+>> +	};
+>> +
+>
+> These clocks are neither in the binding nor in the example.
+>
+ok, I am cleaning this a bit, this will come from DT.
+>> +struct exynos_ufs_drv_data exynos_ufs_drvs[] = {
+>> +{
+>> +	.compatible		= "samsung,exynos7-ufs",
+>> +	.uic_attr		= &exynos7_uic_attr,
+>> +	.quirks			= UFSHCI_QUIRK_BYTE_ALIGN_UTRD |
+>> +				  UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR |
+>> +				  UFSHCI_QUIRK_BROKEN_HCE |
+>> +				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR,
+>> +	.opts			= EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL |
+>> +				  EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL |
+>> +				  EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX,
+>> +	.drv_init		= exynos7_ufs_drv_init,
+>> +	.pre_link		= exynos7_ufs_pre_link,
+>> +	.post_link		= exynos7_ufs_post_link,
+>> +	.pre_pwr_change		= exynos7_ufs_pre_pwr_change,
+>> +	.post_pwr_change	= exynos7_ufs_post_pwr_change,
+>> +}, {
+>> +}, };
+>
+> The indentation is a bit unusual  here.
+>
+hmm..ok will change
+>> diff --git a/drivers/scsi/ufs/ufs-exynos-hw.h b/drivers/scsi/ufs/ufs-exynos-hw.h
+>> new file mode 100644
+>> index 0000000..8464ec8
+>> --- /dev/null
+>> +++ b/drivers/scsi/ufs/ufs-exynos-hw.h
+>> @@ -0,0 +1,43 @@
+>> +/*
+>> + * UFS Host Controller driver for Exynos specific extensions
+>> + *
+>> + * Copyright (C) 2014-2015 Samsung Electronics Co., Ltd.
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License as published by
+>> + * the Free Software Foundation; either version 2 of the License, or
+>> + * (at your option) any later version.
+>> + */
+>> +
+>> +#ifndef _UFS_EXYNOS_HW_H_
+>> +#define _UFS_EXYNOS_HW_H_
+>> +
+>> +#include "ufs-exynos.h"
+>> +#include "unipro.h"
+>> +
+>> +static struct exynos_ufs_uic_attr exynos7_uic_attr = {
+>
+> You cannot put 'static' variables into a header file.
+>
+will remove
+>> +
+>> +/**
+>> + * exynos_ufs_auto_ctrl_hcc - HCI core clock control by h/w
+>> + * Control should be disabled in the below cases
+>> + * - Before host controller S/W reset
+>> + * - Access to UFS protector's register
+>> + */
+>> +static void exynos_ufs_auto_ctrl_hcc(struct exynos_ufs *ufs, bool en)
+>> +{
+>> +	u32 misc = hci_readl(ufs, HCI_MISC);
+>> +
+>> +	if (en)
+>> +		hci_writel(ufs, misc | HCI_CORECLK_CTRL_EN, HCI_MISC);
+>> +	else
+>> +		hci_writel(ufs, misc & ~HCI_CORECLK_CTRL_EN, HCI_MISC);
+>
+> Does this need a spinlock to ensure the change is done atomically?
+>
+will check and if needed will add,
+>> +}
+>> +
+>> +static void exynos_ufs_ctrl_clkstop(struct exynos_ufs *ufs, bool en)
+>> +{
+>> +	u32 ctrl = hci_readl(ufs, HCI_CLKSTOP_CTRL);
+>> +	u32 misc = hci_readl(ufs, HCI_MISC);
+>> +
+>> +	if (en) {
+>> +		hci_writel(ufs, misc | CLK_CTRL_EN_MASK, HCI_MISC);
+>> +		hci_writel(ufs, ctrl | CLK_STOP_MASK, HCI_CLKSTOP_CTRL);
+>> +	} else {
+>> +		hci_writel(ufs, ctrl & ~CLK_STOP_MASK, HCI_CLKSTOP_CTRL);
+>> +		hci_writel(ufs, misc & ~CLK_CTRL_EN_MASK, HCI_MISC);
+>> +	}
+>
+> same here.
+>
+>> +
+>> +static int exynos_ufs_get_clk_info(struct exynos_ufs *ufs)
+>> +{
+>> +	struct ufs_hba *hba = ufs->hba;
+>> +	struct list_head *head = &hba->clk_list_head;
+>> +	struct ufs_clk_info *clki;
+>> +	u32 pclk_rate;
+>> +	u32 f_min, f_max;
+>> +	u8 div = 0;
+>> +	int ret = 0;
+>> +
+>> +	if (!head || list_empty(head))
+>> +		goto out;
+>> +
+>> +	list_for_each_entry(clki, head, list) {
+>> +		if (!IS_ERR_OR_NULL(clki->clk)) {
+>> +			if (!strcmp(clki->name, "aclk_ufs"))
+>> +				ufs->clk_hci_core = clki->clk;
+>> +			else if (!strcmp(clki->name, "sclk_unipro_apb"))
+>> +				ufs->clk_apb = clki->clk;
+>> +			else if (!strcmp(clki->name, "sclk_unipro_main"))
+>> +				ufs->clk_unipro_main = clki->clk;
+>> +		}
+>> +	}
+>
+> Using IS_ERR_OR_NULL is normally a bug. Also the list/loop can likely be
+> replaced with another way to express this.
+>
+ok
+>> +			do {
+>> +				delta = h8_time - ktime_us_delta(ktime_get(),
+>> +							ufs->entry_hibern8_t);
+>> +				if (delta <= 0)
+>> +					break;
+>> +
+>> +				us = min_t(s64, delta, USEC_PER_MSEC);
+>> +				if (us >= 10)
+>> +					usleep_range(us, us + 10);
+>> +				else
+>> +					udelay(us);
+>> +			} while (1);
+>
+> us is at least 1000 (USEC_PER_MSEC), so the else clause is never needed.
+>
+>> +
+>> +const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+>> +	.name				= "exynos_ufs",
+>> +	.init				= exynos_ufs_init,
+>> +	.hce_enable_notify		= exynos_ufs_hce_enable_notify,
+>> +	.link_startup_notify		= exynos_ufs_link_startup_notify,
+>> +	.pwr_change_notify		= exynos_ufs_pwr_change_notify,
+>> +	.specify_nexus_t_xfer_req	= exynos_ufs_specify_nexus_t_xfer_req,
+>> +	.specify_nexus_t_tm_req		= exynos_ufs_specify_nexus_t_tm_req,
+>> +	.hibern8_notify			= exynos_ufs_hibern8_notify,
+>> +	.suspend			= exynos_ufs_suspend,
+>> +	.resume				= exynos_ufs_resume,
+>> +};
+>> +EXPORT_SYMBOL(ufs_hba_exynos_ops);
+>
+> As mentioned in my reply to the build bug report, please restructure the
+> driver so this is not a global exported function but gets passed by the
+> probe function of the exynos driver into an exported function of the
+> common driver.
+>
+Done,
+>> diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
+>> new file mode 100644
+>> index 0000000..58aa714
+>> --- /dev/null
+>> +++ b/drivers/scsi/ufs/ufs-exynos.h
+>> @@ -0,0 +1,463 @@
+>> +/*
+>> + * UFS Host Controller driver for Exynos specific extensions
+>> + *
+>> + * Copyright (C) 2014-2015 Samsung Electronics Co., Ltd.
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License as published by
+>> + * the Free Software Foundation; either version 2 of the License, or
+>> + * (at your option) any later version.
+>> + */
+>> +
+>> +#ifndef _UFS_EXYNOS_H_
+>> +#define _UFS_EXYNOS_H_
+>
+> You have a lot of things in this header that are only used in one of the
+> .c files, so just move them there and make the header as small as possible.
+>
+hmm..these are mostly the registers defines, will removes the one which 
+are not being used as of now.
+Do you think I should sill move them to .c file?
 
-I just checked and it seems such check would be redundant. inquiry_len
-is always >=5 as we have the following code:
-
-response_len = inq_result[4] + 5;
-
-where inq_result is unsigned char *
-
-After that we do:
-sdev->inquiry_len = min(try_inquiry_len, response_len);
-
-As far as I can see try_inquiry_len can be lower than 36 only in case
-some driver sets it manually. I don't see a '>=5' check for it but I'm
-not sure it is needed.
-
--- 
-  Vitaly
+> 	Arnd
+>
