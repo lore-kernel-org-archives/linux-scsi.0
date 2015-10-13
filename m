@@ -1,36 +1,72 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 12/25] scsi: hisi_sas: add v1 HW initialisation code
-Date: Tue, 13 Oct 2015 14:47:19 +0200
-Message-ID: <6185166.M64gFmBG3u@wuerfel>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <147982224.OvBbMyp8ci@wuerfel> <561CFCAA.8030003@huawei.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [RFC PATCH] phy: exynos-ufs: exynos_ufs_phy_calibrate() can be
+ static
+Date: Tue, 13 Oct 2015 19:32:05 +0530
+Message-ID: <561D0EDD.80804@ti.com>
+References: <201510011920.tppZbk0e%fengguang.wu@intel.com>
+ <20151001110430.GA12682@athens> <561CED52.9010806@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <561CFCAA.8030003@huawei.com>
+In-Reply-To: <561CED52.9010806@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
+To: Alim Akhtar <alim.akhtar@samsung.com>, kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 13 October 2015 13:44:26 John Garry wrote:
-> Hello,
+Hi,
+
+On Tuesday 13 October 2015 05:08 PM, Alim Akhtar wrote:
+> HI
+> How I am support to handle this patch? Should I just fix these warnings
+> in my patch or I just add this as a separate patch on the top of the
+> series?
+
+This series has not been merged yet. So you can fix this patch.
+
+Thanks
+Kishon
 > 
-> Just to be clear, are you saying that you would prefer hisi_sas_probe() 
-> and struct hisi_sas_driver to be relocated to hisi_sas_v1_hw.c?
-
-Correct.
-
-> I wanted to keep hisi_sas_v1_hw.c containing only code which accesses HW.
 > 
-> I could consoldate the calls of hw_init_v1_hw(), interrupt_init_v1_hw(), 
-> interrupt_openall_v1_hw(), and phys_init_v1_hw() to a single function hw 
-> init function call. Then most of the code in the probe function will not 
-> be specific to v1.
-
-This is more about correct layering of the code. Generally we want the
-more specific modules on top to call into the more general code in
-the bottom of the stack. Shared code should know as little as possible
-about the specific implementations it is shared with.
-
-	Arnd
+> On 10/01/2015 04:34 PM, kbuild test robot wrote:
+>>
+>> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+>> ---
+>>   phy-exynos-ufs.c |    6 +++---
+>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/phy/phy-exynos-ufs.c b/drivers/phy/phy-exynos-ufs.c
+>> index 343fcaf..835ee78 100644
+>> --- a/drivers/phy/phy-exynos-ufs.c
+>> +++ b/drivers/phy/phy-exynos-ufs.c
+>> @@ -66,7 +66,7 @@ static bool match_cfg_to_pwr_mode(u8 desc, u8
+>> required_pwr)
+>>       return false;
+>>   }
+>>
+>> -int exynos_ufs_phy_calibrate(struct phy *phy, enum phy_cfg_tag tag,
+>> u8 pwr)
+>> +static int exynos_ufs_phy_calibrate(struct phy *phy, enum phy_cfg_tag
+>> tag, u8 pwr)
+>>   {
+>>       struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
+>>       struct exynos_ufs_phy_cfg **cfgs = ufs_phy->cfg;
+>> @@ -93,14 +93,14 @@ out:
+>>       return 0;
+>>   }
+>>
+>> -void exynos_ufs_phy_set_lane_cnt(struct phy *phy, u8 lane_cnt)
+>> +static void exynos_ufs_phy_set_lane_cnt(struct phy *phy, u8 lane_cnt)
+>>   {
+>>       struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
+>>
+>>       ufs_phy->lane_cnt = lane_cnt;
+>>   }
+>>
+>> -int exynos_ufs_phy_wait_for_lock_acq(struct phy *phy)
+>> +static int exynos_ufs_phy_wait_for_lock_acq(struct phy *phy)
+>>   {
+>>       struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
+>>       const unsigned int timeout_us = 100000;
+>>
