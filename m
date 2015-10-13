@@ -1,45 +1,72 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 04/25] scsi: hisi_sas: add scsi host registration
-Date: Tue, 13 Oct 2015 14:18:33 +0200
-Message-ID: <5744202.hTVSbkLqE4@wuerfel>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <5053179.dHmgEztyeB@wuerfel> <561CCC07.2090901@huawei.com>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH 07/25] scsi: hisi_sas: add ioremap for device HW
+Date: Tue, 13 Oct 2015 14:20:59 +0200
+Message-ID: <5074860.NRYCq0Qjjh@wuerfel>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <5285087.C8umupFr76@wuerfel> <561CD316.6040406@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:59136 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbbJMMSp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2015 08:18:45 -0400
-In-Reply-To: <561CCC07.2090901@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <561CD316.6040406-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: zhangfei <zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
 
-On Tuesday 13 October 2015 10:16:55 John Garry wrote:
-> 
-> >
-> >> +       sha = SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
-> >> +       platform_set_drvdata(pdev, sha);
+On Tuesday 13 October 2015 17:47:02 zhangfei wrote:
+> On 10/12/2015 11:21 PM, Arnd Bergmann wrote:
+> > On Monday 12 October 2015 23:20:19 John Garry wrote:
+> >> +int hisi_sas_ioremap(struct hisi_hba *hisi_hba)
+> >> +{
+> >> +       struct platform_device *pdev = hisi_hba->pdev;
+> >> +       struct device *dev = &pdev->dev;
+> >> +       struct resource *res;
 > >> +
-> >> +       phy_nr = port_nr = HISI_SAS_MAX_PHYS;
-> >> +
-> >> +       arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
-> >> +       arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
-> >> +       if (!arr_phy || !arr_port)
+> >> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> >> +       hisi_hba->regs = devm_ioremap(dev,
+> >> +                                     res->start,
+> >> +                                     resource_size(res));
+> >> +       if (!hisi_hba->regs)
 > >> +               return -ENOMEM;
+> >> +
+> >> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> >> +       hisi_hba->ctrl_regs = devm_ioremap(dev,
+> >> +                                          res->start,
+> >> +                                          resource_size(res));
+> >> +       if (!hisi_hba->ctrl_regs)
+> >> +               return -ENOMEM;
+> >> +
+> >> +       return 0;
+> >> +}
+> >>
+> >>   static const struct of_device_id sas_of_match[] = {
+> >>
 > >
-> > And since these are fixed-size arrays, they can be moved in there as well.
+> > Better use devm_ioremap_resource() here, which registers the resource so they
+> > are checked for conflicts and listed in /proc/iomem.
 > >
-> In a later patch we set as follows:
-> phy_nr = port_nr = hisi_hba->n_phy;
 > 
-> You did say in our earlier private review that we could add statically 
-> to hba strcut, but I commented that other vendors do similar so I would 
-> wait for more input.
+> Yes, hisi_hba->regs can use devm_ioremap_resource.
+> 
+> However ctrl_regs have to use devm_ioremap, since the address are 
+> sharing among different nodes, unfortunately, and devm_ioremap_resource 
+> will fail.
 
-Ok, I forgot about that.
+This sounds like it should be fixed in the DT binding then, to ensure
+that the ranges don't overlap.
+
+Mapping the same register region multiple times is generally considered
+a bad idea because the drivers that map them often don't have global
+locks that serialize the access, so it's better to have code in place
+that ensures that they are distinct.
+
+What is the purpose of the ctrl_regs region, and why is it shared
+across multiple devices?
+
+Are all users of these registers in the same driver?
 
 	Arnd
-
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
