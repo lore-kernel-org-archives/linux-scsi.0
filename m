@@ -1,60 +1,33 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [RFC PATCH] phy: exynos-ufs: exynos_ufs_phy_calibrate() can be
- static
-Date: Tue, 13 Oct 2015 17:08:58 +0530
-Message-ID: <561CED52.9010806@samsung.com>
-References: <201510011920.tppZbk0e%fengguang.wu@intel.com>
- <20151001110430.GA12682@athens>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Bugs in multipath scsi in 4.3-rc2
+Date: Tue, 13 Oct 2015 13:52:53 +0200
+Message-ID: <20151013115253.GA17139@lst.de>
+References: <20151002125608.GB14899@lst.de> <1443792301.2209.4.camel@HansenPartnership.com> <20151002133423.GA15867@lst.de> <1443793497.2209.10.camel@HansenPartnership.com> <20151004074556.GA13932@lst.de> <561BAB72.1070205@suse.de> <20151012143927.GA24770@lst.de> <CAMM=eLdLh4VGapGH2WcEUY2Biwx-ZojQ0HELCFYvQwW9zzpQ1A@mail.gmail.com> <20151012193614.GA32464@lst.de> <561C9E0B.6070500@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20151001110430.GA12682@athens>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:57252 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753024AbbJMLwz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Oct 2015 07:52:55 -0400
+Content-Disposition: inline
+In-Reply-To: <561C9E0B.6070500@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Paul Mackerras <paulus@ozlabs.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-HI
-How I am support to handle this patch? Should I just fix these warnings 
-in my patch or I just add this as a separate patch on the top of the series?
+On Tue, Oct 13, 2015 at 08:00:43AM +0200, Hannes Reinecke wrote:
+> In the light of the discussion I think it would be better to
+> upgrade the device handler to become their own transport class,
+> to be hooked in between scsi_target and scsi_device.
+> That way we would have a way of exposing the topology (target port
+> groups etc) and would get rid of the probing problem.
 
+I don't think a transport class makes sense here.  A struct device
+or a class_interface as suggested by James sound much better.
 
-On 10/01/2015 04:34 PM, kbuild test robot wrote:
->
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-> ---
->   phy-exynos-ufs.c |    6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/phy/phy-exynos-ufs.c b/drivers/phy/phy-exynos-ufs.c
-> index 343fcaf..835ee78 100644
-> --- a/drivers/phy/phy-exynos-ufs.c
-> +++ b/drivers/phy/phy-exynos-ufs.c
-> @@ -66,7 +66,7 @@ static bool match_cfg_to_pwr_mode(u8 desc, u8 required_pwr)
->   	return false;
->   }
->
-> -int exynos_ufs_phy_calibrate(struct phy *phy, enum phy_cfg_tag tag, u8 pwr)
-> +static int exynos_ufs_phy_calibrate(struct phy *phy, enum phy_cfg_tag tag, u8 pwr)
->   {
->   	struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
->   	struct exynos_ufs_phy_cfg **cfgs = ufs_phy->cfg;
-> @@ -93,14 +93,14 @@ out:
->   	return 0;
->   }
->
-> -void exynos_ufs_phy_set_lane_cnt(struct phy *phy, u8 lane_cnt)
-> +static void exynos_ufs_phy_set_lane_cnt(struct phy *phy, u8 lane_cnt)
->   {
->   	struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
->
->   	ufs_phy->lane_cnt = lane_cnt;
->   }
->
-> -int exynos_ufs_phy_wait_for_lock_acq(struct phy *phy)
-> +static int exynos_ufs_phy_wait_for_lock_acq(struct phy *phy)
->   {
->   	struct exynos_ufs_phy *ufs_phy = get_exynos_ufs_phy(phy);
->   	const unsigned int timeout_us = 100000;
->
+But even then unless we solve the request_module from async context
+problem we can't reliably load them as soon as we encounter the first
+ALUA/RDAC/EMC/HP device, so distribution would probably still need to
+pre-load them.
