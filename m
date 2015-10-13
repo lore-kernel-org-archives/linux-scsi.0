@@ -1,57 +1,44 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v3 12/13] scsi: ufs-exynos: add UFS host support for Exynos
- SoCs
-Date: Tue, 13 Oct 2015 17:15:39 +0530
-Message-ID: <561CEEE3.7060401@samsung.com>
-References: <1443686970-28104-1-git-send-email-alim.akhtar@samsung.com>
- <2228323.jdbqnSKW75@wuerfel> <561CE8CB.9010102@samsung.com>
- <6499659.hVBcEphJIR@wuerfel>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 11/13] Documentation: devicetree: ufs: Add DT bindings for exynos UFS host controller
+Date: Tue, 13 Oct 2015 14:10:01 +0200
+Message-ID: <5214359.Szp3KsYW6e@wuerfel>
+References: <1443686970-28104-1-git-send-email-alim.akhtar@samsung.com> <1457698.WJ3mz2FHZZ@wuerfel> <561CECB2.2090208@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <6499659.hVBcEphJIR@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:65421 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbbJMMKO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2015 08:10:14 -0400
+In-Reply-To: <561CECB2.2090208@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org
 
+On Tuesday 13 October 2015 17:06:18 Alim Akhtar wrote:
+> > Better rename them to "core", "ref" and "iface", no point requiring to
+> > spell out "clk" here.
+> >
+> >> +            ufs,pwr-attr-mode = "FAST";
+> >
+> > A string is rather unusual here, what are the allowed values? Could you
+> > use a boolean property instead?
+> >
+> will update the binding, supported modes are FAST, SLOW, FAST_auto etc, 
+> so kept the string for more readability
+>
+> >> +            ufs,pwr-attr-lane = /bits/ 8 <2>;
+> >> +            ufs,pwr-attr-gear = /bits/ 8 <2>;
+> >
+> > Why the "/bits/ 8" ?
+> >
+> I am using of_property_read_u8() to read 8 bit value from property.
+> 
 
+I still think it would be better to stay with conventional methods here,
+and change the code accordingly. You can easily use of_property_read_u32
+for the last two properties.
 
-On 10/13/2015 05:08 PM, Arnd Bergmann wrote:
-> On Tuesday 13 October 2015 16:49:39 Alim Akhtar wrote:
->>>> diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
->>>> new file mode 100644
->>>> index 0000000..58aa714
->>>> --- /dev/null
->>>> +++ b/drivers/scsi/ufs/ufs-exynos.h
->>>> @@ -0,0 +1,463 @@
->>>> +/*
->>>> + * UFS Host Controller driver for Exynos specific extensions
->>>> + *
->>>> + * Copyright (C) 2014-2015 Samsung Electronics Co., Ltd.
->>>> + *
->>>> + * This program is free software; you can redistribute it and/or modify
->>>> + * it under the terms of the GNU General Public License as published by
->>>> + * the Free Software Foundation; either version 2 of the License, or
->>>> + * (at your option) any later version.
->>>> + */
->>>> +
->>>> +#ifndef _UFS_EXYNOS_H_
->>>> +#define _UFS_EXYNOS_H_
->>>
->>> You have a lot of things in this header that are only used in one of the
->>> .c files, so just move them there and make the header as small as possible.
->>>
->> hmm..these are mostly the registers defines, will removes the one which
->> are not being used as of now.
->> Do you think I should sill move them to .c file?
->>
->
-> Yes. No need to remove the unused register definitions, just don't put
-> them into a separate header if they are only used in one place.
->
-Ok will do that in v4.
-Thanks.
-> 	Arnd
->
+	Arnd
