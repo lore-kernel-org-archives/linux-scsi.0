@@ -1,72 +1,69 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH 07/25] scsi: hisi_sas: add ioremap for device HW
-Date: Tue, 13 Oct 2015 14:20:59 +0200
-Message-ID: <5074860.NRYCq0Qjjh@wuerfel>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <5285087.C8umupFr76@wuerfel> <561CD316.6040406@linaro.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 12/25] scsi: hisi_sas: add v1 HW initialisation code
+Date: Tue, 13 Oct 2015 13:44:26 +0100
+Message-ID: <561CFCAA.8030003@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <1444663237-238302-13-git-send-email-john.garry@huawei.com>
+ <147982224.OvBbMyp8ci@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <561CD316.6040406-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: zhangfei <zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <147982224.OvBbMyp8ci@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 13 October 2015 17:47:02 zhangfei wrote:
-> On 10/12/2015 11:21 PM, Arnd Bergmann wrote:
-> > On Monday 12 October 2015 23:20:19 John Garry wrote:
-> >> +int hisi_sas_ioremap(struct hisi_hba *hisi_hba)
-> >> +{
-> >> +       struct platform_device *pdev = hisi_hba->pdev;
-> >> +       struct device *dev = &pdev->dev;
-> >> +       struct resource *res;
-> >> +
-> >> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> >> +       hisi_hba->regs = devm_ioremap(dev,
-> >> +                                     res->start,
-> >> +                                     resource_size(res));
-> >> +       if (!hisi_hba->regs)
-> >> +               return -ENOMEM;
-> >> +
-> >> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> >> +       hisi_hba->ctrl_regs = devm_ioremap(dev,
-> >> +                                          res->start,
-> >> +                                          resource_size(res));
-> >> +       if (!hisi_hba->ctrl_regs)
-> >> +               return -ENOMEM;
-> >> +
-> >> +       return 0;
-> >> +}
-> >>
-> >>   static const struct of_device_id sas_of_match[] = {
-> >>
-> >
-> > Better use devm_ioremap_resource() here, which registers the resource so they
-> > are checked for conflicts and listed in /proc/iomem.
-> >
-> 
-> Yes, hisi_hba->regs can use devm_ioremap_resource.
-> 
-> However ctrl_regs have to use devm_ioremap, since the address are 
-> sharing among different nodes, unfortunately, and devm_ioremap_resource 
-> will fail.
+On 12/10/2015 19:46, Arnd Bergmann wrote:
+> On Monday 12 October 2015 23:20:24 John Garry wrote:
+>> @@ -387,6 +392,21 @@ static int hisi_sas_probe(struct platform_device *pdev)
+>>          }
+>>
+>>          hisi_sas_init_add(hisi_hba);
+>> +
+>> +       rc = hw_init_v1_hw(hisi_hba);
+>> +       if (rc)
+>> +               goto err_out_ha;
+>> +
+>> +       rc = interrupt_init_v1_hw(hisi_hba);
+>> +       if (rc)
+>> +               goto err_out_ha;
+>> +
+>> +       rc = interrupt_openall_v1_hw(hisi_hba);
+>> +       if (rc)
+>> +               goto err_out_ha;
+>> +
+>> +       phys_init_v1_hw(hisi_hba);
+>> +
+>>          rc = scsi_add_host(shost, &pdev->dev);
+>>          if (rc)
+>>                  goto err_out_ha;
+>>
+>
+> As the probe function matches against the "hisilicon,sas-controller-v1"
+> compatible string and contains mostly code that is specific to v1, I
+> think it would be cleaner to move that to the hisi_sas_v1_hw.c as well
+> and make the functions above static but make the common functions
+> called here (hisi_sas_init_add etc) global.
+>
+> That would also include the hisi_sas_driver structure.
+>
+> 	Arnd
+>
+> .
+>
+Hello,
 
-This sounds like it should be fixed in the DT binding then, to ensure
-that the ranges don't overlap.
+Just to be clear, are you saying that you would prefer hisi_sas_probe() 
+and struct hisi_sas_driver to be relocated to hisi_sas_v1_hw.c?
 
-Mapping the same register region multiple times is generally considered
-a bad idea because the drivers that map them often don't have global
-locks that serialize the access, so it's better to have code in place
-that ensures that they are distinct.
+I wanted to keep hisi_sas_v1_hw.c containing only code which accesses HW.
 
-What is the purpose of the ctrl_regs region, and why is it shared
-across multiple devices?
+I could consoldate the calls of hw_init_v1_hw(), interrupt_init_v1_hw(), 
+interrupt_openall_v1_hw(), and phys_init_v1_hw() to a single function hw 
+init function call. Then most of the code in the probe function will not 
+be specific to v1.
 
-Are all users of these registers in the same driver?
-
-	Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+John
