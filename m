@@ -1,19 +1,23 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 05/25] scsi: hisi_sas: allocate memories and create pools
-Date: Tue, 13 Oct 2015 09:05:22 +0800
-Message-ID: <201510130928.t2prUUhC%fengguang.wu@intel.com>
-References: <1444663237-238302-6-git-send-email-john.garry@huawei.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 14/25] scsi: hisi_sas: add ssp command function
+Date: Tue, 13 Oct 2015 09:24:37 +0800
+Message-ID: <201510130914.0ywfpA4X%fengguang.wu@intel.com>
+References: <1444663237-238302-15-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="jRHKVT23PllUwdXP"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/mixed; boundary="GvXjxJ+pjyke8COw"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:47722 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752009AbbJMBZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Oct 2015 21:25:14 -0400
 Content-Disposition: inline
-In-Reply-To: <1444663237-238302-6-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TZ19SzzRMN9sA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1444663237-238302-15-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: kbuild-all@01.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.com, devicetree@vger.kernel.org, arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de, John Garry <john.garry@huawei.com>
 
 
---jRHKVT23PllUwdXP
+--GvXjxJ+pjyke8COw
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -31,142 +35,110 @@ reproduce:
 
 All error/warnings (new ones prefixed by >>):
 
-   drivers/scsi/hisi_sas/hisi_sas_init.c: In function 'hisi_sas_alloc':
->> drivers/scsi/hisi_sas/hisi_sas_init.c:65:2: error: implicit declaration of function 'dma_pool_create' [-Werror=implicit-function-declaration]
-     hisi_hba->status_buffer_pool = dma_pool_create(name,
+   drivers/scsi/hisi_sas/hisi_sas_main.c: In function 'hisi_sas_task_prep':
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:169:2: error: implicit declaration of function 'dma_pool_alloc' [-Werror=implicit-function-declaration]
+     slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
      ^
->> drivers/scsi/hisi_sas/hisi_sas_init.c:65:31: warning: assignment makes pointer from integer without a cast
-     hisi_hba->status_buffer_pool = dma_pool_create(name,
-                                  ^
-   drivers/scsi/hisi_sas/hisi_sas_init.c:73:31: warning: assignment makes pointer from integer without a cast
-     hisi_hba->command_table_pool = dma_pool_create(name,
-                                  ^
-   drivers/scsi/hisi_sas/hisi_sas_init.c:115:26: warning: assignment makes pointer from integer without a cast
-     hisi_hba->sge_page_pool = dma_pool_create(name, dev,
-                             ^
-   drivers/scsi/hisi_sas/hisi_sas_init.c: In function 'hisi_sas_free':
->> drivers/scsi/hisi_sas/hisi_sas_init.c:159:3: error: implicit declaration of function 'dma_pool_destroy' [-Werror=implicit-function-declaration]
-      dma_pool_destroy(hisi_hba->status_buffer_pool);
-      ^
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:169:22: warning: assignment makes pointer from integer without a cast
+     slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
+                         ^
+   drivers/scsi/hisi_sas/hisi_sas_main.c:176:22: warning: assignment makes pointer from integer without a cast
+     slot->command_table = dma_pool_alloc(hisi_hba->command_table_pool,
+                         ^
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:226:2: error: implicit declaration of function 'dma_pool_free' [-Werror=implicit-function-declaration]
+     dma_pool_free(hisi_hba->sge_page_pool, slot->sge_page,
+     ^
+   cc1: some warnings being treated as errors
+--
+   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c: In function 'prep_prd_sge_v1_hw':
+>> drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:822:2: error: implicit declaration of function 'dma_pool_alloc' [-Werror=implicit-function-declaration]
+     slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
+     ^
+>> drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:822:17: warning: assignment makes pointer from integer without a cast
+     slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
+                    ^
    cc1: some warnings being treated as errors
 
-vim +/dma_pool_create +65 drivers/scsi/hisi_sas/hisi_sas_init.c
+vim +/dma_pool_alloc +169 drivers/scsi/hisi_sas/hisi_sas_main.c
 
-    59			memset(hisi_hba->complete_hdr[i], 0, s);
-    60		}
-    61	
-    62		sprintf(name, "%s%d", "hisi_sas_status_buffer_pool",
-    63			hisi_hba->id);
-    64		s = HISI_SAS_STATUS_BUF_SZ;
-  > 65		hisi_hba->status_buffer_pool = dma_pool_create(name,
-    66							       dev, s, 16, 0);
-    67		if (!hisi_hba->status_buffer_pool)
-    68			goto err_out;
-    69	
-    70		sprintf(name, "%s%d", "hisi_sas_command_table_pool",
-    71			hisi_hba->id);
-    72		s = HISI_SAS_COMMAND_TABLE_SZ;
-  > 73		hisi_hba->command_table_pool = dma_pool_create(name,
-    74							       dev, s, 16, 0);
-    75		if (!hisi_hba->command_table_pool)
-    76			goto err_out;
-    77	
-    78		s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
-    79		hisi_hba->itct = dma_alloc_coherent(dev, s, &hisi_hba->itct_dma,
-    80						    GFP_KERNEL);
-    81		if (!hisi_hba->itct)
-    82			goto err_out;
-    83	
-    84		memset(hisi_hba->itct, 0, s);
-    85	
-    86		hisi_hba->slot_info = devm_kcalloc(dev, HISI_SAS_COMMAND_ENTRIES,
-    87						   sizeof(struct hisi_sas_slot),
-    88						   GFP_KERNEL);
-    89		if (!hisi_hba->slot_info)
-    90			goto err_out;
-    91	
-    92		s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_iost);
-    93		hisi_hba->iost = dma_alloc_coherent(dev, s, &hisi_hba->iost_dma,
-    94						    GFP_KERNEL);
-    95		if (!hisi_hba->iost)
-    96			goto err_out;
-    97	
-    98		memset(hisi_hba->iost, 0, s);
-    99	
-   100		s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint);
-   101		hisi_hba->breakpoint = dma_alloc_coherent(dev, s,
-   102					&hisi_hba->breakpoint_dma, GFP_KERNEL);
-   103		if (!hisi_hba->breakpoint)
-   104			goto err_out;
-   105	
-   106		memset(hisi_hba->breakpoint, 0, s);
-   107	
-   108		hisi_hba->slot_index_count = HISI_SAS_COMMAND_ENTRIES;
-   109		s = hisi_hba->slot_index_count / sizeof(unsigned long);
-   110		hisi_hba->slot_index_tags = devm_kzalloc(dev, s, GFP_KERNEL);
-   111		if (!hisi_hba->slot_index_tags)
-   112			goto err_out;
-   113	
-   114		sprintf(name, "%s%d", "hisi_sas_status_sge_pool", hisi_hba->id);
-   115		hisi_hba->sge_page_pool = dma_pool_create(name, dev,
-   116					sizeof(struct hisi_sas_sge_page), 16, 0);
-   117		if (!hisi_hba->sge_page_pool)
-   118			goto err_out;
-   119	
-   120		s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
-   121		hisi_hba->initial_fis = dma_alloc_coherent(dev, s,
-   122					&hisi_hba->initial_fis_dma, GFP_KERNEL);
-   123		if (!hisi_hba->initial_fis)
-   124			goto err_out;
-   125		memset(hisi_hba->initial_fis, 0, s);
-   126	
-   127		s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint) * 2;
-   128		hisi_hba->sata_breakpoint = dma_alloc_coherent(dev, s,
-   129					&hisi_hba->sata_breakpoint_dma, GFP_KERNEL);
-   130		if (!hisi_hba->sata_breakpoint)
-   131			goto err_out;
-   132		memset(hisi_hba->sata_breakpoint, 0, s);
-   133	
-   134		return 0;
-   135	err_out:
-   136		return -ENOMEM;
-   137	}
-   138	
-   139	static void hisi_sas_free(struct hisi_hba *hisi_hba)
-   140	{
-   141		int i, s;
-   142		struct device *dev = &hisi_hba->pdev->dev;
-   143	
-   144		for (i = 0; i < hisi_hba->queue_count; i++) {
-   145			s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
-   146			if (hisi_hba->cmd_hdr[i])
-   147				dma_free_coherent(dev, s,
-   148						  hisi_hba->cmd_hdr[i],
-   149						  hisi_hba->cmd_hdr_dma[i]);
-   150	
-   151			s = sizeof(struct hisi_sas_complete_hdr) * HISI_SAS_QUEUE_SLOTS;
-   152			if (hisi_hba->complete_hdr[i])
-   153				dma_free_coherent(dev, s,
-   154						  hisi_hba->complete_hdr[i],
-   155						  hisi_hba->complete_hdr_dma[i]);
-   156		}
-   157	
-   158		if (hisi_hba->status_buffer_pool)
- > 159			dma_pool_destroy(hisi_hba->status_buffer_pool);
-   160	
-   161		if (hisi_hba->command_table_pool)
-   162			dma_pool_destroy(hisi_hba->command_table_pool);
+   163		slot->n_elem = n_elem;
+   164		slot->dlvry_queue = dlvry_queue;
+   165		slot->dlvry_queue_slot = dlvry_queue_slot;
+   166		cmd_hdr_base = hisi_hba->cmd_hdr[dlvry_queue];
+   167		slot->cmd_hdr = &cmd_hdr_base[dlvry_queue_slot];
+   168	
+ > 169		slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
+   170						     GFP_ATOMIC,
+   171						     &slot->status_buffer_dma);
+   172		if (!slot->status_buffer)
+   173			goto err_out_slot_buf;
+   174		memset(slot->status_buffer, 0, HISI_SAS_STATUS_BUF_SZ);
+   175	
+   176		slot->command_table = dma_pool_alloc(hisi_hba->command_table_pool,
+   177						     GFP_ATOMIC,
+   178						     &slot->command_table_dma);
+   179		if (!slot->command_table)
+   180			goto err_out_status_buf;
+   181		memset(slot->command_table, 0, HISI_SAS_COMMAND_TABLE_SZ);
+   182		memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
+   183	
+   184		tei.hdr = slot->cmd_hdr;
+   185		tei.task = task;
+   186		tei.n_elem = n_elem;
+   187		tei.slot = slot;
+   188		switch (task->task_proto) {
+   189		case SAS_PROTOCOL_SSP:
+   190			rc = hisi_sas_task_prep_ssp(hisi_hba, &tei, is_tmf, tmf);
+   191			break;
+   192		case SAS_PROTOCOL_SMP:
+   193		case SAS_PROTOCOL_SATA:
+   194		case SAS_PROTOCOL_STP:
+   195		case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+   196		default:
+   197			dev_err(dev, "task prep: unknown/unsupported proto (0x%x)\n",
+   198				task->task_proto);
+   199			rc = -EINVAL;
+   200			break;
+   201		}
+   202	
+   203		if (rc) {
+   204			dev_err(dev, "task prep: rc = 0x%x\n", rc);
+   205			if (slot->sge_page)
+   206				goto err_out_sge;
+   207			goto err_out_command_table;
+   208		}
+   209	
+   210		slot->task = task;
+   211		slot->port = tei.port;
+   212		task->lldd_task = slot;
+   213		list_add_tail(&slot->entry, &tei.port->list);
+   214		spin_lock(&task->task_state_lock);
+   215		task->task_state_flags |= SAS_TASK_AT_INITIATOR;
+   216		spin_unlock(&task->task_state_lock);
+   217	
+   218		hisi_hba->slot_prep = slot;
+   219	
+   220		sas_dev->running_req++;
+   221		++(*pass);
+   222	
+   223		return rc;
+   224	
+   225	err_out_sge:
+ > 226		dma_pool_free(hisi_hba->sge_page_pool, slot->sge_page,
+   227			slot->sge_page_dma);
+   228	err_out_command_table:
+   229		dma_pool_free(hisi_hba->command_table_pool, slot->command_table,
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---jRHKVT23PllUwdXP
+--GvXjxJ+pjyke8COw
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICNlVHFYAAy5jb25maWcAlFxLd9u4kt73r9BJz2JmcTt+RZ07c7wAQVBCiyRoApRlb3gU
+H4sICAhcHFYAAy5jb25maWcAlFxLd9u4kt73r9BJz2JmcTt+RZ07c7wAQVBCiyRoApRlb3gU
 R93tEz9ybLmn8++nCiTFwoNyzyYxv6/wLhSqiqB+/unnGXvbPz9u9/d324eHH7M/dk+7l+1+
 93X2+/3D7n9mqZqVysxEKs0vIJzfP739/fFx/vnb7OKX819O/vVydzpb7V6edg8z/vz0+/0f
 b1D6/vnpp59/4qrM5KIt5p9Xlz+Gp/pai6JdiFLUkre6kmWuOOEHZnkt5GJpQoKzXCY1M6JN
@@ -799,8 +771,4 @@ P5kNiyri9hEexgzErEzsm1x+LYC+4I+cYzSWKl4mdcPvOC6KvPFvLiBaO0zH78cewocJQUfv
 3DeeoK/v07kDYQScVEhQQZ1zAccbXt38Xchs36tJLpQK0OnsfTZz4On++9RaRGr0mEht8b8T
 3H331jh0VJJzrv8Dn1CO5eMGAgA=
 
---jRHKVT23PllUwdXP--
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--GvXjxJ+pjyke8COw--
