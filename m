@@ -1,65 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Bugs in multipath scsi in 4.3-rc2
-Date: Tue, 13 Oct 2015 08:00:43 +0200
-Message-ID: <561C9E0B.6070500@suse.de>
-References: <20150930215303.GI2627@mtj.duckdns.org> <1443652494.2185.57.camel@HansenPartnership.com> <20151002125608.GB14899@lst.de> <1443792301.2209.4.camel@HansenPartnership.com> <20151002133423.GA15867@lst.de> <1443793497.2209.10.camel@HansenPartnership.com> <20151004074556.GA13932@lst.de> <561BAB72.1070205@suse.de> <20151012143927.GA24770@lst.de> <CAMM=eLdLh4VGapGH2WcEUY2Biwx-ZojQ0HELCFYvQwW9zzpQ1A@mail.gmail.com> <20151012193614.GA32464@lst.de>
+Subject: Re: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Tue, 13 Oct 2015 08:12:27 +0200
+Message-ID: <561CA0CB.5090802@suse.de>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <1444663237-238302-10-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46791 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46987 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449AbbJMGAq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Oct 2015 02:00:46 -0400
-In-Reply-To: <20151012193614.GA32464@lst.de>
+	id S1751771AbbJMGMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Oct 2015 02:12:30 -0400
+In-Reply-To: <1444663237-238302-10-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Paul Mackerras <paulus@ozlabs.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: John Garry <john.garry@huawei.com>, James.Bottomley@HansenPartnership.com
+Cc: devicetree@vger.kernel.org, arnd@arndb.de, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie
 
-On 10/12/2015 09:36 PM, Christoph Hellwig wrote:
-> On Mon, Oct 12, 2015 at 03:29:45PM -0400, Mike Snitzer wrote:
->> What may be getting lost during this discussion is that historically
->> it has been important to be able to attach the scsi_dh during the SC=
-SI
->> scan.  As the scsi_dh alters the SCSI midlayer's sense code processi=
-ng
->> (via callout to the attached scsi_dh).  And this altered SCSI sense
->> code handling amounts to the difference between a successful/quick
->> boot versus hugely delayed and ultimately error-prone boot on system=
-s
->> with many LUNs that have multiple paths.
->>
->> So that is why either of these solutions were deployed:
->> 1) in RHEL6 we'd require dracut to preload the scsi_dh modules early
->> in loading the initramfs
->> 2) in RHEL7 all scsi_dh modules _are_ builtin
->>
->> Both achieve the goal of having all required scsi_dh available durin=
-g SCSI scan.
+On 10/12/2015 05:20 PM, John Garry wrote:
+> This SAS ID is chosen as Huawei IEEE id: 001882
 >=20
-> Yes, and both are workarounds.  I tried to implement this properly,
-> but due to async probing it doesn't actually work.  Given the stateme=
-nt
-> from Tejun I don't really see how to ever get it to work as long as
-> we use async probing and the module loading code isn't safe to call
-> from the async probe path unfortunately.
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas_init.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 >=20
-We've originally designed them to be modular as some handler
-(notably emc, netapp, and alua) are mutually exclusive, ie you could
-load either the alua or one of the vendor specific ones.
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_init.c b/drivers/scsi/his=
+i_sas/hisi_sas_init.c
+> index 44fc524..c295c39 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_init.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_init.c
+> @@ -283,6 +283,19 @@ err_out:
+>  	return NULL;
+>  }
+> =20
+> +static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+> +{
+> +	u8 i;
+> +
+> +	/* Huawei IEEE id (001882) */
+> +	for (i =3D 0; i < hisi_hba->n_phy; i++)
+> +		hisi_hba->phy[i].dev_sas_addr =3D
+> +			cpu_to_be64(0x5001882016072015ULL);
+> +
+Ouch. Each phy has the same SAS address?
+=46or all boards? Ever?
 
-In the light of the discussion I think it would be better to
-upgrade the device handler to become their own transport class,
-to be hooked in between scsi_target and scsi_device.
-That way we would have a way of exposing the topology (target port
-groups etc) and would get rid of the probing problem.
+Not sure if that's a good idea, nor even valid.
+It'll confuse the hell out of any SAS array.
 
-It would mean that effectively the device handler would be
-demodularized and become a compile-time option, but even that
-wouldn't be too much of an issue, seeing that most vendors load
-the modules unconditionally anyway.
-(BTW, SUSE also loads the modules unconditionally ...)
+Please provide a means of having individual SAS addresses for each HBA.
 
 Cheers,
 
