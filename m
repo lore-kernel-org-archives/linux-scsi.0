@@ -1,81 +1,50 @@
-From: zhangfei <zhangfei.gao@linaro.org>
-Subject: Re: [PATCH 07/25] scsi: hisi_sas: add ioremap for device HW
-Date: Tue, 13 Oct 2015 23:09:24 +0800
-Message-ID: <561D1EA4.2060601@linaro.org>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <5285087.C8umupFr76@wuerfel> <561CD316.6040406@linaro.org> <5074860.NRYCq0Qjjh@wuerfel>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv5 00/36] asynchronous ALUA device handler
+Date: Tue, 13 Oct 2015 17:13:01 +0200
+Message-ID: <561D1F7D.7070803@suse.de>
+References: <1443523658-87622-1-git-send-email-hare@suse.de> <560AD88B.9050902@sandisk.com> <560BE1DC.9060600@suse.de> <560C5509.6050206@sandisk.com> <561CD294.3080905@suse.de> <561D1E3E.5030201@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33349 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbbJMPJa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2015 11:09:30 -0400
-Received: by pabrc13 with SMTP id rc13so24132410pab.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2015 08:09:29 -0700 (PDT)
-In-Reply-To: <5074860.NRYCq0Qjjh@wuerfel>
+Received: from mx2.suse.de ([195.135.220.15]:35871 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753065AbbJMPND (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Oct 2015 11:13:03 -0400
+In-Reply-To: <561D1E3E.5030201@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: John Garry <john.garry@huawei.com>, James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-
-
-On 10/13/2015 08:20 PM, Arnd Bergmann wrote:
-> On Tuesday 13 October 2015 17:47:02 zhangfei wrote:
->> On 10/12/2015 11:21 PM, Arnd Bergmann wrote:
->>> On Monday 12 October 2015 23:20:19 John Garry wrote:
->>>> +int hisi_sas_ioremap(struct hisi_hba *hisi_hba)
->>>> +{
->>>> +       struct platform_device *pdev = hisi_hba->pdev;
->>>> +       struct device *dev = &pdev->dev;
->>>> +       struct resource *res;
->>>> +
->>>> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>>> +       hisi_hba->regs = devm_ioremap(dev,
->>>> +                                     res->start,
->>>> +                                     resource_size(res));
->>>> +       if (!hisi_hba->regs)
->>>> +               return -ENOMEM;
->>>> +
->>>> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->>>> +       hisi_hba->ctrl_regs = devm_ioremap(dev,
->>>> +                                          res->start,
->>>> +                                          resource_size(res));
->>>> +       if (!hisi_hba->ctrl_regs)
->>>> +               return -ENOMEM;
->>>> +
->>>> +       return 0;
->>>> +}
->>>>
->>>>    static const struct of_device_id sas_of_match[] = {
->>>>
->>>
->>> Better use devm_ioremap_resource() here, which registers the resource so they
->>> are checked for conflicts and listed in /proc/iomem.
->>>
+On 10/13/2015 05:07 PM, Bart Van Assche wrote:
+> On 10/13/2015 02:44 AM, Hannes Reinecke wrote:
+>> I have rebased my patches to 4.3.0-rc5 and didn't see any lockups;
+>> tested with hpsa and lpfc, both mq enabled and disabled.
 >>
->> Yes, hisi_hba->regs can use devm_ioremap_resource.
->>
->> However ctrl_regs have to use devm_ioremap, since the address are
->> sharing among different nodes, unfortunately, and devm_ioremap_resource
->> will fail.
->
-> This sounds like it should be fixed in the DT binding then, to ensure
-> that the ranges don't overlap.
->
-> Mapping the same register region multiple times is generally considered
-> a bad idea because the drivers that map them often don't have global
-> locks that serialize the access, so it's better to have code in place
-> that ensures that they are distinct.
->
-> What is the purpose of the ctrl_regs region, and why is it shared
-> across multiple devices?
->
-> Are all users of these registers in the same driver?
->
+>> Can you check if it's specific to ib_srp? Is there a way to simulate
+>> an ib_srp setup?
+>=20
+> Hello Hannes,
+>=20
+> This infinite loop was due to the scsi_dh_alua handler not being
+> loaded during my test (as mentioned in
+> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg42645.html=
+).
+>=20
+So it works with that patch?
 
-We are considering using syscon for ctrl_regs.
+Cheers,
 
-Thanks Arnd.
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
