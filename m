@@ -1,154 +1,102 @@
-From: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v4 06/11] scsi: ufs: add quirk to enable host controller
- without hce
-Date: Wed, 14 Oct 2015 18:25:46 +0530
-Message-ID: <1444827351-24128-7-git-send-email-alim.akhtar@samsung.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v4 07/11] scsi: ufs: add specific callback for nexus type
+Date: Wed, 14 Oct 2015 18:25:47 +0530
+Message-ID: <1444827351-24128-8-git-send-email-alim.akhtar@samsung.com>
 References: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <1444827351-24128-1-git-send-email-alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, amit.daniel-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:55564 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389AbbJNNKR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 09:10:17 -0400
+In-reply-to: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, alim.akhtar@samsung.com, arnd@arndb.de
 
-From: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Seungwon Jeon <essuuj@gmail.com>
 
-Some host controller doesn't support host controller enable via HCE.
+Some host controller needs nexus type information for handling
+command. This change adds specific callback function to support
+vendor's implementation.
 
-Signed-off-by: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   75 +++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |    5 +++
- 2 files changed, 78 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |    3 +++
+ drivers/scsi/ufs/ufshcd.h |   19 +++++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ca7483cd899e..e8b96ec65987 100644
+index e8b96ec65987..eeb7835c52ab 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2107,6 +2107,52 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- 			"dme-link-startup: error code %d\n", ret);
- 	return ret;
- }
-+/**
-+ * ufshcd_dme_reset - UIC command for DME_RESET
-+ * @hba: per adapter instance
-+ *
-+ * DME_RESET command is issued in order to reset UniPro stack.
-+ * This function now deal with cold reset.
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_dme_reset(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
-+
-+	uic_cmd.command = UIC_CMD_DME_RESET;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"dme-reset: error code %d\n", ret);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_dme_enable - UIC command for DME_ENABLE
-+ * @hba: per adapter instance
-+ *
-+ * DME_ENABLE command is issued in order to enable UniPro stack.
-+ *
-+ * Returns 0 on success, non-zero value on failure
-+ */
-+static int ufshcd_dme_enable(struct ufs_hba *hba)
-+{
-+	struct uic_command uic_cmd = {0};
-+	int ret;
-+
-+	uic_cmd.command = UIC_CMD_DME_ENABLE;
-+
-+	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+	if (ret)
-+		dev_err(hba->dev,
-+			"dme-reset: error code %d\n", ret);
-+
-+	return ret;
-+}
+@@ -1378,6 +1378,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
- {
-@@ -2642,7 +2688,7 @@ out:
- }
+ 	/* issue command to the controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_vops_specify_nexus_t_xfer_req(hba, tag, lrbp);
+ 	ufshcd_send_command(hba, tag);
+ out_unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -1578,6 +1579,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	hba->dev_cmd.complete = &wait;
  
- /**
-- * ufshcd_hba_enable - initialize the controller
-+ * ufshcd_hba_execute_hce - initialize the controller
-  * @hba: per adapter instance
-  *
-  * The controller resets itself and controller firmware initialization
-@@ -2651,7 +2697,7 @@ out:
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--static int ufshcd_hba_enable(struct ufs_hba *hba)
-+static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
- {
- 	int retry;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_vops_specify_nexus_t_xfer_req(hba, tag, lrbp);
+ 	ufshcd_send_command(hba, tag);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
-@@ -2715,6 +2761,31 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	return 0;
- }
+@@ -3842,6 +3844,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 	task_req_upiup->input_param2 = cpu_to_be32(task_id);
  
-+static int ufshcd_hba_enable(struct ufs_hba *hba)
-+{
-+	int ret;
-+
-+	if (hba->quirks & UFSHCI_QUIRK_BROKEN_HCE) {
-+		ufshcd_set_link_off(hba);
-+		ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
-+
-+		/* enable UIC related interrupts */
-+		ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
-+		ret = ufshcd_dme_reset(hba);
-+		if (!ret) {
-+			ret = ufshcd_dme_enable(hba);
-+			if (!ret)
-+				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
-+			if (ret)
-+				dev_err(hba->dev,
-+					"Host controller enable failed with non-hce\n");
-+		}
-+	} else {
-+		ret = ufshcd_hba_execute_hce(hba);
-+	}
-+
-+	return ret;
-+}
- static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
- {
- 	int tx_lanes, i, err = 0;
+ 	/* send command to the controller */
++	ufshcd_vops_specify_nexus_t_tm_req(hba, free_slot, tm_function);
+ 	__set_bit(free_slot, &hba->outstanding_tasks);
+ 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 4ae32e9316de..500e137bf68a 100644
+index 500e137bf68a..b3dd08420100 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -485,6 +485,11 @@ struct ufs_hba {
- 	 */
- 	#define UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		UFS_BIT(8)
+@@ -259,6 +259,9 @@ struct ufs_pwr_mode_info {
+  * @pwr_change_notify: called before and after a power mode change
+  *			is carried out to allow vendor spesific capabilities
+  *			to be set.
++ * @specify_nexus_t_xfer_req:
++ * @specify_nexus_t_tm_req: called before command is issued to allow vendor
++ *			specific handling to be set for nexus type.
+  * @suspend: called during host controller PM callback
+  * @resume: called during host controller PM callback
+  * @dbg_register_dump: used to dump controller debug information
+@@ -280,6 +283,9 @@ struct ufs_hba_variant_ops {
+ 					enum ufs_notify_change_status status,
+ 					struct ufs_pa_layer_attr *,
+ 					struct ufs_pa_layer_attr *);
++	void	(*specify_nexus_t_xfer_req)(struct ufs_hba *,
++					    int, struct scsi_cmnd *);
++	void	(*specify_nexus_t_tm_req)(struct ufs_hba *, int, u8);
+ 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+ 	void	(*dbg_register_dump)(struct ufs_hba *hba);
+@@ -811,4 +817,17 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+ 		hba->vops->dbg_register_dump(hba);
+ }
  
-+	/*
-+	 * This quirks needs to be enabled if host controller cannot be
-+	 * enabled via HCE register.
-+	 */
-+	#define UFSHCI_QUIRK_BROKEN_HCE				UFS_BIT(9)
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	wait_queue_head_t tm_wq;
++static inline void ufshcd_vops_specify_nexus_t_xfer_req(struct ufs_hba *hba,
++					int tag, struct ufshcd_lrb *lrbp)
++{
++	if (hba->vops && hba->vops->specify_nexus_t_xfer_req)
++		hba->vops->specify_nexus_t_xfer_req(hba, tag, lrbp->cmd);
++}
++
++static inline void ufshcd_vops_specify_nexus_t_tm_req(struct ufs_hba *hba,
++						int free_slot, u8 tm_function)
++{
++	if (hba->vops && hba->vops->specify_nexus_t_tm_req)
++		hba->vops->specify_nexus_t_tm_req(hba, free_slot, tm_function);
++}
+ #endif /* End of Header */
 -- 
 1.7.10.4
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
