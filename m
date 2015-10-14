@@ -1,76 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] SCSI: Fix hard lockup in scsi_remove_target()
-Date: Wed, 14 Oct 2015 11:18:03 -0700
-Message-ID: <20151014181803.GA12497@infradead.org>
-References: <cover.1444829611.git.jthumshirn@suse.de>
- <1444833036.2220.38.camel@HansenPartnership.com>
- <1444833547.19542.21.camel@suse.de>
- <1444837556.2220.43.camel@HansenPartnership.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
+ management
+Date: Wed, 14 Oct 2015 11:34:00 -0700
+Message-ID: <561EA018.7020700@suse.com>
+References: <cover.1444241058.git.lduncan@suse.com>
+ <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+ <1444830904.2220.28.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1444837556.2220.43.camel@HansenPartnership.com>
+In-Reply-To: <1444830904.2220.28.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 14, 2015 at 08:45:56AM -0700, James Bottomley wrote:
-> OK, so I really need you to separate the problems.  Fixing the bug
-> you're reporting does not require a complete rework of the locking
-> infrastructure; it just requires replacing the traversal macro with the
-> safe version, can you verify that and it can go into fixes?
+On 10/14/2015 06:55 AM, James Bottomley wrote:
+> On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
+>> Update the SCSI hosts module to use the ida_simple*() routines
+>> to manage its host_no index instead of an ATOMIC integer. This
+>> means that the SCSI host number will now be reclaimable.
+> 
+> OK, but why would we want to do this?  We do it for sd because our minor
+> space for the device nodes is very constrained, so packing is essential.
+> For HBAs, there's no device space density to worry about, they're
+> largely statically allocated at boot time and not reusing the numbers
+> allows easy extraction of hotplug items for the logs (quite useful for
+> USB) because each separate hotplug has a separate and monotonically
+> increasing host number.
+> 
+> James
+> 
 
-_safe only protects against deletions from yourself, it does not protect
-against other threads once a lock is dropped.  After auditing the
-target reap code I fear the list_move trick isn't safe either, as
-scsi_target_alloc relies on a being able to find a target that is
-currently in the process of being deleted.  So the only safe variant
-we have is to keep the same sequence we currently have and restart the
-loop once we've deleted the target.  Given that we'd normally only
-ever delete a single target anyway (not sure when we'd even get a second
-one ever) this does not seem to be a major efficieny problem.
+Good question, James. Apologies for not making the need clear.
 
-Johannes, can you test the patch below?
+The iSCSI subsystem uses a host structure for discovery, then throws it
+away. So each time it does discovery it gets a new host structure. With
+the current approach, that number is ever increasing. It's only a matter
+of time until some user with a hundreds of disks and perhaps thousands
+of LUNs, that likes to do periodic discovery (think super-computers)
+will run out of host numbers. Or, worse yet, get a negative number
+number (because the value is signed right now).
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b333389f..d3b34d8 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1158,31 +1158,23 @@ static void __scsi_remove_target(struct scsi_target *starget)
- void scsi_remove_target(struct device *dev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
--	struct scsi_target *starget, *last = NULL;
-+	struct scsi_target *starget;
- 	unsigned long flags;
- 
--	/* remove targets being careful to lookup next entry before
--	 * deleting the last
--	 */
-+restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(starget, &shost->__targets, siblings) {
- 		if (starget->state == STARGET_DEL)
- 			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
--			/* assuming new targets arrive at the end */
- 			kref_get(&starget->reap_ref);
- 			spin_unlock_irqrestore(shost->host_lock, flags);
--			if (last)
--				scsi_target_reap(last);
--			last = starget;
- 			__scsi_remove_target(starget);
--			spin_lock_irqsave(shost->host_lock, flags);
-+			scsi_target_reap(starget);
-+			goto restart;
- 		}
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--
--	if (last)
--		scsi_target_reap(last);
- }
- EXPORT_SYMBOL(scsi_remove_target);
- 
+And this use case is a real one right now, by the way.
+
+As you can see from the patch, it's a small amount of code to ensure
+that the host number management is handled more cleanly.
+
+-- 
+Lee Duncan
