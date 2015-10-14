@@ -1,83 +1,53 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Wed, 14 Oct 2015 14:21:47 -0700
-Message-ID: <561EC76B.6020103@suse.com>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH] scsi: kconfig: When possible, compile drivers with
+ COMPILE_TEST
+Date: Wed, 14 Oct 2015 15:25:05 -0700
+Message-ID: <561ED641.9090208@infradead.org>
+References: <1444857220-26595-1-git-send-email-luisbg@osg.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444848835.2220.50.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:41812 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbbJNWZM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 18:25:12 -0400
+In-Reply-To: <1444857220-26595-1-git-send-email-luisbg@osg.samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luis de Bethencourt <luisbg@osg.samsung.com>, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org
 
-On 10/14/2015 11:53 AM, James Bottomley wrote:
-> On Wed, 2015-10-14 at 11:34 -0700, Lee Duncan wrote:
->> On 10/14/2015 06:55 AM, James Bottomley wrote:
->>> On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
->>>> Update the SCSI hosts module to use the ida_simple*() routines
->>>> to manage its host_no index instead of an ATOMIC integer. This
->>>> means that the SCSI host number will now be reclaimable.
->>>
->>> OK, but why would we want to do this?  We do it for sd because our minor
->>> space for the device nodes is very constrained, so packing is essential.
->>> For HBAs, there's no device space density to worry about, they're
->>> largely statically allocated at boot time and not reusing the numbers
->>> allows easy extraction of hotplug items for the logs (quite useful for
->>> USB) because each separate hotplug has a separate and monotonically
->>> increasing host number.
->>>
->>> James
->>>
->>
->> Good question, James. Apologies for not making the need clear.
->>
->> The iSCSI subsystem uses a host structure for discovery, then throws it
->> away. So each time it does discovery it gets a new host structure. With
->> the current approach, that number is ever increasing. It's only a matter
->> of time until some user with a hundreds of disks and perhaps thousands
->> of LUNs, that likes to do periodic discovery (think super-computers)
->> will run out of host numbers. Or, worse yet, get a negative number
->> number (because the value is signed right now).
->>
->> And this use case is a real one right now, by the way.
+On 10/14/15 14:13, Luis de Bethencourt wrote:
+> These drivers only have runtime but no build time dependencies, so they can
+> be built for testing purposes if the Kconfig COMPILE_TEST option is enabled.
 > 
-> Um, so even if you do discovery continuously, say one every second, it
-> still will take 68 years before we wrap the sign.
+> This is useful to have more build coverage and make sure that drivers are
+> not affected by changes that could cause build regressions.
 > 
->> As you can see from the patch, it's a small amount of code to ensure
->> that the host number management is handled more cleanly.
+> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+> ---
+>  drivers/scsi/Kconfig | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 > 
-> Well, I'm a bit worried about the loss of a monotonically increasing
-> host number from the debugging perspective.  Right now, if you look at
-> any log, hostX always refers to one and only one incarnation throughout
-> the system lifetime for any given value of X.  With your patch, the
-> lowest host number gets continually reused ... probably for every hot
-> plug event.  If the USB and other hotplug system people don't mind this,
-> I suppose I can live with it, but I'd like to hear their view before
-> making this change.
-> 
-> James
-> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index d2f480b..0d8ee16 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
 
-James:
+> @@ -1238,7 +1238,7 @@ config SCSI_NCR53C8XX_NO_DISCONNECT
+>  
+>  config SCSI_PAS16
+>  	tristate "PAS16 SCSI support"
+> -	depends on ISA && SCSI
+> +	depends on (ISA || COMPILE) && SCSI
 
-Understand your point, but I've never seen the host number not repeating
-be a benefit in debugging or testing. And Hannes suggested this fix, so
-I can only assume he also did not see a benefit of unique host
-numbering. And purely aesthetically, seeing "host4595483528" in sysfs
-would not be very user-friendly.
+COMPILE_TEST
 
-But one possible solution to address your concern would be to increase
-the host number until it ran out of room (or hit some large maximum),
-and only then start re-using host numbers. This would preserve the
-current monotonically-increasing behavior at least initially. But I
-worry that having this bi-modal numbering scheme might confuse some.
+>  	select SCSI_SPI_ATTRS
+>  	---help---
+>  	  This is support for a SCSI host adapter.  It is explained in section
+
+
 -- 
-Lee Duncan
+~Randy
