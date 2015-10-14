@@ -1,120 +1,114 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 0/3] SCSI: Fix hard lockup in scsi_remove_target()
-Date: Wed, 14 Oct 2015 16:39:07 +0200
-Message-ID: <1444833547.19542.21.camel@suse.de>
-References: <cover.1444829611.git.jthumshirn@suse.de>
-	 <1444833036.2220.38.camel@HansenPartnership.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Wed, 14 Oct 2015 16:05:21 +0100
+Message-ID: <561E6F31.9050804@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <1444663237-238302-10-git-send-email-john.garry@huawei.com>
+ <561CA0CB.5090802@suse.de> <561D3BF1.8060600@huawei.com>
+ <561E1501.2070507@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444833036.2220.38.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <561E1501.2070507-l3A5Bk7waGM@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-10-14 at 07:30 -0700, James Bottomley wrote:
-> On Wed, 2015-10-14 at 15:50 +0200, Johannes Thumshirn wrote:
-> > Removing a SCSI target via scsi_remove_target() suspected to be
-> > racy. When a
-> > sibling get's removed from the list it can occassionly happen that
-> > one CPU is
-> > stuck endlessly looping around this code block
-> > 
-> > list_for_each_entry(starget, &shost->__targets, siblings) {
-> >         if (starget->state == STARGET_DEL)
-> >                 continue;
-> 
-> How long is the __targets list?  It seems a bit unlikely that this is
-> the exact cause, because for a short list all in STARGET_DEL that
-> loop
-> should exit very quickly.  Where in the code does scsi_remove_target
-> +0x68/0x240 actually point to?
-> 
-> Is it not a bit more likely that we're following a removed list
-> element?
-> Since that points back to itself, the list_for_each_entry() would
-> then
-> circulate forever.  If that's the case the simple fix would be to use
-> the safe version of the list traversal macro.
+On 14/10/2015 09:40, Hannes Reinecke wrote:
+> On 10/13/2015 07:14 PM, John Garry wrote:
+>> On 13/10/2015 07:12, Hannes Reinecke wrote:
+>>> On 10/12/2015 05:20 PM, John Garry wrote:
+>>>> This SAS ID is chosen as Huawei IEEE id: 001882
+>>>>
+>>>> Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>>> ---
+>>>>    drivers/scsi/hisi_sas/hisi_sas_init.c | 15 +++++++++++++++
+>>>>    1 file changed, 15 insertions(+)
+>>>>
+>>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_init.c
+>>>> b/drivers/scsi/hisi_sas/hisi_sas_init.c
+>>>> index 44fc524..c295c39 100644
+>>>> --- a/drivers/scsi/hisi_sas/hisi_sas_init.c
+>>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_init.c
+>>>> @@ -283,6 +283,19 @@ err_out:
+>>>>        return NULL;
+>>>>    }
+>>>>
+>>>> +static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+>>>> +{
+>>>> +    u8 i;
+>>>> +
+>>>> +    /* Huawei IEEE id (001882) */
+>>>> +    for (i = 0; i < hisi_hba->n_phy; i++)
+>>>> +        hisi_hba->phy[i].dev_sas_addr =
+>>>> +            cpu_to_be64(0x5001882016072015ULL);
+>>>> +
+>>> Ouch. Each phy has the same SAS address?
+>>> For all boards? Ever?
+>>>
+>>> Not sure if that's a good idea, nor even valid.
+>>> It'll confuse the hell out of any SAS array.
+>>>
+>>> Please provide a means of having individual SAS addresses for each
+>>> HBA.
+>>>
+>>> Cheers,
+>>>
+>>> Hannes
+>>>
+>> Hello,
+>>
+>> Are you saying we should be getting the SAS address from fw with
+>> sas_request_addr() or the like?
+>>
+>> Marvell solution seems to hardcode it.
+>>
+> Doesn't make it any better, nor even valid.
+>
+> Problem is that using a hardcoded SAS address makes it impossible
+> do any resource allocation on a SAS target array.
+> The SAS target array is allocating / mapping the LUNs based on the
+> SAS address, so if HBAs from different machines coming in with the
+> same SAS address the SAS array will assume that all ports belong to
+> the same machine, thus allowing access to all of them.
+>
+> And don't try to _ever_ connect these HBAs to a SAS switch; that
+> will be even more confused.
+>
+> So please, if you have a chance _DO_ get the SAS address from fw.
+> If the firmware doesn't provide it you really should get in touch
+> with the firmware team to get you one.
+>
+> To clarify the situation the SAS spec states:
+>
+>    Device names are worldwide unique names for devices within a
+>    transport protocol (see SAM-3).
+>
+> and:
+>    The VENDOR - SPECIFIC IDENTIFIER contains a 36-bit numeric value
+>    that is uniquely assigned by the organization associated with the
+>    company identifier in the IEEE COMPANY ID field.
+>
+> So as you are using the Huawei Vendor ID Huawei as a company needs
+> to ensure uniqueness of the vendor-specific identifier (ie the last
+> 36 bits of the SAS address). Which the above patch most patently
+> fails to address.
+>
+> Cheers,
+>
+> Hannes
+>
+Hi,
 
-Yes it is traversing a removed element and yes the patches 2/3 and 3/3
-are introducing the safe version of list_for_each_entry(), but they
-also decouple the search for elements to be removed from the actual
-removal. This is what my initial proposal did as well. Christoph wanted
-me to decouple the whole process from the host_lock though and this is
-what this patches do as well now.
+OK, we can look at adding the ability to read the SAS HBA address from a 
+FW image or EFI variables.
 
-> 
-> James
-> 
-> 
-> > Resulting in the following hard lockup.
-> > 
-> > Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 0
-> > [...]
-> > Call Trace:
-> >  [<ffffffff8100471d>] dump_trace+0x7d/0x2d0
-> >  [<ffffffff81004a04>] show_stack_log_lvl+0x94/0x170
-> >  [<ffffffff81005cc1>] show_stack+0x21/0x50
-> >  [<ffffffff8151aa75>] dump_stack+0x41/0x51
-> >  [<ffffffff8151545a>] panic+0xc8/0x1d7
-> >  [<ffffffff810fbdda>] watchdog_overflow_callback+0xba/0xc0
-> >  [<ffffffff811336c8>] __perf_event_overflow+0x88/0x240
-> >  [<ffffffff8101e3aa>] intel_pmu_handle_irq+0x1fa/0x3e0
-> >  [<ffffffff81522836>] perf_event_nmi_handler+0x26/0x40
-> >  [<ffffffff81521fcd>] nmi_handle.isra.2+0x8d/0x180
-> >  [<ffffffff815221e6>] do_nmi+0x126/0x3c0
-> >  [<ffffffff8152159b>] end_repeat_nmi+0x1a/0x1e
-> >  [<ffffffffa00212e8>] scsi_remove_target+0x68/0x240 [scsi_mod]
-> >  [<ffffffff81072742>] process_one_work+0x172/0x420
-> >  [<ffffffff810733ba>] worker_thread+0x11a/0x3c0
-> >  [<ffffffff81079d34>] kthread+0xb4/0xc0
-> >  [<ffffffff81528cd8>] ret_from_fork+0x58/0x90
-> > 
-> > This series attacks the issue by 1) decoupling the __targets and
-> > __devices
-> > lists of struct Scsi_Host from the host_lock spinlock by
-> > introducing spinlocks
-> > for each list and 2) de-coupling the list traversals needed for
-> > detecting
-> > targets/devices to be removed from the actual removal by moving
-> > list entries to
-> > be deleted to a second list and perform the deletion there.
-> > 
-> > 
-> > The whole series survived a nearly 48h test loop of:
-> > while [ $not_done  ]; do
-> > 	umount $mountpoint;
-> > 	rmmod $module;
-> > 	modprobe $module;
-> > 	mount $mountpoint;
-> > done
-> > 
-> > This is a follow up of the patch proposed here:
-> > http://marc.info/?l=linux-scsi&m=144377409311774&w=2
-> > incorporating Christoph's comment
-> > 
-> > Johannes Thumshirn (3):
-> >   SCSI: Introduce device_lock and target_lock in Scsi_Host
-> >   SCSI: Rework list handling in scsi_target_remove
-> >   SCSI: Rework list handling in __scsi_target_remove
-> > 
-> >  drivers/scsi/53c700.c     |  3 +++
-> >  drivers/scsi/hosts.c      |  2 ++
-> >  drivers/scsi/scsi.c       |  8 ++++----
-> >  drivers/scsi/scsi_scan.c  | 10 +++++-----
-> >  drivers/scsi/scsi_sysfs.c | 43 +++++++++++++++++++++--------------
-> > --------
-> >  include/scsi/scsi_host.h  |  2 ++
-> >  6 files changed, 37 insertions(+), 31 deletions(-)
-> > 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+John
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
