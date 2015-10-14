@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 2/3] SCSI: Rework list handling in scsi_target_remove
-Date: Wed, 14 Oct 2015 15:50:07 +0200
-Message-ID: <b43bba6ec61bae1166bd4f9677450117bf5cde0e.1444829611.git.jthumshirn@suse.de>
+Subject: [PATCH 3/3]  SCSI: Rework list handling in __scsi_target_remove
+Date: Wed, 14 Oct 2015 15:50:08 +0200
+Message-ID: <1cfe37e6cb89ede18c88e60578d4293a6eb7430b.1444829611.git.jthumshirn@suse.de>
 References: <cover.1444829611.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1444829611.git.jthumshirn@suse.de>
@@ -12,58 +12,46 @@ To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Christoph He
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Rework the list handling in scsi_target_remove(). The new version introduces a
-reap list for targets. Targets that shall be removed are placed on the reap
-list and can then be reaped later on.
+Rework the list handling in __scsi_target_remove(). The new version introduces
+a reap list for devices. Devices that shall be removed are placed on the reap
+list and can then be removed later on.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_sysfs.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_sysfs.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d7afea9..b41dcb3 100644
+index b41dcb3..2bd88c6 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -1156,31 +1156,28 @@ static void __scsi_remove_target(struct scsi_target *starget)
- void scsi_remove_target(struct device *dev)
+@@ -1129,20 +1129,24 @@ static void __scsi_remove_target(struct scsi_target *starget)
  {
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
--	struct scsi_target *starget, *last = NULL;
-+	struct scsi_target *starget, *tmp;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
  	unsigned long flags;
+-	struct scsi_device *sdev;
++	struct scsi_device *sdev, *tmp;
 +	LIST_HEAD(reap_list);
  
- 	/* remove targets being careful to lookup next entry before
- 	 * deleting the last
- 	 */
- 	spin_lock_irqsave(&shost->target_lock, flags);
--	list_for_each_entry(starget, &shost->__targets, siblings) {
-+	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
- 		if (starget->state == STARGET_DEL)
+ 	spin_lock_irqsave(&shost->device_lock, flags);
+  restart:
+-	list_for_each_entry(sdev, &shost->__devices, siblings) {
++	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
+ 		if (sdev->channel != starget->channel ||
+ 		    sdev->id != starget->id ||
+ 		    scsi_device_get(sdev))
  			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
--			/* assuming new targets arrive at the end */
- 			kref_get(&starget->reap_ref);
--			spin_unlock_irqrestore(&shost->target_lock, flags);
--			if (last)
--				scsi_target_reap(last);
--			last = starget;
--			__scsi_remove_target(starget);
--			spin_lock_irqsave(&shost->target_lock, flags);
-+			list_move_tail(&starget->siblings, &reap_list);
- 		}
+-		scsi_remove_device(sdev);
++		list_move_tail(&sdev->siblings, &reap_list);
+ 		scsi_device_put(sdev);
+ 		goto restart;
  	}
- 	spin_unlock_irqrestore(&shost->target_lock, flags);
- 
--	if (last)
--		scsi_target_reap(last);
-+	list_for_each_entry_safe(starget, tmp, &reap_list, siblings) {
-+		__scsi_remove_target(starget);
-+		scsi_target_reap(starget);
-+	}
+ 	spin_unlock_irqrestore(&shost->device_lock, flags);
++
++	list_for_each_entry_safe(sdev, tmp, &reap_list, siblings)
++		scsi_remove_device(sdev);
  }
- EXPORT_SYMBOL(scsi_remove_target);
  
+ /**
 -- 
 1.8.5.6
