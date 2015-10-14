@@ -1,31 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Wed, 14 Oct 2015 06:55:04 -0700
-Message-ID: <1444830904.2220.28.camel@HansenPartnership.com>
-References: <cover.1444241058.git.lduncan@suse.com>
-	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] SCSI: Introduce device_lock and target_lock in Scsi_Host
+Date: Wed, 14 Oct 2015 16:14:04 +0200
+Message-ID: <561E632C.1030504@suse.de>
+References: <cover.1444829611.git.jthumshirn@suse.de> <f2ff8b554116663d7acf35fa84c23886bf486ffb.1444829611.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
+In-Reply-To: <f2ff8b554116663d7acf35fa84c23886bf486ffb.1444829611.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
-> Update the SCSI hosts module to use the ida_simple*() routines
-> to manage its host_no index instead of an ATOMIC integer. This
-> means that the SCSI host number will now be reclaimable.
+On 10/14/2015 03:50 PM, Johannes Thumshirn wrote:
+> Introduce target_lock and device_lock to untangle the __devices and _=
+_targets
+> lists from the host_lock.
+>=20
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/53c700.c     |  3 +++
+>  drivers/scsi/hosts.c      |  2 ++
+>  drivers/scsi/scsi.c       |  8 ++++----
+>  drivers/scsi/scsi_scan.c  | 10 +++++-----
+>  drivers/scsi/scsi_sysfs.c | 18 ++++++++----------
+>  include/scsi/scsi_host.h  |  2 ++
+>  6 files changed, 24 insertions(+), 19 deletions(-)
+>=20
+> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+> index a209c34..e2b4d04 100644
+> --- a/drivers/scsi/53c700.c
+> +++ b/drivers/scsi/53c700.c
+> @@ -1093,6 +1093,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp,=
+ struct scsi_cmnd *SCp,
+>  		struct NCR_700_command_slot *slot;
+>  		__u8 reselection_id =3D hostdata->reselection_id;
+>  		struct scsi_device *SDp;
+> +		unsigned long flags;
+> =20
+>  		lun =3D hostdata->msgin[0] & 0x1f;
+> =20
+> @@ -1100,7 +1101,9 @@ process_script_interrupt(__u32 dsps, __u32 dsp,=
+ struct scsi_cmnd *SCp,
+>  		DEBUG(("scsi%d: (%d:%d) RESELECTED!\n",
+>  		       host->host_no, reselection_id, lun));
+>  		/* clear the reselection indicator */
+> +		spin_lock_irqsave(host->device_lock, flags);
+>  		SDp =3D __scsi_device_lookup(host, 0, reselection_id, lun);
+> +		spin_unlock_irqrestore(host->device_lock, flags);
+>  		if(unlikely(SDp =3D=3D NULL)) {
+>  			printk(KERN_ERR "scsi%d: (%d:%d) HAS NO device\n",
+>  			       host->host_no, reselection_id, lun);
 
-OK, but why would we want to do this?  We do it for sd because our minor
-space for the device nodes is very constrained, so packing is essential.
-For HBAs, there's no device space density to worry about, they're
-largely statically allocated at boot time and not reusing the numbers
-allows easy extraction of hotplug items for the logs (quite useful for
-USB) because each separate hotplug has a separate and monotonically
-increasing host number.
+Hmm. Unfortunate.
 
-James
+Can't we get rid of the underscore version altogether, seeing that
+we have our own lock now?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
