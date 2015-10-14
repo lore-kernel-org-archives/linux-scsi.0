@@ -1,215 +1,119 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [RFC v6 03/25] m68k/atari: Replace nvram_{read,write}_byte with
- arch_nvram_ops
-Date: Wed, 14 Oct 2015 22:19:37 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1510142216390.4586@nippy.intranet>
-References: <20150823104129.517600532@telegraphics.com.au> <20150823104130.287718296@telegraphics.com.au>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
+ management
+Date: Wed, 14 Oct 2015 14:22:42 +0200
+Message-ID: <1444825362.19542.3.camel@suse.de>
+References: <cover.1444241058.git.lduncan@suse.com>
+	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150823104130.287718296@telegraphics.com.au>
+In-Reply-To: <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-James, would you please review and ack this patch, and patch 01/25 also?
-
-On Sun, 23 Aug 2015, Finn Thain wrote:
-
-> By implementing an arch_nvram_ops struct, any platform can re-use the
-> drivers/char/nvram module without needing any arch-specific code
-> in that module. Atari does so here.
+On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
+> Update the SCSI hosts module to use the ida_simple*() routines
+> to manage its host_no index instead of an ATOMIC integer. This
+> means that the SCSI host number will now be reclaimable.
 > 
-> Atari has one user of nvram_check_checksum() whereas the other platforms
-> (i.e. x86 and ARM platforms) have none at all. Replace this
-> validate-checksum-and-read-byte sequence with the equivalent
-> rtc_nvram_ops.read() call and remove the now unused functions.
-> 
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> Tested-by: Christian T. Steigies <cts@debian.org>
-> Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> 
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
 > ---
+>  drivers/scsi/hosts.c | 22 ++++++++++++++--------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
 > 
-> The advantage of the new ops struct over the old global nvram_* functions
-> is that the misc device module can be shared by different platforms
-> without requiring every platform to implement every nvram_* function.
-> E.g. only RTC "CMOS" NVRAMs have a checksum for the entire NVRAM
-> and only PowerPC platforms have a "sync" ioctl.
-> 
-> ---
->  arch/m68k/atari/nvram.c   |   89 ++++++++++++++++++++++++++++------------------
->  drivers/scsi/atari_scsi.c |    8 ++--
->  include/linux/nvram.h     |    9 ++++
->  3 files changed, 70 insertions(+), 36 deletions(-)
-> 
-> Index: linux/arch/m68k/atari/nvram.c
-> ===================================================================
-> --- linux.orig/arch/m68k/atari/nvram.c	2015-08-23 20:40:55.000000000 +1000
-> +++ linux/arch/m68k/atari/nvram.c	2015-08-23 20:40:57.000000000 +1000
-> @@ -38,33 +38,12 @@ unsigned char __nvram_read_byte(int i)
->  	return CMOS_READ(NVRAM_FIRST_BYTE + i);
->  }
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 8bb173e01084..b6a5ffa886b7 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -33,7 +33,7 @@
+>  #include <linux/transport_class.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_runtime.h>
+> -
+> +#include <linux/idr.h>
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_transport.h>
+> @@ -42,7 +42,7 @@
+>  #include "scsi_logging.h"
 >  
-> -unsigned char nvram_read_byte(int i)
-> -{
-> -	unsigned long flags;
-> -	unsigned char c;
-> -
-> -	spin_lock_irqsave(&rtc_lock, flags);
-> -	c = __nvram_read_byte(i);
-> -	spin_unlock_irqrestore(&rtc_lock, flags);
-> -	return c;
-> -}
-> -EXPORT_SYMBOL(nvram_read_byte);
-> -
->  /* This races nicely with trying to read with checksum checking */
->  void __nvram_write_byte(unsigned char c, int i)
+>  
+> -static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/*
+> host_no for next new host */
+> +static DEFINE_IDA(host_index_ida);
+>  
+>  
+>  static void scsi_host_cls_release(struct device *dev)
+> @@ -337,6 +337,8 @@ static void scsi_host_dev_release(struct device
+> *dev)
+>  
+>  	kfree(shost->shost_data);
+>  
+> +	ida_simple_remove(&host_index_ida, shost->host_no);
+> +
+>  	if (parent)
+>  		put_device(parent);
+>  	kfree(shost);
+> @@ -370,6 +372,7 @@ struct Scsi_Host *scsi_host_alloc(struct
+> scsi_host_template *sht, int privsize)
 >  {
->  	CMOS_WRITE(c, NVRAM_FIRST_BYTE + i);
->  }
+>  	struct Scsi_Host *shost;
+>  	gfp_t gfp_mask = GFP_KERNEL;
+> +	int index;
 >  
-> -void nvram_write_byte(unsigned char c, int i)
-> -{
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&rtc_lock, flags);
-> -	__nvram_write_byte(c, i);
-> -	spin_unlock_irqrestore(&rtc_lock, flags);
-> -}
-> -
->  /* On Ataris, the checksum is over all bytes except the checksum bytes
->   * themselves; these are at the very end.
->   */
-> @@ -83,18 +62,6 @@ int __nvram_check_checksum(void)
->  	       (__nvram_read_byte(ATARI_CKS_LOC + 1) == (sum & 0xff));
->  }
+>  	if (sht->unchecked_isa_dma && privsize)
+>  		gfp_mask |= __GFP_DMA;
+> @@ -388,11 +391,11 @@ struct Scsi_Host *scsi_host_alloc(struct
+> scsi_host_template *sht, int privsize)
+>  	init_waitqueue_head(&shost->host_wait);
+>  	mutex_init(&shost->scan_mutex);
 >  
-> -int nvram_check_checksum(void)
-> -{
-> -	unsigned long flags;
-> -	int rv;
-> -
-> -	spin_lock_irqsave(&rtc_lock, flags);
-> -	rv = __nvram_check_checksum();
-> -	spin_unlock_irqrestore(&rtc_lock, flags);
-> -	return rv;
-> -}
-> -EXPORT_SYMBOL(nvram_check_checksum);
-> -
->  static void __nvram_set_checksum(void)
+> -	/*
+> -	 * subtract one because we increment first then return, but
+> we need to
+> -	 * know what the next host number was before increment
+> -	 */
+> -	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
+> +	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+> +	if (index < 0)
+> +		goto fail_kfree;
+> +	shost->host_no = index;
+> +
+>  	shost->dma_channel = 0xff;
+>  
+>  	/* These three are default values which can be overridden */
+> @@ -477,7 +480,7 @@ struct Scsi_Host *scsi_host_alloc(struct
+> scsi_host_template *sht, int privsize)
+>  		shost_printk(KERN_WARNING, shost,
+>  			"error handler thread failed to spawn, error
+> = %ld\n",
+>  			PTR_ERR(shost->ehandler));
+> -		goto fail_kfree;
+> +		goto fail_index_remove;
+>  	}
+>  
+>  	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+> @@ -493,6 +496,8 @@ struct Scsi_Host *scsi_host_alloc(struct
+> scsi_host_template *sht, int privsize)
+>  
+>   fail_kthread:
+>  	kthread_stop(shost->ehandler);
+> + fail_index_remove:
+> +	ida_simple_remove(&host_index_ida, shost->host_no);
+>   fail_kfree:
+>  	kfree(shost);
+>  	return NULL;
+> @@ -588,6 +593,7 @@ int scsi_init_hosts(void)
+>  void scsi_exit_hosts(void)
 >  {
->  	int i;
-> @@ -106,6 +73,62 @@ static void __nvram_set_checksum(void)
->  	__nvram_write_byte(sum, ATARI_CKS_LOC + 1);
+>  	class_unregister(&shost_class);
+> +	ida_destroy(&host_index_ida);
 >  }
 >  
-> +static ssize_t nvram_read(char *buf, size_t count, loff_t *ppos)
-> +{
-> +	char *p = buf;
-> +	loff_t i;
-> +
-> +	spin_lock_irq(&rtc_lock);
-> +
-> +	if (!__nvram_check_checksum()) {
-> +		spin_unlock_irq(&rtc_lock);
-> +		return -EIO;
-> +	}
-> +
-> +	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
-> +		*p = __nvram_read_byte(i);
-> +
-> +	spin_unlock_irq(&rtc_lock);
-> +
-> +	*ppos = i;
-> +	return p - buf;
-> +}
-> +
-> +static ssize_t nvram_write(char *buf, size_t count, loff_t *ppos)
-> +{
-> +	char *p = buf;
-> +	loff_t i;
-> +
-> +	spin_lock_irq(&rtc_lock);
-> +
-> +	if (!__nvram_check_checksum()) {
-> +		spin_unlock_irq(&rtc_lock);
-> +		return -EIO;
-> +	}
-> +
-> +	for (i = *ppos; count > 0 && i < NVRAM_BYTES; --count, ++i, ++p)
-> +		__nvram_write_byte(*p, i);
-> +
-> +	__nvram_set_checksum();
-> +
-> +	spin_unlock_irq(&rtc_lock);
-> +
-> +	*ppos = i;
-> +	return p - buf;
-> +}
-> +
-> +static ssize_t nvram_get_size(void)
-> +{
-> +	return NVRAM_BYTES;
-> +}
-> +
-> +const struct nvram_ops arch_nvram_ops = {
-> +	.read           = nvram_read,
-> +	.write          = nvram_write,
-> +	.get_size       = nvram_get_size,
-> +};
-> +EXPORT_SYMBOL(arch_nvram_ops);
-> +
->  #ifdef CONFIG_PROC_FS
->  static struct {
->  	unsigned char val;
-> Index: linux/drivers/scsi/atari_scsi.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/atari_scsi.c	2015-08-23 20:40:53.000000000 +1000
-> +++ linux/drivers/scsi/atari_scsi.c	2015-08-23 20:40:57.000000000 +1000
-> @@ -880,13 +880,15 @@ static int __init atari_scsi_probe(struc
->  #ifdef CONFIG_NVRAM
->  	else
->  		/* Test if a host id is set in the NVRam */
-> -		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
-> -			unsigned char b = nvram_read_byte(14);
-> +		if (ATARIHW_PRESENT(TT_CLK)) {
-> +			unsigned char b;
-> +			loff_t offset = 14;
-> +			ssize_t count = arch_nvram_ops.read(&b, 1, &offset);
->  
->  			/* Arbitration enabled? (for TOS)
->  			 * If yes, use configured host ID
->  			 */
-> -			if (b & 0x80)
-> +			if ((count == 1) && (b & 0x80))
->  				atari_scsi_template.this_id = b & 7;
->  		}
->  #endif
-> Index: linux/include/linux/nvram.h
-> ===================================================================
-> --- linux.orig/include/linux/nvram.h	2015-08-23 20:40:53.000000000 +1000
-> +++ linux/include/linux/nvram.h	2015-08-23 20:40:57.000000000 +1000
-> @@ -10,4 +10,13 @@ extern void __nvram_write_byte(unsigned
->  extern void nvram_write_byte(unsigned char c, int i);
->  extern int __nvram_check_checksum(void);
->  extern int nvram_check_checksum(void);
-> +
-> +struct nvram_ops {
-> +	ssize_t         (*read)(char *, size_t, loff_t *);
-> +	ssize_t         (*write)(char *, size_t, loff_t *);
-> +	ssize_t         (*get_size)(void);
-> +};
-> +
-> +extern const struct nvram_ops arch_nvram_ops;
-> +
->  #endif  /* _LINUX_NVRAM_H */
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-m68k" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>  int scsi_is_host_device(const struct device *dev)
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
