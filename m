@@ -1,77 +1,117 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 2/2] qla2xxx: fix rwlock recursion
-Date: Wed, 14 Oct 2015 14:07:08 -0700
-Message-ID: <22881A44-6E6A-45D7-828F-B0DE6C91476D@qlogic.com>
-References: <1444838261-20990-1-git-send-email-himanshu.madhani@qlogic.com> <1444838261-20990-3-git-send-email-himanshu.madhani@qlogic.com> <561E91D4.8030307@sandisk.com>
-Mime-Version: 1.0 (Mac OS X Mail 9.0 \(3094\))
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:52750 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753671AbbJNVHX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Oct 2015 17:07:23 -0400
-In-Reply-To: <561E91D4.8030307@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] scsi: kconfig: When possible, compile drivers with COMPILE_TEST
+Date: Wed, 14 Oct 2015 22:13:40 +0100
+Message-ID: <1444857220-26595-1-git-send-email-luisbg@osg.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, Luis de Bethencourt <luisbg@osg.samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: jbottomley@parallels.com, hch@lst.de, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
 
-Hi Bart, 
+These drivers only have runtime but no build time dependencies, so they can
+be built for testing purposes if the Kconfig COMPILE_TEST option is enabled.
 
-> On Oct 14, 2015, at 10:33 AM, Bart Van Assche <bart.vanassche@sandisk.com> wrote:
-> 
-> On 10/14/2015 08:57 AM, Himanshu Madhani wrote:
->> This patch fixes rwlock recursion introduced for ISP82XX by
->> commit 8dfa4b5a ("qla2xxx: Fix sparse annotations")
-> 
-> Hello Himanshu,
-> 
-> Would it be possible to test whether the (untested) patch below also fixes the observed rwlock recursion ?
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> 
-> [PATCH] qla2xxx: Fix rwlock recursion
-> 
-> Fixes: 8dfa4b5a9b44 ("qla2xxx: Fix sparse annotation")
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Reported-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> ---
-> drivers/scsi/qla2xxx/qla_nx.c | 3 ++-
-> 1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-> index eb0cc54..b6b4cfd 100644
-> --- a/drivers/scsi/qla2xxx/qla_nx.c
-> +++ b/drivers/scsi/qla2xxx/qla_nx.c
-> @@ -433,7 +433,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
-> 	if (off_in < QLA82XX_PCI_CRBSPACE)
-> 		return -1;
-> 
-> -	*off_out = (void __iomem *)(off_in - QLA82XX_PCI_CRBSPACE);
-> +	off_in -= QLA82XX_PCI_CRBSPACE;
-> 
-> 	/* Try direct map */
-> 	m = &crb_128M_2M_map[CRB_BLK(off_in)].sub_block[CRB_SUBBLK(off_in)];
-> @@ -443,6 +443,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
-> 		return 0;
-> 	}
-> 	/* Not in direct map, use crb window */
-> +	*off_out = (void __iomem *)off_in;
-> 	return 1;
-> }
-> 
+This is useful to have more build coverage and make sure that drivers are
+not affected by changes that could cause build regressions.
 
-This change  also resolved rwlock recursion on the driver load. Will perform some more basic sanity and report if there are issues seen. 
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
+ drivers/scsi/Kconfig | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-> -- 
-> 2.1.4
-> 
-> 
-
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d2f480b..0d8ee16 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -416,7 +416,7 @@ config SCSI_ACARD
+ 
+ config SCSI_AHA152X
+ 	tristate "Adaptec AHA152X/2825 support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	---help---
+@@ -509,7 +509,7 @@ config SCSI_ADVANSYS
+ 
+ config SCSI_IN2000
+ 	tristate "Always IN2000 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	help
+ 	  This is support for an ISA bus SCSI host adapter.  You'll find more
+ 	  information in <file:Documentation/scsi/in2000.txt>. If it doesn't work
+@@ -657,7 +657,7 @@ config SCSI_DMX3191D
+ 
+ config SCSI_DTC3280
+ 	tristate "DTC3180/3280 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	help
+@@ -776,7 +776,7 @@ config SCSI_ISCI
+ 
+ config SCSI_GENERIC_NCR5380
+ 	tristate "Generic NCR5380/53c400 SCSI PIO support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is a driver for the old NCR 53c80 series of SCSI controllers
+@@ -796,7 +796,7 @@ config SCSI_GENERIC_NCR5380
+ 
+ config SCSI_GENERIC_NCR5380_MMIO
+ 	tristate "Generic NCR5380/53c400 SCSI MMIO support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is a driver for the old NCR 53c80 series of SCSI controllers
+@@ -970,7 +970,7 @@ config SCSI_IZIP_SLOW_CTR
+ 
+ config SCSI_NCR53C406A
+ 	tristate "NCR53c406a SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	help
+ 	  This is support for the NCR53c406a SCSI host adapter.  For user
+ 	  configurable parameters, check out <file:drivers/scsi/NCR53c406a.c>
+@@ -1238,7 +1238,7 @@ config SCSI_NCR53C8XX_NO_DISCONNECT
+ 
+ config SCSI_PAS16
+ 	tristate "PAS16 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is support for a SCSI host adapter.  It is explained in section
+@@ -1252,7 +1252,7 @@ config SCSI_PAS16
+ 
+ config SCSI_QLOGIC_FAS
+ 	tristate "Qlogic FAS SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	---help---
+ 	  This is a driver for the ISA, VLB, and PCMCIA versions of the Qlogic
+ 	  FastSCSI! cards as well as any other card based on the FASXX chip
+@@ -1321,7 +1321,7 @@ config SCSI_SIM710
+ 
+ config SCSI_SYM53C416
+ 	tristate "Symbios 53c416 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	---help---
+ 	  This is support for the sym53c416 SCSI host adapter, the SCSI
+ 	  adapter that comes with some HP scanners. This driver requires that
+@@ -1372,7 +1372,7 @@ config SCSI_AM53C974
+ 
+ config SCSI_T128
+ 	tristate "Trantor T128/T128F/T228 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	---help---
+-- 
+2.5.1
