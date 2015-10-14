@@ -1,119 +1,86 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Wed, 14 Oct 2015 14:22:42 +0200
-Message-ID: <1444825362.19542.3.camel@suse.de>
-References: <cover.1444241058.git.lduncan@suse.com>
-	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v4 00/11] exynos-ufs: add support for Exynos
+Date: Wed, 14 Oct 2015 18:25:40 +0530
+Message-ID: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, amit.daniel@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, alim.akhtar@samsung.com, arnd@arndb.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
-> Update the SCSI hosts module to use the ida_simple*() routines
-> to manage its host_no index instead of an ATOMIC integer. This
-> means that the SCSI host number will now be reclaimable.
-> 
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->  drivers/scsi/hosts.c | 22 ++++++++++++++--------
->  1 file changed, 14 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 8bb173e01084..b6a5ffa886b7 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -33,7 +33,7 @@
->  #include <linux/transport_class.h>
->  #include <linux/platform_device.h>
->  #include <linux/pm_runtime.h>
-> -
-> +#include <linux/idr.h>
->  #include <scsi/scsi_device.h>
->  #include <scsi/scsi_host.h>
->  #include <scsi/scsi_transport.h>
-> @@ -42,7 +42,7 @@
->  #include "scsi_logging.h"
->  
->  
-> -static atomic_t scsi_host_next_hn = ATOMIC_INIT(0);	/*
-> host_no for next new host */
-> +static DEFINE_IDA(host_index_ida);
->  
->  
->  static void scsi_host_cls_release(struct device *dev)
-> @@ -337,6 +337,8 @@ static void scsi_host_dev_release(struct device
-> *dev)
->  
->  	kfree(shost->shost_data);
->  
-> +	ida_simple_remove(&host_index_ida, shost->host_no);
-> +
->  	if (parent)
->  		put_device(parent);
->  	kfree(shost);
-> @@ -370,6 +372,7 @@ struct Scsi_Host *scsi_host_alloc(struct
-> scsi_host_template *sht, int privsize)
->  {
->  	struct Scsi_Host *shost;
->  	gfp_t gfp_mask = GFP_KERNEL;
-> +	int index;
->  
->  	if (sht->unchecked_isa_dma && privsize)
->  		gfp_mask |= __GFP_DMA;
-> @@ -388,11 +391,11 @@ struct Scsi_Host *scsi_host_alloc(struct
-> scsi_host_template *sht, int privsize)
->  	init_waitqueue_head(&shost->host_wait);
->  	mutex_init(&shost->scan_mutex);
->  
-> -	/*
-> -	 * subtract one because we increment first then return, but
-> we need to
-> -	 * know what the next host number was before increment
-> -	 */
-> -	shost->host_no = atomic_inc_return(&scsi_host_next_hn) - 1;
-> +	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
-> +	if (index < 0)
-> +		goto fail_kfree;
-> +	shost->host_no = index;
-> +
->  	shost->dma_channel = 0xff;
->  
->  	/* These three are default values which can be overridden */
-> @@ -477,7 +480,7 @@ struct Scsi_Host *scsi_host_alloc(struct
-> scsi_host_template *sht, int privsize)
->  		shost_printk(KERN_WARNING, shost,
->  			"error handler thread failed to spawn, error
-> = %ld\n",
->  			PTR_ERR(shost->ehandler));
-> -		goto fail_kfree;
-> +		goto fail_index_remove;
->  	}
->  
->  	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
-> @@ -493,6 +496,8 @@ struct Scsi_Host *scsi_host_alloc(struct
-> scsi_host_template *sht, int privsize)
->  
->   fail_kthread:
->  	kthread_stop(shost->ehandler);
-> + fail_index_remove:
-> +	ida_simple_remove(&host_index_ida, shost->host_no);
->   fail_kfree:
->  	kfree(shost);
->  	return NULL;
-> @@ -588,6 +593,7 @@ int scsi_init_hosts(void)
->  void scsi_exit_hosts(void)
->  {
->  	class_unregister(&shost_class);
-> +	ida_destroy(&host_index_ida);
->  }
->  
->  int scsi_is_host_device(const struct device *dev)
+This patch-set introduces UFS (Universal Flash Storage) host support
+for Samsung Exynos SoC. Mostly, it consists of UFS PHY and host specific driver.
+And it also contains some quirks handling for Exynos.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+NOTE: ** This series has a dependency on [4]. **
+
+-Changes since v3:
+* Fixed compilation warrings as reported by "Kbuild Test Robot"[5].
+* Restructure the driver to make it as a platform driver, rebased on top of [4].
+* Addressed review comments from Arnd Bergmann[5].
+* Other misc changes and improvements.
+
+-Changes since v2:
+* Addressed review comments from Kishon[1] and Rob Herring [2]
+* Splited ufs dt binding documetation from ufs driver patch
+
+-Changes since v1:
+* Addressed review comments from Alexey[3] and various review comments from Amit.
+* Updated email id of Seungwon as his samsung id is void now.
+* Added ufs platform data
+
+[1]-> https://lkml.org/lkml/2015/9/18/29
+[2]-> https://lkml.org/lkml/2015/9/21/668
+[3]-> https://lkml.org/lkml/2015/8/23/124
+[4]-> https://lkml.org/lkml/2015/9/2/364
+[5]-> https://lkml.org/lkml/2015/10/1/402
+
+This patch set is tested on exynos7-espresso board.
+
+Alim Akhtar (1):
+  Documentation: samsung-phy: Add dt bindings for UFS
+
+Seungwon Jeon (10):
+  phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
+  scsi: ufs: add quirk to contain unconformable utrd field
+  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
+  scsi: ufs: add quirk not to allow reset of interrupt aggregation
+  scsi: ufs: add quirk to enable host controller without hce
+  scsi: ufs: add specific callback for nexus type
+  scsi: ufs: add add specific callback for hibern8
+  scsi: ufs: make ufshcd_config_pwr_mode of non-static func
+  Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
+    controller
+  scsi: ufs-exynos: add UFS host support for Exynos SoCs
+
+ .../devicetree/bindings/phy/samsung-phy.txt        |   22 +
+ .../devicetree/bindings/ufs/ufs-exynos.txt         |  104 ++
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-exynos-ufs.c                       |  257 ++++
+ drivers/phy/phy-exynos-ufs.h                       |   88 ++
+ drivers/phy/phy-exynos7-ufs.h                      |   89 ++
+ drivers/scsi/ufs/Kconfig                           |   12 +
+ drivers/scsi/ufs/Makefile                          |    1 +
+ drivers/scsi/ufs/ufs-exynos-hw.c                   |  131 ++
+ drivers/scsi/ufs/ufs-exynos-hw.h                   |   43 +
+ drivers/scsi/ufs/ufs-exynos.c                      | 1317 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                      |  247 ++++
+ drivers/scsi/ufs/ufshcd.c                          |  168 ++-
+ drivers/scsi/ufs/ufshcd.h                          |   54 +
+ drivers/scsi/ufs/ufshci.h                          |   26 +-
+ drivers/scsi/ufs/unipro.h                          |   47 +
+ include/linux/phy/phy-exynos-ufs.h                 |  101 ++
+ 18 files changed, 2695 insertions(+), 20 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/phy/phy-exynos-ufs.c
+ create mode 100644 drivers/phy/phy-exynos-ufs.h
+ create mode 100644 drivers/phy/phy-exynos7-ufs.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+ create mode 100644 include/linux/phy/phy-exynos-ufs.h
+
+-- 
+1.7.10.4
