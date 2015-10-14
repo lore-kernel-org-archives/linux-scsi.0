@@ -1,58 +1,64 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/3] SCSI: Rework list handling in scsi_target_remove
-Date: Wed, 14 Oct 2015 16:18:21 +0200
-Message-ID: <561E642D.8080407@suse.de>
-References: <cover.1444829611.git.jthumshirn@suse.de> <b43bba6ec61bae1166bd4f9677450117bf5cde0e.1444829611.git.jthumshirn@suse.de>
+Subject: Re: [PATCH 3/3]  SCSI: Rework list handling in __scsi_target_remove
+Date: Wed, 14 Oct 2015 16:19:16 +0200
+Message-ID: <561E6464.2020702@suse.de>
+References: <cover.1444829611.git.jthumshirn@suse.de> <1cfe37e6cb89ede18c88e60578d4293a6eb7430b.1444829611.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b43bba6ec61bae1166bd4f9677450117bf5cde0e.1444829611.git.jthumshirn@suse.de>
+In-Reply-To: <1cfe37e6cb89ede18c88e60578d4293a6eb7430b.1444829611.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/14/2015 03:50 PM, Johannes Thumshirn wrote:
-> Rework the list handling in scsi_target_remove(). The new version int=
-roduces a
-> reap list for targets. Targets that shall be removed are placed on th=
-e reap
-> list and can then be reaped later on.
+> Rework the list handling in __scsi_target_remove(). The new version i=
+ntroduces
+> a reap list for devices. Devices that shall be removed are placed on =
+the reap
+> list and can then be removed later on.
 >=20
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  drivers/scsi/scsi_sysfs.c | 19 ++++++++-----------
->  1 file changed, 8 insertions(+), 11 deletions(-)
+>  drivers/scsi/scsi_sysfs.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
 >=20
 > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index d7afea9..b41dcb3 100644
+> index b41dcb3..2bd88c6 100644
 > --- a/drivers/scsi/scsi_sysfs.c
 > +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1156,31 +1156,28 @@ static void __scsi_remove_target(struct scsi_=
+> @@ -1129,20 +1129,24 @@ static void __scsi_remove_target(struct scsi_=
 target *starget)
->  void scsi_remove_target(struct device *dev)
 >  {
->  	struct Scsi_Host *shost =3D dev_to_shost(dev->parent);
-> -	struct scsi_target *starget, *last =3D NULL;
-> +	struct scsi_target *starget, *tmp;
+>  	struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
 >  	unsigned long flags;
+> -	struct scsi_device *sdev;
+> +	struct scsi_device *sdev, *tmp;
 > +	LIST_HEAD(reap_list);
 > =20
->  	/* remove targets being careful to lookup next entry before
->  	 * deleting the last
->  	 */
->  	spin_lock_irqsave(&shost->target_lock, flags);
-> -	list_for_each_entry(starget, &shost->__targets, siblings) {
-> +	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings)=
- {
->  		if (starget->state =3D=3D STARGET_DEL)
+>  	spin_lock_irqsave(&shost->device_lock, flags);
+>   restart:
+> -	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> +	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
+>  		if (sdev->channel !=3D starget->channel ||
+>  		    sdev->id !=3D starget->id ||
+>  		    scsi_device_get(sdev))
 >  			continue;
-Hmm. This can even be converted into a WARN_ON(), as with this patch
-there should _never_ be an deleted target on the list.
-
-Other than that:
-
+> -		scsi_remove_device(sdev);
+> +		list_move_tail(&sdev->siblings, &reap_list);
+>  		scsi_device_put(sdev);
+>  		goto restart;
+>  	}
+>  	spin_unlock_irqrestore(&shost->device_lock, flags);
+> +
+> +	list_for_each_entry_safe(sdev, tmp, &reap_list, siblings)
+> +		scsi_remove_device(sdev);
+>  }
+> =20
+>  /**
+>=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
