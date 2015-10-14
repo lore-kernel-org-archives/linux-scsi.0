@@ -1,52 +1,77 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 0/3] SCSI: Fix hard lockup in scsi_remove_target()
-Date: Wed, 14 Oct 2015 16:22:10 -0400
-Message-ID: <1444854130.26884.33.camel@localhost.localdomain>
-References: <cover.1444829611.git.jthumshirn@suse.de>
-	 <1444833036.2220.38.camel@HansenPartnership.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 2/2] qla2xxx: fix rwlock recursion
+Date: Wed, 14 Oct 2015 14:07:08 -0700
+Message-ID: <22881A44-6E6A-45D7-828F-B0DE6C91476D@qlogic.com>
+References: <1444838261-20990-1-git-send-email-himanshu.madhani@qlogic.com> <1444838261-20990-3-git-send-email-himanshu.madhani@qlogic.com> <561E91D4.8030307@sandisk.com>
+Mime-Version: 1.0 (Mac OS X Mail 9.0 \(3094\))
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33972 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753579AbbJNUWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Oct 2015 16:22:12 -0400
-In-Reply-To: <1444833036.2220.38.camel@HansenPartnership.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:52750 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753671AbbJNVHX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Oct 2015 17:07:23 -0400
+In-Reply-To: <561E91D4.8030307@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: jbottomley@parallels.com, hch@lst.de, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2015-10-14 at 07:30 -0700, James Bottomley wrote:
-> On Wed, 2015-10-14 at 15:50 +0200, Johannes Thumshirn wrote:
-> > Removing a SCSI target via scsi_remove_target() suspected to be racy. When a
-> > sibling get's removed from the list it can occassionly happen that one CPU is
-> > stuck endlessly looping around this code block
-> > 
-> > list_for_each_entry(starget, &shost->__targets, siblings) {
-> >         if (starget->state == STARGET_DEL)
-> >                 continue;
+Hi Bart, 
+
+> On Oct 14, 2015, at 10:33 AM, Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 > 
-> How long is the __targets list?  It seems a bit unlikely that this is
-> the exact cause, because for a short list all in STARGET_DEL that loop
-> should exit very quickly.  Where in the code does scsi_remove_target
-> +0x68/0x240 actually point to?
+> On 10/14/2015 08:57 AM, Himanshu Madhani wrote:
+>> This patch fixes rwlock recursion introduced for ISP82XX by
+>> commit 8dfa4b5a ("qla2xxx: Fix sparse annotations")
 > 
-> Is it not a bit more likely that we're following a removed list element?
-> Since that points back to itself, the list_for_each_entry() would then
-> circulate forever.  If that's the case the simple fix would be to use
-> the safe version of the list traversal macro.
+> Hello Himanshu,
 > 
-> James
+> Would it be possible to test whether the (untested) patch below also fixes the observed rwlock recursion ?
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> 
+> [PATCH] qla2xxx: Fix rwlock recursion
+> 
+> Fixes: 8dfa4b5a9b44 ("qla2xxx: Fix sparse annotation")
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Reported-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+> drivers/scsi/qla2xxx/qla_nx.c | 3 ++-
+> 1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+> index eb0cc54..b6b4cfd 100644
+> --- a/drivers/scsi/qla2xxx/qla_nx.c
+> +++ b/drivers/scsi/qla2xxx/qla_nx.c
+> @@ -433,7 +433,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
+> 	if (off_in < QLA82XX_PCI_CRBSPACE)
+> 		return -1;
+> 
+> -	*off_out = (void __iomem *)(off_in - QLA82XX_PCI_CRBSPACE);
+> +	off_in -= QLA82XX_PCI_CRBSPACE;
+> 
+> 	/* Try direct map */
+> 	m = &crb_128M_2M_map[CRB_BLK(off_in)].sub_block[CRB_SUBBLK(off_in)];
+> @@ -443,6 +443,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
+> 		return 0;
+> 	}
+> 	/* Not in direct map, use crb window */
+> +	*off_out = (void __iomem *)off_in;
+> 	return 1;
+> }
+> 
 
-For what it's worth, I've seen a dump where this was exactly the case.
-starget was in STARGET_DEL state, starget->siblings pointed to itself,
-kref was 0, reap_ref was 0 (this was a while back).
+This change  also resolved rwlock recursion on the driver load. Will perform some more basic sanity and report if there are issues seen. 
 
-The problem was not able to be reproduced at the time.
-
--Ewan
-
+> -- 
+> 2.1.4
+> 
+> 
 
