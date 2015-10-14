@@ -1,29 +1,66 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
-Date: Wed, 14 Oct 2015 17:18:12 +0200
-Message-ID: <5841294.bjnFQrbOU2@wuerfel>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <561E1501.2070507@suse.de> <561E6F31.9050804@huawei.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3] SCSI: Fix hard lockup in scsi_remove_target()
+Date: Wed, 14 Oct 2015 08:45:56 -0700
+Message-ID: <1444837556.2220.43.camel@HansenPartnership.com>
+References: <cover.1444829611.git.jthumshirn@suse.de>
+	 <1444833036.2220.38.camel@HansenPartnership.com>
+	 <1444833547.19542.21.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:60610 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbbJNPSt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 11:18:49 -0400
-In-Reply-To: <561E6F31.9050804@huawei.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48500 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753574AbbJNPp7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Oct 2015 11:45:59 -0400
+In-Reply-To: <1444833547.19542.21.camel@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Hannes Reinecke <hare@suse.de>, James.Bottomley@hansenpartnership.com, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 14 October 2015 16:05:21 John Garry wrote:
+On Wed, 2015-10-14 at 16:39 +0200, Johannes Thumshirn wrote:
+> On Wed, 2015-10-14 at 07:30 -0700, James Bottomley wrote:
+> > On Wed, 2015-10-14 at 15:50 +0200, Johannes Thumshirn wrote:
+> > > Removing a SCSI target via scsi_remove_target() suspected to be
+> > > racy. When a
+> > > sibling get's removed from the list it can occassionly happen that
+> > > one CPU is
+> > > stuck endlessly looping around this code block
+> > > 
+> > > list_for_each_entry(starget, &shost->__targets, siblings) {
+> > >         if (starget->state == STARGET_DEL)
+> > >                 continue;
+> > 
+> > How long is the __targets list?  It seems a bit unlikely that this is
+> > the exact cause, because for a short list all in STARGET_DEL that
+> > loop
+> > should exit very quickly.  Where in the code does scsi_remove_target
+> > +0x68/0x240 actually point to?
+> > 
+> > Is it not a bit more likely that we're following a removed list
+> > element?
+> > Since that points back to itself, the list_for_each_entry() would
+> > then
+> > circulate forever.  If that's the case the simple fix would be to use
+> > the safe version of the list traversal macro.
 > 
-> OK, we can look at adding the ability to read the SAS HBA address from a 
-> FW image or EFI variables.
-> 
+> Yes it is traversing a removed element and yes the patches 2/3 and 3/3
+> are introducing the safe version of list_for_each_entry(), but they
+> also decouple the search for elements to be removed from the actual
+> removal. This is what my initial proposal did as well. Christoph wanted
+> me to decouple the whole process from the host_lock though and this is
+> what this patches do as well now.
 
-The easiest way is usually to have a DT property that gets updated
-by the firmware.
+OK, so I really need you to separate the problems.  Fixing the bug
+you're reporting does not require a complete rework of the locking
+infrastructure; it just requires replacing the traversal macro with the
+safe version, can you verify that and it can go into fixes?
 
-	Arnd
+Then we can discuss the merits of doing a locking rework in this area
+separately from the idea that it's some sort of bug fix.
+
+James
+
+
