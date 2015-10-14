@@ -1,39 +1,132 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH 1/2] qla2xxx: Remove unavailable firmware files
-Date: Thu, 15 Oct 2015 10:33:54 +1100
-Message-ID: <CAGRGNgXL26BUtWDWL+Qa4sHMqQqhP6a7SMegR=FdswvENhLwGg@mail.gmail.com>
-References: <1444838261-20990-1-git-send-email-himanshu.madhani@qlogic.com> <1444838261-20990-2-git-send-email-himanshu.madhani@qlogic.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:35432 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772AbbJNXeO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 19:34:14 -0400
-Received: by iofl186 with SMTP id l186so72827925iof.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2015 16:34:14 -0700 (PDT)
-In-Reply-To: <1444838261-20990-2-git-send-email-himanshu.madhani@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH v2] scsi: kconfig: When possible, compile drivers with COMPILE_TEST
+Date: Thu, 15 Oct 2015 00:36:09 +0100
+Message-ID: <1444865769-3380-1-git-send-email-luisbg@osg.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: rdunlap@infradead.org, JBottomley@odin.com, linux-scsi@vger.kernel.org, Luis de Bethencourt <luisbg@osg.samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, andrew.vasquez@qlogic.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Himanshu,
+These drivers only have runtime but no build time dependencies, so they can
+be built for testing purposes if the Kconfig COMPILE_TEST option is enabled.
 
-On Thu, Oct 15, 2015 at 2:57 AM, Himanshu Madhani
-<himanshu.madhani@qlogic.com> wrote:
-> Remove firmware binary names for the ISPs, which
-> are not submitted to linux-firmware
->
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+This is useful to have more build coverage and make sure that drivers are
+not affected by changes that could cause build regressions.
 
-For what it's worth, this looks good to me.
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
+
+Hi,
+
+This version corrects a typo pointed out by Randy Dunlap.
+
+The validity of the patch is still in question after the comments by James
+Bottomley. [0]
+
+I just wanted to send a correct version as a thank you to Randy.
 
 Thanks,
+Luis
 
+[0] https://lkml.org/lkml/2015/10/14/995
+
+ drivers/scsi/Kconfig | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d2f480b..e90e0ca 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -416,7 +416,7 @@ config SCSI_ACARD
+ 
+ config SCSI_AHA152X
+ 	tristate "Adaptec AHA152X/2825 support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	---help---
+@@ -509,7 +509,7 @@ config SCSI_ADVANSYS
+ 
+ config SCSI_IN2000
+ 	tristate "Always IN2000 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	help
+ 	  This is support for an ISA bus SCSI host adapter.  You'll find more
+ 	  information in <file:Documentation/scsi/in2000.txt>. If it doesn't work
+@@ -657,7 +657,7 @@ config SCSI_DMX3191D
+ 
+ config SCSI_DTC3280
+ 	tristate "DTC3180/3280 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	help
+@@ -776,7 +776,7 @@ config SCSI_ISCI
+ 
+ config SCSI_GENERIC_NCR5380
+ 	tristate "Generic NCR5380/53c400 SCSI PIO support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is a driver for the old NCR 53c80 series of SCSI controllers
+@@ -796,7 +796,7 @@ config SCSI_GENERIC_NCR5380
+ 
+ config SCSI_GENERIC_NCR5380_MMIO
+ 	tristate "Generic NCR5380/53c400 SCSI MMIO support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is a driver for the old NCR 53c80 series of SCSI controllers
+@@ -970,7 +970,7 @@ config SCSI_IZIP_SLOW_CTR
+ 
+ config SCSI_NCR53C406A
+ 	tristate "NCR53c406a SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	help
+ 	  This is support for the NCR53c406a SCSI host adapter.  For user
+ 	  configurable parameters, check out <file:drivers/scsi/NCR53c406a.c>
+@@ -1238,7 +1238,7 @@ config SCSI_NCR53C8XX_NO_DISCONNECT
+ 
+ config SCSI_PAS16
+ 	tristate "PAS16 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is support for a SCSI host adapter.  It is explained in section
+@@ -1252,7 +1252,7 @@ config SCSI_PAS16
+ 
+ config SCSI_QLOGIC_FAS
+ 	tristate "Qlogic FAS SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	---help---
+ 	  This is a driver for the ISA, VLB, and PCMCIA versions of the Qlogic
+ 	  FastSCSI! cards as well as any other card based on the FASXX chip
+@@ -1321,7 +1321,7 @@ config SCSI_SIM710
+ 
+ config SCSI_SYM53C416
+ 	tristate "Symbios 53c416 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	---help---
+ 	  This is support for the sym53c416 SCSI host adapter, the SCSI
+ 	  adapter that comes with some HP scanners. This driver requires that
+@@ -1372,7 +1372,7 @@ config SCSI_AM53C974
+ 
+ config SCSI_T128
+ 	tristate "Trantor T128/T128F/T228 SCSI support"
+-	depends on ISA && SCSI
++	depends on (ISA || COMPILE_TEST) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	select CHECK_SIGNATURE
+ 	---help---
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+2.5.1
