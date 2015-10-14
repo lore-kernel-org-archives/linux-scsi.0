@@ -1,65 +1,19 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Wed, 14 Oct 2015 11:53:55 -0700
-Message-ID: <1444848835.2220.50.camel@HansenPartnership.com>
-References: <cover.1444241058.git.lduncan@suse.com>
-	 <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
-	 <1444830904.2220.28.camel@HansenPartnership.com>
-	 <561EA018.7020700@suse.com>
+From: Financial Service <hr@bankandara.co.id>
+Subject: Fast Loans
+Date: Wed, 14 Oct 2015 13:57:52 +0530
+Message-ID: <20151014082823.6935E228D92@mail.spbgasu.ru>
+Reply-To: applyloan@qq.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <561EA018.7020700@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exchange.lan.spbgasu.ru ([82.137.163.2]:46629 "EHLO
+	mail.spbgasu.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbbJNTBl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 15:01:41 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <hr@bankandara.co.id>
 
-On Wed, 2015-10-14 at 11:34 -0700, Lee Duncan wrote:
-> On 10/14/2015 06:55 AM, James Bottomley wrote:
-> > On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
-> >> Update the SCSI hosts module to use the ida_simple*() routines
-> >> to manage its host_no index instead of an ATOMIC integer. This
-> >> means that the SCSI host number will now be reclaimable.
-> > 
-> > OK, but why would we want to do this?  We do it for sd because our minor
-> > space for the device nodes is very constrained, so packing is essential.
-> > For HBAs, there's no device space density to worry about, they're
-> > largely statically allocated at boot time and not reusing the numbers
-> > allows easy extraction of hotplug items for the logs (quite useful for
-> > USB) because each separate hotplug has a separate and monotonically
-> > increasing host number.
-> > 
-> > James
-> > 
-> 
-> Good question, James. Apologies for not making the need clear.
-> 
-> The iSCSI subsystem uses a host structure for discovery, then throws it
-> away. So each time it does discovery it gets a new host structure. With
-> the current approach, that number is ever increasing. It's only a matter
-> of time until some user with a hundreds of disks and perhaps thousands
-> of LUNs, that likes to do periodic discovery (think super-computers)
-> will run out of host numbers. Or, worse yet, get a negative number
-> number (because the value is signed right now).
-> 
-> And this use case is a real one right now, by the way.
-
-Um, so even if you do discovery continuously, say one every second, it
-still will take 68 years before we wrap the sign.
-
-> As you can see from the patch, it's a small amount of code to ensure
-> that the host number management is handled more cleanly.
-
-Well, I'm a bit worried about the loss of a monotonically increasing
-host number from the debugging perspective.  Right now, if you look at
-any log, hostX always refers to one and only one incarnation throughout
-the system lifetime for any given value of X.  With your patch, the
-lowest host number gets continually reused ... probably for every hot
-plug event.  If the USB and other hotplug system people don't mind this,
-I suppose I can live with it, but I'd like to hear their view before
-making this change.
-
-James
+Loan Service reply for more info.
