@@ -1,43 +1,39 @@
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: Re: [PATCH] scsi: kconfig: When possible, compile drivers with COMPILE_TEST
-Date: Thu, 15 Oct 2015 00:30:57 +0100
-Message-ID: <561EE5B1.40402@osg.samsung.com>
-References: <1444857220-26595-1-git-send-email-luisbg@osg.samsung.com> <1444862561.2220.81.camel@HansenPartnership.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 1/2] qla2xxx: Remove unavailable firmware files
+Date: Thu, 15 Oct 2015 10:33:54 +1100
+Message-ID: <CAGRGNgXL26BUtWDWL+Qa4sHMqQqhP6a7SMegR=FdswvENhLwGg@mail.gmail.com>
+References: <1444838261-20990-1-git-send-email-himanshu.madhani@qlogic.com> <1444838261-20990-2-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444862561.2220.81.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:35432 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753772AbbJNXeO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2015 19:34:14 -0400
+Received: by iofl186 with SMTP id l186so72827925iof.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2015 16:34:14 -0700 (PDT)
+In-Reply-To: <1444838261-20990-2-git-send-email-himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, andrew.vasquez@qlogic.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 14/10/15 23:42, James Bottomley wrote:
-> On Wed, 2015-10-14 at 22:13 +0100, Luis de Bethencourt wrote:
->> These drivers only have runtime but no build time dependencies, so they can
->> be built for testing purposes if the Kconfig COMPILE_TEST option is enabled.
->>
->> This is useful to have more build coverage and make sure that drivers are
->> not affected by changes that could cause build regressions.
-> 
-> I don't think I understand the purpose.  If the object is to build a
-> load of old ISA drivers, why not just turn on CONFIG_ISA in the test
-> build? That's how I build test SCSI on my systems.
-> 
-> James
-> 
-> 
+Hi Himanshu,
 
-Hi James,
+On Thu, Oct 15, 2015 at 2:57 AM, Himanshu Madhani
+<himanshu.madhani@qlogic.com> wrote:
+> Remove firmware binary names for the ISPs, which
+> are not submitted to linux-firmware
+>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-The idea is that the more drivers are built with make allyesconfig, the better.
+For what it's worth, this looks good to me.
 
-I added COMPILE_TEST to all the drivers that can be built without having ISA,
-since they depend on runtime and not in build time. I understand your point,
-which raises the question of why isn't CONFIG_ISA set to Y in make allyesconfig.
+Thanks,
 
-Would this be possible?
+-- 
+Julian Calaby
 
-Thanks for the review,
-Luis
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
