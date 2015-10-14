@@ -1,8 +1,8 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v4 03/11] scsi: ufs: add quirk to contain unconformable utrd
- field
-Date: Wed, 14 Oct 2015 18:25:43 +0530
-Message-ID: <1444827351-24128-4-git-send-email-alim.akhtar@samsung.com>
+Subject: [PATCH v4 04/11] scsi: ufs: add quirk to fix mishandling
+ utrlclr/utmrlclr
+Date: Wed, 14 Oct 2015 18:25:44 +0530
+Message-ID: <1444827351-24128-5-git-send-email-alim.akhtar@samsung.com>
 References: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
@@ -13,95 +13,68 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Seungwon Jeon <essuuj@gmail.com>
 
-UTRD(UTP Transfer Request Descriptor)'s field such as offset/length,
-especially response's has DWORD expression. This quirk can be specified
-for host controller not to conform standard.
+In the right behavior, setting the bit to '0' indicates clear and
+'1' indicates no change. If host contoller handles this the other way,
+UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR can be used.
 
 Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   28 +++++++++++++++++++++-------
- drivers/scsi/ufs/ufshcd.h |    7 +++++++
- 2 files changed, 28 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c |   21 +++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h |    5 +++++
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 131c72038bf8..587a9c8fbfe9 100644
+index 587a9c8fbfe9..2b16eb363203 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1009,7 +1009,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-  *
-  * Returns 0 in case of success, non-zero value in case of failure
+@@ -356,7 +356,24 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
   */
--static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-+static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
  {
- 	struct ufshcd_sg_entry *prd_table;
- 	struct scatterlist *sg;
-@@ -1023,8 +1023,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
- 		return sg_segments;
+-	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
++	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
++		ufshcd_writel(hba, (1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
++	else
++		ufshcd_writel(hba, ~(1 << pos),
++				REG_UTP_TRANSFER_REQ_LIST_CLEAR);
++}
++
++/**
++ * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
++ * @hba: per adapter instance
++ * @pos: position of the bit to be cleared
++ */
++static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
++{
++	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
++		ufshcd_writel(hba, (1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
++	else
++		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
+ }
  
- 	if (sg_segments) {
--		lrbp->utr_descriptor_ptr->prd_table_length =
--					cpu_to_le16((u16) (sg_segments));
-+		if (hba->quirks & UFSHCI_QUIRK_BYTE_ALIGN_UTRD)
-+			lrbp->utr_descriptor_ptr->prd_table_length =
-+				cpu_to_le16((u16)(sg_segments *
-+					sizeof(struct ufshcd_sg_entry)));
-+		else
-+			lrbp->utr_descriptor_ptr->prd_table_length =
-+				cpu_to_le16((u16) (sg_segments));
+ /**
+@@ -3685,7 +3702,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ 		goto out;
  
- 		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
++	ufshcd_utmrl_clear(hba, tag);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
-@@ -1347,7 +1352,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	/* form UPIU before issuing the command */
- 	ufshcd_compose_upiu(hba, lrbp);
--	err = ufshcd_map_sg(lrbp);
-+	err = ufshcd_map_sg(hba, lrbp);
- 	if (err) {
- 		lrbp->cmd = NULL;
- 		clear_bit_unlock(tag, &hba->lrb_in_use);
-@@ -2034,13 +2039,22 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 		utrdlp[i].command_desc_base_addr_hi =
- 				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
- 
-+		if (hba->quirks & UFSHCI_QUIRK_BYTE_ALIGN_UTRD) {
-+			utrdlp[i].response_upiu_offset =
-+				cpu_to_le16(response_offset);
-+			utrdlp[i].prd_table_offset =
-+				cpu_to_le16(prdt_offset);
-+			utrdlp[i].response_upiu_length =
-+				cpu_to_le16(ALIGNED_UPIU_SIZE);
-+		} else {
- 		/* Response upiu and prdt offset should be in double words */
--		utrdlp[i].response_upiu_offset =
-+			utrdlp[i].response_upiu_offset =
- 				cpu_to_le16((response_offset >> 2));
--		utrdlp[i].prd_table_offset =
-+			utrdlp[i].prd_table_offset =
- 				cpu_to_le16((prdt_offset >> 2));
--		utrdlp[i].response_upiu_length =
-+			utrdlp[i].response_upiu_length =
- 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
-+		}
- 
- 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
- 		hba->lrb[i].ucd_req_ptr =
+ 	/* poll for max. 1 sec to clear door bell register by h/w */
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2570d9477b37..6cd542a803d5 100644
+index 6cd542a803d5..d625d01110b0 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -467,6 +467,13 @@ struct ufs_hba {
+@@ -474,6 +474,11 @@ struct ufs_hba {
  	 */
- 	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+ 	#define UFSHCI_QUIRK_BYTE_ALIGN_UTRD			UFS_BIT(6)
  
 +	/*
-+	 * This quirk needs to be enabled if host controller doesn't conform
-+	 * with UTRD. Some fields such as offset/length might not be in double
-+	 * word, but in byte.
++	 * Cleaer handling for transfer/task request list is just opposite.
 +	 */
-+	#define UFSHCI_QUIRK_BYTE_ALIGN_UTRD			UFS_BIT(6)
++	#define UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		UFS_BIT(7)
 +
  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
  
