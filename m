@@ -1,74 +1,45 @@
-From: sumit.saxena@avagotech.com
-Subject: [PATCH 09/12] megaraid_sas : Make PI enabled VD 8 byte DMA
- aligned
-Date: Thu, 15 Oct 2015 13:40:44 +0530
-Message-ID: <201510150818.t9F8I3u4029657@palmhbs0.lsi.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 09/25] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Thu, 15 Oct 2015 10:43:11 +0200
+Message-ID: <10528737.V03dqLA43T@wuerfel>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <5841294.bjnFQrbOU2@wuerfel> <561F1F55.9070606@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([199.3.246.48]:42989 "EHLO
-	rndsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbbJOIUi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 04:20:38 -0400
+Received: from mout.kundenserver.de ([212.227.126.130]:54113 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbbJOIn3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 04:43:29 -0400
+In-Reply-To: <561F1F55.9070606@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
-Cc: uday.lingala@avagotech.com
+To: zhangfei <zhangfei.gao@linaro.org>
+Cc: John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.de>, James.Bottomley@hansenpartnership.com, devicetree@vger.kernel.org, linuxarm@huawei.com, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie
 
-Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c |   34 +++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+On Thursday 15 October 2015 11:36:53 zhangfei wrote:
+> On 10/14/2015 11:18 PM, Arnd Bergmann wrote:
+> > On Wednesday 14 October 2015 16:05:21 John Garry wrote:
+> >>
+> >> OK, we can look at adding the ability to read the SAS HBA address from a
+> >> FW image or EFI variables.
+> >>
+> >
+> > The easiest way is usually to have a DT property that gets updated
+> > by the firmware.
+> >
+> 
+> Yes
+> In net subsystem, there is mac-address.
+> 
+> In dts, we set default mac-address, which will be modified by 
+> boot-loader, if all 0 random address will be used.
+> mac-address = [00 00 00 00 00 00];
+> 
+> In driver, mac-address can be get via of_get_mac_address.
+> 
+> Can we use the similar method here?
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 43e6193..c74d7c5 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1725,8 +1725,42 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
- 	return NULL;
- }
- 
-+/*
-+* megasas_set_dma_alignment - Set DMA alignment for PI enabled VD
-+*
-+* @sdev: OS provided scsi device
-+*
-+* Returns void
-+*/
-+static void megasas_set_dma_alignment(struct scsi_device *sdev)
-+{
-+	u32 device_id, ld;
-+	struct megasas_instance *instance;
-+	struct fusion_context *fusion;
-+	struct MR_LD_RAID *raid;
-+	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
-+
-+	instance = megasas_lookup_instance(sdev->host->host_no);
-+	fusion = instance->ctrl_context;
-+
-+	if (!fusion)
-+		return;
-+
-+	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS) {
-+		device_id = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL)
-+					+ sdev->id;
-+		local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
-+		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
-+		raid = MR_LdRaidGet(ld, local_map_ptr);
-+
-+		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
-+			blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
-+	}
-+}
-+
- static int megasas_slave_configure(struct scsi_device *sdev)
- {
-+	megasas_set_dma_alignment(sdev);
- 	/*
- 	 * The RAID firmware may require extended timeouts.
- 	 */
--- 
-1.7.1
+Good idea, I think this is the best way.
 
+	Arnd
