@@ -1,15 +1,15 @@
 From: sumit.saxena@avagotech.com
-Subject: PATCH 03/12] megaraid_sas : Support for Intruder(12 Gbps)
- controller
-Date: Thu, 15 Oct 2015 13:39:44 +0530
-Message-ID: <201510150817.t9F8H2lv029611@palmhbs0.lsi.com>
+Subject: [PATCH 09/12] megaraid_sas : Make PI enabled VD 8 byte DMA
+ aligned
+Date: Thu, 15 Oct 2015 13:40:44 +0530
+Message-ID: <201510150818.t9F8I3u4029657@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rndsmtp2.avagotech.com ([199.3.246.48]:42987 "EHLO
+Received: from smtp.avagotech.com ([199.3.246.48]:42989 "EHLO
 	rndsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbbJOIUi (ORCPT
+	with ESMTP id S1750880AbbJOIUi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 04:20:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,70 +19,56 @@ Cc: uday.lingala@avagotech.com
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |    9 +++++++++
- drivers/scsi/megaraid/megaraid_sas_base.c |    8 ++++++++
- 2 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |   34 +++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index fc58ba3..7b651c1 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -52,6 +52,8 @@
- #define PCI_DEVICE_ID_LSI_PLASMA		0x002f
- #define PCI_DEVICE_ID_LSI_INVADER		0x005d
- #define PCI_DEVICE_ID_LSI_FURY			0x005f
-+#define PCI_DEVICE_ID_LSI_INTRUDER		0x00ce
-+#define PCI_DEVICE_ID_LSI_INTRUDER_24		0x00cf
- 
- /*
-  * Intel HBA SSDIDs
-@@ -64,6 +66,13 @@
- #define MEGARAID_INTEL_RS3WC040_SSDID		0x9343
- 
- /*
-+ * Intruder HBA SSDIDs
-+ */
-+#define MEGARAID_INTRUDER_SSDID1		0x9371
-+#define MEGARAID_INTRUDER_SSDID2		0x9390
-+#define MEGARAID_INTRUDER_SSDID3		0x9370
-+
-+/*
-  * Intel HBA branding
-  */
- #define MEGARAID_INTEL_RS3DC080_BRANDING	\
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index bc2bb13..b68c318 100644
+index 43e6193..c74d7c5 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -135,6 +135,10 @@ static struct pci_device_id megasas_pci_table[] = {
- 	/* Invader */
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FURY)},
- 	/* Fury */
-+	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INTRUDER)},
-+	/* Intruder */
-+	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INTRUDER_24)},
-+	/* Intruder 24 port*/
- 	{}
- };
+@@ -1725,8 +1725,42 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
+ 	return NULL;
+ }
  
-@@ -4629,6 +4633,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	case PCI_DEVICE_ID_LSI_PLASMA:
- 	case PCI_DEVICE_ID_LSI_INVADER:
- 	case PCI_DEVICE_ID_LSI_FURY:
-+	case PCI_DEVICE_ID_LSI_INTRUDER:
-+	case PCI_DEVICE_ID_LSI_INTRUDER_24:
- 		instance->instancet = &megasas_instance_template_fusion;
- 		break;
- 	case PCI_DEVICE_ID_LSI_SAS1078R:
-@@ -5324,6 +5330,8 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	case PCI_DEVICE_ID_LSI_PLASMA:
- 	case PCI_DEVICE_ID_LSI_INVADER:
- 	case PCI_DEVICE_ID_LSI_FURY:
-+	case PCI_DEVICE_ID_LSI_INTRUDER:
-+	case PCI_DEVICE_ID_LSI_INTRUDER_24:
- 	{
- 		instance->ctrl_context_pages =
- 			get_order(sizeof(struct fusion_context));
++/*
++* megasas_set_dma_alignment - Set DMA alignment for PI enabled VD
++*
++* @sdev: OS provided scsi device
++*
++* Returns void
++*/
++static void megasas_set_dma_alignment(struct scsi_device *sdev)
++{
++	u32 device_id, ld;
++	struct megasas_instance *instance;
++	struct fusion_context *fusion;
++	struct MR_LD_RAID *raid;
++	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
++
++	instance = megasas_lookup_instance(sdev->host->host_no);
++	fusion = instance->ctrl_context;
++
++	if (!fusion)
++		return;
++
++	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS) {
++		device_id = ((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL)
++					+ sdev->id;
++		local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
++		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
++		raid = MR_LdRaidGet(ld, local_map_ptr);
++
++		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
++			blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
++	}
++}
++
+ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
++	megasas_set_dma_alignment(sdev);
+ 	/*
+ 	 * The RAID firmware may require extended timeouts.
+ 	 */
 -- 
 1.7.1
 
