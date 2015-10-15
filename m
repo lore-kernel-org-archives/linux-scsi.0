@@ -1,28 +1,44 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 07/12] megaraid_sas : Online firmware Upgrade support for
- Secure JBOD feature
-Date: Fri, 16 Oct 2015 16:47:13 +0200
-Message-ID: <56210DF1.2080800@redhat.com>
-References: <201510150817.t9F8HgSB029643@palmhbs0.lsi.com>
+From: "POSTCODESLOYERIJ.NL" <postcode1@luckymail.com>
+Subject: Lucky email winner
+Date: Thu, 15 Oct 2015 23:43:09 +0300 (EEST)
+Message-ID: <405ada13250481b76770874b53d3f578.squirrel__40467.3415738673$1445022844$gmane$org@82.79.55.74>
+Reply-To: postcode1@luckymail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51414 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753811AbbJPOrQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Oct 2015 10:47:16 -0400
-In-Reply-To: <201510150817.t9F8HgSB029643@palmhbs0.lsi.com>
+Received: from [82.79.55.74] ([82.79.55.74]:52520 "EHLO
+	server-servicii.uvvgsm.ro" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753865AbbJPTNz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Oct 2015 15:13:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sumit.saxena@avagotech.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com
-Cc: uday.lingala@avagotech.com
 
-On 15.10.2015 10:10, sumit.saxena@avagotech.com wrote:
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Tomas
 
+We are please to inform you of our new year promotion award program hel=
+d
+14th October 2015,which have pronounce your email-address as the lucky
+winner of a total sum:of =80500,000.
+CONTACT:
+The claim office/Email:via-reply,with your winning Serial-No:
+LE0031#13350PSNL.
+*******************
+Postcodesloterij.nl
+
+WARNING!!
+This winning notification is expected to be read and/or used only by th=
+e
+individual(s) for whom it is intended.If you have received this electro=
+nic
+communication in error, please reply to the sender advising of the erro=
+r
+in transmission and delete the original message FOR SECURITY REASON
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
