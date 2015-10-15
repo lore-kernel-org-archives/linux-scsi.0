@@ -1,157 +1,88 @@
-From: Zhengping Zhou <johnzzpcrystal@gmail.com>
-Subject: Re: [PATCH 1/1] scsi subsystem : fix function __scsi_device_lookup
-Date: Thu, 15 Oct 2015 16:22:05 +0800
-Message-ID: <CALXdtC4P3fzftnAczKMcSftqpbNEDrL9f1xgVAfMquakRGc2Uw@mail.gmail.com>
-References: <1444894715-4906-1-git-send-email-johnzzpcrystal@gmail.com>
-	<561F5B86.5090409@suse.de>
+From: sumit.saxena@avagotech.com
+Subject: PATCH 03/12] megaraid_sas : Support for Intruder(12 Gbps)
+ controller
+Date: Thu, 15 Oct 2015 13:39:44 +0530
+Message-ID: <201510150817.t9F8H2lv029611@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:34093 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbbJOIWH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 04:22:07 -0400
-Received: by lfaz124 with SMTP id z124so23914315lfa.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2015 01:22:06 -0700 (PDT)
-In-Reply-To: <561F5B86.5090409@suse.de>
+Received: from rndsmtp2.avagotech.com ([199.3.246.48]:42987 "EHLO
+	rndsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbbJOIUi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 04:20:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, Jej B <James.Bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, kiran-kumar.kasturi@avagotech.com
+Cc: uday.lingala@avagotech.com
 
-Yes
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |    9 +++++++++
+ drivers/scsi/megaraid/megaraid_sas_base.c |    8 ++++++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
 
-But it's interesting ,when you continue to add this device (with the
-same LUN, target, bus, and host number!) to the list,scsi_add_device
-will call scsi_probe_and_add_lun,and it will call
-scsi_device_lookup_by_target(starget, lun) to recheck its existence
-finally.but scsi_device_lookup_by_target doesn't has the problem  what
-I mentioned in this patch .So it's OK when you add this device again.
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index fc58ba3..7b651c1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -52,6 +52,8 @@
+ #define PCI_DEVICE_ID_LSI_PLASMA		0x002f
+ #define PCI_DEVICE_ID_LSI_INVADER		0x005d
+ #define PCI_DEVICE_ID_LSI_FURY			0x005f
++#define PCI_DEVICE_ID_LSI_INTRUDER		0x00ce
++#define PCI_DEVICE_ID_LSI_INTRUDER_24		0x00cf
+ 
+ /*
+  * Intel HBA SSDIDs
+@@ -64,6 +66,13 @@
+ #define MEGARAID_INTEL_RS3WC040_SSDID		0x9343
+ 
+ /*
++ * Intruder HBA SSDIDs
++ */
++#define MEGARAID_INTRUDER_SSDID1		0x9371
++#define MEGARAID_INTRUDER_SSDID2		0x9390
++#define MEGARAID_INTRUDER_SSDID3		0x9370
++
++/*
+  * Intel HBA branding
+  */
+ #define MEGARAID_INTEL_RS3DC080_BRANDING	\
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index bc2bb13..b68c318 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -135,6 +135,10 @@ static struct pci_device_id megasas_pci_table[] = {
+ 	/* Invader */
+ 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FURY)},
+ 	/* Fury */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INTRUDER)},
++	/* Intruder */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INTRUDER_24)},
++	/* Intruder 24 port*/
+ 	{}
+ };
+ 
+@@ -4629,6 +4633,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	case PCI_DEVICE_ID_LSI_PLASMA:
+ 	case PCI_DEVICE_ID_LSI_INVADER:
+ 	case PCI_DEVICE_ID_LSI_FURY:
++	case PCI_DEVICE_ID_LSI_INTRUDER:
++	case PCI_DEVICE_ID_LSI_INTRUDER_24:
+ 		instance->instancet = &megasas_instance_template_fusion;
+ 		break;
+ 	case PCI_DEVICE_ID_LSI_SAS1078R:
+@@ -5324,6 +5330,8 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	case PCI_DEVICE_ID_LSI_PLASMA:
+ 	case PCI_DEVICE_ID_LSI_INVADER:
+ 	case PCI_DEVICE_ID_LSI_FURY:
++	case PCI_DEVICE_ID_LSI_INTRUDER:
++	case PCI_DEVICE_ID_LSI_INTRUDER_24:
+ 	{
+ 		instance->ctrl_context_pages =
+ 			get_order(sizeof(struct fusion_context));
+-- 
+1.7.1
 
-=46orgive my poor English!
-2015-10-15 15:53 GMT+08:00 Hannes Reinecke <hare@suse.de>:
-> On 10/15/2015 09:38 AM, Zhengping Zhou wrote:
->> when a scsi_device is unpluged from scsi controller, if the
->> scsi_device is still be used by application layer,it won't be
->> released until users release it. In this case, scsi_device_remove ju=
-st set
->> the scsi_device's state to be SDEV_DEL. But if you plug the disk
->> just before the old scsi_device is released, then there will be two
->> scsi_device structures in scsi_host->__devices. when the next unplug=
-ing
->> event happens,some low-level drivers will check whether the scsi_dev=
-ice
->> has been added to host (for example, the megaraid sas series control=
-ler)
->> by calling scsi_device_lookup(call __scsi_device_lookup).
->> __scsi_device_lookup will return the first scsi_device. Because its
->> state is SDEV_DEL, the scsi_device_lookup will return NULL finally,
->> making the low-level driver assume that the scsi_device has been
->> removed,and won't call scsi_device_remove,which will lead the
->> failure of hot swap.
->> Signed-off-by: Zhengping Zhou <johnzzpcrystal@gmail.com>
->> ---
->> Hi all:
->>       I'm sorry to bother again,that's my second time to send
->>       this patch.
->>       I find a bug about the failure of hot swap when I am using
->>       megaraid sas series controller. Finally I have found that
->>       when controller receives the event of hot swap, it will firstl=
-y
->>       check whether the device is added to the system/host by callin=
-g
->>       scsi_device_lookup.The logics in function megasas_aen_polling
->>       is as follows:
->>             case MR_EVT_PD_REMOVED:
->>                     if (megasas_get_pd_list(instance) =3D=3D 0) {
->>                     for (i =3D 0; i < MEGASAS_MAX_PD_CHANNELS; i++) =
-{
->>                             for (j =3D 0;
->>                             j < MEGASAS_MAX_DEV_PER_CHANNEL;
->>                             j++) {
->>
->>                             pd_index =3D
->>                             (i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
->>
->>                             sdev1 =3D scsi_device_lookup(host, i, j,=
- 0);
->>
->>                             if (instance->pd_list[pd_index].driveSta=
-te
->>                                     =3D=3D MR_PD_STATE_SYSTEM) {
->>                                     if (sdev1)
->>                                             scsi_device_put(sdev1);
->>                             } else {
->>                                     if (sdev1) {
->>                                             scsi_remove_device(sdev1=
-);
->>                                             scsi_device_put(sdev1);
->>                                     }
->>                             }
->>                             }
->>                     }
->>                     }
->>       If the previous scsi_device is not released, this will lead th=
-e
->>       appearance of two scsi_devices which correspond with the same =
-disk.
->>       And when the disk is unpluged afterwards, the controller will =
-assume
->>       that this disk has never been added into the system/host. Thus=
- it won't
->>       call scsi_device_remove. When I finish this modification, this=
- problem
->>       is fixed.So far, I have successfully test PCI_DEVICE_ID_LSI_SA=
-S0073SKINNY
->>       and PCI_DEVICE_ID_LSI_FURY.
->> Thanks
->> Zhengping
->> ---
->>  drivers/scsi/scsi.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->> index 207d6a7..5251d6d 100644
->> --- a/drivers/scsi/scsi.c
->> +++ b/drivers/scsi/scsi.c
->> @@ -1118,6 +1118,8 @@ struct scsi_device *__scsi_device_lookup(struc=
-t Scsi_Host *shost,
->>       struct scsi_device *sdev;
->>
->>       list_for_each_entry(sdev, &shost->__devices, siblings) {
->> +             if (sdev->sdev_state =3D=3D SDEV_DEL)
->> +                     continue;
->>               if (sdev->channel =3D=3D channel && sdev->id =3D=3D id=
- &&
->>                               sdev->lun =3D=3Dlun)
->>                       return sdev;
->>
-> Ho-hum.
->
-> So lookup will return NULL, which then will cause the subsequent
-> functions to assume the scsi_device is not present, right?
->
-> And if you're _really_ unlucky it'll continue to add this device
-> (with the same LUN, target, bus, and host number!) to the list,
-> resulting in us having _two_ devices with the same number on the list=
-=2E
->
-> Happy lookup.
->
-> I guess this calls for the lock rework from Johannes ...
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                            zSeries & Storage
-> hare@suse.de                                   +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
