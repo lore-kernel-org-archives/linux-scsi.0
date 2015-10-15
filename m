@@ -1,122 +1,69 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas: init tasklet earlier
-Date: Thu, 15 Oct 2015 15:16:27 +0530
-Message-ID: <1602c19d60cd4e13c2b80e69df67ae28@mail.gmail.com>
-References: <1440509507-3337-1-git-send-email-thenzl@redhat.com>
- <a237279f3ee2f546dfc71ae3fe6beaef@mail.gmail.com> <55DDC9C8.8070507@redhat.com>
- 847e68adfa31d716c3d69aeff9adcca6@mail.gmail.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: advansys needs ISA dma api for ISA support
+Date: Thu, 15 Oct 2015 14:06:15 +0200
+Message-ID: <561F96B7.4050300@suse.de>
+References: <5081546.QjQ32dGX2L@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:33467 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588AbbJOJq3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2015 05:46:29 -0400
-Received: by lffv3 with SMTP id v3so25000779lff.0
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2015 02:46:28 -0700 (PDT)
-In-Reply-To: 847e68adfa31d716c3d69aeff9adcca6@mail.gmail.com
+Received: from mx2.suse.de ([195.135.220.15]:52121 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380AbbJOMGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Oct 2015 08:06:17 -0400
+In-Reply-To: <5081546.QjQ32dGX2L@wuerfel>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>
+To: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, JBottomley@odin.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Sumit Saxena [mailto:sumit.saxena@avagotech.com]
-> Sent: Friday, August 28, 2015 3:52 PM
-> To: 'Tomas Henzl'; 'linux-scsi@vger.kernel.org'
-> Cc: Kashyap Desai; Kiran Kumar Kasturi
-> Subject: RE: [PATCH] megaraid_sas: init tasklet earlier
->
->
->
-> > -----Original Message-----
-> > From: Tomas Henzl [mailto:thenzl@redhat.com]
-> > Sent: Wednesday, August 26, 2015 7:45 PM
-> > To: Sumit Saxena; linux-scsi@vger.kernel.org
-> > Cc: Kashyap Desai; Kiran Kumar Kasturi
-> > Subject: Re: [PATCH] megaraid_sas: init tasklet earlier
-> >
-> > On 26.8.2015 15:15, Sumit Saxena wrote:
-> > >> -----Original Message-----
-> > >> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> > >> Sent: Tuesday, August 25, 2015 7:02 PM
-> > >> To: linux-scsi@vger.kernel.org
-> > >> Cc: kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> > >> Sumit.Saxena@avagotech.com
-> > >> Subject: [PATCH] megaraid_sas: init tasklet earlier
-> > >>
-> > >> It may happen (kdump), that an interrupt is invoked just after the
-> > > setup_irqs
-> > >> function was called but before the tasklet was initialised.
-> > >> At this phase the hw ints should have been disabled, but for
-> > >> unknown
-> > > reason this
-> > >> mechanism seems to not work properly.
-> > >>
-> > >> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> > >> ---
-> > >>  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
-> > >>  1 file changed, 3 insertions(+), 3 deletions(-)
-> > >>
-> > >> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > >> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > >> index 71b884dae2..c8e0c6de80 100644
-> > >> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > >> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > >> @@ -4627,6 +4627,9 @@ static int megasas_init_fw(struct
-> > >> megasas_instance
-> > >> *instance)
-> > >>  		"current msix/online cpus\t: (%d/%d)\n",
-> > >>  		instance->msix_vectors, (unsigned int)num_online_cpus());
-> > >>
-> > >> +	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> > >> +		(unsigned long)instance);
-> > >> +
-> > >>  	if (instance->msix_vectors ?
-> > >>  		megasas_setup_irqs_msix(instance, 1) :
-> > >>  		megasas_setup_irqs_ioapic(instance))
-> > >> @@ -4647,9 +4650,6 @@ static int megasas_init_fw(struct
-> > >> megasas_instance
-> > >> *instance)
-> > >>  	if (instance->instancet->init_adapter(instance))
-> > >>  		goto fail_init_adapter;
-> > >>
-> > >> -	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-> > >> -		(unsigned long)instance);
-> > >> -
-> > >>  	instance->instancet->enable_intr(instance);
-> > >>
-> > >>  	printk(KERN_ERR "megasas: INIT adapter done\n");
-> > >
-> > > Patch looks harmless and it fixes your problem then it's fine. But
-> > > we need to know the reason why interrupts are coming even if they
-> > > are not enabled by that time. Can you provide controller's FW
-> > > version ? I would like to try this locally.
-> >
-> > It is a "PERC 6/i Integrated" with
-> > FW Version         : 1.22.02-0612
-> > BIOS Version       : 2.04.00
-> > ------------------
-> >
-> > Even when you'll be able to fix it by another means, we can take my
-> > patch too, just because it calls the init functions in proper order and
-> > so it is
-> safe(r).
-> Looks good.
-> Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+On 10/12/2015 05:10 PM, Arnd Bergmann wrote:
+> The advansys drvier uses the request_dma function that is used on ISA
+> machines for the internal DMA controller, which causes build errors
+> on platforms that have ISA slots but do not provide the ISA DMA API:
+>=20
+> drivers/scsi/advansys.c: In function 'advansys_board_found':
+> drivers/scsi/advansys.c:11300:10: error: implicit declaration of func=
+tion 'request_dma' [-Werror=3Dimplicit-function-declaration]
+>=20
+> The problem now showed up in ARM randconfig builds after commit
+> 6571fb3f8b7f ("advansys: Update to version 3.5 and remove compilation
+> warning") made it possible to build on platforms that have neither
+> VIRT_TO_BUS nor ISA_DMA_API but that do have ISA.
+>=20
+> This adds the missing dependency.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>=20
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index d2f480b04a52..d4aa6a1a806c 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -499,6 +499,7 @@ config SCSI_ADVANSYS
+>  	tristate "AdvanSys SCSI support"
+>  	depends on SCSI
+>  	depends on ISA || EISA || PCI
+> +	depends on ISA_DMA_API || !ISA
+>  	help
+>  	  This is a driver for all SCSI host adapters manufactured by
+>  	  AdvanSys. It is documented in the kernel source in
+>=20
+Sorry to chime in again, but wouldn't this allow to build on platforms
+which have neither ISA_DMA_API nor ISA, like oldish sparc systems with
+proprietary S-BUS?
 
-I have posted same patch with subject- [PATCH 08/12] megaraid_sas :
-Initialize tasklet before setting up IRQs.
-Please ignore this patch to avoid confusion.
+Why not ISA_DMA_API || EISA || PCI ?
 
-Thanks,
-Sumit
->
-> >
-> > >
-> > >> --
-> > >> 2.4.3
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> > > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > > info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
