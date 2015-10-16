@@ -1,59 +1,59 @@
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: Re: [PATCH] scsi: kconfig: When possible, compile drivers with COMPILE_TEST
-Date: Fri, 16 Oct 2015 14:08:14 +0100
-Message-ID: <5620F6BE.8000205@osg.samsung.com>
-References: <1444857220-26595-1-git-send-email-luisbg@osg.samsung.com> <1444862561.2220.81.camel@HansenPartnership.com> <561EE5B1.40402@osg.samsung.com> <1444865945.2220.90.camel@HansenPartnership.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 13/25] scsi: hisi_sas: add path from phyup irq to SAS
+ framework
+Date: Fri, 16 Oct 2015 14:29:55 +0100
+Message-ID: <5620FBD3.2020902@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <1444663237-238302-14-git-send-email-john.garry@huawei.com>
+ <3757591.KXgD8p0a1E@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444865945.2220.90.camel@HansenPartnership.com>
+In-Reply-To: <3757591.KXgD8p0a1E@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 15/10/15 00:39, James Bottomley wrote:
-> On Thu, 2015-10-15 at 00:30 +0100, Luis de Bethencourt wrote:
->> On 14/10/15 23:42, James Bottomley wrote:
->>> On Wed, 2015-10-14 at 22:13 +0100, Luis de Bethencourt wrote:
->>>> These drivers only have runtime but no build time dependencies, so they can
->>>> be built for testing purposes if the Kconfig COMPILE_TEST option is enabled.
->>>>
->>>> This is useful to have more build coverage and make sure that drivers are
->>>> not affected by changes that could cause build regressions.
->>>
->>> I don't think I understand the purpose.  If the object is to build a
->>> load of old ISA drivers, why not just turn on CONFIG_ISA in the test
->>> build? That's how I build test SCSI on my systems.
->>>
->>> James
->>>
->>>
+On 16/10/2015 13:55, Arnd Bergmann wrote:
+> On Monday 12 October 2015 23:20:25 John Garry wrote:
+>> @@ -804,6 +818,16 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
+>>                  phy->identify.target_port_protocols =
+>>                          SAS_PROTOCOL_SMP;
 >>
->> Hi James,
+>> +       wq = kmalloc(sizeof(*wq), GFP_ATOMIC);
+>> +       if (!wq)
+>> +               goto end;
+>> +
+>> +       wq->event = PHYUP;
+>> +       wq->hisi_hba = hisi_hba;
+>> +       wq->phy_no = phy_no;
+>> +
+>> +       INIT_WORK(&wq->work_struct, hisi_sas_wq_process);
+>> +       queue_work(hisi_hba->wq, &wq->work_struct);
 >>
->> The idea is that the more drivers are built with make allyesconfig, the better.
+>>   end:
+>>          hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
 >>
->> I added COMPILE_TEST to all the drivers that can be built without having ISA,
->> since they depend on runtime and not in build time. I understand your point,
->> which raises the question of why isn't CONFIG_ISA set to Y in make allyesconfig.
->>
->> Would this be possible?
-> 
-> It happens today, but it depends on architecture.  An allyesconfig on
-> ia32 should have it set and possibly a few others.  There's no reason an
-> x86-64 couldn't have it set, it's just that x86-64 was the architecture
-> break where ISA was discontinued, so there's no real point building that
-> configuration.
-> 
-> James
-> 
-> 
+>
+> While rereading some other parts of the code, I stumbled over this piece.
+> You should generally not allocate work structs dynamically. Why not embed
+> the work struct inside of the phy structure and then just queue that?
+>
+> 	Arnd
+>
+> .
+>
 
-Hi James,
+It could be considered.
 
-That makes sense.
+A potential issue I see is with hisi_sas_control_phy() for 
+PHY_FUNC_HARD_RESET: this allocates a hisi_sas_wq struct and processes 
+the reset in the queue work. When we re-enable the phy for the reset, 
+the phyup irq will want to use the same hisi_sas_wq struct which may be 
+in use.
 
-Thanks for the information, I understand this a lot better now.
-Luis
+hisi_sas_control_phy() is added in 23/35.
+
+John
