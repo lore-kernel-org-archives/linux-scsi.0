@@ -1,202 +1,165 @@
-From: Paul Menzel <paul.menzel@giantmonkey.de>
-Subject: Re: NULL pointer dereference: IP: [<f828a00c>]
- sr_runtime_suspend+0xc/0x20 [sr_mod]
-Date: Fri, 16 Oct 2015 10:52:56 +0200
-Message-ID: <1444985576.2703.5.camel@giantmonkey.de>
-References: <1444957547.1325.2.camel@giantmonkey.de>
-	 <1444982077.2350.0.camel@giantmonkey.de>
+From: Birta Levente <blevi.linux@gmail.com>
+Subject: LSI driver and SSD status error in IPMI
+Date: Fri, 16 Oct 2015 12:00:26 +0300
+Message-ID: <5620BCAA.7080307@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-RBIglsBqkwDR8Xelnuwk"
+Content-Type: text/plain; charset=iso-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:32942 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753748AbbJPIxL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2015 04:53:11 -0400
-Received: by wijp11 with SMTP id p11so20466wij.0
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2015 01:53:07 -0700 (PDT)
-In-Reply-To: <1444982077.2350.0.camel@giantmonkey.de>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:37696 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752044AbbJPI77 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2015 04:59:59 -0400
+Received: by wijq8 with SMTP id q8so280995wij.0
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2015 01:59:58 -0700 (PDT)
+Received: from [192.168.1.64] ([81.196.63.17])
+        by smtp.googlemail.com with ESMTPSA id ht5sm2403762wib.10.2015.10.16.01.59.56
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1/SSLv3 cipher=OTHER);
+        Fri, 16 Oct 2015 01:59:56 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "James E. J. Bottomley" <JBottomley@odin.com>, 801925@bugs.debian.org
+
+Hi to all
+
+I don't know if this is a right list to ask, but I take my chance:
 
 
---=-RBIglsBqkwDR8Xelnuwk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I have a supermicro server with LSI 3108 with
+- 2x300GB SAS spin drive in raid1 (virtual drive 0)
+- 2x300GB SAS spin drive in raid1 (virtual drive 1)
+- 2x200GB Intel SSD DC S3710 drives configured as JBOD in LSI bios
 
-Dear Linux SCSI folks,
+In the IPMI storage health status eveything looks fine until I boot into 
+Centos 7.1 (unfortunatelly I didn't try other OS, but also I'm not 
+interested in other)
+After boot the status for the SSDs changing in ERROR
+
+The same thing happen when boot with the install CD
+
+Otherwise everything works fine.
+
+Is this hurt? Can I do something?
+
+Also I tried to install the latest LSI driver (06.809.18.00), but seems 
+it is not loaded after restart:
+As the official driver install guide say, before the driver install, I 
+installed the dkms from the epel repo.
+
+/var/log/messages:
+systemd-modules-load: Failed to find module 'override megaraid_sas 
+3.10.* weak-updates/megaraid_sas'
+
+/etc/modules-load.d/megaraid_sas.conf:
+override megaraid_sas 3.10.* weak-updates/megaraid_sas
+
+#modinfo megaraid_sas
+filename: 
+/lib/modules/3.10.0-229.14.1.el7.x86_64/kernel/drivers/scsi/megaraid/megaraid_sas.ko
+description:    LSI MegaRAID SAS Driver
+author:         megaraidlinux@lsi.com
+version:        06.805.06.01-rh2
+license:        GPL
+rhelversion:    7.1
+srcversion:     C0124BBE9453A621D4086DB
+alias:          pci:v00001000d0000005Fsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000005Dsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000002Fsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000005Bsv*sd*bc*sc*i*
+alias:          pci:v00001028d00000015sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000413sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000071sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000073sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000079sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000078sv*sd*bc*sc*i*
+alias:          pci:v00001000d0000007Csv*sd*bc*sc*i*
+alias:          pci:v00001000d00000060sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000411sv*sd*bc*sc*i*
+depends:
+intree:         Y
+vermagic:       3.10.0-229.14.1.el7.x86_64 SMP mod_unload modversions
+signer:         CentOS Linux kernel signing key
+sig_key: E9:9F:C4:37:BD:9C:BF:B4:F1:B1:DA:87:C1:57:FF:66:56:9B:EE:66
+sig_hashalgo:   sha256
+parm:           lb_pending_cmds:Change raid-1 load balancing outstanding 
+threshold. Valid Values are 1-128. Default: 4 (int)
+parm:           max_sectors:Maximum number of sectors per IO command (int)
+parm:           msix_disable:Disable MSI-X interrupt handling. Default: 
+0 (int)
+parm:           msix_vectors:MSI-X max vector count. Default: Set by FW 
+(int)
+parm:           allow_vf_ioctls:Allow ioctls in SR-IOV VF mode. Default: 
+0 (int)
+parm:           throttlequeuedepth:Adapter queue depth when throttled 
+due to I/O timeout. Default: 16 (int)
+parm:           resetwaittime:Wait time in seconds after I/O timeout 
+before resetting adapter. Default: 180 (int)
+parm:           smp_affinity_enable:SMP affinity feature enable/disbale 
+Default: enable(1) (int)
 
 
-Am Freitag, den 16.10.2015, 09:54 +0200 schrieb Paul Menzel:
-> Package: linux-image-4.2.0-1-686-pae
-> Version: 4.2.3-2
-> Severity: important
+I reinstalled again the OS with the new driver loaded/installed as 
+driver update diskette (added linux dd option when boot to the install cd)
+After install/reboot look like the good driver loaded (the error 
+systemd-modules-load: Failed to find module 'override megaraid_sas 
+3.10.* weak-updates/megaraid_sas'  still exists in messages).
 
-> please don=E2=80=99t include the address submit@bugs.debian.org in your r=
-eply.
+# modinfo megaraid_sas
+filename: 
+/lib/modules/3.10.0-229.el7.x86_64/extra/megaraid_sas/megaraid_sas.ko
+description:    Avago MegaRAID SAS Driver
+author:         megaraidlinux.pdl@avagotech.com
+version:        06.809.18.00
+license:        GPL
+rhelversion:    7.1
+srcversion:     27E06D4D7894381BFEDD368
+alias:          pci:v00001000d000000CFsv*sd*bc*sc*i*
+alias:          pci:v00001000d000000CEsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000005Fsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000005Dsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000002Fsv*sd*bc*sc*i*
+alias:          pci:v00001000d0000005Bsv*sd*bc*sc*i*
+alias:          pci:v00001028d00000015sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000413sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000071sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000073sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000079sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000078sv*sd*bc*sc*i*
+alias:          pci:v00001000d0000007Csv*sd*bc*sc*i*
+alias:          pci:v00001000d00000060sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000411sv*sd*bc*sc*i*
+depends:
+vermagic:       3.10.0-229.el7.x86_64 SMP mod_unload modversions
+parm:           lb_pending_cmds:Change raid-1 load balancing outstanding 
+threshold. Valid Values are 1-128. Default: 4 (int)
+parm:           max_sectors:Maximum number of sectors per IO command (int)
+parm:           msix_disable:Disable MSI-X interrupt handling. Default: 
+0 (int)
+parm:           smp_affinity_enable:SMP affinity feature enable/disbale 
+Default: enable(1) (int)
+parm:           msix_vectors:MSI-X max vector count. Default: Set by FW 
+(int)
+parm:           allow_vf_ioctls:Allow ioctls in SR-IOV VF mode. Default: 
+0 (int)
+parm:           throttlequeuedepth:Adapter queue depth when throttled 
+due to I/O timeout. Default: 16 (int)
+parm:           resetwaittime:Wait time in seconds after I/O timeout 
+before resetting adapter. Default: 180 (int)
+parm:           crashdump_enable:Firmware Crash dump feature 
+enable/disbale Default: enable(1) (int)
+parm:           rdpq_enable: Allocate reply queue in chunks for large 
+queue depth enable/disbale Default: disable(0) (int)
 
-this issue is now also tracked in the Debian Bug Tracking System [2] and
-has the number #801925 [3]. Please keep that address in CC.
 
-> Am Freitag, den 16.10.2015, 03:05 +0200 schrieb Paul Menzel:
->=20
-> > using Debian Sid/unstable with Linux 4.2.3-1 upgrading from systemd
-> > 227-1 to 227-2 [1] and other packages, the system doesn=E2=80=99t start=
- up
-> > anymore and the /dev/md1 device doesn=E2=80=99t seem to be found and I =
-am
-> > dropped into shell from initramfs (BusyBox).
-> >=20
-> > Only having wireless LAN and no serial or USB debug capabilities, and
-> > mount a USB storage device did not work, I manually copied the beginnin=
-g
-> > of the Oops.
-> >=20
-> > ```
-> > BUG: unable to handle kernel NULL pointer dereference at 00000014
-> > IP: [<f828a00c>] sr_runtime_suspend+0xc/0x20 [sr_mod]
-> > *pdpt =3D 000000003696e001 *pde =3D 000000000000000000
-> > Oops: 0000 [#1] SMB
-> > Modules linked in: sd_mod(+) sr_mod(+) cdrom ata_generic ohci_pci ahci =
-libahci pata_amd firwire_ohci firewire_core crc_iti_t forcedeth libata scsi=
-_mod ohci_hcd ehci_pci ehci_hcd usbcore usb_common fan thermal thermal_sys =
-floppy(+)
-> > CPU: 1 PID: 73 Comm: systemd-udevd Not tainted 4.2.0-1-686-pae #1 Debia=
-n 4.2.3-1
-> > Hardware name: Packard Bell imedia S3210/WMCP78M, BIOs P01-B2 11/06/200=
-9
-> > task: f68dd040 ti: f6988000 task.ti: f6988000
-> > EIP: 0060:[<fh28a00c>] EFLAGS: 00010246 CPU: 1
-> > EIP is at sr_runtime_suspend+0xc/0x20 [sr_mod]
-> > EAX: 00000000 EBX: f6a30cd8 ECX: f6c03d2c EDX: 00000000
-> > ESI: 00000000 EDI: f828e100 EBP: f6989ba8 ESP: f6989b88
-> >  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> > CR0: 8005003b CR2: 00000014 CR3: 3696d780 CR4: 000006f0
-> > Stack:
-> >  af83346c3 00000000 00000001 fffffff5 f6a7d150 f6a30cd8 f6a30d3c 000000=
-00
-> >  f6989bbc c1390cb7 f6a30cd8 f8334660 00000000 f6989bd0 c1390d0f f6a30cd=
-8
-> >  f8334660 00000000 f6989c0c c13916cb f694a614 f68dd040 00000000 0000000=
-8
-> > Call Trace:
-> >  [=E2=80=A6] ? scsi_runtime_suspend+0x63/0xa0 [scsi_mod]
-> >  [=E2=80=A6] ? __rpm_callback+0x27/0x60
-> > [=E2=80=A6]
-> > ```
-> >=20
-> > I tried also to boot with Linux 4.1 and it fails the same way.
-> >=20
-> > Is that a known problem and has been fixed in the mean time? It=E2=80=
-=99d be
-> > great if you helped me getting the system to boot again. Please tell me
-> > if you need more information to debug this issue and I=E2=80=99ll do my=
- best to
-> > get it.
->=20
-> Ben Hutchings asked me to test the patch below to get more debug
-> information.
->=20
-> ```
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 8bd54a6..dd5b5b2 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -144,6 +144,12 @@ static int sr_runtime_suspend(struct device *dev)
->  {
->  	struct scsi_cd *cd =3D dev_get_drvdata(dev);
-> =20
-> +	if (WARN_ON(!cd)) {
-> +		pr_info("%s: cd =3D=3D NULL; power.usage_count =3D %d\n",
-> +			__func__, atomic_read(&dev->power.usage_count));
-> +		return 0;
-> +	}
-> +
->  	if (cd->media_present)
->  		return -EBUSY;
->  	else
-> @@ -652,7 +658,13 @@ static int sr_probe(struct device *dev)
->  	struct scsi_cd *cd;
->  	int minor, error;
-> =20
-> -	scsi_autopm_get_device(sdev);
-> +	error =3D scsi_autopm_get_device(sdev);
-> +	if (error) {
-> +		pr_err("%s: scsi_autopm_get_device returned %d\n",
-> +		       __func__, error);
-> +		return error;
-> +	}
-> +
->  	error =3D -ENODEV;
->  	if (sdev->type !=3D TYPE_ROM && sdev->type !=3D TYPE_WORM)
->  		goto fail;
-> @@ -719,6 +731,9 @@ static int sr_probe(struct device *dev)
->  	if (register_cdrom(&cd->cdi))
->  		goto fail_put;
-> =20
-> +	pr_info("%s: power.usage_count =3D %d\n",
-> +		__func__, atomic_read(&dev->power.usage_count));
-> +
->  	/*
->  	 * Initialize block layer runtime PM stuffs before the
->  	 * periodic event checking request gets started in add_disk.
-> ```
->=20
-> I=E2=80=99ll try that as soon as a spare drive has arrived, where I can c=
-opy the
-> data to as a backup.
->=20
-> More thoughts are welcome! Especially, if that error suggests a failing
-> drive or not.
+But after kernel update modinfo show me the orig driver version provided 
+by the OS
 
+
+Can somebody tell me how to get the driver to work?
 
 Thanks,
 
-Paul
-
-
-> > [1] http://metadata.ftp-master.debian.org/changelogs//main/s/systemd/sy=
-stemd_227-2_changelog
-[2] https://www.debian.org/Bugs/
-[3] https://bugs.debian.org/801925
---=20
-GPG-Schl=C3=BCssel: 33623E9B
-Fingerabdruck =3D 0EB1 649D 4361 D04F 3C70  6F71 4DD7 BF75 3362 3E9B
-
-Giant Monkey Software Engineering GmbH
-
-Brunnenstr. 7D
-10119 Berlin Mitte
-
-Gesch=C3=A4ftsf=C3=BChrer Adrian Fuhrmann, Lion Vollnhals und Paul Menzel
-
-USt-IdNr.: DE281524720
-HRB 139495 B Amtsgericht Charlottenburg
-
---=-RBIglsBqkwDR8Xelnuwk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJWILrxAAoJEE3Xv3UzYj6bwysQALE/G35p1eV/NwTC1BKTHj3z
-0lsVpvEVeBPHP3laXmQxma8vtGLtKTGsuPrbpYtcCnCerDYhmVp6xVpb3do5+1Gg
-nN+mgXejPo85LpAQINOULYAS6UtT+BVjSGF5aopbwwdPXf9QqhfP9rdA3HrID/W5
-BbpLu4jhtiwIQ2V0nWF1X+24dZXz5hq2YHey8m1nAMYO2HRkEpKTboBwmWtlgGJ8
-Hm/xcfCZaei+jtBEzaqYHQmRyPbbh6JpB+1yT+6uH/6itszJPFxe6s5savbe7htL
-LQOAAAAz530FgZGsTx/2qPhB1iwoUJqYZoNmPEl64co1BRiZWLChYiEaV+KIex72
-dtjVZJvD8NtsxjQw0DcxfExeRm/f1xhPXGetIuo+sJj1DhyIVZuXJy1Jv+wN9l6i
-Xb/J4HrCnY9pnKJaccmEbhkGrCsawfGJ28eoz99fTxk2KSVPGqiYw8cpougzCk22
-VwepdFIiEFvvrz1mx0veJ6MvpYHhGAafILkiQzYPPeKwMfsgEpUPtDV1lUdQfXT3
-7a7c5QbnYSI2LYshnPNrpqRb264xk60CpqY0o2/Wron5b4Ti019MzVhUkEOGSHLr
-CVIs7OOobQV6KiqcM1Iy/2sAZNSzhEGn9I+ownsEK4x6yg7ZHgXN5r2eVAUy5yBk
-9xwuEsjWBbixueVYo5WQ
-=JisI
------END PGP SIGNATURE-----
-
---=-RBIglsBqkwDR8Xelnuwk--
+-- 
+            Levi
 
