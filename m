@@ -1,49 +1,51 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2] scsi: advansys needs ISA dma api for ISA support
-Date: Fri, 16 Oct 2015 16:19:18 +0200
-Message-ID: <5461074.f3cLgYkzKJ@wuerfel>
-References: <4351271.eUtUWpTn54@wuerfel> <1445003624.2191.2.camel@HansenPartnership.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 0/12] megaraid_sas : Updates for scsi for-next
+Date: Fri, 16 Oct 2015 16:24:36 +0200
+Message-ID: <562108A4.8020105@redhat.com>
+References: <201510150816.t9F8GWC6029536@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:57575 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932235AbbJPOTt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2015 10:19:49 -0400
-In-Reply-To: <1445003624.2191.2.camel@HansenPartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55275 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751605AbbJPOYk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Oct 2015 10:24:40 -0400
+In-Reply-To: <201510150816.t9F8GWC6029536@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: sumit.saxena@avagotech.com, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com, uday.lingala@avagotech.com
 
-On Friday 16 October 2015 06:53:44 James Bottomley wrote:
-> > 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> > index d2f480b04a52..1d8b8257773d 100644
-> > --- a/drivers/scsi/Kconfig
-> > +++ b/drivers/scsi/Kconfig
-> > @@ -498,7 +498,7 @@ config SCSI_DPT_I2O
-> >  config SCSI_ADVANSYS
-> >       tristate "AdvanSys SCSI support"
-> >       depends on SCSI
-> > -     depends on ISA || EISA || PCI
-> > +     depends on (ISA && ISA_DMA_API) || EISA || PCI
-> 
-> I thought the desire was to avoid a compile failure when ISA && !
-> ISA_DMA_API?  Won't this one fail if ISA is defined with either EISA or
-> PCI and !ISA_DMA_API?
+On 15.10.2015 10:09, sumit.saxena@avagotech.com wrote:
+> This patch set is rebased on top of last patch set sent by me- http://marc.info/?l=linux-scsi&m=144102204225400&w=2
+> Please consider this patch set for next kernel release.
+>
+> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> ---
+> [PATCH 00/12] megaraid_sas : Updates for scsi for-next.
+> [PATCH 01/12] megaraid_sas : Expose TAPE drives unconditionally.
+> [PATCH 02/12] megaraid_sas : Code optimization- remove PCI Ids based checks.
+> [PATCH 03/12] megaraid_sas : Support for Intruder(12 Gbps) controller.
+> [PATCH 04/12] megaraid_sas : Support for Cutlass(12 Gbps) controller.
+> [PATCH 05/12] megaraid_sas : Donot use PAGE_SIZE macro for calculation of max_sectors per IO request.
+> [PATCH 06/12] megaraid_sas : Update OCR capability on controller properties change.  
+> [PATCH 07/12] megaraid_sas : Online firmware Upgrade support for Secure JBOD feature.
+> [PATCH 08/12] megaraid_sas : Initialize tasklet before setting up IRQs.
+> [PATCH 09/12] megaraid_sas : Make PI enabled VD 8 byte DMA aligned.
+> [PATCH 10/12] megaraid_sas : SMAP restriction-do not access user memory from IOCTL code.
+> [PATCH 11/12] megaraid_sas : Driver version upgrade.
+> [PATCH 12/12] megaraid_sas : Remove debug print from function megasas_update_span_set.
 
-I thought I had it ruled out, but now I've actually found a combination:
-we can build an ARM kernel that supports two ancient machines, and one
-of them supports ISA (but not ISA_DMA_API), while the other one supports
-PCI. I had looked through several thousand randconfig builds and not
-found this combination together with advansys, but I guess that is
-because those were mostly old builds from the times when there was
-a dependency on VIRT_TO_BUS that this platform doesn't have.
+Next time, please send the mail 1-N/N as replies to 0/N
+Cheers,
+Tomas
 
-So screw this one and go back to the original patch.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-	Arnd
