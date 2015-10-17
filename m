@@ -1,83 +1,57 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Fri, 16 Oct 2015 13:14:54 -0700
-Message-ID: <20151016201454.GB5195@kroah.com>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com>
- <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com>
- <5621581E.3000407@suse.com>
+From: Rasmus Villemoes <rv@rasmusvillemoes.dk>
+Subject: Re: [PATCH 1/2] scsi: move Additional Sense Codes to separate file
+Date: Sun, 18 Oct 2015 00:12:31 +0200
+Message-ID: <8737x9nnzk.fsf@rasmusvillemoes.dk>
+References: <20151004080217.GA22816@infradead.org>
+	<1444037200-14684-1-git-send-email-linux@rasmusvillemoes.dk>
+	<1444037200-14684-2-git-send-email-linux@rasmusvillemoes.dk>
+	<56128398.8070908@sandisk.com> <87h9m4m2yq.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5621581E.3000407@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-usb@vger.kernel.org, linux-hotplug@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33919 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbbJQWMe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Oct 2015 18:12:34 -0400
+Received: by wikq8 with SMTP id q8so5038354wik.1
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Oct 2015 15:12:33 -0700 (PDT)
+In-Reply-To: <87h9m4m2yq.fsf@rasmusvillemoes.dk> (Rasmus Villemoes's message
+	of "Tue, 06 Oct 2015 17:27:57 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Oct 16, 2015 at 01:03:42PM -0700, Lee Duncan wrote:
-> Adding linux-usb and linux-hotplug to cc list, in case they wish to comment.
-> 
-> Summary: I want to change SCSI host number so that it gets re-used, like
-> disk index numbers, instead of always increasing.
-> 
-> Please see below.
-> 
-> On 10/14/2015 11:53 AM, James Bottomley wrote:
-> > On Wed, 2015-10-14 at 11:34 -0700, Lee Duncan wrote:
-> >> On 10/14/2015 06:55 AM, James Bottomley wrote:
-> >>> On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
-> >>>> Update the SCSI hosts module to use the ida_simple*() routines
-> >>>> to manage its host_no index instead of an ATOMIC integer. This
-> >>>> means that the SCSI host number will now be reclaimable.
-> >>>
-> >>> OK, but why would we want to do this?  We do it for sd because our minor
-> >>> space for the device nodes is very constrained, so packing is essential.
-> >>> For HBAs, there's no device space density to worry about, they're
-> >>> largely statically allocated at boot time and not reusing the numbers
-> >>> allows easy extraction of hotplug items for the logs (quite useful for
-> >>> USB) because each separate hotplug has a separate and monotonically
-> >>> increasing host number.
-> >>>
-> >>> James
-> >>>
-> >>
-> >> Good question, James. Apologies for not making the need clear.
-> >>
-> >> The iSCSI subsystem uses a host structure for discovery, then throws it
-> >> away. So each time it does discovery it gets a new host structure. With
-> >> the current approach, that number is ever increasing. It's only a matter
-> >> of time until some user with a hundreds of disks and perhaps thousands
-> >> of LUNs, that likes to do periodic discovery (think super-computers)
-> >> will run out of host numbers. Or, worse yet, get a negative number
-> >> number (because the value is signed right now).
-> >>
-> >> And this use case is a real one right now, by the way.
-> > 
-> > Um, so even if you do discovery continuously, say one every second, it
-> > still will take 68 years before we wrap the sign.
-> > 
-> >> As you can see from the patch, it's a small amount of code to ensure
-> >> that the host number management is handled more cleanly.
-> > 
-> > Well, I'm a bit worried about the loss of a monotonically increasing
-> > host number from the debugging perspective.  Right now, if you look at
-> > any log, hostX always refers to one and only one incarnation throughout
-> > the system lifetime for any given value of X.  With your patch, the
-> > lowest host number gets continually reused ... probably for every hot
-> > plug event.  If the USB and other hotplug system people don't mind this,
-> > I suppose I can live with it, but I'd like to hear their view before
-> > making this change.
+On Tue, Oct 06 2015, Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
 
-USB "people" don't care about this, why would we?  You can plug and
-unplug and plug devices in lots of times and they get the "old" names
-all the time, this is something that tools have had to deal with for
-well over a decade.
+> On Mon, Oct 05 2015, Bart Van Assche <bart.vanassche@sandisk.com> wrote:
+>
+>> On 10/05/15 02:26, Rasmus Villemoes wrote:
+>>> -	{0x041A, "Logical unit not ready, start stop unit command in "
+>>> -	 "progress"},
+>>> -	{0x041B, "Logical unit not ready, sanitize in progress"},
+>>> -	{0x041C, "Logical unit not ready, additional power use not yet "
+>>> -	 "granted"},
+>>
+>> Please convert these multi-line strings into single line string
+>> constants such that users can look up these easily with grep.
+>
+> I can certainly do that, but I'd prefer to do it in a separate patch. I
+> really want to keep this as mechanical as possible.
+>
+>>> +
+>>> +SENSE_CODE(0, NULL)
+>>
+>> The above looks confusing to me. Please leave this out and add { 0,
+>> NULL } at the end of the additional[] array instead.
+>
+> OK, I agree that that would have been cleaner. However, the sentinel
+> entry is removed in 2/2 (since we loop using ARRAY_SIZE instead of
+> checking for the sentinel). Let me know if you want me to resend the
+> 1600 line monster anyway with this addressed.
 
-thanks,
+Should I resend, or can these be picked up as-is? I can easily send a
+3/2 making the strings more greppable.
 
-greg k-h
+Thanks,
+Rasmus
