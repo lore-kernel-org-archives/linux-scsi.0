@@ -1,57 +1,73 @@
-From: Rasmus Villemoes <rv@rasmusvillemoes.dk>
-Subject: Re: [PATCH 1/2] scsi: move Additional Sense Codes to separate file
-Date: Sun, 18 Oct 2015 00:12:31 +0200
-Message-ID: <8737x9nnzk.fsf@rasmusvillemoes.dk>
-References: <20151004080217.GA22816@infradead.org>
-	<1444037200-14684-1-git-send-email-linux@rasmusvillemoes.dk>
-	<1444037200-14684-2-git-send-email-linux@rasmusvillemoes.dk>
-	<56128398.8070908@sandisk.com> <87h9m4m2yq.fsf@rasmusvillemoes.dk>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:33919 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbbJQWMe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Oct 2015 18:12:34 -0400
-Received: by wikq8 with SMTP id q8so5038354wik.1
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Oct 2015 15:12:33 -0700 (PDT)
-In-Reply-To: <87h9m4m2yq.fsf@rasmusvillemoes.dk> (Rasmus Villemoes's message
-	of "Tue, 06 Oct 2015 17:27:57 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Geliang Tang <geliangtang@163.com>
+Subject: [PATCH 2/9] scsi: fix trivial typos
+Date: Sun, 18 Oct 2015 23:31:08 +0800
+Message-ID: <557286dd38beb4d8d1be28e787ad89611e7cc077.1445181079.git.geliangtang@163.com>
+References: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+In-Reply-To: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+References: <949f6f3c99f87b57666986dc9f2d1c916935e215.1445181079.git.geliangtang@163.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Jiri Kosina <trivial@kernel.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 06 2015, Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
+s/regsiter/register/
 
-> On Mon, Oct 05 2015, Bart Van Assche <bart.vanassche@sandisk.com> wrote:
->
->> On 10/05/15 02:26, Rasmus Villemoes wrote:
->>> -	{0x041A, "Logical unit not ready, start stop unit command in "
->>> -	 "progress"},
->>> -	{0x041B, "Logical unit not ready, sanitize in progress"},
->>> -	{0x041C, "Logical unit not ready, additional power use not yet "
->>> -	 "granted"},
->>
->> Please convert these multi-line strings into single line string
->> constants such that users can look up these easily with grep.
->
-> I can certainly do that, but I'd prefer to do it in a separate patch. I
-> really want to keep this as mechanical as possible.
->
->>> +
->>> +SENSE_CODE(0, NULL)
->>
->> The above looks confusing to me. Please leave this out and add { 0,
->> NULL } at the end of the additional[] array instead.
->
-> OK, I agree that that would have been cleaner. However, the sentinel
-> entry is removed in 2/2 (since we loop using ARRAY_SIZE instead of
-> checking for the sentinel). Let me know if you want me to resend the
-> 1600 line monster anyway with this addressed.
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/scsi/isci/registers.h       | 4 ++--
+ drivers/scsi/mpt2sas/mpt2sas_base.h | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Should I resend, or can these be picked up as-is? I can easily send a
-3/2 making the strings more greppable.
-
-Thanks,
-Rasmus
+diff --git a/drivers/scsi/isci/registers.h b/drivers/scsi/isci/registers.h
+index 97f3ceb..63468cf 100644
+--- a/drivers/scsi/isci/registers.h
++++ b/drivers/scsi/isci/registers.h
+@@ -652,7 +652,7 @@ struct scu_iit_entry {
+ 
+ 
+ /*
+- * TODO: Where is the SAS_LNKTOV regsiter?
++ * TODO: Where is the SAS_LNKTOV register?
+  * TODO: Where is the SAS_PHYTOV register? */
+ 
+ #define SCU_SAS_TRANSMIT_IDENTIFICATION_SMP_TARGET_SHIFT            (1)
+@@ -1827,7 +1827,7 @@ struct scu_peg_registers {
+ };
+ 
+ /**
+- * struct scu_registers - SCU regsiters including both PEG registers if we turn
++ * struct scu_registers - SCU registers including both PEG registers if we turn
+  *    on that compile option. All of these registers are in the memory mapped
+  *    space returned from BAR1.
+  *
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 97ea360..9cc79cf 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -1209,7 +1209,7 @@ void mpt2sas_ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
+     Mpi2EventNotificationReply_t *mpi_reply);
+ 
+ void mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc,
+-	u8 bits_to_regsiter);
++	u8 bits_to_register);
+ 
+ /* transport shared API */
+ u8 mpt2sas_transport_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 9a73c8b..b95f932 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1211,7 +1211,7 @@ void mpt3sas_ctl_add_to_event_log(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2EventNotificationReply_t *mpi_reply);
+ 
+ void mpt3sas_enable_diag_buffer(struct MPT3SAS_ADAPTER *ioc,
+-	u8 bits_to_regsiter);
++	u8 bits_to_register);
+ int mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
+ 	u8 *issue_reset);
+ 
+-- 
+2.5.0
