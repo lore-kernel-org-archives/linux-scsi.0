@@ -1,27 +1,36 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 12/12] megaraid_sas : Remove debug print from function
- megasas_update_span_set
-Date: Mon, 19 Oct 2015 17:33:14 +0200
-Message-ID: <56250D3A.7090600@redhat.com>
-References: <201510150818.t9F8IXDU029685@palmhbs0.lsi.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi: restart list search after unlock in
+ scsi_remove_target
+Date: Mon, 19 Oct 2015 08:36:23 -0700
+Message-ID: <56250DF7.6050803@sandisk.com>
+References: <20151019143546.GA7486@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57884 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753794AbbJSPdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Oct 2015 11:33:16 -0400
-In-Reply-To: <201510150818.t9F8IXDU029685@palmhbs0.lsi.com>
+Received: from mail-bn1on0070.outbound.protection.outlook.com ([157.56.110.70]:32124
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754288AbbJSPg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Oct 2015 11:36:29 -0400
+In-Reply-To: <20151019143546.GA7486@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sumit.saxena@avagotech.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com
-Cc: uday.lingala@avagotech.com
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: jthumshirn@suse.de
 
-On 15.10.2015 10:11, sumit.saxena@avagotech.com wrote:
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+On 10/19/2015 07:35 AM, Christoph Hellwig wrote:
+> When dropping a lock while iterating a list we must restart the search
+> as other threads could have manipulated the list under us.  Without this
+> we can get stuck in an endless loop.
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Hello Christoph,
 
-Tomas
+Thanks for looking into this. However, I think we need a motivation in 
+the patch description why this patch does not reintroduce the soft 
+lockup documented in patch "scsi_remove_target: fix softlockup 
+regression on hot remove" (commit bc3f02a795d3).
 
+Thanks,
+
+Bart.
