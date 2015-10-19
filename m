@@ -1,76 +1,92 @@
-From: zhangfei <zhangfei.gao@linaro.org>
-Subject: Re: [PATCH 02/25] devicetree: bindings: scsi: HiSi SAS
-Date: Mon, 19 Oct 2015 22:51:22 +0800
-Message-ID: <5625036A.3040203@linaro.org>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <1444663237-238302-3-git-send-email-john.garry@huawei.com> <CAL_JsqLk9p_YX2FCNiR4sOSU74asN0UrOSJ5gQfnyRhrFH8LgQ@mail.gmail.com> <5624CA64.9020209@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 13/25] scsi: hisi_sas: add path from phyup irq to SAS
+ framework
+Date: Mon, 19 Oct 2015 15:55:47 +0100
+Message-ID: <56250473.9090700@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <6858991.h0xpYFqkjM@wuerfel> <5624FA23.1050502@huawei.com>
+ <4269975.xfCo9ut8KK@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33059 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbbJSOvb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2015 10:51:31 -0400
-Received: by pabrc13 with SMTP id rc13so193343604pab.0
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2015 07:51:30 -0700 (PDT)
-In-Reply-To: <5624CA64.9020209@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4269975.xfCo9ut8KK@wuerfel>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Rob Herring <robh@kernel.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.com, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Wei Xu <xuwei5@hisilicon.com>, john.garry2@mail.dcu.ie, hare@suse.de
 
-
-
-On 10/19/2015 06:48 PM, John Garry wrote:
-> On 16/10/2015 14:47, Rob Herring wrote:
-
->>> +  - reg : Address and length of the register sets for the device
->>> +   - SAS controller registers
->>> +   - SAS controller control registers
->>> +
->>> +  - reset-reg : offset to reset, status, and clock registers in
->>> control registers
->>
->> Within the above register range? If so and if this varies, then that
->> implies there is more than 1 version of IP. In that case you should
->> have a more specific compatible string.
->>
-> The registers in the second region are for syscon register offsets. See
-> last note, below.
+>>> I'd have to review more closely, but I think that's fine, as this
+>>> is how most work queues are used: you can queue the same function
+>>> multiple times, and it's guaranteed to run at least once after
+>>> the last queue, so if you queue it while it's already running,
+>>> it will be called again, otherwise it won't.
+>>>
+>> In the scenario I described the issue is not that the second call to
+>> queue the work function is lost. The problem is that when we setup the
+>> second call we may overwrite elements of the phy's hisi_sas_wq struct
+>> which may be still being referenced in the work function for the first call.
 >
->> How long is this property I count 3 cells here, but the example has 5.
->> Define what each cell corresponds to specifically.
->>
-> We will add all the cells to the decription, which are:
-> Reset assert, clock disable, reset status, reset de-assert, and clock
-> enable.
->>> +
+> Do you mean these members?
+>
+>> +       wq->event = PHYUP;
+>> +       wq->hisi_hba = hisi_hba;
+>> +       wq->phy_no = phy_no;
+>
+Yes, these are the members I was referring to. However there is also an 
+element "data" in hisi_sas_wq. This is used in control phy as follows:
+int hisi_sas_control_phy(struct asd_sas_phy *sas_phy,
+			enum phy_func func,
+			void *funcdata)
+{
+	...
+	wq->event = CONTROL_PHY;
+	wq->data = func;
+	...
+	INIT_WORK(&wq->work_struct, hisi_sas_wq_process);
+	queue_work(hisi_hba->wq, &wq->work_struct);
+}
 
-We have switch to using syscon,
-The dts has been changed to
+void hisi_sas_wq_process(struct work_struct *work)
+{
+	struct hisi_sas_wq *wq =
+		container_of(work, struct hisi_sas_wq, work_struct);
+	switch (wq->event) {
+	case CONTROL_PHY:
+		hisi_sas_control_phy_work(hisi_hba, wq->data, phy_no);
+}
 
-         sas_ctrl0: sas_ctrl@c0000000 {
-                 compatible = "hisilicon,sas-ctrl", "syscon";
-                 reg = <0x0 0xc0000000 0x0 0x10000>;
-         };
+static void hisi_sas_control_phy_work(struct hisi_hba *hisi_hba,
+				int func,
+				int phy_no)
+{
+	switch (func) {
+	case PHY_FUNC_HARD_RESET:
+		hard_phy_reset_v1_hw(hisi_hba, phy_no)
 
-         sas0: sas@c1000000 {
-                 compatible = "hisilicon,sas-controller-v1";
-                 reg = <0x0 0xc1000000 0x0 0x10000>;
-                 hisilicon,sas-syscon = <&sas_ctrl0>;
-                 ctrl-reg = <0xa60 0x33c 0x5a30 0xa64 0x338>;
+> Sorry for being unclear, I implied getting rid of them, by having a
+> work queue per phy. You can create a structure for each phy like
+>
+> 	struct hisi_sas_phy {
+> 		struct hisi_sas *dev; /* pointer to the device */
+> 		unsigned int phy_no;
+> 		struct work_struct phyup_work;
+> 	};
+>
+> There are probably other things you can put into the same structure.
+> When the phy is brought up, you then just start the phyup work for
+> that phy, which can retrieve its hisi_sas_phy structure from the
+> work_struct pointer, and from there get to the device.
+>
+> 	Arnd
+>
+> .
+>
+We could create a work_struct for each event, which would be fine. 
+However we would sometimes still need some way of passing data to the 
+event, like the phy control example.
 
-ctrl-reg contains several regs in sas-ctrl, which need to be accessed 
-since some complicated requirement of the silicon.
-
-Have considered using
-hisilicon,sas-syscon = <&sas_ctrl0 0xa60 0x33c 0x5a30 0xa64 0x338>;
-But of_property_read_u32_array cat not get array from index 1.
-Then we have to use of_property_read_u32_index one by one.
-
-So instead we add additional ctrl-reg, and get the array one time via 
-of_property_read_u32_array.
-
-Thanks
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
