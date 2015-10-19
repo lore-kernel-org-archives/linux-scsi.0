@@ -1,33 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 106261] there exists a wrong return value of function
- asd_map_memio() when ioremap_nocache() fails
-Date: Mon, 19 Oct 2015 14:23:56 +0000
-Message-ID: <bug-106261-11613-zvVlrPglmA@https.bugzilla.kernel.org/>
-References: <bug-106261-11613@https.bugzilla.kernel.org/>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 13/25] scsi: hisi_sas: add path from phyup irq to SAS framework
+Date: Mon, 19 Oct 2015 16:26:38 +0200
+Message-ID: <4269975.xfCo9ut8KK@wuerfel>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <6858991.h0xpYFqkjM@wuerfel> <5624FA23.1050502@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41496 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753551AbbJSOX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Oct 2015 10:23:59 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id BB79F2078B
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2015 14:23:58 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D7B86205B6
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2015 14:23:57 +0000 (UTC)
-In-Reply-To: <bug-106261-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5624FA23.1050502@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=106261
+On Monday 19 October 2015 15:11:47 John Garry wrote:
+> On 16/10/2015 14:36, Arnd Bergmann wrote:
+> > On Friday 16 October 2015 14:29:55 John Garry wrote:
+> >>
+> >> It could be considered.
+> >>
+> >> A potential issue I see is with hisi_sas_control_phy() for
+> >> PHY_FUNC_HARD_RESET: this allocates a hisi_sas_wq struct and processes
+> >> the reset in the queue work. When we re-enable the phy for the reset,
+> >> the phyup irq will want to use the same hisi_sas_wq struct which may be
+> >> in use.
+> >>
+> >> hisi_sas_control_phy() is added in 23/35.
+> >
+> > I'd have to review more closely, but I think that's fine, as this
+> > is how most work queues are used: you can queue the same function
+> > multiple times, and it's guaranteed to run at least once after
+> > the last queue, so if you queue it while it's already running,
+> > it will be called again, otherwise it won't.
+> >
+> In the scenario I described the issue is not that the second call to 
+> queue the work function is lost. The problem is that when we setup the 
+> second call we may overwrite elements of the phy's hisi_sas_wq struct 
+> which may be still being referenced in the work function for the first call.
 
---- Comment #1 from RUC_Soft_Sec <rucsoftsec@gmail.com> ---
-*** Bug 106211 has been marked as a duplicate of this bug. ***
+Do you mean these members?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> +       wq->event = PHYUP;
+> +       wq->hisi_hba = hisi_hba;
+> +       wq->phy_no = phy_no;
+
+Sorry for being unclear, I implied getting rid of them, by having a
+work queue per phy. You can create a structure for each phy like
+
+	struct hisi_sas_phy {
+		struct hisi_sas *dev; /* pointer to the device */
+		unsigned int phy_no;
+		struct work_struct phyup_work;
+	};
+
+There are probably other things you can put into the same structure.
+When the phy is brought up, you then just start the phyup work for
+that phy, which can retrieve its hisi_sas_phy structure from the
+work_struct pointer, and from there get to the device.
+
+	Arnd
