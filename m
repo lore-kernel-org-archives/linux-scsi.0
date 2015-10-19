@@ -1,120 +1,91 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: qla2xxx firmware crashes in target mode
-Date: Mon, 19 Oct 2015 09:19:55 +0100
-Message-ID: <5624A7AB.7070907@bootc.net>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/25] HiSilicon SAS driver
+Date: Mon, 19 Oct 2015 09:47:41 +0100
+Message-ID: <5624AE2D.9070200@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: qla2xxx-upstream@qlogic.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1444663237-238302-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi folks,
+Hi James,
 
-So this is a bit of a strange situation I'm in, where my *target*
-qla2xxx firmware appears to get stuck when the *initiator* kernel is 4.1+.
+Could we please get a review for our driver? We have got some good input 
+on changes we need to make, and we will produce another patchset in the 
+coming days. However it would good to get a subsystem maintainer 
+review/acknowledgement to progress our upstreaming.
 
-The target is an Intel system with a QLE2464 running kernel 4.2.1 (from
-Debian) and using fw=7.03.00. The initiator is another Intel system with
-a QLE2460 and using fw=7.03.00. They are connected by direct fibre link,
-there are no switches / fabric involved.
+Thanks in advance,
+John
 
-The initiator and target are both stable when the initiator is running
-kernel 4.0 or lower. When the initiator is running a 4.1 or 4.2 kernel,
-the *target* firmware becomes unstable and the initiator times out IOs
-and generally becomes very unhappy.
+On 12/10/2015 16:20, John Garry wrote:
+> This is the driver patchset for the HiSilicon SAS driver. The driver
+> is a platform driver.
+>
+> The driver will support multiple revisions of HW. Currently only "v1"
+> HW is supported.
+>
+> The driver uses libsas framework within the SCSI framework.
+>
+> The v1 HW supports SSP and SMP, but not STP/SATA.
+>
+>
+> John Garry (25):
+>    [SCSI] sas: centralise ssp frame information units
+>    devicetree: bindings: scsi: HiSi SAS
+>    scsi: hisi_sas: add initial bare driver
+>    scsi: hisi_sas: add scsi host registration
+>    scsi: hisi_sas: allocate memories and create pools
+>    scsi: hisi_sas: add slot init code
+>    scsi: hisi_sas: add ioremap for device HW
+>    scsi: hisi_sas: add cq structure initialization
+>    scsi: hisi_sas: add phy SAS ADDR initialization
+>    scsi: hisi_sas: add misc HBA initialization
+>    scsi: hisi_sas: add v1 hardware register definitions
+>    scsi: hisi_sas: add v1 HW initialisation code
+>    scsi: hisi_sas: add path from phyup irq to SAS framework
+>    scsi: hisi_sas: add ssp command function
+>    scsi: hisi_sas: add cq interrupt handler
+>    scsi: hisi_sas: add dev_found and port_formed
+>    scsi: hisi_sas: add abnormal irq handler
+>    scsi: hisi_sas: add dev_gone and port_deformed
+>    scsi: hisi_sas: add bcast interrupt handler
+>    scsi: hisi_sas: add smp protocol support
+>    scsi: hisi_sas: add scan finished and start
+>    scsi: hisi_sas: add tmf methods
+>    scsi: hisi_sas: add control phy handler
+>    scsi: hisi_sas: add fatal irq handler
+>    MAINTAINERS: add maintainer for HiSi SAS driver
+>
+>   .../devicetree/bindings/scsi/hisilicon-sas.txt     |   63 +
+>   MAINTAINERS                                        |    7 +
+>   drivers/scsi/Kconfig                               |    1 +
+>   drivers/scsi/Makefile                              |    1 +
+>   drivers/scsi/aic94xx/aic94xx_sas.h                 |   49 +-
+>   drivers/scsi/hisi_sas/Kconfig                      |    5 +
+>   drivers/scsi/hisi_sas/Makefile                     |    2 +
+>   drivers/scsi/hisi_sas/hisi_sas.h                   |  406 +++++
+>   drivers/scsi/hisi_sas/hisi_sas_init.c              |  489 ++++++
+>   drivers/scsi/hisi_sas/hisi_sas_main.c              | 1115 ++++++++++++
+>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             | 1850 ++++++++++++++++++++
+>   include/scsi/sas.h                                 |   74 +
+>   12 files changed, 4019 insertions(+), 43 deletions(-)
+>   create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+>   create mode 100644 drivers/scsi/hisi_sas/Kconfig
+>   create mode 100644 drivers/scsi/hisi_sas/Makefile
+>   create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
+>   create mode 100644 drivers/scsi/hisi_sas/hisi_sas_init.c
+>   create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
+>   create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+>
 
-When booting a 4.1+ kernel on the initiator, everything appears to work
-well for a little while (up to an hour or so) before the issue manifests
-itself. At some point I see the "ISP System Error" message and IO locks
-up. To get out of this situation I need to reboot the initiator; the
-target appears to recover by itself.
 
-Do you know about this issue? I can debug further (e.g. try to bisect
-it?) if required but no point if you know about it already.
-
-dmesg from the target end (I haven't been able to capture the initiator
-end):
-
-[484701.194971] qla2xxx [0000:05:00.0]-5003:9: ISP System Error -
-mbx1=c19h mbx2=10h mbx3=0h mbx7=0h.
-[484701.222021] qla2xxx [0000:05:00.0]-d001:9: Firmware dump saved to
-temp buffer (9/ffffc90002b84000), dump status flags (0x3f).
-[484701.222082] qla2xxx [0000:05:00.0]-00af:9: Performing ISP error
-recovery - ha=ffff8800ab7c4000.
-[484702.063799] qla2xxx [0000:05:00.0]-500a:9: LOOP UP detected (4 Gbps).
-[484702.112814] qla2xxx [0000:05:00.0]-0121:9: Failed to enable
-receiving of RSCN requests: 0x2.
-[484702.743687] qla2xxx [0000:05:00.0]-5003:9: ISP System Error -
-mbx1=c19h mbx2=10h mbx3=0h mbx7=0h.
-[484702.754050] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484703.619362] qla2xxx [0000:05:00.0]-00af:9: Performing ISP error
-recovery - ha=ffff8800ab7c4000.
-[484704.459181] qla2xxx [0000:05:00.0]-500a:9: LOOP UP detected (4 Gbps).
-[484704.508170] qla2xxx [0000:05:00.0]-0121:9: Failed to enable
-receiving of RSCN requests: 0x2.
-[484704.854664] qla2xxx [0000:05:00.0]-5003:9: ISP System Error -
-mbx1=c19h mbx2=10h mbx3=0h mbx7=0h.
-[484704.865014] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484734.867554] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484764.883993] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484794.900464] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484824.916954] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484854.933415] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484884.953887] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484914.974377] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484918.761483] INFO: task kworker/2:17:36759 blocked for more than 120
-seconds.
-[484918.778839]       Not tainted 4.2.0-0.bpo.1-amd64 #1
-[484918.793941] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-disables this message.
-[484918.812578] kworker/2:17    D ffff88042e855840     0 36759      2
-0x00000000
-[484918.812597] Workqueue: qla_tgt_wq qlt_create_sess_from_atio [qla2xxx]
-[484918.812607]  ffff880108076500 0000000000000046 ffff88009e473d80
-ffff880107cef040
-[484918.812613]  0000000000000286 ffff88009e474000 ffff880426a5f9a4
-ffff880108076500
-[484918.812624]  00000000ffffffff ffff880426a5f9a8 0000000000000296
-ffffffff8154f26f
-[484918.812626] Call Trace:
-[484918.812632]  [<ffffffff8154f26f>] ? schedule+0x2f/0x70
-[484918.812635]  [<ffffffff8154f51e>] ? schedule_preempt_disabled+0xe/0x20
-[484918.812643]  [<ffffffff81550de5>] ? __mutex_lock_slowpath+0x85/0x100
-[484918.812649]  [<ffffffff81550e7b>] ? mutex_lock+0x1b/0x30
-[484918.812659]  [<ffffffffa0357d5a>] ?
-qlt_create_sess_from_atio+0x12a/0x1c0 [qla2xxx]
-[484918.812668]  [<ffffffff810866da>] ? process_one_work+0x14a/0x3d0
-[484918.812671]  [<ffffffff810870c5>] ? worker_thread+0x65/0x470
-[484918.812675]  [<ffffffff81087060>] ? rescuer_thread+0x2f0/0x2f0
-[484918.812677]  [<ffffffff8108c543>] ? kthread+0xd3/0xf0
-[484918.812680]  [<ffffffff8108c470>] ? kthread_create_on_node+0x170/0x170
-[484918.812684]  [<ffffffff8155309f>] ? ret_from_fork+0x3f/0x70
-[484918.812687]  [<ffffffff8108c470>] ? kthread_create_on_node+0x170/0x170
-[484944.994831] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484975.019311] qla2xxx [0000:05:00.0]-d007:9: Firmware has been
-previously dumped (ffffc90002b84000) -- ignoring request.
-[484975.559187] qla2xxx [0000:05:00.0]-00af:9: Performing ISP error
-recovery - ha=ffff8800ab7c4000.
-[484976.430963] qla2xxx [0000:05:00.0]-500a:9: LOOP UP detected (4 Gbps).
-[484976.448002] qla2xxx [0000:05:00.0]-0121:9: Failed to enable
-receiving of RSCN requests: 0x2.
-
-HTH,
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
