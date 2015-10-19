@@ -1,47 +1,51 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] bfa: integer overflow bug in debugfs
-Date: Mon, 19 Oct 2015 13:17:49 +0300
-Message-ID: <20151019101749.GD26688@mwanda>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/25] HiSilicon SAS driver
+Date: Mon, 19 Oct 2015 11:40:02 +0100
+Message-ID: <5624C882.3090709@huawei.com>
+References: <1444663237-238302-1-git-send-email-john.garry@huawei.com>
+ <5624AE2D.9070200@huawei.com> <5624B015.3000603@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20353 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbbJSKSC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2015 06:18:02 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5624B015.3000603-l3A5Bk7waGM@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-The "len << 2" operation can have an integer overflow and leading to a
-kernel crash.  This is debugfs and thus root only so no one really
-cares, but we should fix it anyway just to make the static checker
-happy.
+On 19/10/2015 09:55, Hannes Reinecke wrote:
+> On 10/19/2015 10:47 AM, John Garry wrote:
+>> Hi James,
+>>
+>> Could we please get a review for our driver? We have got some good
+>> input on changes we need to make, and we will produce another
+>> patchset in the coming days. However it would good to get a
+>> subsystem maintainer review/acknowledgement to progress our
+>> upstreaming.
+>>
+> In general any change will need to have at least two reviews, of
+> which one should be independent (ie not affiliated with the company)
+> from the original submitter.
+>
+> Once the reviews are done the maintainer will/should do a final
+> round of reviews and then include the patch in the next submission.
+>
+> However, you seem to be on a good course with your driver.
+> Please prepare for the next round of patches and we'll be reviewing
+> them.
+>
+> Cheers,
+>
+> Hannes
+>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+OK, thanks. I just want to make sure we're on the right path.
 
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-index 74a307c..d5832b1 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -254,7 +254,8 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 	struct bfad_s *bfad = port->bfad;
- 	struct bfa_s *bfa = &bfad->bfa;
- 	struct bfa_ioc_s *ioc = &bfa->ioc;
--	int addr, len, rc, i;
-+	unsigned int len;
-+	int addr, rc, i;
- 	u32 *regbuf;
- 	void __iomem *rb, *reg_addr;
- 	unsigned long flags;
-@@ -265,7 +266,7 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 		return PTR_ERR(kern_buf);
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &len);
--	if (rc < 2) {
-+	if (rc < 2 || len > UINT_MAX >> 2) {
- 		printk(KERN_INFO
- 			"bfad[%d]: %s failed to read user buf\n",
- 			bfad->inst_no, __func__);
+Regards,
+john
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
