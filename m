@@ -1,61 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 13/25] scsi: hisi_sas: add path from phyup irq to SAS framework
-Date: Mon, 19 Oct 2015 16:26:38 +0200
-Message-ID: <4269975.xfCo9ut8KK@wuerfel>
-References: <1444663237-238302-1-git-send-email-john.garry@huawei.com> <6858991.h0xpYFqkjM@wuerfel> <5624FA23.1050502@huawei.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: restart list search after unlock in
+	scsi_remove_target
+Date: Mon, 19 Oct 2015 16:35:46 +0200
+Message-ID: <20151019143546.GA7486@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5624FA23.1050502@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, hare@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:53904 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814AbbJSOfu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Oct 2015 10:35:50 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: jthumshirn@suse.de
 
-On Monday 19 October 2015 15:11:47 John Garry wrote:
-> On 16/10/2015 14:36, Arnd Bergmann wrote:
-> > On Friday 16 October 2015 14:29:55 John Garry wrote:
-> >>
-> >> It could be considered.
-> >>
-> >> A potential issue I see is with hisi_sas_control_phy() for
-> >> PHY_FUNC_HARD_RESET: this allocates a hisi_sas_wq struct and processes
-> >> the reset in the queue work. When we re-enable the phy for the reset,
-> >> the phyup irq will want to use the same hisi_sas_wq struct which may be
-> >> in use.
-> >>
-> >> hisi_sas_control_phy() is added in 23/35.
-> >
-> > I'd have to review more closely, but I think that's fine, as this
-> > is how most work queues are used: you can queue the same function
-> > multiple times, and it's guaranteed to run at least once after
-> > the last queue, so if you queue it while it's already running,
-> > it will be called again, otherwise it won't.
-> >
-> In the scenario I described the issue is not that the second call to 
-> queue the work function is lost. The problem is that when we setup the 
-> second call we may overwrite elements of the phy's hisi_sas_wq struct 
-> which may be still being referenced in the work function for the first call.
+When dropping a lock while iterating a list we must restart the search
+as other threads could have manipulated the list under us.  Without this
+we can get stuck in an endless loop.
 
-Do you mean these members?
+Reported-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> +       wq->event = PHYUP;
-> +       wq->hisi_hba = hisi_hba;
-> +       wq->phy_no = phy_no;
-
-Sorry for being unclear, I implied getting rid of them, by having a
-work queue per phy. You can create a structure for each phy like
-
-	struct hisi_sas_phy {
-		struct hisi_sas *dev; /* pointer to the device */
-		unsigned int phy_no;
-		struct work_struct phyup_work;
-	};
-
-There are probably other things you can put into the same structure.
-When the phy is brought up, you then just start the phyup work for
-that phy, which can retrieve its hisi_sas_phy structure from the
-work_struct pointer, and from there get to the device.
-
-	Arnd
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389f..d3b34d8 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1158,31 +1158,23 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget, *last = NULL;
++	struct scsi_target *starget;
+ 	unsigned long flags;
+ 
+-	/* remove targets being careful to lookup next entry before
+-	 * deleting the last
+-	 */
++restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+-			/* assuming new targets arrive at the end */
+ 			kref_get(&starget->reap_ref);
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+-			if (last)
+-				scsi_target_reap(last);
+-			last = starget;
+ 			__scsi_remove_target(starget);
+-			spin_lock_irqsave(shost->host_lock, flags);
++			scsi_target_reap(starget);
++			goto restart;
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-	if (last)
+-		scsi_target_reap(last);
+ }
+ EXPORT_SYMBOL(scsi_remove_target);
+ 
