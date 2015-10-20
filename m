@@ -1,51 +1,49 @@
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [RESEND PATCH] sci: ufs: Fix module autoload for OF platform driver
-Date: Tue, 20 Oct 2015 16:09:53 +0100
-Message-ID: <1445353793-2508-1-git-send-email-luisbg@osg.samsung.com>
+From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
+Subject: Re: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in mvs_slot_task_free
+Date: Tue, 20 Oct 2015 20:41:54 +0300
+Message-ID: <CAOE4rSz=U+7WqiLz1fwyeBDkijkkfRPD=uY_twSVy9PWfDudww@mail.gmail.com>
+References: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, Luis de Bethencourt <luis@debethencourt.com>, Luis de Bethencourt <luisbg@osg.samsung.com>
+To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Luis de Bethencourt <luis@debethencourt.com>
+2015-08-21 7:29 GMT+03:00 D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>:
+> When pci_pool_alloc fails in mvs_task_prep then task->lldd_task stays
+> NULL but it's later used in mvs_abort_task as slot which is passed
+> to mvs_slot_task_free causing NULL pointer dereference.
+>
+> Just return from mvs_slot_task_free when passed with NULL slot.
+>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
+> Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
+> ---
+>  drivers/scsi/mvsas/mv_sas.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.=
+c
+> index 454536c..9c78074 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi, u=
+32 rx_desc)
+>  static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task=
+ *task,
+>                           struct mvs_slot_info *slot, u32 slot_idx)
+>  {
+> +       if (!slot)
+> +               return;
+>         if (!slot->task)
+>                 return;
+>         if (!sas_protocol_ata(task->task_proto))
+> --
+> 2.5.0
+>
 
-This platform driver has a OF device ID table but the OF module
-alias information is not created so module autoloading won't work.
-
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
----
-
-Hi,
-
-This is a resend of a patch sent September 18 [0]
-
-This patch adds the missing MODULE_DEVICE_TABLE() for OF to export
-that information so modules have the correct aliases built-in and
-autoloading works correctly.
-
-A longer explanation by Javier Canillas can be found here:
-https://lkml.org/lkml/2015/7/30/519
-
-Thanks,
-Luis
-
-[0] https://lkml.org/lkml/2015/9/18/676
-
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 7db9564..7f3b0cf 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -375,6 +375,7 @@ static const struct of_device_id ufs_of_match[] = {
- 	{ .compatible = "jedec,ufs-1.1"},
- 	{},
- };
-+MODULE_DEVICE_TABLE(of, ufs_of_match);
- 
- static const struct dev_pm_ops ufshcd_dev_pm_ops = {
- 	.suspend	= ufshcd_pltfrm_suspend,
--- 
-2.5.3
+Can this get merged?
+So far since august it have saved me from several kernel crashes.
