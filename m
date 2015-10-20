@@ -1,56 +1,51 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 6/7] bnx2fc: Add HZ to task management timeout.
-Date: Tue, 20 Oct 2015 10:17:11 -0400
-Message-ID: <alpine.OSX.2.00.1510201016130.4822@administrators-macbook-pro.local>
-References: <1445283641-7358-1-git-send-email-chad.dupuis@qlogic.com> <1445283641-7358-7-git-send-email-chad.dupuis@qlogic.com> <562629BE.4020904@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:25468 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752857AbbJTOR3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Oct 2015 10:17:29 -0400
-In-Reply-To: <562629BE.4020904@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [RESEND PATCH] sci: ufs: Fix module autoload for OF platform driver
+Date: Tue, 20 Oct 2015 16:09:53 +0100
+Message-ID: <1445353793-2508-1-git-send-email-luisbg@osg.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, Luis de Bethencourt <luis@debethencourt.com>, Luis de Bethencourt <luisbg@osg.samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: James.Bottomley@HansenPartnership.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
+From: Luis de Bethencourt <luis@debethencourt.com>
 
+This platform driver has a OF device ID table but the OF module
+alias information is not created so module autoloading won't work.
 
-On Tue, 20 Oct 2015, Tomas Henzl wrote:
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
 
-> On 19.10.2015 21:40, Chad Dupuis wrote:
->> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
->> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
->> ---
->>  drivers/scsi/bnx2fc/bnx2fc.h |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
->> index d46267d..d05866d 100644
->> --- a/drivers/scsi/bnx2fc/bnx2fc.h
->> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
->> @@ -129,7 +129,7 @@
->>  #define BNX2FC_MAX_FCP_TGT		256
->>  #define BNX2FC_MAX_CMD_LEN		16
->>
->> -#define BNX2FC_TM_TIMEOUT		60	/* secs */
->> +#define BNX2FC_TM_TIMEOUT		(60 * HZ) /* seconds */
->
-> Hi Chad,
-> when you add HZ here it should be removed from bnx2fc_initiate_tmf :
->        rc = wait_for_completion_timeout(&io_req->tm_done,
->                                         BNX2FC_TM_TIMEOUT * HZ);
-> Cheers,
-> Tomas
+Hi,
 
-Yeah, you're right...no need for this patch then.  Self nack on this one.
+This is a resend of a patch sent September 18 [0]
 
->
->>  #define BNX2FC_IO_TIMEOUT		20000UL	/* msecs */
->>
->>  #define BNX2FC_WAIT_CNT			1200
->
->
+This patch adds the missing MODULE_DEVICE_TABLE() for OF to export
+that information so modules have the correct aliases built-in and
+autoloading works correctly.
+
+A longer explanation by Javier Canillas can be found here:
+https://lkml.org/lkml/2015/7/30/519
+
+Thanks,
+Luis
+
+[0] https://lkml.org/lkml/2015/9/18/676
+
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 7db9564..7f3b0cf 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -375,6 +375,7 @@ static const struct of_device_id ufs_of_match[] = {
+ 	{ .compatible = "jedec,ufs-1.1"},
+ 	{},
+ };
++MODULE_DEVICE_TABLE(of, ufs_of_match);
+ 
+ static const struct dev_pm_ops ufshcd_dev_pm_ops = {
+ 	.suspend	= ufshcd_pltfrm_suspend,
+-- 
+2.5.3
