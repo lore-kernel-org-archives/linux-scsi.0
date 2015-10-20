@@ -1,49 +1,60 @@
-From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
-Subject: Re: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in mvs_slot_task_free
-Date: Tue, 20 Oct 2015 20:41:54 +0300
-Message-ID: <CAOE4rSz=U+7WqiLz1fwyeBDkijkkfRPD=uY_twSVy9PWfDudww@mail.gmail.com>
-References: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
+From: Don Brace <Don.Brace@pmcs.com>
+Subject: RE: [PATCH] hpsa: add in sas transport
+Date: Tue, 20 Oct 2015 20:07:55 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB7CD46B3E@BBYEXM02.pmc-sierra.internal>
+References: <20150929221748.6433.53593.stgit@brunhilda>
+ <20150929222154.6433.60590.stgit@brunhilda> <560B941B.8000802@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:57907 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751654AbbJTUH4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Oct 2015 16:07:56 -0400
+In-Reply-To: <560B941B.8000802@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-2015-08-21 7:29 GMT+03:00 D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>:
-> When pci_pool_alloc fails in mvs_task_prep then task->lldd_task stays
-> NULL but it's later used in mvs_abort_task as slot which is passed
-> to mvs_slot_task_free causing NULL pointer dereference.
->
-> Just return from mvs_slot_task_free when passed with NULL slot.
->
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
-> Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
-> ---
->  drivers/scsi/mvsas/mv_sas.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.=
-c
-> index 454536c..9c78074 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi, u=
-32 rx_desc)
->  static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task=
- *task,
->                           struct mvs_slot_info *slot, u32 slot_idx)
->  {
-> +       if (!slot)
-> +               return;
->         if (!slot->task)
->                 return;
->         if (!sas_protocol_ata(task->task_proto))
-> --
-> 2.5.0
->
-
-Can this get merged?
-So far since august it have saved me from several kernel crashes.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
+aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDMwLCAyMDE1
+IDI6NTAgQU0NCj4gVG86IERvbiBCcmFjZTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4g
+U3ViamVjdDogUmU6IFtQQVRDSF0gaHBzYTogYWRkIGluIHNhcyB0cmFuc3BvcnQNCj4gDQo+IE9u
+IDA5LzMwLzIwMTUgMTI6MjEgQU0sIERvbiBCcmFjZSB3cm90ZToNCj4gPiBGcm9tOiBLZXZpbiBC
+YXJuZXR0IDxrZXZpbi5iYXJuZXR0QHBtY3MuY29tPg0KPiA+DQo+ID4gY3VzdG9tZXJzIHdhbnQg
+bHNzY3NpIC10IHRvIHNob3cgc2FzIGFkZHJlc3NlcyB3aGVuDQo+ID4gZW51bWVyYXRpbmcgc2Fz
+IGRldmljZXMuIFRoZSBzYXMgYWRkcmVzc2VzIGFyZSB1c2VkDQo+ID4gbWFpbmx5IHRvIGxpZ2h0
+IGRyaXZlIExFRHMgZm9yIGxvY2F0aW9uLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogRG9uIEJy
+YWNlIDxkb24uYnJhY2VAcG1jcy5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNh
+LmMgICAgIHwgIDcwNA0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KystLS0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5oICAgICB8ICAgMzcgKysNCj4gPiAgZHJp
+dmVycy9zY3NpL2hwc2FfY21kLmggfCAgIDE0ICsNCj4gPiAgMyBmaWxlcyBjaGFuZ2VkLCA2Nzcg
+aW5zZXJ0aW9ucygrKSwgNzggZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBpbmRleCAzYjM1ZGUw
+Li5hZTgxMWE3IDEwMDY0NA0KPiA+ICAJLyogTm90aWZ5IHNjc2kgbWlkIGxheWVyIG9mIGFueSBh
+ZGRlZCBkZXZpY2VzICovDQo+ID4gIAlmb3IgKGkgPSAwOyBpIDwgbmFkZGVkOyBpKyspIHsNCj4g
+PiAtCQlpZiAoIShhZGRlZFtpXS0+ZXhwb3NlX3N0YXRlICYgSFBTQV9TQ1NJX0FERCkpDQo+ID4g
+KwkJaWYgKCEoYWRkZWRbaV0tPmV4cG9zZV9kZXZpY2UpKQ0KPiA+ICAJCQljb250aW51ZTsNCj4g
+PiAtCQlpZiAoc2NzaV9hZGRfZGV2aWNlKHNoLCBhZGRlZFtpXS0+YnVzLA0KPiA+IC0JCQlhZGRl
+ZFtpXS0+dGFyZ2V0LCBhZGRlZFtpXS0+bHVuKSA9PSAwKQ0KPiA+ICsJCWlmIChocHNhX2FkZF9k
+ZXZpY2UoaCwgYWRkZWRbaV0pID09IDApDQo+ID4gIAkJCWNvbnRpbnVlOw0KPiA+ICAJCWhwc2Ff
+c2hvd19kZXZfbXNnKEtFUk5fV0FSTklORywgaCwgYWRkZWRbaV0sDQo+ID4gIAkJCQkJImFkZGl0
+aW9uIGZhaWxlZCwgZGV2aWNlIG5vdCBhZGRlZC4iKTsNCj4gU2lnaC4gSGVyZSB3ZSBnbyBhZ2Fp
+bi4NCj4gDQo+IEkndmUgcHJvYmFibHkgYXNrZWQgeW91IChvciBNaWtlIE1pbGxlciA6LSkgYWJv
+dXQgdGhpcyBzZXZlcmFsIHRpbWVzDQo+IG5vdywgYnV0IGNvdWxkbid0IHlvdSB1c2UgdGhlIF9y
+ZWFsXyBMVU4gYWRkcmVzc2VzPw0KPiANCj4gRXNwZWNpYWxseSBhcyB5b3UncmUgbm93IGV4cG9z
+aW5nICdyZWFsJyBkZXZpY2VzLCB3aGVyZSBpcyB0aGUgcG9pbnQNCj4gb2YgY3JlYXRpbmcgYW4g
+aW50ZXJuYWwgTFVOIG1hcHBpbmcgdGFibGU/DQo+IA0KPiBJZiB5b3Ugd2VyZSBleHBvc2UgdGhl
+IGRldmljZXMgd2l0aCB0aGUgYWN0dWFsIExVTiBhZGRyZXNzIChieSBlZw0KPiBhcnJhbmdpbmcg
+dGhlIHRhcmdldC9SQUlEIGNvbnRyb2xsZXIgb24gYnVzICcwJywgdGhlIFJBSUQgZGV2aWNlcyBv
+bg0KPiBidXMgJzEnLCBhbmQgdGhlIGV4cG9zZWQgZGV2aWNlcyBvbiBidXMgJzInKSB5b3UgY291
+bGQgcmVtb3ZlIHRoZQ0KPiBpbnRlcm5hbCBMVU4gbWFwcGluZyB0YWJsZSBhbmQgcXVpdGUgc29t
+ZSBjb21wbGV4aXR5IHdvdWxkIGdvIGF3YXkgLi4uDQo+IA0KDQpUaGlzIGNhbiBiZSBkb25lLg0K
+DQpIb3dldmVyLCBhdCB0aGlzIHBvaW50LCBJIGRvIG5vdCB3YW50IHRvIGNoYW5nZSBocHNhIHdp
+dGhvdXQgbW9yZSB0ZXN0aW5nLiANCkknbGwgbWFrZSBhbm90aGVyIHBhdGNoIGFuZCBzZW5kIGl0
+IHVwIGFmdGVyIGl0IGhhcyBhIGNoYW5jZSB0byBiZSB0ZXN0ZWQgaW4gb3VyIGxhYnMuDQpIb3Bl
+IHRoaXMgaXMgT0suDQoNCkkgc3BsaXQgb3V0IHRoZSBvdGhlciBjaGFuZ2VzIHRvIHNlcGFyYXRl
+IHBhdGNoZXMgYXMgeW91IHJlY29tbWVuZGVkLg0K
