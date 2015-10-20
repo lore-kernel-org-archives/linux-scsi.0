@@ -1,67 +1,60 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [patch] ses: tighten range checks in ses_intf_add()
-Date: Tue, 20 Oct 2015 08:38:20 +0200
-Message-ID: <20151020063820.GC1005@1wt.eu>
-References: <----An------QYmAn$10b010ca-f710-44aa-8ea3-3b65a3c21286@alibaba-inc.com> <20151019134820.GA28752@mwanda>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: mvsas: fix misleading indentation
+Date: Tue, 20 Oct 2015 09:46:54 +0200
+Message-ID: <1445327214.16404.0.camel@suse.de>
+References: <1445287000-1370-1-git-send-email-luisbg@osg.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wtarreau.pck.nerim.net ([62.212.114.60]:64695 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195AbbJTGjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Oct 2015 02:39:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20151019134820.GA28752@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1445287000-1370-1-git-send-email-luisbg@osg.samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luis de Bethencourt <luisbg@osg.samsung.com>, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, linux-scsi@vger.kernel.org, hare@suse.de, tj@kernel.org, dan.j.williams@intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, "??????(??????)" <chengmiao.cj@alibaba-inc.com>, throber3 <throber3@gmail.com>, security@kernel.org
 
-Hi Dan,
-
-On Mon, Oct 19, 2015 at 04:48:20PM +0300, Dan Carpenter wrote:
-> We test that "type_ptr" is within the buffer but then we read from
-> "type_ptr[3]" so we could be reading beyond the end of the buffer.
-> 
-> Reported-by: "Berry Cheng ??????(??????)" <chengmiao.cj@alibaba-inc.com>
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On Mon, 2015-10-19 at 21:36 +0100, Luis de Bethencourt wrote:
+> Fix a smatch warning:
+> drivers/scsi/mvsas/mv_sas.c:740 mvs_task_prep() warn: curly braces
+> intended?
+>=20
+> The code is correct, the indention is misleading. When the device is
+> not
+> ready we want to return SAS_PHY_DOWN. But current indentation makes
+> it
+> look like we only do so in the else branch of if (mvi_dev).
+>=20
+> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
 > ---
-> This isn't a complete fix because we still need more range checking in
-> all the other places which use type_ptr like ses_get_page2_descriptor().
-> We record len as page1_len but we don't use it anywhere...
-> 
-> I wonder if someone knew the expected format we could make reject too
-> short lengths earlier.
-> 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index dcb0d76..39f69b0 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -641,7 +641,7 @@ static int ses_intf_add(struct device *cdev,
->  	/* begin at the enclosure descriptor */
->  	type_ptr = buf + 8;
->  	/* skip all the enclosure descriptors */
-> -	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
-> +	for (i = 0; i < num_enclosures && type_ptr + 4 < buf + len; i++) {
->  		types += type_ptr[2];
->  		type_ptr += type_ptr[3] + 4;
+>=20
+> Hi,
+>=20
+> The aim of this patch is to improve code readability, and at the same
+> time
+> silence the smatch warning.
+>=20
+> Thanks for the review,
+> Luis
+>=20
+> =C2=A0drivers/scsi/mvsas/mv_sas.c | 4 ++--
+> =C2=A01 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/mvsas/mv_sas.c
+> b/drivers/scsi/mvsas/mv_sas.c
+> index 454536c..b1c5dec 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -737,8 +737,8 @@ static int mvs_task_prep(struct sas_task *task,
+> struct mvs_info *mvi, int is_tmf
+> =C2=A0			mv_dprintk("device %016llx not ready.\n",
+> =C2=A0				SAS_ADDR(dev->sas_addr));
+> =C2=A0
+> -			rc =3D SAS_PHY_DOWN;
+> -			return rc;
+> +		rc =3D SAS_PHY_DOWN;
+> +		return rc;
+> =C2=A0	}
+> =C2=A0	tei.port =3D dev->port->lldd_port;
+> =C2=A0	if (tei.port && !tei.port->port_attached && !tmf) {
 
-
-why "type_ptr + 4 < buf + len" here ? You're using type_ptr[3] only,
-so it's either "type_ptr + 4 <= buf + len" or "type_ptr + 3 < buf + len".
-
-> @@ -649,7 +649,7 @@ static int ses_intf_add(struct device *cdev,
->  	ses_dev->page1_types = type_ptr;
->  	ses_dev->page1_num_types = types;
->  
-> -	for (i = 0; i < types && type_ptr < buf + len; i++, type_ptr += 4) {
-> +	for (i = 0; i < types && type_ptr + 2 < buf + len; i++, type_ptr += 4) {
->  		if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
->  		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
->  			components += type_ptr[1];
-
-Same here where I'd expect "type_ptr + 1 < buf + len"
-
-Regards,
-Willy
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
