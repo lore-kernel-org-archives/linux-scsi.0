@@ -1,64 +1,41 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v1 16/17] scsi: ufs: add delay before putting UFS rails in
- low power modes
-Date: Thu, 22 Oct 2015 01:11:39 +0900
-Message-ID: <CAC5umyj+gQYuLR1v73Dq78vx0NEreMDkmWe0Tk9UBuv8uc5AQw@mail.gmail.com>
-References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-	<1442155977-7686-17-git-send-email-ygardi@codeaurora.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 34/34] cxlflash: Fix to escalate to LINK_RESET on login
+ timeout
+Date: Wed, 21 Oct 2015 14:38:36 -0500
+Message-ID: <5627E9BC.3080606@linux.vnet.ibm.com>
+References: <1443714773-9176-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1443715132-26119-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442155977-7686-17-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:47500 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755629AbbJUTim (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2015 15:38:42 -0400
+Received: from localhost
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 21 Oct 2015 15:38:42 -0400
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8284DC90043
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2015 15:26:50 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9LJcdTU59179120
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2015 19:38:39 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9LJcb02021477
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2015 15:38:38 -0400
+In-Reply-To: <1443715132-26119-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Tomas Henzl <thenzl@redhat.com>, David Laight <David.Laight@ACULAB.COM>
+Cc: Michael Neuling <mikey@neuling.org>, linuxppc-dev@lists.ozlabs.org, Manoj Kumar <manoj@linux.vnet.ibm.com>
 
-2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
-> We put the UFS device in sleep state & UFS link in hibern8 state during
-> runtime suspaned. After this we put all the UFS rails in low power
-> modes immediately but it seems some devices may still draw more than
-> sleep current from UFS rails (especially from VCCQ rail) atleast for
-> 500us.
-> To avoid this situation, this change adds 2ms delay before putting
-> these UFS rails in LPM mode.
->
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->
-> ---
->  drivers/scsi/ufs/ufshcd.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 20b4c0e..786df28 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5694,6 +5694,15 @@ out:
->  static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
->  {
->         /*
-> +        * It seems some UFS devices may keep drawing more than sleep current
-> +        * (atleast for 500us) from UFS rails (especially from VCCQ rail).
-> +        * To avoid this situation, add 2ms delay before putting these UFS
-> +        * rails in LPM mode.
-> +        */
-> +       if (!ufshcd_is_link_active(hba))
-> +               usleep_range(2000, 2100);
-> +
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 
-Shouldn't we define dev_quirks for this?
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-> +       /*
->          * If UFS device is either in UFS_Sleep turn off VCC rail to save some
->          * power.
->          *
-> --
-> 1.8.5.2
->
-> --
-> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
