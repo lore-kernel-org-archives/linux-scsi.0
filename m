@@ -1,60 +1,116 @@
-From: Don Brace <Don.Brace@pmcs.com>
-Subject: RE: [PATCH] hpsa: add in sas transport
-Date: Tue, 20 Oct 2015 20:07:55 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB7CD46B3E@BBYEXM02.pmc-sierra.internal>
-References: <20150929221748.6433.53593.stgit@brunhilda>
- <20150929222154.6433.60590.stgit@brunhilda> <560B941B.8000802@suse.de>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH for v4.3-rc] scsi_dh: fix use-after-free when removing
+ scsi device
+Date: Wed, 21 Oct 2015 00:36:34 +0000
+Message-ID: <20151021003633.GA4595@xzibit.linux.bs1.fc.nec.co.jp>
+References: <20151006043256.GA8193@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:57907 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751654AbbJTUH4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Oct 2015 16:07:56 -0400
-In-Reply-To: <560B941B.8000802@suse.de>
-Content-Language: en-US
+Received: from TYO201.gate.nec.co.jp ([210.143.35.51]:36650 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457AbbJUAhz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2015 20:37:55 -0400
+In-Reply-To: <20151006043256.GA8193@xzibit.linux.bs1.fc.nec.co.jp>
+Content-Language: ja-JP
+Content-ID: <888DEFC076B8DA419D222244217D5226@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
-aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDMwLCAyMDE1
-IDI6NTAgQU0NCj4gVG86IERvbiBCcmFjZTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4g
-U3ViamVjdDogUmU6IFtQQVRDSF0gaHBzYTogYWRkIGluIHNhcyB0cmFuc3BvcnQNCj4gDQo+IE9u
-IDA5LzMwLzIwMTUgMTI6MjEgQU0sIERvbiBCcmFjZSB3cm90ZToNCj4gPiBGcm9tOiBLZXZpbiBC
-YXJuZXR0IDxrZXZpbi5iYXJuZXR0QHBtY3MuY29tPg0KPiA+DQo+ID4gY3VzdG9tZXJzIHdhbnQg
-bHNzY3NpIC10IHRvIHNob3cgc2FzIGFkZHJlc3NlcyB3aGVuDQo+ID4gZW51bWVyYXRpbmcgc2Fz
-IGRldmljZXMuIFRoZSBzYXMgYWRkcmVzc2VzIGFyZSB1c2VkDQo+ID4gbWFpbmx5IHRvIGxpZ2h0
-IGRyaXZlIExFRHMgZm9yIGxvY2F0aW9uLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogRG9uIEJy
-YWNlIDxkb24uYnJhY2VAcG1jcy5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNh
-LmMgICAgIHwgIDcwNA0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KystLS0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5oICAgICB8ICAgMzcgKysNCj4gPiAgZHJp
-dmVycy9zY3NpL2hwc2FfY21kLmggfCAgIDE0ICsNCj4gPiAgMyBmaWxlcyBjaGFuZ2VkLCA2Nzcg
-aW5zZXJ0aW9ucygrKSwgNzggZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBpbmRleCAzYjM1ZGUw
-Li5hZTgxMWE3IDEwMDY0NA0KPiA+ICAJLyogTm90aWZ5IHNjc2kgbWlkIGxheWVyIG9mIGFueSBh
-ZGRlZCBkZXZpY2VzICovDQo+ID4gIAlmb3IgKGkgPSAwOyBpIDwgbmFkZGVkOyBpKyspIHsNCj4g
-PiAtCQlpZiAoIShhZGRlZFtpXS0+ZXhwb3NlX3N0YXRlICYgSFBTQV9TQ1NJX0FERCkpDQo+ID4g
-KwkJaWYgKCEoYWRkZWRbaV0tPmV4cG9zZV9kZXZpY2UpKQ0KPiA+ICAJCQljb250aW51ZTsNCj4g
-PiAtCQlpZiAoc2NzaV9hZGRfZGV2aWNlKHNoLCBhZGRlZFtpXS0+YnVzLA0KPiA+IC0JCQlhZGRl
-ZFtpXS0+dGFyZ2V0LCBhZGRlZFtpXS0+bHVuKSA9PSAwKQ0KPiA+ICsJCWlmIChocHNhX2FkZF9k
-ZXZpY2UoaCwgYWRkZWRbaV0pID09IDApDQo+ID4gIAkJCWNvbnRpbnVlOw0KPiA+ICAJCWhwc2Ff
-c2hvd19kZXZfbXNnKEtFUk5fV0FSTklORywgaCwgYWRkZWRbaV0sDQo+ID4gIAkJCQkJImFkZGl0
-aW9uIGZhaWxlZCwgZGV2aWNlIG5vdCBhZGRlZC4iKTsNCj4gU2lnaC4gSGVyZSB3ZSBnbyBhZ2Fp
-bi4NCj4gDQo+IEkndmUgcHJvYmFibHkgYXNrZWQgeW91IChvciBNaWtlIE1pbGxlciA6LSkgYWJv
-dXQgdGhpcyBzZXZlcmFsIHRpbWVzDQo+IG5vdywgYnV0IGNvdWxkbid0IHlvdSB1c2UgdGhlIF9y
-ZWFsXyBMVU4gYWRkcmVzc2VzPw0KPiANCj4gRXNwZWNpYWxseSBhcyB5b3UncmUgbm93IGV4cG9z
-aW5nICdyZWFsJyBkZXZpY2VzLCB3aGVyZSBpcyB0aGUgcG9pbnQNCj4gb2YgY3JlYXRpbmcgYW4g
-aW50ZXJuYWwgTFVOIG1hcHBpbmcgdGFibGU/DQo+IA0KPiBJZiB5b3Ugd2VyZSBleHBvc2UgdGhl
-IGRldmljZXMgd2l0aCB0aGUgYWN0dWFsIExVTiBhZGRyZXNzIChieSBlZw0KPiBhcnJhbmdpbmcg
-dGhlIHRhcmdldC9SQUlEIGNvbnRyb2xsZXIgb24gYnVzICcwJywgdGhlIFJBSUQgZGV2aWNlcyBv
-bg0KPiBidXMgJzEnLCBhbmQgdGhlIGV4cG9zZWQgZGV2aWNlcyBvbiBidXMgJzInKSB5b3UgY291
-bGQgcmVtb3ZlIHRoZQ0KPiBpbnRlcm5hbCBMVU4gbWFwcGluZyB0YWJsZSBhbmQgcXVpdGUgc29t
-ZSBjb21wbGV4aXR5IHdvdWxkIGdvIGF3YXkgLi4uDQo+IA0KDQpUaGlzIGNhbiBiZSBkb25lLg0K
-DQpIb3dldmVyLCBhdCB0aGlzIHBvaW50LCBJIGRvIG5vdCB3YW50IHRvIGNoYW5nZSBocHNhIHdp
-dGhvdXQgbW9yZSB0ZXN0aW5nLiANCkknbGwgbWFrZSBhbm90aGVyIHBhdGNoIGFuZCBzZW5kIGl0
-IHVwIGFmdGVyIGl0IGhhcyBhIGNoYW5jZSB0byBiZSB0ZXN0ZWQgaW4gb3VyIGxhYnMuDQpIb3Bl
-IHRoaXMgaXMgT0suDQoNCkkgc3BsaXQgb3V0IHRoZSBvdGhlciBjaGFuZ2VzIHRvIHNlcGFyYXRl
-IHBhdGNoZXMgYXMgeW91IHJlY29tbWVuZGVkLg0K
+On 10/06/15 13:32, Junichi Nomura wrote:
+> The commit 1bab0de0274f ("dm-mpath, scsi_dh: don't let dm detach device
+> handlers") removed reference counting of attached scsi device handler.
+> As a result, handler data is freed immediately via scsi_dh->detach()
+> in the context of scsi_remove_device() where activation request can be
+> still in flight.
+> 
+> This patch moves scsi_dh_handler_detach() to sdev releasing function,
+> scsi_device_dev_release_usercontext(), at that point the device
+> is already in quiesced state.
+> 
+> Fixes: 1bab0de0274f ("dm-mpath, scsi_dh: don't let dm detach device handlers")
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> Acked-by: Christoph Hellwig <hch@lst.de>
+
+Hello James,
+
+could we get this regression fix before 4.3 is released?
+
+Problem happens like this:
+
+  dm-multipath                   sysadmin
+  ------------------------------------------------------------------
+  scsi_dh_activate()
+    [start using handler data]
+                                 echo 1 > /sys/block/sdX/device/delete
+                                   scsi_remove_device()
+                                     scsi_dh_remove_device()
+                                       scsi_dh->detach()
+                                         kfree(handler data)
+    [still using freed handler data]
+    [finish using handler data]
+
+and can result in crash or data corruption.
+
+> ---
+>  drivers/scsi/scsi_dh.c    | 6 +++++-
+>  drivers/scsi/scsi_priv.h  | 2 ++
+>  drivers/scsi/scsi_sysfs.c | 2 ++
+>  3 files changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index edb044a..19bf9db 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -232,10 +232,14 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+>  	return err;
+>  }
+>  
+> -void scsi_dh_remove_device(struct scsi_device *sdev)
+> +void scsi_dh_release_device(struct scsi_device *sdev)
+>  {
+>  	if (sdev->handler)
+>  		scsi_dh_handler_detach(sdev);
+> +}
+> +
+> +void scsi_dh_remove_device(struct scsi_device *sdev)
+> +{
+>  	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+>  }
+>  
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 644bb73..4d01cdb 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -173,9 +173,11 @@ extern struct async_domain scsi_sd_probe_domain;
+>  /* scsi_dh.c */
+>  #ifdef CONFIG_SCSI_DH
+>  int scsi_dh_add_device(struct scsi_device *sdev);
+> +void scsi_dh_release_device(struct scsi_device *sdev);
+>  void scsi_dh_remove_device(struct scsi_device *sdev);
+>  #else
+>  static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
+> +static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
+>  static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
+>  #endif
+>  
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index b333389..dff8faf 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -399,6 +399,8 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  
+>  	sdev = container_of(work, struct scsi_device, ew.work);
+>  
+> +	scsi_dh_release_device(sdev);
+> +
+>  	parent = sdev->sdev_gendev.parent;
+>  
+>  	spin_lock_irqsave(sdev->host->host_lock, flags);
+
+
+-- 
+Jun'ichi Nomura, NEC Corporation
