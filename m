@@ -1,32 +1,73 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2] scsi: Export SCSI Inquiry data to sysfs
-Date: Wed, 21 Oct 2015 08:32:15 +0200
-Message-ID: <5627316F.9090706@suse.de>
-References: <1439537960-25085-1-git-send-email-jthumshirn@suse.de> <mqdh9mjyijh.fsf@c203.arch.suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in
+ mvs_slot_task_free
+Date: Wed, 21 Oct 2015 09:33:46 +0200
+Message-ID: <1445412826.16404.12.camel@suse.de>
+References: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
+	 <CAOE4rSz=U+7WqiLz1fwyeBDkijkkfRPD=uY_twSVy9PWfDudww@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mqdh9mjyijh.fsf@c203.arch.suse.de>
+In-Reply-To: <CAOE4rSz=U+7WqiLz1fwyeBDkijkkfRPD=uY_twSVy9PWfDudww@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>
+To: =?UTF-8?Q?D=C4=81vis_Mos=C4=81ns?= <davispuh@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/24/2015 04:54 PM, Johannes Thumshirn wrote:
+On Tue, 2015-10-20 at 20:41 +0300, D=C4=81vis Mos=C4=81ns wrote:
+> 2015-08-21 7:29 GMT+03:00 D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>=
+:
+> > When pci_pool_alloc fails in mvs_task_prep then task->lldd_task
+> > stays
+> > NULL but it's later used in mvs_abort_task as slot which is passed
+> > to mvs_slot_task_free causing NULL pointer dereference.
+> >=20
+> > Just return from mvs_slot_task_free when passed with NULL slot.
+> >=20
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101891
+> > Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
+> > ---
+> > =C2=A0drivers/scsi/mvsas/mv_sas.c | 2 ++
+> > =C2=A01 file changed, 2 insertions(+)
+> >=20
+> > diff --git a/drivers/scsi/mvsas/mv_sas.c
+> > b/drivers/scsi/mvsas/mv_sas.c
+> > index 454536c..9c78074 100644
+> > --- a/drivers/scsi/mvsas/mv_sas.c
+> > +++ b/drivers/scsi/mvsas/mv_sas.c
+> > @@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi,
+> > u32 rx_desc)
+> > =C2=A0static void mvs_slot_task_free(struct mvs_info *mvi, struct
+> > sas_task *task,
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0struct mvs_slot_info *slot, u32 slot_idx)
+> > =C2=A0{
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!slot)
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0return;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!slot->task)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0return;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!sas_protocol_a=
+ta(task->task_proto))
+> > --
+> > 2.5.0
+> >=20
 >=20
-> Ping?
->=20
-I really would like to see them included, as with this we can move
-the udev rules over to not issuing any SG_IO commands during event
-processing. This helps a lot for multipath failover scenarios.
+> Can this get merged?
+> So far since august it have saved me from several kernel crashes.
 
-Cheers,
+If it saved you from several crashes, it probably should be tagged for
+stable, shouldn't it?
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+=20
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=C2=A0=C2=A0http://vger.kernel.org/majordomo-in=
+fo.html
