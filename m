@@ -1,54 +1,52 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v1 02/17] scsi: ufs: add option to change default UFS
- power management level
-Date: Thu, 22 Oct 2015 00:51:29 +0900
-Message-ID: <CAC5umygzaoA+Ja0Ji0UKzmKkcu5Q4W_R1xggefqtgaU2xxFJSA@mail.gmail.com>
+Subject: Re: [PATCH v1 06/17] scsi :ufs: verify hba controller hce reg value
+Date: Thu, 22 Oct 2015 00:53:38 +0900
+Message-ID: <CAC5umygqzg1vBhnF8cB3Z3ncVSTH7VWF7n2mQ2gZAubiORoM7g@mail.gmail.com>
 References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-	<1442155977-7686-3-git-send-email-ygardi@codeaurora.org>
+	<1442155977-7686-7-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1442155977-7686-3-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, open li
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34005 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755510AbbJUPxj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2015 11:53:39 -0400
+In-Reply-To: <1442155977-7686-7-git-send-email-ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 
 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
-> UFS device and link can be put in multiple different low power modes
-> hence UFS driver supports multiple different low power modes.
-> By default UFS driver selects the default (optimal) low power mode
-> (which gives moderate power savings and have relatively less enter
-> and exit latencies) but we might have to tune this default power
-> mode for different chipset platforms to meet the low power
-> requirements/goals. Hence this patch adds option to change default
-> UFS low power mode (level).
+> Sometimes due to hw issues it takes some time to the
+> host controller register to update. In order to verify the register
+> has updated, a polling is done until its value is set.
 >
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> In addition the functions ufshcd_hba_stop() and
+> ufshcd_wait_for_register() was updated with an additional input
+> parameter, indicating the timeout between reads will
+> be done by sleeping or spinning the cpu.
+>
+> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 54 ++++++++++++++++++++++++++++-------------------
+>  drivers/scsi/ufs/ufshcd.h | 12 +++--------
+>  2 files changed, 35 insertions(+), 31 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 6171da8..e5a876c 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -267,11 +267,12 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+>   * @val - wait condition
+>   * @interval_us - polling interval in microsecs
+>   * @timeout_ms - timeout in millisecs
+> - *
+> + * @can_sleep - perform sleep or just spin
+>   * Returns -ETIMEDOUT on error, zero on success
+>   */
 
-...
-
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 3196197..1d26e49 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1195,11 +1195,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->                 if (res) {
->                         host->dev_ref_clk_ctrl_mmio =
->                                         devm_ioremap_resource(dev, res);
-> -                       if (IS_ERR(host->dev_ref_clk_ctrl_mmio)) {
-> -                               dev_warn(dev,
-> -                                       "%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
-> +                       if (IS_ERR((__force void const *)
-> +                                  host->dev_ref_clk_ctrl_mmio)) {
-> +                               dev_warn(dev, "%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
->                                         __func__,
-> -                                       PTR_ERR(host->dev_ref_clk_ctrl_mmio));
-> +                                       PTR_ERR((__force void const *)
-> +                                                host->dev_ref_clk_ctrl_mmio));
->                                 host->dev_ref_clk_ctrl_mmio = NULL;
->                         }
->                         host->dev_ref_clk_en_mask = BIT(5);
-
-This change looks unrelated.  Should this be belong to other patch?
+We usually put a blank line between @argument description and
+return value description.
