@@ -1,126 +1,58 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] SCSI: mvsas: Fix NULL pointer dereference in
- mvs_slot_task_free
-Date: Wed, 21 Oct 2015 16:29:01 +0200
-Message-ID: <1445437741.16404.17.camel@suse.de>
-References: <1440131362-18605-1-git-send-email-davispuh@gmail.com>
-	 <CAOE4rSz=U+7WqiLz1fwyeBDkijkkfRPD=uY_twSVy9PWfDudww@mail.gmail.com>
-	 <1445412826.16404.12.camel@suse.de>
-	 <CAOE4rSx_UW-tDa+1PNBigbmnWJLDqF2B2bJ=_9hYH8ApXtXH4w@mail.gmail.com>
-	 <1445435228.16404.15.camel@suse.de>
-	 <CAOE4rSznxS7h4vqY2THG7Mfv0QU9gRoiyMjd5B51sakYBvyT0g@mail.gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v3 03/15] scsi: ufs: verify command tag validity
+Date: Wed, 21 Oct 2015 23:48:31 +0900
+Message-ID: <CAC5umyjwgKvyZpMsk7J1n5M+G+bjTh+rEUNGZcDgnSD2DZG1NQ@mail.gmail.com>
+References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
+	<1441188795-4600-4-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOE4rSznxS7h4vqY2THG7Mfv0QU9gRoiyMjd5B51sakYBvyT0g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?UTF-8?Q?D=C4=81vis_Mos=C4=81ns?= <davispuh@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1441188795-4600-4-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Rob Herring <robherring2@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-10-21 at 17:26 +0300, D=C4=81vis Mos=C4=81ns wrote:
-> 2015-10-21 16:47 GMT+03:00 Johannes Thumshirn <jthumshirn@suse.de>:
-> > On Wed, 2015-10-21 at 16:18 +0300, D=C4=81vis Mos=C4=81ns wrote:
-> > > 2015-10-21 10:33 GMT+03:00 Johannes Thumshirn <jthumshirn@suse.de
-> > > >:
-> > > > On Tue, 2015-10-20 at 20:41 +0300, D=C4=81vis Mos=C4=81ns wrote=
-:
-> > > > > 2015-08-21 7:29 GMT+03:00 D=C4=81vis Mos=C4=81ns <davispuh@gm=
-ail.com>:
-> > > > > > When pci_pool_alloc fails in mvs_task_prep then task-
-> > > > > > >lldd_task
-> > > > > > stays
-> > > > > > NULL but it's later used in mvs_abort_task as slot which is
-> > > > > > passed
-> > > > > > to mvs_slot_task_free causing NULL pointer dereference.
-> > > > > >=20
-> > > > > > Just return from mvs_slot_task_free when passed with NULL
-> > > > > > slot.
-> > > > > >=20
-> > > > > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D101=
-89
-> > > > > > 1
-> > > > > > Signed-off-by: D=C4=81vis Mos=C4=81ns <davispuh@gmail.com>
-> > > > > > ---
-> > > > > > =C2=A0drivers/scsi/mvsas/mv_sas.c | 2 ++
-> > > > > > =C2=A01 file changed, 2 insertions(+)
-> > > > > >=20
-> > > > > > diff --git a/drivers/scsi/mvsas/mv_sas.c
-> > > > > > b/drivers/scsi/mvsas/mv_sas.c
-> > > > > > index 454536c..9c78074 100644
-> > > > > > --- a/drivers/scsi/mvsas/mv_sas.c
-> > > > > > +++ b/drivers/scsi/mvsas/mv_sas.c
-> > > > > > @@ -887,6 +887,8 @@ static void mvs_slot_free(struct
-> > > > > > mvs_info
-> > > > > > *mvi,
-> > > > > > u32 rx_desc)
-> > > > > > =C2=A0static void mvs_slot_task_free(struct mvs_info *mvi,
-> > > > > > struct
-> > > > > > sas_task *task,
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0struct mvs_slot_info *slot, u32
-> > > > > > slot_idx)
-> > > > > > =C2=A0{
-> > > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!slot)
-> > > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return;
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!slot->=
-task)
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return;
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!sas_pr=
-otocol_ata(task->task_proto))
-> > > > > > --
-> > > > > > 2.5.0
-> > > > > >=20
-> > > > >=20
-> > > > > Can this get merged?
-> > > > > So far since august it have saved me from several kernel
-> > > > > crashes.
-> > > >=20
-> > > > If it saved you from several crashes, it probably should be
-> > > > tagged
-> > > > for
-> > > > stable, shouldn't it?
-> > > >=20
-> > > > Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> > > >=20
-> > > >=20
-> > >=20
-> > > I don't really know how that works... this is my first patch so
-> > > I'm
-> > > not really concerned about in which version it gets in as long as
-> > > it
-> > > does.
-> > > I've been compiling kernel with this patch for these months so
-> > > for me
-> > > it
-> > > doesn't really make any difference.
-> >=20
-> > You can add
-> > Cc: stable@vger.kernel.org
-> > somewhere around your Signed-off-by
-> >=20
-> > Documentation/stable_kernel_rules.txt has all the process
-> > documentation.
->=20
-> Should I add it together with review tags too and resend patch or
-> reply to this
-> thread with it edited or just leave it like it is now and whoever
-> will see it
-> will add it himself?
+2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+> A race condition appear to exist between request completion when
+> scsi_done() is called to end the request and set the tag back to
+> -1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
+> handling which aborts the command and reuses it to request sense
+> data. Sending the request sense is done with tag which was set to -1
+> and so it is invalid.
+> Assert command tag passed from scsi layer is valid.
+>
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
+>  1 file changed, 22 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 2d3ebca..8860a57 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+>                 struct ufs_pa_layer_attr *desired_pwr_mode);
+>  static int ufshcd_change_power_mode(struct ufs_hba *hba,
+>                              struct ufs_pa_layer_attr *pwr_mode);
+> +static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
+> +{
+> +       return tag >= 0 && tag < hba->nutrs;
+> +}
+>
+>  static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+>  {
+> @@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>         hba = shost_priv(host);
+>
+>         tag = cmd->request->tag;
+> +       if (!ufshcd_valid_tag(hba, tag)) {
+> +               dev_err(hba->dev,
+> +                       "%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+> +                       __func__, tag, cmd, cmd->request);
+> +               BUG();
+> +       }
 
-good question, but I think James can help here.
-
->=20
->=20
-> also for stable requirements this line is a bit confusing
-> "It or an equivalent fix must already exist in Linus' tree
-> (upstream)."
->=20
-> but then later seems it's not requirement for Option 1
-
-yes, if you tag it with the Cc, it will get to stable review _after_ it
-is applied to Linus' tree
+Is it better to avoid BUG() by WARN_ON() and return if possible?
