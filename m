@@ -1,34 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v7 6/8] scsi: ufs: make the UFS variant a platform device
-Date: Thu, 22 Oct 2015 09:50:58 +0200
-Message-ID: <4607478.zVSfzXyPzA@wuerfel>
-References: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org> <1441205138-12664-7-git-send-email-ygardi@codeaurora.org> <2dce3d8d918e124eb29afa7a59607bca.squirrel@codeaurora.org>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: Re: [PATCH] scsi: wd719x: Remove use of macro DEFINE_PCI_DEVICE_TABLE
+Date: Thu, 22 Oct 2015 17:02:41 +0530
+Message-ID: <CAK-LDbLOn-tN=AVUkSCA=bXXd5aOj0gLSXWDLnV=GQLS7TyB7w@mail.gmail.com>
+References: <1445466207-23265-1-git-send-email-falakreyaz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <2dce3d8d918e124eb29afa7a59607bca.squirrel@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: subhashj@codeaurora.org
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, gbroner@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1445466207-23265-1-git-send-email-falakreyaz@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Muhammad Falak R Wani <falakreyaz@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thursday 22 October 2015 07:02:14 subhashj@codeaurora.org wrote:
-> >
-> >  Required properties:
-> > -- compatible        : compatible list, contains "jedec,ufs-1.1"
-> > +- compatible        : compatible list, contains "jedec,ufs-1.1" or
-> > +		      "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
-> 
-> Are we really using these "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
-> compatible string anywhere?
+On Thu, Oct 22, 2015 at 3:53 AM, Muhammad Falak R Wani
+<falakreyaz@gmail.com> wrote:
+> Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE with
+> the goal of getting rid of this macro completely, as this macro
+> is deprecated.
 
-We should list them in either case, but it could be clarified as:
+Duplicate of :https://lkml.org/lkml/2015/7/17/62
 
-compatible	: must contain "jedec,ufs-1.1", may also list one or more
-		  of the following:
-			"qcom,msm8994-ufshc"
-			"qcom,msm8996-ufshc"
-			"qcom,ufshc"
+> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
+> ---
+>  drivers/scsi/wd719x.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+> index e3da1a2..2a9da2e 100644
+> --- a/drivers/scsi/wd719x.c
+> +++ b/drivers/scsi/wd719x.c
+> @@ -962,7 +962,7 @@ static void wd719x_pci_remove(struct pci_dev *pdev)
+>         scsi_host_put(sh);
+>  }
+>
+> -static DEFINE_PCI_DEVICE_TABLE(wd719x_pci_table) = {
+> +static const struct pci_device_id wd719x_pci_table[] = {
+>         { PCI_DEVICE(PCI_VENDOR_ID_WD, 0x3296) },
+>         {}
+>  };
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-	Arnd
+
+
+-- 
+Vaishali
