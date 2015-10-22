@@ -1,52 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: wd719x: Use module_pci_driver
-Date: Thu, 22 Oct 2015 09:23:21 +0200
-Message-ID: <1445498601.16404.19.camel@suse.de>
-References: <1445467581-26377-1-git-send-email-falakreyaz@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v7 6/8] scsi: ufs: make the UFS variant a platform device
+Date: Thu, 22 Oct 2015 09:50:58 +0200
+Message-ID: <4607478.zVSfzXyPzA@wuerfel>
+References: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org> <1441205138-12664-7-git-send-email-ygardi@codeaurora.org> <2dce3d8d918e124eb29afa7a59607bca.squirrel@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445467581-26377-1-git-send-email-falakreyaz@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Muhammad Falak R Wani <falakreyaz@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Ondrej Zary <linux@rainbow-software.org>, Fida Mohammad <fmthoker@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <2dce3d8d918e124eb29afa7a59607bca.squirrel@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: subhashj@codeaurora.org
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, gbroner@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2015-10-22 at 04:16 +0530, Muhammad Falak R Wani wrote:
-> Remove boilerplate code by using macro module_pci_driver.
-> For drivers whose __init and __exit paths only register and
-> unregister to the pci API, it is preferred to use this macro.
->=20
-> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
-> ---
-> =C2=A0drivers/scsi/wd719x.c | 13 +------------
-> =C2=A01 file changed, 1 insertion(+), 12 deletions(-)
->=20
-> diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-> index 2a9da2e..6d3bce3 100644
-> --- a/drivers/scsi/wd719x.c
-> +++ b/drivers/scsi/wd719x.c
-> @@ -976,18 +976,7 @@ static struct pci_driver wd719x_pci_driver =3D {
-> =C2=A0	.remove =3D	wd719x_pci_remove,
-> =C2=A0};
-> =C2=A0
-> -static int __init wd719x_init(void)
-> -{
-> -	return pci_register_driver(&wd719x_pci_driver);
-> -}
-> -
-> -static void __exit wd719x_exit(void)
-> -{
-> -	pci_unregister_driver(&wd719x_pci_driver);
-> -}
-> -
-> -module_init(wd719x_init);
-> -module_exit(wd719x_exit);
-> +module_pci_driver(wd719x_pci_driver);
-> =C2=A0
-> =C2=A0MODULE_DESCRIPTION("Western Digital WD7193/7197/7296 SCSI drive=
-r");
-> =C2=A0MODULE_AUTHOR("Ondrej Zary, Aaron Dewell, Juergen Gaertner");
+On Thursday 22 October 2015 07:02:14 subhashj@codeaurora.org wrote:
+> >
+> >  Required properties:
+> > -- compatible        : compatible list, contains "jedec,ufs-1.1"
+> > +- compatible        : compatible list, contains "jedec,ufs-1.1" or
+> > +		      "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
+> 
+> Are we really using these "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
+> compatible string anywhere?
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+We should list them in either case, but it could be clarified as:
+
+compatible	: must contain "jedec,ufs-1.1", may also list one or more
+		  of the following:
+			"qcom,msm8994-ufshc"
+			"qcom,msm8996-ufshc"
+			"qcom,ufshc"
+
+	Arnd
