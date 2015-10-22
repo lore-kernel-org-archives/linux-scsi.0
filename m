@@ -1,16 +1,15 @@
 From: subhashj@codeaurora.org
-Subject: Re: [PATCH v7 3/8] scsi: ufs-qcom: update configuration option of
- SCSI_UFS_QCOM component
-Date: Thu, 22 Oct 2015 06:56:10 -0000
-Message-ID: <707ae57d27a4eb46a3c1a4cfd735ca03.squirrel@codeaurora.org>
+Subject: Re: [PATCH v7 4/8] add ufshcd_get_variant ufshcd_set_variant
+Date: Thu, 22 Oct 2015 06:57:12 -0000
+Message-ID: <ebfb6608a0dfd562ce5cc77d80677d26.squirrel@codeaurora.org>
 References: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org>
-    <1441205138-12664-4-git-send-email-ygardi@codeaurora.org>
+    <1441205138-12664-5-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1441205138-12664-4-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1441205138-12664-5-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
@@ -18,28 +17,210 @@ Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 
-> This change is required in order to be able to build the component
-> as a module.
->
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/ufs/ufs-qcom.c | 34 +++++++++++++++++-----------------
+>  drivers/scsi/ufs/ufshcd.h   | 21 +++++++++++++++++++++
+>  2 files changed, 38 insertions(+), 17 deletions(-)
 >
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e945383..5f45307 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -72,7 +72,7 @@ config SCSI_UFSHCD_PLATFORM
->  	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 6c23bbf..64c54b7 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -155,7 +155,7 @@ out:
 >
->  config SCSI_UFS_QCOM
-> -	bool "QCOM specific hooks to UFS controller platform driver"
-> +	tristate "QCOM specific hooks to UFS controller platform driver"
->  	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
->  	select PHY_QCOM_UFS
->  	help
+>  static int ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	u32 tx_lanes;
+>  	int err = 0;
+> @@ -211,7 +211,7 @@ static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
+>
+>  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int ret = 0;
+>  	bool is_rate_B = (UFS_QCOM_LIMIT_HS_RATE == PA_HS_MODE_B)
+> @@ -273,7 +273,7 @@ static void ufs_qcom_enable_hw_clk_gating(struct
+> ufs_hba *hba)
+>
+>  static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba, bool status)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	int err = 0;
+>
+>  	switch (status) {
+> @@ -307,7 +307,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba
+> *hba, bool status)
+>  static unsigned long
+>  ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear, u32 hs, u32 rate)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct ufs_clk_info *clki;
+>  	u32 core_clk_period_in_ns;
+>  	u32 tx_clk_cycles_per_us = 0;
+> @@ -448,7 +448,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba
+> *hba, bool status)
+>
+>  static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int ret = 0;
+>
+> @@ -479,7 +479,7 @@ out:
+>
+>  static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int err;
+>
+> @@ -621,7 +621,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba
+> *hba,
+>  				struct ufs_pa_layer_attr *dev_req_params)
+>  {
+>  	u32 val;
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	struct ufs_qcom_dev_params ufs_qcom_cap;
+>  	int ret = 0;
+> @@ -696,7 +696,7 @@ out:
+>
+>  static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major == 0x1)
+>  		return UFSHCI_VERSION_11;
+> @@ -715,7 +715,7 @@ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba
+> *hba)
+>   */
+>  static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major == 0x01) {
+>  		hba->quirks |= UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS
+> @@ -740,7 +740,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba
+> *hba)
+>
+>  static void ufs_qcom_set_caps(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major >= 0x2)
+>  		host->caps = UFS_QCOM_CAP_QUNIPRO;
+> @@ -811,7 +811,7 @@ static void ufs_qcom_get_speed_mode(struct
+> ufs_pa_layer_attr *p, char *result)
+>
+>  static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	int err = 0;
+>  	int vote = 0;
+>
+> @@ -866,7 +866,7 @@ show_ufs_to_mem_max_bus_bw(struct device *dev, struct
+> device_attribute *attr,
+>  			char *buf)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	return snprintf(buf, PAGE_SIZE, "%u\n",
+>  			host->bus_vote.is_max_bw_needed);
+> @@ -877,7 +877,7 @@ store_ufs_to_mem_max_bus_bw(struct device *dev, struct
+> device_attribute *attr,
+>  		const char *buf, size_t count)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	uint32_t value;
+>
+>  	if (!kstrtou32(buf, 0, &value)) {
+> @@ -954,7 +954,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	}
+>
+>  	host->hba = hba;
+> -	hba->priv = (void *)host;
+> +	ufshcd_set_variant(hba, host);
+>
+>  	host->generic_phy = devm_phy_get(dev, "ufsphy");
+>
+> @@ -1003,14 +1003,14 @@ out_unregister_bus:
+>  	phy_exit(host->generic_phy);
+>  out_host_free:
+>  	devm_kfree(dev, host);
+> -	hba->priv = NULL;
+> +	ufshcd_set_variant(hba, NULL);
+>  out:
+>  	return err;
+>  }
+>
+>  static void ufs_qcom_exit(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	ufs_qcom_disable_lane_clks(host);
+>  	phy_power_off(host->generic_phy);
+> @@ -1019,7 +1019,7 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+>  static
+>  void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct ufs_pa_layer_attr *dev_req_params = &host->dev_req_params;
+>
+>  	if (!dev_req_params)
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index c40a0e7..54e7afb 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -594,6 +594,27 @@ static inline void check_upiu_size(void)
+>  		GENERAL_UPIU_REQUEST_SIZE + QUERY_DESC_MAX_SIZE);
+>  }
+>
+> +/**
+> + * ufshcd_set_variant - set variant specific data to the hba
+> + * @hba - per adapter instance
+> + * @variant - pointer to variant specific data
+> + */
+> +static inline void ufshcd_set_variant(struct ufs_hba *hba, void *variant)
+> +{
+> +	BUG_ON(!hba);
+> +	hba->priv = variant;
+> +}
+> +
+> +/**
+> + * ufshcd_get_variant - get variant specific data from the hba
+> + * @hba - per adapter instance
+> + */
+> +static inline void *ufshcd_get_variant(struct ufs_hba *hba)
+> +{
+> +	BUG_ON(!hba);
+> +	return hba->priv;
+> +}
+> +
+>  extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+>  extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+>  extern int ufshcd_runtime_idle(struct ufs_hba *hba);
 > --
 > 1.8.5.2
 >
