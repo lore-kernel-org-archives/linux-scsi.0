@@ -1,36 +1,77 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v6 29/37] cxlflash: Fix to double the delay each time
-Date: Fri, 23 Oct 2015 15:57:40 +0200
-Message-ID: <562A3CD4.4010500@redhat.com>
+Subject: Re: [PATCH v6 30/37] cxlflash: Fix to avoid corrupting adapter fops
+Date: Fri, 23 Oct 2015 16:00:03 +0200
+Message-ID: <562A3D63.7020707@redhat.com>
 References: <1445458134-63197-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1445458530-59831-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1445458537-60298-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46774 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51059 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbbJWN5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Oct 2015 09:57:43 -0400
-In-Reply-To: <1445458530-59831-1-git-send-email-mrochs@linux.vnet.ibm.com>
+	id S1752531AbbJWOAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Oct 2015 10:00:07 -0400
+In-Reply-To: <1445458537-60298-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
 Cc: Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 
 On 21.10.2015 22:15, Matthew R. Ochs wrote:
-> From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+> The fops owned by the adapter can be corrupted in certain scenarios,
+> opening a window where certain fops are temporarily NULLed before being
+> reset to their proper value. This can potentially lead software to make
+> incorrect decisions, leaving the user with the inability to function as
+> intended.
 >
-> The operator used to double the master context response delay
-> is incorrect and does not result in delay doubling.
+> An example of this behavior can be observed when there are a number of
+> users with a high rate of turn around (attach to LUN, perform an I/O,
+> detach from LUN, repeat). Every so often a user is given a valid
+> context and adapter file descriptor, but the file associated with the
+> descriptor lacks the correct read permission bit (FMODE_CAN_READ) and
+> thus the read system call bails before calling the valid read fop.
 >
-> To fix, use a left shift instead of the XOR operator.
+> Background:
 >
-> Reported-by: Tomas Henzl <thenzl@redhat.com>
+> The fops is stored in the adapter structure to provide the ability to
+> lookup the adapter structure from within the fop handler. CXL services
+> use the file's private_data and at present, the CXL context does not
+> have a private section. In an effort to limit areas of the cxlflash
+> driver with code specific the superpipe function, a design choice was
+> made to keep the details of the fops situated away from the legacy
+> portions of the driver. This drove the behavior that the adapter fops
+> is set at the beginning of the disk attach ioctl handler when there
+> are no users present.
+>
+> The corruption that this fix remedies is due to the fact that the fops
+> is initially defaulted to values found within a static structure. When
+> the fops is handed down to the CXL services later in the attach path,
+> certain services are patched. The fops structure remains correct until
+> the user count drops to 0 and the fops is reset, triggering the process
+> to repeat again. The user counts are tightly coupled with the creation
+> and deletion of the user context. If multiple users perform a disk
+> attach at the same time, when the user count is currently 0, some users
+> can be in the middle of obtaining a file descriptor and have not yet
+> reached the context creation code that [in addition to creating the
+> context] increments the user count. Subsequent users coming in to
+> perform the attach see that the user count is still 0, and reinitialize
+> the fops, temporarily removing the patched fops. The users that are in
+> the middle obtaining their file descriptor may then receive an invalid
+> descriptor.
+>
+> The fix simply removes the user count altogether and moves the fops
+> initialization to probe time such that it is only performed one time
+> for the life of the adapter. In the future, if the CXL services adopt
+> a private member for their context, that could be used to store the
+> adapter structure reference and cxlflash could revert to a model that
+> does not require an embedded fops.
+>
 > Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 > Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 > Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 > Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
 
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
