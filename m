@@ -1,84 +1,36 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 05/15] scsi: ufs: increase fDeviceInit query response timeout
-Date: Fri, 23 Oct 2015 20:18:01 +0900
-Message-ID: <CAC5umyh6dvnDBm0Udw2pWY3GgJL0AdYw7F-f_JpJtuHurDvEFw@mail.gmail.com>
-References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-	<1441188795-4600-6-git-send-email-ygardi@codeaurora.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v6 11/37] cxlflash: Refine host/device attributes
+Date: Fri, 23 Oct 2015 15:33:15 +0200
+Message-ID: <562A371B.8050406@redhat.com>
+References: <1445458134-63197-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1445458359-33508-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:32798 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbbJWLSD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2015 07:18:03 -0400
-In-Reply-To: <1441188795-4600-6-git-send-email-ygardi@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56953 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974AbbJWNdU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Oct 2015 09:33:20 -0400
+In-Reply-To: <1445458359-33508-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Rob Herring <robherring2@gmail.com>, Jej B <James.Bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Brian King <brking@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Daniel Axtens <dja@ozlabs.au.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, David Laight <David.Laight@ACULAB.COM>
+Cc: Shane Seymour <shane.seymour@hp.com>, Michael Neuling <mikey@neuling.org>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 
-2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
-> fDeviceInit query response time for some devices is too long that default
-> query request timeout of 100ms may not be enough. Experiments show that
-> fDeviceInit response sometimes takes 500ms so to be on safer side this
-> change sets the timeout to 600ms. Without this change, we might
-> unnecessarily have to retry fDeviceInit query requests multiple times and
-> each query request timeout prints one error message.
+On 21.10.2015 22:12, Matthew R. Ochs wrote:
+> Implement the following suggestions and add two new attributes
+> to allow for debugging the port LUN table.
 >
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>  - use scnprintf() instead of snprintf()
+>  - use DEVICE_ATTR_RO and DEVICE_ATTR_RW
 >
-> ---
->  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e0b8755..573a8cb 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -58,6 +58,12 @@
->  #define QUERY_REQ_RETRIES 10
->  /* Query request timeout */
->  #define QUERY_REQ_TIMEOUT 30 /* msec */
-> +/*
-> + * Query request timeout for fDeviceInit flag
-> + * fDeviceInit query response time for some devices is too large that default
-> + * QUERY_REQ_TIMEOUT may not be enough for such devices.
-> + */
-> +#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
+> Suggested-by: Shane Seymour <shane.seymour@hp.com>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 
-How about just increasing QUERY_REQ_TIMEOUT from 30ms to 600ms
-instead of conditionally setting timeout depending on ufs flag?
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
->
->  /* Task management command timeout */
->  #define TM_CMD_TIMEOUT 100 /* msecs */
-> @@ -1651,6 +1657,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->         struct ufs_query_req *request = NULL;
->         struct ufs_query_res *response = NULL;
->         int err, index = 0, selector = 0;
-> +       int timeout = QUERY_REQ_TIMEOUT;
->
->         BUG_ON(!hba);
->
-> @@ -1683,7 +1690,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->                 goto out_unlock;
->         }
->
-> -       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-> +       if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
-> +               timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
-> +
-> +       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
->
->         if (err) {
->                 dev_err(hba->dev,
-> --
-> 1.8.5.2
->
-> --
-> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomas
+
