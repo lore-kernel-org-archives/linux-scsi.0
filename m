@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 09/21] hpsa: simplify check for device exposure
-Date: Sat, 24 Oct 2015 14:53:21 -0500
-Message-ID: <20151024195321.17127.62124.stgit@brunhilda>
+Subject: [PATCH 11/21] hpsa: add function is_logical_device
+Date: Sat, 24 Oct 2015 14:53:33 -0500
+Message-ID: <20151024195333.17127.91753.stgit@brunhilda>
 References: <20151024193306.17127.7819.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51339 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51385 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752336AbbJXT5D (ORCPT
+	by vger.kernel.org with ESMTP id S1752336AbbJXT5P (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Oct 2015 15:57:03 -0400
+	Sat, 24 Oct 2015 15:57:15 -0400
 In-Reply-To: <20151024193306.17127.7819.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,124 +20,86 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@pmcs.com>
 
-remove macros and cleanup device exposure checking
+simplify checking for logical/physical devices
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   25 +++++++++++--------------
- drivers/scsi/hpsa.h |    6 +-----
- 2 files changed, 12 insertions(+), 19 deletions(-)
+ drivers/scsi/hpsa.c |   19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ff34c8e..7d109bc 100644
+index 1598573..40770b8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -791,8 +791,7 @@ static ssize_t path_info_show(struct device *dev,
- 				PATH_STRING_LEN,
- 				"PORT: %.2s ",
- 				phys_connector);
--		if (hdev->devtype == TYPE_DISK &&
--			hdev->expose_state != HPSA_DO_NOT_EXPOSE) {
-+		if (hdev->devtype == TYPE_DISK && hdev->expose_device) {
- 			if (box == 0 || box == 0xFF) {
- 				output_len += snprintf(path[i] + output_len,
- 					PATH_STRING_LEN,
-@@ -1152,7 +1151,7 @@ static inline void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
- 				"RAID-?" : raid_label[dev->raid_level],
- 			dev->offload_config ? '+' : '-',
- 			dev->offload_enabled ? '+' : '-',
--			dev->expose_state);
-+			dev->expose_device);
- }
+@@ -617,6 +617,11 @@ static const char * const raid_label[] = { "0", "4", "1(+0)", "5", "5+1", "6",
+ #define HPSA_RAID_ADM	6	/* also used for RAID 1+0 ADM */
+ #define RAID_UNKNOWN (ARRAY_SIZE(raid_label) - 1)
  
- /* Add an entry into h->dev[] array. */
-@@ -1225,7 +1224,7 @@ lun_assigned:
- 	added[*nadded] = device;
- 	(*nadded)++;
- 	hpsa_show_dev_msg(__stringify(KERN_INFO), h, device,
--		device->expose_state & HPSA_SCSI_ADD ? "added" : "masked");
-+		device->expose_device ? "added" : "masked");
- 	device->offload_to_be_enabled = device->offload_enabled;
- 	device->offload_enabled = 0;
- 	return 0;
-@@ -1777,7 +1776,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	for (i = 0; i < nremoved; i++) {
- 		if (!removed[i])
++static inline bool is_logical_device(struct hpsa_scsi_dev_t *device)
++{
++	return !device->physical_device;
++}
++
+ static ssize_t raid_level_show(struct device *dev,
+ 	     struct device_attribute *attr, char *buf)
+ {
+@@ -637,7 +642,7 @@ static ssize_t raid_level_show(struct device *dev,
+ 	}
+ 
+ 	/* Is this even a logical drive? */
+-	if (!is_logical_dev_addr_mode(hdev->scsi3addr)) {
++	if (!is_logical_device(hdev)) {
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		l = snprintf(buf, PAGE_SIZE, "N/A\n");
+ 		return l;
+@@ -771,8 +776,8 @@ static ssize_t path_info_show(struct device *dev,
+ 				scsi_device_type(hdev->devtype));
+ 
+ 		if (is_ext_target(h, hdev) ||
+-			(hdev->devtype == TYPE_RAID) ||
+-			is_logical_dev_addr_mode(hdev->scsi3addr)) {
++			hdev->devtype == TYPE_RAID ||
++			is_logical_device(hdev)) {
+ 			output_len += snprintf(path[i] + output_len,
+ 						PATH_STRING_LEN, "%s\n",
+ 						active);
+@@ -1582,7 +1587,7 @@ static void hpsa_figure_phys_disk_ptrs(struct ctlr_info *h,
+ 		for (j = 0; j < ndevices; j++) {
+ 			if (dev[j]->devtype != TYPE_DISK)
+ 				continue;
+-			if (is_logical_dev_addr_mode(dev[j]->scsi3addr))
++			if (is_logical_device(dev[j]))
+ 				continue;
+ 			if (dev[j]->ioaccel_handle != dd[i].ioaccel_handle)
+ 				continue;
+@@ -1625,7 +1630,7 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
+ 	for (i = 0; i < ndevices; i++) {
+ 		if (dev[i]->devtype != TYPE_DISK)
  			continue;
--		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
-+		if (removed[i]->expose_device) {
- 			struct scsi_device *sdev =
- 				scsi_device_lookup(sh, removed[i]->bus,
- 					removed[i]->target, removed[i]->lun);
-@@ -1803,7 +1802,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	for (i = 0; i < nadded; i++) {
- 		if (!added[i])
+-		if (!is_logical_dev_addr_mode(dev[i]->scsi3addr))
++		if (!is_logical_device(dev[i]))
  			continue;
--		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
-+		if (!(added[i]->expose_device))
- 			continue;
- 		if (scsi_add_device(sh, added[i]->bus,
- 			added[i]->target, added[i]->lun) == 0)
-@@ -1852,7 +1851,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
- 		sdev_id(sdev), sdev->lun);
- 	if (likely(sd)) {
- 		atomic_set(&sd->ioaccel_cmds_out, 0);
--		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
-+		sdev->hostdata = sd->expose_device ? sd : NULL;
- 	} else
- 		sdev->hostdata = NULL;
- 	spin_unlock_irqrestore(&h->devlock, flags);
-@@ -1866,7 +1865,7 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
- 	int queue_depth;
  
- 	sd = sdev->hostdata;
--	sdev->no_uld_attach = !sd || !(sd->expose_state & HPSA_ULD_ATTACH);
-+	sdev->no_uld_attach = !sd || !sd->expose_device;
- 
- 	if (sd)
- 		queue_depth = sd->queue_depth != 0 ?
-@@ -3854,12 +3853,10 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 
- 		/* do not expose masked devices */
- 		if (MASKED_DEVICE(lunaddrbytes) &&
--			i < nphysicals + (raid_ctlr_position == 0)) {
--			this_device->expose_state = HPSA_DO_NOT_EXPOSE;
--		} else {
--			this_device->expose_state =
--					HPSA_SG_ATTACH | HPSA_ULD_ATTACH;
--		}
-+			i < nphysicals + (raid_ctlr_position == 0))
-+			this_device->expose_device = 0;
-+		else
-+			this_device->expose_device = 1;
- 
- 		switch (this_device->devtype) {
- 		case TYPE_ROM:
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index fb07b70..aab722a 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -37,6 +37,7 @@ struct hpsa_scsi_dev_t {
- 	int devtype;
- 	int bus, target, lun;		/* as presented to the OS */
- 	unsigned char scsi3addr[8];	/* as presented to the HW */
-+	u8 expose_device;
- #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
- 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
- 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
-@@ -75,11 +76,6 @@ struct hpsa_scsi_dev_t {
- 	struct hpsa_scsi_dev_t *phys_disk[RAID_MAP_MAX_ENTRIES];
- 	int nphysical_disks;
- 	int supports_aborts;
--#define HPSA_DO_NOT_EXPOSE	0x0
--#define HPSA_SG_ATTACH		0x1
--#define HPSA_ULD_ATTACH		0x2
--#define HPSA_SCSI_ADD		(HPSA_SG_ATTACH | HPSA_ULD_ATTACH)
--	u8 expose_state;
- };
- 
- struct reply_queue_buffer {
+ 		/*
+@@ -2228,7 +2233,7 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
+ 	 * the normal I/O path so the controller can handle whatever's
+ 	 * wrong.
+ 	 */
+-	if (is_logical_dev_addr_mode(dev->scsi3addr) &&
++	if (is_logical_device(dev) &&
+ 		c2->error_data.serv_response ==
+ 			IOACCEL2_SERV_RESPONSE_FAILURE) {
+ 		if (c2->error_data.status ==
+@@ -2348,7 +2353,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 		 * the normal I/O path so the controller can handle whatever's
+ 		 * wrong.
+ 		 */
+-		if (is_logical_dev_addr_mode(dev->scsi3addr)) {
++		if (is_logical_device(dev)) {
+ 			if (ei->CommandStatus == CMD_IOACCEL_DISABLED)
+ 				dev->offload_enabled = 0;
+ 			return hpsa_retry_cmd(h, cp);
 
