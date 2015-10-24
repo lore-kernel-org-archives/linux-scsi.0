@@ -1,111 +1,119 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 05/21] hpsa: fix hpsa_adjust_hpsa_scsi_table
-Date: Sat, 24 Oct 2015 14:52:56 -0500
-Message-ID: <20151024195256.17127.93962.stgit@brunhilda>
+Subject: [PATCH 06/21] hpsa: fix physical target reset
+Date: Sat, 24 Oct 2015 14:53:02 -0500
+Message-ID: <20151024195302.17127.78961.stgit@brunhilda>
 References: <20151024193306.17127.7819.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55222 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55245 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752336AbbJXT4i (ORCPT
+	by vger.kernel.org with ESMTP id S1752336AbbJXT4p (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Oct 2015 15:56:38 -0400
+	Sat, 24 Oct 2015 15:56:45 -0400
 In-Reply-To: <20151024193306.17127.7819.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-Fix a NULL pointer issue in the driver when devices are removed
-during a reset.
+From: Scott Teel <scott.teel@pmcs.com>
 
+Set reset type in device_reset_handler to do either
+logical unit reset for logical devices, or physical
+target reset, for physical devices.
+
+Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/block/cciss.h |    1 +
- drivers/scsi/hpsa.c   |   16 ++++++++++++++++
- drivers/scsi/hpsa.h   |    1 +
- 3 files changed, 18 insertions(+)
+ drivers/scsi/hpsa.c |   33 +++++++++++++++++++++++++++------
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index 7fda30e..036fb0f 100644
---- a/drivers/block/cciss.h
-+++ b/drivers/block/cciss.h
-@@ -155,6 +155,7 @@ struct ctlr_info
- 	size_t reply_pool_size;
- 	unsigned char reply_pool_wraparound;
- 	u32 *blockFetchTable;
-+	atomic_t reset_in_progress;
- };
- 
- /*  Defining the diffent access_methods
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3520d75..714bb76 100644
+index 714bb76..0d08682 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1656,6 +1656,11 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	int nadded, nremoved;
- 	struct Scsi_Host *sh = NULL;
+@@ -2728,9 +2728,8 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
  
-+	if (atomic_read(&h->reset_in_progress)) {
-+		h->drv_req_rescan = 1;
-+		return;
-+	}
+ 
+ 	/* fill_cmd can't fail here, no data buffer to map. */
+-	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
++	(void) fill_cmd(c, reset_type, h, NULL, 0, 0,
+ 			scsi3addr, TYPE_MSG);
+-	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to LUN reset */
+ 	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
+ 	if (rc) {
+ 		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
+@@ -5200,6 +5199,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	int rc;
+ 	struct ctlr_info *h;
+ 	struct hpsa_scsi_dev_t *dev;
++	u8 reset_type;
+ 	char msg[48];
+ 
+ 	/* find the controller to which the command to be aborted was sent */
+@@ -5238,15 +5238,22 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	if (is_hba_lunid(dev->scsi3addr))
+ 		return SUCCESS;
+ 
+-	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, "resetting");
++	if (is_logical_dev_addr_mode(dev->scsi3addr))
++		reset_type = HPSA_DEVICE_RESET_MSG;
++	else
++		reset_type = HPSA_PHYS_TARGET_RESET;
 +
- 	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
- 	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
++	sprintf(msg, "resetting %s",
++		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ");
  
-@@ -1764,8 +1769,14 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 		goto free_and_out;
+ 	atomic_set(&h->reset_in_progress, 1);
  
- 	sh = h->scsi_host;
-+	if (sh == NULL) {
-+		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
-+		return;
-+	}
- 	/* Notify scsi mid layer of any removed devices */
- 	for (i = 0; i < nremoved; i++) {
-+		if (!removed[i])
-+			continue;
- 		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
- 			struct scsi_device *sdev =
- 				scsi_device_lookup(sh, removed[i]->bus,
-@@ -1790,6 +1801,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 
- 	/* Notify scsi mid layer of any added devices */
- 	for (i = 0; i < nadded; i++) {
-+		if (!added[i])
-+			continue;
- 		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
- 			continue;
- 		if (scsi_add_device(sh, added[i]->bus,
-@@ -5227,12 +5240,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 
- 	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, "resetting");
- 
-+	atomic_set(&h->reset_in_progress, 1);
-+
  	/* send a reset to the SCSI LUN which the command was sent to */
- 	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+-	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
++	rc = hpsa_do_reset(h, dev, dev->scsi3addr, reset_type,
  			   DEFAULT_REPLY_QUEUE);
- 	snprintf(msg, sizeof(msg), "reset %s",
- 		 rc == 0 ? "completed successfully" : "failed");
+-	snprintf(msg, sizeof(msg), "reset %s",
+-		 rc == 0 ? "completed successfully" : "failed");
++	sprintf(msg, "reset %s %s",
++		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ",
++		rc == 0 ? "completed successfully" : "failed");
  	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, msg);
-+	atomic_set(&h->reset_in_progress, 0);
+ 	atomic_set(&h->reset_in_progress, 0);
  	return rc == 0 ? SUCCESS : FAILED;
- }
+@@ -6364,6 +6371,20 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 	} else if (cmd_type == TYPE_MSG) {
+ 		switch (cmd) {
  
++		case  HPSA_PHYS_TARGET_RESET:
++			c->Request.CDBLen = 16;
++			c->Request.type_attr_dir =
++				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_NONE);
++			c->Request.Timeout = 0; /* Don't time out */
++			memset(&c->Request.CDB[0], 0, sizeof(c->Request.CDB));
++			c->Request.CDB[0] = HPSA_RESET;
++			c->Request.CDB[1] = HPSA_TARGET_RESET_TYPE;
++			/* Physical target reset needs no control bytes 4-7*/
++			c->Request.CDB[4] = 0x00;
++			c->Request.CDB[5] = 0x00;
++			c->Request.CDB[6] = 0x00;
++			c->Request.CDB[7] = 0x00;
++			break;
+ 		case  HPSA_DEVICE_RESET_MSG:
+ 			c->Request.CDBLen = 16;
+ 			c->Request.type_attr_dir =
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 642c8ce..c7c1697 100644
+index c7c1697..fb07b70 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -271,6 +271,7 @@ struct ctlr_info {
- 	wait_queue_head_t abort_cmd_wait_queue;
- 	wait_queue_head_t event_sync_wait_queue;
- 	struct mutex reset_mutex;
-+	atomic_t reset_in_progress;
- };
+@@ -285,6 +285,7 @@ struct offline_device_entry {
+ #define HPSA_RESET_TYPE_BUS 0x01
+ #define HPSA_RESET_TYPE_TARGET 0x03
+ #define HPSA_RESET_TYPE_LUN 0x04
++#define HPSA_PHYS_TARGET_RESET 0x99 /* not defined by cciss spec */
+ #define HPSA_MSG_SEND_RETRY_LIMIT 10
+ #define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS (10000)
  
- struct offline_device_entry {
 
