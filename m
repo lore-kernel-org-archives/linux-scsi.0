@@ -1,59 +1,108 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 08/21] hpsa: correct ioaccel2 sg chain len
-Date: Sat, 24 Oct 2015 14:53:15 -0500
-Message-ID: <20151024195315.17127.3510.stgit@brunhilda>
+Subject: [PATCH 10/21] hpsa: simplify update scsi devices
+Date: Sat, 24 Oct 2015 14:53:27 -0500
+Message-ID: <20151024195327.17127.39786.stgit@brunhilda>
 References: <20151024193306.17127.7819.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51311 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752336AbbJXT45 (ORCPT
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55335 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752336AbbJXT5J (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Oct 2015 15:56:57 -0400
+	Sat, 24 Oct 2015 15:57:09 -0400
 In-Reply-To: <20151024193306.17127.7819.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
+From: Kevin Barnett <kevin.barnett@pmcs.com>
+
+remove repeated calculation that checks for physical
+or logical devices.
+
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c |   23 ++++++++++++++---------
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index d42063d..ff34c8e 100644
+index 7d109bc..1598573 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1974,7 +1974,7 @@ static int hpsa_map_ioaccel2_sg_chain_block(struct ctlr_info *h,
- 	u32 chain_size;
+@@ -3745,6 +3745,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	int ncurrent = 0;
+ 	int i, n_ext_target_devs, ndevs_to_allocate;
+ 	int raid_ctlr_position;
++	bool physical_device;
+ 	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
  
- 	chain_block = h->ioaccel2_cmd_sg_list[c->cmdindex];
--	chain_size = le32_to_cpu(cp->data_len);
-+	chain_size = le32_to_cpu(cp->sg[0].length);
- 	temp64 = pci_map_single(h->pdev, chain_block, chain_size,
- 				PCI_DMA_TODEVICE);
- 	if (dma_mapping_error(&h->pdev->dev, temp64)) {
-@@ -1995,7 +1995,7 @@ static void hpsa_unmap_ioaccel2_sg_chain_block(struct ctlr_info *h,
+ 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
+@@ -3805,16 +3806,17 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		int rc = 0;
+ 		int phys_dev_index = i - (raid_ctlr_position == 0);
  
- 	chain_sg = cp->sg;
- 	temp64 = le64_to_cpu(chain_sg->address);
--	chain_size = le32_to_cpu(cp->data_len);
-+	chain_size = le32_to_cpu(cp->sg[0].length);
- 	pci_unmap_single(h->pdev, temp64, chain_size, PCI_DMA_TODEVICE);
- }
++		physical_device = i < nphysicals + (raid_ctlr_position == 0);
++
+ 		/* Figure out where the LUN ID info is coming from */
+ 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
+ 			i, nphysicals, nlogicals, physdev_list, logdev_list);
  
-@@ -4308,6 +4308,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	/* fill in sg elements */
- 	if (use_sg > h->ioaccel_maxsg) {
- 		cp->sg_count = 1;
-+		cp->sg[0].length = cpu_to_le32(use_sg * sizeof(cp->sg[0]));
- 		if (hpsa_map_ioaccel2_sg_chain_block(h, cp, c)) {
- 			atomic_dec(&phys_disk->ioaccel_cmds_out);
- 			scsi_dma_unmap(cmd);
+ 		/* skip masked non-disk devices */
+-		if (MASKED_DEVICE(lunaddrbytes))
+-			if (i < nphysicals + (raid_ctlr_position == 0) &&
+-				(physdev_list->
+-				LUN[phys_dev_index].device_flags & 0x01))
+-				continue;
++		if (physical_device &&
++			MASKED_DEVICE(lunaddrbytes) &&
++			(physdev_list->LUN[phys_dev_index].device_flags & 0x01))
++			continue;
+ 
+ 		/* Get device type, vendor, model, device id */
+ 		rc = hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+@@ -3850,10 +3852,13 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		}
+ 
+ 		*this_device = *tmpdevice;
++		this_device->physical_device = physical_device;
+ 
+-		/* do not expose masked devices */
+-		if (MASKED_DEVICE(lunaddrbytes) &&
+-			i < nphysicals + (raid_ctlr_position == 0))
++		/*
++		 * Expose all devices except for physical devices that
++		 * are masked.
++		 */
++		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
+ 			this_device->expose_device = 0;
+ 		else
+ 			this_device->expose_device = 1;
+@@ -3871,7 +3876,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 				ncurrent++;
+ 			break;
+ 		case TYPE_DISK:
+-			if (i < nphysicals + (raid_ctlr_position == 0)) {
++			if (this_device->physical_device) {
+ 				/* The disk is in HBA mode. */
+ 				/* Never use RAID mapper in HBA mode. */
+ 				this_device->offload_enabled = 0;
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index aab722a..4248522 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -37,6 +37,7 @@ struct hpsa_scsi_dev_t {
+ 	int devtype;
+ 	int bus, target, lun;		/* as presented to the OS */
+ 	unsigned char scsi3addr[8];	/* as presented to the HW */
++	u8 physical_device;
+ 	u8 expose_device;
+ #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
+ 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
 
