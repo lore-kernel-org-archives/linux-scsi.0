@@ -1,17 +1,18 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 13/21] hpsa: refactor hpsa_figure_bus_target_lun
-Date: Sat, 24 Oct 2015 14:53:45 -0500
-Message-ID: <20151024195345.17127.66584.stgit@brunhilda>
+Subject: [PATCH 14/21] hpsa: move scsi_add_device and scsi_remove_device
+ calls to new function
+Date: Sat, 24 Oct 2015 14:53:51 -0500
+Message-ID: <20151024195351.17127.32431.stgit@brunhilda>
 References: <20151024193306.17127.7819.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55416 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752206AbbJXT51 (ORCPT
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:51456 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752418AbbJXT5e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Oct 2015 15:57:27 -0400
+	Sat, 24 Oct 2015 15:57:34 -0400
 In-Reply-To: <20151024193306.17127.7819.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,87 +21,112 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@pmcs.com>
 
-setup for sas transport. Need to set the
-bus and target accordingly.
+preparation for adding the sas transport class
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   25 ++++++++++++-------------
- drivers/scsi/hpsa.h |    5 +++++
- 2 files changed, 17 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c |   62 ++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 36 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 54c816a..2c26f1c 100644
+index 2c26f1c..ce8b169 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3503,38 +3503,37 @@ static int is_ext_target(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
- 	return 0;
+@@ -1646,6 +1646,39 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
+ 	}
  }
  
--/* Helper function to assign bus, target, lun mapping of devices.
-- * Puts non-external target logical volumes on bus 0, external target logical
-- * volumes on bus 1, physical devices on bus 2. and the hba on bus 3.
-+/*
-+ * Helper function to assign bus, target, lun mapping of devices.
-  * Logical drive target and lun are assigned at this time, but
-  * physical device lun and target assignment are deferred (assigned
-  * in hpsa_find_target_lun, called by hpsa_scsi_add_entry.)
-- */
-+*/
- static void figure_bus_target_lun(struct ctlr_info *h,
- 	u8 *lunaddrbytes, struct hpsa_scsi_dev_t *device)
- {
--	u32 lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
-+	u32 lunid = get_unaligned_le32(lunaddrbytes);
- 
- 	if (!is_logical_dev_addr_mode(lunaddrbytes)) {
- 		/* physical device, target and lun filled in later */
- 		if (is_hba_lunid(lunaddrbytes))
--			hpsa_set_bus_target_lun(device, 3, 0, lunid & 0x3fff);
-+			hpsa_set_bus_target_lun(device,
-+					HPSA_HBA_BUS, 0, lunid & 0x3fff);
- 		else
- 			/* defer target, lun assignment for physical devices */
--			hpsa_set_bus_target_lun(device, 2, -1, -1);
-+			hpsa_set_bus_target_lun(device,
-+					HPSA_PHYSICAL_DEVICE_BUS, -1, -1);
- 		return;
- 	}
- 	/* It's a logical device */
- 	if (is_ext_target(h, device)) {
--		/* external target way, put logicals on bus 1
--		 * and match target/lun numbers box
--		 * reports, other smart array, bus 0, target 0, match lunid
--		 */
- 		hpsa_set_bus_target_lun(device,
--			1, (lunid >> 16) & 0x3fff, lunid & 0x00ff);
-+			HPSA_EXTERNAL_RAID_VOLUME_BUS, (lunid >> 16) & 0x3fff,
-+			lunid & 0x00ff);
- 		return;
- 	}
--	hpsa_set_bus_target_lun(device, 0, 0, lunid & 0x3fff);
-+	hpsa_set_bus_target_lun(device, HPSA_RAID_VOLUME_BUS,
-+				0, lunid & 0x3fff);
- }
- 
- /*
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 4248522..c50fc5d 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -367,6 +367,11 @@ struct offline_device_entry {
- #define IOACCEL2_INBOUND_POSTQ_64_LOW	0xd0
- #define IOACCEL2_INBOUND_POSTQ_64_HI	0xd4
- 
-+#define HPSA_PHYSICAL_DEVICE_BUS	0
-+#define HPSA_RAID_VOLUME_BUS		1
-+#define HPSA_EXTERNAL_RAID_VOLUME_BUS	2
-+#define HPSA_HBA_BUS			3
++static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
++{
++	int rc = 0;
 +
- /*
- 	Send the command to the hardware
- */
++	rc = scsi_add_device(h->scsi_host, device->bus,
++					device->target, device->lun);
++	return rc;
++}
++
++static void hpsa_remove_device(struct ctlr_info *h,
++			struct hpsa_scsi_dev_t *device)
++{
++	struct scsi_device *sdev = NULL;
++
++	sdev = scsi_device_lookup(h->scsi_host, device->bus,
++						device->target, device->lun);
++
++	if (sdev) {
++		scsi_remove_device(sdev);
++		scsi_device_put(sdev);
++	} else {
++		/*
++		 * We don't expect to get here.  Future commands
++		 * to this device will get a selection timeout as
++		 * if the device were gone.
++		 */
++		dev_warn(&h->pdev->dev,
++			"didn't find scsi %d:%d:%d:%d for removal.",
++			h->scsi_host->host_no, device->bus,
++			device->target, device->lun);
++	}
++}
++
+ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	struct hpsa_scsi_dev_t *sd[], int nsds)
+ {
+@@ -1658,7 +1691,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	unsigned long flags;
+ 	struct hpsa_scsi_dev_t **added, **removed;
+ 	int nadded, nremoved;
+-	struct Scsi_Host *sh = NULL;
+ 
+ 	if (atomic_read(&h->reset_in_progress)) {
+ 		h->drv_req_rescan = 1;
+@@ -1772,33 +1804,12 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 	if (hostno == -1 || !changes)
+ 		goto free_and_out;
+ 
+-	sh = h->scsi_host;
+-	if (sh == NULL) {
+-		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
+-		return;
+-	}
+ 	/* Notify scsi mid layer of any removed devices */
+ 	for (i = 0; i < nremoved; i++) {
+ 		if (!removed[i])
+ 			continue;
+-		if (removed[i]->expose_device) {
+-			struct scsi_device *sdev =
+-				scsi_device_lookup(sh, removed[i]->bus,
+-					removed[i]->target, removed[i]->lun);
+-			if (sdev != NULL) {
+-				scsi_remove_device(sdev);
+-				scsi_device_put(sdev);
+-			} else {
+-				/*
+-				 * We don't expect to get here.
+-				 * future cmds to this device will get selection
+-				 * timeout as if the device was gone.
+-				 */
+-				hpsa_show_dev_msg(__stringify(KERN_WARNING),
+-					h, removed[i],
+-					"didn't find device for removal.");
+-			}
+-		}
++		if (removed[i]->expose_device)
++			hpsa_remove_device(h, removed[i]);
+ 		kfree(removed[i]);
+ 		removed[i] = NULL;
+ 	}
+@@ -1809,8 +1820,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+ 			continue;
+ 		if (!(added[i]->expose_device))
+ 			continue;
+-		if (scsi_add_device(sh, added[i]->bus,
+-			added[i]->target, added[i]->lun) == 0)
++		if (hpsa_add_device(h, added[i]) == 0)
+ 			continue;
+ 		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, added[i],
+ 					"addition failed, device not added.");
 
