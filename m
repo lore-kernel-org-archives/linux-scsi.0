@@ -1,375 +1,478 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 5/8] scsi: ufs: creates wrapper functions for vops
-Date: Sun, 25 Oct 2015 12:50:47 +0200
-Message-ID: <1445770250-28802-6-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 6/8] scsi: ufs: make the UFS variant a platform device
+Date: Sun, 25 Oct 2015 12:50:48 +0200
+Message-ID: <1445770250-28802-7-git-send-email-ygardi@codeaurora.org>
 References: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:OPEN FIRMWARE AND FLATTENED
+	DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In order to simplify the code a set of wrapper functions is created
-to test and call each of the variant operations.
+This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
+a platform device.
+In order to do so a few additional changes are required:
+1. The ufshcd-pltfrm is no longer serves as a platform device.
+   Now it only serves as a group of platform APIs such as PM APIs
+   (runtime suspend/resume, system suspend/resume etc), parsers of
+   clocks, regulators and pm_levels from DT.
+2. What used to be the old platform "probe" is now "only"
+   a pltfrm_init() routine, that does exactly the same, but only
+   being called by the new probe function of the UFS variant.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs-qcom.c |   1 -
- drivers/scsi/ufs/ufshcd.c   | 104 +++++++++++++++++---------------------------
- drivers/scsi/ufs/ufshcd.h   |  98 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 137 insertions(+), 66 deletions(-)
+ Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 58 +++++++++++++
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 11 ++-
+ drivers/scsi/ufs/ufs-qcom.c                        | 62 +++++++++++++-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 98 ++++++----------------
+ drivers/scsi/ufs/ufshcd-pltfrm.h                   | 41 +++++++++
+ drivers/scsi/ufs/ufshcd.c                          | 10 +++
+ drivers/scsi/ufs/ufshcd.h                          |  1 +
+ 7 files changed, 207 insertions(+), 74 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
 
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+new file mode 100644
+index 0000000..070baf4
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+@@ -0,0 +1,58 @@
++* Qualcomm Technologies Inc Universal Flash Storage (UFS) PHY
++
++UFSPHY nodes are defined to describe on-chip UFS PHY hardware macro.
++Each UFS PHY node should have its own node.
++
++To bind UFS PHY with UFS host controller, the controller node should
++contain a phandle reference to UFS PHY node.
++
++Required properties:
++- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
++		      or "qcom,ufs-phy-qmp-14nm" according to the relevant phy in use.
++- reg               : should contain PHY register address space (mandatory),
++- reg-names         : indicates various resources passed to driver (via reg proptery) by name.
++                      Required "reg-names" is "phy_mem".
++- #phy-cells        : This property shall be set to 0
++- vdda-phy-supply   : phandle to main PHY supply for analog domain
++- vdda-pll-supply   : phandle to PHY PLL and Power-Gen block power supply
++- clocks	    : List of phandle and clock specifier pairs
++- clock-names       : List of clock input name strings sorted in the same
++		      order as the clocks property. "ref_clk_src", "ref_clk",
++		      "tx_iface_clk" & "rx_iface_clk" are mandatory but
++		      "ref_clk_parent" is optional
++
++Optional properties:
++- vdda-phy-max-microamp : specifies max. load that can be drawn from phy supply
++- vdda-pll-max-microamp : specifies max. load that can be drawn from pll supply
++- vddp-ref-clk-supply   : phandle to UFS device ref_clk pad power supply
++- vddp-ref-clk-max-microamp : specifies max. load that can be drawn from this supply
++- vddp-ref-clk-always-on : specifies if this supply needs to be kept always on
++
++Example:
++
++	ufsphy1: ufsphy@0xfc597000 {
++		compatible = "qcom,ufs-phy-qmp-20nm";
++		reg = <0xfc597000 0x800>;
++		reg-names = "phy_mem";
++		#phy-cells = <0>;
++		vdda-phy-supply = <&pma8084_l4>;
++		vdda-pll-supply = <&pma8084_l12>;
++		vdda-phy-max-microamp = <50000>;
++		vdda-pll-max-microamp = <1000>;
++		clock-names = "ref_clk_src",
++			"ref_clk_parent",
++			"ref_clk",
++			"tx_iface_clk",
++			"rx_iface_clk";
++		clocks = <&clock_rpm clk_ln_bb_clk>,
++			<&clock_gcc clk_pcie_1_phy_ldo >,
++			<&clock_gcc clk_ufs_phy_ldo>,
++			<&clock_gcc clk_gcc_ufs_tx_cfg_clk>,
++			<&clock_gcc clk_gcc_ufs_rx_cfg_clk>;
++	};
++
++	ufshc@0xfc598000 {
++		...
++		phys = <&ufsphy1>;
++		phy-names = "ufsphy";
++	};
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 5357919..03c0e98 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -4,11 +4,18 @@ UFSHC nodes are defined to describe on-chip UFS host controllers.
+ Each UFS controller instance should have its own node.
+ 
+ Required properties:
+-- compatible        : compatible list, contains "jedec,ufs-1.1"
++- compatible		: must contain "jedec,ufs-1.1", may also list one or more
++					  of the following:
++					  "qcom,msm8994-ufshc"
++					  "qcom,msm8996-ufshc"
++					  "qcom,ufshc"
+ - interrupts        : <interrupt mapping for UFS host controller IRQ>
+ - reg               : <registers mapping>
+ 
+ Optional properties:
++- phys                  : phandle to UFS PHY node
++- phy-names             : the string "ufsphy" when is found in a node, along
++                          with "phys" attribute, provides phandle to UFS PHY node
+ - vdd-hba-supply        : phandle to UFS host controller supply regulator node
+ - vcc-supply            : phandle to VCC supply regulator node
+ - vccq-supply           : phandle to VCCQ supply regulator node
+@@ -54,4 +61,6 @@ Example:
+ 		clocks = <&core 0>, <&ref 0>, <&iface 0>;
+ 		clock-names = "core_clk", "ref_clk", "iface_clk";
+ 		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
++		phys = <&ufsphy1>;
++		phy-names = "ufsphy";
+ 	};
 diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 64c54b7..329ac84 100644
+index 329ac84..b275a9a 100644
 --- a/drivers/scsi/ufs/ufs-qcom.c
 +++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1049,6 +1049,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.suspend		= ufs_qcom_suspend,
+@@ -19,6 +19,7 @@
+ 
+ #include <linux/phy/phy-qcom-ufs.h>
+ #include "ufshcd.h"
++#include "ufshcd-pltfrm.h"
+ #include "unipro.h"
+ #include "ufs-qcom.h"
+ #include "ufshci.h"
+@@ -1036,7 +1037,7 @@ void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
+  * The variant operations configure the necessary controller and PHY
+  * handshake during initialization.
+  */
+-static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
++static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.name                   = "qcom",
+ 	.init                   = ufs_qcom_init,
+ 	.exit                   = ufs_qcom_exit,
+@@ -1050,4 +1051,63 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
  	.resume			= ufs_qcom_resume,
  };
--EXPORT_SYMBOL(ufs_hba_qcom_vops);
  
- MODULE_LICENSE("GPL v2");
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b0ade73..9e79c33 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -271,10 +271,8 @@ static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
-  */
- static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
- {
--	if (hba->quirks & UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION) {
--		if (hba->vops && hba->vops->get_ufs_hci_version)
--			return hba->vops->get_ufs_hci_version(hba);
--	}
-+	if (hba->quirks & UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION)
-+		return ufshcd_vops_get_ufs_hci_version(hba);
- 
- 	return ufshcd_readl(hba, REG_UFS_VERSION);
- }
-@@ -2473,9 +2471,8 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 		dev_err(hba->dev,
- 			"%s: power mode change failed %d\n", __func__, ret);
- 	} else {
--		if (hba->vops && hba->vops->pwr_change_notify)
--			hba->vops->pwr_change_notify(hba,
--				POST_CHANGE, NULL, pwr_mode);
-+		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
-+								pwr_mode);
- 
- 		memcpy(&hba->pwr_info, pwr_mode,
- 			sizeof(struct ufs_pa_layer_attr));
-@@ -2495,10 +2492,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 	struct ufs_pa_layer_attr final_params = { 0 };
- 	int ret;
- 
--	if (hba->vops && hba->vops->pwr_change_notify)
--		hba->vops->pwr_change_notify(hba,
--		     PRE_CHANGE, desired_pwr_mode, &final_params);
--	else
-+	ret = ufshcd_vops_pwr_change_notify(hba, PRE_CHANGE,
-+					desired_pwr_mode, &final_params);
++/**
++ * ufs_qcom_probe - probe routine of the driver
++ * @pdev: pointer to Platform device handle
++ *
++ * Return zero for success and non-zero for failure
++ */
++static int ufs_qcom_probe(struct platform_device *pdev)
++{
++	int err;
++	struct device *dev = &pdev->dev;
 +
-+	if (ret)
- 		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
++	/* Perform generic probe */
++	err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
++	if (err)
++		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
++
++	return err;
++}
++
++/**
++ * ufs_qcom_remove - set driver_data of the device to NULL
++ * @pdev: pointer to platform device handle
++ *
++ * Always return 0
++ */
++static int ufs_qcom_remove(struct platform_device *pdev)
++{
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	pm_runtime_get_sync(&(pdev)->dev);
++	ufshcd_remove(hba);
++	return 0;
++}
++
++static const struct of_device_id ufs_qcom_of_match[] = {
++	{ .compatible = "qcom,ufshc"},
++	{},
++};
++
++static const struct dev_pm_ops ufs_qcom_pm_ops = {
++	.suspend	= ufshcd_pltfrm_suspend,
++	.resume		= ufshcd_pltfrm_resume,
++	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
++	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
++	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++};
++
++static struct platform_driver ufs_qcom_pltform = {
++	.probe	= ufs_qcom_probe,
++	.remove	= ufs_qcom_remove,
++	.shutdown = ufshcd_pltfrm_shutdown,
++	.driver	= {
++		.name	= "ufshcd-qcom",
++		.pm	= &ufs_qcom_pm_ops,
++		.of_match_table = of_match_ptr(ufs_qcom_of_match),
++	},
++};
++module_platform_driver(ufs_qcom_pltform);
++
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 7db9564..9714f2a 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -38,20 +38,7 @@
+ #include <linux/of.h>
  
- 	ret = ufshcd_change_power_mode(hba, &final_params);
-@@ -2647,8 +2644,7 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	/* UniPro link is disabled at this point */
- 	ufshcd_set_link_off(hba);
+ #include "ufshcd.h"
+-
+-static const struct of_device_id ufs_of_match[];
+-static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
+-{
+-	if (dev->of_node) {
+-		const struct of_device_id *match;
+-
+-		match = of_match_node(ufs_of_match, dev->of_node);
+-		if (match)
+-			return (struct ufs_hba_variant_ops *)match->data;
+-	}
+-
+-	return NULL;
+-}
++#include "ufshcd-pltfrm.h"
  
--	if (hba->vops && hba->vops->hce_enable_notify)
--		hba->vops->hce_enable_notify(hba, PRE_CHANGE);
-+	ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
- 
- 	/* start controller initialization sequence */
- 	ufshcd_hba_start(hba);
-@@ -2681,8 +2677,7 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
- 	/* enable UIC related interrupts */
- 	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
- 
--	if (hba->vops && hba->vops->hce_enable_notify)
--		hba->vops->hce_enable_notify(hba, POST_CHANGE);
-+	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
- 
- 	return 0;
+ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ {
+@@ -245,10 +232,11 @@ out:
+  * Returns 0 if successful
+  * Returns non-zero otherwise
+  */
+-static int ufshcd_pltfrm_suspend(struct device *dev)
++int ufshcd_pltfrm_suspend(struct device *dev)
+ {
+ 	return ufshcd_system_suspend(dev_get_drvdata(dev));
  }
-@@ -2735,8 +2730,7 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 	int retries = DME_LINKSTARTUP_RETRIES;
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_suspend);
  
- 	do {
--		if (hba->vops && hba->vops->link_startup_notify)
--			hba->vops->link_startup_notify(hba, PRE_CHANGE);
-+		ufshcd_vops_link_startup_notify(hba, PRE_CHANGE);
+ /**
+  * ufshcd_pltfrm_resume - resume power management function
+@@ -257,43 +245,47 @@ static int ufshcd_pltfrm_suspend(struct device *dev)
+  * Returns 0 if successful
+  * Returns non-zero otherwise
+  */
+-static int ufshcd_pltfrm_resume(struct device *dev)
++int ufshcd_pltfrm_resume(struct device *dev)
+ {
+ 	return ufshcd_system_resume(dev_get_drvdata(dev));
+ }
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_resume);
  
- 		ret = ufshcd_dme_link_startup(hba);
+-static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
++int ufshcd_pltfrm_runtime_suspend(struct device *dev)
+ {
+ 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+ }
+-static int ufshcd_pltfrm_runtime_resume(struct device *dev)
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_suspend);
++
++int ufshcd_pltfrm_runtime_resume(struct device *dev)
+ {
+ 	return ufshcd_runtime_resume(dev_get_drvdata(dev));
+ }
+-static int ufshcd_pltfrm_runtime_idle(struct device *dev)
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_resume);
++
++int ufshcd_pltfrm_runtime_idle(struct device *dev)
+ {
+ 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+ }
+-#else /* !CONFIG_PM */
+-#define ufshcd_pltfrm_suspend	NULL
+-#define ufshcd_pltfrm_resume	NULL
+-#define ufshcd_pltfrm_runtime_suspend	NULL
+-#define ufshcd_pltfrm_runtime_resume	NULL
+-#define ufshcd_pltfrm_runtime_idle	NULL
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_idle);
++
+ #endif /* CONFIG_PM */
  
-@@ -2767,11 +2761,9 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 	}
+-static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
++void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
+ {
+ 	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
+ }
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
  
- 	/* Include any host controller configuration via UIC commands */
--	if (hba->vops && hba->vops->link_startup_notify) {
--		ret = hba->vops->link_startup_notify(hba, POST_CHANGE);
--		if (ret)
--			goto out;
--	}
-+	ret = ufshcd_vops_link_startup_notify(hba, POST_CHANGE);
-+	if (ret)
-+		goto out;
- 
- 	ret = ufshcd_make_hba_operational(hba);
- out:
-@@ -4578,8 +4570,7 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 		}
- 	}
- 
--	if (hba->vops && hba->vops->setup_clocks)
--		ret = hba->vops->setup_clocks(hba, on);
-+	ret = ufshcd_vops_setup_clocks(hba, on);
- out:
- 	if (ret) {
- 		list_for_each_entry(clki, head, list) {
-@@ -4645,27 +4636,22 @@ static int ufshcd_variant_hba_init(struct ufs_hba *hba)
- 	if (!hba->vops)
+ /**
+- * ufshcd_pltfrm_probe - probe routine of the driver
++ * ufshcd_pltfrm_init - probe routine of the driver
+  * @pdev: pointer to Platform device handle
++ * @vops: pointer to variant ops
+  *
+  * Returns 0 on success, non-zero value on failure
+  */
+-static int ufshcd_pltfrm_probe(struct platform_device *pdev)
++int ufshcd_pltfrm_init(struct platform_device *pdev,
++		       struct ufs_hba_variant_ops *vops)
+ {
+ 	struct ufs_hba *hba;
+ 	void __iomem *mmio_base;
+@@ -321,19 +313,19 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
  		goto out;
+ 	}
  
--	if (hba->vops->init) {
--		err = hba->vops->init(hba);
--		if (err)
--			goto out;
--	}
-+	err = ufshcd_vops_init(hba);
-+	if (err)
-+		goto out;
+-	hba->vops = get_variant_ops(&pdev->dev);
++	hba->vops = vops;
  
--	if (hba->vops->setup_regulators) {
--		err = hba->vops->setup_regulators(hba, true);
--		if (err)
--			goto out_exit;
--	}
-+	err = ufshcd_vops_setup_regulators(hba, true);
-+	if (err)
-+		goto out_exit;
+ 	err = ufshcd_parse_clock_info(hba);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "%s: clock parse failed %d\n",
+ 				__func__, err);
+-		goto out;
++		goto dealloc_host;
+ 	}
+ 	err = ufshcd_parse_regulator_info(hba);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "%s: regulator init failed %d\n",
+ 				__func__, err);
+-		goto out;
++		goto dealloc_host;
+ 	}
  
- 	goto out;
- 
- out_exit:
--	if (hba->vops->exit)
--		hba->vops->exit(hba);
-+	ufshcd_vops_exit(hba);
+ 	pm_runtime_set_active(&pdev->dev);
+@@ -352,50 +344,12 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
+ out_disable_rpm:
+ 	pm_runtime_disable(&pdev->dev);
+ 	pm_runtime_set_suspended(&pdev->dev);
++dealloc_host:
++	ufshcd_dealloc_host(hba);
  out:
- 	if (err)
- 		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
--			__func__, hba->vops ? hba->vops->name : "", err);
-+			__func__, ufshcd_get_var_name(hba), err);
  	return err;
  }
+-
+-/**
+- * ufshcd_pltfrm_remove - remove platform driver routine
+- * @pdev: pointer to platform device handle
+- *
+- * Returns 0 on success, non-zero value on failure
+- */
+-static int ufshcd_pltfrm_remove(struct platform_device *pdev)
+-{
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+-	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
+-	return 0;
+-}
+-
+-static const struct of_device_id ufs_of_match[] = {
+-	{ .compatible = "jedec,ufs-1.1"},
+-	{},
+-};
+-
+-static const struct dev_pm_ops ufshcd_dev_pm_ops = {
+-	.suspend	= ufshcd_pltfrm_suspend,
+-	.resume		= ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
+-};
+-
+-static struct platform_driver ufshcd_pltfrm_driver = {
+-	.probe	= ufshcd_pltfrm_probe,
+-	.remove	= ufshcd_pltfrm_remove,
+-	.shutdown = ufshcd_pltfrm_shutdown,
+-	.driver	= {
+-		.name	= "ufshcd",
+-		.pm	= &ufshcd_dev_pm_ops,
+-		.of_match_table = ufs_of_match,
+-	},
+-};
+-
+-module_platform_driver(ufshcd_pltfrm_driver);
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
  
-@@ -4674,14 +4660,11 @@ static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
- 	if (!hba->vops)
- 		return;
+ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
+ MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
+new file mode 100644
+index 0000000..df64c41
+--- /dev/null
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
+@@ -0,0 +1,41 @@
++/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#ifndef UFSHCD_PLTFRM_H_
++#define UFSHCD_PLTFRM_H_
++
++#include "ufshcd.h"
++
++int ufshcd_pltfrm_init(struct platform_device *pdev,
++		       struct ufs_hba_variant_ops *vops);
++void ufshcd_pltfrm_shutdown(struct platform_device *pdev);
++
++#ifdef CONFIG_PM
++
++int ufshcd_pltfrm_suspend(struct device *dev);
++int ufshcd_pltfrm_resume(struct device *dev);
++int ufshcd_pltfrm_runtime_suspend(struct device *dev);
++int ufshcd_pltfrm_runtime_resume(struct device *dev);
++int ufshcd_pltfrm_runtime_idle(struct device *dev);
++
++#else /* !CONFIG_PM */
++
++#define ufshcd_pltfrm_suspend	NULL
++#define ufshcd_pltfrm_resume	NULL
++#define ufshcd_pltfrm_runtime_suspend	NULL
++#define ufshcd_pltfrm_runtime_resume	NULL
++#define ufshcd_pltfrm_runtime_idle	NULL
++
++#endif /* CONFIG_PM */
++
++#endif /* UFSHCD_PLTFRM_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9e79c33..2ef9834 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5348,6 +5348,16 @@ void ufshcd_remove(struct ufs_hba *hba)
+ EXPORT_SYMBOL_GPL(ufshcd_remove);
  
--	if (hba->vops->setup_clocks)
--		hba->vops->setup_clocks(hba, false);
-+	ufshcd_vops_setup_clocks(hba, false);
- 
--	if (hba->vops->setup_regulators)
--		hba->vops->setup_regulators(hba, false);
-+	ufshcd_vops_setup_regulators(hba, false);
- 
--	if (hba->vops->exit)
--		hba->vops->exit(hba);
-+	ufshcd_vops_exit(hba);
- }
- 
- static int ufshcd_hba_init(struct ufs_hba *hba)
-@@ -5058,17 +5041,13 @@ disable_clks:
- 	 * vendor specific host controller register space call them before the
- 	 * host clocks are ON.
- 	 */
--	if (hba->vops && hba->vops->suspend) {
--		ret = hba->vops->suspend(hba, pm_op);
--		if (ret)
--			goto set_link_active;
--	}
-+	ret = ufshcd_vops_suspend(hba, pm_op);
-+	if (ret)
-+		goto set_link_active;
- 
--	if (hba->vops && hba->vops->setup_clocks) {
--		ret = hba->vops->setup_clocks(hba, false);
--		if (ret)
--			goto vops_resume;
--	}
-+	ret = ufshcd_vops_setup_clocks(hba, false);
-+	if (ret)
-+		goto vops_resume;
- 
- 	if (!ufshcd_is_link_active(hba))
- 		ufshcd_setup_clocks(hba, false);
-@@ -5079,7 +5058,7 @@ disable_clks:
- 	hba->clk_gating.state = CLKS_OFF;
- 	/*
- 	 * Disable the host irq as host controller as there won't be any
--	 * host controller trasanction expected till resume.
-+	 * host controller transaction expected till resume.
- 	 */
- 	ufshcd_disable_irq(hba);
- 	/* Put the host controller in low power mode if possible */
-@@ -5087,8 +5066,7 @@ disable_clks:
- 	goto out;
- 
- vops_resume:
--	if (hba->vops && hba->vops->resume)
--		hba->vops->resume(hba, pm_op);
-+	ufshcd_vops_resume(hba, pm_op);
- set_link_active:
- 	ufshcd_vreg_set_hpm(hba);
- 	if (ufshcd_is_link_hibern8(hba) && !ufshcd_uic_hibern8_exit(hba))
-@@ -5144,11 +5122,9 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 * vendor specific host controller register space call them when the
- 	 * host clocks are ON.
- 	 */
--	if (hba->vops && hba->vops->resume) {
--		ret = hba->vops->resume(hba, pm_op);
--		if (ret)
--			goto disable_vreg;
--	}
-+	ret = ufshcd_vops_resume(hba, pm_op);
-+	if (ret)
-+		goto disable_vreg;
- 
- 	if (ufshcd_is_link_hibern8(hba)) {
- 		ret = ufshcd_uic_hibern8_exit(hba);
-@@ -5189,8 +5165,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- set_old_link_state:
- 	ufshcd_link_state_transition(hba, old_link_state, 0);
- vendor_suspend:
--	if (hba->vops && hba->vops->suspend)
--		hba->vops->suspend(hba, pm_op);
-+	ufshcd_vops_suspend(hba, pm_op);
- disable_vreg:
- 	ufshcd_vreg_set_lpm(hba);
- disable_irq_and_vops_clks:
-@@ -5463,8 +5438,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 		dev_dbg(hba->dev, "%s: clk: %s, rate: %lu\n", __func__,
- 				clki->name, clk_get_rate(clki->clk));
- 	}
--	if (hba->vops->clk_scale_notify)
--		hba->vops->clk_scale_notify(hba);
-+	ufshcd_vops_clk_scale_notify(hba);
- out:
- 	return ret;
- }
+ /**
++ * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
++ * @hba: pointer to Host Bus Adapter (HBA)
++ */
++void ufshcd_dealloc_host(struct ufs_hba *hba)
++{
++	scsi_host_put(hba->host);
++}
++EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
++
++/**
+  * ufshcd_set_dma_mask - Set dma mask based on the controller
+  *			 addressing capability
+  * @hba: per adapter instance
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 54e7afb..ce75626 100644
+index ce75626..f2aa47e 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -674,4 +674,102 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+@@ -576,6 +576,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+ }
  
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
-+
-+/* Wrapper functions for safely calling variant operations */
-+static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
-+{
-+	if (hba->vops)
-+		return hba->vops->name;
-+	return "";
-+}
-+
-+static inline int ufshcd_vops_init(struct ufs_hba *hba)
-+{
-+	if (hba->vops && hba->vops->init)
-+		return hba->vops->init(hba);
-+
-+	return 0;
-+}
-+
-+static inline void ufshcd_vops_exit(struct ufs_hba *hba)
-+{
-+	if (hba->vops && hba->vops->exit)
-+		return hba->vops->exit(hba);
-+}
-+
-+static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
-+{
-+	if (hba->vops && hba->vops->get_ufs_hci_version)
-+		return hba->vops->get_ufs_hci_version(hba);
-+
-+	return ufshcd_readl(hba, REG_UFS_VERSION);
-+}
-+
-+static inline void ufshcd_vops_clk_scale_notify(struct ufs_hba *hba)
-+{
-+	if (hba->vops && hba->vops->clk_scale_notify)
-+		return hba->vops->clk_scale_notify(hba);
-+}
-+
-+static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on)
-+{
-+	if (hba->vops && hba->vops->setup_clocks)
-+		return hba->vops->setup_clocks(hba, on);
-+
-+	return 0;
-+}
-+
-+static inline int ufshcd_vops_setup_regulators(struct ufs_hba *hba, bool status)
-+{
-+	if (hba->vops && hba->vops->setup_regulators)
-+		return hba->vops->setup_regulators(hba, status);
-+
-+	return 0;
-+}
-+
-+static inline int ufshcd_vops_hce_enable_notify(struct ufs_hba *hba,
-+						bool status)
-+{
-+	if (hba->vops && hba->vops->hce_enable_notify)
-+		return hba->vops->hce_enable_notify(hba, status);
-+
-+	return 0;
-+}
-+static inline int ufshcd_vops_link_startup_notify(struct ufs_hba *hba,
-+						bool status)
-+{
-+	if (hba->vops && hba->vops->link_startup_notify)
-+		return hba->vops->link_startup_notify(hba, status);
-+
-+	return 0;
-+}
-+
-+static inline int ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
-+				  bool status,
-+				  struct ufs_pa_layer_attr *dev_max_params,
-+				  struct ufs_pa_layer_attr *dev_req_params)
-+{
-+	if (hba->vops && hba->vops->pwr_change_notify)
-+		return hba->vops->pwr_change_notify(hba, status,
-+					dev_max_params, dev_req_params);
-+
-+	return -ENOTSUPP;
-+}
-+
-+static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum ufs_pm_op op)
-+{
-+	if (hba->vops && hba->vops->suspend)
-+		return hba->vops->suspend(hba, op);
-+
-+	return 0;
-+}
-+
-+static inline int ufshcd_vops_resume(struct ufs_hba *hba, enum ufs_pm_op op)
-+{
-+	if (hba->vops && hba->vops->resume)
-+		return hba->vops->resume(hba, op);
-+
-+	return 0;
-+}
-+
- #endif /* End of Header */
+ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
++void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+ void ufshcd_remove(struct ufs_hba *);
+ 
 -- 
 1.8.5.2
 
