@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 10/15] scsi: ufs: fix error recovery after the hibern8 exit failure
-Date: Sun, 25 Oct 2015 16:56:19 +0200
-Message-ID: <1445784984-16443-11-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v4 07/15] scsi: ufs: set REQUEST_SENSE command size to 18 bytes
+Date: Sun, 25 Oct 2015 16:56:16 +0200
+Message-ID: <1445784984-16443-8-git-send-email-ygardi@codeaurora.org>
 References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
@@ -10,144 +10,70 @@ To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hibern8 exit can be called from 3 different context:
-    - ufshcd_hibern8_exit_work
-    - ufshcd_ungate_work
-    - runtime/system resume
+According to UFS device specification REQUEST_SENSE command can
+only report back up to 18 bytes of data.
 
-If hibern8 exit fails for some reason then we try to bring the link to
-active state by link startup but this recovery mechanism results into
-deadlock or errors from first 2 context listed above. This change fixes
-the recovery by adding proper error handling mechanism.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 58 +++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 53 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ed134d6..60ba729 100644
+index 0e54183..8a04691 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -610,6 +610,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->clk_gating.active_reqs++;
+@@ -43,6 +43,8 @@
+ #include "ufshcd.h"
+ #include "unipro.h"
  
-+	if (ufshcd_eh_in_progress(hba)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		return 0;
-+	}
++#define UFSHCD_REQ_SENSE_SIZE	18
 +
- start:
- 	switch (hba->clk_gating.state) {
- 	case CLKS_ON:
-@@ -725,7 +730,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
- 		|| hba->lrb_in_use || hba->outstanding_tasks
--		|| hba->active_uic_cmd || hba->uic_async_done)
-+		|| hba->active_uic_cmd || hba->uic_async_done
-+		|| ufshcd_eh_in_progress(hba))
- 		return;
- 
- 	hba->clk_gating.state = REQ_CLKS_OFF;
-@@ -1363,6 +1369,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		cmd->scsi_done(cmd);
- 		goto out_unlock;
+ #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+ 				 UTP_TASK_REQ_COMPL |\
+ 				 UFSHCD_ERROR_MASK)
+@@ -836,7 +838,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+ 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sr.sense_data_len);
+ 		memcpy(lrbp->sense_buffer,
+ 			lrbp->ucd_rsp_ptr->sr.sense_data,
+-			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
++			min_t(int, len, UFSHCD_REQ_SENSE_SIZE));
  	}
-+
-+	/* if error handling is in progress, don't issue commands */
-+	if (ufshcd_eh_in_progress(hba)) {
-+		set_host_byte(cmd, DID_ERROR);
-+		cmd->scsi_done(cmd);
-+		goto out_unlock;
-+	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* acquire the tag to make sure device cmds don't use it */
-@@ -2393,6 +2406,31 @@ out:
- 	return ret;
  }
  
-+static int ufshcd_link_recovery(struct ufs_hba *hba)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	ret = ufshcd_host_reset_and_restore(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (ret)
-+		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+	ufshcd_clear_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	if (ret)
-+		dev_err(hba->dev, "%s: link recovery failed, err %d",
-+			__func__, ret);
-+
-+	return ret;
-+}
-+
- static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
+@@ -1381,7 +1383,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = cmd;
+-	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
++	lrbp->sense_bufflen = UFSHCD_REQ_SENSE_SIZE;
+ 	lrbp->sense_buffer = cmd->sense_buffer;
+ 	lrbp->task_tag = tag;
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+@@ -4817,19 +4819,19 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
+ 				0,
+ 				0,
+ 				0,
+-				SCSI_SENSE_BUFFERSIZE,
++				UFSHCD_REQ_SENSE_SIZE,
+ 				0};
+ 	char *buffer;
  	int ret;
-@@ -2401,10 +2439,18 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
  
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
- 			__func__, ret);
- 
-+		/*
-+		 * If link recovery fails then return error so that caller
-+		 * don't retry the hibern8 enter again.
-+		 */
-+		if (ufshcd_link_recovery(hba))
-+			ret = -ENOLINK;
-+	}
-+
- 	return ret;
- }
- 
-@@ -2429,8 +2475,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	if (ret) {
--		ufshcd_set_link_off(hba);
--		ret = ufshcd_host_reset_and_restore(hba);
-+		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
-+			__func__, ret);
-+		ret = ufshcd_link_recovery(hba);
+-	buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
++	buffer = kzalloc(UFSHCD_REQ_SENSE_SIZE, GFP_KERNEL);
+ 	if (!buffer) {
+ 		ret = -ENOMEM;
+ 		goto out;
  	}
  
- 	return ret;
-@@ -4382,7 +4429,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
--	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	hba->wlun_dev_clr_ua = true;
- 
- 	if (ufshcd_get_max_pwr_mode(hba)) {
-@@ -4396,6 +4442,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 					__func__, ret);
- 	}
- 
-+	/* set the state as operational after switching to desired gear */
-+	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	/*
- 	 * If we are in error handling context or in power management callbacks
- 	 * context, no need to scan the host
+ 	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
+-				SCSI_SENSE_BUFFERSIZE, NULL,
++				UFSHCD_REQ_SENSE_SIZE, NULL,
+ 				msecs_to_jiffies(1000), 3, NULL, REQ_PM);
+ 	if (ret)
+ 		pr_err("%s: failed with err %d\n", __func__, ret);
 -- 
 1.8.5.2
 
