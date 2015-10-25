@@ -1,65 +1,84 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 02/15] scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-Date: Sun, 25 Oct 2015 16:56:11 +0200
-Message-ID: <1445784984-16443-3-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v4 03/15] scsi: ufs: verify command tag validity
+Date: Sun, 25 Oct 2015 16:56:12 +0200
+Message-ID: <1445784984-16443-4-git-send-email-ygardi@codeaurora.org>
 References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some of the data structures (like response UPIU) and/or its elements
-(unused fields) should be cleared before sending out the respective
-command to UFS device.
+A race condition appear to exist between request completion when
+scsi_done() is called to end the request and set the tag back to
+-1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
+handling which aborts the command and reuses it to request sense
+data. Sending the request sense is done with tag which was set to -1
+and so it is invalid.
+Assert command tag passed from scsi layer is valid.
 
-This change clears the UPIU response data structure for query commands
-and NOP command before sending out the command. We also initialize the
-PRDT table length to zero which should take care of commands which doesn't
-have any data associated with it. We are also clearing the unused fields in
-request UPIU for NOP command.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3428f72..2d3ebca 100644
+index 2d3ebca..8860a57 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1129,6 +1129,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
- 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
- 	/* dword_3 is reserved, hence it is set to 0 */
- 	req_desc->header.dword_3 = 0;
-+
-+	req_desc->prd_table_length = 0;
- }
+@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
++static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
++{
++	return tag >= 0 && tag < hba->nutrs;
++}
  
- /**
-@@ -1198,6 +1200,7 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
- 	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
- 		memcpy(descp, query->descriptor, len);
+ static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+ {
+@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	hba = shost_priv(host);
  
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
- static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
-@@ -1210,6 +1213,11 @@ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
- 	ucd_req_ptr->header.dword_0 =
- 		UPIU_HEADER_DWORD(
- 			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
-+	/* clear rest of the fields of basic header */
-+	ucd_req_ptr->header.dword_1 = 0;
-+	ucd_req_ptr->header.dword_2 = 0;
-+
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	switch (hba->ufshcd_state) {
+@@ -3862,13 +3872,23 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+ 	tag = cmd->request->tag;
++	if (!ufshcd_valid_tag(hba, tag)) {
++		dev_err(hba->dev,
++			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
++			__func__, tag, cmd, cmd->request);
++		BUG();
++	}
  
- /**
+ 	ufshcd_hold(hba, false);
++	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* If command is already aborted/completed, return SUCCESS */
+-	if (!(test_bit(tag, &hba->outstanding_reqs)))
++	if (!(test_bit(tag, &hba->outstanding_reqs))) {
++		dev_err(hba->dev,
++			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
++			__func__, tag, hba->outstanding_reqs, reg);
+ 		goto out;
++	}
+ 
+-	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	if (!(reg & (1 << tag))) {
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag = %d",
 -- 
 1.8.5.2
 
