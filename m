@@ -1,49 +1,61 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v7 6/8] scsi: ufs: make the UFS variant a platform
- device
-Date: Sun, 25 Oct 2015 10:50:42 -0000
-Message-ID: <245c494679a40e4187287daa23e1e274.squirrel@www.codeaurora.org>
-References: <1441205138-12664-1-git-send-email-ygardi@codeaurora.org>
-    <1441205138-12664-7-git-send-email-ygardi@codeaurora.org>
-    <2dce3d8d918e124eb29afa7a59607bca.squirrel@codeaurora.org>
-    <4607478.zVSfzXyPzA@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37141 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbbJYKun (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Oct 2015 06:50:43 -0400
-In-Reply-To: <4607478.zVSfzXyPzA@wuerfel>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v8 0/8] Fix error message and present UFS variant
+Date: Sun, 25 Oct 2015 12:50:42 +0200
+Message-ID: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: subhashj@codeaurora.org, Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, gbroner@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devic>
 
-> On Thursday 22 October 2015 07:02:14 subhashj@codeaurora.org wrote:
->> >
->> >  Required properties:
->> > -- compatible        : compatible list, contains "jedec,ufs-1.1"
->> > +- compatible        : compatible list, contains "jedec,ufs-1.1" or
->> > +		      "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
->>
->> Are we really using these "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc"
->> compatible string anywhere?
->
-> We should list them in either case, but it could be clarified as:
->
-> compatible	: must contain "jedec,ufs-1.1", may also list one or more
-> 		  of the following:
-> 			"qcom,msm8994-ufshc"
-> 			"qcom,msm8996-ufshc"
-> 			"qcom,ufshc"
->
-> 	Arnd
->
+V8: add phy attributes to UFS devicetree documentation file
 
-Shortly i will upload an updated v8.
-Yaniv
+V7: removed additional dead code
 
+V6: removed dead code from ufs-qcom.c and added
+calling to ufshcd_dealloc_host() in ufshcd-pltfrm.c in case
+of an error after a successfull ufshcd_alloc_host()
 
+V5: removed a redundant null check
 
+V4: add file
+Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+and modify the compatible strings in
+Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+
+V3: fixes a few minor issues.
+
+V2: fixes a few issues of unnecessary EXPORT_SYMBOL,
+types of parameters in routine definition, 
+build errors in case CONFIG_PM is not defined and some
+other minor fixes.
+
+Yaniv Gardi (8):
+  phy: qcom-ufs: fix build error when the component is built as a module
+  scsi: ufs-qcom: fix compilation warning if compiled as a module
+  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
+  add ufshcd_get_variant ufshcd_set_variant
+  scsi: ufs: creates wrapper functions for vops
+  scsi: ufs: make the UFS variant a platform device
+  scsi: ufs-qcom: add debug prints for test bus
+  scsi: ufs-qcom: add QUniPro hardware support and power optimizations
+
+ Documentation/devicetree/bindings/ufs/ufs-qcom.txt |  58 ++
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  11 +-
+ drivers/phy/phy-qcom-ufs.c                         |  11 +
+ drivers/scsi/ufs/Kconfig                           |   2 +-
+ drivers/scsi/ufs/ufs-qcom.c                        | 905 ++++++++++++++++-----
+ drivers/scsi/ufs/ufs-qcom.h                        |  68 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  98 +--
+ drivers/scsi/ufs/ufshcd-pltfrm.h                   |  41 +
+ drivers/scsi/ufs/ufshcd.c                          | 122 ++-
+ drivers/scsi/ufs/ufshcd.h                          | 149 +++-
+ 10 files changed, 1127 insertions(+), 338 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
