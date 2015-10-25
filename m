@@ -1,56 +1,106 @@
-From: punit vara <punitvara@gmail.com>
-Subject: Re: [PATCH 1/2] scsi: lpfc: Use kzalloc instead of kmalloc
-Date: Sun, 25 Oct 2015 14:47:56 +0530
-Message-ID: <CABXAfNJSpttL=jGL1CwQ0CWQis_zEiXMTedcujZb7vcZEJtDmQ@mail.gmail.com>
-References: <1445630633-14209-1-git-send-email-punitvara@gmail.com>
-	<1445630633-14209-2-git-send-email-punitvara@gmail.com>
-	<C55884B0-E8D4-4EE2-AB46-40A871F8A073@linux.vnet.ibm.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v3 6/8] scsi: ufs: make the UFS variant a platform
+ device
+Date: Sun, 25 Oct 2015 09:24:24 -0000
+Message-ID: <337eb8cbc465fa36925c54da90531810.squirrel@www.codeaurora.org>
+References: <1440335381-5122-1-git-send-email-ygardi@codeaurora.org>
+    <1440335381-5122-7-git-send-email-ygardi@codeaurora.org>
+    <CAL_JsqLYeM3fbU5jHq-+7SbwHH7T80bETZpkkjR_hbg=un1BBg@mail.gmail.com>
+    <c07dbe55ff782a2323cc053d89d49480.squirrel@www.codeaurora.org>
+    <CAL_JsqKDaqSX=DNL0AC2RDy53YUhtF2Eg2t=fJ7eVCoSB6P+JA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <C55884B0-E8D4-4EE2-AB46-40A871F8A073@linux.vnet.ibm.com>
+In-Reply-To: <CAL_JsqKDaqSX=DNL0AC2RDy53YUhtF2Eg2t=fJ7eVCoSB6P+JA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Cc: JBottomley@odin.com, don.brace@pmcs.com, storagedev@pmcs.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rob Herring <robherring2@gmail.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, hch@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaur>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Oct 24, 2015 at 4:56 AM, Matthew R. Ochs
-<mrochs@linux.vnet.ibm.com> wrote:
-> Hi Punit,
->
-> Aren't you missing the removal of the memset() as part of this conversion?
->
->
-> -matt
->
->> On Oct 23, 2015, at 3:03 PM, Punit Vara <punitvara@gmail.com> wrote:
+> On Sun, Aug 30, 2015 at 3:43 AM,  <ygardi@codeaurora.org> wrote:
+>>> On Sun, Aug 23, 2015 at 8:09 AM, Yaniv Gardi <ygardi@codeaurora.org>
+>>> wrote:
+>>>> This change turns the UFS variant (SCSI_UFS_QCOM) into a UFS
+>>>> a platform device.
+>>>> In order to do so a few additional changes are required:
+>>>> 1. The ufshcd-pltfrm is no longer serves as a platform device.
+>>>>    Now it only serves as a group of platform APIs such as PM APIs
+>>>>    (runtime suspend/resume, system suspend/resume etc), parsers of
+>>>>    clocks, regulators and pm_levels from DT.
+>>>> 2. What used to be the old platform "probe" is now "only"
+>>>>    a pltfrm_init() routine, that does exactly the same, but only
+>>>>    being called by the new probe function of the UFS variant.
+>>>>
+>>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>>>
+>>>> ---
+>>>>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  2 +-
+>>>>  drivers/scsi/ufs/ufs-qcom.c                        | 78
+>>>> +++++++++++++++++-
+>>>>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 92
+>>>> ++++++----------------
+>>>>  drivers/scsi/ufs/ufshcd-pltfrm.h                   | 41 ++++++++++
+>>>>  drivers/scsi/ufs/ufshcd.c                          | 10 +++
+>>>>  drivers/scsi/ufs/ufshcd.h                          |  1 +
+>>>>  6 files changed, 152 insertions(+), 72 deletions(-)
+>>>>  create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>>> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>>> index 5357919..b39e765 100644
+>>>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>>> @@ -4,7 +4,7 @@ UFSHC nodes are defined to describe on-chip UFS host
+>>>> controllers.
+>>>>  Each UFS controller instance should have its own node.
+>>>>
+>>>>  Required properties:
+>>>> -- compatible        : compatible list, contains "jedec,ufs-1.1"
+>>>> +- compatible        : compatible list, contains "jedec,ufs-1.1" or
+>>>> "qcom,ufshc"
+>>>
+>>> Replying again as I inadvertently dropped everyone.
+>>>
+>>> This should also have a more specific compatible string with the SOC
+>>> name/number in it. It may be "the same in all SOCs", but there is
+>>> always the possibility for bugs/limitations to be found that are
+>>> specific to an SOC even if all RTL versions are identical (e.g.
+>>> different max clock speeds). It is about making the dtb future proof,
+>>> not about what exactly you need today. You can keep qcom,ufshc for
+>>> driver matching if you want.
 >>
->> This patch is to the lpfc_els.c which resolves following warning
->> reported by coccicheck:
+>> I see your point.
+>> I just would like to make sure, syntactically speaking, if what you mean
+>> should look like:
 >>
->> WARNING: kzalloc should be used for rdp_context, instead of
->> kmalloc/memset
->>
->> Signed-off-by: Punit Vara <punitvara@gmail.com>
->> ---
->> drivers/scsi/lpfc/lpfc_els.c | 2 +-
->> 1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
->> index 36bf58b..422c800 100644
->> --- a/drivers/scsi/lpfc/lpfc_els.c
->> +++ b/drivers/scsi/lpfc/lpfc_els.c
->> @@ -4990,7 +4990,7 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->>       if (RDP_NPORT_ID_SIZE !=
->>                       be32_to_cpu(rdp_req->nport_id_desc.length))
->>               goto rjt_logerr;
->> -     rdp_context = kmalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
->> +     rdp_context = kzalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
->>       if (!rdp_context) {
->>               rjt_err = LSRJT_UNABLE_TPC;
->>               goto error;
+>> compatible        : compatible list, contains "jedec,ufs-1.1" or
+>>                     "qcom,ufshc" for msm8994, msm8996 SOCs.
 >
-Thanks for reviewing my patches.
-Can I send more patches ? my all previous patches already reviewed by
-you . Should I wait to apply this patch to tree or i can send new
-patch set ? Please suggest me sir.
+> No, you need actual compatible strings:
+>
+> contains one of:
+>   "jedec,ufs-1.1"
+>   "qcom,msm8994-ufshc" or "qcom,msm8996-ufshc" followed by "qcom,ufshc"
+>
+> Really, we should probably never had allowed "jedec,ufs-1.1" by itself.
+>
+>>>>  - interrupts        : <interrupt mapping for UFS host controller IRQ>
+>>>>  - reg               : <registers mapping>
+>>>
+>>> What about phy properties? No Unipro PHY block that requires setup?
+>>>
+>>
+>> yes, i will add another documentation file for it.
+>
+> And you need the "phy" property here with the phandle to the phy node.
+>
+
+The "phy" properties will be updated in V8 i'm about to uploade
+
+> Rob
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
