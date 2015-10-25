@@ -1,138 +1,37 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 1/8] phy: qcom-ufs: fix build error when the component is built as a module
-Date: Sun, 25 Oct 2015 12:50:43 +0200
-Message-ID: <1445770250-28802-2-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v8 3/8] scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
+Date: Sun, 25 Oct 2015 12:50:45 +0200
+Message-ID: <1445770250-28802-4-git-send-email-ygardi@codeaurora.org>
 References: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Export the following functions in order to avoid build errors
-when the component PHY_QCOM_UFS is compiled as a module:
-
-ERROR: "ufs_qcom_phy_disable_ref_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_enable_ref_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_is_pcs_ready"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_disable_iface_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_start_serdes"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_calibrate_phy"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_enable_dev_ref_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_set_tx_lane_enable"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_disable_dev_ref_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_save_controller_version"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-ERROR: "ufs_qcom_phy_enable_iface_clk"
-	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
-make[1]: *** [__modpost] Error 1
+This change is required in order to be able to build the component
+as a module.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/phy/phy-qcom-ufs.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/ufs/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index f9c618f..6140a8b 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -432,6 +432,7 @@ out_disable_src:
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e945383..5f45307 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -72,7 +72,7 @@ config SCSI_UFSHCD_PLATFORM
+ 	  If unsure, say N.
  
- static
- int ufs_qcom_phy_disable_vreg(struct phy *phy,
-@@ -474,6 +475,7 @@ void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
- 		phy->is_ref_clk_enabled = false;
- 	}
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
- 
- #define UFS_REF_CLK_EN	(1 << 5)
- 
-@@ -517,11 +519,13 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy *generic_phy)
- {
- 	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, true);
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_dev_ref_clk);
- 
- void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
- {
- 	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, false);
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
- 
- /* Turn ON M-PHY RMMI interface clocks */
- int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
-@@ -550,6 +554,7 @@ int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
- 
- /* Turn OFF M-PHY RMMI interface clocks */
- void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
-@@ -562,6 +567,7 @@ void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
- 		phy->is_iface_clk_enabled = false;
- 	}
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
- 
- int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
- {
-@@ -578,6 +584,7 @@ int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_start_serdes);
- 
- int ufs_qcom_phy_set_tx_lane_enable(struct phy *generic_phy, u32 tx_lanes)
- {
-@@ -595,6 +602,7 @@ int ufs_qcom_phy_set_tx_lane_enable(struct phy *generic_phy, u32 tx_lanes)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_set_tx_lane_enable);
- 
- void ufs_qcom_phy_save_controller_version(struct phy *generic_phy,
- 					  u8 major, u16 minor, u16 step)
-@@ -605,6 +613,7 @@ void ufs_qcom_phy_save_controller_version(struct phy *generic_phy,
- 	ufs_qcom_phy->host_ctrl_rev_minor = minor;
- 	ufs_qcom_phy->host_ctrl_rev_step = step;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_save_controller_version);
- 
- int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- {
-@@ -625,6 +634,7 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
- 
- int ufs_qcom_phy_remove(struct phy *generic_phy,
- 			struct ufs_qcom_phy *ufs_qcom_phy)
-@@ -662,6 +672,7 @@ int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
- 	return ufs_qcom_phy->phy_spec_ops->
- 			is_physical_coding_sublayer_ready(ufs_qcom_phy);
- }
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_is_pcs_ready);
- 
- int ufs_qcom_phy_power_on(struct phy *generic_phy)
- {
+ config SCSI_UFS_QCOM
+-	bool "QCOM specific hooks to UFS controller platform driver"
++	tristate "QCOM specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_QCOM
+ 	select PHY_QCOM_UFS
+ 	help
 -- 
 1.8.5.2
 
