@@ -1,59 +1,53 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v8 0/8] Fix error message and present UFS variant
-Date: Sun, 25 Oct 2015 12:50:42 +0200
-Message-ID: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Subject: [PATCH v8 2/8] scsi: ufs-qcom: fix compilation warning if compiled as a module
+Date: Sun, 25 Oct 2015 12:50:44 +0200
+Message-ID: <1445770250-28802-3-git-send-email-ygardi@codeaurora.org>
+References: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-V8: add phy attributes to UFS devicetree documentation file
+This change fixes a compilation warning that happens if SCSI_UFS_QCOM
+is compiled as a module.
+Also this patch fixes an error happens when insmod the module:
+"ufs_qcom: module license 'unspecified' taints kernel."
 
-V7: removed additional dead code
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V6: removed dead code from ufs-qcom.c and added
-calling to ufshcd_dealloc_host() in ufshcd-pltfrm.c in case
-of an error after a successfull ufshcd_alloc_host()
+---
+ drivers/scsi/ufs/ufs-qcom.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-V5: removed a redundant null check
-
-V4: add file
-Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-and modify the compatible strings in
-Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-
-V3: fixes a few minor issues.
-
-V2: fixes a few issues of unnecessary EXPORT_SYMBOL,
-types of parameters in routine definition, 
-build errors in case CONFIG_PM is not defined and some
-other minor fixes.
-
-Yaniv Gardi (8):
-  phy: qcom-ufs: fix build error when the component is built as a module
-  scsi: ufs-qcom: fix compilation warning if compiled as a module
-  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
-  add ufshcd_get_variant ufshcd_set_variant
-  scsi: ufs: creates wrapper functions for vops
-  scsi: ufs: make the UFS variant a platform device
-  scsi: ufs-qcom: add debug prints for test bus
-  scsi: ufs-qcom: add QUniPro hardware support and power optimizations
-
- Documentation/devicetree/bindings/ufs/ufs-qcom.txt |  58 ++
- .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  11 +-
- drivers/phy/phy-qcom-ufs.c                         |  11 +
- drivers/scsi/ufs/Kconfig                           |   2 +-
- drivers/scsi/ufs/ufs-qcom.c                        | 905 ++++++++++++++++-----
- drivers/scsi/ufs/ufs-qcom.h                        |  68 +-
- drivers/scsi/ufs/ufshcd-pltfrm.c                   |  98 +--
- drivers/scsi/ufs/ufshcd-pltfrm.h                   |  41 +
- drivers/scsi/ufs/ufshcd.c                          | 122 ++-
- drivers/scsi/ufs/ufshcd.h                          | 149 +++-
- 10 files changed, 1127 insertions(+), 338 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-qcom.txt
- create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
-
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4cdffa4..6c23bbf 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -917,12 +917,15 @@ out:
+ 
+ #define	ANDROID_BOOT_DEV_MAX	30
+ static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+-static int get_android_boot_dev(char *str)
++
++#ifndef MODULE
++static int __init get_android_boot_dev(char *str)
+ {
+ 	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
+ 	return 1;
+ }
+ __setup("androidboot.bootdevice=", get_android_boot_dev);
++#endif
+ 
+ /**
+  * ufs_qcom_init - bind phy with controller
+@@ -1047,3 +1050,5 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.resume			= ufs_qcom_resume,
+ };
+ EXPORT_SYMBOL(ufs_hba_qcom_vops);
++
++MODULE_LICENSE("GPL v2");
 -- 
 1.8.5.2
 
