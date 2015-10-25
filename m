@@ -1,108 +1,153 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 08/15] scsi: ufs: add retries to dme_peer get and set attribute
-Date: Sun, 25 Oct 2015 16:56:17 +0200
-Message-ID: <1445784984-16443-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v4 10/15] scsi: ufs: fix error recovery after the hibern8 exit failure
+Date: Sun, 25 Oct 2015 16:56:19 +0200
+Message-ID: <1445784984-16443-11-git-send-email-ygardi@codeaurora.org>
 References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The dme_peer get/set attribute commands are prone to errors, therefore
-we add three retries for the UIC command sending.
-Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-it was successful or the retries have finished, another command will be
-sent.
+Hibern8 exit can be called from 3 different context:
+    - ufshcd_hibern8_exit_work
+    - ufshcd_ungate_work
+    - runtime/system resume
 
-Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+If hibern8 exit fails for some reason then we try to bring the link to
+active state by link startup but this recovery mechanism results into
+deadlock or errors from first 2 context listed above. This change fixes
+the recovery by adding proper error handling mechanism.
+
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 58 +++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 53 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8a04691..5005d12 100644
+index ed134d6..60ba729 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -70,6 +70,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -610,6 +610,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->clk_gating.active_reqs++;
  
-+/* maximum number of retries for a general UIC command  */
-+#define UFS_UIC_COMMAND_RETRIES 3
++	if (ufshcd_eh_in_progress(hba)) {
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		return 0;
++	}
 +
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
+ start:
+ 	switch (hba->clk_gating.state) {
+ 	case CLKS_ON:
+@@ -725,7 +730,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
+ 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
+ 		|| hba->lrb_in_use || hba->outstanding_tasks
+-		|| hba->active_uic_cmd || hba->uic_async_done)
++		|| hba->active_uic_cmd || hba->uic_async_done
++		|| ufshcd_eh_in_progress(hba))
+ 		return;
  
-@@ -2185,6 +2188,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *set = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 
- 	uic_cmd.command = peer ?
- 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-@@ -2192,10 +2196,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
- 	uic_cmd.argument3 = mib_val;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret)
--		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
--			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	} while (ret && peer && --retries);
+ 	hba->clk_gating.state = REQ_CLKS_OFF;
+@@ -1363,6 +1369,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		cmd->scsi_done(cmd);
+ 		goto out_unlock;
+ 	}
 +
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-+				retries);
++	/* if error handling is in progress, don't issue commands */
++	if (ufshcd_eh_in_progress(hba)) {
++		set_host_byte(cmd, DID_ERROR);
++		cmd->scsi_done(cmd);
++		goto out_unlock;
++	}
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
  
+ 	/* acquire the tag to make sure device cmds don't use it */
+@@ -2393,6 +2406,31 @@ out:
  	return ret;
  }
-@@ -2220,6 +2232,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *get = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 	struct ufs_pa_layer_attr orig_pwr_info;
- 	struct ufs_pa_layer_attr temp_pwr_info;
- 	bool pwr_mode_change = false;
-@@ -2250,14 +2263,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
- 	uic_cmd.argument1 = attr_sel;
  
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret) {
--		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
--			get, UIC_GET_ATTR_ID(attr_sel), ret);
--		goto out;
--	}
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), ret);
-+	} while (ret && peer && --retries);
++static int ufshcd_link_recovery(struct ufs_hba *hba)
++{
++	int ret;
++	unsigned long flags;
 +
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), retries);
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->ufshcd_state = UFSHCD_STATE_RESET;
++	ufshcd_set_eh_in_progress(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	ret = ufshcd_host_reset_and_restore(hba);
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	if (ret)
++		hba->ufshcd_state = UFSHCD_STATE_ERROR;
++	ufshcd_clear_eh_in_progress(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	if (ret)
++		dev_err(hba->dev, "%s: link recovery failed, err %d",
++			__func__, ret);
++
++	return ret;
++}
++
+ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ {
+ 	int ret;
+@@ -2401,10 +2439,18 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
  
--	if (mib_val)
-+	if (mib_val && !ret)
- 		*mib_val = uic_cmd.argument3;
+-	if (ret)
++	if (ret) {
+ 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
+ 			__func__, ret);
  
- 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
++		/*
++		 * If link recovery fails then return error so that caller
++		 * don't retry the hibern8 enter again.
++		 */
++		if (ufshcd_link_recovery(hba))
++			ret = -ENOLINK;
++	}
++
+ 	return ret;
+ }
+ 
+@@ -2429,8 +2475,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+ 	if (ret) {
+-		ufshcd_set_link_off(hba);
+-		ret = ufshcd_host_reset_and_restore(hba);
++		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
++			__func__, ret);
++		ret = ufshcd_link_recovery(hba);
+ 	}
+ 
+ 	return ret;
+@@ -4382,7 +4429,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+-	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	hba->wlun_dev_clr_ua = true;
+ 
+ 	if (ufshcd_get_max_pwr_mode(hba)) {
+@@ -4396,6 +4442,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 					__func__, ret);
+ 	}
+ 
++	/* set the state as operational after switching to desired gear */
++	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	/*
+ 	 * If we are in error handling context or in power management callbacks
+ 	 * context, no need to scan the host
 -- 
 1.8.5.2
 
