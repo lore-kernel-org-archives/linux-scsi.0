@@ -1,107 +1,176 @@
 From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 09/15] scsi: ufs: add retries for hibern8 enter
-Date: Sun, 25 Oct 2015 13:45:22 -0000
-Message-ID: <4ed7c37f55b57369feb4d91d2563d175.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v3 12/15] scsi: ufs: reduce the interrupts for power mode
+ change requests
+Date: Sun, 25 Oct 2015 14:34:01 -0000
+Message-ID: <36d419d54cee9c6cc477fb8264af98b0.squirrel@www.codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-    <1441188795-4600-10-git-send-email-ygardi@codeaurora.org>
-    <CAC5umygAA0Q-8pCFi2GbC8Tn5XxMPSGauSsV-FJQihXAi+xbTA@mail.gmail.com>
+    <1441188795-4600-13-git-send-email-ygardi@codeaurora.org>
+    <CAC5umyh+q1_zJTRp1euyqq-rnMUmSxBkdrq48XQLzmtduHf1gQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39402 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbbJYNpX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Oct 2015 09:45:23 -0400
-In-Reply-To: <CAC5umygAA0Q-8pCFi2GbC8Tn5XxMPSGauSsV-FJQihXAi+xbTA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyh+q1_zJTRp1euyqq-rnMUmSxBkdrq48XQLzmtduHf1gQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+List-Id: linux-scsi@vger.kernel.org
 
 > 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> If hibern8 enter command fails then UFS link state may be unknown which
->> may result into timeout of all the commands issued after failure.
->>
->> This change does 2 things (for pre-defined number of retry counts) after
->> hibern8 enter failure:
->> 1. Recovers the UFS link to active state
->> 2. If link is recovered to active state, tries to put the UFS link in
->>    hibern8 enter again until retry count expires.
+>> DME commands such as Hibern8 enter/exit and gear switch generate 2
+>> completion interrupts, one for confirmation that command is received
+>> by local UniPro and 2nd one is the final confirmation after
+>> communication
+>> with remote UniPro. Currently both of these completions are registered
+>> as interrupt events which is not quite necessary and instead we can
+>> just wait for the interrupt of 2nd completion, this should reduce
+>> the number of interrupts and could reduce the unnecessary CPU wakeups
+>> to handle extra interrupts.
 >>
 >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >>
 >> ---
->>  drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
->>  1 file changed, 24 insertions(+), 2 deletions(-)
+>>  drivers/scsi/ufs/ufshcd.c | 41
+>> +++++++++++++++++++++++++++--------------
+>>  1 file changed, 27 insertions(+), 14 deletions(-)
 >>
 >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 8d5bdf0..5800b08 100644
+>> index f2d4301..fc2a52d 100644
 >> --- a/drivers/scsi/ufs/ufshcd.c
 >> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -75,6 +75,9 @@
->>  /* maximum number of link-startup retries */
->>  #define DME_LINKSTARTUP_RETRIES 3
->>
->> +/* Maximum retries for Hibern8 enter */
->> +#define UIC_HIBERN8_ENTER_RETRIES 3
->> +
->>  /* maximum number of reset retries before giving up */
->>  #define MAX_HOST_RESET_RETRIES 5
->>
->> @@ -2389,13 +2392,32 @@ out:
->>         return ret;
->>  }
->>
->> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
->> +static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>> @@ -986,13 +986,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba,
+>> struct uic_command *uic_cmd)
+>>   * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
+>>   * @hba: per adapter instance
+>>   * @uic_cmd: UIC command
+>> + * @completion: initialize the completion only if this is set to true
+>>   *
+>>   * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
+>>   * with mutex held and host_lock locked.
+>>   * Returns 0 only if success.
+>>   */
+>>  static int
+>> -__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+>> +__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+>> +                     bool completion)
 >>  {
->> +       int ret;
->>         struct uic_command uic_cmd = {0};
+>>         if (!ufshcd_ready_for_uic_cmd(hba)) {
+>>                 dev_err(hba->dev,
+>> @@ -1000,7 +1002,8 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+>> uic_command *uic_cmd)
+>>                 return -EIO;
+>>         }
 >>
->>         uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
->> +       ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
->> +
->> +       if (ret)
->> +               dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d",
->> +                       __func__, ret);
->
-> This format string is not terminated with '\n'.
-> (I found several same issues in ufshcd.c)
-
-correct. will be modified in the next v4.
->
->> +
->> +       return ret;
->> +}
->> +
->> +static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
->> +{
->> +       int ret = 0, retries;
+>> -       init_completion(&uic_cmd->done);
+>> +       if (completion)
+>> +               init_completion(&uic_cmd->done);
 >>
->
-> 'ret' will soon be initialized in the loop anyway, so it is unnecessary
-> to initialized here.
-
-correct but, in order to be on the safe side, better to leave this
-initialization here, as if UIC_HIBERN8_ENTER_RETRIES is modified to 0, we
-will never get into the for-loop, and thus, ret will be un initialized.
-
-
->
->> -       return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
->> +       for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0;
->> retries--) {
->> +               ret = __ufshcd_uic_hibern8_enter(hba);
->> +               if (!ret || ret == -ENOLINK)
->> +                       goto out;
->> +       }
->> +out:
->> +       return ret;
->>  }
+>>         ufshcd_dispatch_uic_cmd(hba, uic_cmd);
 >>
->>  static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>> @@ -1025,7 +1028,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+>> uic_command *uic_cmd)
+>>         ufshcd_add_delay_before_dme_cmd(hba);
+>>
+>>         spin_lock_irqsave(hba->host->host_lock, flags);
+>> -       ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
+>> +       ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+>>         spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>         if (!ret)
+>>                 ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+>> @@ -2346,6 +2349,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
+>> *hba, struct uic_command *cmd)
+>>         unsigned long flags;
+>>         u8 status;
+>>         int ret;
+>> +       bool reenable_intr = false;
+>>
+>>         mutex_lock(&hba->uic_cmd_mutex);
+>>         init_completion(&uic_async_done);
+>> @@ -2353,15 +2357,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
+>> *hba, struct uic_command *cmd)
+>>
+>>         spin_lock_irqsave(hba->host->host_lock, flags);
+>>         hba->uic_async_done = &uic_async_done;
+>> -       ret = __ufshcd_send_uic_cmd(hba, cmd);
+>> -       spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> -       if (ret) {
+>> -               dev_err(hba->dev,
+>> -                       "pwr ctrl cmd 0x%x with mode 0x%x uic error
+>> %d\n",
+>> -                       cmd->command, cmd->argument3, ret);
+>> -               goto out;
+>> +       if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL)
+>> {
+>> +               ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
+>> +               /*
+>> +                * Make sure UIC command completion interrupt is
+>> disabled before
+>> +                * issuing UIC command.
+>> +                */
+>> +               wmb();
+>> +               reenable_intr = true;
+>>         }
+>> -       ret = ufshcd_wait_for_uic_cmd(hba, cmd);
+>> +       ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+>> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>         if (ret) {
+>>                 dev_err(hba->dev,
+>>                         "pwr ctrl cmd 0x%x with mode 0x%x uic error
+>> %d\n",
+>> @@ -2387,7 +2393,10 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
+>> *hba, struct uic_command *cmd)
+>>         }
+>>  out:
+>>         spin_lock_irqsave(hba->host->host_lock, flags);
+>> +       hba->active_uic_cmd = NULL;
+>>         hba->uic_async_done = NULL;
+>> +       if (reenable_intr)
+>> +               ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+>>         spin_unlock_irqrestore(hba->host->host_lock, flags);
+>>         mutex_unlock(&hba->uic_cmd_mutex);
+>>
+>> @@ -3812,16 +3821,20 @@ static void ufshcd_sl_intr(struct ufs_hba *hba,
+>> u32 intr_status)
+>>   */
+>>  static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>  {
+>> -       u32 intr_status;
+>> +       u32 intr_status, enabled_intr_status;
+>>         irqreturn_t retval = IRQ_NONE;
+>>         struct ufs_hba *hba = __hba;
+>>
+>>         spin_lock(hba->host->host_lock);
+>>         intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> +       enabled_intr_status =
+>> +               intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>
+> Is it better to store interrupt mask to new member field in ufs_hba
+> when ufshcd_{enable,disable}_intr() is called and avoid register
+> read every interrupt?  Because register read is much slower than
+> normal memory read and we don't want to slow high IOPS workload.
+>
+
+Mita, this is a good idea, but it would require a little bit more
+of code changing, which requires more testing to make sure no new issues
+appear.
+I would add this as a future note, but currently, i think there is no
+major hit in performance. if you insist on changing it in this patch, it
+might
+delay the entire patch-set which i hope doesn't happen. do you agree?
+
+
+>>
+>> -       if (intr_status) {
+>> +       if (intr_status)
+>>                 ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+>> -               ufshcd_sl_intr(hba, intr_status);
+>> +
+>> +       if (enabled_intr_status) {
+>> +               ufshcd_sl_intr(hba, enabled_intr_status);
+>>                 retval = IRQ_HANDLED;
+>>         }
+>>         spin_unlock(hba->host->host_lock);
 >> --
 >> 1.8.5.2
 >>
@@ -109,9 +178,9 @@ will never get into the for-loop, and thus, ret will be un initialized.
 >> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
 >> member of Code Aurora Forum, hosted by The Linux Foundation
 >> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+>> in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
 >
-
-
