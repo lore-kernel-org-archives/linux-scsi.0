@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 09/15] scsi: ufs: add retries for hibern8 enter
-Date: Sun, 25 Oct 2015 16:56:18 +0200
-Message-ID: <1445784984-16443-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v4 06/15] scsi: ufs: avoid exception event handler racing with PM callbacks
+Date: Sun, 25 Oct 2015 16:56:15 +0200
+Message-ID: <1445784984-16443-7-git-send-email-ygardi@codeaurora.org>
 References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
@@ -10,71 +10,45 @@ To: James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If hibern8 enter command fails then UFS link state may be unknown which
-may result into timeout of all the commands issued after failure.
-
-This change does 2 things (for pre-defined number of retry counts) after
-hibern8 enter failure:
-1. Recovers the UFS link to active state
-2. If link is recovered to active state, tries to put the UFS link in
-   hibern8 enter again until retry count expires.
+If device raises the exception event in the response to the commands
+sent during the runtime/system PM callbacks, exception event handler
+might run in parallel with PM callbacks and may see unclocked register
+accesses. This change fixes this issue by not scheduling the exception
+event handler while PM callbacks are running.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5005d12..ed134d6 100644
+index 573a8cb..0e54183 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -76,6 +76,9 @@
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
+@@ -3145,7 +3145,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			scsi_status = result & MASK_SCSI_STATUS;
+ 			result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
  
-+/* Maximum retries for Hibern8 enter */
-+#define UIC_HIBERN8_ENTER_RETRIES 3
-+
- /* maximum number of reset retries before giving up */
- #define MAX_HOST_RESET_RETRIES 5
- 
-@@ -2390,13 +2393,32 @@ out:
- 	return ret;
- }
- 
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
-+	int ret;
- 	struct uic_command uic_cmd = {0};
- 
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
-+	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+
-+	if (ret)
-+		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
-+			__func__, ret);
-+
-+	return ret;
-+}
-+
-+static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+{
-+	int ret = 0, retries;
- 
--	return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
-+		ret = __ufshcd_uic_hibern8_enter(hba);
-+		if (!ret || ret == -ENOLINK)
-+			goto out;
-+	}
-+out:
-+	return ret;
- }
- 
- static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+-			if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
++			/*
++			 * Currently we are only supporting BKOPs exception
++			 * events hence we can ignore BKOPs exception event
++			 * during power management callbacks. BKOPs exception
++			 * event is not expected to be raised in runtime suspend
++			 * callback as it allows the urgent bkops.
++			 * During system suspend, we are anyway forcefully
++			 * disabling the bkops and if urgent bkops is needed
++			 * it will be enabled on system resume. Long term
++			 * solution could be to abort the system suspend if
++			 * UFS device needs urgent BKOPs.
++			 */
++			if (!hba->pm_op_in_progress &&
++			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+ 				schedule_work(&hba->eeh_work);
+ 			break;
+ 		case UPIU_TRANSACTION_REJECT_UPIU:
 -- 
 1.8.5.2
 
