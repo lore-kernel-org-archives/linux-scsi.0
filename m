@@ -1,76 +1,105 @@
 From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 03/15] scsi: ufs: verify command tag validity
-Date: Sun, 25 Oct 2015 13:29:30 -0000
-Message-ID: <5c991223dc8eeefa92263c27b20c59b0.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v3 05/15] scsi: ufs: increase fDeviceInit query response
+ timeout
+Date: Sun, 25 Oct 2015 13:38:19 -0000
+Message-ID: <34946dd94ecbe771a307c1470e63985e.squirrel@www.codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-    <1441188795-4600-4-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyjwgKvyZpMsk7J1n5M+G+bjTh+rEUNGZcDgnSD2DZG1NQ@mail.gmail.com>
+    <1441188795-4600-6-git-send-email-ygardi@codeaurora.org>
+    <CAC5umyh6dvnDBm0Udw2pWY3GgJL0AdYw7F-f_JpJtuHurDvEFw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyjwgKvyZpMsk7J1n5M+G+bjTh+rEUNGZcDgnSD2DZG1NQ@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39281 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbbJYNiU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Oct 2015 09:38:20 -0400
+In-Reply-To: <CAC5umyh6dvnDBm0Udw2pWY3GgJL0AdYw7F-f_JpJtuHurDvEFw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
-List-Id: linux-scsi@vger.kernel.org
 
 > 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> A race condition appear to exist between request completion when
->> scsi_done() is called to end the request and set the tag back to
->> -1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
->> handling which aborts the command and reuses it to request sense
->> data. Sending the request sense is done with tag which was set to -1
->> and so it is invalid.
->> Assert command tag passed from scsi layer is valid.
+>> fDeviceInit query response time for some devices is too long that
+>> default
+>> query request timeout of 100ms may not be enough. Experiments show that
+>> fDeviceInit response sometimes takes 500ms so to be on safer side this
+>> change sets the timeout to 600ms. Without this change, we might
+>> unnecessarily have to retry fDeviceInit query requests multiple times
+>> and
+>> each query request timeout prints one error message.
 >>
->> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >>
 >> ---
->>  drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
->>  1 file changed, 22 insertions(+), 2 deletions(-)
+>>  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
+>>  1 file changed, 11 insertions(+), 1 deletion(-)
 >>
 >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 2d3ebca..8860a57 100644
+>> index e0b8755..573a8cb 100644
 >> --- a/drivers/scsi/ufs/ufshcd.c
 >> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba
->> *hba,
->>                 struct ufs_pa_layer_attr *desired_pwr_mode);
->>  static int ufshcd_change_power_mode(struct ufs_hba *hba,
->>                              struct ufs_pa_layer_attr *pwr_mode);
->> +static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
->> +{
->> +       return tag >= 0 && tag < hba->nutrs;
->> +}
->>
->>  static inline int ufshcd_enable_irq(struct ufs_hba *hba)
->>  {
->> @@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host
->> *host, struct scsi_cmnd *cmd)
->>         hba = shost_priv(host);
->>
->>         tag = cmd->request->tag;
->> +       if (!ufshcd_valid_tag(hba, tag)) {
->> +               dev_err(hba->dev,
->> +                       "%s: invalid command tag %d: cmd=0x%p,
->> cmd->request=0x%p",
->> +                       __func__, tag, cmd, cmd->request);
->> +               BUG();
->> +       }
+>> @@ -58,6 +58,12 @@
+>>  #define QUERY_REQ_RETRIES 10
+>>  /* Query request timeout */
+>>  #define QUERY_REQ_TIMEOUT 30 /* msec */
+>> +/*
+>> + * Query request timeout for fDeviceInit flag
+>> + * fDeviceInit query response time for some devices is too large that
+>> default
+>> + * QUERY_REQ_TIMEOUT may not be enough for such devices.
+>> + */
+>> +#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
 >
-> Is it better to avoid BUG() by WARN_ON() and return if possible?
+> How about just increasing QUERY_REQ_TIMEOUT from 30ms to 600ms
+> instead of conditionally setting timeout depending on ufs flag?
 
-in this specific case, i think BUG() is the way to handle this scenario.
-It is very rare, and if invalid_tag is sent, the SW can not proceed, and
-it indicates something very wrong happened. either in the block layer that
-allocated the tag, or in the UFS that reported nutrs.
-So, if we actually hit this scenario, then recovering is not an option and
-i believe we need to BUG. hope it makes sense.
+Your suggestion obviously could work (increasing the QUERY_REQ_TIMEOUT to
+600ms), but in that case we bring extra delay of 570ms to error handling
+of query timeout, and in such a case, instead of handling the error after
+30ms we handle it after 600ms, which make the SW hang.
+does it make sense ?
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 >
+>>
+>>  /* Task management command timeout */
+>>  #define TM_CMD_TIMEOUT 100 /* msecs */
+>> @@ -1651,6 +1657,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
+>> enum query_opcode opcode,
+>>         struct ufs_query_req *request = NULL;
+>>         struct ufs_query_res *response = NULL;
+>>         int err, index = 0, selector = 0;
+>> +       int timeout = QUERY_REQ_TIMEOUT;
+>>
+>>         BUG_ON(!hba);
+>>
+>> @@ -1683,7 +1690,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
+>> enum query_opcode opcode,
+>>                 goto out_unlock;
+>>         }
+>>
+>> -       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY,
+>> QUERY_REQ_TIMEOUT);
+>> +       if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
+>> +               timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
+>> +
+>> +       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
+>>
+>>         if (err) {
+>>                 dev_err(hba->dev,
+>> --
+>> 1.8.5.2
+>>
+>> --
+>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
+>> member of Code Aurora Forum, hosted by The Linux Foundation
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
