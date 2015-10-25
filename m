@@ -1,86 +1,108 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 13/15] scsi: ufs: add missing memory barriers
-Date: Sun, 25 Oct 2015 16:56:22 +0200
-Message-ID: <1445784984-16443-14-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v4 08/15] scsi: ufs: add retries to dme_peer get and set attribute
+Date: Sun, 25 Oct 2015 16:56:17 +0200
+Message-ID: <1445784984-16443-9-git-send-email-ygardi@codeaurora.org>
 References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Performing several writes to UFS host controller registers has
-no gurrantee of ordering, so we must make sure register writes
-to setup request list base address etc. are performed before the
-run/stop register is enabled.
-In addition, when setting up a task request, we must make sure
-the updating of descriptors takes places before ringing the
-doorbell, similarly to setting up a transfer request.
+The dme_peer get/set attribute commands are prone to errors, therefore
+we add three retries for the UIC command sending.
+Error code returned from ufshcd_send_uic_cmd() is checked, and unless
+it was successful or the retries have finished, another command will be
+sent.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+Signed-off-by: Lee Susman <lsusman@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 24a879d..14bebc5 100644
+index 8a04691..5005d12 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -402,11 +402,9 @@ static inline int ufshcd_get_lists_status(u32 reg)
- 	 *  1		UTRLRDY
- 	 *  2		UTMRLRDY
- 	 *  3		UCRDY
--	 *  4		HEI
--	 *  5		DEI
--	 * 6-7		reserved
-+	 * 4-7		reserved
- 	 */
--	return (((reg) & (0xFF)) >> 1) ^ (0x07);
-+	return ((reg & 0xFF) >> 1) ^ 0x07;
+@@ -70,6 +70,9 @@
+ /* Task management command timeout */
+ #define TM_CMD_TIMEOUT	100 /* msecs */
+ 
++/* maximum number of retries for a general UIC command  */
++#define UFS_UIC_COMMAND_RETRIES 3
++
+ /* maximum number of link-startup retries */
+ #define DME_LINKSTARTUP_RETRIES 3
+ 
+@@ -2185,6 +2188,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *set = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 
+ 	uic_cmd.command = peer ?
+ 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
+@@ -2192,10 +2196,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
+ 	uic_cmd.argument3 = mib_val;
+ 
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret)
+-		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
+-			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++		if (ret)
++			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
++	} while (ret && peer && --retries);
++
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
++				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
++				retries);
+ 
+ 	return ret;
  }
+@@ -2220,6 +2232,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	};
+ 	const char *get = action[!!peer];
+ 	int ret;
++	int retries = UFS_UIC_COMMAND_RETRIES;
+ 	struct ufs_pa_layer_attr orig_pwr_info;
+ 	struct ufs_pa_layer_attr temp_pwr_info;
+ 	bool pwr_mode_change = false;
+@@ -2250,14 +2263,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
+ 	uic_cmd.argument1 = attr_sel;
  
- /**
-@@ -2727,7 +2725,7 @@ out:
-  * To bring UFS host controller to operational state,
-  * 1. Enable required interrupts
-  * 2. Configure interrupt aggregation
-- * 3. Program UTRL and UTMRL base addres
-+ * 3. Program UTRL and UTMRL base address
-  * 4. Configure run-stop-registers
-  *
-  * Returns 0 on success, non-zero value on failure
-@@ -2757,8 +2755,13 @@ static int ufshcd_make_hba_operational(struct ufs_hba *hba)
- 			REG_UTP_TASK_REQ_LIST_BASE_H);
- 
- 	/*
-+	 * Make sure base address and interrupt setup are updated before
-+	 * enabling the run/stop registers below.
-+	 */
-+	wmb();
+-	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+-	if (ret) {
+-		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
+-			get, UIC_GET_ATTR_ID(attr_sel), ret);
+-		goto out;
+-	}
++	do {
++		/* for peer attributes we retry upon failure */
++		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++		if (ret)
++			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
++				get, UIC_GET_ATTR_ID(attr_sel), ret);
++	} while (ret && peer && --retries);
 +
-+	/*
- 	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
--	 * DEI, HEI bits must be 0
- 	 */
- 	reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
- 	if (!(ufshcd_get_lists_status(reg))) {
-@@ -3921,7 +3924,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
++	if (!retries)
++		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
++				get, UIC_GET_ATTR_ID(attr_sel), retries);
  
- 	/* send command to the controller */
- 	__set_bit(free_slot, &hba->outstanding_tasks);
-+
-+	/* Make sure descriptors are ready before ringing the task doorbell */
-+	wmb();
-+
- 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
-+	/* Make sure that doorbell is committed immediately */
-+	wmb();
+-	if (mib_val)
++	if (mib_val && !ret)
+ 		*mib_val = uic_cmd.argument3;
  
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
+ 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
 -- 
 1.8.5.2
 
