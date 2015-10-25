@@ -1,95 +1,107 @@
 From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 05/15] scsi: ufs: increase fDeviceInit query response
- timeout
-Date: Sun, 25 Oct 2015 13:38:19 -0000
-Message-ID: <34946dd94ecbe771a307c1470e63985e.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v3 09/15] scsi: ufs: add retries for hibern8 enter
+Date: Sun, 25 Oct 2015 13:45:22 -0000
+Message-ID: <4ed7c37f55b57369feb4d91d2563d175.squirrel@www.codeaurora.org>
 References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-    <1441188795-4600-6-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyh6dvnDBm0Udw2pWY3GgJL0AdYw7F-f_JpJtuHurDvEFw@mail.gmail.com>
+    <1441188795-4600-10-git-send-email-ygardi@codeaurora.org>
+    <CAC5umygAA0Q-8pCFi2GbC8Tn5XxMPSGauSsV-FJQihXAi+xbTA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39281 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39402 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbbJYNiU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Oct 2015 09:38:20 -0400
-In-Reply-To: <CAC5umyh6dvnDBm0Udw2pWY3GgJL0AdYw7F-f_JpJtuHurDvEFw@mail.gmail.com>
+	with ESMTP id S1750762AbbJYNpX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Oct 2015 09:45:23 -0400
+In-Reply-To: <CAC5umygAA0Q-8pCFi2GbC8Tn5XxMPSGauSsV-FJQihXAi+xbTA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 
 > 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> fDeviceInit query response time for some devices is too long that
->> default
->> query request timeout of 100ms may not be enough. Experiments show that
->> fDeviceInit response sometimes takes 500ms so to be on safer side this
->> change sets the timeout to 600ms. Without this change, we might
->> unnecessarily have to retry fDeviceInit query requests multiple times
->> and
->> each query request timeout prints one error message.
+>> If hibern8 enter command fails then UFS link state may be unknown which
+>> may result into timeout of all the commands issued after failure.
+>>
+>> This change does 2 things (for pre-defined number of retry counts) after
+>> hibern8 enter failure:
+>> 1. Recovers the UFS link to active state
+>> 2. If link is recovered to active state, tries to put the UFS link in
+>>    hibern8 enter again until retry count expires.
 >>
 >> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 >> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >>
 >> ---
->>  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
->>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>  drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
+>>  1 file changed, 24 insertions(+), 2 deletions(-)
 >>
 >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index e0b8755..573a8cb 100644
+>> index 8d5bdf0..5800b08 100644
 >> --- a/drivers/scsi/ufs/ufshcd.c
 >> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -58,6 +58,12 @@
->>  #define QUERY_REQ_RETRIES 10
->>  /* Query request timeout */
->>  #define QUERY_REQ_TIMEOUT 30 /* msec */
->> +/*
->> + * Query request timeout for fDeviceInit flag
->> + * fDeviceInit query response time for some devices is too large that
->> default
->> + * QUERY_REQ_TIMEOUT may not be enough for such devices.
->> + */
->> +#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
->
-> How about just increasing QUERY_REQ_TIMEOUT from 30ms to 600ms
-> instead of conditionally setting timeout depending on ufs flag?
-
-Your suggestion obviously could work (increasing the QUERY_REQ_TIMEOUT to
-600ms), but in that case we bring extra delay of 570ms to error handling
-of query timeout, and in such a case, instead of handling the error after
-30ms we handle it after 600ms, which make the SW hang.
-does it make sense ?
-
-
->
+>> @@ -75,6 +75,9 @@
+>>  /* maximum number of link-startup retries */
+>>  #define DME_LINKSTARTUP_RETRIES 3
 >>
->>  /* Task management command timeout */
->>  #define TM_CMD_TIMEOUT 100 /* msecs */
->> @@ -1651,6 +1657,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
->> enum query_opcode opcode,
->>         struct ufs_query_req *request = NULL;
->>         struct ufs_query_res *response = NULL;
->>         int err, index = 0, selector = 0;
->> +       int timeout = QUERY_REQ_TIMEOUT;
->>
->>         BUG_ON(!hba);
->>
->> @@ -1683,7 +1690,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
->> enum query_opcode opcode,
->>                 goto out_unlock;
->>         }
->>
->> -       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY,
->> QUERY_REQ_TIMEOUT);
->> +       if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
->> +               timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
+>> +/* Maximum retries for Hibern8 enter */
+>> +#define UIC_HIBERN8_ENTER_RETRIES 3
 >> +
->> +       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
+>>  /* maximum number of reset retries before giving up */
+>>  #define MAX_HOST_RESET_RETRIES 5
 >>
->>         if (err) {
->>                 dev_err(hba->dev,
+>> @@ -2389,13 +2392,32 @@ out:
+>>         return ret;
+>>  }
+>>
+>> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>> +static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>>  {
+>> +       int ret;
+>>         struct uic_command uic_cmd = {0};
+>>
+>>         uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+>> +       ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>> +
+>> +       if (ret)
+>> +               dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d",
+>> +                       __func__, ret);
+>
+> This format string is not terminated with '\n'.
+> (I found several same issues in ufshcd.c)
+
+correct. will be modified in the next v4.
+>
+>> +
+>> +       return ret;
+>> +}
+>> +
+>> +static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>> +{
+>> +       int ret = 0, retries;
+>>
+>
+> 'ret' will soon be initialized in the loop anyway, so it is unnecessary
+> to initialized here.
+
+correct but, in order to be on the safe side, better to leave this
+initialization here, as if UIC_HIBERN8_ENTER_RETRIES is modified to 0, we
+will never get into the for-loop, and thus, ret will be un initialized.
+
+
+>
+>> -       return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>> +       for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0;
+>> retries--) {
+>> +               ret = __ufshcd_uic_hibern8_enter(hba);
+>> +               if (!ret || ret == -ENOLINK)
+>> +                       goto out;
+>> +       }
+>> +out:
+>> +       return ret;
+>>  }
+>>
+>>  static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
 >> --
 >> 1.8.5.2
 >>
