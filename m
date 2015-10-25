@@ -1,52 +1,65 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 00/15] Big fixes, retries, handle a race condition
-Date: Sun, 25 Oct 2015 16:56:09 +0200
-Message-ID: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v4 02/15] scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
+Date: Sun, 25 Oct 2015 16:56:11 +0200
+Message-ID: <1445784984-16443-3-git-send-email-ygardi@codeaurora.org>
+References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Important:
-This serie of 15 small patches should be pushed after the series of 8 patches
-"Fix error message and present UFS variant probe"
+Some of the data structures (like response UPIU) and/or its elements
+(unused fields) should be cleared before sending out the respective
+command to UFS device.
 
-V4:
-fixing a few comments from reviewers
+This change clears the UPIU response data structure for query commands
+and NOP command before sending out the command. We also initialize the
+PRDT table length to zero which should take care of commands which doesn't
+have any data associated with it. We are also clearing the unused fields in
+request UPIU for NOP command.
 
-V3:
-removed specific calls to wmb() since they are redundant.
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V2:
-a few minor changes
+---
+ drivers/scsi/ufs/ufshcd.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-V1:
-This serie of 15 small patches should be pushed after the series of 8 patches
-I have uploaded to the upstream a week ago:
-"Fix error message and present UFS variant probe"
-
-Yaniv Gardi (15):
-  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: verify command tag validity
-  scsi: ufs: clear outstanding_request bit in case query timeout
-  scsi: ufs: increase fDeviceInit query response timeout
-  scsi: ufs: avoid exception event handler racing with PM callbacks
-  scsi: ufs: set REQUEST_SENSE command size to 18 bytes
-  scsi: ufs: add retries to dme_peer get and set attribute
-  scsi: ufs: add retries for hibern8 enter
-  scsi: ufs: fix error recovery after the hibern8 exit failure
-  scsi: ufs: retry failed query flag requests
-  scsi: ufs: reduce the interrupts for power mode change requests
-  scsi: ufs: add missing memory barriers
-  scsi: ufs: commit descriptors before setting the doorbell
-  scsi: ufs: add wrapper for retrying sending query attribute
-
- drivers/scsi/ufs/ufshcd.c | 410 ++++++++++++++++++++++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h |   4 +
- 2 files changed, 329 insertions(+), 85 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3428f72..2d3ebca 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1129,6 +1129,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
+ 	/* dword_3 is reserved, hence it is set to 0 */
+ 	req_desc->header.dword_3 = 0;
++
++	req_desc->prd_table_length = 0;
+ }
+ 
+ /**
+@@ -1198,6 +1200,7 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
+ 	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
+ 		memcpy(descp, query->descriptor, len);
+ 
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
+ 
+ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
+@@ -1210,6 +1213,11 @@ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
+ 	ucd_req_ptr->header.dword_0 =
+ 		UPIU_HEADER_DWORD(
+ 			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
++	/* clear rest of the fields of basic header */
++	ucd_req_ptr->header.dword_1 = 0;
++	ucd_req_ptr->header.dword_2 = 0;
++
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
+ 
+ /**
 -- 
 1.8.5.2
 
