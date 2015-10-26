@@ -1,281 +1,302 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 09/17] scsi: ufs: make error handling bit faster
-Date: Mon, 26 Oct 2015 17:41:04 +0200
-Message-ID: <1445874072-25909-10-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 16/17] scsi: ufs-qcom: set PA_Local_TX_LCC_Enable before link startup
+Date: Mon, 26 Oct 2015 17:41:11 +0200
+Message-ID: <1445874072-25909-17-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43560 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbbJZPmI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 11:42:08 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+List-Id: linux-scsi@vger.kernel.org
 
-UFS driver's error handler forcefully tries to clear all the pending
-requests. For each pending request in the queue, it waits 1 sec for it
-to get cleared. If we have multiple requests in the queue then it's
-possible that we might end up waiting for those many seconds before
-resetting the host. But note that resetting host would any way clear
-all the pending requests from the hardware. Hence this change skips
-the forceful clear of the pending requests if we are anyway going to
-reset the host (for fatal errors).
+Some UFS devices (and may be host) have issues if LCC is
+enabled. So we are setting PA_Local_TX_LCC_Enable to 0
+before link startup which will make sure that both host
+and device TX LCC are disabled once link startup is
+completed.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+This change also:
+- enables the device ref clock before changing to HS mode
+  and disables it if entered to PWM mode
+- adds printouts of testbus debug registers
+
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 155 +++++++++++++++++++++++++++++++++-------------
- 1 file changed, 112 insertions(+), 43 deletions(-)
+ drivers/scsi/ufs/ufs-qcom.c | 116 +++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufs-qcom.h |   9 ++++
+ drivers/scsi/ufs/ufshcd.h   |   9 ++++
+ drivers/scsi/ufs/unipro.h   |   1 +
+ 4 files changed, 128 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ff57eb8..3bf557b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -135,9 +135,11 @@ enum {
- /* UFSHCD UIC layer error flags */
- enum {
- 	UFSHCD_UIC_DL_PA_INIT_ERROR = (1 << 0), /* Data link layer error */
--	UFSHCD_UIC_NL_ERROR = (1 << 1), /* Network layer error */
--	UFSHCD_UIC_TL_ERROR = (1 << 2), /* Transport Layer error */
--	UFSHCD_UIC_DME_ERROR = (1 << 3), /* DME error */
-+	UFSHCD_UIC_DL_NAC_RECEIVED_ERROR = (1 << 1), /* Data link layer error */
-+	UFSHCD_UIC_DL_TCx_REPLAY_ERROR = (1 << 2), /* Data link layer error */
-+	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
-+	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
-+	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index c470c40..72b0ef7 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -16,8 +16,8 @@
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/phy/phy.h>
+-
+ #include <linux/phy/phy-qcom-ufs.h>
++
+ #include "ufshcd.h"
+ #include "ufshcd-pltfrm.h"
+ #include "unipro.h"
+@@ -58,6 +58,12 @@ static void ufs_qcom_dump_regs(struct ufs_hba *hba, int offset, int len,
+ 			len * 4, false);
+ }
+ 
++static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
++		char *prefix, void *priv)
++{
++	ufs_qcom_dump_regs(hba, offset, len, prefix);
++}
++
+ static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
+ {
+ 	int err = 0;
+@@ -106,9 +112,11 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	clk_disable_unprepare(host->tx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->tx_l1_sync_clk);
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->rx_l1_sync_clk);
+ 	clk_disable_unprepare(host->rx_l0_sync_clk);
+ 
+ 	host->is_lane_clks_enabled = false;
+@@ -271,9 +279,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 	ret = ufs_qcom_phy_calibrate_phy(phy, is_rate_B);
+ 
+ 	if (ret) {
+-		dev_err(hba->dev,
+-		"%s: ufs_qcom_phy_calibrate_phy()failed, ret = %d\n",
+-		__func__, ret);
++		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
++			__func__, ret);
+ 		goto out;
+ 	}
+ 
+@@ -523,6 +530,18 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+ 			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
+ 									  150);
+ 
++		/*
++		 * Some UFS devices (and may be host) have issues if LCC is
++		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
++		 * before link startup which will make sure that both host
++		 * and device TX LCC are disabled once link startup is
++		 * completed.
++		 */
++		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
++			err = ufshcd_dme_set(hba,
++					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
++					0);
++
+ 		break;
+ 	case POST_CHANGE:
+ 		ufs_qcom_link_startup_post_change(hba);
+@@ -966,6 +985,10 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 			goto out;
+ 		}
+ 
++		/* enable the device ref clock before changing to HS mode */
++		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
++			ufshcd_is_hs_mode(dev_req_params))
++			ufs_qcom_dev_ref_clk_ctrl(host, true);
+ 		break;
+ 	case POST_CHANGE:
+ 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
+@@ -993,6 +1016,11 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 		memcpy(&host->dev_req_params,
+ 				dev_req_params, sizeof(*dev_req_params));
+ 		ufs_qcom_update_bus_bw_vote(host);
++
++		/* disable the device ref clock if entered PWM mode */
++		if (ufshcd_is_hs_mode(&hba->pwr_info) &&
++			!ufshcd_is_hs_mode(dev_req_params))
++			ufs_qcom_dev_ref_clk_ctrl(host, false);
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+@@ -1094,6 +1122,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+ 			goto out;
+ 		}
++		/* enable the device ref clock for HS mode*/
++		if (ufshcd_is_hs_mode(&hba->pwr_info))
++			ufs_qcom_dev_ref_clk_ctrl(host, true);
+ 		vote = host->bus_vote.saved_vote;
+ 		if (vote == host->bus_vote.min_bw_vote)
+ 			ufs_qcom_update_bus_bw_vote(host);
+@@ -1371,6 +1402,74 @@ out:
+ 	return err;
+ }
+ 
++static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
++		void *priv, void (*print_fn)(struct ufs_hba *hba,
++		int offset, int num_regs, char *str, void *priv))
++{
++	u32 reg;
++	struct ufs_qcom_host *host;
++
++	if (unlikely(!hba)) {
++		pr_err("%s: hba is NULL\n", __func__);
++		return;
++	}
++	if (unlikely(!print_fn)) {
++		dev_err(hba->dev, "%s: print_fn is NULL\n", __func__);
++		return;
++	}
++
++	host = ufshcd_get_variant(hba);
++	if (!(host->dbg_print_en & UFS_QCOM_DBG_PRINT_REGS_EN))
++		return;
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_REG_OCSC);
++	print_fn(hba, reg, 44, "UFS_UFS_DBG_RD_REG_OCSC ", priv);
++
++	reg = ufshcd_readl(hba, REG_UFS_CFG1);
++	reg |= UFS_BIT(17);
++	ufshcd_writel(hba, reg, REG_UFS_CFG1);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_EDTL_RAM);
++	print_fn(hba, reg, 32, "UFS_UFS_DBG_RD_EDTL_RAM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_DESC_RAM);
++	print_fn(hba, reg, 128, "UFS_UFS_DBG_RD_DESC_RAM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
++	print_fn(hba, reg, 64, "UFS_UFS_DBG_RD_PRDT_RAM ", priv);
++
++	ufshcd_writel(hba, (reg & ~UFS_BIT(17)), REG_UFS_CFG1);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
++	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UAWM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UARM);
++	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UARM ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TXUC);
++	print_fn(hba, reg, 48, "UFS_DBG_RD_REG_TXUC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_RXUC);
++	print_fn(hba, reg, 27, "UFS_DBG_RD_REG_RXUC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_DFC);
++	print_fn(hba, reg, 19, "UFS_DBG_RD_REG_DFC ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TRLUT);
++	print_fn(hba, reg, 34, "UFS_DBG_RD_REG_TRLUT ", priv);
++
++	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
++	print_fn(hba, reg, 9, "UFS_DBG_RD_REG_TMRLUT ", priv);
++}
++
++static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
++{
++	if (host->dbg_print_en & UFS_QCOM_DBG_PRINT_TEST_BUS_EN)
++		ufshcd_rmwl(host->hba, TEST_BUS_EN, TEST_BUS_EN, REG_UFS_CFG1);
++	else
++		ufshcd_rmwl(host->hba, TEST_BUS_EN, 0, REG_UFS_CFG1);
++}
++
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host)
+ {
+ 	/* provide a legal default configuration */
+@@ -1479,6 +1578,7 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	ufshcd_rmwl(host->hba, mask,
+ 		    (u32)host->testbus.select_minor << offset,
+ 		    reg);
++	ufs_qcom_enable_test_bus(host);
+ 	ufshcd_release(host->hba);
+ 	pm_runtime_put_sync(host->hba->dev);
+ 
+@@ -1495,8 +1595,10 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 	ufs_qcom_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16,
+ 			"HCI Vendor Specific Registers ");
+ 
++	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+ 	ufs_qcom_testbus_read(hba);
+ }
++
+ /**
+  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+  *
+@@ -1541,7 +1643,7 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+  * ufs_qcom_remove - set driver_data of the device to NULL
+  * @pdev: pointer to platform device handle
+  *
+- * Always return 0
++ * Always returns 0
+  */
+ static int ufs_qcom_remove(struct platform_device *pdev)
+ {
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 36249b3..a19307a 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -241,6 +241,15 @@ struct ufs_qcom_host {
+ 	struct ufs_qcom_testbus testbus;
  };
  
- /* Interrupt configuration options */
-@@ -3492,31 +3494,18 @@ static void ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- }
- 
- /**
-- * ufshcd_transfer_req_compl - handle SCSI and query command completion
-+ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-+ * @completed_reqs: requests to complete
-  */
--static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
-+static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-+					unsigned long completed_reqs)
- {
- 	struct ufshcd_lrb *lrbp;
- 	struct scsi_cmnd *cmd;
--	unsigned long completed_reqs;
--	u32 tr_doorbell;
- 	int result;
- 	int index;
- 
--	/* Resetting interrupt aggregation counters first and reading the
--	 * DOOR_BELL afterward allows us to handle all the completed requests.
--	 * In order to prevent other interrupts starvation the DB is read once
--	 * after reset. The down side of this solution is the possibility of
--	 * false interrupt if device completes another request after resetting
--	 * aggregation and before reading the DB.
--	 */
--	if (ufshcd_is_intr_aggr_allowed(hba))
--		ufshcd_reset_intr_aggr(hba);
--
--	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
--
- 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
- 		lrbp = &hba->lrb[index];
- 		cmd = lrbp->cmd;
-@@ -3546,6 +3535,31 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_transfer_req_compl - handle SCSI and query command completion
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_transfer_req_compl(struct ufs_hba *hba)
++static inline u32
++ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
 +{
-+	unsigned long completed_reqs;
-+	u32 tr_doorbell;
++	if (host->hw_ver.major <= 0x02)
++		return UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(reg);
 +
-+	/* Resetting interrupt aggregation counters first and reading the
-+	 * DOOR_BELL afterward allows us to handle all the completed requests.
-+	 * In order to prevent other interrupts starvation the DB is read once
-+	 * after reset. The down side of this solution is the possibility of
-+	 * false interrupt if device completes another request after resetting
-+	 * aggregation and before reading the DB.
-+	 */
-+	if (ufshcd_is_intr_aggr_allowed(hba))
-+		ufshcd_reset_intr_aggr(hba);
++	return UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(reg);
++};
 +
-+	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
-+
-+	__ufshcd_transfer_req_compl(hba, completed_reqs);
+ #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
+ #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
+ #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index aa1f3e5..cba580c 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -54,6 +54,7 @@
+ #include <linux/clk.h>
+ #include <linux/completion.h>
+ #include <linux/regulator/consumer.h>
++#include "unipro.h"
+ 
+ #include <asm/irq.h>
+ #include <asm/byteorder.h>
+@@ -689,6 +690,14 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 
+ int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
+ 
++static inline bool ufshcd_is_hs_mode(struct ufs_pa_layer_attr *pwr_info)
++{
++	return (pwr_info->pwr_rx == FAST_MODE ||
++		pwr_info->pwr_rx == FASTAUTO_MODE) &&
++		(pwr_info->pwr_tx == FAST_MODE ||
++		pwr_info->pwr_tx == FASTAUTO_MODE);
 +}
 +
-+/**
-  * ufshcd_disable_ee - disable exception event
-  * @hba: per-adapter instance
-  * @mask: exception event to disable
-@@ -3800,6 +3814,13 @@ out:
- 	return;
- }
+ #define ASCII_STD true
  
-+/* Complete requests that have door-bell cleared */
-+static void ufshcd_complete_requests(struct ufs_hba *hba)
-+{
-+	ufshcd_transfer_req_compl(hba);
-+	ufshcd_tmc_handler(hba);
-+}
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -3812,6 +3833,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	u32 err_tm = 0;
- 	int err = 0;
- 	int tag;
-+	bool needs_reset = false;
- 
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
-@@ -3819,40 +3841,75 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	ufshcd_hold(hba, false);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	if (hba->ufshcd_state == UFSHCD_STATE_RESET)
- 		goto out;
--	}
- 
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 	ufshcd_set_eh_in_progress(hba);
- 
- 	/* Complete requests that have door-bell cleared by h/w */
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	ufshcd_complete_requests(hba);
-+	if ((hba->saved_err & INT_FATAL_ERRORS) ||
-+	    ((hba->saved_err & UIC_ERROR) &&
-+	    (hba->saved_uic_err & (UFSHCD_UIC_DL_PA_INIT_ERROR |
-+				   UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-+				   UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
-+		needs_reset = true;
- 
-+	/*
-+	 * if host reset is required then skip clearing the pending
-+	 * transfers forcefully because they will automatically get
-+	 * cleared after link startup.
-+	 */
-+	if (needs_reset)
-+		goto skip_pending_xfer_clear;
-+
-+	/* release lock as clear command might sleep */
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/* Clear pending transfer requests */
--	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs)
--		if (ufshcd_clear_cmd(hba, tag))
--			err_xfer |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-+		if (ufshcd_clear_cmd(hba, tag)) {
-+			err_xfer = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
- 	/* Clear pending task management requests */
--	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs)
--		if (ufshcd_clear_tm_cmd(hba, tag))
--			err_tm |= 1 << tag;
-+	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-+		if (ufshcd_clear_tm_cmd(hba, tag)) {
-+			err_tm = true;
-+			goto lock_skip_pending_xfer_clear;
-+		}
-+	}
- 
--	/* Complete the requests that are cleared by s/w */
-+lock_skip_pending_xfer_clear:
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	/* Complete the requests that are cleared by s/w */
-+	ufshcd_complete_requests(hba);
-+
-+	if (err_xfer || err_tm)
-+		needs_reset = true;
-+
-+skip_pending_xfer_clear:
- 	/* Fatal errors need reset */
--	if (err_xfer || err_tm || (hba->saved_err & INT_FATAL_ERRORS) ||
--			((hba->saved_err & UIC_ERROR) &&
--			 (hba->saved_uic_err & UFSHCD_UIC_DL_PA_INIT_ERROR))) {
-+	if (needs_reset) {
-+		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
-+
-+		/*
-+		 * ufshcd_reset_and_restore() does the link reinitialization
-+		 * which will need atleast one empty doorbell slot to send the
-+		 * device management commands (NOP and query commands).
-+		 * If there is no slot empty at this moment then free up last
-+		 * slot forcefully.
-+		 */
-+		if (hba->outstanding_reqs == max_doorbells)
-+			__ufshcd_transfer_req_compl(hba,
-+						    (1UL << (hba->nutrs - 1)));
-+
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err) {
- 			dev_err(hba->dev, "%s: reset and restore failed\n",
- 					__func__);
-@@ -3866,9 +3923,18 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->saved_err = 0;
- 		hba->saved_uic_err = 0;
- 	}
-+
-+	if (!needs_reset) {
-+		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+		if (hba->saved_err || hba->saved_uic_err)
-+			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
-+			    __func__, hba->saved_err, hba->saved_uic_err);
-+	}
-+
- 	ufshcd_clear_eh_in_progress(hba);
- 
- out:
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	scsi_unblock_requests(hba->host);
- 	ufshcd_release(hba);
- 	pm_runtime_put_sync(hba->dev);
-@@ -3923,15 +3989,18 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 	}
- 
- 	if (queue_eh_work) {
-+		/*
-+		 * update the transfer error masks to sticky bits, let's do this
-+		 * irrespective of current ufshcd_state.
-+		 */
-+		hba->saved_err |= hba->errors;
-+		hba->saved_uic_err |= hba->uic_error;
-+
- 		/* handle fatal errors only when link is functional */
- 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
- 			/* block commands from scsi mid-layer */
- 			scsi_block_requests(hba->host);
- 
--			/* transfer error masks to sticky bits */
--			hba->saved_err |= hba->errors;
--			hba->saved_uic_err |= hba->uic_error;
--
- 			hba->ufshcd_state = UFSHCD_STATE_ERROR;
- 			schedule_work(&hba->eh_work);
- 		}
+ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 8082020..e2854e4 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -75,6 +75,7 @@
+ #define PA_MAXRXSPEEDFAST	0x1541
+ #define PA_MAXRXSPEEDSLOW	0x1542
+ #define PA_TXLINKSTARTUPHS	0x1544
++#define PA_LOCAL_TX_LCC_ENABLE	0x155E
+ #define PA_TXSPEEDFAST		0x1565
+ #define PA_TXSPEEDSLOW		0x1566
+ #define PA_REMOTEVERINFO	0x15A0
 -- 
 1.8.5.2
 
