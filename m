@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 03/17] scsi: ufs: optimize system suspend handling
-Date: Mon, 26 Oct 2015 17:40:58 +0200
-Message-ID: <1445874072-25909-4-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 05/17] scsi: ufs: implement scsi host timeout handler
+Date: Mon, 26 Oct 2015 17:41:00 +0200
+Message-ID: <1445874072-25909-6-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
@@ -10,57 +10,82 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Consider following sequence of events:
-1. UFS is runtime suspended, link_state = Hibern8, device_state = sleep
-2. System goes into system suspend, ufshcd_system_suspend() brings both
-   link and device to active state and then puts the device in
-   Power_Down state and link in OFF state.
-3. System resumes at some later point in time, ufshcd_system_resume()
-   doesn't do anything as UFS state is runtime suspended. Note that
-   link is still on OFF state and device is in Power_Down state.
-4. Now system again goes into suspend without any UFS accesses
-   before it.
-   ufshcd_system_suspend() again brings both link and device to active
-   state and then puts the device in Power_Down state and link if OFF
-   state. But it's unnecessary to bring the link & device in active
-   state as both link and device are already in desired low power
-   states. This change fixes this issue by adding proper state checks
-   in ufshcd_system_suspend().
+A race condition exists between request requeueing and scsi layer
+error handling:
+When UFS driver queuecommand returns a busy status for a request,
+it will be requeued and its tag will be freed and set to -1.
+At the same time it is possible that the request will timeout and
+scsi layer will start error handling for it. The scsi layer reuses
+the request and its tag to send error related commands to the device,
+however its tag is no longer valid.
+As this request was never really sent to the device, there is no
+point to start error handling with the device.
+Implement the scsi error handling timeout callback and bypass SCSI
+error handling for request that were not actually sent to the device.
+For such requests simply reset the block layer timer. Otherwise, let
+SCSI layer perform the usual error handling.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 20c5b5d..00964f9 100644
+index a0aac38..3aea64b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5459,16 +5459,13 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
- 	if (!hba || !hba->is_powered)
- 		return 0;
+@@ -4597,6 +4597,41 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	ufshcd_probe_hba(hba);
+ }
  
--	if (pm_runtime_suspended(hba->dev)) {
--		if (hba->rpm_lvl == hba->spm_lvl)
--			/*
--			 * There is possibility that device may still be in
--			 * active state during the runtime suspend.
--			 */
--			if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
--			    hba->curr_dev_pwr_mode) && !hba->auto_bkops_enabled)
--				goto out;
-+	if ((ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl) ==
-+	     hba->curr_dev_pwr_mode) &&
-+	    (ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl) ==
-+	     hba->uic_link_state))
-+		goto out;
- 
-+	if (pm_runtime_suspended(hba->dev)) {
- 		/*
- 		 * UFS device and/or UFS link low power states during runtime
- 		 * suspend seems to be different than what is expected during
++static enum blk_eh_timer_return ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	struct Scsi_Host *host;
++	struct ufs_hba *hba;
++	int index;
++	bool found = false;
++
++	if (!scmd || !scmd->device || !scmd->device->host)
++		return BLK_EH_NOT_HANDLED;
++
++	host = scmd->device->host;
++	hba = shost_priv(host);
++	if (!hba)
++		return BLK_EH_NOT_HANDLED;
++
++	spin_lock_irqsave(host->host_lock, flags);
++
++	for_each_set_bit(index, &hba->outstanding_reqs, hba->nutrs) {
++		if (hba->lrb[index].cmd == scmd) {
++			found = true;
++			break;
++		}
++	}
++
++	spin_unlock_irqrestore(host->host_lock, flags);
++
++	/*
++	 * Bypass SCSI error handling and reset the block layer timer if this
++	 * SCSI command was not actually dispatched to UFS driver, otherwise
++	 * let SCSI layer handle the error as usual.
++	 */
++	return found ? BLK_EH_NOT_HANDLED : BLK_EH_RESET_TIMER;
++}
++
+ static struct scsi_host_template ufshcd_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+@@ -4609,6 +4644,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.eh_abort_handler	= ufshcd_abort,
+ 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
+ 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
++	.eh_timed_out		= ufshcd_eh_timed_out,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
 -- 
 1.8.5.2
 
