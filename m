@@ -1,67 +1,85 @@
-From: Don Brace <brace77070@gmail.com>
-Subject: Re: [PATCH 01/21] hpsa: correct calls to dev_printk
-Date: Mon, 26 Oct 2015 08:41:32 -0500
-Message-ID: <562E2D8C.1090206@pmcs.com>
-References: <20151024193306.17127.7819.stgit@brunhilda>
- <20151024195232.17127.59627.stgit@brunhilda> <562E2208.5060200@redhat.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v1 08/17] scsi: ufs: split broken LCC quirk
+Date: Mon, 26 Oct 2015 13:58:13 -0000
+Message-ID: <27be51bdca19b53867dd72a564971cc2.squirrel@www.codeaurora.org>
+References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
+    <1442155977-7686-9-git-send-email-ygardi@codeaurora.org>
+    <CAC5umyjDpDZz77fOrxmudXiPsPEsN1pxvTL-r_9hAE3h3jaAGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36292 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872AbbJZNlf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 09:41:35 -0400
-Received: by pacfv9 with SMTP id fv9so197741851pac.3
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2015 06:41:35 -0700 (PDT)
-In-Reply-To: <562E2208.5060200@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyjDpDZz77fOrxmudXiPsPEsN1pxvTL-r_9hAE3h3jaAGw@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
 
-On 10/26/2015 07:52 AM, Tomas Henzl wrote:
-> On 24.10.2015 21:52, Don Brace wrote:
->> was seeing issues passing level into hpsa_show_dev_msg and then using
->> the level as an arguement to dev_printk. For now, switch to dev_warn.
+> 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+>> Currently when UFSHCD_BROKEN_LCC quirk is defined, LCC is getting
+>> disabled on both host and device side but there could be a need
+>> where we don't want to disable the LCC on both side hence this change
+>> splits the quirk in 2 parts one for host and one for device.
 >>
->> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>
 >> ---
->>   drivers/scsi/hpsa.c |   41 ++++++++++++++++++++++++-----------------
->>   1 file changed, 24 insertions(+), 17 deletions(-)
+>>  drivers/scsi/ufs/ufshcd.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
 >>
->> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
->> index 40669f8..8454f22 100644
->> --- a/drivers/scsi/hpsa.c
->> +++ b/drivers/scsi/hpsa.c
->> @@ -1137,11 +1137,15 @@ static int hpsa_find_target_lun(struct ctlr_info *h,
->>   static inline void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
->>   	struct hpsa_scsi_dev_t *dev, char *description)
->>   {
->> -	dev_printk(level, &h->pdev->dev,
->> +	if (dev == NULL)
->> +		return;
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 0803a89..411ec17 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -3048,6 +3048,11 @@ static int ufshcd_disable_tx_lcc(struct ufs_hba
+>> *hba, bool peer)
+>>         return err;
+>>  }
+>>
+>> +static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
+>> +{
+>> +       return ufshcd_disable_tx_lcc(hba, false);
+>> +}
 >> +
->> +	dev_warn(&h->pdev->dev,
->>   			"scsi %d:%d:%d:%d: %s %s %.8s %.16s RAID-%s SSDSmartPathCap%c En%c Exp=%d\n",
->>   			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
->>   			description,
->> -			scsi_device_type(dev->devtype),
->> +			dev->devtype >= 0 ?
->> +				scsi_device_type(dev->devtype) : "unknown",
-> Can devtype ever be negative? Found only this place in code
-> where it is set "this_device->devtype = (inq_buff[0] & 0x1f);"
-> And if it was negative the scsi_device_type will return "Unknown"
-> anyway. You probably could skip the test now and switch devtype
-> from int to unsigned in the future.
+>>  static inline int ufshcd_disable_device_tx_lcc(struct ufs_hba *hba)
+>>  {
+>>         return ufshcd_disable_tx_lcc(hba, true);
+>> @@ -3095,6 +3100,12 @@ static int ufshcd_link_startup(struct ufs_hba
+>> *hba)
+>>                         goto out;
+>>         }
+>>
+>> +       if (hba->dev_quirks & UFS_DEVICE_QUIRK_BROKEN_LCC) {
+>> +               ret = ufshcd_disable_host_tx_lcc(hba);
+>> +               if (ret)
+>> +                       goto out;
+>> +       }
+>> +
 >
-> Cheers,
-> Tomas
->
->
-Thanks, changed to unsigned and removed check.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This dev_quirks is checked just after link startup.  But dev_quirk is
+> determined after ufshcd_complete_dev_init().  Is this quirk correctly
+> be applied?
 
+good comment :)
+since there is no need in this quirk anymore (it is never set),
+luckily we can totally remove the quirk.
+i will remove this patch totally in v2
+
+
+
+>
+>>         /* Include any host controller configuration via UIC commands */
+>>         ret = ufshcd_vops_link_startup_notify(hba, POST_CHANGE);
+>>         if (ret)
+>> --
+>> 1.8.5.2
+>>
+>> --
+>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
+>> member of Code Aurora Forum, hosted by The Linux Foundation
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
