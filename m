@@ -1,150 +1,177 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 08/17] scsi: ufs: disable vccq if it's not needed by UFS device
-Date: Mon, 26 Oct 2015 17:41:03 +0200
-Message-ID: <1445874072-25909-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 01/17] scsi: ufs-qcom: add number of lanes per direction
+Date: Mon, 26 Oct 2015 17:40:56 +0200
+Message-ID: <1445874072-25909-2-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:OPEN FIRMWARE AND FLATTENED
+	DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Some UFS devices don't require VCCQ rail for device operations hence
-this change adds support to recognize such devices and remove vote for
-the unused VCCQ rail.
+Different platform may have different number of lanes
+for the UFS link.
+Add parameter to device tree specifying how many lanes
+should be configured for the UFS link.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufs.h    |  1 +
- drivers/scsi/ufs/ufshcd.c | 60 +++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 57 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  3 ++
+ drivers/scsi/ufs/ufs-qcom.c                        | 38 ++++++++++++----------
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 19 +++++++++++
+ drivers/scsi/ufs/ufshcd.c                          |  1 +
+ drivers/scsi/ufs/ufshcd.h                          |  2 ++
+ 5 files changed, 46 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 85c46b9..05e0f23 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -500,6 +500,7 @@ struct ufs_vreg {
- 	struct regulator *reg;
- 	const char *name;
- 	bool enabled;
-+	bool unused;
- 	int min_uV;
- 	int max_uV;
- 	int min_uA;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 21e0792..ff57eb8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -221,6 +221,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 				 bool skip_ref_clk);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused);
- static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
- static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-@@ -4622,6 +4623,12 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		goto out;
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index 03c0e98..9fea0de 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -38,6 +38,9 @@ Optional properties:
+ 			  defined or a value in the array is "0" then it is assumed
+ 			  that the frequency is set by the parent clock or a
+ 			  fixed rate clock source.
++- lanes-per-direction:	number of lanes available per direction - either 1 or 2.
++			Note that it is assume same number of lanes is used both directions at once.
++			If not specified, default is 2 lanes per direction.
  
- 	ufs_advertise_fixup_device(hba);
-+
-+	ret = ufshcd_set_vccq_rail_unused(hba,
-+		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
-+	if (ret)
-+		goto out;
-+
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
-@@ -4773,13 +4780,24 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg,
-+					       UFS_VREG_LPM_LOAD_UA);
- }
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4f38d00..c470c40 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -132,21 +132,23 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto disable_rx_l0;
  
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
-+	if (!vreg)
-+		return 0;
-+	else if (vreg->unused)
-+		return 0;
-+	else
-+		return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
+-	err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
+-		host->rx_l1_sync_clk);
+-	if (err)
+-		goto disable_tx_l0;
+-
+-	err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
+-		host->tx_l1_sync_clk);
+-	if (err)
+-		goto disable_rx_l1;
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_enable(dev, "rx_lane1_sync_clk",
++			host->rx_l1_sync_clk);
++		if (err)
++			goto disable_tx_l0;
  
- static int ufshcd_config_vreg(struct device *dev,
-@@ -4814,7 +4832,9 @@ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = ufshcd_config_vreg(dev, vreg, true);
-@@ -4834,7 +4854,9 @@ static int ufshcd_disable_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
- 
--	if (!vreg || !vreg->enabled)
-+	if (!vreg)
-+		goto out;
-+	else if (!vreg->enabled || vreg->unused)
- 		goto out;
- 
- 	ret = regulator_disable(vreg->reg);
-@@ -4940,6 +4962,36 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
- 	return 0;
- }
- 
-+static int ufshcd_set_vccq_rail_unused(struct ufs_hba *hba, bool unused)
-+{
-+	int ret = 0;
-+	struct ufs_vreg_info *info = &hba->vreg_info;
-+
-+	if (!info)
-+		goto out;
-+	else if (!info->vccq)
-+		goto out;
-+
-+	if (unused) {
-+		/* shut off the rail here */
-+		ret = ufshcd_toggle_vreg(hba->dev, info->vccq, false);
-+		/*
-+		 * Mark this rail as no longer used, so it doesn't get enabled
-+		 * later by mistake
-+		 */
-+		if (!ret)
-+			info->vccq->unused = true;
-+	} else {
-+		/*
-+		 * rail should have been already enabled hence just make sure
-+		 * that unused flag is cleared.
-+		 */
-+		info->vccq->unused = false;
++		err = ufs_qcom_host_clk_enable(dev, "tx_lane1_sync_clk",
++			host->tx_l1_sync_clk);
++		if (err)
++			goto disable_rx_l1;
 +	}
-+out:
-+	return ret;
+ 	host->is_lane_clks_enabled = true;
+ 	goto out;
+ 
+ disable_rx_l1:
+-	clk_disable_unprepare(host->rx_l1_sync_clk);
++	if (host->hba->lanes_per_direction > 1)
++		clk_disable_unprepare(host->rx_l1_sync_clk);
+ disable_tx_l0:
+ 	clk_disable_unprepare(host->tx_l0_sync_clk);
+ disable_rx_l0:
+@@ -170,14 +172,16 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
+-		&host->rx_l1_sync_clk);
+-	if (err)
+-		goto out;
+-
+-	err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
+-		&host->tx_l1_sync_clk);
++	/* In case of single lane per direction, don't read lane1 clocks */
++	if (host->hba->lanes_per_direction > 1) {
++		err = ufs_qcom_host_clk_get(dev, "rx_lane1_sync_clk",
++			&host->rx_l1_sync_clk);
++		if (err)
++			goto out;
+ 
++		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
++			&host->tx_l1_sync_clk);
++	}
+ out:
+ 	return err;
+ }
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 9714f2a..5be0c91 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -40,6 +40,8 @@
+ #include "ufshcd.h"
+ #include "ufshcd-pltfrm.h"
+ 
++#define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
++
+ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+@@ -277,6 +279,21 @@ void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_shutdown);
+ 
++static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	int ret;
++
++	ret = of_property_read_u32(dev->of_node, "lanes-per-direction",
++		&hba->lanes_per_direction);
++	if (ret) {
++		dev_dbg(hba->dev,
++			"%s: failed to read lanes-per-direction, ret=%d\n",
++			__func__, ret);
++		hba->lanes_per_direction = UFSHCD_DEFAULT_LANES_PER_DIRECTION;
++	}
 +}
 +
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 					bool skip_ref_clk)
- {
+ /**
+  * ufshcd_pltfrm_init - probe routine of the driver
+  * @pdev: pointer to Platform device handle
+@@ -331,6 +348,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	pm_runtime_set_active(&pdev->dev);
+ 	pm_runtime_enable(&pdev->dev);
+ 
++	ufshcd_init_lanes_per_dir(hba);
++
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err(dev, "Intialization failed\n");
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 98607e4..8d16aca 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -40,6 +40,7 @@
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+ 
++#include <linux/of.h>
+ #include "ufshcd.h"
+ #include "unipro.h"
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index f8ce680..e7bcf65 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -509,6 +509,8 @@ struct ufs_hba {
+ 
+ 	bool wlun_dev_clr_ua;
+ 
++	/* Number of lanes available (1 or 2) for Rx/Tx */
++	u32 lanes_per_direction;
+ 	struct ufs_pa_layer_attr pwr_info;
+ 	struct ufs_pwr_mode_info max_pwr_info;
+ 
 -- 
 1.8.5.2
 
