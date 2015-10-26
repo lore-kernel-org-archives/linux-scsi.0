@@ -1,151 +1,72 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 07/17] scsi: ufs: separate device and host quirks
-Date: Mon, 26 Oct 2015 13:30:17 -0000
-Message-ID: <5262350eb3482d0691f36d60d6e2f670.squirrel@www.codeaurora.org>
-References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-    <1442155977-7686-8-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyg1VKi-E_EUNV5PiDi2+ksUE-cLVKoz2A6Auog3SB=++g@mail.gmail.com>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH 19/21] hpsa: enhance device messages
+Date: Mon, 26 Oct 2015 08:36:00 -0500
+Message-ID: <562E2C40.1030504@pmcs.com>
+References: <201510250406.gGhioqiY%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyg1VKi-E_EUNV5PiDi2+ksUE-cLVKoz2A6Auog3SB=++g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:35009 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbbJZNgC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 09:36:02 -0400
+Received: by obctp1 with SMTP id tp1so115115893obc.2
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2015 06:36:01 -0700 (PDT)
+In-Reply-To: <201510250406.gGhioqiY%fengguang.wu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-> 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+On 10/24/2015 03:19 PM, kbuild test robot wrote:
+> Hi Don,
 >
->> diff --git a/drivers/scsi/ufs/ufs_quirks.c
->> b/drivers/scsi/ufs/ufs_quirks.c
->> new file mode 100644
->> index 0000000..b649bbf
->> --- /dev/null
->> +++ b/drivers/scsi/ufs/ufs_quirks.c
->> @@ -0,0 +1,101 @@
->> +/*
->> + * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 and
->> + * only version 2 as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + */
->> +
->> +#include "ufshcd.h"
->> +#include "ufs_quirks.h"
->> +
->> +
+> [auto build test ERROR on scsi/for-next -- if it's inappropriate base, please suggest rules for selecting the more suitable base]
 >
-> Single blank line is enough.
-
-done
-
+> url:    https://github.com/0day-ci/linux/commits/Don-Brace/hpsa-updates/20151025-040012
+> config: x86_64-randconfig-x017-201543 (attached as .config)
+> reproduce:
+>          # save the attached .config to linux build tree
+>          make ARCH=x86_64
 >
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index e5a876c..0803a89 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -39,9 +39,10 @@
->>
->>  #include <linux/async.h>
->>  #include <linux/devfreq.h>
->> -
->> +#include <linux/nls.h>
->>  #include <linux/of.h>
->>  #include "ufshcd.h"
->> +#include "ufs_quirks.h"
->>  #include "unipro.h"
->>  #define UFSHCD_REQ_SENSE_SIZE  18
->>
->> @@ -259,6 +260,16 @@ static inline void ufshcd_disable_irq(struct
->> ufs_hba *hba)
->>         }
->>  }
->>
->> +/* replace non-printable or non-ASCII characters with spaces */
->> +static inline void ufshcd_remove_non_printable(char *val)
->> +{
->> +       if (!val)
->> +               return;
->> +
->> +       if (*val < 0x20 || *val > 0x7e)
->> +               *val = ' ';
->> +}
->> +
->>  /*
->>   * ufshcd_wait_for_register - wait for register value to change
->>   * @hba - per-adapter interface
->> @@ -2052,6 +2063,82 @@ static inline int ufshcd_read_power_desc(struct
->> ufs_hba *hba,
->>         return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf,
->> size);
->>  }
->>
->> +int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
->> +{
->> +       return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf,
->> size);
->> +}
->> +EXPORT_SYMBOL(ufshcd_read_device_desc);
->> +
->> +/**
->> + * ufshcd_read_string_desc - read string descriptor
->> + * @hba: pointer to adapter instance
->> + * @desc_index: descriptor index
->> + * @buf: pointer to buffer where descriptor would be read
->> + * @size: size of buf
->> + * @ascii: if true convert from unicode to ascii characters
->> + *
->> + * Return 0 in case of success, non-zero otherwise
->> + */
->> +int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8
->> *buf,
->> +                               u32 size, bool ascii)
->> +{
->> +       int err = 0;
->> +
->> +       err = ufshcd_read_desc(hba,
->> +                               QUERY_DESC_IDN_STRING, desc_index, buf,
->> size);
->> +
->> +       if (err) {
->> +               dev_err(hba->dev, "%s: reading String Desc failed after
->> %d retries. err = %d\n",
->> +                       __func__, QUERY_REQ_RETRIES, err);
->> +               goto out;
->> +       }
+> All error/warnings (new ones prefixed by >>):
 >
-> I actually tried this patch and ufshcd_read_desc() always returns
-> -EINVAL due to the following check in the end of ufshcd_read_desc().
+>     drivers/scsi/hpsa.c: In function 'hpsa_show_dev_msg':
+>>> drivers/scsi/hpsa.c:1182:2: error: expected expression before 'if'
+>       if (dev == NULL)
+>       ^
+>>> drivers/scsi/hpsa.c:1181:75: warning: left-hand operand of comma expression has no effect [-Wunused-value]
+>         "scsi %d:%d:%d:%d: %s %s %.8s %.16s %s SSDSmartPathCap%c En%c Exp=%d\n",
+>                                                                                ^
 >
->         if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
->             (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
->              ufs_query_desc_max_size[desc_id])
->             || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
->                 ...
->                 if (!ret)
->                         ret = -EINVAL;
+> vim +/if +1182 drivers/scsi/hpsa.c
 >
-> Could you also include a fix fir ufshcd_read_desc()?
-
-i'm not sure i understand what should be fixed.
-if the check you mentioned implies that something is wrong,
-we shouldn't ignore the error. otherwise we might exceed the buf
-boundaries for example.
-can you elaborate what is that you think we should fix ?
-
-
-
-
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 4e3d7818 Don Brace 2015-10-24  1175  		break;
+> 4e3d7818 Don Brace 2015-10-24  1176  	default:
+> 4e3d7818 Don Brace 2015-10-24  1177  		snprintf(label, LABEL_SIZE, "UNKNOWN");
+> 4e3d7818 Don Brace 2015-10-24  1178  		break;
+> 4e3d7818 Don Brace 2015-10-24  1179  	}
+> 4e3d7818 Don Brace 2015-10-24  1180
+> 4e3d7818 Don Brace 2015-10-24 @1181  			"scsi %d:%d:%d:%d: %s %s %.8s %.16s %s SSDSmartPathCap%c En%c Exp=%d\n",
+> c59f371e Don Brace 2015-10-24 @1182  	if (dev == NULL)
+> c59f371e Don Brace 2015-10-24  1183  		return;
+> c59f371e Don Brace 2015-10-24  1184
+> c59f371e Don Brace 2015-10-24  1185  	dev_warn(&h->pdev->dev,
 >
+> :::::: The code at line 1182 was first introduced by commit
+> :::::: c59f371efab30f7066af482dc6a1b1cfddd562f0 hpsa: correct calls to dev_printk
+>
+> :::::: TO: Don Brace <don.brace@pmcs.com>
+> :::::: CC: 0day robot <fengguang.wu@intel.com>
+>
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+Wow. I had a merge conflict that kdiff3 auto-resolved.
+Sorry about that. Anyone else ever have that happen?
+
+I'll send out v1 soon.
+
+Thanks
