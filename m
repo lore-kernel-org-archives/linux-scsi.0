@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 03/32] scsi: hisi_sas: add initial bare main driver
-Date: Mon, 26 Oct 2015 22:14:34 +0800
-Message-ID: <1445868903-183817-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 30/32] scsi: hisi_sas: add control phy handler
+Date: Mon, 26 Oct 2015 22:15:01 +0800
+Message-ID: <1445868903-183817-31-git-send-email-john.garry@huawei.com>
 References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,152 +12,132 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the initial bare main driver for the
-HiSilicon SAS HBA. This only introduces the changes to
-build and load the main driver module.
-
-The complete driver consists of the core main module and
-also a module platform driver for driving the hw.
-
-The HBA is a platform device.
+Add method for lldd_control_phy. Currently link rate
+control and spinup hold is unsupported.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/Kconfig                  |  1 +
- drivers/scsi/Makefile                 |  1 +
- drivers/scsi/hisi_sas/Kconfig         |  6 +++++
- drivers/scsi/hisi_sas/Makefile        |  1 +
- drivers/scsi/hisi_sas/hisi_sas.h      | 26 +++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 44 +++++++++++++++++++++++++++++++++++
- 6 files changed, 79 insertions(+)
- create mode 100644 drivers/scsi/hisi_sas/Kconfig
- create mode 100644 drivers/scsi/hisi_sas/Makefile
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 +++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 37 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 23 +++++++++++++++++++++
+ 3 files changed, 63 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 95f7a76..5c345f9 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1774,5 +1774,6 @@ source "drivers/scsi/pcmcia/Kconfig"
- source "drivers/scsi/device_handler/Kconfig"
- 
- source "drivers/scsi/osd/Kconfig"
-+source "drivers/scsi/hisi_sas/Kconfig"
- 
- endmenu
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 1a8c9b5..03c30de 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -158,6 +158,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
- obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
- 
- obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
-+obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
- 
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-new file mode 100644
-index 0000000..37a0c71
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -0,0 +1,6 @@
-+config SCSI_HISI_SAS
-+	tristate "HiSilicon SAS"
-+	select SCSI_SAS_LIBSAS
-+	select BLK_DEV_INTEGRITY
-+	help
-+		This driver supports HiSilicon's SAS HBA
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-new file mode 100644
-index 0000000..d86b05e
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-new file mode 100644
-index 0000000..a5cec22
---- /dev/null
+index fae73cd..982b51d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -0,0 +1,26 @@
-+/*
-+ * Copyright (c) 2015 Linaro Ltd.
-+ * Copyright (c) 2015 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#ifndef _HISI_SAS_H_
-+#define _HISI_SAS_H_
-+
-+#include <linux/dmapool.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <scsi/libsas.h>
-+
-+#define DRV_VERSION "v1.0"
-+
-+#endif
+@@ -140,6 +140,9 @@ struct hisi_sas_hw {
+ 			struct hisi_sas_slot *slot);
+ 	int (*slot_complete)(struct hisi_hba *hisi_hba,
+ 			     struct hisi_sas_slot *slot, int abort);
++	void (*phy_enable)(struct hisi_hba *hisi_hba, int phy_no);
++	void (*phy_disable)(struct hisi_hba *hisi_hba, int phy_no);
++	void (*phy_hard_reset)(struct hisi_hba *hisi_hba, int phy_no);
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
+ 			    struct hisi_sas_device *dev);
+ 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-new file mode 100644
-index 0000000..67977a3
---- /dev/null
+index 4f3a818..d21491a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -0,0 +1,44 @@
-+/*
-+ * Copyright (c) 2015 Linaro Ltd.
-+ * Copyright (c) 2015 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas"
-+
-+
-+static struct scsi_transport_template *hisi_sas_stt;
-+
-+static struct sas_domain_function_template hisi_sas_transport_ops = {
-+};
-+
-+static __init int hisi_sas_init(void)
+@@ -641,6 +641,42 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 	return hisi_sas_task_exec(task, gfp_flags, NULL, 0, NULL);
+ }
+ 
++static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
++				void *funcdata)
 +{
-+	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
++	struct sas_ha_struct *sas_ha = sas_phy->ha;
++	struct hisi_hba *hisi_hba = NULL;
++	int phy_no = 0;
 +
-+	hisi_sas_stt = sas_domain_attach_transport(&hisi_sas_transport_ops);
-+	if (!hisi_sas_stt)
-+		return -ENOMEM;
++	while (sas_ha->sas_phy[phy_no]) {
++		if (sas_ha->sas_phy[phy_no] == sas_phy) {
++			hisi_hba = (struct hisi_hba *)sas_ha->lldd_ha;
++			break;
++		}
++		phy_no++;
++	}
 +
++	switch (func) {
++	case PHY_FUNC_HARD_RESET:
++		hisi_hba->hw->phy_hard_reset(hisi_hba, phy_no);
++		break;
++
++	case PHY_FUNC_LINK_RESET:
++		hisi_hba->hw->phy_enable(hisi_hba, phy_no);
++		hisi_hba->hw->phy_hard_reset(hisi_hba, phy_no);
++		break;
++
++	case PHY_FUNC_DISABLE:
++		hisi_hba->hw->phy_disable(hisi_hba, phy_no);
++		break;
++
++	case PHY_FUNC_SET_LINK_RATE:
++	case PHY_FUNC_RELEASE_SPINUP_HOLD:
++	default:
++		return -EOPNOTSUPP;
++	}
 +	return 0;
 +}
-+
-+static __exit void hisi_sas_exit(void)
+ 
+ static void hisi_sas_task_done(struct sas_task *task)
+ {
+@@ -1027,6 +1063,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_dev_found		= hisi_sas_dev_found,
+ 	.lldd_dev_gone		= hisi_sas_dev_gone,
+ 	.lldd_execute_task	= hisi_sas_queue_command,
++	.lldd_control_phy	= hisi_sas_control_phy,
+ 	.lldd_abort_task	= hisi_sas_abort_task,
+ 	.lldd_abort_task_set	= hisi_sas_abort_task_set,
+ 	.lldd_clear_aca		= hisi_sas_clear_aca,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 0a2f97e..d7ad515 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -763,6 +763,14 @@ static void enable_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+ }
+ 
++static void disable_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	sas_release_transport(hisi_sas_stt);
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg &= ~PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +}
 +
-+module_init(hisi_sas_init);
-+module_exit(hisi_sas_exit);
+ static void start_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	config_id_frame_v1_hw(hisi_hba, phy_no);
+@@ -771,6 +779,18 @@ static void start_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	enable_phy_v1_hw(hisi_hba, phy_no);
+ }
+ 
++static void stop_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	disable_phy_v1_hw(hisi_hba, phy_no);
++}
 +
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS controller driver");
-+MODULE_ALIAS("platform:" DRV_NAME);
++static void phy_hard_reset_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	stop_phy_v1_hw(hisi_hba, phy_no);
++	msleep(100);
++	start_phy_v1_hw(hisi_hba, phy_no);
++}
++
+ static void start_phys_v1_hw(unsigned long data)
+ {
+ 	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
+@@ -1713,6 +1733,9 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.get_free_slot = get_free_slot_v1_hw,
+ 	.start_delivery = start_delivery_v1_hw,
+ 	.slot_complete = slot_complete_v1_hw,
++	.phy_enable = enable_phy_v1_hw,
++	.phy_disable = disable_phy_v1_hw,
++	.phy_hard_reset = phy_hard_reset_v1_hw,
+ 	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
+ };
 -- 
 1.9.1
