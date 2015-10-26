@@ -1,76 +1,71 @@
-From: "Mrs Hayet Zaara" <hayetzaara@gmail.com>
-Subject: BITTE BRAUCHE ICH EURE HILFE!
-Date: Wed, 21 Oct 2015 23:44:19 +0300 (EEST)
-Message-ID: <a274353ef0f8cb464cd939b04d18e1f6.squirrel__30128.1958040365$1445895368$gmane$org@82.79.55.74>
-Reply-To: hayetzaara@gmail.com
+From: Stephen Boyd <sboyd@codeaurora.org>
+Subject: Re: [PATCH v2 17/17] scsi: ufs-qcom: fix compilation warnings
+Date: Mon, 26 Oct 2015 14:56:46 -0700
+Message-ID: <562EA19E.2070007@codeaurora.org>
+References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
+ <1445874072-25909-18-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [82.79.55.74] ([82.79.55.74]:37880 "EHLO
-	server-servicii.uvvgsm.ro" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753383AbbJZVfp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Oct 2015 17:35:45 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33301 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969AbbJZV4t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 17:56:49 -0400
+In-Reply-To: <1445874072-25909-18-git-send-email-ygardi@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+
+On 10/26/2015 08:41 AM, Yaniv Gardi wrote:
+> Tnis patch fixes the following compilation warnings:
+> ...ufs-qcom.c:1201:40:
+> 	warning: incorrect type in argument 1 (different address spaces)
+> ...ufs-qcom.c:1201:40:
+> 	expected void const *ptr
+> ...ufs-qcom.c:1201:40:
+> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+> ...ufs-qcom.c:1207:53:
+> 	warning: incorrect type in argument 1 (different address spaces)
+> ...ufs-qcom.c:1207:53:
+> 	expected void const *ptr
+> ...ufs-qcom.c:1207:53:
+> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+
+What version of sparse do you use? You shouldn't need to do this.
+
+>  drivers/scsi/ufs/ufs-qcom.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 72b0ef7..b57f88a 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1226,11 +1226,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  		if (res) {
+>  			host->dev_ref_clk_ctrl_mmio =
+>  					devm_ioremap_resource(dev, res);
+> -			if (IS_ERR(host->dev_ref_clk_ctrl_mmio)) {
+> -				dev_warn(dev,
+> -					"%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
+> +			if (IS_ERR((__force void const *)
+> +				   host->dev_ref_clk_ctrl_mmio)) {
+> +				dev_warn(dev, "%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
+>  					__func__,
+> -					PTR_ERR(host->dev_ref_clk_ctrl_mmio));
+> +					PTR_ERR((__force void const *)
+> +						 host->dev_ref_clk_ctrl_mmio));
+>  				host->dev_ref_clk_ctrl_mmio = NULL;
+>  			}
+>  			host->dev_ref_clk_en_mask = BIT(5);
 
 
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
-
-Ich bin Frau Zaara Heyet ein H=E4ndler, =D6l-Wartung der Anlagen, schre=
-iben
-diese Mail an Sie, mit Tr=E4nen und Liebe aus meinem Herzen Liebe Arbei=
-t,
-die ich aufgrund meiner derzeitigen Healness nicht vor dem Ende meiner
-Tage erf=FCllen konnte,bitte glaube nicht dieses Schreibens als einer
-derjenigen, die um Geld bitten um gesendet werden,Ich habe Ihre e-Mail-=
-Id
-von unserer Handelskammer,bei der Suche nach einer zuverl=E4ssigen Pers=
-on zu
-Hilfe, dieses Projekt durchzuf=FChren.
-
-Ich habe eine dringende und vertrauliche Businessl=F6sungen mit =DCbert=
-ragung
-von 9 Millionen $9,000.000.00 USD,es wird von gro=DFem Vorteil f=FCr un=
-s beide
-besonders Sie als meine Tage Anzahl auf der Erde sind.
-Ich werde Ihnen weitere Informationen bez=FCglich dieser Transaktion so
-schnell wie Sie,antworten Sie mir Ihr Interesse =FCber meine pers=F6nli=
-che
-E-mail: die hayetzaara@gmail.com, vielen Dank f=FCr Ihr Interesse.
-
-WARNUNG!! WARNUNG!!
-Diese Benachrichtigung wird erwartet, dass anhand der Person(en), f=FCr=
- die
-sie bestimmt ist bzw. lesen werden.: *********
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-I am Mrs Zaara Heyet an oil-servicing equipment merchant, am writing th=
-is
-mail to you with tears and love from my heart of charity work i could n=
-ot
-fulfill before the end of my days due to my present healness ,Please do
-not think of this letter as one of those being sent around to ask for
-money,I got your email id from our chambers of commerce while searching
-for a reliable person to help me carry out this project.
-
-I have an urgent and confidential business proposition involving transf=
-er
-of Nine Million $9,000.000.00 USD ,it will be of great benefit for both=
- of
-us especially you as my days are number on earth. I will give you more
-details as regards this transaction as soon as you, reply me of your
-interest via my personal E-mail:hayetzaara@gmail.com  , Thanks for your
-interested .
-
-WARNING!!WARNING!!
-This notification is expected to be read and/or used only by the
-individual(s) for whom it is intended.:**************
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
