@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 14/17] scsi: ufs: fix leakage during link off state
-Date: Mon, 26 Oct 2015 17:41:09 +0200
-Message-ID: <1445874072-25909-15-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 12/17] scsi: ufs: handle non spec compliant bkops behaviour by device
+Date: Mon, 26 Oct 2015 17:41:07 +0200
+Message-ID: <1445874072-25909-13-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
@@ -10,40 +10,128 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Currently when we try to put the link in off/disabled state during
-suspend, it seems link is not being kept in low power mode.
-This patch fixes the issue by putting the link in hibern8 first
-(so device also puts the link in low power mode) and then stop the
-host controller.
+We are seeing that some devices are raising the urgent bkops exception
+events even when BKOPS status doesn't indicate performace impacted or
+critical. Handle these device by determining their urgent bkops status
+at runtime.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 822692e..f85cd66 100644
+index 3c5b82a..95d5d6b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5649,6 +5649,16 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		   (!check_for_bkops || (check_for_bkops &&
- 		    !hba->auto_bkops_enabled))) {
- 		/*
-+		 * Let's make sure that link is in low power mode, we are doing
-+		 * this currently by putting the link in Hibern8. Otherway to
-+		 * put the link in low power mode is to send the DME end point
-+		 * to device and then send the DME reset command to local
-+		 * unipro. But putting the link in hibern8 is much faster.
-+		 */
-+		ret = ufshcd_uic_hibern8_enter(hba);
-+		if (ret)
-+			goto out;
-+		/*
- 		 * Change controller state to "reset state" which
- 		 * should also put the link in off/reset state
- 		 */
+@@ -3790,7 +3790,7 @@ out:
+  */
+ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+ {
+-	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
++	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+ }
+ 
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+@@ -3799,6 +3799,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+ }
+ 
++static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
++{
++	int err;
++	u32 curr_status = 0;
++
++	if (hba->is_urgent_bkops_lvl_checked)
++		goto enable_auto_bkops;
++
++	err = ufshcd_get_bkops_status(hba, &curr_status);
++	if (err) {
++		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
++				__func__, err);
++		goto out;
++	}
++
++	/*
++	 * We are seeing that some devices are raising the urgent bkops
++	 * exception events even when BKOPS status doesn't indicate performace
++	 * impacted or critical. Handle these device by determining their urgent
++	 * bkops status at runtime.
++	 */
++	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
++		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
++				__func__, curr_status);
++		/* update the current status as the urgent bkops level */
++		hba->urgent_bkops_lvl = curr_status;
++		hba->is_urgent_bkops_lvl_checked = true;
++	}
++
++enable_auto_bkops:
++	err = ufshcd_enable_auto_bkops(hba);
++out:
++	if (err < 0)
++		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
++				__func__, err);
++}
++
+ /**
+  * ufshcd_exception_event_handler - handle exceptions raised by device
+  * @work: pointer to work data
+@@ -3822,12 +3859,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	}
+ 
+ 	status &= hba->ee_ctrl_mask;
+-	if (status & MASK_EE_URGENT_BKOPS) {
+-		err = ufshcd_urgent_bkops(hba);
+-		if (err < 0)
+-			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
+-					__func__, err);
+-	}
++
++	if (status & MASK_EE_URGENT_BKOPS)
++		ufshcd_bkops_exception_event_handler(hba);
++
+ out:
+ 	pm_runtime_put_sync(hba->dev);
+ 	return;
+@@ -4792,6 +4827,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 	ufshcd_init_pwr_info(hba);
+ 
++	/* set the default level for urgent bkops */
++	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
++	hba->is_urgent_bkops_lvl_checked = false;
++
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 463f0d5..5c489483 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
++ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
++ *  device is known or not.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -538,6 +541,9 @@ struct ufs_hba {
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+ 	bool is_sys_suspended;
++
++	enum bkops_status urgent_bkops_lvl;
++	bool is_urgent_bkops_lvl_checked;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
 -- 
 1.8.5.2
 
