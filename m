@@ -1,80 +1,98 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 28/32] scsi: hisi_sas: add scan finished and start
-Date: Mon, 26 Oct 2015 22:14:59 +0800
-Message-ID: <1445868903-183817-29-git-send-email-john.garry@huawei.com>
-References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 00/32] HiSilicon SAS driver
+Date: Mon, 26 Oct 2015 22:14:31 +0800
+Message-ID: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:19649 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753936AbbJZOCQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 10:02:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Add functions for scsi host template scan_finished
-and scan_start methods
+This is the driver patchset for the HiSilicon SAS driver. The driver
+is a platform driver.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+)
+The driver will support multiple revisions of HW. Currently only "v1"
+HW is supported.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 1dc71ee..fae73cd 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -158,6 +158,7 @@ struct hisi_hba {
- 
- 
- 	int n_phy;
-+	int scan_finished;
- 	spinlock_t lock;
- 
- 	struct timer_list timer;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a1bfb47..13e34cb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -425,6 +425,29 @@ found_out:
- 	return res;
- }
- 
-+static void hisi_sas_scan_start(struct Scsi_Host *shost)
-+{
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
-+	int i;
-+
-+	for (i = 0; i < hisi_hba->n_phy; ++i)
-+		hisi_sas_bytes_dmaed(hisi_hba, i);
-+
-+	hisi_hba->scan_finished = 1;
-+}
-+
-+static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
-+{
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
-+	struct sas_ha_struct *sha = &hisi_hba->sha;
-+
-+	if (hisi_hba->scan_finished == 0)
-+		return 0;
-+
-+	sas_drain_work(sha);
-+	return 1;
-+}
-+
- static void hisi_sas_phyup_work(struct work_struct *work)
- {
- 	struct hisi_sas_phy *phy =
-@@ -638,6 +661,8 @@ static struct scsi_host_template hisi_sas_sht = {
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
- 	.slave_configure	= sas_slave_configure,
-+	.scan_finished		= hisi_sas_scan_finished,
-+	.scan_start		= hisi_sas_scan_start,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.can_queue		= 1,
+The driver uses libsas framework within the SCSI framework.
+
+The v1 HW supports SSP and SMP, but not STP/SATA.
+
+Differences to v1 patchset:
+- re-arch driver into main module and hw-specific driver module
+- allocate hisi_hba in scsi_host_alloc
+- use of_irq_count get irq count - depends on [1]
+- use syscon to handle ctrl reg access
+- get SAS address from device tree
+- do not set cmd_per_lun to 1
+- remove controller id
+- use static wq in phy struct
+- process control phy in caller context
+- fix port->port_attached issue for rmmod
+
+[1] http://www.spinics.net/lists/arm-kernel/msg452833.html
+
+
+
+John Garry (32):
+  [SCSI] sas: centralise ssp frame information units
+  devicetree: bindings: scsi: HiSi SAS
+  scsi: hisi_sas: add initial bare main driver
+  scsi: hisi_sas: add scsi host registration
+  scsi: hisi_sas: scan device tree
+  scsi: hisi_sas: add HW DMA structures
+  scsi: hisi_sas: allocate memories and create pools
+  scsi: hisi_sas: add hisi_sas_remove
+  scsi: hisi_sas: add slot init code
+  scsi: hisi_sas: add cq structure initialization
+  scsi: hisi_sas: add phy SAS ADDR initialization
+  scsi: hisi_sas: set dev DMA mask
+  scsi: hisi_sas: add hisi_hba workqueue
+  scsi: hisi_sas: add hisi sas device type
+  scsi: hisi_sas: add phy and port init
+  scsi: hisi_sas: add timer and spinlock init
+  scsi: hisi_sas: add v1 hw module init
+  scsi: hisi_sas: add v1 hardware register definitions
+  scsi: hisi_sas: add v1 HW initialisation code
+  scsi: hisi_sas: add v1 hw interrupt init
+  scsi: hisi_sas: add path from phyup irq to SAS framework
+  scsi: hisi_sas: add ssp command function
+  scsi: hisi_sas: add cq interrupt handler
+  scsi: hisi_sas: add dev_found and port_formed
+  scsi: hisi_sas: add abnormal irq handler
+  scsi: hisi_sas: add bcast interrupt handler
+  scsi: hisi_sas: add smp protocol support
+  scsi: hisi_sas: add scan finished and start
+  scsi: hisi_sas: add tmf methods
+  scsi: hisi_sas: add control phy handler
+  scsi: hisi_sas: add fatal irq handler
+  MAINTAINERS: add maintainer for HiSi SAS driver
+
+ .../devicetree/bindings/scsi/hisilicon-sas.txt     |   70 +
+ MAINTAINERS                                        |    7 +
+ drivers/scsi/Kconfig                               |    1 +
+ drivers/scsi/Makefile                              |    1 +
+ drivers/scsi/aic94xx/aic94xx_sas.h                 |   49 +-
+ drivers/scsi/hisi_sas/Kconfig                      |    6 +
+ drivers/scsi/hisi_sas/Makefile                     |    2 +
+ drivers/scsi/hisi_sas/hisi_sas.h                   |  359 ++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c              | 1462 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             | 1895 ++++++++++++++++++++
+ include/scsi/sas.h                                 |   74 +
+ 11 files changed, 3883 insertions(+), 43 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+ create mode 100644 drivers/scsi/hisi_sas/Kconfig
+ create mode 100644 drivers/scsi/hisi_sas/Makefile
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+
 -- 
 1.9.1
+
