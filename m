@@ -1,75 +1,142 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 16/17] scsi: ufs: add delay before putting UFS rails
- in low power modes
-Date: Mon, 26 Oct 2015 15:08:01 -0000
-Message-ID: <71145a231320062c019266176d3263b5.squirrel@www.codeaurora.org>
-References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-    <1442155977-7686-17-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyj+gQYuLR1v73Dq78vx0NEreMDkmWe0Tk9UBuv8uc5AQw@mail.gmail.com>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH 05/21] hpsa: fix hpsa_adjust_hpsa_scsi_table
+Date: Mon, 26 Oct 2015 10:22:19 -0500
+Message-ID: <562E452B.9030502@pmcs.com>
+References: <20151024193306.17127.7819.stgit@brunhilda>
+ <20151024195256.17127.93962.stgit@brunhilda> <562E3EEF.1090301@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyj+gQYuLR1v73Dq78vx0NEreMDkmWe0Tk9UBuv8uc5AQw@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36000 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbbJZPWW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 11:22:22 -0400
+Received: by pacfv9 with SMTP id fv9so199997115pac.3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2015 08:22:22 -0700 (PDT)
+In-Reply-To: <562E3EEF.1090301@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-> 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> We put the UFS device in sleep state & UFS link in hibern8 state during
->> runtime suspaned. After this we put all the UFS rails in low power
->> modes immediately but it seems some devices may still draw more than
->> sleep current from UFS rails (especially from VCCQ rail) atleast for
->> 500us.
->> To avoid this situation, this change adds 2ms delay before putting
->> these UFS rails in LPM mode.
+
+
+On 10/26/2015 09:55 AM, Tomas Henzl wrote:
+> On 24.10.2015 21:52, Don Brace wrote:
+>> Fix a NULL pointer issue in the driver when devices are removed
+>> during a reset.
 >>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>
+>> Signed-off-by: Don Brace <don.brace@pmcs.com>
 >> ---
->>  drivers/scsi/ufs/ufshcd.c | 9 +++++++++
->>  1 file changed, 9 insertions(+)
+>>   drivers/block/cciss.h |    1 +
+>>   drivers/scsi/hpsa.c   |   16 ++++++++++++++++
+>>   drivers/scsi/hpsa.h   |    1 +
+>>   3 files changed, 18 insertions(+)
 >>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 20b4c0e..786df28 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -5694,6 +5694,15 @@ out:
->>  static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
->>  {
->>         /*
->> +        * It seems some UFS devices may keep drawing more than sleep
->> current
->> +        * (atleast for 500us) from UFS rails (especially from VCCQ
->> rail).
->> +        * To avoid this situation, add 2ms delay before putting these
->> UFS
->> +        * rails in LPM mode.
->> +        */
->> +       if (!ufshcd_is_link_active(hba))
->> +               usleep_range(2000, 2100);
+>> diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
+>> index 7fda30e..036fb0f 100644
+>> --- a/drivers/block/cciss.h
+>> +++ b/drivers/block/cciss.h
+>> @@ -155,6 +155,7 @@ struct ctlr_info
+>>   	size_t reply_pool_size;
+>>   	unsigned char reply_pool_wraparound;
+>>   	u32 *blockFetchTable;
+>> +	atomic_t reset_in_progress;
+>>   };
+>>   
+>>   /*  Defining the diffent access_methods
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 3520d75..714bb76 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -1656,6 +1656,11 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>   	int nadded, nremoved;
+>>   	struct Scsi_Host *sh = NULL;
+>>   
+>> +	if (atomic_read(&h->reset_in_progress)) {
+>> +		h->drv_req_rescan = 1;
+>> +		return;
+>> +	}
+> Is it safe, what happens when a reset is invoked at this point?
+> Is it possible to somehow reuse the scan_lock or scan_finished
+> and change the logic and wait with the reset?
+> (maybe break and reschedule the scan)
+I wanted to reschedule the scan to see what happened after
+a reset.
+
+There also seems to be some raciness between the reset
+handler and the re-scan procedure.
+
+> Btw. why is an atomic variable needed here?
+Overkill. I can change reset_in_progress to an int.
+
+> --tm
+>
+>
 >> +
->
-> Shouldn't we define dev_quirks for this?
-
-as you suggested, in v2 i added a device quirk for that.
-
->
->> +       /*
->>          * If UFS device is either in UFS_Sleep turn off VCC rail to
->> save some
->>          * power.
->>          *
->> --
->> 1.8.5.2
+>>   	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
+>>   	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
+>>   
+>> @@ -1764,8 +1769,14 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>   		goto free_and_out;
+>>   
+>>   	sh = h->scsi_host;
+>> +	if (sh == NULL) {
+>> +		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
+>> +		return;
+>> +	}
+>>   	/* Notify scsi mid layer of any removed devices */
+>>   	for (i = 0; i < nremoved; i++) {
+>> +		if (!removed[i])
+>> +			continue;
+>>   		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
+>>   			struct scsi_device *sdev =
+>>   				scsi_device_lookup(sh, removed[i]->bus,
+>> @@ -1790,6 +1801,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>   
+>>   	/* Notify scsi mid layer of any added devices */
+>>   	for (i = 0; i < nadded; i++) {
+>> +		if (!added[i])
+>> +			continue;
+>>   		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
+>>   			continue;
+>>   		if (scsi_add_device(sh, added[i]->bus,
+>> @@ -5227,12 +5240,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>>   
+>>   	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, "resetting");
+>>   
+>> +	atomic_set(&h->reset_in_progress, 1);
+>> +
+>>   	/* send a reset to the SCSI LUN which the command was sent to */
+>>   	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+>>   			   DEFAULT_REPLY_QUEUE);
+>>   	snprintf(msg, sizeof(msg), "reset %s",
+>>   		 rc == 0 ? "completed successfully" : "failed");
+>>   	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, msg);
+>> +	atomic_set(&h->reset_in_progress, 0);
+>>   	return rc == 0 ? SUCCESS : FAILED;
+>>   }
+>>   
+>> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+>> index 642c8ce..c7c1697 100644
+>> --- a/drivers/scsi/hpsa.h
+>> +++ b/drivers/scsi/hpsa.h
+>> @@ -271,6 +271,7 @@ struct ctlr_info {
+>>   	wait_queue_head_t abort_cmd_wait_queue;
+>>   	wait_queue_head_t event_sync_wait_queue;
+>>   	struct mutex reset_mutex;
+>> +	atomic_t reset_in_progress;
+>>   };
+>>   
+>>   struct offline_device_entry {
 >>
->> --
->> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
->> member of Code Aurora Forum, hosted by The Linux Foundation
 >> --
 >> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
