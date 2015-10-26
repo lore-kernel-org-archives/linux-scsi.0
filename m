@@ -1,135 +1,204 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 13/15] scsi: ufs: add missing memory barriers
-Date: Mon, 26 Oct 2015 12:35:05 -0000
-Message-ID: <e8df00bf987f9d15d0da562498670dd7.squirrel@www.codeaurora.org>
-References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-    <1441188795-4600-14-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyhkAdEjtFd+r3EOKfkPdFgfZ5juH0Wg2983=UqUSzkD7Q@mail.gmail.com>
-    <191698899544068194e28246454c2613.squirrel@www.codeaurora.org>
-    <CAC5umygdHdYt7OuJyxg=-77bA5GctO9OgrUCGo9iY-ukjkxQUA@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 01/21] hpsa: correct calls to dev_printk
+Date: Mon, 26 Oct 2015 13:52:24 +0100
+Message-ID: <562E2208.5060200@redhat.com>
+References: <20151024193306.17127.7819.stgit@brunhilda>
+ <20151024195232.17127.59627.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umygdHdYt7OuJyxg=-77bA5GctO9OgrUCGo9iY-ukjkxQUA@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34842 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753935AbbJZMw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Oct 2015 08:52:27 -0400
+In-Reply-To: <20151024195232.17127.59627.stgit@brunhilda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-> 2015-10-25 23:40 GMT+09:00  <ygardi@codeaurora.org>:
->>> 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->>>> Performing several writes to UFS host controller registers has
->>>> no gurrantee of ordering, so we must make sure register writes
->>>> to setup request list base address etc. are performed before the
->>>> run/stop register is enabled.
->>>> In addition, when setting up a task request, we must make sure
->>>> the updating of descriptors takes places before ringing the
->>>> doorbell, similarly to setting up a transfer request.
->>>>
->>>> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
->>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>>>
->>>> ---
->>>>  drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
->>>>  1 file changed, 15 insertions(+), 6 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>>> index fc2a52d..298511a 100644
->>>> --- a/drivers/scsi/ufs/ufshcd.c
->>>> +++ b/drivers/scsi/ufs/ufshcd.c
->>>> @@ -401,11 +401,9 @@ static inline int ufshcd_get_lists_status(u32
->>>> reg)
->>>>          *  1           UTRLRDY
->>>>          *  2           UTMRLRDY
->>>>          *  3           UCRDY
->>>> -        *  4           HEI
->>>> -        *  5           DEI
->>>> -        * 6-7          reserved
->>>> +        * 4-7          reserved
->>>>          */
->>>> -       return (((reg) & (0xFF)) >> 1) ^ (0x07);
->>>> +       return ((reg & 0xFF) >> 1) ^ 0x07;
->>>>  }
->>>>
->>>>  /**
->>>> @@ -2726,7 +2724,7 @@ out:
->>>>   * To bring UFS host controller to operational state,
->>>>   * 1. Enable required interrupts
->>>>   * 2. Configure interrupt aggregation
->>>> - * 3. Program UTRL and UTMRL base addres
->>>> + * 3. Program UTRL and UTMRL base address
->>>>   * 4. Configure run-stop-registers
->>>>   *
->>>>   * Returns 0 on success, non-zero value on failure
->>>> @@ -2756,8 +2754,13 @@ static int ufshcd_make_hba_operational(struct
->>>> ufs_hba *hba)
->>>>                         REG_UTP_TASK_REQ_LIST_BASE_H);
->>>>
->>>>         /*
->>>> +        * Make sure base address and interrupt setup are updated
->>>> before
->>>> +        * enabling the run/stop registers below.
->>>> +        */
->>>> +       wmb();
->>>> +
->>>> +       /*
->>>>          * UCRDY, UTMRLDY and UTRLRDY bits must be 1
->>>> -        * DEI, HEI bits must be 0
->>>>          */
->>>>         reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
->>>>         if (!(ufshcd_get_lists_status(reg))) {
->>>> @@ -3920,7 +3923,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba
->>>> *hba, int lun_id, int task_id,
->>>>
->>>>         /* send command to the controller */
->>>>         __set_bit(free_slot, &hba->outstanding_tasks);
->>>> +
->>>> +       /* Make sure descriptors are ready before ringing the task
->>>> doorbell */
->>>> +       wmb();
->>>> +
->>>>         ufshcd_writel(hba, 1 << free_slot,
->>>> REG_UTP_TASK_REQ_DOOR_BELL);
->>>> +       /* Make sure that doorbell is committed immediately */
->>>> +       wmb();
->>>
->>> Is this wmb() after ringing tm doorbell is needed?
->>
->> Well, Mita, in the case of DB register (Request DB and TASK DB), every
->> write operation to the DB should be barrier, as if not, out of order
->> writing to this register might cause inconsistency in its value, and
->> thus,
->> un-handled requests/tasks.
+On 24.10.2015 21:52, Don Brace wrote:
+> was seeing issues passing level into hpsa_show_dev_msg and then using
+> the level as an arguement to dev_printk. For now, switch to dev_warn.
 >
-> I couldn't fully understand why out of order writing to TASK DB
-> register causes inconsistency.
-> In the TASK request completion (ufshcd_tmc_handler), TASK DB register
-> is read before handling finished requests, so it ensures that all
-> write operations for TASK DB have been performed.
+> Signed-off-by: Don Brace <don.brace@pmcs.com>
+> ---
+>  drivers/scsi/hpsa.c |   41 ++++++++++++++++++++++++-----------------
+>  1 file changed, 24 insertions(+), 17 deletions(-)
 >
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 40669f8..8454f22 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -1137,11 +1137,15 @@ static int hpsa_find_target_lun(struct ctlr_info *h,
+>  static inline void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
+>  	struct hpsa_scsi_dev_t *dev, char *description)
+>  {
+> -	dev_printk(level, &h->pdev->dev,
+> +	if (dev == NULL)
+> +		return;
+> +
+> +	dev_warn(&h->pdev->dev,
+>  			"scsi %d:%d:%d:%d: %s %s %.8s %.16s RAID-%s SSDSmartPathCap%c En%c Exp=%d\n",
+>  			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+>  			description,
+> -			scsi_device_type(dev->devtype),
+> +			dev->devtype >= 0 ?
+> +				scsi_device_type(dev->devtype) : "unknown",
 
-thanks, Mita
-your explanation makes sense.
-It will be fixed in v4.
+Can devtype ever be negative? Found only this place in code
+where it is set "this_device->devtype = (inq_buff[0] & 0x1f);"
+And if it was negative the scsi_device_type will return "Unknown"
+anyway. You probably could skip the test now and switch devtype
+from int to unsigned in the future.
+
+Cheers,
+Tomas
 
 
->>>
->>>>
->>>>         spin_unlock_irqrestore(host->host_lock, flags);
->>>>
->>>> --
->>>> 1.8.5.2
->>>>
->>>> --
->>>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
->>>> member of Code Aurora Forum, hosted by The Linux Foundation
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->>>> in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->>
+>  			dev->vendor,
+>  			dev->model,
+>  			dev->raid_level > RAID_UNKNOWN ?
+> @@ -1220,7 +1224,7 @@ lun_assigned:
+>  	h->ndevices++;
+>  	added[*nadded] = device;
+>  	(*nadded)++;
+> -	hpsa_show_dev_msg(KERN_INFO, h, device,
+> +	hpsa_show_dev_msg(__stringify(KERN_INFO), h, device,
+>  		device->expose_state & HPSA_SCSI_ADD ? "added" : "masked");
+>  	device->offload_to_be_enabled = device->offload_enabled;
+>  	device->offload_enabled = 0;
+> @@ -1271,7 +1275,7 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
+>  
+>  	offload_enabled = h->dev[entry]->offload_enabled;
+>  	h->dev[entry]->offload_enabled = h->dev[entry]->offload_to_be_enabled;
+> -	hpsa_show_dev_msg(KERN_INFO, h, h->dev[entry], "updated");
+> +	hpsa_show_dev_msg(__stringify(KERN_INFO), h, h->dev[entry], "updated");
+>  	h->dev[entry]->offload_enabled = offload_enabled;
+>  }
+>  
+> @@ -1298,7 +1302,7 @@ static void hpsa_scsi_replace_entry(struct ctlr_info *h, int hostno,
+>  	h->dev[entry] = new_entry;
+>  	added[*nadded] = new_entry;
+>  	(*nadded)++;
+> -	hpsa_show_dev_msg(KERN_INFO, h, new_entry, "replaced");
+> +	hpsa_show_dev_msg(__stringify(KERN_INFO), h, new_entry, "replaced");
+>  	new_entry->offload_to_be_enabled = new_entry->offload_enabled;
+>  	new_entry->offload_enabled = 0;
+>  }
+> @@ -1320,7 +1324,7 @@ static void hpsa_scsi_remove_entry(struct ctlr_info *h, int hostno, int entry,
+>  	for (i = entry; i < h->ndevices-1; i++)
+>  		h->dev[i] = h->dev[i+1];
+>  	h->ndevices--;
+> -	hpsa_show_dev_msg(KERN_INFO, h, sd, "removed");
+> +	hpsa_show_dev_msg(__stringify(KERN_INFO), h, sd, "removed");
+>  }
+>  
+>  #define SCSI3ADDR_EQ(a, b) ( \
+> @@ -1710,7 +1714,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  		 */
+>  		if (sd[i]->volume_offline) {
+>  			hpsa_show_volume_status(h, sd[i]);
+> -			hpsa_show_dev_msg(KERN_INFO, h, sd[i], "offline");
+> +			hpsa_show_dev_msg(__stringify(KERN_INFO), h, sd[i],
+> +						"offline");
+>  			continue;
+>  		}
+>  
+> @@ -1774,7 +1779,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  				 * future cmds to this device will get selection
+>  				 * timeout as if the device was gone.
+>  				 */
+> -				hpsa_show_dev_msg(KERN_WARNING, h, removed[i],
+> +				hpsa_show_dev_msg(__stringify(KERN_WARNING),
+> +					h, removed[i],
+>  					"didn't find device for removal.");
+>  			}
+>  		}
+> @@ -1789,7 +1795,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  		if (scsi_add_device(sh, added[i]->bus,
+>  			added[i]->target, added[i]->lun) == 0)
+>  			continue;
+> -		hpsa_show_dev_msg(KERN_WARNING, h, added[i],
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, added[i],
+>  					"addition failed, device not added.");
+>  		/* now we have to remove it from h->dev,
+>  		 * since it didn't get added to scsi mid layer
+> @@ -5188,7 +5194,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  		snprintf(msg, sizeof(msg),
+>  			 "cmd %d RESET FAILED, lockup detected",
+>  			 hpsa_get_cmd_index(scsicmd));
+> -		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, msg);
+>  		return FAILED;
+>  	}
+>  
+> @@ -5197,7 +5203,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  		snprintf(msg, sizeof(msg),
+>  			 "cmd %d RESET FAILED, new lockup detected",
+>  			 hpsa_get_cmd_index(scsicmd));
+> -		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, msg);
+>  		return FAILED;
+>  	}
+>  
+> @@ -5205,14 +5211,14 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  	if (is_hba_lunid(dev->scsi3addr))
+>  		return SUCCESS;
+>  
+> -	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
+> +	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, "resetting");
+>  
+>  	/* send a reset to the SCSI LUN which the command was sent to */
+>  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+>  			   DEFAULT_REPLY_QUEUE);
+>  	snprintf(msg, sizeof(msg), "reset %s",
+>  		 rc == 0 ? "completed successfully" : "failed");
+> -	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> +	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev, msg);
+>  	return rc == 0 ? SUCCESS : FAILED;
+>  }
+>  
+> @@ -5548,14 +5554,14 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  
+>  	/* If controller locked up, we can guarantee command won't complete */
+>  	if (lockup_detected(h)) {
+> -		hpsa_show_dev_msg(KERN_WARNING, h, dev,
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev,
+>  					"ABORT FAILED, lockup detected");
+>  		return FAILED;
+>  	}
+>  
+>  	/* This is a good time to check if controller lockup has occurred */
+>  	if (detect_controller_lockup(h)) {
+> -		hpsa_show_dev_msg(KERN_WARNING, h, dev,
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev,
+>  					"ABORT FAILED, new lockup detected");
+>  		return FAILED;
+>  	}
+> @@ -5610,7 +5616,8 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  			as->cmd_len, as->cmnd[0], as->cmnd[1],
+>  			as->serial_number);
+>  	dev_warn(&h->pdev->dev, "%s BEING SENT\n", msg);
+> -	hpsa_show_dev_msg(KERN_WARNING, h, dev, "Aborting command");
+> +	hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev,
+> +				"Aborting command");
+>  
+>  	/*
+>  	 * Command is in flight, or possibly already completed
+> @@ -5629,7 +5636,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  	wake_up_all(&h->abort_cmd_wait_queue);
+>  	if (rc != 0) {
+>  		dev_warn(&h->pdev->dev, "%s SENT, FAILED\n", msg);
+> -		hpsa_show_dev_msg(KERN_WARNING, h, dev,
+> +		hpsa_show_dev_msg(__stringify(KERN_WARNING), h, dev,
+>  				"FAILED to abort command");
+>  		cmd_free(h, abort);
+>  		return FAILED;
 >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
