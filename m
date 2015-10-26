@@ -1,225 +1,91 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH 2/2] qla2xxx: fix rwlock recursion
-Date: Mon, 26 Oct 2015 20:34:16 +0000
-Message-ID: <D253DBAE.BFD54%himanshu.madhani@qlogic.com>
-References: <1444838261-20990-1-git-send-email-himanshu.madhani@qlogic.com>
- <1444838261-20990-3-git-send-email-himanshu.madhani@qlogic.com>
- <561E91D4.8030307@sandisk.com>
- <22881A44-6E6A-45D7-828F-B0DE6C91476D@qlogic.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH] qla2xxx: Fix rwlock recursion
+Date: Mon, 26 Oct 2015 14:00:16 -0700
+Message-ID: <562E9460.4070105@sandisk.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D253DBAEBFD54himanshumadhaniqlogiccom_"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:32838 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751413AbbJZUeS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Oct 2015 16:34:18 -0400
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t9QKXWnr024283
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2015 13:34:18 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1xr8yp2wxd-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2015 13:34:18 -0700
-In-Reply-To: <22881A44-6E6A-45D7-828F-B0DE6C91476D@qlogic.com>
-Content-Language: en-US
+Received: from mail-by2on0073.outbound.protection.outlook.com ([207.46.100.73]:54857
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751729AbbJZVAT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Oct 2015 17:00:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@lst.de" <hch@lst.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@odin.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_000_D253DBAEBFD54himanshumadhaniqlogiccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <C5C792773A3FD449921B57A7B36141E4@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+This patch fixes the following kernel bug:
 
-Hi Bart,=20
+kernel:BUG: rwlock recursion on CPU#2, insmod/39333, ffff8803e998cb28
+kernel: Call Trace:
+kernel: [<ffffffff812bce44>] dump_stack+0x48/0x64
+kernel: [<ffffffff810a8047>] rwlock_bug+0x67/0x70
+kernel: [<ffffffff810a833a>] do_raw_write_lock+0x8a/0xa0
+kernel: [<ffffffff815f3033>] _raw_write_lock_irqsave+0x63/0x80
+kernel: [<ffffffffa08087c8>] qla82xx_rd_32+0xe8/0x140 [qla2xxx]
+kernel: [<ffffffffa0808845>] qla82xx_crb_win_lock+0x25/0x60 [qla2xxx]
+kernel: [<ffffffffa0808976>] qla82xx_wr_32+0xf6/0x150 [qla2xxx]
+kernel: [<ffffffffa0808ac0>] qla82xx_disable_intrs+0x50/0x80 [qla2xxx]
+kernel: [<ffffffffa080630a>] qla82xx_reset_chip+0x1a/0x20 [qla2xxx]
+kernel: [<ffffffffa07d6ef2>] qla2x00_initialize_adapter+0x132/0x420 [qla2xxx]
+kernel: [<ffffffffa08087c8>] qla82xx_rd_32+0xe8/0x140 [qla2xxx]
+kernel: [<ffffffffa0808845>] qla82xx_crb_win_lock+0x25/0x60 [qla2xxx]
+kernel: [<ffffffffa0808976>] qla82xx_wr_32+0xf6/0x150 [qla2xxx]
+kernel: [<ffffffffa0808ac0>] qla82xx_disable_intrs+0x50/0x80 [qla2xxx]
+kernel: [<ffffffffa080630a>] qla82xx_reset_chip+0x1a/0x20 [qla2xxx]
+kernel: [<ffffffffa07d6ef2>] qla2x00_initialize_adapter+0x132/0x420 [qla2xxx]
+kernel: [<ffffffffa07c964e>] qla2x00_probe_one+0xefe/0x2130 [qla2xxx]
+kernel: [<ffffffff8130052c>] local_pci_probe+0x4c/0xa0
+kernel: [<ffffffff81300603>] pci_call_probe+0x83/0xa0
+kernel: [<ffffffff813008cf>] pci_device_probe+0x7f/0xb0
+kernel: [<ffffffff813e2e83>] really_probe+0x133/0x390
+kernel: [<ffffffff813e3139>] driver_probe_device+0x59/0xd0
+kernel: [<ffffffff813e3251>] __driver_attach+0xa1/0xb0
+kernel: [<ffffffff813e0cdd>] bus_for_each_dev+0x8d/0xb0
+kernel: [<ffffffff813e28ee>] driver_attach+0x1e/0x20
+kernel: [<ffffffff813e2252>] bus_add_driver+0x1d2/0x290
+kernel: [<ffffffff813e3970>] driver_register+0x60/0xe0
+kernel: [<ffffffff813009e4>] __pci_register_driver+0x64/0x70
+kernel: [<ffffffffa04bc1cb>] qla2x00_module_init+0x1cb/0x21b [qla2xxx]
+kernel: [<ffffffff8100027d>] do_one_initcall+0xad/0x1c0
+kernel: [<ffffffff810e2859>] do_init_module+0x69/0x210
+kernel: [<ffffffff810e4e5c>] load_module+0x5cc/0x750
+kernel: [<ffffffff810e5162>] SyS_init_module+0x92/0xc0
+kernel: [<ffffffff815f37d7>] entry_SYSCALL_64_fastpath+0x12/0x6f
 
+Fixes: 8dfa4b5a9b44 ("qla2xxx: Fix sparse annotation")
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reported-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Tested-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: stable <stable@vger.kernel.org> # v4.3+
+---
+ drivers/scsi/qla2xxx/qla_nx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-On 10/14/15, 4:07 PM, "linux-scsi-owner@vger.kernel.org on behalf of
-Himanshu Madhani" <linux-scsi-owner@vger.kernel.org on behalf of
-himanshu.madhani@qlogic.com> wrote:
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index eb0cc54..b6b4cfd 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -433,7 +433,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
+ 	if (off_in < QLA82XX_PCI_CRBSPACE)
+ 		return -1;
+ 
+-	*off_out = (void __iomem *)(off_in - QLA82XX_PCI_CRBSPACE);
++	off_in -= QLA82XX_PCI_CRBSPACE;
+ 
+ 	/* Try direct map */
+ 	m = &crb_128M_2M_map[CRB_BLK(off_in)].sub_block[CRB_SUBBLK(off_in)];
+@@ -443,6 +443,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, ulong off_in,
+ 		return 0;
+ 	}
+ 	/* Not in direct map, use crb window */
++	*off_out = (void __iomem *)off_in;
+ 	return 1;
+ }
+ 
+-- 
+2.1.4
 
->Hi Bart,=20
->
->> On Oct 14, 2015, at 10:33 AM, Bart Van Assche
->><bart.vanassche@sandisk.com> wrote:
->>=20
->> On 10/14/2015 08:57 AM, Himanshu Madhani wrote:
->>> This patch fixes rwlock recursion introduced for ISP82XX by
->>> commit 8dfa4b5a ("qla2xxx: Fix sparse annotations")
->>=20
->> Hello Himanshu,
->>=20
->> Would it be possible to test whether the (untested) patch below also
->>fixes the observed rwlock recursion ?
->>=20
->> Thanks,
->>=20
->> Bart.
->>=20
->>=20
->>=20
->> [PATCH] qla2xxx: Fix rwlock recursion
->>=20
->> Fixes: 8dfa4b5a9b44 ("qla2xxx: Fix sparse annotation")
->> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
->> Reported-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
->> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
->> ---
->> drivers/scsi/qla2xxx/qla_nx.c | 3 ++-
->> 1 file changed, 2 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/scsi/qla2xxx/qla_nx.c
->>b/drivers/scsi/qla2xxx/qla_nx.c
->> index eb0cc54..b6b4cfd 100644
->> --- a/drivers/scsi/qla2xxx/qla_nx.c
->> +++ b/drivers/scsi/qla2xxx/qla_nx.c
->> @@ -433,7 +433,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha,
->>ulong off_in,
->> 	if (off_in < QLA82XX_PCI_CRBSPACE)
->> 		return -1;
->>=20
->> -	*off_out =3D (void __iomem *)(off_in - QLA82XX_PCI_CRBSPACE);
->> +	off_in -=3D QLA82XX_PCI_CRBSPACE;
->>=20
->> 	/* Try direct map */
->> 	m =3D &crb_128M_2M_map[CRB_BLK(off_in)].sub_block[CRB_SUBBLK(off_in)];
->> @@ -443,6 +443,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha,
->>ulong off_in,
->> 		return 0;
->> 	}
->> 	/* Not in direct map, use crb window */
->> +	*off_out =3D (void __iomem *)off_in;
->> 	return 1;
->> }
->>=20
->
->This change  also resolved rwlock recursion on the driver load. Will
->perform some more basic sanity and report if there are issues seen.
-
-Testing looks good so far. Please send official patch with this fix.
-
-
-
->
->> --=20
->> 2.1.4
->>=20
->>=20
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-Thanks,
-Himanshu
-
-
->
-
-
---_000_D253DBAEBFD54himanshumadhaniqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-VETwSYCWkQTy/0dxHIQ78rqgH2BZILgDSTL/uqIk0MDKKWgpMAuBL1VJMv0G4GSSUBkwMnCS0AeQ
-NdD3GdFIMQDAagWwpLAEYCpufS9GTbGyxyc98QIQMnIgQmgCQHA6Ly8qfS/VxyctyiIuyrBtsEa1
-DX9PWyg2zV8witAFFULSgAAAHwBCAAEAAAAiAAAASABpAG0AYQBuAHMAaAB1ACAATQBhAGQAaABh
-AG4AaQAAAAAAHwBlAAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHwAAAAA
-AAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAA
-UwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAHwACXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABhAG4AaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAOVfAQAAAEAAAABzAGkAcAA6AGgAaQBtAGEAbgBzAGgAdQAu
-AG0AYQBkAGgAYQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAaDAEAAAAiAAAASABpAG0A
-YQBuAHMAaAB1ACAATQBhAGQAaABhAG4AaQAAAAAAHwAfDAEAAAA4AAAAaABpAG0AYQBuAHMAaAB1
-AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAB4MAQAAAAoAAABTAE0A
-VABQAAAAAAACARkMAQAAAHwAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBIAGkAbQBhAG4AcwBo
-AHUAIABNAGEAZABoAGEAbgBpAAAAUwBNAFQAUAAAAGgAaQBtAGEAbgBzAGgAdQAuAG0AYQBkAGgA
-YQBuAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA4AAAAaABpAG0AYQBuAHMAaAB1
-AC4AbQBhAGQAaABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAPg/AQAAACIAAABIAGkA
-bQBhAG4AcwBoAHUAIABNAGEAZABoAGEAbgBpAAAAAAAfACNAAQAAADgAAABoAGkAbQBhAG4AcwBo
-AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMA
-TQBUAFAAAAAAAAIB+T8BAAAAfAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEgAaQBtAGEAbgBz
-AGgAdQAgAE0AYQBkAGgAYQBuAGkAAABTAE0AVABQAAAAaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQA
-aABhAG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADgAAABoAGkAbQBhAG4AcwBo
-AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAsAQDoBAAAAHwAaAAEA
-AAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAA
-ABAAAAB9EmfX4Xt2Rr5QlrEevERVAwAXAAEAAABAADkAANSjri0Q0QFAAAgwiV2tri0Q0QELAACA
-CCAGAAAAAADAAAAAAAAARgAAAAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABh
-AGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAFwAAABSAGUAOgAgAFsAUABBAFQAQwBI
-ACAAMgAvADIAXQAgAHEAbABhADIAeAB4AHgAOgAgAGYAaQB4ACAAcgB3AGwAbwBjAGsAIAByAGUA
-YwB1AHIAcwBpAG8AbgAAAB8APQABAAAACgAAAFIAZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAABk
-AAAAPAAyADIAOAA4ADEAQQA0ADQALQA2AEUANgBBAC0ANAA1AEQANwAtADgAMgA4AEYALQBCADAA
-RABFADYAQwA5ADEANAA3ADYARABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAAAAIBcQABAAAAIAAA
-AAEB0QamaLdVqef+jYRAp6Di025ldXaea3tFAIAS0sEAHwBwAAEAAABUAAAAWwBQAEEAVABDAEgA
-IAAyAC8AMgBdACAAcQBsAGEAMgB4AHgAeAA6ACAAZgBpAHgAIAByAHcAbABvAGMAawAgAHIAZQBj
-AHUAcgBzAGkAbwBuAAAAHwA1EAEAAABaAAAAPABEADIANQAzAEQAQgBBAEUALgBCAEYARAA1ADQA
-JQBoAGkAbQBhAG4AcwBoAHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+
-AAAAAAAfADkQAQAAAKIBAAA8ADEANAA0ADQAOAAzADgAMgA2ADEALQAyADAAOQA5ADAALQAxAC0A
-ZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AaABpAG0AYQBuAHMAaAB1AC4AbQBhAGQAaABh
-AG4AaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0APgAgADwAMQA0ADQANAA4ADMAOAAyADYAMQAtADIA
-MAA5ADkAMAAtADMALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBoAGkAbQBhAG4AcwBo
-AHUALgBtAGEAZABoAGEAbgBpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+ACAAPAA1ADYAMQBFADkA
-MQBEADQALgA4ADAAMwAwADMAMAA3AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AIAA8ADIAMgA4
-ADgAMQBBADQANAAtADYARQA2AEEALQA0ADUARAA3AC0AOAAyADgARgAtAEIAMABEAEUANgBDADkA
-MQA0ADcANgBEAEAAcQBsAG8AZwBpAGMALgBjAG8AbQA+AAAAAAADAN4/n04AAEAABzBsOaauLRDR
-AQMAJgAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMy0xNTEwMjYyMDM0
-MTZaLTk3MjgxAAAAHwAVEAEAAABYAAAAQwA1AEMANwA5ADIANwA3ADMAQQAzAEYARAA0ADQAOQA5
-ADIAMQBCADUANwBBADcAQgAzADYAMQA0ADEARQA0AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIB
-FDABAAAADAAAAN4AAABQo8mLSAAAAB8A+j8BAAAAIgAAAEgAaQBtAGEAbgBzAGgAdQAgAE0AYQBk
-AGgAYQBuAGkAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
-bgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
-ADEANAAuADUALgA3AC4AMQA1ADEAMAAwADUAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
-AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
-AAEAAAA0AQAASQBJAD0AMAAxADAAMQBEADEAMQAwADIARABBAEUANwBCAEQARgA3ADMAMgA3ADIA
-RgBCADYAMwAwADQANQA5ADYANgA2ADQAOQBEAEUARAAxADUAMgBGADIARgAxADsAUwBCAE0ASQBE
-AD0AMwA7AFMAMQA9ADwAMgAyADgAOAAxAEEANAA0AC0ANgBFADYAQQAtADQANQBEADcALQA4ADIA
-OABGAC0AQgAwAEQARQA2AEMAOQAxADQANwA2AEQAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AOwBW
-AGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIAdQBpAGwAZAAgADIA
-MwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAA
-AABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBw
-AAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABG
-AQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAABm
-Rw==
-
---_000_D253DBAEBFD54himanshumadhaniqlogiccom_--
