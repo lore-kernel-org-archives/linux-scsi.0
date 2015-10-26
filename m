@@ -1,31 +1,47 @@
-From: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH v2 05/32] scsi: hisi_sas: scan device tree
-Date: Mon, 26 Oct 2015 14:48:54 +0000
-Message-ID: <20151026144854.GC12277@leverpostej>
-References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
- <1445868903-183817-6-git-send-email-john.garry@huawei.com>
+From: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
+Subject: [PATCH] scsi_sysfs: Fix queue_ramp_up_period return code
+Date: Mon, 26 Oct 2015 15:54:23 +0100
+Message-ID: <562E3E9F.50600@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1445868903-183817-6-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e06smtp09.uk.ibm.com ([195.75.94.105]:51843 "EHLO
+	e06smtp09.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753715AbbJZOy2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 10:54:28 -0400
+Received: from localhost
+	by e06smtp09.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <oberpar@linux.vnet.ibm.com>;
+	Mon, 26 Oct 2015 14:54:26 -0000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> +	sas_addr_prop = of_find_property(np, "sas-addr", NULL);
-> +	if (!sas_addr_prop || (sas_addr_prop->length != SAS_ADDR_SIZE))
-> +		goto err_out;
-> +	memcpy(hisi_hba->sas_addr, sas_addr_prop->value, SAS_ADDR_SIZE);
+Writing a number to /sys/bus/scsi/devices/<sdev>/queue_ramp_up_period
+returns the value of that number instead of the number of bytes written.
+This behavior can confuse programs expecting POSIX write() semantics.
+Fix this by returning the number of bytes written instead.
 
-This was not in the binding.
+Signed-off-by: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-What is this?
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..6b0f292 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -898,7 +898,7 @@ sdev_store_queue_ramp_up_period(struct device *dev,
+ 		return -EINVAL;
 
-Thanks,
-Mark.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	sdev->queue_ramp_up_period = msecs_to_jiffies(period);
+-	return period;
++	return count;
+ }
+
+ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
+-- 
+2.3.0
+
