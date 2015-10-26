@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 25/32] scsi: hisi_sas: add abnormal irq handler
-Date: Mon, 26 Oct 2015 22:14:56 +0800
-Message-ID: <1445868903-183817-26-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 03/32] scsi: hisi_sas: add initial bare main driver
+Date: Mon, 26 Oct 2015 22:14:34 +0800
+Message-ID: <1445868903-183817-4-git-send-email-john.garry@huawei.com>
 References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,304 +12,152 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add abnormal irq handler. This handler is concerned with
-phy down event.
-Also add port formed and port deformed handlers.
+This patch adds the initial bare main driver for the
+HiSilicon SAS HBA. This only introduces the changes to
+build and load the main driver module.
+
+The complete driver consists of the core main module and
+also a module platform driver for driving the hw.
+
+The HBA is a platform device.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |   2 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 136 +++++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  70 +++++++++++++++++
- 3 files changed, 208 insertions(+)
+ drivers/scsi/Kconfig                  |  1 +
+ drivers/scsi/Makefile                 |  1 +
+ drivers/scsi/hisi_sas/Kconfig         |  6 +++++
+ drivers/scsi/hisi_sas/Makefile        |  1 +
+ drivers/scsi/hisi_sas/hisi_sas.h      | 26 +++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 44 +++++++++++++++++++++++++++++++++++
+ 6 files changed, 79 insertions(+)
+ create mode 100644 drivers/scsi/hisi_sas/Kconfig
+ create mode 100644 drivers/scsi/hisi_sas/Makefile
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 95f7a76..5c345f9 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1774,5 +1774,6 @@ source "drivers/scsi/pcmcia/Kconfig"
+ source "drivers/scsi/device_handler/Kconfig"
+ 
+ source "drivers/scsi/osd/Kconfig"
++source "drivers/scsi/hisi_sas/Kconfig"
+ 
+ endmenu
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 1a8c9b5..03c30de 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -158,6 +158,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+ obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
+ 
+ obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
++obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
+ 
+ # This goes last, so that "real" scsi devices probe earlier
+ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+new file mode 100644
+index 0000000..37a0c71
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/Kconfig
+@@ -0,0 +1,6 @@
++config SCSI_HISI_SAS
++	tristate "HiSilicon SAS"
++	select SCSI_SAS_LIBSAS
++	select BLK_DEV_INTEGRITY
++	help
++		This driver supports HiSilicon's SAS HBA
+diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
+new file mode 100644
+index 0000000..d86b05e
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index fc2457f..e52f5d3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
+new file mode 100644
+index 0000000..a5cec22
+--- /dev/null
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -139,6 +139,7 @@ struct hisi_sas_hw {
- 			     struct hisi_sas_slot *slot, int abort);
- 	void (*free_device)(struct hisi_hba *hisi_hba,
- 			    struct hisi_sas_device *dev);
-+	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
- 	int complete_hdr_size;
- };
- 
-@@ -344,6 +345,7 @@ extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
- 
-+extern void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy);
- extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- 				    struct sas_task *task,
- 				    struct hisi_sas_slot *slot);
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (c) 2015 Linaro Ltd.
++ * Copyright (c) 2015 Hisilicon Limited.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
++
++#ifndef _HISI_SAS_H_
++#define _HISI_SAS_H_
++
++#include <linux/dmapool.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <scsi/libsas.h>
++
++#define DRV_VERSION "v1.0"
++
++#endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9e62eda..88bf72f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+new file mode 100644
+index 0000000..67977a3
+--- /dev/null
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -454,6 +454,89 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
- 	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
- }
- 
-+static void hisi_sas_port_notify_formed(struct asd_sas_phy *sas_phy, int lock)
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (c) 2015 Linaro Ltd.
++ * Copyright (c) 2015 Hisilicon Limited.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
++
++#include "hisi_sas.h"
++#define DRV_NAME "hisi_sas"
++
++
++static struct scsi_transport_template *hisi_sas_stt;
++
++static struct sas_domain_function_template hisi_sas_transport_ops = {
++};
++
++static __init int hisi_sas_init(void)
 +{
-+	struct sas_ha_struct *sas_ha = sas_phy->ha;
-+	struct hisi_hba *hisi_hba = NULL;
-+	int i = 0;
-+	struct hisi_sas_phy *phy = sas_phy->lldd_phy;
-+	struct asd_sas_port *sas_port = sas_phy->port;
-+	struct hisi_sas_port *port;
-+	unsigned long flags = 0;
++	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
 +
-+	if (!sas_port)
-+		return;
++	hisi_sas_stt = sas_domain_attach_transport(&hisi_sas_transport_ops);
++	if (!hisi_sas_stt)
++		return -ENOMEM;
 +
-+	while (sas_ha->sas_phy[i]) {
-+		if (sas_ha->sas_phy[i] == sas_phy) {
-+			hisi_hba = (struct hisi_hba *)sas_ha->lldd_ha;
-+			port = &hisi_hba->port[i];
-+			break;
-+		}
-+		i++;
-+	}
-+
-+	if (hisi_hba == NULL) {
-+		pr_err("%s: could not find hba\n", __func__);
-+		return;
-+	}
-+
-+	if (lock)
-+		spin_lock_irqsave(&hisi_hba->lock, flags);
-+	port->port_attached = 1;
-+	port->id = phy->port_id;
-+	phy->port = port;
-+	sas_port->lldd_port = port;
-+
-+	if (lock)
-+		spin_unlock_irqrestore(&hisi_hba->lock, flags);
++	return 0;
 +}
 +
-+static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba,
-+		int phy_no, struct domain_device *device)
++static __exit void hisi_sas_exit(void)
 +{
-+	struct hisi_sas_phy *phy;
-+	struct hisi_sas_port *port;
-+	struct hisi_sas_slot *slot, *slot2;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+
-+	phy = &hisi_hba->phy[phy_no];
-+	port = phy->port;
-+	if (!port)
-+		return;
-+
-+	list_for_each_entry_safe(slot, slot2, &port->list, entry) {
-+		struct sas_task *task;
-+
-+		task = slot->task;
-+		if (device && task->dev != device)
-+			continue;
-+
-+		dev_info(dev, "Release slot [%d:%d], task [%p]:\n",
-+			 slot->dlvry_queue, slot->dlvry_queue_slot, task);
-+		hisi_hba->hw->slot_complete(hisi_hba, slot, 1);
-+	}
++	sas_release_transport(hisi_sas_stt);
 +}
 +
-+static void hisi_sas_port_notify_deformed(struct asd_sas_phy *sas_phy,
-+					  int lock)
-+{
-+	struct domain_device *device;
-+	struct hisi_sas_phy *phy = sas_phy->lldd_phy;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	struct asd_sas_port *sas_port = sas_phy->port;
-+	int phy_no = 0;
++module_init(hisi_sas_init);
++module_exit(hisi_sas_exit);
 +
-+	while (phy != &hisi_hba->phy[phy_no]) {
-+		phy_no++;
-+
-+		if (phy_no >= hisi_hba->n_phy)
-+			return;
-+	}
-+	list_for_each_entry(device, &sas_port->dev_list, dev_list_node)
-+		hisi_sas_do_release_task(phy->hisi_hba, phy_no, device);
-+}
-+
- static int hisi_sas_dev_found(struct domain_device *device)
- {
- 	return hisi_sas_dev_found_notify(device, 1);
-@@ -488,6 +571,57 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	return hisi_sas_task_exec(task, gfp_flags, NULL, 0, NULL);
- }
- 
-+
-+static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
-+{
-+	hisi_sas_port_notify_formed(sas_phy, 1);
-+}
-+
-+static void hisi_sas_port_deformed(struct asd_sas_phy *sas_phy)
-+{
-+	hisi_sas_port_notify_deformed(sas_phy, 1);
-+}
-+
-+static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
-+{
-+	phy->phy_attached = 0;
-+	phy->phy_type = 0;
-+	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
-+	phy->port = NULL;
-+}
-+
-+void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
-+{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+
-+	if (rdy) {
-+		/* Phy down but ready */
-+		hisi_sas_bytes_dmaed(hisi_hba, phy_no);
-+		hisi_sas_port_notify_formed(sas_phy, 0);
-+	} else {
-+		struct hisi_sas_port *port  = phy->port;
-+
-+		/* Phy down and not ready */
-+		sas_ha->notify_phy_event(sas_phy, PHYE_LOSS_OF_SIGNAL);
-+		sas_phy_disconnected(sas_phy);
-+
-+		if (port) {
-+			if (phy->phy_type & PORT_TYPE_SAS) {
-+				int port_id = port->id;
-+
-+				if (!hisi_hba->hw->get_wideport_bitmap(hisi_hba,
-+								       port_id))
-+					port->port_attached = 0;
-+			} else if (phy->phy_type & PORT_TYPE_SATA)
-+				port->port_attached = 0;
-+		}
-+		hisi_sas_phy_disconnected(phy);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_phy_down);
-+
- static struct scsi_transport_template *hisi_sas_stt;
- 
- static struct scsi_host_template hisi_sas_sht = {
-@@ -513,6 +647,8 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
- 	.lldd_dev_found		= hisi_sas_dev_found,
- 	.lldd_dev_gone		= hisi_sas_dev_gone,
- 	.lldd_execute_task	= hisi_sas_queue_command,
-+	.lldd_port_formed	= hisi_sas_port_formed,
-+	.lldd_port_deformed	= hisi_sas_port_deformed,
- };
- 
- static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index f9ebe7e..8a9498e74 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -809,6 +809,18 @@ static void sl_notify_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
- }
- 
-+static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
-+{
-+	int i, bitmap = 0;
-+	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++)
-+		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
-+			bitmap |= 1 << i;
-+
-+	return bitmap;
-+}
-+
- /**
-  * This function allocates across all queues to load balance.
-  * It uses the current cpu as the method to balance the
-@@ -1339,6 +1351,61 @@ end:
- 	return res;
- }
- 
-+static irqreturn_t int_abnormal_v1_hw(int irq, void *p)
-+{
-+	struct hisi_sas_phy *phy = p;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	u32 irq_value, irq_mask_old;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	int phy_no = sas_phy->id;
-+
-+	/* mask_int0 */
-+	irq_mask_old = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT0_MSK);
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK, 0x3fffff);
-+
-+	/* read int0 */
-+	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT0);
-+
-+	if (irq_value & CHL_INT0_PHYCTRL_NOTRDY_MSK) {
-+		u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
-+
-+		hisi_sas_phy_down(hisi_hba, phy_no,
-+				  (phy_state & 1 << phy_no) ? 1 : 0);
-+	}
-+
-+	if (irq_value & CHL_INT0_ID_TIMEOUT_MSK)
-+		dev_dbg(dev, "abnormal: ID_TIMEOUT phy%d identify timeout\n",
-+			phy_no);
-+
-+	if (irq_value & CHL_INT0_DWS_LOST_MSK)
-+		dev_dbg(dev, "abnormal: DWS_LOST phy%d dws lost\n", phy_no);
-+
-+	if (irq_value & CHL_INT0_SN_FAIL_NGR_MSK)
-+		dev_dbg(dev, "abnormal: SN_FAIL_NGR phy%d sn fail ngr\n",
-+			phy_no);
-+
-+	if (irq_value & CHL_INT0_SL_IDAF_FAIL_MSK ||
-+		irq_value & CHL_INT0_SL_OPAF_FAIL_MSK)
-+		dev_dbg(dev, "abnormal: SL_ID/OPAF_FAIL phy%d check adr frm err\n",
-+			phy_no);
-+
-+	if (irq_value & CHL_INT0_SL_PS_FAIL_OFF)
-+		dev_dbg(dev, "abnormal: SL_PS_FAIL phy%d fail\n", phy_no);
-+
-+	/* write to zero */
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, irq_value);
-+
-+	if (irq_value & CHL_INT0_PHYCTRL_NOTRDY_MSK)
-+		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK,
-+				0x3fffff & ~CHL_INT0_MSK_PHYCTRL_NOTRDY_MSK);
-+	else
-+		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK,
-+				irq_mask_old);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
- {
- 	struct hisi_sas_cq *cq = p;
-@@ -1391,11 +1458,13 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
- 
- static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
- 	{"Phy Up"},
-+	{"Abnormal"},
- };
- 
- static const char cq_int_name[32] = "cq";
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_phyup_v1_hw,
-+	int_abnormal_v1_hw
- };
- 
- static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
-@@ -1520,6 +1589,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.get_free_slot = get_free_slot_v1_hw,
- 	.start_delivery = start_delivery_v1_hw,
- 	.slot_complete = slot_complete_v1_hw,
-+	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
- };
- 
++MODULE_VERSION(DRV_VERSION);
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
++MODULE_DESCRIPTION("HISILICON SAS controller driver");
++MODULE_ALIAS("platform:" DRV_NAME);
 -- 
 1.9.1
