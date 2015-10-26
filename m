@@ -1,118 +1,100 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 14/17] scsi: ufs: tune UniPro parameters to optimize
- hibern8 exit time
-Date: Mon, 26 Oct 2015 14:32:45 -0000
-Message-ID: <783cf3a29279b2f929ea75c7850a014d.squirrel@www.codeaurora.org>
-References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-    <1442155977-7686-15-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyhz0NHw+Q1gpLmf-O6Ub7WkQjVaNhJZzNf7kVqJS5tJ5g@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 03/21] hpsa: abandon rescans on memory alloaction
+ failures.
+Date: Mon, 26 Oct 2015 15:36:05 +0100
+Message-ID: <562E3A55.2080400@redhat.com>
+References: <20151024193306.17127.7819.stgit@brunhilda>
+ <20151024195244.17127.26347.stgit@brunhilda> <562E379B.5040400@redhat.com>
+ <562E38AE.8080409@pmcs.com> <562E3961.2000602@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyhz0NHw+Q1gpLmf-O6Ub7WkQjVaNhJZzNf7kVqJS5tJ5g@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54257 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752740AbbJZOgI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Oct 2015 10:36:08 -0400
+In-Reply-To: <562E3961.2000602@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <brace77070@gmail.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-> 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> Optimal values of local UniPro parameters like PA_Hibern8Time &
->> PA_TActivate can help reduce the hibern8 exit latency. If both host and
->> device supports UniPro ver1.6 or later, these parameters will be
->> automatically tuned during link startup itself. But if either host or
->> device doesn't support UniPro ver 1.6 or later, we have to manually
->> tune them. But to keep manual tuning logic simple, we will only do
->> manual tuning if local unipro version doesn't support ver1.6 or later.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 121
->> ++++++++++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/ufs/ufshcd.h |   1 +
->>  drivers/scsi/ufs/ufshci.h |   2 +
->>  drivers/scsi/ufs/unipro.h |  21 ++++++++
->>  4 files changed, 145 insertions(+)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index a8659a9..0938d6c 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -596,6 +596,34 @@ static inline int ufshcd_is_hba_active(struct
->> ufs_hba *hba)
->>         return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
->>  }
->>
->> +u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
->> +{
->> +       /* HCI version 1.0 and 1.1 supports UniPro 1.41 */
->> +       if ((hba->ufs_version == UFSHCI_VERSION_10) ||
->> +           (hba->ufs_version == UFSHCI_VERSION_11))
->> +               return UFS_UNIPRO_VER_1_41;
->> +       else
->> +               return UFS_UNIPRO_VER_1_6;
->> +}
->> +EXPORT_SYMBOL(ufshcd_get_local_unipro_ver);
->> +
->> +static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
->> +{
->> +       /*
->> +        * If both host and device support UniPro ver1.6 or later, PA
->> layer
->> +        * parameters tuning happens during link startup itself.
->> +        *
->> +        * We can manually tune PA layer parameters if either host or
->> device
->> +        * doesn't support UniPro ver 1.6 or later. But to keep manual
->> tuning
->> +        * logic simple, we will only do manual tuning if local unipro
->> version
->> +        * doesn't support ver1.6 or later.
->> +        */
->> +       if (ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6)
->> +               return true;
->> +       else
->> +               return false;
->> +}
->> +
->>  static void ufshcd_ungate_work(struct work_struct *work)
->>  {
->>         int ret;
->> @@ -4826,6 +4854,98 @@ out:
->>  }
->>
->>  /**
->> + * ufshcd_tune_pa_tactivate - Tunes PA_TActivate of local UniPro
->> + * @hba: per-adapter instance
->> + *
->> + * PA_TActivate parameter can be tuned manually if UniPro version is
->> less than
->> + * 1.61. PA_TActivate needs to be greater than or equal to peerM-PHY's
->> + * RX_MIN_ACTIVATETIME_CAPABILITY attribute. This optimal value can
->> help reduce
->> + * the hibern8 exit latency.
->> + *
->> + * Returns zero on success, non-zero error value on failure.
->> + */
->> +static int ufshcd_tune_pa_tactivate(struct ufs_hba *hba)
->> +{
->> +       int ret = 0;
->> +       u32 peer_rx_min_activatetime = 0, tuned_pa_tactivate;
->> +
->> +       if (!ufshcd_is_unipro_pa_params_tuning_req(hba))
->> +               return 0;
+On 26.10.2015 15:32, Tomas Henzl wrote:
+> On 26.10.2015 15:29, Don Brace wrote:
+>> On 10/26/2015 09:24 AM, Tomas Henzl wrote:
+>>> On 24.10.2015 21:52, Don Brace wrote:
+>>>> Abandon and reschedule rescan process only if device inquiries
+>>>> fail due to mem alloc failures, which are likely to occur for
+>>>> all devices.
+>>>>
+>>>> Otherwise, skip device if inquiry fails for other reasons,
+>>>> and continue rescanning process for other devices.
+>>>>
+>>>> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+>>>> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+>>>> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+>>>> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>>>> ---
+>>>>   drivers/scsi/hpsa.c |   24 +++++++++++++++++++-----
+>>>>   1 file changed, 19 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>>>> index 5dfb6cf..e1ee06d 100644
+>>>> --- a/drivers/scsi/hpsa.c
+>>>> +++ b/drivers/scsi/hpsa.c
+>>>>
+>>>> @@ -3799,11 +3804,20 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+>>>>   				continue;
+>>>>   
+>>>>   		/* Get device type, vendor, model, device id */
+>>>> -		if (hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+>>>> -							&is_OBDR)) {
+>>>> +		rc = hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+>>>> +							&is_OBDR);
+>>>> +		if (rc == -ENOMEM) {
+>>>> +			dev_warn(&h->pdev->dev,
+>>>> +				"Out of memory, rescan stopped.\n");
+>>> What about 'rescan deferred" instead of "rescan stopped?
+>> I can do either "rescan deferred" or "rescan rescheduled"
+> Do what you prefer, it's your language.
+
+And with any option you may add -
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Tomas
+
 >
-> This ufshcd_tune_pa_tactivate() is called only when
-> ufshcd_is_unipro_pa_params_tuning_req() returns true.  Is this
-> second check needed?
->
+>>>   
+>>>
+>>>>   			h->drv_req_rescan = 1;
+>>>> -			continue; /* skip it if we can't talk to it. */
+>>>> +			goto out;
+>>>>   		}
+>>>> +		if (rc) {
+>>>> +			dev_warn(&h->pdev->dev,
+>>>> +				"Inquiry failed, skipping device.\n");
+>>>> +			continue;
+>>>> +		}
+>>>> +
+>>>>   		figure_bus_target_lun(h, lunaddrbytes, tmpdevice);
+>>>>   		hpsa_update_device_supports_aborts(h, tmpdevice, lunaddrbytes);
+>>>>   		this_device = currentsd[ncurrent];
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-i could think of having this second check for any future call to
-ufshcd_tune_pa_tactivate() which is not protected with a wrapping check
-like in this case.
-but i guess every call to ufshcd_tune_pa_tactivate()
-will use ufshcd_tune_unipro_params() so we are good.
-i will remove the 2nd check
