@@ -1,263 +1,481 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 13/17] scsi: ufs: tune UniPro parameters to optimize hibern8 exit time
-Date: Mon, 26 Oct 2015 17:41:08 +0200
-Message-ID: <1445874072-25909-14-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 07/17] scsi: ufs: separate device and host quirks
+Date: Mon, 26 Oct 2015 17:41:02 +0200
+Message-ID: <1445874072-25909-8-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Optimal values of local UniPro parameters like PA_Hibern8Time &
-PA_TActivate can help reduce the hibern8 exit latency. If both host and
-device supports UniPro ver1.6 or later, these parameters will be
-automatically tuned during link startup itself. But if either host or
-device doesn't support UniPro ver 1.6 or later, we have to manually
-tune them. But to keep manual tuning logic simple, we will only do
-manual tuning if local unipro version doesn't support ver1.6 or later.
+Currently we use the host quirks mechanism in order to
+handle both device and host controller quirks.
+In order to support various of UFS devices we should separate
+handling the device quirks from the host controller's.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 118 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h |   1 +
- drivers/scsi/ufs/ufshci.h |   2 +
- drivers/scsi/ufs/unipro.h |  21 +++++++++
- 4 files changed, 142 insertions(+)
+ drivers/scsi/ufs/Makefile     |   2 +-
+ drivers/scsi/ufs/ufs.h        |  31 +++++++++++
+ drivers/scsi/ufs/ufs_quirks.c | 100 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs_quirks.h | 123 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c     |  90 ++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h     |  10 ++++
+ 6 files changed, 354 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.c
+ create mode 100644 drivers/scsi/ufs/ufs_quirks.h
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 95d5d6b..822692e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -596,6 +596,34 @@ static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
- 	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
- }
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 8303bcc..8570d41 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -1,5 +1,5 @@
+ # UFSHCD makefile
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+-obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
++obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o ufs_quirks.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 42c459a..85c46b9 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -43,6 +43,7 @@
+ #define GENERAL_UPIU_REQUEST_SIZE 32
+ #define QUERY_DESC_MAX_SIZE       255
+ #define QUERY_DESC_MIN_SIZE       2
++#define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+ 					(sizeof(struct utp_upiu_header)))
  
-+u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
-+{
-+	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
-+	if ((hba->ufs_version == UFSHCI_VERSION_10) ||
-+	    (hba->ufs_version == UFSHCI_VERSION_11))
-+		return UFS_UNIPRO_VER_1_41;
-+	else
-+		return UFS_UNIPRO_VER_1_6;
-+}
-+EXPORT_SYMBOL(ufshcd_get_local_unipro_ver);
-+
-+static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
-+{
-+	/*
-+	 * If both host and device support UniPro ver1.6 or later, PA layer
-+	 * parameters tuning happens during link startup itself.
-+	 *
-+	 * We can manually tune PA layer parameters if either host or device
-+	 * doesn't support UniPro ver 1.6 or later. But to keep manual tuning
-+	 * logic simple, we will only do manual tuning if local unipro version
-+	 * doesn't support ver1.6 or later.
-+	 */
-+	if (ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6)
-+		return true;
-+	else
-+		return false;
-+}
-+
- static void ufshcd_ungate_work(struct work_struct *work)
- {
- 	int ret;
-@@ -4812,6 +4840,95 @@ out:
- }
- 
- /**
-+ * ufshcd_tune_pa_tactivate - Tunes PA_TActivate of local UniPro
-+ * @hba: per-adapter instance
-+ *
-+ * PA_TActivate parameter can be tuned manually if UniPro version is less than
-+ * 1.61. PA_TActivate needs to be greater than or equal to peerM-PHY's
-+ * RX_MIN_ACTIVATETIME_CAPABILITY attribute. This optimal value can help reduce
-+ * the hibern8 exit latency.
-+ *
-+ * Returns zero on success, non-zero error value on failure.
-+ */
-+static int ufshcd_tune_pa_tactivate(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	u32 peer_rx_min_activatetime = 0, tuned_pa_tactivate;
-+
-+	ret = ufshcd_dme_peer_get(hba,
-+				  UIC_ARG_MIB_SEL(
-+					RX_MIN_ACTIVATETIME_CAPABILITY,
-+					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
-+				  &peer_rx_min_activatetime);
-+	if (ret)
-+		goto out;
-+
-+	/* make sure proper unit conversion is applied */
-+	tuned_pa_tactivate =
-+		((peer_rx_min_activatetime * RX_MIN_ACTIVATETIME_UNIT_US)
-+		 / PA_TACTIVATE_TIME_UNIT_US);
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE),
-+			     tuned_pa_tactivate);
-+
-+out:
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_tune_pa_hibern8time - Tunes PA_Hibern8Time of local UniPro
-+ * @hba: per-adapter instance
-+ *
-+ * PA_Hibern8Time parameter can be tuned manually if UniPro version is less than
-+ * 1.61. PA_Hibern8Time needs to be maximum of local M-PHY's
-+ * TX_HIBERN8TIME_CAPABILITY & peer M-PHY's RX_HIBERN8TIME_CAPABILITY.
-+ * This optimal value can help reduce the hibern8 exit latency.
-+ *
-+ * Returns zero on success, non-zero error value on failure.
-+ */
-+static int ufshcd_tune_pa_hibern8time(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	u32 local_tx_hibern8_time_cap = 0, peer_rx_hibern8_time_cap = 0;
-+	u32 max_hibern8_time, tuned_pa_hibern8time;
-+
-+	ret = ufshcd_dme_get(hba,
-+			     UIC_ARG_MIB_SEL(TX_HIBERN8TIME_CAPABILITY,
-+					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
-+				  &local_tx_hibern8_time_cap);
-+	if (ret)
-+		goto out;
-+
-+	ret = ufshcd_dme_peer_get(hba,
-+				  UIC_ARG_MIB_SEL(RX_HIBERN8TIME_CAPABILITY,
-+					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
-+				  &peer_rx_hibern8_time_cap);
-+	if (ret)
-+		goto out;
-+
-+	max_hibern8_time = max(local_tx_hibern8_time_cap,
-+			       peer_rx_hibern8_time_cap);
-+	/* make sure proper unit conversion is applied */
-+	tuned_pa_hibern8time = ((max_hibern8_time * HIBERN8TIME_UNIT_US)
-+				/ PA_HIBERN8_TIME_UNIT_US);
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
-+			     tuned_pa_hibern8time);
-+out:
-+	return ret;
-+}
-+
-+static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
-+{
-+	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
-+		ufshcd_tune_pa_tactivate(hba);
-+		ufshcd_tune_pa_hibern8time(hba);
-+	}
-+
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_TACTIVATE)
-+		/* set 1ms timeout for PA_TACTIVATE */
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 10);
-+}
-+
-+/**
-  * ufshcd_probe_hba - probe hba to detect device and initialize
-  * @hba: per-adapter instance
-  *
-@@ -4843,6 +4960,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		goto out;
- 
- 	ufs_advertise_fixup_device(hba);
-+	ufshcd_tune_unipro_params(hba);
- 
- 	ret = ufshcd_set_vccq_rail_unused(hba,
- 		(hba->dev_quirks & UFS_DEVICE_NO_VCCQ) ? true : false);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 5c489483..aa1f3e5 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -699,6 +699,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
-+u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
- 
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 2b05bfb..4cb1cc6 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -92,6 +92,7 @@ enum {
- 	UFSHCI_VERSION_10 = 0x00010000, /* 1.0 */
- 	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
- 	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
-+	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
+@@ -195,6 +196,36 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
  };
  
++/* Device descriptor parameters offsets in bytes*/
++enum device_desc_param {
++	DEVICE_DESC_PARAM_LEN			= 0x0,
++	DEVICE_DESC_PARAM_TYPE			= 0x1,
++	DEVICE_DESC_PARAM_DEVICE_TYPE		= 0x2,
++	DEVICE_DESC_PARAM_DEVICE_CLASS		= 0x3,
++	DEVICE_DESC_PARAM_DEVICE_SUB_CLASS	= 0x4,
++	DEVICE_DESC_PARAM_PRTCL			= 0x5,
++	DEVICE_DESC_PARAM_NUM_LU		= 0x6,
++	DEVICE_DESC_PARAM_NUM_WLU		= 0x7,
++	DEVICE_DESC_PARAM_BOOT_ENBL		= 0x8,
++	DEVICE_DESC_PARAM_DESC_ACCSS_ENBL	= 0x9,
++	DEVICE_DESC_PARAM_INIT_PWR_MODE		= 0xA,
++	DEVICE_DESC_PARAM_HIGH_PR_LUN		= 0xB,
++	DEVICE_DESC_PARAM_SEC_RMV_TYPE		= 0xC,
++	DEVICE_DESC_PARAM_SEC_LU		= 0xD,
++	DEVICE_DESC_PARAM_BKOP_TERM_LT		= 0xE,
++	DEVICE_DESC_PARAM_ACTVE_ICC_LVL		= 0xF,
++	DEVICE_DESC_PARAM_SPEC_VER		= 0x10,
++	DEVICE_DESC_PARAM_MANF_DATE		= 0x12,
++	DEVICE_DESC_PARAM_MANF_NAME		= 0x14,
++	DEVICE_DESC_PARAM_PRDCT_NAME		= 0x15,
++	DEVICE_DESC_PARAM_SN			= 0x16,
++	DEVICE_DESC_PARAM_OEM_ID		= 0x17,
++	DEVICE_DESC_PARAM_MANF_ID		= 0x18,
++	DEVICE_DESC_PARAM_UD_OFFSET		= 0x1A,
++	DEVICE_DESC_PARAM_UD_LEN		= 0x1B,
++	DEVICE_DESC_PARAM_RTT_CAP		= 0x1C,
++	DEVICE_DESC_PARAM_FRQ_RTC		= 0x1D,
++};
  /*
-@@ -211,6 +212,7 @@ enum {
- 
- /* GenSelectorIndex calculation macros for M-PHY attributes */
- #define UIC_ARG_MPHY_TX_GEN_SEL_INDEX(lane) (lane)
-+#define UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane) (PA_MAXDATALANES + (lane))
- 
- #define UIC_ARG_MIB_SEL(attr, sel)	((((attr) & 0xFFFF) << 16) |\
- 					 ((sel) & 0xFFFF))
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 816a8a4..8082020 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -15,6 +15,7 @@
- /*
-  * M-TX Configuration Attributes
-  */
-+#define TX_HIBERN8TIME_CAPABILITY		0x000F
- #define TX_MODE					0x0021
- #define TX_HSRATE_SERIES			0x0022
- #define TX_HSGEAR				0x0023
-@@ -48,8 +49,12 @@
- #define RX_ENTER_HIBERN8			0x00A7
- #define RX_BYPASS_8B10B_ENABLE			0x00A8
- #define RX_TERMINATION_FORCE_ENABLE		0x0089
-+#define RX_MIN_ACTIVATETIME_CAPABILITY		0x008F
-+#define RX_HIBERN8TIME_CAPABILITY		0x0092
- 
- #define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-+#define RX_MIN_ACTIVATETIME_UNIT_US		100
-+#define HIBERN8TIME_UNIT_US			100
- /*
-  * PHY Adpater attributes
-  */
-@@ -110,6 +115,12 @@
- #define PA_STALLNOCONFIGTIME	0x15A3
- #define PA_SAVECONFIGTIME	0x15A4
- 
-+#define PA_TACTIVATE_TIME_UNIT_US	10
-+#define PA_HIBERN8_TIME_UNIT_US		100
+  * Logical Unit Write Protect
+  * 00h: LU not write protected
+diff --git a/drivers/scsi/ufs/ufs_quirks.c b/drivers/scsi/ufs/ufs_quirks.c
+new file mode 100644
+index 0000000..3e3b6fc
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs_quirks.c
+@@ -0,0 +1,100 @@
++/*
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
 +
-+/* PHY Adapter Protocol Constants */
-+#define PA_MAXDATALANES	4
++#include "ufshcd.h"
++#include "ufs_quirks.h"
 +
- /* PA power modes */
- enum {
- 	FAST_MODE	= 1,
-@@ -143,6 +154,16 @@ enum ufs_hs_gear_tag {
- 	UFS_HS_G3,		/* HS Gear 3 */
- };
- 
-+enum ufs_unipro_ver {
-+	UFS_UNIPRO_VER_RESERVED = 0,
-+	UFS_UNIPRO_VER_1_40 = 1, /* UniPro version 1.40 */
-+	UFS_UNIPRO_VER_1_41 = 2, /* UniPro version 1.41 */
-+	UFS_UNIPRO_VER_1_6 = 3,  /* UniPro version 1.6 */
-+	UFS_UNIPRO_VER_MAX = 4,  /* UniPro unsupported version */
-+	/* UniPro version field mask in PA_LOCALVERINFO */
-+	UFS_UNIPRO_VER_MASK = 0xF,
++static struct ufs_dev_fix ufs_fixups[] = {
++	/* UFS cards deviations table */
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS),
++	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
++		UFS_DEVICE_NO_FASTAUTO),
++	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9C8KBADG",
++		UFS_DEVICE_QUIRK_PA_TACTIVATE),
++	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
++		UFS_DEVICE_QUIRK_PA_TACTIVATE),
++
++	END_FIX
 +};
 +
++static int ufs_get_device_info(struct ufs_hba *hba,
++				struct ufs_device_info *card_data)
++{
++	int err;
++	u8 model_index;
++	u8 str_desc_buf[QUERY_DESC_STRING_MAX_SIZE + 1] = {0};
++	u8 desc_buf[QUERY_DESC_DEVICE_MAX_SIZE];
++
++	err = ufshcd_read_device_desc(hba, desc_buf,
++					QUERY_DESC_DEVICE_MAX_SIZE);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	/*
++	 * getting vendor (manufacturerID) and Bank Index in big endian
++	 * format
++	 */
++	card_data->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
++				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
++
++	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
++
++	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
++					QUERY_DESC_STRING_MAX_SIZE, ASCII_STD);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	str_desc_buf[QUERY_DESC_STRING_MAX_SIZE] = '\0';
++	strlcpy(card_data->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
++		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
++		      MAX_MODEL_LEN));
++
++	/* Null terminate the model string */
++	card_data->model[MAX_MODEL_LEN] = '\0';
++
++out:
++	return err;
++}
++
++void ufs_advertise_fixup_device(struct ufs_hba *hba)
++{
++	int err;
++	struct ufs_dev_fix *f;
++	struct ufs_device_info card_data;
++
++	card_data.wmanufacturerid = 0;
++
++	err = ufs_get_device_info(hba, &card_data);
++	if (err) {
++		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
++			__func__, err);
++		return;
++	}
++
++	for (f = ufs_fixups; f->quirk; f++) {
++		if (((f->card.wmanufacturerid == card_data.wmanufacturerid) ||
++		    (f->card.wmanufacturerid == UFS_ANY_VENDOR)) &&
++		    (STR_PRFX_EQUAL(f->card.model, card_data.model) ||
++		     !strcmp(f->card.model, UFS_ANY_MODEL)))
++			hba->dev_quirks |= f->quirk;
++	}
++}
++EXPORT_SYMBOL(ufs_advertise_fixup_device);
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+new file mode 100644
+index 0000000..7c2817e
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -0,0 +1,123 @@
++/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#ifndef _UFS_QUIRKS_H_
++#define _UFS_QUIRKS_H_
++
++/* return true if s1 is a prefix of s2 */
++#define STR_PRFX_EQUAL(s1, s2) !strncmp(s1, s2, strlen(s1))
++
++#define UFS_ANY_VENDOR -1
++#define UFS_ANY_MODEL  "ANY_MODEL"
++
++#define MAX_MODEL_LEN 16
++
++#define UFS_VENDOR_TOSHIBA     0x198
++#define UFS_VENDOR_SAMSUNG     0x1CE
++
++/**
++ * ufs_device_info - ufs device details
++ * @wmanufacturerid: card details
++ * @model: card model
++ */
++struct ufs_device_info {
++	u16 wmanufacturerid;
++	char model[MAX_MODEL_LEN + 1];
++};
++
++/**
++ * ufs_dev_fix - ufs device quirk info
++ * @card: ufs card details
++ * @quirk: device quirk
++ */
++struct ufs_dev_fix {
++	struct ufs_device_info card;
++	unsigned int quirk;
++};
++
++#define END_FIX { { 0 }, 0 }
++
++/* add specific device quirk */
++#define UFS_FIX(_vendor, _model, _quirk) \
++		{					  \
++			.card.wmanufacturerid = (_vendor),\
++			.card.model = (_model),		  \
++			.quirk = (_quirk),		  \
++		}
++
++/*
++ * If UFS device is having issue in processing LCC (Line Control
++ * Command) coming from UFS host controller then enable this quirk.
++ * When this quirk is enabled, host controller driver should disable
++ * the LCC transmission on UFS host controller (by clearing
++ * TX_LCC_ENABLE attribute of host to 0).
++ */
++#define UFS_DEVICE_QUIRK_BROKEN_LCC (1 << 0)
++
++/*
++ * Some UFS devices don't need VCCQ rail for device operations. Enabling this
++ * quirk for such devices will make sure that VCCQ rail is not voted.
++ */
++#define UFS_DEVICE_NO_VCCQ (1 << 1)
++
++/*
++ * Some vendor's UFS device sends back to back NACs for the DL data frames
++ * causing the host controller to raise the DFES error status. Sometimes
++ * such UFS devices send back to back NAC without waiting for new
++ * retransmitted DL frame from the host and in such cases it might be possible
++ * the Host UniPro goes into bad state without raising the DFES error
++ * interrupt. If this happens then all the pending commands would timeout
++ * only after respective SW command (which is generally too large).
++ *
++ * We can workaround such device behaviour like this:
++ * - As soon as SW sees the DL NAC error, it should schedule the error handler
++ * - Error handler would sleep for 50ms to see if there are any fatal errors
++ *   raised by UFS controller.
++ *    - If there are fatal errors then SW does normal error recovery.
++ *    - If there are no fatal errors then SW sends the NOP command to device
++ *      to check if link is alive.
++ *        - If NOP command times out, SW does normal error recovery
++ *        - If NOP command succeed, skip the error handling.
++ *
++ * If DL NAC error is seen multiple times with some vendor's UFS devices then
++ * enable this quirk to initiate quick error recovery and also silence related
++ * error logs to reduce spamming of kernel logs.
++ */
++#define UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS (1 << 2)
++
++/*
++ * Some UFS devices may not work properly after resume if the link was kept
++ * in off state during suspend. Enabling this quirk will not allow the
++ * link to be kept in off state during suspend.
++ */
++#define UFS_DEVICE_QUIRK_NO_LINK_OFF	(1 << 3)
++
++/*
++ * Few Toshiba UFS device models advertise RX_MIN_ACTIVATETIME_CAPABILITY as
++ * 600us which may not be enough for reliable hibern8 exit hardware sequence
++ * from UFS device.
++ * To workaround this issue, host should set its PA_TACTIVATE time to 1ms even
++ * if device advertises RX_MIN_ACTIVATETIME_CAPABILITY less than 1ms.
++ */
++#define UFS_DEVICE_QUIRK_PA_TACTIVATE	(1 << 4)
++
++/*
++ * Some UFS memory devices may have really low read/write throughput in
++ * FAST AUTO mode, enable this quirk to make sure that FAST AUTO mode is
++ * never enabled for such devices.
++ */
++#define UFS_DEVICE_NO_FASTAUTO		(1 << 5)
++
++struct ufs_hba;
++void ufs_advertise_fixup_device(struct ufs_hba *hba);
++#endif /* UFS_QUIRKS_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e8e7530..21e0792 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -39,9 +39,10 @@
+ 
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+-
++#include <linux/nls.h>
+ #include <linux/of.h>
+ #include "ufshcd.h"
++#include "ufs_quirks.h"
+ #include "unipro.h"
+ 
+ #define UFSHCD_REQ_SENSE_SIZE	18
+@@ -258,6 +259,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
+ }
+ 
++/* replace non-printable or non-ASCII characters with spaces */
++static inline void ufshcd_remove_non_printable(char *val)
++{
++	if (!val)
++		return;
++
++	if (*val < 0x20 || *val > 0x7e)
++		*val = ' ';
++}
++
  /*
-  * Data Link Layer Attributes
-  */
+  * ufshcd_wait_for_register - wait for register value to change
+  * @hba - per-adapter interface
+@@ -2048,6 +2059,82 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
+ 	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
++{
++	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
++}
++EXPORT_SYMBOL(ufshcd_read_device_desc);
++
++/**
++ * ufshcd_read_string_desc - read string descriptor
++ * @hba: pointer to adapter instance
++ * @desc_index: descriptor index
++ * @buf: pointer to buffer where descriptor would be read
++ * @size: size of buf
++ * @ascii: if true convert from unicode to ascii characters
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii)
++{
++	int err = 0;
++
++	err = ufshcd_read_desc(hba,
++				QUERY_DESC_IDN_STRING, desc_index, buf, size);
++
++	if (err) {
++		dev_err(hba->dev, "%s: reading String Desc failed after %d retries. err = %d\n",
++			__func__, QUERY_REQ_RETRIES, err);
++		goto out;
++	}
++
++	if (ascii) {
++		int desc_len;
++		int ascii_len;
++		int i;
++		char *buff_ascii;
++
++		desc_len = buf[0];
++		/* remove header and divide by 2 to move from UTF16 to UTF8 */
++		ascii_len = (desc_len - QUERY_DESC_HDR_SIZE) / 2 + 1;
++		if (size < ascii_len + QUERY_DESC_HDR_SIZE) {
++			dev_err(hba->dev, "%s: buffer allocated size is too small\n",
++					__func__);
++			err = -ENOMEM;
++			goto out;
++		}
++
++		buff_ascii = kmalloc(ascii_len, GFP_KERNEL);
++		if (!buff_ascii) {
++			err = -ENOMEM;
++			goto out_free_buff;
++		}
++
++		/*
++		 * the descriptor contains string in UTF16 format
++		 * we need to convert to utf-8 so it can be displayed
++		 */
++		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
++				desc_len - QUERY_DESC_HDR_SIZE,
++				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
++
++		/* replace non-printable or non-ASCII characters with spaces */
++		for (i = 0; i < ascii_len; i++)
++			ufshcd_remove_non_printable(&buff_ascii[i]);
++
++		memset(buf + QUERY_DESC_HDR_SIZE, 0,
++				size - QUERY_DESC_HDR_SIZE);
++		memcpy(buf + QUERY_DESC_HDR_SIZE, buff_ascii, ascii_len);
++		buf[QUERY_DESC_LENGTH_OFFSET] = ascii_len + QUERY_DESC_HDR_SIZE;
++out_free_buff:
++		kfree(buff_ascii);
++	}
++out:
++	return err;
++}
++EXPORT_SYMBOL(ufshcd_read_string_desc);
++
+ /**
+  * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
+  * @hba: Pointer to adapter instance
+@@ -4534,6 +4621,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 
++	ufs_advertise_fixup_device(hba);
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 55a38a4..463f0d5 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -470,6 +470,9 @@ struct ufs_hba {
+ 
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
++	/* Device deviations from standard UFS device spec. */
++	unsigned int dev_quirks;
++
+ 	wait_queue_head_t tm_wq;
+ 	wait_queue_head_t tm_tag_wq;
+ 	unsigned long tm_condition;
+@@ -678,6 +681,13 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
+ }
+ 
++int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size);
++
++#define ASCII_STD true
++
++int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
++				u32 size, bool ascii);
++
+ /* Expose Query-Request API */
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
 -- 
 1.8.5.2
 
