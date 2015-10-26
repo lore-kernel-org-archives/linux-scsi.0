@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 01/32] [SCSI] sas: centralise ssp frame information units
-Date: Mon, 26 Oct 2015 22:14:32 +0800
-Message-ID: <1445868903-183817-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 26/32] scsi: hisi_sas: add bcast interrupt handler
+Date: Mon, 26 Oct 2015 22:14:57 +0800
+Message-ID: <1445868903-183817-27-git-send-email-john.garry@huawei.com>
 References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,189 +12,67 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The xfer_rdy, command, and task frame's iu structures
-are not available in <scsi/sas.h>, but only aic94xx
-driver folder.
-Add them to include/scsi/sas.h
+This is for expander broadcast event.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/aic94xx/aic94xx_sas.h | 49 ++++---------------------
- include/scsi/sas.h                 | 74 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 80 insertions(+), 43 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_sas.h b/drivers/scsi/aic94xx/aic94xx_sas.h
-index 912e6b7..101072c 100644
---- a/drivers/scsi/aic94xx/aic94xx_sas.h
-+++ b/drivers/scsi/aic94xx/aic94xx_sas.h
-@@ -327,46 +327,9 @@ struct scb_header {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 8a9498e74..f8c53e7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1351,6 +1351,35 @@ end:
+ 	return res;
+ }
  
- #define LUN_SIZE                8
++static irqreturn_t int_bcast_v1_hw(int irq, void *p)
++{
++	struct hisi_sas_phy *phy = p;
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	u32 irq_value;
++	irqreturn_t res = IRQ_HANDLED;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	int phy_no = sas_phy->id;
++	struct sas_ha_struct *sha = &hisi_hba->sha;
++	struct device *dev = &hisi_hba->pdev->dev;
++
++	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
++
++	if (!(irq_value & CHL_INT2_SL_RX_BC_ACK_MSK)) {
++		dev_err(dev, "bcast: irq_value = %x not set enable bit",
++			irq_value);
++		res = IRQ_NONE;
++		goto end;
++	}
++
++	sha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
++
++end:
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
++			     CHL_INT2_SL_RX_BC_ACK_MSK);
++
++	return res;
++}
++
+ static irqreturn_t int_abnormal_v1_hw(int irq, void *p)
+ {
+ 	struct hisi_sas_phy *phy = p;
+@@ -1457,12 +1486,14 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
+ }
  
--/* See SAS spec, task IU
-- */
--struct ssp_task_iu {
--	u8     lun[LUN_SIZE];	  /* BE */
--	u16    _r_a;
--	u8     tmf;
--	u8     _r_b;
--	__be16 tag;		  /* BE */
--	u8     _r_c[14];
--} __attribute__ ((packed));
--
--/* See SAS spec, command IU
-- */
--struct ssp_command_iu {
--	u8     lun[LUN_SIZE];
--	u8     _r_a;
--	u8     efb_prio_attr;	  /* enable first burst, task prio & attr */
--#define EFB_MASK        0x80
--#define TASK_PRIO_MASK	0x78
--#define TASK_ATTR_MASK  0x07
--
--	u8    _r_b;
--	u8     add_cdb_len;	  /* in dwords, since bit 0,1 are reserved */
--	union {
--		u8     cdb[16];
--		struct {
--			__le64 long_cdb_addr;	  /* bus address, LE */
--			__le32 long_cdb_size;	  /* LE */
--			u8     _r_c[3];
--			u8     eol_ds;		  /* eol:6,6, ds:5,4 */
--		} long_cdb;	  /* sequencer extension */
--	};
--} __attribute__ ((packed));
--
--struct xfer_rdy_iu {
--	__be32 requested_offset;  /* BE */
--	__be32 write_data_len;	  /* BE */
--	__be32 _r_a;
--} __attribute__ ((packed));
--
-+#define EFB_MASK                0x80
-+#define TASK_PRIO_MASK          0x78
-+#define TASK_ATTR_MASK          0x07
- /* ---------- SCB tasks ---------- */
+ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
++	{"Bcast"},
+ 	{"Phy Up"},
+ 	{"Abnormal"},
+ };
  
- /* This is both ssp_task and long_ssp_task
-@@ -511,7 +474,7 @@ struct abort_task {
- 	u8     proto_conn_rate;
- 	__le32 _r_a;
- 	struct ssp_frame_hdr ssp_frame;
--	struct ssp_task_iu ssp_task;
-+	struct ssp_tmf_iu ssp_task;
- 	__le16 sister_scb;
- 	__le16 conn_handle;
- 	u8     flags;	  /* ovrd_itnl_timer:3,3, suspend_data_trans:2,2 */
-@@ -549,7 +512,7 @@ struct clear_nexus {
- 	u8     _r_b[3];
- 	u8     conn_mask;
- 	u8     _r_c[19];
--	struct ssp_task_iu ssp_task; /* LUN and TAG */
-+	struct ssp_tmf_iu ssp_task; /* LUN and TAG */
- 	__le16 _r_d;
- 	__le16 conn_handle;
- 	__le64 _r_e;
-@@ -562,7 +525,7 @@ struct initiate_ssp_tmf {
- 	u8     proto_conn_rate;
- 	__le32 _r_a;
- 	struct ssp_frame_hdr ssp_frame;
--	struct ssp_task_iu ssp_task;
-+	struct ssp_tmf_iu ssp_task;
- 	__le16 sister_scb;
- 	__le16 conn_handle;
- 	u8     flags;	  /* itnl override and suspend data tx */
-diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-index 0d2607d..42a84ef 100644
---- a/include/scsi/sas.h
-+++ b/include/scsi/sas.h
-@@ -344,6 +344,43 @@ struct ssp_response_iu {
- 	u8     sense_data[0];
- } __attribute__ ((packed));
- 
-+struct ssp_command_iu {
-+	u8     lun[8];
-+	u8     _r_a;
-+
-+	union {
-+		struct {
-+			u8  attr:3;
-+			u8  prio:4;
-+			u8  efb:1;
-+		};
-+		u8 efb_prio_attr;
-+	};
-+
-+	u8    _r_b;
-+
-+	u8    _r_c:2;
-+	u8    add_cdb_len:6;
-+
-+	u8    cdb[16];
-+	u8    add_cdb[0];
-+} __attribute__ ((packed));
-+
-+struct xfer_rdy_iu {
-+	__be32 requested_offset;
-+	__be32 write_data_len;
-+	__be32 _r_a;
-+} __attribute__ ((packed));
-+
-+struct ssp_tmf_iu {
-+	u8     lun[8];
-+	u16    _r_a;
-+	u8     tmf;
-+	u8     _r_b;
-+	__be16 tag;
-+	u8     _r_c[14];
-+} __attribute__ ((packed));
-+
- /* ---------- SMP ---------- */
- 
- struct report_general_resp {
-@@ -538,6 +575,43 @@ struct ssp_response_iu {
- 	u8     sense_data[0];
- } __attribute__ ((packed));
- 
-+struct ssp_command_iu {
-+	u8     lun[8];
-+	u8     _r_a;
-+
-+	union {
-+		struct {
-+			u8  efb:1;
-+			u8  prio:4;
-+			u8  attr:3;
-+		};
-+		u8 efb_prio_attr;
-+	};
-+
-+	u8    _r_b;
-+
-+	u8    add_cdb_len:6;
-+	u8    _r_c:2;
-+
-+	u8    cdb[16];
-+	u8    add_cdb[0];
-+} __attribute__ ((packed));
-+
-+struct xfer_rdy_iu {
-+	__be32 requested_offset;
-+	__be32 write_data_len;
-+	__be32 _r_a;
-+} __attribute__ ((packed));
-+
-+struct ssp_tmf_iu {
-+	u8     lun[8];
-+	u16    _r_a;
-+	u8     tmf;
-+	u8     _r_b;
-+	__be16 tag;
-+	u8     _r_c[14];
-+} __attribute__ ((packed));
-+
- /* ---------- SMP ---------- */
- 
- struct report_general_resp {
+ static const char cq_int_name[32] = "cq";
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
++	int_bcast_v1_hw,
+ 	int_phyup_v1_hw,
+ 	int_abnormal_v1_hw
+ };
 -- 
 1.9.1
