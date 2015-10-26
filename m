@@ -1,137 +1,60 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v2 12/17] scsi: ufs: handle non spec compliant bkops behaviour by device
-Date: Mon, 26 Oct 2015 17:41:07 +0200
-Message-ID: <1445874072-25909-13-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v2 17/17] scsi: ufs-qcom: fix compilation warnings
+Date: Mon, 26 Oct 2015 17:41:12 +0200
+Message-ID: <1445874072-25909-18-git-send-email-ygardi@codeaurora.org>
 References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43659 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbbJZPmj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2015 11:42:39 -0400
 In-Reply-To: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-List-Id: linux-scsi@vger.kernel.org
 
-We are seeing that some devices are raising the urgent bkops exception
-events even when BKOPS status doesn't indicate performace impacted or
-critical. Handle these device by determining their urgent bkops status
-at runtime.
+Tnis patch fixes the following compilation warnings:
+...ufs-qcom.c:1201:40:
+	warning: incorrect type in argument 1 (different address spaces)
+...ufs-qcom.c:1201:40:
+	expected void const *ptr
+...ufs-qcom.c:1201:40:
+	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+...ufs-qcom.c:1207:53:
+	warning: incorrect type in argument 1 (different address spaces)
+...ufs-qcom.c:1207:53:
+	expected void const *ptr
+...ufs-qcom.c:1207:53:
+	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 53 ++++++++++++++++++++++++++++++++++++++++-------
- drivers/scsi/ufs/ufshcd.h |  6 ++++++
- 2 files changed, 52 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufs-qcom.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3c5b82a..95d5d6b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3790,7 +3790,7 @@ out:
-  */
- static int ufshcd_urgent_bkops(struct ufs_hba *hba)
- {
--	return ufshcd_bkops_ctrl(hba, BKOPS_STATUS_PERF_IMPACT);
-+	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
- }
- 
- static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
-@@ -3799,6 +3799,43 @@ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
- 			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
- }
- 
-+static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
-+{
-+	int err;
-+	u32 curr_status = 0;
-+
-+	if (hba->is_urgent_bkops_lvl_checked)
-+		goto enable_auto_bkops;
-+
-+	err = ufshcd_get_bkops_status(hba, &curr_status);
-+	if (err) {
-+		dev_err(hba->dev, "%s: failed to get BKOPS status %d\n",
-+				__func__, err);
-+		goto out;
-+	}
-+
-+	/*
-+	 * We are seeing that some devices are raising the urgent bkops
-+	 * exception events even when BKOPS status doesn't indicate performace
-+	 * impacted or critical. Handle these device by determining their urgent
-+	 * bkops status at runtime.
-+	 */
-+	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
-+		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
-+				__func__, curr_status);
-+		/* update the current status as the urgent bkops level */
-+		hba->urgent_bkops_lvl = curr_status;
-+		hba->is_urgent_bkops_lvl_checked = true;
-+	}
-+
-+enable_auto_bkops:
-+	err = ufshcd_enable_auto_bkops(hba);
-+out:
-+	if (err < 0)
-+		dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
-+				__func__, err);
-+}
-+
- /**
-  * ufshcd_exception_event_handler - handle exceptions raised by device
-  * @work: pointer to work data
-@@ -3822,12 +3859,10 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 	}
- 
- 	status &= hba->ee_ctrl_mask;
--	if (status & MASK_EE_URGENT_BKOPS) {
--		err = ufshcd_urgent_bkops(hba);
--		if (err < 0)
--			dev_err(hba->dev, "%s: failed to handle urgent bkops %d\n",
--					__func__, err);
--	}
-+
-+	if (status & MASK_EE_URGENT_BKOPS)
-+		ufshcd_bkops_exception_event_handler(hba);
-+
- out:
- 	pm_runtime_put_sync(hba->dev);
- 	return;
-@@ -4792,6 +4827,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 
- 	ufshcd_init_pwr_info(hba);
- 
-+	/* set the default level for urgent bkops */
-+	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
-+	hba->is_urgent_bkops_lvl_checked = false;
-+
- 	/* UniPro link is active now */
- 	ufshcd_set_link_active(hba);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 463f0d5..5c489483 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -383,6 +383,9 @@ struct ufs_init_prefetch {
-  * @clk_list_head: UFS host controller clocks list node head
-  * @pwr_info: holds current power mode
-  * @max_pwr_info: keeps the device max valid pwm
-+ * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-+ * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-+ *  device is known or not.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -538,6 +541,9 @@ struct ufs_hba {
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
- 	bool is_sys_suspended;
-+
-+	enum bkops_status urgent_bkops_lvl;
-+	bool is_urgent_bkops_lvl_checked;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 72b0ef7..b57f88a 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1226,11 +1226,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 		if (res) {
+ 			host->dev_ref_clk_ctrl_mmio =
+ 					devm_ioremap_resource(dev, res);
+-			if (IS_ERR(host->dev_ref_clk_ctrl_mmio)) {
+-				dev_warn(dev,
+-					"%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
++			if (IS_ERR((__force void const *)
++				   host->dev_ref_clk_ctrl_mmio)) {
++				dev_warn(dev, "%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
+ 					__func__,
+-					PTR_ERR(host->dev_ref_clk_ctrl_mmio));
++					PTR_ERR((__force void const *)
++						 host->dev_ref_clk_ctrl_mmio));
+ 				host->dev_ref_clk_ctrl_mmio = NULL;
+ 			}
+ 			host->dev_ref_clk_en_mask = BIT(5);
 -- 
 1.8.5.2
 
