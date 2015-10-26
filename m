@@ -1,101 +1,95 @@
-From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v4 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
-Date: Sun, 25 Oct 2015 16:56:10 +0200
-Message-ID: <1445784984-16443-2-git-send-email-ygardi@codeaurora.org>
-References: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445784984-16443-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: restart list search after unlock in
+ scsi_remove_target
+Date: Mon, 26 Oct 2015 09:35:37 +0100
+Message-ID: <1445848537.16404.26.camel@suse.de>
+References: <20151019143546.GA7486@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:55328 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753049AbbJZIfj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Oct 2015 04:35:39 -0400
+In-Reply-To: <20151019143546.GA7486@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Clear the UFS data structures before sending new request.
+On Mon, 2015-10-19 at 16:35 +0200, Christoph Hellwig wrote:
+> When dropping a lock while iterating a list we must restart the
+> search
+> as other threads could have manipulated the list under us.=C2=A0=C2=A0=
+Without
+> this
+> we can get stuck in an endless loop.
+>=20
+> Reported-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>=20
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index b333389f..d3b34d8 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1158,31 +1158,23 @@ static void __scsi_remove_target(struct
+> scsi_target *starget)
+> =C2=A0void scsi_remove_target(struct device *dev)
+> =C2=A0{
+> =C2=A0	struct Scsi_Host *shost =3D dev_to_shost(dev->parent);
+> -	struct scsi_target *starget, *last =3D NULL;
+> +	struct scsi_target *starget;
+> =C2=A0	unsigned long flags;
+> =C2=A0
+> -	/* remove targets being careful to lookup next entry before
+> -	=C2=A0* deleting the last
+> -	=C2=A0*/
+> +restart:
+> =C2=A0	spin_lock_irqsave(shost->host_lock, flags);
+> =C2=A0	list_for_each_entry(starget, &shost->__targets, siblings) {
+> =C2=A0		if (starget->state =3D=3D STARGET_DEL)
+> =C2=A0			continue;
+> =C2=A0		if (starget->dev.parent =3D=3D dev || &starget->dev =3D=3D
+> dev) {
+> -			/* assuming new targets arrive at the end */
+> =C2=A0			kref_get(&starget->reap_ref);
+> =C2=A0			spin_unlock_irqrestore(shost->host_lock,
+> flags);
+> -			if (last)
+> -				scsi_target_reap(last);
+> -			last =3D starget;
+> =C2=A0			__scsi_remove_target(starget);
+> -			spin_lock_irqsave(shost->host_lock, flags);
+> +			scsi_target_reap(starget);
+> +			goto restart;
+> =C2=A0		}
+> =C2=A0	}
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> -
+> -	if (last)
+> -		scsi_target_reap(last);
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL(scsi_remove_target);
 
-The SCSI command is sent to the device within the UFS UPIU request.
-As part of the transfer UPIU preparation, the SCSI command is copied
-to the UPIU structure according to the SCSI command size.
-As different SCSI commands differ in size from each other, we need
-to clear the whole SCSI command field to prevent sending uninitialized
-data to the device.
+Hi Christoph,
 
-The UPIU response doesn't always include the sense data and can differ
-in size.
-Hence, the UPIU response should also be cleared before the transfer.
+I haven't heard anything from the original reporter of the lockup but
+my test's went all O.K., so=C2=A0
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
----
- drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+> =C2=A0
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+=20
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=C2=A0=C2=A0http://vger.kernel.org/majordomo-in=
+fo.html
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 131c720..3428f72 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3,7 +3,7 @@
-  *
-  * This code is based on drivers/scsi/ufs/ufshcd.c
-  * Copyright (C) 2011-2013 Samsung India Software Operations
-- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
-  *
-  * Authors:
-  *	Santosh Yaraganavi <santosh.sy@samsung.com>
-@@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
- 				cpu_to_le32(lower_32_bits(sg->dma_address));
- 			prd_table[i].upper_addr =
- 				cpu_to_le32(upper_32_bits(sg->dma_address));
-+			prd_table[i].reserved = 0;
- 		}
- 	} else {
- 		lrbp->utr_descriptor_ptr->prd_table_length = 0;
-@@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
- 
- 	/* Transfer request descriptor header fields */
- 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
--
-+	/* dword_1 is reserved, hence it is set to 0 */
-+	req_desc->header.dword_1 = 0;
- 	/*
- 	 * assigning invalid value for command status. Controller
- 	 * updates OCS on command completion, with the command
-@@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
- 	 */
- 	req_desc->header.dword_2 =
- 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
-+	/* dword_3 is reserved, hence it is set to 0 */
-+	req_desc->header.dword_3 = 0;
- }
- 
- /**
-@@ -1137,6 +1141,7 @@ static
- void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
- {
- 	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
-+	unsigned short cdb_len;
- 
- 	/* command descriptor fields */
- 	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
-@@ -1151,8 +1156,12 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
- 	ucd_req_ptr->sc.exp_data_transfer_len =
- 		cpu_to_be32(lrbp->cmd->sdb.length);
- 
--	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
--		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
-+	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
-+	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
-+	if (cdb_len < MAX_CDB_SIZE)
-+		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
-+		       (MAX_CDB_SIZE - cdb_len));
-+	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
- 
- /**
--- 
-1.8.5.2
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
