@@ -1,105 +1,176 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v1 12/17] scsi: ufs: add retry for query descriptors
-Date: Mon, 26 Oct 2015 14:03:23 -0000
-Message-ID: <bf8c80915cc7e5bde824828fe1a94722.squirrel@www.codeaurora.org>
-References: <1442155977-7686-1-git-send-email-ygardi@codeaurora.org>
-    <1442155977-7686-13-git-send-email-ygardi@codeaurora.org>
-    <CAC5umygn_VMS7+8Nx1b_sqzwPLE7T1m=3zuxO7MZfd6NT0ORKQ@mail.gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 31/32] scsi: hisi_sas: add fatal irq handler
+Date: Mon, 26 Oct 2015 22:15:02 +0800
+Message-ID: <1445868903-183817-32-git-send-email-john.garry@huawei.com>
+References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAC5umygn_VMS7+8Nx1b_sqzwPLE7T1m=3zuxO7MZfd6NT0ORKQ@mail.gmail.com>
+In-Reply-To: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> 2015-09-13 23:52 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->> Query commands have 100ms timeout and it may timeout if they are
->> issued in parallel to ongoing read/write SCSI commands, this change
->> adds the retry (max: 10) in case command timeouts.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 48
->> ++++++++++++++++++++++++++++++++---------------
->>  1 file changed, 33 insertions(+), 15 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index a649250..528e46e 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -1906,21 +1906,7 @@ static int ufshcd_query_attr_retry(struct ufs_hba
->> *hba,
->>         return ret;
->>  }
->>
->> -/**
->> - * ufshcd_query_descriptor - API function for sending descriptor
->> requests
->> - * hba: per-adapter instance
->> - * opcode: attribute opcode
->> - * idn: attribute idn to access
->> - * index: index field
->> - * selector: selector field
->> - * desc_buf: the buffer that contains the descriptor
->> - * buf_len: length parameter passed to the device
->> - *
->> - * Returns 0 for success, non-zero in case of failure.
->> - * The buf_len parameter will contain, on return, the length parameter
->> - * received on the response.
->> - */
->> -static int ufshcd_query_descriptor(struct ufs_hba *hba,
->> +static int __ufshcd_query_descriptor(struct ufs_hba *hba,
->>                         enum query_opcode opcode, enum desc_idn idn, u8
->> index,
->>                         u8 selector, u8 *desc_buf, int *buf_len)
->>  {
->> @@ -1985,6 +1971,38 @@ out:
->>  }
->>
->>  /**
->> + * ufshcd_query_descriptor - API function for sending descriptor
->> requests
->> + * hba: per-adapter instance
->> + * opcode: attribute opcode
->> + * idn: attribute idn to access
->> + * index: index field
->> + * selector: selector field
->> + * desc_buf: the buffer that contains the descriptor
->> + * buf_len: length parameter passed to the device
->> + *
->> + * Returns 0 for success, non-zero in case of failure.
->> + * The buf_len parameter will contain, on return, the length parameter
->> + * received on the response.
->> + */
->> +int ufshcd_query_descriptor(struct ufs_hba *hba,
->> +                       enum query_opcode opcode, enum desc_idn idn, u8
->> index,
->> +                       u8 selector, u8 *desc_buf, int *buf_len)
->> +{
->> +       int err;
->> +       int retries;
->> +
->> +       for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
->> +               err = __ufshcd_query_descriptor(hba, opcode, idn, index,
->> +                                               selector, desc_buf,
->> buf_len);
->> +               if (!err || err == -EINVAL)
->> +                       break;
->> +       }
->> +
->> +       return err;
->> +}
->> +EXPORT_SYMBOL(ufshcd_query_descriptor);
->
-> You introduced query flag and attribute APIs for retry version with
-> '_retry' suffix.
-> This function retries but doesn't have '_retry' suffix.
-> Should we have consistent function names for these query APIs?
->
+Add handlers for fatal interrupts
 
-sure. will fix this in v2
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 122 +++++++++++++++++++++++++++++++++
+ 1 file changed, 122 insertions(+)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index d7ad515..778fa22 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1597,6 +1597,93 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
+ 	return IRQ_HANDLED;
+ }
+ 
++static irqreturn_t fatal_ecc_int_v1_hw(int irq, void *p)
++{
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 ecc_int = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
++
++	if (ecc_int & SAS_ECC_INTR_DQ_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal DQ 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_DQ_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_DQ_ECC_ADDR) &
++				HGC_DQ_ECC_ADDR_BAD_MSK) >>
++				HGC_DQ_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal DQ RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_IOST_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal IOST 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_IOST_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR) &
++				HGC_IOST_ECC_ADDR_BAD_MSK) >>
++				HGC_IOST_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal IOST RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_ITCT_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR) &
++				HGC_ITCT_ECC_ADDR_BAD_MSK) >>
++				HGC_ITCT_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal TCT RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_ITCT_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal ITCT 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	hisi_sas_write32(hisi_hba, SAS_ECC_INTR, ecc_int | 0x3f);
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
++{
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 axi_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC2);
++	u32 axi_info = hisi_sas_read32(hisi_hba, HGC_AXI_FIFO_ERR_INFO);
++
++	if (axi_int & ENT_INT_SRC2_DQ_CFG_ERR_MSK)
++		panic("%s: Fatal DQ_CFG_ERR interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_CQ_CFG_ERR_MSK)
++		panic("%s: Fatal CQ_CFG_ERR interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_AXI_WRONG_INT_MSK)
++		panic("%s: Fatal AXI_WRONG_INT interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_AXI_OVERLF_INT_MSK)
++		panic("%s: Fatal AXI_OVERLF_INT incorrect interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, axi_int | 0x30000000);
++
++	return IRQ_HANDLED;
++}
++
+ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
+ 	{"Bcast"},
+ 	{"Phy Up"},
+@@ -1604,12 +1691,22 @@ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
+ };
+ 
+ static const char cq_int_name[32] = "cq";
++static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
++	"fatal ecc",
++	"fatal axi"
++};
++
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_bcast_v1_hw,
+ 	int_phyup_v1_hw,
+ 	int_abnormal_v1_hw
+ };
+ 
++static irq_handler_t fatal_interrupts[HISI_SAS_MAX_QUEUES] = {
++	fatal_ecc_int_v1_hw,
++	fatal_axi_int_v1_hw
++};
++
+ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i, j, irq, rc;
+@@ -1672,6 +1769,31 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		idx++;
+ 	}
+ 
++	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++) {
++		int idx = (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) +
++			  hisi_hba->queue_count + i;
++
++		irq = irq_of_parse_and_map(np, idx);
++		if (!irq) {
++			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
++				idx);
++			return -ENOENT;
++		}
++		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
++			       HISI_SAS_NAME_LEN,
++			       "%s %s:%d", dev_name(dev), fatal_int_name[i], i);
++		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
++				      &int_names[idx * HISI_SAS_NAME_LEN],
++				      hisi_hba);
++		if (rc) {
++			dev_err(dev,
++				"irq init: could not request fatal interrupt %d, rc=%d\n",
++				irq, rc);
++			return -ENOENT;
++		}
++		idx++;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
