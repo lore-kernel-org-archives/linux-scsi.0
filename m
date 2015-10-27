@@ -1,73 +1,124 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v2 02/32] devicetree: bindings: scsi: HiSi SAS
-Date: Tue, 27 Oct 2015 14:39:39 +0000
-Message-ID: <20151027143939.GG3091@leverpostej>
-References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
- <1445868903-183817-3-git-send-email-john.garry@huawei.com>
- <20151026144523.GB12277@leverpostej>
- <562F777B.6020407@huawei.com>
+From: "Gilad Broner" <gbroner@codeaurora.org>
+Subject: Re: [PATCH v5 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before
+ new transfers
+Date: Tue, 27 Oct 2015 14:53:35 -0000
+Message-ID: <25858eda615f63aa89c032011d02e8d6.squirrel@www.codeaurora.org>
+References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-2-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <562F777B.6020407@huawei.com>
+In-Reply-To: <1445942657-6293-2-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org
+Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 27, 2015 at 01:09:15PM +0000, John Garry wrote:
-> On 26/10/2015 14:45, Mark Rutland wrote:
-> >On Mon, Oct 26, 2015 at 10:14:33PM +0800, John Garry wrote:
-> >>Add devicetree bindings for HiSilicon SAS driver.
-> >>
-> >>Signed-off-by: John Garry <john.garry@huawei.com>
-> >>---
-> >>  .../devicetree/bindings/scsi/hisilicon-sas.txt     | 70 ++++++++++++++++++++++
-> >>  1 file changed, 70 insertions(+)
-> >>  create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> >>
-> >>diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> >>new file mode 100644
-> >>index 0000000..d1e7b2a
-> >>--- /dev/null
-> >>+++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> >>@@ -0,0 +1,70 @@
-> >>+* HiSilicon SAS controller
-> >>+
-> >>+The HiSilicon SAS controller supports SAS/SATA.
-> >>+
-> >>+Main node required properties:
-> >>+  - compatible : value should be as follows:
-> >>+	(a) "hisilicon,sas-controller-v1" for v1 of HiSilicon SAS controller IP
-> >>+  - reg : Address and length of the SAS register
-> >>+  - hisilicon,sas-syscon: phandle of syscon used for sas control
-> >>+  - ctrl-reg : offset to the following SAS control registers (in order):
-> >>+		- reset assert
-> >>+		- clock disable
-> >>+		- reset status
-> >>+		- reset de-assert
-> >>+		- clock enable
-> >
-> >This needs a better name, and it should probably be split up into
-> >several properties.
-> >
-> >However, it sounds like the syscon is actually a clock+reset
-> >controller, and should be modelled as such. It's not actually a part of
-> >the SAS controller as such.
-> 
-> The syscon block is a general subsystem control block, and it is not
-> specifically only for controlling reset and enabling clocks (other
-> functions include serdes control, for example). It is also shared
-> with other peripherals.
-> 
-> So we can remove the ctrl-reg property (since it is not part of the
-> SAS controller), and add the relevant syscon register offsets to the
-> "hisilicon,sas-syscon" property, like this:
-> hisilicon,sas-syscon = <&sas_ctrl0 0xa60 0x33c 0x5a30 0xa64 0x338>;
-> 
-> Ok?
+Looks OK.
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-It would be better to have each offset in a separate property.
+> Clear the UFS data structures before sending new request.
+>
+> The SCSI command is sent to the device within the UFS UPIU request.
+> As part of the transfer UPIU preparation, the SCSI command is copied
+> to the UPIU structure according to the SCSI command size.
+> As different SCSI commands differ in size from each other, we need
+> to clear the whole SCSI command field to prevent sending uninitialized
+> data to the device.
+>
+> The UPIU response doesn't always include the sense data and can differ
+> in size.
+> Hence, the UPIU response should also be cleared before the transfer.
+>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++----
+>  1 file changed, 13 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 131c720..3428f72 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -3,7 +3,7 @@
+>   *
+>   * This code is based on drivers/scsi/ufs/ufshcd.c
+>   * Copyright (C) 2011-2013 Samsung India Software Operations
+> - * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
+> + * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+>   *
+>   * Authors:
+>   *	Santosh Yaraganavi <santosh.sy@samsung.com>
+> @@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+>  				cpu_to_le32(lower_32_bits(sg->dma_address));
+>  			prd_table[i].upper_addr =
+>  				cpu_to_le32(upper_32_bits(sg->dma_address));
+> +			prd_table[i].reserved = 0;
+>  		}
+>  	} else {
+>  		lrbp->utr_descriptor_ptr->prd_table_length = 0;
+> @@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct
+> ufshcd_lrb *lrbp,
+>
+>  	/* Transfer request descriptor header fields */
+>  	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+> -
+> +	/* dword_1 is reserved, hence it is set to 0 */
+> +	req_desc->header.dword_1 = 0;
+>  	/*
+>  	 * assigning invalid value for command status. Controller
+>  	 * updates OCS on command completion, with the command
+> @@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct
+> ufshcd_lrb *lrbp,
+>  	 */
+>  	req_desc->header.dword_2 =
+>  		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
+> +	/* dword_3 is reserved, hence it is set to 0 */
+> +	req_desc->header.dword_3 = 0;
+>  }
+>
+>  /**
+> @@ -1137,6 +1141,7 @@ static
+>  void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32
+> upiu_flags)
+>  {
+>  	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
+> +	unsigned short cdb_len;
+>
+>  	/* command descriptor fields */
+>  	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+> @@ -1151,8 +1156,12 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct
+> ufshcd_lrb *lrbp, u32 upiu_flags)
+>  	ucd_req_ptr->sc.exp_data_transfer_len =
+>  		cpu_to_be32(lrbp->cmd->sdb.length);
+>
+> -	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
+> -		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
+> +	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
+> +	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
+> +	if (cdb_len < MAX_CDB_SIZE)
+> +		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
+> +		       (MAX_CDB_SIZE - cdb_len));
+> +	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+>  }
+>
+>  /**
+> --
+> 1.8.5.2
+>
+> --
+> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+> of Code Aurora Forum, hosted by The Linux Foundation
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Mark.
+
+-- 
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
