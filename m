@@ -1,137 +1,152 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 15/15] scsi: ufs: add wrapper for retrying sending
- query attribute
-Date: Tue, 27 Oct 2015 15:00:30 -0000
-Message-ID: <11a50cbba7edb5332644f9937c2f1f82.squirrel@www.codeaurora.org>
-References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-16-git-send-email-ygardi@codeaurora.org>
+Subject: Re: [PATCH v8 1/8] phy: qcom-ufs: fix build error when the component
+ is built as a module
+Date: Tue, 27 Oct 2015 15:02:52 -0000
+Message-ID: <fee2a9250cd9d6589d5d0a9d659af53d.squirrel@www.codeaurora.org>
+References: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
+    <1445770250-28802-2-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-16-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1445770250-28802-2-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Kishon Vijay Abraham I <kishon@ti.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> Sometimes queries from the device might return a failure so it is
-> recommended to retry sending the query, before giving up.
-> This change adds a wrapper to retry sending a query attribute,
-> in cases where we need to wait longer, before we continue,
-> or before reporting a failure.
+> Export the following functions in order to avoid build errors
+> when the component PHY_QCOM_UFS is compiled as a module:
+>
+> ERROR: "ufs_qcom_phy_disable_ref_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_enable_ref_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_is_pcs_ready"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_disable_iface_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_start_serdes"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_calibrate_phy"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_enable_dev_ref_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_set_tx_lane_enable"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_disable_dev_ref_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_save_controller_version"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> ERROR: "ufs_qcom_phy_enable_iface_clk"
+> 	[drivers/scsi/ufs/ufs-qcom.ko] undefined!
+> make[1]: *** [__modpost] Error 1
 >
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 51
-> ++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 44 insertions(+), 7 deletions(-)
+>  drivers/phy/phy-qcom-ufs.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ec90504..1d1e681 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1824,6 +1824,43 @@ out:
+> diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+> index f9c618f..6140a8b 100644
+> --- a/drivers/phy/phy-qcom-ufs.c
+> +++ b/drivers/phy/phy-qcom-ufs.c
+> @@ -432,6 +432,7 @@ out_disable_src:
+>  out:
+>  	return ret;
 >  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
 >
->  /**
-> + * ufshcd_query_attr_retry() - API function for sending query
-> + * attribute with retries
-> + * @hba: per-adapter instance
-> + * @opcode: attribute opcode
-> + * @idn: attribute idn to access
-> + * @index: index field
-> + * @selector: selector field
-> + * @attr_val: the attribute value after the query request
-> + * completes
-> + *
-> + * Returns 0 for success, non-zero in case of failure
-> +*/
-> +static int ufshcd_query_attr_retry(struct ufs_hba *hba,
-> +	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
-> +	u32 *attr_val)
-> +{
-> +	int ret = 0;
-> +	u32 retries;
-> +
-> +	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-> +		ret = ufshcd_query_attr(hba, opcode, idn, index,
-> +						selector, attr_val);
-> +		if (ret)
-> +			dev_dbg(hba->dev, "%s: failed with error %d, retries %d\n",
-> +				__func__, ret, retries);
-> +		else
-> +			break;
-> +	}
-> +
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"%s: query attribute, idn %d, failed with error %d after %d
-> retires\n",
-> +			__func__, idn, ret, QUERY_REQ_RETRIES);
-> +	return ret;
-> +}
-> +
-> +/**
->   * ufshcd_query_descriptor - API function for sending descriptor requests
->   * hba: per-adapter instance
->   * opcode: attribute opcode
-> @@ -3404,7 +3441,7 @@ static int ufshcd_disable_ee(struct ufs_hba *hba,
-> u16 mask)
+>  static
+>  int ufs_qcom_phy_disable_vreg(struct phy *phy,
+> @@ -474,6 +475,7 @@ void ufs_qcom_phy_disable_ref_clk(struct phy
+> *generic_phy)
+>  		phy->is_ref_clk_enabled = false;
+>  	}
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
 >
->  	val = hba->ee_ctrl_mask & ~mask;
->  	val &= 0xFFFF; /* 2 bytes */
-> -	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
->  			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
->  	if (!err)
->  		hba->ee_ctrl_mask &= ~mask;
-> @@ -3432,7 +3469,7 @@ static int ufshcd_enable_ee(struct ufs_hba *hba, u16
-> mask)
+>  #define UFS_REF_CLK_EN	(1 << 5)
 >
->  	val = hba->ee_ctrl_mask | mask;
->  	val &= 0xFFFF; /* 2 bytes */
-> -	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
->  			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
->  	if (!err)
->  		hba->ee_ctrl_mask |= mask;
-> @@ -3538,7 +3575,7 @@ static void  ufshcd_force_reset_auto_bkops(struct
-> ufs_hba *hba)
->
->  static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32
-> *status)
+> @@ -517,11 +519,13 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy
+> *generic_phy)
 >  {
-> -	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->  			QUERY_ATTR_IDN_BKOPS_STATUS, 0, 0, status);
+>  	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, true);
 >  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_dev_ref_clk);
 >
-> @@ -3601,7 +3638,7 @@ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
->
->  static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+>  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
 >  {
-> -	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->  			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+>  	ufs_qcom_phy_dev_ref_clk_ctrl(generic_phy, false);
 >  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
 >
-> @@ -4355,9 +4392,9 @@ static void ufshcd_init_icc_levels(struct ufs_hba
-> *hba)
->  	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
->  			__func__, hba->init_prefetch_data.icc_level);
+>  /* Turn ON M-PHY RMMI interface clocks */
+>  int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
+> @@ -550,6 +554,7 @@ int ufs_qcom_phy_enable_iface_clk(struct phy
+> *generic_phy)
+>  out:
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
 >
-> -	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> -			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
-> -			&hba->init_prefetch_data.icc_level);
-> +	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
-> +		&hba->init_prefetch_data.icc_level);
+>  /* Turn OFF M-PHY RMMI interface clocks */
+>  void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
+> @@ -562,6 +567,7 @@ void ufs_qcom_phy_disable_iface_clk(struct phy
+> *generic_phy)
+>  		phy->is_iface_clk_enabled = false;
+>  	}
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
 >
->  	if (ret)
->  		dev_err(hba->dev,
+>  int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+>  {
+> @@ -578,6 +584,7 @@ int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+>
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_start_serdes);
+>
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *generic_phy, u32
+> tx_lanes)
+>  {
+> @@ -595,6 +602,7 @@ int ufs_qcom_phy_set_tx_lane_enable(struct phy
+> *generic_phy, u32 tx_lanes)
+>
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_set_tx_lane_enable);
+>
+>  void ufs_qcom_phy_save_controller_version(struct phy *generic_phy,
+>  					  u8 major, u16 minor, u16 step)
+> @@ -605,6 +613,7 @@ void ufs_qcom_phy_save_controller_version(struct phy
+> *generic_phy,
+>  	ufs_qcom_phy->host_ctrl_rev_minor = minor;
+>  	ufs_qcom_phy->host_ctrl_rev_step = step;
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_save_controller_version);
+>
+>  int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
+>  {
+> @@ -625,6 +634,7 @@ int ufs_qcom_phy_calibrate_phy(struct phy
+> *generic_phy, bool is_rate_B)
+>
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
+>
+>  int ufs_qcom_phy_remove(struct phy *generic_phy,
+>  			struct ufs_qcom_phy *ufs_qcom_phy)
+> @@ -662,6 +672,7 @@ int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
+>  	return ufs_qcom_phy->phy_spec_ops->
+>  			is_physical_coding_sublayer_ready(ufs_qcom_phy);
+>  }
+> +EXPORT_SYMBOL_GPL(ufs_qcom_phy_is_pcs_ready);
+>
+>  int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  {
 > --
 > 1.8.5.2
 >
