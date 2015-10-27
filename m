@@ -1,76 +1,85 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 02/15] scsi: ufs: clear fields UTRD, UPIU req and rsp
- before new transfers
-Date: Tue, 27 Oct 2015 14:55:24 -0000
-Message-ID: <f61b859d062e87ce0b8e4fd9f9e91abc.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 04/15] scsi: ufs: clear outstanding_request bit in
+ case query timeout
+Date: Tue, 27 Oct 2015 14:56:27 -0000
+Message-ID: <6c67cb64689065532ae0daa0c2cb7b6d.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-3-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-5-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-3-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1445942657-6293-5-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Looks OK.
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> Some of the data structures (like response UPIU) and/or its elements
-> (unused fields) should be cleared before sending out the respective
-> command to UFS device.
+> When sending a query to the device returns with a timeout error,
+> we clear the corresponding bit in the DOORBELL register but
+> we don't clear the outstanding_request field as we should.
+> This patch fixes this bug.
 >
-> This change clears the UPIU response data structure for query commands
-> and NOP command before sending out the command. We also initialize the
-> PRDT table length to zero which should take care of commands which doesn't
-> have any data associated with it. We are also clearing the unused fields
-> in
-> request UPIU for NOP command.
->
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
+>  drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++--
+>  1 file changed, 20 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 3428f72..2d3ebca 100644
+> index 8860a57..e0b8755 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1129,6 +1129,8 @@ static void ufshcd_prepare_req_desc_hdr(struct
-> ufshcd_lrb *lrbp,
->  		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
->  	/* dword_3 is reserved, hence it is set to 0 */
->  	req_desc->header.dword_3 = 0;
-> +
-> +	req_desc->prd_table_length = 0;
+> @@ -364,6 +364,16 @@ static inline void ufshcd_utrl_clear(struct ufs_hba
+> *hba, u32 pos)
 >  }
 >
 >  /**
-> @@ -1198,6 +1200,7 @@ static void ufshcd_prepare_utp_query_req_upiu(struct
-> ufs_hba *hba,
->  	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
->  		memcpy(descp, query->descriptor, len);
->
-> +	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
->  }
->
->  static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
-> @@ -1210,6 +1213,11 @@ static inline void
-> ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
->  	ucd_req_ptr->header.dword_0 =
->  		UPIU_HEADER_DWORD(
->  			UPIU_TRANSACTION_NOP_OUT, 0, 0, lrbp->task_tag);
-> +	/* clear rest of the fields of basic header */
-> +	ucd_req_ptr->header.dword_1 = 0;
-> +	ucd_req_ptr->header.dword_2 = 0;
+> + * ufshcd_outstanding_req_clear - Clear a bit in outstanding request
+> field
+> + * @hba: per adapter instance
+> + * @tag: position of the bit to be cleared
+> + */
+> +static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int
+> tag)
+> +{
+> +	__clear_bit(tag, &hba->outstanding_reqs);
+> +}
 > +
-> +	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
->  }
+> +/**
+>   * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
+>   * @reg: Register value of host controller status
+>   *
+> @@ -1502,9 +1512,17 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba
+> *hba,
 >
->  /**
+>  	if (!time_left) {
+>  		err = -ETIMEDOUT;
+> +		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
+> +			__func__, lrbp->task_tag);
+>  		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
+> -			/* sucessfully cleared the command, retry if needed */
+> +			/* successfully cleared the command, retry if needed */
+>  			err = -EAGAIN;
+> +		/*
+> +		 * in case of an error, after clearing the doorbell,
+> +		 * we also need to clear the outstanding_request
+> +		 * field in hba
+> +		 */
+> +		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
+>  	}
+>
+>  	return err;
+> @@ -3942,7 +3960,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>  	scsi_dma_unmap(cmd);
+>
+>  	spin_lock_irqsave(host->host_lock, flags);
+> -	__clear_bit(tag, &hba->outstanding_reqs);
+> +	ufshcd_outstanding_req_clear(hba, tag);
+>  	hba->lrb[tag].cmd = NULL;
+>  	spin_unlock_irqrestore(host->host_lock, flags);
+>
 > --
 > 1.8.5.2
 >
