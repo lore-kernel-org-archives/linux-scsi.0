@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 10/15] scsi: ufs: fix error recovery after the hibern8 exit failure
-Date: Tue, 27 Oct 2015 12:44:12 +0200
-Message-ID: <1445942657-6293-11-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 11/15] scsi: ufs: retry failed query flag requests
+Date: Tue, 27 Oct 2015 12:44:13 +0200
+Message-ID: <1445942657-6293-12-git-send-email-ygardi@codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
@@ -10,144 +10,158 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hibern8 exit can be called from 3 different context:
-    - ufshcd_hibern8_exit_work
-    - ufshcd_ungate_work
-    - runtime/system resume
+UFS flag query requests may fail sometimes due to timeouts etc.
+Add a wrapper function to retry up to 10 times in case of such
+failure, similar to retries being made for attribute queries.
 
-If hibern8 exit fails for some reason then we try to bring the link to
-active state by link startup but this recovery mechanism results into
-deadlock or errors from first 2 context listed above. This change fixes
-the recovery by adding proper error handling mechanism.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 58 +++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 53 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 63 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h |  4 +++
+ 2 files changed, 41 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ed134d6..60ba729 100644
+index 60ba729..889a7be 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -610,6 +610,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->clk_gating.active_reqs++;
- 
-+	if (ufshcd_eh_in_progress(hba)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		return 0;
-+	}
-+
- start:
- 	switch (hba->clk_gating.state) {
- 	case CLKS_ON:
-@@ -725,7 +730,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
- 		|| hba->lrb_in_use || hba->outstanding_tasks
--		|| hba->active_uic_cmd || hba->uic_async_done)
-+		|| hba->active_uic_cmd || hba->uic_async_done
-+		|| ufshcd_eh_in_progress(hba))
- 		return;
- 
- 	hba->clk_gating.state = REQ_CLKS_OFF;
-@@ -1363,6 +1369,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		cmd->scsi_done(cmd);
- 		goto out_unlock;
- 	}
-+
-+	/* if error handling is in progress, don't issue commands */
-+	if (ufshcd_eh_in_progress(hba)) {
-+		set_host_byte(cmd, DID_ERROR);
-+		cmd->scsi_done(cmd);
-+		goto out_unlock;
-+	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* acquire the tag to make sure device cmds don't use it */
-@@ -2393,6 +2406,31 @@ out:
- 	return ret;
+@@ -1663,6 +1663,29 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
+ 	(*request)->upiu_req.selector = selector;
  }
  
-+static int ufshcd_link_recovery(struct ufs_hba *hba)
++static int ufshcd_query_flag_retry(struct ufs_hba *hba,
++	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
 +{
 +	int ret;
-+	unsigned long flags;
++	int retries;
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->ufshcd_state = UFSHCD_STATE_RESET;
-+	ufshcd_set_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	ret = ufshcd_host_reset_and_restore(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (ret)
-+		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+	ufshcd_clear_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
++		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
++		if (ret)
++			dev_dbg(hba->dev,
++				"%s: failed with error %d, retries %d\n",
++				__func__, ret, retries);
++		else
++			break;
++	}
 +
 +	if (ret)
-+		dev_err(hba->dev, "%s: link recovery failed, err %d",
-+			__func__, ret);
-+
++		dev_err(hba->dev,
++			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retires\n",
++			__func__, opcode, idn, ret, retries);
 +	return ret;
 +}
 +
- static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ /**
+  * ufshcd_query_flag() - API function for sending flag query requests
+  * hba: per-adapter instance
+@@ -1672,7 +1695,7 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
+  *
+  * Returns 0 for success, non-zero in case of failure
+  */
+-static int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
++int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 			enum flag_idn idn, bool *flag_res)
  {
- 	int ret;
-@@ -2401,10 +2439,18 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+ 	struct ufs_query_req *request = NULL;
+@@ -2657,17 +2680,12 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+  */
+ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ {
+-	int i, retries, err = 0;
++	int i;
++	int err;
+ 	bool flag_res = 1;
  
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
- 			__func__, ret);
+-	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+-		/* Set the fDeviceInit flag */
+-		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+-					QUERY_FLAG_IDN_FDEVICEINIT, NULL);
+-		if (!err || err == -ETIMEDOUT)
+-			break;
+-		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
+-	}
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++		QUERY_FLAG_IDN_FDEVICEINIT, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev,
+ 			"%s setting fDeviceInit flag failed with error %d\n",
+@@ -2675,18 +2693,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ 		goto out;
+ 	}
  
-+		/*
-+		 * If link recovery fails then return error so that caller
-+		 * don't retry the hibern8 enter again.
-+		 */
-+		if (ufshcd_link_recovery(hba))
-+			ret = -ENOLINK;
-+	}
+-	/* poll for max. 100 iterations for fDeviceInit flag to clear */
+-	for (i = 0; i < 100 && !err && flag_res; i++) {
+-		for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+-			err = ufshcd_query_flag(hba,
+-					UPIU_QUERY_OPCODE_READ_FLAG,
+-					QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
+-			if (!err || err == -ETIMEDOUT)
+-				break;
+-			dev_dbg(hba->dev, "%s: error %d retrying\n", __func__,
+-					err);
+-		}
+-	}
++	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
++	for (i = 0; i < 1000 && !err && flag_res; i++)
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++			QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
 +
- 	return ret;
+ 	if (err)
+ 		dev_err(hba->dev,
+ 			"%s reading fDeviceInit flag failed with error %d\n",
+@@ -3433,7 +3444,7 @@ static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
+ 	if (hba->auto_bkops_enabled)
+ 		goto out;
+ 
+-	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+ 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: failed to enable bkops %d\n",
+@@ -3482,7 +3493,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
++	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+ 			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: failed to disable bkops %d\n",
+@@ -4453,8 +4464,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 		/* clear any previous UFS device information */
+ 		memset(&hba->dev_info, 0, sizeof(hba->dev_info));
+-		if (!ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+-				       QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
++		if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+ 			hba->dev_info.f_power_on_wp_en = flag;
+ 
+ 		if (!hba->is_init_prefetch)
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2570d94..f8ce680 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -3,6 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.h
+  * Copyright (C) 2011-2013 Samsung India Software Operations
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -681,6 +682,9 @@ static inline int ufshcd_dme_peer_get(struct ufs_hba *hba,
+ 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
  }
  
-@@ -2429,8 +2475,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	if (ret) {
--		ufshcd_set_link_off(hba);
--		ret = ufshcd_host_reset_and_restore(hba);
-+		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
-+			__func__, ret);
-+		ret = ufshcd_link_recovery(hba);
- 	}
++/* Expose Query-Request API */
++int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
++	enum flag_idn idn, bool *flag_res);
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
  
- 	return ret;
-@@ -4382,7 +4429,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
--	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	hba->wlun_dev_clr_ua = true;
- 
- 	if (ufshcd_get_max_pwr_mode(hba)) {
-@@ -4396,6 +4442,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 					__func__, ret);
- 	}
- 
-+	/* set the state as operational after switching to desired gear */
-+	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	/*
- 	 * If we are in error handling context or in power management callbacks
- 	 * context, no need to scan the host
 -- 
 1.8.5.2
 
