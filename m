@@ -1,85 +1,75 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 04/15] scsi: ufs: clear outstanding_request bit in
- case query timeout
-Date: Tue, 27 Oct 2015 14:56:27 -0000
-Message-ID: <6c67cb64689065532ae0daa0c2cb7b6d.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 05/15] scsi: ufs: increase fDeviceInit query response
+ timeout
+Date: Tue, 27 Oct 2015 14:56:55 -0000
+Message-ID: <efb5727af7e1b08c370b6eabbf865d9e.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-5-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-6-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-5-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1445942657-6293-6-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> When sending a query to the device returns with a timeout error,
-> we clear the corresponding bit in the DOORBELL register but
-> we don't clear the outstanding_request field as we should.
-> This patch fixes this bug.
+> fDeviceInit query response time for some devices is too long that default
+> query request timeout of 100ms may not be enough. Experiments show that
+> fDeviceInit response sometimes takes 500ms so to be on safer side this
+> change sets the timeout to 600ms. Without this change, we might
+> unnecessarily have to retry fDeviceInit query requests multiple times and
+> each query request timeout prints one error message.
 >
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++--
->  1 file changed, 20 insertions(+), 2 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8860a57..e0b8755 100644
+> index e0b8755..573a8cb 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -364,6 +364,16 @@ static inline void ufshcd_utrl_clear(struct ufs_hba
-> *hba, u32 pos)
->  }
->
->  /**
-> + * ufshcd_outstanding_req_clear - Clear a bit in outstanding request
-> field
-> + * @hba: per adapter instance
-> + * @tag: position of the bit to be cleared
+> @@ -58,6 +58,12 @@
+>  #define QUERY_REQ_RETRIES 10
+>  /* Query request timeout */
+>  #define QUERY_REQ_TIMEOUT 30 /* msec */
+> +/*
+> + * Query request timeout for fDeviceInit flag
+> + * fDeviceInit query response time for some devices is too large that
+> default
+> + * QUERY_REQ_TIMEOUT may not be enough for such devices.
 > + */
-> +static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int
-> tag)
-> +{
-> +	__clear_bit(tag, &hba->outstanding_reqs);
-> +}
-> +
-> +/**
->   * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
->   * @reg: Register value of host controller status
->   *
-> @@ -1502,9 +1512,17 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba
-> *hba,
+> +#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
 >
->  	if (!time_left) {
->  		err = -ETIMEDOUT;
-> +		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
-> +			__func__, lrbp->task_tag);
->  		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
-> -			/* sucessfully cleared the command, retry if needed */
-> +			/* successfully cleared the command, retry if needed */
->  			err = -EAGAIN;
-> +		/*
-> +		 * in case of an error, after clearing the doorbell,
-> +		 * we also need to clear the outstanding_request
-> +		 * field in hba
-> +		 */
-> +		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
+>  /* Task management command timeout */
+>  #define TM_CMD_TIMEOUT	100 /* msecs */
+> @@ -1651,6 +1657,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
+> enum query_opcode opcode,
+>  	struct ufs_query_req *request = NULL;
+>  	struct ufs_query_res *response = NULL;
+>  	int err, index = 0, selector = 0;
+> +	int timeout = QUERY_REQ_TIMEOUT;
+>
+>  	BUG_ON(!hba);
+>
+> @@ -1683,7 +1690,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
+> enum query_opcode opcode,
+>  		goto out_unlock;
 >  	}
 >
->  	return err;
-> @@ -3942,7 +3960,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->  	scsi_dma_unmap(cmd);
+> -	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
+> +	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
+> +		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
+> +
+> +	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
 >
->  	spin_lock_irqsave(host->host_lock, flags);
-> -	__clear_bit(tag, &hba->outstanding_reqs);
-> +	ufshcd_outstanding_req_clear(hba, tag);
->  	hba->lrb[tag].cmd = NULL;
->  	spin_unlock_irqrestore(host->host_lock, flags);
->
+>  	if (err) {
+>  		dev_err(hba->dev,
 > --
 > 1.8.5.2
 >
