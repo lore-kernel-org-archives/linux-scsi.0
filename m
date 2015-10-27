@@ -1,7 +1,7 @@
 From: Weidong Wang <wangweidong1@huawei.com>
-Subject: [PATCH 2/3] megaraid_sas: Convert printk to printk_<level>
-Date: Tue, 27 Oct 2015 16:26:14 +0800
-Message-ID: <1445934375-17784-3-git-send-email-wangweidong1@huawei.com>
+Subject: [PATCH 3/3] megaraid_sas: return -ENOMEM when create DMA pool for cmd frames failed
+Date: Tue, 27 Oct 2015 16:26:15 +0800
+Message-ID: <1445934375-17784-4-git-send-email-wangweidong1@huawei.com>
 References: <1445934375-17784-1-git-send-email-wangweidong1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,80 +12,74 @@ To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagot
 Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wangweidong1@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Reduce object size a little by using pr_<level>
-calls instead of printk(KERN_<LEVEL>.
+when create DMA pool for cmd frames failed, we should return -ENOMEM,
+instead of 0.
+In some case in:
+
+    megasas_init_adapter_fusion()
+
+    -->megasas_alloc_cmds()
+       -->megasas_create_frame_pool
+          create DMA pool failed,
+        --> megasas_free_cmds() [1]
+
+    -->megasas_alloc_cmds_fusion()
+       failed, then goto fail_alloc_cmds.
+    -->megasas_free_cmds() [2]
+
+we will call megasas_free_cmds twice, [1] will kfree cmd_list,
+[2] will use cmd_list.it will cause a problem:
+
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+pgd = ffffffc000f70000
+[00000000] *pgd=0000001fbf893003, *pud=0000001fbf893003, *pmd=0000001fbf894003, *pte=006000006d000707
+Internal error: Oops: 96000005 [#1] SMP
+ Modules linked in:
+ CPU: 18 PID: 1 Comm: swapper/0 Not tainted
+ task: ffffffdfb9290000 ti: ffffffdfb923c000 task.ti: ffffffdfb923c000
+ PC is at megasas_free_cmds+0x30/0x70
+ LR is at megasas_free_cmds+0x24/0x70
+
+ ...
+
+ Call trace:
+ [<ffffffc0005b779c>] megasas_free_cmds+0x30/0x70
+ [<ffffffc0005bca74>] megasas_init_adapter_fusion+0x2f4/0x4d8
+ [<ffffffc0005b926c>] megasas_init_fw+0x2dc/0x760
+ [<ffffffc0005b9ab0>] megasas_probe_one+0x3c0/0xcd8
+ [<ffffffc0004a5abc>] local_pci_probe+0x4c/0xb4
+ [<ffffffc0004a5c40>] pci_device_probe+0x11c/0x14c
+ [<ffffffc00053a5e4>] driver_probe_device+0x1ec/0x430
+ [<ffffffc00053a92c>] __driver_attach+0xa8/0xb0
+ [<ffffffc000538178>] bus_for_each_dev+0x74/0xc8
+  [<ffffffc000539e88>] driver_attach+0x28/0x34
+ [<ffffffc000539a18>] bus_add_driver+0x16c/0x248
+ [<ffffffc00053b234>] driver_register+0x6c/0x138
+ [<ffffffc0004a5350>] __pci_register_driver+0x5c/0x6c
+ [<ffffffc000ce3868>] megasas_init+0xc0/0x1a8
+ [<ffffffc000082a58>] do_one_initcall+0xe8/0x1ec
+ [<ffffffc000ca7be8>] kernel_init_freeable+0x1c8/0x284
+ [<ffffffc0008d90b8>] kernel_init+0x1c/0xe4
 
 Signed-off-by: Weidong Wang <wangweidong1@huawei.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ed9846d..2287aa1 100644
+index 2287aa1..8215218 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5889,7 +5889,7 @@ static int megasas_mgmt_fasync(int fd, struct file *filep, int mode)
- 		return 0;
+@@ -3746,8 +3746,9 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 	 * Create a frame pool and assign one frame to each cmd
+ 	 */
+ 	if (megasas_create_frame_pool(instance)) {
+-		dev_dbg(&instance->pdev->dev, "Error creating frame DMA pool\n");
++		dev_err(&instance->pdev->dev, "Error creating frame DMA pool\n");
+ 		megasas_free_cmds(instance);
++		return -ENOMEM;
  	}
  
--	printk(KERN_DEBUG "megasas: fasync_helper failed [%d]\n", rc);
-+	pr_debug("megasas: fasync_helper failed [%d]\n", rc);
- 
- 	return rc;
- }
-@@ -6233,7 +6233,7 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
- 	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
- 
- 	if (file->private_data != file) {
--		printk(KERN_DEBUG "megasas: fasync_helper was not "
-+		pr_debug("megasas: fasync_helper was not "
- 		       "called first\n");
- 		return -EINVAL;
- 	}
-@@ -6355,7 +6355,7 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
- 
- 	if (copy_in_user(&cioc->frame.hdr.cmd_status,
- 			 &ioc->frame.hdr.cmd_status, sizeof(u8))) {
--		printk(KERN_DEBUG "megasas: error copy_in_user cmd_status\n");
-+		pr_debug("megasas: error copy_in_user cmd_status\n");
- 		return -EFAULT;
- 	}
- 	return error;
-@@ -6455,7 +6455,7 @@ megasas_sysfs_set_dbg_lvl(struct device_driver *dd, const char *buf, size_t coun
- 	int retval = count;
- 
- 	if (sscanf(buf, "%u", &megasas_dbg_lvl) < 1) {
--		printk(KERN_ERR "megasas: could not set dbg_lvl\n");
-+		pr_err("megasas: could not set dbg_lvl\n");
- 		retval = -EINVAL;
- 	}
- 	return retval;
-@@ -6480,7 +6480,7 @@ megasas_aen_polling(struct work_struct *work)
- 	int error;
- 
- 	if (!instance) {
--		printk(KERN_ERR "invalid instance!\n");
-+		pr_err("invalid instance!\n");
- 		kfree(ev);
- 		return;
- 	}
-@@ -6740,7 +6740,7 @@ static int __init megasas_init(void)
- 	rval = register_chrdev(0, "megaraid_sas_ioctl", &megasas_mgmt_fops);
- 
- 	if (rval < 0) {
--		printk(KERN_DEBUG "megasas: failed to open device node\n");
-+		pr_debug("megasas: failed to open device node\n");
- 		return rval;
- 	}
- 
-@@ -6752,7 +6752,7 @@ static int __init megasas_init(void)
- 	rval = pci_register_driver(&megasas_pci_driver);
- 
- 	if (rval) {
--		printk(KERN_DEBUG "megasas: PCI hotplug registration failed \n");
-+		pr_debug("megasas: PCI hotplug registration failed \n");
- 		goto err_pcidrv;
- 	}
- 
+ 	return 0;
 -- 
 1.9.0
