@@ -1,34 +1,57 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: [PATCH 1/3] megaraid_sas: Convert dev_printk to dev_<level>
-Date: Tue, 27 Oct 2015 16:03:27 +0530
-Message-ID: <6aed31d964ce36a682947820eee7cbc1@mail.gmail.com>
-References: <1445934375-17784-1-git-send-email-wangweidong1@huawei.com>
-	 <1445934375-17784-2-git-send-email-wangweidong1@huawei.com> <1445941550.16404.37.camel@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445941550.16404.37.camel@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Weidong Wang <wangweidong1@huawei.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, JBottomley@odin.com
-Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v5 00/15] Big fixes, retries, handle a race condition
+Date: Tue, 27 Oct 2015 12:44:02 +0200
+Message-ID: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
 
-> > +		dev_dbg(&instance->pdev->dev, "Error copying out
-> > cmd_status\n");
-> >  		error = -EFAULT;
-> >  	}
-> >
->
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Important:
+This serie of 15 small patches should be pushed after the series of 8 patches
+"Fix error message and present UFS variant probe"
 
-We will consider all three patches for future submission. As of now we have
-two patch set pending to be committed.
-We are working for few more patch in megaraid_sas which will do clean up in
-driver module + proper error handling of DCMD command timeout. It will cover
-Patch posted with below subject -
+V5:
+removed un-necessary wmb()
 
-[PATCH 3/3] megaraid_sas: return -ENOMEM when create DMA pool for cmd frames
-failed
+V4:
+fixing a few comments from reviewers
 
-James  -  We will be resending these patch set on top of latest outstanding
-megaraid_sas driver patch, so that we can avoid any conflict in commits.
+V3:
+removed specific calls to wmb() since they are redundant.
+
+V2:
+a few minor changes
+
+V1:
+This serie of 15 small patches should be pushed after the series of 8 patches
+I have uploaded to the upstream a week ago:
+"Fix error message and present UFS variant probe"
+
+Yaniv Gardi (15):
+  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
+  scsi: ufs: verify command tag validity
+  scsi: ufs: clear outstanding_request bit in case query timeout
+  scsi: ufs: increase fDeviceInit query response timeout
+  scsi: ufs: avoid exception event handler racing with PM callbacks
+  scsi: ufs: set REQUEST_SENSE command size to 18 bytes
+  scsi: ufs: add retries to dme_peer get and set attribute
+  scsi: ufs: add retries for hibern8 enter
+  scsi: ufs: fix error recovery after the hibern8 exit failure
+  scsi: ufs: retry failed query flag requests
+  scsi: ufs: reduce the interrupts for power mode change requests
+  scsi: ufs: add missing memory barriers
+  scsi: ufs: commit descriptors before setting the doorbell
+  scsi: ufs: add wrapper for retrying sending query attribute
+
+ drivers/scsi/ufs/ufshcd.c | 408 ++++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/ufs/ufshcd.h |   4 +
+ 2 files changed, 327 insertions(+), 85 deletions(-)
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
