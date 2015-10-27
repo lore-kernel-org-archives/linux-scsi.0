@@ -1,49 +1,238 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v2 02/32] devicetree: bindings: scsi: HiSi SAS
-Date: Tue, 27 Oct 2015 15:03:41 +0000
-Message-ID: <20151027150341.GH3091@leverpostej>
-References: <1445868903-183817-1-git-send-email-john.garry@huawei.com>
- <1445868903-183817-3-git-send-email-john.garry@huawei.com>
- <20151026144523.GB12277@leverpostej>
- <562F777B.6020407@huawei.com>
- <20151027143939.GG3091@leverpostej>
- <562F9016.50807@linaro.org>
+From: "Gilad Broner" <gbroner@codeaurora.org>
+Subject: Re: [PATCH v8 4/8] add ufshcd_get_variant ufshcd_set_variant
+Date: Tue, 27 Oct 2015 15:03:54 -0000
+Message-ID: <9f0a71a5bd6c4b18247047b81e918738.squirrel@www.codeaurora.org>
+References: <1445770250-28802-1-git-send-email-ygardi@codeaurora.org>
+    <1445770250-28802-5-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <562F9016.50807@linaro.org>
+In-Reply-To: <1445770250-28802-5-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: zhangfei <zhangfei.gao@linaro.org>
-Cc: John Garry <john.garry@huawei.com>, JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com
+Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> >>>>+  - ctrl-reg : offset to the following SAS control registers (in order):
-> >>>>+		- reset assert
-> >>>>+		- clock disable
-> >>>>+		- reset status
-> >>>>+		- reset de-assert
-> >>>>+		- clock enable
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-[...]
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 34 +++++++++++++++++-----------------
+>  drivers/scsi/ufs/ufshcd.h   | 21 +++++++++++++++++++++
+>  2 files changed, 38 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 6c23bbf..64c54b7 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -155,7 +155,7 @@ out:
+>
+>  static int ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	u32 tx_lanes;
+>  	int err = 0;
+> @@ -211,7 +211,7 @@ static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
+>
+>  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int ret = 0;
+>  	bool is_rate_B = (UFS_QCOM_LIMIT_HS_RATE == PA_HS_MODE_B)
+> @@ -273,7 +273,7 @@ static void ufs_qcom_enable_hw_clk_gating(struct
+> ufs_hba *hba)
+>
+>  static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba, bool status)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	int err = 0;
+>
+>  	switch (status) {
+> @@ -307,7 +307,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba
+> *hba, bool status)
+>  static unsigned long
+>  ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear, u32 hs, u32 rate)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct ufs_clk_info *clki;
+>  	u32 core_clk_period_in_ns;
+>  	u32 tx_clk_cycles_per_us = 0;
+> @@ -448,7 +448,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba
+> *hba, bool status)
+>
+>  static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int ret = 0;
+>
+> @@ -479,7 +479,7 @@ out:
+>
+>  static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	int err;
+>
+> @@ -621,7 +621,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba
+> *hba,
+>  				struct ufs_pa_layer_attr *dev_req_params)
+>  {
+>  	u32 val;
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct phy *phy = host->generic_phy;
+>  	struct ufs_qcom_dev_params ufs_qcom_cap;
+>  	int ret = 0;
+> @@ -696,7 +696,7 @@ out:
+>
+>  static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major == 0x1)
+>  		return UFSHCI_VERSION_11;
+> @@ -715,7 +715,7 @@ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba
+> *hba)
+>   */
+>  static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major == 0x01) {
+>  		hba->quirks |= UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS
+> @@ -740,7 +740,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba
+> *hba)
+>
+>  static void ufs_qcom_set_caps(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	if (host->hw_ver.major >= 0x2)
+>  		host->caps = UFS_QCOM_CAP_QUNIPRO;
+> @@ -811,7 +811,7 @@ static void ufs_qcom_get_speed_mode(struct
+> ufs_pa_layer_attr *p, char *result)
+>
+>  static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	int err = 0;
+>  	int vote = 0;
+>
+> @@ -866,7 +866,7 @@ show_ufs_to_mem_max_bus_bw(struct device *dev, struct
+> device_attribute *attr,
+>  			char *buf)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	return snprintf(buf, PAGE_SIZE, "%u\n",
+>  			host->bus_vote.is_max_bw_needed);
+> @@ -877,7 +877,7 @@ store_ufs_to_mem_max_bus_bw(struct device *dev, struct
+> device_attribute *attr,
+>  		const char *buf, size_t count)
+>  {
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	uint32_t value;
+>
+>  	if (!kstrtou32(buf, 0, &value)) {
+> @@ -954,7 +954,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	}
+>
+>  	host->hba = hba;
+> -	hba->priv = (void *)host;
+> +	ufshcd_set_variant(hba, host);
+>
+>  	host->generic_phy = devm_phy_get(dev, "ufsphy");
+>
+> @@ -1003,14 +1003,14 @@ out_unregister_bus:
+>  	phy_exit(host->generic_phy);
+>  out_host_free:
+>  	devm_kfree(dev, host);
+> -	hba->priv = NULL;
+> +	ufshcd_set_variant(hba, NULL);
+>  out:
+>  	return err;
+>  }
+>
+>  static void ufs_qcom_exit(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>
+>  	ufs_qcom_disable_lane_clks(host);
+>  	phy_power_off(host->generic_phy);
+> @@ -1019,7 +1019,7 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+>  static
+>  void ufs_qcom_clk_scale_notify(struct ufs_hba *hba)
+>  {
+> -	struct ufs_qcom_host *host = hba->priv;
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	struct ufs_pa_layer_attr *dev_req_params = &host->dev_req_params;
+>
+>  	if (!dev_req_params)
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index c40a0e7..54e7afb 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -594,6 +594,27 @@ static inline void check_upiu_size(void)
+>  		GENERAL_UPIU_REQUEST_SIZE + QUERY_DESC_MAX_SIZE);
+>  }
+>
+> +/**
+> + * ufshcd_set_variant - set variant specific data to the hba
+> + * @hba - per adapter instance
+> + * @variant - pointer to variant specific data
+> + */
+> +static inline void ufshcd_set_variant(struct ufs_hba *hba, void *variant)
+> +{
+> +	BUG_ON(!hba);
+> +	hba->priv = variant;
+> +}
+> +
+> +/**
+> + * ufshcd_get_variant - get variant specific data from the hba
+> + * @hba - per adapter instance
+> + */
+> +static inline void *ufshcd_get_variant(struct ufs_hba *hba)
+> +{
+> +	BUG_ON(!hba);
+> +	return hba->priv;
+> +}
+> +
+>  extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+>  extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+>  extern int ufshcd_runtime_idle(struct ufs_hba *hba);
+> --
+> 1.8.5.2
+>
+> --
+> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+> of Code Aurora Forum, hosted by The Linux Foundation
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> >It would be better to have each offset in a separate property.
-> >
-> These register are not used for different purpose.
-> Instead, they are all used for one purpose, reset the sas controller;
-> Though a bit complicated, the silicon has special requirement here.
 
-While they are indeed used together, they are separate registers, as
-listed above. There may be other registers in future that turn out to
-be useful for the SAS controller, or it might turn out a new system
-doesn't have all of the existing registers.
-
-> So still prefer using the original method,
-> ctrl-reg = <0xa60 0x33c 0x5a30 0xa64 0x338>;
-> Since we can simply use of_property_read_u32_array.
-
-That may be simpler now, but makes future maintenance harder.
-
-Use separate properties.
-
-Mark.
+-- 
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
