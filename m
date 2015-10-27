@@ -1,108 +1,140 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 08/15] scsi: ufs: add retries to dme_peer get and set attribute
-Date: Tue, 27 Oct 2015 12:44:10 +0200
-Message-ID: <1445942657-6293-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 12/15] scsi: ufs: reduce the interrupts for power mode change requests
+Date: Tue, 27 Oct 2015 12:44:14 +0200
+Message-ID: <1445942657-6293-13-git-send-email-ygardi@codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The dme_peer get/set attribute commands are prone to errors, therefore
-we add three retries for the UIC command sending.
-Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-it was successful or the retries have finished, another command will be
-sent.
+DME commands such as Hibern8 enter/exit and gear switch generate 2
+completion interrupts, one for confirmation that command is received
+by local UniPro and 2nd one is the final confirmation after communication
+with remote UniPro. Currently both of these completions are registered
+as interrupt events which is not quite necessary and instead we can
+just wait for the interrupt of 2nd completion, this should reduce
+the number of interrupts and could reduce the unnecessary CPU wakeups
+to handle extra interrupts.
 
-Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 41 +++++++++++++++++++++++++++--------------
+ 1 file changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8a04691..5005d12 100644
+index 889a7be..24a879d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -70,6 +70,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -987,13 +987,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
+  * @hba: per adapter instance
+  * @uic_cmd: UIC command
++ * @completion: initialize the completion only if this is set to true
+  *
+  * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
+  * with mutex held and host_lock locked.
+  * Returns 0 only if success.
+  */
+ static int
+-__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
++__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
++		      bool completion)
+ {
+ 	if (!ufshcd_ready_for_uic_cmd(hba)) {
+ 		dev_err(hba->dev,
+@@ -1001,7 +1003,8 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 		return -EIO;
+ 	}
  
-+/* maximum number of retries for a general UIC command  */
-+#define UFS_UIC_COMMAND_RETRIES 3
-+
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
+-	init_completion(&uic_cmd->done);
++	if (completion)
++		init_completion(&uic_cmd->done);
  
-@@ -2185,6 +2188,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *set = action[!!peer];
+ 	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
+ 
+@@ -1026,7 +1029,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	ufshcd_add_delay_before_dme_cmd(hba);
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
++	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	if (!ret)
+ 		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+@@ -2347,6 +2350,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	unsigned long flags;
+ 	u8 status;
  	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
++	bool reenable_intr = false;
  
- 	uic_cmd.command = peer ?
- 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-@@ -2192,10 +2196,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
- 	uic_cmd.argument3 = mib_val;
+ 	mutex_lock(&hba->uic_cmd_mutex);
+ 	init_completion(&uic_async_done);
+@@ -2354,15 +2358,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
  
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret)
--		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
--			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-+				retries);
- 
- 	return ret;
- }
-@@ -2220,6 +2232,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *get = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 	struct ufs_pa_layer_attr orig_pwr_info;
- 	struct ufs_pa_layer_attr temp_pwr_info;
- 	bool pwr_mode_change = false;
-@@ -2250,14 +2263,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
- 	uic_cmd.argument1 = attr_sel;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->uic_async_done = &uic_async_done;
+-	ret = __ufshcd_send_uic_cmd(hba, cmd);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
 -	if (ret) {
--		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
--			get, UIC_GET_ATTR_ID(attr_sel), ret);
+-		dev_err(hba->dev,
+-			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+-			cmd->command, cmd->argument3, ret);
 -		goto out;
--	}
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), ret);
-+	} while (ret && peer && --retries);
++	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
++		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
++		/*
++		 * Make sure UIC command completion interrupt is disabled before
++		 * issuing UIC command.
++		 */
++		wmb();
++		reenable_intr = true;
+ 	}
+-	ret = ufshcd_wait_for_uic_cmd(hba, cmd);
++	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	if (ret) {
+ 		dev_err(hba->dev,
+ 			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+@@ -2388,7 +2394,10 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	}
+ out:
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->active_uic_cmd = NULL;
+ 	hba->uic_async_done = NULL;
++	if (reenable_intr)
++		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	mutex_unlock(&hba->uic_cmd_mutex);
+ 
+@@ -3813,16 +3822,20 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+  */
+ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ {
+-	u32 intr_status;
++	u32 intr_status, enabled_intr_status;
+ 	irqreturn_t retval = IRQ_NONE;
+ 	struct ufs_hba *hba = __hba;
+ 
+ 	spin_lock(hba->host->host_lock);
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
++	enabled_intr_status =
++		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 
+-	if (intr_status) {
++	if (intr_status)
+ 		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+-		ufshcd_sl_intr(hba, intr_status);
 +
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), retries);
- 
--	if (mib_val)
-+	if (mib_val && !ret)
- 		*mib_val = uic_cmd.argument3;
- 
- 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
++	if (enabled_intr_status) {
++		ufshcd_sl_intr(hba, enabled_intr_status);
+ 		retval = IRQ_HANDLED;
+ 	}
+ 	spin_unlock(hba->host->host_lock);
 -- 
 1.8.5.2
 
