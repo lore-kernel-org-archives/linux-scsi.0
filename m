@@ -1,163 +1,153 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 10/15] scsi: ufs: fix error recovery after the hibern8
- exit failure
-Date: Tue, 27 Oct 2015 14:59:17 -0000
-Message-ID: <4339c7cfbc77135812744d7e3a94e50e.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 12/15] scsi: ufs: reduce the interrupts for power mode
+ change requests
+Date: Tue, 27 Oct 2015 14:59:44 -0000
+Message-ID: <5f511591d42f5022599fd53c81422a9e.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-11-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-13-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-11-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1445942657-6293-13-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> Hibern8 exit can be called from 3 different context:
->     - ufshcd_hibern8_exit_work
->     - ufshcd_ungate_work
->     - runtime/system resume
->
-> If hibern8 exit fails for some reason then we try to bring the link to
-> active state by link startup but this recovery mechanism results into
-> deadlock or errors from first 2 context listed above. This change fixes
-> the recovery by adding proper error handling mechanism.
+> DME commands such as Hibern8 enter/exit and gear switch generate 2
+> completion interrupts, one for confirmation that command is received
+> by local UniPro and 2nd one is the final confirmation after communication
+> with remote UniPro. Currently both of these completions are registered
+> as interrupt events which is not quite necessary and instead we can
+> just wait for the interrupt of 2nd completion, this should reduce
+> the number of interrupts and could reduce the unnecessary CPU wakeups
+> to handle extra interrupts.
 >
 > Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 58
-> +++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 53 insertions(+), 5 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 41 +++++++++++++++++++++++++++--------------
+>  1 file changed, 27 insertions(+), 14 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ed134d6..60ba729 100644
+> index 889a7be..24a879d 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -610,6 +610,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	hba->clk_gating.active_reqs++;
->
-> +	if (ufshcd_eh_in_progress(hba)) {
-> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		return 0;
-> +	}
-> +
->  start:
->  	switch (hba->clk_gating.state) {
->  	case CLKS_ON:
-> @@ -725,7 +730,8 @@ static void __ufshcd_release(struct ufs_hba *hba)
->  	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
->  		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
->  		|| hba->lrb_in_use || hba->outstanding_tasks
-> -		|| hba->active_uic_cmd || hba->uic_async_done)
-> +		|| hba->active_uic_cmd || hba->uic_async_done
-> +		|| ufshcd_eh_in_progress(hba))
->  		return;
->
->  	hba->clk_gating.state = REQ_CLKS_OFF;
-> @@ -1363,6 +1369,13 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
->  		cmd->scsi_done(cmd);
->  		goto out_unlock;
->  	}
-> +
-> +	/* if error handling is in progress, don't issue commands */
-> +	if (ufshcd_eh_in_progress(hba)) {
-> +		set_host_byte(cmd, DID_ERROR);
-> +		cmd->scsi_done(cmd);
-> +		goto out_unlock;
-> +	}
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->
->  	/* acquire the tag to make sure device cmds don't use it */
-> @@ -2393,6 +2406,31 @@ out:
->  	return ret;
->  }
->
-> +static int ufshcd_link_recovery(struct ufs_hba *hba)
-> +{
-> +	int ret;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +	ufshcd_set_eh_in_progress(hba);
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +
-> +	ret = ufshcd_host_reset_and_restore(hba);
-> +
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	if (ret)
-> +		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +	ufshcd_clear_eh_in_progress(hba);
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +
-> +	if (ret)
-> +		dev_err(hba->dev, "%s: link recovery failed, err %d",
-> +			__func__, ret);
-> +
-> +	return ret;
-> +}
-> +
->  static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+> @@ -987,13 +987,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct
+> uic_command *uic_cmd)
+>   * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
+>   * @hba: per adapter instance
+>   * @uic_cmd: UIC command
+> + * @completion: initialize the completion only if this is set to true
+>   *
+>   * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
+>   * with mutex held and host_lock locked.
+>   * Returns 0 only if success.
+>   */
+>  static int
+> -__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+> +__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+> +		      bool completion)
 >  {
+>  	if (!ufshcd_ready_for_uic_cmd(hba)) {
+>  		dev_err(hba->dev,
+> @@ -1001,7 +1003,8 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+> uic_command *uic_cmd)
+>  		return -EIO;
+>  	}
+>
+> -	init_completion(&uic_cmd->done);
+> +	if (completion)
+> +		init_completion(&uic_cmd->done);
+>
+>  	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
+>
+> @@ -1026,7 +1029,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+> uic_command *uic_cmd)
+>  	ufshcd_add_delay_before_dme_cmd(hba);
+>
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
+> +	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	if (!ret)
+>  		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+> @@ -2347,6 +2350,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,
+> struct uic_command *cmd)
+>  	unsigned long flags;
+>  	u8 status;
 >  	int ret;
-> @@ -2401,10 +2439,18 @@ static int __ufshcd_uic_hibern8_enter(struct
-> ufs_hba *hba)
->  	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
->  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+> +	bool reenable_intr = false;
 >
-> -	if (ret)
-> +	if (ret) {
->  		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
->  			__func__, ret);
+>  	mutex_lock(&hba->uic_cmd_mutex);
+>  	init_completion(&uic_async_done);
+> @@ -2354,15 +2358,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
+> *hba, struct uic_command *cmd)
 >
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	hba->uic_async_done = &uic_async_done;
+> -	ret = __ufshcd_send_uic_cmd(hba, cmd);
+> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	if (ret) {
+> -		dev_err(hba->dev,
+> -			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+> -			cmd->command, cmd->argument3, ret);
+> -		goto out;
+> +	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
+> +		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
 > +		/*
-> +		 * If link recovery fails then return error so that caller
-> +		 * don't retry the hibern8 enter again.
+> +		 * Make sure UIC command completion interrupt is disabled before
+> +		 * issuing UIC command.
 > +		 */
-> +		if (ufshcd_link_recovery(hba))
-> +			ret = -ENOLINK;
-> +	}
-> +
->  	return ret;
->  }
->
-> @@ -2429,8 +2475,9 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba
-> *hba)
->  	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
->  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+> +		wmb();
+> +		reenable_intr = true;
+>  	}
+> -	ret = ufshcd_wait_for_uic_cmd(hba, cmd);
+> +	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
 >  	if (ret) {
-> -		ufshcd_set_link_off(hba);
-> -		ret = ufshcd_host_reset_and_restore(hba);
-> +		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
-> +			__func__, ret);
-> +		ret = ufshcd_link_recovery(hba);
+>  		dev_err(hba->dev,
+>  			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+> @@ -2388,7 +2394,10 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,
+> struct uic_command *cmd)
 >  	}
+>  out:
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	hba->active_uic_cmd = NULL;
+>  	hba->uic_async_done = NULL;
+> +	if (reenable_intr)
+> +		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	mutex_unlock(&hba->uic_cmd_mutex);
 >
->  	return ret;
-> @@ -4382,7 +4429,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  	/* UFS device is also active now */
->  	ufshcd_set_ufs_dev_active(hba);
->  	ufshcd_force_reset_auto_bkops(hba);
-> -	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
->  	hba->wlun_dev_clr_ua = true;
+> @@ -3813,16 +3822,20 @@ static void ufshcd_sl_intr(struct ufs_hba *hba,
+> u32 intr_status)
+>   */
+>  static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>  {
+> -	u32 intr_status;
+> +	u32 intr_status, enabled_intr_status;
+>  	irqreturn_t retval = IRQ_NONE;
+>  	struct ufs_hba *hba = __hba;
 >
->  	if (ufshcd_get_max_pwr_mode(hba)) {
-> @@ -4396,6 +4442,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  					__func__, ret);
+>  	spin_lock(hba->host->host_lock);
+>  	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> +	enabled_intr_status =
+> +		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>
+> -	if (intr_status) {
+> +	if (intr_status)
+>  		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+> -		ufshcd_sl_intr(hba, intr_status);
+> +
+> +	if (enabled_intr_status) {
+> +		ufshcd_sl_intr(hba, enabled_intr_status);
+>  		retval = IRQ_HANDLED;
 >  	}
->
-> +	/* set the state as operational after switching to desired gear */
-> +	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
->  	/*
->  	 * If we are in error handling context or in power management callbacks
->  	 * context, no need to scan the host
+>  	spin_unlock(hba->host->host_lock);
 > --
 > 1.8.5.2
 >
