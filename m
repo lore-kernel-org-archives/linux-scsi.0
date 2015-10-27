@@ -1,40 +1,82 @@
-From: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
-Subject: [RESEND PATCH] scsi_sysfs: Fix queue_ramp_up_period return code
-Date: Tue, 27 Oct 2015 10:49:54 +0100
-Message-ID: <562F48C2.1070803@linux.vnet.ibm.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v2 17/17] scsi: ufs-qcom: fix compilation warnings
+Date: Tue, 27 Oct 2015 10:10:48 -0000
+Message-ID: <723997f5afca9a1683db57b8ecb3cf44.squirrel@www.codeaurora.org>
+References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
+    <1445874072-25909-18-git-send-email-ygardi@codeaurora.org>
+    <562EA19E.2070007@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Vasu Dev <vasu.dev@intel.com>, stable@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <562EA19E.2070007@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Stephen Boyd <sboyd@codeaurora.org>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Writing a number to /sys/bus/scsi/devices/<sdev>/queue_ramp_up_period
-returns the value of that number instead of the number of bytes written.
-This behavior can confuse programs expecting POSIX write() semantics.
-Fix this by returning the number of bytes written instead.
+> On 10/26/2015 08:41 AM, Yaniv Gardi wrote:
+>> Tnis patch fixes the following compilation warnings:
+>> ...ufs-qcom.c:1201:40:
+>> 	warning: incorrect type in argument 1 (different address spaces)
+>> ...ufs-qcom.c:1201:40:
+>> 	expected void const *ptr
+>> ...ufs-qcom.c:1201:40:
+>> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+>> ...ufs-qcom.c:1207:53:
+>> 	warning: incorrect type in argument 1 (different address spaces)
+>> ...ufs-qcom.c:1207:53:
+>> 	expected void const *ptr
+>> ...ufs-qcom.c:1207:53:
+>> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+>>
+>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>
+>> ---
+>
+> What version of sparse do you use? You shouldn't need to do this.
+>
 
-Signed-off-by: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Cc: stable@vger.kernel.org
----
- drivers/scsi/scsi_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+i just updated my sparse to the newest -
+so i'm using sparse 0.4.4
+and the command i use is:
+make ARCH=arm C=1  CF="-Wsparse-all"
+and i still get all the warnings.
+with my patch, the are no warnings.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b333389..6b0f292 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -898,7 +898,7 @@ sdev_store_queue_ramp_up_period(struct device *dev,
- 		return -EINVAL;
 
- 	sdev->queue_ramp_up_period = msecs_to_jiffies(period);
--	return period;
-+	return count;
- }
-
- static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
--- 
-2.3.0
+>>  drivers/scsi/ufs/ufs-qcom.c | 9 +++++----
+>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+>> index 72b0ef7..b57f88a 100644
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>> @@ -1226,11 +1226,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>>  		if (res) {
+>>  			host->dev_ref_clk_ctrl_mmio =
+>>  					devm_ioremap_resource(dev, res);
+>> -			if (IS_ERR(host->dev_ref_clk_ctrl_mmio)) {
+>> -				dev_warn(dev,
+>> -					"%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
+>> +			if (IS_ERR((__force void const *)
+>> +				   host->dev_ref_clk_ctrl_mmio)) {
+>> +				dev_warn(dev, "%s: could not map dev_ref_clk_ctrl_mmio, err %ld\n",
+>>  					__func__,
+>> -					PTR_ERR(host->dev_ref_clk_ctrl_mmio));
+>> +					PTR_ERR((__force void const *)
+>> +						 host->dev_ref_clk_ctrl_mmio));
+>>  				host->dev_ref_clk_ctrl_mmio = NULL;
+>>  			}
+>>  			host->dev_ref_clk_en_mask = BIT(5);
+>
+>
+> --
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
