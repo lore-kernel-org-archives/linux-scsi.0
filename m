@@ -1,153 +1,137 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 12/15] scsi: ufs: reduce the interrupts for power mode
- change requests
-Date: Tue, 27 Oct 2015 14:59:44 -0000
-Message-ID: <5f511591d42f5022599fd53c81422a9e.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 15/15] scsi: ufs: add wrapper for retrying sending
+ query attribute
+Date: Tue, 27 Oct 2015 15:00:30 -0000
+Message-ID: <11a50cbba7edb5332644f9937c2f1f82.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-13-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-16-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-13-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1445942657-6293-16-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> DME commands such as Hibern8 enter/exit and gear switch generate 2
-> completion interrupts, one for confirmation that command is received
-> by local UniPro and 2nd one is the final confirmation after communication
-> with remote UniPro. Currently both of these completions are registered
-> as interrupt events which is not quite necessary and instead we can
-> just wait for the interrupt of 2nd completion, this should reduce
-> the number of interrupts and could reduce the unnecessary CPU wakeups
-> to handle extra interrupts.
+> Sometimes queries from the device might return a failure so it is
+> recommended to retry sending the query, before giving up.
+> This change adds a wrapper to retry sending a query attribute,
+> in cases where we need to wait longer, before we continue,
+> or before reporting a failure.
 >
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 41 +++++++++++++++++++++++++++--------------
->  1 file changed, 27 insertions(+), 14 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 51
+> ++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 44 insertions(+), 7 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 889a7be..24a879d 100644
+> index ec90504..1d1e681 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -987,13 +987,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct
-> uic_command *uic_cmd)
->   * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
->   * @hba: per adapter instance
->   * @uic_cmd: UIC command
-> + * @completion: initialize the completion only if this is set to true
->   *
->   * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
->   * with mutex held and host_lock locked.
->   * Returns 0 only if success.
->   */
->  static int
-> -__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-> +__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
-> +		      bool completion)
->  {
->  	if (!ufshcd_ready_for_uic_cmd(hba)) {
->  		dev_err(hba->dev,
-> @@ -1001,7 +1003,8 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
-> uic_command *uic_cmd)
->  		return -EIO;
->  	}
+> @@ -1824,6 +1824,43 @@ out:
+>  }
 >
-> -	init_completion(&uic_cmd->done);
-> +	if (completion)
-> +		init_completion(&uic_cmd->done);
->
->  	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
->
-> @@ -1026,7 +1029,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
-> uic_command *uic_cmd)
->  	ufshcd_add_delay_before_dme_cmd(hba);
->
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
-> +	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	if (!ret)
->  		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
-> @@ -2347,6 +2350,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,
-> struct uic_command *cmd)
->  	unsigned long flags;
->  	u8 status;
->  	int ret;
-> +	bool reenable_intr = false;
->
->  	mutex_lock(&hba->uic_cmd_mutex);
->  	init_completion(&uic_async_done);
-> @@ -2354,15 +2358,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba
-> *hba, struct uic_command *cmd)
->
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	hba->uic_async_done = &uic_async_done;
-> -	ret = __ufshcd_send_uic_cmd(hba, cmd);
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -	if (ret) {
-> -		dev_err(hba->dev,
-> -			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
-> -			cmd->command, cmd->argument3, ret);
-> -		goto out;
-> +	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
-> +		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
-> +		/*
-> +		 * Make sure UIC command completion interrupt is disabled before
-> +		 * issuing UIC command.
-> +		 */
-> +		wmb();
-> +		reenable_intr = true;
->  	}
-> -	ret = ufshcd_wait_for_uic_cmd(hba, cmd);
-> +	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	if (ret) {
->  		dev_err(hba->dev,
->  			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
-> @@ -2388,7 +2394,10 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,
-> struct uic_command *cmd)
->  	}
->  out:
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	hba->active_uic_cmd = NULL;
->  	hba->uic_async_done = NULL;
-> +	if (reenable_intr)
-> +		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	mutex_unlock(&hba->uic_cmd_mutex);
->
-> @@ -3813,16 +3822,20 @@ static void ufshcd_sl_intr(struct ufs_hba *hba,
-> u32 intr_status)
->   */
->  static irqreturn_t ufshcd_intr(int irq, void *__hba)
->  {
-> -	u32 intr_status;
-> +	u32 intr_status, enabled_intr_status;
->  	irqreturn_t retval = IRQ_NONE;
->  	struct ufs_hba *hba = __hba;
->
->  	spin_lock(hba->host->host_lock);
->  	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-> +	enabled_intr_status =
-> +		intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
->
-> -	if (intr_status) {
-> +	if (intr_status)
->  		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
-> -		ufshcd_sl_intr(hba, intr_status);
+>  /**
+> + * ufshcd_query_attr_retry() - API function for sending query
+> + * attribute with retries
+> + * @hba: per-adapter instance
+> + * @opcode: attribute opcode
+> + * @idn: attribute idn to access
+> + * @index: index field
+> + * @selector: selector field
+> + * @attr_val: the attribute value after the query request
+> + * completes
+> + *
+> + * Returns 0 for success, non-zero in case of failure
+> +*/
+> +static int ufshcd_query_attr_retry(struct ufs_hba *hba,
+> +	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
+> +	u32 *attr_val)
+> +{
+> +	int ret = 0;
+> +	u32 retries;
 > +
-> +	if (enabled_intr_status) {
-> +		ufshcd_sl_intr(hba, enabled_intr_status);
->  		retval = IRQ_HANDLED;
->  	}
->  	spin_unlock(hba->host->host_lock);
+> +	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+> +		ret = ufshcd_query_attr(hba, opcode, idn, index,
+> +						selector, attr_val);
+> +		if (ret)
+> +			dev_dbg(hba->dev, "%s: failed with error %d, retries %d\n",
+> +				__func__, ret, retries);
+> +		else
+> +			break;
+> +	}
+> +
+> +	if (ret)
+> +		dev_err(hba->dev,
+> +			"%s: query attribute, idn %d, failed with error %d after %d
+> retires\n",
+> +			__func__, idn, ret, QUERY_REQ_RETRIES);
+> +	return ret;
+> +}
+> +
+> +/**
+>   * ufshcd_query_descriptor - API function for sending descriptor requests
+>   * hba: per-adapter instance
+>   * opcode: attribute opcode
+> @@ -3404,7 +3441,7 @@ static int ufshcd_disable_ee(struct ufs_hba *hba,
+> u16 mask)
+>
+>  	val = hba->ee_ctrl_mask & ~mask;
+>  	val &= 0xFFFF; /* 2 bytes */
+> -	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+>  			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+>  	if (!err)
+>  		hba->ee_ctrl_mask &= ~mask;
+> @@ -3432,7 +3469,7 @@ static int ufshcd_enable_ee(struct ufs_hba *hba, u16
+> mask)
+>
+>  	val = hba->ee_ctrl_mask | mask;
+>  	val &= 0xFFFF; /* 2 bytes */
+> -	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+>  			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+>  	if (!err)
+>  		hba->ee_ctrl_mask |= mask;
+> @@ -3538,7 +3575,7 @@ static void  ufshcd_force_reset_auto_bkops(struct
+> ufs_hba *hba)
+>
+>  static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32
+> *status)
+>  {
+> -	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>  			QUERY_ATTR_IDN_BKOPS_STATUS, 0, 0, status);
+>  }
+>
+> @@ -3601,7 +3638,7 @@ static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+>
+>  static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+>  {
+> -	return ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>  			QUERY_ATTR_IDN_EE_STATUS, 0, 0, status);
+>  }
+>
+> @@ -4355,9 +4392,9 @@ static void ufshcd_init_icc_levels(struct ufs_hba
+> *hba)
+>  	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
+>  			__func__, hba->init_prefetch_data.icc_level);
+>
+> -	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> -			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
+> -			&hba->init_prefetch_data.icc_level);
+> +	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
+> +		&hba->init_prefetch_data.icc_level);
+>
+>  	if (ret)
+>  		dev_err(hba->dev,
 > --
 > 1.8.5.2
 >
