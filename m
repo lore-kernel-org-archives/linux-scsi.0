@@ -1,75 +1,61 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 05/15] scsi: ufs: increase fDeviceInit query response
- timeout
-Date: Tue, 27 Oct 2015 14:56:55 -0000
-Message-ID: <efb5727af7e1b08c370b6eabbf865d9e.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 06/15] scsi: ufs: avoid exception event handler racing
+ with PM callbacks
+Date: Tue, 27 Oct 2015 14:57:56 -0000
+Message-ID: <d800b6db75a6c51d368268d5bc7f036b.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-6-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-7-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-6-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1445942657-6293-7-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> fDeviceInit query response time for some devices is too long that default
-> query request timeout of 100ms may not be enough. Experiments show that
-> fDeviceInit response sometimes takes 500ms so to be on safer side this
-> change sets the timeout to 600ms. Without this change, we might
-> unnecessarily have to retry fDeviceInit query requests multiple times and
-> each query request timeout prints one error message.
+> If device raises the exception event in the response to the commands
+> sent during the runtime/system PM callbacks, exception event handler
+> might run in parallel with PM callbacks and may see unclocked register
+> accesses. This change fixes this issue by not scheduling the exception
+> event handler while PM callbacks are running.
 >
 > Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
+>  drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e0b8755..573a8cb 100644
+> index 573a8cb..0e54183 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -58,6 +58,12 @@
->  #define QUERY_REQ_RETRIES 10
->  /* Query request timeout */
->  #define QUERY_REQ_TIMEOUT 30 /* msec */
-> +/*
-> + * Query request timeout for fDeviceInit flag
-> + * fDeviceInit query response time for some devices is too large that
-> default
-> + * QUERY_REQ_TIMEOUT may not be enough for such devices.
-> + */
-> +#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
+> @@ -3145,7 +3145,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> struct ufshcd_lrb *lrbp)
+>  			scsi_status = result & MASK_SCSI_STATUS;
+>  			result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
 >
->  /* Task management command timeout */
->  #define TM_CMD_TIMEOUT	100 /* msecs */
-> @@ -1651,6 +1657,7 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
-> enum query_opcode opcode,
->  	struct ufs_query_req *request = NULL;
->  	struct ufs_query_res *response = NULL;
->  	int err, index = 0, selector = 0;
-> +	int timeout = QUERY_REQ_TIMEOUT;
->
->  	BUG_ON(!hba);
->
-> @@ -1683,7 +1690,10 @@ static int ufshcd_query_flag(struct ufs_hba *hba,
-> enum query_opcode opcode,
->  		goto out_unlock;
->  	}
->
-> -	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-> +	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
-> +		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
-> +
-> +	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
->
->  	if (err) {
->  		dev_err(hba->dev,
+> -			if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+> +			/*
+> +			 * Currently we are only supporting BKOPs exception
+> +			 * events hence we can ignore BKOPs exception event
+> +			 * during power management callbacks. BKOPs exception
+> +			 * event is not expected to be raised in runtime suspend
+> +			 * callback as it allows the urgent bkops.
+> +			 * During system suspend, we are anyway forcefully
+> +			 * disabling the bkops and if urgent bkops is needed
+> +			 * it will be enabled on system resume. Long term
+> +			 * solution could be to abort the system suspend if
+> +			 * UFS device needs urgent BKOPs.
+> +			 */
+> +			if (!hba->pm_op_in_progress &&
+> +			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+>  				schedule_work(&hba->eeh_work);
+>  			break;
+>  		case UPIU_TRANSACTION_REJECT_UPIU:
 > --
 > 1.8.5.2
 >
