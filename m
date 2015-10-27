@@ -1,41 +1,53 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: restart list search after unlock in
- scsi_remove_target
-Date: Tue, 27 Oct 2015 17:33:21 +0100
-Message-ID: <1445963601.16404.45.camel@suse.de>
-References: <20151019143546.GA7486@lst.de>
+From: Stephen Boyd <sboyd@codeaurora.org>
+Subject: Re: [PATCH v2 17/17] scsi: ufs-qcom: fix compilation warnings
+Date: Tue, 27 Oct 2015 10:27:47 -0700
+Message-ID: <562FB412.5050603@codeaurora.org>
+References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
+ <1445874072-25909-18-git-send-email-ygardi@codeaurora.org>
+ <562EA19E.2070007@codeaurora.org>
+ <723997f5afca9a1683db57b8ecb3cf44.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56613 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932394AbbJ0Qd0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Oct 2015 12:33:26 -0400
-In-Reply-To: <20151019143546.GA7486@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <723997f5afca9a1683db57b8ecb3cf44.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: ygardi@codeaurora.org
+Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Mon, 2015-10-19 at 16:35 +0200, Christoph Hellwig wrote:
-> When dropping a lock while iterating a list we must restart the
-> search
-> as other threads could have manipulated the list under us.=C2=A0=C2=A0=
-Without
-> this
-> we can get stuck in an endless loop.
->=20
-> Reported-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 10/27/2015 03:10 AM, ygardi@codeaurora.org wrote:
+>> On 10/26/2015 08:41 AM, Yaniv Gardi wrote:
+>>> Tnis patch fixes the following compilation warnings:
+>>> ...ufs-qcom.c:1201:40:
+>>> 	warning: incorrect type in argument 1 (different address spaces)
+>>> ...ufs-qcom.c:1201:40:
+>>> 	expected void const *ptr
+>>> ...ufs-qcom.c:1201:40:
+>>> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+>>> ...ufs-qcom.c:1207:53:
+>>> 	warning: incorrect type in argument 1 (different address spaces)
+>>> ...ufs-qcom.c:1207:53:
+>>> 	expected void const *ptr
+>>> ...ufs-qcom.c:1207:53:
+>>> 	got void [noderef] <asn:2>*dev_ref_clk_ctrl_mmio
+>>>
+>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>>
+>>> ---
+>> What version of sparse do you use? You shouldn't need to do this.
+>>
+> i just updated my sparse to the newest -
+> so i'm using sparse 0.4.4
+> and the command i use is:
+> make ARCH=arm C=1  CF="-Wsparse-all"
+> and i still get all the warnings.
+> with my patch, the are no warnings.
+>
 
-I have an official acknowledge from the original author that a 48h long
-term test on their side didn't reproduce the lockup as well.
+That is not the latest version of sparse. I'm not sure when sparse was
+updated, but I have the git version which shows v0.5.0-51-ga53cea28f0db
 
-James can we please get the patch included in 4.4 and stable?
-
-Thanks
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
