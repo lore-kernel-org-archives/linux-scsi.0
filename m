@@ -1,143 +1,107 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3 13/15] scsi: ufs: add missing memory barriers
-Date: Tue, 27 Oct 2015 10:21:40 -0000
-Message-ID: <4fd71de3dfabec4d177d2b556f779756.squirrel@www.codeaurora.org>
-References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
-    <1441188795-4600-14-git-send-email-ygardi@codeaurora.org>
-    <CAC5umyhkAdEjtFd+r3EOKfkPdFgfZ5juH0Wg2983=UqUSzkD7Q@mail.gmail.com>
-    <191698899544068194e28246454c2613.squirrel@www.codeaurora.org>
-    <CAC5umygdHdYt7OuJyxg=-77bA5GctO9OgrUCGo9iY-ukjkxQUA@mail.gmail.com>
-    <e8df00bf987f9d15d0da562498670dd7.squirrel@www.codeaurora.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 2/3] megaraid_sas: Convert printk to printk_<level>
+Date: Tue, 27 Oct 2015 11:25:24 +0100
+Message-ID: <1445941524.16404.36.camel@suse.de>
+References: <1445934375-17784-1-git-send-email-wangweidong1@huawei.com>
+	 <1445934375-17784-3-git-send-email-wangweidong1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e8df00bf987f9d15d0da562498670dd7.squirrel@www.codeaurora.org>
+In-Reply-To: <1445934375-17784-3-git-send-email-wangweidong1@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+To: Weidong Wang <wangweidong1@huawei.com>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, JBottomley@odin.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->> 2015-10-25 23:40 GMT+09:00  <ygardi@codeaurora.org>:
->>>> 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
->>>>> Performing several writes to UFS host controller registers has
->>>>> no gurrantee of ordering, so we must make sure register writes
->>>>> to setup request list base address etc. are performed before the
->>>>> run/stop register is enabled.
->>>>> In addition, when setting up a task request, we must make sure
->>>>> the updating of descriptors takes places before ringing the
->>>>> doorbell, similarly to setting up a transfer request.
->>>>>
->>>>> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
->>>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->>>>>
->>>>> ---
->>>>>  drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
->>>>>  1 file changed, 15 insertions(+), 6 deletions(-)
->>>>>
->>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>>>> index fc2a52d..298511a 100644
->>>>> --- a/drivers/scsi/ufs/ufshcd.c
->>>>> +++ b/drivers/scsi/ufs/ufshcd.c
->>>>> @@ -401,11 +401,9 @@ static inline int ufshcd_get_lists_status(u32
->>>>> reg)
->>>>>          *  1           UTRLRDY
->>>>>          *  2           UTMRLRDY
->>>>>          *  3           UCRDY
->>>>> -        *  4           HEI
->>>>> -        *  5           DEI
->>>>> -        * 6-7          reserved
->>>>> +        * 4-7          reserved
->>>>>          */
->>>>> -       return (((reg) & (0xFF)) >> 1) ^ (0x07);
->>>>> +       return ((reg & 0xFF) >> 1) ^ 0x07;
->>>>>  }
->>>>>
->>>>>  /**
->>>>> @@ -2726,7 +2724,7 @@ out:
->>>>>   * To bring UFS host controller to operational state,
->>>>>   * 1. Enable required interrupts
->>>>>   * 2. Configure interrupt aggregation
->>>>> - * 3. Program UTRL and UTMRL base addres
->>>>> + * 3. Program UTRL and UTMRL base address
->>>>>   * 4. Configure run-stop-registers
->>>>>   *
->>>>>   * Returns 0 on success, non-zero value on failure
->>>>> @@ -2756,8 +2754,13 @@ static int ufshcd_make_hba_operational(struct
->>>>> ufs_hba *hba)
->>>>>                         REG_UTP_TASK_REQ_LIST_BASE_H);
->>>>>
->>>>>         /*
->>>>> +        * Make sure base address and interrupt setup are updated
->>>>> before
->>>>> +        * enabling the run/stop registers below.
->>>>> +        */
->>>>> +       wmb();
->>>>> +
->>>>> +       /*
->>>>>          * UCRDY, UTMRLDY and UTRLRDY bits must be 1
->>>>> -        * DEI, HEI bits must be 0
->>>>>          */
->>>>>         reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
->>>>>         if (!(ufshcd_get_lists_status(reg))) {
->>>>> @@ -3920,7 +3923,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba
->>>>> *hba, int lun_id, int task_id,
->>>>>
->>>>>         /* send command to the controller */
->>>>>         __set_bit(free_slot, &hba->outstanding_tasks);
->>>>> +
->>>>> +       /* Make sure descriptors are ready before ringing the task
->>>>> doorbell */
->>>>> +       wmb();
->>>>> +
->>>>>         ufshcd_writel(hba, 1 << free_slot,
->>>>> REG_UTP_TASK_REQ_DOOR_BELL);
->>>>> +       /* Make sure that doorbell is committed immediately */
->>>>> +       wmb();
->>>>
->>>> Is this wmb() after ringing tm doorbell is needed?
->>>
->>> Well, Mita, in the case of DB register (Request DB and TASK DB), every
->>> write operation to the DB should be barrier, as if not, out of order
->>> writing to this register might cause inconsistency in its value, and
->>> thus,
->>> un-handled requests/tasks.
->>
->> I couldn't fully understand why out of order writing to TASK DB
->> register causes inconsistency.
->> In the TASK request completion (ufshcd_tmc_handler), TASK DB register
->> is read before handling finished requests, so it ensures that all
->> write operations for TASK DB have been performed.
->>
->
-> thanks, Mita
-> your explanation makes sense.
-> It will be fixed in v4.
->
+On Tue, 2015-10-27 at 16:26 +0800, Weidong Wang wrote:
+> Reduce object size a little by using pr_<level>
+> calls instead of printk(KERN_<LEVEL>.
+>=20
+> Signed-off-by: Weidong Wang <wangweidong1@huawei.com>
+> ---
+> =C2=A0drivers/scsi/megaraid/megaraid_sas_base.c | 14 +++++++-------
+> =C2=A01 file changed, 7 insertions(+), 7 deletions(-)
+>=20
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index ed9846d..2287aa1 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -5889,7 +5889,7 @@ static int megasas_mgmt_fasync(int fd, struct
+> file *filep, int mode)
+> =C2=A0		return 0;
+> =C2=A0	}
+> =C2=A0
+> -	printk(KERN_DEBUG "megasas: fasync_helper failed [%d]\n",
+> rc);
+> +	pr_debug("megasas: fasync_helper failed [%d]\n", rc);
+> =C2=A0
+> =C2=A0	return rc;
+> =C2=A0}
+> @@ -6233,7 +6233,7 @@ static int megasas_mgmt_ioctl_aen(struct file
+> *file, unsigned long arg)
+> =C2=A0	u32 wait_time =3D MEGASAS_RESET_WAIT_TIME;
+> =C2=A0
+> =C2=A0	if (file->private_data !=3D file) {
+> -		printk(KERN_DEBUG "megasas: fasync_helper was not "
+> +		pr_debug("megasas: fasync_helper was not "
+> =C2=A0		=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0"called first\n");
+> =C2=A0		return -EINVAL;
+> =C2=A0	}
+> @@ -6355,7 +6355,7 @@ static int megasas_mgmt_compat_ioctl_fw(struct
+> file *file, unsigned long arg)
+> =C2=A0
+> =C2=A0	if (copy_in_user(&cioc->frame.hdr.cmd_status,
+> =C2=A0			=C2=A0&ioc->frame.hdr.cmd_status, sizeof(u8))) {
+> -		printk(KERN_DEBUG "megasas: error copy_in_user
+> cmd_status\n");
+> +		pr_debug("megasas: error copy_in_user
+> cmd_status\n");
+> =C2=A0		return -EFAULT;
+> =C2=A0	}
+> =C2=A0	return error;
+> @@ -6455,7 +6455,7 @@ megasas_sysfs_set_dbg_lvl(struct device_driver
+> *dd, const char *buf, size_t coun
+> =C2=A0	int retval =3D count;
+> =C2=A0
+> =C2=A0	if (sscanf(buf, "%u", &megasas_dbg_lvl) < 1) {
+> -		printk(KERN_ERR "megasas: could not set dbg_lvl\n");
+> +		pr_err("megasas: could not set dbg_lvl\n");
+> =C2=A0		retval =3D -EINVAL;
+> =C2=A0	}
+> =C2=A0	return retval;
+> @@ -6480,7 +6480,7 @@ megasas_aen_polling(struct work_struct *work)
+> =C2=A0	int error;
+> =C2=A0
+> =C2=A0	if (!instance) {
+> -		printk(KERN_ERR "invalid instance!\n");
+> +		pr_err("invalid instance!\n");
+> =C2=A0		kfree(ev);
+> =C2=A0		return;
+> =C2=A0	}
+> @@ -6740,7 +6740,7 @@ static int __init megasas_init(void)
+> =C2=A0	rval =3D register_chrdev(0, "megaraid_sas_ioctl",
+> &megasas_mgmt_fops);
+> =C2=A0
+> =C2=A0	if (rval < 0) {
+> -		printk(KERN_DEBUG "megasas: failed to open device
+> node\n");
+> +		pr_debug("megasas: failed to open device node\n");
+> =C2=A0		return rval;
+> =C2=A0	}
+> =C2=A0
+> @@ -6752,7 +6752,7 @@ static int __init megasas_init(void)
+> =C2=A0	rval =3D pci_register_driver(&megasas_pci_driver);
+> =C2=A0
+> =C2=A0	if (rval) {
+> -		printk(KERN_DEBUG "megasas: PCI hotplug registration
+> failed \n");
+> +		pr_debug("megasas: PCI hotplug registration failed
+> \n");
+> =C2=A0		goto err_pcidrv;
+> =C2=A0	}
+> =C2=A0
 
-sorry, it will fixed in v5.
 
-Yaniv
-
->
->>>>
->>>>>
->>>>>         spin_unlock_irqrestore(host->host_lock, flags);
->>>>>
->>>>> --
->>>>> 1.8.5.2
->>>>>
->>>>> --
->>>>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
->>>>> member of Code Aurora Forum, hosted by The Linux Foundation
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->>>>> in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>>
->>
->
->
->
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
