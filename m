@@ -1,62 +1,42 @@
-From: Laurent Vivier <lvivier@redhat.com>
-Subject: Re: [PATCH 1/3] ibmvsci: make parameters max_id and max_channel
- read-only
-Date: Tue, 27 Oct 2015 16:38:23 +0100
-Message-ID: <562F9A6F.2000201@redhat.com>
-References: <1441876994-16821-1-git-send-email-lvivier@redhat.com>
- <561D7639.6030109@redhat.com>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] scsi_sysfs: Fix queue_ramp_up_period return code
+Date: Tue, 27 Oct 2015 12:12:11 -0400
+Message-ID: <1445962331.4119.28.camel@localhost.localdomain>
+References: <562E3E9F.50600@linux.vnet.ibm.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <561D7639.6030109@redhat.com>
+In-Reply-To: <562E3E9F.50600@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, dgibson@redhat.com, thuth@redhat.com, pbonzini@redhat.com
+To: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Ping ?
+On Mon, 2015-10-26 at 15:54 +0100, Peter Oberparleiter wrote:
+> Writing a number to /sys/bus/scsi/devices/<sdev>/queue_ramp_up_period
+> returns the value of that number instead of the number of bytes written.
+> This behavior can confuse programs expecting POSIX write() semantics.
+> Fix this by returning the number of bytes written instead.
+> 
+> Signed-off-by: Peter Oberparleiter <oberpar@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/scsi_sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index b333389..6b0f292 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -898,7 +898,7 @@ sdev_store_queue_ramp_up_period(struct device *dev,
+>  		return -EINVAL;
+> 
+>  	sdev->queue_ramp_up_period = msecs_to_jiffies(period);
+> -	return period;
+> +	return count;
+>  }
+> 
+>  static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
 
-On 13/10/2015 23:23, Laurent Vivier wrote:
-> James,
-> 
-> this series has been reviewed and ack'ed,
-> as SCSI maintainer, could you take it ?
-> 
-> Laurent
-> 
-> On 10/09/2015 11:23, Laurent Vivier wrote:
->> The value of the parameter is never re-read by the driver,
->> so a new value is ignored. Let know the user he
->> can't modify it by removing writable attribute.
->>
->> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
->> ---
->> I resend this patch as James was not cc'ed.
->>
->>  drivers/scsi/ibmvscsi/ibmvscsi.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> index 6a41c36..3e76490 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> @@ -105,9 +105,9 @@ MODULE_AUTHOR("Dave Boutcher");
->>  MODULE_LICENSE("GPL");
->>  MODULE_VERSION(IBMVSCSI_VERSION);
->>  
->> -module_param_named(max_id, max_id, int, S_IRUGO | S_IWUSR);
->> +module_param_named(max_id, max_id, int, S_IRUGO);
->>  MODULE_PARM_DESC(max_id, "Largest ID value for each channel");
->> -module_param_named(max_channel, max_channel, int, S_IRUGO | S_IWUSR);
->> +module_param_named(max_channel, max_channel, int, S_IRUGO);
->>  MODULE_PARM_DESC(max_channel, "Largest channel value");
->>  module_param_named(init_timeout, init_timeout, int, S_IRUGO | S_IWUSR);
->>  MODULE_PARM_DESC(init_timeout, "Initialization timeout in seconds");
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
