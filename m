@@ -1,84 +1,99 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v5 03/15] scsi: ufs: verify command tag validity
-Date: Tue, 27 Oct 2015 12:44:05 +0200
-Message-ID: <1445942657-6293-4-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v5 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+Date: Tue, 27 Oct 2015 12:44:03 +0200
+Message-ID: <1445942657-6293-2-git-send-email-ygardi@codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-A race condition appear to exist between request completion when
-scsi_done() is called to end the request and set the tag back to
--1 (at blk_queue_end_tag() scsi_end_request), and scsi layer error
-handling which aborts the command and reuses it to request sense
-data. Sending the request sense is done with tag which was set to -1
-and so it is invalid.
-Assert command tag passed from scsi layer is valid.
+Clear the UFS data structures before sending new request.
 
-Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+The SCSI command is sent to the device within the UFS UPIU request.
+As part of the transfer UPIU preparation, the SCSI command is copied
+to the UPIU structure according to the SCSI command size.
+As different SCSI commands differ in size from each other, we need
+to clear the whole SCSI command field to prevent sending uninitialized
+data to the device.
+
+The UPIU response doesn't always include the sense data and can differ
+in size.
+Hence, the UPIU response should also be cleared before the transfer.
+
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2d3ebca..8860a57 100644
+index 131c720..3428f72 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -190,6 +190,10 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 		struct ufs_pa_layer_attr *desired_pwr_mode);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
-+static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
-+{
-+	return tag >= 0 && tag < hba->nutrs;
-+}
+@@ -3,7 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 				cpu_to_le32(lower_32_bits(sg->dma_address));
+ 			prd_table[i].upper_addr =
+ 				cpu_to_le32(upper_32_bits(sg->dma_address));
++			prd_table[i].reserved = 0;
+ 		}
+ 	} else {
+ 		lrbp->utr_descriptor_ptr->prd_table_length = 0;
+@@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
  
- static inline int ufshcd_enable_irq(struct ufs_hba *hba)
+ 	/* Transfer request descriptor header fields */
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+-
++	/* dword_1 is reserved, hence it is set to 0 */
++	req_desc->header.dword_1 = 0;
+ 	/*
+ 	 * assigning invalid value for command status. Controller
+ 	 * updates OCS on command completion, with the command
+@@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 	 */
+ 	req_desc->header.dword_2 =
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
++	/* dword_3 is reserved, hence it is set to 0 */
++	req_desc->header.dword_3 = 0;
+ }
+ 
+ /**
+@@ -1137,6 +1141,7 @@ static
+ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
  {
-@@ -1310,6 +1314,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	hba = shost_priv(host);
+ 	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
++	unsigned short cdb_len;
  
- 	tag = cmd->request->tag;
-+	if (!ufshcd_valid_tag(hba, tag)) {
-+		dev_err(hba->dev,
-+			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
-+			__func__, tag, cmd, cmd->request);
-+		BUG();
-+	}
+ 	/* command descriptor fields */
+ 	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+@@ -1151,8 +1156,12 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ 	ucd_req_ptr->sc.exp_data_transfer_len =
+ 		cpu_to_be32(lrbp->cmd->sdb.length);
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	switch (hba->ufshcd_state) {
-@@ -3862,13 +3872,23 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	host = cmd->device->host;
- 	hba = shost_priv(host);
- 	tag = cmd->request->tag;
-+	if (!ufshcd_valid_tag(hba, tag)) {
-+		dev_err(hba->dev,
-+			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
-+			__func__, tag, cmd, cmd->request);
-+		BUG();
-+	}
+-	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
+-		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
++	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
++	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
++	if (cdb_len < MAX_CDB_SIZE)
++		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
++		       (MAX_CDB_SIZE - cdb_len));
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
  
- 	ufshcd_hold(hba, false);
-+	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	/* If command is already aborted/completed, return SUCCESS */
--	if (!(test_bit(tag, &hba->outstanding_reqs)))
-+	if (!(test_bit(tag, &hba->outstanding_reqs))) {
-+		dev_err(hba->dev,
-+			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
-+			__func__, tag, hba->outstanding_reqs, reg);
- 		goto out;
-+	}
- 
--	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	if (!(reg & (1 << tag))) {
- 		dev_err(hba->dev,
- 		"%s: cmd was completed, but without a notifying intr, tag = %d",
+ /**
 -- 
 1.8.5.2
 
