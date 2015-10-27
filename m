@@ -1,162 +1,97 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] scsi: restart list search after unlock in
- scsi_remove_target
-Date: Tue, 27 Oct 2015 13:14:40 -0700
-Message-ID: <562FDB30.1060304@sandisk.com>
-References: <20151019143546.GA7486@lst.de> <1445848537.16404.26.camel@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0077.outbound.protection.outlook.com ([207.46.100.77]:31621
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965031AbbJ0UOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Oct 2015 16:14:45 -0400
-In-Reply-To: <1445848537.16404.26.camel@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Laura Abbott <labbott@fedoraproject.org>
+Subject: [PATCH] scsi_dh: Use module_request_nowait
+Date: Tue, 27 Oct 2015 14:45:23 -0700
+Message-ID: <1445982323-1162-1-git-send-email-labbott@fedoraproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Laura Abbott <labbott@fedoraproject.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Mackerras <paulus@ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On 10/26/2015 01:35 AM, Johannes Thumshirn wrote:
-> I haven't heard anything from the original reporter of the lockup but
-> my test's went all O.K., so
-> 
-> Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+We recevied a bugzilla report:
 
-Hello Christoph and Johannes,
+Additional info:
+reporter: libreport-2.6.3
+WARNING: CPU: 3 PID: 10195 at kernel/kmod.c:140
+__request_module+0x214/0x330()
+Modules linked in: uas usb_storage xfs libcrc32c vhost_net vhost macvtap
+macvlan bnep bluetooth pppoe pppox ppp_generic slhc xt_CHECKSUM
+ipt_MASQUERADE nf_nat_masquerade_ipv4 tun ip6t_rpfilter ip6t_REJECT
+nf_reject_ipv6 xt_conntrack ebtable_nat ebtable_filter ebtable_broute
+bridge ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6
+nf_nat_ipv6 ip6table_raw ip6table_security ip6table_mangle
+ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
+nf_nat_ipv4 nf_nat nf_conntrack iptable_raw iptable_security
+iptable_mangle vfat fat joydev snd_hda_codec_realtek
+snd_hda_codec_generic snd_hda_codec_hdmi snd_hda_intel btrfs
+snd_hda_codec snd_hda_core snd_hwdep xor snd_seq raid6_pq intel_rapl
+iosf_mbi eeepc_wmi x86_pkg_temp_thermal coretemp iTCO_wdt
+iTCO_vendor_support kvm_intel
+snd_seq_device asus_wmi sparse_keymap snd_pcm rfkill mxm_wmi kvm
+crct10dif_pclmul snd_timer crc32_pclmul crc32c_intel snd mei_me mei
+i2c_i801 lpc_ich soundcore shpchp soc_button_array tpm_infineon tpm_tis
+tpm wmi nfsd auth_rpcgss nfs_acl lockd grace sunrpc 8021q garp stp llc
+mrp i915 i2c_algo_bit serio_raw drm_kms_helper e1000e drm ptp pps_core
+fjes video
+CPU: 3 PID: 10195 Comm: kworker/u16:2 Not tainted
+4.3.0-0.rc6.git2.1.fc24.x86_64 #1
+Hardware name: ASUS All Series/Z87-PLUS, BIOS 1207 07/01/2013
+Workqueue: events_unbound async_run_entry_fn
+0000000000000000 0000000059576eea ffff880227a67b58 ffffffff81419a49
+0000000000000000 ffff880227a67b90 ffffffff810a9c12 ffffffff81ce2ee5
+0000000000000001 ffff88003f587000 0000000000000000 0000000000000000
+Call Trace:
+[<ffffffff81419a49>] dump_stack+0x4b/0x72
+[<ffffffff810a9c12>] warn_slowpath_common+0x82/0xc0
+[<ffffffff810a9d5a>] warn_slowpath_null+0x1a/0x20
+[<ffffffff810c3f64>] __request_module+0x214/0x330
+[<ffffffff81123a8d>] ? debug_lockdep_rcu_enabled+0x1d/0x20
+[<ffffffff815bb32e>] scsi_dh_lookup+0x2e/0x40
+[<ffffffff815bb870>] scsi_dh_add_device+0xd0/0x100
+[<ffffffff815b766e>] scsi_sysfs_add_sdev+0xbe/0x2a0
+[<ffffffff815a82e6>] ? __scsi_iterate_devices+0x66/0xd0
+[<ffffffff815b5e5e>] do_scan_async+0x12e/0x170
+[<ffffffff810d355a>] async_run_entry_fn+0x4a/0x140
+[<ffffffff810c8470>] process_one_work+0x230/0x6a0
+[<ffffffff810c83d9>] ? process_one_work+0x199/0x6a0
+[<ffffffff810c892e>] worker_thread+0x4e/0x450
+[<ffffffff810c88e0>] ? process_one_work+0x6a0/0x6a0
+[<ffffffff810c88e0>] ? process_one_work+0x6a0/0x6a0
+[<ffffffff810cf981>] kthread+0x101/0x120
+[<ffffffff81104fb9>] ? trace_hardirqs_on_caller+0x129/0x1b0
+[<ffffffff810cf880>] ? kthread_create_on_node+0x250/0x250
+[<ffffffff81862a6f>] ret_from_fork+0x3f/0x70
+[<ffffffff810cf880>] ? kthread_create_on_node+0x250/0x250
 
-How about the patch below, which is a variant of Christoph's patch ?
+The warning that is tripped is
 
-Thanks,
+WARN_ON_ONCE(wait && current_is_async());
 
-Bart.
+The module request is happening in an asynchronous thread
+but the request is waiting. Switch to request_module_nowait
+instead.
 
-[PATCH] scsi: Restart list search after unlock in scsi_remove_target
-
-When dropping a lock while iterating a list we must restart the search
-as other threads could have manipulated the list under us.  Without this
-we can get stuck in an endless loop. Introduce a new member variable
-"visible" in struct scsi_target to track presence in sysfs.
-
-Reported-by: Johannes Thumshirn <jthumshirn@suse.de>
+Fixes: 566079c849cf ("dm-mpath, scsi_dh: request scsi_dh modules in scsi_dh, not dm-mpath")
+Reported-by: mustafa1024m@gmail.com
+Signed-off-by: Laura Abbott <labbott@fedoraproject.org>
 ---
- drivers/scsi/scsi_scan.c   | 16 +++-------------
- drivers/scsi/scsi_sysfs.c  | 19 ++++++-------------
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 10 insertions(+), 26 deletions(-)
+Not actually tested, just an attempt at a patch from the backtrace
+---
+ drivers/scsi/scsi_dh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f9f3f82..7b74470 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -314,7 +314,6 @@ static void scsi_target_destroy(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
- 	unsigned long flags;
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 0a2168e..5c945b4 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -111,7 +111,7 @@ static struct scsi_device_handler *scsi_dh_lookup(const char *name)
  
--	starget->state = STARGET_DEL;
- 	transport_destroy_device(dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (shost->hostt->target_destroy)
-@@ -379,12 +378,8 @@ static void scsi_target_reap_ref_release(struct kref *kref)
- 	struct scsi_target *starget
- 		= container_of(kref, struct scsi_target, reap_ref);
- 
--	/*
--	 * if we get here and the target is still in the CREATED state that
--	 * means it was allocated but never made visible (because a scan
--	 * turned up no LUNs), so don't call device_del() on it.
--	 */
--	if (starget->state != STARGET_CREATED) {
-+	if (starget->visible) {
-+		starget->visible = false;
- 		transport_remove_device(&starget->dev);
- 		device_del(&starget->dev);
+ 	dh = __scsi_dh_lookup(name);
+ 	if (!dh) {
+-		request_module("scsi_dh_%s", name);
++		request_module_nowait("scsi_dh_%s", name);
+ 		dh = __scsi_dh_lookup(name);
  	}
-@@ -507,12 +502,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
-  */
- void scsi_target_reap(struct scsi_target *starget)
- {
--	/*
--	 * serious problem if this triggers: STARGET_DEL is only set in the if
--	 * the reap_ref drops to zero, so we're trying to do another final put
--	 * on an already released kref
--	 */
--	BUG_ON(starget->state == STARGET_DEL);
-+	starget->state = STARGET_DEL;
- 	scsi_target_reap_ref_put(starget);
- }
  
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5e085d4..de8e202 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -974,7 +974,7 @@ static int scsi_target_add(struct scsi_target *starget)
- {
- 	int error;
- 
--	if (starget->state != STARGET_CREATED)
-+	if (starget->visible)
- 		return 0;
- 
- 	error = device_add(&starget->dev);
-@@ -983,6 +983,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 		return error;
- 	}
- 	transport_add_device(&starget->dev);
-+	starget->visible = true;
- 	starget->state = STARGET_RUNNING;
- 
- 	pm_runtime_set_active(&starget->dev);
-@@ -1166,31 +1167,23 @@ static void __scsi_remove_target(struct scsi_target *starget)
- void scsi_remove_target(struct device *dev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
--	struct scsi_target *starget, *last = NULL;
-+	struct scsi_target *starget;
- 	unsigned long flags;
- 
--	/* remove targets being careful to lookup next entry before
--	 * deleting the last
--	 */
-+restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(starget, &shost->__targets, siblings) {
- 		if (starget->state == STARGET_DEL)
- 			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
--			/* assuming new targets arrive at the end */
- 			kref_get(&starget->reap_ref);
- 			spin_unlock_irqrestore(shost->host_lock, flags);
--			if (last)
--				scsi_target_reap(last);
--			last = starget;
- 			__scsi_remove_target(starget);
--			spin_lock_irqsave(shost->host_lock, flags);
-+			scsi_target_reap(starget);
-+			goto restart;
- 		}
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--
--	if (last)
--		scsi_target_reap(last);
- }
- EXPORT_SYMBOL(scsi_remove_target);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index fe89d7c..d5a5f21 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -267,6 +267,7 @@ struct scsi_target {
- 	unsigned int		expecting_lun_change:1;	/* A device has reported
- 						 * a 3F/0E UA, other devices on
- 						 * the same target will also. */
-+	unsigned int		visible:1; /* visible in sysfs */
- 	/* commands actually active on LLD. */
- 	atomic_t		target_busy;
- 	atomic_t		target_blocked;
 -- 
-2.1.4
-
+2.4.3
