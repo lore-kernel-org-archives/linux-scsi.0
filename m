@@ -1,118 +1,85 @@
 From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 08/15] scsi: ufs: add retries to dme_peer get and set
- attribute
-Date: Tue, 27 Oct 2015 14:58:50 -0000
-Message-ID: <b562bae0cda7256d52ac58fddce9f92c.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v5 09/15] scsi: ufs: add retries for hibern8 enter
+Date: Tue, 27 Oct 2015 14:59:03 -0000
+Message-ID: <cda88f83b6088de3fbc96de4f2f8a0df.squirrel@www.codeaurora.org>
 References: <1445942657-6293-1-git-send-email-ygardi@codeaurora.org>
-    <1445942657-6293-9-git-send-email-ygardi@codeaurora.org>
+    <1445942657-6293-10-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445942657-6293-9-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1445942657-6293-10-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
+Cc: robherring2@gmail.com, james.bottomley@hansenpartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 
-> The dme_peer get/set attribute commands are prone to errors, therefore
-> we add three retries for the UIC command sending.
-> Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-> it was successful or the retries have finished, another command will be
-> sent.
+> If hibern8 enter command fails then UFS link state may be unknown which
+> may result into timeout of all the commands issued after failure.
 >
-> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+> This change does 2 things (for pre-defined number of retry counts) after
+> hibern8 enter failure:
+> 1. Recovers the UFS link to active state
+> 2. If link is recovered to active state, tries to put the UFS link in
+>    hibern8 enter again until retry count expires.
+>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 >
 > ---
->  drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
->  1 file changed, 29 insertions(+), 11 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
+>  1 file changed, 24 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8a04691..5005d12 100644
+> index 5005d12..ed134d6 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -70,6 +70,9 @@
->  /* Task management command timeout */
->  #define TM_CMD_TIMEOUT	100 /* msecs */
->
-> +/* maximum number of retries for a general UIC command  */
-> +#define UFS_UIC_COMMAND_RETRIES 3
-> +
+> @@ -76,6 +76,9 @@
 >  /* maximum number of link-startup retries */
 >  #define DME_LINKSTARTUP_RETRIES 3
 >
-> @@ -2185,6 +2188,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32
-> attr_sel,
->  	};
->  	const char *set = action[!!peer];
->  	int ret;
-> +	int retries = UFS_UIC_COMMAND_RETRIES;
->
->  	uic_cmd.command = peer ?
->  		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-> @@ -2192,10 +2196,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32
-> attr_sel,
->  	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
->  	uic_cmd.argument3 = mib_val;
->
-> -	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> -	if (ret)
-> -		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-> -			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-> +	do {
-> +		/* for peer attributes we retry upon failure */
-> +		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +		if (ret)
-> +			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-> +				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-> +	} while (ret && peer && --retries);
+> +/* Maximum retries for Hibern8 enter */
+> +#define UIC_HIBERN8_ENTER_RETRIES 3
 > +
-> +	if (!retries)
-> +		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-> +				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-> +				retries);
+>  /* maximum number of reset retries before giving up */
+>  #define MAX_HOST_RESET_RETRIES 5
 >
+> @@ -2390,13 +2393,32 @@ out:
 >  	return ret;
 >  }
-> @@ -2220,6 +2232,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32
-> attr_sel,
->  	};
->  	const char *get = action[!!peer];
->  	int ret;
-> +	int retries = UFS_UIC_COMMAND_RETRIES;
->  	struct ufs_pa_layer_attr orig_pwr_info;
->  	struct ufs_pa_layer_attr temp_pwr_info;
->  	bool pwr_mode_change = false;
-> @@ -2250,14 +2263,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32
-> attr_sel,
->  		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
->  	uic_cmd.argument1 = attr_sel;
 >
-> -	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> -	if (ret) {
-> -		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> -			get, UIC_GET_ATTR_ID(attr_sel), ret);
-> -		goto out;
-> -	}
-> +	do {
-> +		/* for peer attributes we retry upon failure */
-> +		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +		if (ret)
-> +			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-> +				get, UIC_GET_ATTR_ID(attr_sel), ret);
-> +	} while (ret && peer && --retries);
+> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+> +static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>  {
+> +	int ret;
+>  	struct uic_command uic_cmd = {0};
+>
+>  	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+> +	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
 > +
-> +	if (!retries)
-> +		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-> +				get, UIC_GET_ATTR_ID(attr_sel), retries);
+> +	if (ret)
+> +		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
+> +			__func__, ret);
+> +
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+> +{
+> +	int ret = 0, retries;
 >
-> -	if (mib_val)
-> +	if (mib_val && !ret)
->  		*mib_val = uic_cmd.argument3;
+> -	return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+> +	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
+> +		ret = __ufshcd_uic_hibern8_enter(hba);
+> +		if (!ret || ret == -ENOLINK)
+> +			goto out;
+> +	}
+> +out:
+> +	return ret;
+>  }
 >
->  	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+>  static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
 > --
 > 1.8.5.2
 >
