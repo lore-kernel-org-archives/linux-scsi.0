@@ -1,106 +1,143 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 3/3] megaraid_sas: return -ENOMEM when create DMA pool
- for cmd frames failed
-Date: Tue, 27 Oct 2015 11:17:06 +0100
-Message-ID: <1445941026.16404.35.camel@suse.de>
-References: <1445934375-17784-1-git-send-email-wangweidong1@huawei.com>
-	 <1445934375-17784-4-git-send-email-wangweidong1@huawei.com>
+From: ygardi@codeaurora.org
+Subject: Re: [PATCH v3 13/15] scsi: ufs: add missing memory barriers
+Date: Tue, 27 Oct 2015 10:21:40 -0000
+Message-ID: <4fd71de3dfabec4d177d2b556f779756.squirrel@www.codeaurora.org>
+References: <1441188795-4600-1-git-send-email-ygardi@codeaurora.org>
+    <1441188795-4600-14-git-send-email-ygardi@codeaurora.org>
+    <CAC5umyhkAdEjtFd+r3EOKfkPdFgfZ5juH0Wg2983=UqUSzkD7Q@mail.gmail.com>
+    <191698899544068194e28246454c2613.squirrel@www.codeaurora.org>
+    <CAC5umygdHdYt7OuJyxg=-77bA5GctO9OgrUCGo9iY-ukjkxQUA@mail.gmail.com>
+    <e8df00bf987f9d15d0da562498670dd7.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445934375-17784-4-git-send-email-wangweidong1@huawei.com>
+In-Reply-To: <e8df00bf987f9d15d0da562498670dd7.squirrel@www.codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Weidong Wang <wangweidong1@huawei.com>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, JBottomley@odin.com
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>, Rob Herring <robherring2@gmail.com>, Jej B <james.bottomley@hansenpartnership.com>, Paul Bolle <pebolle@tiscali.nl>, Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2015-10-27 at 16:26 +0800, Weidong Wang wrote:
-> when create DMA pool for cmd frames failed, we should return -ENOMEM,
-> instead of 0.
-> In some case in:
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0megasas_init_adapter_fusion()
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0-->megasas_alloc_cmds()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0-->megasas_create_frame_poo=
-l
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0create DM=
-A pool failed,
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0--> megasas_free_cmds=
-() [1]
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0-->megasas_alloc_cmds_fusion()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0failed, then goto fail_allo=
-c_cmds.
-> =C2=A0=C2=A0=C2=A0=C2=A0-->megasas_free_cmds() [2]
->=20
-> we will call megasas_free_cmds twice, [1] will kfree cmd_list,
-> [2] will use cmd_list.it will cause a problem:
->=20
-> Unable to handle kernel NULL pointer dereference at virtual address
-> 00000000
-> pgd =3D ffffffc000f70000
-> [00000000] *pgd=3D0000001fbf893003, *pud=3D0000001fbf893003,
-> *pmd=3D0000001fbf894003, *pte=3D006000006d000707
-> Internal error: Oops: 96000005 [#1] SMP
-> =C2=A0Modules linked in:
-> =C2=A0CPU: 18 PID: 1 Comm: swapper/0 Not tainted
-> =C2=A0task: ffffffdfb9290000 ti: ffffffdfb923c000 task.ti:
-> ffffffdfb923c000
-> =C2=A0PC is at megasas_free_cmds+0x30/0x70
-> =C2=A0LR is at megasas_free_cmds+0x24/0x70
->=20
-> =C2=A0...
->=20
-> =C2=A0Call trace:
-> =C2=A0[<ffffffc0005b779c>] megasas_free_cmds+0x30/0x70
-> =C2=A0[<ffffffc0005bca74>] megasas_init_adapter_fusion+0x2f4/0x4d8
-> =C2=A0[<ffffffc0005b926c>] megasas_init_fw+0x2dc/0x760
-> =C2=A0[<ffffffc0005b9ab0>] megasas_probe_one+0x3c0/0xcd8
-> =C2=A0[<ffffffc0004a5abc>] local_pci_probe+0x4c/0xb4
-> =C2=A0[<ffffffc0004a5c40>] pci_device_probe+0x11c/0x14c
-> =C2=A0[<ffffffc00053a5e4>] driver_probe_device+0x1ec/0x430
-> =C2=A0[<ffffffc00053a92c>] __driver_attach+0xa8/0xb0
-> =C2=A0[<ffffffc000538178>] bus_for_each_dev+0x74/0xc8
-> =C2=A0 [<ffffffc000539e88>] driver_attach+0x28/0x34
-> =C2=A0[<ffffffc000539a18>] bus_add_driver+0x16c/0x248
-> =C2=A0[<ffffffc00053b234>] driver_register+0x6c/0x138
-> =C2=A0[<ffffffc0004a5350>] __pci_register_driver+0x5c/0x6c
-> =C2=A0[<ffffffc000ce3868>] megasas_init+0xc0/0x1a8
-> =C2=A0[<ffffffc000082a58>] do_one_initcall+0xe8/0x1ec
-> =C2=A0[<ffffffc000ca7be8>] kernel_init_freeable+0x1c8/0x284
-> =C2=A0[<ffffffc0008d90b8>] kernel_init+0x1c/0xe4
->=20
-> Signed-off-by: Weidong Wang <wangweidong1@huawei.com>
-> ---
-> =C2=A0drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
-> =C2=A01 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 2287aa1..8215218 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -3746,8 +3746,9 @@ int megasas_alloc_cmds(struct megasas_instance
-> *instance)
-> =C2=A0	=C2=A0* Create a frame pool and assign one frame to each cmd
-> =C2=A0	=C2=A0*/
-> =C2=A0	if (megasas_create_frame_pool(instance)) {
-> -		dev_dbg(&instance->pdev->dev, "Error creating frame
-> DMA pool\n");
-> +		dev_err(&instance->pdev->dev, "Error creating frame
-> DMA pool\n");
-> =C2=A0		megasas_free_cmds(instance);
-> +		return -ENOMEM;
-> =C2=A0	}
-> =C2=A0
-> =C2=A0	return 0;
+>> 2015-10-25 23:40 GMT+09:00  <ygardi@codeaurora.org>:
+>>>> 2015-09-02 19:13 GMT+09:00 Yaniv Gardi <ygardi@codeaurora.org>:
+>>>>> Performing several writes to UFS host controller registers has
+>>>>> no gurrantee of ordering, so we must make sure register writes
+>>>>> to setup request list base address etc. are performed before the
+>>>>> run/stop register is enabled.
+>>>>> In addition, when setting up a task request, we must make sure
+>>>>> the updating of descriptors takes places before ringing the
+>>>>> doorbell, similarly to setting up a transfer request.
+>>>>>
+>>>>> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+>>>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>>>>
+>>>>> ---
+>>>>>  drivers/scsi/ufs/ufshcd.c | 21 +++++++++++++++------
+>>>>>  1 file changed, 15 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>>>> index fc2a52d..298511a 100644
+>>>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>>>> @@ -401,11 +401,9 @@ static inline int ufshcd_get_lists_status(u32
+>>>>> reg)
+>>>>>          *  1           UTRLRDY
+>>>>>          *  2           UTMRLRDY
+>>>>>          *  3           UCRDY
+>>>>> -        *  4           HEI
+>>>>> -        *  5           DEI
+>>>>> -        * 6-7          reserved
+>>>>> +        * 4-7          reserved
+>>>>>          */
+>>>>> -       return (((reg) & (0xFF)) >> 1) ^ (0x07);
+>>>>> +       return ((reg & 0xFF) >> 1) ^ 0x07;
+>>>>>  }
+>>>>>
+>>>>>  /**
+>>>>> @@ -2726,7 +2724,7 @@ out:
+>>>>>   * To bring UFS host controller to operational state,
+>>>>>   * 1. Enable required interrupts
+>>>>>   * 2. Configure interrupt aggregation
+>>>>> - * 3. Program UTRL and UTMRL base addres
+>>>>> + * 3. Program UTRL and UTMRL base address
+>>>>>   * 4. Configure run-stop-registers
+>>>>>   *
+>>>>>   * Returns 0 on success, non-zero value on failure
+>>>>> @@ -2756,8 +2754,13 @@ static int ufshcd_make_hba_operational(struct
+>>>>> ufs_hba *hba)
+>>>>>                         REG_UTP_TASK_REQ_LIST_BASE_H);
+>>>>>
+>>>>>         /*
+>>>>> +        * Make sure base address and interrupt setup are updated
+>>>>> before
+>>>>> +        * enabling the run/stop registers below.
+>>>>> +        */
+>>>>> +       wmb();
+>>>>> +
+>>>>> +       /*
+>>>>>          * UCRDY, UTMRLDY and UTRLRDY bits must be 1
+>>>>> -        * DEI, HEI bits must be 0
+>>>>>          */
+>>>>>         reg = ufshcd_readl(hba, REG_CONTROLLER_STATUS);
+>>>>>         if (!(ufshcd_get_lists_status(reg))) {
+>>>>> @@ -3920,7 +3923,13 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba
+>>>>> *hba, int lun_id, int task_id,
+>>>>>
+>>>>>         /* send command to the controller */
+>>>>>         __set_bit(free_slot, &hba->outstanding_tasks);
+>>>>> +
+>>>>> +       /* Make sure descriptors are ready before ringing the task
+>>>>> doorbell */
+>>>>> +       wmb();
+>>>>> +
+>>>>>         ufshcd_writel(hba, 1 << free_slot,
+>>>>> REG_UTP_TASK_REQ_DOOR_BELL);
+>>>>> +       /* Make sure that doorbell is committed immediately */
+>>>>> +       wmb();
+>>>>
+>>>> Is this wmb() after ringing tm doorbell is needed?
+>>>
+>>> Well, Mita, in the case of DB register (Request DB and TASK DB), every
+>>> write operation to the DB should be barrier, as if not, out of order
+>>> writing to this register might cause inconsistency in its value, and
+>>> thus,
+>>> un-handled requests/tasks.
+>>
+>> I couldn't fully understand why out of order writing to TASK DB
+>> register causes inconsistency.
+>> In the TASK request completion (ufshcd_tmc_handler), TASK DB register
+>> is read before handling finished requests, so it ensures that all
+>> write operations for TASK DB have been performed.
+>>
+>
+> thanks, Mita
+> your explanation makes sense.
+> It will be fixed in v4.
+>
 
-I think this is needed for stable as well.
+sorry, it will fixed in v5.
 
-Other than that,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Yaniv
 
-Thanks,
-	Johannes
+>
+>>>>
+>>>>>
+>>>>>         spin_unlock_irqrestore(host->host_lock, flags);
+>>>>>
+>>>>> --
+>>>>> 1.8.5.2
+>>>>>
+>>>>> --
+>>>>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a
+>>>>> member of Code Aurora Forum, hosted by The Linux Foundation
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>>>>> in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>>
+>>
+>
+>
+>
