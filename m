@@ -1,120 +1,135 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 1 09/25] hpsa: fix physical target reset
-Date: Wed, 28 Oct 2015 17:05:24 -0500
-Message-ID: <20151028220524.5323.29044.stgit@brunhilda>
+Subject: [PATCH 1 10/25] hpsa: correct check for non-disk devices
+Date: Wed, 28 Oct 2015 17:05:30 -0500
+Message-ID: <20151028220530.5323.72852.stgit@brunhilda>
 References: <20151028215206.5323.84194.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:58948 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:58974 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756337AbbJ1WJK (ORCPT
+	by vger.kernel.org with ESMTP id S1756347AbbJ1WJQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Oct 2015 18:09:10 -0400
+	Wed, 28 Oct 2015 18:09:16 -0400
 In-Reply-To: <20151028215206.5323.84194.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Scott Teel <scott.teel@pmcs.com>
+The driver is using two MACROs which seemingly are looking in
+the wrong location for the device_flags returned from
+CISS_REPORT_PHYS. Both MACROs, NON_DISK_PHYS_DEV and
+PHYS_IOACCEL, are using the pointer returned from figure_lunaddrbytes
+which is the address of the LUN.lunid element in
+the extended CISS_REPORT_PHYS.  But the MACROS are using offsets
+beyond the range of the element (offset 17 of an 8 byte element).
 
-Set reset type in device_reset_handler to do either
-logical unit reset for logical devices, or physical
-target reset, for physical devices.
+These MACROs actually are looking at the correct location but
+they fail static checker analysis. It also will not work
+if any new elements are added to the extended LUN structure.
 
+Change the code to use the structure elements directly
+since this MACRO is only used in one location.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   34 ++++++++++++++++++++++++++++------
- drivers/scsi/hpsa.h |    1 +
- 2 files changed, 29 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.c     |   28 +++++++++++++++-------------
+ drivers/scsi/hpsa_cmd.h |    2 --
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 08a761c..67136fb 100644
+index 67136fb..3973fb3 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2746,9 +2746,8 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 
- 
- 	/* fill_cmd can't fail here, no data buffer to map. */
--	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
-+	(void) fill_cmd(c, reset_type, h, NULL, 0, 0,
- 			scsi3addr, TYPE_MSG);
--	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to LUN reset */
- 	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
- 	if (rc) {
- 		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
-@@ -5216,6 +5215,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+@@ -3690,19 +3690,18 @@ static u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position,
+ /* get physical drive ioaccel handle and queue depth */
+ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
+ 		struct hpsa_scsi_dev_t *dev,
+-		u8 *lunaddrbytes,
++		struct ReportExtendedLUNdata *rlep, int rle_index,
+ 		struct bmic_identify_physical_device *id_phys)
+ {
  	int rc;
- 	struct ctlr_info *h;
- 	struct hpsa_scsi_dev_t *dev;
-+	u8 reset_type;
- 	char msg[48];
+-	struct ext_report_lun_entry *rle =
+-		(struct ext_report_lun_entry *) lunaddrbytes;
++	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
  
- 	/* find the controller to which the command to be aborted was sent */
-@@ -5254,15 +5254,23 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	if (is_hba_lunid(dev->scsi3addr))
- 		return SUCCESS;
+ 	dev->ioaccel_handle = rle->ioaccel_handle;
+-	if (PHYS_IOACCEL(lunaddrbytes) && dev->ioaccel_handle)
++	if ((rle->device_flags & 0x08) && dev->ioaccel_handle)
+ 		dev->hba_ioaccel_enabled = 1;
+ 	memset(id_phys, 0, sizeof(*id_phys));
+-	rc = hpsa_bmic_id_physical_device(h, lunaddrbytes,
+-			GET_BMIC_DRIVE_NUMBER(lunaddrbytes), id_phys,
++	rc = hpsa_bmic_id_physical_device(h, &rle->lunid[0],
++			GET_BMIC_DRIVE_NUMBER(&rle->lunid[0]), id_phys,
+ 			sizeof(*id_phys));
+ 	if (!rc)
+ 		/* Reserve space for FW operations */
+@@ -3716,11 +3715,12 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
+ }
  
--	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
-+	if (is_logical_dev_addr_mode(dev->scsi3addr))
-+		reset_type = HPSA_DEVICE_RESET_MSG;
-+	else
-+		reset_type = HPSA_PHYS_TARGET_RESET;
+ static void hpsa_get_path_info(struct hpsa_scsi_dev_t *this_device,
+-	u8 *lunaddrbytes,
++	struct ReportExtendedLUNdata *rlep, int rle_index,
+ 	struct bmic_identify_physical_device *id_phys)
+ {
+-	if (PHYS_IOACCEL(lunaddrbytes)
+-		&& this_device->ioaccel_handle)
++	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
 +
-+	sprintf(msg, "resetting %s",
-+		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ");
-+	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
++	if ((rle->device_flags & 0x08) && this_device->ioaccel_handle)
+ 		this_device->hba_ioaccel_enabled = 1;
  
- 	h->reset_in_progress = 1;
+ 	memcpy(&this_device->active_path_index,
+@@ -3820,6 +3820,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	for (i = 0; i < nphysicals + nlogicals + 1; i++) {
+ 		u8 *lunaddrbytes, is_OBDR = 0;
+ 		int rc = 0;
++		int phys_dev_index = i - (raid_ctlr_position == 0);
  
- 	/* send a reset to the SCSI LUN which the command was sent to */
--	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
-+	rc = hpsa_do_reset(h, dev, dev->scsi3addr, reset_type,
- 			   DEFAULT_REPLY_QUEUE);
--	snprintf(msg, sizeof(msg), "reset %s",
--		 rc == 0 ? "completed successfully" : "failed");
-+	sprintf(msg, "reset %s %s",
-+		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ",
-+		rc == 0 ? "completed successfully" : "failed");
- 	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
- 	h->reset_in_progress = 0;
- 	return rc == 0 ? SUCCESS : FAILED;
-@@ -6379,6 +6387,20 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	} else if (cmd_type == TYPE_MSG) {
- 		switch (cmd) {
+ 		/* Figure out where the LUN ID info is coming from */
+ 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
+@@ -3828,7 +3829,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		/* skip masked non-disk devices */
+ 		if (MASKED_DEVICE(lunaddrbytes))
+ 			if (i < nphysicals + (raid_ctlr_position == 0) &&
+-				NON_DISK_PHYS_DEV(lunaddrbytes))
++				(physdev_list->
++				LUN[phys_dev_index].device_flags & 0x01))
+ 				continue;
  
-+		case  HPSA_PHYS_TARGET_RESET:
-+			c->Request.CDBLen = 16;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_NONE);
-+			c->Request.Timeout = 0; /* Don't time out */
-+			memset(&c->Request.CDB[0], 0, sizeof(c->Request.CDB));
-+			c->Request.CDB[0] = HPSA_RESET;
-+			c->Request.CDB[1] = HPSA_TARGET_RESET_TYPE;
-+			/* Physical target reset needs no control bytes 4-7*/
-+			c->Request.CDB[4] = 0x00;
-+			c->Request.CDB[5] = 0x00;
-+			c->Request.CDB[6] = 0x00;
-+			c->Request.CDB[7] = 0x00;
-+			break;
- 		case  HPSA_DEVICE_RESET_MSG:
- 			c->Request.CDBLen = 16;
- 			c->Request.type_attr_dir =
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index dc113c1a..04f98eb 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -285,6 +285,7 @@ struct offline_device_entry {
- #define HPSA_RESET_TYPE_BUS 0x01
- #define HPSA_RESET_TYPE_TARGET 0x03
- #define HPSA_RESET_TYPE_LUN 0x04
-+#define HPSA_PHYS_TARGET_RESET 0x99 /* not defined by cciss spec */
- #define HPSA_MSG_SEND_RETRY_LIMIT 10
- #define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS (10000)
- 
+ 		/* Get device type, vendor, model, device id */
+@@ -3893,9 +3895,9 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 				/* Never use RAID mapper in HBA mode. */
+ 				this_device->offload_enabled = 0;
+ 				hpsa_get_ioaccel_drive_info(h, this_device,
+-					lunaddrbytes, id_phys);
+-				hpsa_get_path_info(this_device, lunaddrbytes,
+-							id_phys);
++					physdev_list, phys_dev_index, id_phys);
++				hpsa_get_path_info(this_device,
++					physdev_list, phys_dev_index, id_phys);
+ 			}
+ 			ncurrent++;
+ 			break;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 47c756b..c2c0737 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -260,8 +260,6 @@ struct ext_report_lun_entry {
+ 	u8 wwid[8];
+ 	u8 device_type;
+ 	u8 device_flags;
+-#define NON_DISK_PHYS_DEV(x) ((x)[17] & 0x01)
+-#define PHYS_IOACCEL(x) ((x)[17] & 0x08)
+ 	u8 lun_count; /* multi-lun device, how many luns */
+ 	u8 redundant_paths;
+ 	u32 ioaccel_handle; /* ioaccel1 only uses lower 16 bits */
 
