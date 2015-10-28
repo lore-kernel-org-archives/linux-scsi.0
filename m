@@ -1,114 +1,56 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 08/15] scsi: ufs: add retries to dme_peer get and set attribute
-Date: Wed, 28 Oct 2015 15:13:58 +0200
-Message-ID: <1446038045-17102-9-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 06/15] scsi: ufs: avoid exception event handler racing with PM callbacks
+Date: Wed, 28 Oct 2015 15:13:56 +0200
+Message-ID: <1446038045-17102-7-git-send-email-ygardi@codeaurora.org>
 References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45768 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965415AbbJ1NOq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2015 09:14:46 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+List-Id: linux-scsi@vger.kernel.org
 
-The dme_peer get/set attribute commands are prone to errors, therefore
-we add three retries for the UIC command sending.
-Error code returned from ufshcd_send_uic_cmd() is checked, and unless
-it was successful or the retries have finished, another command will be
-sent.
+If device raises the exception event in the response to the commands
+sent during the runtime/system PM callbacks, exception event handler
+might run in parallel with PM callbacks and may see unclocked register
+accesses. This change fixes this issue by not scheduling the exception
+event handler while PM callbacks are running.
 
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8a04691..5005d12 100644
+index 573a8cb..0e54183 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -70,6 +70,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -3145,7 +3145,20 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			scsi_status = result & MASK_SCSI_STATUS;
+ 			result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
  
-+/* maximum number of retries for a general UIC command  */
-+#define UFS_UIC_COMMAND_RETRIES 3
-+
- /* maximum number of link-startup retries */
- #define DME_LINKSTARTUP_RETRIES 3
- 
-@@ -2185,6 +2188,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *set = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 
- 	uic_cmd.command = peer ?
- 		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
-@@ -2192,10 +2196,18 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
- 	uic_cmd.argument3 = mib_val;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret)
--		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
--			set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x val 0x%x failed %d retries\n",
-+				set, UIC_GET_ATTR_ID(attr_sel), mib_val,
-+				retries);
- 
- 	return ret;
- }
-@@ -2220,6 +2232,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 	};
- 	const char *get = action[!!peer];
- 	int ret;
-+	int retries = UFS_UIC_COMMAND_RETRIES;
- 	struct ufs_pa_layer_attr orig_pwr_info;
- 	struct ufs_pa_layer_attr temp_pwr_info;
- 	bool pwr_mode_change = false;
-@@ -2250,14 +2263,19 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
- 	uic_cmd.argument1 = attr_sel;
- 
--	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
--	if (ret) {
--		dev_err(hba->dev, "%s: attr-id 0x%x error code %d\n",
--			get, UIC_GET_ATTR_ID(attr_sel), ret);
--		goto out;
--	}
-+	do {
-+		/* for peer attributes we retry upon failure */
-+		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-+		if (ret)
-+			dev_dbg(hba->dev, "%s: attr-id 0x%x error code %d\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), ret);
-+	} while (ret && peer && --retries);
-+
-+	if (!retries)
-+		dev_err(hba->dev, "%s: attr-id 0x%x failed %d retries\n",
-+				get, UIC_GET_ATTR_ID(attr_sel), retries);
- 
--	if (mib_val)
-+	if (mib_val && !ret)
- 		*mib_val = uic_cmd.argument3;
- 
- 	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+-			if (ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
++			/*
++			 * Currently we are only supporting BKOPs exception
++			 * events hence we can ignore BKOPs exception event
++			 * during power management callbacks. BKOPs exception
++			 * event is not expected to be raised in runtime suspend
++			 * callback as it allows the urgent bkops.
++			 * During system suspend, we are anyway forcefully
++			 * disabling the bkops and if urgent bkops is needed
++			 * it will be enabled on system resume. Long term
++			 * solution could be to abort the system suspend if
++			 * UFS device needs urgent BKOPs.
++			 */
++			if (!hba->pm_op_in_progress &&
++			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+ 				schedule_work(&hba->eeh_work);
+ 			break;
+ 		case UPIU_TRANSACTION_REJECT_UPIU:
 -- 
 1.8.5.2
 
