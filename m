@@ -1,7 +1,7 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 04/15] scsi: ufs: clear outstanding_request bit in case query timeout
-Date: Wed, 28 Oct 2015 15:13:54 +0200
-Message-ID: <1446038045-17102-5-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 09/15] scsi: ufs: add retries for hibern8 enter
+Date: Wed, 28 Oct 2015 15:13:59 +0200
+Message-ID: <1446038045-17102-10-git-send-email-ygardi@codeaurora.org>
 References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
@@ -10,69 +10,73 @@ To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscal
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When sending a query to the device returns with a timeout error,
-we clear the corresponding bit in the DOORBELL register but
-we don't clear the outstanding_request field as we should.
-This patch fixes this bug.
+If hibern8 enter command fails then UFS link state may be unknown which
+may result into timeout of all the commands issued after failure.
 
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+This change does 2 things (for pre-defined number of retry counts) after
+hibern8 enter failure:
+1. Recovers the UFS link to active state
+2. If link is recovered to active state, tries to put the UFS link in
+   hibern8 enter again until retry count expires.
+
 Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8860a57..e0b8755 100644
+index 5005d12..ed134d6 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -364,6 +364,16 @@ static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+@@ -76,6 +76,9 @@
+ /* maximum number of link-startup retries */
+ #define DME_LINKSTARTUP_RETRIES 3
+ 
++/* Maximum retries for Hibern8 enter */
++#define UIC_HIBERN8_ENTER_RETRIES 3
++
+ /* maximum number of reset retries before giving up */
+ #define MAX_HOST_RESET_RETRIES 5
+ 
+@@ -2390,13 +2393,32 @@ out:
+ 	return ret;
  }
  
- /**
-+ * ufshcd_outstanding_req_clear - Clear a bit in outstanding request field
-+ * @hba: per adapter instance
-+ * @tag: position of the bit to be cleared
-+ */
-+static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
-+{
-+	__clear_bit(tag, &hba->outstanding_reqs);
+-static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
++static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ {
++	int ret;
+ 	struct uic_command uic_cmd = {0};
+ 
+ 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
++	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
++
++	if (ret)
++		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
++			__func__, ret);
++
++	return ret;
 +}
 +
-+/**
-  * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
-  * @reg: Register value of host controller status
-  *
-@@ -1502,9 +1512,17 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
++static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
++{
++	int ret = 0, retries;
  
- 	if (!time_left) {
- 		err = -ETIMEDOUT;
-+		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
-+			__func__, lrbp->task_tag);
- 		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
--			/* sucessfully cleared the command, retry if needed */
-+			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
-+		/*
-+		 * in case of an error, after clearing the doorbell,
-+		 * we also need to clear the outstanding_request
-+		 * field in hba
-+		 */
-+		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
- 	}
+-	return ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
++	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
++		ret = __ufshcd_uic_hibern8_enter(hba);
++		if (!ret || ret == -ENOLINK)
++			goto out;
++	}
++out:
++	return ret;
+ }
  
- 	return err;
-@@ -3942,7 +3960,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	scsi_dma_unmap(cmd);
- 
- 	spin_lock_irqsave(host->host_lock, flags);
--	__clear_bit(tag, &hba->outstanding_reqs);
-+	ufshcd_outstanding_req_clear(hba, tag);
- 	hba->lrb[tag].cmd = NULL;
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
+ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
 -- 
 1.8.5.2
 
