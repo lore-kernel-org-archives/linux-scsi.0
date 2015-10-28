@@ -1,62 +1,27 @@
-From: Weidong Wang <wangweidong1@huawei.com>
-Subject: Re: [PATCH 1/3] megaraid_sas: Convert dev_printk to dev_<level>
-Date: Wed, 28 Oct 2015 09:59:49 +0800
-Message-ID: <56302C15.8000001@huawei.com>
-References: <1445934375-17784-1-git-send-email-wangweidong1@huawei.com>  <1445934375-17784-2-git-send-email-wangweidong1@huawei.com> <1445974556.2757.47.camel@perches.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 01/12] megaraid_sas : Expose TAPE drives unconditionally
+Date: Tue, 27 Oct 2015 22:13:36 -0400
+Message-ID: <yq1wpu791v3.fsf@sermon.lab.mkp.net>
+References: <201510150816.t9F8GgOq029543@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1445974556.2757.47.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, JBottomley@odin.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <201510150816.t9F8GgOq029543@palmhbs0.lsi.com> (sumit saxena's
+	message of "Thu, 15 Oct 2015 13:39:24 +0530")
+Sender: stable-owner@vger.kernel.org
+To: sumit.saxena@avagotech.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, kiran-kumar.kasturi@avagotech.com, uday.lingala@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 2015/10/28 3:35, Joe Perches wrote:
-> On Tue, 2015-10-27 at 16:26 +0800, Weidong Wang wrote:
->> Reduce object size a little by using dev_<level>
->> calls instead of dev_printk(KERN_<LEVEL>.
-> 
-> This is also not the same output.
-> 
-> dev_printk(KERN_DEBUG vs dev_dbg has the same
-> behavior as printk(KERN_DEBUG vs pr_debug
-> 
 
-yep, You are right.
+Sumit> Expose non-disk(TAPE drive, CD-ROM) unconditionally. This issue
+Sumit> is reported in Redhat Bugzilla [Bug 1254762].
 
-As Kashyap said, these two patches(Covert [dev_]printk to [dev|pr]_<level>) may
-introduced conflicts to their working for megaraid_sas.
-So just ignore these two patches.
+RH bugzilla is not public so I removed this blurb from the patch
+description.
 
-Regards,
-Weidong
+In the future, please drop the spaces after megaraid_sas in patch
+header. I fixed those up for now.
 
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> []
->> @@ -1884,7 +1884,7 @@ static int megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
->>  	cmd = megasas_get_cmd(instance);
->>  
->>  	if (!cmd) {
->> -		dev_printk(KERN_DEBUG, &instance->pdev->dev, "megasas_get_ld_vf_affiliation_111:"
->> +		dev_dbg(&instance->pdev->dev, "megasas_get_ld_vf_affiliation_111:"
->>  		       "Failed to get cmd for scsi%d\n",
->>  			instance->host->host_no);
->>  		return -ENOMEM;
-> []
->> @@ -5243,7 +5243,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
->>  					     &instance->consumer_h);
->>  
->>  		if (!instance->producer || !instance->consumer) {
->> -			dev_printk(KERN_DEBUG, &pdev->dev, "Failed to allocate"
->> +			dev_dbg(&pdev->dev, "Failed to allocate"
->>  			       "memory for producer, consumer\n");
-> 
-> Note the lack of a space between coalesced string segment words.
-> That's one of the reasons to coalesce them.
-> 
-> 
-> 
-> .
-> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
