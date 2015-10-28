@@ -1,79 +1,126 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: [PATCH] scsi: Set sg_tablesize to 1, for LLDDs that set SG_NONE
-Date: Wed, 28 Oct 2015 14:36:39 -0500
-Message-ID: <1446060999-49260-1-git-send-email-manoj@linux.vnet.ibm.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Blk-mq/scsi-mq Tuning
+Date: Wed, 28 Oct 2015 20:11:21 +0000
+Message-ID: <D256A425.229C0%chad.dupuis@qlogic.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_D256A425229C0chaddupuisqlogiccom_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:35006 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbbJ1ThF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2015 15:37:05 -0400
-Received: from localhost
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Wed, 28 Oct 2015 13:37:05 -0600
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id A5CD719D8026
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:25:12 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9SJZe2N12910868
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 12:35:40 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9SJb25i017160
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:37:02 -0600
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:1243 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751070AbbJ1ULY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Oct 2015 16:11:24 -0400
+Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t9SKBON5004243
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:11:24 -0700
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1xr8yp67dm-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:11:24 -0700
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Manoj Kumar <manoj@linux.vnet.ibm.com>, Youngjae Lee <leeyo@linux.vnet.ibm.com>
+To: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-Oops while testing blk_mq over the new cxlflash driver.
+--_000_D256A425229C0chaddupuisqlogiccom_
+Content-Type: text/plain; charset="Windows-1252"
+Content-ID: <8BD6868160485B458683CDE905F19D45@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-[ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
-[ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
-[ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
-[ 2960.817314] Call Trace:
-[ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
-[ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
-[ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
-[ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
-[ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
-[ 2960.817344] blk_finish_plug+0x58/0x80
-[ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
-[ 2960.817352] force_page_cache_readahead+0x68/0xd0
-[ 2960.817356] generic_file_read_iter+0x43c/0x6a0
-[ 2960.817359] blkdev_read_iter+0x68/0xa0
-[ 2960.817361] __vfs_read+0x11c/0x180
-[ 2960.817364] vfs_read+0xa4/0x1c0
-[ 2960.817366] SyS_read+0x6c/0x110
-[ 2960.817369] system_call+0x38/0xb4
+Hi Folks,
 
-The root cause of the problem was this low level device driver(LLDD),
-in this case cxlflash, does not support scatter-gather and hence had
-set it's sg_tablesize to SG_NONE (value of 0). In reality the tablesize
-is of length 1. This value of SG_NONE does not cause any problems with
-the standard block driver stack but causes issues for blk_mq, as shown
-above. Since quite a few of the legacy LLDDs are setting sg_tablesize
-to SG_NONE, it was preferable to override the LLDD provided value in
-scsi_host_alloc().
+We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if there wer=
+e
+any best practices in terms of block layer settings.  We=B9re looking
+specifically at the FCoE and iSCSI protocols.
 
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Signed-off-by: Youngjae Lee <leeyo@linux.vnet.ibm.com>
----
- drivers/scsi/hosts.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+A little background on the queues in our hardware first: we have a per
+connection transmit queue and multiple, global receive queues.  The
+transmit queues are not pegged to a particular CPU.  The receive queues
+are pegged to the first N CPUs where N is the number of receive queues.
+We set the nr_hw_queues in the scsi_host_template to N as well.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..bd13c9d 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -413,7 +413,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->hostt = sht;
- 	shost->this_id = sht->this_id;
- 	shost->can_queue = sht->can_queue;
--	shost->sg_tablesize = sht->sg_tablesize;
-+	shost->sg_tablesize = (sht->sg_tablesize ? sht->sg_tablesize : 1);
- 	shost->sg_prot_tablesize = sht->sg_prot_tablesize;
- 	shost->cmd_per_lun = sht->cmd_per_lun;
- 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
--- 
-2.1.0
+In our initial testing we=B9re not seeing the performance scale as we would
+expect so we wanted to see if there some =8Cknobs=B9 if you will that we co=
+uld
+try tuning to try to increase the performance.  Also, one question we did
+have is there an official API to be able to set the CPU affinity of the
+hw_ctx_queues?
 
+Thanks,
+Chad
+
+
+--_000_D256A425229C0chaddupuisqlogiccom_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+ImpKAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEE2NDg5MTk1
+NDYxRjJFNDhCOTdFRjA4QjExQkE5QjkxADAHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HCgAcABQA
+CwAVAAMAQwEBIIADAA4AAADfBwoAHAAUAAsAFQADAEMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABABYAAABCbGstbXEvc2NzaS1tcSBUdW5pbmcApQcBA5AGADQNAAAyAAAA
+AgF/AAEAAAAoAAAAPEQyNTZBNDI1LjIyOUMwJWNoYWQuZHVwdWlzQHFsb2dpYy5jb20+AAsAHw4B
+AAAAAgEJEAEAAACHAwAAgwMAAEYFAABMWkZ1tx4LmWEACmZiaWQEAABjY8BwZzEyNTIA/gND8HRl
+eHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIW
+cQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAF
+wAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBF
+R0lOfQr8AfEL8WAgSGkgRgbwH1AsNFxsC4BlCoEiRFdlEFwnQjkaMCBiZexndQOgGJAgEDALUAWw
+wyOBIfAtbXEgAHAcYHcE8ACQJOZ3AHAcQiQBa9xubwfgBpAcwGgEkBngbncnYSI1AHB5I5EfYCDy
+cBhwY3QOUAeRC4AcwQ8bAAQgGTAkoW9jayA9C2B5G7ESASkgGcBzLlwgICMUJIEJAG8doWd5IjVz
+cAWQBpAOUAdAbF8ocBiAJzIhwAhQRSUTadBTQ1NJKNFvGJAI4esrcCI8QSqQaQJAHnAjkH0A0GsJ
+wAhgJTECIC4Tca8KUApQKWMIYSAR0WQmIOckgS1wEfB0OieRM1Ejcf5hKNAEkCI1G+EYUCkRMhI7
+GHAAgG0xADJ0JRNtdYZsKSALUGUsIGcJAO8xYAMgCXApQGkjcTKEK4H+VCdQIjU2XAQgM7Im0CjB
+/yOwGDAmczThH4EOUDeQCsH4Q1BVOXQ4jSfmJIE7yN8uIjPzB7A9IgQgdydTQKDzBAAuE251BtAb
+sSoROJ0HIqcq8kG0cl9od1+fMoguIiViRNAZEHRfECBebQtRECAj8kCgYUDxZfstsC/tSTMEC4Ax
+AAcxHMH/H2ArQSeRK9U7ghIAOMBKEfcuIjUBGuNuKUAlUR5hR2T7JhAIYGwLMCJEJDE14SVQ/yQQ
+TRImN0sRJwgZIAeAAzDoJzhDJsFiDgAjQScC/nkIYCYQAxBJoRHQBUA0Ye8FoE1oNlAocHQj0EtD
+P+HvU4IkEAuABQBlR3BHAUuc9SuBQS/AbzgAAiAyY0nh/zIRNGEN4E2GNJNBlCSBA5HnGTAtcUmC
+QVAvMCQBI6D/JRACYEcDRDY9MSUQWZFJUb8ocCoRJ0FYBkTwKRB4RQXePyI8OaAAcCIIQxHQTYYH
+IjUVQmFQAB8AQgABAAAAGAAAAEMAaABhAGQAIABEAHUAcAB1AGkAcwAAAB8AZQABAAAALgAAAGMA
+aABhAGQALgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAABAAAACgAA
+AFMATQBUAFAAAAAAAAIBQQABAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEMAaABhAGQA
+IABEAHUAcAB1AGkAcwAAAFMATQBUAFAAAABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAHwACXQEAAAAuAAAAYwBoAGEAZAAuAGQAdQBwAHUAaQBzAEAAcQBsAG8A
+ZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA2AAAAcwBpAHAAOgBjAGgAYQBkAC4AZAB1AHAAdQBp
+AHMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABgAAABDAGgAYQBkACAARAB1AHAA
+dQBpAHMAAAAfAB8MAQAAAC4AAABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAGgAAAAAAAAAgSsfpL6j
+EBmdbgDdAQ9UAgAAAIBDAGgAYQBkACAARAB1AHAAdQBpAHMAAABTAE0AVABQAAAAYwBoAGEAZAAu
+AGQAdQBwAHUAaQBzAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALgAAAGMAaABhAGQA
+LgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAGAAAAEMAaABh
+AGQAIABEAHUAcAB1AGkAcwAAAB8AI0ABAAAALgAAAGMAaABhAGQALgBkAHUAcAB1AGkAcwBAAHEA
+bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAaAAA
+AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEMAaABhAGQAIABEAHUAcAB1AGkAcwAAAFMATQBUAFAA
+AABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAu
+AAAAYwBoAGEAZAAuAGQAdQBwAHUAaQBzAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEA
+AAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQA
+AAIBCzABAAAAEAAAAKZIkZVGHy5IuX7wixG6m5EDABcAAQAAAEAAOQCA+ubPvBHRAUAACDDQuRnQ
+vBHRAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
+AAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMA
+AAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAALAAAAEIAbABrAC0AbQBx
+AC8AcwBjAHMAaQAtAG0AcQAgAFQAdQBuAGkAbgBnAAAAHwA9AAEAAAACAAAAAAAAAAMANgAAAAAA
+AgFxAAEAAAAWAAAAAQHREbzPzTAOYMVvFkOYpMeIzu309QAAHwBwAAEAAAAsAAAAQgBsAGsALQBt
+AHEALwBzAGMAcwBpAC0AbQBxACAAVAB1AG4AaQBuAGcAAAAfADUQAQAAAFAAAAA8AEQAMgA1ADYA
+QQA0ADIANQAuADIAMgA5AEMAMAAlAGMAaABhAGQALgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0APgAAAAMA3j/kBAAAQAAHMFA0ENC8EdEBAwAmAAAAAAACAUcAAQAAAC8AAABjPVVT
+O2E9IDtwPVFMb2dpYztsPUFWTUIxLTE1MTAyODIwMTEyMVotMTE1MDU2AAAfABUQAQAAAFgAAAA4
+AEIARAA2ADgANgA4ADEANgAwADQAOAA1AEIANAA1ADgANgA4ADMAQwBEAEUAOQAwADUARgAxADkA
+RAA0ADUAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAnAAAAMGIr9hIAAAAHwD6
+PwEAAAAYAAAAQwBoAGEAZAAgAEQAdQBwAHUAaQBzAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
+FgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBN
+AGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANAAuADgALgAxADUAMAAxADEANgAAAAAAHwAAgB+k
+6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABU
+AHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAALoAAABJAEkAPQAwADEAMAAxAEQAMQAxADEAQgBDAEMA
+RgBDAEQAMwAwADAARQA2ADAAQwA1ADYARgAxADYANAAzADkAOABBADQAQwA3ADgAOABDAEUARQBE
+AEYANABGADUAOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIA
+dQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADQAAAAAAAMADTT9PwAAHwAA
+gIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAA
+AQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBh
+AHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYD
+AgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5
+AHAAYQBzAHMAAAAAAByR
+
+--_000_D256A425229C0chaddupuisqlogiccom_--
