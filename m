@@ -1,126 +1,82 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Blk-mq/scsi-mq Tuning
-Date: Wed, 28 Oct 2015 20:11:21 +0000
-Message-ID: <D256A425.229C0%chad.dupuis@qlogic.com>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH] scsi: hpsa: fix multiple issues in path_info_show
+Date: Wed, 28 Oct 2015 15:33:09 -0500
+Message-ID: <56313105.3050805@pmcs.com>
+References: <1445984203-3288-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D256A425229C0chaddupuisqlogiccom_"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:1243 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751070AbbJ1ULY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Oct 2015 16:11:24 -0400
-Received: from pps.filterd (m0085408.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t9SKBON5004243
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:11:24 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1xr8yp67dm-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 13:11:24 -0700
-Content-Language: en-US
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:36337 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734AbbJ1UdN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2015 16:33:13 -0400
+In-Reply-To: <1445984203-3288-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Joe Handzik <joseph.t.handzik@hp.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Kevin Barnett <kevin.barnett@pmcs.com>, Scott Teel <scott.teel@pmcs.com>, Tomas Henzl <thenzl@redhat.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---_000_D256A425229C0chaddupuisqlogiccom_
-Content-Type: text/plain; charset="Windows-1252"
-Content-ID: <8BD6868160485B458683CDE905F19D45@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-Hi Folks,
-
-We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if there wer=
-e
-any best practices in terms of block layer settings.  We=B9re looking
-specifically at the FCoE and iSCSI protocols.
-
-A little background on the queues in our hardware first: we have a per
-connection transmit queue and multiple, global receive queues.  The
-transmit queues are not pegged to a particular CPU.  The receive queues
-are pegged to the first N CPUs where N is the number of receive queues.
-We set the nr_hw_queues in the scsi_host_template to N as well.
-
-In our initial testing we=B9re not seeing the performance scale as we would
-expect so we wanted to see if there some =8Cknobs=B9 if you will that we co=
-uld
-try tuning to try to increase the performance.  Also, one question we did
-have is there an official API to be able to set the CPU affinity of the
-hw_ctx_queues?
-
-Thanks,
-Chad
-
-
---_000_D256A425229C0chaddupuisqlogiccom_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+ImpKAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEE2NDg5MTk1
-NDYxRjJFNDhCOTdFRjA4QjExQkE5QjkxADAHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HCgAcABQA
-CwAVAAMAQwEBIIADAA4AAADfBwoAHAAUAAsAFQADAEMBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABABYAAABCbGstbXEvc2NzaS1tcSBUdW5pbmcApQcBA5AGADQNAAAyAAAA
-AgF/AAEAAAAoAAAAPEQyNTZBNDI1LjIyOUMwJWNoYWQuZHVwdWlzQHFsb2dpYy5jb20+AAsAHw4B
-AAAAAgEJEAEAAACHAwAAgwMAAEYFAABMWkZ1tx4LmWEACmZiaWQEAABjY8BwZzEyNTIA/gND8HRl
-eHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIW
-cQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAF
-wAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBF
-R0lOfQr8AfEL8WAgSGkgRgbwH1AsNFxsC4BlCoEiRFdlEFwnQjkaMCBiZexndQOgGJAgEDALUAWw
-wyOBIfAtbXEgAHAcYHcE8ACQJOZ3AHAcQiQBa9xubwfgBpAcwGgEkBngbncnYSI1AHB5I5EfYCDy
-cBhwY3QOUAeRC4AcwQ8bAAQgGTAkoW9jayA9C2B5G7ESASkgGcBzLlwgICMUJIEJAG8doWd5IjVz
-cAWQBpAOUAdAbF8ocBiAJzIhwAhQRSUTadBTQ1NJKNFvGJAI4esrcCI8QSqQaQJAHnAjkH0A0GsJ
-wAhgJTECIC4Tca8KUApQKWMIYSAR0WQmIOckgS1wEfB0OieRM1Ejcf5hKNAEkCI1G+EYUCkRMhI7
-GHAAgG0xADJ0JRNtdYZsKSALUGUsIGcJAO8xYAMgCXApQGkjcTKEK4H+VCdQIjU2XAQgM7Im0CjB
-/yOwGDAmczThH4EOUDeQCsH4Q1BVOXQ4jSfmJIE7yN8uIjPzB7A9IgQgdydTQKDzBAAuE251BtAb
-sSoROJ0HIqcq8kG0cl9od1+fMoguIiViRNAZEHRfECBebQtRECAj8kCgYUDxZfstsC/tSTMEC4Ax
-AAcxHMH/H2ArQSeRK9U7ghIAOMBKEfcuIjUBGuNuKUAlUR5hR2T7JhAIYGwLMCJEJDE14SVQ/yQQ
-TRImN0sRJwgZIAeAAzDoJzhDJsFiDgAjQScC/nkIYCYQAxBJoRHQBUA0Ye8FoE1oNlAocHQj0EtD
-P+HvU4IkEAuABQBlR3BHAUuc9SuBQS/AbzgAAiAyY0nh/zIRNGEN4E2GNJNBlCSBA5HnGTAtcUmC
-QVAvMCQBI6D/JRACYEcDRDY9MSUQWZFJUb8ocCoRJ0FYBkTwKRB4RQXePyI8OaAAcCIIQxHQTYYH
-IjUVQmFQAB8AQgABAAAAGAAAAEMAaABhAGQAIABEAHUAcAB1AGkAcwAAAB8AZQABAAAALgAAAGMA
-aABhAGQALgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAABAAAACgAA
-AFMATQBUAFAAAAAAAAIBQQABAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEMAaABhAGQA
-IABEAHUAcAB1AGkAcwAAAFMATQBUAFAAAABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBn
-AGkAYwAuAGMAbwBtAAAAHwACXQEAAAAuAAAAYwBoAGEAZAAuAGQAdQBwAHUAaQBzAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA2AAAAcwBpAHAAOgBjAGgAYQBkAC4AZAB1AHAAdQBp
-AHMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAABgAAABDAGgAYQBkACAARAB1AHAA
-dQBpAHMAAAAfAB8MAQAAAC4AAABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAGgAAAAAAAAAgSsfpL6j
-EBmdbgDdAQ9UAgAAAIBDAGgAYQBkACAARAB1AHAAdQBpAHMAAABTAE0AVABQAAAAYwBoAGEAZAAu
-AGQAdQBwAHUAaQBzAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAALgAAAGMAaABhAGQA
-LgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAGAAAAEMAaABh
-AGQAIABEAHUAcAB1AGkAcwAAAB8AI0ABAAAALgAAAGMAaABhAGQALgBkAHUAcAB1AGkAcwBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAaAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEMAaABhAGQAIABEAHUAcAB1AGkAcwAAAFMATQBUAFAA
-AABjAGgAYQBkAC4AZAB1AHAAdQBpAHMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAAu
-AAAAYwBoAGEAZAAuAGQAdQBwAHUAaQBzAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAACwBAOgEA
-AAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQA
-AAIBCzABAAAAEAAAAKZIkZVGHy5IuX7wixG6m5EDABcAAQAAAEAAOQCA+ubPvBHRAUAACDDQuRnQ
-vBHRAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMA
-AAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAALAAAAEIAbABrAC0AbQBx
-AC8AcwBjAHMAaQAtAG0AcQAgAFQAdQBuAGkAbgBnAAAAHwA9AAEAAAACAAAAAAAAAAMANgAAAAAA
-AgFxAAEAAAAWAAAAAQHREbzPzTAOYMVvFkOYpMeIzu309QAAHwBwAAEAAAAsAAAAQgBsAGsALQBt
-AHEALwBzAGMAcwBpAC0AbQBxACAAVAB1AG4AaQBuAGcAAAAfADUQAQAAAFAAAAA8AEQAMgA1ADYA
-QQA0ADIANQAuADIAMgA5AEMAMAAlAGMAaABhAGQALgBkAHUAcAB1AGkAcwBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0APgAAAAMA3j/kBAAAQAAHMFA0ENC8EdEBAwAmAAAAAAACAUcAAQAAAC8AAABjPVVT
-O2E9IDtwPVFMb2dpYztsPUFWTUIxLTE1MTAyODIwMTEyMVotMTE1MDU2AAAfABUQAQAAAFgAAAA4
-AEIARAA2ADgANgA4ADEANgAwADQAOAA1AEIANAA1ADgANgA4ADMAQwBEAEUAOQAwADUARgAxADkA
-RAA0ADUAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAnAAAAMGIr9hIAAAAHwD6
-PwEAAAAYAAAAQwBoAGEAZAAgAEQAdQBwAHUAaQBzAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
-FgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBN
-AGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANAAuADgALgAxADUAMAAxADEANgAAAAAAHwAAgB+k
-6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABU
-AHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAALoAAABJAEkAPQAwADEAMAAxAEQAMQAxADEAQgBDAEMA
-RgBDAEQAMwAwADAARQA2ADAAQwA1ADYARgAxADYANAAzADkAOABBADQAQwA3ADgAOABDAEUARQBE
-AEYANABGADUAOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADMAIAAoAEIA
-dQBpAGwAZAAgADIAMwA1AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADQAAAAAAAMADTT9PwAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAA
-AQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBh
-AHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYD
-AgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5
-AHAAYQBzAHMAAAAAAByR
-
---_000_D256A425229C0chaddupuisqlogiccom_--
+On 10/27/2015 05:16 PM, Rasmus Villemoes wrote:
+> I'm not familiar with this code, but path_info_show() (added in
+> 8270b86243658 "hpsa: add sysfs entry path_info to show box and
+> bay information") seems to be broken in multiple ways.
+>
+> First, there's
+>
+>    817 return snprintf(buf, output_len+1, "%s%s%s%s%s%s%s%s",
+>    818         path[0], path[1], path[2], path[3],
+>    819         path[4], path[5], path[6], path[7]);
+>
+> so hopefully output_len contains the combined length of the eight
+> strings. Otherwise, snprintf will stop copying to the output
+> buffer, but still end up reporting that combined length - which
+> in turn would result in user-space getting a bunch of useless nul
+> bytes (thankfully the upper sysfs layer seems to clear the output
+> buffer before passing it to the various ->show routines). But we have
+>
+>    767         output_len = snprintf(path[i],
+>    768                         PATH_STRING_LEN, "[%d:%d:%d:%d] %20.20s ",
+>    769                         h->scsi_host->host_no,
+>    770                         hdev->bus, hdev->target, hdev->lun,
+>    771                         scsi_device_type(hdev->devtype));
+>
+> so output_len at best contains the length of the last string printed.
+>
+> Inside the loop, we then otherwise add to output_len. By magic,
+> we still have PATH_STRING_LEN available every time... This
+> wouldn't really be a problem if the bean-counting has been done
+> properly and each line actually does fit in 50 bytes, and maybe
+> it does, but I don't immediately see why. Suppose we end up
+> taking this branch:
+>
+>    802                         output_len += snprintf(path[i] + output_len,
+>    803                                 PATH_STRING_LEN,
+>    804                                 "BOX: %hhu BAY: %hhu %s\n",
+>    805                                 box, bay, active);
+>
+> An optimistic estimate says this uses strlen("BOX: 1 BAY: 2
+> Active\n") which is 21. Now add the 20 bytes guaranteed by the
+> %20.20s and then some for the rest of that format string, and
+> we're easily over 50 bytes. I don't think we can get over 100
+> bytes even being pessimistic, so this just means we'll scribble
+> into the next path[i+1] and maybe get that overwritten later,
+> leading to some garbled output (in fact, since we'd overwrite the
+> previous string's 0-terminator, we could end up with one very
+> long string and then print various suffixes of that, leading to
+> much more than 400 bytes of output). Except of course when we're
+> filling path[7], where overrunning it means writing random stuff
+> to the kernel stack, which is usually a lot of fun.
+>
+> We can fix all of that and get rid of the 400 byte stack buffer by
+> simply writing directly to the given output buffer, which the upper
+> layer guarantees is at least PAGE_SIZE. s[c]nprintf doesn't care where
+> it is writing to, so this doesn't make the spin lock hold time any
+> longer. Using scnprintf ensures that output_len always represents the
+> number of bytes actually written to the buffer, so we'll report the
+> proper amount to the upper layer.
+>
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+>
+Thanks, I added this to my current patch set. This patch will be up
+with you as the author soon.
