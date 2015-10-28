@@ -1,58 +1,101 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v6 00/15] Big fixes, retries, handle a race condition
-Date: Wed, 28 Oct 2015 15:13:50 +0200
-Message-ID: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v6 01/15] scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
+Date: Wed, 28 Oct 2015 15:13:51 +0200
+Message-ID: <1446038045-17102-2-git-send-email-ygardi@codeaurora.org>
+References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Maya Erez <merez@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Important:
-This serie of 15 small patches should be pushed after the series of 8 patches
-"Fix error message and present UFS variant probe"
+Clear the UFS data structures before sending new request.
 
-V6:
-update Reviewed-by from various reviewers
+The SCSI command is sent to the device within the UFS UPIU request.
+As part of the transfer UPIU preparation, the SCSI command is copied
+to the UPIU structure according to the SCSI command size.
+As different SCSI commands differ in size from each other, we need
+to clear the whole SCSI command field to prevent sending uninitialized
+data to the device.
 
-V5:
-removed un-necessary wmb()
+The UPIU response doesn't always include the sense data and can differ
+in size.
+Hence, the UPIU response should also be cleared before the transfer.
 
-V4:
-fixing a few comments from reviewers
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-V3:
-removed specific calls to wmb() since they are redundant.
+---
+ drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-V2:
-a few minor changes
-
-V1:
-This serie of 15 small patches should be pushed after the series of 8 patches
-I have uploaded to the upstream a week ago:
-"Fix error message and present UFS variant probe"
-
-Yaniv Gardi (15):
-  scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
-  scsi: ufs: verify command tag validity
-  scsi: ufs: clear outstanding_request bit in case query timeout
-  scsi: ufs: increase fDeviceInit query response timeout
-  scsi: ufs: avoid exception event handler racing with PM callbacks
-  scsi: ufs: set REQUEST_SENSE command size to 18 bytes
-  scsi: ufs: add retries to dme_peer get and set attribute
-  scsi: ufs: add retries for hibern8 enter
-  scsi: ufs: fix error recovery after the hibern8 exit failure
-  scsi: ufs: retry failed query flag requests
-  scsi: ufs: reduce the interrupts for power mode change requests
-  scsi: ufs: add missing memory barriers
-  scsi: ufs: commit descriptors before setting the doorbell
-  scsi: ufs: add wrapper for retrying sending query attribute
-
- drivers/scsi/ufs/ufshcd.c | 408 ++++++++++++++++++++++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h |   4 +
- 2 files changed, 327 insertions(+), 85 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 131c720..3428f72 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3,7 +3,7 @@
+  *
+  * This code is based on drivers/scsi/ufs/ufshcd.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+@@ -1035,6 +1035,7 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 				cpu_to_le32(lower_32_bits(sg->dma_address));
+ 			prd_table[i].upper_addr =
+ 				cpu_to_le32(upper_32_bits(sg->dma_address));
++			prd_table[i].reserved = 0;
+ 		}
+ 	} else {
+ 		lrbp->utr_descriptor_ptr->prd_table_length = 0;
+@@ -1117,7 +1118,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 
+ 	/* Transfer request descriptor header fields */
+ 	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+-
++	/* dword_1 is reserved, hence it is set to 0 */
++	req_desc->header.dword_1 = 0;
+ 	/*
+ 	 * assigning invalid value for command status. Controller
+ 	 * updates OCS on command completion, with the command
+@@ -1125,6 +1127,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+ 	 */
+ 	req_desc->header.dword_2 =
+ 		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
++	/* dword_3 is reserved, hence it is set to 0 */
++	req_desc->header.dword_3 = 0;
+ }
+ 
+ /**
+@@ -1137,6 +1141,7 @@ static
+ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ {
+ 	struct utp_upiu_req *ucd_req_ptr = lrbp->ucd_req_ptr;
++	unsigned short cdb_len;
+ 
+ 	/* command descriptor fields */
+ 	ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+@@ -1151,8 +1156,12 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u32 upiu_flags)
+ 	ucd_req_ptr->sc.exp_data_transfer_len =
+ 		cpu_to_be32(lrbp->cmd->sdb.length);
+ 
+-	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd,
+-		(min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE)));
++	cdb_len = min_t(unsigned short, lrbp->cmd->cmd_len, MAX_CDB_SIZE);
++	memcpy(ucd_req_ptr->sc.cdb, lrbp->cmd->cmnd, cdb_len);
++	if (cdb_len < MAX_CDB_SIZE)
++		memset(ucd_req_ptr->sc.cdb + cdb_len, 0,
++		       (MAX_CDB_SIZE - cdb_len));
++	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+ }
+ 
+ /**
 -- 
 1.8.5.2
 
