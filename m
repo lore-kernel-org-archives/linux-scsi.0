@@ -1,43 +1,64 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 01/12] megaraid_sas : Expose TAPE drives unconditionally
-Date: Wed, 28 Oct 2015 16:28:54 +0530
-Message-ID: <f1c1f29ad47e8c6f25dc3b0317682493@mail.gmail.com>
-References: <201510150816.t9F8GgOq029543@palmhbs0.lsi.com> <yq1wpu791v3.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <yq1wpu791v3.fsf@sermon.lab.mkp.net>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v9 0/8] Fix error message and present UFS variant
+Date: Wed, 28 Oct 2015 13:15:43 +0200
+Message-ID: <1446030951-2431-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Wednesday, October 28, 2015 7:44 AM
-> To: sumit.saxena@avagotech.com
-> Cc: linux-scsi@vger.kernel.org; stable@vger.kernel.org;
-thenzl@redhat.com;
-> martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
-> kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> uday.lingala@avagotech.com
-> Subject: Re: [PATCH 01/12] megaraid_sas : Expose TAPE drives
-unconditionally
->
->
-> Sumit> Expose non-disk(TAPE drive, CD-ROM) unconditionally. This issue
-> Sumit> is reported in Redhat Bugzilla [Bug 1254762].
->
-> RH bugzilla is not public so I removed this blurb from the patch
-description.
->
-> In the future, please drop the spaces after megaraid_sas in patch
-header. I fixed
-> those up for now.
-Sure, I will take care of it while sending patches in future.
+V9: update commit message with Reviewed-by
+and update commit message of patch 4/8
 
-Thanks,
-Sumit
->
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+V8: add phy attributes to UFS devicetree documentation file
+
+V7: removed additional dead code
+
+V6: removed dead code from ufs-qcom.c and added
+calling to ufshcd_dealloc_host() in ufshcd-pltfrm.c in case
+of an error after a successfull ufshcd_alloc_host()
+
+V5: removed a redundant null check
+
+V4: add file
+Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+and modify the compatible strings in
+Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+
+V3: fixes a few minor issues.
+
+V2: fixes a few issues of unnecessary EXPORT_SYMBOL,
+types of parameters in routine definition, 
+build errors in case CONFIG_PM is not defined and some
+other minor fixes.
+
+Yaniv Gardi (8):
+  phy: qcom-ufs: fix build error when the component is built as a module
+  scsi: ufs-qcom: fix compilation warning if compiled as a module
+  scsi: ufs-qcom: update configuration option of SCSI_UFS_QCOM component
+  scsi: ufs: add ufshcd_get_variant ufshcd_set_variant
+  scsi: ufs: creates wrapper functions for vops
+  scsi: ufs: make the UFS variant a platform device
+  scsi: ufs-qcom: add debug prints for test bus
+  scsi: ufs-qcom: add QUniPro hardware support and power optimizations
+
+ Documentation/devicetree/bindings/ufs/ufs-qcom.txt |  58 ++
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  11 +-
+ drivers/phy/phy-qcom-ufs.c                         |  11 +
+ drivers/scsi/ufs/Kconfig                           |   2 +-
+ drivers/scsi/ufs/ufs-qcom.c                        | 905 ++++++++++++++++-----
+ drivers/scsi/ufs/ufs-qcom.h                        |  68 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  98 +--
+ drivers/scsi/ufs/ufshcd-pltfrm.h                   |  41 +
+ drivers/scsi/ufs/ufshcd.c                          | 122 ++-
+ drivers/scsi/ufs/ufshcd.h                          | 149 +++-
+ 10 files changed, 1127 insertions(+), 338 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+ create mode 100644 drivers/scsi/ufs/ufshcd-pltfrm.h
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
