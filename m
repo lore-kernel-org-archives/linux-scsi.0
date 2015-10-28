@@ -1,40 +1,52 @@
-From: Saurabh Sengar <saurabh.truth@gmail.com>
-Subject: [PATCH] lpfc: replaced kmalloc + memset with kzalloc
-Date: Wed, 28 Oct 2015 12:23:39 +0530
-Message-ID: <1446015219-16131-1-git-send-email-saurabh.truth@gmail.com>
-References: <saurabh.truth@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <saurabh.truth@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@avagotech.com, dick.kennedy@avagotech.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Saurabh Sengar <saurabh.truth@gmail.com>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
+Subject: RE: [PATCH 02/12] megaraid_sas : Code optimization- remove PCI Ids
+ based checks
+Date: Wed, 28 Oct 2015 13:13:42 +0530
+Message-ID: <8e8133a4c138153187671ddf75181b8b@mail.gmail.com>
+References: <201510150816.t9F8GqPJ029555@palmhbs0.lsi.com> <yq1si4v90yp.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:36029 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbbJ1Hno (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2015 03:43:44 -0400
+Received: by lffz202 with SMTP id z202so183862037lff.3
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2015 00:43:43 -0700 (PDT)
+In-Reply-To: <yq1si4v90yp.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
 
-replacing kmalloc and memset by a single call of kzalloc
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Wednesday, October 28, 2015 8:03 AM
+> To: sumit.saxena@avagotech.com
+> Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
+> martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
+> kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
+> uday.lingala@avagotech.com
+> Subject: Re: [PATCH 02/12] megaraid_sas : Code optimization- remove PCI
+Ids
+> based checks
+>
+> >>>>> "Sumit" == sumit saxena <sumit.saxena@avagotech.com> writes:
+>
+> Sumit> Code optimization: remove PCI id based checks and instead of
+> Sumit> those use instance->ctrl_context to make call whether controller
+> Sumit> is MFI based OR fusion adapter.  fusion adapters further are also
+> Sumit> divided in two categories- 1)THUNDERBOLT SERIES and 2)INVADER
+> Sumit> SERIES.
+>
+> Does not apply against current upstream. Please fix and repost.
 
-Signed-off-by: Saurabh Sengar <saurabh.truth@gmail.com>
----
- drivers/scsi/lpfc/lpfc_els.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Martin, This patch set is not based on current upstream but rebased on top
+of few patches sent by me prior to this patch series. Patches sent prior
+to this patch series are not yet accepted.
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 36bf58b..9729ab1 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4990,13 +4990,12 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	if (RDP_NPORT_ID_SIZE !=
- 			be32_to_cpu(rdp_req->nport_id_desc.length))
- 		goto rjt_logerr;
--	rdp_context = kmalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
-+	rdp_context = kzalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
- 	if (!rdp_context) {
- 		rjt_err = LSRJT_UNABLE_TPC;
- 		goto error;
- 	}
- 
--	memset(rdp_context, 0, sizeof(struct lpfc_rdp_context));
- 	cmd = &cmdiocb->iocb;
- 	rdp_context->ndlp = lpfc_nlp_get(ndlp);
- 	rdp_context->ox_id = cmd->unsli3.rcvsli3.ox_id;
--- 
-1.9.1
+Thanks,
+Sumit
+>
+> --
+> Martin K. Petersen	Oracle Linux Engineering
