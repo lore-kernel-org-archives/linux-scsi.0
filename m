@@ -1,39 +1,59 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 02/12] megaraid_sas : Code optimization- remove PCI Ids based checks
-Date: Thu, 29 Oct 2015 00:40:42 -0400
-Message-ID: <yq1fv0u8eyd.fsf@sermon.lab.mkp.net>
-References: <201510150816.t9F8GqPJ029555@palmhbs0.lsi.com>
-	<yq1si4v90yp.fsf@sermon.lab.mkp.net>
-	<8e8133a4c138153187671ddf75181b8b@mail.gmail.com>
-	<c184826206ec6525b7ecb9e034cb6368@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 106861] New: DPOFUA should not be related to WCE / Caching mode
+ page
+Date: Thu, 29 Oct 2015 08:14:51 +0000
+Message-ID: <bug-106861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45626 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbbJ2ElX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 00:41:23 -0400
-In-Reply-To: <c184826206ec6525b7ecb9e034cb6368@mail.gmail.com> (Kashyap
-	Desai's message of "Wed, 28 Oct 2015 20:00:47 +0530")
+Received: from mail.kernel.org ([198.145.29.136]:41819 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911AbbJ2IOz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Oct 2015 04:14:55 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D31E5209BD
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 08:14:53 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 597E72096A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 08:14:52 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Sumit Saxena <sumit.saxena@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
+To: linux-scsi@vger.kernel.org
 
->>>>> "Kashyap" == Kashyap Desai <kashyap.desai@avagotech.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=106861
 
-Kashyap> Here is last outstanding patch series.
-Kashyap> http://marc.info/?l=linux-scsi&m=144102204225400&w=2
+            Bug ID: 106861
+           Summary: DPOFUA should not be related to WCE / Caching mode
+                    page
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.2.4
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: tom.ty89@gmail.com
+        Regression: No
 
-Kashyap> Last patch series was missed because of small rebase
-Kashyap> issue. James suggested not to ACK anything which is not
-Kashyap> critical to avoid such issue and probably piggy back those
-Kashyap> patches.  Last series and latest series has reviewed-by
-Kashyap> tags. Can we have outstanding patches committed in next window
-Kashyap> ?
+The sd driver checks whether the device supports DPO/FUA and reports it to the
+FUA readonly attribute. However, they are somehow "depended" on the Caching
+mode page and WCE (sd.c).
 
-Just pulled in the previous patch series. Will work on the latest one
-next.
+The fact is, the DPOFUA bit just isn't part of the Caching mode page. Instead
+it is reported in DEVICE-SPECIFIC PARAMETER of mode parameter header.
+
+Moreover, I don't see what impact does WCE have on DPO/FUA as per SBC or SAT.
+As long as it is implemented correctly, DPO/FUA should be completely fine on
+drives without write cache as well.
+
+So IMHO how the kernel handles the checking and reporting simply has logical
+mistake.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are the assignee for the bug.
