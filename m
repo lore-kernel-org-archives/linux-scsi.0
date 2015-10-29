@@ -1,132 +1,112 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1 04/25] hpsa: fix null device issues
-Date: Thu, 29 Oct 2015 15:06:41 +0100
-Message-ID: <563227F1.3080909@redhat.com>
+Subject: Re: [PATCH 1 08/25] hpsa: fix hpsa_adjust_hpsa_scsi_table
+Date: Thu, 29 Oct 2015 15:23:16 +0100
+Message-ID: <56322BD4.5040101@redhat.com>
 References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220453.5323.34762.stgit@brunhilda>
+ <20151028220518.5323.5177.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38351 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45131 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964869AbbJ2OGp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2015 10:06:45 -0400
-In-Reply-To: <20151028220453.5323.34762.stgit@brunhilda>
+	id S1752376AbbJ2OXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Oct 2015 10:23:20 -0400
+In-Reply-To: <20151028220518.5323.5177.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-On 28.10.2015 23:04, Don Brace wrote:
+On 28.10.2015 23:05, Don Brace wrote:
+> Fix a NULL pointer issue in the driver when devices are removed
+> during a reset.
+>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
->  drivers/scsi/hpsa.c |   25 ++++++++++++++++++++-----
->  1 file changed, 20 insertions(+), 5 deletions(-)
+>  drivers/block/cciss.h |    1 +
+>  drivers/scsi/hpsa.c   |   16 ++++++++++++++++
+>  drivers/scsi/hpsa.h   |    1 +
+>  3 files changed, 18 insertions(+)
 >
+> diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
+> index 7fda30e..f8b8c6b 100644
+> --- a/drivers/block/cciss.h
+> +++ b/drivers/block/cciss.h
+> @@ -155,6 +155,7 @@ struct ctlr_info
+>  	size_t reply_pool_size;
+>  	unsigned char reply_pool_wraparound;
+>  	u32 *blockFetchTable;
+> +	u8 reset_in_progress;
+>  };
+>  
+>  /*  Defining the diffent access_methods
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 6b6e9bb..3fe8a18 100644
+> index ced0d4c..08a761c 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -1136,7 +1136,7 @@ static int hpsa_find_target_lun(struct ctlr_info *h,
->  	return !found;
->  }
+> @@ -1670,6 +1670,15 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  	int nadded, nremoved;
+>  	struct Scsi_Host *sh = NULL;
 >  
-> -static inline void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
-> +static void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
->  	struct hpsa_scsi_dev_t *dev, char *description)
->  {
->  	if (dev == NULL)
-> @@ -1423,6 +1423,9 @@ static int hpsa_scsi_find_entry(struct hpsa_scsi_dev_t *needle,
->  #define DEVICE_CHANGED 1
->  #define DEVICE_SAME 2
->  #define DEVICE_UPDATED 3
-> +	if (needle == NULL)
-> +		return DEVICE_NOT_FOUND;
-> +
->  	for (i = 0; i < haystack_size; i++) {
->  		if (haystack[i] == NULL) /* previously removed. */
->  			continue;
-> @@ -1574,6 +1577,9 @@ static void hpsa_figure_phys_disk_ptrs(struct ctlr_info *h,
->  				total_disks_per_row;
->  	int qdepth;
->  
-> +	if (logical_drive == NULL)
+> +	/*
+> +	 * A reset can cause a device status to change
+> +	 * re-schedule the scan to see what happened.
+> +	 */
+> +	if (h->reset_in_progress) {
+> +		h->drv_req_rescan = 1;
 > +		return;
+> +	}
+> +
 
-logical_drive
-- is used before this check
-- this function is called only from hpsa_update_log_drive_phys_drive_ptrs
-and there is a check (dev[i] == NULL) ->  logical_drive can never be NULL here
+If another process start the reset at this point will you get the
+the same Null pointer issue as before? Isn't some kind of
+exclusive access protection needed ?
 
 -tm
 
-> +
->  	if (nraid_map_entries > RAID_MAP_MAX_ENTRIES)
->  		nraid_map_entries = RAID_MAP_MAX_ENTRIES;
+>  	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
+>  	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
 >  
-> @@ -1585,6 +1591,8 @@ static void hpsa_figure_phys_disk_ptrs(struct ctlr_info *h,
->  		if (!logical_drive->offload_config)
->  			continue;
->  		for (j = 0; j < ndevices; j++) {
-> +			if (dev[j] == NULL)
-> +				continue;
->  			if (dev[j]->devtype != TYPE_DISK)
->  				continue;
->  			if (is_logical_dev_addr_mode(dev[j]->scsi3addr))
-> @@ -1628,6 +1636,8 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
->  	int i;
+> @@ -1780,6 +1789,10 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  		goto free_and_out;
 >  
->  	for (i = 0; i < ndevices; i++) {
-> +		if (dev[i] == NULL)
-> +			continue;
->  		if (dev[i]->devtype != TYPE_DISK)
->  			continue;
->  		if (!is_logical_dev_addr_mode(dev[i]->scsi3addr))
-> @@ -1743,8 +1753,11 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  	/* Now that h->dev[]->phys_disk[] is coherent, we can enable
->  	 * any logical drives that need it enabled.
->  	 */
-> -	for (i = 0; i < h->ndevices; i++)
-> +	for (i = 0; i < h->ndevices; i++) {
-> +		if (h->dev[i] == NULL)
-> +			continue;
->  		h->dev[i]->offload_enabled = h->dev[i]->offload_to_be_enabled;
-> +	}
->  
->  	spin_unlock_irqrestore(&h->devlock, flags);
->  
-> @@ -1769,6 +1782,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
 >  	sh = h->scsi_host;
+> +	if (sh == NULL) {
+> +		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
+> +		return;
+> +	}
 >  	/* Notify scsi mid layer of any removed devices */
 >  	for (i = 0; i < nremoved; i++) {
-> +		if (removed[i] == NULL)
-> +			continue;
->  		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
->  			struct scsi_device *sdev =
->  				scsi_device_lookup(sh, removed[i]->bus,
-> @@ -1792,18 +1807,18 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>  		if (removed[i] == NULL)
+> @@ -5243,12 +5256,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
 >  
->  	/* Notify scsi mid layer of any added devices */
->  	for (i = 0; i < nadded; i++) {
-> +		if (added[i] == NULL)
-> +			continue;
->  		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
->  			continue;
->  		if (scsi_add_device(sh, added[i]->bus,
->  			added[i]->target, added[i]->lun) == 0)
->  			continue;
-> -		hpsa_show_dev_msg(KERN_WARNING, h, added[i],
-> -					"addition failed, device not added.");
-> +		dev_warn(&h->pdev->dev, "addition failed, device not added.");
->  		/* now we have to remove it from h->dev,
->  		 * since it didn't get added to scsi mid layer
->  		 */
->  		fixup_botched_add(h, added[i]);
-> -		added[i] = NULL;
->  	}
+>  	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
 >  
->  free_and_out:
+> +	h->reset_in_progress = 1;
+> +
+>  	/* send a reset to the SCSI LUN which the command was sent to */
+>  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+>  			   DEFAULT_REPLY_QUEUE);
+>  	snprintf(msg, sizeof(msg), "reset %s",
+>  		 rc == 0 ? "completed successfully" : "failed");
+>  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> +	h->reset_in_progress = 0;
+>  	return rc == 0 ? SUCCESS : FAILED;
+>  }
+>  
+> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+> index b173c0e..dc113c1a 100644
+> --- a/drivers/scsi/hpsa.h
+> +++ b/drivers/scsi/hpsa.h
+> @@ -271,6 +271,7 @@ struct ctlr_info {
+>  	wait_queue_head_t abort_cmd_wait_queue;
+>  	wait_queue_head_t event_sync_wait_queue;
+>  	struct mutex reset_mutex;
+> +	u8 reset_in_progress;
+>  };
+>  
+>  struct offline_device_entry {
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
