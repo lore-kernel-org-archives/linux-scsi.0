@@ -1,81 +1,130 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: Blk-mq/scsi-mq Tuning
-Date: Thu, 29 Oct 2015 11:04:47 -0700
-Message-ID: <56325FBF.8010306@sandisk.com>
-References: <D256A425.229C0%chad.dupuis@qlogic.com>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH 1 13/25] hpsa: simplify update scsi devices
+Date: Thu, 29 Oct 2015 14:01:35 -0500
+Message-ID: <56326D0F.50203@pmcs.com>
+References: <20151028215206.5323.84194.stgit@brunhilda>
+ <20151028220549.5323.85641.stgit@brunhilda>
+ <998BCB19-5910-44A6-A53F-29BB78160ED9@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0079.outbound.protection.outlook.com ([207.46.100.79]:38322
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751055AbbJ2SEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2015 14:04:50 -0400
-In-Reply-To: <D256A425.229C0%chad.dupuis@qlogic.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:35590 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbbJ2TBj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 15:01:39 -0400
+Received: by pasz6 with SMTP id z6so48510794pas.2
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 12:01:39 -0700 (PDT)
+In-Reply-To: <998BCB19-5910-44A6-A53F-29BB78160ED9@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>, Jens Axboe <axboe@fb.com>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On 10/28/2015 01:11 PM, Chad Dupuis wrote:
-> We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if the=
-re were
-> any best practices in terms of block layer settings.  We=B9re looking
-> specifically at the FCoE and iSCSI protocols.
+On 10/29/2015 11:43 AM, Matthew R. Ochs wrote:
+>> On Oct 28, 2015, at 5:05 PM, Don Brace <don.brace@pmcs.com> wrote:
+>>
+>> From: Kevin Barnett <kevin.barnett@pmcs.com>
+>>
+>> remove repeated calculation that checks for physical
+>> or logical devices.
+>>
+>> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+>> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+>> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+>> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>> ---
+>> drivers/scsi/hpsa.c |   23 ++++++++++++++---------
+>> drivers/scsi/hpsa.h |    1 +
+>> 2 files changed, 15 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index d011540..7c1a552 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -3761,6 +3761,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+>> 	int ncurrent = 0;
+>> 	int i, n_ext_target_devs, ndevs_to_allocate;
+>> 	int raid_ctlr_position;
+>> +	bool physical_device;
+> Any particular reason for using a bool here and a u8 when you cache the value?
+Changed definition to u8 physical_device : 1; in hpsa_scsi_dev_t
+
 >
-> A little background on the queues in our hardware first: we have a pe=
-r
-> connection transmit queue and multiple, global receive queues.  The
-> transmit queues are not pegged to a particular CPU.  The receive queu=
-es
-> are pegged to the first N CPUs where N is the number of receive queue=
-s.
-> We set the nr_hw_queues in the scsi_host_template to N as well.
+>> 	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
+>>
+>> 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
+>> @@ -3821,16 +3822,17 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+>> 		int rc = 0;
+>> 		int phys_dev_index = i - (raid_ctlr_position == 0);
+>>
+>> +		physical_device = i < nphysicals + (raid_ctlr_position == 0);
+>> +
+>> 		/* Figure out where the LUN ID info is coming from */
+>> 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
+>> 			i, nphysicals, nlogicals, physdev_list, logdev_list);
+>>
+>> 		/* skip masked non-disk devices */
+>> -		if (MASKED_DEVICE(lunaddrbytes))
+>> -			if (i < nphysicals + (raid_ctlr_position == 0) &&
+>> -				(physdev_list->
+>> -				LUN[phys_dev_index].device_flags & 0x01))
+>> -				continue;
+>> +		if (physical_device &&
+>> +			MASKED_DEVICE(lunaddrbytes) &&
+>> +			(physdev_list->LUN[phys_dev_index].device_flags & 0x01))
+>> +			continue;
+> In this conditional you swapped the ordering, evaluating physical_device first, why?
+Changed it back. Better to be consistent.
 >
-> In our initial testing we=B9re not seeing the performance scale as we=
- would
-> expect so we wanted to see if there some =8Cknobs=B9 if you will that=
- we could
-> try tuning to try to increase the performance.  Also, one question we=
- did
-> have is there an official API to be able to set the CPU affinity of t=
-he
-> hw_ctx_queues?
+>> 		/* Get device type, vendor, model, device id */
+>> 		rc = hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+>> @@ -3866,10 +3868,13 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+>> 		}
+>>
+>> 		*this_device = *tmpdevice;
+>> +		this_device->physical_device = physical_device;
+>>
+>> -		/* do not expose masked devices */
+>> -		if (MASKED_DEVICE(lunaddrbytes) &&
+>> -			i < nphysicals + (raid_ctlr_position == 0))
+>> +		/*
+>> +		 * Expose all devices except for physical devices that
+>> +		 * are masked.
+>> +		 */
+>> +		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
+>> 			this_device->expose_device = 0;
+>> 		else
+>> 			this_device->expose_device = 1;
+>> @@ -3887,7 +3892,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+>> 				ncurrent++;
+>> 			break;
+>> 		case TYPE_DISK:
+>> -			if (i < nphysicals + (raid_ctlr_position == 0)) {
+>> +			if (this_device->physical_device) {
+>> 				/* The disk is in HBA mode. */
+>> 				/* Never use RAID mapper in HBA mode. */
+>> 				this_device->offload_enabled = 0;
+>> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+>> index a6ead07..808b520 100644
+>> --- a/drivers/scsi/hpsa.h
+>> +++ b/drivers/scsi/hpsa.h
+>> @@ -37,6 +37,7 @@ struct hpsa_scsi_dev_t {
+>> 	unsigned int devtype;
+>> 	int bus, target, lun;		/* as presented to the OS */
+>> 	unsigned char scsi3addr[8];	/* as presented to the HW */
+>> +	u8 physical_device;
+>> 	u8 expose_device;
+>> #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
+>> 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-(added Jens to CC-list)
-
-Hello Chad,
-
-It's great news that you are looking into adding scsi-mq support for=20
-=46CoE and iSCSI initiator HBA's. If you do not see the performance sca=
-le=20
-as expected that probably means that lock contention occurs in the code=
-=20
-that submits requests to the SCSI request queues. Have you already trie=
-d=20
-to measure L3 cache misses with perf (e.g. perf record -ag -e=20
-LLC-store-misses sleep 10 && perf report) ? If a single function is=20
-responsible for more than 10% of the L3 cache misses usually that means=
-=20
-that that function is causing a bottleneck.
-
-As far as I know an official API for setting the CPU affinity of the=20
-hw_ctx queues is not yet available. The approach of the SRP initiator=20
-driver (ib_srp) is that it assumes that the HCA supports MSI-X and that=
-=20
-MSI-X interrupts have been spread evenly over processors. The ib_srp=20
-driver selects an MSI-X interrupt for each hw_ctx queue via the=20
-comp_vector member of struct ib_cq_init_attr. The script I am using=20
-myself is available at=20
-http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/21312/fo=
-cus=3D98409.=20
-I hope one day that script will be superfluous :-)
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
