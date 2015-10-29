@@ -1,112 +1,127 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1 08/25] hpsa: fix hpsa_adjust_hpsa_scsi_table
-Date: Thu, 29 Oct 2015 15:23:16 +0100
-Message-ID: <56322BD4.5040101@redhat.com>
+Subject: Re: [PATCH 1 09/25] hpsa: fix physical target reset
+Date: Thu, 29 Oct 2015 15:30:36 +0100
+Message-ID: <56322D8C.4030007@redhat.com>
 References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220518.5323.5177.stgit@brunhilda>
+ <20151028220524.5323.29044.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45131 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43677 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752376AbbJ2OXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2015 10:23:20 -0400
-In-Reply-To: <20151028220518.5323.5177.stgit@brunhilda>
+	id S1751045AbbJ2Oaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Oct 2015 10:30:39 -0400
+In-Reply-To: <20151028220524.5323.29044.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
 On 28.10.2015 23:05, Don Brace wrote:
-> Fix a NULL pointer issue in the driver when devices are removed
-> during a reset.
+> From: Scott Teel <scott.teel@pmcs.com>
 >
+> Set reset type in device_reset_handler to do either
+> logical unit reset for logical devices, or physical
+> target reset, for physical devices.
+>
+> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
->  drivers/block/cciss.h |    1 +
->  drivers/scsi/hpsa.c   |   16 ++++++++++++++++
->  drivers/scsi/hpsa.h   |    1 +
->  3 files changed, 18 insertions(+)
+>  drivers/scsi/hpsa.c |   34 ++++++++++++++++++++++++++++------
+>  drivers/scsi/hpsa.h |    1 +
+>  2 files changed, 29 insertions(+), 6 deletions(-)
 >
-> diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-> index 7fda30e..f8b8c6b 100644
-> --- a/drivers/block/cciss.h
-> +++ b/drivers/block/cciss.h
-> @@ -155,6 +155,7 @@ struct ctlr_info
->  	size_t reply_pool_size;
->  	unsigned char reply_pool_wraparound;
->  	u32 *blockFetchTable;
-> +	u8 reset_in_progress;
->  };
->  
->  /*  Defining the diffent access_methods
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index ced0d4c..08a761c 100644
+> index 08a761c..67136fb 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -1670,6 +1670,15 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  	int nadded, nremoved;
->  	struct Scsi_Host *sh = NULL;
+> @@ -2746,9 +2746,8 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
 >  
-> +	/*
-> +	 * A reset can cause a device status to change
-> +	 * re-schedule the scan to see what happened.
-> +	 */
-> +	if (h->reset_in_progress) {
-> +		h->drv_req_rescan = 1;
-> +		return;
-> +	}
+>  
+>  	/* fill_cmd can't fail here, no data buffer to map. */
+> -	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+> +	(void) fill_cmd(c, reset_type, h, NULL, 0, 0,
+>  			scsi3addr, TYPE_MSG);
+> -	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to LUN reset */
+>  	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
+>  	if (rc) {
+>  		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
+> @@ -5216,6 +5215,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  	int rc;
+>  	struct ctlr_info *h;
+>  	struct hpsa_scsi_dev_t *dev;
+> +	u8 reset_type;
+>  	char msg[48];
+>  
+>  	/* find the controller to which the command to be aborted was sent */
+> @@ -5254,15 +5254,23 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  	if (is_hba_lunid(dev->scsi3addr))
+>  		return SUCCESS;
+>  
+> -	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
+> +	if (is_logical_dev_addr_mode(dev->scsi3addr))
+> +		reset_type = HPSA_DEVICE_RESET_MSG;
+> +	else
+> +		reset_type = HPSA_PHYS_TARGET_RESET;
 > +
-
-If another process start the reset at this point will you get the
-the same Null pointer issue as before? Isn't some kind of
-exclusive access protection needed ?
-
--tm
-
->  	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
->  	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
+> +	sprintf(msg, "resetting %s",
+> +		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ");
+> +	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
 >  
-> @@ -1780,6 +1789,10 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  		goto free_and_out;
+>  	h->reset_in_progress = 1;
 >  
->  	sh = h->scsi_host;
-> +	if (sh == NULL) {
-> +		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
-> +		return;
-> +	}
->  	/* Notify scsi mid layer of any removed devices */
->  	for (i = 0; i < nremoved; i++) {
->  		if (removed[i] == NULL)
-> @@ -5243,12 +5256,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
->  
->  	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
->  
-> +	h->reset_in_progress = 1;
-> +
 >  	/* send a reset to the SCSI LUN which the command was sent to */
->  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+> -	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+> +	rc = hpsa_do_reset(h, dev, dev->scsi3addr, reset_type,
 >  			   DEFAULT_REPLY_QUEUE);
->  	snprintf(msg, sizeof(msg), "reset %s",
->  		 rc == 0 ? "completed successfully" : "failed");
+> -	snprintf(msg, sizeof(msg), "reset %s",
+> -		 rc == 0 ? "completed successfully" : "failed");
+> +	sprintf(msg, "reset %s %s",
+> +		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ",
+> +		rc == 0 ? "completed successfully" : "failed");
 >  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
-> +	h->reset_in_progress = 0;
+>  	h->reset_in_progress = 0;
 >  	return rc == 0 ? SUCCESS : FAILED;
->  }
+> @@ -6379,6 +6387,20 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+>  	} else if (cmd_type == TYPE_MSG) {
+>  		switch (cmd) {
 >  
+> +		case  HPSA_PHYS_TARGET_RESET:
+> +			c->Request.CDBLen = 16;
+> +			c->Request.type_attr_dir =
+> +				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_NONE);
+> +			c->Request.Timeout = 0; /* Don't time out */
+> +			memset(&c->Request.CDB[0], 0, sizeof(c->Request.CDB));
+> +			c->Request.CDB[0] = HPSA_RESET;
+> +			c->Request.CDB[1] = HPSA_TARGET_RESET_TYPE;
+> +			/* Physical target reset needs no control bytes 4-7*/
+> +			c->Request.CDB[4] = 0x00;
+> +			c->Request.CDB[5] = 0x00;
+> +			c->Request.CDB[6] = 0x00;
+> +			c->Request.CDB[7] = 0x00;
+> +			break;
+>  		case  HPSA_DEVICE_RESET_MSG:
+>  			c->Request.CDBLen = 16;
+>  			c->Request.type_attr_dir =
 > diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-> index b173c0e..dc113c1a 100644
+> index dc113c1a..04f98eb 100644
 > --- a/drivers/scsi/hpsa.h
 > +++ b/drivers/scsi/hpsa.h
-> @@ -271,6 +271,7 @@ struct ctlr_info {
->  	wait_queue_head_t abort_cmd_wait_queue;
->  	wait_queue_head_t event_sync_wait_queue;
->  	struct mutex reset_mutex;
-> +	u8 reset_in_progress;
->  };
+> @@ -285,6 +285,7 @@ struct offline_device_entry {
+>  #define HPSA_RESET_TYPE_BUS 0x01
+>  #define HPSA_RESET_TYPE_TARGET 0x03
+>  #define HPSA_RESET_TYPE_LUN 0x04
+> +#define HPSA_PHYS_TARGET_RESET 0x99 /* not defined by cciss spec */
+
+Will this new reset command work for the whole range of hpsa devices?
+(and for the older cciss hw - hpsa_allow_any) ?
+
+>  #define HPSA_MSG_SEND_RETRY_LIMIT 10
+>  #define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS (10000)
 >  
->  struct offline_device_entry {
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
