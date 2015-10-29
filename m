@@ -1,30 +1,30 @@
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1 15/25] hpsa: enhance hpsa_get_device_id
-Date: Thu, 29 Oct 2015 12:04:23 -0500
-Message-ID: <332960E8-ABA9-454E-922C-229EDC56C0BA@linux.vnet.ibm.com>
-References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220601.5323.62936.stgit@brunhilda>
+Subject: Re: [PATCH 1 17/25] hpsa: move scsi_add_device and scsi_remove_device calls to new function
+Date: Thu, 29 Oct 2015 12:21:10 -0500
+Message-ID: <90741AFD-5D5E-4588-A7B1-53A3E80DA984@linux.vnet.ibm.com>
+References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220613.5323.52829.stgit@brunhilda>
 Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:58748 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757057AbbJ2RE2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 13:04:28 -0400
+Received: from e39.co.us.ibm.com ([32.97.110.160]:54638 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757446AbbJ2RVR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 13:21:17 -0400
 Received: from localhost
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 29 Oct 2015 13:04:27 -0400
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id B04B938C805C
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:04:25 -0400 (EDT)
+	Thu, 29 Oct 2015 11:21:16 -0600
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id E6249C9003E
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:09:25 -0400 (EDT)
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9TH4Pki42336464
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 17:04:25 GMT
+	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9THLFxs63438936
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 17:21:15 GMT
 Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9TH4OLp009567
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:04:25 -0400
-In-Reply-To: <20151028220601.5323.62936.stgit@brunhilda>
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9THLDXv015921
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:21:14 -0400
+In-Reply-To: <20151028220613.5323.52829.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>
@@ -32,60 +32,134 @@ Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bo
 
 > On Oct 28, 2015, at 5:06 PM, Don Brace <don.brace@pmcs.com> wrote:
 > 
-> use an index into vpd data for SAS/SATA drives
+> From: Kevin Barnett <kevin.barnett@pmcs.com>
+> 
+> preparation for adding the sas transport class
 > 
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
-> drivers/scsi/hpsa.c |   23 ++++++++++++++++++++---
-> 1 file changed, 20 insertions(+), 3 deletions(-)
+> drivers/scsi/hpsa.c |   65 +++++++++++++++++++++++++++++++--------------------
+> 1 file changed, 39 insertions(+), 26 deletions(-)
 > 
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index c1b053f..1361414 100644
+> index 24b3c8c..06207e2 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -3137,7 +3137,7 @@ out:
-> 
-> /* Get the device id from inquiry page 0x83 */
-> static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
-> -	unsigned char *device_id, int buflen)
-> +	unsigned char *device_id, int index, int buflen)
-> {
-> 	int rc;
-> 	unsigned char *buf;
-> @@ -3149,8 +3149,10 @@ static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
-> 		return -ENOMEM;
-> 	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0x83, buf, 64);
-> 	if (rc == 0)
-> -		memcpy(device_id, &buf[8], buflen);
-> +		memcpy(device_id, &buf[index], buflen);
-> +
-> 	kfree(buf);
-> +
-> 	return rc != 0;
+> @@ -1660,6 +1660,37 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
+> 	}
 > }
 > 
-> @@ -3379,6 +3381,18 @@ static int hpsa_device_supports_aborts(struct ctlr_info *h,
-> 	return rc;
-> }
-> 
-> +static void sanitize_inquiry_string(unsigned char *s, int len)
+> +static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
 > +{
-> +	bool terminated = false;
+> +	int rc = 0;
 > +
-> +	for (; len > 0; (--len, ++s)) {
-> +		if (*s == 0)
-> +			terminated = true;
-> +		if (terminated || *s < 0x20 || *s > 0x7e)
-> +			*s = ' ';
+> +	rc = scsi_add_device(h->scsi_host, device->bus,
+> +					device->target, device->lun);
+> +	return rc;
+> +}
+> +
+> +static void hpsa_remove_device(struct ctlr_info *h,
+> +			struct hpsa_scsi_dev_t *device)
+> +{
+> +	struct scsi_device *sdev = NULL;
+> +
+> +	sdev = scsi_device_lookup(h->scsi_host, device->bus,
+> +						device->target, device->lun);
+> +
+> +	if (sdev) {
+> +		scsi_remove_device(sdev);
+> +		scsi_device_put(sdev);
+> +	} else {
+> +		/*
+> +		 * We don't expect to get here.  Future commands
+> +		 * to this device will get a selection timeout as
+> +		 * if the device were gone.
+> +		 */
+> +		hpsa_show_dev_msg(KERN_WARNING, h, device,
+> +					"didn't find device for removal.");
 > +	}
 > +}
 > +
+> static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+> 	struct hpsa_scsi_dev_t *sd[], int nsds)
+> {
+> @@ -1672,7 +1703,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+> 	unsigned long flags;
+> 	struct hpsa_scsi_dev_t **added, **removed;
+> 	int nadded, nremoved;
+> -	struct Scsi_Host *sh = NULL;
+> 
+> 	/*
+> 	 * A reset can cause a device status to change
+> @@ -1792,46 +1822,29 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+> 	if (hostno == -1 || !changes)
+> 		goto free_and_out;
+> 
+> -	sh = h->scsi_host;
+> -	if (sh == NULL) {
+> -		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
+> -		return;
+> -	}
 
-Perhaps in a future commit the version in scsi_scan can be exported and this duplication
-can be eliminated.
+Are we guaranteed that h->scsi_host will never be NULL when running in here? Or when
+the newly introduced hpsa_remove_device() is invoked elsewhere for that matter?
 
-Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+This commit loses this check and scsi_device_lookup() is not tolerant of a NULL
+scsi_host * (first action is to grab the host_lock).
+
+> 	/* Notify scsi mid layer of any removed devices */
+> 	for (i = 0; i < nremoved; i++) {
+> 		if (removed[i] == NULL)
+> 			continue;
+> -		if (removed[i]->expose_device) {
+> -			struct scsi_device *sdev =
+> -				scsi_device_lookup(sh, removed[i]->bus,
+> -					removed[i]->target, removed[i]->lun);
+> -			if (sdev != NULL) {
+> -				scsi_remove_device(sdev);
+> -				scsi_device_put(sdev);
+> -			} else {
+> -				/*
+> -				 * We don't expect to get here.
+> -				 * future cmds to this device will get selection
+> -				 * timeout as if the device was gone.
+> -				 */
+> -				hpsa_show_dev_msg(KERN_WARNING, h, removed[i],
+> -					"didn't find device for removal.");
+> -			}
+> -		}
+> +		if (removed[i]->expose_device)
+> +			hpsa_remove_device(h, removed[i]);
+> 		kfree(removed[i]);
+> 		removed[i] = NULL;
+> 	}
+> 
+> 	/* Notify scsi mid layer of any added devices */
+> 	for (i = 0; i < nadded; i++) {
+> +		int rc = 0;
+> +
+> 		if (added[i] == NULL)
+> 			continue;
+> 		if (!(added[i]->expose_device))
+> 			continue;
+> -		if (scsi_add_device(sh, added[i]->bus,
+> -			added[i]->target, added[i]->lun) == 0)
+> +		rc = hpsa_add_device(h, added[i]);
+> +		if (!rc)
+> 			continue;
+> -		dev_warn(&h->pdev->dev, "addition failed, device not added.");
+> +		dev_warn(&h->pdev->dev,
+> +			"addition failed %d, device not added.", rc);
+> 		/* now we have to remove it from h->dev,
+> 		 * since it didn't get added to scsi mid layer
+> 		 */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
