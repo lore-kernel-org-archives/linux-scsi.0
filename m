@@ -1,165 +1,81 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1 17/25] hpsa: move scsi_add_device and scsi_remove_device calls to new function
-Date: Thu, 29 Oct 2015 12:21:10 -0500
-Message-ID: <90741AFD-5D5E-4588-A7B1-53A3E80DA984@linux.vnet.ibm.com>
-References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220613.5323.52829.stgit@brunhilda>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Blk-mq/scsi-mq Tuning
+Date: Thu, 29 Oct 2015 11:04:47 -0700
+Message-ID: <56325FBF.8010306@sandisk.com>
+References: <D256A425.229C0%chad.dupuis@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:54638 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757446AbbJ2RVR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 13:21:17 -0400
-Received: from localhost
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Thu, 29 Oct 2015 11:21:16 -0600
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id E6249C9003E
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:09:25 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9THLFxs63438936
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 17:21:15 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9THLDXv015921
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 13:21:14 -0400
-In-Reply-To: <20151028220613.5323.52829.stgit@brunhilda>
+Received: from mail-by2on0079.outbound.protection.outlook.com ([207.46.100.79]:38322
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751055AbbJ2SEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Oct 2015 14:04:50 -0400
+In-Reply-To: <D256A425.229C0%chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>, Jens Axboe <axboe@fb.com>
 
-> On Oct 28, 2015, at 5:06 PM, Don Brace <don.brace@pmcs.com> wrote:
-> 
-> From: Kevin Barnett <kevin.barnett@pmcs.com>
-> 
-> preparation for adding the sas transport class
-> 
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
-> drivers/scsi/hpsa.c |   65 +++++++++++++++++++++++++++++++--------------------
-> 1 file changed, 39 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 24b3c8c..06207e2 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -1660,6 +1660,37 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
-> 	}
-> }
-> 
-> +static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
-> +{
-> +	int rc = 0;
-> +
-> +	rc = scsi_add_device(h->scsi_host, device->bus,
-> +					device->target, device->lun);
-> +	return rc;
-> +}
-> +
-> +static void hpsa_remove_device(struct ctlr_info *h,
-> +			struct hpsa_scsi_dev_t *device)
-> +{
-> +	struct scsi_device *sdev = NULL;
-> +
-> +	sdev = scsi_device_lookup(h->scsi_host, device->bus,
-> +						device->target, device->lun);
-> +
-> +	if (sdev) {
-> +		scsi_remove_device(sdev);
-> +		scsi_device_put(sdev);
-> +	} else {
-> +		/*
-> +		 * We don't expect to get here.  Future commands
-> +		 * to this device will get a selection timeout as
-> +		 * if the device were gone.
-> +		 */
-> +		hpsa_show_dev_msg(KERN_WARNING, h, device,
-> +					"didn't find device for removal.");
-> +	}
-> +}
-> +
-> static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
-> 	struct hpsa_scsi_dev_t *sd[], int nsds)
-> {
-> @@ -1672,7 +1703,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
-> 	unsigned long flags;
-> 	struct hpsa_scsi_dev_t **added, **removed;
-> 	int nadded, nremoved;
-> -	struct Scsi_Host *sh = NULL;
-> 
-> 	/*
-> 	 * A reset can cause a device status to change
-> @@ -1792,46 +1822,29 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
-> 	if (hostno == -1 || !changes)
-> 		goto free_and_out;
-> 
-> -	sh = h->scsi_host;
-> -	if (sh == NULL) {
-> -		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
-> -		return;
-> -	}
+On 10/28/2015 01:11 PM, Chad Dupuis wrote:
+> We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if the=
+re were
+> any best practices in terms of block layer settings.  We=B9re looking
+> specifically at the FCoE and iSCSI protocols.
+>
+> A little background on the queues in our hardware first: we have a pe=
+r
+> connection transmit queue and multiple, global receive queues.  The
+> transmit queues are not pegged to a particular CPU.  The receive queu=
+es
+> are pegged to the first N CPUs where N is the number of receive queue=
+s.
+> We set the nr_hw_queues in the scsi_host_template to N as well.
+>
+> In our initial testing we=B9re not seeing the performance scale as we=
+ would
+> expect so we wanted to see if there some =8Cknobs=B9 if you will that=
+ we could
+> try tuning to try to increase the performance.  Also, one question we=
+ did
+> have is there an official API to be able to set the CPU affinity of t=
+he
+> hw_ctx_queues?
 
-Are we guaranteed that h->scsi_host will never be NULL when running in here? Or when
-the newly introduced hpsa_remove_device() is invoked elsewhere for that matter?
+(added Jens to CC-list)
 
-This commit loses this check and scsi_device_lookup() is not tolerant of a NULL
-scsi_host * (first action is to grab the host_lock).
+Hello Chad,
 
-> 	/* Notify scsi mid layer of any removed devices */
-> 	for (i = 0; i < nremoved; i++) {
-> 		if (removed[i] == NULL)
-> 			continue;
-> -		if (removed[i]->expose_device) {
-> -			struct scsi_device *sdev =
-> -				scsi_device_lookup(sh, removed[i]->bus,
-> -					removed[i]->target, removed[i]->lun);
-> -			if (sdev != NULL) {
-> -				scsi_remove_device(sdev);
-> -				scsi_device_put(sdev);
-> -			} else {
-> -				/*
-> -				 * We don't expect to get here.
-> -				 * future cmds to this device will get selection
-> -				 * timeout as if the device was gone.
-> -				 */
-> -				hpsa_show_dev_msg(KERN_WARNING, h, removed[i],
-> -					"didn't find device for removal.");
-> -			}
-> -		}
-> +		if (removed[i]->expose_device)
-> +			hpsa_remove_device(h, removed[i]);
-> 		kfree(removed[i]);
-> 		removed[i] = NULL;
-> 	}
-> 
-> 	/* Notify scsi mid layer of any added devices */
-> 	for (i = 0; i < nadded; i++) {
-> +		int rc = 0;
-> +
-> 		if (added[i] == NULL)
-> 			continue;
-> 		if (!(added[i]->expose_device))
-> 			continue;
-> -		if (scsi_add_device(sh, added[i]->bus,
-> -			added[i]->target, added[i]->lun) == 0)
-> +		rc = hpsa_add_device(h, added[i]);
-> +		if (!rc)
-> 			continue;
-> -		dev_warn(&h->pdev->dev, "addition failed, device not added.");
-> +		dev_warn(&h->pdev->dev,
-> +			"addition failed %d, device not added.", rc);
-> 		/* now we have to remove it from h->dev,
-> 		 * since it didn't get added to scsi mid layer
-> 		 */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+It's great news that you are looking into adding scsi-mq support for=20
+=46CoE and iSCSI initiator HBA's. If you do not see the performance sca=
+le=20
+as expected that probably means that lock contention occurs in the code=
+=20
+that submits requests to the SCSI request queues. Have you already trie=
+d=20
+to measure L3 cache misses with perf (e.g. perf record -ag -e=20
+LLC-store-misses sleep 10 && perf report) ? If a single function is=20
+responsible for more than 10% of the L3 cache misses usually that means=
+=20
+that that function is causing a bottleneck.
 
+As far as I know an official API for setting the CPU affinity of the=20
+hw_ctx queues is not yet available. The approach of the SRP initiator=20
+driver (ib_srp) is that it assumes that the HCA supports MSI-X and that=
+=20
+MSI-X interrupts have been spread evenly over processors. The ib_srp=20
+driver selects an MSI-X interrupt for each hw_ctx queue via the=20
+comp_vector member of struct ib_cq_init_attr. The script I am using=20
+myself is available at=20
+http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/21312/fo=
+cus=3D98409.=20
+I hope one day that script will be superfluous :-)
+
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
