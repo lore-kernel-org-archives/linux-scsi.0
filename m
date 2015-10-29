@@ -1,36 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 106841] do not output error for simple subenclosure (handle
- Short Enclosure Status diagnostic page)
-Date: Thu, 29 Oct 2015 04:27:40 +0000
-Message-ID: <bug-106841-11613-gMP7VSnxNZ@https.bugzilla.kernel.org/>
-References: <bug-106841-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 02/12] megaraid_sas : Code optimization- remove PCI Ids based checks
+Date: Thu, 29 Oct 2015 00:40:42 -0400
+Message-ID: <yq1fv0u8eyd.fsf@sermon.lab.mkp.net>
+References: <201510150816.t9F8GqPJ029555@palmhbs0.lsi.com>
+	<yq1si4v90yp.fsf@sermon.lab.mkp.net>
+	<8e8133a4c138153187671ddf75181b8b@mail.gmail.com>
+	<c184826206ec6525b7ecb9e034cb6368@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60532 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226AbbJ2E1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2015 00:27:43 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4416C209C4
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 04:27:42 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id CB42E209E7
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 04:27:40 +0000 (UTC)
-In-Reply-To: <bug-106841-11613@https.bugzilla.kernel.org/>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45626 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbJ2ElX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 00:41:23 -0400
+In-Reply-To: <c184826206ec6525b7ecb9e034cb6368@mail.gmail.com> (Kashyap
+	Desai's message of "Wed, 28 Oct 2015 20:00:47 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Sumit Saxena <sumit.saxena@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=106841
+>>>>> "Kashyap" == Kashyap Desai <kashyap.desai@avagotech.com> writes:
 
---- Comment #1 from Tom Yan <tom.ty89@gmail.com> ---
-Oops I missed the lsscsi output:
-[tom@localhost ~]$ sudo lsscsi -g | grep WD
-[7:0:0:0]    disk    WD       My Passport 083A 1065  /dev/sdc   /dev/sg3 
-[7:0:0:1]    enclosu WD       SES Device       1065  -          /dev/sg4
+Kashyap> Here is last outstanding patch series.
+Kashyap> http://marc.info/?l=linux-scsi&m=144102204225400&w=2
+
+Kashyap> Last patch series was missed because of small rebase
+Kashyap> issue. James suggested not to ACK anything which is not
+Kashyap> critical to avoid such issue and probably piggy back those
+Kashyap> patches.  Last series and latest series has reviewed-by
+Kashyap> tags. Can we have outstanding patches committed in next window
+Kashyap> ?
+
+Just pulled in the previous patch series. Will work on the latest one
+next.
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Martin K. Petersen	Oracle Linux Engineering
