@@ -1,51 +1,71 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1 03/25] hpsa: check for null arguments to dev_printk
-Date: Thu, 29 Oct 2015 09:41:36 -0500
-Message-ID: <56323020.6000909@linux.vnet.ibm.com>
-References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220447.5323.79638.stgit@brunhilda>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [dm-devel] IBM request to allow unprivledged ioctls [Was: Revert
+ "dm mpath: fix stalls when handling invalid ioctls"]
+Date: Thu, 29 Oct 2015 12:47:06 -0200
+Message-ID: <5632316A.5060909@linux.vnet.ibm.com>
+References: <1446121463-17828-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <20151029131810.GA26841@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:43495 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757067AbbJ2OlS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 10:41:18 -0400
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Thu, 29 Oct 2015 08:41:17 -0600
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 98CD919D8040
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 08:29:23 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9TEfD0g8388926
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 07:41:14 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9TEfCrD006140
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 08:41:13 -0600
-In-Reply-To: <20151028220447.5323.79638.stgit@brunhilda>
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:57195 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbbJ2OrQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 10:47:16 -0400
+Received: from /spool/local
+	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+	Thu, 29 Oct 2015 12:47:14 -0200
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 9175B1DC0060
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 10:46:06 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9TEldca4649142
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 12:47:39 -0200
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9TEl9CR010629
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 12:47:09 -0200
+In-Reply-To: <20151029131810.GA26841@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: snitzer@redhat.com
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
+Hi Mike,
 
-On 10/28/2015 5:04 PM, Don Brace wrote:
-> Check for NULLs.
-> -	int devtype;
-> +	unsigned int devtype;
+On 10/29/2015 11:18 AM, Mike Snitzer wrote:
+> Sorry but I fail to see why your request to revert is viable.
 
-Don:
+No problem. Thanks for moving this for a discussion on a proper fix.
 
-Unrelated to the NULL argument check. Would have been preferable in a
-distinct patch.
+I'm somewhat new to kernel and SCSI workings and its community process,
+so that's certainly appreciated.
 
-Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+> Wouldn't the correct fix be to train scsi_verify_blk_ioctl() to work
+> even without SYS_CAP_RAWIO?
 
----
-Manoj Kumar
+I see it would fix the problem as well, but I don't happen to know
+all of its usages, so I'd have to defer to question to someone who
+knows more of it.
 
+> I'm not doubting that the commit caused problems for the case you care
+> about (unprivledged users issueing ioctls) but that is an entirely
+> different issue that needs to be discussed more directly (with the
+> broader linux-scsi community, now cc'd).
+
+Sure. Thanks for opening the discussion.
+
+> p.s. leaving full context for linux-scsi so they don't need to track
+> down other mails (btw, thanks for the detailed patch header but it
+> enabled me to be skeptical of your request to revert):
+
+You're welcome. If it's been useful for rejecting this patch and
+getting a better one later, it's worth it. :)
+
+Kind regards,
+
+-- 
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
 
