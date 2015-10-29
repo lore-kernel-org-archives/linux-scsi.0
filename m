@@ -1,153 +1,134 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1 17/25] hpsa: move scsi_add_device and scsi_remove_device
- calls to new function
-Date: Thu, 29 Oct 2015 17:37:25 +0100
-Message-ID: <56324B45.3070004@redhat.com>
-References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220613.5323.52829.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1 13/25] hpsa: simplify update scsi devices
+Date: Thu, 29 Oct 2015 11:43:09 -0500
+Message-ID: <998BCB19-5910-44A6-A53F-29BB78160ED9@linux.vnet.ibm.com>
+References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220549.5323.85641.stgit@brunhilda>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56995 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754046AbbJ2Qh2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2015 12:37:28 -0400
-In-Reply-To: <20151028220613.5323.52829.stgit@brunhilda>
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:47477 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317AbbJ2QnQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2015 12:43:16 -0400
+Received: from localhost
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Thu, 29 Oct 2015 12:43:15 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 7C10CC90043
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 12:31:22 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9TGhBnJ57606146
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 16:43:11 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9TGhAIl026076
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2015 12:43:11 -0400
+In-Reply-To: <20151028220549.5323.85641.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On 28.10.2015 23:06, Don Brace wrote:
+> On Oct 28, 2015, at 5:05 PM, Don Brace <don.brace@pmcs.com> wrote:
+> 
 > From: Kevin Barnett <kevin.barnett@pmcs.com>
->
-> preparation for adding the sas transport class
->
+> 
+> remove repeated calculation that checks for physical
+> or logical devices.
+> 
 > Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 > Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
->  drivers/scsi/hpsa.c |   65 +++++++++++++++++++++++++++++++--------------------
->  1 file changed, 39 insertions(+), 26 deletions(-)
->
+> drivers/scsi/hpsa.c |   23 ++++++++++++++---------
+> drivers/scsi/hpsa.h |    1 +
+> 2 files changed, 15 insertions(+), 9 deletions(-)
+> 
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 24b3c8c..06207e2 100644
+> index d011540..7c1a552 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -1660,6 +1660,37 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
->  	}
->  }
->  
-> +static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
-> +{
-> +	int rc = 0;
+> @@ -3761,6 +3761,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+> 	int ncurrent = 0;
+> 	int i, n_ext_target_devs, ndevs_to_allocate;
+> 	int raid_ctlr_position;
+> +	bool physical_device;
 
-Just int rc; is better, but it's a nit.
-(and struct scsi_device *sdev; few lines below)
+Any particular reason for using a bool here and a u8 when you cache the value?
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> 	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
+> 
+> 	currentsd = kzalloc(sizeof(*currentsd) * HPSA_MAX_DEVICES, GFP_KERNEL);
+> @@ -3821,16 +3822,17 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+> 		int rc = 0;
+> 		int phys_dev_index = i - (raid_ctlr_position == 0);
+> 
+> +		physical_device = i < nphysicals + (raid_ctlr_position == 0);
+> +
+> 		/* Figure out where the LUN ID info is coming from */
+> 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
+> 			i, nphysicals, nlogicals, physdev_list, logdev_list);
+> 
+> 		/* skip masked non-disk devices */
+> -		if (MASKED_DEVICE(lunaddrbytes))
+> -			if (i < nphysicals + (raid_ctlr_position == 0) &&
+> -				(physdev_list->
+> -				LUN[phys_dev_index].device_flags & 0x01))
+> -				continue;
+> +		if (physical_device &&
+> +			MASKED_DEVICE(lunaddrbytes) &&
+> +			(physdev_list->LUN[phys_dev_index].device_flags & 0x01))
+> +			continue;
 
-Tomas
+In this conditional you swapped the ordering, evaluating physical_device first, why?
 
-> +
-> +	rc = scsi_add_device(h->scsi_host, device->bus,
-> +					device->target, device->lun);
-> +	return rc;
-> +}
-> +
-> +static void hpsa_remove_device(struct ctlr_info *h,
-> +			struct hpsa_scsi_dev_t *device)
-> +{
-> +	struct scsi_device *sdev = NULL;
-> +
-> +	sdev = scsi_device_lookup(h->scsi_host, device->bus,
-> +						device->target, device->lun);
-> +
-> +	if (sdev) {
-> +		scsi_remove_device(sdev);
-> +		scsi_device_put(sdev);
-> +	} else {
+> 
+> 		/* Get device type, vendor, model, device id */
+> 		rc = hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
+> @@ -3866,10 +3868,13 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+> 		}
+> 
+> 		*this_device = *tmpdevice;
+> +		this_device->physical_device = physical_device;
+> 
+> -		/* do not expose masked devices */
+> -		if (MASKED_DEVICE(lunaddrbytes) &&
+> -			i < nphysicals + (raid_ctlr_position == 0))
 > +		/*
-> +		 * We don't expect to get here.  Future commands
-> +		 * to this device will get a selection timeout as
-> +		 * if the device were gone.
+> +		 * Expose all devices except for physical devices that
+> +		 * are masked.
 > +		 */
-> +		hpsa_show_dev_msg(KERN_WARNING, h, device,
-> +					"didn't find device for removal.");
-> +	}
-> +}
-> +
->  static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  	struct hpsa_scsi_dev_t *sd[], int nsds)
->  {
-> @@ -1672,7 +1703,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  	unsigned long flags;
->  	struct hpsa_scsi_dev_t **added, **removed;
->  	int nadded, nremoved;
-> -	struct Scsi_Host *sh = NULL;
->  
->  	/*
->  	 * A reset can cause a device status to change
-> @@ -1792,46 +1822,29 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
->  	if (hostno == -1 || !changes)
->  		goto free_and_out;
->  
-> -	sh = h->scsi_host;
-> -	if (sh == NULL) {
-> -		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
-> -		return;
-> -	}
->  	/* Notify scsi mid layer of any removed devices */
->  	for (i = 0; i < nremoved; i++) {
->  		if (removed[i] == NULL)
->  			continue;
-> -		if (removed[i]->expose_device) {
-> -			struct scsi_device *sdev =
-> -				scsi_device_lookup(sh, removed[i]->bus,
-> -					removed[i]->target, removed[i]->lun);
-> -			if (sdev != NULL) {
-> -				scsi_remove_device(sdev);
-> -				scsi_device_put(sdev);
-> -			} else {
-> -				/*
-> -				 * We don't expect to get here.
-> -				 * future cmds to this device will get selection
-> -				 * timeout as if the device was gone.
-> -				 */
-> -				hpsa_show_dev_msg(KERN_WARNING, h, removed[i],
-> -					"didn't find device for removal.");
-> -			}
-> -		}
-> +		if (removed[i]->expose_device)
-> +			hpsa_remove_device(h, removed[i]);
->  		kfree(removed[i]);
->  		removed[i] = NULL;
->  	}
->  
->  	/* Notify scsi mid layer of any added devices */
->  	for (i = 0; i < nadded; i++) {
-> +		int rc = 0;
-> +
->  		if (added[i] == NULL)
->  			continue;
->  		if (!(added[i]->expose_device))
->  			continue;
-> -		if (scsi_add_device(sh, added[i]->bus,
-> -			added[i]->target, added[i]->lun) == 0)
-> +		rc = hpsa_add_device(h, added[i]);
-> +		if (!rc)
->  			continue;
-> -		dev_warn(&h->pdev->dev, "addition failed, device not added.");
-> +		dev_warn(&h->pdev->dev,
-> +			"addition failed %d, device not added.", rc);
->  		/* now we have to remove it from h->dev,
->  		 * since it didn't get added to scsi mid layer
->  		 */
->
+> +		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
+> 			this_device->expose_device = 0;
+> 		else
+> 			this_device->expose_device = 1;
+> @@ -3887,7 +3892,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+> 				ncurrent++;
+> 			break;
+> 		case TYPE_DISK:
+> -			if (i < nphysicals + (raid_ctlr_position == 0)) {
+> +			if (this_device->physical_device) {
+> 				/* The disk is in HBA mode. */
+> 				/* Never use RAID mapper in HBA mode. */
+> 				this_device->offload_enabled = 0;
+> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+> index a6ead07..808b520 100644
+> --- a/drivers/scsi/hpsa.h
+> +++ b/drivers/scsi/hpsa.h
+> @@ -37,6 +37,7 @@ struct hpsa_scsi_dev_t {
+> 	unsigned int devtype;
+> 	int bus, target, lun;		/* as presented to the OS */
+> 	unsigned char scsi3addr[8];	/* as presented to the HW */
+> +	u8 physical_device;
+> 	u8 expose_device;
+> #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
+> 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
