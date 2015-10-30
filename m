@@ -1,164 +1,68 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 1/2] Separate target visibility from reaped state information
-Date: Fri, 30 Oct 2015 15:08:12 -0700
-Message-ID: <5633EA4C.10608@sandisk.com>
-References: <5633E9F2.5080209@sandisk.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/5] ipr: Inquiry IOA page 0xC4 during initialization.
+Date: Fri, 30 Oct 2015 17:08:30 -0500
+Message-ID: <5633EA5E.2040104@linux.vnet.ibm.com>
+References: <1446223749-17416-1-git-send-email-krisman@linux.vnet.ibm.com>
+ <1446223749-17416-3-git-send-email-krisman@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0090.outbound.protection.outlook.com ([157.56.110.90]:34816
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030338AbbJ3WIQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 18:08:16 -0400
-In-Reply-To: <5633E9F2.5080209@sandisk.com>
+Received: from e18.ny.us.ibm.com ([129.33.205.208]:58024 "EHLO
+	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030338AbbJ3WIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 18:08:35 -0400
+Received: from localhost
+	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 18:08:34 -0400
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 10E506E8040
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 17:56:43 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9UM8Vxd57737260
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 22:08:31 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9UM8V3C006417
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 18:08:31 -0400
+In-Reply-To: <1446223749-17416-3-git-send-email-krisman@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: wenxiong@linux.vnet.ibm.com
 
-Instead of representing the states "visible in sysfs" and
-"has been removed from the target list" by a single state
-variable, use two variables to represent this information.
+On 10/30/2015 11:49 AM, Gabriel Krisman Bertazi wrote:
+> diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+> index 69257c4..f0238cc 100644
+> --- a/drivers/scsi/ipr.h
+> +++ b/drivers/scsi/ipr.h
+> @@ -849,6 +849,16 @@ struct ipr_inquiry_page0 {
+>  	u8 page[IPR_INQUIRY_PAGE0_ENTRIES];
+>  }__attribute__((packed));
+> 
+> +struct ipr_inquiry_pageC4 {
+> +	u8 peri_qual_dev_type;
+> +	u8 page_code;
+> +	u8 reserved1;
+> +	u8 len;
+> +	u8 cache_cap[4];
+> +#define IPR_CAP_SYNC_CACHE		0x08
+> +	u8 reserved2[20];
+> +}__attribute__((packed));
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: stable <stable@vger.kernel.org>
----
- drivers/scsi/scsi_scan.c   | 31 +++----------------------------
- drivers/scsi/scsi_sysfs.c  |  7 ++++---
- include/scsi/scsi_device.h |  3 ++-
- 3 files changed, 9 insertions(+), 32 deletions(-)
+This triggers a couple complaints from checkpatch. You need a space after the },
+which checkpatch flags as an error and __packed is preferred to __attribute__((packed)),
+which is flagged as a warning. There are a couple of other warnings that checkpatch
+issues in this series, so you might want to take a look at them, fixup, and resend.
+We should probably spin a follow up patch to fix up the __attribute__ usage in ipr.h,
+since you were simply being consistent with that.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f9f3f82..80b8c3f 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -314,7 +314,6 @@ static void scsi_target_destroy(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
- 	unsigned long flags;
- 
--	starget->state = STARGET_DEL;
- 	transport_destroy_device(dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (shost->hostt->target_destroy)
-@@ -379,19 +378,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
- 	struct scsi_target *starget
- 		= container_of(kref, struct scsi_target, reap_ref);
- 
--	/*
--	 * if we get here and the target is still in the CREATED state that
--	 * means it was allocated but never made visible (because a scan
--	 * turned up no LUNs), so don't call device_del() on it.
--	 */
--	if (starget->state != STARGET_CREATED) {
-+	if (starget->visible) {
-+		starget->visible = false;
- 		transport_remove_device(&starget->dev);
- 		device_del(&starget->dev);
- 	}
- 	scsi_target_destroy(starget);
- }
- 
--static void scsi_target_reap_ref_put(struct scsi_target *starget)
-+void scsi_target_reap(struct scsi_target *starget)
- {
- 	kref_put(&starget->reap_ref, scsi_target_reap_ref_release);
- }
-@@ -437,7 +432,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	starget->can_queue = 0;
- 	INIT_LIST_HEAD(&starget->siblings);
- 	INIT_LIST_HEAD(&starget->devices);
--	starget->state = STARGET_CREATED;
- 	starget->scsi_level = SCSI_2;
- 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
-  retry:
-@@ -498,25 +492,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- }
- 
- /**
-- * scsi_target_reap - check to see if target is in use and destroy if not
-- * @starget: target to be checked
-- *
-- * This is used after removing a LUN or doing a last put of the target
-- * it checks atomically that nothing is using the target and removes
-- * it if so.
-- */
--void scsi_target_reap(struct scsi_target *starget)
--{
--	/*
--	 * serious problem if this triggers: STARGET_DEL is only set in the if
--	 * the reap_ref drops to zero, so we're trying to do another final put
--	 * on an already released kref
--	 */
--	BUG_ON(starget->state == STARGET_DEL);
--	scsi_target_reap_ref_put(starget);
--}
--
--/**
-  * sanitize_inquiry_string - remove non-graphical chars from an INQUIRY result string
-  * @s: INQUIRY result string to sanitize
-  * @len: length of the string
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b333389..b9fb61a 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -974,7 +974,7 @@ static int scsi_target_add(struct scsi_target *starget)
- {
- 	int error;
- 
--	if (starget->state != STARGET_CREATED)
-+	if (starget->visible)
- 		return 0;
- 
- 	error = device_add(&starget->dev);
-@@ -983,7 +983,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 		return error;
- 	}
- 	transport_add_device(&starget->dev);
--	starget->state = STARGET_RUNNING;
-+	starget->visible = true;
- 
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
-@@ -1166,11 +1166,12 @@ void scsi_remove_target(struct device *dev)
- 	 */
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(starget, &shost->__targets, siblings) {
--		if (starget->state == STARGET_DEL)
-+		if (starget->reaped)
- 			continue;
- 		if (starget->dev.parent == dev || &starget->dev == dev) {
- 			/* assuming new targets arrive at the end */
- 			kref_get(&starget->reap_ref);
-+			starget->reaped = true;
- 			spin_unlock_irqrestore(shost->host_lock, flags);
- 			if (last)
- 				scsi_target_reap(last);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index fe89d7c..a734656 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -267,6 +267,8 @@ struct scsi_target {
- 	unsigned int		expecting_lun_change:1;	/* A device has reported
- 						 * a 3F/0E UA, other devices on
- 						 * the same target will also. */
-+	unsigned int		visible:1; /* visible in sysfs */
-+	unsigned int		reaped:1; /* removed from target list */
- 	/* commands actually active on LLD. */
- 	atomic_t		target_busy;
- 	atomic_t		target_blocked;
-@@ -280,7 +282,6 @@ struct scsi_target {
- #define SCSI_DEFAULT_TARGET_BLOCKED	3
- 
- 	char			scsi_level;
--	enum scsi_target_state	state;
- 	void 			*hostdata; /* available to low-level driver */
- 	unsigned long		starget_data[0]; /* for the transport */
- 	/* starget_data must be the last element!!!! */
+Thanks,
+
+Brian
+
 -- 
-2.6.2.307.g37023ba
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
