@@ -1,76 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v6 00/15] Big fixes, retries, handle a race condition
-Date: Fri, 30 Oct 2015 13:20:09 +0100
-Message-ID: <56336079.60509@suse.de>
-References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RESEND PATCH v3] scsi: stex: Remove use of struct timeval
+Date: Fri, 30 Oct 2015 13:45:08 +0100
+Message-ID: <5927653.jpoZ2K5FqB@wuerfel>
+References: <20151030083040.GA31741@tina-laptop> <56335B69.4010502@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <56335B69.4010502@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, y2038@lists.linaro.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/28/2015 02:13 PM, Yaniv Gardi wrote:
-> Important:
-> This serie of 15 small patches should be pushed after the series of 8=
- patches
-> "Fix error message and present UFS variant probe"
->=20
-> V6:
-> update Reviewed-by from various reviewers
->=20
-> V5:
-> removed un-necessary wmb()
->=20
-> V4:
-> fixing a few comments from reviewers
->=20
-> V3:
-> removed specific calls to wmb() since they are redundant.
->=20
-> V2:
-> a few minor changes
->=20
-> V1:
-> This serie of 15 small patches should be pushed after the series of 8=
- patches
-> I have uploaded to the upstream a week ago:
-> "Fix error message and present UFS variant probe"
->=20
-> Yaniv Gardi (15):
->   scsi: ufs: clear UTRD, UPIU req and rsp before new transfers
->   scsi: ufs: clear fields UTRD, UPIU req and rsp before new transfers
->   scsi: ufs: verify command tag validity
->   scsi: ufs: clear outstanding_request bit in case query timeout
->   scsi: ufs: increase fDeviceInit query response timeout
->   scsi: ufs: avoid exception event handler racing with PM callbacks
->   scsi: ufs: set REQUEST_SENSE command size to 18 bytes
->   scsi: ufs: add retries to dme_peer get and set attribute
->   scsi: ufs: add retries for hibern8 enter
->   scsi: ufs: fix error recovery after the hibern8 exit failure
->   scsi: ufs: retry failed query flag requests
->   scsi: ufs: reduce the interrupts for power mode change requests
->   scsi: ufs: add missing memory barriers
->   scsi: ufs: commit descriptors before setting the doorbell
->   scsi: ufs: add wrapper for retrying sending query attribute
->=20
->  drivers/scsi/ufs/ufshcd.c | 408 ++++++++++++++++++++++++++++++++++++=
-----------
->  drivers/scsi/ufs/ufshcd.h |   4 +
->  2 files changed, 327 insertions(+), 85 deletions(-)
->=20
-Except for patch 07/15:
+On Friday 30 October 2015 12:58:33 Hannes Reinecke wrote:
+> > @@ -1076,7 +1069,7 @@ static int stex_ss_handshake(struct st_hba *hba)
+> >       h->req_cnt = cpu_to_le16(hba->rq_count+1);
+> >       h->status_sz = cpu_to_le16(sizeof(struct status_msg));
+> >       h->status_cnt = cpu_to_le16(hba->sts_count+1);
+> > -     stex_gettime(&h->hosttime);
+> > +     h->hosttime = cpu_to_le64(ktime_get_real_seconds());
+> >       h->partner_type = HMU_PARTNER_TYPE;
+> >       h->extra_offset = h->extra_size = 0;
+> >       scratch_size = (hba->sts_count+1)*sizeof(u32);
+> > 
+> Just remove 'hosttime' altogether. It serves no purpose whatsoever.
+> 
+> 
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Are you sure? It is defined in a struct that is shared with the HBA
+as part of hba->dma_mem, so unless you have access to the firmware,
+it's hard to guess what it might be used for inside of the firmware.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+	Arnd
