@@ -1,79 +1,237 @@
 From: Benjamin Rood <benjaminjrood@gmail.com>
-Subject: [PATCH 1/8] pm80xx: configure PHY settings based on subsystem vendor ID
-Date: Fri, 30 Oct 2015 10:53:24 -0400
-Message-ID: <1446216811-2248-2-git-send-email-brood@attotech.com>
+Subject: [PATCH 5/8] pm80xx: set PHY profiles for ATTO 12Gb SAS controllers
+Date: Fri, 30 Oct 2015 10:53:28 -0400
+Message-ID: <1446216811-2248-6-git-send-email-brood@attotech.com>
 References: <1446216811-2248-1-git-send-email-brood@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:35343 "EHLO
-	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbbJ3Oxg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 10:53:36 -0400
-Received: by qkbl190 with SMTP id l190so31576044qkb.2
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 07:53:35 -0700 (PDT)
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:33810 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbbJ3Oxl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 10:53:41 -0400
+Received: by qgem9 with SMTP id m9so63091837qge.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 07:53:41 -0700 (PDT)
 In-Reply-To: <1446216811-2248-1-git-send-email-brood@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com
 Cc: Benjamin Rood <brood@attotech.com>
 
-Previuosly, all PMC Sierra 80xx controllers are assumed to be a
-motherboard controller, except if the subsystem vendor ID was equal to
-PCI_VENDOR_ID_ADAPTEC.  The driver then attempts to load PHY settings
-from NVRAM.  While this may be correct behavior for most controllers, it
-does not work with Adaptec and ATTO controllers since they do not store
-PHY settings in NVRAM and choose to use either custom PHY settings or chip
-defaults.  Loading random values from NVRAM may cause the controllers to
-malfunction in this edge case.
+PHY profiles are not saved in NVRAM on ATTO 12Gb SAS controllers.
+Therefore, in order for the controller to function in a wide range of
+configurations, the PHY profiles must be statically set.  This patch
+provides the necessary functionality to do so.
 
 Signed-off-by: Benjamin Rood <brood@attotech.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 130 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h  |   2 +
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  32 ++++++++++
+ 3 files changed, 164 insertions(+)
 
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 5c0356f..8c094fd 100644
+index fdbfab6..a0e55d4 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -720,6 +720,23 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+@@ -732,6 +732,131 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
  	return 0;
  }
  
++struct pm8001_mpi3_phy_pg_trx_config {
++	u32 LaneLosCfg;
++	u32 LanePgaCfg1;
++	u32 LanePisoCfg1;
++	u32 LanePisoCfg2;
++	u32 LanePisoCfg3;
++	u32 LanePisoCfg4;
++	u32 LanePisoCfg5;
++	u32 LanePisoCfg6;
++	u32 LaneBctCtrl;
++};
++
 +/**
-+ * pm8001_configure_phy_settings : Configures PHY settings based on vendor ID.
-+ * @pm8001_ha : our hba.
++ * pm8001_get_internal_phy_settings : Retrieves the internal PHY settings
++ * @pm8001_ha : our adapter
++ * @phycfg : PHY config page to populate
 + */
-+static int pm8001_configure_phy_settings(struct pm8001_hba_info *pm8001_ha)
++static
++void pm8001_get_internal_phy_settings(struct pm8001_hba_info *pm8001_ha,
++		struct pm8001_mpi3_phy_pg_trx_config *phycfg)
 +{
-+	switch (pm8001_ha->pdev->subsystem_vendor) {
-+	case PCI_VENDOR_ID_ATTO:
-+	case PCI_VENDOR_ID_ADAPTEC2:
-+	case 0:
-+		return 0;
++	phycfg->LaneLosCfg   = 0x00000132;
++	phycfg->LanePgaCfg1  = 0x00203949;
++	phycfg->LanePisoCfg1 = 0x000000FF;
++	phycfg->LanePisoCfg2 = 0xFF000001;
++	phycfg->LanePisoCfg3 = 0xE7011300;
++	phycfg->LanePisoCfg4 = 0x631C40C0;
++	phycfg->LanePisoCfg5 = 0xF8102036;
++	phycfg->LanePisoCfg6 = 0xF74A1000;
++	phycfg->LaneBctCtrl  = 0x00FB33F8;
++}
++
++/**
++ * pm8001_get_external_phy_settings : Retrieves the external PHY settings
++ * @pm8001_ha : our adapter
++ * @phycfg : PHY config page to populate
++ */
++static
++void pm8001_get_external_phy_settings(struct pm8001_hba_info *pm8001_ha,
++		struct pm8001_mpi3_phy_pg_trx_config *phycfg)
++{
++	phycfg->LaneLosCfg   = 0x00000132;
++	phycfg->LanePgaCfg1  = 0x00203949;
++	phycfg->LanePisoCfg1 = 0x000000FF;
++	phycfg->LanePisoCfg2 = 0xFF000001;
++	phycfg->LanePisoCfg3 = 0xE7011300;
++	phycfg->LanePisoCfg4 = 0x63349140;
++	phycfg->LanePisoCfg5 = 0xF8102036;
++	phycfg->LanePisoCfg6 = 0xF80D9300;
++	phycfg->LaneBctCtrl  = 0x00FB33F8;
++}
++
++/**
++ * pm8001_get_phy_mask : Retrieves the mask that denotes if a PHY is int/ext
++ * @pm8001_ha : our adapter
++ * @phymask : The PHY mask
++ */
++static
++void pm8001_get_phy_mask(struct pm8001_hba_info *pm8001_ha, int *phymask)
++{
++	switch (pm8001_ha->pdev->subsystem_device) {
++	case 0x0070: /* H1280 - 8 external 0 internal */
++	case 0x0072: /* H12F0 - 16 external 0 internal */
++		*phymask = 0x0000;
++		break;
++
++	case 0x0071: /* H1208 - 0 external 8 internal */
++	case 0x0073: /* H120F - 0 external 16 internal */
++		*phymask = 0xFFFF;
++		break;
++
++	case 0x0080: /* H1244 - 4 external 4 internal */
++		*phymask = 0x00F0;
++		break;
++
++	case 0x0081: /* H1248 - 4 external 8 internal */
++		*phymask = 0x0FF0;
++		break;
++
++	case 0x0082: /* H1288 - 8 external 8 internal */
++		*phymask = 0xFF00;
++		break;
 +
 +	default:
-+		return pm8001_get_phy_settings_info(pm8001_ha);
++		PM8001_INIT_DBG(pm8001_ha,
++			pm8001_printk("Unknown subsystem device=0x%.04x",
++				pm8001_ha->pdev->subsystem_device));
 +	}
 +}
 +
- #ifdef PM8001_USE_MSIX
- /**
-  * pm8001_setup_msix - enable MSI-X interrupt
-@@ -902,12 +919,9 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 
- 	pm8001_init_sas_add(pm8001_ha);
- 	/* phy setting support for motherboard controller */
--	if (pdev->subsystem_vendor != PCI_VENDOR_ID_ADAPTEC2 &&
--		pdev->subsystem_vendor != 0) {
--		rc = pm8001_get_phy_settings_info(pm8001_ha);
--		if (rc)
--			goto err_out_shost;
--	}
-+	if (pm8001_configure_phy_settings(pm8001_ha))
-+		goto err_out_shost;
++/**
++ * pm8001_set_phy_settings_ven_117c_12Gb : Configure ATTO 12Gb PHY settings
++ * @pm8001_ha : our adapter
++ */
++static
++int pm8001_set_phy_settings_ven_117c_12G(struct pm8001_hba_info *pm8001_ha)
++{
++	struct pm8001_mpi3_phy_pg_trx_config phycfg_int;
++	struct pm8001_mpi3_phy_pg_trx_config phycfg_ext;
++	int phymask = 0;
++	int i = 0;
 +
- 	pm8001_post_sas_ha_init(shost, chip);
- 	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
- 	if (rc)
++	memset(&phycfg_int, 0, sizeof(phycfg_int));
++	memset(&phycfg_ext, 0, sizeof(phycfg_ext));
++
++	pm8001_get_internal_phy_settings(pm8001_ha, &phycfg_int);
++	pm8001_get_external_phy_settings(pm8001_ha, &phycfg_ext);
++	pm8001_get_phy_mask(pm8001_ha, &phymask);
++
++	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
++		if (phymask & (1 << i)) {/* Internal PHY */
++			pm8001_set_phy_profile_single(pm8001_ha, i,
++					sizeof(phycfg_int) / sizeof(u32),
++					(u32 *)&phycfg_int);
++
++		} else { /* External PHY */
++			pm8001_set_phy_profile_single(pm8001_ha, i,
++					sizeof(phycfg_ext) / sizeof(u32),
++					(u32 *)&phycfg_ext);
++		}
++	}
++
++	return 0;
++}
++
+ /**
+  * pm8001_configure_phy_settings : Configures PHY settings based on vendor ID.
+  * @pm8001_ha : our hba.
+@@ -740,6 +865,11 @@ static int pm8001_configure_phy_settings(struct pm8001_hba_info *pm8001_ha)
+ {
+ 	switch (pm8001_ha->pdev->subsystem_vendor) {
+ 	case PCI_VENDOR_ID_ATTO:
++		if (pm8001_ha->pdev->device == 0x0042) /* 6Gb */
++			return 0;
++		else
++			return pm8001_set_phy_settings_ven_117c_12G(pm8001_ha);
++
+ 	case PCI_VENDOR_ID_ADAPTEC2:
+ 	case 0:
+ 		return 0;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 9fa9705..6628cc3 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -710,6 +710,8 @@ int pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha);
+ int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+ void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+ 	u32 length, u8 *buf);
++void pm8001_set_phy_profile_single(struct pm8001_hba_info *pm8001_ha,
++		u32 phy, u32 length, u32 *buf);
+ int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+ 		struct device_attribute *attr, char *buf);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 9a389f1..29c548b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4576,6 +4576,38 @@ void pm8001_set_phy_profile(struct pm8001_hba_info *pm8001_ha,
+ 	}
+ 	PM8001_INIT_DBG(pm8001_ha, pm8001_printk("phy settings completed\n"));
+ }
++
++void pm8001_set_phy_profile_single(struct pm8001_hba_info *pm8001_ha,
++		u32 phy, u32 length, u32 *buf)
++{
++	u32 tag, opc;
++	int rc, i;
++	struct set_phy_profile_req payload;
++	struct inbound_queue_table *circularQ;
++
++	memset(&payload, 0, sizeof(payload));
++
++	rc = pm8001_tag_alloc(pm8001_ha, &tag);
++	if (rc)
++		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("Invalid tag"));
++
++	circularQ = &pm8001_ha->inbnd_q_tbl[0];
++	opc = OPC_INB_SET_PHY_PROFILE;
++
++	payload.tag = cpu_to_le32(tag);
++	payload.ppc_phyid = (((SAS_PHY_ANALOG_SETTINGS_PAGE & 0xF) << 8)
++				| (phy & 0xFF));
++
++	for (i = 0; i < length; i++)
++		payload.reserved[i] = cpu_to_le32(*(buf + i));
++
++	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
++	if (rc)
++		pm8001_tag_free(pm8001_ha, tag);
++
++	PM8001_INIT_DBG(pm8001_ha,
++		pm8001_printk("PHY %d settings applied", phy));
++}
+ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+ 	.name			= "pmc80xx",
+ 	.chip_init		= pm80xx_chip_init,
 -- 
 2.4.3
 
