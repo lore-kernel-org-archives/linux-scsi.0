@@ -1,43 +1,65 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 5/8] scsi: ufs: creates wrapper functions for vops
-Date: Fri, 30 Oct 2015 09:28:52 +0100
-Message-ID: <56332A44.5010005@suse.de>
-References: <1446030951-2431-1-git-send-email-ygardi@codeaurora.org>
- <1446030951-2431-6-git-send-email-ygardi@codeaurora.org>
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
+Subject: [RESEND PATCH v3] scsi: stex: Remove use of struct timeval
+Date: Fri, 30 Oct 2015 01:30:40 -0700
+Message-ID: <20151030083040.GA31741@tina-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446030951-2431-6-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: linux-scsi@vger.kernel.org, arnd@arndb.de
+Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/28/2015 12:15 PM, Yaniv Gardi wrote:
-> In order to simplify the code a set of wrapper functions is created
-> to test and call each of the variant operations.
->=20
-> Reviewed-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->=20
-> ---
->  drivers/scsi/ufs/ufs-qcom.c |   1 -
->  drivers/scsi/ufs/ufshcd.c   | 104 +++++++++++++++++-----------------=
-----------
->  drivers/scsi/ufs/ufshcd.h   |  98 ++++++++++++++++++++++++++++++++++=
-+++++++
->  3 files changed, 137 insertions(+), 66 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+RnVuY3Rpb24gc3RleF9nZXR0aW1lIHVzZXMgJ3N0cnVjdCB0aW1ldmFsJyB3aG9zZSB0dl9zZWMg
+dmFsdWUKd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5ZWFyIDIwMzggYW5kIGJl
+eW9uZC4gVGhpcyBwYXRjaApyZXBsYWNlcyB0aGUgdXNlIG9mIHN0cnVjdCB0aW1ldmFsIGFuZCBk
+b19nZXR0aW1lb2ZkYXkgd2l0aAprdGltZV9nZXRfcmVhbF9zZWNvbmRzLCB3aGljaCByZXR1cm5z
+IGEgNjQtYml0IHNlY29uZHMgdmFsdWUuCgpTdWdnZXN0ZWQtYnk6IEFybmQgQmVyZ21hbm4gPGFy
+bmRAYXJuZGIuZGU+ClNpZ25lZC1vZmYtYnk6IFRpbmEgUnVjaGFuZGFuaSA8cnVjaGFuZGFuaS50
+aW5hQGdtYWlsLmNvbT4KLS0KQ2hhbmdlcyBpbiB2MzoKLSBSZW1vdmUgc3RleF9nZXR0aW1lIGFs
+dG9nZXRoZXIsIGRpcmVjdGx5IGFzc2lnbiB0aGUgdGltZXN0YW1wLgpDaGFuZ2VzIGluIHYyOgot
+IENoYW5nZSBzdWJqZWN0IGxpbmUgdG8gaW5kaWNhdGUgdGhhdCB0aGUgcGF0Y2ggaXMgcmVzdHJp
+Y3RlZCB0byBzdGV4IGRyaXZlci4KLS0tCi0tLQogZHJpdmVycy9zY3NpL3N0ZXguYyB8IDEzICsr
+Ky0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9u
+cygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zdGV4LmMgYi9kcml2ZXJzL3Njc2kvc3Rl
+eC5jCmluZGV4IDk4YTYyYmMuLjg0ZTE5NmUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zdGV4
+LmMKKysrIGIvZHJpdmVycy9zY3NpL3N0ZXguYwpAQCAtMjUsNiArMjUsNyBAQAogI2luY2x1ZGUg
+PGxpbnV4L3R5cGVzLmg+CiAjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+CiAjaW5jbHVkZSA8bGlu
+dXgvc3BpbmxvY2suaD4KKyNpbmNsdWRlIDxsaW51eC9rdGltZS5oPgogI2luY2x1ZGUgPGFzbS9p
+by5oPgogI2luY2x1ZGUgPGFzbS9pcnEuaD4KICNpbmNsdWRlIDxhc20vYnl0ZW9yZGVyLmg+CkBA
+IC0zNjIsMTQgKzM2Myw2IEBAIE1PRFVMRV9ERVNDUklQVElPTigiUHJvbWlzZSBUZWNobm9sb2d5
+IFN1cGVyVHJhayBFWCBDb250cm9sbGVycyIpOwogTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOwogTU9E
+VUxFX1ZFUlNJT04oU1RfRFJJVkVSX1ZFUlNJT04pOwogCi1zdGF0aWMgdm9pZCBzdGV4X2dldHRp
+bWUoX19sZTY0ICp0aW1lKQotewotCXN0cnVjdCB0aW1ldmFsIHR2OwotCi0JZG9fZ2V0dGltZW9m
+ZGF5KCZ0dik7Ci0JKnRpbWUgPSBjcHVfdG9fbGU2NCh0di50dl9zZWMpOwotfQotCiBzdGF0aWMg
+c3RydWN0IHN0YXR1c19tc2cgKnN0ZXhfZ2V0X3N0YXR1cyhzdHJ1Y3Qgc3RfaGJhICpoYmEpCiB7
+CiAJc3RydWN0IHN0YXR1c19tc2cgKnN0YXR1cyA9IGhiYS0+c3RhdHVzX2J1ZmZlciArIGhiYS0+
+c3RhdHVzX3RhaWw7CkBAIC0xMDAyLDcgKzk5NSw3IEBAIHN0YXRpYyBpbnQgc3RleF9jb21tb25f
+aGFuZHNoYWtlKHN0cnVjdCBzdF9oYmEgKmhiYSkKIAloLT5yZXFfY250ID0gY3B1X3RvX2xlMTYo
+aGJhLT5ycV9jb3VudCsxKTsKIAloLT5zdGF0dXNfc3ogPSBjcHVfdG9fbGUxNihzaXplb2Yoc3Ry
+dWN0IHN0YXR1c19tc2cpKTsKIAloLT5zdGF0dXNfY250ID0gY3B1X3RvX2xlMTYoaGJhLT5zdHNf
+Y291bnQrMSk7Ci0Jc3RleF9nZXR0aW1lKCZoLT5ob3N0dGltZSk7CisJaC0+aG9zdHRpbWUgPSBj
+cHVfdG9fbGU2NChrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkpOwogCWgtPnBhcnRuZXJfdHlwZSA9
+IEhNVV9QQVJUTkVSX1RZUEU7CiAJaWYgKGhiYS0+ZXh0cmFfb2Zmc2V0KSB7CiAJCWgtPmV4dHJh
+X29mZnNldCA9IGNwdV90b19sZTMyKGhiYS0+ZXh0cmFfb2Zmc2V0KTsKQEAgLTEwNzYsNyArMTA2
+OSw3IEBAIHN0YXRpYyBpbnQgc3RleF9zc19oYW5kc2hha2Uoc3RydWN0IHN0X2hiYSAqaGJhKQog
+CWgtPnJlcV9jbnQgPSBjcHVfdG9fbGUxNihoYmEtPnJxX2NvdW50KzEpOwogCWgtPnN0YXR1c19z
+eiA9IGNwdV90b19sZTE2KHNpemVvZihzdHJ1Y3Qgc3RhdHVzX21zZykpOwogCWgtPnN0YXR1c19j
+bnQgPSBjcHVfdG9fbGUxNihoYmEtPnN0c19jb3VudCsxKTsKLQlzdGV4X2dldHRpbWUoJmgtPmhv
+c3R0aW1lKTsKKwloLT5ob3N0dGltZSA9IGNwdV90b19sZTY0KGt0aW1lX2dldF9yZWFsX3NlY29u
+ZHMoKSk7CiAJaC0+cGFydG5lcl90eXBlID0gSE1VX1BBUlRORVJfVFlQRTsKIAloLT5leHRyYV9v
+ZmZzZXQgPSBoLT5leHRyYV9zaXplID0gMDsKIAlzY3JhdGNoX3NpemUgPSAoaGJhLT5zdHNfY291
+bnQrMSkqc2l6ZW9mKHUzMik7Ci0tIAoyLjIuMC5yYzAuMjA3LmdhM2E2MTZjCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZ
+MjAzOEBsaXN0cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xp
+c3RpbmZvL3kyMDM4Cg==
