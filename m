@@ -1,53 +1,29 @@
 From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [RESEND PATCH] qla2xxx: Remove use of 'struct timeval'
-Date: Fri, 30 Oct 2015 02:15:26 -0700
-Message-ID: <20151030091526.GA4028@tina-laptop>
+Subject: Re: [RESEND PATCH] mpt2sas: Remove usage of 'struct timeval'
+Date: Fri, 30 Oct 2015 02:19:29 -0700
+Message-ID: <CAB__kkm6Pv3J6-nGfi7nwAm7LuNX8Ytco1XHyus6gbVJ0eVixQ@mail.gmail.com>
+References: <20151030090515.GA3542@tina-laptop>
+	<cc10647b-d628-415b-bf77-4b5344799cbc@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: linux-scsi@vger.kernel.org
-Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:33053 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759425AbbJ3JTa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 05:19:30 -0400
+Received: by ykft191 with SMTP id t191so69429920ykf.0
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 02:19:30 -0700 (PDT)
+In-Reply-To: <cc10647b-d628-415b-bf77-4b5344799cbc@email.android.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, y2038 <y2038@lists.linaro.org>
 
-c3RydWN0IHJlZ2lzdGVyX2hvc3RfaW5mbyBzdG9yZXMgYSA2NC1iaXQgVVRDIHN5c3RlbSB0aW1l
-IHRpbWVzdGFtcC4KVGhpcyBwYXRjaCByZW1vdmVzIHRoZSB1c2Ugb2YgJ3N0cnVjdCB0aW1ldmFs
-JyB0byBvYnRhaW4gdGhhdCB0aW1lc3RhbXAKYXMgaXRzIHR2X3NlYyB2YWx1ZSB3aWxsIG92ZXJm
-bG93IG9uIDMyLWJpdCBzeXN0ZW1zIGluIHllYXIgMjAzOCBiZXlvbmQuClRoZSBwYXRjaCB1c2Vz
-IGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKSB3aGljaCByZXR1cm5zIGEgNjQtYml0IHNlY29uZHMg
-dmFsdWUuCgpTaWduZWQtb2ZmLWJ5OiBUaW5hIFJ1Y2hhbmRhbmkgPHJ1Y2hhbmRhbmkudGluYUBn
-bWFpbC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21yLmMgfCA1ICsrLS0tCiAx
-IGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tci5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgv
-cWxhX21yLmMKaW5kZXggNmQxOTBiNC4uZDY0YTY0YSAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX21yLmMKKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21yLmMKQEAg
-LTYsNiArNiw3IEBACiAgKi8KICNpbmNsdWRlICJxbGFfZGVmLmgiCiAjaW5jbHVkZSA8bGludXgv
-ZGVsYXkuaD4KKyNpbmNsdWRlIDxsaW51eC9rdGltZS5oPgogI2luY2x1ZGUgPGxpbnV4L3BjaS5o
-PgogI2luY2x1ZGUgPGxpbnV4L3JhdGVsaW1pdC5oPgogI2luY2x1ZGUgPGxpbnV4L3ZtYWxsb2Mu
-aD4KQEAgLTE4MTIsNyArMTgxMyw2IEBAIHFsYWZ4MDBfZnhfZGlzYyhzY3NpX3FsYV9ob3N0X3Qg
-KnZoYSwgZmNfcG9ydF90ICpmY3BvcnQsIHVpbnQxNl90IGZ4X3R5cGUpCiAJc3RydWN0IGhvc3Rf
-c3lzdGVtX2luZm8gKnBob3N0X2luZm87CiAJc3RydWN0IHJlZ2lzdGVyX2hvc3RfaW5mbyAqcHJl
-Z19oc2k7CiAJc3RydWN0IG5ld191dHNuYW1lICpwX3N5c2lkID0gTlVMTDsKLQlzdHJ1Y3QgdGlt
-ZXZhbCB0djsKIAogCXNwID0gcWxhMngwMF9nZXRfc3AodmhhLCBmY3BvcnQsIEdGUF9LRVJORUwp
-OwogCWlmICghc3ApCkBAIC0xODg2LDggKzE4ODYsNyBAQCBxbGFmeDAwX2Z4X2Rpc2Moc2NzaV9x
-bGFfaG9zdF90ICp2aGEsIGZjX3BvcnRfdCAqZmNwb3J0LCB1aW50MTZfdCBmeF90eXBlKQogCQkJ
-ICAgIHBfc3lzaWQtPmRvbWFpbm5hbWUsIERPTU5BTUVfTEVOR1RIKTsKIAkJCXN0cm5jcHkocGhv
-c3RfaW5mby0+aG9zdGRyaXZlciwKIAkJCSAgICBRTEEyWFhYX1ZFUlNJT04sIFZFUlNJT05fTEVO
-R1RIKTsKLQkJCWRvX2dldHRpbWVvZmRheSgmdHYpOwotCQkJcHJlZ19oc2ktPnV0YyA9ICh1aW50
-NjRfdCl0di50dl9zZWM7CisJCQlwcmVnX2hzaS0+dXRjID0gKHVpbnQ2NF90KWt0aW1lX2dldF9y
-ZWFsX3NlY29uZHMoKTsKIAkJCXFsX2RiZyhxbF9kYmdfaW5pdCwgdmhhLCAweDAxNDksCiAJCQkg
-ICAgIklTUCUwNFg6IEhvc3QgcmVnaXN0cmF0aW9uIHdpdGggZmlybXdhcmVcbiIsCiAJCQkgICAg
-aGEtPnBkZXYtPmRldmljZSk7Ci0tIAoyLjIuMC5yYzAuMjA3LmdhM2E2MTZjCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QK
-WTIwMzhAbGlzdHMubGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9s
-aXN0aW5mby95MjAzOAo=
+> Can you wait a cycle on this? Martin Petersen is on a mission to wrangle the mpt2/3sas merger in this window, which will conflict with this.
+>
+
+James,
+No issues. Making a note here though that the patches for
+mpt2sas_base.c and mpt3sas_base.c are identical, I submitted the
+latter before I saw your email.
+Tina
