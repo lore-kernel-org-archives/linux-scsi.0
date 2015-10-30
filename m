@@ -1,85 +1,202 @@
 From: Don Brace <brace77070@gmail.com>
-Subject: Re: [PATCH 1 15/25] hpsa: enhance hpsa_get_device_id
-Date: Fri, 30 Oct 2015 15:59:47 -0500
-Message-ID: <5633DA43.3010002@pmcs.com>
+Subject: Re: [PATCH 1 21/25] hpsa: disable report lun data caching
+Date: Fri, 30 Oct 2015 16:18:30 -0500
+Message-ID: <5633DEA6.3050208@pmcs.com>
 References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220601.5323.62936.stgit@brunhilda> <56332562.4000707@suse.de>
+ <20151028220638.5323.49466.stgit@brunhilda> <56337DBF.5050309@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f193.google.com ([209.85.214.193]:36575 "EHLO
-	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760879AbbJ3U7t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 16:59:49 -0400
-Received: by obctp1 with SMTP id tp1so4336597obc.3
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 13:59:48 -0700 (PDT)
-In-Reply-To: <56332562.4000707@suse.de>
+Received: from mail-ob0-f196.google.com ([209.85.214.196]:34982 "EHLO
+	mail-ob0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030430AbbJ3VSc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 17:18:32 -0400
+Received: by obcaq9 with SMTP id aq9so1785948obc.2
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 14:18:31 -0700 (PDT)
+In-Reply-To: <56337DBF.5050309@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+To: Tomas Henzl <thenzl@redhat.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-On 10/30/2015 03:08 AM, Hannes Reinecke wrote:
-> On 10/28/2015 11:06 PM, Don Brace wrote:
->> use an index into vpd data for SAS/SATA drives
+On 10/30/2015 09:25 AM, Tomas Henzl wrote:
+> On 28.10.2015 23:06, Don Brace wrote:
+>> From: Scott Teel <scott.teel@pmcs.com>
+>>
+>> When external target arrays are present, disable the firmware's
+>> normal behavior of returning a cached copy of the report lun data,
+>> and force it to collect new data each time we request a report luns.
+>>
+>> This is necessary for external arrays, since there may be no
+>> reliable signal from the external array to the smart array when
+>> lun configuration changes, and thus when driver requests
+>> report luns, it may be stale data.
+>>
+>> Use diag options to turn off RPL data caching.
 >>
 >> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 >> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 >> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 >> Signed-off-by: Don Brace <don.brace@pmcs.com>
 >> ---
->>   drivers/scsi/hpsa.c |   23 ++++++++++++++++++++---
->>   1 file changed, 20 insertions(+), 3 deletions(-)
+>>   drivers/scsi/hpsa.c     |   86 +++++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/scsi/hpsa_cmd.h |    3 ++
+>>   2 files changed, 89 insertions(+)
 >>
 >> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
->> index c1b053f..1361414 100644
+>> index e521acd..33fd0aa 100644
 >> --- a/drivers/scsi/hpsa.c
 >> +++ b/drivers/scsi/hpsa.c
->> @@ -3137,7 +3137,7 @@ out:
+>> @@ -276,6 +276,7 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
+>>   static void hpsa_command_resubmit_worker(struct work_struct *work);
+>>   static u32 lockup_detected(struct ctlr_info *h);
+>>   static int detect_controller_lockup(struct ctlr_info *h);
+>> +static void hpsa_disable_rld_caching(struct ctlr_info *h);
+>>   static int hpsa_luns_changed(struct ctlr_info *h);
 >>   
->>   /* Get the device id from inquiry page 0x83 */
->>   static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
->> -	unsigned char *device_id, int buflen)
->> +	unsigned char *device_id, int index, int buflen)
->>   {
->>   	int rc;
->>   	unsigned char *buf;
->> @@ -3149,8 +3149,10 @@ static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
->>   		return -ENOMEM;
->>   	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0x83, buf, 64);
->>   	if (rc == 0)
->> -		memcpy(device_id, &buf[8], buflen);
->> +		memcpy(device_id, &buf[index], buflen);
->> +
->>   	kfree(buf);
->> +
->>   	return rc != 0;
+>>   static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+>> @@ -6386,6 +6387,24 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+>>   			c->Request.CDB[8] = (size >> 8) & 0xFF;
+>>   			c->Request.CDB[9] = size & 0xFF;
+>>   			break;
+>> +		case BMIC_SENSE_DIAG_OPTIONS:
+>> +			c->Request.CDBLen = 16;
+>> +			c->Request.type_attr_dir =
+>> +				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
+>> +			c->Request.Timeout = 0;
+>> +			/* Spec says this should be BMIC_WRITE */
+>> +			c->Request.CDB[0] = BMIC_READ;
+>> +			c->Request.CDB[6] = BMIC_SENSE_DIAG_OPTIONS;
+>> +			break;
+>> +		case BMIC_SET_DIAG_OPTIONS:
+>> +			c->Request.CDBLen = 16;
+>> +			c->Request.type_attr_dir =
+>> +					TYPE_ATTR_DIR(cmd_type,
+>> +						ATTR_SIMPLE, XFER_WRITE);
+>> +			c->Request.Timeout = 0;
+>> +			c->Request.CDB[0] = BMIC_WRITE;
+>> +			c->Request.CDB[6] = BMIC_SET_DIAG_OPTIONS;
+>> +			break;
+>>   		case HPSA_CACHE_FLUSH:
+>>   			c->Request.CDBLen = 12;
+>>   			c->Request.type_attr_dir =
+>> @@ -8086,6 +8105,7 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
+>>   		hpsa_scan_start(h->scsi_host);
+>>   		scsi_host_put(h->scsi_host);
+>>   	} else if (h->discovery_polling) {
+>> +		hpsa_disable_rld_caching(h);
+>>   		if (hpsa_luns_changed(h)) {
+>>   			struct Scsi_Host *sh = NULL;
+>>   
+>> @@ -8423,6 +8443,72 @@ out:
+>>   	kfree(flush_buf);
 >>   }
 >>   
->> @@ -3379,6 +3381,18 @@ static int hpsa_device_supports_aborts(struct ctlr_info *h,
->>   	return rc;
->>   }
->>   
->> +static void sanitize_inquiry_string(unsigned char *s, int len)
+>> +/* Make controller gather fresh report lun data each time we
+>> + * send down a report luns request
+>> + */
+>> +static void hpsa_disable_rld_caching(struct ctlr_info *h)
 >> +{
->> +	bool terminated = false;
+>> +	u32 *options;
+>> +	struct CommandList *c;
+>> +	int rc;
 >> +
->> +	for (; len > 0; (--len, ++s)) {
->> +		if (*s == 0)
->> +			terminated = true;
->> +		if (terminated || *s < 0x20 || *s > 0x7e)
->> +			*s = ' ';
+>> +	/* Don't bother trying to set diag options if locked up */
+>> +	if (unlikely(h->lockup_detected))
+>> +		return;
+>> +
+>> +	options = kzalloc(sizeof(*options), GFP_KERNEL);
+>> +	if (!options) {
+>> +		dev_err(&h->pdev->dev,
+>> +			"Error: failed to disable rld caching, during alloc.\n");
+>> +		return;
 >> +	}
->> +}
 >> +
->>   static int hpsa_update_device_info(struct ctlr_info *h,
->>   	unsigned char scsi3addr[], struct hpsa_scsi_dev_t *this_device,
->>   	unsigned char *is_OBDR_device)
-> I would prefer to have the function from scsi_scan.c to be exported.
-> Hardly a point to duplicate it.
+>> +	c = cmd_alloc(h);
+>> +
+>> +	/* first, get the current diag options settings */
+>> +	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
+>> +		RAID_CTLR_LUNID, TYPE_CMD))
+>> +		goto errout;
+>> +
+>> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+>> +		PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+>> +	if ((rc != 0) || (c->err_info->CommandStatus != 0))
+>> +		goto errout;
+>> +
+>> +	/* Now, set the bit for disabling the RLD caching */
+>> +	*options |= HPSA_DIAG_OPTS_DISABLE_RLD_CACHING;
+>> +
+>> +	if (fill_cmd(c, BMIC_SET_DIAG_OPTIONS, h, options, 4, 0,
+>> +		RAID_CTLR_LUNID, TYPE_CMD))
+>> +		goto errout;
+>> +
+>> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+>> +		PCI_DMA_TODEVICE, NO_TIMEOUT);
+>> +	if ((rc != 0)  || (c->err_info->CommandStatus != 0))
+>> +		goto errout;
+>> +
+>> +	/* Now verify that it got set: */
+>> +	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
+>> +		RAID_CTLR_LUNID, TYPE_CMD))
+>> +		goto errout;
+>> +
+>> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+>> +		PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+>> +	if ((rc != 0)  || (c->err_info->CommandStatus != 0))
+>> +		goto errout;
+>> +
+>> +	if (*options && HPSA_DIAG_OPTS_DISABLE_RLD_CACHING)
+>> +		goto out;
+>> +	else {
+>> +errout:
+>> +		dev_err(&h->pdev->dev,
+>> +			"Error: failed to disable report lun data caching.\n");
+>> +	}
+>> +out:
+>> +	cmd_free(h, c);
+>> +	kfree(options);
+>> +}
+> The last if statement looks too complicated - what about :
 >
-> Cheers,
+> +	if (*options && HPSA_DIAG_OPTS_DISABLE_RLD_CACHING)
+> 		goto out;
 >
-> Hannes
-I can submit a patch to change it. Can it be in a later patch?
+> +errout:
+> +	dev_err(&h->pdev->dev,
+> +		"Error: failed to disable report lun data caching.\n");
+> +out:
+> +	cmd_free(h, c);
+> +	kfree(options);
+> +}
+> Agreed.
+>
+>> +
+>>   static void hpsa_shutdown(struct pci_dev *pdev)
+>>   {
+>>   	struct ctlr_info *h;
+>> diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+>> index c83eaf1..4910344 100644
+>> --- a/drivers/scsi/hpsa_cmd.h
+>> +++ b/drivers/scsi/hpsa_cmd.h
+>> @@ -287,6 +287,9 @@ struct SenseSubsystem_info {
+>>   #define BMIC_SENSE_CONTROLLER_PARAMETERS 0x64
+>>   #define BMIC_IDENTIFY_PHYSICAL_DEVICE 0x15
+>>   #define BMIC_IDENTIFY_CONTROLLER 0x11
+>> +#define BMIC_SET_DIAG_OPTIONS 0xF4
+>> +#define BMIC_SENSE_DIAG_OPTIONS 0xF5
+>> +#define HPSA_DIAG_OPTS_DISABLE_RLD_CACHING 0x40000000
+>>   
+>>   /* Command List Structure */
+>>   union SCSI3Addr {
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
