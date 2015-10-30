@@ -1,80 +1,58 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RESEND PATCH] [SCSI] mvumi: 64bit value for seconds_since1970
-Date: Fri, 30 Oct 2015 10:35:57 +0100
-Message-ID: <1446197757.16404.56.camel@suse.de>
-References: <20151030091110.GA3880@tina-laptop>
+Subject: Re: [RESEND PATCH] qla2xxx: Remove use of 'struct timeval'
+Date: Fri, 30 Oct 2015 10:36:16 +0100
+Message-ID: <1446197776.16404.57.camel@suse.de>
+References: <20151030091526.GA4028@tina-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47288 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758993AbbJ3Jf7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 05:35:59 -0400
-In-Reply-To: <20151030091110.GA3880@tina-laptop>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20151030091526.GA4028@tina-laptop>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
 To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, y2038@lists.linaro.org
+Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Arnd Bergmann <arnd@arndb.de>
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-10-30 at 02:11 -0700, Tina Ruchandani wrote:
-> struct mvumi_hs_page2 stores a "seconds_since1970" field which is of
-> type u64. It is however, written to, using 'struct timeval' which has
-> a 32-bit seconds field and whose value will overflow in year 2038.
-> This patch uses ktime_get_real_seconds() instead since it provides a
-> 64-bit seconds value, which is 2038 safe.
->=20
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
-> ---
-> =C2=A0drivers/scsi/mvumi.c | 10 +++++-----
-> =C2=A01 file changed, 5 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 3e6b866..02360de 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -31,6 +31,7 @@
-> =C2=A0#include <linux/spinlock.h>
-> =C2=A0#include <linux/interrupt.h>
-> =C2=A0#include <linux/delay.h>
-> +#include <linux/ktime.h>
-> =C2=A0#include <linux/blkdev.h>
-> =C2=A0#include <linux/io.h>
-> =C2=A0#include <scsi/scsi.h>
-> @@ -858,8 +859,8 @@ static void mvumi_hs_build_page(struct mvumi_hba
-> *mhba,
-> =C2=A0	struct mvumi_hs_page2 *hs_page2;
-> =C2=A0	struct mvumi_hs_page4 *hs_page4;
-> =C2=A0	struct mvumi_hs_page3 *hs_page3;
-> -	struct timeval time;
-> -	unsigned int local_time;
-> +	u64 time;
-> +	u64 local_time;
-> =C2=A0
-> =C2=A0	switch (hs_header->page_code) {
-> =C2=A0	case HS_PAGE_HOST_INFO:
-> @@ -877,9 +878,8 @@ static void mvumi_hs_build_page(struct mvumi_hba
-> *mhba,
-> =C2=A0		hs_page2->slot_number =3D 0;
-> =C2=A0		hs_page2->intr_level =3D 0;
-> =C2=A0		hs_page2->intr_vector =3D 0;
-> -		do_gettimeofday(&time);
-> -		local_time =3D (unsigned int) (time.tv_sec -
-> -						(sys_tz.tz_minuteswe
-> st * 60));
-> +		time =3D ktime_get_real_seconds();
-> +		local_time =3D (time - (sys_tz.tz_minuteswest * 60));
-> =C2=A0		hs_page2->seconds_since1970 =3D local_time;
-> =C2=A0		hs_header->checksum =3D
-> mvumi_calculate_checksum(hs_header,
-> =C2=A0						hs_header-
-> >frame_length);
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gRnJpLCAyMDE1LTEwLTMwIGF0IDAyOjE1IC0wNzAwLCBUaW5hIFJ1Y2hhbmRhbmkgd3JvdGU6
+Cj4gc3RydWN0IHJlZ2lzdGVyX2hvc3RfaW5mbyBzdG9yZXMgYSA2NC1iaXQgVVRDIHN5c3RlbSB0
+aW1lIHRpbWVzdGFtcC4KPiBUaGlzIHBhdGNoIHJlbW92ZXMgdGhlIHVzZSBvZiAnc3RydWN0IHRp
+bWV2YWwnIHRvIG9idGFpbiB0aGF0Cj4gdGltZXN0YW1wCj4gYXMgaXRzIHR2X3NlYyB2YWx1ZSB3
+aWxsIG92ZXJmbG93IG9uIDMyLWJpdCBzeXN0ZW1zIGluIHllYXIgMjAzOAo+IGJleW9uZC4KPiBU
+aGUgcGF0Y2ggdXNlcyBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkgd2hpY2ggcmV0dXJucyBhIDY0
+LWJpdAo+IHNlY29uZHMgdmFsdWUuCj4gCj4gU2lnbmVkLW9mZi1ieTogVGluYSBSdWNoYW5kYW5p
+IDxydWNoYW5kYW5pLnRpbmFAZ21haWwuY29tPgoKUmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1z
+aGlybiA8anRodW1zaGlybkBzdXNlLmRlPgoKPiAtLS0KPiDCoGRyaXZlcnMvc2NzaS9xbGEyeHh4
+L3FsYV9tci5jIHwgNSArKy0tLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwg
+MyBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxh
+X21yLmMKPiBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tci5jCj4gaW5kZXggNmQxOTBiNC4u
+ZDY0YTY0YSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbXIuYwo+ICsr
+KyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tci5jCj4gQEAgLTYsNiArNiw3IEBACj4gwqAg
+Ki8KPiDCoCNpbmNsdWRlICJxbGFfZGVmLmgiCj4gwqAjaW5jbHVkZSA8bGludXgvZGVsYXkuaD4K
+PiArI2luY2x1ZGUgPGxpbnV4L2t0aW1lLmg+Cj4gwqAjaW5jbHVkZSA8bGludXgvcGNpLmg+Cj4g
+wqAjaW5jbHVkZSA8bGludXgvcmF0ZWxpbWl0Lmg+Cj4gwqAjaW5jbHVkZSA8bGludXgvdm1hbGxv
+Yy5oPgo+IEBAIC0xODEyLDcgKzE4MTMsNiBAQCBxbGFmeDAwX2Z4X2Rpc2Moc2NzaV9xbGFfaG9z
+dF90ICp2aGEsIGZjX3BvcnRfdAo+ICpmY3BvcnQsIHVpbnQxNl90IGZ4X3R5cGUpCj4gwqAJc3Ry
+dWN0IGhvc3Rfc3lzdGVtX2luZm8gKnBob3N0X2luZm87Cj4gwqAJc3RydWN0IHJlZ2lzdGVyX2hv
+c3RfaW5mbyAqcHJlZ19oc2k7Cj4gwqAJc3RydWN0IG5ld191dHNuYW1lICpwX3N5c2lkID0gTlVM
+TDsKPiAtCXN0cnVjdCB0aW1ldmFsIHR2Owo+IMKgCj4gwqAJc3AgPSBxbGEyeDAwX2dldF9zcCh2
+aGEsIGZjcG9ydCwgR0ZQX0tFUk5FTCk7Cj4gwqAJaWYgKCFzcCkKPiBAQCAtMTg4Niw4ICsxODg2
+LDcgQEAgcWxhZngwMF9meF9kaXNjKHNjc2lfcWxhX2hvc3RfdCAqdmhhLCBmY19wb3J0X3QKPiAq
+ZmNwb3J0LCB1aW50MTZfdCBmeF90eXBlKQo+IMKgCQkJwqDCoMKgwqBwX3N5c2lkLT5kb21haW5u
+YW1lLCBET01OQU1FX0xFTkdUSCk7Cj4gwqAJCQlzdHJuY3B5KHBob3N0X2luZm8tPmhvc3Rkcml2
+ZXIsCj4gwqAJCQnCoMKgwqDCoFFMQTJYWFhfVkVSU0lPTiwgVkVSU0lPTl9MRU5HVEgpOwo+IC0J
+CQlkb19nZXR0aW1lb2ZkYXkoJnR2KTsKPiAtCQkJcHJlZ19oc2ktPnV0YyA9ICh1aW50NjRfdCl0
+di50dl9zZWM7Cj4gKwkJCXByZWdfaHNpLT51dGMgPQo+ICh1aW50NjRfdClrdGltZV9nZXRfcmVh
+bF9zZWNvbmRzKCk7Cj4gwqAJCQlxbF9kYmcocWxfZGJnX2luaXQsIHZoYSwgMHgwMTQ5LAo+IMKg
+CQkJwqDCoMKgwqAiSVNQJTA0WDogSG9zdCByZWdpc3RyYXRpb24gd2l0aAo+IGZpcm13YXJlXG4i
+LAo+IMKgCQkJwqDCoMKgwqBoYS0+cGRldi0+ZGV2aWNlKTsKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZMjAzOEBsaXN0
+cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3ky
+MDM4Cg==
