@@ -1,120 +1,103 @@
-From: Ben Guthro <ben@guthro.net>
-Subject: Re: [PATCH] megaraid_sas : Add locking to megasas_aen_polling
-Date: Fri, 30 Oct 2015 18:42:44 -0400
-Message-ID: <CAOvdn6UFTLfPF2n2x4O4rQs1F0hJj-hou9KDjmWvnxWzBN5TpA@mail.gmail.com>
-References: <1446227270-4857-1-git-send-email-ben.guthro@simplivity.com>
-	<20151030212047.GB31128@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1 24/25] hpsa: add in sas transport class
+Date: Fri, 30 Oct 2015 18:23:26 -0500
+Message-ID: <3406D9A5-4302-41F0-94C6-6946C1D76DE0@linux.vnet.ibm.com>
+References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220656.5323.34704.stgit@brunhilda> <04D5BEB2-DCD8-49C7-8BA7-24FD162E5729@linux.vnet.ibm.com> <5633E86A.8050900@pmcs.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20151030212047.GB31128@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, "stable@vger.kernel.org" <stable@vger.kernel.org>, Glenn Watkins <Glenn.Watkins@simplivity.com>, Ben Guthro <ben.guthro@simplivity.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:56069 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759270AbbJ3XXb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 19:23:31 -0400
+Received: from localhost
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 17:23:30 -0600
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id CFBD91FF002D
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 17:11:40 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9UNM45u3342746
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 16:22:04 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9UNNSpU029893
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 17:23:28 -0600
+In-Reply-To: <5633E86A.8050900@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <brace77070@gmail.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-Apologies for missing that - it has been a while since submitting to
-the stable tree.
+> On Oct 30, 2015, at 5:00 PM, Don Brace <brace77070@gmail.com> wrote:
+> On 10/30/2015 03:07 PM, Matthew R. Ochs wrote:
+>>> On Oct 28, 2015, at 5:06 PM, Don Brace <don.brace@pmcs.com> wrote:
+>>> 
+>>> From: Kevin Barnett <kevin.barnett@pmcs.com>
+>>> 
+>>> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+>>> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+>>> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+>>> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>>> ---
+>>> drivers/scsi/hpsa.c     |  535 +++++++++++++++++++++++++++++++++++++++++++++--
+>>> drivers/scsi/hpsa.h     |   27 ++
+>>> drivers/scsi/hpsa_cmd.h |   14 +
+>>> 3 files changed, 555 insertions(+), 21 deletions(-)
+>>> 
+>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>>> index 56526312..ca38a00 100644
+>>> --- a/drivers/scsi/hpsa.c
+>>> +++ b/drivers/scsi/hpsa.c
+>>> @@ -41,6 +41,7 @@
+>>> 
+>>> +static u64 hpsa_get_sas_address_from_report_physical(struct ctlr_info *h,
+>>> +						unsigned char *scsi3addr)
+>>> +{
+>>> +	struct ReportExtendedLUNdata *physdev;
+>>> +	u32 nphysicals;
+>>> +	u64 sa = 0;
+>>> +	int i;
+>>> +
+>>> +	physdev = kzalloc(sizeof(*physdev), GFP_KERNEL);
+>>> +	if (!physdev)
+>>> +		return 0;
+>>> +
+>>> +	if (hpsa_scsi_do_report_phys_luns(h, physdev, sizeof(*physdev))) {
+>>> +		dev_err(&h->pdev->dev, "report physical LUNs failed.\n");
+>>> +		kfree(physdev);
+>>> +		return 0;
+>>> +	}
+>>> +	nphysicals = get_unaligned_be32(physdev->LUNListLength) / 24;
+>>> +
+>>> +	for (i = 0; i < nphysicals; i++)
+>>> +		if (!memcmp(&physdev->LUN[i].lunid[0], scsi3addr, 8))
+>>> +			sa = get_unaligned_be64(&physdev->LUN[i].wwid[0]);
+>> Don't you want to break out here if you found a match?
+> Agreed.
+>> 
+>>> +
+>>> +	kfree(physdev);
+>>> +
+>>> +	return sa;
+>>> +}
+>>> +
+>>> +static void hpsa_get_sas_address(struct ctlr_info *h, unsigned char *scsi3addr,
+>>> +					struct hpsa_scsi_dev_t *dev)
+>>> +{
+>>> +	int rc;
+>>> +	u64 sa = 0;
+>>> +
+>>> +	if (is_hba_lunid(scsi3addr)) {
+>>> +		struct bmic_sense_subsystem_info *ssi;
+>>> +
+>>> +		ssi = kzalloc(sizeof(*ssi), GFP_KERNEL);
+>> What happens if this allocation fails? If the I/O can succeed without the
+>> DMA buffer then you will run into trouble when deriving sa.
+> Added check for NULL.
 
-I'll resubmit the same patch with the Cc: stable@vger.kernel.org in
-the sign-off area.
+With these changes
 
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-Regards,
-
-Ben
-
-On Fri, Oct 30, 2015 at 5:20 PM, Greg KH <greg@kroah.com> wrote:
-> On Fri, Oct 30, 2015 at 01:47:50PM -0400, Ben Guthro wrote:
->> From: Glenn Watkins <Glenn.Watkins@simplivity.com>
->>
->> Under conditions of offlining drives, and rescanning the scsi host,
->> we can get into situations that the megasas_aen_polling kthread
->> can crash(GPF) in the megasas_aen_polling work queue:
->>
->> [ 1206.568641] general protection fault: 0000 [#1] SMP
->> [ 1206.569479] Modules linked in: xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables x_tables coretemp crct10dif_pclmul crc32_pclmul aesni_intel ablk_helper cryptd psmouse lrw vmwgfx gf128mul serio_raw glue_helper aes_x86_64 ppdev ttm microcode vmw_balloon drm_kms_helper drm parport_pc parport fb_sys_fops sysimgblt sysfillrect syscopyarea vmw_vmci binfmt_misc floppy mptspi mptscsih vmw_pvscsi megaraid_sas pata_acpi mptbase vmxnet3
->> [ 1206.576488] CPU: 0 PID: 1157 Comm: kworker/0:2 Not tainted 4.3.0-rc7-svt1 #1
->> [ 1206.577520] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/2014
->> [ 1206.579101] Workqueue: events megasas_aen_polling [megaraid_sas]
->> [ 1206.580007] task: ffff8818bb7b8000 ti: ffff8818ca280000 task.ti: ffff8818ca280000
->> [ 1206.581104] RIP: 0010:[<ffffffff8118403d>]  [<ffffffff8118403d>] bdi_unregister+0x3d/0x1e0
->> [ 1206.582339] RSP: 0018:ffff8818ca283cb8  EFLAGS: 00010246
->> [ 1206.583131] RAX: dead000000000200 RBX: ffff8818bb603f08 RCX: ffff8818c6487800
->> [ 1206.584184] RDX: ffff8818bb603f08 RSI: 000000007fffffff RDI: ffffffff81f9aa68
->> [ 1206.585243] RBP: ffff8818ca283d18 R08: 0000000000000000 R09: 0000000000000000
->> [ 1206.586294] R10: 0000000fffffffe0 R11: dead000000000200 R12: ffff8818bb6042f0
->> [ 1206.587346] R13: ffff8818bb604530 R14: 00000000000000ae R15: 0000000000000080
->> [ 1206.588388] FS:  0000000000000000(0000) GS:ffff88193fc00000(0000) knlGS:0000000000000000
->> [ 1206.589598] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->> [ 1206.590457] CR2: 0000000001a89000 CR3: 00000018c07f2000 CR4: 00000000000406f0
->> [ 1206.591545] Stack:
->> [ 1206.591870]  ffff8818bb6042f0 ffff8818bb603d78 00000000000000ae 0000000000000080
->> [ 1206.593098]  ffff8818ca283ce8 ffffffff8108f683 ffff8818ca283d18 ffffffff813332b0
->> [ 1206.594308]  ffff8818ca283d18 ffff8818bb603d78 ffff8818bb6042f0 ffff8818bb604530
->> [ 1206.595532] Call Trace:
->> [ 1206.595922]  [<ffffffff8108f683>] ? cancel_delayed_work_sync+0x13/0x20
->> [ 1206.596903]  [<ffffffff813332b0>] ? blk_sync_queue+0x80/0x90
->> [ 1206.597753]  [<ffffffff81336424>] blk_cleanup_queue+0x114/0x150
->> [ 1206.598645]  [<ffffffff814efe44>] __scsi_remove_device+0x54/0xd0
->> [ 1206.599556]  [<ffffffff814efeef>] scsi_remove_device+0x2f/0x50
->> [ 1206.600441]  [<ffffffffa003884d>] megasas_aen_polling+0x34d/0x670 [megaraid_sas]
->> [ 1206.601561]  [<ffffffff8108ddcc>] process_one_work+0x14c/0x400
->> [ 1206.602449]  [<ffffffff8108e6a7>] worker_thread+0x117/0x480
->> [ 1206.603295]  [<ffffffff8108e590>] ? create_worker+0x1c0/0x1c0
->> [ 1206.604160]  [<ffffffff81094bf9>] kthread+0xc9/0xe0
->> [ 1206.604898]  [<ffffffff81094b30>] ? flush_kthread_worker+0x90/0x90
->> [ 1206.605831]  [<ffffffff8171bf8f>] ret_from_fork+0x3f/0x70
->> [ 1206.606659]  [<ffffffff81094b30>] ? flush_kthread_worker+0x90/0x90
->> [ 1206.607585] Code: c7 c7 68 aa f9 81 48 83 ec 48 e8 bf 76 59 00 48 8b 43 08 48 8b 13 49 bb 00 02 00 00 00 00 ad de 48 c7 c7 68 aa f9 81 48 89 42 08 <48> 89 10 4c 89 5b 08 e8 27 76 59 00 e8 32 92 f4 ff 48 8d 7b 50
->> [ 1206.611938] RIP  [<ffffffff8118403d>] bdi_unregister+0x3d/0x1e0
->> [ 1206.612856]  RSP <ffff8818ca283cb8>
->>
->> This can be readily reproduced by a pair of shell scripts - one of which loops on
->> onlining / offlining drives via MegaCli (or storcli, if you prefer)
->>
->>     #!/bin/bash
->>
->>     while [ 1 ]; do
->>         /opt/MegaRAID/MegaCli/MegaCli64 pdoffline physdrv[32:0] a0 &>2
->>         /opt/MegaRAID/MegaCli/MegaCli64 pdoffline physdrv[32:11] a0 &>2
->>
->>         /opt/MegaRAID/MegaCli/MegaCli64 pdonline physdrv[32:0] a0 &>2
->>         /opt/MegaRAID/MegaCli/MegaCli64 pdonline physdrv[32:11] a0 &>2
->>     done
->>
->> Meanwhile, the second script is looping on rescanning the scsi hosts:
->>
->>     #!/bin/bash
->>     while [ 1 ]; do
->>         for (( l=0; l<4; l++ )); do
->>             echo - - - > /sys/class/scsi_host/host$l/scan
->>         done
->>     done
->>
->> This was originally introduced in the following commit:
->>
->> commit 7e8a75f4dfbff173977b2f58799c3eceb7b09afd
->> Author: Yang, Bo <Bo.Yang@lsi.com>
->> Date:   Tue Oct 6 14:50:17 2009 -0600
->>
->>     [SCSI] megaraid_sas: Add the support for updating the OS after adding/removing the devices from FW
->>
->> The fix for this is to add some locking around the AEN polling.
->> Since this affects all kernels since 2.6.33, I have also CC'ed the stable list.
->>
->> Signed-off-by: Glenn Watkins <Glenn.Watkins@simplivity.com>
->> Signed-off-by: Ben Guthro <ben.guthro@simplivity.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas_base.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->
-> <formletter>
->
-> This is not the correct way to submit patches for inclusion in the
-> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
->
-> </formletter>
