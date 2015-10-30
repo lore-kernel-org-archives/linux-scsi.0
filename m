@@ -1,47 +1,164 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 0/2] Fix a hard lockup in scsi_remove_target()
-Date: Fri, 30 Oct 2015 15:06:42 -0700
-Message-ID: <5633E9F2.5080209@sandisk.com>
+Subject: [PATCH 1/2] Separate target visibility from reaped state information
+Date: Fri, 30 Oct 2015 15:08:12 -0700
+Message-ID: <5633EA4C.10608@sandisk.com>
+References: <5633E9F2.5080209@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0053.outbound.protection.outlook.com ([157.56.111.53]:29565
+Received: from mail-bn1on0090.outbound.protection.outlook.com ([157.56.110.90]:34816
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932926AbbJ3WGq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 18:06:46 -0400
+	id S1030338AbbJ3WIQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 18:08:16 -0400
+In-Reply-To: <5633E9F2.5080209@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On October 2, 2015 Johannes Thumshirn reported the following hard lockup 
-(see also http://thread.gmane.org/gmane.linux.kernel/2052359):
+Instead of representing the states "visible in sysfs" and
+"has been removed from the target list" by a single state
+variable, use two variables to represent this information.
 
-Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 0
-[...]
-Call Trace:
-  [<ffffffff8100471d>] dump_trace+0x7d/0x2d0
-  [<ffffffff81004a04>] show_stack_log_lvl+0x94/0x170
-  [<ffffffff81005cc1>] show_stack+0x21/0x50
-  [<ffffffff8151aa75>] dump_stack+0x41/0x51
-  [<ffffffff8151545a>] panic+0xc8/0x1d7
-  [<ffffffff810fbdda>] watchdog_overflow_callback+0xba/0xc0
-  [<ffffffff811336c8>] __perf_event_overflow+0x88/0x240
-  [<ffffffff8101e3aa>] intel_pmu_handle_irq+0x1fa/0x3e0
-  [<ffffffff81522836>] perf_event_nmi_handler+0x26/0x40
-  [<ffffffff81521fcd>] nmi_handle.isra.2+0x8d/0x180
-  [<ffffffff815221e6>] do_nmi+0x126/0x3c0
-  [<ffffffff8152159b>] end_repeat_nmi+0x1a/0x1e
-  [<ffffffffa00212e8>] scsi_remove_target+0x68/0x240 [scsi_mod]
-  [<ffffffff81072742>] process_one_work+0x172/0x420
-  [<ffffffff810733ba>] worker_thread+0x11a/0x3c0
-  [<ffffffff81079d34>] kthread+0xb4/0xc0
-  [<ffffffff81528cd8>] ret_from_fork+0x58/0x90
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: stable <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_scan.c   | 31 +++----------------------------
+ drivers/scsi/scsi_sysfs.c  |  7 ++++---
+ include/scsi/scsi_device.h |  3 ++-
+ 3 files changed, 9 insertions(+), 32 deletions(-)
 
-The following two patches fix this lockup:
-0001-Separate-target-visibility-from-reaped-state-informa.patch
-0002-Restart-list-search-after-unlock-in-scsi_remove_targ.patch
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f9f3f82..80b8c3f 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -314,7 +314,6 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	unsigned long flags;
+ 
+-	starget->state = STARGET_DEL;
+ 	transport_destroy_device(dev);
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (shost->hostt->target_destroy)
+@@ -379,19 +378,15 @@ static void scsi_target_reap_ref_release(struct kref *kref)
+ 	struct scsi_target *starget
+ 		= container_of(kref, struct scsi_target, reap_ref);
+ 
+-	/*
+-	 * if we get here and the target is still in the CREATED state that
+-	 * means it was allocated but never made visible (because a scan
+-	 * turned up no LUNs), so don't call device_del() on it.
+-	 */
+-	if (starget->state != STARGET_CREATED) {
++	if (starget->visible) {
++		starget->visible = false;
+ 		transport_remove_device(&starget->dev);
+ 		device_del(&starget->dev);
+ 	}
+ 	scsi_target_destroy(starget);
+ }
+ 
+-static void scsi_target_reap_ref_put(struct scsi_target *starget)
++void scsi_target_reap(struct scsi_target *starget)
+ {
+ 	kref_put(&starget->reap_ref, scsi_target_reap_ref_release);
+ }
+@@ -437,7 +432,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
+-	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+  retry:
+@@ -498,25 +492,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ }
+ 
+ /**
+- * scsi_target_reap - check to see if target is in use and destroy if not
+- * @starget: target to be checked
+- *
+- * This is used after removing a LUN or doing a last put of the target
+- * it checks atomically that nothing is using the target and removes
+- * it if so.
+- */
+-void scsi_target_reap(struct scsi_target *starget)
+-{
+-	/*
+-	 * serious problem if this triggers: STARGET_DEL is only set in the if
+-	 * the reap_ref drops to zero, so we're trying to do another final put
+-	 * on an already released kref
+-	 */
+-	BUG_ON(starget->state == STARGET_DEL);
+-	scsi_target_reap_ref_put(starget);
+-}
+-
+-/**
+  * sanitize_inquiry_string - remove non-graphical chars from an INQUIRY result string
+  * @s: INQUIRY result string to sanitize
+  * @len: length of the string
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..b9fb61a 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -974,7 +974,7 @@ static int scsi_target_add(struct scsi_target *starget)
+ {
+ 	int error;
+ 
+-	if (starget->state != STARGET_CREATED)
++	if (starget->visible)
+ 		return 0;
+ 
+ 	error = device_add(&starget->dev);
+@@ -983,7 +983,7 @@ static int scsi_target_add(struct scsi_target *starget)
+ 		return error;
+ 	}
+ 	transport_add_device(&starget->dev);
+-	starget->state = STARGET_RUNNING;
++	starget->visible = true;
+ 
+ 	pm_runtime_set_active(&starget->dev);
+ 	pm_runtime_enable(&starget->dev);
+@@ -1166,11 +1166,12 @@ void scsi_remove_target(struct device *dev)
+ 	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+-		if (starget->state == STARGET_DEL)
++		if (starget->reaped)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			/* assuming new targets arrive at the end */
+ 			kref_get(&starget->reap_ref);
++			starget->reaped = true;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			if (last)
+ 				scsi_target_reap(last);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index fe89d7c..a734656 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -267,6 +267,8 @@ struct scsi_target {
+ 	unsigned int		expecting_lun_change:1;	/* A device has reported
+ 						 * a 3F/0E UA, other devices on
+ 						 * the same target will also. */
++	unsigned int		visible:1; /* visible in sysfs */
++	unsigned int		reaped:1; /* removed from target list */
+ 	/* commands actually active on LLD. */
+ 	atomic_t		target_busy;
+ 	atomic_t		target_blocked;
+@@ -280,7 +282,6 @@ struct scsi_target {
+ #define SCSI_DEFAULT_TARGET_BLOCKED	3
+ 
+ 	char			scsi_level;
+-	enum scsi_target_state	state;
+ 	void 			*hostdata; /* available to low-level driver */
+ 	unsigned long		starget_data[0]; /* for the transport */
+ 	/* starget_data must be the last element!!!! */
+-- 
+2.6.2.307.g37023ba
 
-These patches have been tested with the SRP initiator (ib_srp).
