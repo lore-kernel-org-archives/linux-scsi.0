@@ -1,29 +1,80 @@
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: Re: [RESEND PATCH] mpt2sas: Remove usage of 'struct timeval'
-Date: Fri, 30 Oct 2015 02:19:29 -0700
-Message-ID: <CAB__kkm6Pv3J6-nGfi7nwAm7LuNX8Ytco1XHyus6gbVJ0eVixQ@mail.gmail.com>
-References: <20151030090515.GA3542@tina-laptop>
-	<cc10647b-d628-415b-bf77-4b5344799cbc@email.android.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [RESEND PATCH] [SCSI] mvumi: 64bit value for seconds_since1970
+Date: Fri, 30 Oct 2015 10:35:57 +0100
+Message-ID: <1446197757.16404.56.camel@suse.de>
+References: <20151030091110.GA3880@tina-laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:33053 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759425AbbJ3JTa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 05:19:30 -0400
-Received: by ykft191 with SMTP id t191so69429920ykf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 02:19:30 -0700 (PDT)
-In-Reply-To: <cc10647b-d628-415b-bf77-4b5344799cbc@email.android.com>
+Received: from mx2.suse.de ([195.135.220.15]:47288 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758993AbbJ3Jf7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 05:35:59 -0400
+In-Reply-To: <20151030091110.GA3880@tina-laptop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, y2038 <y2038@lists.linaro.org>
+To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, y2038@lists.linaro.org
 
-> Can you wait a cycle on this? Martin Petersen is on a mission to wrangle the mpt2/3sas merger in this window, which will conflict with this.
->
+On Fri, 2015-10-30 at 02:11 -0700, Tina Ruchandani wrote:
+> struct mvumi_hs_page2 stores a "seconds_since1970" field which is of
+> type u64. It is however, written to, using 'struct timeval' which has
+> a 32-bit seconds field and whose value will overflow in year 2038.
+> This patch uses ktime_get_real_seconds() instead since it provides a
+> 64-bit seconds value, which is 2038 safe.
+>=20
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 
-James,
-No issues. Making a note here though that the patches for
-mpt2sas_base.c and mpt3sas_base.c are identical, I submitted the
-latter before I saw your email.
-Tina
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+> ---
+> =C2=A0drivers/scsi/mvumi.c | 10 +++++-----
+> =C2=A01 file changed, 5 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 3e6b866..02360de 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+> @@ -31,6 +31,7 @@
+> =C2=A0#include <linux/spinlock.h>
+> =C2=A0#include <linux/interrupt.h>
+> =C2=A0#include <linux/delay.h>
+> +#include <linux/ktime.h>
+> =C2=A0#include <linux/blkdev.h>
+> =C2=A0#include <linux/io.h>
+> =C2=A0#include <scsi/scsi.h>
+> @@ -858,8 +859,8 @@ static void mvumi_hs_build_page(struct mvumi_hba
+> *mhba,
+> =C2=A0	struct mvumi_hs_page2 *hs_page2;
+> =C2=A0	struct mvumi_hs_page4 *hs_page4;
+> =C2=A0	struct mvumi_hs_page3 *hs_page3;
+> -	struct timeval time;
+> -	unsigned int local_time;
+> +	u64 time;
+> +	u64 local_time;
+> =C2=A0
+> =C2=A0	switch (hs_header->page_code) {
+> =C2=A0	case HS_PAGE_HOST_INFO:
+> @@ -877,9 +878,8 @@ static void mvumi_hs_build_page(struct mvumi_hba
+> *mhba,
+> =C2=A0		hs_page2->slot_number =3D 0;
+> =C2=A0		hs_page2->intr_level =3D 0;
+> =C2=A0		hs_page2->intr_vector =3D 0;
+> -		do_gettimeofday(&time);
+> -		local_time =3D (unsigned int) (time.tv_sec -
+> -						(sys_tz.tz_minuteswe
+> st * 60));
+> +		time =3D ktime_get_real_seconds();
+> +		local_time =3D (time - (sys_tz.tz_minuteswest * 60));
+> =C2=A0		hs_page2->seconds_since1970 =3D local_time;
+> =C2=A0		hs_header->checksum =3D
+> mvumi_calculate_checksum(hs_header,
+> =C2=A0						hs_header-
+> >frame_length);
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
