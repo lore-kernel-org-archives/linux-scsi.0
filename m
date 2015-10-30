@@ -1,100 +1,80 @@
 From: Benjamin Rood <benjaminjrood@gmail.com>
-Subject: [PATCH 8/8] pm80xx: avoid a panic if MSI(X) interrupts are disabled
-Date: Fri, 30 Oct 2015 10:53:31 -0400
-Message-ID: <1446216811-2248-9-git-send-email-brood@attotech.com>
+Subject: [PATCH 2/8] pm80xx: add support for PMC Sierra 8070 and PMC Sierra 8072 SAS controllers
+Date: Fri, 30 Oct 2015 10:53:25 -0400
+Message-ID: <1446216811-2248-3-git-send-email-brood@attotech.com>
 References: <1446216811-2248-1-git-send-email-brood@attotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:33874 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758949AbbJ3Oxq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 10:53:46 -0400
-Received: by qgem9 with SMTP id m9so63093799qge.1
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 07:53:45 -0700 (PDT)
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:34793 "EHLO
+	mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbbJ3Oxh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 10:53:37 -0400
+Received: by qkcn129 with SMTP id n129so31673807qkc.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 07:53:36 -0700 (PDT)
 In-Reply-To: <1446216811-2248-1-git-send-email-brood@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com
 Cc: Benjamin Rood <brood@attotech.com>
 
-If MSI(X) interrupts are disabled via the kernel command line
-(pci=nomsi), the pm8001 driver will kernel panic because it does not
-detect that MSI interrupts are disabled and will soldier on and attempt to
-configure MSI interrupts anyways.  This leads to a kernel panic, most
-likely because a required data structure is not available down the
-line.  Using the pci_msi_enabled() function in order to detect if MSI
-interrupts are enabled before configuring them resolves this issue and
-avoids a kernel panic when the module is loaded.  Additionally, the
-irq_vector structure must be initialized when legacy interrupts are
-being used otherwise legacy interrupts will simply not function and
-result in another panic.
+These SAS controllers support speeds up to 12Gb.
 
 Signed-off-by: Benjamin Rood <brood@attotech.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/pm8001/pm8001_defs.h | 2 ++
+ drivers/scsi/pm8001/pm8001_init.c | 4 +++-
+ drivers/scsi/pm8001/pm8001_sas.h  | 4 +++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+index f14ec6e..199527d 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -51,6 +51,8 @@ enum chip_flavors {
+ 	chip_8076,
+ 	chip_8077,
+ 	chip_8006,
++	chip_8070,
++	chip_8072
+ };
+ 
+ enum phy_speed {
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ab99984..bdc624f 100644
+index 8c094fd..2106ac3 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -482,7 +482,8 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+@@ -58,6 +58,8 @@ static const struct pm8001_chip_info pm8001_chips[] = {
+ 	[chip_8076] = {0,  16, &pm8001_80xx_dispatch,},
+ 	[chip_8077] = {0,  16, &pm8001_80xx_dispatch,},
+ 	[chip_8006] = {0,  16, &pm8001_80xx_dispatch,},
++	[chip_8070] = {0,  8, &pm8001_80xx_dispatch,},
++	[chip_8072] = {0,  16, &pm8001_80xx_dispatch,},
+ };
+ static int pm8001_id;
  
- #ifdef PM8001_USE_TASKLET
- 	/* Tasklet for non msi-x interrupt handler */
--	if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
-+	if ((!pdev->msix_cap || !pci_msi_enabled())
-+	    || (pm8001_ha->chip_id == chip_8001))
- 		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
- 			(unsigned long)&(pm8001_ha->irq_vector[0]));
- 	else
-@@ -951,7 +952,7 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
- 	pdev = pm8001_ha->pdev;
+@@ -1234,7 +1236,7 @@ MODULE_AUTHOR("Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>");
+ MODULE_AUTHOR("Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>");
+ MODULE_AUTHOR("Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>");
+ MODULE_DESCRIPTION(
+-		"PMC-Sierra PM8001/8006/8081/8088/8089/8074/8076/8077 "
++		"PMC-Sierra PM8001/8006/8081/8088/8089/8074/8076/8077/8070/8072 "
+ 		"SAS/SATA controller driver");
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index e2e97db..9fa9705 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -106,7 +106,9 @@ do {						\
+ #define DEV_IS_EXPANDER(type)	((type == SAS_EDGE_EXPANDER_DEVICE) || (type == SAS_FANOUT_EXPANDER_DEVICE))
+ #define IS_SPCV_12G(dev)	((dev->device == 0X8074)		\
+ 				|| (dev->device == 0X8076)		\
+-				|| (dev->device == 0X8077))
++				|| (dev->device == 0X8077)		\
++				|| (dev->device == 0X8070)		\
++				|| (dev->device == 0X8072))
  
- #ifdef PM8001_USE_MSIX
--	if (pdev->msix_cap)
-+	if (pdev->msix_cap && pci_msi_enabled())
- 		return pm8001_setup_msix(pm8001_ha);
- 	else {
- 		PM8001_INIT_DBG(pm8001_ha,
-@@ -962,6 +963,8 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
- 
- intx:
- 	/* initialize the INT-X interrupt */
-+	pm8001_ha->irq_vector[0].irq_id = 0;
-+	pm8001_ha->irq_vector[0].drv_inst = pm8001_ha;
- 	rc = request_irq(pdev->irq, pm8001_interrupt_handler_intx, IRQF_SHARED,
- 		DRV_NAME, SHOST_TO_SAS_HA(pm8001_ha->shost));
- 	return rc;
-@@ -1112,7 +1115,8 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
- #endif
- #ifdef PM8001_USE_TASKLET
- 	/* For non-msix and msix interrupts */
--	if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
-+	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
-+	    (pm8001_ha->chip_id == chip_8001))
- 		tasklet_kill(&pm8001_ha->tasklet[0]);
- 	else
- 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
-@@ -1161,7 +1165,8 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- #endif
- #ifdef PM8001_USE_TASKLET
- 	/* For non-msix and msix interrupts */
--	if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
-+	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
-+	    (pm8001_ha->chip_id == chip_8001))
- 		tasklet_kill(&pm8001_ha->tasklet[0]);
- 	else
- 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
-@@ -1231,7 +1236,8 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 		goto err_out_disable;
- #ifdef PM8001_USE_TASKLET
- 	/*  Tasklet for non msi-x interrupt handler */
--	if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
-+	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
-+	    (pm8001_ha->chip_id == chip_8001))
- 		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
- 			(unsigned long)&(pm8001_ha->irq_vector[0]));
- 	else
+ #define PM8001_NAME_LENGTH		32/* generic length of strings */
+ extern struct list_head hba_list;
 -- 
 2.4.3
 
