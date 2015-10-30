@@ -1,82 +1,72 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: Blk-mq/scsi-mq Tuning
-Date: Fri, 30 Oct 2015 10:12:53 -0400
-Message-ID: <alpine.OSX.2.00.1510301010550.4888@administrators-macbook-pro.local>
-References: <D256A425.229C0%chad.dupuis@qlogic.com> <56331FFB.9010703@suse.de> <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local> <563372CB.9050206@suse.de>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH 1 03/25] hpsa: check for null arguments to dev_printk
+Date: Fri, 30 Oct 2015 09:16:28 -0500
+Message-ID: <56337BBC.5070104@pmcs.com>
+References: <20151028215206.5323.84194.stgit@brunhilda>
+ <20151028220447.5323.79638.stgit@brunhilda> <5633207B.6030200@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="0-91181859-1446214376=:4888"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:59918 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031361AbbJ3ONP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 10:13:15 -0400
-In-Reply-To: <563372CB.9050206@suse.de>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36123 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030891AbbJ3OQ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 10:16:29 -0400
+Received: by oiao187 with SMTP id o187so59963866oia.3
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 07:16:29 -0700 (PDT)
+In-Reply-To: <5633207B.6030200@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
+To: Hannes Reinecke <hare@suse.de>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
---0-91181859-1446214376=:4888
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-
-
-On Fri, 30 Oct 2015, Hannes Reinecke wrote:
-
-> On 10/30/2015 02:25 PM, Chad Dupuis wrote:
+On 10/30/2015 02:47 AM, Hannes Reinecke wrote:
+> On 10/28/2015 11:04 PM, Don Brace wrote:
+>> Check for NULLs.
 >>
+>> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>> ---
+>>   drivers/scsi/hpsa.c |    6 ++++++
+>>   drivers/scsi/hpsa.h |    2 +-
+>>   2 files changed, 7 insertions(+), 1 deletion(-)
 >>
->> On Fri, 30 Oct 2015, Hannes Reinecke wrote:
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 864fb03..6b6e9bb 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -1139,6 +1139,12 @@ static int hpsa_find_target_lun(struct ctlr_info *h,
+>>   static inline void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
+>>   	struct hpsa_scsi_dev_t *dev, char *description)
+>>   {
+>> +	if (dev == NULL)
+>> +		return;
+>> +
+>> +	if (h == NULL || h->pdev == NULL || h->scsi_host == NULL)
+>> +		return;
+>> +
+>>   	dev_printk(level, &h->pdev->dev,
+>>   			"scsi %d:%d:%d:%d: %s %s %.8s %.16s RAID-%s SSDSmartPathCap%c En%c Exp=%d\n",
+>>   			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+>> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+>> index 27debb3..d6c4ebf 100644
+>> --- a/drivers/scsi/hpsa.h
+>> +++ b/drivers/scsi/hpsa.h
+>> @@ -34,7 +34,7 @@ struct access_method {
+>>   };
+>>   
+>>   struct hpsa_scsi_dev_t {
+>> -	int devtype;
+>> +	unsigned int devtype;
+>>   	int bus, target, lun;		/* as presented to the OS */
+>>   	unsigned char scsi3addr[8];	/* as presented to the HW */
+>>   #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
 >>
->>> On 10/28/2015 09:11 PM, Chad Dupuis wrote:
->>>> Hi Folks,
->>>>
->>>> We¹ve begun to explore blk-mq and scsi-mq and wanted to know if there
->>>> were
->>>> any best practices in terms of block layer settings.  We¹re looking
->>>> specifically at the FCoE and iSCSI protocols.
->>>>
->>>> A little background on the queues in our hardware first: we have a per
->>>> connection transmit queue and multiple, global receive queues.  The
->>>> transmit queues are not pegged to a particular CPU.  The receive queues
->>>> are pegged to the first N CPUs where N is the number of receive queues.
->>>> We set the nr_hw_queues in the scsi_host_template to N as well.
->>>>
->>> Weelll ... I think you'll run into issues here.
->>> The whole point of the multiqueue implementation is that you can tag the
->>> submission _and_ completion queue to a single CPU, thereby eliminating
->>> locking.
->>> If you only peg the completion queue to a CPU you'll still have
->>> contention on the submission queue, needing to take locks etc.
->>>
->>> Plus you will _inevitably_ incur cache misses, as the completion will
->>> basically never occur on the same CPU which did the submissoin.
->>> Hence the context needs to be bounced to the CPU holding the completion
->>> queue, or you'll need to do a IPI to inform the submitting CPU.
->>> But if you do that you're essentially doing single-queue submission,
->>> so I doubt we're seeing that great improvements.
->>
->> This was why I was asking if there was a blk-mq API to be able to set
->> CPU affinity for the hardware context queues so I could steer the
->> submissions to the CPUs that my receive queues are on (even if they are
->> allowed to float).
->>
-> But what would that achieve?
-> Each of the hardware context queues would still having to use the
-> same submission queue, so you'd have to have some serialisation
-> with spinlocks et.al. during submission. Which is what blk-mq
-> tries to avoid.
-> Am I wrong?
-
-Sadly, no I believe you're correct. So essentially the upshot seems to be 
-if you can have a 1x1 request:response queue then sticking with the older 
-queuecommand method is better?
-
+> That's not really a check for NULL, isn't it?
+> Should rather be moved into an individual patch.
 >
 > Cheers,
 >
 > Hannes
->
---0-91181859-1446214376=:4888--
+
+Making the change.
+
