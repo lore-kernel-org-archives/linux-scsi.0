@@ -1,55 +1,66 @@
 From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [RESEND PATCH] mpt2sas: Remove usage of 'struct timeval'
-Date: Fri, 30 Oct 2015 02:05:15 -0700
-Message-ID: <20151030090515.GA3542@tina-laptop>
+Subject: [RESEND PATCH] mpt3sas: Remove usage of 'struct timeval'
+Date: Fri, 30 Oct 2015 02:08:03 -0700
+Message-ID: <20151030090803.GA3679@tina-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34897 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758776AbbJ3JIP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 05:08:15 -0400
+Received: by pasz6 with SMTP id z6so68888900pas.2
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 02:08:15 -0700 (PDT)
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: linux-scsi@vger.kernel.org
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Arnd Bergmann <arnd@arndb.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, y2038@lists.linaro.org
 
-J3N0cnVjdCB0aW1ldmFsJyB3aWxsIGhhdmUgaXRzIHR2X3NlYyB2YWx1ZSBvdmVyZmxvdyBvbiAz
-Mi1iaXQgc3lzdGVtcwppbiB5ZWFyIDIwMzggYW5kIGJleW9uZC4gVGhpcyBwYXRjaCByZXBsYWNl
-cyB0aGUgdXNlIG9mIHN0cnVjdCB0aW1ldmFsCmZvciBjb21wdXRpbmcgbXBpX3JlcXVlc3QuVGlt
-ZVN0YW1wLCBhbmQgaW5zdGVhZCB1c2VzIGt0aW1lX3Qgd2hpY2ggcHJvdmlkZXMKNjQtYml0IHNl
-Y29uZHMgdmFsdWUuIFRoZSB0aW1lc3RhbXAgY29tcHV0ZWQgcmVtYWlucyB1bmFmZmVjdGVkICht
-aWxsaXNlY29uZHMKc2luY2UgVW5peCBlcG9jaCkuCgpTaWduZWQtb2ZmLWJ5OiBUaW5hIFJ1Y2hh
-bmRhbmkgPHJ1Y2hhbmRhbmkudGluYUBnbWFpbC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL21wdDJz
-YXMvbXB0MnNhc19iYXNlLmMgfCA4ICsrKystLS0tCiAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRp
-b25zKCspLCA0IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQyc2Fz
-L21wdDJzYXNfYmFzZS5jIGIvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0MnNhc19iYXNlLmMKaW5k
-ZXggNThlNDUyMS4uNmQ4MDQ3NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0
-MnNhc19iYXNlLmMKKysrIGIvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0MnNhc19iYXNlLmMKQEAg
-LTU3LDYgKzU3LDcgQEAKICNpbmNsdWRlIDxsaW51eC9zb3J0Lmg+CiAjaW5jbHVkZSA8bGludXgv
-aW8uaD4KICNpbmNsdWRlIDxsaW51eC90aW1lLmg+CisjaW5jbHVkZSA8bGludXgva3RpbWUuaD4K
-ICNpbmNsdWRlIDxsaW51eC9rdGhyZWFkLmg+CiAjaW5jbHVkZSA8bGludXgvYWVyLmg+CiAKQEAg
-LTM2MTYsNyArMzYxNyw3IEBAIF9iYXNlX3NlbmRfaW9jX2luaXQoc3RydWN0IE1QVDJTQVNfQURB
-UFRFUiAqaW9jLCBpbnQgc2xlZXBfZmxhZykKIAlNcGkySU9DSW5pdFJlcXVlc3RfdCBtcGlfcmVx
-dWVzdDsKIAlNcGkySU9DSW5pdFJlcGx5X3QgbXBpX3JlcGx5OwogCWludCBpLCByID0gMDsKLQlz
-dHJ1Y3QgdGltZXZhbCBjdXJyZW50X3RpbWU7CisJa3RpbWVfdCBjdXJyZW50X3RpbWU7CiAJdTE2
-IGlvY19zdGF0dXM7CiAJdTMyIHJlcGx5X3Bvc3RfZnJlZV9hcnJheV9zeiA9IDA7CiAJTXBpMklP
-Q0luaXRSRFBRQXJyYXlFbnRyeSAqcmVwbHlfcG9zdF9mcmVlX2FycmF5ID0gTlVMTDsKQEAgLTM2
-NzgsOSArMzY3OSw4IEBAIF9iYXNlX3NlbmRfaW9jX2luaXQoc3RydWN0IE1QVDJTQVNfQURBUFRF
-UiAqaW9jLCBpbnQgc2xlZXBfZmxhZykKIAkvKiBUaGlzIHRpbWUgc3RhbXAgc3BlY2lmaWVzIG51
-bWJlciBvZiBtaWxsaXNlY29uZHMKIAkgKiBzaW5jZSBlcG9jaCB+IG1pZG5pZ2h0IEphbnVhcnkg
-MSwgMTk3MC4KIAkgKi8KLQlkb19nZXR0aW1lb2ZkYXkoJmN1cnJlbnRfdGltZSk7Ci0JbXBpX3Jl
-cXVlc3QuVGltZVN0YW1wID0gY3B1X3RvX2xlNjQoKHU2NCljdXJyZW50X3RpbWUudHZfc2VjICog
-MTAwMCArCi0JICAgIChjdXJyZW50X3RpbWUudHZfdXNlYyAvIDEwMDApKTsKKwljdXJyZW50X3Rp
-bWUgPSBrdGltZV9nZXRfcmVhbCgpOworCW1waV9yZXF1ZXN0LlRpbWVTdGFtcCA9IGNwdV90b19s
-ZTY0KGt0aW1lX3RvX21zKGN1cnJlbnRfdGltZSkpOwogCiAJaWYgKGlvYy0+bG9nZ2luZ19sZXZl
-bCAmIE1QVF9ERUJVR19JTklUKSB7CiAJCV9fbGUzMiAqbWZwOwotLSAKMi4yLjAucmMwLjIwNy5n
-YTNhNjE2YwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-WTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5s
-aW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
+'struct timeval' will have its tv_sec value overflow on 32-bit systems
+in year 2038 and beyond. This patch replaces the use of struct timeval
+for computing mpi_request.TimeStamp, and instead uses ktime_t which provides
+64-bit seconds value. The timestamp computed remains unaffected (milliseconds
+since Unix epoch).
+
+Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 1560115..ee9c3c6 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -56,6 +56,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/io.h>
+ #include <linux/time.h>
++#include <linux/ktime.h>
+ #include <linux/kthread.h>
+ #include <linux/aer.h>
+ 
+@@ -3735,7 +3736,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+ 	Mpi2IOCInitRequest_t mpi_request;
+ 	Mpi2IOCInitReply_t mpi_reply;
+ 	int i, r = 0;
+-	struct timeval current_time;
++	ktime_t current_time;
+ 	u16 ioc_status;
+ 	u32 reply_post_free_array_sz = 0;
+ 	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
+@@ -3797,9 +3798,8 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+ 	/* This time stamp specifies number of milliseconds
+ 	 * since epoch ~ midnight January 1, 1970.
+ 	 */
+-	do_gettimeofday(&current_time);
+-	mpi_request.TimeStamp = cpu_to_le64((u64)current_time.tv_sec * 1000 +
+-	    (current_time.tv_usec / 1000));
++	current_time = ktime_get_real();
++	mpi_request.TimeStamp = cpu_to_le64(ktime_to_ms(current_time));
+ 
+ 	if (ioc->logging_level & MPT_DEBUG_INIT) {
+ 		__le32 *mfp;
+-- 
+2.2.0.rc0.207.ga3a616c
+
