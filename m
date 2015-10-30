@@ -1,28 +1,35 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 4/8] scsi: ufs: add ufshcd_get_variant
- ufshcd_set_variant
-Date: Fri, 30 Oct 2015 09:28:03 +0100
-Message-ID: <56332A13.4050407@suse.de>
+Subject: Re: [PATCH v9 5/8] scsi: ufs: creates wrapper functions for vops
+Date: Fri, 30 Oct 2015 09:28:52 +0100
+Message-ID: <56332A44.5010005@suse.de>
 References: <1446030951-2431-1-git-send-email-ygardi@codeaurora.org>
- <1446030951-2431-5-git-send-email-ygardi@codeaurora.org>
+ <1446030951-2431-6-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446030951-2431-5-git-send-email-ygardi@codeaurora.org>
+In-Reply-To: <1446030951-2431-6-git-send-email-ygardi@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/28/2015 12:15 PM, Yaniv Gardi wrote:
-> This patch adds ufshcd_get_variant() and ufshcd_set_variant()
-> routines in order to get/set the variant specific data.
+> In order to simplify the code a set of wrapper functions is created
+> to test and call each of the variant operations.
 >=20
 > Reviewed-by: Akinobu Mita <akinobu.mita@gmail.com>
 > Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 > Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>=20
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c |   1 -
+>  drivers/scsi/ufs/ufshcd.c   | 104 +++++++++++++++++-----------------=
+----------
+>  drivers/scsi/ufs/ufshcd.h   |  98 ++++++++++++++++++++++++++++++++++=
++++++++
+>  3 files changed, 137 insertions(+), 66 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
