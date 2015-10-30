@@ -1,88 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Blk-mq/scsi-mq Tuning
-Date: Fri, 30 Oct 2015 14:38:19 +0100
-Message-ID: <563372CB.9050206@suse.de>
-References: <D256A425.229C0%chad.dupuis@qlogic.com> <56331FFB.9010703@suse.de>
- <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH v2 27/32] scsi: hisi_sas: add smp protocol support
+Date: Fri, 30 Oct 2015 14:53:51 +0100
+Message-ID: <3976707.At0tktvfqn@wuerfel>
+References: <1445868903-183817-1-git-send-email-john.garry@huawei.com> <1445868903-183817-28-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35819 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758943AbbJ3NiW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 09:38:22 -0400
-In-Reply-To: <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1445868903-183817-28-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-On 10/30/2015 02:25 PM, Chad Dupuis wrote:
->=20
->=20
-> On Fri, 30 Oct 2015, Hannes Reinecke wrote:
->=20
->> On 10/28/2015 09:11 PM, Chad Dupuis wrote:
->>> Hi Folks,
->>>
->>> We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if t=
-here
->>> were
->>> any best practices in terms of block layer settings.  We=B9re looki=
-ng
->>> specifically at the FCoE and iSCSI protocols.
->>>
->>> A little background on the queues in our hardware first: we have a =
-per
->>> connection transmit queue and multiple, global receive queues.  The
->>> transmit queues are not pegged to a particular CPU.  The receive qu=
-eues
->>> are pegged to the first N CPUs where N is the number of receive que=
-ues.
->>> We set the nr_hw_queues in the scsi_host_template to N as well.
->>>
->> Weelll ... I think you'll run into issues here.
->> The whole point of the multiqueue implementation is that you can tag=
- the
->> submission _and_ completion queue to a single CPU, thereby eliminati=
-ng
->> locking.
->> If you only peg the completion queue to a CPU you'll still have
->> contention on the submission queue, needing to take locks etc.
->>
->> Plus you will _inevitably_ incur cache misses, as the completion wil=
-l
->> basically never occur on the same CPU which did the submissoin.
->> Hence the context needs to be bounced to the CPU holding the complet=
-ion
->> queue, or you'll need to do a IPI to inform the submitting CPU.
->> But if you do that you're essentially doing single-queue submission,
->> so I doubt we're seeing that great improvements.
->=20
-> This was why I was asking if there was a blk-mq API to be able to set
-> CPU affinity for the hardware context queues so I could steer the
-> submissions to the CPUs that my receive queues are on (even if they a=
-re
-> allowed to float).
->=20
-But what would that achieve?
-Each of the hardware context queues would still having to use the
-same submission queue, so you'd have to have some serialisation
-with spinlocks et.al. during submission. Which is what blk-mq
-tries to avoid.
-Am I wrong?
+On Monday 26 October 2015 22:14:58 John Garry wrote:
 
-Cheers,
+> +       /*
+> +       * DMA-map SMP request, response buffers
+> +       */
+> +       /* req */
+> +       sg_req = &task->smp_task.smp_req;
+> +       elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
+> +       if (!elem)
+> +               return -ENOMEM;
+> +       req_len = sg_dma_len(sg_req);
+> +       req_dma_addr = sg_dma_address(sg_req);
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+If you only use the first element, could you just use dma_map_single()?
+
+> +       hdr->cmd_table_addr_lo = cpu_to_le32(lower_32_bits(req_dma_addr));
+> +       hdr->cmd_table_addr_hi = cpu_to_le32(upper_32_bits(req_dma_addr));
+> +
+> +       hdr->sts_buffer_addr_lo =
+> +                       cpu_to_le32(lower_32_bits(slot->status_buffer_dma));
+> +       hdr->sts_buffer_addr_hi =
+> +                       cpu_to_le32(upper_32_bits(slot->status_buffer_dma));
+> +
+> 
+
+I see these a lot in your code. Could you replace this wit
+
+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
+
+and so on? That would be much more readable. Or are the two __le32 variables
+swapped? If so, you could add a small helper function like
+
+static inline __le64 cpu_to_le64_wordswapped(u64 val)
+{
+	return cpu_to_le64(val >> 32 | val << 32);
+}
+
+	Arnd
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
