@@ -1,59 +1,74 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 RESEND] scsi: report 'INQUIRY result too short' once
- per host
-Date: Fri, 30 Oct 2015 12:55:25 +0100
-Message-ID: <56335AAD.4040506@suse.de>
-References: <1446205211-12874-1-git-send-email-vkuznets@redhat.com>
+Subject: Re: [RESEND PATCH v3] scsi: stex: Remove use of struct
+	timeval
+Date: Fri, 30 Oct 2015 12:58:33 +0100
+Message-ID: <56335B69.4010502@suse.de>
+References: <20151030083040.GA31741@tina-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446205211-12874-1-git-send-email-vkuznets@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, James Bottomley <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan\"" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20151030083040.GA31741@tina-laptop>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org, arnd@arndb.de
+Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/30/2015 12:40 PM, Vitaly Kuznetsov wrote:
-> Some host adapters (e.g. Hyper-V storvsc) are known for not respectin=
-g the
-> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain=
- at
-> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
-> INQUIRY result too short (5), using 36' messages on console. This can=
- be
-> problematic for slow consoles. Introduce short_inquiry flag in struct
-> Scsi_Host to print the message once per host.
->=20
-> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-> ---
-> Changes since v3 RESEND:
-> - Sorry, I screwed up James address when sending 'v3 RESEND'.
->=20
-> Changes since v3:
-> - no changes, this is just a RESEND.
->=20
-> Changes since v2:
-> - This is a successor of previously sent (and still not merged) "scsi=
-:
->   introduce short_inquiry flag for broken host adapters" patch. I'm n=
-ot
->   particularly sure which solution is better but I'm leaning towards =
-this
->   one as it doesn't require changes to adapter drivers.
-> ---
->  drivers/scsi/scsi_scan.c | 9 ++++++---
->  include/scsi/scsi_host.h | 3 +++
->  2 files changed, 9 insertions(+), 3 deletions(-)
->=20
-Why not printk_once?
-Should achieve the same result, and we're saving yet another flag...
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+T24gMTAvMzAvMjAxNSAwOTozMCBBTSwgVGluYSBSdWNoYW5kYW5pIHdyb3RlOgo+IEZ1bmN0aW9u
+IHN0ZXhfZ2V0dGltZSB1c2VzICdzdHJ1Y3QgdGltZXZhbCcgd2hvc2UgdHZfc2VjIHZhbHVlCj4g
+d2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5ZWFyIDIwMzggYW5kIGJleW9uZC4g
+VGhpcyBwYXRjaAo+IHJlcGxhY2VzIHRoZSB1c2Ugb2Ygc3RydWN0IHRpbWV2YWwgYW5kIGRvX2dl
+dHRpbWVvZmRheSB3aXRoCj4ga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcywgd2hpY2ggcmV0dXJucyBh
+IDY0LWJpdCBzZWNvbmRzIHZhbHVlLgo+IAo+IFN1Z2dlc3RlZC1ieTogQXJuZCBCZXJnbWFubiA8
+YXJuZEBhcm5kYi5kZT4KPiBTaWduZWQtb2ZmLWJ5OiBUaW5hIFJ1Y2hhbmRhbmkgPHJ1Y2hhbmRh
+bmkudGluYUBnbWFpbC5jb20+Cj4gLS0KPiBDaGFuZ2VzIGluIHYzOgo+IC0gUmVtb3ZlIHN0ZXhf
+Z2V0dGltZSBhbHRvZ2V0aGVyLCBkaXJlY3RseSBhc3NpZ24gdGhlIHRpbWVzdGFtcC4KPiBDaGFu
+Z2VzIGluIHYyOgo+IC0gQ2hhbmdlIHN1YmplY3QgbGluZSB0byBpbmRpY2F0ZSB0aGF0IHRoZSBw
+YXRjaCBpcyByZXN0cmljdGVkIHRvIHN0ZXggZHJpdmVyLgo+IC0tLQo+IC0tLQo+ICBkcml2ZXJz
+L3Njc2kvc3RleC5jIHwgMTMgKysrLS0tLS0tLS0tLQo+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNl
+cnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L3N0ZXguYyBiL2RyaXZlcnMvc2NzaS9zdGV4LmMKPiBpbmRleCA5OGE2MmJjLi44NGUxOTZlIDEw
+MDY0NAo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zdGV4LmMKPiArKysgYi9kcml2ZXJzL3Njc2kvc3Rl
+eC5jCj4gQEAgLTI1LDYgKzI1LDcgQEAKPiAgI2luY2x1ZGUgPGxpbnV4L3R5cGVzLmg+Cj4gICNp
+bmNsdWRlIDxsaW51eC9tb2R1bGUuaD4KPiAgI2luY2x1ZGUgPGxpbnV4L3NwaW5sb2NrLmg+Cj4g
+KyNpbmNsdWRlIDxsaW51eC9rdGltZS5oPgo+ICAjaW5jbHVkZSA8YXNtL2lvLmg+Cj4gICNpbmNs
+dWRlIDxhc20vaXJxLmg+Cj4gICNpbmNsdWRlIDxhc20vYnl0ZW9yZGVyLmg+Cj4gQEAgLTM2Miwx
+NCArMzYzLDYgQEAgTU9EVUxFX0RFU0NSSVBUSU9OKCJQcm9taXNlIFRlY2hub2xvZ3kgU3VwZXJU
+cmFrIEVYIENvbnRyb2xsZXJzIik7Cj4gIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKPiAgTU9EVUxF
+X1ZFUlNJT04oU1RfRFJJVkVSX1ZFUlNJT04pOwo+ICAKPiAtc3RhdGljIHZvaWQgc3RleF9nZXR0
+aW1lKF9fbGU2NCAqdGltZSkKPiAtewo+IC0Jc3RydWN0IHRpbWV2YWwgdHY7Cj4gLQo+IC0JZG9f
+Z2V0dGltZW9mZGF5KCZ0dik7Cj4gLQkqdGltZSA9IGNwdV90b19sZTY0KHR2LnR2X3NlYyk7Cj4g
+LX0KPiAtCj4gIHN0YXRpYyBzdHJ1Y3Qgc3RhdHVzX21zZyAqc3RleF9nZXRfc3RhdHVzKHN0cnVj
+dCBzdF9oYmEgKmhiYSkKPiAgewo+ICAJc3RydWN0IHN0YXR1c19tc2cgKnN0YXR1cyA9IGhiYS0+
+c3RhdHVzX2J1ZmZlciArIGhiYS0+c3RhdHVzX3RhaWw7Cj4gQEAgLTEwMDIsNyArOTk1LDcgQEAg
+c3RhdGljIGludCBzdGV4X2NvbW1vbl9oYW5kc2hha2Uoc3RydWN0IHN0X2hiYSAqaGJhKQo+ICAJ
+aC0+cmVxX2NudCA9IGNwdV90b19sZTE2KGhiYS0+cnFfY291bnQrMSk7Cj4gIAloLT5zdGF0dXNf
+c3ogPSBjcHVfdG9fbGUxNihzaXplb2Yoc3RydWN0IHN0YXR1c19tc2cpKTsKPiAgCWgtPnN0YXR1
+c19jbnQgPSBjcHVfdG9fbGUxNihoYmEtPnN0c19jb3VudCsxKTsKPiAtCXN0ZXhfZ2V0dGltZSgm
+aC0+aG9zdHRpbWUpOwo+ICsJaC0+aG9zdHRpbWUgPSBjcHVfdG9fbGU2NChrdGltZV9nZXRfcmVh
+bF9zZWNvbmRzKCkpOwo+ICAJaC0+cGFydG5lcl90eXBlID0gSE1VX1BBUlRORVJfVFlQRTsKPiAg
+CWlmIChoYmEtPmV4dHJhX29mZnNldCkgewo+ICAJCWgtPmV4dHJhX29mZnNldCA9IGNwdV90b19s
+ZTMyKGhiYS0+ZXh0cmFfb2Zmc2V0KTsKPiBAQCAtMTA3Niw3ICsxMDY5LDcgQEAgc3RhdGljIGlu
+dCBzdGV4X3NzX2hhbmRzaGFrZShzdHJ1Y3Qgc3RfaGJhICpoYmEpCj4gIAloLT5yZXFfY250ID0g
+Y3B1X3RvX2xlMTYoaGJhLT5ycV9jb3VudCsxKTsKPiAgCWgtPnN0YXR1c19zeiA9IGNwdV90b19s
+ZTE2KHNpemVvZihzdHJ1Y3Qgc3RhdHVzX21zZykpOwo+ICAJaC0+c3RhdHVzX2NudCA9IGNwdV90
+b19sZTE2KGhiYS0+c3RzX2NvdW50KzEpOwo+IC0Jc3RleF9nZXR0aW1lKCZoLT5ob3N0dGltZSk7
+Cj4gKwloLT5ob3N0dGltZSA9IGNwdV90b19sZTY0KGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKSk7
+Cj4gIAloLT5wYXJ0bmVyX3R5cGUgPSBITVVfUEFSVE5FUl9UWVBFOwo+ICAJaC0+ZXh0cmFfb2Zm
+c2V0ID0gaC0+ZXh0cmFfc2l6ZSA9IDA7Cj4gIAlzY3JhdGNoX3NpemUgPSAoaGJhLT5zdHNfY291
+bnQrMSkqc2l6ZW9mKHUzMik7Cj4gCkp1c3QgcmVtb3ZlICdob3N0dGltZScgYWx0b2dldGhlci4g
+SXQgc2VydmVzIG5vIHB1cnBvc2Ugd2hhdHNvZXZlci4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIu
+IEhhbm5lcyBSZWluZWNrZQkJICAgICAgelNlcmllcyAmIFN0b3JhZ2UKaGFyZUBzdXNlLmRlCQkJ
+ICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBQcm9kdWN0cyBHbWJILCBNYXhmZWxk
+c3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEouIEhhd24sIEouIEd1aWxkLCBGLiBJbWVuZMO2
+cmZmZXIsIEhSQiAxNjc0NiAoQUcgTsO8cm5iZXJnKQpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMubGlu
+YXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAzOAo=
