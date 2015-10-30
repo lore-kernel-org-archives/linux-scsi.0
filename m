@@ -1,60 +1,79 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Y2038] [RESEND PATCH v3] scsi: stex: Remove use of struct timeval
-Date: Sat, 31 Oct 2015 00:37:51 +0100
-Message-ID: <4881842.skchM6NLXo@wuerfel>
-References: <20151030083040.GA31741@tina-laptop> <1446195000.16404.55.camel@suse.de> <CAB__kk=s_axDoU4PBr0_6ME+1TTYD_D4+u=t9Vaq9+uMWtazPA@mail.gmail.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH] sg: Fix double-free when drives detach during SG_IO
+Date: Fri, 30 Oct 2015 16:57:00 -0700
+Message-ID: <944215ec334c3c5b3af98210acf8f6479f5539c8.1445634103.git.calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAB__kk=s_axDoU4PBr0_6ME+1TTYD_D4+u=t9Vaq9+uMWtazPA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: y2038@lists.linaro.org
-Cc: Tina Ruchandani <ruchandani.tina@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:37370 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750834AbbJ3X5d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 19:57:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, calvinowens@fb.com
 
-On Friday 30 October 2015 01:54:10 Tina Ruchandani wrote:
-> >
-> > Thanks for the conversion. Can you please check if other (scsi) drivers
-> > have the same y2038 issues? A quick "git grep do_gettimeofday
-> > drivers/scsi/  | wc -l" reveals 30 occurrences (of cause not all are
-> > problematic).
+In sg_common_write(), we free the block request and return -ENODEV if
+the device is detached in the middle of the SG_IO ioctl().
 
-In fact all of them are problematic, just for different reasons.
+Unfortunately, sg_finish_rem_req() also tries to free srp->rq, so we
+end up freeing rq->cmd in the already free rq object, and then free
+the object itself out from under the current user.
 
-* Some drivers actually overflow in 2038 in a way that causes problems
-  in those drivers. These obviously need to be fixed right away.
+This ends up corrupting random memory via the list_head on the rq
+object. The most common crash trace I saw is this:
 
-* A second class of drivers pass time_t/timeval/timespec values to
-  or from user space. Even in cases where the absolute numbers are
-  small (monotonic times, or time intervals), we have to change them
-  to be able to deal with 32-bit user space that will be compiled
-  against a modified libc using 64-bit time_t.
+  ------------[ cut here ]------------
+  kernel BUG at block/blk-core.c:1420!
+  Call Trace:
+  [<ffffffff81281eab>] blk_put_request+0x5b/0x80
+  [<ffffffffa0069e5b>] sg_finish_rem_req+0x6b/0x120 [sg]
+  [<ffffffffa006bcb9>] sg_common_write.isra.14+0x459/0x5a0 [sg]
+  [<ffffffff8125b328>] ? selinux_file_alloc_security+0x48/0x70
+  [<ffffffffa006bf95>] sg_new_write.isra.17+0x195/0x2d0 [sg]
+  [<ffffffffa006cef4>] sg_ioctl+0x644/0xdb0 [sg]
+  [<ffffffff81170f80>] do_vfs_ioctl+0x90/0x520
+  [<ffffffff81258967>] ? file_has_perm+0x97/0xb0
+  [<ffffffff811714a1>] SyS_ioctl+0x91/0xb0
+  [<ffffffff81602afb>] tracesys+0xdd/0xe2
+    RIP [<ffffffff81281e04>] __blk_put_request+0x154/0x1a0
 
-* All other driver are likely not broken, but we want to change them
-  anyway, to annotate the fact that we have looked at them. My goal
-  is to remove the definition of time_t (and all derived structures)
-  from the kernel once all drivers have been converted, to ensure that
-  we are not adding new broken users, and to have a reasonable
-  confidence that we have in actually found the ones that were wrong.
+The solution is straightforward: just set srp->rq to NULL in the
+failure branch so that sg_finish_rem_req() doesn't attempt to re-free
+it.
 
-> Hi Johannes,
-> Yes, there are quite a few occurrences of timeval within scsi. I had
-> sent some of the trivial back in the Feb-May 2015 period, and they
-> were ack-ed by my then mentor and a couple of other people, but not
-> merged or ack-ed by someone from linux-scsi. Until today, I thought
-> using "RESEND" would be impolite, but now I will resend the other ones
-> as well. Arnd Bergmann is leading this effort and may have more
-> insightful comments.
-> 
+Additionally, since sg_rq_end_io() will never be called on the object
+when this happens, we need to free memory backing ->cmd if it isn't
+embedded in the object itself.
 
-I provided a "Reviewed-by" tag in https://lkml.org/lkml/2015/5/5/201 .
-Normally, when patches get picked up directly from the list, the
-person who merges it should add the tags directly.
+KASAN was extremely helpful in finding the root cause of this bug.
 
-However, if you have to re-send the patch (with or without
-small modifications), you should add that tag after your
-Signed-off-by, so it does not get lost when the new patch is
-applied.
+Signed-off-by: Calvin Owens <calvinowens@fb.com>
+---
+ drivers/scsi/sg.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-	Arnd
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 9d7b7db..503ab8b 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -787,8 +787,14 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+ 	if (atomic_read(&sdp->detaching)) {
+-		if (srp->bio)
++		if (srp->bio) {
++			if (srp->rq->cmd != srp->rq->__cmd)
++				kfree(srp->rq->cmd);
++
+ 			blk_end_request_all(srp->rq, -EIO);
++			srp->rq = NULL;
++		}
++
+ 		sg_finish_rem_req(srp);
+ 		return -ENODEV;
+ 	}
+-- 
+2.5.0
