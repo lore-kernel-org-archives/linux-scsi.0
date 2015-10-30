@@ -1,76 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH RESEND] scsi: Export SCSI Inquiry data to sysfs
-Date: Fri, 30 Oct 2015 13:06:36 +0100
-Message-ID: <1446206796-5146-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56603 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030907AbbJ3MGj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 08:06:39 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v6 07/15] scsi: ufs: set REQUEST_SENSE command size to 18
+ bytes
+Date: Fri, 30 Oct 2015 13:16:49 +0100
+Message-ID: <56335FB1.3050301@suse.de>
+References: <1446038045-17102-1-git-send-email-ygardi@codeaurora.org>
+ <1446038045-17102-8-git-send-email-ygardi@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1446038045-17102-8-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>, robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@odin.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-Export the RAW SCSI Inquiry to sysfs as binfile. This way the data can be used
-by userland without the need to have and ioctl or use the sg_inq tool.
+On 10/28/2015 02:13 PM, Yaniv Gardi wrote:
+> According to UFS device specification REQUEST_SENSE command can
+> only report back up to 18 bytes of data.
+>=20
+> Reviewed-by: Dolev Raviv <draviv@codeaurora.org>
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>=20
+Really? The spec only says that the inline sense code is 18 bytes;
+if you issue a request sense directly there is not such limitation.
 
-Here is an example of the provided data
+Cheers,
 
-linux:~ # hexdump /sys/class/scsi_device/1\:0\:0\:0/device/inquiry
-0000000 8005 3205 001f 0000 4551 554d 2020 2020
-0000010 4551 554d 4420 4456 522d 4d4f 2020 2020
-0000020 2e32 2e33
-0000024
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_sysfs.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b333389..fdcf0ab 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -773,6 +773,29 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
- sdev_vpd_pg_attr(pg83);
- sdev_vpd_pg_attr(pg80);
- 
-+static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
-+			    struct bin_attribute *bin_attr,
-+			    char *buf, loff_t off, size_t count)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	if (!sdev->inquiry)
-+		return -EINVAL;
-+
-+	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
-+				       sdev->inquiry_len);
-+}
-+
-+static struct bin_attribute dev_attr_inquiry = {
-+	.attr = {
-+		.name = "inquiry",
-+		.mode = S_IRUGO,
-+	},
-+	.size = 0,
-+	.read = show_inquiry,
-+};
-+
- static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
- 			char *buf)
-@@ -957,6 +980,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- static struct bin_attribute *scsi_sdev_bin_attrs[] = {
- 	&dev_attr_vpd_pg83,
- 	&dev_attr_vpd_pg80,
-+	&dev_attr_inquiry,
- 	NULL
- };
- static struct attribute_group scsi_sdev_attr_group = {
--- 
-2.6.2
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
