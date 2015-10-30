@@ -1,42 +1,82 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1 19/25] hpsa: eliminate fake lun0 enclosures
-Date: Fri, 30 Oct 2015 15:12:26 +0100
-Message-ID: <56337ACA.5030000@redhat.com>
-References: <20151028215206.5323.84194.stgit@brunhilda>
- <20151028220625.5323.81676.stgit@brunhilda>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: Blk-mq/scsi-mq Tuning
+Date: Fri, 30 Oct 2015 10:12:53 -0400
+Message-ID: <alpine.OSX.2.00.1510301010550.4888@administrators-macbook-pro.local>
+References: <D256A425.229C0%chad.dupuis@qlogic.com> <56331FFB.9010703@suse.de> <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local> <563372CB.9050206@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="0-91181859-1446214376=:4888"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36344 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030592AbbJ3OMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 10:12:30 -0400
-In-Reply-To: <20151028220625.5323.81676.stgit@brunhilda>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:59918 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1031361AbbJ3ONP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 10:13:15 -0400
+In-Reply-To: <563372CB.9050206@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-On 28.10.2015 23:06, Don Brace wrote:
-> From: Scott Teel <scott.teel@pmcs.com>
+--0-91181859-1446214376=:4888
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 8BIT
+
+
+
+On Fri, 30 Oct 2015, Hannes Reinecke wrote:
+
+> On 10/30/2015 02:25 PM, Chad Dupuis wrote:
+>>
+>>
+>> On Fri, 30 Oct 2015, Hannes Reinecke wrote:
+>>
+>>> On 10/28/2015 09:11 PM, Chad Dupuis wrote:
+>>>> Hi Folks,
+>>>>
+>>>> We¹ve begun to explore blk-mq and scsi-mq and wanted to know if there
+>>>> were
+>>>> any best practices in terms of block layer settings.  We¹re looking
+>>>> specifically at the FCoE and iSCSI protocols.
+>>>>
+>>>> A little background on the queues in our hardware first: we have a per
+>>>> connection transmit queue and multiple, global receive queues.  The
+>>>> transmit queues are not pegged to a particular CPU.  The receive queues
+>>>> are pegged to the first N CPUs where N is the number of receive queues.
+>>>> We set the nr_hw_queues in the scsi_host_template to N as well.
+>>>>
+>>> Weelll ... I think you'll run into issues here.
+>>> The whole point of the multiqueue implementation is that you can tag the
+>>> submission _and_ completion queue to a single CPU, thereby eliminating
+>>> locking.
+>>> If you only peg the completion queue to a CPU you'll still have
+>>> contention on the submission queue, needing to take locks etc.
+>>>
+>>> Plus you will _inevitably_ incur cache misses, as the completion will
+>>> basically never occur on the same CPU which did the submissoin.
+>>> Hence the context needs to be bounced to the CPU holding the completion
+>>> queue, or you'll need to do a IPI to inform the submitting CPU.
+>>> But if you do that you're essentially doing single-queue submission,
+>>> so I doubt we're seeing that great improvements.
+>>
+>> This was why I was asking if there was a blk-mq API to be able to set
+>> CPU affinity for the hardware context queues so I could steer the
+>> submissions to the CPUs that my receive queues are on (even if they are
+>> allowed to float).
+>>
+> But what would that achieve?
+> Each of the hardware context queues would still having to use the
+> same submission queue, so you'd have to have some serialisation
+> with spinlocks et.al. during submission. Which is what blk-mq
+> tries to avoid.
+> Am I wrong?
+
+Sadly, no I believe you're correct. So essentially the upshot seems to be 
+if you can have a 1x1 request:response queue then sticking with the older 
+queuecommand method is better?
+
 >
-> We don't need to create fake enclosure devices at Lun0
-> in external target array configurations anymore.
-> This was done to support Pre-SCSI rev 5 controllers
-> that didn't suppoprt report luns commands, so the
-> SCSI layer had to scan targets. If there was no
-> LUN at LUN 0, then the target scan would stop, and
-> move to the next target.  Lun0 enclosure device
-> was added to prevent sparsely-numbered LUNs from
-> being missed.
+> Cheers,
 >
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-Tomas
-
+> Hannes
+>
+--0-91181859-1446214376=:4888--
