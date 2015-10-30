@@ -1,74 +1,76 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RESEND PATCH v3] scsi: stex: Remove use of struct
-	timeval
-Date: Fri, 30 Oct 2015 12:58:33 +0100
-Message-ID: <56335B69.4010502@suse.de>
-References: <20151030083040.GA31741@tina-laptop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <20151030083040.GA31741@tina-laptop>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org, arnd@arndb.de
-Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH RESEND] scsi: Export SCSI Inquiry data to sysfs
+Date: Fri, 30 Oct 2015 13:06:36 +0100
+Message-ID: <1446206796-5146-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56603 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030907AbbJ3MGj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 08:06:39 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@odin.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-T24gMTAvMzAvMjAxNSAwOTozMCBBTSwgVGluYSBSdWNoYW5kYW5pIHdyb3RlOgo+IEZ1bmN0aW9u
-IHN0ZXhfZ2V0dGltZSB1c2VzICdzdHJ1Y3QgdGltZXZhbCcgd2hvc2UgdHZfc2VjIHZhbHVlCj4g
-d2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5ZWFyIDIwMzggYW5kIGJleW9uZC4g
-VGhpcyBwYXRjaAo+IHJlcGxhY2VzIHRoZSB1c2Ugb2Ygc3RydWN0IHRpbWV2YWwgYW5kIGRvX2dl
-dHRpbWVvZmRheSB3aXRoCj4ga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcywgd2hpY2ggcmV0dXJucyBh
-IDY0LWJpdCBzZWNvbmRzIHZhbHVlLgo+IAo+IFN1Z2dlc3RlZC1ieTogQXJuZCBCZXJnbWFubiA8
-YXJuZEBhcm5kYi5kZT4KPiBTaWduZWQtb2ZmLWJ5OiBUaW5hIFJ1Y2hhbmRhbmkgPHJ1Y2hhbmRh
-bmkudGluYUBnbWFpbC5jb20+Cj4gLS0KPiBDaGFuZ2VzIGluIHYzOgo+IC0gUmVtb3ZlIHN0ZXhf
-Z2V0dGltZSBhbHRvZ2V0aGVyLCBkaXJlY3RseSBhc3NpZ24gdGhlIHRpbWVzdGFtcC4KPiBDaGFu
-Z2VzIGluIHYyOgo+IC0gQ2hhbmdlIHN1YmplY3QgbGluZSB0byBpbmRpY2F0ZSB0aGF0IHRoZSBw
-YXRjaCBpcyByZXN0cmljdGVkIHRvIHN0ZXggZHJpdmVyLgo+IC0tLQo+IC0tLQo+ICBkcml2ZXJz
-L3Njc2kvc3RleC5jIHwgMTMgKysrLS0tLS0tLS0tLQo+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNl
-cnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
-L3N0ZXguYyBiL2RyaXZlcnMvc2NzaS9zdGV4LmMKPiBpbmRleCA5OGE2MmJjLi44NGUxOTZlIDEw
-MDY0NAo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zdGV4LmMKPiArKysgYi9kcml2ZXJzL3Njc2kvc3Rl
-eC5jCj4gQEAgLTI1LDYgKzI1LDcgQEAKPiAgI2luY2x1ZGUgPGxpbnV4L3R5cGVzLmg+Cj4gICNp
-bmNsdWRlIDxsaW51eC9tb2R1bGUuaD4KPiAgI2luY2x1ZGUgPGxpbnV4L3NwaW5sb2NrLmg+Cj4g
-KyNpbmNsdWRlIDxsaW51eC9rdGltZS5oPgo+ICAjaW5jbHVkZSA8YXNtL2lvLmg+Cj4gICNpbmNs
-dWRlIDxhc20vaXJxLmg+Cj4gICNpbmNsdWRlIDxhc20vYnl0ZW9yZGVyLmg+Cj4gQEAgLTM2Miwx
-NCArMzYzLDYgQEAgTU9EVUxFX0RFU0NSSVBUSU9OKCJQcm9taXNlIFRlY2hub2xvZ3kgU3VwZXJU
-cmFrIEVYIENvbnRyb2xsZXJzIik7Cj4gIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKPiAgTU9EVUxF
-X1ZFUlNJT04oU1RfRFJJVkVSX1ZFUlNJT04pOwo+ICAKPiAtc3RhdGljIHZvaWQgc3RleF9nZXR0
-aW1lKF9fbGU2NCAqdGltZSkKPiAtewo+IC0Jc3RydWN0IHRpbWV2YWwgdHY7Cj4gLQo+IC0JZG9f
-Z2V0dGltZW9mZGF5KCZ0dik7Cj4gLQkqdGltZSA9IGNwdV90b19sZTY0KHR2LnR2X3NlYyk7Cj4g
-LX0KPiAtCj4gIHN0YXRpYyBzdHJ1Y3Qgc3RhdHVzX21zZyAqc3RleF9nZXRfc3RhdHVzKHN0cnVj
-dCBzdF9oYmEgKmhiYSkKPiAgewo+ICAJc3RydWN0IHN0YXR1c19tc2cgKnN0YXR1cyA9IGhiYS0+
-c3RhdHVzX2J1ZmZlciArIGhiYS0+c3RhdHVzX3RhaWw7Cj4gQEAgLTEwMDIsNyArOTk1LDcgQEAg
-c3RhdGljIGludCBzdGV4X2NvbW1vbl9oYW5kc2hha2Uoc3RydWN0IHN0X2hiYSAqaGJhKQo+ICAJ
-aC0+cmVxX2NudCA9IGNwdV90b19sZTE2KGhiYS0+cnFfY291bnQrMSk7Cj4gIAloLT5zdGF0dXNf
-c3ogPSBjcHVfdG9fbGUxNihzaXplb2Yoc3RydWN0IHN0YXR1c19tc2cpKTsKPiAgCWgtPnN0YXR1
-c19jbnQgPSBjcHVfdG9fbGUxNihoYmEtPnN0c19jb3VudCsxKTsKPiAtCXN0ZXhfZ2V0dGltZSgm
-aC0+aG9zdHRpbWUpOwo+ICsJaC0+aG9zdHRpbWUgPSBjcHVfdG9fbGU2NChrdGltZV9nZXRfcmVh
-bF9zZWNvbmRzKCkpOwo+ICAJaC0+cGFydG5lcl90eXBlID0gSE1VX1BBUlRORVJfVFlQRTsKPiAg
-CWlmIChoYmEtPmV4dHJhX29mZnNldCkgewo+ICAJCWgtPmV4dHJhX29mZnNldCA9IGNwdV90b19s
-ZTMyKGhiYS0+ZXh0cmFfb2Zmc2V0KTsKPiBAQCAtMTA3Niw3ICsxMDY5LDcgQEAgc3RhdGljIGlu
-dCBzdGV4X3NzX2hhbmRzaGFrZShzdHJ1Y3Qgc3RfaGJhICpoYmEpCj4gIAloLT5yZXFfY250ID0g
-Y3B1X3RvX2xlMTYoaGJhLT5ycV9jb3VudCsxKTsKPiAgCWgtPnN0YXR1c19zeiA9IGNwdV90b19s
-ZTE2KHNpemVvZihzdHJ1Y3Qgc3RhdHVzX21zZykpOwo+ICAJaC0+c3RhdHVzX2NudCA9IGNwdV90
-b19sZTE2KGhiYS0+c3RzX2NvdW50KzEpOwo+IC0Jc3RleF9nZXR0aW1lKCZoLT5ob3N0dGltZSk7
-Cj4gKwloLT5ob3N0dGltZSA9IGNwdV90b19sZTY0KGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKSk7
-Cj4gIAloLT5wYXJ0bmVyX3R5cGUgPSBITVVfUEFSVE5FUl9UWVBFOwo+ICAJaC0+ZXh0cmFfb2Zm
-c2V0ID0gaC0+ZXh0cmFfc2l6ZSA9IDA7Cj4gIAlzY3JhdGNoX3NpemUgPSAoaGJhLT5zdHNfY291
-bnQrMSkqc2l6ZW9mKHUzMik7Cj4gCkp1c3QgcmVtb3ZlICdob3N0dGltZScgYWx0b2dldGhlci4g
-SXQgc2VydmVzIG5vIHB1cnBvc2Ugd2hhdHNvZXZlci4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIu
-IEhhbm5lcyBSZWluZWNrZQkJICAgICAgelNlcmllcyAmIFN0b3JhZ2UKaGFyZUBzdXNlLmRlCQkJ
-ICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBQcm9kdWN0cyBHbWJILCBNYXhmZWxk
-c3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEouIEhhd24sIEouIEd1aWxkLCBGLiBJbWVuZMO2
-cmZmZXIsIEhSQiAxNjc0NiAoQUcgTsO8cm5iZXJnKQpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMubGlu
-YXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAzOAo=
+Export the RAW SCSI Inquiry to sysfs as binfile. This way the data can be used
+by userland without the need to have and ioctl or use the sg_inq tool.
+
+Here is an example of the provided data
+
+linux:~ # hexdump /sys/class/scsi_device/1\:0\:0\:0/device/inquiry
+0000000 8005 3205 001f 0000 4551 554d 2020 2020
+0000010 4551 554d 4420 4456 522d 4d4f 2020 2020
+0000020 2e32 2e33
+0000024
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_sysfs.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..fdcf0ab 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -773,6 +773,29 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
+ sdev_vpd_pg_attr(pg83);
+ sdev_vpd_pg_attr(pg80);
+ 
++static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
++			    struct bin_attribute *bin_attr,
++			    char *buf, loff_t off, size_t count)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->inquiry)
++		return -EINVAL;
++
++	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
++				       sdev->inquiry_len);
++}
++
++static struct bin_attribute dev_attr_inquiry = {
++	.attr = {
++		.name = "inquiry",
++		.mode = S_IRUGO,
++	},
++	.size = 0,
++	.read = show_inquiry,
++};
++
+ static ssize_t
+ show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -957,6 +980,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ static struct bin_attribute *scsi_sdev_bin_attrs[] = {
+ 	&dev_attr_vpd_pg83,
+ 	&dev_attr_vpd_pg80,
++	&dev_attr_inquiry,
+ 	NULL
+ };
+ static struct attribute_group scsi_sdev_attr_group = {
+-- 
+2.6.2
+
