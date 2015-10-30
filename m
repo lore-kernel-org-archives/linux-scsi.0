@@ -1,55 +1,81 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH v3 RESEND] scsi: report 'INQUIRY result too short' once per host
-Date: Fri, 30 Oct 2015 13:56:36 +0100
-Message-ID: <874mh8seez.fsf@vitty.brq.redhat.com>
-References: <1446205211-12874-1-git-send-email-vkuznets@redhat.com>
-	<56335AAD.4040506@suse.de>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: Blk-mq/scsi-mq Tuning
+Date: Fri, 30 Oct 2015 09:25:19 -0400
+Message-ID: <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local>
+References: <D256A425.229C0%chad.dupuis@qlogic.com> <56331FFB.9010703@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56335AAD.4040506@suse.de> (Hannes Reinecke's message of "Fri, 30
-	Oct 2015 12:55:25 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan\" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>"@redhat.com
+Content-Type: multipart/mixed; boundary="0-1922859884-1446211522=:2511"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:16365 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932230AbbJ3NZj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Oct 2015 09:25:39 -0400
+In-Reply-To: <56331FFB.9010703@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-Hannes Reinecke <hare@suse.de> writes:
+--0-1922859884-1446211522=:2511
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-> On 10/30/2015 12:40 PM, Vitaly Kuznetsov wrote:
->> Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
->> SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
->> least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
->> INQUIRY result too short (5), using 36' messages on console. This can be
->> problematic for slow consoles. Introduce short_inquiry flag in struct
->> Scsi_Host to print the message once per host.
->> 
->> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
->> ---
->> Changes since v3 RESEND:
->> - Sorry, I screwed up James address when sending 'v3 RESEND'.
->> 
->> Changes since v3:
->> - no changes, this is just a RESEND.
->> 
->> Changes since v2:
->> - This is a successor of previously sent (and still not merged) "scsi:
->>   introduce short_inquiry flag for broken host adapters" patch. I'm not
->>   particularly sure which solution is better but I'm leaning towards this
->>   one as it doesn't require changes to adapter drivers.
->> ---
->>  drivers/scsi/scsi_scan.c | 9 ++++++---
->>  include/scsi/scsi_host.h | 3 +++
->>  2 files changed, 9 insertions(+), 3 deletions(-)
->> 
-> Why not printk_once?
-> Should achieve the same result, and we're saving yet another flag...
+
+
+On Fri, 30 Oct 2015, Hannes Reinecke wrote:
+
+> On 10/28/2015 09:11 PM, Chad Dupuis wrote:
+>> Hi Folks,
+>>
+>> We¹ve begun to explore blk-mq and scsi-mq and wanted to know if there were
+>> any best practices in terms of block layer settings.  We¹re looking
+>> specifically at the FCoE and iSCSI protocols.
+>>
+>> A little background on the queues in our hardware first: we have a per
+>> connection transmit queue and multiple, global receive queues.  The
+>> transmit queues are not pegged to a particular CPU.  The receive queues
+>> are pegged to the first N CPUs where N is the number of receive queues.
+>> We set the nr_hw_queues in the scsi_host_template to N as well.
+>>
+> Weelll ... I think you'll run into issues here.
+> The whole point of the multiqueue implementation is that you can tag the
+> submission _and_ completion queue to a single CPU, thereby eliminating
+> locking.
+> If you only peg the completion queue to a CPU you'll still have
+> contention on the submission queue, needing to take locks etc.
 >
+> Plus you will _inevitably_ incur cache misses, as the completion will
+> basically never occur on the same CPU which did the submissoin.
+> Hence the context needs to be bounced to the CPU holding the completion
+> queue, or you'll need to do a IPI to inform the submitting CPU.
+> But if you do that you're essentially doing single-queue submission,
+> so I doubt we're seeing that great improvements.
 
-It seems it makes sense to print this warning per-host (as we can have
-many hosts) and not just once. It's hard to come up with a reasonable
-message for printk_once() -- "some of your SCSI devices are buggy"
-sounds to vague. Here we say "this particular scsi controller is buggy".
+This was why I was asking if there was a blk-mq API to be able to set CPU 
+affinity for the hardware context queues so I could steer the submissions 
+to the CPUs that my receive queues are on (even if they are allowed to 
+float).
 
--- 
-  Vitaly
+>> In our initial testing we¹re not seeing the performance scale as we would
+>> expect so we wanted to see if there some Œknobs¹ if you will that we could
+>> try tuning to try to increase the performance.  Also, one question we did
+>> have is there an official API to be able to set the CPU affinity of the
+>> hw_ctx_queues?
+>>
+> As above, given the underlying design I'm not surprised.
+>
+> But above you mentioned 'per-connection submission queues'; from which
+> one could infer that there are several _hardware_ submission queues?
+> If so, _maybe_ we should look into doing MC/S (in the iSCSI case),
+> which would allow us to keep the 1:1 submission/completion ratio
+> preferred by blk-mq and still use several queues ... Hmm?
+
+Yes, each connection has a transmit queue.
+
+>
+> Cheers,
+>
+> Hannes
+>
+--0-1922859884-1446211522=:2511--
