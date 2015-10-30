@@ -1,120 +1,119 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Blk-mq/scsi-mq Tuning
-Date: Fri, 30 Oct 2015 16:00:55 +0100
-Message-ID: <56338627.8080601@suse.de>
-References: <D256A425.229C0%chad.dupuis@qlogic.com> <56331FFB.9010703@suse.de>
- <alpine.OSX.2.00.1510300919390.2511@administrators-macbook-pro.local>
- <563372CB.9050206@suse.de>
- <alpine.OSX.2.00.1510301010550.4888@administrators-macbook-pro.local>
-Mime-Version: 1.0
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1 17/25] hpsa: move scsi_add_device and scsi_remove_device calls to new function
+Date: Fri, 30 Oct 2015 10:56:55 -0500
+Message-ID: <B5CF36FC-31B1-481B-B269-A2F8147323AC@linux.vnet.ibm.com>
+References: <20151028215206.5323.84194.stgit@brunhilda> <20151028220613.5323.52829.stgit@brunhilda> <90741AFD-5D5E-4588-A7B1-53A3E80DA984@linux.vnet.ibm.com> <563281CB.5040409@pmcs.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44039 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759232AbbJ3PA6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 11:00:58 -0400
-In-Reply-To: <alpine.OSX.2.00.1510301010550.4888@administrators-macbook-pro.local>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:50452 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704AbbJ3P5C convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2015 11:57:02 -0400
+Received: from localhost
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Fri, 30 Oct 2015 09:57:01 -0600
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 2E2E61FF0021
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 09:45:10 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t9UFtpMM3015050
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 08:55:51 -0700
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t9UFuviZ016509
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2015 09:56:58 -0600
+In-Reply-To: <563281CB.5040409@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: "bvanassche@acm.org" <bvanassche@acm.org>, "hch@lst.de" <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>, Lee Duncan <lduncan@suse.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Don Brace <brace77070@gmail.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On 10/30/2015 03:12 PM, Chad Dupuis wrote:
->=20
->=20
-> On Fri, 30 Oct 2015, Hannes Reinecke wrote:
->=20
->> On 10/30/2015 02:25 PM, Chad Dupuis wrote:
->>>
->>>
->>> On Fri, 30 Oct 2015, Hannes Reinecke wrote:
->>>
->>>> On 10/28/2015 09:11 PM, Chad Dupuis wrote:
->>>>> Hi Folks,
->>>>>
->>>>> We=B9ve begun to explore blk-mq and scsi-mq and wanted to know if=
- there
->>>>> were
->>>>> any best practices in terms of block layer settings.  We=B9re loo=
-king
->>>>> specifically at the FCoE and iSCSI protocols.
->>>>>
->>>>> A little background on the queues in our hardware first: we have =
-a per
->>>>> connection transmit queue and multiple, global receive queues.  T=
-he
->>>>> transmit queues are not pegged to a particular CPU.  The receive
->>>>> queues
->>>>> are pegged to the first N CPUs where N is the number of receive
->>>>> queues.
->>>>> We set the nr_hw_queues in the scsi_host_template to N as well.
->>>>>
->>>> Weelll ... I think you'll run into issues here.
->>>> The whole point of the multiqueue implementation is that you can t=
-ag
->>>> the
->>>> submission _and_ completion queue to a single CPU, thereby elimina=
-ting
->>>> locking.
->>>> If you only peg the completion queue to a CPU you'll still have
->>>> contention on the submission queue, needing to take locks etc.
->>>>
->>>> Plus you will _inevitably_ incur cache misses, as the completion w=
-ill
->>>> basically never occur on the same CPU which did the submissoin.
->>>> Hence the context needs to be bounced to the CPU holding the compl=
-etion
->>>> queue, or you'll need to do a IPI to inform the submitting CPU.
->>>> But if you do that you're essentially doing single-queue submissio=
-n,
->>>> so I doubt we're seeing that great improvements.
->>>
->>> This was why I was asking if there was a blk-mq API to be able to s=
-et
->>> CPU affinity for the hardware context queues so I could steer the
->>> submissions to the CPUs that my receive queues are on (even if they=
- are
->>> allowed to float).
->>>
->> But what would that achieve?
->> Each of the hardware context queues would still having to use the
->> same submission queue, so you'd have to have some serialisation
->> with spinlocks et.al. during submission. Which is what blk-mq
->> tries to avoid.
->> Am I wrong?
->=20
-> Sadly, no I believe you're correct. So essentially the upshot seems t=
-o
-> be if you can have a 1x1 request:response queue then sticking with th=
-e
-> older queuecommand method is better?
->=20
-Hmm; you might be getting some performance improvements as the
-submission path from the blocklayer down is more efficient, but in
-your case the positive effects might be eliminated by reducing the
-number of receive queues.
-But then you never know until you try :-)
+> On Oct 29, 2015, at 3:30 PM, Don Brace <brace77070@gmail.com> wrote:
+> 
+> On 10/29/2015 12:21 PM, Matthew R. Ochs wrote:
+>>> On Oct 28, 2015, at 5:06 PM, Don Brace <don.brace@pmcs.com> wrote:
+>>> 
+>>> From: Kevin Barnett <kevin.barnett@pmcs.com>
+>>> 
+>>> preparation for adding the sas transport class
+>>> 
+>>> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+>>> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+>>> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+>>> Signed-off-by: Don Brace <don.brace@pmcs.com>
+>>> ---
+>>> drivers/scsi/hpsa.c |   65 +++++++++++++++++++++++++++++++--------------------
+>>> 1 file changed, 39 insertions(+), 26 deletions(-)
+>>> 
+>>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>>> index 24b3c8c..06207e2 100644
+>>> --- a/drivers/scsi/hpsa.c
+>>> +++ b/drivers/scsi/hpsa.c
+>>> @@ -1660,6 +1660,37 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
+>>> 	}
+>>> }
+>>> 
+>>> +static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
+>>> +{
+>>> +	int rc = 0;
+>>> +
+>>> +	rc = scsi_add_device(h->scsi_host, device->bus,
+>>> +					device->target, device->lun);
+>>> +	return rc;
+>>> +}
+>>> +
+>>> +static void hpsa_remove_device(struct ctlr_info *h,
+>>> +			struct hpsa_scsi_dev_t *device)
+>>> +{
+>>> +	struct scsi_device *sdev = NULL;
+>>> +
+>>> +	sdev = scsi_device_lookup(h->scsi_host, device->bus,
+>>> +						device->target, device->lun);
+>>> +
+>>> +	if (sdev) {
+>>> +		scsi_remove_device(sdev);
+>>> +		scsi_device_put(sdev);
+>>> +	} else {
+>>> +		/*
+>>> +		 * We don't expect to get here.  Future commands
+>>> +		 * to this device will get a selection timeout as
+>>> +		 * if the device were gone.
+>>> +		 */
+>>> +		hpsa_show_dev_msg(KERN_WARNING, h, device,
+>>> +					"didn't find device for removal.");
+>>> +	}
+>>> +}
+>>> +
+>>> static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>> 	struct hpsa_scsi_dev_t *sd[], int nsds)
+>>> {
+>>> @@ -1672,7 +1703,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>> 	unsigned long flags;
+>>> 	struct hpsa_scsi_dev_t **added, **removed;
+>>> 	int nadded, nremoved;
+>>> -	struct Scsi_Host *sh = NULL;
+>>> 
+>>> 	/*
+>>> 	 * A reset can cause a device status to change
+>>> @@ -1792,46 +1822,29 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
+>>> 	if (hostno == -1 || !changes)
+>>> 		goto free_and_out;
+>>> 
+>>> -	sh = h->scsi_host;
+>>> -	if (sh == NULL) {
+>>> -		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
+>>> -		return;
+>>> -	}
+>> Are we guaranteed that h->scsi_host will never be NULL when running in here? Or when
+>> the newly introduced hpsa_remove_device() is invoked elsewhere for that matter?
+>> 
+>> This commit loses this check and scsi_device_lookup() is not tolerant of a NULL
+>> scsi_host * (first action is to grab the host_lock).
+> Better to be safe. I'll add a check in both functions.
 
-The alternative would indeed be to move to MC/S with block-mq; that
-should give you some benefits as you'd be able to utilize several queue=
-s.
-I have actually discussed that with Emulex; moving to MC/S in the iSCSI
-stack might indeed be viable when using blk-mq. It would be a rather
-good match with the existing blk-mq implementation, and most of the
-implementation would be in the iSCSI stack, reducing the burden on the
-driver vendors :-)
+With these changes
 
-Cheers,
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
