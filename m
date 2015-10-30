@@ -1,58 +1,68 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RESEND PATCH] qla2xxx: Remove use of 'struct timeval'
-Date: Fri, 30 Oct 2015 10:36:16 +0100
-Message-ID: <1446197776.16404.57.camel@suse.de>
-References: <20151030091526.GA4028@tina-laptop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <20151030091526.GA4028@tina-laptop>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi@vger.kernel.org
-Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Arnd Bergmann <arnd@arndb.de>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: [PATCH v3 RESEND] scsi: report 'INQUIRY result too short' once per host
+Date: Fri, 30 Oct 2015 12:23:45 +0100
+Message-ID: <1446204225-6114-1-git-send-email-vkuznets@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <^Cottomley@Odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan\"" <kys@microsoft.com>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gRnJpLCAyMDE1LTEwLTMwIGF0IDAyOjE1IC0wNzAwLCBUaW5hIFJ1Y2hhbmRhbmkgd3JvdGU6
-Cj4gc3RydWN0IHJlZ2lzdGVyX2hvc3RfaW5mbyBzdG9yZXMgYSA2NC1iaXQgVVRDIHN5c3RlbSB0
-aW1lIHRpbWVzdGFtcC4KPiBUaGlzIHBhdGNoIHJlbW92ZXMgdGhlIHVzZSBvZiAnc3RydWN0IHRp
-bWV2YWwnIHRvIG9idGFpbiB0aGF0Cj4gdGltZXN0YW1wCj4gYXMgaXRzIHR2X3NlYyB2YWx1ZSB3
-aWxsIG92ZXJmbG93IG9uIDMyLWJpdCBzeXN0ZW1zIGluIHllYXIgMjAzOAo+IGJleW9uZC4KPiBU
-aGUgcGF0Y2ggdXNlcyBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkgd2hpY2ggcmV0dXJucyBhIDY0
-LWJpdAo+IHNlY29uZHMgdmFsdWUuCj4gCj4gU2lnbmVkLW9mZi1ieTogVGluYSBSdWNoYW5kYW5p
-IDxydWNoYW5kYW5pLnRpbmFAZ21haWwuY29tPgoKUmV2aWV3ZWQtYnk6IEpvaGFubmVzIFRodW1z
-aGlybiA8anRodW1zaGlybkBzdXNlLmRlPgoKPiAtLS0KPiDCoGRyaXZlcnMvc2NzaS9xbGEyeHh4
-L3FsYV9tci5jIHwgNSArKy0tLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwg
-MyBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxh
-X21yLmMKPiBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tci5jCj4gaW5kZXggNmQxOTBiNC4u
-ZDY0YTY0YSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbXIuYwo+ICsr
-KyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tci5jCj4gQEAgLTYsNiArNiw3IEBACj4gwqAg
-Ki8KPiDCoCNpbmNsdWRlICJxbGFfZGVmLmgiCj4gwqAjaW5jbHVkZSA8bGludXgvZGVsYXkuaD4K
-PiArI2luY2x1ZGUgPGxpbnV4L2t0aW1lLmg+Cj4gwqAjaW5jbHVkZSA8bGludXgvcGNpLmg+Cj4g
-wqAjaW5jbHVkZSA8bGludXgvcmF0ZWxpbWl0Lmg+Cj4gwqAjaW5jbHVkZSA8bGludXgvdm1hbGxv
-Yy5oPgo+IEBAIC0xODEyLDcgKzE4MTMsNiBAQCBxbGFmeDAwX2Z4X2Rpc2Moc2NzaV9xbGFfaG9z
-dF90ICp2aGEsIGZjX3BvcnRfdAo+ICpmY3BvcnQsIHVpbnQxNl90IGZ4X3R5cGUpCj4gwqAJc3Ry
-dWN0IGhvc3Rfc3lzdGVtX2luZm8gKnBob3N0X2luZm87Cj4gwqAJc3RydWN0IHJlZ2lzdGVyX2hv
-c3RfaW5mbyAqcHJlZ19oc2k7Cj4gwqAJc3RydWN0IG5ld191dHNuYW1lICpwX3N5c2lkID0gTlVM
-TDsKPiAtCXN0cnVjdCB0aW1ldmFsIHR2Owo+IMKgCj4gwqAJc3AgPSBxbGEyeDAwX2dldF9zcCh2
-aGEsIGZjcG9ydCwgR0ZQX0tFUk5FTCk7Cj4gwqAJaWYgKCFzcCkKPiBAQCAtMTg4Niw4ICsxODg2
-LDcgQEAgcWxhZngwMF9meF9kaXNjKHNjc2lfcWxhX2hvc3RfdCAqdmhhLCBmY19wb3J0X3QKPiAq
-ZmNwb3J0LCB1aW50MTZfdCBmeF90eXBlKQo+IMKgCQkJwqDCoMKgwqBwX3N5c2lkLT5kb21haW5u
-YW1lLCBET01OQU1FX0xFTkdUSCk7Cj4gwqAJCQlzdHJuY3B5KHBob3N0X2luZm8tPmhvc3Rkcml2
-ZXIsCj4gwqAJCQnCoMKgwqDCoFFMQTJYWFhfVkVSU0lPTiwgVkVSU0lPTl9MRU5HVEgpOwo+IC0J
-CQlkb19nZXR0aW1lb2ZkYXkoJnR2KTsKPiAtCQkJcHJlZ19oc2ktPnV0YyA9ICh1aW50NjRfdCl0
-di50dl9zZWM7Cj4gKwkJCXByZWdfaHNpLT51dGMgPQo+ICh1aW50NjRfdClrdGltZV9nZXRfcmVh
-bF9zZWNvbmRzKCk7Cj4gwqAJCQlxbF9kYmcocWxfZGJnX2luaXQsIHZoYSwgMHgwMTQ5LAo+IMKg
-CQkJwqDCoMKgwqAiSVNQJTA0WDogSG9zdCByZWdpc3RyYXRpb24gd2l0aAo+IGZpcm13YXJlXG4i
-LAo+IMKgCQkJwqDCoMKgwqBoYS0+cGRldi0+ZGV2aWNlKTsKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1haWxpbmcgbGlzdApZMjAzOEBsaXN0
-cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3ky
-MDM4Cg==
+Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
+SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
+least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+INQUIRY result too short (5), using 36' messages on console. This can be
+problematic for slow consoles. Introduce short_inquiry flag in struct
+Scsi_Host to print the message once per host.
+
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+Changes since v3:
+- no changes, this is just a RESEND.
+
+Changes since v2:
+- This is a successor of previously sent (and still not merged) "scsi:
+  introduce short_inquiry flag for broken host adapters" patch. I'm not
+  particularly sure which solution is better but I'm leaning towards this
+  one as it doesn't require changes to adapter drivers.
+---
+ drivers/scsi/scsi_scan.c | 9 ++++++---
+ include/scsi/scsi_host.h | 3 +++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f9f3f82..cd347e4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "scsi scan: INQUIRY result too short (%d),"
+-			    " using 36\n", sdev->inquiry_len);
++		if (!sdev->host->short_inquiry) {
++			shost_printk(KERN_INFO, sdev->host,
++				    "scsi scan: INQUIRY result too short (%d),"
++				    " using 36\n", sdev->inquiry_len);
++			sdev->host->short_inquiry = 1;
++		}
+ 		sdev->inquiry_len = 36;
+ 	}
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e113c75..3a22da7 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -673,6 +673,9 @@ struct Scsi_Host {
+ 	unsigned use_blk_mq:1;
+ 	unsigned use_cmd_list:1;
+ 
++	/* Host responded with short (<36 bytes) INQUIRY result */
++	unsigned short_inquiry:1;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
+-- 
+2.4.3
