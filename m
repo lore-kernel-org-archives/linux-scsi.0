@@ -1,79 +1,137 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH] sg: Fix double-free when drives detach during SG_IO
-Date: Fri, 30 Oct 2015 16:57:00 -0700
-Message-ID: <944215ec334c3c5b3af98210acf8f6479f5539c8.1445634103.git.calvinowens@fb.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.3-rc4
+Date: Sat, 31 Oct 2015 12:39:41 +0900
+Message-ID: <1446262781.25009.59.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:37370 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750834AbbJ3X5d (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58350 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751226AbbJaDjr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2015 19:57:33 -0400
+	Fri, 30 Oct 2015 23:39:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, calvinowens@fb.com
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-In sg_common_write(), we free the block request and return -ENODEV if
-the device is detached in the middle of the SG_IO ioctl().
+This is three essential bug fixes for various SCSI parts.  The only
+affected users are SCSI multi-path via device handler (basically all th=
+e
+enterprise) and mvsas users.  The dh bugs are an async entanglement in
+boot resulting in a serious WARN_ON trip and a use after free on remove
+leading to a crash with strict memory accounting.  The mvsas bug
+manifests as a null deref oops but only on abort sequences; however,
+these can commonly occur with SATA attached devices, hence the fix.
 
-Unfortunately, sg_finish_rem_req() also tries to free srp->rq, so we
-end up freeing rq->cmd in the already free rq object, and then free
-the object itself out from under the current user.
+The patch is available here:
 
-This ends up corrupting random memory via the list_head on the rq
-object. The most common crash trace I saw is this:
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-  ------------[ cut here ]------------
-  kernel BUG at block/blk-core.c:1420!
-  Call Trace:
-  [<ffffffff81281eab>] blk_put_request+0x5b/0x80
-  [<ffffffffa0069e5b>] sg_finish_rem_req+0x6b/0x120 [sg]
-  [<ffffffffa006bcb9>] sg_common_write.isra.14+0x459/0x5a0 [sg]
-  [<ffffffff8125b328>] ? selinux_file_alloc_security+0x48/0x70
-  [<ffffffffa006bf95>] sg_new_write.isra.17+0x195/0x2d0 [sg]
-  [<ffffffffa006cef4>] sg_ioctl+0x644/0xdb0 [sg]
-  [<ffffffff81170f80>] do_vfs_ioctl+0x90/0x520
-  [<ffffffff81258967>] ? file_has_perm+0x97/0xb0
-  [<ffffffff811714a1>] SyS_ioctl+0x91/0xb0
-  [<ffffffff81602afb>] tracesys+0xdd/0xe2
-    RIP [<ffffffff81281e04>] __blk_put_request+0x154/0x1a0
+The short changelog is:
 
-The solution is straightforward: just set srp->rq to NULL in the
-failure branch so that sg_finish_rem_req() doesn't attempt to re-free
-it.
+Christoph Hellwig (1):
+      scsi_dh: don't try to load a device handler during async probing
 
-Additionally, since sg_rq_end_io() will never be called on the object
-when this happens, we need to free memory backing ->cmd if it isn't
-embedded in the object itself.
+D=C4=81vis Mos=C4=81ns (1):
+      mvsas: Fix NULL pointer dereference in mvs_slot_task_free
 
-KASAN was extremely helpful in finding the root cause of this bug.
+Junichi Nomura (1):
+      scsi_dh: fix use-after-free when removing scsi device
 
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
+And the diffstat:
+
+ drivers/scsi/mvsas/mv_sas.c | 2 ++
+ drivers/scsi/scsi_dh.c      | 8 ++++++--
+ drivers/scsi/scsi_priv.h    | 2 ++
+ drivers/scsi/scsi_sysfs.c   | 2 ++
+ 4 files changed, 12 insertions(+), 2 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/sg.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9d7b7db..503ab8b 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -787,8 +787,14 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		return k;	/* probably out of space --> ENOMEM */
- 	}
- 	if (atomic_read(&sdp->detaching)) {
--		if (srp->bio)
-+		if (srp->bio) {
-+			if (srp->rq->cmd != srp->rq->__cmd)
-+				kfree(srp->rq->cmd);
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 454536c..9c78074 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -887,6 +887,8 @@ static void mvs_slot_free(struct mvs_info *mvi, u32=
+ rx_desc)
+ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *=
+task,
+ 			  struct mvs_slot_info *slot, u32 slot_idx)
+ {
++	if (!slot)
++		return;
+ 	if (!slot->task)
+ 		return;
+ 	if (!sas_protocol_ata(task->task_proto))
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 0a2168e..e7649ed 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -226,16 +226,20 @@ int scsi_dh_add_device(struct scsi_device *sdev)
+=20
+ 	drv =3D scsi_dh_find_driver(sdev);
+ 	if (drv)
+-		devinfo =3D scsi_dh_lookup(drv);
++		devinfo =3D __scsi_dh_lookup(drv);
+ 	if (devinfo)
+ 		err =3D scsi_dh_handler_attach(sdev, devinfo);
+ 	return err;
+ }
+=20
+-void scsi_dh_remove_device(struct scsi_device *sdev)
++void scsi_dh_release_device(struct scsi_device *sdev)
+ {
+ 	if (sdev->handler)
+ 		scsi_dh_handler_detach(sdev);
++}
 +
- 			blk_end_request_all(srp->rq, -EIO);
-+			srp->rq = NULL;
-+		}
++void scsi_dh_remove_device(struct scsi_device *sdev)
++{
+ 	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
+ }
+=20
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 644bb73..4d01cdb 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -173,9 +173,11 @@ extern struct async_domain scsi_sd_probe_domain;
+ /* scsi_dh.c */
+ #ifdef CONFIG_SCSI_DH
+ int scsi_dh_add_device(struct scsi_device *sdev);
++void scsi_dh_release_device(struct scsi_device *sdev);
+ void scsi_dh_remove_device(struct scsi_device *sdev);
+ #else
+ static inline int scsi_dh_add_device(struct scsi_device *sdev) { retur=
+n 0; }
++static inline void scsi_dh_release_device(struct scsi_device *sdev) { =
+}
+ static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
+ #endif
+=20
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..dff8faf 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -399,6 +399,8 @@ static void scsi_device_dev_release_usercontext(str=
+uct work_struct *work)
+=20
+ 	sdev =3D container_of(work, struct scsi_device, ew.work);
+=20
++	scsi_dh_release_device(sdev);
 +
- 		sg_finish_rem_req(srp);
- 		return -ENODEV;
- 	}
--- 
-2.5.0
+ 	parent =3D sdev->sdev_gendev.parent;
+=20
+ 	spin_lock_irqsave(sdev->host->host_lock, flags);
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
