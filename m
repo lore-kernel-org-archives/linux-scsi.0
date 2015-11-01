@@ -1,99 +1,46 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v7 01/26] scsi/atari_scsi: Dont select CONFIG_NVRAM
-Date: Sun, 01 Nov 2015 21:42:03 +1100
-Message-ID: <20151101104202.561654951@telegraphics.com.au>
-References: <20151101104202.301856132@telegraphics.com.au>
+From: Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [PATCH v4.3-rc7] be2iscsi : Fix bogus WARN_ON length check
+Date: Sun, 1 Nov 2015 08:43:59 -0700
+Message-ID: <5636333F.7000903@canonical.com>
+References: <1446229378-2956-1-git-send-email-tim.gardner@canonical.com>
+ <mqdbnbgxec5.fsf@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline; filename=atari-nvram-disable
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mqdbnbgxec5.fsf@linux-x5ow.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Minh Tran <minh.tran@avagotech.com>, John Soni Jose <sony.john-n@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gcG93ZXJwYywgc2V0dGluZyBDT05GSUdfTlZSQU09biBidWlsZHMgYSBrZXJuZWwgd2l0aCBu
-byBOVlJBTSBzdXBwb3J0LgpTZXR0aW5nIENPTkZJR19OVlJBTT1tIGVuYWJsZXMgdGhlIC9kZXYv
-bnZyYW0gbWlzYyBkZXZpY2UgbW9kdWxlIHdpdGhvdXQKZW5hYmxpbmcgTlZSQU0gc3VwcG9ydCBp
-biBkcml2ZXJzLiBTZXR0aW5nIENPTkZJR19OVlJBTT15IGVuYWJsZXMgdGhlCm1pc2MgZGV2aWNl
-IChidWlsdC1pbikgYW5kIGFsc28gZW5hYmxlcyBOVlJBTSBzdXBwb3J0IGluIGRyaXZlcnMuCgpt
-NjhrIHNoYXJlcyB0aGUgdmFsa3lyaWVmYiBkcml2ZXIgd2l0aCBwb3dlcnBjLCBhbmQgc2luY2Ug
-dGhhdCBkcml2ZXIgdXNlcwpOVlJBTSwgaXQgaXMgYWZmZWN0ZWQgYnkgQ09ORklHX0FUQVJJX1ND
-U0ksIGJlY2F1c2Ugb2YgdGhlIHVzZSBvZgoic2VsZWN0IE5WUkFNIi4KCkFkb3B0IHRoZSBwb3dl
-cnBjIGNvbnZlbnRpb24gb24gbTY4ayB0byBhdm9pZCBzdXJwcmlzZXMuCgpTaWduZWQtb2ZmLWJ5
-OiBGaW5uIFRoYWluIDxmdGhhaW5AdGVsZWdyYXBoaWNzLmNvbS5hdT4KVGVzdGVkLWJ5OiBDaHJp
-c3RpYW4gVC4gU3RlaWdpZXMgPGN0c0BkZWJpYW4ub3JnPgoKLS0tCgpUaGlzIHBhdGNoIHRlbXBv
-cmFyaWx5IGRpc2FibGVzIENPTkZJR19OVlJBTSBvbiBBdGFyaSwgdG8gcHJldmVudCBidWlsZApm
-YWlsdXJlcyB3aGVuIGJpc2VjdGluZyB0aGUgcmVzdCBvZiB0aGlzIHBhdGNoIHNlcmllcy4gSXQg
-Z2V0cyBlbmFibGVkCmFnYWluIHdpdGggdGhlIGludHJvZHVjdGlvbiBvZiBDT05GSUdfSEFWRV9B
-UkNIX05WUkFNX09QUywgb25jZSB0aGUKbnZyYW1fKiBnbG9iYWwgZnVuY3Rpb25zIGhhdmUgYmVl
-biBtb3ZlZCB0byBhbiBvcHMgc3RydWN0LgoKVGhlIHJlbW92YWwgb2YgInNlbGVjdCBOVlJBTSIg
-bWF5IG1lYW4gdGhhdCBzb21lIGtlcm5lbCBjb25maWdzIChzdWNoCmFzIERlYmlhbi9tNjhrKSBt
-YXkgbmVlZCB0d2Vha2luZy4KCi0tLQogZHJpdmVycy9jaGFyL0tjb25maWcgICAgICB8ICAgIDUg
-Ky0tLS0KIGRyaXZlcnMvc2NzaS9LY29uZmlnICAgICAgfCAgICA2ICsrKy0tLQogZHJpdmVycy9z
-Y3NpL2F0YXJpX3Njc2kuYyB8ICAgIDggKysrKy0tLS0KIDMgZmlsZXMgY2hhbmdlZCwgOCBpbnNl
-cnRpb25zKCspLCAxMSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC9kcml2ZXJzL2NoYXIvS2Nv
-bmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2RyaXZlcnMvY2hhci9LY29uZmlnCTIwMTUt
-MTEtMDEgMjE6NDE6MjQuMDAwMDAwMDAwICsxMTAwCisrKyBsaW51eC9kcml2ZXJzL2NoYXIvS2Nv
-bmZpZwkyMDE1LTExLTAxIDIxOjQxOjI0LjAwMDAwMDAwMCArMTEwMApAQCAtMjQ3LDcgKzI0Nyw3
-IEBAIHNvdXJjZSAiZHJpdmVycy9jaGFyL2h3X3JhbmRvbS9LY29uZmlnIgogCiBjb25maWcgTlZS
-QU0KIAl0cmlzdGF0ZSAiL2Rldi9udnJhbSBzdXBwb3J0IgotCWRlcGVuZHMgb24gQVRBUkkgfHwg
-WDg2IHx8IChBUk0gJiYgUlRDX0RSVl9DTU9TKSB8fCBHRU5FUklDX05WUkFNCisJZGVwZW5kcyBv
-biBYODYgfHwgKEFSTSAmJiBSVENfRFJWX0NNT1MpIHx8IEdFTkVSSUNfTlZSQU0KIAktLS1oZWxw
-LS0tCiAJICBJZiB5b3Ugc2F5IFkgaGVyZSBhbmQgY3JlYXRlIGEgY2hhcmFjdGVyIHNwZWNpYWwg
-ZmlsZSAvZGV2L252cmFtCiAJICB3aXRoIG1ham9yIG51bWJlciAxMCBhbmQgbWlub3IgbnVtYmVy
-IDE0NCB1c2luZyBta25vZCAoIm1hbiBta25vZCIpLApAQCAtMjY1LDkgKzI2NSw2IEBAIGNvbmZp
-ZyBOVlJBTQogCSAgc2hvdWxkIE5FVkVSIGlkbHkgdGFtcGVyIHdpdGggaXQuIFNlZSBSYWxmIEJy
-b3duJ3MgaW50ZXJydXB0IGxpc3QKIAkgIGZvciBhIGd1aWRlIHRvIHRoZSB1c2Ugb2YgQ01PUyBi
-eXRlcyBieSB5b3VyIEJJT1MuCiAKLQkgIE9uIEF0YXJpIG1hY2hpbmVzLCAvZGV2L252cmFtIGlz
-IGFsd2F5cyBjb25maWd1cmVkIGFuZCBkb2VzIG5vdCBuZWVkCi0JICB0byBiZSBzZWxlY3RlZC4K
-LQogCSAgVG8gY29tcGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hvb3NlIE0gaGVyZTog
-dGhlCiAJICBtb2R1bGUgd2lsbCBiZSBjYWxsZWQgbnZyYW0uCiAKSW5kZXg6IGxpbnV4L2RyaXZl
-cnMvc2NzaS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4Lm9yaWcvZHJpdmVycy9zY3NpL0tj
-b25maWcJMjAxNS0xMS0wMSAyMTo0MToyNC4wMDAwMDAwMDAgKzExMDAKKysrIGxpbnV4L2RyaXZl
-cnMvc2NzaS9LY29uZmlnCTIwMTUtMTEtMDEgMjE6NDE6MjQuMDAwMDAwMDAwICsxMTAwCkBAIC0x
-NjEwLDE0ICsxNjEwLDE0IEBAIGNvbmZpZyBBVEFSSV9TQ1NJCiAJdHJpc3RhdGUgIkF0YXJpIG5h
-dGl2ZSBTQ1NJIHN1cHBvcnQiCiAJZGVwZW5kcyBvbiBBVEFSSSAmJiBTQ1NJCiAJc2VsZWN0IFND
-U0lfU1BJX0FUVFJTCi0Jc2VsZWN0IE5WUkFNCiAJLS0taGVscC0tLQogCSAgSWYgeW91IGhhdmUg
-YW4gQXRhcmkgd2l0aCBidWlsdC1pbiBOQ1I1MzgwIFNDU0kgY29udHJvbGxlciAoVFQsCiAJICBG
-YWxjb24sIC4uLikgc2F5IFkgdG8gZ2V0IGl0IHN1cHBvcnRlZC4gT2YgY291cnNlIGFsc28sIGlm
-IHlvdSBoYXZlCiAJICBhIGNvbXBhdGlibGUgU0NTSSBjb250cm9sbGVyIChlLmcuIGZvciBNZWR1
-c2EpLgogCi0JICBUbyBjb21waWxlIHRoaXMgZHJpdmVyIGFzIGEgbW9kdWxlLCBjaG9vc2UgTSBo
-ZXJlOiB0aGUKLQkgIG1vZHVsZSB3aWxsIGJlIGNhbGxlZCBhdGFyaV9zY3NpLgorCSAgVG8gY29t
-cGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwgY2hvb3NlIE0gaGVyZTogdGhlIG1vZHVsZSB3
-aWxsCisJICBiZSBjYWxsZWQgYXRhcmlfc2NzaS4gSWYgeW91IGFsc28gZW5hYmxlIE5WUkFNIHN1
-cHBvcnQsIHRoZSBTQ1NJCisJICBob3N0J3MgSUQgaXMgdGFrZW4gZnJvbSB0aGUgc2V0dGluZyBp
-biBUVCBSVEMgTlZSQU0uCiAKIAkgIFRoaXMgZHJpdmVyIHN1cHBvcnRzIGJvdGggc3R5bGVzIG9m
-IE5DUiBpbnRlZ3JhdGlvbiBpbnRvIHRoZQogCSAgc3lzdGVtOiB0aGUgVFQgc3R5bGUgKHNlcGFy
-YXRlIERNQSksIGFuZCB0aGUgRmFsY29uIHN0eWxlICh2aWEKSW5kZXg6IGxpbnV4L2RyaXZlcnMv
-c2NzaS9hdGFyaV9zY3NpLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgub3JpZy9kcml2ZXJzL3Njc2kv
-YXRhcmlfc2NzaS5jCTIwMTUtMTEtMDEgMjE6NDE6MjQuMDAwMDAwMDAwICsxMTAwCisrKyBsaW51
-eC9kcml2ZXJzL3Njc2kvYXRhcmlfc2NzaS5jCTIwMTUtMTEtMDEgMjE6NDE6MjQuMDAwMDAwMDAw
-ICsxMTAwCkBAIC04NzUsOSArODc1LDEwIEBAIHN0YXRpYyBpbnQgX19pbml0IGF0YXJpX3Njc2lf
-cHJvYmUoc3RydWMKIAlpZiAoQVRBUklIV19QUkVTRU5UKFRUX1NDU0kpICYmIHNldHVwX3NnX3Rh
-Ymxlc2l6ZSA+PSAwKQogCQlhdGFyaV9zY3NpX3RlbXBsYXRlLnNnX3RhYmxlc2l6ZSA9IHNldHVw
-X3NnX3RhYmxlc2l6ZTsKIAotCWlmIChzZXR1cF9ob3N0aWQgPj0gMCkgeworCWlmIChzZXR1cF9o
-b3N0aWQgPj0gMCkKIAkJYXRhcmlfc2NzaV90ZW1wbGF0ZS50aGlzX2lkID0gc2V0dXBfaG9zdGlk
-ICYgNzsKLQl9IGVsc2UgeworI2lmZGVmIENPTkZJR19OVlJBTQorCWVsc2UKIAkJLyogVGVzdCBp
-ZiBhIGhvc3QgaWQgaXMgc2V0IGluIHRoZSBOVlJhbSAqLwogCQlpZiAoQVRBUklIV19QUkVTRU5U
-KFRUX0NMSykgJiYgbnZyYW1fY2hlY2tfY2hlY2tzdW0oKSkgewogCQkJdW5zaWduZWQgY2hhciBi
-ID0gbnZyYW1fcmVhZF9ieXRlKDE0KTsKQEAgLTg4OCw4ICs4ODksNyBAQCBzdGF0aWMgaW50IF9f
-aW5pdCBhdGFyaV9zY3NpX3Byb2JlKHN0cnVjCiAJCQlpZiAoYiAmIDB4ODApCiAJCQkJYXRhcmlf
-c2NzaV90ZW1wbGF0ZS50aGlzX2lkID0gYiAmIDc7CiAJCX0KLQl9Ci0KKyNlbmRpZgogCiAjaWZk
-ZWYgUkVBTF9ETUEKIAkvKiBJZiBydW5uaW5nIG9uIGEgRmFsY29uIGFuZCBpZiB0aGVyZSdzIFRU
-LVJhbSAoaS5lLiwgbW9yZSB0aGFuIG9uZQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2
-QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4
-cHBjLWRldg==
+On 10/30/2015 02:59 PM, Johannes Thumshirn wrote:
+> Hi Tim,
+> tim.gardner@canonical.com writes:
+> 
+>> From: Tim Gardner <tim.gardner@canonical.com>
+>>
+>> drivers/scsi/be2iscsi/be_main.c: In function 'be_sgl_create_contiguous':
+>> drivers/scsi/be2iscsi/be_main.c:3187:18: warning: logical not is only applied to the left hand side of comparison [-Wlogical-not-parentheses]
+>>   WARN_ON(!length > 0);
+>>
+>> gcc version 5.2.1
+> 
+> This patch (or similar) was already posted on Oct 1 by Joel Stanley.
+> See http://comments.gmane.org/gmane.linux.scsi/105462
+> 
+> Thanks,
+>         Johannes
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
+Mechanical application of prarens makes that expression more complicated
+then it needs to be. It is, after all, an unsigned integer.
+
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
