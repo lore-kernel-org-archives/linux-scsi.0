@@ -1,73 +1,108 @@
 From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 7/8] pm80xx: wait a minimum of 500ms before issuing
- commands to SPCv
-Date: Mon, 2 Nov 2015 09:12:30 +0100
-Message-ID: <CAD+HZHU-2V0R1uRAqauxFWuSsC0qGLsGCoVrBgmbhp2LADbfdg@mail.gmail.com>
+Subject: Re: [PATCH 8/8] pm80xx: avoid a panic if MSI(X) interrupts are disabled
+Date: Mon, 2 Nov 2015 09:12:54 +0100
+Message-ID: <CAD+HZHW=JVu_fw8PSs5nJBvd9H81LTOqif2_nuQf1w+OGsa=YQ@mail.gmail.com>
 References: <1446216811-2248-1-git-send-email-brood@attotech.com>
-	<1446216811-2248-8-git-send-email-brood@attotech.com>
+	<1446216811-2248-9-git-send-email-brood@attotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:35209 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbbKBIMc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2015 03:12:32 -0500
-Received: by lbbes7 with SMTP id es7so82510347lbb.2
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2015 00:12:30 -0800 (PST)
-In-Reply-To: <1446216811-2248-8-git-send-email-brood@attotech.com>
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:33066 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbbKBIMz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2015 03:12:55 -0500
+Received: by lfbf136 with SMTP id f136so43999911lfb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2015 00:12:54 -0800 (PST)
+In-Reply-To: <1446216811-2248-9-git-send-email-brood@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Benjamin Rood <benjaminjrood@gmail.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, Benjamin Rood <brood@attotech.com>
 
 2015-10-30 15:53 GMT+01:00 Benjamin Rood <benjaminjrood@gmail.com>:
-> The documentation for the 8070 and 8072 SPCv chip explicitly states that
-> a minimum of 500ms must elapse before issuing commands, otherwise the
-> SPCv may not process them and the firmware may get into an unrecoverable
-> state requiring a reboot.  While the Linux guys will probably think this
-> is 'racy', it is called out in the chip documentation and inserting this
-> delay makes power management function properly.
+> If MSI(X) interrupts are disabled via the kernel command line
+> (pci=nomsi), the pm8001 driver will kernel panic because it does not
+> detect that MSI interrupts are disabled and will soldier on and attempt to
+> configure MSI interrupts anyways.  This leads to a kernel panic, most
+> likely because a required data structure is not available down the
+> line.  Using the pci_msi_enabled() function in order to detect if MSI
+> interrupts are enabled before configuring them resolves this issue and
+> avoids a kernel panic when the module is loaded.  Additionally, the
+> irq_vector structure must be initialized when legacy interrupts are
+> being used otherwise legacy interrupts will simply not function and
+> result in another panic.
 >
 > Signed-off-by: Benjamin Rood <brood@attotech.com>
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+>  drivers/scsi/pm8001/pm8001_init.c | 16 +++++++++++-----
+>  1 file changed, 11 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index a0e55d4..ab99984 100644
+> index ab99984..bdc624f 100644
 > --- a/drivers/scsi/pm8001/pm8001_init.c
 > +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1190,6 +1190,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->         int rc;
->         u8 i = 0, j;
->         u32 device_state;
-> +       u32 wait_count;
->         DECLARE_COMPLETION_ONSTACK(completion);
->         pm8001_ha = sha->lldd_ha;
->         device_state = pdev->current_state;
-> @@ -1243,6 +1244,17 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
->                 for (i = 1; i < pm8001_ha->number_of_intr; i++)
->                         PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
->         }
-> +
-> +       if (pm8001_ha->chip_id == chip_8070 ||
-> +               pm8001_ha->chip_id == chip_8072) {
-> +               wait_count = 500;
-> +               do {
-> +                       mdelay(1);
-> +               } while (--wait_count);
-> +       }
-> +
-> +       /* Spin up the PHYs */
-> +
->         pm8001_ha->flags = PM8001F_RUN_TIME;
->         for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
->                 pm8001_ha->phy[i].enable_completion = &completion;
+> @@ -482,7 +482,8 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+>
+>  #ifdef PM8001_USE_TASKLET
+>         /* Tasklet for non msi-x interrupt handler */
+> -       if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
+> +       if ((!pdev->msix_cap || !pci_msi_enabled())
+> +           || (pm8001_ha->chip_id == chip_8001))
+>                 tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
+>                         (unsigned long)&(pm8001_ha->irq_vector[0]));
+>         else
+> @@ -951,7 +952,7 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
+>         pdev = pm8001_ha->pdev;
+>
+>  #ifdef PM8001_USE_MSIX
+> -       if (pdev->msix_cap)
+> +       if (pdev->msix_cap && pci_msi_enabled())
+>                 return pm8001_setup_msix(pm8001_ha);
+>         else {
+>                 PM8001_INIT_DBG(pm8001_ha,
+> @@ -962,6 +963,8 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
+>
+>  intx:
+>         /* initialize the INT-X interrupt */
+> +       pm8001_ha->irq_vector[0].irq_id = 0;
+> +       pm8001_ha->irq_vector[0].drv_inst = pm8001_ha;
+>         rc = request_irq(pdev->irq, pm8001_interrupt_handler_intx, IRQF_SHARED,
+>                 DRV_NAME, SHOST_TO_SAS_HA(pm8001_ha->shost));
+>         return rc;
+> @@ -1112,7 +1115,8 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
+>  #endif
+>  #ifdef PM8001_USE_TASKLET
+>         /* For non-msix and msix interrupts */
+> -       if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
+> +       if ((!pdev->msix_cap || !pci_msi_enabled()) ||
+> +           (pm8001_ha->chip_id == chip_8001))
+>                 tasklet_kill(&pm8001_ha->tasklet[0]);
+>         else
+>                 for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
+> @@ -1161,7 +1165,8 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  #endif
+>  #ifdef PM8001_USE_TASKLET
+>         /* For non-msix and msix interrupts */
+> -       if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
+> +       if ((!pdev->msix_cap || !pci_msi_enabled()) ||
+> +           (pm8001_ha->chip_id == chip_8001))
+>                 tasklet_kill(&pm8001_ha->tasklet[0]);
+>         else
+>                 for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
+> @@ -1231,7 +1236,8 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+>                 goto err_out_disable;
+>  #ifdef PM8001_USE_TASKLET
+>         /*  Tasklet for non msi-x interrupt handler */
+> -       if ((!pdev->msix_cap) || (pm8001_ha->chip_id == chip_8001))
+> +       if ((!pdev->msix_cap || !pci_msi_enabled()) ||
+> +           (pm8001_ha->chip_id == chip_8001))
+>                 tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
+>                         (unsigned long)&(pm8001_ha->irq_vector[0]));
+>         else
 > --
 > 2.4.3
 >
-Could we simply mdelay(500) instead the loop?
-Also better to add a comment around.
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-Thanks,
+Thanks
 Jack
