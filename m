@@ -1,33 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/8] pm80xx: add support for PMC Sierra 8070 and PMC
- Sierra 8072 SAS controllers
-Date: Mon, 2 Nov 2015 08:51:59 +0100
-Message-ID: <5637161F.1000809@suse.de>
+Subject: Re: [PATCH 3/8] pm80xx: add ATTO PCI IDs to pm8001_pci_table
+Date: Mon, 2 Nov 2015 08:52:30 +0100
+Message-ID: <5637163E.8060203@suse.de>
 References: <1446216811-2248-1-git-send-email-brood@attotech.com>
- <1446216811-2248-3-git-send-email-brood@attotech.com>
+ <1446216811-2248-4-git-send-email-brood@attotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54572 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54591 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbbKBHwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2015 02:52:06 -0500
-In-Reply-To: <1446216811-2248-3-git-send-email-brood@attotech.com>
+	id S1751332AbbKBHwb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2015 02:52:31 -0500
+In-Reply-To: <1446216811-2248-4-git-send-email-brood@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Benjamin Rood <benjaminjrood@gmail.com>, linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com
 Cc: Benjamin Rood <brood@attotech.com>
 
 On 10/30/2015 03:53 PM, Benjamin Rood wrote:
-> These SAS controllers support speeds up to 12Gb.
+> These PCI IDs allow the pm8001 driver to load against ATTO 12Gb SAS
+> controllers that use PMC Sierra 8070 and PMC Sierra 8072 SAS chips.
 >=20
 > Signed-off-by: Benjamin Rood <brood@attotech.com>
 > ---
->  drivers/scsi/pm8001/pm8001_defs.h | 2 ++
->  drivers/scsi/pm8001/pm8001_init.c | 4 +++-
->  drivers/scsi/pm8001/pm8001_sas.h  | 4 +++-
->  3 files changed, 8 insertions(+), 2 deletions(-)
+>  drivers/scsi/pm8001/pm8001_init.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
