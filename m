@@ -1,57 +1,34 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: IBM request to allow unprivledged ioctls [Was: Revert "dm mpath:
- fix stalls when handling invalid ioctls"]
-Date: Mon, 2 Nov 2015 10:49:43 -0500
-Message-ID: <20151102154942.GA23816@redhat.com>
-References: <5634DF67.7060302@redhat.com>
- <20151031181312.GA11587@redhat.com>
- <5635115B.7080805@redhat.com>
- <20151031224707.GA12805@redhat.com>
- <56371095.6020400@suse.de>
- <20151102133119.GA23234@redhat.com>
- <56376B8C.5010001@suse.de>
- <563778B9.7060900@redhat.com>
- <20151102150527.GA23665@redhat.com>
- <56378505.6080601@redhat.com>
+From: Don Brace <brace77070@gmail.com>
+Subject: Re: [PATCH 1 22/25] hpsa: enhance device messages
+Date: Mon, 2 Nov 2015 10:54:27 -0600
+Message-ID: <56379543.7000907@pmcs.com>
+References: <20151028215206.5323.84194.stgit@brunhilda>
+ <20151028220644.5323.17616.stgit@brunhilda> <56337F81.1040403@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41363 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024AbbKBPto (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2015 10:49:44 -0500
-Content-Disposition: inline
-In-Reply-To: <56378505.6080601@redhat.com>
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:36680 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753569AbbKBQy3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2015 11:54:29 -0500
+Received: by obctp1 with SMTP id tp1so8598233obc.3
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2015 08:54:28 -0800 (PST)
+In-Reply-To: <56337F81.1040403@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, hch@lst.de, Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Peter Rajnoha <prajnoha@redhat.com>
+To: Tomas Henzl <thenzl@redhat.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Nov 02 2015 at 10:45am -0500,
-Paolo Bonzini <pbonzini@redhat.com> wrote:
+On 10/30/2015 09:32 AM, Tomas Henzl wrote:
+> RAID_UNKNOWN is used in few other places - raid_level_show for example,
 
-> 
-> 
-> On 02/11/2015 16:05, Mike Snitzer wrote:
-> > > In any case, if we don't start path activation we should return
-> > > ENOTCONN, not ENOTTY.
-> > 
-> > Currently, if we don't start path activation we're returning EIO.
-> > ENOTCONN is used for when we do start path activation (and ENOTCONN is
-> > the means for DM core to retry)
-> > 
-> > We _could_ change the ENOTCONN to be EAGAIN and EIO to ENOTCONN...
-> 
-> This makes sense... though of course testing the impact of this on
-> userspace is going to be hard. :(  Chances are that userspace is not
-> expecting EAGAIN either.
-> 
-> Even if they did, how would someone know that they can now retry the
-> ioctl after getting EAGAIN?  Should they just do it in a loop?
+raid_level_show handles physical devices by using "N/A", otherwise it 
+displays
+the RAID level for logical devices.
 
-Turns out multipath (userspace) has a udev rule for this now (prajnoha
-pointed this out):
-http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=blob;f=multipath/11-dm-mpath.rules
+Other functions avoid the use of raid_type when the drive is not a RAID 
+device.
 
-So now I'm wondering if we _need_ to do any retries in kernel (aside
-from while activation is active)?
+Or, am I missing your point?
+
