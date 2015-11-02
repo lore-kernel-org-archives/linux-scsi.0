@@ -1,111 +1,220 @@
-From: Mike Snitzer <snitzer@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: IBM request to allow unprivledged ioctls [Was: Revert "dm mpath:
  fix stalls when handling invalid ioctls"]
-Date: Mon, 2 Nov 2015 09:12:43 -0500
-Message-ID: <20151102141243.GB23234@redhat.com>
-References: <1446121463-17828-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <20151029131810.GA26841@redhat.com>
- <5634DF67.7060302@redhat.com>
- <20151031181312.GA11587@redhat.com>
- <5635115B.7080805@redhat.com>
- <20151031224707.GA12805@redhat.com>
- <56371095.6020400@suse.de>
- <20151102133119.GA23234@redhat.com>
- <56376B8C.5010001@suse.de>
+Date: Mon, 02 Nov 2015 15:36:33 +0100
+Message-ID: <563774F1.7090806@suse.de>
+References: <1446121463-17828-1-git-send-email-mauricfo@linux.vnet.ibm.com> <20151029131810.GA26841@redhat.com> <5634DF67.7060302@redhat.com> <20151031181312.GA11587@redhat.com> <5635115B.7080805@redhat.com> <20151031224707.GA12805@redhat.com> <56371095.6020400@suse.de> <20151102133119.GA23234@redhat.com> <56376B8C.5010001@suse.de> <20151102141243.GB23234@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040604010603030402000107"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37170 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:34625 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066AbbKBOMp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2015 09:12:45 -0500
-Content-Disposition: inline
-In-Reply-To: <56376B8C.5010001@suse.de>
+	id S1753647AbbKBOgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2015 09:36:35 -0500
+In-Reply-To: <20151102141243.GB23234@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
+To: Mike Snitzer <snitzer@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>, hch@lst.de, Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Mon, Nov 02 2015 at  8:56am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
+This is a multi-part message in MIME format.
+--------------040604010603030402000107
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 
-> On 11/02/2015 02:31 PM, Mike Snitzer wrote:
-> > On Mon, Nov 02 2015 at  2:28am -0500,
-> > Hannes Reinecke <hare@suse.de> wrote:
-> > 
-> >> On 10/31/2015 11:47 PM, Mike Snitzer wrote:
-> >>>
-> >>> For Hannes, and in my head, it didn't matter if a future bdev satisfies
-> >>> the length condition.  I don't think Hannes was trying to guard against
-> >>> dangerous partition ioctls being issued by udev... but now I _do_
-> >>> question what exactly _is_ the point of his commit 21a2807bc3f.  Which
-> >>> invalid ioctls, from udev, did Hannes' change actually disallow?
-> >>>
-> > 
-> > FYI, I meant s/21a2807bc3f/a1989b33/
-> > 
-> >> The reasoning is thus:
-> >>
-> >> With the original code we would need to wait for path activation
-> >> before we would be able to figure out if the ioctl is valid.
-> >> However, the callback to verify the ioctl is sd_ioctl(), which as
-> >> a first step calls scsi_verify_ioctl().
-> >> So my reasoning was that we can as well call scsi_verify_ioctl()
-> >> early, and allow it to filter out known invalid ioctls.
-> >> Then we wouldn't need to wait for path activation and return
-> >> immediately.
-> > 
-> > Right, I understood that to be your intent.  And it seemed reasonible.
-> > Unfortuntely, as we now know, scsi_verify_blk_ioctl() only really cares
-> > to filter out ioctls that are invalid for partitions.
-> > 
-> > I'm still curious: which ioctls were being issued by udev that your
-> > commit a1989b33 "fixed" (so udev workers didn't hang)?  Is the right fix
-> > to modify udev to not issue such ioctls?  What was invalid about the
-> > udev issued ioctls?
-> > 
-> Thing is, it's not udev itself which issues ioctl. It's the programs
-> started by udev via the various rules (PROGRAM or IMPORT keywords).
-> They might (and occasionally, will) issue ioctls, and we have no
-> means of controlling them.
+On 11/02/2015 03:12 PM, Mike Snitzer wrote:
+> On Mon, Nov 02 2015 at  8:56am -0500,
+> Hannes Reinecke <hare@suse.de> wrote:
 > 
-> >> Incidentally, in the 'r == -ENOTCONN' case, we're waiting
-> >> for path activation, but then just bail out with -ENOTCONN.
-> >> As we're not resetting -ENOTCONN, where's the point in activate the
-> >> paths here?
-> >> Shouldn't we retry to figure out if -ENOTCONN is still true?
-> > 
-> > We do, in DM core, see _your_ commit that added this ;)
-> > 6c182cd88d ("dm mpath: fix ioctl deadlock when no paths")
-> > 
-> Indeed.
+>> On 11/02/2015 02:31 PM, Mike Snitzer wrote:
+>>> On Mon, Nov 02 2015 at  2:28am -0500,
+>>> Hannes Reinecke <hare@suse.de> wrote:
+>>>
+>>>> On 10/31/2015 11:47 PM, Mike Snitzer wrote:
+>>>>>
+>>>>> For Hannes, and in my head, it didn't matter if a future bdev satisfies
+>>>>> the length condition.  I don't think Hannes was trying to guard against
+>>>>> dangerous partition ioctls being issued by udev... but now I _do_
+>>>>> question what exactly _is_ the point of his commit 21a2807bc3f.  Which
+>>>>> invalid ioctls, from udev, did Hannes' change actually disallow?
+>>>>>
+>>>
+>>> FYI, I meant s/21a2807bc3f/a1989b33/
+>>>
+>>>> The reasoning is thus:
+>>>>
+>>>> With the original code we would need to wait for path activation
+>>>> before we would be able to figure out if the ioctl is valid.
+>>>> However, the callback to verify the ioctl is sd_ioctl(), which as
+>>>> a first step calls scsi_verify_ioctl().
+>>>> So my reasoning was that we can as well call scsi_verify_ioctl()
+>>>> early, and allow it to filter out known invalid ioctls.
+>>>> Then we wouldn't need to wait for path activation and return
+>>>> immediately.
+>>>
+>>> Right, I understood that to be your intent.  And it seemed reasonible.
+>>> Unfortuntely, as we now know, scsi_verify_blk_ioctl() only really cares
+>>> to filter out ioctls that are invalid for partitions.
+>>>
+>>> I'm still curious: which ioctls were being issued by udev that your
+>>> commit a1989b33 "fixed" (so udev workers didn't hang)?  Is the right fix
+>>> to modify udev to not issue such ioctls?  What was invalid about the
+>>> udev issued ioctls?
+>>>
+>> Thing is, it's not udev itself which issues ioctl. It's the programs
+>> started by udev via the various rules (PROGRAM or IMPORT keywords).
+>> They might (and occasionally, will) issue ioctls, and we have no
+>> means of controlling them.
+>>
+>>>> Incidentally, in the 'r == -ENOTCONN' case, we're waiting
+>>>> for path activation, but then just bail out with -ENOTCONN.
+>>>> As we're not resetting -ENOTCONN, where's the point in activate the
+>>>> paths here?
+>>>> Shouldn't we retry to figure out if -ENOTCONN is still true?
+>>>
+>>> We do, in DM core, see _your_ commit that added this ;)
+>>> 6c182cd88d ("dm mpath: fix ioctl deadlock when no paths")
+>>>
+>> Indeed.
+>>
+>> But then the real question remains:
+>>
+>> What is the 'correct' behaviour for ioctls when no path retry
+>> is active (or when no paths are present)?
+>>
+>> Should we start path activation?
+>> If so, should we wait for path activation to finish, risking udev
+>> killing the worker for that event (udev has a built-in timeout of
+>> 120 seconds, which we might easily exceed when we need to activate
+>> paths for large installations or slow path activation ... just
+>> thinking of NetApp takeover/giveback cycle)?
+>> If we're not waiting for path activation, where would be the point
+>> in starting it, seeing that we're not actually interested in the result?
 > 
-> But then the real question remains:
+> We only start it: if (r == -ENOTCONN && !fatal_signal_pending(current))
 > 
-> What is the 'correct' behaviour for ioctls when no path retry
-> is active (or when no paths are present)?
+> -ENOTCONN is set with:
+> if ((pgpath && m->queue_io) || (!pgpath && m->queue_if_no_path))
 > 
-> Should we start path activation?
-> If so, should we wait for path activation to finish, risking udev
-> killing the worker for that event (udev has a built-in timeout of
-> 120 seconds, which we might easily exceed when we need to activate
-> paths for large installations or slow path activation ... just
-> thinking of NetApp takeover/giveback cycle)?
-> If we're not waiting for path activation, where would be the point
-> in starting it, seeing that we're not actually interested in the result?
+I know.
 
-We only start it: if (r == -ENOTCONN && !fatal_signal_pending(current))
+>> And if we shouldn't start a path activation, what is the point of
+>> having code for it in the first place?
+> 
+> The point is we have reason to believe paths will be coming back or that
+> the user wants to queue_if_no_path.
+> 
+Yes. But taken at face value, it means that any I/O will be stuck in
+the queue for an indefinite amount of time.
+Which doesn't work for things like udev, which _requires_ an answer
+after a certain time.
+And if that answer isn't forthcoming, the entire udev worker is
+killed, rendering the device useless as the event is never delivered.
 
--ENOTCONN is set with:
-if ((pgpath && m->queue_io) || (!pgpath && m->queue_if_no_path))
+So if the user has set queue_if_no_path, we might never get a path
+down event delivered as udev is stuck.
 
-> And if we shouldn't start a path activation, what is the point of
-> having code for it in the first place?
+What do we do then?
+Tell the customer "Hey, you screwed up" is possibly not the best of
+ideas, especially not as multipath sets an unconditional
+queue_if_no_path per default for quite some arrays.
 
-The point is we have reason to believe paths will be coming back or that
-the user wants to queue_if_no_path.
+I can see a point for waiting the path initialisation to complete
+(ie if queue_io is active). But for queue_if_no_path I'd rather
+return an error directly (like -EAGAIN).
 
-> Couldn't we just rip it out altogether, and avoid much of the
-> current unpleasantness?
+With that change we could retry path selection until queue_io is
+done, and would be able to retrieve a valid status (as we'd always
+have a bdev).
 
-Sorry, not seeing how you're getting there.
+See the attached patch for a detailed explanation.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
+
+--------------040604010603030402000107
+Content-Type: text/x-patch;
+ name="0001-dm-mpath-Retry-ioctl-if-paths-need-to-be-initialized.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename*0="0001-dm-mpath-Retry-ioctl-if-paths-need-to-be-initialized.pa";
+ filename*1="tch"
+
+=46rom b0d5848e91cfc3b97adb49121085c994b707eac3 Mon Sep 17 00:00:00 2001
+From: Hannes Reinecke <hare@suse.de>
+Date: Mon, 2 Nov 2015 15:33:58 +0100
+Subject: [PATCH] dm-mpath: Retry ioctl if paths need to be initialized
+
+If paths need to be initialized (m->queue_io is set) we should
+be starting the initialization and retry the ioctl to retrieve
+the final status.
+At the same time, we should _not_ wait for queue_if_no_path
+to go away as this might take forever, resulting in the
+ioctl to be stuck.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/md/dm-mpath.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 5a67671..7352397 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1543,6 +1543,7 @@ static int multipath_ioctl(struct dm_target *ti, un=
+signed int cmd,
+ 	unsigned long flags;
+ 	int r;
+=20
++again:
+ 	bdev =3D NULL;
+ 	mode =3D 0;
+ 	r =3D 0;
+@@ -1559,8 +1560,10 @@ static int multipath_ioctl(struct dm_target *ti, u=
+nsigned int cmd,
+ 		mode =3D pgpath->path.dev->mode;
+ 	}
+=20
+-	if ((pgpath && m->queue_io) || (!pgpath && m->queue_if_no_path))
++	if (pgpath && m->queue_io)
+ 		r =3D -ENOTCONN;
++	else if (!pgpath && m->queue_if_no_path)
++		r =3D -EAGAIN;
+ 	else if (!bdev)
+ 		r =3D -EIO;
+=20
+@@ -1569,7 +1572,7 @@ static int multipath_ioctl(struct dm_target *ti, un=
+signed int cmd,
+ 	/*
+ 	 * Only pass ioctls through if the device sizes match exactly.
+ 	 */
+-	if (!bdev || ti->len !=3D i_size_read(bdev->bd_inode) >> SECTOR_SHIFT) =
+{
++	if (r =3D=3D -ENOTCONN && ti->len !=3D i_size_read(bdev->bd_inode) >> S=
+ECTOR_SHIFT) {
+ 		int err =3D scsi_verify_blk_ioctl(NULL, cmd);
+ 		if (err)
+ 			r =3D err;
+@@ -1585,6 +1588,8 @@ static int multipath_ioctl(struct dm_target *ti, un=
+signed int cmd,
+ 			__pg_init_all_paths(m);
+ 		spin_unlock_irqrestore(&m->lock, flags);
+ 		dm_table_run_md_queue_async(m->ti->table);
++		msleep(10);
++		goto again;
+ 	}
+=20
+ 	return r ? : __blkdev_driver_ioctl(bdev, mode, cmd, arg);
+--=20
+1.8.5.6
+
+
+--------------040604010603030402000107--
