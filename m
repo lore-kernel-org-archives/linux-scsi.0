@@ -1,61 +1,83 @@
-From: Benjamin Rood <benjaminjrood@gmail.com>
-Subject: [PATCH v2 7/9] pm80xx: wait a minimum of 500ms before issuing commands to SPCv
-Date: Mon,  2 Nov 2015 15:42:29 -0500
-Message-ID: <1446496949-1980-1-git-send-email-brood@attotech.com>
-References: <CAD+HZHU-2V0R1uRAqauxFWuSsC0qGLsGCoVrBgmbhp2LADbfdg@mail.gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:35234 "EHLO
-	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbbKBUmd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2015 15:42:33 -0500
-Received: by qkct129 with SMTP id t129so3645816qkc.2
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2015 12:42:33 -0800 (PST)
-In-Reply-To: <CAD+HZHU-2V0R1uRAqauxFWuSsC0qGLsGCoVrBgmbhp2LADbfdg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] sg: Fix double-free when drives detach during SG_IO
+Date: Mon, 2 Nov 2015 21:57:35 +0100
+Message-ID: <5637CE3F.6020706@interlog.com>
+References: <944215ec334c3c5b3af98210acf8f6479f5539c8.1445634103.git.calvinowens@fb.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <944215ec334c3c5b3af98210acf8f6479f5539c8.1445634103.git.calvinowens@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com, hare@suse.de
-Cc: Benjamin Rood <brood@attotech.com>
 
-The documentation for the 8070 and 8072 SPCv chip explicitly states that
-a minimum of 500ms must elapse before issuing commands, otherwise the
-SPCv may not process them and the firmware may get into an unrecoverable
-state requiring a reboot.  While the Linux guys will probably think this
-is 'racy', it is called out in the chip documentation and inserting this
-delay makes power management function properly.
+On 15-10-31 12:57 AM, Calvin Owens wrote:
+> In sg_common_write(), we free the block request and return -ENODEV if
+> the device is detached in the middle of the SG_IO ioctl().
+>
+> Unfortunately, sg_finish_rem_req() also tries to free srp->rq, so we
+> end up freeing rq->cmd in the already free rq object, and then free
+> the object itself out from under the current user.
+>
+> This ends up corrupting random memory via the list_head on the rq
+> object. The most common crash trace I saw is this:
+>
+>    ------------[ cut here ]------------
+>    kernel BUG at block/blk-core.c:1420!
+>    Call Trace:
+>    [<ffffffff81281eab>] blk_put_request+0x5b/0x80
+>    [<ffffffffa0069e5b>] sg_finish_rem_req+0x6b/0x120 [sg]
+>    [<ffffffffa006bcb9>] sg_common_write.isra.14+0x459/0x5a0 [sg]
+>    [<ffffffff8125b328>] ? selinux_file_alloc_security+0x48/0x70
+>    [<ffffffffa006bf95>] sg_new_write.isra.17+0x195/0x2d0 [sg]
+>    [<ffffffffa006cef4>] sg_ioctl+0x644/0xdb0 [sg]
+>    [<ffffffff81170f80>] do_vfs_ioctl+0x90/0x520
+>    [<ffffffff81258967>] ? file_has_perm+0x97/0xb0
+>    [<ffffffff811714a1>] SyS_ioctl+0x91/0xb0
+>    [<ffffffff81602afb>] tracesys+0xdd/0xe2
+>      RIP [<ffffffff81281e04>] __blk_put_request+0x154/0x1a0
+>
+> The solution is straightforward: just set srp->rq to NULL in the
+> failure branch so that sg_finish_rem_req() doesn't attempt to re-free
+> it.
+>
+> Additionally, since sg_rq_end_io() will never be called on the object
+> when this happens, we need to free memory backing ->cmd if it isn't
+> embedded in the object itself.
+>
+> KASAN was extremely helpful in finding the root cause of this bug.
+>
+> Signed-off-by: Calvin Owens <calvinowens@fb.com>
 
-Signed-off-by: Benjamin Rood <brood@attotech.com>
----
-Changes from v1 -> v2:
-	-Used mdelay(500) instead of a loop to facilitate required delay
-	-Added comment as to why this behavior exists
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
- drivers/scsi/pm8001/pm8001_init.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Thanks.
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 7ce7ea3..d147c41 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1243,6 +1243,19 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
- 			PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, i);
- 	}
-+
-+	/* Chip documentation for the 8070 and 8072 SPCv    */
-+	/* states that a 500ms minimum delay is required    */
-+	/* before issuing commands.  Otherwise, the firmare */
-+	/* will enter an unrecoverable state.               */
-+
-+	if (pm8001_ha->chip_id == chip_8070 ||
-+		pm8001_ha->chip_id == chip_8072) {
-+		mdelay(500);
-+	}
-+
-+	/* Spin up the PHYs */
-+
- 	pm8001_ha->flags = PM8001F_RUN_TIME;
- 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
- 		pm8001_ha->phy[i].enable_completion = &completion;
--- 
-2.4.3
-
+> ---
+>   drivers/scsi/sg.c | 8 +++++++-
+>   1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 9d7b7db..503ab8b 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -787,8 +787,14 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+>   		return k;	/* probably out of space --> ENOMEM */
+>   	}
+>   	if (atomic_read(&sdp->detaching)) {
+> -		if (srp->bio)
+> +		if (srp->bio) {
+> +			if (srp->rq->cmd != srp->rq->__cmd)
+> +				kfree(srp->rq->cmd);
+> +
+>   			blk_end_request_all(srp->rq, -EIO);
+> +			srp->rq = NULL;
+> +		}
+> +
+>   		sg_finish_rem_req(srp);
+>   		return -ENODEV;
+>   	}
+>
