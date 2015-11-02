@@ -1,43 +1,33 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/8] pm80xx: configure PHY settings based on subsystem
- vendor ID
-Date: Mon, 2 Nov 2015 08:51:31 +0100
-Message-ID: <56371603.3000807@suse.de>
+Subject: Re: [PATCH 2/8] pm80xx: add support for PMC Sierra 8070 and PMC
+ Sierra 8072 SAS controllers
+Date: Mon, 2 Nov 2015 08:51:59 +0100
+Message-ID: <5637161F.1000809@suse.de>
 References: <1446216811-2248-1-git-send-email-brood@attotech.com>
- <1446216811-2248-2-git-send-email-brood@attotech.com>
+ <1446216811-2248-3-git-send-email-brood@attotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54406 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54572 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbbKBHvd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2015 02:51:33 -0500
-In-Reply-To: <1446216811-2248-2-git-send-email-brood@attotech.com>
+	id S1751332AbbKBHwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2015 02:52:06 -0500
+In-Reply-To: <1446216811-2248-3-git-send-email-brood@attotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Benjamin Rood <benjaminjrood@gmail.com>, linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com
 Cc: Benjamin Rood <brood@attotech.com>
 
 On 10/30/2015 03:53 PM, Benjamin Rood wrote:
-> Previuosly, all PMC Sierra 80xx controllers are assumed to be a
-> motherboard controller, except if the subsystem vendor ID was equal t=
-o
-> PCI_VENDOR_ID_ADAPTEC.  The driver then attempts to load PHY settings
-> from NVRAM.  While this may be correct behavior for most controllers,=
- it
-> does not work with Adaptec and ATTO controllers since they do not sto=
-re
-> PHY settings in NVRAM and choose to use either custom PHY settings or=
- chip
-> defaults.  Loading random values from NVRAM may cause the controllers=
- to
-> malfunction in this edge case.
+> These SAS controllers support speeds up to 12Gb.
 >=20
 > Signed-off-by: Benjamin Rood <brood@attotech.com>
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 26 ++++++++++++++++++++------
->  1 file changed, 20 insertions(+), 6 deletions(-)
+>  drivers/scsi/pm8001/pm8001_defs.h | 2 ++
+>  drivers/scsi/pm8001/pm8001_init.c | 4 +++-
+>  drivers/scsi/pm8001/pm8001_sas.h  | 4 +++-
+>  3 files changed, 8 insertions(+), 2 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
