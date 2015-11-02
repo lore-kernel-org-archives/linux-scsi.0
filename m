@@ -1,69 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
 Subject: Re: IBM request to allow unprivledged ioctls [Was: Revert "dm mpath:
  fix stalls when handling invalid ioctls"]
-Date: Mon, 02 Nov 2015 16:29:03 +0100
-Message-ID: <5637813F.7070401@suse.de>
-References: <20151029131810.GA26841@redhat.com> <5634DF67.7060302@redhat.com> <20151031181312.GA11587@redhat.com> <5635115B.7080805@redhat.com> <20151031224707.GA12805@redhat.com> <56371095.6020400@suse.de> <20151102133119.GA23234@redhat.com> <56376B8C.5010001@suse.de> <20151102141243.GB23234@redhat.com> <563774F1.7090806@suse.de> <20151102151446.GB23665@redhat.com>
+Date: Mon, 02 Nov 2015 16:32:31 +0100
+Message-ID: <5637820F.9080503@suse.de>
+References: <1446121463-17828-1-git-send-email-mauricfo@linux.vnet.ibm.com> <20151029131810.GA26841@redhat.com> <5634DF67.7060302@redhat.com> <20151031181312.GA11587@redhat.com> <5635115B.7080805@redhat.com> <20151031224707.GA12805@redhat.com> <56371095.6020400@suse.de> <20151102133119.GA23234@redhat.com> <56376B8C.5010001@suse.de> <563778B9.7060900@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40382 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40609 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932117AbbKBP3G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2015 10:29:06 -0500
-In-Reply-To: <20151102151446.GB23665@redhat.com>
+	id S1753676AbbKBPcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2015 10:32:33 -0500
+In-Reply-To: <563778B9.7060900@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, hch@lst.de, Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: hch@lst.de, Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On 11/02/2015 04:14 PM, Mike Snitzer wrote:
-> On Mon, Nov 02 2015 at  9:36am -0500,
-> Hannes Reinecke <hare@suse.de> wrote:
-[ .. ]
->> From b0d5848e91cfc3b97adb49121085c994b707eac3 Mon Sep 17 00:00:00 20=
-01
->> From: Hannes Reinecke <hare@suse.de>
->> Date: Mon, 2 Nov 2015 15:33:58 +0100
->> Subject: [PATCH] dm-mpath: Retry ioctl if paths need to be initializ=
-ed
+On 11/02/2015 03:52 PM, Paolo Bonzini wrote:
+>=20
+>=20
+> On 02/11/2015 14:56, Hannes Reinecke wrote:
+>> But then the real question remains:
 >>
->> If paths need to be initialized (m->queue_io is set) we should
->> be starting the initialization and retry the ioctl to retrieve
->> the final status.
->> At the same time, we should _not_ wait for queue_if_no_path
->> to go away as this might take forever, resulting in the
->> ioctl to be stuck.
+>> What is the 'correct' behaviour for ioctls when no path retry
+>> is active (or when no paths are present)?
+>>
+>> Should we start path activation?
+>> If so, should we wait for path activation to finish, risking udev
+>> killing the worker for that event (udev has a built-in timeout of
+>> 120 seconds, which we might easily exceed when we need to activate
+>> paths for large installations or slow path activation ... just
+>> thinking of NetApp takeover/giveback cycle)?
+>> If we're not waiting for path activation, where would be the point
+>> in starting it, seeing that we're not actually interested in the res=
+ult?
+>> And if we shouldn't start a path activation, what is the point of
+>> having code for it in the first place?
 >=20
-> I understand your goal.. but the patch is a bit incomplete.
+> That's a fair question, and it depends on what said udev worker actua=
+lly
+> does.
 >=20
-> In your patch the activation is still in progress; so there is no
-> bdev.. so it'll yield false positives still.
->=20
-Right.
+Point is, we have no idea whatsoever what udev might be doing.
 
-> And DM core has retry via -ENOTCONN.. yet you're adding it to
-> multipath_ioctl (meaning nothing will use DM core's retry logic now).
->=20
-Yeah, I've just noticed.
+And experience shows that while most admins/distros etc have a fair
+knowledge of writing valid udev rules, more often than not the
+'queue_if_no_path' feature from multipath totally escapes them.
+So we will be finding ourselves in positions where programs from
+udev rules issue ioctls to devices where queue_if_no_path is active.
 
-> Also, you still haven't established what it is about
-> scsi_verify_blk_ioctl() that you see as beneficial.  If we return EAG=
-AIN
-> to userspace that should "fix" the udev worker issue (so no need for
-> extra ioctl verification.. which you're clearly still implicitly
-> overloading with the hopes that it is more generally applicable than
-> just being concerned about whether an ioctl is valid against a
-> partition).
->=20
-Personally, I would happily drop the call to scsi_verify_blk_ioctl
-altogether; it'll be called via sd_ioctl() later on anyway.
-And if we don't have valid/accessible paths I'd rather return an
-error code indicating that instead of trying to figure out what the
-error would be if we would have had a valid path.
+Plus it's a really daunting task to validate all udev rules to check
+if any of those programs might issue ioctls and blank them out for
+the queue_if_no_path case.
+I did a review once for SUSE, but even that might be obsoleted now
+as rules are being changed all the time.
 
-If we can agree on that everything would become _so much_ easier...
+> In any case, if we don't start path activation we should return
+> ENOTCONN, not ENOTTY.
+>=20
+No problem with that.
 
 Cheers,
 
