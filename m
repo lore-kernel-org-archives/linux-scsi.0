@@ -1,42 +1,31 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 0/12] megaraid_sas : Updates for scsi for-next
-Date: Tue, 3 Nov 2015 11:59:28 +0530
-Message-ID: <40e5ef678c32f9c5ca2c9ea295c90934@mail.gmail.com>
-References: <201510150816.t9F8GWC6029536@palmhbs0.lsi.com> <yq1d1vr4tk6.fsf@sermon.lab.mkp.net>
+From: Unknown <unknown@unknown.invalid>
+Subject: ATTENTION
+Date: Tue, 3 Nov 2015 13:53:37 +0530
+Message-ID: <MA1PR01MB0070DCECEB627F294C8D488CB82B0@MA1PR01MB0070.INDPRD01.PROD.OUTLOOK.COM>
+Reply-To: <mrsmariarose0@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:34923 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752823AbbKCG3b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 01:29:31 -0500
-Received: by lfbn126 with SMTP id n126so6491618lfb.2
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2015 22:29:29 -0800 (PST)
-In-Reply-To: <yq1d1vr4tk6.fsf@sermon.lab.mkp.net>
+Received: from mail-ma1ind01hn0202.outbound.protection.outlook.com ([104.47.100.202]:5152
+	"EHLO IND01-MA1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754942AbbKCIYB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 03:24:01 -0500
+Content-Description: Mail message body
+From: <>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, hch@infradead.org, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>
+To: Recipients@vger.kernel.org
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Tuesday, November 03, 2015 9:35 AM
-> To: sumit.saxena@avagotech.com
-> Cc: linux-scsi@vger.kernel.org; thenzl@redhat.com;
-> martin.petersen@oracle.com; hch@infradead.org; jbottomley@parallels.com;
-> kashyap.desai@avagotech.com; kiran-kumar.kasturi@avagotech.com;
-> uday.lingala@avagotech.com
-> Subject: Re: [PATCH 0/12] megaraid_sas : Updates for scsi for-next
->
-> >>>>> "sumit" == sumit saxena <sumit.saxena@avagotech.com> writes:
->
-> sumit> This patch set is rebased on top of last patch set sent by me-
-> sumit> http://marc.info/?l=linux-scsi&m=144102204225400&w=2 Please
-> sumit> consider this patch set for next kernel release.
->
-> Applied.
+Good day My Dear,
 
-Thanks..
->
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+I am seeking the immediate assistance,of a reliable and trustworthy Indian
+businessman who understands India local language (Hindi) and a little
+English; to handle a profitable business for our mutual benefit.
+
+I await your reply for more details.
+
+Thanks and best regards,
+Dr. Maria Rose Anthony.
+Email:mrsmariarose0@gmail.com
