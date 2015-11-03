@@ -1,33 +1,48 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v2 27/32] scsi: hisi_sas: add smp protocol support
-Date: Tue, 03 Nov 2015 13:27:01 +0100
-Message-ID: <47461872.JGeCX32zVp@wuerfel>
-References: <1445868903-183817-1-git-send-email-john.garry@huawei.com> <4452058.YIXj3BxT1F@wuerfel> <56389DA6.6070103@huawei.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1 22/25] hpsa: enhance device messages
+Date: Tue, 3 Nov 2015 14:12:45 +0100
+Message-ID: <5638B2CD.3080907@redhat.com>
+References: <20151028215206.5323.84194.stgit@brunhilda>
+ <20151028220644.5323.17616.stgit@brunhilda> <56337F81.1040403@redhat.com>
+ <56379543.7000907@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56389DA6.6070103-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43936 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751610AbbKCNMt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2015 08:12:49 -0500
+In-Reply-To: <56379543.7000907@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <brace77070@gmail.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tuesday 03 November 2015 11:42:30 John Garry wrote:
-> >
-> There seems to be some misunderstanding. Are you suggesting I change 
-> sas_smp_task?
-> ./include/scsi/libsas.h
-> struct sas_smp_task {
->         struct scatterlist smp_req;
->         struct scatterlist smp_resp;
-> };
-> 
+On 2.11.2015 17:54, Don Brace wrote:
+> On 10/30/2015 09:32 AM, Tomas Henzl wrote:
+>> RAID_UNKNOWN is used in few other places - raid_level_show for example,
+> raid_level_show handles physical devices by using "N/A", otherwise it 
+> displays
+> the RAID level for logical devices.
+>
+> Other functions avoid the use of raid_type when the drive is not a RAID 
+> device.
+>
+> Or, am I missing your point?
 
-Ah, no. I had not realized this comes from another file.
+Seems that I missed the fact that raid_level_show output is N/A,
+I thought it would be "RAID-Unknown".
 
-	Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Last minor point is that you could replace 
++				dev->raid_level > RAID_UNKNOWN ? "?" :
++				raid_label[dev->raid_level]);
+with
++				dev->raid_level > RAID_UNKNOWN ? raid_label[RAID_UNKNOWN] :
++				raid_label[dev->raid_level]);
+but that's not important.
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Tomas
+
