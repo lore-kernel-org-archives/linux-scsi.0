@@ -1,165 +1,216 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH v2] megaraid_sas : Add locking to megasas_aen_polling
-Date: Tue, 3 Nov 2015 14:08:10 +0530
-Message-ID: <c8f8229117bac4571a3a5c9cc162c9bf@mail.gmail.com>
-References: <1446466738-8209-1-git-send-email-ben.guthro@simplivity.com>
+From: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH v4 11/11] scsi: ufs-exynos: add UFS host support for Exynos
+ SoCs
+Date: Tue, 03 Nov 2015 17:14:58 +0530
+Message-ID: <56389E3A.7060004@samsung.com>
+References: <1444827351-24128-1-git-send-email-alim.akhtar@samsung.com>
+ <1444827351-24128-12-git-send-email-alim.akhtar@samsung.com>
+ <561F18C5.10406@samsung.com> <562A4FE3.9080200@ti.com>
+ <CAGOxZ51cFDvvSKN+=nNnHD=P756r74edUX5XrkvrHv+NXU_NTw@mail.gmail.com>
+ <5630C55D.80800@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1446466738-8209-1-git-send-email-ben.guthro@simplivity.com>
-Sender: stable-owner@vger.kernel.org
-To: Ben Guthro <ben@guthro.net>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org
-Cc: Glenn Watkins <Glenn.Watkins@simplivity.com>, Ben Guthro <ben.guthro@simplivity.com>, "Yang, Bo" <Bo.Yang@lsi.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <5630C55D.80800-l0cyMroinI0@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Alim Akhtar <alim.akhtar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James E.J. Bottomley" <JBottomley-wo1vFcy6AUs@public.gmane.org>, vinayak holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Ben Guthro [mailto:ben.guthro@gmail.com] On Behalf Of Ben Guthro
-> Sent: Monday, November 02, 2015 5:49 PM
-> To: megaraidlinux.pdl@avagotech.com; linux-scsi@vger.kernel.org
-> Cc: Glenn Watkins; Ben Guthro; Yang, Bo; stable@vger.kernel.org
-> Subject: [PATCH v2] megaraid_sas : Add locking to megasas_aen_polling
->
-> From: Glenn Watkins <Glenn.Watkins@simplivity.com>
->
-> Under conditions of offlining drives, and rescanning the scsi host, we
-can get
-> into situations that the megasas_aen_polling kthread can crash(GPF) in
-the
-> megasas_aen_polling work queue:
->
-> [ 1206.568641] general protection fault: 0000 [#1] SMP [ 1206.569479]
-Modules
-> linked in: xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_state
-nf_conntrack
-> iptable_filter ip_tables x_tables coretemp crct10dif_pclmul crc32_pclmul
-> aesni_intel ablk_helper cryptd psmouse lrw vmwgfx gf128mul serio_raw
-> glue_helper aes_x86_64 ppdev ttm microcode vmw_balloon drm_kms_helper
-> drm parport_pc parport fb_sys_fops sysimgblt sysfillrect syscopyarea
-vmw_vmci
-> binfmt_misc floppy mptspi mptscsih vmw_pvscsi megaraid_sas pata_acpi
-> mptbase vmxnet3 [ 1206.576488] CPU: 0 PID: 1157 Comm: kworker/0:2 Not
-> tainted 4.3.0-rc7-svt1 #1 [ 1206.577520] Hardware name: VMware, Inc.
-> VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00
-> 04/14/2014 [ 1206.579101] Workqueue: events megasas_aen_polling
-> [megaraid_sas] [ 1206.580007] task: ffff8818bb7b8000 ti:
-ffff8818ca280000
-> task.ti: ffff8818ca280000 [ 1206.581104] RIP: 0010:[<ffffffff8118403d>]
-> [<ffffffff8118403d>] bdi_unregister+0x3d/0x1e0 [ 1206.582339] RSP:
-> 0018:ffff8818ca283cb8  EFLAGS: 00010246 [ 1206.583131] RAX:
-> dead000000000200 RBX: ffff8818bb603f08 RCX: ffff8818c6487800 [
-> 1206.584184] RDX: ffff8818bb603f08 RSI: 000000007fffffff RDI:
-ffffffff81f9aa68
-> [ 1206.585243] RBP: ffff8818ca283d18 R08: 0000000000000000 R09:
-> 0000000000000000 [ 1206.586294] R10: 0000000fffffffe0 R11:
-> dead000000000200 R12: ffff8818bb6042f0 [ 1206.587346] R13:
-> ffff8818bb604530 R14: 00000000000000ae R15: 0000000000000080 [
-> 1206.588388] FS:  0000000000000000(0000) GS:ffff88193fc00000(0000)
-> knlGS:0000000000000000 [ 1206.589598] CS:  0010 DS: 0000 ES: 0000 CR0:
-> 000000008005003b [ 1206.590457] CR2: 0000000001a89000 CR3:
-> 00000018c07f2000 CR4: 00000000000406f0 [ 1206.591545] Stack:
-> [ 1206.591870]  ffff8818bb6042f0 ffff8818bb603d78 00000000000000ae
-> 0000000000000080 [ 1206.593098]  ffff8818ca283ce8 ffffffff8108f683
-> ffff8818ca283d18 ffffffff813332b0 [ 1206.594308]  ffff8818ca283d18
-> ffff8818bb603d78 ffff8818bb6042f0 ffff8818bb604530 [ 1206.595532] Call
-> Trace:
-> [ 1206.595922]  [<ffffffff8108f683>] ?
-cancel_delayed_work_sync+0x13/0x20
-> [ 1206.596903]  [<ffffffff813332b0>] ? blk_sync_queue+0x80/0x90 [
-> 1206.597753]  [<ffffffff81336424>] blk_cleanup_queue+0x114/0x150 [
-> 1206.598645]  [<ffffffff814efe44>] __scsi_remove_device+0x54/0xd0 [
-> 1206.599556]  [<ffffffff814efeef>] scsi_remove_device+0x2f/0x50 [
-> 1206.600441]  [<ffffffffa003884d>] megasas_aen_polling+0x34d/0x670
-> [megaraid_sas] [ 1206.601561]  [<ffffffff8108ddcc>]
-> process_one_work+0x14c/0x400 [ 1206.602449]  [<ffffffff8108e6a7>]
-> worker_thread+0x117/0x480 [ 1206.603295]  [<ffffffff8108e590>] ?
-> create_worker+0x1c0/0x1c0 [ 1206.604160]  [<ffffffff81094bf9>]
-> kthread+0xc9/0xe0 [ 1206.604898]  [<ffffffff81094b30>] ?
-> flush_kthread_worker+0x90/0x90 [ 1206.605831]  [<ffffffff8171bf8f>]
-> ret_from_fork+0x3f/0x70 [ 1206.606659]  [<ffffffff81094b30>] ?
-> flush_kthread_worker+0x90/0x90 [ 1206.607585] Code: c7 c7 68 aa f9 81 48
-83
-> ec 48 e8 bf 76 59 00 48 8b 43 08 48 8b 13 49 bb 00 02 00 00 00 00 ad de
-48 c7 c7
-> 68 aa f9 81 48 89 42 08 <48> 89 10 4c 89 5b 08 e8 27 76 59 00 e8 32 92
-f4 ff 48
-> 8d 7b 50 [ 1206.611938] RIP  [<ffffffff8118403d>]
-bdi_unregister+0x3d/0x1e0 [
-> 1206.612856]  RSP <ffff8818ca283cb8>
->
-> This can be readily reproduced by a pair of shell scripts - one of which
-loops on
-> onlining / offlining drives via MegaCli (or storcli, if you prefer)
->
->     #!/bin/bash
->
->     while [ 1 ]; do
->         /opt/MegaRAID/MegaCli/MegaCli64 pdoffline physdrv[32:0] a0 &>2
->         /opt/MegaRAID/MegaCli/MegaCli64 pdoffline physdrv[32:11] a0 &>2
->
->         /opt/MegaRAID/MegaCli/MegaCli64 pdonline physdrv[32:0] a0 &>2
->         /opt/MegaRAID/MegaCli/MegaCli64 pdonline physdrv[32:11] a0 &>2
->     done
->
-> Meanwhile, the second script is looping on rescanning the scsi hosts:
->
->     #!/bin/bash
->     while [ 1 ]; do
->         for (( l=0; l<4; l++ )); do
->             echo - - - > /sys/class/scsi_host/host$l/scan
->         done
->     done
->
-> This was originally introduced in the following commit:
->
-> commit 7e8a75f4dfbff173977b2f58799c3eceb7b09afd
-> Author: Yang, Bo <Bo.Yang@lsi.com>
-> Date:   Tue Oct 6 14:50:17 2009 -0600
->
->     [SCSI] megaraid_sas: Add the support for updating the OS after
-> adding/removing the devices from FW
->
-> The fix for this is to add some locking around the AEN polling.
-> Since this affects all kernels since 2.6.33, I have also CC'ed the
-stable list.
->
-> --
-> Changes in v2:
->   - Fix contents of sign-off area
->
-> Signed-off-by: Glenn Watkins <Glenn.Watkins@simplivity.com>
-> Signed-off-by: Ben Guthro <ben.guthro@simplivity.com>
-> Cc: Yang, Bo <Bo.Yang@lsi.com>
-> Cc: stable@vger.kernel.org
->
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index eaa81e5..d203d9d 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -6640,6 +6640,7 @@ megasas_aen_polling(struct work_struct *work)
->  	if (doscan) {
->  		dev_info(&instance->pdev->dev, "scanning for scsi%d...\n",
->  		       instance->host->host_no);
-> +		mutex_lock(&host->scan_mutex);
->  		if (megasas_get_pd_list(instance) == 0) {
->  			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
->  				for (j = 0; j <
-> MEGASAS_MAX_DEV_PER_CHANNEL; j++) { @@ -6661,6 +6662,7 @@
-> megasas_aen_polling(struct work_struct *work)
->  				}
->  			}
->  		}
-> +		mutex_unlock(&host->scan_mutex);
->
->  		if (!instance->requestorId ||
->  		    (instance->requestorId &&
-There is some additional work done internally @Avago to address this issue
-and few other issues as well. I will be posting the complete fix soon. To
-avoid confusion, we can ignore this patch for now.
+Hi Kishon,
+Thanks for your time.
 
-> --
-> 1.7.9.5
+On 10/28/2015 06:23 PM, Kishon Vijay Abraham I wrote:
+> Hi,
+>
+> On Sunday 25 October 2015 05:34 PM, Alim Akhtar wrote:
+>> Hi Kishon
+>> Thanks again for you review.
+>>
+>> On Fri, Oct 23, 2015 at 8:48 PM, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org> wrote:
+>>> Hi,
+>>>
+>>> On Thursday 15 October 2015 08:38 AM, Alim Akhtar wrote:
+>>>> +CCing kishon Vijay,
+>>>>
+>>>> On 10/14/2015 06:25 PM, Alim Akhtar wrote:
+>>>>> From: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>>>>
+>>>>> This patch introduces Exynos UFS host controller driver,
+>>>>> which mainly handles vendor-specific operations including
+>>>>> link startup, power mode change and hibernation/unhibernation.
+>>>>>
+>>>>> Signed-off-by: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>>>> Signed-off-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>>>>> ---
+>>>>>    drivers/scsi/ufs/Kconfig         |   12 +
+>>>>>    drivers/scsi/ufs/Makefile        |    1 +
+>>>>>    drivers/scsi/ufs/ufs-exynos-hw.c |  131 ++++
+>>>>>    drivers/scsi/ufs/ufs-exynos-hw.h |   43 ++
+>>>>>    drivers/scsi/ufs/ufs-exynos.c    | 1317
+>>>>> ++++++++++++++++++++++++++++++++++++++
+>>>>>    drivers/scsi/ufs/ufs-exynos.h    |  247 +++++++
+>>>>>    drivers/scsi/ufs/ufshci.h        |   26 +-
+>>>>>    drivers/scsi/ufs/unipro.h        |   47 ++
+>>>>>    8 files changed, 1823 insertions(+), 1 deletion(-)
+>>>>>    create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.c
+>>>>>    create mode 100644 drivers/scsi/ufs/ufs-exynos-hw.h
+>>>>>    create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+>>>>>    create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+>>>>>
+>>> .
+>>> .
+>>> <snip>
+>>> .
+>>> .
+>>>>> diff --git a/drivers/scsi/ufs/ufs-exynos-hw.c
+>>>>> b/drivers/scsi/ufs/ufs-exynos-hw.c
+>>>>> new file mode 100644
+>>>>> index 000000000000..be6c61541a8f
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/scsi/ufs/ufs-exynos-hw.c
+>>>>> @@ -0,0 +1,131 @@
+>>> .
+>>> .
+>>> <snip>
+>>> .
+>>> .
+>>>>> +
+>>>>> +#define PWR_MODE_STR_LEN    64
+>>>>> +static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
+>>>>> +                struct ufs_pa_layer_attr *pwr_max,
+>>>>> +                struct ufs_pa_layer_attr *pwr_req)
+>>>>> +{
+>>>>> +    struct exynos_ufs *ufs = to_exynos_ufs(hba);
+>>>>> +    struct exynos_ufs_phy_info *phy_info = phy_get_drvdata(ufs->phy);
+>>>
+>>> This is abusing the interface. phy_get_drvdata is meant to be used only
+>>> by the PHY driver.
+>>>>> +    struct exynos_ufs_phy_specific_ops *phy_ops =
+>>>>> +                    phy_info->phy_specific_ops;
+>>>
+>>> I'm really not happy about having platform specific ops for PHY. We have
+>>> to see if existing PHY ops can be used for this or in worst case add new
+>>> PHY ops.
+>> Well you said you like the controller driver to use only PHY ops[1], I
+>> am sorry If I misunderstood that point, can you please help me to
+>> understand that?
+>
+> I meant PHY generic ops and not PHY ops.
+Ok, got it, will use only generic phy here in controller driver.
+- Will remove the platform specific PHY ops from phy driver introduce in 
+this series (patch 02/11)
+>> [1]-> https://lkml.org/lkml/2015/9/18/29
+>>
+>>>>> +    struct uic_pwr_mode *pwr = &ufs->pwr_act;
+>>>>> +    char pwr_str[PWR_MODE_STR_LEN] = "";
+>>>>> +    int ret = 0;
+>>>>> +
+>>>>> +    if (ufs->drv_data->post_pwr_change)
+>>>>> +        ufs->drv_data->post_pwr_change(ufs, pwr);
+>>>>> +
+>>>>> +    if (IS_UFS_PWR_MODE_HS(pwr->mode)) {
+>>>>> +        switch (pwr->hs_series) {
+>>>>> +        case PA_HS_MODE_A:
+>>>>> +        case PA_HS_MODE_B:
+>>>>> +            phy_ops->calibrate_phy(ufs->phy, CFG_POST_PWR_HS,
+>>>>> +                PWR_MODE_HS(pwr->gear, pwr->hs_series));
+>>>>> +            break;
+>>>>> +        }
+>>>>> +
+>>>>> +        ret = phy_ops->wait_for_lock_acq(ufs->phy);
+>>>>> +        snprintf(pwr_str, sizeof(pwr_str), "Fast%s series_%s G_%d L_%d",
+>>>>> +            pwr->mode == FASTAUTO_MODE ? "_Auto" : "",
+>>>>> +            pwr->hs_series == PA_HS_MODE_A ? "A" : "B",
+>>>>> +            pwr->gear, pwr->lane);
+>>>>> +    } else if (IS_UFS_PWR_MODE_PWM(pwr->mode)) {
+>>>>> +        snprintf(pwr_str, sizeof(pwr_str), "Slow%s G_%d L_%d",
+>>>>> +            pwr->mode == SLOWAUTO_MODE ? "_Auto" : "",
+>>>>> +            pwr->gear, pwr->lane);
+>>>>> +    }
+>>>>> +
+>>>>> +    dev_info(hba->dev, "Power mode change %d : %s\n", ret, pwr_str);
+>>>>> +    return ret;
+>>>>> +}
+>>>>> +
+>>>>> +static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
+>>>>> +                        int tag, struct scsi_cmnd *cmd)
+>>>>> +{
+>>>>> +    struct exynos_ufs *ufs = to_exynos_ufs(hba);
+>>>>> +    u32 type;
+>>>>> +
+>>>>> +    type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
+>>>>> +
+>>>>> +    if (cmd)
+>>>>> +        hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
+>>>>> +    else
+>>>>> +        hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
+>>>>> +}
+>>>>> +
+>>>>> +static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
+>>>>> +                        int tag, u8 func)
+>>>>> +{
+>>>>> +    struct exynos_ufs *ufs = to_exynos_ufs(hba);
+>>>>> +    u32 type;
+>>>>> +
+>>>>> +    type =  hci_readl(ufs, HCI_UTMRL_NEXUS_TYPE);
+>>>>> +
+>>>>> +    switch (func) {
+>>>>> +    case UFS_ABORT_TASK:
+>>>>> +    case UFS_QUERY_TASK:
+>>>>> +        hci_writel(ufs, type | (1 << tag), HCI_UTMRL_NEXUS_TYPE);
+>>>>> +        break;
+>>>>> +    case UFS_ABORT_TASK_SET:
+>>>>> +    case UFS_CLEAR_TASK_SET:
+>>>>> +    case UFS_LOGICAL_RESET:
+>>>>> +    case UFS_QUERY_TASK_SET:
+>>>>> +        hci_writel(ufs, type & ~(1 << tag), HCI_UTMRL_NEXUS_TYPE);
+>>>>> +        break;
+>>>>> +    }
+>>>>> +}
+>>>>> +
+>>>>> +static void exynos_ufs_phy_init(struct exynos_ufs *ufs)
+>>>>> +{
+>>>>> +    struct ufs_hba *hba = ufs->hba;
+>>>>> +    struct exynos_ufs_phy_info *phy_info = phy_get_drvdata(ufs->phy);
+>>>>> +    struct exynos_ufs_phy_specific_ops *phy_ops =
+>>>>> +                    phy_info->phy_specific_ops;
+>>>>> +
+>>>>> +    if (ufs->avail_ln_rx == 0 || ufs->avail_ln_tx == 0) {
+>>>>> +        ufshcd_dme_get(hba, UIC_ARG_MIB(PA_AVAILRXDATALANES),
+>>>>> +            &ufs->avail_ln_rx);
+>>>>> +        ufshcd_dme_get(hba, UIC_ARG_MIB(PA_AVAILTXDATALANES),
+>>>>> +            &ufs->avail_ln_tx);
+>>>>> +        WARN(ufs->avail_ln_rx != ufs->avail_ln_tx,
+>>>>> +            "available data lane is not equal(rx:%d, tx:%d)\n",
+>>>>> +            ufs->avail_ln_rx, ufs->avail_ln_tx);
+>>>>> +    }
+>>>>> +
+>>>>> +    phy_ops->set_lane_cnt(ufs->phy, ufs->avail_ln_rx);
+>>>
+>>> can't bus_width attribute in phy core be reused for this?
+>>>
+>> I will take a look on it.
+>>
+>>>>> +    phy_ops->calibrate_phy(ufs->phy, CFG_PRE_INIT, PWR_MODE_ANY);
+>>>
+>>> Why can't calibrate PHY be directly done in phy_init?
+>>>
+>> This is just one instance, need to calibrate PHY when the ufs pwr mode changes.
+>
+> Then maybe we should check when the power mode changes and see if it
+> makes sense to calibrate PHY in other generic PHY ops like phy_power_on
+> etc..
+>
+I did explore this but looks like in current situation it is not the 
+best option.
+Will post next revision after I am done with modifications, PTAL.
+
+> Thanks
+> Kishon
+>
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
