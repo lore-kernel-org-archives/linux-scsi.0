@@ -1,150 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] string_helpers: fix precision loss for some inputs
-Date: Tue, 03 Nov 2015 12:33:30 -0800
-Message-ID: <1446582810.6440.36.camel@HansenPartnership.com>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/5] ipr: Don't set NO_ULEN_CHK bit when resource is a
+ vset.
+Date: Tue, 3 Nov 2015 14:39:36 -0600
+Message-ID: <56391B88.8090102@linux.vnet.ibm.com>
+References: <1446575170-18656-1-git-send-email-krisman@linux.vnet.ibm.com>
+ <1446575170-18656-2-git-send-email-krisman@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45020 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932576AbbKCUdc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 15:33:32 -0500
+Received: from e39.co.us.ibm.com ([32.97.110.160]:48529 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbbKCUjK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 15:39:10 -0500
+Received: from localhost
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Tue, 3 Nov 2015 13:39:09 -0700
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 2AF7D1FF0049
+	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2015 13:27:19 -0700 (MST)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA3Kd7ll1245470
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2015 13:39:07 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA3Kd71M011887
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2015 13:39:07 -0700
+In-Reply-To: <1446575170-18656-2-git-send-email-krisman@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>, "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>, "keescook@chromium.org" <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
 
-From: James Bottomley <JBottomley@Odin.com> 
+Gabriel:
 
-It was noticed that we lose precision in the final calculation for some
-inputs.  The most egregious example is size=3000 blk_size=1900 in units of 10
-should yield 5.70 MB but in fact yields 3.00 MB (oops). This is because the
-current algorithm doesn't correctly account for all the remainders in the
-logarithms.  Fix this by doing a correct calculation in the remainders based
-on napier's algorithm.  Additionally, now we have the correct result, we have
-to account for arithmetic rounding because we're printing 3 digits of
-precision.  This means that if the fourth digit is five or greater, we have to
-round up, so add a section to ensure correct rounding.  Finally account for
-all possible inputs correctly, including zero for block size.
+On applying this patch, I noticed that this statement
+seems to be unnecessary:
 
-Reported-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: stable@vger.kernel.org	# delay backport by two months for testing
-Fixes: b9f28d863594c429e1df35a0474d2663ca28b307
-Signed-off-by: James Bottomley <JBottomley@Odin.com>
+                 else
+                         ioarcb->cmd_pkt.flags_lo |= 
+IPR_FLAGS_LO_UNTAGGED_TASK;
 
-diff --git a/lib/string_helpers.c b/lib/string_helpers.c
-index 5939f63..2ac77bf 100644
---- a/lib/string_helpers.c
-+++ b/lib/string_helpers.c
-@@ -43,37 +43,67 @@ void string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
- 		[STRING_UNITS_10] = 1000,
- 		[STRING_UNITS_2] = 1024,
- 	};
--	int i, j;
--	u32 remainder = 0, sf_cap, exp;
-+	static const unsigned int rounding[] = { 500, 50, 5, 0};
-+	int i = 0, j;
-+	u32 remainder = 0, sf_cap, r1 = 0, r2 = 0;
- 	char tmp[8];
- 	const char *unit;
- 
- 	tmp[0] = '\0';
--	i = 0;
--	if (!size)
-+
-+	if (blk_size == 0)
-+		size = 0;
-+	if (size == 0)
- 		goto out;
- 
-+	/* This is napier's algorithm.  Reduce the original block size to
-+	 *
-+	 * co * divisor[units]^i
-+	 *
-+	 * where co = blk_size + r1/divisor[units];
-+	 *
-+	 * and the same for size.  We simply add to the exponent i, because
-+	 * the final calculation we're looking for is
-+	 *
-+	 * (co1 * co2) * divisor[units]^(i1 +i2)
-+	 */
-+
-+
- 	while (blk_size >= divisor[units]) {
--		remainder = do_div(blk_size, divisor[units]);
-+		r1 = do_div(blk_size, divisor[units]);
- 		i++;
- 	}
- 
--	exp = divisor[units] / (u32)blk_size;
--	/*
--	 * size must be strictly greater than exp here to ensure that remainder
--	 * is greater than divisor[units] coming out of the if below.
--	 */
--	if (size > exp) {
--		remainder = do_div(size, divisor[units]);
--		remainder *= blk_size;
-+	while (size >= divisor[units]) {
-+		r2 = do_div(size, divisor[units]);
- 		i++;
--	} else {
--		remainder *= size;
- 	}
- 
--	size *= blk_size;
--	size += remainder / divisor[units];
--	remainder %= divisor[units];
-+	/*
-+	 * We've already added the exponents in i, now multiply the
-+	 * coefficients:
-+	 *
-+	 * co1*co2 = (blk_size + r1/divisor[units])*(size + r2/divisor[units])
-+	 *
-+	 * therefore
-+	 *
-+	 * co1*co2 = blk_size*size
-+	 *           + (r1*size + r2*size)/divisor[units]
-+	 *           + r1*r2/divisor[units]/divisor[units]
-+	 *
-+	 * reduce the exponent by 2 (it can now go negative) to perform this
-+	 * calculation without divisions (64 bit divisions are very painful on
-+	 * 32 bit architectures), then redo the logarithm adjustment to bring
-+	 * us back to the correct coefficient and exponent.  This calculation
-+	 * can still not overflow because the largest term must be less than
-+	 * divisor[units]^4, which is 40 bits
-+	 *
-+	 */
-+
-+	i -= 2;
-+	size = size * blk_size * divisor[units] * divisor[units]
-+	  + (r1 * size + r2 * blk_size) * divisor[units]
-+	  + r1*r2;
- 
- 	while (size >= divisor[units]) {
- 		remainder = do_div(size, divisor[units]);
-@@ -84,9 +114,20 @@ void string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
- 	for (j = 0; sf_cap*10 < 1000; j++)
- 		sf_cap *= 10;
- 
-+	/* express the remainder as a decimal (it's currently the numerator of
-+	 * a fraction whose denominator is divisor[units]) */
-+	remainder *= 1000;
-+	remainder /= divisor[units];
-+
-+	/* add a 5 to the digit below what will be printed to ensure
-+	 * an arithmetical round up and carry it through to size */
-+	remainder += rounding[j];
-+	if (remainder >= 1000) {
-+		remainder -= 1000;
-+		size += 1;
-+	}
-+
- 	if (j) {
--		remainder *= 1000;
--		remainder /= divisor[units];
- 		snprintf(tmp, sizeof(tmp), ".%03u", remainder);
- 		tmp[j+1] = '\0';
- 	}
+As the value is 0x00:
+#define IPR_FLAGS_LO_UNTAGGED_TASK              0x00
 
+You can resolve this in a future update.
+
+Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+
+---
+Manoj Kumar
+
+On 11/3/2015 12:26 PM, Gabriel Krisman Bertazi wrote:
+> According to the IPR specification, Inhibit Underlength Checking bit
+> must be disabled when issuing commands to vsets.  Enabling it in this
+> case might cause SCSI commands to fail with an Illegal Request, so make
+> sure we keep this bit cleared when resource is a vset.
+>
+> Changes since v1:
+> 	- Put gsci exclusive stuff in a separate block.
+>
+> Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+> ---
+>   drivers/scsi/ipr.c | 10 +++++++---
+>   1 file changed, 7 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 238efab..6849b7f 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -6363,15 +6363,19 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
+>   	ipr_cmd->scsi_cmd = scsi_cmd;
+>   	ipr_cmd->done = ipr_scsi_eh_done;
+>
+> -	if (ipr_is_gscsi(res) || ipr_is_vset_device(res)) {
+> +	if (ipr_is_gscsi(res)) {
+>   		if (scsi_cmd->underflow == 0)
+>   			ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_ULEN_CHK;
+>
+> -		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_LINK_DESC;
+> -		if (ipr_is_gscsi(res) && res->reset_occurred) {
+> +		if (res->reset_occurred) {
+>   			res->reset_occurred = 0;
+>   			ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_DELAY_AFTER_RST;
+>   		}
+> +	}
+> +
+> +	if (ipr_is_gscsi(res) || ipr_is_vset_device(res)) {
+> +		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_LINK_DESC;
+> +
+>   		ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_ALIGNED_BFR;
+>   		if (scsi_cmd->flags & SCMD_TAGGED)
+>   			ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_SIMPLE_TASK;
+>
 
