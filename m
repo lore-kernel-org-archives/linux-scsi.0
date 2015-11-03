@@ -1,137 +1,150 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: [PATCH v2 4/5] ipr: Issue Configure Cache Parameters command.
-Date: Tue,  3 Nov 2015 16:26:09 -0200
-Message-ID: <1446575170-18656-4-git-send-email-krisman@linux.vnet.ibm.com>
-References: <1446575170-18656-1-git-send-email-krisman@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] string_helpers: fix precision loss for some inputs
+Date: Tue, 03 Nov 2015 12:33:30 -0800
+Message-ID: <1446582810.6440.36.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:38078 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319AbbKCS0c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 13:26:32 -0500
-Received: from /spool/local
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-	Tue, 3 Nov 2015 16:26:28 -0200
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id D17E71DC0060
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2015 13:25:21 -0500 (EST)
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA3IQtPp4980784
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2015 16:26:55 -0200
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA3IQOTI021417
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2015 16:26:25 -0200
-In-Reply-To: <1446575170-18656-1-git-send-email-krisman@linux.vnet.ibm.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45020 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932576AbbKCUdc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2015 15:33:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>, "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>, "keescook@chromium.org" <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-Some new adapters require a special Configure Cache Parameters command
-to enable the adapter write cache, so send this during the adapter
-initialization if the adapter requires it.
+From: James Bottomley <JBottomley@Odin.com> 
 
-Changes since v1:
-        - Fix checkpatch.pl warnings.
+It was noticed that we lose precision in the final calculation for some
+inputs.  The most egregious example is size=3000 blk_size=1900 in units of 10
+should yield 5.70 MB but in fact yields 3.00 MB (oops). This is because the
+current algorithm doesn't correctly account for all the remainders in the
+logarithms.  Fix this by doing a correct calculation in the remainders based
+on napier's algorithm.  Additionally, now we have the correct result, we have
+to account for arithmetic rounding because we're printing 3 digits of
+precision.  This means that if the fourth digit is five or greater, we have to
+round up, so add a section to ensure correct rounding.  Finally account for
+all possible inputs correctly, including zero for block size.
 
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ipr.h |  4 ++++
- 2 files changed, 62 insertions(+), 1 deletion(-)
+Reported-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: stable@vger.kernel.org	# delay backport by two months for testing
+Fixes: b9f28d863594c429e1df35a0474d2663ca28b307
+Signed-off-by: James Bottomley <JBottomley@Odin.com>
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 5efc7ef..79fd9ff 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -7675,6 +7675,63 @@ static int ipr_ioafp_query_ioa_cfg(struct ipr_cmnd *ipr_cmd)
- 	return IPR_RC_JOB_RETURN;
- }
+diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+index 5939f63..2ac77bf 100644
+--- a/lib/string_helpers.c
++++ b/lib/string_helpers.c
+@@ -43,37 +43,67 @@ void string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
+ 		[STRING_UNITS_10] = 1000,
+ 		[STRING_UNITS_2] = 1024,
+ 	};
+-	int i, j;
+-	u32 remainder = 0, sf_cap, exp;
++	static const unsigned int rounding[] = { 500, 50, 5, 0};
++	int i = 0, j;
++	u32 remainder = 0, sf_cap, r1 = 0, r2 = 0;
+ 	char tmp[8];
+ 	const char *unit;
  
-+static int ipr_ioa_service_action_failed(struct ipr_cmnd *ipr_cmd)
-+{
-+	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+ 	tmp[0] = '\0';
+-	i = 0;
+-	if (!size)
 +
-+	if (ioasc == IPR_IOASC_IR_INVALID_REQ_TYPE_OR_PKT)
-+		return IPR_RC_JOB_CONTINUE;
++	if (blk_size == 0)
++		size = 0;
++	if (size == 0)
+ 		goto out;
+ 
++	/* This is napier's algorithm.  Reduce the original block size to
++	 *
++	 * co * divisor[units]^i
++	 *
++	 * where co = blk_size + r1/divisor[units];
++	 *
++	 * and the same for size.  We simply add to the exponent i, because
++	 * the final calculation we're looking for is
++	 *
++	 * (co1 * co2) * divisor[units]^(i1 +i2)
++	 */
 +
-+	return ipr_reset_cmd_failed(ipr_cmd);
-+}
 +
-+static void ipr_build_ioa_service_action(struct ipr_cmnd *ipr_cmd,
-+					 __be32 res_handle, u8 sa_code)
-+{
-+	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+ 	while (blk_size >= divisor[units]) {
+-		remainder = do_div(blk_size, divisor[units]);
++		r1 = do_div(blk_size, divisor[units]);
+ 		i++;
+ 	}
+ 
+-	exp = divisor[units] / (u32)blk_size;
+-	/*
+-	 * size must be strictly greater than exp here to ensure that remainder
+-	 * is greater than divisor[units] coming out of the if below.
+-	 */
+-	if (size > exp) {
+-		remainder = do_div(size, divisor[units]);
+-		remainder *= blk_size;
++	while (size >= divisor[units]) {
++		r2 = do_div(size, divisor[units]);
+ 		i++;
+-	} else {
+-		remainder *= size;
+ 	}
+ 
+-	size *= blk_size;
+-	size += remainder / divisor[units];
+-	remainder %= divisor[units];
++	/*
++	 * We've already added the exponents in i, now multiply the
++	 * coefficients:
++	 *
++	 * co1*co2 = (blk_size + r1/divisor[units])*(size + r2/divisor[units])
++	 *
++	 * therefore
++	 *
++	 * co1*co2 = blk_size*size
++	 *           + (r1*size + r2*size)/divisor[units]
++	 *           + r1*r2/divisor[units]/divisor[units]
++	 *
++	 * reduce the exponent by 2 (it can now go negative) to perform this
++	 * calculation without divisions (64 bit divisions are very painful on
++	 * 32 bit architectures), then redo the logarithm adjustment to bring
++	 * us back to the correct coefficient and exponent.  This calculation
++	 * can still not overflow because the largest term must be less than
++	 * divisor[units]^4, which is 40 bits
++	 *
++	 */
 +
-+	ioarcb->res_handle = res_handle;
-+	ioarcb->cmd_pkt.cdb[0] = IPR_IOA_SERVICE_ACTION;
-+	ioarcb->cmd_pkt.cdb[1] = sa_code;
-+	ioarcb->cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
-+}
++	i -= 2;
++	size = size * blk_size * divisor[units] * divisor[units]
++	  + (r1 * size + r2 * blk_size) * divisor[units]
++	  + r1*r2;
+ 
+ 	while (size >= divisor[units]) {
+ 		remainder = do_div(size, divisor[units]);
+@@ -84,9 +114,20 @@ void string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
+ 	for (j = 0; sf_cap*10 < 1000; j++)
+ 		sf_cap *= 10;
+ 
++	/* express the remainder as a decimal (it's currently the numerator of
++	 * a fraction whose denominator is divisor[units]) */
++	remainder *= 1000;
++	remainder /= divisor[units];
 +
-+/**
-+ * ipr_ioafp_set_caching_parameters - Issue Set Cache parameters service
-+ * action
-+ *
-+ * Return value:
-+ *	none
-+ **/
-+static int ipr_ioafp_set_caching_parameters(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+	struct ipr_inquiry_pageC4 *pageC4 = &ioa_cfg->vpd_cbs->pageC4_data;
-+
-+	ENTER;
-+
-+	ipr_cmd->job_step = ipr_ioafp_query_ioa_cfg;
-+
-+	if (pageC4->cache_cap[0] & IPR_CAP_SYNC_CACHE) {
-+		ipr_build_ioa_service_action(ipr_cmd,
-+					     cpu_to_be32(IPR_IOA_RES_HANDLE),
-+					     IPR_IOA_SA_CHANGE_CACHE_PARAMS);
-+
-+		ioarcb->cmd_pkt.cdb[2] = 0x40;
-+
-+		ipr_cmd->job_step_failed = ipr_ioa_service_action_failed;
-+		ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout,
-+			   IPR_SET_SUP_DEVICE_TIMEOUT);
-+
-+		LEAVE;
-+		return IPR_RC_JOB_RETURN;
++	/* add a 5 to the digit below what will be printed to ensure
++	 * an arithmetical round up and carry it through to size */
++	remainder += rounding[j];
++	if (remainder >= 1000) {
++		remainder -= 1000;
++		size += 1;
 +	}
 +
-+	LEAVE;
-+	return IPR_RC_JOB_CONTINUE;
-+}
-+
- /**
-  * ipr_ioafp_inquiry - Send an Inquiry to the adapter.
-  * @ipr_cmd:	ipr command struct
-@@ -7742,7 +7799,7 @@ static int ipr_ioafp_pageC4_inquiry(struct ipr_cmnd *ipr_cmd)
- 	struct ipr_inquiry_pageC4 *pageC4 = &ioa_cfg->vpd_cbs->pageC4_data;
- 
- 	ENTER;
--	ipr_cmd->job_step = ipr_ioafp_query_ioa_cfg;
-+	ipr_cmd->job_step = ipr_ioafp_set_caching_parameters;
- 	memset(pageC4, 0, sizeof(*pageC4));
- 
- 	if (ipr_inquiry_page_supported(page0, 0xC4)) {
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index 7be1271..b16bcd1 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -216,6 +216,10 @@
- #define IPR_SET_ALL_SUPPORTED_DEVICES			0x80
- #define IPR_IOA_SHUTDOWN				0xF7
- #define	IPR_WR_BUF_DOWNLOAD_AND_SAVE			0x05
-+#define IPR_IOA_SERVICE_ACTION				0xD2
-+
-+/* IOA Service Actions */
-+#define IPR_IOA_SA_CHANGE_CACHE_PARAMS			0x14
- 
- /*
-  * Timeouts
--- 
-2.1.0
+ 	if (j) {
+-		remainder *= 1000;
+-		remainder /= divisor[units];
+ 		snprintf(tmp, sizeof(tmp), ".%03u", remainder);
+ 		tmp[j+1] = '\0';
+ 	}
+
 
