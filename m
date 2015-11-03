@@ -1,40 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sg: Fix double-free when drives detach during SG_IO
-Date: Mon, 02 Nov 2015 23:52:23 -0500
-Message-ID: <yq1ziyv3cs8.fsf@sermon.lab.mkp.net>
-References: <944215ec334c3c5b3af98210acf8f6479f5539c8.1445634103.git.calvinowens@fb.com>
-	<5637CE3F.6020706@interlog.com>
+Subject: Re: [PATCH 1/3] ibmvsci: make parameters max_id and max_channel read-only
+Date: Tue, 03 Nov 2015 00:00:32 -0500
+Message-ID: <yq1vb9j3cen.fsf@sermon.lab.mkp.net>
+References: <1441876994-16821-1-git-send-email-lvivier@redhat.com>
+	<561D7639.6030109@redhat.com> <562F9A6F.2000201@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45986 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbbKCEwe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2015 23:52:34 -0500
-In-Reply-To: <5637CE3F.6020706@interlog.com> (Douglas Gilbert's message of
-	"Mon, 2 Nov 2015 21:57:35 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <562F9A6F.2000201@redhat.com> (Laurent Vivier's message of "Tue,
+	27 Oct 2015 16:38:23 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Laurent Vivier <lvivier@redhat.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, dgibson@redhat.com, thuth@redhat.com, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Calvin Owens <calvinowens@fb.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+>>>>> "Laurent" == Laurent Vivier <lvivier@redhat.com> writes:
 
->> In sg_common_write(), we free the block request and return -ENODEV if
->> the device is detached in the middle of the SG_IO ioctl().
->> 
->> Unfortunately, sg_finish_rem_req() also tries to free srp->rq, so we
->> end up freeing rq->cmd in the already free rq object, and then free
->> the object itself out from under the current user.
->> 
->> This ends up corrupting random memory via the list_head on the rq
->> object. The most common crash trace I saw is this:
+Laurent> Ping ?
 
->> Signed-off-by: Calvin Owens <calvinowens@fb.com>
+>> this series has been reviewed and ack'ed, as SCSI maintainer, could
+>> you take it ?
 
-Doug> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+My mailbox doesn't reach quite far enough back in time to pick this up
+and I'd rather not have to deal with mail archive-mangled versions.
+Please apply the relevant Reviewed-by tags and repost.
 
-Applied.
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
