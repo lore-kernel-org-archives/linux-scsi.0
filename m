@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 01/32] block/fs: add REQ_OP definitions.
-Date: Wed,  4 Nov 2015 16:07:58 -0600
-Message-ID: <1446674909-5371-2-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 08/32] target: prepare for bi_rw split
+Date: Wed,  4 Nov 2015 16:08:05 -0600
+Message-ID: <1446674909-5371-9-git-send-email-mchristi@redhat.com>
 References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -24,33 +24,107 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch adds definitions for request/bio operations which
-will be used in the next patches.
+This patch prepares lio's submit_bio use for the next
+patches that split bi_rw into a operation and flags field.
+Instead of passing in a bitmap with both the operation and
+flags mixed in, the callers will now pass them in seperately.
 
-In the initial patches the REQ_OPs match the REQ ones for compat reasons
-while all the code is converted in this set. In the last patches
-that will be removed.
+This patch modifies the code related to the submit_bio calls
+so the flags and operation are seperated. When this is done
+for all code, one of the later patches in the series will
+the actual submit_bio call, so the patches are bisectable.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- include/linux/blk_types.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/target/target_core_iblock.c | 32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index e813013..d7b6009 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -244,4 +244,11 @@ enum rq_flag_bits {
- #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
- #define REQ_NO_TIMEOUT		(1ULL << __REQ_NO_TIMEOUT)
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 0f19e11..25f75ab 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -354,14 +354,14 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num)
+ 	return bio;
+ }
  
-+enum req_op {
-+	REQ_OP_READ,
-+	REQ_OP_WRITE		= REQ_WRITE,
-+	REQ_OP_DISCARD		= REQ_DISCARD,
-+	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+};
-+
- #endif /* __LINUX_BLK_TYPES_H */
+-static void iblock_submit_bios(struct bio_list *list, int rw)
++static void iblock_submit_bios(struct bio_list *list, int op, int op_flags)
+ {
+ 	struct blk_plug plug;
+ 	struct bio *bio;
+ 
+ 	blk_start_plug(&plug);
+ 	while ((bio = bio_list_pop(list)))
+-		submit_bio(rw, bio);
++		submit_bio(op | op_flags, bio);
+ 	blk_finish_plug(&plug);
+ }
+ 
+@@ -480,7 +480,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		sectors -= 1;
+ 	}
+ 
+-	iblock_submit_bios(&list, WRITE);
++	iblock_submit_bios(&list, REQ_OP_WRITE, 0);
+ 	return 0;
+ 
+ fail_put_bios:
+@@ -653,7 +653,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	u32 sg_num = sgl_nents;
+ 	sector_t block_lba;
+ 	unsigned bio_cnt;
+-	int rw = 0;
++	int op_flags = 0;
++	int op = 0;
+ 	int i;
+ 
+ 	if (data_direction == DMA_TO_DEVICE) {
+@@ -664,17 +665,20 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		 * is not enabled, or if initiator set the Force Unit Access bit.
+ 		 */
+ 		if (q->flush_flags & REQ_FUA) {
+-			if (cmd->se_cmd_flags & SCF_FUA)
+-				rw = WRITE_FUA;
+-			else if (!(q->flush_flags & REQ_FLUSH))
+-				rw = WRITE_FUA;
+-			else
+-				rw = WRITE;
++			if (cmd->se_cmd_flags & SCF_FUA) {
++				op = REQ_OP_WRITE;
++				op_flags = WRITE_FUA;
++			} else if (!(q->flush_flags & REQ_FLUSH)) {
++				op = REQ_OP_WRITE;
++				op_flags = WRITE_FUA;
++			} else {
++				op = REQ_OP_WRITE;
++			}
+ 		} else {
+-			rw = WRITE;
++			op = REQ_OP_WRITE;
+ 		}
+ 	} else {
+-		rw = READ;
++		op = REQ_OP_READ;
+ 	}
+ 
+ 	/*
+@@ -726,7 +730,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+ 				!= sg->length) {
+ 			if (bio_cnt >= IBLOCK_MAX_BIO_PER_TASK) {
+-				iblock_submit_bios(&list, rw);
++				iblock_submit_bios(&list, op, op_flags);
+ 				bio_cnt = 0;
+ 			}
+ 
+@@ -750,7 +754,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 			goto fail_put_bios;
+ 	}
+ 
+-	iblock_submit_bios(&list, rw);
++	iblock_submit_bios(&list, op, op_flags);
+ 	iblock_complete_cmd(cmd);
+ 	return 0;
+ 
 -- 
 1.8.3.1
