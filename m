@@ -1,32 +1,32 @@
 From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: [PATCH 2/3] aic94xx: remove SCSI host before detaching from SAS transport
-Date: Wed, 4 Nov 2015 17:51:03 +0100
-Message-ID: <CAMGffEnkHVrUwFoHsttTc86HHJQtQukQd0mYjUuL3iuBXpU73w@mail.gmail.com>
+Subject: [PATCH 3/3] mvsas: remove SCSI host before detaching from SAS transport
+Date: Wed, 4 Nov 2015 17:52:37 +0100
+Message-ID: <CAMGffE=iV5Q9L7fkqcsuzq1V8EWuP=1VcJfXFyb63c44qixwdA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:33251 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbbKDQvX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 11:51:23 -0500
-Received: by wmeg8 with SMTP id g8so115681207wme.0
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2015 08:51:22 -0800 (PST)
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38479 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030567AbbKDQw6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 11:52:58 -0500
+Received: by wmeg8 with SMTP id g8so46632502wme.1
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2015 08:52:57 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jej B <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 Cc: hch <hch@lst.de>, brood <brood@attotech.com>
 
-=46rom 3aae177e7aa833339fa84ae5c60ed5f10056610d Mon Sep 17 00:00:00 200=
+=46rom 6c3cb7d4df1e164008338c922cd99149a6a8191b Mon Sep 17 00:00:00 200=
 1
 =46rom: Jack Wang <jinpu.wang@profitbricks.com>
-Date: Wed, 4 Nov 2015 10:01:41 +0100
-Subject: [PATCH 2/3] aic94xx: remove SCSI host before detaching from SA=
-S
+Date: Wed, 4 Nov 2015 10:05:01 +0100
+Subject: [PATCH 3/3] mvsas: remove SCSI host before detaching from SAS
  transport
 
 commit cff549e4860f ("scsi: proper state checking and module refcount
 handling in scsi_device_get")
+
 the reference count of scsi device was changed, which could lead to
 when rmmod with at least on drive attached, SCSI error handle will
 run into infinite loop, and lockup the system.
@@ -41,27 +41,25 @@ http://www.spinics.net/lists/linux-scsi/msg90088.html
 
 Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c | 2 +-
+ drivers/scsi/mvsas/mv_init.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c
-b/drivers/scsi/aic94xx/aic94xx_init.c
-index f6c336b..4b56976 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -704,10 +704,10 @@ static int asd_unregister_sas_ha(struct
-asd_ha_struct *asd_ha)
- {
-  int err;
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.=
+c
+index e2d555c..1960d95 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -641,9 +641,9 @@ static void mvs_pci_remove(struct pci_dev *pdev)
+  tasklet_kill(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
+ #endif
 
-+ scsi_remove_host(asd_ha->sas_ha.core.shost);
-  err =3D sas_unregister_ha(&asd_ha->sas_ha);
++ scsi_remove_host(mvi->shost);
+  sas_unregister_ha(sha);
+  sas_remove_host(mvi->shost);
+- scsi_remove_host(mvi->shost);
 
-  sas_remove_host(asd_ha->sas_ha.core.shost);
-- scsi_remove_host(asd_ha->sas_ha.core.shost);
-  scsi_host_put(asd_ha->sas_ha.core.shost);
-
-  kfree(asd_ha->sas_ha.sas_phy);
+  MVS_CHIP_DISP->interrupt_disable(mvi);
+  free_irq(mvi->pdev->irq, sha);
 --=20
 1.9.1
 
