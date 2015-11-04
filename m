@@ -1,7 +1,7 @@
 From: mchristi@redhat.com
-Subject: [PATCH 17/32] block: add operation field to bio struct
-Date: Wed,  4 Nov 2015 16:08:14 -0600
-Message-ID: <1446674909-5371-18-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 06/32] xen blkback: prepare for bi_rw split
+Date: Wed,  4 Nov 2015 16:08:03 -0600
+Message-ID: <1446674909-5371-7-git-send-email-mchristi@redhat.com>
 References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -24,121 +24,109 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch adds field to the bio to store the REQ_OP, and it
-has the block layer code set it.
+This patch prepares xen blkback submit_bio use for the next
+patches that split bi_rw into a operation and flags field.
+Instead of passing in a bitmap with both the operation and
+flags mixed in, the callers will now pass them in seperately.
 
-The next patches will modify the other drivers and filesystems
-to also set the bi_op. We are still ORing the op into the bi_rw.
-When I am done with the conversion, that will be dropped.
+This patch modifies the code related to the submit_bio calls
+so the flags and operation are seperated. When this is done
+for all code, one of the later patches in the series will
+modify the actual submit_bio call, so the patches are bisectable.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- block/bio.c               | 11 +++++++++--
- block/blk-core.c          |  1 +
- block/blk-map.c           |  4 +++-
- include/linux/blk_types.h |  8 +++++++-
- 4 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/block/xen-blkback/blkback.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index ae91ccb..1cf8428 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -582,6 +582,7 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
- 	bio->bi_bdev = bio_src->bi_bdev;
- 	bio_set_flag(bio, BIO_CLONED);
- 	bio->bi_rw = bio_src->bi_rw;
-+	bio->bi_op = bio_src->bi_op;
- 	bio->bi_iter = bio_src->bi_iter;
- 	bio->bi_io_vec = bio_src->bi_io_vec;
- }
-@@ -664,6 +665,7 @@ struct bio *bio_clone_bioset(struct bio *bio_src, gfp_t gfp_mask,
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index 6a685ae..bfffab3 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -488,7 +488,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
+ 	struct xen_vbd *vbd = &blkif->vbd;
+ 	int rc = -EACCES;
  
- 	bio->bi_bdev		= bio_src->bi_bdev;
- 	bio->bi_rw		= bio_src->bi_rw;
-+	bio->bi_op		= bio_src->bi_op;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
- 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
+-	if ((operation != READ) && vbd->readonly)
++	if ((operation != REQ_OP_READ) && vbd->readonly)
+ 		goto out;
  
-@@ -1168,8 +1170,10 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
- 	if (!bio)
- 		goto out_bmd;
+ 	if (likely(req->nr_sects)) {
+@@ -990,7 +990,7 @@ static int dispatch_discard_io(struct xen_blkif *blkif,
+ 	preq.sector_number = req->u.discard.sector_number;
+ 	preq.nr_sects      = req->u.discard.nr_sectors;
  
--	if (iter->type & WRITE)
-+	if (iter->type & WRITE) {
- 		bio->bi_rw |= REQ_WRITE;
-+		bio->bi_op = REQ_OP_WRITE;
-+	}
+-	err = xen_vbd_translate(&preq, blkif, WRITE);
++	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
+ 	if (err) {
+ 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
+ 			preq.sector_number,
+@@ -1203,6 +1203,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	struct bio **biolist = pending_req->biolist;
+ 	int i, nbio = 0;
+ 	int operation;
++	int operation_flags = 0;
+ 	struct blk_plug plug;
+ 	bool drain = false;
+ 	struct grant_page **pages = pending_req->segments;
+@@ -1220,17 +1221,19 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	switch (req_operation) {
+ 	case BLKIF_OP_READ:
+ 		blkif->st_rd_req++;
+-		operation = READ;
++		operation = REQ_OP_READ;
+ 		break;
+ 	case BLKIF_OP_WRITE:
+ 		blkif->st_wr_req++;
+-		operation = WRITE_ODIRECT;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_ODIRECT;
+ 		break;
+ 	case BLKIF_OP_WRITE_BARRIER:
+ 		drain = true;
+ 	case BLKIF_OP_FLUSH_DISKCACHE:
+ 		blkif->st_f_req++;
+-		operation = WRITE_FLUSH;
++		operation = REQ_OP_WRITE;
++		operation_flags = WRITE_FLUSH;
+ 		break;
+ 	default:
+ 		operation = 0; /* make gcc happy */
+@@ -1242,7 +1245,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	nseg = req->operation == BLKIF_OP_INDIRECT ?
+ 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
  
- 	ret = 0;
+-	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
++	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
+ 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
+ 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
+ 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
+@@ -1349,7 +1352,7 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
  
-@@ -1338,8 +1342,10 @@ struct bio *bio_map_user_iov(struct request_queue *q,
- 	/*
- 	 * set data direction, and check if mapped pages need bouncing
- 	 */
--	if (iter->type & WRITE)
-+	if (iter->type & WRITE) {
- 		bio->bi_rw |= REQ_WRITE;
-+		bio->bi_op = REQ_OP_WRITE;
-+	}
+ 	/* This will be hit if the operation was a flush or discard. */
+ 	if (!bio) {
+-		BUG_ON(operation != WRITE_FLUSH);
++		BUG_ON(operation_flags != WRITE_FLUSH);
  
- 	bio_set_flag(bio, BIO_USER_MAPPED);
+ 		bio = bio_alloc(GFP_KERNEL, 0);
+ 		if (unlikely(bio == NULL))
+@@ -1365,14 +1368,14 @@ static int dispatch_rw_block_io(struct xen_blkif *blkif,
+ 	blk_start_plug(&plug);
  
-@@ -1533,6 +1539,7 @@ struct bio *bio_copy_kern(struct request_queue *q, void *data, unsigned int len,
- 	} else {
- 		bio->bi_end_io = bio_copy_kern_endio;
- 		bio->bi_rw |= REQ_WRITE;
-+		bio->bi_op = REQ_OP_WRITE;
- 	}
+ 	for (i = 0; i < nbio; i++)
+-		submit_bio(operation, biolist[i]);
++		submit_bio(operation | operation_flags, biolist[i]);
  
- 	return bio;
-diff --git a/block/blk-core.c b/block/blk-core.c
-index d325ece..c8672f2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1988,6 +1988,7 @@ EXPORT_SYMBOL(generic_make_request);
- void submit_bio(int op, int flags, struct bio *bio)
- {
- 	bio->bi_rw |= op | flags;
-+	bio->bi_op = op;
+ 	/* Let the I/Os go.. */
+ 	blk_finish_plug(&plug);
  
- 	/*
- 	 * If it's a regular read/write or a barrier with data attached,
-diff --git a/block/blk-map.c b/block/blk-map.c
-index f565e11..4a91dc4 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -223,8 +223,10 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
+-	if (operation == READ)
++	if (operation == REQ_OP_READ)
+ 		blkif->st_rd_sect += preq.nr_sects;
+-	else if (operation & WRITE)
++	else if (operation == REQ_OP_WRITE)
+ 		blkif->st_wr_sect += preq.nr_sects;
  
--	if (!reading)
-+	if (!reading) {
- 		bio->bi_rw |= REQ_WRITE;
-+		bio->bi_op = REQ_OP_WRITE;
-+	}
- 
- 	if (do_copy)
- 		rq->cmd_flags |= REQ_COPY_USER;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d7b6009..b974aea 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -48,9 +48,15 @@ struct bio {
- 	struct block_device	*bi_bdev;
- 	unsigned int		bi_flags;	/* status, command, etc */
- 	int			bi_error;
--	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
-+	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
- 						 * top bits priority
- 						 */
-+	/*
-+	 * this will be a u8 in the next patches and bi_rw can be shrunk to
-+	 * a u32. For compat in these transistional patches op is a int here.
-+	 */
-+	int			bi_op;		/* REQ_OP */
-+
- 
- 	struct bvec_iter	bi_iter;
- 
+ 	return 0;
 -- 
 1.8.3.1
