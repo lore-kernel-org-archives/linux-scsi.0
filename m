@@ -1,38 +1,26 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 12/27] hpsa: correct check for non-disk devices
-Date: Wed, 04 Nov 2015 15:51:08 -0600
-Message-ID: <20151104215108.15472.46886.stgit@brunhilda>
+Subject: [PATCH v2 14/27] hpsa: simplify check for device exposure
+Date: Wed, 04 Nov 2015 15:51:21 -0600
+Message-ID: <20151104215120.15472.91256.stgit@brunhilda>
 References: <20151104214910.15472.23179.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53453 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030947AbbKDVzB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:55:01 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:60873 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030782AbbKDVzN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:55:13 -0500
 In-Reply-To: <20151104214910.15472.23179.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-The driver is using two MACROs which seemingly are looking in
-the wrong location for the device_flags returned from
-CISS_REPORT_PHYS. Both MACROs, NON_DISK_PHYS_DEV and
-PHYS_IOACCEL, are using the pointer returned from figure_lunaddrbytes
-which is the address of the LUN.lunid element in
-the extended CISS_REPORT_PHYS.  But the MACROS are using offsets
-beyond the range of the element (offset 17 of an 8 byte element).
+From: Kevin Barnett <kevin.barnett@pmcs.com>
 
-These MACROs actually are looking at the correct location but
-they fail static checker analysis. It also will not work
-if any new elements are added to the extended LUN structure.
+remove macros and cleanup device exposure checking
 
-Change the code to use the structure elements directly
-since this MACRO is only used in one location.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
@@ -40,97 +28,117 @@ Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c     |   28 +++++++++++++++-------------
- drivers/scsi/hpsa_cmd.h |    2 --
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.c |   25 +++++++++++--------------
+ drivers/scsi/hpsa.h |    6 +-----
+ 2 files changed, 12 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1607b6d..9cf551b 100644
+index 61992c0..77c14ae 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3681,19 +3681,18 @@ static u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position,
- /* get physical drive ioaccel handle and queue depth */
- static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
- 		struct hpsa_scsi_dev_t *dev,
--		u8 *lunaddrbytes,
-+		struct ReportExtendedLUNdata *rlep, int rle_index,
- 		struct bmic_identify_physical_device *id_phys)
- {
- 	int rc;
--	struct ext_report_lun_entry *rle =
--		(struct ext_report_lun_entry *) lunaddrbytes;
-+	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
- 
- 	dev->ioaccel_handle = rle->ioaccel_handle;
--	if (PHYS_IOACCEL(lunaddrbytes) && dev->ioaccel_handle)
-+	if ((rle->device_flags & 0x08) && dev->ioaccel_handle)
- 		dev->hba_ioaccel_enabled = 1;
- 	memset(id_phys, 0, sizeof(*id_phys));
--	rc = hpsa_bmic_id_physical_device(h, lunaddrbytes,
--			GET_BMIC_DRIVE_NUMBER(lunaddrbytes), id_phys,
-+	rc = hpsa_bmic_id_physical_device(h, &rle->lunid[0],
-+			GET_BMIC_DRIVE_NUMBER(&rle->lunid[0]), id_phys,
- 			sizeof(*id_phys));
- 	if (!rc)
- 		/* Reserve space for FW operations */
-@@ -3707,11 +3706,12 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
+@@ -792,8 +792,7 @@ static ssize_t path_info_show(struct device *dev,
+ 				PATH_STRING_LEN,
+ 				"PORT: %.2s ",
+ 				phys_connector);
+-		if (hdev->devtype == TYPE_DISK &&
+-			hdev->expose_state != HPSA_DO_NOT_EXPOSE) {
++		if (hdev->devtype == TYPE_DISK && hdev->expose_device) {
+ 			if (box == 0 || box == 0xFF) {
+ 				output_len += snprintf(path[i] + output_len,
+ 					PATH_STRING_LEN,
+@@ -1152,7 +1151,7 @@ static void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
+ 				"RAID-?" : raid_label[dev->raid_level],
+ 			dev->offload_config ? '+' : '-',
+ 			dev->offload_enabled ? '+' : '-',
+-			dev->expose_state);
++			dev->expose_device);
  }
  
- static void hpsa_get_path_info(struct hpsa_scsi_dev_t *this_device,
--	u8 *lunaddrbytes,
-+	struct ReportExtendedLUNdata *rlep, int rle_index,
- 	struct bmic_identify_physical_device *id_phys)
- {
--	if (PHYS_IOACCEL(lunaddrbytes)
--		&& this_device->ioaccel_handle)
-+	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+
-+	if ((rle->device_flags & 0x08) && this_device->ioaccel_handle)
- 		this_device->hba_ioaccel_enabled = 1;
+ /* Add an entry into h->dev[] array. */
+@@ -1225,7 +1224,7 @@ lun_assigned:
+ 	added[*nadded] = device;
+ 	(*nadded)++;
+ 	hpsa_show_dev_msg(KERN_INFO, h, device,
+-		device->expose_state & HPSA_SCSI_ADD ? "added" : "masked");
++		device->expose_device ? "added" : "masked");
+ 	device->offload_to_be_enabled = device->offload_enabled;
+ 	device->offload_enabled = 0;
+ 	return 0;
+@@ -1788,7 +1787,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
+ 	for (i = 0; i < nremoved; i++) {
+ 		if (removed[i] == NULL)
+ 			continue;
+-		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
++		if (removed[i]->expose_device) {
+ 			struct scsi_device *sdev =
+ 				scsi_device_lookup(sh, removed[i]->bus,
+ 					removed[i]->target, removed[i]->lun);
+@@ -1813,7 +1812,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
+ 	for (i = 0; i < nadded; i++) {
+ 		if (added[i] == NULL)
+ 			continue;
+-		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
++		if (!(added[i]->expose_device))
+ 			continue;
+ 		if (scsi_add_device(sh, added[i]->bus,
+ 			added[i]->target, added[i]->lun) == 0)
+@@ -1861,7 +1860,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
+ 		sdev_id(sdev), sdev->lun);
+ 	if (likely(sd)) {
+ 		atomic_set(&sd->ioaccel_cmds_out, 0);
+-		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
++		sdev->hostdata = sd->expose_device ? sd : NULL;
+ 	} else
+ 		sdev->hostdata = NULL;
+ 	spin_unlock_irqrestore(&h->devlock, flags);
+@@ -1875,7 +1874,7 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
+ 	int queue_depth;
  
- 	memcpy(&this_device->active_path_index,
-@@ -3811,6 +3811,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 	for (i = 0; i < nphysicals + nlogicals + 1; i++) {
- 		u8 *lunaddrbytes, is_OBDR = 0;
- 		int rc = 0;
-+		int phys_dev_index = i - (raid_ctlr_position == 0);
+ 	sd = sdev->hostdata;
+-	sdev->no_uld_attach = !sd || !(sd->expose_state & HPSA_ULD_ATTACH);
++	sdev->no_uld_attach = !sd || !sd->expose_device;
  
- 		/* Figure out where the LUN ID info is coming from */
- 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
-@@ -3819,7 +3820,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		/* skip masked non-disk devices */
- 		if (MASKED_DEVICE(lunaddrbytes))
- 			if (i < nphysicals + (raid_ctlr_position == 0) &&
--				NON_DISK_PHYS_DEV(lunaddrbytes))
-+				(physdev_list->
-+				LUN[phys_dev_index].device_flags & 0x01))
- 				continue;
+ 	if (sd)
+ 		queue_depth = sd->queue_depth != 0 ?
+@@ -3861,12 +3860,10 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
  
- 		/* Get device type, vendor, model, device id */
-@@ -3884,9 +3886,9 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 				/* Never use RAID mapper in HBA mode. */
- 				this_device->offload_enabled = 0;
- 				hpsa_get_ioaccel_drive_info(h, this_device,
--					lunaddrbytes, id_phys);
--				hpsa_get_path_info(this_device, lunaddrbytes,
--							id_phys);
-+					physdev_list, phys_dev_index, id_phys);
-+				hpsa_get_path_info(this_device,
-+					physdev_list, phys_dev_index, id_phys);
- 			}
- 			ncurrent++;
- 			break;
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 47c756b..c2c0737 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -260,8 +260,6 @@ struct ext_report_lun_entry {
- 	u8 wwid[8];
- 	u8 device_type;
- 	u8 device_flags;
--#define NON_DISK_PHYS_DEV(x) ((x)[17] & 0x01)
--#define PHYS_IOACCEL(x) ((x)[17] & 0x08)
- 	u8 lun_count; /* multi-lun device, how many luns */
- 	u8 redundant_paths;
- 	u32 ioaccel_handle; /* ioaccel1 only uses lower 16 bits */
+ 		/* do not expose masked devices */
+ 		if (MASKED_DEVICE(lunaddrbytes) &&
+-			i < nphysicals + (raid_ctlr_position == 0)) {
+-			this_device->expose_state = HPSA_DO_NOT_EXPOSE;
+-		} else {
+-			this_device->expose_state =
+-					HPSA_SG_ATTACH | HPSA_ULD_ATTACH;
+-		}
++			i < nphysicals + (raid_ctlr_position == 0))
++			this_device->expose_device = 0;
++		else
++			this_device->expose_device = 1;
+ 
+ 		switch (this_device->devtype) {
+ 		case TYPE_ROM:
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 04f98eb..a6ead07 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -37,6 +37,7 @@ struct hpsa_scsi_dev_t {
+ 	unsigned int devtype;
+ 	int bus, target, lun;		/* as presented to the OS */
+ 	unsigned char scsi3addr[8];	/* as presented to the HW */
++	u8 expose_device;
+ #define RAID_CTLR_LUNID "\0\0\0\0\0\0\0\0"
+ 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
+ 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
+@@ -75,11 +76,6 @@ struct hpsa_scsi_dev_t {
+ 	struct hpsa_scsi_dev_t *phys_disk[RAID_MAP_MAX_ENTRIES];
+ 	int nphysical_disks;
+ 	int supports_aborts;
+-#define HPSA_DO_NOT_EXPOSE	0x0
+-#define HPSA_SG_ATTACH		0x1
+-#define HPSA_ULD_ATTACH		0x2
+-#define HPSA_SCSI_ADD		(HPSA_SG_ATTACH | HPSA_ULD_ATTACH)
+-	u8 expose_state;
+ };
+ 
+ struct reply_queue_buffer {
 
