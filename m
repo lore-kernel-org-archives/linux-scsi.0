@@ -1,30 +1,29 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: Re: [PATCH v2 5/5] ipr: Driver version 2.6.3.
-Date: Wed, 04 Nov 2015 13:51:25 -0500
-Message-ID: <20151104135125.Horde.HIVw5DBxrqbeogUGz2-MlQ1@ltc.linux.ibm.com>
+Subject: Re: [PATCH v2 1/5] ipr: Add delay to ensure coherent dumps.
+Date: Wed, 04 Nov 2015 13:51:47 -0500
+Message-ID: <20151104135147.Horde.LG3GY5en6f-2mgc8Ug2dmQ5@ltc.linux.ibm.com>
 References: <1446575170-18656-1-git-send-email-krisman@linux.vnet.ibm.com>
- <1446575170-18656-5-git-send-email-krisman@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e18.ny.us.ibm.com ([129.33.205.208]:49706 "EHLO
-	e18.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031139AbbKDSvf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 13:51:35 -0500
+Received: from e39.co.us.ibm.com ([32.97.110.160]:45661 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031287AbbKDSvw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 13:51:52 -0500
 Received: from localhost
-	by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Wed, 4 Nov 2015 13:51:34 -0500
-Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 0A61138C8046
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2015 13:51:32 -0500 (EST)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA4IpVer51445942
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2015 18:51:31 GMT
-Received: from d01av05.pok.ibm.com (localhost [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA4IoDhu025010
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2015 13:50:14 -0500
-In-Reply-To: <1446575170-18656-5-git-send-email-krisman@linux.vnet.ibm.com>
+	Wed, 4 Nov 2015 11:51:51 -0700
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5D8091FF004F
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2015 11:40:00 -0700 (MST)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA4IoOds3277258
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2015 11:50:24 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA4IpmJQ010791
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2015 11:51:48 -0700
+In-Reply-To: <1446575170-18656-1-git-send-email-krisman@linux.vnet.ibm.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -36,28 +35,113 @@ Reviewed-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 Thanks,
 Wendy
 
+
 Quoting Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>:
 
+> Add a holding pattern prior to collecting dump data, to wait for the IOA
+> indication that the Mailbox register is stable and won't change without
+> an explicit reset.  This ensures we'll be collecting meaningful dump
+> data, even when dumping right after an adapter reset.
+>
+> In the event of a timeout, we still force the dump, since a partial dump
+> still might be useful.
+>
+> Changes since v1:
+> 	- Fix checkpatch.pl warnings.
+>
 > Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 > ---
->  drivers/scsi/ipr.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/ipr.c | 51 +++++++++++++++++++++++++++++++++++++++------------
+>  drivers/scsi/ipr.h |  3 +++
+>  2 files changed, 42 insertions(+), 12 deletions(-)
 >
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index b62836d..238efab 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -8277,6 +8277,42 @@ static int  
+> ipr_reset_get_unit_check_job(struct ipr_cmnd *ipr_cmd)
+>  	return IPR_RC_JOB_RETURN;
+>  }
+>
+> +static int ipr_dump_mailbox_wait(struct ipr_cmnd *ipr_cmd)
+> +{
+> +	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+> +
+> +	ENTER;
+> +
+> +	if (ioa_cfg->sdt_state != GET_DUMP)
+> +		return IPR_RC_JOB_RETURN;
+> +
+> +	if (!ioa_cfg->sis64 || !ipr_cmd->u.time_left ||
+> +	    (readl(ioa_cfg->regs.sense_interrupt_reg) &
+> +	     IPR_PCII_MAILBOX_STABLE)) {
+> +
+> +		if (!ipr_cmd->u.time_left)
+> +			dev_err(&ioa_cfg->pdev->dev,
+> +				"Timed out waiting for Mailbox register.\n");
+> +
+> +		ioa_cfg->sdt_state = READ_DUMP;
+> +		ioa_cfg->dump_timeout = 0;
+> +		if (ioa_cfg->sis64)
+> +			ipr_reset_start_timer(ipr_cmd, IPR_SIS64_DUMP_TIMEOUT);
+> +		else
+> +			ipr_reset_start_timer(ipr_cmd, IPR_SIS32_DUMP_TIMEOUT);
+> +		ipr_cmd->job_step = ipr_reset_wait_for_dump;
+> +		schedule_work(&ioa_cfg->work_q);
+> +
+> +	} else {
+> +		ipr_cmd->u.time_left -= IPR_CHECK_FOR_RESET_TIMEOUT;
+> +		ipr_reset_start_timer(ipr_cmd,
+> +				      IPR_CHECK_FOR_RESET_TIMEOUT);
+> +	}
+> +
+> +	LEAVE;
+> +	return IPR_RC_JOB_RETURN;
+> +}
+> +
+>  /**
+>   * ipr_reset_restore_cfg_space - Restore PCI config space.
+>   * @ipr_cmd:	ipr command struct
+> @@ -8326,20 +8362,11 @@ static int  
+> ipr_reset_restore_cfg_space(struct ipr_cmnd *ipr_cmd)
+>
+>  	if (ioa_cfg->in_ioa_bringdown) {
+>  		ipr_cmd->job_step = ipr_ioa_bringdown_done;
+> +	} else if (ioa_cfg->sdt_state == GET_DUMP) {
+> +		ipr_cmd->job_step = ipr_dump_mailbox_wait;
+> +		ipr_cmd->u.time_left = IPR_WAIT_FOR_MAILBOX;
+>  	} else {
+>  		ipr_cmd->job_step = ipr_reset_enable_ioa;
+> -
+> -		if (GET_DUMP == ioa_cfg->sdt_state) {
+> -			ioa_cfg->sdt_state = READ_DUMP;
+> -			ioa_cfg->dump_timeout = 0;
+> -			if (ioa_cfg->sis64)
+> -				ipr_reset_start_timer(ipr_cmd, IPR_SIS64_DUMP_TIMEOUT);
+> -			else
+> -				ipr_reset_start_timer(ipr_cmd, IPR_SIS32_DUMP_TIMEOUT);
+> -			ipr_cmd->job_step = ipr_reset_wait_for_dump;
+> -			schedule_work(&ioa_cfg->work_q);
+> -			return IPR_RC_JOB_RETURN;
+> -		}
+>  	}
+>
+>  	LEAVE;
 > diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-> index b16bcd1..a34c7a5 100644
+> index e4fb17a..69257c4 100644
 > --- a/drivers/scsi/ipr.h
 > +++ b/drivers/scsi/ipr.h
-> @@ -39,8 +39,8 @@
->  /*
->   * Literals
->   */
-> -#define IPR_DRIVER_VERSION "2.6.2"
-> -#define IPR_DRIVER_DATE "(June 11, 2015)"
-> +#define IPR_DRIVER_VERSION "2.6.3"
-> +#define IPR_DRIVER_DATE "(October 17, 2015)"
+> @@ -279,6 +279,9 @@
+>  #define IPR_IPL_INIT_STAGE_TIME_MASK			0x0000ffff
+>  #define IPR_PCII_IPL_STAGE_CHANGE			(0x80000000 >> 0)
 >
->  /*
->   * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+> +#define IPR_PCII_MAILBOX_STABLE				(0x80000000 >> 4)
+> +#define IPR_WAIT_FOR_MAILBOX				(2 * HZ)
+> +
+>  #define IPR_PCII_IOA_TRANS_TO_OPER			(0x80000000 >> 0)
+>  #define IPR_PCII_IOARCB_XFER_FAILED			(0x80000000 >> 3)
+>  #define IPR_PCII_IOA_UNIT_CHECKED			(0x80000000 >> 4)
 > --
 > 2.1.0
 
