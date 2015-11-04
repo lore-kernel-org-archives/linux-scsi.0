@@ -1,16 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 21/27] hpsa: eliminate fake lun0 enclosures
-Date: Wed, 04 Nov 2015 15:52:03 -0600
-Message-ID: <20151104215203.15472.68970.stgit@brunhilda>
+Subject: [PATCH v2 23/27] hpsa: disable report lun data caching
+Date: Wed, 04 Nov 2015 15:52:16 -0600
+Message-ID: <20151104215216.15472.10559.stgit@brunhilda>
 References: <20151104214910.15472.23179.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53713 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030199AbbKDVz4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:55:56 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:32923 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030199AbbKDV4I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:56:08 -0500
 In-Reply-To: <20151104214910.15472.23179.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,111 +19,157 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Scott Teel <scott.teel@pmcs.com>
 
-We don't need to create fake enclosure devices at Lun0
-in external target array configurations anymore.
-This was done to support Pre-SCSI rev 5 controllers
-that didn't suppoprt report luns commands, so the
-SCSI layer had to scan targets. If there was no
-LUN at LUN 0, then the target scan would stop, and
-move to the next target.  Lun0 enclosure device
-was added to prevent sparsely-numbered LUNs from
-being missed.
+When external target arrays are present, disable the firmware's
+normal behavior of returning a cached copy of the report lun data,
+and force it to collect new data each time we request a report luns.
+
+This is necessary for external arrays, since there may be no
+reliable signal from the external array to the smart array when
+lun configuration changes, and thus when driver requests
+report luns, it may be stale data.
+
+Use diag options to turn off RPL data caching.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   68 ---------------------------------------------------
- 1 file changed, 68 deletions(-)
+ drivers/scsi/hpsa.c     |   85 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/hpsa_cmd.h |    3 ++
+ 2 files changed, 88 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1a67d63..c843dd2 100644
+index acfbbb2..91e7005 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3571,60 +3571,6 @@ static void figure_bus_target_lun(struct ctlr_info *h,
- 				0, lunid & 0x3fff);
+@@ -275,6 +275,7 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
+ static void hpsa_command_resubmit_worker(struct work_struct *work);
+ static u32 lockup_detected(struct ctlr_info *h);
+ static int detect_controller_lockup(struct ctlr_info *h);
++static void hpsa_disable_rld_caching(struct ctlr_info *h);
+ static int hpsa_luns_changed(struct ctlr_info *h);
+ 
+ static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+@@ -6380,6 +6381,24 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 			c->Request.CDB[8] = (size >> 8) & 0xFF;
+ 			c->Request.CDB[9] = size & 0xFF;
+ 			break;
++		case BMIC_SENSE_DIAG_OPTIONS:
++			c->Request.CDBLen = 16;
++			c->Request.type_attr_dir =
++				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
++			c->Request.Timeout = 0;
++			/* Spec says this should be BMIC_WRITE */
++			c->Request.CDB[0] = BMIC_READ;
++			c->Request.CDB[6] = BMIC_SENSE_DIAG_OPTIONS;
++			break;
++		case BMIC_SET_DIAG_OPTIONS:
++			c->Request.CDBLen = 16;
++			c->Request.type_attr_dir =
++					TYPE_ATTR_DIR(cmd_type,
++						ATTR_SIMPLE, XFER_WRITE);
++			c->Request.Timeout = 0;
++			c->Request.CDB[0] = BMIC_WRITE;
++			c->Request.CDB[6] = BMIC_SET_DIAG_OPTIONS;
++			break;
+ 		case HPSA_CACHE_FLUSH:
+ 			c->Request.CDBLen = 12;
+ 			c->Request.type_attr_dir =
+@@ -8080,6 +8099,7 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
+ 		hpsa_scan_start(h->scsi_host);
+ 		scsi_host_put(h->scsi_host);
+ 	} else if (h->discovery_polling) {
++		hpsa_disable_rld_caching(h);
+ 		if (hpsa_luns_changed(h)) {
+ 			struct Scsi_Host *sh = NULL;
+ 
+@@ -8417,6 +8437,71 @@ out:
+ 	kfree(flush_buf);
  }
  
--/*
-- * If there is no lun 0 on a target, linux won't find any devices.
-- * For the external targets (arrays), we have to manually detect the enclosure
-- * which is at lun zero, as CCISS_REPORT_PHYSICAL_LUNS doesn't report
-- * it for some reason.  *tmpdevice is the target we're adding,
-- * this_device is a pointer into the current element of currentsd[]
-- * that we're building up in update_scsi_devices(), below.
-- * lunzerobits is a bitmap that tracks which targets already have a
-- * lun 0 assigned.
-- * Returns 1 if an enclosure was added, 0 if not.
-- */
--static int add_ext_target_dev(struct ctlr_info *h,
--	struct hpsa_scsi_dev_t *tmpdevice,
--	struct hpsa_scsi_dev_t *this_device, u8 *lunaddrbytes,
--	unsigned long lunzerobits[], int *n_ext_target_devs)
--{
--	unsigned char scsi3addr[8];
--
--	if (test_bit(tmpdevice->target, lunzerobits))
--		return 0; /* There is already a lun 0 on this target. */
--
--	if (!is_logical_dev_addr_mode(lunaddrbytes))
--		return 0; /* It's the logical targets that may lack lun 0. */
--
--	if (!tmpdevice->external)
--		return 0; /* Only external target devices have this problem. */
--
--	if (tmpdevice->lun == 0) /* if lun is 0, then we have a lun 0. */
--		return 0;
--
--	memset(scsi3addr, 0, 8);
--	scsi3addr[3] = tmpdevice->target;
--	if (is_hba_lunid(scsi3addr))
--		return 0; /* Don't add the RAID controller here. */
--
--	if (is_scsi_rev_5(h))
--		return 0; /* p1210m doesn't need to do this. */
--
--	if (*n_ext_target_devs >= MAX_EXT_TARGETS) {
--		dev_warn(&h->pdev->dev, "Maximum number of external "
--			"target devices exceeded.  Check your hardware "
--			"configuration.");
--		return 0;
--	}
--
--	if (hpsa_update_device_info(h, scsi3addr, this_device, NULL))
--		return 0;
--	(*n_ext_target_devs)++;
--	hpsa_set_bus_target_lun(this_device,
--				tmpdevice->bus, tmpdevice->target, 0);
--	hpsa_update_device_supports_aborts(h, this_device, scsi3addr);
--	set_bit(tmpdevice->target, lunzerobits);
--	return 1;
--}
++/* Make controller gather fresh report lun data each time we
++ * send down a report luns request
++ */
++static void hpsa_disable_rld_caching(struct ctlr_info *h)
++{
++	u32 *options;
++	struct CommandList *c;
++	int rc;
++
++	/* Don't bother trying to set diag options if locked up */
++	if (unlikely(h->lockup_detected))
++		return;
++
++	options = kzalloc(sizeof(*options), GFP_KERNEL);
++	if (!options) {
++		dev_err(&h->pdev->dev,
++			"Error: failed to disable rld caching, during alloc.\n");
++		return;
++	}
++
++	c = cmd_alloc(h);
++
++	/* first, get the current diag options settings */
++	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
++		RAID_CTLR_LUNID, TYPE_CMD))
++		goto errout;
++
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++		PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if ((rc != 0) || (c->err_info->CommandStatus != 0))
++		goto errout;
++
++	/* Now, set the bit for disabling the RLD caching */
++	*options |= HPSA_DIAG_OPTS_DISABLE_RLD_CACHING;
++
++	if (fill_cmd(c, BMIC_SET_DIAG_OPTIONS, h, options, 4, 0,
++		RAID_CTLR_LUNID, TYPE_CMD))
++		goto errout;
++
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++		PCI_DMA_TODEVICE, NO_TIMEOUT);
++	if ((rc != 0)  || (c->err_info->CommandStatus != 0))
++		goto errout;
++
++	/* Now verify that it got set: */
++	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
++		RAID_CTLR_LUNID, TYPE_CMD))
++		goto errout;
++
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++		PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if ((rc != 0)  || (c->err_info->CommandStatus != 0))
++		goto errout;
++
++	if (*options && HPSA_DIAG_OPTS_DISABLE_RLD_CACHING)
++		goto out;
++
++errout:
++	dev_err(&h->pdev->dev,
++			"Error: failed to disable report lun data caching.\n");
++out:
++	cmd_free(h, c);
++	kfree(options);
++}
++
+ static void hpsa_shutdown(struct pci_dev *pdev)
+ {
+ 	struct ctlr_info *h;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index c83eaf1..4910344 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -287,6 +287,9 @@ struct SenseSubsystem_info {
+ #define BMIC_SENSE_CONTROLLER_PARAMETERS 0x64
+ #define BMIC_IDENTIFY_PHYSICAL_DEVICE 0x15
+ #define BMIC_IDENTIFY_CONTROLLER 0x11
++#define BMIC_SET_DIAG_OPTIONS 0xF4
++#define BMIC_SENSE_DIAG_OPTIONS 0xF5
++#define HPSA_DIAG_OPTS_DISABLE_RLD_CACHING 0x40000000
  
- /*
-  * Get address of physical disk used for an ioaccel2 mode command:
-@@ -3952,20 +3898,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		hpsa_update_device_supports_aborts(h, tmpdevice, lunaddrbytes);
- 		this_device = currentsd[ncurrent];
- 
--		/*
--		 * For external target devices, we have to insert a LUN 0 which
--		 * doesn't show up in CCISS_REPORT_PHYSICAL data, but there
--		 * is nonetheless an enclosure device there.  We have to
--		 * present that otherwise linux won't find anything if
--		 * there is no lun 0.
--		 */
--		if (add_ext_target_dev(h, tmpdevice, this_device,
--				lunaddrbytes, lunzerobits,
--				&n_ext_target_devs)) {
--			ncurrent++;
--			this_device = currentsd[ncurrent];
--		}
--
- 		*this_device = *tmpdevice;
- 		this_device->physical_device = physical_device;
- 
+ /* Command List Structure */
+ union SCSI3Addr {
 
