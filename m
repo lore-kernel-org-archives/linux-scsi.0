@@ -1,149 +1,197 @@
 From: mchristi@redhat.com
-Subject: [PATCH 32/32] block: remove __REQ op defs and reduce bi_op/bi_rw sizes
-Date: Wed,  4 Nov 2015 16:08:29 -0600
-Message-ID: <1446674909-5371-33-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 30/32] drbd: don't use bi_rw for operations
+Date: Wed,  4 Nov 2015 16:08:27 -0600
+Message-ID: <1446674909-5371-31-git-send-email-mchristi@redhat.com>
 References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 Cc: Mike Christie <mchristi@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patches removes the __REQ/REQ definitions for operations
-now defined by REQ_OPs.
-
-There is now no need for bi_rw to be a long, so this makes it a
-int. I also moved the priority to its own field, but I guess I could
-have just kept this in the bi_rw since there is only 16 bio related
-REQ_XYZ flags.
-
-bi_op is also no longer a bitmap, so it only needs to be a u8/char,
-so that is changed too.
-
-This is more of a RFC patch, because I still need to update the rest
-of the block layer code that was treating bi_rw as a long and I can
-also shrink the request->cmd_flags.
-
-I was not sure if or how much or where people wanted to stick things.
-There also appears to be room in the bi_flags field. If bi_flags is
-only using 13 bits and there are only 16 REQ_XYZs bits related bios,
-I could put them all in one variable if we wanted to go wild with trying
-to shrink the bio while I am at it..
+This removes drbd's bi_rw use for operations read, write,
+discard, write same, etc (REQ_OPs).
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- include/linux/bio.h         | 13 ++-----------
- include/linux/blk_types.h   | 23 ++++++-----------------
- include/trace/events/f2fs.h |  1 -
- 3 files changed, 8 insertions(+), 29 deletions(-)
+ drivers/block/drbd/drbd_actlog.c   |  2 +-
+ drivers/block/drbd/drbd_bitmap.c   |  1 -
+ drivers/block/drbd/drbd_main.c     | 15 ++++++++-------
+ drivers/block/drbd/drbd_receiver.c | 22 ++++++++--------------
+ drivers/block/drbd/drbd_worker.c   |  4 ++--
+ 5 files changed, 19 insertions(+), 25 deletions(-)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 7cbad7a..34a20cf 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -44,18 +44,9 @@
- #define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_CACHE_SHIFT)
- #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
+diff --git a/drivers/block/drbd/drbd_actlog.c b/drivers/block/drbd/drbd_actlog.c
+index ed2eafe..fc96a3c 100644
+--- a/drivers/block/drbd/drbd_actlog.c
++++ b/drivers/block/drbd/drbd_actlog.c
+@@ -159,7 +159,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
+ 		goto out;
+ 	bio->bi_private = device;
+ 	bio->bi_end_io = drbd_md_endio;
+-	bio->bi_rw = op | op_flags;
++	bio->bi_rw = op_flags;
+ 	bio->bi_op = op;
  
--/*
-- * upper 16 bits of bi_rw define the io priority of this bio
-- */
--#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
--#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
-+#define bio_prio(bio)		(bio)->bi_ioprio
- #define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
--
--#define bio_set_prio(bio, prio)		do {			\
--	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
--	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
--	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
--} while (0)
-+#define bio_set_prio(bio, prio)	((bio)->bi_ioprio = prio)
+ 	if (op != REQ_OP_WRITE && device->state.disk == D_DISKLESS && device->ldev == NULL)
+diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
+index 2ff407a..173a3d6 100644
+--- a/drivers/block/drbd/drbd_bitmap.c
++++ b/drivers/block/drbd/drbd_bitmap.c
+@@ -1022,7 +1022,6 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
  
- /*
-  * various member access, note that bio_data should of course not be used
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 581d353..c32ae3c 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -48,14 +48,9 @@ struct bio {
- 	struct block_device	*bi_bdev;
- 	unsigned int		bi_flags;	/* status, command, etc */
- 	int			bi_error;
--	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
--						 * top bits priority
--						 */
+ 	if (drbd_insert_fault(device, (rw == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
+ 		bio->bi_op = rw;
+-		bio->bi_rw |= rw;
+ 		bio_io_error(bio);
+ 	} else {
+ 		submit_bio(rw, 0, bio);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 9eb8039..d74178c 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -1602,15 +1602,16 @@ static int _drbd_send_zc_ee(struct drbd_peer_device *peer_device,
+ 	return 0;
+ }
+ 
+-static u32 bio_flags_to_wire(struct drbd_connection *connection, unsigned long bi_rw)
++static u32 bio_flags_to_wire(struct drbd_connection *connection,
++			     struct bio *bio)
+ {
+ 	if (connection->agreed_pro_version >= 95)
+-		return  (bi_rw & REQ_SYNC ? DP_RW_SYNC : 0) |
+-			(bi_rw & REQ_FUA ? DP_FUA : 0) |
+-			(bi_rw & REQ_FLUSH ? DP_FLUSH : 0) |
+-			(bi_rw & REQ_DISCARD ? DP_DISCARD : 0);
++		return  (bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0) |
++			(bio->bi_rw & REQ_FUA ? DP_FUA : 0) |
++			(bio->bi_rw & REQ_FLUSH ? DP_FLUSH : 0) |
++			(bio->bi_op == REQ_OP_DISCARD ? DP_DISCARD : 0);
+ 	else
+-		return bi_rw & REQ_SYNC ? DP_RW_SYNC : 0;
++		return bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0;
+ }
+ 
+ /* Used to send write or TRIM aka REQ_DISCARD requests
+@@ -1635,7 +1636,7 @@ int drbd_send_dblock(struct drbd_peer_device *peer_device, struct drbd_request *
+ 	p->sector = cpu_to_be64(req->i.sector);
+ 	p->block_id = (unsigned long)req;
+ 	p->seq_num = cpu_to_be32(atomic_inc_return(&device->packet_seq));
+-	dp_flags = bio_flags_to_wire(peer_device->connection, req->master_bio->bi_rw);
++	dp_flags = bio_flags_to_wire(peer_device->connection, req->master_bio);
+ 	if (device->state.conn >= C_SYNC_SOURCE &&
+ 	    device->state.conn <= C_PAUSED_SYNC_T)
+ 		dp_flags |= DP_MAY_SET_IN_SYNC;
+diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
+index 4e458bd..44193da 100644
+--- a/drivers/block/drbd/drbd_receiver.c
++++ b/drivers/block/drbd/drbd_receiver.c
+@@ -1418,7 +1418,7 @@ next_bio:
+ 	/* > peer_req->i.sector, unless this is the first bio */
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_bdev = device->ldev->backing_bdev;
+-	bio->bi_rw = op | op_flags;
++	bio->bi_rw = op_flags;
+ 	bio->bi_op = op;
+ 	bio->bi_private = peer_req;
+ 	bio->bi_end_io = drbd_peer_request_endio;
+@@ -1427,7 +1427,7 @@ next_bio:
+ 	bios = bio;
+ 	++n_bios;
+ 
+-	if (op & REQ_OP_DISCARD) {
++	if (op == REQ_OP_DISCARD) {
+ 		bio->bi_iter.bi_size = data_size;
+ 		goto submit;
+ 	}
+@@ -2132,8 +2132,7 @@ static unsigned long wire_flags_to_bio_flags(u32 dpf)
+ {
+ 	return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
+ 		(dpf & DP_FUA ? REQ_FUA : 0) |
+-		(dpf & DP_FLUSH ? REQ_FLUSH : 0) |
+-		(dpf & DP_DISCARD ? REQ_DISCARD : 0);
++		(dpf & DP_FLUSH ? REQ_FLUSH : 0);
+ }
+ 
+ static unsigned long wire_flags_to_bio_op(u32 dpf)
+@@ -2141,7 +2140,7 @@ static unsigned long wire_flags_to_bio_op(u32 dpf)
+ 	if (dpf & DP_DISCARD)
+ 		return REQ_OP_DISCARD;
+ 	else
+-		return 0;
++		return REQ_OP_WRITE;;
+ }
+ 
+ static void fail_postponed_requests(struct drbd_device *device, sector_t sector,
+@@ -2287,7 +2286,7 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
+ 	struct drbd_peer_request *peer_req;
+ 	struct p_data *p = pi->data;
+ 	u32 peer_seq = be32_to_cpu(p->seq_num);
+-	int op = REQ_OP_WRITE, op_flags = 0;
++	int op, op_flags;
+ 	u32 dp_flags;
+ 	int err, tp;
+ 
+@@ -2326,20 +2325,15 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
+ 	peer_req->flags |= EE_APPLICATION;
+ 
+ 	dp_flags = be32_to_cpu(p->dp_flags);
 -	/*
--	 * this will be a u8 in the next patches and bi_rw can be shrunk to
--	 * a u32. For compat in these transistional patches op is a int here.
+-	 * Tmp compat. We OR it here because other code assumes both the
+-	 * discard and write flags are set. In the next patches that
+-	 * will be cleaned up.
 -	 */
--	int			bi_op;		/* REQ_OP */
-+	unsigned int		bi_rw;		/* rq_flags_bits */
-+	unsigned short		bi_ioprio;
-+	u8			bi_op;		/* REQ_OP */
+-	op |= wire_flags_to_bio_op(dp_flags);
+-	op_flags |= wire_flags_to_bio_flags(dp_flags);
++	op = wire_flags_to_bio_op(dp_flags);
++	op_flags = wire_flags_to_bio_flags(dp_flags);
+ 	if (pi->cmd == P_TRIM) {
+ 		struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
+ 		peer_req->flags |= EE_IS_TRIM;
+ 		if (!blk_queue_discard(q))
+ 			peer_req->flags |= EE_IS_TRIM_USE_ZEROOUT;
+ 		D_ASSERT(peer_device, peer_req->i.size > 0);
+-		D_ASSERT(peer_device, op & REQ_OP_DISCARD);
++		D_ASSERT(peer_device, op == REQ_OP_DISCARD);
+ 		D_ASSERT(peer_device, peer_req->pages == NULL);
+ 	} else if (peer_req->pages == NULL) {
+ 		D_ASSERT(device, peer_req->i.size == 0);
+diff --git a/drivers/block/drbd/drbd_worker.c b/drivers/block/drbd/drbd_worker.c
+index 23e5500..f1c63d2 100644
+--- a/drivers/block/drbd/drbd_worker.c
++++ b/drivers/block/drbd/drbd_worker.c
+@@ -175,7 +175,7 @@ void drbd_peer_request_endio(struct bio *bio)
+ 	struct drbd_peer_request *peer_req = bio->bi_private;
+ 	struct drbd_device *device = peer_req->peer_device->device;
+ 	int is_write = bio_data_dir(bio) == WRITE;
+-	int is_discard = !!(bio->bi_rw & REQ_DISCARD);
++	int is_discard = (bio->bi_op == REQ_OP_DISCARD);
  
+ 	if (bio->bi_error && __ratelimit(&drbd_ratelimit_state))
+ 		drbd_warn(device, "%s: error=%d s=%llus\n",
+@@ -243,7 +243,7 @@ void drbd_request_endio(struct bio *bio)
  
- 	struct bvec_iter	bi_iter;
-@@ -151,7 +146,6 @@ struct bio {
-  */
- enum rq_flag_bits {
- 	/* common flags */
--	__REQ_WRITE,		/* not set, read. set, write */
- 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
- 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
- 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
-@@ -159,9 +153,7 @@ enum rq_flag_bits {
- 	__REQ_SYNC,		/* request is sync (sync write or read) */
- 	__REQ_META,		/* metadata io request */
- 	__REQ_PRIO,		/* boost priority in cfq */
--	__REQ_DISCARD,		/* request to discard sectors */
--	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
--	__REQ_WRITE_SAME,	/* write same block many times */
-+	__REQ_SECURE,		/* secure discard (used with REQ_OP_DISCARD) */
- 
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
-@@ -198,15 +190,12 @@ enum rq_flag_bits {
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
--#define REQ_WRITE		(1ULL << __REQ_WRITE)
- #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
- #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
- #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
- #define REQ_SYNC		(1ULL << __REQ_SYNC)
- #define REQ_META		(1ULL << __REQ_META)
- #define REQ_PRIO		(1ULL << __REQ_PRIO)
--#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
--#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
- 
-@@ -250,8 +239,8 @@ enum rq_flag_bits {
- enum req_op {
- 	REQ_OP_READ,
- 	REQ_OP_WRITE,
--	REQ_OP_DISCARD,
--	REQ_OP_WRITE_SAME,
-+	REQ_OP_DISCARD,		/* request to discard sectors */
-+	REQ_OP_WRITE_SAME,	/* write same block many times */
- };
- 
- #endif /* __LINUX_BLK_TYPES_H */
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index 0c7301b..2446a2f 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
- TRACE_DEFINE_ENUM(LFS);
- TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
--TRACE_DEFINE_ENUM(__REQ_WRITE);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
- TRACE_DEFINE_ENUM(__REQ_FLUSH);
+ 	/* to avoid recursion in __req_mod */
+ 	if (unlikely(bio->bi_error)) {
+-		if (bio->bi_rw & REQ_DISCARD)
++		if (bio->bi_op == REQ_OP_DISCARD)
+ 			what = (bio->bi_error == -EOPNOTSUPP)
+ 				? DISCARD_COMPLETED_NOTSUPP
+ 				: DISCARD_COMPLETED_WITH_ERROR;
 -- 
 1.8.3.1
