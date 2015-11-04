@@ -1,147 +1,129 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 19/27] hpsa: move scsi_add_device and scsi_remove_device
- calls to new function
-Date: Wed, 04 Nov 2015 15:51:51 -0600
-Message-ID: <20151104215151.15472.78753.stgit@brunhilda>
+Subject: [PATCH v2 21/27] hpsa: eliminate fake lun0 enclosures
+Date: Wed, 04 Nov 2015 15:52:03 -0600
+Message-ID: <20151104215203.15472.68970.stgit@brunhilda>
 References: <20151104214910.15472.23179.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:60997 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030199AbbKDVzo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:55:44 -0500
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53713 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030199AbbKDVz4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:55:56 -0500
 In-Reply-To: <20151104214910.15472.23179.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@pmcs.com>
+From: Scott Teel <scott.teel@pmcs.com>
 
-preparation for adding the sas transport class
+We don't need to create fake enclosure devices at Lun0
+in external target array configurations anymore.
+This was done to support Pre-SCSI rev 5 controllers
+that didn't suppoprt report luns commands, so the
+SCSI layer had to scan targets. If there was no
+LUN at LUN 0, then the target scan would stop, and
+move to the next target.  Lun0 enclosure device
+was added to prevent sparsely-numbered LUNs from
+being missed.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   71 ++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 45 insertions(+), 26 deletions(-)
+ drivers/scsi/hpsa.c |   68 ---------------------------------------------------
+ 1 file changed, 68 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c95ff8c..0af4c67 100644
+index 1a67d63..c843dd2 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1653,6 +1653,43 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
- 	}
+@@ -3571,60 +3571,6 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ 				0, lunid & 0x3fff);
  }
  
-+static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
-+{
-+	int rc = 0;
-+
-+	if (!h->scsi_host)
-+		return 1;
-+
-+	rc = scsi_add_device(h->scsi_host, device->bus,
-+					device->target, device->lun);
-+	return rc;
-+}
-+
-+static void hpsa_remove_device(struct ctlr_info *h,
-+			struct hpsa_scsi_dev_t *device)
-+{
-+	struct scsi_device *sdev = NULL;
-+
-+	if (!h->scsi_host)
-+		return;
-+
-+	sdev = scsi_device_lookup(h->scsi_host, device->bus,
-+						device->target, device->lun);
-+
-+	if (sdev) {
-+		scsi_remove_device(sdev);
-+		scsi_device_put(sdev);
-+	} else {
-+		/*
-+		 * We don't expect to get here.  Future commands
-+		 * to this device will get a selection timeout as
-+		 * if the device were gone.
-+		 */
-+		hpsa_show_dev_msg(KERN_WARNING, h, device,
-+					"didn't find device for removal.");
-+	}
-+}
-+
- static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 	struct hpsa_scsi_dev_t *sd[], int nsds)
- {
-@@ -1665,7 +1702,6 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 	unsigned long flags;
- 	struct hpsa_scsi_dev_t **added, **removed;
- 	int nadded, nremoved;
--	struct Scsi_Host *sh = NULL;
- 
- 	/*
- 	 * A reset can cause a device status to change
-@@ -1783,46 +1819,29 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 	if (!changes)
- 		goto free_and_out;
- 
--	sh = h->scsi_host;
--	if (sh == NULL) {
--		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
--		goto free_and_out;
+-/*
+- * If there is no lun 0 on a target, linux won't find any devices.
+- * For the external targets (arrays), we have to manually detect the enclosure
+- * which is at lun zero, as CCISS_REPORT_PHYSICAL_LUNS doesn't report
+- * it for some reason.  *tmpdevice is the target we're adding,
+- * this_device is a pointer into the current element of currentsd[]
+- * that we're building up in update_scsi_devices(), below.
+- * lunzerobits is a bitmap that tracks which targets already have a
+- * lun 0 assigned.
+- * Returns 1 if an enclosure was added, 0 if not.
+- */
+-static int add_ext_target_dev(struct ctlr_info *h,
+-	struct hpsa_scsi_dev_t *tmpdevice,
+-	struct hpsa_scsi_dev_t *this_device, u8 *lunaddrbytes,
+-	unsigned long lunzerobits[], int *n_ext_target_devs)
+-{
+-	unsigned char scsi3addr[8];
+-
+-	if (test_bit(tmpdevice->target, lunzerobits))
+-		return 0; /* There is already a lun 0 on this target. */
+-
+-	if (!is_logical_dev_addr_mode(lunaddrbytes))
+-		return 0; /* It's the logical targets that may lack lun 0. */
+-
+-	if (!tmpdevice->external)
+-		return 0; /* Only external target devices have this problem. */
+-
+-	if (tmpdevice->lun == 0) /* if lun is 0, then we have a lun 0. */
+-		return 0;
+-
+-	memset(scsi3addr, 0, 8);
+-	scsi3addr[3] = tmpdevice->target;
+-	if (is_hba_lunid(scsi3addr))
+-		return 0; /* Don't add the RAID controller here. */
+-
+-	if (is_scsi_rev_5(h))
+-		return 0; /* p1210m doesn't need to do this. */
+-
+-	if (*n_ext_target_devs >= MAX_EXT_TARGETS) {
+-		dev_warn(&h->pdev->dev, "Maximum number of external "
+-			"target devices exceeded.  Check your hardware "
+-			"configuration.");
+-		return 0;
 -	}
- 	/* Notify scsi mid layer of any removed devices */
- 	for (i = 0; i < nremoved; i++) {
- 		if (removed[i] == NULL)
- 			continue;
--		if (removed[i]->expose_device) {
--			struct scsi_device *sdev =
--				scsi_device_lookup(sh, removed[i]->bus,
--					removed[i]->target, removed[i]->lun);
--			if (sdev != NULL) {
--				scsi_remove_device(sdev);
--				scsi_device_put(sdev);
--			} else {
--				/*
--				 * We don't expect to get here.
--				 * future cmds to this device will get selection
--				 * timeout as if the device was gone.
--				 */
--				hpsa_show_dev_msg(KERN_WARNING, h, removed[i],
--					"didn't find device for removal.");
--			}
--		}
-+		if (removed[i]->expose_device)
-+			hpsa_remove_device(h, removed[i]);
- 		kfree(removed[i]);
- 		removed[i] = NULL;
- 	}
+-
+-	if (hpsa_update_device_info(h, scsi3addr, this_device, NULL))
+-		return 0;
+-	(*n_ext_target_devs)++;
+-	hpsa_set_bus_target_lun(this_device,
+-				tmpdevice->bus, tmpdevice->target, 0);
+-	hpsa_update_device_supports_aborts(h, this_device, scsi3addr);
+-	set_bit(tmpdevice->target, lunzerobits);
+-	return 1;
+-}
  
- 	/* Notify scsi mid layer of any added devices */
- 	for (i = 0; i < nadded; i++) {
-+		int rc = 0;
-+
- 		if (added[i] == NULL)
- 			continue;
- 		if (!(added[i]->expose_device))
- 			continue;
--		if (scsi_add_device(sh, added[i]->bus,
--			added[i]->target, added[i]->lun) == 0)
-+		rc = hpsa_add_device(h, added[i]);
-+		if (!rc)
- 			continue;
--		dev_warn(&h->pdev->dev, "addition failed, device not added.");
-+		dev_warn(&h->pdev->dev,
-+			"addition failed %d, device not added.", rc);
- 		/* now we have to remove it from h->dev,
- 		 * since it didn't get added to scsi mid layer
- 		 */
+ /*
+  * Get address of physical disk used for an ioaccel2 mode command:
+@@ -3952,20 +3898,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 		hpsa_update_device_supports_aborts(h, tmpdevice, lunaddrbytes);
+ 		this_device = currentsd[ncurrent];
+ 
+-		/*
+-		 * For external target devices, we have to insert a LUN 0 which
+-		 * doesn't show up in CCISS_REPORT_PHYSICAL data, but there
+-		 * is nonetheless an enclosure device there.  We have to
+-		 * present that otherwise linux won't find anything if
+-		 * there is no lun 0.
+-		 */
+-		if (add_ext_target_dev(h, tmpdevice, this_device,
+-				lunaddrbytes, lunzerobits,
+-				&n_ext_target_devs)) {
+-			ncurrent++;
+-			this_device = currentsd[ncurrent];
+-		}
+-
+ 		*this_device = *tmpdevice;
+ 		this_device->physical_device = physical_device;
+ 
 
