@@ -1,111 +1,44 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 3/3] ibmvscsi: Allow to configure maximum LUN
-Date: Wed, 4 Nov 2015 17:06:43 -0600
-Message-ID: <563A8F83.7010601@linux.vnet.ibm.com>
-References: <1446632451-22365-1-git-send-email-lvivier@redhat.com>
- <1446632451-22365-4-git-send-email-lvivier@redhat.com>
- <5639E904.1070100@suse.de> <5639F020.4010308@redhat.com>
- <563A01CC.20809@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 2/2] Restart list search after unlock in
+ scsi_remove_target
+Date: Wed, 4 Nov 2015 15:20:14 -0800
+Message-ID: <563A92AE.5000605@sandisk.com>
+References: <5633E9F2.5080209@sandisk.com> <5633EA98.8050604@sandisk.com>
+ <563A883C.9060501@sandisk.com>
+ <1446677072.2216.30.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <563A01CC.20809@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Laurent Vivier <lvivier@redhat.com>, martin.petersen@oracle.com
-Cc: tyreld@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0061.outbound.protection.outlook.com ([157.56.110.61]:26112
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030352AbbKDXUR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Nov 2015 18:20:17 -0500
+In-Reply-To: <1446677072.2216.30.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/04/2015 07:02 AM, Hannes Reinecke wrote:
-> On 11/04/2015 12:46 PM, Laurent Vivier wrote:
+On 11/04/2015 02:44 PM, James Bottomley wrote:
+> On Wed, 2015-11-04 at 14:35 -0800, Bart Van Assche wrote:
+>> (replying to my own e-mail)
 >>
+>> Hello Christoph,
 >>
->> On 04/11/2015 12:16, Hannes Reinecke wrote:
->>> On 11/04/2015 11:20 AM, Laurent Vivier wrote:
->>>> QEMU allows until 32 LUNs.
->>>>
->>>> Signed-off-by: Laurent Vivier <lvivier@redhat.com>
->>>> ---
->>>>  drivers/scsi/ibmvscsi/ibmvscsi.c | 5 ++++-
->>>>  1 file changed, 4 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
->>>> index 04de287..4480d3e 100644
->>>> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
->>>> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
->>>> @@ -84,6 +84,7 @@
->>>>   */
->>>>  static int max_id = 64;
->>>>  static int max_channel = 3;
->>>> +static int max_lun = 8;
->>>>  static int init_timeout = 300;
->>>>  static int login_timeout = 60;
->>>>  static int info_timeout = 30;
->>>> @@ -117,6 +118,8 @@ module_param_named(fast_fail, fast_fail, int, S_IRUGO | S_IWUSR);
->>>>  MODULE_PARM_DESC(fast_fail, "Enable fast fail. [Default=1]");
->>>>  module_param_named(client_reserve, client_reserve, int, S_IRUGO );
->>>>  MODULE_PARM_DESC(client_reserve, "Attempt client managed reserve/release");
->>>> +module_param(max_lun, int, S_IRUGO);
->>>> +MODULE_PARM_DESC(max_lun, "Maximum LUN value [Default=8]");
->>>>  
->>>>  static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
->>>>  				struct ibmvscsi_host_data *hostdata);
->>>> @@ -2289,7 +2292,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
->>>>  		goto init_pool_failed;
->>>>  	}
->>>>  
->>>> -	host->max_lun = 8;
->>>> +	host->max_lun = max_lun;
->>>>  	host->max_id = max_id;
->>>>  	host->max_channel = max_channel;
->>>>  	host->max_cmd_len = 16;
->>>>
->>> Please, don't do this.
->>>
->>> 'max_lun' should only be set if the HBA / transport has some hard
->>> limitations on the number of bytes it can use.
->>> Otherwise the scanning algorithm in scsi_scan.c should do the
->>> correct thing, independent on the 'max_lun' setting.
->>
->> So you are saying we can remove the line ?
->>
-> Ho-hum. In principle you could, as ibmvscsi is using SRP internally,
-> which does support 64 bit LUNs.
-> 
-> However, due to some weird design decisions there is
-> the function 'lun_from_dev()', which mangles the incoming LUN number
-> into something ... else.
-> Which leaves only 4 bits free for the actual LUN number, requiring
-> you to use max_lun = 16.
-> 
-> Personally I would just do away with that function and use the
-> incoming LUN numbers as is.
+>> Is it OK for you if I mention you as author of this e-mail ?
+>
+> Could you just both co-operate, especially since there's not much
+> difference between the patches.
 
-I pulled out my copy of SAM, what lun_from_dev is doing is translating
-the incoming bus / id / LUN to a LUN in the logical unit addressing format,
-as defined in 4.6.9 of SAM-4.
+Hello James and Christoph,
 
---------------------------------------
-|Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
---------------------------------------
-| n  | (10b) |       Target          |
---------------------------------------
-| n+1|   Bus     |        LUN        |
---------------------------------------
+Patch [2/2] is identical to the patch Christoph had posted except that 
+it has been rebased on top of patch [1/2] of this series. I will be 
+happy to step back if Christoph or someone else wants to take the lead 
+here. The only reason I started looking into this is that there was no 
+further progress on the original e-mail thread about this subject 
+(http://thread.gmane.org/gmane.linux.kernel/2052359).
 
-So this means, in the current implementation, we have 6 bits for target (max=63),
-3 bits for bus (max=7), and 5 bits for LUN (max=31). 
-
-It might not be a bad idea to enforce these limits on the module parameters. Otherwise
-we'll have a mess when we run through lun_from_dev...
-
-As far as eliminating lun_from_dev and just passing the LUN through, I don't think we
-can do that. The LUN list returned by Report LUNs to a VSCSI disk assumes we are
-doing the translation above.
-
--Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Bart.
