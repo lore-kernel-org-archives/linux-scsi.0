@@ -1,94 +1,70 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: [PATCH 1/3] isci: isci: remove SCSI host before detaching from SAS transport
-Date: Wed, 4 Nov 2015 17:48:08 +0100
-Message-ID: <CAMGffE=F6PuKNV1vgesePQ29GJUCoZaScq01pT-gqROjV4DL9w@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [dm-devel] [RFC PATCH 00/32] separate operations from flags in
+ the bio/request structs
+Date: Wed, 4 Nov 2015 08:49:00 -0800
+Message-ID: <563A36FC.6010001@sandisk.com>
+References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:38473 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030498AbbKDQs3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 11:48:29 -0500
-Received: by wmeg8 with SMTP id g8so46521342wme.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2015 08:48:28 -0800 (PST)
+Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:26149
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030498AbbKDQtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Nov 2015 11:49:06 -0500
+In-Reply-To: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jej B <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, intel-linux-scu@intel.com
-Cc: hch@lst.de, brood@attotech.com
+To: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 
-=46rom b1fb56b6d98610251253dc4b858df509df08e813 Mon Sep 17 00:00:00 200=
-1
-=46rom: Jack Wang <jinpu.wang@profitbricks.com>
-Date: Wed, 4 Nov 2015 09:46:05 +0100
-Subject: [PATCH 1/3] isci: remove SCSI host before detaching from SAS
- transport
+On 11/04/2015 08:32 AM, mchristi@redhat.com wrote:
+> There are a couple new block layer commands we are trying to add support
+> for in the near term:
+>
+> compare and write
+> http://www.spinics.net/lists/target-devel/msg07826.html
+>
+> copy offload/extended copy/xcopy
+> https://www.redhat.com/archives/dm-devel/2014-July/msg00070.html
+>
+> The problem is if we contine to add more commands we will have to one day
+> extend the cmd_flags/bi_rw fields again. To prevent that, this patchset
+> separates the operation (REQ_WRITE, REQ_DISCARD, REQ_WRITE_SAME, etc) from
+> the flags (REQ_SYNC, REQ_QUIET, etc) in the bio and request structs. In the
+> end of this set, we will have two fields bio->bi_op/request->op and
+> bio->bi_rw/request->cmd_flags.
+>
+> The patches were made against Jens's linux-block tree's for-linus branch:
+> https://git.kernel.org/cgit/linux/kernel/git/axboe/linux-block.git/log/?h=for-linus
+> (last commit a22c4d7e34402ccdf3414f64c50365436eba7b93).
+>
+> I have done some basic testing for a lot of the drivers and filesystems,
+> but I wanted to get comments before trying to track down more hardware/
+> systems for testing.
+>
+>
+> Known issues:
+> - REQ_FLUSH is still a flag, but should probably be a operation.
+>   For lower level drivers like SCSI where we only get a flush, it makes
+> more sense to be a operation. However, upper layers like filesystems
+> can send down flushes with writes, so it is more of a flag for them.
+> I am still working on this.
+>
+> - There is a regression with the dm flakey target. It currently
+> cannot corrupt the operation values.
+>
+> - The patchset is a little awkward. It touches so much code,
+> but I wanted to maintain git bisectibility, so there is lots of compat code
+> left around until the last patches where everyting is cleaned up.
 
-commit cff549e4860f ("scsi: proper state checking and module refcount
-handling in scsi_device_get")
-, the reference count of scsi device was changed, which could lead to w=
-hen
-rmmod with at least on drive attached, SCSI error handle will
-run into infinite loop, and lockup the system.
+Hello Mike,
 
-=46ix it by remove scsi host first, this way scsi core will not send
-commands down after detaching SAS transport.
+If you have to touch submit_bio() and submit_bio_wait(), how about 
+requiring the callers of these functions to set the cmd and flags 
+arguments in the bio structure and to leave out the cmd and flags 
+arguments from the submit_bio() and submit_bio_wait() functions ? A 
+(compile tested only) patch that implements this idea is available at 
+https://lkml.org/lkml/2014/6/2/173.
 
-This is a follow up fix for Benjamin's fix for pm80xx.
-
-See also:
-http://www.spinics.net/lists/linux-scsi/msg90088.html
-
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- drivers/scsi/isci/init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 0dfcabe..9e0d069 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -272,11 +272,11 @@ static void isci_unregister(struct isci_host *isc=
-i_host)
-  if (!isci_host)
-  return;
-
-+ shost =3D to_shost(isci_host);
-+ scsi_remove_host(shost);
-  sas_unregister_ha(&isci_host->sas_ha);
-
-- shost =3D to_shost(isci_host);
-  sas_remove_host(shost);
-- scsi_remove_host(shost);
-  scsi_host_put(shost);
- }
-
---=20
-1.9.1
-
-
---=20
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Best Regards,
-
-Jack Wang
-
-Linux Kernel Developer Storage
-ProfitBricks GmbH  The IaaS-Company.
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
-Tel: +49 30 5770083-42
-=46ax: +49 30 5770085-98
-Email: jinpu.wang@profitbricks.com
-URL: http://www.profitbricks.de
-
-Sitz der Gesellschaft: Berlin.
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B.
-Gesch=C3=A4ftsf=C3=BChrer: Andreas Gauger, Achim Weiss.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
