@@ -1,91 +1,69 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 2/2] Restart list search after unlock in
- scsi_remove_target
-Date: Wed, 4 Nov 2015 14:35:40 -0800
-Message-ID: <563A883C.9060501@sandisk.com>
-References: <5633E9F2.5080209@sandisk.com> <5633EA98.8050604@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [dm-devel] [PATCH 19/32] block: add helper to get
+ data dir from op
+Date: Wed, 4 Nov 2015 14:44:03 -0800
+Message-ID: <563A8A33.3000002@sandisk.com>
+References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
+	<1446674909-5371-20-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:59060
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030434AbbKDWfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Nov 2015 17:35:45 -0500
-In-Reply-To: <5633EA98.8050604@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <1446674909-5371-20-git-send-email-mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Cc: Mike Christie <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Dan Williams <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/30/2015 03:09 PM, Bart Van Assche wrote:
-> When dropping a lock while iterating a list we must restart the search
-> as other threads could have manipulated the list under us. Without this
-> we can get stuck in an endless loop.
+On 11/04/2015 02:08 PM, mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
+> From: Mike Christie <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 >
-> This is a slightly modified version of a patch from Christoph Hellwig
-> (see also https://www.spinics.net/lists/linux-scsi/msg89416.html).
+> In later patches the op will no longer be a bitmap, so we will
+> not have REQ_WRITE set for all non reads like discard, flush,
+> and write same. Drivers will still want to treat them as writes
+> for accounting reasons, so this patch adds a helper to translate
+> a op to a data direction.
 >
-> Reported-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: stable <stable@vger.kernel.org>
+> Signed-off-by: Mike Christie <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > ---
->   drivers/scsi/scsi_sysfs.c | 16 ++++------------
->   1 file changed, 4 insertions(+), 12 deletions(-)
+>   include/linux/blkdev.h | 12 ++++++++++++
+>   1 file changed, 12 insertions(+)
 >
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index b9fb61a..5a183d1 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1158,32 +1158,24 @@ static void __scsi_remove_target(struct scsi_target *starget)
->   void scsi_remove_target(struct device *dev)
->   {
->   	struct Scsi_Host *shost = dev_to_shost(dev->parent);
-> -	struct scsi_target *starget, *last = NULL;
-> +	struct scsi_target *starget;
->   	unsigned long flags;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 19c2e94..cf5f518 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -586,6 +586,18 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
 >
-> -	/* remove targets being careful to lookup next entry before
-> -	 * deleting the last
-> -	 */
-> +restart:
->   	spin_lock_irqsave(shost->host_lock, flags);
->   	list_for_each_entry(starget, &shost->__targets, siblings) {
->   		if (starget->reaped)
->   			continue;
->   		if (starget->dev.parent == dev || &starget->dev == dev) {
-> -			/* assuming new targets arrive at the end */
->   			kref_get(&starget->reap_ref);
->   			starget->reaped = true;
->   			spin_unlock_irqrestore(shost->host_lock, flags);
-> -			if (last)
-> -				scsi_target_reap(last);
-> -			last = starget;
->   			__scsi_remove_target(starget);
-> -			spin_lock_irqsave(shost->host_lock, flags);
-> +			scsi_target_reap(starget);
-> +			goto restart;
->   		}
->   	}
->   	spin_unlock_irqrestore(shost->host_lock, flags);
-> -
-> -	if (last)
-> -		scsi_target_reap(last);
->   }
->   EXPORT_SYMBOL(scsi_remove_target);
+>   #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+>
+> +/*
+> + * Non REQ_OP_WRITE requests like discard, write same, etc, are
+> + * considered WRITEs.
+> + */
+> +static inline int op_to_data_dir(int op)
+> +{
+> +	if (op == REQ_OP_READ)
+> +		return READ;
+> +	else
+> +		return WRITE;
+> +}
+> +
+>   #define rq_data_dir(rq)		((int)((rq)->cmd_flags & 1))
+>
+>   /*
+>
 
-(replying to my own e-mail)
-
-Hello Christoph,
-
-Is it OK for you if I mention you as author of this e-mail ?
-
-Thanks,
+How about introducing two functions - op_is_write() and op_is_read() ? I 
+think that approach will result in shorter and easier to read code in 
+the contexts where these functions are used.
 
 Bart.
-
-
