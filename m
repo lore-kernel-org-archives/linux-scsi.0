@@ -1,49 +1,51 @@
-From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 27/27] hpsa: bump the driver version
-Date: Wed, 04 Nov 2015 15:52:40 -0600
-Message-ID: <20151104215240.15472.92049.stgit@brunhilda>
-References: <20151104214910.15472.23179.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:33052 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030986AbbKDV4d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:56:33 -0500
-In-Reply-To: <20151104214910.15472.23179.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+From: mchristi@redhat.com
+Subject: [RESEND RFC PATCH 00/32] separate operations from flags in the bio/request structs
+Date: Wed,  4 Nov 2015 16:07:57 -0600
+Message-ID: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
-To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
 
-Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Gerry Morong <gerry.morong.pmcs.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Don Brace <don.brace@pmcs.com>
----
- drivers/scsi/hpsa.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+This is just a resend of the patchset from earlier today. There was
+a error in the middle of sending the set, so it looks like 10 - 32 got
+dropped.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5f02a60..57166e6 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -55,8 +55,11 @@
- #include "hpsa_cmd.h"
- #include "hpsa.h"
- 
--/* HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.' */
--#define HPSA_DRIVER_VERSION "3.4.10-0"
-+/*
-+ * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
-+ * with an optional trailing '-' followed by a byte value (0-255).
-+ */
-+#define HPSA_DRIVER_VERSION "3.4.14-0"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
- #define HPSA "hpsa"
- 
+There are a couple new block layer commands we are trying to add support
+for in the near term:
 
+compare and write
+http://www.spinics.net/lists/target-devel/msg07826.html
+
+copy offload/extended copy/xcopy
+https://www.redhat.com/archives/dm-devel/2014-July/msg00070.html
+
+The problem is if we contine to add more commands we will have to one day
+extend the cmd_flags/bi_rw fields again. To prevent that, this patchset
+separates the operation (REQ_WRITE, REQ_DISCARD, REQ_WRITE_SAME, etc) from
+the flags (REQ_SYNC, REQ_QUIET, etc) in the bio and request structs. In the
+end of this set, we will have two fields bio->bi_op/request->op and
+bio->bi_rw/request->cmd_flags.
+
+The patches were made against Jens's linux-block tree's for-linus branch:
+https://git.kernel.org/cgit/linux/kernel/git/axboe/linux-block.git/log/?h=for-linus
+(last commit a22c4d7e34402ccdf3414f64c50365436eba7b93).
+
+I have done some basic testing for a lot of the drivers and filesystems,
+but I wanted to get comments before trying to track down more hardware/
+systems for testing.
+
+
+Known issues:
+- REQ_FLUSH is still a flag, but should probably be a operation.
+ For lower level drivers like SCSI where we only get a flush, it makes
+more sense to be a operation. However, upper layers like filesystems
+can send down flushes with writes, so it is more of a flag for them.
+I am still working on this.
+
+- There is a regression with the dm flakey target. It currently
+cannot corrupt the operation values.
+
+- The patchset is a little awkward. It touches so much code,
+but I wanted to maintain git bisectibility, so there is lots of compat code
+left around until the last patches where everyting is cleaned up.
