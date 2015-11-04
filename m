@@ -1,73 +1,88 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 09/27] hpsa: correct transfer length for 6 byte
- read/write commands
-Date: Wed, 04 Nov 2015 15:50:50 -0600
-Message-ID: <20151104215050.15472.95520.stgit@brunhilda>
+Subject: [PATCH v2 10/27] hpsa: fix hpsa_adjust_hpsa_scsi_table
+Date: Wed, 04 Nov 2015 15:50:56 -0600
+Message-ID: <20151104215056.15472.70511.stgit@brunhilda>
 References: <20151104214910.15472.23179.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:60772 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030228AbbKDVym (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:54:42 -0500
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53421 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030228AbbKDVys (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2015 16:54:48 -0500
 In-Reply-To: <20151104214910.15472.23179.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-handle block counts of 0. Cleanup block and block count calculations.
+Fix a NULL pointer issue in the driver when devices are removed
+during a reset.
 
-Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c |   16 ++++++++++++++++
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 17 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ce0341a..ae9968b 100644
+index ae9968b..382cb5d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4012,19 +4012,14 @@ static int fixup_ioaccel_cdb(u8 *cdb, int *cdb_len)
- 	case READ_6:
- 	case READ_12:
- 		if (*cdb_len == 6) {
--			block = (((u32) cdb[2]) << 8) | cdb[3];
-+			block = get_unaligned_be16(&cdb[2]);
- 			block_cnt = cdb[4];
-+			if (block_cnt == 0)
-+				block_cnt = 256;
- 		} else {
- 			BUG_ON(*cdb_len != 12);
--			block = (((u32) cdb[2]) << 24) |
--				(((u32) cdb[3]) << 16) |
--				(((u32) cdb[4]) << 8) |
--				cdb[5];
--			block_cnt =
--				(((u32) cdb[6]) << 24) |
--				(((u32) cdb[7]) << 16) |
--				(((u32) cdb[8]) << 8) |
--				cdb[9];
-+			block = get_unaligned_be32(&cdb[2]);
-+			block_cnt = get_unaligned_be32(&cdb[6]);
- 		}
- 		if (block_cnt > 0xffff)
- 			return IO_ACCEL_INELIGIBLE;
-@@ -4410,9 +4405,7 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 	case WRITE_6:
- 		is_write = 1;
- 	case READ_6:
--		first_block =
--			(((u64) cmd->cmnd[2]) << 8) |
--			cmd->cmnd[3];
-+		first_block = get_unaligned_be16(&cmd->cmnd[2]);
- 		block_cnt = cmd->cmnd[4];
- 		if (block_cnt == 0)
- 			block_cnt = 256;
+@@ -1663,6 +1663,15 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
+ 	int nadded, nremoved;
+ 	struct Scsi_Host *sh = NULL;
+ 
++	/*
++	 * A reset can cause a device status to change
++	 * re-schedule the scan to see what happened.
++	 */
++	if (h->reset_in_progress) {
++		h->drv_req_rescan = 1;
++		return;
++	}
++
+ 	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
+ 	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
+ 
+@@ -1771,6 +1780,10 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
+ 		goto free_and_out;
+ 
+ 	sh = h->scsi_host;
++	if (sh == NULL) {
++		dev_warn(&h->pdev->dev, "%s: scsi_host is null\n", __func__);
++		goto free_and_out;
++	}
+ 	/* Notify scsi mid layer of any removed devices */
+ 	for (i = 0; i < nremoved; i++) {
+ 		if (removed[i] == NULL)
+@@ -5234,12 +5247,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 
+ 	hpsa_show_dev_msg(KERN_WARNING, h, dev, "resetting");
+ 
++	h->reset_in_progress = 1;
++
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+ 	rc = hpsa_do_reset(h, dev, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+ 			   DEFAULT_REPLY_QUEUE);
+ 	snprintf(msg, sizeof(msg), "reset %s",
+ 		 rc == 0 ? "completed successfully" : "failed");
+ 	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
++	h->reset_in_progress = 0;
+ 	return rc == 0 ? SUCCESS : FAILED;
+ }
+ 
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index b173c0e..dc113c1a 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -271,6 +271,7 @@ struct ctlr_info {
+ 	wait_queue_head_t abort_cmd_wait_queue;
+ 	wait_queue_head_t event_sync_wait_queue;
+ 	struct mutex reset_mutex;
++	u8 reset_in_progress;
+ };
+ 
+ struct offline_device_entry {
 
