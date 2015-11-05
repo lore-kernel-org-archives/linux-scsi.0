@@ -1,71 +1,47 @@
-From: Bob Peterson <rpeterso@redhat.com>
-Subject: Re: [RESEND RFC PATCH 00/32] separate operations from flags in the
- bio/request structs
-Date: Thu, 5 Nov 2015 11:44:19 -0500 (EST)
-Message-ID: <731509878.4925375.1446741859986.JavaMail.zimbra@redhat.com>
-References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/2] Restart list search after unlock in scsi_remove_target
+Date: Thu, 5 Nov 2015 08:55:59 -0800
+Message-ID: <CAPcyv4iO0iX2_DCSKz8aXSqeu22bO=kq9CtRtH-MSrKm4ouxfg@mail.gmail.com>
+References: <5633E9F2.5080209@sandisk.com>
+	<5633EA98.8050604@sandisk.com>
+	<563A883C.9060501@sandisk.com>
+	<1446677072.2216.30.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38098 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030726AbbKEQ4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2015 11:56:00 -0500
+Received: by wmeg8 with SMTP id g8so18989972wme.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2015 08:55:59 -0800 (PST)
+In-Reply-To: <1446677072.2216.30.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
------ Original Message -----
-> This is just a resend of the patchset from earlier today. There was
-> a error in the middle of sending the set, so it looks like 10 - 32 got
-> dropped.
-> 
-> There are a couple new block layer commands we are trying to add support
-> for in the near term:
-> 
-> compare and write
-> http://www.spinics.net/lists/target-devel/msg07826.html
-> 
-> copy offload/extended copy/xcopy
-> https://www.redhat.com/archives/dm-devel/2014-July/msg00070.html
-> 
-> The problem is if we contine to add more commands we will have to one day
-> extend the cmd_flags/bi_rw fields again. To prevent that, this patchset
-> separates the operation (REQ_WRITE, REQ_DISCARD, REQ_WRITE_SAME, etc) from
-> the flags (REQ_SYNC, REQ_QUIET, etc) in the bio and request structs. In the
-> end of this set, we will have two fields bio->bi_op/request->op and
-> bio->bi_rw/request->cmd_flags.
-> 
-> The patches were made against Jens's linux-block tree's for-linus branch:
-> https://git.kernel.org/cgit/linux/kernel/git/axboe/linux-block.git/log/?h=for-linus
-> (last commit a22c4d7e34402ccdf3414f64c50365436eba7b93).
-> 
-> I have done some basic testing for a lot of the drivers and filesystems,
-> but I wanted to get comments before trying to track down more hardware/
-> systems for testing.
-> 
-> 
-> Known issues:
-> - REQ_FLUSH is still a flag, but should probably be a operation.
->  For lower level drivers like SCSI where we only get a flush, it makes
-> more sense to be a operation. However, upper layers like filesystems
-> can send down flushes with writes, so it is more of a flag for them.
-> I am still working on this.
-> 
-> - There is a regression with the dm flakey target. It currently
-> cannot corrupt the operation values.
-> 
-> - The patchset is a little awkward. It touches so much code,
-> but I wanted to maintain git bisectibility, so there is lots of compat code
-> left around until the last patches where everyting is cleaned up.
+On Wed, Nov 4, 2015 at 2:44 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+[..]
+> The fundamental problem with this is how have the conditions that caused
+> us to move away from list restart:
+>
+> commit bc3f02a795d3b4faa99d37390174be2a75d091bd
+> Author: Dan Williams <djbw@fb.com>
+> Date:   Tue Aug 28 22:12:10 2012 -0700
+>
+>     [SCSI] scsi_remove_target: fix softlockup regression on hot remove
+>
+> Which was triggered by this bug report
+>
+> http://thread.gmane.org/gmane.linux.kernel/1348679
+>
+> been mitigated?
+>
 
-Hi Mike,
+I think it has because the problem that led to that report was the
+fact that scsi_target_destroy() did not advance the target state, but
+we changed that in f2495e228fce.
 
-The GFS2 patches in patches 11, 14, 16 and 23 all look correct.
-You can add my:
-Reviewed-by: Bob Peterson <rpeterso@redhat.com>
-to those, but I have not reviewed the non-GFS2 bits.
-
-Regards,
-
-Bob Peterson
-Red Hat File Systems
+http://marc.info/?l=linux-scsi&m=144527527308725&w=2
