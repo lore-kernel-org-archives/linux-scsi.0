@@ -1,67 +1,122 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [dm-devel] [PATCH 19/32] block: add helper to get data dir from
- op
-Date: Thu, 5 Nov 2015 11:34:07 -0600
-Message-ID: <563B930F.7040705@redhat.com>
-References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
- <1446674909-5371-20-git-send-email-mchristi@redhat.com>
- <563A8A33.3000002@sandisk.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 3/4] scsi: fix compiler warning for sg
+Date: Thu, 5 Nov 2015 20:07:03 +0200
+Message-ID: <CAHp75VeVW3KRmCAa0mE4vPVus4Y9iFf0_PhV+kbvUziDWgTaOw@mail.gmail.com>
+References: <1446698789-19308-1-git-send-email-okaya@codeaurora.org>
+	<1446698789-19308-3-git-send-email-okaya@codeaurora.org>
+	<CAHp75VfB1ToEZXRbxeWkU7xsWJkMz3v3A1O5QsH9LiiV4Be-iw@mail.gmail.com>
+	<563B7180.2000405@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <563A8A33.3000002@sandisk.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <563B7180.2000405@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/04/2015 04:44 PM, Bart Van Assche wrote:
-> On 11/04/2015 02:08 PM, mchristi@redhat.com wrote:
->> From: Mike Christie <mchristi@redhat.com>
+On Thu, Nov 5, 2015 at 5:10 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>
+>
+> On 11/5/2015 3:48 AM, Andy Shevchenko wrote:
 >>
->> In later patches the op will no longer be a bitmap, so we will
->> not have REQ_WRITE set for all non reads like discard, flush,
->> and write same. Drivers will still want to treat them as writes
->> for accounting reasons, so this patch adds a helper to translate
->> a op to a data direction.
+>> On Thu, Nov 5, 2015 at 6:46 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>
+>>> The MULDIV macro has been designed for small
+>>> numbers. It emits an overflow warning on 64 bit
+>>> systems. This patch places type casts in the
+>>> parameters to fix the compiler warning.
+>>>
+>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>> ---
+>>>   drivers/scsi/sg.c | 5 ++++-
+>>>   1 file changed, 4 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>>> index 9d7b7db..eb2739d 100644
+>>> --- a/drivers/scsi/sg.c
+>>> +++ b/drivers/scsi/sg.c
+>>> @@ -88,7 +88,10 @@ static void sg_proc_cleanup(void);
+>>>    * Of course an overflow is inavoidable if the result of muldiv doesn't
+>>> fit
+>>>    * in 32 bits.
+>>>    */
+>>> -#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) *
+>>> MUL))
+>>> +static inline u64 MULDIV(u64 X, u32 MUL, u32 DIV)
+>>> +{
+>>> +       return ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL));
+>>> +}
 >>
->> Signed-off-by: Mike Christie <mchristi@redhat.com>
->> ---
->>   include/linux/blkdev.h | 12 ++++++++++++
->>   1 file changed, 12 insertions(+)
 >>
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index 19c2e94..cf5f518 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -586,6 +586,18 @@ static inline void queue_flag_clear(unsigned int
->> flag, struct request_queue *q)
+>> Like kbuild bot already told you it would be nice to think of 32-bit
+>> architectures.
 >>
->>   #define list_entry_rq(ptr)    list_entry((ptr), struct request,
->> queuelist)
+>> Moreover we have mult_frac() macro already for 32-bit numbers.
 >>
->> +/*
->> + * Non REQ_OP_WRITE requests like discard, write same, etc, are
->> + * considered WRITEs.
->> + */
->> +static inline int op_to_data_dir(int op)
->> +{
->> +    if (op == REQ_OP_READ)
->> +        return READ;
->> +    else
->> +        return WRITE;
->> +}
->> +
->>   #define rq_data_dir(rq)        ((int)((rq)->cmd_flags & 1))
+>> For 64 bit numbers you need to do do_div().
 >>
->>   /*
+>> Like:
 >>
-> 
-> How about introducing two functions - op_is_write() and op_is_read() ? I
-> think that approach will result in shorter and easier to read code in
-> the contexts where these functions are used.
-> 
+>> static inline u64 mult_frac64(u64 x, u32 m, u32 n)
+>> {
+>> u64 ret;
+>>
+>> ret = do_div(x, n);
+>> return ret * m;
+>> }
+>>
+>
+> OK, I didn't know that we had such a macro. To make this look like the other
+> macro, I can do this.
+>
+> static inline u64 mult_frac64(u64 x, u32 numer, u32 denom)
+> {
+>         u64 quot;
+>         u64 rem  = x % denom;
+>         u64 rem2;
+>
+>         quot = x;
+>         do_div(quot, denom);
+>
+>         rem2 = rem * numer;
+>         do_div(rem2, denom);
+>
+>         return (quot * numer) + rem2;
+> }
 
-I can do that. You are right in how they are used. I just did the above,
-to follow the other *_data_dir calls.
+Might be I did a wrong smaple, but do_div() returns two values actually.
+You perhaps overlooked it and thus wrote something redundant above.
 
+>
+> #define MULDIV(X,MUL,DIV)       mult_frac64(X, MUL, DIV)
+>
+>>
+>>>
+>>>   #define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
+>>>
+>>> --
+>>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+>>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+>>> Linux Foundation Collaborative Project
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>>
+>
+> --
+> Sinan Kaya
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
+> Foundation Collaborative Project
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
