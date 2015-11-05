@@ -1,55 +1,41 @@
 From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH 1/4] scsi: mpt2sas: try 64 bit DMA when 32 bit DMA fails
-Date: Wed,  4 Nov 2015 23:46:26 -0500
-Message-ID: <1446698789-19308-1-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH 3/4] scsi: fix compiler warning for sg
+Date: Wed,  4 Nov 2015 23:46:28 -0500
+Message-ID: <1446698789-19308-3-git-send-email-okaya@codeaurora.org>
+References: <1446698789-19308-1-git-send-email-okaya@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1446698789-19308-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
-Cc: Sinan Kaya <okaya@codeaurora.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, MPT-FusionLinux.pdl@avagotech.com, linux-kernel@vger.kernel.org
+Cc: Sinan Kaya <okaya@codeaurora.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Current code gives up when 32 bit DMA is not supported.
-This patch tests 64 bit support before bailing out in
-such conditions.
+The MULDIV macro has been designed for small
+numbers. It emits an overflow warning on 64 bit
+systems. This patch places type casts in the
+parameters to fix the compiler warning.
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+ drivers/scsi/sg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index c167911..c61c82a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1217,8 +1217,27 @@ _base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
- 		ioc->base_add_sg_single = &_base_add_sg_single_32;
- 		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
- 		ioc->dma_mask = 32;
--	} else
-+	} else {
-+		/* Try 64 bit, 32 bit failed */
-+		consistent_dma_mask = DMA_BIT_MASK(64);
-+
-+		if (sizeof(dma_addr_t) > 4) {
-+			const uint64_t required_mask =
-+				dma_get_required_mask(&pdev->dev);
-+			if ((required_mask > DMA_BIT_MASK(32)) &&
-+				!pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) &&
-+				!pci_set_consistent_dma_mask(pdev,
-+							consistent_dma_mask)) {
-+				ioc->base_add_sg_single =
-+					&_base_add_sg_single_64;
-+				ioc->sge_size = sizeof(Mpi2SGESimple64_t);
-+				ioc->dma_mask = 64;
-+				goto out;
-+			}
-+		}
-+
- 		return -ENODEV;
-+	}
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 9d7b7db..eb2739d 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -88,7 +88,10 @@ static void sg_proc_cleanup(void);
+  * Of course an overflow is inavoidable if the result of muldiv doesn't fit
+  * in 32 bits.
+  */
+-#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
++static inline u64 MULDIV(u64 X, u32 MUL, u32 DIV)
++{
++	return ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL));
++}
  
-  out:
- 	si_meminfo(&s);
+ #define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
+ 
 -- 
 Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
