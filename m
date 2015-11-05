@@ -1,39 +1,34 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: [PATCH 2/2] megaraid_sas: Fix sparse warning
-Date: Thu,  5 Nov 2015 21:17:38 +0530
-Message-ID: <1446738458-12425-3-git-send-email-Sumit.Saxena@avagotech.com>
-References: <1446738458-12425-1-git-send-email-Sumit.Saxena@avagotech.com>
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 18/27] hpsa: refactor hpsa_figure_bus_target_lun
+Date: Thu, 5 Nov 2015 10:18:13 -0600
+Message-ID: <3ABFC66C-FEF5-4EC8-88F7-5B149E68A15F@linux.vnet.ibm.com>
+References: <20151104214910.15472.23179.stgit@brunhilda> <20151104215145.15472.70649.stgit@brunhilda>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34390 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030685AbbKEPsO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2015 10:48:14 -0500
-Received: by padhx2 with SMTP id hx2so82778189pad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2015 07:48:14 -0800 (PST)
-In-Reply-To: <1446738458-12425-1-git-send-email-Sumit.Saxena@avagotech.com>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:52675 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162166AbbKEQS1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2015 11:18:27 -0500
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Thu, 5 Nov 2015 09:18:26 -0700
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 7497B3E40044
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2015 09:18:17 -0700 (MST)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tA5GH8PZ8323406
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2015 09:17:08 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tA5GIGWr022950
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2015 09:18:17 -0700
+In-Reply-To: <20151104215145.15472.70649.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jbottomley@odin.com, martin.petersen@oracle.com, thenzl@redhat.com
-Cc: kashyap.desai@avagotech.com, Sumit Saxena <sumit.saxena@avagotech.com>
+To: Don Brace <don.brace@pmcs.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 72c731d..bdc2606 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1865,7 +1865,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 		/* Want to send all IO via FW path */
- 		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
- 		pRAID_Context->configSeqNum = 0;
--		io_request->DevHandle = le16_to_cpu(0xFFFF);
-+		io_request->DevHandle = cpu_to_le16(0xFFFF);
- 	}
- 
- 	cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
--- 
-1.7.1
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
