@@ -1,56 +1,154 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] Restart list search after unlock in
- scsi_remove_target
-Date: Thu, 05 Nov 2015 09:05:47 -0800
-Message-ID: <1446743147.2211.19.camel@HansenPartnership.com>
-References: <5633E9F2.5080209@sandisk.com> <5633EA98.8050604@sandisk.com>
-	 <563A883C.9060501@sandisk.com>
-	 <1446677072.2216.30.camel@HansenPartnership.com>
-	 <CAPcyv4iO0iX2_DCSKz8aXSqeu22bO=kq9CtRtH-MSrKm4ouxfg@mail.gmail.com>
+Subject: [GIT PULL] first round of SCSI updates for the 4.3+ merge window
+Date: Thu, 05 Nov 2015 09:17:38 -0800
+Message-ID: <1446743858.2211.24.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59464 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030726AbbKERFt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2015 12:05:49 -0500
-In-Reply-To: <CAPcyv4iO0iX2_DCSKz8aXSqeu22bO=kq9CtRtH-MSrKm4ouxfg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-11-05 at 08:55 -0800, Dan Williams wrote:
-> On Wed, Nov 4, 2015 at 2:44 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> [..]
-> > The fundamental problem with this is how have the conditions that caused
-> > us to move away from list restart:
-> >
-> > commit bc3f02a795d3b4faa99d37390174be2a75d091bd
-> > Author: Dan Williams <djbw@fb.com>
-> > Date:   Tue Aug 28 22:12:10 2012 -0700
-> >
-> >     [SCSI] scsi_remove_target: fix softlockup regression on hot remove
-> >
-> > Which was triggered by this bug report
-> >
-> > http://thread.gmane.org/gmane.linux.kernel/1348679
-> >
-> > been mitigated?
-> >
-> 
-> I think it has because the problem that led to that report was the
-> fact that scsi_target_destroy() did not advance the target state, but
-> we changed that in f2495e228fce.
-> 
-> http://marc.info/?l=linux-scsi&m=144527527308725&w=2
+This patch includes a couple of minor fixes, some core changes to help
+issues we're still seeing with the suspend/resume code and updates to
+lpfc and cxlflash.
 
-Great, thanks, we'll put Christoph's version in then, because it can be
-cc'd to stable without problems.  Bart, you can redo your state updates
-on top of this because that's inessential to the current problem.
+We're (actually Martin Petersen is) trying to wrangle a mpt2/mpt3sas
+merger for the merge window which will help enormously with the
+maintenance burden, so there will be another round before it closes
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The Short Changelog is:
+
+Alan Stern (2):
+      SCSI: fix bug in scsi_dev_info_list matching
+      SCSI: refactor device-matching code in scsi_devinfo.c
+
+Ales Novak (1):
+      fix: lpfc_send_rscn_event sends bigger buffer size
+
+Bodo Stroesser (1):
+      lpfc: in sli3 use configured sg_seg_cnt for sg_tablesize
+
+Firo Yang (1):
+      lpfc: Remove unnessary cast
+
+Ian Mitchell (1):
+      Fix kmalloc overflow in LPFC driver at large core count
+
+James Smart (5):
+      lpfc: Update version to 11.0.0.0 for upstream patch set
+      lpfc: Fix default RA_TOV and ED_TOV in the FC/FCoE driver for all topologies
+      lpfc: The linux driver does not reinitiate discovery after a failed FLOGI
+      lpfc: Fix for discovery failure in PT2PT when FLOGI's ELS ACC response gets aborted
+      lpfc: Add support for Lancer G6 and 32G FC links
+
+Johannes Thumshirn (1):
+      lpfc: Destroy lpfc_hba_index IDR on module exit
+
+Ketan Mukadam (2):
+      be2iscsi: Revert ownership to Emulex
+      MAINTAINERS: Update be2iscsi driver
+
+Manoj Kumar (5):
+      cxlflash: Fix to escalate to LINK_RESET on login timeout
+      cxlflash: Fix to double the delay each time
+      cxlflash: Fix read capacity timeout
+      cxlflash: Replace magic numbers with literals
+      cxlflash: Fix to avoid invalid port_sel value
+
+Matthew R. Ochs (32):
+      cxlflash: Fix to avoid bypassing context cleanup
+      cxlflash: Fix to avoid lock instrumentation rejection
+      cxlflash: Fix to avoid corrupting port selection mask
+      cxlflash: Fix to avoid leaving dangling interrupt resources
+      cxlflash: Fix to avoid potential deadlock on EEH
+      cxlflash: Correct trace string
+      cxlflash: Fix to avoid corrupting adapter fops
+      MAINTAINERS: Add cxlflash driver
+      cxlflash: Fix to prevent stale AFU RRQ
+      cxlflash: Correct spelling, grammar, and alignment mistakes
+      cxlflash: Fix to prevent EEH recovery failure
+      cxlflash: Fix MMIO and endianness errors
+      cxlflash: Fix function prolog parameters and return codes
+      cxlflash: Remove unnecessary scsi_block_requests
+      cxlflash: Correct behavior in device reset handler following EEH
+      cxlflash: Fix to prevent workq from accessing freed memory
+      cxlflash: Correct usage of scsi_host_put()
+      cxlflash: Fix AFU version access/storage and add check
+      cxlflash: Remove dual port online dependency
+      cxlflash: Fix async interrupt bypass logic
+      cxlflash: Fix host link up event handling
+      cxlflash: Fix location of setting resid
+      cxlflash: Fix to avoid stall while waiting on TMF
+      cxlflash: Fix to avoid spamming the kernel log
+      cxlflash: Refine host/device attributes
+      cxlflash: Make functions static
+      cxlflash: Correct naming of limbo state and waitq
+      cxlflash: Fix to avoid CXL services during EEH
+      cxlflash: Fix context encode mask width
+      cxlflash: Fix to avoid sizeof(bool)
+      cxlflash: Fix data corruption when vLUN used over multiple cards
+      cxlflash: Fix potential oops following LUN removal
+
+Maurizio Lombardi (1):
+      fnic: check pci_map_single() return value
+
+Nicholas Krause (1):
+      lpfc:Make the function lpfc_sli4_mbox_completions_pending static in order to comply with function prototype
+
+Sebastian Herbszt (2):
+      lpfc: remove set but not used variables
+      lpfc: fix model description
+
+Shirish Pargaonkar (1):
+      bnx2fc: Do not log error for netevents that need no action
+
+
+With the diffstat:
+
+ MAINTAINERS                        |   13 +-
+ drivers/scsi/be2iscsi/Kconfig      |    4 +-
+ drivers/scsi/be2iscsi/Makefile     |    2 +-
+ drivers/scsi/be2iscsi/be.h         |    4 +-
+ drivers/scsi/be2iscsi/be_cmds.c    |    4 +-
+ drivers/scsi/be2iscsi/be_cmds.h    |    4 +-
+ drivers/scsi/be2iscsi/be_iscsi.c   |    4 +-
+ drivers/scsi/be2iscsi/be_main.c    |    8 +-
+ drivers/scsi/be2iscsi/be_main.h    |    6 +-
+ drivers/scsi/be2iscsi/be_mgmt.c    |    4 +-
+ drivers/scsi/be2iscsi/be_mgmt.h    |    4 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |    1 -
+ drivers/scsi/cxlflash/common.h     |   30 +-
+ drivers/scsi/cxlflash/lunmgt.c     |   45 +-
+ drivers/scsi/cxlflash/main.c       | 1550 +++++++++++++++++++-----------------
+ drivers/scsi/cxlflash/main.h       |    1 +
+ drivers/scsi/cxlflash/sislite.h    |    8 +-
+ drivers/scsi/cxlflash/superpipe.c  |  209 +++--
+ drivers/scsi/cxlflash/superpipe.h  |   14 +-
+ drivers/scsi/cxlflash/vlun.c       |   68 +-
+ drivers/scsi/fnic/fnic_fcs.c       |   46 +-
+ drivers/scsi/fnic/fnic_scsi.c      |   16 +
+ drivers/scsi/lpfc/lpfc.h           |    8 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |   23 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       |   20 -
+ drivers/scsi/lpfc/lpfc_ct.c        |   11 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  100 +--
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   27 +-
+ drivers/scsi/lpfc/lpfc_hw.h        |    6 +-
+ drivers/scsi/lpfc/lpfc_init.c      |   36 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      |   19 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |    2 -
+ drivers/scsi/lpfc/lpfc_scsi.c      |   14 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |   10 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |    1 -
+ drivers/scsi/lpfc/lpfc_version.h   |    2 +-
+ drivers/scsi/scsi_devinfo.c        |  181 ++---
+ 37 files changed, 1342 insertions(+), 1163 deletions(-)
 
 James
-
-
