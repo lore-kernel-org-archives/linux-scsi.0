@@ -1,39 +1,46 @@
-From: Don Brace <brace77070@gmail.com>
-Subject: Re: [PATCH v2 00/27] hpsa updates
-Date: Fri, 6 Nov 2015 09:05:59 -0600
-Message-ID: <563CC1D7.3050403@pmcs.com>
-References: <20151104214910.15472.23179.stgit@brunhilda>
- <563CB99A.6030002@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH RESEND] hpsa: move lockup_detected attribute to host attr
+Date: Fri,  6 Nov 2015 16:24:09 +0100
+Message-ID: <1446823449-3986-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35040 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbbKFPGC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Nov 2015 10:06:02 -0500
-Received: by pasz6 with SMTP id z6so129511268pas.2
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Nov 2015 07:06:02 -0800 (PST)
-In-Reply-To: <563CB99A.6030002@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57457 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111AbbKFPYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Nov 2015 10:24:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: don.brace@pmcs.com
 
-Please repost, I'll sign off.
-Thank-you
+This patch fixes a 'general protection fault' issue by
+moving the attribute to where it was likely meant.
 
-On 11/06/2015 08:30 AM, Tomas Henzl wrote:
-> Please add to this series the "hpsa: move lockup_detected attribute to host attr"
-> http://www.spinics.net/lists/linux-scsi/msg88129.html.
->
-> Maybe the maintainer could add it too, or should I repost the patch?
->
-> Thanks,
-> Tomas
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Don Brace <don.brace@pmcs.com>
+---
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 57166e68fc..6d4412359d 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -867,7 +867,6 @@ static struct device_attribute *hpsa_sdev_attrs[] = {
+ 	&dev_attr_unique_id,
+ 	&dev_attr_hp_ssd_smart_path_enabled,
+ 	&dev_attr_path_info,
+-	&dev_attr_lockup_detected,
+ 	NULL,
+ };
+ 
+@@ -879,6 +878,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
+ 	&dev_attr_resettable,
+ 	&dev_attr_hp_ssd_smart_path_status,
+ 	&dev_attr_raid_offload_debug,
++	&dev_attr_lockup_detected,
+ 	NULL,
+ };
+ 
+-- 
+2.4.3
 
