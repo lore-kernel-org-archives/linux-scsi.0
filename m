@@ -1,32 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] ses: tighten range checks in ses_intf_add()
-Date: Thu, 05 Nov 2015 14:01:20 -0800
-Message-ID: <1446760880.2211.31.camel@HansenPartnership.com>
-References: <----An------QYmAn$10b010ca-f710-44aa-8ea3-3b65a3c21286@alibaba-inc.com>
-	 <20151019134820.GA28752@mwanda> <20151105215255.GN7289@mwanda>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST 3.1 pre-release freeze
+Date: Thu, 05 Nov 2015 22:47:54 -0800
+Message-ID: <563C4D1A.30102@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33100 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754274AbbKEWBW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2015 17:01:22 -0500
-In-Reply-To: <20151105215255.GN7289@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, =?UTF-8?Q?=E7=A8=8B=E5=90=9B=28=E6=88=90=E6=B7=BC=29?= <chengmiao.cj@alibaba-inc.com>, throber3 <throber3@gmail.com>, security@kernel.org
 
-On Fri, 2015-11-06 at 00:52 +0300, Dan Carpenter wrote:
-> James, could you take a look at this?  My patch was really incomplete
-> and even the bits that I wrote were buggy...  :/  This might be easier
-> for someone who is familiar with the code and can say what the expected
-> ranges are etc.
+Hi All,
 
-Yes, I've got a couple of SES things to look into, but not until after
-the merge window closes, probably.
+I'm glad to announce SCST 3.1 pre-release code freeze in the SCST SVN branch 3.0.x.
 
-James
+You can get it by command:
 
+$ svn co https://scst.svn.sourceforge.net/svnroot/scst/branches/3.1.x
 
+It is going to be released after few weeks of testing, if no significant issues found.
+
+Highlights for this release:
+
+ - Cluster support for SCSI reservations. This feature is essential for initiator-side
+clustering approaches based on persistent reservations, e.g. the quorum disk
+implementation in Windows Clustering.
+
+ - Full support for VAAI or vStorage API for Array Integration: Extended Copy command
+support has been added as well as performance of WRITE SAME and of Atomic Test & Set,
+also known as COMPARE AND WRITE, has been improved.
+
+ - T10-PI support has been added.
+
+ - ALUA support has been improved: explicit ALUA (SET TARGET PORT GROUPS command) has
+been added and DRBD compatibility has been improved.
+
+ - SCST events user space infrastructure has been added, so now SCST can notify a user
+space agent about important internal and fabric events.
+
+ - QLogic target driver has been significantly improved.
+
+SCST is alternative SCSI target stack for Linux. SCST allows creation of sophisticated
+storage devices, which can provide advanced functionality, like replication, thin
+provisioning, deduplication, high availability, automatic backup, etc. Majority of
+recently developed SAN appliances, especially higher end ones, are SCST based. It might
+well be that your favorite storage appliance running SCST in the firmware.
+
+More info about SCST and its modules you can find on: http://scst.sourceforge.net
+
+Thanks to all who made it happen, especially to SanDisk for the great support! All
+above highlights development was supported by SanDisk.
+
+Vlad
