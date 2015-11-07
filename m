@@ -1,42 +1,27 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [ANNOUNCE]: SCST 3.1 pre-release freeze
-Date: Fri, 06 Nov 2015 20:18:57 -0800
-Message-ID: <563D7BB1.2010600@vlnb.net>
-References: <563C4D1A.30102@vlnb.net> <CALAS2kmDLoSBebryAOfCREWsM9kGrEakWQ8G8WK-dK2oAz9sSg@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RESEND RFC PATCH 00/32] separate operations from flags in the
+ bio/request structs
+Date: Sat, 7 Nov 2015 02:10:23 -0800
+Message-ID: <20151107101023.GA12117@infradead.org>
+References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALAS2kmDLoSBebryAOfCREWsM9kGrEakWQ8G8WK-dK2oAz9sSg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bike & Snow <bikeandsnow@googlemail.com>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: mchristi@redhat.com
+Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, Nov 04, 2015 at 04:07:57PM -0600, mchristi@redhat.com wrote:
+> Known issues:
+> - REQ_FLUSH is still a flag, but should probably be a operation.
+>  For lower level drivers like SCSI where we only get a flush, it makes
+> more sense to be a operation. However, upper layers like filesystems
+> can send down flushes with writes, so it is more of a flag for them.
+> I am still working on this.
 
-Bike & Snow wrote on 11/06/2015 10:55 AM:
-> Hello Vlad
-> 
-> Excellent news on all the updates.
-> 
-> Regarding this:
-> - QLogic target driver has been significantly improved.
-> 
-> Does that mean I should stop building the QLogic target driver from here?
-> git://git.qlogic.com/scst-qla2xxx.git <http://git.qlogic.com/scst-qla2xxx.git>
-> 
-> Or are you saying the git.qlogic.com <http://git.qlogic.com> has been improved?
-
-It is saying that qla2x00t was improved.
-
-The ultimate goal is to have the mainstream (git) QLogic target driver to be the main
-and the only QLogic target driver, but, unfortunately, this driver not yet reached
-level of quality and maturity of qla2x00t. We with QLogic are working toward it.
-
-> If I stop building the one from git.qlogic.com <http://git.qlogic.com>, does the 3.2.0
-> one support NPIV?
-
-Yes, it has full NPIV support.
-
-Vlad
+Actually it should be both.  REQ_OP_FLUSH for a real flush operation,
+and a REQ_PREFLUSH bio flag that the request layer will sequence into
+an actual write an a flush operation.
