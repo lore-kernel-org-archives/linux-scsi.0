@@ -1,56 +1,39 @@
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: aacraid and rotational 1 even for ssd disks
-Date: Sat, 7 Nov 2015 15:00:35 +0100
-Message-ID: <201511071500.35885.a.miskiewicz@gmail.com>
-Reply-To: arekm@maven.pl
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH 06/32] xen blkback: prepare for bi_rw split
+Date: Sat, 7 Nov 2015 09:04:18 -0500
+Message-ID: <20151107140410.GA5091@x230.dumpdata.com>
+References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
+	<1446674909-5371-7-git-send-email-mchristi@redhat.com>
+	<20151107101713.GB12117@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:34488 "EHLO
-	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbKGOAj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Nov 2015 09:00:39 -0500
-Received: by lfgh9 with SMTP id h9so82703380lfg.1
-        for <linux-scsi@vger.kernel.org>; Sat, 07 Nov 2015 06:00:37 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xen-devel-bounces@lists.xen.org>
+Content-Disposition: inline
+In-Reply-To: <20151107101713.GB12117@infradead.org>
+List-Unsubscribe: <http://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <http://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Sender: xen-devel-bounces@lists.xen.org
+Errors-To: xen-devel-bounces@lists.xen.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, mchristi@redhat.com, linux-fsdevel@vger.kernel.org, xen-devel@lists.xenproject.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: aacraid@adaptec.com
 
+On Sat, Nov 07, 2015 at 02:17:13AM -0800, Christoph Hellwig wrote:
+> A little offtopic for this patch, but can some explain this whole
+> mess about bios in Xen blkfront?  We can happily do partial completions
+> at the request later.
 
-Hi.
+Not sure I follow. There are a couple of patches that are touching
+Xen block code right now - the multi-queue, the ones in xen-tip
+(which look to have be merged on Wednesday) and this one.
 
-I wonder if aacraid shouldn't properly inform kernel about sdd disk via=
-=20
-/sys/devices/../queue/rotational flag?
-
-Using 3.18.22 kernel and aacraid driver tells linux that all drives are=
-=20
-rotational:
-
-raid:
-# cat=20
-/sys/devices/pci0000:80/0000:80:03.0/0000:81:00.0/host10/target10:0:0/1=
-0:0:0:0/block/sda/queue/rotational
-1
-
-lvm on top of that raid:
-# cat /sys/devices/virtual/block/dm-*/queue/rotational
-1
-1
-1
-
-while this system has raid array of SSD drives only (INTEL SSDSC2BB30).=
- No=20
-rotational disks.
-
-Adaptec ASR8405 7.8-0 (32730) firmware.
-
---=20
-Arkadiusz Mi=C5=9Bkiewicz, arekm / ( maven.pl | pld-linux.org )
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And oddly enough I never got copied on this original patch.
+> 
+> Also since the blk-mq conversion the call to blk_end_request_all is
+> completely broken, so it doesn't look like this code path is exactly
+> well tested.
