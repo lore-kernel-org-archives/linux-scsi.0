@@ -1,82 +1,143 @@
-From: Matthew Vernon <mcv21@cam.ac.uk>
-Subject: [BUG] Boot failures with mpt2sas / Intel RMS25JB080
-	module
-Date: Fri, 6 Nov 2015 18:08:46 +0000
-Message-ID: <22076.60590.659266.885478@pick.csi.cam.ac.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v4] string_helpers: fix precision loss for some inputs
+Date: Fri, 06 Nov 2015 16:50:52 -0800
+Message-ID: <1446857452.2166.25.camel@HansenPartnership.com>
+References: <1446582810.6440.36.camel@HansenPartnership.com>
+	 <1446585708.6440.47.camel@HansenPartnership.com>
+	 <1446592360.6440.54.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <xen-devel-bounces@lists.xen.org>
-List-Unsubscribe: <http://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
-	<mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <http://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
-	<mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Sender: xen-devel-bounces@lists.xen.org
-Errors-To: xen-devel-bounces@lists.xen.org
-To: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Cc: ian.jackson@eu.citrix.com, xen-devel@lists.xen.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1446592360.6440.54.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>, "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>, "keescook@chromium.org" <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+From: James Bottomley <JBottomley@Odin.com>
 
-[These lists are in the MAINTAINERS file for mpt2sas; I hope this is
-the correct place to report this problem. Xen-devel CCd as this is
-failing on trying to boot Xen]
+It was noticed that we lose precision in the final calculation for some
+inputs.  The most egregious example is size=3000 blk_size=1900 in units of 10
+should yield 5.70 MB but in fact yields 3.00 MB (oops). This is because the
+current algorithm doesn't correctly account for all the remainders in the
+logarithms.  Fix this by doing a correct calculation in the remainders based
+on napier's algorithm.  Additionally, now we have the correct result, we have
+to account for arithmetic rounding because we're printing 3 digits of
+precision.  This means that if the fourth digit is five or greater, we have to
+round up, so add a section to ensure correct rounding.  Finally account for
+all possible inputs correctly, including zero for block size.
 
-When booting Xen, mpt2sas finds my Intel RMS25JB080, but fails to load
-it correctly.
+Reported-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: stable@vger.kernel.org	# delay backport by two months for testing
+Fixes: b9f28d863594c429e1df35a0474d2663ca28b307
+Signed-off-by: James Bottomley <JBottomley@Odin.com>
 
-This is a Debian jessie (stable) system, kernel version
-3.16.0-4-amd64, Xen version 4.4.1.
+---
 
-Relevant snippet of log output of failed boot:
+v2: updated with a recommendation from Rasmus Villemoes to truncate the
+initial precision at just under 32 bits
 
-[   64.095008] mpt2sas0: reply_post_free pool: pci_pool_alloc failed
-[   64.535255] mpt2sas0: failure at /build/linux-xkTWug/linux-3.16.7-ckt11/drivers/scsi/mpt2sas/mpt2sas_scsih.c:8234/_scsih_probe()!
+v3: put back the missing do_divs
 
-...it then fails to find any of my attached drives, so cannot boot,
-and I get dumped in the initramfs.
+v4: use explicit top bit checking in logarithmic reductions.  Only adjust
+remainder precision where necessary
 
-Having googled a bit, I tried pci=realloc=off on the kernel
-command-line, as well as swiotlb=26422 ; neither of them changed the
-failure mode
-
-Booting bare-metal does work; relevant snippet of log output of
-successful (i.e. bare-metal) boot:
-
-[    3.977037] mpt2sas0: diag reset: SUCCESS
-[    4.178627] mpt2sas0: Allocated physical memory: size(17390 kB)
-[    4.178630] mpt2sas0: Current Controller Queue Depth(7931), Max Controller Queue Depth(8192)
-[    4.178631] mpt2sas0: Scatter Gather Elements per IO(128)
-[    4.409752] mpt2sas0: LSISAS2308: FWVersion(20.00.02.00), ChipRevision(0x05), BiosVersion(07.39.00.00)
-[    4.409755] mpt2sas0: Intel(R) Integrated RAID Module RMS25JB080
-[    4.409756] mpt2sas0: Protocol=(Initiator), Capabilities=(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set Full,NCQ)
-[    4.409846] mpt2sas0: sending port enable !!
-...
-[    5.941978] mpt2sas0: host_add: handle(0x0001), sas_addr(0x5001e67c17ff5000), phys(8)
-[    5.980601] device-mapper: uevent: version 1.0.3
-[    5.980773] device-mapper: ioctl: 4.27.0-ioctl (2013-10-30) initialised: dm-devel@redhat.com
-[   11.823480] mpt2sas0: port enable: SUCCESS
-
-(and then it finds the attached disks)
-
-Fuller outputs:
-
-i) bare-metal boot dmesg:
-http://www-uxsup.csx.cam.ac.uk/~mcv21/debug/bare_metal_dmesg
-
-ii) output from failed Xen boot (captured over a serial line with
-earlyprintk=xen and loglvl=all guest_loglvl=all):
-http://www-uxsup.csx.cam.ac.uk/~mcv21/debug/failedboot-output-2
-
-iii) kernel config (stock Debian):
-http://www-uxsup.csx.cam.ac.uk/~mcv21/debug/config-3.16.0-4-amd64
-
-iv) lspci -vvv output:
-http://www-uxsup.csx.cam.ac.uk/~mcv21/debug/lspcivvv
-
-Regards,
-
-Matthew
+diff --git a/lib/string_helpers.c b/lib/string_helpers.c
+index 5939f63..5c88204 100644
+--- a/lib/string_helpers.c
++++ b/lib/string_helpers.c
+@@ -43,50 +43,73 @@ void string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
+ 		[STRING_UNITS_10] = 1000,
+ 		[STRING_UNITS_2] = 1024,
+ 	};
+-	int i, j;
+-	u32 remainder = 0, sf_cap, exp;
++	static const unsigned int rounding[] = { 500, 50, 5 };
++	int i = 0, j;
++	u32 remainder = 0, sf_cap;
+ 	char tmp[8];
+ 	const char *unit;
+ 
+ 	tmp[0] = '\0';
+-	i = 0;
+-	if (!size)
++
++	if (blk_size == 0)
++		size = 0;
++	if (size == 0)
+ 		goto out;
+ 
+-	while (blk_size >= divisor[units]) {
+-		remainder = do_div(blk_size, divisor[units]);
++	/* This is Napier's algorithm.  Reduce the original block size to
++	 *
++	 * coefficient * divisor[units]^i
++	 *
++	 * we do the reduction so both coefficients are just under 32 bits so
++	 * that multiplying them together won't overflow 64 bits and we keep
++	 * as much precision as possible in the numbers.
++	 *
++	 * Note: it's safe to throw away the remainders here because all the
++	 * precision is in the coefficients.
++	 */
++	while (blk_size >> 32) {
++		do_div(blk_size, divisor[units]);
+ 		i++;
+ 	}
+ 
+-	exp = divisor[units] / (u32)blk_size;
+-	/*
+-	 * size must be strictly greater than exp here to ensure that remainder
+-	 * is greater than divisor[units] coming out of the if below.
+-	 */
+-	if (size > exp) {
+-		remainder = do_div(size, divisor[units]);
+-		remainder *= blk_size;
++	while (size >> 32) {
++		do_div(size, divisor[units]);
+ 		i++;
+-	} else {
+-		remainder *= size;
+ 	}
+ 
++	/* now perform the actual multiplication keeping i as the sum of the
++	 * two logarithms */
+ 	size *= blk_size;
+-	size += remainder / divisor[units];
+-	remainder %= divisor[units];
+ 
++	/* and logarithmically reduce it until it's just under the divisor */
+ 	while (size >= divisor[units]) {
+ 		remainder = do_div(size, divisor[units]);
+ 		i++;
+ 	}
+ 
++	/* work out in j how many digits of precision we need from the
++	 * remainder */
+ 	sf_cap = size;
+ 	for (j = 0; sf_cap*10 < 1000; j++)
+ 		sf_cap *= 10;
+ 
+-	if (j) {
++	if (units == STRING_UNITS_2) {
++		/* express the remainder as a decimal.  It's currently the
++		 * numerator of a fraction whose denominator is
++		 * divisor[units], which is 1 << 10 for STRING_UNITS_2 */
+ 		remainder *= 1000;
+-		remainder /= divisor[units];
++		remainder >>= 10;
++	}
++
++	/* add a 5 to the digit below what will be printed to ensure
++	 * an arithmetical round up and carry it through to size */
++	remainder += rounding[j];
++	if (remainder >= 1000) {
++		remainder -= 1000;
++		size += 1;
++	}
++
++	if (j) {
+ 		snprintf(tmp, sizeof(tmp), ".%03u", remainder);
+ 		tmp[j+1] = '\0';
+ 	}
