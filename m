@@ -1,41 +1,56 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [dm-devel] [RFC PATCH 00/32] separate operations
- from flags in the bio/request structs
-Date: Sat, 7 Nov 2015 02:23:09 -0800
-Message-ID: <20151107102309.GE12117@infradead.org>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-	<563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
+From: Dmitry Katsubo <dma_k@mail.ru>
+Subject: scsi-sd fails with error "Invalid field in cdb" for SATA-to-USB adapter
+ JMicron
+Date: Sat, 07 Nov 2015 13:18:39 +0100
+Message-ID: <563DEC1F.5090905@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <563A3813.5010604-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fallback1.mail.ru ([94.100.181.184]:48016 "EHLO
+	fallback1.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbbKGMVS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Nov 2015 07:21:18 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-usb-general@vger.kernel.org
 
-On Wed, Nov 04, 2015 at 10:53:39AM -0600, Mike Christie wrote:
-> > If you have to touch submit_bio() and submit_bio_wait(), how about
-> > requiring the callers of these functions to set the cmd and flags
-> > arguments in the bio structure and to leave out the cmd and flags
-> > arguments from the submit_bio() and submit_bio_wait() functions ? A
-> > (compile tested only) patch that implements this idea is available at
-> > https://lkml.org/lkml/2014/6/2/173.
-> > 
-> 
-> Yeah, I can do that.
+Hello,
 
-I think this would be useful to do at the beginning of the series.
-While this will have a huge trickle effect through the series it should
-make thing a bit simpler overall.  By leaving op 0 undefined it should
-also help to create a nice error trap for unconverted code.
+In continuation to the issue described in [1] and [2]:
+
+Unfortunately, I still suffer from the same problem on Linux kernel
+v4.2.3. The problem is in detailed described in [3], in particular I see
+the following in dmesg:
+
+sd 6:0:0:0: [sdd] 234441648 512-byte logical blocks: (120 GB/111 GiB)
+sd 6:0:0:0: [sdd] 4096-byte physical blocks
+sd 6:0:0:0: [sdd] Write Protect is off
+sd 6:0:0:0: [sdd] Mode Sense: 53 00 10 08
+sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, supports
+DPO and FUA
+...
+sd 6:0:0:0: [sdd] tag#0 FAILED Result: hostbyte=DID_OK
+driverbyte=DRIVER_SENSE
+sd 6:0:0:0: [sdd] tag#0 Sense Key : Illegal Request [current]
+sd 6:0:0:0: [sdd] tag#0 Add. Sense: Invalid field in cdb
+sd 6:0:0:0: [sdd] tag#0 CDB: Write(10) 2a 08 00 00 10 80 00 00 08 00
+blk_update_request: critical target error, dev sdd, sector 4224
+BTRFS: lost page write due to I/O error on /dev/sdd1
+BTRFS: bdev /dev/sdd1 errs: wr 9, rd 0, flush 0, corrupt 0, gen 0
+
+I believe that according to patches [4], [5] I should see something like
+"Disabling FUA" in logs.
+
+Any information about how to fix the problem is appreciated.
+
+> [1] http://permalink.gmane.org/gmane.linux.scsi/91997
+> [2] http://permalink.gmane.org/gmane.linux.usb.general/120430
+> [3] http://unix.stackexchange.com/questions/237204/
+> [4] https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable/+blame/v4.2.3/drivers/scsi/sd.c#2446
+> [5] https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable/+blame/v4.2.3/drivers/usb/storage/unusual_devs.h#1990
+
+-- 
+With best regards,
+Dmitry
