@@ -1,34 +1,29 @@
-From: Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH V2 2/3] scsi: fix compiler warning for sg
-Date: Mon, 9 Nov 2015 22:53:17 -0600
-Message-ID: <5641783D.3030108@codeaurora.org>
-References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
- <1447034266-28003-3-git-send-email-okaya@codeaurora.org>
- <CAHp75VdUBKr_XQ=2_5uSww71YVz+-Shmhg5hSe5KAoeshTtMYQ@mail.gmail.com>
- <564162AB.6080803@codeaurora.org> <564163F7.2020109@codeaurora.org>
- <564177D7.7070103@codeaurora.org>
+From: "mssg1" <k0176@seznam.cz>
+Subject: =?iso-8859-1?Q?spolupr=E1ce?=
+Date: Mon, 9 Nov 2015 18:53:31 -0000
+Message-ID: <e4f9a877a404512317c9462e013f39c4.squirrel__13302.5709809319$1447132988$gmane$org@204.151.192.87>
+Reply-To: chn.jg62@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <564177D7.7070103@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sinan Kaya <okaya@codeaurora.org>, Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, cov@codeaurora.org, jcm@redhat.com, Andy Gross <agross@codeaurora.org>, linux-arm-msm@vger.kernel.org, linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [204.151.192.87] ([204.151.192.87]:41741 "EHLO mail.abc.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750732AbbKJFWV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Nov 2015 00:22:21 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sinan Kaya wrote:
->
-> The code says it is using these macros for small integers only which
-> can't overflow. I was trying to get rid of compiler warning and it seems
-> to have disappeared.
 
-I would double-check the assembly code, if I were you.  I don't like it 
-when warnings just go away like that.
 
-Besides, we *should* be using do_div() for 64-bit division.
 
--- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the
-Code Aurora Forum, hosted by The Linux Foundation.
+odpovezte mi na nize uvedenou e-mailovou adresu pro vysvetlen=ED v=FDro=
+ku.
+
+E-mail: chn.jg62@gmail.com
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
