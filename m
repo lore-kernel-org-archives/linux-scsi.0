@@ -1,90 +1,37 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 09/32] scsi: hisi_sas: add slot init code
-Date: Tue, 10 Nov 2015 00:32:14 +0800
-Message-ID: <1447086757-147706-10-git-send-email-john.garry@huawei.com>
-References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 11/32] scsi: hisi_sas: add phy SAS ADDR initialization
+Date: Mon, 09 Nov 2015 17:28:46 +0100
+Message-ID: <4369607.QVA3rBnZUm@wuerfel>
+References: <1447086757-147706-1-git-send-email-john.garry@huawei.com> <1447086757-147706-12-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.130]:64630 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbbKIQ32 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 11:29:28 -0500
+In-Reply-To: <1447086757-147706-12-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org
 
-Add functionality to init slot indexing.
+On Tuesday 10 November 2015 00:32:16 John Garry wrote:
+>  }
+>  
+> +static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < hisi_hba->n_phy; i++)
+> +               memcpy(&hisi_hba->phy[i].dev_sas_addr,
+> +                      hisi_hba->sas_addr,
+> +                      SAS_ADDR_SIZE);
+> +}
 
-Slot indexing is for the host to track which slots
-(or tags) are free and which are used.
+I don't know the background here, but I thought it would have to
+be a different address on each phy. Are you sure this is not the
+case?
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h      |  4 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 23 +++++++++++++++++++++++
- 2 files changed, 27 insertions(+)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 6d1b7d8..2cd6771 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -66,6 +66,10 @@ struct hisi_hba {
- 
- 	int n_phy;
- 
-+
-+	int slot_index_count;
-+	unsigned long *slot_index_tags;
-+
- 	/* SCSI/SAS glue */
- 	struct sas_ha_struct sha;
- 	struct Scsi_Host *shost;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 7f81000..985f074 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -12,6 +12,21 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas"
- 
-+static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
-+{
-+	void *bitmap = hisi_hba->slot_index_tags;
-+
-+	clear_bit(slot_idx, bitmap);
-+}
-+
-+static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
-+{
-+	int i;
-+
-+	for (i = 0; i < hisi_hba->slot_index_count; ++i)
-+		hisi_sas_slot_index_clear(hisi_hba, i);
-+}
-+
- static struct scsi_transport_template *hisi_sas_stt;
- 
- static struct scsi_host_template hisi_sas_sht = {
-@@ -102,6 +117,12 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 	memset(hisi_hba->breakpoint, 0, s);
- 
-+	hisi_hba->slot_index_count = HISI_SAS_COMMAND_ENTRIES;
-+	s = hisi_hba->slot_index_count / sizeof(unsigned long);
-+	hisi_hba->slot_index_tags = devm_kzalloc(dev, s, GFP_KERNEL);
-+	if (!hisi_hba->slot_index_tags)
-+		goto err_out;
-+
- 	hisi_hba->sge_page_pool = dma_pool_create("status_sge", dev,
- 				sizeof(struct hisi_sas_sge_page), 16, 0);
- 	if (!hisi_hba->sge_page_pool)
-@@ -121,6 +142,8 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 		goto err_out;
- 	memset(hisi_hba->sata_breakpoint, 0, s);
- 
-+	hisi_sas_slot_index_init(hisi_hba);
-+
- 	return 0;
- err_out:
- 	return -ENOMEM;
--- 
-1.9.1
+	Arnd
