@@ -1,73 +1,90 @@
 From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V2 2/3] scsi: fix compiler warning for sg
-Date: Sun,  8 Nov 2015 20:57:45 -0500
-Message-ID: <1447034266-28003-3-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH V2 3/3] scsi: mptxsas: offload IRQ execution
+Date: Sun,  8 Nov 2015 20:57:46 -0500
+Message-ID: <1447034266-28003-4-git-send-email-okaya@codeaurora.org>
 References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34488 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbbKIB6I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2015 20:58:08 -0500
 In-Reply-To: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
-Cc: agross@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
+Cc: agross@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, MPT-FusionLinux.pdl@avagotech.com, linux-kernel@vger.kernel.org
 
-The MULDIV macro has been designed for small numbers.
-Compiler emits an overflow warning on 64 bit systems.
-This patch uses 64 bit numbers in order to suppress
-warning.
+The mpt2sas and mpt3sas drivers are spinning forever in
+their IRQ handlers if there are a lot of jobs queued up
+by the PCIe card. This handler is causing spikes for
+the rest of the system and sluggish behavior.
+
+Marking all MSI interrupts as non-shared and moving the
+MSI interrupts to thread context. This relexes the rest
+of the system execution.
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/scsi/sg.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 12 ++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 13 +++++++++----
+ 2 files changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9d7b7db..112d8974 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -51,6 +51,7 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
- #include <linux/atomic.h>
- #include <linux/ratelimit.h>
- #include <linux/uio.h>
-+#include <asm/div64.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index c61c82a..b619a0e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1359,14 +1359,18 @@ _base_request_irq(struct MPT2SAS_ADAPTER *ioc, u8 index, u32 vector)
+ 	cpumask_clear(reply_q->affinity_hint);
  
- #include "scsi.h"
- #include <scsi/scsi_dbg.h>
-@@ -85,12 +86,17 @@ static void sg_proc_cleanup(void);
-  * Replacing muldiv(x) by muldiv(x)=((x % d) * m) / d + int(x / d) * m
-  * calculates the same, but prevents the overflow when both m and d
-  * are "small" numbers (like HZ and USER_HZ).
-- * Of course an overflow is inavoidable if the result of muldiv doesn't fit
-- * in 32 bits.
-  */
--#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
-+static inline u64 mult_frac64(u64 x, u32 numer, u32 denom)
-+{
-+	u64 r1 = do_div(x, denom);
-+	u64 r2 = r1 * numer;
+ 	atomic_set(&reply_q->busy, 0);
+-	if (ioc->msix_enable)
++	if (ioc->msix_enable) {
+ 		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d-msix%d",
+ 		    MPT2SAS_DRIVER_NAME, ioc->id, index);
+-	else
++		r = request_threaded_irq(vector, NULL, _base_interrupt,
++					 IRQF_TRIGGER_RISING | IRQF_ONESHOT,
++					 reply_q->name, reply_q);
++	} else {
+ 		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d",
+ 		    MPT2SAS_DRIVER_NAME, ioc->id);
+-	r = request_irq(vector, _base_interrupt, IRQF_SHARED, reply_q->name,
+-	    reply_q);
++		r = request_irq(vector, _base_interrupt, IRQF_SHARED,
++				reply_q->name, reply_q);
++	}
+ 	if (r) {
+ 		printk(MPT2SAS_ERR_FMT "unable to allocate interrupt %d!\n",
+ 		    reply_q->name, vector);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 6dc391c..62bee43 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1661,14 +1661,19 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
+ 	cpumask_clear(reply_q->affinity_hint);
+ 
+ 	atomic_set(&reply_q->busy, 0);
+-	if (ioc->msix_enable)
++	if (ioc->msix_enable) {
+ 		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d-msix%d",
+ 		    MPT3SAS_DRIVER_NAME, ioc->id, index);
+-	else
 +
-+	do_div(r2, denom);
-+	return (x * numer) + r2;
-+}
- 
--#define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
-+#define SG_DEFAULT_TIMEOUT mult_frac64(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
- 
- int sg_big_buff = SG_DEF_RESERVED_SIZE;
- /* N.B. This variable is readable and writeable via
-@@ -877,10 +883,10 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 			return result;
- 		if (val < 0)
- 			return -EIO;
--		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
--		    val = MULDIV (INT_MAX, USER_HZ, HZ);
-+		if (val >= mult_frac64(INT_MAX, USER_HZ, HZ))
-+			val = mult_frac64(INT_MAX, USER_HZ, HZ);
- 		sfp->timeout_user = val;
--		sfp->timeout = MULDIV (val, HZ, USER_HZ);
-+		sfp->timeout = mult_frac64(val, HZ, USER_HZ);
- 
- 		return 0;
- 	case SG_GET_TIMEOUT:	/* N.B. User receives timeout as return value */
++		r = request_threaded_irq(vector, NULL, _base_interrupt,
++					 IRQF_TRIGGER_RISING | IRQF_ONESHOT,
++					 reply_q->name, reply_q);
++	} else {
+ 		snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d",
+ 		    MPT3SAS_DRIVER_NAME, ioc->id);
+-	r = request_irq(vector, _base_interrupt, IRQF_SHARED, reply_q->name,
+-	    reply_q);
++		r = request_irq(vector, _base_interrupt, IRQF_SHARED,
++				reply_q->name, reply_q);
++	}
+ 	if (r) {
+ 		pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
+ 		    reply_q->name, vector);
 -- 
 Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+
