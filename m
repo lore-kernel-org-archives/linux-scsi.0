@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 31/32] scsi: hisi_sas: add fatal irq handler
-Date: Tue, 10 Nov 2015 00:32:36 +0800
-Message-ID: <1447086757-147706-32-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 28/32] scsi: hisi_sas: add scan finished and start
+Date: Tue, 10 Nov 2015 00:32:33 +0800
+Message-ID: <1447086757-147706-29-git-send-email-john.garry@huawei.com>
 References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,165 +12,69 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add handlers for fatal interrupts
+Add functions for scsi host template scan_finished
+and scan_start methods
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 122 +++++++++++++++++++++++++++++++++
- 1 file changed, 122 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 3f27a5c..1759c58 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1573,6 +1573,93 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
- 	return IRQ_HANDLED;
- }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index f2355db..af716e5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -158,6 +158,7 @@ struct hisi_hba {
+ 	u8 sas_addr[SAS_ADDR_SIZE];
  
-+static irqreturn_t fatal_ecc_int_v1_hw(int irq, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u32 ecc_int = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
-+
-+	if (ecc_int & SAS_ECC_INTR_DQ_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
-+
-+		panic("%s: Fatal DQ 1b ECC interrupt (0x%x)\n",
-+		      dev_name(dev), ecc_err);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_DQ_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_DQ_ECC_ADDR) &
-+				HGC_DQ_ECC_ADDR_BAD_MSK) >>
-+				HGC_DQ_ECC_ADDR_BAD_OFF;
-+
-+		panic("%s: Fatal DQ RAM ECC interrupt @ 0x%08x\n",
-+		      dev_name(dev), addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_IOST_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
-+
-+		panic("%s: Fatal IOST 1b ECC interrupt (0x%x)\n",
-+		      dev_name(dev), ecc_err);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_IOST_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR) &
-+				HGC_IOST_ECC_ADDR_BAD_MSK) >>
-+				HGC_IOST_ECC_ADDR_BAD_OFF;
-+
-+		panic("%s: Fatal IOST RAM ECC interrupt @ 0x%08x\n",
-+		      dev_name(dev), addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_ITCT_ECCBAD_MSK) {
-+		u32 addr = (hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR) &
-+				HGC_ITCT_ECC_ADDR_BAD_MSK) >>
-+				HGC_ITCT_ECC_ADDR_BAD_OFF;
-+
-+		panic("%s: Fatal TCT RAM ECC interrupt @ 0x%08x\n",
-+		      dev_name(dev), addr);
-+	}
-+
-+	if (ecc_int & SAS_ECC_INTR_ITCT_ECC1B_MSK) {
-+		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
-+
-+		panic("%s: Fatal ITCT 1b ECC interrupt (0x%x)\n",
-+		      dev_name(dev), ecc_err);
-+	}
-+
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR, ecc_int | 0x3f);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u32 axi_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC2);
-+	u32 axi_info = hisi_sas_read32(hisi_hba, HGC_AXI_FIFO_ERR_INFO);
-+
-+	if (axi_int & ENT_INT_SRC2_DQ_CFG_ERR_MSK)
-+		panic("%s: Fatal DQ_CFG_ERR interrupt (0x%x)\n",
-+		      dev_name(dev), axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_CQ_CFG_ERR_MSK)
-+		panic("%s: Fatal CQ_CFG_ERR interrupt (0x%x)\n",
-+		      dev_name(dev), axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_AXI_WRONG_INT_MSK)
-+		panic("%s: Fatal AXI_WRONG_INT interrupt (0x%x)\n",
-+		      dev_name(dev), axi_info);
-+
-+	if (axi_int & ENT_INT_SRC2_AXI_OVERLF_INT_MSK)
-+		panic("%s: Fatal AXI_OVERLF_INT incorrect interrupt (0x%x)\n",
-+		      dev_name(dev), axi_info);
-+
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, axi_int | 0x30000000);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
- 	{"Bcast"},
- 	{"Phy Up"},
-@@ -1580,12 +1667,22 @@ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
- };
+ 	int n_phy;
++	int scan_finished;
+ 	spinlock_t lock;
  
- static const char cq_int_name[32] = "cq";
-+static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
-+	"fatal ecc",
-+	"fatal axi"
-+};
-+
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_bcast_v1_hw,
- 	int_phyup_v1_hw,
- 	int_abnormal_v1_hw
- };
- 
-+static irq_handler_t fatal_interrupts[HISI_SAS_MAX_QUEUES] = {
-+	fatal_ecc_int_v1_hw,
-+	fatal_axi_int_v1_hw
-+};
-+
- static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- {
- 	int i, j, irq, rc;
-@@ -1649,6 +1746,31 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		idx++;
- 	}
- 
-+	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++) {
-+		int idx = (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) +
-+			  hisi_hba->queue_count + i;
-+
-+		irq = irq_of_parse_and_map(np, idx);
-+		if (!irq) {
-+			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
-+				idx);
-+			return -ENOENT;
-+		}
-+		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
-+			       HISI_SAS_NAME_LEN,
-+			       "%s %s:%d", dev_name(dev), fatal_int_name[i], i);
-+		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-+				      &int_names[idx * HISI_SAS_NAME_LEN],
-+				      hisi_hba);
-+		if (rc) {
-+			dev_err(dev,
-+				"irq init: could not request fatal interrupt %d, rc=%d\n",
-+				irq, rc);
-+			return -ENOENT;
-+		}
-+		idx++;
-+	}
-+
+ 	struct timer_list timer;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 95535e5..d8ddae0 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -403,6 +403,29 @@ static int hisi_sas_dev_found(struct domain_device *device)
  	return 0;
  }
  
++static void hisi_sas_scan_start(struct Scsi_Host *shost)
++{
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	int i;
++
++	for (i = 0; i < hisi_hba->n_phy; ++i)
++		hisi_sas_bytes_dmaed(hisi_hba, i);
++
++	hisi_hba->scan_finished = 1;
++}
++
++static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
++{
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	struct sas_ha_struct *sha = &hisi_hba->sha;
++
++	if (hisi_hba->scan_finished == 0)
++		return 0;
++
++	sas_drain_work(sha);
++	return 1;
++}
++
+ static void hisi_sas_phyup_work(struct work_struct *work)
+ {
+ 	struct hisi_sas_phy *phy =
+@@ -587,6 +610,8 @@ static struct scsi_host_template hisi_sas_sht = {
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+ 	.slave_configure	= sas_slave_configure,
++	.scan_finished		= hisi_sas_scan_finished,
++	.scan_start		= hisi_sas_scan_start,
+ 	.change_queue_depth	= sas_change_queue_depth,
+ 	.bios_param		= sas_bios_param,
+ 	.can_queue		= 1,
 -- 
 1.9.1
