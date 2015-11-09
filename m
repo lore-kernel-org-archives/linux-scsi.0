@@ -1,77 +1,33 @@
 From: Laurent Vivier <lvivier@redhat.com>
-Subject: [PATCH v4 3/3] ibmvscsi: Allow to configure maximum LUN
-Date: Mon,  9 Nov 2015 15:47:45 +0100
-Message-ID: <1447080465-17858-4-git-send-email-lvivier@redhat.com>
-References: <1447080465-17858-1-git-send-email-lvivier@redhat.com>
+Subject: [PATCH v4 0/3] ibmvscsi parameter cleanup
+Date: Mon,  9 Nov 2015 15:47:42 +0100
+Message-ID: <1447080465-17858-1-git-send-email-lvivier@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447080465-17858-1-git-send-email-lvivier@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: hare@suse.de, brking@linux.vnet.ibm.com, tyreld@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, lvivier@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch allows to define the maximum LUN numbers.
-As defined in 4.6.9 of SAM-4, the encoding of LUN is
-on 5 bits (max_lun=32) and the current value is only 8.
+v4 udpates 3/3 description
+   max_lun can be less or equal to 32
 
-Signed-off-by: Laurent Vivier <lvivier@redhat.com>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c | 9 ++++++++-
- drivers/scsi/ibmvscsi/ibmvscsi.h | 1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
+v3 checks that max_lun is less or equal to 31
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 04de287..adcd5e8 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -84,6 +84,7 @@
-  */
- static int max_id = 64;
- static int max_channel = 3;
-+static int max_lun = 8;
- static int init_timeout = 300;
- static int login_timeout = 60;
- static int info_timeout = 30;
-@@ -117,6 +118,9 @@ module_param_named(fast_fail, fast_fail, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(fast_fail, "Enable fast fail. [Default=1]");
- module_param_named(client_reserve, client_reserve, int, S_IRUGO );
- MODULE_PARM_DESC(client_reserve, "Attempt client managed reserve/release");
-+module_param(max_lun, int, S_IRUGO);
-+MODULE_PARM_DESC(max_lun, "Maximum allowed LUN "
-+                          "[Default=8,Max="__stringify(IBMVSCSI_MAX_LUN)"]");
- 
- static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
- 				struct ibmvscsi_host_data *hostdata);
-@@ -2289,7 +2293,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 		goto init_pool_failed;
- 	}
- 
--	host->max_lun = 8;
-+	host->max_lun = max_lun;
- 	host->max_id = max_id;
- 	host->max_channel = max_channel;
- 	host->max_cmd_len = 16;
-@@ -2414,6 +2418,9 @@ int __init ibmvscsi_module_init(void)
- {
- 	int ret;
- 
-+	if (max_lun > IBMVSCSI_MAX_LUN)
-+		return -EINVAL;
-+
- 	/* Ensure we have two requests to do error recovery */
- 	driver_template.can_queue = max_requests;
- 	max_events = max_requests + 2;
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
-index 7d64867..1067367 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.h
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
-@@ -48,6 +48,7 @@ struct Scsi_Host;
- #define IBMVSCSI_CMDS_PER_LUN_DEFAULT 16
- #define IBMVSCSI_MAX_SECTORS_DEFAULT 256 /* 32 * 8 = default max I/O 32 pages */
- #define IBMVSCSI_MAX_CMDS_PER_LUN 64
-+#define IBMVSCSI_MAX_LUN 32
- 
- /* ------------------------------------------------------------
-  * Data Structures
+v2 of this series only fix the format type of max_lun:
+
+drivers/scsi/ibmvscsi/ibmvscsi.c:2298:4:
+warning: format '%d' expects argument of type 'int',
+but argument 4 has type 'u64 {aka long long unsigned int}' [-Wformat=]
+       "Maximum ID: %d Maximum LUN: %d Maximum Channel: %d\n",
+
+Laurent Vivier (3):
+  ibmvscsi: make parameters max_id and max_channel read-only
+  ibmvscsi: display default value for max_id, max_lun and max_channel.
+  ibmvscsi: Allow to configure maximum LUN
+
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 21 ++++++++++++++++-----
+ drivers/scsi/ibmvscsi/ibmvscsi.h |  1 +
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
 -- 
 2.1.0
