@@ -1,48 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 17/27] hpsa: enhance hpsa_get_device_id
-Date: Mon, 09 Nov 2015 10:40:36 +0100
-Message-ID: <56406A14.2080109@suse.de>
-References: <20151104214910.15472.23179.stgit@brunhilda> <20151104215139.15472.48831.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH RESEND] scsi: Export SCSI Inquiry data to sysfs
+Date: Mon,  9 Nov 2015 10:56:57 +0100
+Message-ID: <1447063017-129232-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49640 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51436 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751185AbbKIJki (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:40:38 -0500
-In-Reply-To: <20151104215139.15472.48831.stgit@brunhilda>
+	id S1751549AbbKIJ5C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Nov 2015 04:57:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On 11/04/2015 10:51 PM, Don Brace wrote:
-> use an index into vpd data for SAS/SATA drives
->=20
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
->  drivers/scsi/hpsa.c |   23 ++++++++++++++++++++---
->  1 file changed, 20 insertions(+), 3 deletions(-)
->=20
+Export the RAW SCSI Inquiry to sysfs as binfile. This way the data can be used
+by userland without the need to have and ioctl or use the sg_inq tool.
+
+Here is an example of the provided data
+
+linux:~ # hexdump /sys/class/scsi_device/1\:0\:0\:0/device/inquiry
+0000000 8005 3205 001f 0000 4551 554d 2020 2020
+0000010 4551 554d 4420 4456 522d 4d4f 2020 2020
+0000020 2e32 2e33
+0000024
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+1st sent on Aug. 14 2015
+1st resend on Oct. 30 2015
 
-Cheers,
+ drivers/scsi/scsi_sysfs.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index b333389..fdcf0ab 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -773,6 +773,29 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
+ sdev_vpd_pg_attr(pg83);
+ sdev_vpd_pg_attr(pg80);
+ 
++static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
++			    struct bin_attribute *bin_attr,
++			    char *buf, loff_t off, size_t count)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	if (!sdev->inquiry)
++		return -EINVAL;
++
++	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
++				       sdev->inquiry_len);
++}
++
++static struct bin_attribute dev_attr_inquiry = {
++	.attr = {
++		.name = "inquiry",
++		.mode = S_IRUGO,
++	},
++	.size = 0,
++	.read = show_inquiry,
++};
++
+ static ssize_t
+ show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -957,6 +980,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ static struct bin_attribute *scsi_sdev_bin_attrs[] = {
+ 	&dev_attr_vpd_pg83,
+ 	&dev_attr_vpd_pg80,
++	&dev_attr_inquiry,
+ 	NULL
+ };
+ static struct attribute_group scsi_sdev_attr_group = {
+-- 
+2.6.2
+
