@@ -1,192 +1,162 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 27/32] scsi: hisi_sas: add smp protocol support
-Date: Tue, 10 Nov 2015 00:32:32 +0800
-Message-ID: <1447086757-147706-28-git-send-email-john.garry@huawei.com>
-References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v5 10/11] Documentation: devicetree: ufs: Add DT bindings
+ for exynos UFS host controller
+Date: Mon, 9 Nov 2015 10:23:12 -0600
+Message-ID: <20151109162312.GA32748@rob-hp-laptop>
+References: <1447046787-480-1-git-send-email-alim.akhtar@samsung.com>
+ <1447046787-480-11-git-send-email-alim.akhtar@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1447086757-147706-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1447046787-480-11-git-send-email-alim.akhtar@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@odin.com, vinholikatti@gmail.com, gautam.vivek@samsung.com, essuuj@gmail.com, devicetree@vger.kernel.org, kishon@ti.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for smp function, which allows devices
-attached by expander to be controlled
+On Mon, Nov 09, 2015 at 10:56:26AM +0530, Alim Akhtar wrote:
+> From: Seungwon Jeon <essuuj@gmail.com>
+> 
+> This adds Exynos Universal Flash Storage (UFS) Host Controller DT bindings.
+> 
+> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> ---
+>  .../devicetree/bindings/ufs/ufs-exynos.txt         |  104 ++++++++++++++++++++
+>  1 file changed, 104 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-exynos.txt b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+> new file mode 100644
+> index 000000000000..08e2d1497b1b
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+> @@ -0,0 +1,104 @@
+> +* Exynos Universal Flash Storage (UFS) Host Controller
+> +
+> +UFSHC nodes are defined to describe on-chip UFS host controllers.
+> +Each UFS controller instance should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible name, contains "samsung,exynos7-ufs"
+> +- interrupts        : <interrupt mapping for UFS host controller IRQ>
+> +- reg               : Should contain HCI, vendor specific, UNIPRO and
+> +		      UFS protector address space
+> +- reg-names	    : "hci", "vs_hci", "unipro", "ufsp";
 
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  9 ++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 88 ++++++++++++++++++++++++++++++++++
- 3 files changed, 100 insertions(+)
+No phy for MPHY?
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index bcef33c..f2355db 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -36,6 +36,7 @@
- 		(((sizeof(union hisi_sas_command_table)+3)/4)*4)
- 
- #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
-+#define HISI_SAS_MAX_SMP_RESP_SZ 1028
- 
- #define HISI_SAS_NAME_LEN 32
- 
-@@ -134,6 +135,8 @@ struct hisi_sas_hw {
- 	int (*prep_ssp)(struct hisi_hba *hisi_hba,
- 			struct hisi_sas_slot *slot, int is_tmf,
- 			struct hisi_sas_tmf_task *tmf);
-+	int (*prep_smp)(struct hisi_hba *hisi_hba,
-+			struct hisi_sas_slot *slot);
- 	int (*slot_complete)(struct hisi_hba *hisi_hba,
- 			     struct hisi_sas_slot *slot, int abort);
- 	void (*free_device)(struct hisi_hba *hisi_hba,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index e573512..95535e5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -98,6 +98,12 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- }
- EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
- 
-+static int hisi_sas_task_prep_smp(struct hisi_hba *hisi_hba,
-+				  struct hisi_sas_slot *slot)
-+{
-+	return hisi_hba->hw->prep_smp(hisi_hba, slot);
-+}
-+
- static int hisi_sas_task_prep_ssp(struct hisi_hba *hisi_hba,
- 				  struct hisi_sas_slot *slot, int is_tmf,
- 				  struct hisi_sas_tmf_task *tmf)
-@@ -215,6 +221,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
- 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
- 
- 	switch (task->task_proto) {
-+	case SAS_PROTOCOL_SMP:
-+		rc = hisi_sas_task_prep_smp(hisi_hba, slot);
-+		break;
- 	case SAS_PROTOCOL_SSP:
- 		rc = hisi_sas_task_prep_ssp(hisi_hba, slot, is_tmf, tmf);
- 		break;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 8f66d06..0a07e15 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -903,6 +903,74 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
- 	return 0;
- }
- 
-+static int prep_smp_v1_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
-+{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
-+
-+	/*
-+	* DMA-map SMP request, response buffers
-+	*/
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
-+
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
-+	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
-+	}
-+
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (1 << CMD_HDR_MODE_OFF) | /* ini mode */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32(sas_dev->device_id << CMD_HDR_DEVICE_ID_OFF);
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len-4)/4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ/4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
-+}
- 
- static int prep_ssp_v1_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot, int is_tmf,
-@@ -1223,6 +1291,25 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 		sas_ssp_task_response(dev, task, iu);
- 		break;
- 	}
-+	case SAS_PROTOCOL_SMP:
-+	{
-+		void *to;
-+		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
-+
-+		ts->stat = SAM_STAT_GOOD;
-+		to = kmap_atomic(sg_page(sg_resp));
-+
-+		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
-+			     DMA_FROM_DEVICE);
-+		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
-+			     DMA_TO_DEVICE);
-+		memcpy(to + sg_resp->offset,
-+		       slot->status_buffer +
-+		       sizeof(struct hisi_sas_err_record),
-+		       sg_dma_len(sg_resp));
-+		kunmap_atomic(to);
-+		break;
-+	}
- 	case SAS_PROTOCOL_SATA:
- 	case SAS_PROTOCOL_STP:
- 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
-@@ -1598,6 +1685,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.setup_itct = setup_itct_v1_hw,
- 	.sl_notify = sl_notify_v1_hw,
- 	.free_device = free_device_v1_hw,
-+	.prep_smp = prep_smp_v1_hw,
- 	.prep_ssp = prep_ssp_v1_hw,
- 	.get_free_slot = get_free_slot_v1_hw,
- 	.start_delivery = start_delivery_v1_hw,
--- 
-1.9.1
+> +
+> +Optional properties:
+> +- vdd-hba-supply        : phandle to UFS host controller supply regulator node
+> +- vcc-supply            : phandle to VCC supply regulator node
+> +- vccq-supply           : phandle to VCCQ supply regulator node
+> +- vccq2-supply          : phandle to VCCQ2 supply regulator node
+> +- vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
+> +                          or 2.7-3.6V. This boolean property when set, specifies
+> +			  to use low voltage range of 1.7-1.95V. Note for external
+> +			  UFS cards this property is invalid and valid VCC range is
+> +			  always 2.7-3.6V.
+> +- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
+> +- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
+> +- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Some of these are supplies to the flash chip, so you should make 
+these common properties (in a common doc).
+
+> +- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
+
+This should be determined from the regulator.
+
+> +
+> +- clocks                : List of phandle and clock specifier pairs
+> +- clock-names           : List of clock input name strings sorted in the same
+> +                          order as the clocks property.
+> +			  "core", "sclk_unipro_main", "ref" and ref_parent
+> +
+> +- freq-table-hz		: Array of <min max> operating frequencies stored in the same
+> +			  order as the clocks property. If this property is not
+> +			  defined or a value in the array is "0" then it is assumed
+> +			  that the frequency is set by the parent clock or a
+> +			  fixed rate clock source.
+> +- pclk-freq-avail-range : specifies available frequency range(min/max) for APB clock
+> +- ufs,pwr-attr-mode : specifies mode value for power mode change, possible values are
+> +			"FAST", "SLOW", "FAST_auto" and "SLOW_auto"
+
+ufs is not a vendor. Use a '-' rather than ','.
+
+> +- ufs,pwr-attr-lane : specifies lane count value for power mode change
+> +		      allowed values are 1 or 2
+> +- ufs,pwr-attr-gear : specifies gear count value for power mode change
+> +		      allowed values are 1 or 2
+> +- ufs,pwr-attr-hs-series : specifies HS rate series for power mode change
+> +			   can be one of "HS_rate_b" or "HS_rate_a"
+> +- ufs,pwr-local-l2-timer : specifies array of local UNIPRO L2 timer values
+> +			   3 timers supported
+> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
+> +- ufs,pwr-remote-l2-timer : specifies array of remote UNIPRO L2 timer values
+> +			   3 timers supported
+> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
+> +- ufs-rx-adv-fine-gran-sup_en : specifies support of fine granularity of MPHY,
+> +			      this is a boolean property.
+> +- ufs-rx-adv-fine-gran-step : specifies granularity steps of MPHY,
+> +			      allowed step size is 0 to 3
+> +- ufs-rx-adv-min-activate-time-cap : specifies rx advanced minimum activate time of MPHY
+> +				     range is 1 to 9
+> +- ufs-pa-granularity : specifies Granularity for PA_TActivate and PA_Hibern8Time
+> +- ufs-pa-tacctivate : specifies time to wake-up remote M-RX
+> +- ufs-pa-hibern8time : specifies minimum time to wait in HIBERN8 state
+
+These are all M-PHY properties?
+
+> +
+> +Note: If above properties are not defined it can be assumed that the supply
+> +regulators or clocks are always on.
+> +
+> +Example:
+> +	ufshc@0x15570000 {
+> +		compatible = "samsung,exynos7-ufs";
+> +		reg = <0x15570000 0x100>,
+> +		      <0x15570100 0x100>,
+> +		      <0x15571000 0x200>,
+> +		      <0x15572000 0x300>;
+> +		reg-names = "hci", "vs_hci", "unipro", "ufsp";
+> +		interrupts = <0 200 0>;
+> +
+> +		vdd-hba-supply = <&xxx_reg0>;
+> +		vdd-hba-fixed-regulator;
+> +		vcc-supply = <&xxx_reg1>;
+> +		vcc-supply-1p8;
+> +		vccq-supply = <&xxx_reg2>;
+> +		vccq2-supply = <&xxx_reg3>;
+> +		vcc-max-microamp = 500000;
+> +		vccq-max-microamp = 200000;
+> +		vccq2-max-microamp = 200000;
+> +
+> +		clocks = <&core 0>, <&ref 0>, <&iface 0>;
+> +		clock-names = "core", "sclk_unipro_main", "ref", "ref_parent";
+> +		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>, <0 0>;
+> +
+> +		pclk-freq-avail-range = <70000000 133000000>;
+> +
+> +		ufs,pwr-attr-mode = "FAST";
+> +		ufs,pwr-attr-lane = <2>;
+> +		ufs,pwr-attr-gear = <2>;
+> +		ufs,pwr-attr-hs-series = "HS_rate_b";
+> +		ufs,pwr-local-l2-timer = <8000 28000 20000>;
+> +		ufs,pwr-remote-l2-timer = <12000 32000 16000>;
+> +		ufs-rx-adv-fine-gran-sup_en = <1>;
+> +		ufs-rx-adv-fine-gran-step = <3>;
+> +		ufs-rx-adv-min-activate-time-cap = <9>;
+> +		ufs-pa-granularity = <6>;
+> +		ufs-pa-tacctivate = <6>;
+> +		ufs-pa-hibern8time = <20>;
+> +	};
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
