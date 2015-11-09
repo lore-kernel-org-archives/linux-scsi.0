@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 16/32] scsi: hisi_sas: add timer and spinlock init
-Date: Tue, 10 Nov 2015 00:32:21 +0800
-Message-ID: <1447086757-147706-17-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 10/32] scsi: hisi_sas: add cq structure initialization
+Date: Tue, 10 Nov 2015 00:32:15 +0800
+Message-ID: <1447086757-147706-11-git-send-email-john.garry@huawei.com>
 References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,46 +12,57 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Each completion queue has a structure. This is mainly for
+passing to irq handler so we know which queue the irq occured
+on.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      | 2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 3 +++
- 2 files changed, 5 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      | 7 +++++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 6 ++++++
+ 2 files changed, 13 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e04fd67..146a236 100644
+index 2cd6771..315fe46 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -99,7 +99,9 @@ struct hisi_hba {
- 	u8 sas_addr[SAS_ADDR_SIZE];
+@@ -45,6 +45,11 @@ struct hisi_sas_port {
+ 	struct asd_sas_port	sas_port;
+ };
  
- 	int n_phy;
-+	spinlock_t lock;
++struct hisi_sas_cq {
++	struct hisi_hba *hisi_hba;
++	int	id;
++};
++
+ struct hisi_sas_slot {
+ };
  
-+	struct timer_list timer;
- 	struct workqueue_struct *wq;
+@@ -73,6 +78,8 @@ struct hisi_hba {
+ 	/* SCSI/SAS glue */
+ 	struct sas_ha_struct sha;
+ 	struct Scsi_Host *shost;
++
++	struct hisi_sas_cq cq[HISI_SAS_MAX_QUEUES];
+ 	struct hisi_sas_phy phy[HISI_SAS_MAX_PHYS];
+ 	struct hisi_sas_port port[HISI_SAS_MAX_PHYS];
  
- 	int slot_index_count;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6892cdf..54d6260 100644
+index 985f074..79d6530 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -81,6 +81,7 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 	struct platform_device *pdev = hisi_hba->pdev;
+@@ -58,6 +58,12 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
  	struct device *dev = &pdev->dev;
  
-+	spin_lock_init(&hisi_hba->lock);
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
- 		hisi_sas_phy_init(hisi_hba, i);
- 		hisi_hba->port[i].port_attached = 0;
-@@ -275,6 +276,8 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	hisi_hba->shost = shost;
- 	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
- 
-+	init_timer(&hisi_hba->timer);
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
 +
- 	sas_addr_prop = of_find_property(np, "sas-addr", NULL);
- 	if (!sas_addr_prop || (sas_addr_prop->length != SAS_ADDR_SIZE))
- 		goto err_out;
++		/* Completion queue structure */
++		cq->id = i;
++		cq->hisi_hba = hisi_hba;
++
+ 		/* Delivery queue */
+ 		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
+ 		hisi_hba->cmd_hdr[i] = dma_alloc_coherent(dev, s,
 -- 
 1.9.1
