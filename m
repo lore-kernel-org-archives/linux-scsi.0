@@ -1,40 +1,29 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/32] HiSilicon SAS driver
-Date: Mon, 09 Nov 2015 17:40:18 +0100
-Message-ID: <7145880.UVekNWKRMt@wuerfel>
-References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH RESEND] scsi: Export SCSI Inquiry data to sysfs
+Date: Mon, 09 Nov 2015 11:47:38 -0500
+Message-ID: <yq1fv0fxgph.fsf@sermon.lab.mkp.net>
+References: <1447063017-129232-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:53202 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590AbbKIQqL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 11:46:11 -0500
-In-Reply-To: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41636 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866AbbKIQrw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 11:47:52 -0500
+In-Reply-To: <1447063017-129232-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Mon, 9 Nov 2015 10:56:57 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Tuesday 10 November 2015 00:32:05 John Garry wrote:
-> This is the driver patchset for the HiSilicon SAS driver. The driver
-> is a platform driver.
-> 
-> The driver will support multiple revisions of HW. Currently only "v1"
-> HW is supported.
-> 
-> The driver uses libsas framework within the SCSI framework.
-> 
-> The v1 HW supports SSP and SMP, but not STP/SATA.
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-I have one remaining comment that I now posted, all my previous comments
-have been addressed as far as I can tell.
+Johannes> Export the RAW SCSI Inquiry to sysfs as binfile. This way the
+Johannes> data can be used by userland without the need to have and
+Johannes> ioctl or use the sg_inq tool.
 
-Very nice work!
+Applied.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-
-Note that my comments were mostly about general driver design, I have
-very little SAS specific knowledge and someone else should look over those
-parts.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
