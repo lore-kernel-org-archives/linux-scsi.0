@@ -1,46 +1,64 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA fails
-Date: Mon, 09 Nov 2015 09:59:04 +0100
-Message-ID: <4041362.9GKaSPm9gs@wuerfel>
-References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org> <1447034266-28003-2-git-send-email-okaya@codeaurora.org> <564046B3.8090505@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 05/27] hpsa: check for null arguments to dev_printk
+Date: Mon, 09 Nov 2015 10:37:54 +0100
+Message-ID: <56406972.1000304@suse.de>
+References: <20151104214910.15472.23179.stgit@brunhilda> <20151104215025.15472.12183.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <564046B3.8090505@suse.de>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hannes Reinecke <hare@suse.de>, Sinan Kaya <okaya@codeaurora.org>, linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-arm-msm@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49255 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751749AbbKIJh5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Nov 2015 04:37:57 -0500
+In-Reply-To: <20151104215025.15472.12183.stgit@brunhilda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Monday 09 November 2015 08:09:39 Hannes Reinecke wrote:
-> On 11/09/2015 02:57 AM, Sinan Kaya wrote:
-> > Current code gives up when 32 bit DMA is not supported.
-> > This problem has been observed on systems without any
-> > memory below 4 gig.
-> > 
-> > This patch tests 64 bit support before bailing out to find
-> > a working combination.
-> > 
-> That feels decidedly odd.
-> 
-> Why do you probe for 64bit if 32bit fails?
+On 11/04/2015 10:50 PM, Don Brace wrote:
+> Check for NULLs.
+>=20
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+> Signed-off-by: Don Brace <don.brace@pmcs.com>
+> ---
+>  drivers/scsi/hpsa.c |    3 +++
+>  1 file changed, 3 insertions(+)
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 5a996273..b64913f 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -1138,6 +1138,9 @@ static int hpsa_find_target_lun(struct ctlr_inf=
+o *h,
+>  static inline void hpsa_show_dev_msg(const char *level, struct ctlr_=
+info *h,
+>  	struct hpsa_scsi_dev_t *dev, char *description)
+>  {
+> +	if (h =3D=3D NULL || h->pdev =3D=3D NULL || h->scsi_host =3D=3D NUL=
+L)
+> +		return;
+> +
+>  	dev_printk(level, &h->pdev->dev,
+>  			"scsi %d:%d:%d:%d: %s %s %.8s %.16s RAID-%s SSDSmartPathCap%c En%=
+c Exp=3D%d\n",
+>  			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-32-bit DMA mask on PCI cannot fail, we rely on that in all sorts
-of places. If the machine has all of its RAM visible above 4GB
-PCI bus addresses, it must use an IOMMU.
+Cheers,
 
-> Typically it's the other way round, on the grounds that 64bit DMA
-> should be preferred over 32bit.
-> Can you explain why it needs to be done the other way round here?
-
-Something else is odd here, the driver already checks for
-dma_get_required_mask(), which will return the smallest mask
-that fits all of RAM. If the machine has any memory above 4GB,
-it already uses the 64-bit mask, and only falls back to
-the 32-bit mask if that fails or if all memory fits within the
-first 4GB.
-
-So both the description and the patch are wrong. :(
-
-	Arnd
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
