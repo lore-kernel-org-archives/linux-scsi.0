@@ -1,430 +1,192 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 18/32] scsi: hisi_sas: add v1 hardware register definitions
-Date: Tue, 10 Nov 2015 00:32:23 +0800
-Message-ID: <1447086757-147706-19-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3 27/32] scsi: hisi_sas: add smp protocol support
+Date: Tue, 10 Nov 2015 00:32:32 +0800
+Message-ID: <1447086757-147706-28-git-send-email-john.garry@huawei.com>
 References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:13617 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbbKIQTF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 11:19:05 -0500
-In-Reply-To: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447086757-147706-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Add support for smp function, which allows devices
+attached by expander to be controlled
+
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 389 +++++++++++++++++++++++++++++++++
- 1 file changed, 389 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  9 ++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 88 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 100 insertions(+)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index bcef33c..f2355db 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -36,6 +36,7 @@
+ 		(((sizeof(union hisi_sas_command_table)+3)/4)*4)
+ 
+ #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
++#define HISI_SAS_MAX_SMP_RESP_SZ 1028
+ 
+ #define HISI_SAS_NAME_LEN 32
+ 
+@@ -134,6 +135,8 @@ struct hisi_sas_hw {
+ 	int (*prep_ssp)(struct hisi_hba *hisi_hba,
+ 			struct hisi_sas_slot *slot, int is_tmf,
+ 			struct hisi_sas_tmf_task *tmf);
++	int (*prep_smp)(struct hisi_hba *hisi_hba,
++			struct hisi_sas_slot *slot);
+ 	int (*slot_complete)(struct hisi_hba *hisi_hba,
+ 			     struct hisi_sas_slot *slot, int abort);
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index e573512..95535e5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -98,6 +98,12 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
+ 
++static int hisi_sas_task_prep_smp(struct hisi_hba *hisi_hba,
++				  struct hisi_sas_slot *slot)
++{
++	return hisi_hba->hw->prep_smp(hisi_hba, slot);
++}
++
+ static int hisi_sas_task_prep_ssp(struct hisi_hba *hisi_hba,
+ 				  struct hisi_sas_slot *slot, int is_tmf,
+ 				  struct hisi_sas_tmf_task *tmf)
+@@ -215,6 +221,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+ 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
+ 
+ 	switch (task->task_proto) {
++	case SAS_PROTOCOL_SMP:
++		rc = hisi_sas_task_prep_smp(hisi_hba, slot);
++		break;
+ 	case SAS_PROTOCOL_SSP:
+ 		rc = hisi_sas_task_prep_ssp(hisi_hba, slot, is_tmf, tmf);
+ 		break;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 011bfe3..d1c9c27 100644
+index 8f66d06..0a07e15 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -12,10 +12,399 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas_v1_hw"
+@@ -903,6 +903,74 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
+ }
  
-+/* global registers need init*/
-+#define DLVRY_QUEUE_ENABLE		0x0
-+#define IOST_BASE_ADDR_LO		0x8
-+#define IOST_BASE_ADDR_HI		0xc
-+#define ITCT_BASE_ADDR_LO		0x10
-+#define ITCT_BASE_ADDR_HI		0x14
-+#define BROKEN_MSG_ADDR_LO		0x18
-+#define BROKEN_MSG_ADDR_HI		0x1c
-+#define PHY_CONTEXT			0x20
-+#define PHY_STATE			0x24
-+#define PHY_PORT_NUM_MA			0x28
-+#define PORT_STATE			0x2c
-+#define PHY_CONN_RATE			0x30
-+#define HGC_TRANS_TASK_CNT_LIMIT	0x38
-+#define AXI_AHB_CLK_CFG			0x3c
-+#define HGC_SAS_TXFAIL_RETRY_CTRL	0x84
-+#define HGC_GET_ITV_TIME		0x90
-+#define DEVICE_MSG_WORK_MODE		0x94
-+#define I_T_NEXUS_LOSS_TIME		0xa0
-+#define BUS_INACTIVE_LIMIT_TIME		0xa8
-+#define REJECT_TO_OPEN_LIMIT_TIME	0xac
-+#define CFG_AGING_TIME			0xbc
-+#define CFG_AGING_TIME_ITCT_REL_OFF	0
-+#define CFG_AGING_TIME_ITCT_REL_MSK	(0x1 << CFG_AGING_TIME_ITCT_REL_OFF)
-+#define HGC_DFX_CFG2			0xc0
-+#define FIS_LIST_BADDR_L		0xc4
-+#define CFG_1US_TIMER_TRSH		0xcc
-+#define CFG_SAS_CONFIG			0xd4
-+#define HGC_IOST_ECC_ADDR		0x140
-+#define HGC_IOST_ECC_ADDR_BAD_OFF	16
-+#define HGC_IOST_ECC_ADDR_BAD_MSK	(0x3ff << HGC_IOST_ECC_ADDR_BAD_OFF)
-+#define HGC_DQ_ECC_ADDR			0x144
-+#define HGC_DQ_ECC_ADDR_BAD_OFF		16
-+#define HGC_DQ_ECC_ADDR_BAD_MSK		(0xfff << HGC_DQ_ECC_ADDR_BAD_OFF)
-+#define HGC_INVLD_DQE_INFO		0x148
-+#define HGC_INVLD_DQE_INFO_DQ_OFF	0
-+#define HGC_INVLD_DQE_INFO_DQ_MSK	(0xffff << HGC_INVLD_DQE_INFO_DQ_OFF)
-+#define HGC_INVLD_DQE_INFO_TYPE_OFF	16
-+#define HGC_INVLD_DQE_INFO_TYPE_MSK	(0x1 << HGC_INVLD_DQE_INFO_TYPE_OFF)
-+#define HGC_INVLD_DQE_INFO_FORCE_OFF	17
-+#define HGC_INVLD_DQE_INFO_FORCE_MSK	(0x1 << HGC_INVLD_DQE_INFO_FORCE_OFF)
-+#define HGC_INVLD_DQE_INFO_PHY_OFF	18
-+#define HGC_INVLD_DQE_INFO_PHY_MSK	(0x1 << HGC_INVLD_DQE_INFO_PHY_OFF)
-+#define HGC_INVLD_DQE_INFO_ABORT_OFF	19
-+#define HGC_INVLD_DQE_INFO_ABORT_MSK	(0x1 << HGC_INVLD_DQE_INFO_ABORT_OFF)
-+#define HGC_INVLD_DQE_INFO_IPTT_OF_OFF	20
-+#define HGC_INVLD_DQE_INFO_IPTT_OF_MSK	(0x1 << HGC_INVLD_DQE_INFO_IPTT_OF_OFF)
-+#define HGC_INVLD_DQE_INFO_SSP_ERR_OFF	21
-+#define HGC_INVLD_DQE_INFO_SSP_ERR_MSK	(0x1 << HGC_INVLD_DQE_INFO_SSP_ERR_OFF)
-+#define HGC_INVLD_DQE_INFO_OFL_OFF	22
-+#define HGC_INVLD_DQE_INFO_OFL_MSK	(0x1 << HGC_INVLD_DQE_INFO_OFL_OFF)
-+#define HGC_ITCT_ECC_ADDR		0x150
-+#define HGC_ITCT_ECC_ADDR_BAD_OFF	16
-+#define HGC_ITCT_ECC_ADDR_BAD_MSK	(0x3ff << HGC_ITCT_ECC_ADDR_BAD_OFF)
-+#define HGC_AXI_FIFO_ERR_INFO		0x154
-+#define INT_COAL_EN			0x1bc
-+#define OQ_INT_COAL_TIME		0x1c0
-+#define OQ_INT_COAL_CNT			0x1c4
-+#define ENT_INT_COAL_TIME		0x1c8
-+#define ENT_INT_COAL_CNT		0x1cc
-+#define OQ_INT_SRC			0x1d0
-+#define OQ_INT_SRC_MSK			0x1d4
-+#define ENT_INT_SRC1			0x1d8
-+#define ENT_INT_SRC2			0x1dc
-+#define ENT_INT_SRC2_DQ_CFG_ERR_OFF	25
-+#define ENT_INT_SRC2_DQ_CFG_ERR_MSK	(0x1 << ENT_INT_SRC2_DQ_CFG_ERR_OFF)
-+#define ENT_INT_SRC2_CQ_CFG_ERR_OFF	27
-+#define ENT_INT_SRC2_CQ_CFG_ERR_MSK	(0x1 << ENT_INT_SRC2_CQ_CFG_ERR_OFF)
-+#define ENT_INT_SRC2_AXI_WRONG_INT_OFF	28
-+#define ENT_INT_SRC2_AXI_WRONG_INT_MSK	(0x1 << ENT_INT_SRC2_AXI_WRONG_INT_OFF)
-+#define ENT_INT_SRC2_AXI_OVERLF_INT_OFF	29
-+#define ENT_INT_SRC2_AXI_OVERLF_INT_MSK	(0x1 << ENT_INT_SRC2_AXI_OVERLF_INT_OFF)
-+#define ENT_INT_SRC_MSK1		0x1e0
-+#define ENT_INT_SRC_MSK2		0x1e4
-+#define SAS_ECC_INTR			0x1e8
-+#define SAS_ECC_INTR_DQ_ECC1B_OFF	0
-+#define SAS_ECC_INTR_DQ_ECC1B_MSK	(0x1 << SAS_ECC_INTR_DQ_ECC1B_OFF)
-+#define SAS_ECC_INTR_DQ_ECCBAD_OFF	1
-+#define SAS_ECC_INTR_DQ_ECCBAD_MSK	(0x1 << SAS_ECC_INTR_DQ_ECCBAD_OFF)
-+#define SAS_ECC_INTR_IOST_ECC1B_OFF	2
-+#define SAS_ECC_INTR_IOST_ECC1B_MSK	(0x1 << SAS_ECC_INTR_IOST_ECC1B_OFF)
-+#define SAS_ECC_INTR_IOST_ECCBAD_OFF	3
-+#define SAS_ECC_INTR_IOST_ECCBAD_MSK	(0x1 << SAS_ECC_INTR_IOST_ECCBAD_OFF)
-+#define SAS_ECC_INTR_ITCT_ECC1B_OFF	4
-+#define SAS_ECC_INTR_ITCT_ECC1B_MSK	(0x1 << SAS_ECC_INTR_ITCT_ECC1B_OFF)
-+#define SAS_ECC_INTR_ITCT_ECCBAD_OFF	5
-+#define SAS_ECC_INTR_ITCT_ECCBAD_MSK	(0x1 << SAS_ECC_INTR_ITCT_ECCBAD_OFF)
-+#define SAS_ECC_INTR_MSK		0x1ec
-+#define HGC_ERR_STAT_EN			0x238
-+#define DLVRY_Q_0_BASE_ADDR_LO		0x260
-+#define DLVRY_Q_0_BASE_ADDR_HI		0x264
-+#define DLVRY_Q_0_DEPTH			0x268
-+#define DLVRY_Q_0_WR_PTR		0x26c
-+#define DLVRY_Q_0_RD_PTR		0x270
-+#define COMPL_Q_0_BASE_ADDR_LO		0x4e0
-+#define COMPL_Q_0_BASE_ADDR_HI		0x4e4
-+#define COMPL_Q_0_DEPTH			0x4e8
-+#define COMPL_Q_0_WR_PTR		0x4ec
-+#define COMPL_Q_0_RD_PTR		0x4f0
-+#define HGC_ECC_ERR			0x7d0
++static int prep_smp_v1_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot)
++{
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
++	struct device *dev = &hisi_hba->pdev->dev;
++	struct hisi_sas_port *port = slot->port;
++	struct scatterlist *sg_req, *sg_resp;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	dma_addr_t req_dma_addr;
++	unsigned int req_len, resp_len;
++	int elem, rc;
 +
-+/* phy registers need init */
-+#define PORT_BASE			(0x800)
++	/*
++	* DMA-map SMP request, response buffers
++	*/
++	/* req */
++	sg_req = &task->smp_task.smp_req;
++	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
++	if (!elem)
++		return -ENOMEM;
++	req_len = sg_dma_len(sg_req);
++	req_dma_addr = sg_dma_address(sg_req);
 +
-+#define PHY_CFG				(PORT_BASE + 0x0)
-+#define PHY_CFG_ENA_OFF			0
-+#define PHY_CFG_ENA_MSK			(0x1 << PHY_CFG_ENA_OFF)
-+#define PHY_CFG_DC_OPT_OFF		2
-+#define PHY_CFG_DC_OPT_MSK		(0x1 << PHY_CFG_DC_OPT_OFF)
-+#define PROG_PHY_LINK_RATE		(PORT_BASE + 0xc)
-+#define PROG_PHY_LINK_RATE_MAX_OFF	0
-+#define PROG_PHY_LINK_RATE_MAX_MSK	(0xf << PROG_PHY_LINK_RATE_MAX_OFF)
-+#define PROG_PHY_LINK_RATE_MIN_OFF	4
-+#define PROG_PHY_LINK_RATE_MIN_MSK	(0xf << PROG_PHY_LINK_RATE_MIN_OFF)
-+#define PROG_PHY_LINK_RATE_OOB_OFF	8
-+#define PROG_PHY_LINK_RATE_OOB_MSK	(0xf << PROG_PHY_LINK_RATE_OOB_OFF)
-+#define PHY_CTRL			(PORT_BASE + 0x14)
-+#define PHY_CTRL_RESET_OFF		0
-+#define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
-+#define PHY_RATE_NEGO			(PORT_BASE + 0x30)
-+#define PHY_PCN				(PORT_BASE + 0x44)
-+#define SL_TOUT_CFG			(PORT_BASE + 0x8c)
-+#define SL_CONTROL			(PORT_BASE + 0x94)
-+#define SL_CONTROL_NOTIFY_EN_OFF	0
-+#define SL_CONTROL_NOTIFY_EN_MSK	(0x1 << SL_CONTROL_NOTIFY_EN_OFF)
-+#define TX_ID_DWORD0			(PORT_BASE + 0x9c)
-+#define TX_ID_DWORD1			(PORT_BASE + 0xa0)
-+#define TX_ID_DWORD2			(PORT_BASE + 0xa4)
-+#define TX_ID_DWORD3			(PORT_BASE + 0xa8)
-+#define TX_ID_DWORD4			(PORT_BASE + 0xaC)
-+#define TX_ID_DWORD5			(PORT_BASE + 0xb0)
-+#define TX_ID_DWORD6			(PORT_BASE + 0xb4)
-+#define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
-+#define RX_IDAF_DWORD1			(PORT_BASE + 0xc8)
-+#define RX_IDAF_DWORD2			(PORT_BASE + 0xcc)
-+#define RX_IDAF_DWORD3			(PORT_BASE + 0xd0)
-+#define RX_IDAF_DWORD4			(PORT_BASE + 0xd4)
-+#define RX_IDAF_DWORD5			(PORT_BASE + 0xd8)
-+#define RX_IDAF_DWORD6			(PORT_BASE + 0xdc)
-+#define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
-+#define DONE_RECEIVED_TIME		(PORT_BASE + 0x12c)
-+#define CON_CFG_DRIVER			(PORT_BASE + 0x130)
-+#define PHY_CONFIG2			(PORT_BASE + 0x1a8)
-+#define PHY_CONFIG2_FORCE_TXDEEMPH_OFF	3
-+#define PHY_CONFIG2_FORCE_TXDEEMPH_MSK	(0x1 << PHY_CONFIG2_FORCE_TXDEEMPH_OFF)
-+#define PHY_CONFIG2_TX_TRAIN_COMP_OFF	24
-+#define PHY_CONFIG2_TX_TRAIN_COMP_MSK	(0x1 << PHY_CONFIG2_TX_TRAIN_COMP_OFF)
-+#define CHL_INT0			(PORT_BASE + 0x1b0)
-+#define CHL_INT0_PHYCTRL_NOTRDY_OFF	0
-+#define CHL_INT0_PHYCTRL_NOTRDY_MSK	(0x1 << CHL_INT0_PHYCTRL_NOTRDY_OFF)
-+#define CHL_INT0_SN_FAIL_NGR_OFF	2
-+#define CHL_INT0_SN_FAIL_NGR_MSK	(0x1 << CHL_INT0_SN_FAIL_NGR_OFF)
-+#define CHL_INT0_DWS_LOST_OFF		4
-+#define CHL_INT0_DWS_LOST_MSK		(0x1 << CHL_INT0_DWS_LOST_OFF)
-+#define CHL_INT0_SL_IDAF_FAIL_OFF	10
-+#define CHL_INT0_SL_IDAF_FAIL_MSK	(0x1 << CHL_INT0_SL_IDAF_FAIL_OFF)
-+#define CHL_INT0_ID_TIMEOUT_OFF		11
-+#define CHL_INT0_ID_TIMEOUT_MSK		(0x1 << CHL_INT0_ID_TIMEOUT_OFF)
-+#define CHL_INT0_SL_OPAF_FAIL_OFF	12
-+#define CHL_INT0_SL_OPAF_FAIL_MSK	(0x1 << CHL_INT0_SL_OPAF_FAIL_OFF)
-+#define CHL_INT0_SL_PS_FAIL_OFF		21
-+#define CHL_INT0_SL_PS_FAIL_MSK		(0x1 << CHL_INT0_SL_PS_FAIL_OFF)
-+#define CHL_INT1			(PORT_BASE + 0x1b4)
-+#define CHL_INT2			(PORT_BASE + 0x1b8)
-+#define CHL_INT2_SL_RX_BC_ACK_OFF	2
-+#define CHL_INT2_SL_RX_BC_ACK_MSK	(0x1 << CHL_INT2_SL_RX_BC_ACK_OFF)
-+#define CHL_INT2_SL_PHY_ENA_OFF		6
-+#define CHL_INT2_SL_PHY_ENA_MSK		(0x1 << CHL_INT2_SL_PHY_ENA_OFF)
-+#define CHL_INT0_MSK			(PORT_BASE + 0x1bc)
-+#define CHL_INT0_MSK_PHYCTRL_NOTRDY_OFF	0
-+#define CHL_INT0_MSK_PHYCTRL_NOTRDY_MSK	(0x1 << CHL_INT0_MSK_PHYCTRL_NOTRDY_OFF)
-+#define CHL_INT1_MSK			(PORT_BASE + 0x1c0)
-+#define CHL_INT2_MSK			(PORT_BASE + 0x1c4)
-+#define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
-+#define DMA_TX_STATUS			(PORT_BASE + 0x2d0)
-+#define DMA_TX_STATUS_BUSY_OFF		0
-+#define DMA_TX_STATUS_BUSY_MSK		(0x1 << DMA_TX_STATUS_BUSY_OFF)
-+#define DMA_RX_STATUS			(PORT_BASE + 0x2e8)
-+#define DMA_RX_STATUS_BUSY_OFF		0
-+#define DMA_RX_STATUS_BUSY_MSK		(0x1 << DMA_RX_STATUS_BUSY_OFF)
++	/* resp */
++	sg_resp = &task->smp_task.smp_resp;
++	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
++	if (!elem) {
++		rc = -ENOMEM;
++		goto err_out_req;
++	}
++	resp_len = sg_dma_len(sg_resp);
++	if ((req_len & 0x3) || (resp_len & 0x3)) {
++		rc = -EINVAL;
++		goto err_out_resp;
++	}
 +
-+#define AXI_CFG				0x5100
-+#define RESET_VALUE			0x7ffff
++	/* create header */
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
++			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
++			       (1 << CMD_HDR_MODE_OFF) | /* ini mode */
++			       (2 << CMD_HDR_CMD_OFF)); /* smp */
 +
-+/* HW dma structures */
-+/* Delivery queue header */
-+/* dw0 */
-+#define CMD_HDR_RESP_REPORT_OFF		5
-+#define CMD_HDR_RESP_REPORT_MSK		0x20
-+#define CMD_HDR_TLR_CTRL_OFF		6
-+#define CMD_HDR_TLR_CTRL_MSK		0xc0
-+#define CMD_HDR_PORT_OFF		17
-+#define CMD_HDR_PORT_MSK		0xe0000
-+#define CMD_HDR_PRIORITY_OFF		27
-+#define CMD_HDR_PRIORITY_MSK		0x8000000
-+#define CMD_HDR_MODE_OFF		28
-+#define CMD_HDR_MODE_MSK		0x10000000
-+#define CMD_HDR_CMD_OFF			29
-+#define CMD_HDR_CMD_MSK			0xe0000000
-+/* dw1 */
-+#define CMD_HDR_VERIFY_DTL_OFF		10
-+#define CMD_HDR_VERIFY_DTL_MSK		0x400
-+#define CMD_HDR_SSP_FRAME_TYPE_OFF	13
-+#define CMD_HDR_SSP_FRAME_TYPE_MSK	0xe000
-+#define CMD_HDR_DEVICE_ID_OFF		16
-+#define CMD_HDR_DEVICE_ID_MSK		0xffff0000
-+/* dw2 */
-+#define CMD_HDR_CFL_OFF			0
-+#define CMD_HDR_CFL_MSK			0x1ff
-+#define CMD_HDR_MRFL_OFF		15
-+#define CMD_HDR_MRFL_MSK		0xff8000
-+#define CMD_HDR_FIRST_BURST_OFF		25
-+#define CMD_HDR_FIRST_BURST_MSK		0x2000000
-+/* dw3 */
-+#define CMD_HDR_IPTT_OFF		0
-+#define CMD_HDR_IPTT_MSK		0xffff
-+/* dw6 */
-+#define CMD_HDR_DATA_SGL_LEN_OFF	16
-+#define CMD_HDR_DATA_SGL_LEN_MSK	0xffff0000
++	/* map itct entry */
++	hdr->dw1 = cpu_to_le32(sas_dev->device_id << CMD_HDR_DEVICE_ID_OFF);
 +
-+/* Completion header */
-+#define CMPLT_HDR_IPTT_OFF		0
-+#define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
-+#define CMPLT_HDR_CMD_CMPLT_OFF		17
-+#define CMPLT_HDR_CMD_CMPLT_MSK		(0x1 << CMPLT_HDR_CMD_CMPLT_OFF)
-+#define CMPLT_HDR_ERR_RCRD_XFRD_OFF	18
-+#define CMPLT_HDR_ERR_RCRD_XFRD_MSK	(0x1 << CMPLT_HDR_ERR_RCRD_XFRD_OFF)
-+#define CMPLT_HDR_RSPNS_XFRD_OFF	19
-+#define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
-+#define CMPLT_HDR_IO_CFG_ERR_OFF	27
-+#define CMPLT_HDR_IO_CFG_ERR_MSK	(0x1 << CMPLT_HDR_IO_CFG_ERR_OFF)
++	/* dw2 */
++	hdr->dw2 = cpu_to_le32((((req_len-4)/4) << CMD_HDR_CFL_OFF) |
++			       (HISI_SAS_MAX_SMP_RESP_SZ/4 <<
++			       CMD_HDR_MRFL_OFF));
 +
-+/* ITCT header */
-+/* qw0 */
-+#define ITCT_HDR_DEV_TYPE_OFF		0
-+#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
-+#define ITCT_HDR_VALID_OFF		2
-+#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
-+#define ITCT_HDR_BREAK_REPLY_ENA_OFF	3
-+#define ITCT_HDR_BREAK_REPLY_ENA_MSK	(0x1 << ITCT_HDR_BREAK_REPLY_ENA_OFF)
-+#define ITCT_HDR_AWT_CONTROL_OFF	4
-+#define ITCT_HDR_AWT_CONTROL_MSK	(0x1 << ITCT_HDR_AWT_CONTROL_OFF)
-+#define ITCT_HDR_MAX_CONN_RATE_OFF	5
-+#define ITCT_HDR_MAX_CONN_RATE_MSK	(0xf << ITCT_HDR_MAX_CONN_RATE_OFF)
-+#define ITCT_HDR_VALID_LINK_NUM_OFF	9
-+#define ITCT_HDR_VALID_LINK_NUM_MSK	(0xf << ITCT_HDR_VALID_LINK_NUM_OFF)
-+#define ITCT_HDR_PORT_ID_OFF		13
-+#define ITCT_HDR_PORT_ID_MSK		(0x7 << ITCT_HDR_PORT_ID_OFF)
-+#define ITCT_HDR_SMP_TIMEOUT_OFF	16
-+#define ITCT_HDR_SMP_TIMEOUT_MSK	(0xffff << ITCT_HDR_SMP_TIMEOUT_OFF)
-+#define ITCT_HDR_MAX_BURST_BYTES_OFF	16
-+#define ITCT_HDR_MAX_BURST_BYTES_MSK	(0xffffffff << \
-+					ITCT_MAX_BURST_BYTES_OFF)
-+/* qw1 */
-+#define ITCT_HDR_MAX_SAS_ADDR_OFF	0
-+#define ITCT_HDR_MAX_SAS_ADDR_MSK	(0xffffffffffffffff << \
-+					ITCT_HDR_MAX_SAS_ADDR_OFF)
-+/* qw2 */
-+#define ITCT_HDR_IT_NEXUS_LOSS_TL_OFF	0
-+#define ITCT_HDR_IT_NEXUS_LOSS_TL_MSK	(0xffff << \
-+					ITCT_HDR_IT_NEXUS_LOSS_TL_OFF)
-+#define ITCT_HDR_BUS_INACTIVE_TL_OFF	16
-+#define ITCT_HDR_BUS_INACTIVE_TL_MSK	(0xffff << \
-+					ITCT_HDR_BUS_INACTIVE_TL_OFF)
-+#define ITCT_HDR_MAX_CONN_TL_OFF	32
-+#define ITCT_HDR_MAX_CONN_TL_MSK	(0xffff << \
-+					ITCT_HDR_MAX_CONN_TL_OFF)
-+#define ITCT_HDR_REJ_OPEN_TL_OFF	48
-+#define ITCT_HDR_REJ_OPEN_TL_MSK	(0xffff << \
-+					ITCT_REJ_OPEN_TL_OFF)
++	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
 +
-+/* Err record header */
-+#define ERR_HDR_DMA_TX_ERR_TYPE_OFF	0
-+#define ERR_HDR_DMA_TX_ERR_TYPE_MSK	(0xffff << ERR_HDR_DMA_TX_ERR_TYPE_OFF)
-+#define ERR_HDR_DMA_RX_ERR_TYPE_OFF	16
-+#define ERR_HDR_DMA_RX_ERR_TYPE_MSK	(0xffff << ERR_HDR_DMA_RX_ERR_TYPE_OFF)
++	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	return 0;
++
++err_out_resp:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
++		     DMA_FROM_DEVICE);
++err_out_req:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
++		     DMA_TO_DEVICE);
++	return rc;
++}
  
- struct hisi_sas_complete_v1_hdr {
- 	__le32 data;
- };
+ static int prep_ssp_v1_hw(struct hisi_hba *hisi_hba,
+ 			  struct hisi_sas_slot *slot, int is_tmf,
+@@ -1223,6 +1291,25 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 		sas_ssp_task_response(dev, task, iu);
+ 		break;
+ 	}
++	case SAS_PROTOCOL_SMP:
++	{
++		void *to;
++		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
 +
-+enum {
-+	HISI_SAS_PHY_BCAST_ACK = 0,
-+	HISI_SAS_PHY_SL_PHY_ENABLED,
-+	HISI_SAS_PHY_INT_ABNORMAL,
-+	HISI_SAS_PHY_INT_NR
-+};
++		ts->stat = SAM_STAT_GOOD;
++		to = kmap_atomic(sg_page(sg_resp));
 +
-+enum {
-+	DMA_TX_ERR_BASE = 0x0,
-+	DMA_RX_ERR_BASE = 0x100,
-+	TRANS_TX_FAIL_BASE = 0x200,
-+	TRANS_RX_FAIL_BASE = 0x300,
-+
-+	/* dma tx */
-+	DMA_TX_DIF_CRC_ERR = DMA_TX_ERR_BASE, /* 0x0 */
-+	DMA_TX_DIF_APP_ERR, /* 0x1 */
-+	DMA_TX_DIF_RPP_ERR, /* 0x2 */
-+	DMA_TX_AXI_BUS_ERR, /* 0x3 */
-+	DMA_TX_DATA_SGL_OVERFLOW_ERR, /* 0x4 */
-+	DMA_TX_DIF_SGL_OVERFLOW_ERR, /* 0x5 */
-+	DMA_TX_UNEXP_XFER_RDY_ERR, /* 0x6 */
-+	DMA_TX_XFER_RDY_OFFSET_ERR, /* 0x7 */
-+	DMA_TX_DATA_UNDERFLOW_ERR, /* 0x8 */
-+	DMA_TX_XFER_RDY_LENGTH_OVERFLOW_ERR, /* 0x9 */
-+
-+	/* dma rx */
-+	DMA_RX_BUFFER_ECC_ERR = DMA_RX_ERR_BASE, /* 0x100 */
-+	DMA_RX_DIF_CRC_ERR, /* 0x101 */
-+	DMA_RX_DIF_APP_ERR, /* 0x102 */
-+	DMA_RX_DIF_RPP_ERR, /* 0x103 */
-+	DMA_RX_RESP_BUFFER_OVERFLOW_ERR, /* 0x104 */
-+	DMA_RX_AXI_BUS_ERR, /* 0x105 */
-+	DMA_RX_DATA_SGL_OVERFLOW_ERR, /* 0x106 */
-+	DMA_RX_DIF_SGL_OVERFLOW_ERR, /* 0x107 */
-+	DMA_RX_DATA_OFFSET_ERR, /* 0x108 */
-+	DMA_RX_UNEXP_RX_DATA_ERR, /* 0x109 */
-+	DMA_RX_DATA_OVERFLOW_ERR, /* 0x10a */
-+	DMA_RX_DATA_UNDERFLOW_ERR, /* 0x10b */
-+	DMA_RX_UNEXP_RETRANS_RESP_ERR, /* 0x10c */
-+
-+	/* trans tx */
-+	TRANS_TX_RSVD0_ERR = TRANS_TX_FAIL_BASE, /* 0x200 */
-+	TRANS_TX_PHY_NOT_ENABLE_ERR, /* 0x201 */
-+	TRANS_TX_OPEN_REJCT_WRONG_DEST_ERR, /* 0x202 */
-+	TRANS_TX_OPEN_REJCT_ZONE_VIOLATION_ERR, /* 0x203 */
-+	TRANS_TX_OPEN_REJCT_BY_OTHER_ERR, /* 0x204 */
-+	TRANS_TX_RSVD1_ERR, /* 0x205 */
-+	TRANS_TX_OPEN_REJCT_AIP_TIMEOUT_ERR, /* 0x206 */
-+	TRANS_TX_OPEN_REJCT_STP_BUSY_ERR, /* 0x207 */
-+	TRANS_TX_OPEN_REJCT_PROTOCOL_NOT_SUPPORT_ERR, /* 0x208 */
-+	TRANS_TX_OPEN_REJCT_RATE_NOT_SUPPORT_ERR, /* 0x209 */
-+	TRANS_TX_OPEN_REJCT_BAD_DEST_ERR, /* 0x20a */
-+	TRANS_TX_OPEN_BREAK_RECEIVE_ERR, /* 0x20b */
-+	TRANS_TX_LOW_PHY_POWER_ERR, /* 0x20c */
-+	TRANS_TX_OPEN_REJCT_PATHWAY_BLOCKED_ERR, /* 0x20d */
-+	TRANS_TX_OPEN_TIMEOUT_ERR, /* 0x20e */
-+	TRANS_TX_OPEN_REJCT_NO_DEST_ERR, /* 0x20f */
-+	TRANS_TX_OPEN_RETRY_ERR, /* 0x210 */
-+	TRANS_TX_RSVD2_ERR, /* 0x211 */
-+	TRANS_TX_BREAK_TIMEOUT_ERR, /* 0x212 */
-+	TRANS_TX_BREAK_REQUEST_ERR, /* 0x213 */
-+	TRANS_TX_BREAK_RECEIVE_ERR, /* 0x214 */
-+	TRANS_TX_CLOSE_TIMEOUT_ERR, /* 0x215 */
-+	TRANS_TX_CLOSE_NORMAL_ERR, /* 0x216 */
-+	TRANS_TX_CLOSE_PHYRESET_ERR, /* 0x217 */
-+	TRANS_TX_WITH_CLOSE_DWS_TIMEOUT_ERR, /* 0x218 */
-+	TRANS_TX_WITH_CLOSE_COMINIT_ERR, /* 0x219 */
-+	TRANS_TX_NAK_RECEIVE_ERR, /* 0x21a */
-+	TRANS_TX_ACK_NAK_TIMEOUT_ERR, /* 0x21b */
-+	TRANS_TX_CREDIT_TIMEOUT_ERR, /* 0x21c */
-+	TRANS_TX_IPTT_CONFLICT_ERR, /* 0x21d */
-+	TRANS_TX_TXFRM_TYPE_ERR, /* 0x21e */
-+	TRANS_TX_TXSMP_LENGTH_ERR, /* 0x21f */
-+
-+	/* trans rx */
-+	TRANS_RX_FRAME_CRC_ERR = TRANS_RX_FAIL_BASE, /* 0x300 */
-+	TRANS_RX_FRAME_DONE_ERR, /* 0x301 */
-+	TRANS_RX_FRAME_ERRPRM_ERR, /* 0x302 */
-+	TRANS_RX_FRAME_NO_CREDIT_ERR, /* 0x303 */
-+	TRANS_RX_RSVD0_ERR, /* 0x304 */
-+	TRANS_RX_FRAME_OVERRUN_ERR, /* 0x305 */
-+	TRANS_RX_FRAME_NO_EOF_ERR, /* 0x306 */
-+	TRANS_RX_LINK_BUF_OVERRUN_ERR, /* 0x307 */
-+	TRANS_RX_BREAK_TIMEOUT_ERR, /* 0x308 */
-+	TRANS_RX_BREAK_REQUEST_ERR, /* 0x309 */
-+	TRANS_RX_BREAK_RECEIVE_ERR, /* 0x30a */
-+	TRANS_RX_CLOSE_TIMEOUT_ERR, /* 0x30b */
-+	TRANS_RX_CLOSE_NORMAL_ERR, /* 0x30c */
-+	TRANS_RX_CLOSE_PHYRESET_ERR, /* 0x30d */
-+	TRANS_RX_WITH_CLOSE_DWS_TIMEOUT_ERR, /* 0x30e */
-+	TRANS_RX_WITH_CLOSE_COMINIT_ERR, /* 0x30f */
-+	TRANS_RX_DATA_LENGTH0_ERR, /* 0x310 */
-+	TRANS_RX_BAD_HASH_ERR, /* 0x311 */
-+	TRANS_RX_XRDY_ZERO_ERR, /* 0x312 */
-+	TRANS_RX_SSP_FRAME_LEN_ERR, /* 0x313 */
-+	TRANS_RX_TRANS_RX_RSVD1_ERR, /* 0x314 */
-+	TRANS_RX_NO_BALANCE_ERR, /* 0x315 */
-+	TRANS_RX_TRANS_RX_RSVD2_ERR, /* 0x316 */
-+	TRANS_RX_TRANS_RX_RSVD3_ERR, /* 0x317 */
-+	TRANS_RX_BAD_FRAME_TYPE_ERR, /* 0x318 */
-+	TRANS_RX_SMP_FRAME_LEN_ERR, /* 0x319 */
-+	TRANS_RX_SMP_RESP_TIMEOUT_ERR, /* 0x31a */
-+};
-+
-+#define HISI_SAS_PHY_MAX_INT_NR (HISI_SAS_PHY_INT_NR * HISI_SAS_MAX_PHYS)
-+#define HISI_SAS_CQ_MAX_INT_NR (HISI_SAS_MAX_QUEUES)
-+#define HISI_SAS_FATAL_INT_NR (2)
-+
-+#define HISI_SAS_MAX_INT_NR \
-+	(HISI_SAS_PHY_MAX_INT_NR + HISI_SAS_CQ_MAX_INT_NR +\
-+	HISI_SAS_FATAL_INT_NR)
-+
- static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
- };
++		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
++			     DMA_FROM_DEVICE);
++		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
++			     DMA_TO_DEVICE);
++		memcpy(to + sg_resp->offset,
++		       slot->status_buffer +
++		       sizeof(struct hisi_sas_err_record),
++		       sg_dma_len(sg_resp));
++		kunmap_atomic(to);
++		break;
++	}
+ 	case SAS_PROTOCOL_SATA:
+ 	case SAS_PROTOCOL_STP:
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+@@ -1598,6 +1685,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.setup_itct = setup_itct_v1_hw,
+ 	.sl_notify = sl_notify_v1_hw,
+ 	.free_device = free_device_v1_hw,
++	.prep_smp = prep_smp_v1_hw,
+ 	.prep_ssp = prep_ssp_v1_hw,
+ 	.get_free_slot = get_free_slot_v1_hw,
+ 	.start_delivery = start_delivery_v1_hw,
 -- 
 1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
