@@ -1,33 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA
- fails
-Date: Mon, 09 Nov 2015 08:09:39 +0100
-Message-ID: <564046B3.8090505@suse.de>
-References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org> <1447034266-28003-2-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH V2 3/3] scsi: mptxsas: offload IRQ execution
+Date: Mon, 09 Nov 2015 08:15:40 +0100
+Message-ID: <5640481C.9000505@suse.de>
+References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org> <1447034266-28003-4-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1447034266-28003-2-git-send-email-okaya@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447034266-28003-4-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Sinan Kaya <okaya@codeaurora.org>, linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
 Cc: agross@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@odin.com>, MPT-FusionLinux.pdl@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 11/09/2015 02:57 AM, Sinan Kaya wrote:
-> Current code gives up when 32 bit DMA is not supported.
-> This problem has been observed on systems without any
-> memory below 4 gig.
+> The mpt2sas and mpt3sas drivers are spinning forever in
+> their IRQ handlers if there are a lot of jobs queued up
+> by the PCIe card. This handler is causing spikes for
+> the rest of the system and sluggish behavior.
 >=20
-> This patch tests 64 bit support before bailing out to find
-> a working combination.
+> Marking all MSI interrupts as non-shared and moving the
+> MSI interrupts to thread context. This relexes the rest
+> of the system execution.
 >=20
-That feels decidedly odd.
+NACK.
 
-Why do you probe for 64bit if 32bit fails?
-Typically it's the other way round, on the grounds that 64bit DMA
-should be preferred over 32bit.
-Can you explain why it needs to be done the other way round here?
+If there is a scalability issue when handling interrupts
+it should be fixed in the driver directly.
+
+Looking at the driver is should be possible to implement
+a worker thread handling the reply descriptor, and having the
+interrupt only to fetch the reply descriptor.
 
 Cheers,
 
