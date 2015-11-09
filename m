@@ -1,31 +1,34 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 10/27] hpsa: fix hpsa_adjust_hpsa_scsi_table
-Date: Mon, 09 Nov 2015 10:39:28 +0100
-Message-ID: <564069D0.7030005@suse.de>
-References: <20151104214910.15472.23179.stgit@brunhilda> <20151104215056.15472.70511.stgit@brunhilda>
+Subject: Re: [PATCH v2 17/27] hpsa: enhance hpsa_get_device_id
+Date: Mon, 09 Nov 2015 10:40:36 +0100
+Message-ID: <56406A14.2080109@suse.de>
+References: <20151104214910.15472.23179.stgit@brunhilda> <20151104215139.15472.48831.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49514 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49640 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353AbbKIJja (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Nov 2015 04:39:30 -0500
-In-Reply-To: <20151104215056.15472.70511.stgit@brunhilda>
+	id S1751185AbbKIJki (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Nov 2015 04:40:38 -0500
+In-Reply-To: <20151104215139.15472.48831.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, scott.benesh@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-On 11/04/2015 10:50 PM, Don Brace wrote:
-> Fix a NULL pointer issue in the driver when devices are removed
-> during a reset.
+On 11/04/2015 10:51 PM, Don Brace wrote:
+> use an index into vpd data for SAS/SATA drives
 >=20
+> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+> Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 > Signed-off-by: Don Brace <don.brace@pmcs.com>
 > ---
->  drivers/scsi/hpsa.c |   16 ++++++++++++++++
->  drivers/scsi/hpsa.h |    1 +
->  2 files changed, 17 insertions(+)
+>  drivers/scsi/hpsa.c |   23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
