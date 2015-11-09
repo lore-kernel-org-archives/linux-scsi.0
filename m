@@ -1,7 +1,8 @@
 From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v5 07/11] scsi: ufs: add specific callback for nexus type
-Date: Mon, 09 Nov 2015 10:56:23 +0530
-Message-ID: <1447046787-480-8-git-send-email-alim.akhtar@samsung.com>
+Subject: [PATCH v5 09/11] scsi: ufs: make ufshcd_config_pwr_mode of non-static
+ func
+Date: Mon, 09 Nov 2015 10:56:25 +0530
+Message-ID: <1447046787-480-10-git-send-email-alim.akhtar@samsung.com>
 References: <1447046787-480-1-git-send-email-alim.akhtar@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1447046787-480-1-git-send-email-alim.akhtar@samsung.com>
@@ -12,86 +13,58 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Seungwon Jeon <essuuj@gmail.com>
 
-Some host controller needs nexus type information for handling
-command. This change adds specific callback function to support
-vendor's implementation.
+This makes ufshcd_config_pwr_mode non-static so that other vendors
+like exynos can use the same.
 
 Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c |    3 +++
- drivers/scsi/ufs/ufshcd.h |   19 +++++++++++++++++++
- 2 files changed, 22 insertions(+)
+ drivers/scsi/ufs/ufshcd.c |    5 ++---
+ drivers/scsi/ufs/ufshcd.h |    2 ++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e8b96ec65987..eeb7835c52ab 100644
+index 075b7bf13080..358d9114a1a5 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1378,6 +1378,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+@@ -185,8 +185,6 @@ static int ufshcd_uic_hibern8_ctrl(struct ufs_hba *hba, bool en);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+ static irqreturn_t ufshcd_intr(int irq, void *__hba);
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+-		struct ufs_pa_layer_attr *desired_pwr_mode);
+ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 			     struct ufs_pa_layer_attr *pwr_mode);
  
- 	/* issue command to the controller */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_vops_specify_nexus_t_xfer_req(hba, tag, lrbp);
- 	ufshcd_send_command(hba, tag);
- out_unlock:
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-@@ -1578,6 +1579,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	hba->dev_cmd.complete = &wait;
+@@ -2592,7 +2590,7 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+  * @hba: per-adapter instance
+  * @desired_pwr_mode: desired power configuration
+  */
+-static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 		struct ufs_pa_layer_attr *desired_pwr_mode)
+ {
+ 	struct ufs_pa_layer_attr final_params = { 0 };
+@@ -2608,6 +2606,7 @@ static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_vops_specify_nexus_t_xfer_req(hba, tag, lrbp);
- 	ufshcd_send_command(hba, tag);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
  
-@@ -3842,6 +3844,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 	task_req_upiup->input_param2 = cpu_to_be32(task_id);
- 
- 	/* send command to the controller */
-+	ufshcd_vops_specify_nexus_t_tm_req(hba, free_slot, tm_function);
- 	__set_bit(free_slot, &hba->outstanding_tasks);
- 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
- 
+ /**
+  * ufshcd_complete_dev_init() - checks device readiness
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 500e137bf68a..b3dd08420100 100644
+index 9c69dd2f3672..8cad52c072d4 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -259,6 +259,9 @@ struct ufs_pwr_mode_info {
-  * @pwr_change_notify: called before and after a power mode change
-  *			is carried out to allow vendor spesific capabilities
-  *			to be set.
-+ * @specify_nexus_t_xfer_req:
-+ * @specify_nexus_t_tm_req: called before command is issued to allow vendor
-+ *			specific handling to be set for nexus type.
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-@@ -280,6 +283,9 @@ struct ufs_hba_variant_ops {
- 					enum ufs_notify_change_status status,
- 					struct ufs_pa_layer_attr *,
- 					struct ufs_pa_layer_attr *);
-+	void	(*specify_nexus_t_xfer_req)(struct ufs_hba *,
-+					    int, struct scsi_cmnd *);
-+	void	(*specify_nexus_t_tm_req)(struct ufs_hba *, int, u8);
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
-@@ -811,4 +817,17 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
- 		hba->vops->dbg_register_dump(hba);
- }
+@@ -666,6 +666,8 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u8 attr_set, u32 mib_val, u8 peer);
+ extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u32 *mib_val, u8 peer);
++extern int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++			struct ufs_pa_layer_attr *desired_pwr_mode);
  
-+static inline void ufshcd_vops_specify_nexus_t_xfer_req(struct ufs_hba *hba,
-+					int tag, struct ufshcd_lrb *lrbp)
-+{
-+	if (hba->vops && hba->vops->specify_nexus_t_xfer_req)
-+		hba->vops->specify_nexus_t_xfer_req(hba, tag, lrbp->cmd);
-+}
-+
-+static inline void ufshcd_vops_specify_nexus_t_tm_req(struct ufs_hba *hba,
-+						int free_slot, u8 tm_function)
-+{
-+	if (hba->vops && hba->vops->specify_nexus_t_tm_req)
-+		hba->vops->specify_nexus_t_tm_req(hba, free_slot, tm_function);
-+}
- #endif /* End of Header */
+ /* UIC command interfaces for DME primitives */
+ #define DME_LOCAL	0
 -- 
 1.7.10.4
