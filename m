@@ -1,75 +1,101 @@
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA
- fails
-Date: Mon, 9 Nov 2015 09:07:36 -0500
-Message-ID: <5640A8A8.90203@codeaurora.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH V2 2/3] scsi: fix compiler warning for sg
+Date: Mon, 9 Nov 2015 16:14:50 +0200
+Message-ID: <CAHp75VdUBKr_XQ=2_5uSww71YVz+-Shmhg5hSe5KAoeshTtMYQ@mail.gmail.com>
 References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
- <1447034266-28003-2-git-send-email-okaya@codeaurora.org>
- <564046B3.8090505@suse.de> <4041362.9GKaSPm9gs@wuerfel>
+	<1447034266-28003-3-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4041362.9GKaSPm9gs@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-arm-msm@vger.kernel.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1447034266-28003-3-git-send-email-okaya@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com, Andy Gross <agross@codeaurora.org>, linux-arm-msm@vger.kernel.org, linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 11/9/2015 3:59 AM, Arnd Bergmann wrote:
-> On Monday 09 November 2015 08:09:39 Hannes Reinecke wrote:
->> On 11/09/2015 02:57 AM, Sinan Kaya wrote:
->>> Current code gives up when 32 bit DMA is not supported.
->>> This problem has been observed on systems without any
->>> memory below 4 gig.
->>>
->>> This patch tests 64 bit support before bailing out to find
->>> a working combination.
->>>
->> That feels decidedly odd.
->>
->> Why do you probe for 64bit if 32bit fails?
+On Mon, Nov 9, 2015 at 3:57 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> The MULDIV macro has been designed for small numbers.
+> Compiler emits an overflow warning on 64 bit systems.
+> This patch uses 64 bit numbers in order to suppress
+> warning.
 >
-> 32-bit DMA mask on PCI cannot fail, we rely on that in all sorts
-> of places. If the machine has all of its RAM visible above 4GB
-> PCI bus addresses, it must use an IOMMU.
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Can you be specific? PCIe does not have this limitation. It supports 32 
-bit and 64 bit TLPs.
 
-I have not seen any limitation so far in the OS either.
-
-Using IOMMU is fine but not required if the endpoint is a true 64 bit 
-supporting endpoint. This endpoint supports 64bit too.
-
+> ---
+>  drivers/scsi/sg.c | 20 +++++++++++++-------
+>  1 file changed, 13 insertions(+), 7 deletions(-)
 >
->> Typically it's the other way round, on the grounds that 64bit DMA
->> should be preferred over 32bit.
->> Can you explain why it needs to be done the other way round here?
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 9d7b7db..112d8974 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -51,6 +51,7 @@ static int sg_version_num = 30536;    /* 2 digits for each component */
+>  #include <linux/atomic.h>
+>  #include <linux/ratelimit.h>
+>  #include <linux/uio.h>
+> +#include <asm/div64.h>
 >
-> Something else is odd here, the driver already checks for
-> dma_get_required_mask(), which will return the smallest mask
-> that fits all of RAM. If the machine has any memory above 4GB,
-> it already uses the 64-bit mask, and only falls back to
-> the 32-bit mask if that fails or if all memory fits within the
-> first 4GB.
->
+>  #include "scsi.h"
+>  #include <scsi/scsi_dbg.h>
+> @@ -85,12 +86,17 @@ static void sg_proc_cleanup(void);
+>   * Replacing muldiv(x) by muldiv(x)=((x % d) * m) / d + int(x / d) * m
+>   * calculates the same, but prevents the overflow when both m and d
+>   * are "small" numbers (like HZ and USER_HZ).
+> - * Of course an overflow is inavoidable if the result of muldiv doesn't fit
+> - * in 32 bits.
+>   */
+> -#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
+> +static inline u64 mult_frac64(u64 x, u32 numer, u32 denom)
+> +{
+> +       u64 r1 = do_div(x, denom);
+> +       u64 r2 = r1 * numer;
+> +
+> +       do_div(r2, denom);
 
-I'll add some prints in the code to get to the bottom of it. I think the 
-code is checking more than just the required mask and failing in one of 
-the other conditions. At least that DMA comparison code was more than 
-what I have ever seen.
+> +       return (x * numer) + r2;
+
+Parens are useless, noticed later, sorry.
+
+Isn't mult_frac() enough here?
+
+Btw, can you mention explicitly what is the warning you get
+(copy'n'paste of the line would be okay)?
+
+> +}
+>
+> -#define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
+> +#define SG_DEFAULT_TIMEOUT mult_frac64(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
+>
+>  int sg_big_buff = SG_DEF_RESERVED_SIZE;
+>  /* N.B. This variable is readable and writeable via
+> @@ -877,10 +883,10 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+>                         return result;
+>                 if (val < 0)
+>                         return -EIO;
+> -               if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
+> -                   val = MULDIV (INT_MAX, USER_HZ, HZ);
+> +               if (val >= mult_frac64(INT_MAX, USER_HZ, HZ))
+> +                       val = mult_frac64(INT_MAX, USER_HZ, HZ);
 
 
-> So both the description and the patch are wrong. :(
+>                 sfp->timeout_user = val;
+> -               sfp->timeout = MULDIV (val, HZ, USER_HZ);
+> +               sfp->timeout = mult_frac64(val, HZ, USER_HZ);
 >
-> 	Arnd
+>                 return 0;
+>         case SG_GET_TIMEOUT:    /* N.B. User receives timeout as return value */
+> --
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
 >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+With Best Regards,
+Andy Shevchenko
