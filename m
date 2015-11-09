@@ -1,205 +1,163 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 01/32] [SCSI] sas: centralise ssp frame information units
-Date: Tue, 10 Nov 2015 00:32:06 +0800
-Message-ID: <1447086757-147706-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 03/32] scsi: hisi_sas: add initial bare main driver
+Date: Tue, 10 Nov 2015 00:32:08 +0800
+Message-ID: <1447086757-147706-4-git-send-email-john.garry@huawei.com>
 References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:13358 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbbKIQSU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 11:18:20 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
-The xfer_rdy, command, and task frame's iu structures
-are not available in <scsi/sas.h>, but only aic94xx
-driver folder.
-Add them to include/scsi/sas.h
+This patch adds the initial bare main driver for the
+HiSilicon SAS HBA. This only introduces the changes to
+build and load the main driver module.
+
+The complete driver consists of the core main module and
+also a module platform driver for driving the hw.
+
+The HBA is a platform device.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
 ---
- drivers/scsi/aic94xx/aic94xx_sas.h | 49 ++++---------------------
- include/scsi/sas.h                 | 74 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 80 insertions(+), 43 deletions(-)
+ drivers/scsi/Kconfig                  |  1 +
+ drivers/scsi/Makefile                 |  1 +
+ drivers/scsi/hisi_sas/Kconfig         |  6 +++++
+ drivers/scsi/hisi_sas/Makefile        |  1 +
+ drivers/scsi/hisi_sas/hisi_sas.h      | 26 +++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 43 +++++++++++++++++++++++++++++++++++
+ 6 files changed, 78 insertions(+)
+ create mode 100644 drivers/scsi/hisi_sas/Kconfig
+ create mode 100644 drivers/scsi/hisi_sas/Makefile
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_sas.h b/drivers/scsi/aic94xx/aic94xx_sas.h
-index 912e6b7..101072c 100644
---- a/drivers/scsi/aic94xx/aic94xx_sas.h
-+++ b/drivers/scsi/aic94xx/aic94xx_sas.h
-@@ -327,46 +327,9 @@ struct scb_header {
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d2f480b..ce7bd12 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1767,5 +1767,6 @@ source "drivers/scsi/pcmcia/Kconfig"
+ source "drivers/scsi/device_handler/Kconfig"
  
- #define LUN_SIZE                8
+ source "drivers/scsi/osd/Kconfig"
++source "drivers/scsi/hisi_sas/Kconfig"
  
--/* See SAS spec, task IU
-- */
--struct ssp_task_iu {
--	u8     lun[LUN_SIZE];	  /* BE */
--	u16    _r_a;
--	u8     tmf;
--	u8     _r_b;
--	__be16 tag;		  /* BE */
--	u8     _r_c[14];
--} __attribute__ ((packed));
--
--/* See SAS spec, command IU
-- */
--struct ssp_command_iu {
--	u8     lun[LUN_SIZE];
--	u8     _r_a;
--	u8     efb_prio_attr;	  /* enable first burst, task prio & attr */
--#define EFB_MASK        0x80
--#define TASK_PRIO_MASK	0x78
--#define TASK_ATTR_MASK  0x07
--
--	u8    _r_b;
--	u8     add_cdb_len;	  /* in dwords, since bit 0,1 are reserved */
--	union {
--		u8     cdb[16];
--		struct {
--			__le64 long_cdb_addr;	  /* bus address, LE */
--			__le32 long_cdb_size;	  /* LE */
--			u8     _r_c[3];
--			u8     eol_ds;		  /* eol:6,6, ds:5,4 */
--		} long_cdb;	  /* sequencer extension */
--	};
--} __attribute__ ((packed));
--
--struct xfer_rdy_iu {
--	__be32 requested_offset;  /* BE */
--	__be32 write_data_len;	  /* BE */
--	__be32 _r_a;
--} __attribute__ ((packed));
--
-+#define EFB_MASK                0x80
-+#define TASK_PRIO_MASK          0x78
-+#define TASK_ATTR_MASK          0x07
- /* ---------- SCB tasks ---------- */
+ endmenu
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 1a8c9b5..03c30de 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -158,6 +158,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+ obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
  
- /* This is both ssp_task and long_ssp_task
-@@ -511,7 +474,7 @@ struct abort_task {
- 	u8     proto_conn_rate;
- 	__le32 _r_a;
- 	struct ssp_frame_hdr ssp_frame;
--	struct ssp_task_iu ssp_task;
-+	struct ssp_tmf_iu ssp_task;
- 	__le16 sister_scb;
- 	__le16 conn_handle;
- 	u8     flags;	  /* ovrd_itnl_timer:3,3, suspend_data_trans:2,2 */
-@@ -549,7 +512,7 @@ struct clear_nexus {
- 	u8     _r_b[3];
- 	u8     conn_mask;
- 	u8     _r_c[19];
--	struct ssp_task_iu ssp_task; /* LUN and TAG */
-+	struct ssp_tmf_iu ssp_task; /* LUN and TAG */
- 	__le16 _r_d;
- 	__le16 conn_handle;
- 	__le64 _r_e;
-@@ -562,7 +525,7 @@ struct initiate_ssp_tmf {
- 	u8     proto_conn_rate;
- 	__le32 _r_a;
- 	struct ssp_frame_hdr ssp_frame;
--	struct ssp_task_iu ssp_task;
-+	struct ssp_tmf_iu ssp_task;
- 	__le16 sister_scb;
- 	__le16 conn_handle;
- 	u8     flags;	  /* itnl override and suspend data tx */
-diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-index 0d2607d..42a84ef 100644
---- a/include/scsi/sas.h
-+++ b/include/scsi/sas.h
-@@ -344,6 +344,43 @@ struct ssp_response_iu {
- 	u8     sense_data[0];
- } __attribute__ ((packed));
+ obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
++obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
  
-+struct ssp_command_iu {
-+	u8     lun[8];
-+	u8     _r_a;
+ # This goes last, so that "real" scsi devices probe earlier
+ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+new file mode 100644
+index 0000000..37a0c71
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/Kconfig
+@@ -0,0 +1,6 @@
++config SCSI_HISI_SAS
++	tristate "HiSilicon SAS"
++	select SCSI_SAS_LIBSAS
++	select BLK_DEV_INTEGRITY
++	help
++		This driver supports HiSilicon's SAS HBA
+diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
+new file mode 100644
+index 0000000..d86b05e
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+new file mode 100644
+index 0000000..a5cec22
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (c) 2015 Linaro Ltd.
++ * Copyright (c) 2015 Hisilicon Limited.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
 +
-+	union {
-+		struct {
-+			u8  attr:3;
-+			u8  prio:4;
-+			u8  efb:1;
-+		};
-+		u8 efb_prio_attr;
-+	};
++#ifndef _HISI_SAS_H_
++#define _HISI_SAS_H_
 +
-+	u8    _r_b;
++#include <linux/dmapool.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <scsi/libsas.h>
 +
-+	u8    _r_c:2;
-+	u8    add_cdb_len:6;
++#define DRV_VERSION "v1.0"
 +
-+	u8    cdb[16];
-+	u8    add_cdb[0];
-+} __attribute__ ((packed));
++#endif
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+new file mode 100644
+index 0000000..7201363
+--- /dev/null
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -0,0 +1,43 @@
++/*
++ * Copyright (c) 2015 Linaro Ltd.
++ * Copyright (c) 2015 Hisilicon Limited.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
 +
-+struct xfer_rdy_iu {
-+	__be32 requested_offset;
-+	__be32 write_data_len;
-+	__be32 _r_a;
-+} __attribute__ ((packed));
++#include "hisi_sas.h"
++#define DRV_NAME "hisi_sas"
 +
-+struct ssp_tmf_iu {
-+	u8     lun[8];
-+	u16    _r_a;
-+	u8     tmf;
-+	u8     _r_b;
-+	__be16 tag;
-+	u8     _r_c[14];
-+} __attribute__ ((packed));
++static struct scsi_transport_template *hisi_sas_stt;
 +
- /* ---------- SMP ---------- */
- 
- struct report_general_resp {
-@@ -538,6 +575,43 @@ struct ssp_response_iu {
- 	u8     sense_data[0];
- } __attribute__ ((packed));
- 
-+struct ssp_command_iu {
-+	u8     lun[8];
-+	u8     _r_a;
++static struct sas_domain_function_template hisi_sas_transport_ops = {
++};
 +
-+	union {
-+		struct {
-+			u8  efb:1;
-+			u8  prio:4;
-+			u8  attr:3;
-+		};
-+		u8 efb_prio_attr;
-+	};
++static __init int hisi_sas_init(void)
++{
++	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
 +
-+	u8    _r_b;
++	hisi_sas_stt = sas_domain_attach_transport(&hisi_sas_transport_ops);
++	if (!hisi_sas_stt)
++		return -ENOMEM;
 +
-+	u8    add_cdb_len:6;
-+	u8    _r_c:2;
++	return 0;
++}
 +
-+	u8    cdb[16];
-+	u8    add_cdb[0];
-+} __attribute__ ((packed));
++static __exit void hisi_sas_exit(void)
++{
++	sas_release_transport(hisi_sas_stt);
++}
 +
-+struct xfer_rdy_iu {
-+	__be32 requested_offset;
-+	__be32 write_data_len;
-+	__be32 _r_a;
-+} __attribute__ ((packed));
++module_init(hisi_sas_init);
++module_exit(hisi_sas_exit);
 +
-+struct ssp_tmf_iu {
-+	u8     lun[8];
-+	u16    _r_a;
-+	u8     tmf;
-+	u8     _r_b;
-+	__be16 tag;
-+	u8     _r_c[14];
-+} __attribute__ ((packed));
-+
- /* ---------- SMP ---------- */
- 
- struct report_general_resp {
++MODULE_VERSION(DRV_VERSION);
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
++MODULE_DESCRIPTION("HISILICON SAS controller driver");
++MODULE_ALIAS("platform:" DRV_NAME);
 -- 
 1.9.1
-
