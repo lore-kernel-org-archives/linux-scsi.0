@@ -1,30 +1,70 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] pm80xx: remove the SCSI host before detaching from SAS transport
-Date: Mon, 09 Nov 2015 19:44:20 -0500
-Message-ID: <yq137wewumz.fsf@sermon.lab.mkp.net>
-References: <1446235297-4572-1-git-send-email-brood@attotech.com>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: Re: [PATCH] wd719x: Remove use of macro DEFINE_PCI_DEVICE_TABLE
+Date: Tue, 10 Nov 2015 08:26:38 +0530
+Message-ID: <CAK-LDb+oKcWM-NVVD5fa=TJEWoxEWFrGzTz4MhxttFpUCDMcSw@mail.gmail.com>
+References: <20150717054643.GA7209@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45711 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588AbbKJAo1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2015 19:44:27 -0500
-In-Reply-To: <1446235297-4572-1-git-send-email-brood@attotech.com> (Benjamin
-	Rood's message of "Fri, 30 Oct 2015 16:01:37 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150717054643.GA7209@vaishali-Ideapad-Z570>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Rood <benjaminjrood@gmail.com>
-Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, James.Bottomley@HansenPartnership.com, Benjamin Rood <brood@attotech.com>
 
->>>>> "Benjamin" == Benjamin Rood <benjaminjrood@gmail.com> writes:
+On Fri, Jul 17, 2015 at 11:16 AM, Vaishali Thakkar
+<vthakkar1994@gmail.com> wrote:
+> Macro DEFINE_PCI_DEVICE_TABLE is deprecated. So, here use
+> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE with
+> the goal of getting rid of this macro completely.
+>
+> The Coccinelle semantic patch that performs this transformation
+> is as follows:
+>
+> @@
+> identifier a;
+> declarer name DEFINE_PCI_DEVICE_TABLE;
+> initializer i;
+> @@
+> - DEFINE_PCI_DEVICE_TABLE(a)
+> + const struct pci_device_id a[]
+> = i;
+>
+> Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+> ---
+> This patch is against linux-next branch
+> ---
+>  drivers/scsi/wd719x.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+> index 61346aa..4655d16 100644
+> --- a/drivers/scsi/wd719x.c
+> +++ b/drivers/scsi/wd719x.c
+> @@ -962,7 +962,7 @@ static void wd719x_pci_remove(struct pci_dev *pdev)
+>         scsi_host_put(sh);
+>  }
+>
+> -static DEFINE_PCI_DEVICE_TABLE(wd719x_pci_table) = {
+> +static const struct pci_device_id wd719x_pci_table[] = {
+>         { PCI_DEVICE(PCI_VENDOR_ID_WD, 0x3296) },
+>         {}
+>  };
+> --
+> 1.9.1
+>
 
-Benjamin> Previously, when this module was unloaded via 'rmmod' with at
-Benjamin> least one drive attached, the SCSI error handler thread would
-Benjamin> become stuck in an infinite recovery loop and lockup the
-Benjamin> system, necessitating a reboot.
+Hi James,
 
-Applied.
+Can you please apply this patch? Actually this is the only case which is using
+DEFINE_PCI_DEVICE_TABLE in the kernel and the use is blocking the removal
+of everything related to this macro in the kernel. So, it would be
+good if you can
+apply this patch.
+
+Inform me if it's not in your queue and I need to resend it.
+
+Thanks
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Vaishali
