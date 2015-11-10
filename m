@@ -1,181 +1,51 @@
-From: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH v5 10/11] Documentation: devicetree: ufs: Add DT bindings
- for exynos UFS host controller
-Date: Tue, 10 Nov 2015 14:05:37 +0530
-Message-ID: <5641AC59.50204@samsung.com>
-References: <1447046787-480-1-git-send-email-alim.akhtar@samsung.com>
- <1447046787-480-11-git-send-email-alim.akhtar@samsung.com>
- <20151109162312.GA32748@rob-hp-laptop>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA fails
+Date: Tue, 10 Nov 2015 09:38:32 +0100
+Message-ID: <5349261.sTnZTFhKWB@wuerfel>
+References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org> <6940177.lD0iNnWRJy@wuerfel> <56412AAE.80004@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20151109162312.GA32748@rob-hp-laptop>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-wo1vFcy6AUs@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, gautam.vivek-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:56107 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbbKJIj5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 03:39:57 -0500
+In-Reply-To: <56412AAE.80004@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Sinan Kaya <okaya@codeaurora.org>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, timur@codeaurora.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, cov@codeaurora.org, linux-arm-msm@vger.kernel.org, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com, Hannes Reinecke <hare@suse.de>
 
-Hi Rob,
+On Monday 09 November 2015 18:22:22 Sinan Kaya wrote:
+> On 11/9/2015 9:33 AM, Arnd Bergmann wrote:
+> > On Monday 09 November 2015 09:07:36 Sinan Kaya wrote:
+> >> On 11/9/2015 3:59 AM, Arnd Bergmann wrote:
+> 
+> ioc->dma_mask is 0 and the driver is trying to use 32 bit even though 64 
+> bit supported by the platform.
 
-On 11/09/2015 09:53 PM, Rob Herring wrote:
-> On Mon, Nov 09, 2015 at 10:56:26AM +0530, Alim Akhtar wrote:
->> From: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>
->> This adds Exynos Universal Flash Storage (UFS) Host Controller DT bindings.
->>
->> Signed-off-by: Seungwon Jeon <essuuj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Signed-off-by: Alim Akhtar <alim.akhtar-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->> ---
->>   .../devicetree/bindings/ufs/ufs-exynos.txt         |  104 ++++++++++++++++++++
->>   1 file changed, 104 insertions(+)
->>   create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufs-exynos.txt b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
->> new file mode 100644
->> index 000000000000..08e2d1497b1b
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
->> @@ -0,0 +1,104 @@
->> +* Exynos Universal Flash Storage (UFS) Host Controller
->> +
->> +UFSHC nodes are defined to describe on-chip UFS host controllers.
->> +Each UFS controller instance should have its own node.
->> +
->> +Required properties:
->> +- compatible        : compatible name, contains "samsung,exynos7-ufs"
->> +- interrupts        : <interrupt mapping for UFS host controller IRQ>
->> +- reg               : Should contain HCI, vendor specific, UNIPRO and
->> +		      UFS protector address space
->> +- reg-names	    : "hci", "vs_hci", "unipro", "ufsp";
->
-> No phy for MPHY?
->
-ufs-phy is documented, see 01/11 of this series.
->> +
->> +Optional properties:
->> +- vdd-hba-supply        : phandle to UFS host controller supply regulator node
->> +- vcc-supply            : phandle to VCC supply regulator node
->> +- vccq-supply           : phandle to VCCQ supply regulator node
->> +- vccq2-supply          : phandle to VCCQ2 supply regulator node
->> +- vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
->> +                          or 2.7-3.6V. This boolean property when set, specifies
->> +			  to use low voltage range of 1.7-1.95V. Note for external
->> +			  UFS cards this property is invalid and valid VCC range is
->> +			  always 2.7-3.6V.
->> +- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
->> +- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
->> +- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
->
-> Some of these are supplies to the flash chip, so you should make
-> these common properties (in a common doc).
->
-Ah, yes these are duplicated, already documented in common ufshcd file
-Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-What is the recommended way, do I need to include it here as well? or 
-just mentioning that "same as documented in ufshcd-pltfrm.txt"?
+Ok, makes sense.
 
->> +- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
->
-> This should be determined from the regulator.
->
-Same as above already documented as part of ufshcd-pltfrm binding.
->> +
->> +- clocks                : List of phandle and clock specifier pairs
->> +- clock-names           : List of clock input name strings sorted in the same
->> +                          order as the clocks property.
->> +			  "core", "sclk_unipro_main", "ref" and ref_parent
->> +
->> +- freq-table-hz		: Array of <min max> operating frequencies stored in the same
->> +			  order as the clocks property. If this property is not
->> +			  defined or a value in the array is "0" then it is assumed
->> +			  that the frequency is set by the parent clock or a
->> +			  fixed rate clock source.
->> +- pclk-freq-avail-range : specifies available frequency range(min/max) for APB clock
->> +- ufs,pwr-attr-mode : specifies mode value for power mode change, possible values are
->> +			"FAST", "SLOW", "FAST_auto" and "SLOW_auto"
->
-> ufs is not a vendor. Use a '-' rather than ','.
->
-Ok will change.
->> +- ufs,pwr-attr-lane : specifies lane count value for power mode change
->> +		      allowed values are 1 or 2
->> +- ufs,pwr-attr-gear : specifies gear count value for power mode change
->> +		      allowed values are 1 or 2
->> +- ufs,pwr-attr-hs-series : specifies HS rate series for power mode change
->> +			   can be one of "HS_rate_b" or "HS_rate_a"
->> +- ufs,pwr-local-l2-timer : specifies array of local UNIPRO L2 timer values
->> +			   3 timers supported
->> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
->> +- ufs,pwr-remote-l2-timer : specifies array of remote UNIPRO L2 timer values
->> +			   3 timers supported
->> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
->> +- ufs-rx-adv-fine-gran-sup_en : specifies support of fine granularity of MPHY,
->> +			      this is a boolean property.
->> +- ufs-rx-adv-fine-gran-step : specifies granularity steps of MPHY,
->> +			      allowed step size is 0 to 3
->> +- ufs-rx-adv-min-activate-time-cap : specifies rx advanced minimum activate time of MPHY
->> +				     range is 1 to 9
->> +- ufs-pa-granularity : specifies Granularity for PA_TActivate and PA_Hibern8Time
->> +- ufs-pa-tacctivate : specifies time to wake-up remote M-RX
->> +- ufs-pa-hibern8time : specifies minimum time to wait in HIBERN8 state
->
-> These are all M-PHY properties?
->
-These are UIC (ufs interconnect) attributes related to M-PHY and Unipro 
-blocks.
->> +
->> +Note: If above properties are not defined it can be assumed that the supply
->> +regulators or clocks are always on.
->> +
->> +Example:
->> +	ufshc@0x15570000 {
->> +		compatible = "samsung,exynos7-ufs";
->> +		reg = <0x15570000 0x100>,
->> +		      <0x15570100 0x100>,
->> +		      <0x15571000 0x200>,
->> +		      <0x15572000 0x300>;
->> +		reg-names = "hci", "vs_hci", "unipro", "ufsp";
->> +		interrupts = <0 200 0>;
->> +
->> +		vdd-hba-supply = <&xxx_reg0>;
->> +		vdd-hba-fixed-regulator;
->> +		vcc-supply = <&xxx_reg1>;
->> +		vcc-supply-1p8;
->> +		vccq-supply = <&xxx_reg2>;
->> +		vccq2-supply = <&xxx_reg3>;
->> +		vcc-max-microamp = 500000;
->> +		vccq-max-microamp = 200000;
->> +		vccq2-max-microamp = 200000;
->> +
->> +		clocks = <&core 0>, <&ref 0>, <&iface 0>;
->> +		clock-names = "core", "sclk_unipro_main", "ref", "ref_parent";
->> +		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>, <0 0>;
->> +
->> +		pclk-freq-avail-range = <70000000 133000000>;
->> +
->> +		ufs,pwr-attr-mode = "FAST";
->> +		ufs,pwr-attr-lane = <2>;
->> +		ufs,pwr-attr-gear = <2>;
->> +		ufs,pwr-attr-hs-series = "HS_rate_b";
->> +		ufs,pwr-local-l2-timer = <8000 28000 20000>;
->> +		ufs,pwr-remote-l2-timer = <12000 32000 16000>;
->> +		ufs-rx-adv-fine-gran-sup_en = <1>;
->> +		ufs-rx-adv-fine-gran-step = <3>;
->> +		ufs-rx-adv-min-activate-time-cap = <9>;
->> +		ufs-pa-granularity = <6>;
->> +		ufs-pa-tacctivate = <6>;
->> +		ufs-pa-hibern8time = <20>;
->> +	};
->> --
->> 1.7.10.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe devicetree" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think the proper fix is to pass the required_mask back to 
+> consistent_dma_mask rather than using ioc->dma_mask and guessing.
+> 
+> pci_set_consistent_dma_mask(pdev, required_mask)
+> 
+> My code was just a band aid for broken code.
+> 
+
+No, as Timur found, the driver is correct and it intentionally
+sets the 32-bit mask, and that is guaranteed to work on all sane
+hardware. Don't change the driver but find a better platform for
+your workload, or talk to the people that are responsible for
+the platform and get them to fix it.
+
+If the platform also doesn't have an IOMMU, you can probably work
+around it by setting up the dma-ranges property of the PCI host
+to map the low PCI addresses to the start of RAM. This will also
+require changes in the bootloader to set up the PCI outbound translation,
+and it will require implementing the DMA offset on ARM64, which I was
+hoping to avoid.
+
+	Arnd
