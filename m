@@ -1,38 +1,64 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [RFC PATCH scsi] aacraid: aac_release_resources() can be static
-Date: Tue, 10 Nov 2015 13:59:06 +0800
-Message-ID: <20151110055906.GA116383@lkp-hsx03>
-References: <201511101352.WifvAYu2%fengguang.wu@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 00/32] HiSilicon SAS driver
+Date: Tue, 10 Nov 2015 08:15:37 +0100
+Message-ID: <56419999.3020809@suse.de>
+References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:22511 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284AbbKJGAc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Nov 2015 01:00:32 -0500
-Content-Disposition: inline
-In-Reply-To: <201511101352.WifvAYu2%fengguang.wu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, xuwei5@hisilicon.com, zhangfei.gao@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, James Bottomley <JBottomley@Odin.com>, Tomas Henzl <thenzl@redhat.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Karthikeya Sunkesula <Karthikeya.Sunkesula@pmcs.com>
 
+On 11/09/2015 05:32 PM, John Garry wrote:
+> This is the driver patchset for the HiSilicon SAS driver. The driver
+> is a platform driver.
+>=20
+> The driver will support multiple revisions of HW. Currently only "v1"
+> HW is supported.
+>=20
+> The driver uses libsas framework within the SCSI framework.
+>=20
+> The v1 HW supports SSP and SMP, but not STP/SATA.
+>=20
+> Differences to v2:
+> - update device tree bindings
+> - remove while loops when evaluating hba struct
+> - remove _lo and _hi DMA struct fields
+> - revised spinlock usage
+> - fix error handling for when CMPLT_HDR_ERR_RCRD_XFRD set
+> - general coding style and cosmetic fixes
+>=20
+> Differences to v1:
+> - re-arch driver into main module and hw-specific driver module
+> - allocate hisi_hba in scsi_host_alloc
+> - use of_irq_count get irq count - depends on [1]
+> - use syscon to handle ctrl reg access
+> - get SAS address from device tree
+> - do not set cmd_per_lun to 1
+> - remove remove controller id
+> - use static wq in phy struct
+> - process control phy in caller context
+> - fix port->port_attached issue for rmmod
+>=20
+> [1] http://www.spinics.net/lists/arm-kernel/msg452833.html
+>=20
+Nice work.
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- linit.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 37375cf..7724583f 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1318,7 +1318,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- }
- 
- #if (defined(CONFIG_PM))
--void aac_release_resources(struct aac_dev *aac)
-+static void aac_release_resources(struct aac_dev *aac)
- {
- 	int i;
- 
+Although it should be dead trivial to convert the driver to
+use scsi-mq; but that can come in with a later patch.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
