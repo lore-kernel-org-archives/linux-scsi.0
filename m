@@ -1,80 +1,74 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: [PATCH RESEND] scsi: Set sg_tablesize to 1, for LLDDs that set SG_NONE
-Date: Tue, 10 Nov 2015 16:45:20 -0600
-Message-ID: <1447195520-27307-1-git-send-email-manoj@linux.vnet.ibm.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 4.1] target-core: fix return without a value
+Date: Tue, 10 Nov 2015 18:31:47 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1511101826430.13780@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1511101329001.18857@file01.intranet.prod.int.rdu2.redhat.com> <20151110185605.GA15668@kroah.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e17.ny.us.ibm.com ([129.33.205.207]:50341 "EHLO
-	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbbKJWpt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 17:45:49 -0500
-Received: from localhost
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Tue, 10 Nov 2015 17:45:48 -0500
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 32CAD38C8041
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 17:45:46 -0500 (EST)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tAAMjkqJ63963154
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 22:45:46 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tAAMjj2k021743
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 17:45:45 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:39648 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751607AbbKJXbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Nov 2015 18:31:50 -0500
+In-Reply-To: <20151110185605.GA15668@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Youngjae Lee <leeyo@linux.vnet.ibm.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>, linux-stable@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>, Alex Gorbachev <ag@iss-integration.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-Oops while testing blk_mq over the new cxlflash driver.
 
-[ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
-[ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
-[ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
-[ 2960.817314] Call Trace:
-[ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
-[ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
-[ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
-[ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
-[ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
-[ 2960.817344] blk_finish_plug+0x58/0x80
-[ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
-[ 2960.817352] force_page_cache_readahead+0x68/0xd0
-[ 2960.817356] generic_file_read_iter+0x43c/0x6a0
-[ 2960.817359] blkdev_read_iter+0x68/0xa0
-[ 2960.817361] __vfs_read+0x11c/0x180
-[ 2960.817364] vfs_read+0xa4/0x1c0
-[ 2960.817366] SyS_read+0x6c/0x110
-[ 2960.817369] system_call+0x38/0xb4
 
-The root cause of the problem was this low level device driver(LLDD),
-in this case cxlflash, does not support scatter-gather and hence had
-set it's sg_tablesize to SG_NONE (value of 0). In reality the tablesize
-is of length 1. This value of SG_NONE does not cause any problems with
-the standard block driver stack but causes issues for blk_mq, as shown
-above. Since quite a few of the legacy LLDDs are setting sg_tablesize
-to SG_NONE, it was preferable to override the LLDD provided value in
-scsi_host_alloc().
+On Tue, 10 Nov 2015, Greg Kroah-Hartman wrote:
 
-Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
-Signed-off-by: Youngjae Lee <leeyo@linux.vnet.ibm.com>
-Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
- drivers/scsi/hosts.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Tue, Nov 10, 2015 at 01:32:10PM -0500, Mikulas Patocka wrote:
+> > Fix the warning drivers/target/target_core_pr.c:332:3: warning: 'return'
+> > with no value, in function returning non-void [-Wreturn-type]
+> > 
+> > The patch 35afa65642a9a88c81913377b93a3a66220f8b9d committed to 4.1.11
+> > adds a check if device_list is NULL. The patch adds a return statement
+> > without a value to the function core_scsi3_pr_seq_non_holder that returns
+> > int.
+> > 
+> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > 
+> > ---
+> >  drivers/target/target_core_pr.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> <formletter>
+> 
+> This is not the correct way to submit patches for inclusion in the
+> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+> for how to do this properly.
+> 
+> </formletter>
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..bd13c9d 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -413,7 +413,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->hostt = sht;
- 	shost->this_id = sht->this_id;
- 	shost->can_queue = sht->can_queue;
--	shost->sg_tablesize = sht->sg_tablesize;
-+	shost->sg_tablesize = (sht->sg_tablesize ? sht->sg_tablesize : 1);
- 	shost->sg_prot_tablesize = sht->sg_prot_tablesize;
- 	shost->cmd_per_lun = sht->cmd_per_lun;
- 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
--- 
-2.1.0
+This patch has no upstream equivalent (because the code in upstream was 
+already refactored), so none of the rules in stable_kernel_rules.txt apply 
+to it. The patch that broke it also has no upstream equivalent.
+
+
+Documentation/stable_kernel_rules.txt
+
+   --- Option 1 ---
+
+   To have the patch automatically included in the stable tree, add the tag
+     Cc: stable@vger.kernel.org
+   in the sign-off area. Once the patch is merged it will be applied to
+   the stable tree without anything else needing to be done by the author
+   or subsystem maintainer.
+
+   --- Option 2 ---
+
+   After the patch has been merged to Linus' tree, send an email to
+   stable@vger.kernel.org containing the subject of the patch, the commit ID,
+   why you think it should be applied, and what kernel version you wish it to
+   be applied to.
+
+   --- Option 3 ---
+
+   Send the patch, after verifying that it follows the above rules, to
+   stable@vger.kernel.org.  You must note the upstream commit ID in the
+   changelog of your submission, as well as the kernel version you wish
+   it to be applied to.
 
