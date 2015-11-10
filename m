@@ -1,40 +1,36 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA fails
-Date: Tue, 10 Nov 2015 23:08:57 +0100
-Message-ID: <5480219.RxDdMdtxQU@wuerfel>
-References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org> <4912471.TLsW7CIyYF@wuerfel> <564268B6.9000204@codeaurora.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] mptfusion: don't allow negative bytes in kbuf_alloc_2_sgl()
+Date: Wed, 11 Nov 2015 01:15:24 +0300
+Message-ID: <20151110221524.GB30281@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <564268B6.9000204@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Timur Tabi <timur@codeaurora.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, cov@codeaurora.org, linux-arm-msm@vger.kernel.org, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 10 November 2015 15:59:18 Timur Tabi wrote:
-> On 11/10/2015 03:54 PM, Arnd Bergmann wrote:
-> 
-> >> In our drivers for 32-bit devices, we have to explicitly set the DMA
-> >> mask to 32-bits in order to get any DMA working.
-> >
-> > Do you mean PCI devices or platform devices?
-> 
-> Platform.
-> 
-> > Maybe the parent bus is lacking a dma-ranges property?
-> 
-> All of this applies only on device-tree platforms.  Sinan and I are 
-> working on an ACPI server platform.  So we never call 
-> of_dma_configure(), and we don't have a dma-ranges property.
+There is a static checker warning here because "bytes" is controlled by
+the user and we cap the upper bound with min() but allow negatives.
+Negative bytes will result in some nasty warning messages but are not
+super harmful.  Anyway, no one needs negative bytes so let's just check
+for it and return NULL.
 
-ACPI must have something else to mark DMA master devices and their
-capabilities, right?
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-The platform should initialize the dma_mask pointer to a per-device
-mask and set both the dma_mask and dma_coherent_mask to 32 bits
-for any DMA master device, and the device driver should override
-that to be an appropriate mask based on its needs later.
-
-	Arnd
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index fc73937..02b5f69 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1038,6 +1038,10 @@ kbuf_alloc_2_sgl(int bytes, u32 sgdir, int sge_offset, int *frags,
+ 	int		 i, buflist_ent;
+ 	int		 sg_spill = MAX_FRAGS_SPILL1;
+ 	int		 dir;
++
++	if (bytes < 0)
++		return NULL;
++
+ 	/* initialization */
+ 	*frags = 0;
+ 	*blp = NULL;
