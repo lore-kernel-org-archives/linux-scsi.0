@@ -1,64 +1,48 @@
-From: Sinan Kaya <okaya@codeaurora.org>
+From: Timur Tabi <timur@codeaurora.org>
 Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA
  fails
-Date: Tue, 10 Nov 2015 15:58:19 -0500
-Message-ID: <56425A6B.2070900@codeaurora.org>
+Date: Tue, 10 Nov 2015 15:03:59 -0600
+Message-ID: <56425BBF.6000308@codeaurora.org>
 References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
- <4982446.ZlJVrezq1Y@wuerfel> <56422725.7040809@codeaurora.org>
- <3742888.Lmg2Y11mdz@wuerfel>
+ <4982446.ZlJVrezq1Y@wuerfel> <564222CB.3000701@codeaurora.org>
+ <6333643.g8NiezT8gD@wuerfel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51256 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbbKJU6W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 15:58:22 -0500
-In-Reply-To: <3742888.Lmg2Y11mdz@wuerfel>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <6333643.g8NiezT8gD@wuerfel>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, cov@codeaurora.org, linux-arm-msm@vger.kernel.org, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>, linux-scsi@vger.kernel.org, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, jcm@redhat.com, timur@codeaurora.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Hannes Reinecke <hare@suse.de>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, cov@codeaurora.org, linux-arm-msm@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, agross@codeaurora.org
 
+On 11/10/2015 01:13 PM, Arnd Bergmann wrote:
+> If the mask is 64-bit by default on ARM64, that is a bug that we need
+> to fix urgently. Can you verify this?
 
+I think the mask is 0 by default, because there's no code in ARM64 that 
+actually sets the mask.
 
-On 11/10/2015 2:56 PM, Arnd Bergmann wrote:
->> The ACPI IORT table declares whether you enable IOMMU for a particular
->> >device or not. The placement of IOMMU HW is system specific. The IORT
->> >table gives the IOMMU HW topology to the operating system.
-> This sounds odd. Clearly you need to specify the IOMMU settings for each
-> possible PCI device independent of whether the OS actually uses the IOMMU
-> or not.
+Take a look at arch_setup_pdev_archdata() in 
+arch/powerpc/kernel/setup-common.c.
 
-There are provisions to have DMA mask in the PCIe host bridge not at the 
-PCIe device level inside IORT table. This setting is specific for each 
-PCIe bus. It is not per PCIe device.
+void arch_setup_pdev_archdata(struct platform_device *pdev)
+{
+         pdev->archdata.dma_mask = DMA_BIT_MASK(32);
+         pdev->dev.dma_mask = &pdev->archdata.dma_mask;
+         set_dma_ops(&pdev->dev, &dma_direct_ops);
+}
 
-It is assumed that the endpoint device driver knows the hardware for 
-PCIe devices. The driver can also query the supported DMA bits by this 
-platform via DMA APIs and will request the correct DMA mask from the DMA 
-subsystem (surprise!).
+I don't see anything equivalent in arch/arm64
 
->In a lot of cases, we want to turn it off to get better performance
-> when the driver has set a DMA mask that covers all of RAM, but you
-> also want to enable the IOMMU for debugging purposes or for device
-> assignment if you run virtual machines. The bootloader doesn't know how
-> the device is going to be used, so it cannot define the policy here.
+> A lot of PCI devices can only do 32-bit DMA, and we have plenty
+> of drivers that don't bother setting a mask at all because the 32-bit
+> mask is the default on all other architectures.
 
-I think we'll end up adding a virtualization option to the UEFI BIOS 
-similar to how Intel platforms work. Based on this switch, we'll end up 
-patching the ACPI table.
-
-If I remove the IORT entry, then the device is in coherent mode with 
-device accessing the full RAM range.
-
-If I have the IORT table, the device is in IOMMU translation mode.
-
-Details are in the IORT spec.
-
+In our drivers for 32-bit devices, we have to explicitly set the DMA 
+mask to 32-bits in order to get any DMA working.
 
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
