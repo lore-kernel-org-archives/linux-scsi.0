@@ -1,63 +1,60 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v3 02/32] devicetree: bindings: scsi: HiSi SAS
-Date: Tue, 10 Nov 2015 07:16:03 -0600
-Message-ID: <CAL_JsqLbWWSLbe+7T=qbp-Y2DMngeUf3nnxytb8=+ceYxUcgrA@mail.gmail.com>
-References: <1447086757-147706-1-git-send-email-john.garry@huawei.com>
- <1447086757-147706-3-git-send-email-john.garry@huawei.com>
- <20151109180133.GA23100@rob-hp-laptop> <5641D087.8050502@huawei.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 1/3] scsi: mptxsas: try 64 bit DMA when 32 bit DMA
+ fails
+Date: Tue, 10 Nov 2015 11:06:40 -0500
+Message-ID: <56421610.50005@codeaurora.org>
+References: <1447034266-28003-1-git-send-email-okaya@codeaurora.org>
+ <6940177.lD0iNnWRJy@wuerfel> <56412AAE.80004@codeaurora.org>
+ <5349261.sTnZTFhKWB@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60056 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbbKJNQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Nov 2015 08:16:26 -0500
-In-Reply-To: <5641D087.8050502@huawei.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33255 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754329AbbKJQGo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 11:06:44 -0500
+In-Reply-To: <5349261.sTnZTFhKWB@wuerfel>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "JBottomley@odin.com" <JBottomley@odin.com>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "galak@codeaurora.org" <galak@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>, "john.garry2@mail.dcu.ie" <john.garry2@mail.dcu.ie>, "hare@suse.de" <hare@suse.de>, "xuwei (O)" <xuwei5@hisilicon.com>, "zhangfei.gao@linaro.org" <zhangfei.gao@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, timur@codeaurora.org, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, cov@codeaurora.org, linux-arm-msm@vger.kernel.org, agross@codeaurora.org, MPT-FusionLinux.pdl@avagotech.com, Hannes Reinecke <hare@suse.de>
 
-On Tue, Nov 10, 2015 at 5:09 AM, John Garry <john.garry@huawei.com> wrote:
-> On 09/11/2015 18:01, Rob Herring wrote:
->>
->> On Tue, Nov 10, 2015 at 12:32:07AM +0800, John Garry wrote:
->>>
->>> Add devicetree bindings for HiSilicon SAS driver.
->>>
->>> Signed-off-by: John Garry <john.garry@huawei.com>
->>> Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
->>> ---
->>>   .../devicetree/bindings/scsi/hisilicon-sas.txt     | 81
->>> ++++++++++++++++++++++
->>>   1 file changed, 81 insertions(+)
->>>   create mode 100644
->>> Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->>>
->>> diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->>> b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->>> new file mode 100644
->>> index 0000000..2333cc3
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
->>> @@ -0,0 +1,81 @@
->>> +* HiSilicon SAS controller
->>> +
->>> +The HiSilicon SAS controller supports SAS/SATA.
->>> +
->>> +Main node required properties:
->>> +  - compatible : value should be as follows:
->>> +       (a) "hisilicon,sas-controller-v1" for v1 of HiSilicon SAS
->>> controller IP
->>
->>
->> Please do a more specific compatible string with the SOC part number.
->> Same versions of IP blocks can have different integration/process
->> features/bugs.
->>
+
+
+On 11/10/2015 3:38 AM, Arnd Bergmann wrote:
+ > No, as Timur found, the driver is correct and it intentionally
+> sets the 32-bit mask, and that is guaranteed to work on all sane
+> hardware. Don't change the driver but find a better platform for
+> your workload, or talk to the people that are responsible for
+> the platform and get them to fix it.
+
+Platform does have an IOMMU. No issues there. I am trying to clean out 
+the patch pipe I have in order to get this card working with and without 
+IOMMU.
+
 >
-> How about "hisilicon,hip05-sas-v1"?
+> If the platform also doesn't have an IOMMU, you can probably work
+> around it by setting up the dma-ranges property of the PCI host
+> to map the low PCI addresses to the start of RAM. This will also
+> require changes in the bootloader to set up the PCI outbound translation,
+> and it will require implementing the DMA offset on ARM64, which I was
+> hoping to avoid.
 
-That's fine.
+ From the email thread, it looks like this was introduced to support 
+some legacy card that has 64 bit addressing limitations and is being 
+carried around ("rotted") since then.
 
-Rob
+I'm the second guy after the powerpc architecture complaining about the 
+very same issue. Any red flags?
+
+I can't change the address map for PCIe. SBSA requires all inbound PCIe 
+addresses to be non-translated.
+
+I'll just have to stick with IOMMU for this card.
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
