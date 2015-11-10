@@ -1,36 +1,80 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] mptfusion: don't allow negative bytes in kbuf_alloc_2_sgl()
-Date: Wed, 11 Nov 2015 01:15:24 +0300
-Message-ID: <20151110221524.GB30281@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: [PATCH RESEND] scsi: Set sg_tablesize to 1, for LLDDs that set SG_NONE
+Date: Tue, 10 Nov 2015 16:45:20 -0600
+Message-ID: <1447195520-27307-1-git-send-email-manoj@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e17.ny.us.ibm.com ([129.33.205.207]:50341 "EHLO
+	e17.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950AbbKJWpt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 17:45:49 -0500
+Received: from localhost
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
+	Tue, 10 Nov 2015 17:45:48 -0500
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 32CAD38C8041
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 17:45:46 -0500 (EST)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tAAMjkqJ63963154
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 22:45:46 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tAAMjj2k021743
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2015 17:45:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Youngjae Lee <leeyo@linux.vnet.ibm.com>
 
-There is a static checker warning here because "bytes" is controlled by
-the user and we cap the upper bound with min() but allow negatives.
-Negative bytes will result in some nasty warning messages but are not
-super harmful.  Anyway, no one needs negative bytes so let's just check
-for it and return NULL.
+Oops while testing blk_mq over the new cxlflash driver.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+[ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
+[ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
+[ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
+[ 2960.817314] Call Trace:
+[ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
+[ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
+[ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
+[ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
+[ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
+[ 2960.817344] blk_finish_plug+0x58/0x80
+[ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
+[ 2960.817352] force_page_cache_readahead+0x68/0xd0
+[ 2960.817356] generic_file_read_iter+0x43c/0x6a0
+[ 2960.817359] blkdev_read_iter+0x68/0xa0
+[ 2960.817361] __vfs_read+0x11c/0x180
+[ 2960.817364] vfs_read+0xa4/0x1c0
+[ 2960.817366] SyS_read+0x6c/0x110
+[ 2960.817369] system_call+0x38/0xb4
 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index fc73937..02b5f69 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -1038,6 +1038,10 @@ kbuf_alloc_2_sgl(int bytes, u32 sgdir, int sge_offset, int *frags,
- 	int		 i, buflist_ent;
- 	int		 sg_spill = MAX_FRAGS_SPILL1;
- 	int		 dir;
-+
-+	if (bytes < 0)
-+		return NULL;
-+
- 	/* initialization */
- 	*frags = 0;
- 	*blp = NULL;
+The root cause of the problem was this low level device driver(LLDD),
+in this case cxlflash, does not support scatter-gather and hence had
+set it's sg_tablesize to SG_NONE (value of 0). In reality the tablesize
+is of length 1. This value of SG_NONE does not cause any problems with
+the standard block driver stack but causes issues for blk_mq, as shown
+above. Since quite a few of the legacy LLDDs are setting sg_tablesize
+to SG_NONE, it was preferable to override the LLDD provided value in
+scsi_host_alloc().
+
+Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+Signed-off-by: Youngjae Lee <leeyo@linux.vnet.ibm.com>
+Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+---
+ drivers/scsi/hosts.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8bb173e..bd13c9d 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -413,7 +413,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->hostt = sht;
+ 	shost->this_id = sht->this_id;
+ 	shost->can_queue = sht->can_queue;
+-	shost->sg_tablesize = sht->sg_tablesize;
++	shost->sg_tablesize = (sht->sg_tablesize ? sht->sg_tablesize : 1);
+ 	shost->sg_prot_tablesize = sht->sg_prot_tablesize;
+ 	shost->cmd_per_lun = sht->cmd_per_lun;
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+-- 
+2.1.0
+
