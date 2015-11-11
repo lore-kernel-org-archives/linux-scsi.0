@@ -1,53 +1,50 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH RESEND] scsi: Set sg_tablesize to 1, for LLDDs that set
- SG_NONE
-Date: Wed, 11 Nov 2015 09:27:00 -0600
-Message-ID: <56435E44.7050609@linux.vnet.ibm.com>
-References: <1447195520-27307-1-git-send-email-manoj@linux.vnet.ibm.com>
- <5642EE3A.50308@suse.de>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 00/32] separate operations from flags in
+ the bio/request structs
+Date: Wed, 11 Nov 2015 12:37:20 -0500
+Message-ID: <20151111173719.GB12236@redhat.com>
+References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
+	<563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
+	<20151107102309.GE12117@infradead.org>
+	<5642F3F4.2060007@cs.wisc.edu> <20151111112846.GA358@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:59797 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbbKKP0Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2015 10:26:25 -0500
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <manoj@linux.vnet.ibm.com>;
-	Wed, 11 Nov 2015 10:26:24 -0500
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8E150C90046
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2015 10:14:31 -0500 (EST)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id tABFQLnm64684140
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2015 15:26:21 GMT
-Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id tABFQKRb007834
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2015 10:26:20 -0500
-In-Reply-To: <5642EE3A.50308@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151111112846.GA358-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Youngjae Lee <leeyo@linux.vnet.ibm.com>
 
-Hannes:
+On Wed, Nov 11 2015 at  6:28am -0500,
+Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
 
-A very valid point. Thanks for your suggestion.
-Will look at resolving the issue in blk-mq.
+> On Wed, Nov 11, 2015 at 01:53:24AM -0600, Mike Christie wrote:
+> > We no longer have the bvec merge functions so the original reason given
+> > in the thread/patch Bart referenced is no longer valid.
+> > 
+> > Offlist it was suggested that dropping the argument from submit_bio
+> > might still improve performance, but I modified xfs and dm and did some
+> > testing and did not see anything.
+> > 
+> > So the change is not needed, and it would only be done because people
+> > feel it would improve the interface.
+> 
+> I would defintively prefer the changed interface, and to me it also
+> looks like it would make your overall patch simpler.  If you disagree
+> feel free to keep it as-is for now and I'll do another pass later.
 
-Regards,
-- Manoj
-
-On 11/11/2015 1:28 AM, Hannes Reinecke wrote:
-> Shouldn't we rather fixup blk-mq to properly support SG_NONE?
-> Silently converting SG_NONE (=0) to 1 has a fair chance of breaking
-> non-mq enabled setups, which happily work with SG_NONE currently.
->
-> Cheers,
->
-> Hannes
->
-
+The less churn the better.  But honestly, not quite following the logic
+on why all this flag-day churn is needed.  BUT if it needs to happen,
+because we'll soon hit a wall on supported operations via REQ_*, now is
+as good a time as any -- but best to limit the change to the flags IMHO.
