@@ -1,71 +1,95 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 4.1] target-core: fix return without a value
-Date: Tue, 10 Nov 2015 16:00:59 -0800
-Message-ID: <20151111000059.GA4902@kroah.com>
-References: <alpine.LRH.2.02.1511101329001.18857@file01.intranet.prod.int.rdu2.redhat.com>
- <20151110185605.GA15668@kroah.com>
- <alpine.LRH.2.02.1511101826430.13780@file01.intranet.prod.int.rdu2.redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH RESEND] scsi: Set sg_tablesize to 1, for LLDDs that set
+ SG_NONE
+Date: Wed, 11 Nov 2015 08:28:58 +0100
+Message-ID: <5642EE3A.50308@suse.de>
+References: <1447195520-27307-1-git-send-email-manoj@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37513 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbbKKABA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2015 19:01:00 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1511101826430.13780@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:56861 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750999AbbKKH3A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2015 02:29:00 -0500
+In-Reply-To: <1447195520-27307-1-git-send-email-manoj@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>, linux-stable@vger.kernel.org, Martin Svec <martin.svec@zoner.cz>, Alex Gorbachev <ag@iss-integration.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: Manoj Kumar <manoj@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Youngjae Lee <leeyo@linux.vnet.ibm.com>
 
-On Tue, Nov 10, 2015 at 06:31:47PM -0500, Mikulas Patocka wrote:
-> 
-> 
-> On Tue, 10 Nov 2015, Greg Kroah-Hartman wrote:
-> 
-> > On Tue, Nov 10, 2015 at 01:32:10PM -0500, Mikulas Patocka wrote:
-> > > Fix the warning drivers/target/target_core_pr.c:332:3: warning: 'return'
-> > > with no value, in function returning non-void [-Wreturn-type]
-> > > 
-> > > The patch 35afa65642a9a88c81913377b93a3a66220f8b9d committed to 4.1.11
-> > > adds a check if device_list is NULL. The patch adds a return statement
-> > > without a value to the function core_scsi3_pr_seq_non_holder that returns
-> > > int.
-> > > 
-> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > > 
-> > > ---
-> > >  drivers/target/target_core_pr.c |    2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > <formletter>
-> > 
-> > This is not the correct way to submit patches for inclusion in the
-> > stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> > for how to do this properly.
-> > 
-> > </formletter>
-> 
-> This patch has no upstream equivalent (because the code in upstream was 
-> already refactored), so none of the rules in stable_kernel_rules.txt apply 
-> to it. The patch that broke it also has no upstream equivalent.
->
+On 11/10/2015 11:45 PM, Manoj Kumar wrote:
+> Oops while testing blk_mq over the new cxlflash driver.
+>=20
+> [ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
+> [ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
+> [ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
+> [ 2960.817314] Call Trace:
+> [ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
+> [ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
+> [ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
+> [ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
+> [ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
+> [ 2960.817344] blk_finish_plug+0x58/0x80
+> [ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
+> [ 2960.817352] force_page_cache_readahead+0x68/0xd0
+> [ 2960.817356] generic_file_read_iter+0x43c/0x6a0
+> [ 2960.817359] blkdev_read_iter+0x68/0xa0
+> [ 2960.817361] __vfs_read+0x11c/0x180
+> [ 2960.817364] vfs_read+0xa4/0x1c0
+> [ 2960.817366] SyS_read+0x6c/0x110
+> [ 2960.817369] system_call+0x38/0xb4
+>=20
+> The root cause of the problem was this low level device driver(LLDD),
+> in this case cxlflash, does not support scatter-gather and hence had
+> set it's sg_tablesize to SG_NONE (value of 0). In reality the tablesi=
+ze
+> is of length 1. This value of SG_NONE does not cause any problems wit=
+h
+> the standard block driver stack but causes issues for blk_mq, as show=
+n
+> above. Since quite a few of the legacy LLDDs are setting sg_tablesize
+> to SG_NONE, it was preferable to override the LLDD provided value in
+> scsi_host_alloc().
+>=20
+> Signed-off-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+> Signed-off-by: Youngjae Lee <leeyo@linux.vnet.ibm.com>
+> Reviewed-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/hosts.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 8bb173e..bd13c9d 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -413,7 +413,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_hos=
+t_template *sht, int privsize)
+>  	shost->hostt =3D sht;
+>  	shost->this_id =3D sht->this_id;
+>  	shost->can_queue =3D sht->can_queue;
+> -	shost->sg_tablesize =3D sht->sg_tablesize;
+> +	shost->sg_tablesize =3D (sht->sg_tablesize ? sht->sg_tablesize : 1)=
+;
+>  	shost->sg_prot_tablesize =3D sht->sg_prot_tablesize;
+>  	shost->cmd_per_lun =3D sht->cmd_per_lun;
+>  	shost->unchecked_isa_dma =3D sht->unchecked_isa_dma;
+>=20
+Shouldn't we rather fixup blk-mq to properly support SG_NONE?
+Silently converting SG_NONE (=3D0) to 1 has a fair chance of breaking
+non-mq enabled setups, which happily work with SG_NONE currently.
 
-Then you need to say that!
+Cheers,
 
-And the fact that a "please take this patch, it's correct but doesn't
-apply to upstream" patch is now broken is proof of why I didn't want to
-take it in the first place!
-
-Ugh.  How about I just revert the original patch and then you send me
-backports of what is actually in Linus's tree so we don't have this
-problem anymore?
-
-Oh, and you got the stable mailing list address wrong as well :(
-
-Please fix all of this up and resend.
-
-thanks,
-
-greg k-h
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
