@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/2] scsi_transport_fc: Implement 'async_user_scan' module parameter
-Date: Wed, 11 Nov 2015 11:34:40 +0100
-Message-ID: <1447238080-109942-3-git-send-email-hare@suse.de>
+Subject: [PATCH 1/2] scsi_transport_fc: implement 'disable_target_scan' module parameter
+Date: Wed, 11 Nov 2015 11:34:39 +0100
+Message-ID: <1447238080-109942-2-git-send-email-hare@suse.de>
 References: <1447238080-109942-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44261 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44264 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890AbbKKKen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751508AbbKKKen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 11 Nov 2015 05:34:43 -0500
 In-Reply-To: <1447238080-109942-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,63 +14,53 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@odin.com>, Hannes Reinecke <hare@suse.de>
 
-When invoking a scan via the sysfs 'scan' attribute the process
-will be blocked until the scan is completed, which can take a
-very long time on large installations.
-Enabling the 'async_user_scan' parameter moves the actual
-LUN scanning to a workqueue, thereby unblocking the process.
+On larger installations it makes sense to disable the target scan
+per default on boot, and scan the required LUNs directly via udev
+rules.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_transport_fc.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_transport_fc.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 72954a8..af1d35b 100644
+index 454cc28..72954a8 100644
 --- a/drivers/scsi/scsi_transport_fc.c
 +++ b/drivers/scsi/scsi_transport_fc.c
-@@ -83,6 +83,21 @@ MODULE_PARM_DESC(disable_target_scan,
- 		 "Disable target scan on remote ports (default=0)");
+@@ -71,6 +71,18 @@ MODULE_PARM_DESC(dev_loss_tmo,
+ 		 " fast_io_fail_tmo is not set.");
  
  /*
-+ * async_user_scan: make 'scan' sysfs attribute asynchronous
-+ *   on larger installations scanning can take a very long time
-+ *   during which the process invoking the scan will be blocked
-+ *   on writing to the 'scan' attribute. Enabling this attribute
-+ *   will move scanning to a work queue, allowing the process
-+ *   to return immediately.
++ * disable_target_scan: Disable target scan per default
++ *   useful on larger installations where only a small
++ *   number of LUNs are required for booting.
 + */
-+static bool fc_async_user_scan;
++static bool fc_disable_target_scan;
 +
-+module_param_named(async_user_scan, fc_async_user_scan,
++module_param_named(disable_target_scan, fc_disable_target_scan,
 +		   bool, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(async_user_scan,
-+		 "Allow for asynchronous user LUN scanning (default=0)");
++MODULE_PARM_DESC(disable_target_scan,
++		 "Disable target scan on remote ports (default=0)");
 +
 +/*
   * Redefine so that we can have same named attributes in the
   * sdev/starget/host objects.
   */
-@@ -2121,8 +2136,18 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, uint lun)
+@@ -3282,10 +3294,14 @@ fc_scsi_scan_rport(struct work_struct *work)
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	unsigned long flags;
++	bool disable_target_scan;
++
++	disable_target_scan = fc_disable_target_scan ?
++		fc_disable_target_scan : i->f->disable_target_scan;
  
- 		if ((channel == rport->channel) &&
- 		    (id == rport->scsi_target_id)) {
--			spin_unlock_irqrestore(shost->host_lock, flags);
--			scsi_scan_target(&rport->dev, channel, id, lun, 1);
-+			if (lun == SCAN_WILD_CARD &&
-+			    fc_async_user_scan) {
-+				if (!(rport->flags & FC_RPORT_SCAN_PENDING)) {
-+					rport->flags |= FC_RPORT_SCAN_PENDING;
-+					scsi_queue_work(shost,
-+							&rport->scan_work);
-+				}
-+				spin_unlock_irqrestore(shost->host_lock, flags);
-+			} else {
-+				spin_unlock_irqrestore(shost->host_lock, flags);
-+				scsi_scan_target(&rport->dev, channel, id, lun, 1);
-+			}
- 			return;
- 		}
+ 	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
+ 	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
+-	    !(i->f->disable_target_scan)) {
++	    !disable_target_scan) {
+ 		scsi_scan_target(&rport->dev, rport->channel,
+ 			rport->scsi_target_id, SCAN_WILD_CARD, 1);
  	}
 -- 
 1.8.5.6
