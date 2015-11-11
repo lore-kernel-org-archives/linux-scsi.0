@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 23/25] mpt2sas: Removed mpt2sas entries from SCSI's Kconfig and Makefile
-Date: Wed, 11 Nov 2015 17:30:39 +0530
-Message-ID: <1447243241-10912-24-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 24/25] mpt3sas: Added SCSI_MPT3SAS_MERGED config option
+Date: Wed, 11 Nov 2015 17:30:40 +0530
+Message-ID: <1447243241-10912-25-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,37 +10,45 @@ To: jejb@kernel.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Removed mpt2sas entries from SCSI's Kconfig and Makefile files.
+This Kconfig option is only used for legacy mpt2sas/mpt3sas
+interoperability.
+
+Once this config is set, out of box driver mpt2sas and mpt3sas
+can reconginize difference between merged and legacy inbox driver.
+Used only to interface gracefully between old mpt2sas/mpt3sas and
+merged mpt3sas driver.
+
+Allways set for merged mpt3sas driver.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/Kconfig  | 1 -
- drivers/scsi/Makefile | 1 -
- 2 files changed, 2 deletions(-)
+ drivers/scsi/mpt3sas/Kconfig | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 95f7a76..8aed855 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -541,7 +541,6 @@ config SCSI_ARCMSR
+diff --git a/drivers/scsi/mpt3sas/Kconfig b/drivers/scsi/mpt3sas/Kconfig
+index 2906146..ad171c4 100644
+--- a/drivers/scsi/mpt3sas/Kconfig
++++ b/drivers/scsi/mpt3sas/Kconfig
+@@ -45,9 +45,20 @@ config SCSI_MPT3SAS
+ 	depends on PCI && SCSI
+ 	select SCSI_SAS_ATTRS
+ 	select RAID_ATTRS
++	select SCSI_MPT3SAS_MERGED
+ 	---help---
+ 	This driver supports PCI-Express SAS 12Gb/s Host Adapters.
  
- source "drivers/scsi/esas2r/Kconfig"
- source "drivers/scsi/megaraid/Kconfig.megaraid"
--source "drivers/scsi/mpt2sas/Kconfig"
- source "drivers/scsi/mpt3sas/Kconfig"
- source "drivers/scsi/ufs/Kconfig"
- 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 1a8c9b5..c14bca4 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -106,7 +106,6 @@ obj-$(CONFIG_CXLFLASH)		+= cxlflash/
- obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
- obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
- obj-$(CONFIG_MEGARAID_SAS)	+= megaraid/
--obj-$(CONFIG_SCSI_MPT2SAS)	+= mpt2sas/
- obj-$(CONFIG_SCSI_MPT3SAS)	+= mpt3sas/
- obj-$(CONFIG_SCSI_UFSHCD)	+= ufs/
- obj-$(CONFIG_SCSI_ACARD)	+= atp870u.o
++config SCSI_MPT3SAS_MERGED
++	bool "Only used for legacy mpt2sas/mpt3sas interoperability"
++	---help---
++	Once this config is set, out of box driver mpt2sas and mpt3sas
++	can recongnize difference between merged and legacy inbox driver.
++	Used only to interface gracefully between old mpt2sas/mpt3sas and
++	merged mpt3sas driver.
++
++	Always set for merged mpt3sas driver.
++
+ config SCSI_MPT2SAS_MAX_SGE
+ 	int "LSI MPT Fusion SAS 2.0 Max number of SG Entries (16 - 256)"
+ 	depends on PCI && SCSI && SCSI_MPT3SAS
 -- 
 2.0.2
