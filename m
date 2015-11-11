@@ -1,215 +1,662 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 22/25] mpt3sas: Added a module parameter hbas_to_enumerate
-Date: Wed, 11 Nov 2015 17:30:38 +0530
-Message-ID: <1447243241-10912-23-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 21/25] mpt2sas: Removed mpt2sas folder
+Date: Wed, 11 Nov 2015 17:30:37 +0530
+Message-ID: <1447243241-10912-22-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34259 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbbKKMDD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2015 07:03:03 -0500
-Received: by padhx2 with SMTP id hx2so29768698pad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2015 04:03:02 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Added module parameter 'hbas_to_enumerate', which user can
-use this merged driver as legacy mpt2sas driver or as a
-legacy mpt3sas driver if needed.
-
-Here are the available options for this module parameter
-  0 - Merged driver which enumerates both SAS 2.0 & SAS 3.0 HBAs
-  1 - Acts as legacy mpt2sas driver, which enumerates only SAS 2.0 HBAs
-  2 - Acts as legacy mpt3sas driver, which enumerates only SAS 3.0 HBAs
+Removed mpt2sas files, mpt2sas directory & mpt3sas_module.c file.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 +--
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 32 +++++++++++++-------
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 58 +++++++++++++++++++++++++++---------
- 3 files changed, 68 insertions(+), 26 deletions(-)
+ drivers/scsi/mpt2sas/Kconfig          |  61 --------
+ drivers/scsi/mpt2sas/Makefile         |  15 --
+ drivers/scsi/mpt2sas/mpt2sas_module.c | 281 ----------------------------------
+ drivers/scsi/mpt3sas/mpt3sas_module.c | 253 ------------------------------
+ 4 files changed, 610 deletions(-)
+ delete mode 100644 drivers/scsi/mpt2sas/Kconfig
+ delete mode 100644 drivers/scsi/mpt2sas/Makefile
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_module.c
+ delete mode 100644 drivers/scsi/mpt3sas/mpt3sas_module.c
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 087586e..25c141c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1357,8 +1357,8 @@ int mpt3sas_config_get_volume_wwid(struct MPT3SAS_ADAPTER *ioc,
- /* ctl shared API */
- extern struct device_attribute *mpt3sas_host_attrs[];
- extern struct device_attribute *mpt3sas_dev_attrs[];
--void mpt3sas_ctl_init(void);
--void mpt3sas_ctl_exit(void);
-+void mpt3sas_ctl_init(ushort hbas_to_enumerate);
-+void mpt3sas_ctl_exit(ushort hbas_to_enumerate);
- u8 mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	u32 reply);
- void mpt3sas_ctl_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 05b0733..d8366b0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3404,15 +3404,25 @@ static struct miscdevice gen2_ctl_dev = {
-  *
-  */
- void
--mpt3sas_ctl_init(void)
-+mpt3sas_ctl_init(ushort hbas_to_enumerate)
- {
- 	async_queue = NULL;
--	if (misc_register(&ctl_dev) < 0)
--		pr_err("%s can't register misc device [minor=%d]\n",
--		    MPT3SAS_DRIVER_NAME, MPT3SAS_MINOR);
--	if (misc_register(&gen2_ctl_dev) < 0)
+diff --git a/drivers/scsi/mpt2sas/Kconfig b/drivers/scsi/mpt2sas/Kconfig
+deleted file mode 100644
+index 1356a0a..0000000
+--- a/drivers/scsi/mpt2sas/Kconfig
++++ /dev/null
+@@ -1,61 +0,0 @@
+-#
+-# Kernel configuration file for the MPT2SAS
+-#
+-# This code is based on drivers/scsi/mpt2sas/Kconfig
+-# Copyright (C) 2007-2014  LSI Corporation
+-#  (mailto:DL-MPTFusionLinux@lsi.com)
+-
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License
+-# as published by the Free Software Foundation; either version 2
+-# of the License, or (at your option) any later version.
+-
+-# This program is distributed in the hope that it will be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-
+-# NO WARRANTY
+-# THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+-# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
+-# LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
+-# MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
+-# solely responsible for determining the appropriateness of using and
+-# distributing the Program and assumes all risks associated with its
+-# exercise of rights under this Agreement, including but not limited to
+-# the risks and costs of program errors, damage to or loss of data,
+-# programs or equipment, and unavailability or interruption of operations.
+-
+-# DISCLAIMER OF LIABILITY
+-# NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
+-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+-# DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
+-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+-# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+-# USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
+-# HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
+-
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write to the Free Software
+-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+-# USA.
+-
+-config SCSI_MPT2SAS
+-	tristate "LSI MPT Fusion SAS 2.0 Device Driver"
+-	depends on PCI && SCSI
+-	select SCSI_SAS_ATTRS
+-	select RAID_ATTRS
+-	---help---
+-	This driver supports PCI-Express SAS 6Gb/s Host Adapters.
+-
+-config SCSI_MPT2SAS_MAX_SGE
+-	int "LSI MPT Fusion Max number of SG Entries (16 - 128)"
+-	depends on PCI && SCSI && SCSI_MPT2SAS
+-	default "128"
+-	range 16 128
+-	---help---
+-	This option allows you to specify the maximum number of scatter-
+-	gather entries per I/O. The driver default is 128, which matches
+-	SAFE_PHYS_SEGMENTS.  However, it may decreased down to 16.
+-	Decreasing this parameter will reduce memory requirements
+-	on a per controller instance.
+diff --git a/drivers/scsi/mpt2sas/Makefile b/drivers/scsi/mpt2sas/Makefile
+deleted file mode 100644
+index 3771616..0000000
+--- a/drivers/scsi/mpt2sas/Makefile
++++ /dev/null
+@@ -1,15 +0,0 @@
+-# mpt2sas makefile
+-
+-# share the official mpi headers from the mpt3sas driver
+-ccflags-y += -I$(src)/../mpt3sas
+-ccflags-y += -DSCSI_MPT2SAS
+-
+-# use the common object files from mpt3sas driver
+-obj-$(CONFIG_SCSI_MPT2SAS) += mpt2sas.o
+-mpt2sas-y +=  ../mpt3sas/mpt3sas_base.o        \
+-		../mpt3sas/mpt3sas_config.o    \
+-		../mpt3sas/mpt3sas_scsih.o     \
+-		../mpt3sas/mpt3sas_transport.o \
+-		../mpt3sas/mpt3sas_ctl.o       \
+-		../mpt3sas/mpt3sas_trigger_diag.o  \
+-		mpt2sas_module.o
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_module.c b/drivers/scsi/mpt2sas/mpt2sas_module.c
+deleted file mode 100644
+index d407ed0..0000000
+--- a/drivers/scsi/mpt2sas/mpt2sas_module.c
++++ /dev/null
+@@ -1,281 +0,0 @@
+-/*
+- * Scsi Host Layer for MPT (Message Passing Technology) based controllers
+- *
+- * Copyright (C) 2012-2014  LSI Corporation
+- * Copyright (C) 2013-2015 Avago Technologies
+- *  (mailto: MPT-FusionLinux.pdl@avagotech.com)
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * NO WARRANTY
+- * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+- * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
+- * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
+- * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
+- * solely responsible for determining the appropriateness of using and
+- * distributing the Program and assumes all risks associated with its
+- * exercise of rights under this Agreement, including but not limited to
+- * the risks and costs of program errors, damage to or loss of data,
+- * programs or equipment, and unavailability or interruption of operations.
+-
+- * DISCLAIMER OF LIABILITY
+- * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
+- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
+- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+- * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
+- * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
+-
+- * You should have received a copy of the GNU General Public License
+- * along with this program.
+- */
+-
+-#include <linux/module.h>
+-#include <linux/pci.h>
+-#include <linux/raid_class.h>
+-
+-#include "mpt3sas_base.h"
+-#include "mpt3sas_ctl.h"
+-
+-MODULE_AUTHOR(MPT3SAS_AUTHOR);
+-MODULE_DESCRIPTION(MPT2SAS_DESCRIPTION);
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION(MPT2SAS_DRIVER_VERSION);
+-
+-/* shost template */
+-static struct scsi_host_template mpt2sas_driver_template = {
+-	.module				= THIS_MODULE,
+-	.name				= "Fusion MPT SAS Host",
+-	.proc_name			= MPT2SAS_DRIVER_NAME,
+-	.queuecommand			= scsih_qcmd,
+-	.target_alloc			= scsih_target_alloc,
+-	.slave_alloc			= scsih_slave_alloc,
+-	.slave_configure		= scsih_slave_configure,
+-	.target_destroy			= scsih_target_destroy,
+-	.slave_destroy			= scsih_slave_destroy,
+-	.scan_finished			= scsih_scan_finished,
+-	.scan_start			= scsih_scan_start,
+-	.change_queue_depth		= scsih_change_queue_depth,
+-	.eh_abort_handler		= scsih_abort,
+-	.eh_device_reset_handler	= scsih_dev_reset,
+-	.eh_target_reset_handler	= scsih_target_reset,
+-	.eh_host_reset_handler		= scsih_host_reset,
+-	.bios_param			= scsih_bios_param,
+-	.can_queue			= 1,
+-	.this_id			= -1,
+-	.sg_tablesize			= MPT2SAS_SG_DEPTH,
+-	.max_sectors			= 32767,
+-	.cmd_per_lun			= 7,
+-	.use_clustering			= ENABLE_CLUSTERING,
+-	.shost_attrs			= mpt3sas_host_attrs,
+-	.sdev_attrs			= mpt3sas_dev_attrs,
+-	.track_queue_depth		= 1,
+-};
+-
+-/* raid transport support */
+-static struct raid_function_template mpt2sas_raid_functions = {
+-	.cookie		= &mpt2sas_driver_template,
+-	.is_raid	= scsih_is_raid,
+-	.get_resync	= scsih_get_resync,
+-	.get_state	= scsih_get_state,
+-};
+-
+-/*
+- * The pci device ids are defined in mpi/mpi2_cnfg.h.
+- */
+-static const struct pci_device_id mpt2sas_pci_table[] = {
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2004,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Falcon ~ 2008*/
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2008,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Liberator ~ 2108 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_1,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_2,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_3,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Meteor ~ 2116 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2116_1,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2116_2,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Thunderbolt ~ 2208 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_1,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_2,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_3,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_4,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_5,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_6,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Mustang ~ 2308 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_1,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_2,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_3,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* SSS6200 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SSS6200,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{0}	/* Terminating entry */
+-};
+-MODULE_DEVICE_TABLE(pci, mpt2sas_pci_table);
+-
+-static const struct file_operations mpt2sas_ctl_fops = {
+-	.owner = THIS_MODULE,
+-	.unlocked_ioctl = ctl_ioctl,
+-	.poll = ctl_poll,
+-	.fasync = ctl_fasync,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = ctl_ioctl_compat,
+-#endif
+-	.llseek = noop_llseek,
+-};
+-
+-static struct miscdevice mpt2sas_ctl_dev = {
+-	.minor  = MPT2SAS_MINOR,
+-	.name   = MPT2SAS_DEV_NAME,
+-	.fops   = &mpt2sas_ctl_fops,
+-};
+-
+-/**
+- * mpt2sas_ctl_init - main entry point for ctl.
+- *
+- */
+-void
+-mpt2sas_ctl_init(void)
+-{
+-	ctl_init();
+-	if (misc_register(&mpt2sas_ctl_dev) < 0)
 -		pr_err("%s can't register misc device [minor=%d]\n",
 -		    MPT2SAS_DRIVER_NAME, MPT2SAS_MINOR);
-+
-+	/* Don't register mpt3ctl ioctl device if
-+	 * hbas_to_enumarate is one.
-+	 */
-+	if (hbas_to_enumerate != 1)
-+		if (misc_register(&ctl_dev) < 0)
-+			pr_err("%s can't register misc device [minor=%d]\n",
-+			    MPT3SAS_DRIVER_NAME, MPT3SAS_MINOR);
-+
-+	/* Don't register mpt3ctl ioctl device if
-+	 * hbas_to_enumarate is two.
-+	 */
-+	if (hbas_to_enumerate != 2)
-+		if (misc_register(&gen2_ctl_dev) < 0)
-+			pr_err("%s can't register misc device [minor=%d]\n",
-+			    MPT2SAS_DRIVER_NAME, MPT2SAS_MINOR);
- 
- 	init_waitqueue_head(&ctl_poll_wait);
- }
-@@ -3422,7 +3432,7 @@ mpt3sas_ctl_init(void)
-  *
-  */
- void
+-}
+-
+-/**
+- * mpt2sas_ctl_exit - exit point for ctl
+- *
+- */
+-void
+-mpt2sas_ctl_exit(void)
+-{
+-	ctl_exit();
+-	misc_deregister(&mpt2sas_ctl_dev);
+-}
+-
+-/**
+- * _mpt2sas_probe - attach and add scsi host
+- * @pdev: PCI device struct
+- * @id: pci device id
+- *
+- * Returns 0 success, anything else error.
+- */
+-static int
+-_mpt2sas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	struct Scsi_Host *shost;
+-	int rv;
+-
+-	shost = scsi_host_alloc(&mpt2sas_driver_template,
+-			    sizeof(struct MPT3SAS_ADAPTER));
+-	if (!shost)
+-		return -ENODEV;
+-
+-	sprintf(driver_name, "%s", MPT2SAS_DRIVER_NAME);
+-	rv = scsih_probe(pdev, shost);
+-	return rv;
+-}
+-
+-static struct pci_error_handlers _mpt2sas_err_handler = {
+-	.error_detected = scsih_pci_error_detected,
+-	.mmio_enabled = scsih_pci_mmio_enabled,
+-	.slot_reset =   scsih_pci_slot_reset,
+-	.resume =       scsih_pci_resume,
+-};
+-
+-static struct pci_driver mpt2sas_driver = {
+-	.name		= MPT2SAS_DRIVER_NAME,
+-	.id_table	= mpt2sas_pci_table,
+-	.probe		= _mpt2sas_probe,
+-	.remove		= scsih_remove,
+-	.shutdown	= scsih_shutdown,
+-	.err_handler	= &_mpt2sas_err_handler,
+-#ifdef CONFIG_PM
+-	.suspend	= scsih_suspend,
+-	.resume		= scsih_resume,
+-#endif
+-};
+-
+-/**
+- * _mpt2sas_init - main entry point for this driver.
+- *
+- * Returns 0 success, anything else error.
+- */
+-static int __init
+-_mpt2sas_init(void)
+-{
+-	int error;
+-
+-	pr_info("%s version %s loaded\n", MPT2SAS_DRIVER_NAME,
+-					MPT2SAS_DRIVER_VERSION);
+-
+-	mpt3sas_transport_template =
+-	    sas_attach_transport(&mpt3sas_transport_functions);
+-	if (!mpt3sas_transport_template)
+-		return -ENODEV;
+-
+-	mpt3sas_raid_template = raid_class_attach(&mpt2sas_raid_functions);
+-	if (!mpt3sas_raid_template) {
+-		sas_release_transport(mpt3sas_transport_template);
+-		return -ENODEV;
+-	}
+-
+-	error = scsih_init();
+-	if (error) {
+-		scsih_exit();
+-		return error;
+-	}
+-
+-	mpt2sas_ctl_init();
+-
+-	error = pci_register_driver(&mpt2sas_driver);
+-	if (error)
+-		scsih_exit();
+-
+-	return error;
+-}
+-
+-/**
+- * _mpt2sas_exit - exit point for this driver (when it is a module).
+- *
+- */
+-static void __exit
+-_mpt2sas_exit(void)
+-{
+-	pr_info("mpt2sas version %s unloading\n",
+-				MPT2SAS_DRIVER_VERSION);
+-
+-	pci_unregister_driver(&mpt2sas_driver);
+-
+-	mpt2sas_ctl_exit();
+-
+-	scsih_exit();
+-}
+-
+-module_init(_mpt2sas_init);
+-module_exit(_mpt2sas_exit);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_module.c b/drivers/scsi/mpt3sas/mpt3sas_module.c
+deleted file mode 100644
+index 322dc8d..0000000
+--- a/drivers/scsi/mpt3sas/mpt3sas_module.c
++++ /dev/null
+@@ -1,253 +0,0 @@
+-/*
+- * Scsi Host Layer for MPT (Message Passing Technology) based controllers
+- *
+- * Copyright (C) 2012-2014  LSI Corporation
+- * Copyright (C) 2013-2015 Avago Technologies
+- *  (mailto: MPT-FusionLinux.pdl@avagotech.com)
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * NO WARRANTY
+- * THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+- * CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT
+- * LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
+- * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is
+- * solely responsible for determining the appropriateness of using and
+- * distributing the Program and assumes all risks associated with its
+- * exercise of rights under this Agreement, including but not limited to
+- * the risks and costs of program errors, damage to or loss of data,
+- * programs or equipment, and unavailability or interruption of operations.
+-
+- * DISCLAIMER OF LIABILITY
+- * NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
+- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+- * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND
+- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+- * USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
+- * HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
+-
+- * You should have received a copy of the GNU General Public License
+- * along with this program.
+- */
+-
+-#include <linux/module.h>
+-#include <linux/pci.h>
+-#include <linux/raid_class.h>
+-
+-#include "mpt3sas_base.h"
+-#include "mpt3sas_ctl.h"
+-
+-MODULE_AUTHOR(MPT3SAS_AUTHOR);
+-MODULE_DESCRIPTION(MPT3SAS_DESCRIPTION);
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION(MPT3SAS_DRIVER_VERSION);
+-
+-/* shost template */
+-static struct scsi_host_template mpt3sas_driver_template = {
+-	.module				= THIS_MODULE,
+-	.name				= "Fusion MPT SAS Host",
+-	.proc_name			= MPT3SAS_DRIVER_NAME,
+-	.queuecommand			= scsih_qcmd,
+-	.target_alloc			= scsih_target_alloc,
+-	.slave_alloc			= scsih_slave_alloc,
+-	.slave_configure		= scsih_slave_configure,
+-	.target_destroy			= scsih_target_destroy,
+-	.slave_destroy			= scsih_slave_destroy,
+-	.scan_finished			= scsih_scan_finished,
+-	.scan_start			= scsih_scan_start,
+-	.change_queue_depth		= scsih_change_queue_depth,
+-	.eh_abort_handler		= scsih_abort,
+-	.eh_device_reset_handler	= scsih_dev_reset,
+-	.eh_target_reset_handler	= scsih_target_reset,
+-	.eh_host_reset_handler		= scsih_host_reset,
+-	.bios_param			= scsih_bios_param,
+-	.can_queue			= 1,
+-	.this_id			= -1,
+-	.sg_tablesize			= MPT3SAS_SG_DEPTH,
+-	.max_sectors			= 32767,
+-	.cmd_per_lun			= 7,
+-	.use_clustering			= ENABLE_CLUSTERING,
+-	.shost_attrs			= mpt3sas_host_attrs,
+-	.sdev_attrs			= mpt3sas_dev_attrs,
+-	.track_queue_depth		= 1,
+-};
+-
+-/* raid transport support */
+-static struct raid_function_template mpt3sas_raid_functions = {
+-	.cookie		= &mpt3sas_driver_template,
+-	.is_raid	= scsih_is_raid,
+-	.get_resync	= scsih_get_resync,
+-	.get_state	= scsih_get_state,
+-};
+-
+-/*
+- * The pci device ids are defined in mpi/mpi2_cnfg.h.
+- */
+-static const struct pci_device_id mpt3sas_pci_table[] = {
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3004,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3008,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	/* Invader ~ 3108 */
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3108_1,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3108_2,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3108_5,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ MPI2_MFGPAGE_VENDORID_LSI, MPI25_MFGPAGE_DEVID_SAS3108_6,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{0}     /* Terminating entry */
+-};
+-MODULE_DEVICE_TABLE(pci, mpt3sas_pci_table);
+-
+-static const struct file_operations mpt3sas_ctl_fops = {
+-	.owner = THIS_MODULE,
+-	.unlocked_ioctl = ctl_ioctl,
+-	.poll = ctl_poll,
+-	.fasync = ctl_fasync,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = ctl_ioctl_compat,
+-#endif
+-};
+-
+-static struct miscdevice mpt3sas_ctl_dev = {
+-	.minor  = MPT3SAS_MINOR,
+-	.name   = MPT3SAS_DEV_NAME,
+-	.fops   = &mpt3sas_ctl_fops,
+-};
+-
+-/**
+- * mpt3sas_ctl_init - main entry point for ctl.
+- *
+- */
+-void
+-mpt3sas_ctl_init(void)
+-{
+-	ctl_init();
+-	if (misc_register(&mpt3sas_ctl_dev) < 0)
+-		pr_err("%s can't register misc device [minor=%d]\n",
+-		    MPT3SAS_DRIVER_NAME, MPT3SAS_MINOR);
+-}
+-
+-/**
+- * mpt3sas_ctl_exit - exit point for ctl
+- *
+- */
+-void
 -mpt3sas_ctl_exit(void)
-+mpt3sas_ctl_exit(ushort hbas_to_enumerate)
- {
- 	struct MPT3SAS_ADAPTER *ioc;
- 	int i;
-@@ -3447,6 +3457,8 @@ mpt3sas_ctl_exit(void)
- 
- 		kfree(ioc->event_log);
- 	}
--	misc_deregister(&ctl_dev);
--	misc_deregister(&gen2_ctl_dev);
-+	if (hbas_to_enumerate != 1)
-+		misc_deregister(&ctl_dev);
-+	if (hbas_to_enumerate != 2)
-+		misc_deregister(&gen2_ctl_dev);
- }
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 04570a2..d95206b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -119,8 +119,12 @@ static u64 max_lun = MPT3SAS_MAX_LUN;
- module_param(max_lun, ullong, 0);
- MODULE_PARM_DESC(max_lun, " max lun, default=16895 ");
- 
+-{
+-	ctl_exit();
+-	misc_deregister(&mpt3sas_ctl_dev);
+-}
 -
+-/**
+- * _mpt3sas_probe - attach and add scsi host
+- * @pdev: PCI device struct
+- * @id: pci device id
+- *
+- * Returns 0 success, anything else error.
+- */
+-static int
+-_mpt3sas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	struct Scsi_Host *shost;
+-	int rv;
 -
-+static ushort hbas_to_enumerate;
-+module_param(hbas_to_enumerate, ushort, 0);
-+MODULE_PARM_DESC(hbas_to_enumerate,
-+		" 0 - enumerates both SAS 2.0 & SAS 3.0 generation HBAs\n \
-+		  1 - enumerates only SAS 2.0 generation HBAs\n \
-+		  2 - enumerates only SAS 3.0 generation HBAs (default=0)");
- 
- /* diag_buffer_enable is bitwise
-  * bit 0 set = TRACE
-@@ -8444,6 +8448,18 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (hba_mpi_version == 0)
- 		return -ENODEV;
- 
-+	/* Enumerate only SAS 2.0 HBA's if hbas_to_enumerate is one,
-+	 * for other generation HBA's return with -ENODEV
-+	 */
-+	if ((hbas_to_enumerate == 1) && (hba_mpi_version !=  MPI2_VERSION))
-+		return -ENODEV;
-+
-+	/* Enumerate only SAS 3.0 HBA's if hbas_to_enumerate is two,
-+	 * for other generation HBA's return with -ENODEV
-+	 */
-+	if ((hbas_to_enumerate == 2) && (hba_mpi_version !=  MPI25_VERSION))
-+		return -ENODEV;
-+
- 	switch (hba_mpi_version) {
- 	case MPI2_VERSION:
- 		/* Use mpt2sas driver host template for SAS 2.0 HBA's */
-@@ -8948,8 +8964,10 @@ scsih_exit(void)
- 	mpt3sas_base_release_callback_handler(tm_sas_control_cb_idx);
- 
- /* raid transport support */
--	raid_class_release(mpt3sas_raid_template);
--	raid_class_release(mpt2sas_raid_template);
-+	if (hbas_to_enumerate != 1)
-+		raid_class_release(mpt3sas_raid_template);
-+	if (hbas_to_enumerate != 2)
-+		raid_class_release(mpt2sas_raid_template);
- 	sas_release_transport(mpt3sas_transport_template);
- }
- 
-@@ -8971,16 +8989,28 @@ _mpt3sas_init(void)
- 	if (!mpt3sas_transport_template)
- 		return -ENODEV;
- 
+-	shost = scsi_host_alloc(&mpt3sas_driver_template,
+-				sizeof(struct MPT3SAS_ADAPTER));
+-	if (!shost)
+-		return -ENODEV;
+-
+-	sprintf(driver_name, "%s", MPT3SAS_DRIVER_NAME);
+-	rv = scsih_probe(pdev, shost);
+-	return rv;
+-}
+-
+-static struct pci_error_handlers _mpt3sas_err_handler = {
+-	.error_detected	= scsih_pci_error_detected,
+-	.mmio_enabled	= scsih_pci_mmio_enabled,
+-	.slot_reset	= scsih_pci_slot_reset,
+-	.resume		= scsih_pci_resume,
+-};
+-
+-static struct pci_driver mpt3sas_driver = {
+-	.name		= MPT3SAS_DRIVER_NAME,
+-	.id_table	= mpt3sas_pci_table,
+-	.probe		= _mpt3sas_probe,
+-	.remove		= scsih_remove,
+-	.shutdown	= scsih_shutdown,
+-	.err_handler	= &_mpt3sas_err_handler,
+-#ifdef CONFIG_PM
+-	.suspend	= scsih_suspend,
+-	.resume		= scsih_resume,
+-#endif
+-};
+-
+-/**
+- * _mpt3sas_init - main entry point for this driver.
+- *
+- * Returns 0 success, anything else error.
+- */
+-static int __init
+-_mpt3sas_init(void)
+-{
+-	int error;
+-
+-	pr_info("%s version %s loaded\n", MPT3SAS_DRIVER_NAME,
+-					MPT3SAS_DRIVER_VERSION);
+-
+-	mpt3sas_transport_template =
+-	    sas_attach_transport(&mpt3sas_transport_functions);
+-	if (!mpt3sas_transport_template)
+-		return -ENODEV;
+-
 -	mpt3sas_raid_template = raid_class_attach(&mpt3sas_raid_functions);
 -	if (!mpt3sas_raid_template) {
 -		sas_release_transport(mpt3sas_transport_template);
 -		return -ENODEV;
-+	/* No need attach mpt3sas raid functions template
-+	 * if hbas_to_enumarate value is one.
-+	 */
-+	if (hbas_to_enumerate != 1) {
-+		mpt3sas_raid_template =
-+				raid_class_attach(&mpt3sas_raid_functions);
-+		if (!mpt3sas_raid_template) {
-+			sas_release_transport(mpt3sas_transport_template);
-+			return -ENODEV;
-+		}
- 	}
- 
--	mpt2sas_raid_template = raid_class_attach(&mpt2sas_raid_functions);
--	if (!mpt2sas_raid_template) {
--		sas_release_transport(mpt3sas_transport_template);
--		return -ENODEV;
-+	/* No need to attach mpt2sas raid functions template
-+	 * if hbas_to_enumarate value is two
-+	 */
-+	if (hbas_to_enumerate != 2) {
-+		mpt2sas_raid_template =
-+				raid_class_attach(&mpt2sas_raid_functions);
-+		if (!mpt2sas_raid_template) {
-+			sas_release_transport(mpt3sas_transport_template);
-+			return -ENODEV;
-+		}
- 	}
- 
- 	error = scsih_init();
-@@ -8989,7 +9019,7 @@ _mpt3sas_init(void)
- 		return error;
- 	}
- 
+-	}
+-
+-	error = scsih_init();
+-	if (error) {
+-		scsih_exit();
+-		return error;
+-	}
+-
 -	mpt3sas_ctl_init();
-+	mpt3sas_ctl_init(hbas_to_enumerate);
- 
- 	error = pci_register_driver(&mpt3sas_driver);
- 	if (error)
-@@ -9010,7 +9040,7 @@ _mpt3sas_exit(void)
- 
- 	pci_unregister_driver(&mpt3sas_driver);
- 
+-
+-	error = pci_register_driver(&mpt3sas_driver);
+-	if (error)
+-		scsih_exit();
+-
+-	return error;
+-}
+-
+-/**
+- * _mpt3sas_exit - exit point for this driver (when it is a module).
+- *
+- */
+-static void __exit
+-_mpt3sas_exit(void)
+-{
+-	pr_info("mpt3sas version %s unloading\n",
+-				MPT3SAS_DRIVER_VERSION);
+-
+-	pci_unregister_driver(&mpt3sas_driver);
+-
 -	mpt3sas_ctl_exit();
-+	mpt3sas_ctl_exit(hbas_to_enumerate);
- 
- 	scsih_exit();
- }
+-
+-	scsih_exit();
+-}
+-
+-module_init(_mpt3sas_init);
+-module_exit(_mpt3sas_exit);
 -- 
 2.0.2
-
