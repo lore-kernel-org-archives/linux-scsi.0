@@ -1,44 +1,77 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [dm-devel] [RFC PATCH 00/32] separate operations from flags in
- the bio/request structs
-Date: Wed, 11 Nov 2015 01:53:24 -0600
-Message-ID: <5642F3F4.2060007@cs.wisc.edu>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
- <563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
- <20151107102309.GE12117@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151107102309.GE12117@infradead.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, drbd-dev@lists.linbit.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/2] scsi_transport_fc: Implement 'async_user_scan' module parameter
+Date: Wed, 11 Nov 2015 11:34:40 +0100
+Message-ID: <1447238080-109942-3-git-send-email-hare@suse.de>
+References: <1447238080-109942-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:44261 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751890AbbKKKen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2015 05:34:43 -0500
+In-Reply-To: <1447238080-109942-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@odin.com>, Hannes Reinecke <hare@suse.de>
 
-On 11/07/2015 04:23 AM, Christoph Hellwig wrote:
-> On Wed, Nov 04, 2015 at 10:53:39AM -0600, Mike Christie wrote:
->>> If you have to touch submit_bio() and submit_bio_wait(), how about
->>> requiring the callers of these functions to set the cmd and flags
->>> arguments in the bio structure and to leave out the cmd and flags
->>> arguments from the submit_bio() and submit_bio_wait() functions ? A
->>> (compile tested only) patch that implements this idea is available at
->>> https://lkml.org/lkml/2014/6/2/173.
->>>
->>
->> Yeah, I can do that.
-> 
-> I think this would be useful to do at the beginning of the series.
+When invoking a scan via the sysfs 'scan' attribute the process
+will be blocked until the scan is completed, which can take a
+very long time on large installations.
+Enabling the 'async_user_scan' parameter moves the actual
+LUN scanning to a workqueue, thereby unblocking the process.
 
-I just wanted to double check that we wanted to do this.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_transport_fc.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
-We no longer have the bvec merge functions so the original reason given
-in the thread/patch Bart referenced is no longer valid.
-
-Offlist it was suggested that dropping the argument from submit_bio
-might still improve performance, but I modified xfs and dm and did some
-testing and did not see anything.
-
-So the change is not needed, and it would only be done because people
-feel it would improve the interface.
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 72954a8..af1d35b 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -83,6 +83,21 @@ MODULE_PARM_DESC(disable_target_scan,
+ 		 "Disable target scan on remote ports (default=0)");
+ 
+ /*
++ * async_user_scan: make 'scan' sysfs attribute asynchronous
++ *   on larger installations scanning can take a very long time
++ *   during which the process invoking the scan will be blocked
++ *   on writing to the 'scan' attribute. Enabling this attribute
++ *   will move scanning to a work queue, allowing the process
++ *   to return immediately.
++ */
++static bool fc_async_user_scan;
++
++module_param_named(async_user_scan, fc_async_user_scan,
++		   bool, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(async_user_scan,
++		 "Allow for asynchronous user LUN scanning (default=0)");
++
++/*
+  * Redefine so that we can have same named attributes in the
+  * sdev/starget/host objects.
+  */
+@@ -2121,8 +2136,18 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, uint lun)
+ 
+ 		if ((channel == rport->channel) &&
+ 		    (id == rport->scsi_target_id)) {
+-			spin_unlock_irqrestore(shost->host_lock, flags);
+-			scsi_scan_target(&rport->dev, channel, id, lun, 1);
++			if (lun == SCAN_WILD_CARD &&
++			    fc_async_user_scan) {
++				if (!(rport->flags & FC_RPORT_SCAN_PENDING)) {
++					rport->flags |= FC_RPORT_SCAN_PENDING;
++					scsi_queue_work(shost,
++							&rport->scan_work);
++				}
++				spin_unlock_irqrestore(shost->host_lock, flags);
++			} else {
++				spin_unlock_irqrestore(shost->host_lock, flags);
++				scsi_scan_target(&rport->dev, channel, id, lun, 1);
++			}
+ 			return;
+ 		}
+ 	}
+-- 
+1.8.5.6
 
