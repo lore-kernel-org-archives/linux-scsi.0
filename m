@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH RESEND 08/25] mpt3sas: For an IO, build MPI SGL LIST on GEN2 HBA's and build IEEE SGL LIST on GEN3 HBA's
-Date: Wed, 11 Nov 2015 17:30:24 +0530
-Message-ID: <1447243241-10912-9-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH RESEND 09/25] mpt3sas: Don't send PHYDISK_HIDDEN Raid Action request on SAS2 HBA's
+Date: Wed, 11 Nov 2015 17:30:25 +0530
+Message-ID: <1447243241-10912-10-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -12,221 +12,127 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 
-Gen2 HBA's uses MPI Scatter Gather Lists where as Gen3 HBA's uses
-IEEE Scatter Gather Lists. So modify the common code part in such
-a way that it will build IEEE SGL table for Gen3 HBA's and it will
-build MPI SGL table for Gen2 HBA's.
+Don't send PHYDISK_HIDDEN Raid Action request for SAS2 HBA's.
+Since these HBA's doesn't support this Raid Action.
+
+Also enable fast_path only for SAS3 HBA's.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 181 +++++++++++++++++++++++++++++++++---
- 1 file changed, 168 insertions(+), 13 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 31d0ca8..62dc312 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1318,6 +1318,149 @@ _base_build_zero_len_sge_ieee(struct MPT3SAS_ADAPTER *ioc, void *paddr)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a638920..80469d0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1165,8 +1165,10 @@ scsih_target_alloc(struct scsi_target *starget)
+ 		if (test_bit(sas_device->handle, ioc->pd_handles))
+ 			sas_target_priv_data->flags |=
+ 			    MPT_TARGET_FLAGS_RAID_COMPONENT;
++#ifndef SCSI_MPT2SAS
+ 		if (sas_device->fast_path)
+ 			sas_target_priv_data->flags |= MPT_TARGET_FASTPATH_IO;
++#endif
+ 	}
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 
+@@ -3719,11 +3721,13 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		ioc->build_zero_len_sge(ioc, &mpi_request->SGL);
+ 
+ 	if (likely(mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)) {
++#ifndef SCSI_MPT2SAS
+ 		if (sas_target_priv_data->flags & MPT_TARGET_FASTPATH_IO) {
+ 			mpi_request->IoFlags = cpu_to_le16(scmd->cmd_len |
+ 			    MPI25_SCSIIO_IOFLAGS_FAST_PATH);
+ 			mpt3sas_base_put_smid_fast_path(ioc, smid, handle);
+ 		} else
++#endif
+ 			mpt3sas_base_put_smid_scsi_io(ioc, smid, handle);
+ 	} else
+ 		mpt3sas_base_put_smid_default(ioc, smid);
+@@ -5031,8 +5035,10 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 	sas_device->device_info = device_info;
+ 	sas_device->sas_address = sas_address;
+ 	sas_device->phy = sas_device_pg0.PhyNum;
++#ifndef SCSI_MPT2SAS
+ 	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
+ 	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
++#endif
+ 
+ 	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 		sas_device->enclosure_level =
+@@ -5731,6 +5737,7 @@ _scsih_sas_discovery_event(struct MPT3SAS_ADAPTER *ioc,
+ 	}
  }
  
++#ifndef SCSI_MPT2SAS
  /**
-+ * _base_build_sg_scmd - main sg creation routine
-+ * @ioc: per adapter object
-+ * @scmd: scsi command
-+ * @smid: system request message index
-+ * Context: none.
-+ *
-+ * The main routine that builds scatter gather table from a given
-+ * scsi request sent via the .queuecommand main handler.
-+ *
-+ * Returns 0 success, anything else error
-+ */
-+static int
-+_base_build_sg_scmd(struct MPT3SAS_ADAPTER *ioc,
-+		struct scsi_cmnd *scmd, u16 smid)
-+{
-+	Mpi2SCSIIORequest_t *mpi_request;
-+	dma_addr_t chain_dma;
-+	struct scatterlist *sg_scmd;
-+	void *sg_local, *chain;
-+	u32 chain_offset;
-+	u32 chain_length;
-+	u32 chain_flags;
-+	int sges_left;
-+	u32 sges_in_segment;
-+	u32 sgl_flags;
-+	u32 sgl_flags_last_element;
-+	u32 sgl_flags_end_buffer;
-+	struct chain_tracker *chain_req;
-+
-+	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-+
-+	/* init scatter gather flags */
-+	sgl_flags = MPI2_SGE_FLAGS_SIMPLE_ELEMENT;
-+	if (scmd->sc_data_direction == DMA_TO_DEVICE)
-+		sgl_flags |= MPI2_SGE_FLAGS_HOST_TO_IOC;
-+	sgl_flags_last_element = (sgl_flags | MPI2_SGE_FLAGS_LAST_ELEMENT)
-+	    << MPI2_SGE_FLAGS_SHIFT;
-+	sgl_flags_end_buffer = (sgl_flags | MPI2_SGE_FLAGS_LAST_ELEMENT |
-+	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_END_OF_LIST)
-+	    << MPI2_SGE_FLAGS_SHIFT;
-+	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
-+
-+	sg_scmd = scsi_sglist(scmd);
-+	sges_left = scsi_dma_map(scmd);
-+	if (sges_left < 0) {
-+		sdev_printk(KERN_ERR, scmd->device,
-+		 "pci_map_sg failed: request for %d bytes!\n",
-+		 scsi_bufflen(scmd));
-+		return -ENOMEM;
-+	}
-+
-+	sg_local = &mpi_request->SGL;
-+	sges_in_segment = ioc->max_sges_in_main_message;
-+	if (sges_left <= sges_in_segment)
-+		goto fill_in_last_segment;
-+
-+	mpi_request->ChainOffset = (offsetof(Mpi2SCSIIORequest_t, SGL) +
-+	    (sges_in_segment * ioc->sge_size))/4;
-+
-+	/* fill in main message segment when there is a chain following */
-+	while (sges_in_segment) {
-+		if (sges_in_segment == 1)
-+			ioc->base_add_sg_single(sg_local,
-+			    sgl_flags_last_element | sg_dma_len(sg_scmd),
-+			    sg_dma_address(sg_scmd));
-+		else
-+			ioc->base_add_sg_single(sg_local, sgl_flags |
-+			    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
-+		sg_scmd = sg_next(sg_scmd);
-+		sg_local += ioc->sge_size;
-+		sges_left--;
-+		sges_in_segment--;
-+	}
-+
-+	/* initializing the chain flags and pointers */
-+	chain_flags = MPI2_SGE_FLAGS_CHAIN_ELEMENT << MPI2_SGE_FLAGS_SHIFT;
-+	chain_req = _base_get_chain_buffer_tracker(ioc, smid);
-+	if (!chain_req)
-+		return -1;
-+	chain = chain_req->chain_buffer;
-+	chain_dma = chain_req->chain_buffer_dma;
-+	do {
-+		sges_in_segment = (sges_left <=
-+		    ioc->max_sges_in_chain_message) ? sges_left :
-+		    ioc->max_sges_in_chain_message;
-+		chain_offset = (sges_left == sges_in_segment) ?
-+		    0 : (sges_in_segment * ioc->sge_size)/4;
-+		chain_length = sges_in_segment * ioc->sge_size;
-+		if (chain_offset) {
-+			chain_offset = chain_offset <<
-+			    MPI2_SGE_CHAIN_OFFSET_SHIFT;
-+			chain_length += ioc->sge_size;
-+		}
-+		ioc->base_add_sg_single(sg_local, chain_flags | chain_offset |
-+		    chain_length, chain_dma);
-+		sg_local = chain;
-+		if (!chain_offset)
-+			goto fill_in_last_segment;
-+
-+		/* fill in chain segments */
-+		while (sges_in_segment) {
-+			if (sges_in_segment == 1)
-+				ioc->base_add_sg_single(sg_local,
-+				    sgl_flags_last_element |
-+				    sg_dma_len(sg_scmd),
-+				    sg_dma_address(sg_scmd));
-+			else
-+				ioc->base_add_sg_single(sg_local, sgl_flags |
-+				    sg_dma_len(sg_scmd),
-+				    sg_dma_address(sg_scmd));
-+			sg_scmd = sg_next(sg_scmd);
-+			sg_local += ioc->sge_size;
-+			sges_left--;
-+			sges_in_segment--;
-+		}
-+
-+		chain_req = _base_get_chain_buffer_tracker(ioc, smid);
-+		if (!chain_req)
-+			return -1;
-+		chain = chain_req->chain_buffer;
-+		chain_dma = chain_req->chain_buffer_dma;
-+	} while (1);
-+
-+
-+ fill_in_last_segment:
-+
-+	/* fill the last segment */
-+	while (sges_left) {
-+		if (sges_left == 1)
-+			ioc->base_add_sg_single(sg_local, sgl_flags_end_buffer |
-+			    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
-+		else
-+			ioc->base_add_sg_single(sg_local, sgl_flags |
-+			    sg_dma_len(sg_scmd), sg_dma_address(sg_scmd));
-+		sg_scmd = sg_next(sg_scmd);
-+		sg_local += ioc->sge_size;
-+		sges_left--;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * _base_build_sg_scmd_ieee - main sg creation routine for IEEE format
+  * _scsih_ir_fastpath - turn on fastpath for IR physdisk
   * @ioc: per adapter object
-  * @scmd: scsi command
-@@ -2850,8 +2993,12 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
- 	/* command line tunables for max sgl entries */
- 	if (max_sgl_entries != -1)
- 		sg_tablesize = max_sgl_entries;
--	else
--		sg_tablesize = MPT3SAS_SG_DEPTH;
-+	else {
-+		if (ioc->hba_mpi_version_belonged == MPI2_VERSION)
-+			sg_tablesize = MPT2SAS_SG_DEPTH;
-+		else
-+			sg_tablesize = MPT3SAS_SG_DEPTH;
-+	}
+@@ -5750,7 +5757,6 @@ _scsih_ir_fastpath(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phys_disk_num)
+ 	u16 ioc_status;
+ 	u32 log_info;
  
- 	if (sg_tablesize < MPT_MIN_PHYS_SEGMENTS)
- 		sg_tablesize = MPT_MIN_PHYS_SEGMENTS;
-@@ -4878,17 +5025,25 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	if (r)
- 		goto out_free_resources;
- 
--	/*
--	 * In SAS3.0,
--	 * SCSI_IO, SMP_PASSTHRU, SATA_PASSTHRU, Target Assist, and
--	 * Target Status - all require the IEEE formated scatter gather
--	 * elements.
--	 */
 -
--	ioc->build_sg_scmd = &_base_build_sg_scmd_ieee;
--	ioc->build_sg = &_base_build_sg_ieee;
--	ioc->build_zero_len_sge = &_base_build_zero_len_sge_ieee;
--	ioc->sge_size_ieee = sizeof(Mpi2IeeeSgeSimple64_t);
-+	switch (ioc->hba_mpi_version_belonged) {
-+	case MPI2_VERSION:
-+		ioc->build_sg_scmd = &_base_build_sg_scmd;
-+		ioc->build_sg = &_base_build_sg;
-+		ioc->build_zero_len_sge = &_base_build_zero_len_sge;
-+		break;
-+	case MPI25_VERSION:
-+		/*
-+		 * In SAS3.0,
-+		 * SCSI_IO, SMP_PASSTHRU, SATA_PASSTHRU, Target Assist, and
-+		 * Target Status - all require the IEEE formated scatter gather
-+		 * elements.
-+		 */
-+		ioc->build_sg_scmd = &_base_build_sg_scmd_ieee;
-+		ioc->build_sg = &_base_build_sg_ieee;
-+		ioc->build_zero_len_sge = &_base_build_zero_len_sge_ieee;
-+		ioc->sge_size_ieee = sizeof(Mpi2IeeeSgeSimple64_t);
-+		break;
-+	}
+ 	mutex_lock(&ioc->scsih_cmds.mutex);
  
- 	/*
- 	 * These function pointers for other requests that don't
+ 	if (ioc->scsih_cmds.status != MPT3_CMD_NOT_USED) {
+@@ -5825,6 +5831,8 @@ _scsih_ir_fastpath(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phys_disk_num)
+ 		    FORCE_BIG_HAMMER);
+ 	return rc;
+ }
++/* End of not defined SCSI_MPT2SAS */
++#endif
+ 
+ /**
+  * _scsih_reprobe_lun - reprobing lun
+@@ -6017,8 +6025,10 @@ _scsih_sas_pd_hide(struct MPT3SAS_ADAPTER *ioc,
+ 	if (!sas_device)
+ 		return;
+ 
++#ifndef SCSI_MPT2SAS
+ 	/* hiding raid component */
+ 	_scsih_ir_fastpath(ioc, handle, element->PhysDiskNum);
++#endif
+ 	if (starget)
+ 		starget_for_each_device(starget, (void *)1, _scsih_reprobe_lun);
+ }
+@@ -6067,7 +6077,9 @@ _scsih_sas_pd_add(struct MPT3SAS_ADAPTER *ioc,
+ 	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 	if (sas_device) {
++#ifndef SCSI_MPT2SAS
+ 		_scsih_ir_fastpath(ioc, handle, element->PhysDiskNum);
++#endif
+ 		return;
+ 	}
+ 
+@@ -6091,7 +6103,9 @@ _scsih_sas_pd_add(struct MPT3SAS_ADAPTER *ioc,
+ 		mpt3sas_transport_update_links(ioc, sas_address, handle,
+ 		    sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5);
+ 
++#ifndef SCSI_MPT2SAS
+ 	_scsih_ir_fastpath(ioc, handle, element->PhysDiskNum);
++#endif
+ 	_scsih_add_device(ioc, handle, 0, 1);
+ }
+ 
+@@ -6202,13 +6216,14 @@ _scsih_sas_ir_config_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	element = (Mpi2EventIrConfigElement_t *)&event_data->ConfigElement[0];
+ 	if (ioc->shost_recovery) {
+-
++#ifndef SCSI_MPT2SAS
+ 		for (i = 0; i < event_data->NumElements; i++, element++) {
+ 			if (element->ReasonCode == MPI2_EVENT_IR_CHANGE_RC_HIDE)
+ 				_scsih_ir_fastpath(ioc,
+ 					le16_to_cpu(element->PhysDiskDevHandle),
+ 					element->PhysDiskNum);
+ 		}
++#endif
+ 		return;
+ 	}
+ 	for (i = 0; i < event_data->NumElements; i++, element++) {
 -- 
 2.0.2
