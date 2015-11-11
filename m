@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH RESEND 15/25] mpt3sas: Refcount fw_events and fix unsafe list usage
-Date: Wed, 11 Nov 2015 17:30:31 +0530
-Message-ID: <1447243241-10912-16-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH RESEND 17/25] mpt3sas: setpci reset kernel oops fix
+Date: Wed, 11 Nov 2015 17:30:33 +0530
+Message-ID: <1447243241-10912-18-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -12,284 +12,270 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 
-The fw_event_work struct is concurrently referenced at shutdown, so
-add a refcount to protect it, and refactor the code to use it.
+setpci reset on nytro warpdrive card along with sysfs access and
+cli ioctl access resulted in kernel oops
 
-Additionally, refactor _scsih_fw_event_cleanup_queue() such that it
-no longer iterates over the list without holding the lock, since
-_firmware_event_work() concurrently deletes items from the list.
+1. pci_access_mutex lock added to provide synchronization between IOCTL,
+   sysfs, PCI resource handling path
 
-This patch is ported from below mpt2sas driver patch, these changes
-also required for mpt3sas driver and we tested this on mpt3sas driver
-also,
+2. gioc_lock spinlock to protect list operations over multiple
+controllers
 
-'commit 008549f6e8a1dc4aeea4a8d64184909786b27713
-("mpt2sas: Refcount fw_events and fix unsafe list usage")'
+This patch is ported from below mpt2sas driver patch,
+
+'commit 6229b414b3adb3aac0b54e67d72d6462fc230c0d
+("mpt2sas: setpci reset kernel oops fix")
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 116 ++++++++++++++++++++++++++++-------
- 1 file changed, 94 insertions(+), 22 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  6 ++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h  | 20 ++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 42 +++++++++++++++++++++++++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++++
+ 4 files changed, 71 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index bec3163..f5d589e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -108,9 +108,12 @@ _scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
+ 	if (ret)
+ 		return ret;
+ 
++	/* global ioc spinlock to protect controller list on list operations */
+ 	pr_info("setting fwfault_debug(%d)\n", mpt3sas_fwfault_debug);
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list)
+ 		ioc->fwfault_debug = mpt3sas_fwfault_debug;
++	spin_unlock(&gioc_lock);
+ 	return 0;
+ }
+ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
+@@ -5136,6 +5139,8 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+ 	    __func__));
+ 
++	/* synchronizing freeing resource with pci_access_mutex lock */
++	mutex_lock(&ioc->pci_access_mutex);
+ 	if (ioc->chip_phys && ioc->chip) {
+ 		_base_mask_interrupts(ioc);
+ 		ioc->shost_recovery = 1;
+@@ -5144,6 +5149,7 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	}
+ 
+ 	mpt3sas_base_unmap_resources(ioc);
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return;
+ }
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index c92be3c..6d64fa8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -916,7 +916,13 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @replyPostRegisterIndex: index of next position in Reply Desc Post Queue
+  * @delayed_tr_list: target reset link list
+  * @delayed_tr_volume_list: volume target reset link list
+- * @@temp_sensors_count: flag to carry the number of temperature sensors
++ * @temp_sensors_count: flag to carry the number of temperature sensors
++ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
++ *	pci resource handling. PCI resource freeing will lead to free
++ *	vital hardware/memory resource, which might be in use by cli/sysfs
++ *	path functions resulting in Null pointer reference followed by kernel
++ *	crash. To avoid the above race condition we use mutex syncrhonization
++ *	which ensures the syncrhonization between cli/sysfs_show path.
+  */
+ struct MPT3SAS_ADAPTER {
+ 	struct list_head list;
+@@ -1131,6 +1137,7 @@ struct MPT3SAS_ADAPTER {
+ 	struct list_head delayed_tr_list;
+ 	struct list_head delayed_tr_volume_list;
+ 	u8		temp_sensors_count;
++	struct mutex pci_access_mutex;
+ 
+ 	/* diag buffer support */
+ 	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
+@@ -1161,6 +1168,17 @@ typedef u8 (*MPT_CALLBACK)(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ /* base shared API */
+ extern struct list_head mpt3sas_ioc_list;
+ extern char    driver_name[MPT_NAME_LENGTH];
++/* spinlock on list operations over IOCs
++ * Case: when multiple warpdrive cards(IOCs) are in use
++ * Each IOC will added to the ioc list structure on initialization.
++ * Watchdog threads run at regular intervals to check IOC for any
++ * fault conditions which will trigger the dead_ioc thread to
++ * deallocate pci resource, resulting deleting the IOC netry from list,
++ * this deletion need to protected by spinlock to enusre that
++ * ioc removal is syncrhonized, if not synchronized it might lead to
++ * list_del corruption as the ioc list is traversed in cli path.
++ */
++extern spinlock_t gioc_lock;
+ 
+ void mpt3sas_base_start_watchdog(struct MPT3SAS_ADAPTER *ioc);
+ void mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 1c62db8..f257c96 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -416,13 +416,16 @@ static int
+ _ctl_verify_adapter(int ioc_number, struct MPT3SAS_ADAPTER **iocpp)
+ {
+ 	struct MPT3SAS_ADAPTER *ioc;
+-
++	/* global ioc lock to protect controller on list operations */
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list) {
+ 		if (ioc->id != ioc_number)
+ 			continue;
++		spin_unlock(&gioc_lock);
+ 		*iocpp = ioc;
+ 		return ioc_number;
+ 	}
++	spin_unlock(&gioc_lock);
+ 	*iocpp = NULL;
+ 	return -1;
+ }
+@@ -511,10 +514,15 @@ ctl_poll(struct file *filep, poll_table *wait)
+ 
+ 	poll_wait(filep, &ctl_poll_wait, wait);
+ 
++	/* global ioc lock to protect controller on list operations */
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list) {
+-		if (ioc->aen_event_read_flag)
++		if (ioc->aen_event_read_flag) {
++			spin_unlock(&gioc_lock);
+ 			return POLLIN | POLLRDNORM;
++		}
+ 	}
++	spin_unlock(&gioc_lock);
+ 	return 0;
+ }
+ 
+@@ -2211,16 +2219,25 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 	if (_ctl_verify_adapter(ioctl_header.ioc_number, &ioc) == -1 || !ioc)
+ 		return -ENODEV;
+ 
++	/* pci_access_mutex lock acquired by ioctl path */
++	mutex_lock(&ioc->pci_access_mutex);
++
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery ||
+-	    ioc->is_driver_loading)
+-		return -EAGAIN;
++	    ioc->is_driver_loading || ioc->remove_host) {
++		ret = -EAGAIN;
++		goto out_unlock_pciaccess;
++	}
+ 
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+ 	if (state == NON_BLOCKING) {
+-		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
+-			return -EAGAIN;
+-	} else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+-		return -ERESTARTSYS;
++		if (!mutex_trylock(&ioc->ctl_cmds.mutex)) {
++			ret = -EAGAIN;
++			goto out_unlock_pciaccess;
++		}
++	} else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex)) {
++		ret = -ERESTARTSYS;
++		goto out_unlock_pciaccess;
++	}
+ 
+ 
+ 	switch (cmd) {
+@@ -2301,6 +2318,8 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
+ 	}
+ 
+ 	mutex_unlock(&ioc->ctl_cmds.mutex);
++out_unlock_pciaccess:
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return ret;
+ }
+ 
+@@ -2748,6 +2767,12 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 		    " warpdrive\n", ioc->name, __func__);
+ 		goto out;
+ 	}
++	/* pci_access_mutex lock acquired by sysfs show path */
++	mutex_lock(&ioc->pci_access_mutex);
++	if (ioc->pci_error_recovery || ioc->remove_host) {
++		mutex_unlock(&ioc->pci_access_mutex);
++		return 0;
++	}
+ 
+ 	/* allocate upto GPIOVal 36 entries */
+ 	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
+@@ -2786,6 +2811,7 @@ _ctl_BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 
+  out:
+ 	kfree(io_unit_pg3);
++	mutex_unlock(&ioc->pci_access_mutex);
+ 	return rc;
+ }
+ static DEVICE_ATTR(BRM_status, S_IRUGO, _ctl_BRM_status_show, NULL);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5dbf214..436e65e 100644
+index 436e65e..d0ab002 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -200,9 +200,37 @@ struct fw_event_work {
- 	u8			VP_ID;
- 	u8			ignore;
- 	u16			event;
-+	struct kref		refcount;
- 	char			event_data[0] __aligned(4);
- };
+@@ -90,6 +90,8 @@ _scsih_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ /* global parameters */
+ LIST_HEAD(mpt3sas_ioc_list);
+ char    driver_name[MPT_NAME_LENGTH];
++/* global ioc lock for list operations */
++DEFINE_SPINLOCK(gioc_lock);
  
-+static void fw_event_work_free(struct kref *r)
-+{
-+	kfree(container_of(r, struct fw_event_work, refcount));
-+}
-+
-+static void fw_event_work_get(struct fw_event_work *fw_work)
-+{
-+	kref_get(&fw_work->refcount);
-+}
-+
-+static void fw_event_work_put(struct fw_event_work *fw_work)
-+{
-+	kref_put(&fw_work->refcount, fw_event_work_free);
-+}
-+
-+static struct fw_event_work *alloc_fw_event_work(int len)
-+{
-+	struct fw_event_work *fw_event;
-+
-+	fw_event = kzalloc(sizeof(*fw_event) + len, GFP_ATOMIC);
-+	if (!fw_event)
-+		return NULL;
-+
-+	kref_init(&fw_event->refcount);
-+	return fw_event;
-+}
-+
- /**
-  * struct _scsi_io_transfer - scsi io transfer
-  * @handle: sas device handle (assigned by firmware)
-@@ -2598,32 +2626,36 @@ _scsih_fw_event_add(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 		return;
+ /* local parameters */
+ static u8 scsi_io_cb_idx = -1;
+@@ -294,8 +296,10 @@ _scsih_set_debug_level(const char *val, struct kernel_param *kp)
+ 		return ret;
  
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	fw_event_work_get(fw_event);
- 	INIT_LIST_HEAD(&fw_event->list);
- 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
- 	INIT_WORK(&fw_event->work, _firmware_event_work);
-+	fw_event_work_get(fw_event);
- 	queue_work(ioc->firmware_event_thread, &fw_event->work);
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 	pr_info("setting logging_level(0x%08x)\n", logging_level);
++	spin_lock(&gioc_lock);
+ 	list_for_each_entry(ioc, &mpt3sas_ioc_list, list)
+ 		ioc->logging_level = logging_level;
++	spin_unlock(&gioc_lock);
+ 	return 0;
+ }
+ module_param_call(logging_level, _scsih_set_debug_level, param_get_int,
+@@ -7997,7 +8001,9 @@ void scsih_remove(struct pci_dev *pdev)
+ 	sas_remove_host(shost);
+ 	scsi_remove_host(shost);
+ 	mpt3sas_base_detach(ioc);
++	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
++	spin_unlock(&gioc_lock);
+ 	scsi_host_put(shost);
  }
  
- /**
-- * _scsih_fw_event_free - delete fw_event
-+ * _scsih_fw_event_del_from_list - delete fw_event from the list
-  * @ioc: per adapter object
-  * @fw_event: object describing the event
-  * Context: This function will acquire ioc->fw_event_lock.
-  *
-- * This removes firmware event object from link list, frees associated memory.
-+ * If the fw_event is on the fw_event_list, remove it and do a put.
-  *
-  * Return nothing.
-  */
- static void
--_scsih_fw_event_free(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
-+_scsih_fw_event_del_from_list(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
- 	*fw_event)
- {
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
--	list_del(&fw_event->list);
--	kfree(fw_event);
-+	if (!list_empty(&fw_event->list)) {
-+		list_del_init(&fw_event->list);
-+		fw_event_work_put(fw_event);
-+	}
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+@@ -8384,7 +8390,9 @@ scsih_probe(struct pci_dev *pdev, struct Scsi_Host *shost)
+ 	ioc = shost_priv(shost);
+ 	memset(ioc, 0, sizeof(struct MPT3SAS_ADAPTER));
+ 	INIT_LIST_HEAD(&ioc->list);
++	spin_lock(&gioc_lock);
+ 	list_add_tail(&ioc->list, &mpt3sas_ioc_list);
++	spin_unlock(&gioc_lock);
+ 	ioc->shost = shost;
+ 	ioc->id = mpt_ids++;
+ 	ioc->pdev = pdev;
+@@ -8403,6 +8411,8 @@ scsih_probe(struct pci_dev *pdev, struct Scsi_Host *shost)
+ 	ioc->schedule_dead_ioc_flush_running_cmds = &_scsih_flush_running_cmds;
+ 	/* misc semaphores and spin locks */
+ 	mutex_init(&ioc->reset_in_progress_mutex);
++	/* initializing pci_access_mutex lock */
++	mutex_init(&ioc->pci_access_mutex);
+ 	spin_lock_init(&ioc->ioc_reset_in_progress_lock);
+ 	spin_lock_init(&ioc->scsi_lookup_lock);
+ 	spin_lock_init(&ioc->sas_device_lock);
+@@ -8510,7 +8520,9 @@ out_add_shost_fail:
+  out_attach_fail:
+ 	destroy_workqueue(ioc->firmware_event_thread);
+  out_thread_fail:
++	spin_lock(&gioc_lock);
+ 	list_del(&ioc->list);
++	spin_unlock(&gioc_lock);
+ 	scsi_host_put(shost);
+ 	return rv;
  }
- 
-@@ -2640,17 +2672,19 @@ mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data)
- {
- 	struct fw_event_work *fw_event;
-+	u16 sz;
- 
- 	if (ioc->is_driver_loading)
- 		return;
--	fw_event = kzalloc(sizeof(*fw_event) + sizeof(*event_data),
--			   GFP_ATOMIC);
-+	sz = sizeof(*event_data);
-+	fw_event = alloc_fw_event_work(sz);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_PROCESS_TRIGGER_DIAG;
- 	fw_event->ioc = ioc;
- 	memcpy(fw_event->event_data, event_data, sizeof(*event_data));
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -2666,12 +2700,13 @@ _scsih_error_recovery_delete_devices(struct MPT3SAS_ADAPTER *ioc)
- 
- 	if (ioc->is_driver_loading)
- 		return;
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_REMOVE_UNRESPONDING_DEVICES;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -2685,12 +2720,29 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
- {
- 	struct fw_event_work *fw_event;
- 
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_PORT_ENABLE_COMPLETE;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
-+}
-+
-+static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	unsigned long flags;
-+	struct fw_event_work *fw_event = NULL;
-+
-+	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	if (!list_empty(&ioc->fw_event_list)) {
-+		fw_event = list_first_entry(&ioc->fw_event_list,
-+				struct fw_event_work, list);
-+		list_del_init(&fw_event->list);
-+	}
-+	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
-+
-+	return fw_event;
- }
- 
- /**
-@@ -2705,17 +2757,25 @@ mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc)
- static void
- _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
- {
--	struct fw_event_work *fw_event, *next;
-+	struct fw_event_work *fw_event;
- 
- 	if (list_empty(&ioc->fw_event_list) ||
- 	     !ioc->firmware_event_thread || in_interrupt())
- 		return;
- 
--	list_for_each_entry_safe(fw_event, next, &ioc->fw_event_list, list) {
--		if (cancel_delayed_work_sync(&fw_event->delayed_work)) {
--			_scsih_fw_event_free(ioc, fw_event);
--			continue;
--		}
-+	while ((fw_event = dequeue_next_fw_event(ioc))) {
-+		/*
-+		 * Wait on the fw_event to complete. If this returns 1, then
-+		 * the event was never executed, and we need a put for the
-+		 * reference the delayed_work had on the fw_event.
-+		 *
-+		 * If it did execute, we wait for it to finish, and the put will
-+		 * happen from _firmware_event_work()
-+		 */
-+		if (cancel_delayed_work_sync(&fw_event->delayed_work))
-+			fw_event_work_put(fw_event);
-+
-+		fw_event_work_put(fw_event);
- 	}
- }
- 
-@@ -4242,13 +4302,14 @@ _scsih_send_event_to_turn_on_pfa_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	struct fw_event_work *fw_event;
- 
--	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(0);
- 	if (!fw_event)
- 		return;
- 	fw_event->event = MPT3SAS_TURN_ON_PFA_LED;
- 	fw_event->device_handle = handle;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -7498,10 +7559,11 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
- static void
- _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- {
-+	_scsih_fw_event_del_from_list(ioc, fw_event);
-+
- 	/* the queue is being flushed so ignore this event */
--	if (ioc->remove_host ||
--	    ioc->pci_error_recovery) {
--		_scsih_fw_event_free(ioc, fw_event);
-+	if (ioc->remove_host || ioc->pci_error_recovery) {
-+		fw_event_work_put(fw_event);
- 		return;
- 	}
- 
-@@ -7512,8 +7574,16 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 			fw_event->event_data);
- 		break;
- 	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
--		while (scsi_host_in_recovery(ioc->shost) || ioc->shost_recovery)
-+		while (scsi_host_in_recovery(ioc->shost) ||
-+					 ioc->shost_recovery) {
-+			/*
-+			 * If we're unloading, bail. Otherwise, this can become
-+			 * an infinite loop.
-+			 */
-+			if (ioc->remove_host)
-+				goto out;
- 			ssleep(1);
-+		}
- 		_scsih_remove_unresponding_sas_devices(ioc);
- 		_scsih_scan_for_devices_after_reset(ioc);
- 		break;
-@@ -7558,7 +7628,8 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 		_scsih_sas_ir_operation_status_event(ioc, fw_event);
- 		break;
- 	}
--	_scsih_fw_event_free(ioc, fw_event);
-+out:
-+	fw_event_work_put(fw_event);
- }
- 
- /**
-@@ -7720,7 +7791,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	}
- 
- 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
--	fw_event = kzalloc(sizeof(*fw_event) + sz, GFP_ATOMIC);
-+	fw_event = alloc_fw_event_work(sz);
- 	if (!fw_event) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-@@ -7733,6 +7804,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	fw_event->VP_ID = mpi_reply->VP_ID;
- 	fw_event->event = event;
- 	_scsih_fw_event_add(ioc, fw_event);
-+	fw_event_work_put(fw_event);
- 	return 1;
- }
- 
 -- 
 2.0.2
