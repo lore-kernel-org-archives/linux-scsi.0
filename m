@@ -1,42 +1,158 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [dm-devel] [RFC PATCH 00/32] separate operations
- from flags in the bio/request structs
-Date: Wed, 11 Nov 2015 03:28:46 -0800
-Message-ID: <20151111112846.GA358@infradead.org>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-	<563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
-	<20151107102309.GE12117@infradead.org>
-	<5642F3F4.2060007@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <5642F3F4.2060007-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH 00/25] mpt3sas: Mergering mpt2sas & mpt3sas driver code
+Date: Wed, 11 Nov 2015 17:30:16 +0530
+Message-ID: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@kernel.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 11, 2015 at 01:53:24AM -0600, Mike Christie wrote:
-> We no longer have the bvec merge functions so the original reason given
-> in the thread/patch Bart referenced is no longer valid.
-> 
-> Offlist it was suggested that dropping the argument from submit_bio
-> might still improve performance, but I modified xfs and dm and did some
-> testing and did not see anything.
-> 
-> So the change is not needed, and it would only be done because people
-> feel it would improve the interface.
+Last time we have posted a set of patches which combine the mpt2sas
+and mpt3sas driver code. and we are generating two driver modules
+(i.e. two separate .ko's) from this Combined driver source.
 
-I would defintively prefer the changed interface, and to me it also
-looks like it would make your overall patch simpler.  If you disagree
-feel free to keep it as-is for now and I'll do another pass later.
+Now we have modified above Combined driver source (i.e. single driver
+source with two .ko's) to a Merged driver source (i.e. sing source with
+single .ko) which supports both LSI MPT Fusion SAS 2.0 and SAS 3.0
+generation HBAs.
+
+Here I am once again posting first 18 patches of Combined driver source
+along with last 7 patches which converts this Combined driver source to
+Merged driver source.
+
+Here is the change list from Combined driver src to Merged driver src
+* Added SAS 2.0 HBA device IDs to the mpt3sas_pci_table pci table.
+* Created two separate SCSI host templates for SAS2 and SAS3 HBAs. So
+  that, during the driver load time driver can use
+  corresponding host template(based the pci device ID) while
+  registering a scsi host adapter instance for that pci device.
+* Registered two IOCTL devices, mpt2ctl is for SAS2 HBAs & mpt3ctl for
+  SAS3 HBAs. Also updated the code to make sure   that mpt2ctl device to
+  process only those ioctl cmds issued for the SAS2 HBAs and mpt3ctl
+  device to process only those ioctl cmds issued for the SAS3 HBAs.
+* Added two separate ioc number indexing for SAS2 and SAS3 HBAs.
+* Replaced compile time check 'MPT2SAS_SCSI' to run time check
+  'hba_mpi_version_belonged' wherever needed.
+* Aliased this merged driver to mpt2sas using MODULE_ALIAS.so that
+  still user can load this merged driver with 'modprobe mpt2sas'.
+* Moved global variable 'driver_name' to per adapter instance variable.
+* Created two raid function templates and used corresponding raid
+  function templates based on the run time check
+  'hba_mpi_version_belonged'.
+* Moved mpt2sas_warpdrive.c file from mpt2sas to mpt3sas folder and
+  renamed it as mpt3sas_warpdrive.c.
+* Updated the Makefile to built as a mpt3sas_warpdrive.o file.
+* Added module parameter 'hbas_to_enumarate', which user can use this
+  merged driver as legacy mpt2sas driver or as a
+  legacy mpt3sas driver if needed.
+
+        Here are the available options for this module parameter
+           0 - Merged driver which enumerates both SAS 2.0 & SAS 3.0 HBAs
+           1 - Acts as legacy mpt2sas driver, which enumerates only SAS 2.0 HBAs
+           2 - Acts as legacy mpt3sas driver, which enumerates only SAS 3.0 HBAs
+
+* Added SCSI_MPT3SAS_MERGED config option, This Kconfig option is only
+  used for legacy mpt2sas/mpt3sas interoperability.
+
+In patch 5 (ie. mpt2sas: Removed .c and .h files from mpt2sas driver)
+we are just removing mpt2sas driver files. so one can just provide below
+command if this patch is not reached to linux-scsi community mail list,
+
+"git rm drivers/scsi/mpt2sas/mpt2sas_base.*
+drivers/scsi/mpt2sas/mpt2sas_config.c
+drivers/scsi/mpt2sas/mpt2sas_ctl.*
+drivers/scsi/mpt2sas/mpt2sas_scsih.c
+drivers/scsi/mpt2sas/mpt2sas_transport.c
+drivers/scsi/mpt2sas/mpt2sas_debug.h"
+
+Thanks,
+Sreekanth
+
+Sreekanth Reddy (25):
+  mpt2sas: Use mpi headers from mpt3sas
+  mpt3sas: Added mpt2sas driver definitions
+  mpt3sas: Move Gen3 HBA's device registration with PCI, SML and IOCTL
+    related API's to a separate file
+  mpt2sas: Created mpt2sas_module.c file in which Gen2 HBA's are
+    registers with PCI, SML and IOCTLs
+  mpt2sas: Removed .c and .h files from mpt2sas driver
+  mpt3sas: Define 'hba_mpi_version_belonged' IOC variable
+  mpt2sas, mpt3sas : Removed SCSI_MPTXSAS_LOGGING entry from Kconfig
+  mpt3sas: For an IO, build MPI SGL LIST on GEN2 HBA's and build IEEE
+    SGL LIST on GEN3 HBA's
+  mpt3sas: Don't send PHYDISK_HIDDEN Raid Action request on SAS2 HBA's
+  mpt3sas: Manage MSIX vectors according to HBA device type
+  mpt3sas: fix for driver fails EEH, recovery from injected pci bus
+    error
+  mpt3sas: Ported WarpDrive product SSS6200 support
+  mpt3sas: Ported the providing sysfs attribute to report Backup Rail
+    Monitor Status
+  mpt3sas: Refcount sas_device objects and fix unsafe list usage
+  mpt3sas: Refcount fw_events and fix unsafe list usage
+  mpt3sas: Added OEMs Gen2 PnP ID Branding names
+  mpt3sas: setpci reset kernel oops fix
+  mpt2sas, mpt3sas: Update the driver versions
+  mpt3sas: Single driver module which supports both SAS 2.0 & SAS 3.0
+    HBA's
+  mpt3sas: Moved Warpdriver specific functions to mpt3sas_warpdrive.c
+  mpt2sas: Removed mpt2sas folder
+  mpt3sas: Added a module parameter hbas_to_enumerate
+  mpt2sas: Removed mpt2sas entries from SCSI's Kconfig and Makefile
+  mpt3sas: Added SCSI_MPT3SAS_MERGED config option
+  mpt3sas: Bump mpt3sas driver version to 09.102.00.00
+
+ drivers/scsi/Kconfig                     |    1 -
+ drivers/scsi/Makefile                    |    1 -
+ drivers/scsi/mpt2sas/Kconfig             |   67 -
+ drivers/scsi/mpt2sas/Makefile            |    7 -
+ drivers/scsi/mpt2sas/mpi/mpi2.h          | 1170 ----
+ drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h     | 3068 -----------
+ drivers/scsi/mpt2sas/mpi/mpi2_init.h     |  461 --
+ drivers/scsi/mpt2sas/mpi/mpi2_ioc.h      | 1708 ------
+ drivers/scsi/mpt2sas/mpi/mpi2_raid.h     |  366 --
+ drivers/scsi/mpt2sas/mpi/mpi2_sas.h      |  288 -
+ drivers/scsi/mpt2sas/mpi/mpi2_tool.h     |  481 --
+ drivers/scsi/mpt2sas/mpi/mpi2_type.h     |   61 -
+ drivers/scsi/mpt2sas/mpt2sas_base.c      | 4899 -----------------
+ drivers/scsi/mpt2sas/mpt2sas_base.h      | 1235 -----
+ drivers/scsi/mpt2sas/mpt2sas_config.c    | 1527 ------
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c       | 3101 -----------
+ drivers/scsi/mpt2sas/mpt2sas_ctl.h       |  419 --
+ drivers/scsi/mpt2sas/mpt2sas_debug.h     |  182 -
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c     | 8855 ------------------------------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c | 2173 --------
+ drivers/scsi/mpt3sas/Kconfig             |   29 +-
+ drivers/scsi/mpt3sas/Makefile            |    3 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      |  668 ++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  233 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |   42 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  259 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h       |    6 +-
+ drivers/scsi/mpt3sas/mpt3sas_debug.h     |   16 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1555 ++++--
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |   18 +-
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  344 ++
+ 31 files changed, 2447 insertions(+), 30796 deletions(-)
+ delete mode 100644 drivers/scsi/mpt2sas/Kconfig
+ delete mode 100644 drivers/scsi/mpt2sas/Makefile
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_init.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_sas.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpi/mpi2_type.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_base.c
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_base.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_config.c
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_ctl.c
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_ctl.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_debug.h
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_scsih.c
+ delete mode 100644 drivers/scsi/mpt2sas/mpt2sas_transport.c
+ create mode 100644 drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+
+-- 
+2.0.2
