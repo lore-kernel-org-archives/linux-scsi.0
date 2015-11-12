@@ -1,46 +1,46 @@
-From: Chris Leech <leech@pobox.com>
-Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Thu, 12 Nov 2015 13:33:30 -0800
-Message-ID: <CAHNqLyWjuTkZEGAfoAkOZxeYYnuwbC9xctEdi5TGttXVC5NVDA@mail.gmail.com>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
-	<56447FF7.40600@dev.mellanox.co.il>
+From: zhongjun@asia.com
+Subject: BUSINESS VORSCHLAG.
+Date: Thu, 12 Nov 2015 21:09:43 +0100
+Message-ID: <20151113004935.B456514EE3E@ampsrv1.comunidad-ameripol.org>
+Reply-To: fuzhong348@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:36592 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbbKLVda (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2015 16:33:30 -0500
-Received: by igbmn7 with SMTP id mn7so387836igb.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2015 13:33:30 -0800 (PST)
-In-Reply-To: <56447FF7.40600@dev.mellanox.co.il>
+Received: from Static-IP-cr200118122217.cable.net.co ([200.118.122.217]:35393
+	"EHLO ampsrv1.comunidad-ameripol.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S932259AbbKMBbe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Nov 2015 20:31:34 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: mchristi@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>, Or Gerlitz <ogerlitz@mellanox.com>, shlomopongratz@gmail.com
+To: Recipients <zhongjun@asia.com>
 
-On Thu, Nov 12, 2015 at 4:03 AM, Sagi Grimberg <sagig@dev.mellanox.co.il> wrote:
->
->> The bug is caused by this patch:
->>
->> 659743b02c411075b26601725947b21df0bb29c8
->>
->> which allowed the task lists to be manipulated under different locks
->> in the xmit and completion path.
->>
->> To fix the oops this patch just reverts that patch. It also reverts
->> these 2 patches for regressions that were also a result of that patch:
->
->
-> Whoa now Mike, this is a major change. Can we take a step back and think
-> about this for a second?
->
-> My understanding is that the kfifo circular buffer design allows a
-> writer (e.g. the producer) and a reader (e.g. the consumer) to avoid
-> extra locking when accessing the kfifo buffer.
+Guten Tag,
 
-I don't think the problem is with the kfifo cmdpool, but rather the
-connection mgmtqueue/cmdqueue linked lists.   iscsi_task structs are linked
-in using the task->running list_head.
+Ich brauche einen ausl=E4ndischen Partner f=FCr einen gemeinsamen Gesch=
+=E4fts Vorschlag, der auf die =DCbertragung von einer gro=DFen Geldsumm=
+e an einem ausl=E4ndischen Konto bezieht, als Empf=E4nger der Mittel. A=
+lles an dieser Transaktion rechtlich ohne Br=FCcke der Finanzbeh=F6rde =
+sowohl in meinem Land und yours.I wil g=F6nnen Sie h=F6chste Diskretion=
+ in allen Fragen rund um dieses Problem zu beobachten, durchgef=FChrt w=
+erden. Wenn Sie interessiert sind, antworten Sie bitte zur=FCck =FCber =
+meine private E-Mail-Adresse geschrieben unten, gebe ich Ihnen mehr =FC=
+ber mich selbst mit dem Finanzinstitut I dargestellt und tats=E4chliche=
+n Betr=E4ge beinhaltet zum Projekt, sobald ich Ihre positive Antwort er=
+halten.
 
-- Chris
+Private E-Mail: fu.zhongjun@fuzhongjun.net
+
+=46reundlichen Gru=DF,
+
+
+Gesch=E4ftsf=FChrer.
+
+China-Bank.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
