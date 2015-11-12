@@ -1,37 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND PATCH] mpt2sas: Remove usage of 'struct timeval'
-Date: Wed, 11 Nov 2015 20:42:44 -0500
-Message-ID: <yq1vb98t2ln.fsf@sermon.lab.mkp.net>
-References: <20151030090515.GA3542@tina-laptop>
+Subject: Re: [RESEND PATCH] [SCSI] mvumi: 64bit value for
+	seconds_since1970
+Date: Wed, 11 Nov 2015 20:47:40 -0500
+Message-ID: <yq1r3jwt2df.fsf@sermon.lab.mkp.net>
+References: <20151030091110.GA3880@tina-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41287 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbbKLBnA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2015 20:43:00 -0500
-In-Reply-To: <20151030090515.GA3542@tina-laptop> (Tina Ruchandani's message of
-	"Fri, 30 Oct 2015 02:05:15 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20151030091110.GA3880@tina-laptop> (Tina Ruchandani's message of
+ "Fri, 30 Oct 2015 02:11:10 -0700")
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
 To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, y2038@lists.linaro.org
+Cc: y2038@lists.linaro.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tina" == Tina Ruchandani <ruchandani.tina@gmail.com> writes:
-
-Tina,
-
-Tina> 'struct timeval' will have its tv_sec value overflow on 32-bit
-Tina> systems in year 2038 and beyond. This patch replaces the use of
-Tina> struct timeval for computing mpi_request.TimeStamp, and instead
-Tina> uses ktime_t which provides 64-bit seconds value. The timestamp
-Tina> computed remains unaffected (milliseconds since Unix epoch).
-
-We just consolidated the mpt2sas and mpt3sas drivers into one so I'm
-afraid your time tweaks will have to be rebased. I encourage you repost
-in a couple of weeks after the merge window dust settles.
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Pj4+Pj4gIlRpbmEiID09IFRpbmEgUnVjaGFuZGFuaSA8cnVjaGFuZGFuaS50aW5hQGdtYWlsLmNv
+bT4gd3JpdGVzOgoKVGluYT4gc3RydWN0IG12dW1pX2hzX3BhZ2UyIHN0b3JlcyBhICJzZWNvbmRz
+X3NpbmNlMTk3MCIgZmllbGQgd2hpY2ggaXMKVGluYT4gb2YgdHlwZSB1NjQuIEl0IGlzIGhvd2V2
+ZXIsIHdyaXR0ZW4gdG8sIHVzaW5nICdzdHJ1Y3QgdGltZXZhbCcKVGluYT4gd2hpY2ggaGFzIGEg
+MzItYml0IHNlY29uZHMgZmllbGQgYW5kIHdob3NlIHZhbHVlIHdpbGwgb3ZlcmZsb3cgaW4KVGlu
+YT4geWVhciAyMDM4LiAgVGhpcyBwYXRjaCB1c2VzIGt0aW1lX2dldF9yZWFsX3NlY29uZHMoKSBp
+bnN0ZWFkIHNpbmNlClRpbmE+IGl0IHByb3ZpZGVzIGEgNjQtYml0IHNlY29uZHMgdmFsdWUsIHdo
+aWNoIGlzIDIwMzggc2FmZS4KClVuZGVyIG5vcm1hbCBjaXJjdW1zdGFuY2VzIEkgd291bGQgbGlr
+ZSBhIGRyaXZlciBvd25lciBzaWdub2ZmIGJ1dCBpdApkb2Vzbid0IGxvb2sgbGlrZSBtdnVtaSBn
+ZXRzIG11Y2ggYXR0ZW50aW9uLiBBcHBsaWVkLgoKLS0gCk1hcnRpbiBLLiBQZXRlcnNlbglPcmFj
+bGUgTGludXggRW5naW5lZXJpbmcKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0
+cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
