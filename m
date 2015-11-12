@@ -1,73 +1,65 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Thu, 12 Nov 2015 17:31:29 +0100
-Message-ID: <5644BEE1.3010208@suse.com>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2 02/17] scsi: ufs: add option to change default UFS
+ power management level
+Date: Thu, 12 Nov 2015 11:39:42 -0600
+Message-ID: <20151112173942.GA1369@rob-hp-laptop>
+References: <1445874072-25909-1-git-send-email-ygardi@codeaurora.org>
+ <1445874072-25909-3-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444848835.2220.50.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1445874072-25909-3-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: robherring2@gmail.com, James.Bottomley@HansenPartnership.com, pebolle@tiscali.nl, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, gbroner@codeaurora.org, draviv@codeaurora.org, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/14/2015 08:53 PM, James Bottomley wrote:
-> On Wed, 2015-10-14 at 11:34 -0700, Lee Duncan wrote:
->> On 10/14/2015 06:55 AM, James Bottomley wrote:
->>> On Wed, 2015-10-07 at 16:51 -0700, Lee Duncan wrote:
->>>> Update the SCSI hosts module to use the ida_simple*() routines
->>>> to manage its host_no index instead of an ATOMIC integer. This
->>>> means that the SCSI host number will now be reclaimable.
->>>
->>> OK, but why would we want to do this?  We do it for sd because our minor
->>> space for the device nodes is very constrained, so packing is essential.
->>> For HBAs, there's no device space density to worry about, they're
->>> largely statically allocated at boot time and not reusing the numbers
->>> allows easy extraction of hotplug items for the logs (quite useful for
->>> USB) because each separate hotplug has a separate and monotonically
->>> increasing host number.
->>>
->>> James
->>>
->>
->> Good question, James. Apologies for not making the need clear.
->>
->> The iSCSI subsystem uses a host structure for discovery, then throws it
->> away. So each time it does discovery it gets a new host structure. With
->> the current approach, that number is ever increasing. It's only a matter
->> of time until some user with a hundreds of disks and perhaps thousands
->> of LUNs, that likes to do periodic discovery (think super-computers)
->> will run out of host numbers. Or, worse yet, get a negative number
->> number (because the value is signed right now).
->>
->> And this use case is a real one right now, by the way.
+On Mon, Oct 26, 2015 at 05:40:57PM +0200, Yaniv Gardi wrote:
+> UFS device and link can be put in multiple different low power modes
+> hence UFS driver supports multiple different low power modes.
+> By default UFS driver selects the default (optimal) low power mode
+> (which gives moderate power savings and have relatively less enter
+> and exit latencies) but we might have to tune this default power
+> mode for different chipset platforms to meet the low power
+> requirements/goals. Hence this patch adds option to change default
+> UFS low power mode (level).
 > 
-> Um, so even if you do discovery continuously, say one every second, it
-> still will take 68 years before we wrap the sign.
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 > 
->> As you can see from the patch, it's a small amount of code to ensure
->> that the host number management is handled more cleanly.
+> ---
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  8 +++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 17 +++++++++-
+>  drivers/scsi/ufs/ufshcd.c                          | 39 ++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h                          |  4 +--
+>  4 files changed, 65 insertions(+), 3 deletions(-)
 > 
-> Well, I'm a bit worried about the loss of a monotonically increasing
-> host number from the debugging perspective.  Right now, if you look at
-> any log, hostX always refers to one and only one incarnation throughout
-> the system lifetime for any given value of X.  With your patch, the
-> lowest host number gets continually reused ... probably for every hot
-> plug event.  If the USB and other hotplug system people don't mind this,
-> I suppose I can live with it, but I'd like to hear their view before
-> making this change.
-> 
-> James
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index 9fea0de..b7db1c9 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -38,6 +38,14 @@ Optional properties:
+>  			  defined or a value in the array is "0" then it is assumed
+>  			  that the frequency is set by the parent clock or a
+>  			  fixed rate clock source.
+> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
+> +			  0 - Both UFS device and Link in active state (Highest power consumption)
+> +			  1 - UFS device in active state but Link in Hibern8 state
+> +			  2 - UFS device in Sleep state but Link in active state
+> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
+> +			  4 - UFS device in Power-down state and Link in Hibern8 state
+> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
+> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
 
-James?
+These seem too Linux specific. What would make them different for 
+runtime-PM vs. system suspend? Power mgmt capabilities in the kernel 
+change over time (and vary by OS), so you don't want to encode them into 
+DT. I would probably define separately what modes the phy supports and 
+the device supports. 
 
-It looks like both Hannes and GregKH agreed this was the proper approach.
+Isn't hibern8 required by the MPHY or UniPro spec? If so, that should be 
+assumed to be supported and then have a quirk property to flag it as 
+broken.
 
--- 
-Lee Duncan
+Rob
