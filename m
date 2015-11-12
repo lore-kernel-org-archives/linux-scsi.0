@@ -1,50 +1,37 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 00/32] separate operations from flags in
- the bio/request structs
-Date: Wed, 11 Nov 2015 12:37:20 -0500
-Message-ID: <20151111173719.GB12236@redhat.com>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-	<563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
-	<20151107102309.GE12117@infradead.org>
-	<5642F3F4.2060007@cs.wisc.edu> <20151111112846.GA358@infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 00/25] mpt3sas: Mergering mpt2sas & mpt3sas driver code
+Date: Wed, 11 Nov 2015 20:09:57 -0500
+Message-ID: <yq1d1vguioq.fsf@sermon.lab.mkp.net>
+References: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151111112846.GA358-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447243241-10912-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Wed, 11 Nov 2015 17:30:16 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com, Hannes Reinecke <hare@suse.de>, christopher.owens@avagotech.com, peter.rivera@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 11 2015 at  6:28am -0500,
-Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-> On Wed, Nov 11, 2015 at 01:53:24AM -0600, Mike Christie wrote:
-> > We no longer have the bvec merge functions so the original reason given
-> > in the thread/patch Bart referenced is no longer valid.
-> > 
-> > Offlist it was suggested that dropping the argument from submit_bio
-> > might still improve performance, but I modified xfs and dm and did some
-> > testing and did not see anything.
-> > 
-> > So the change is not needed, and it would only be done because people
-> > feel it would improve the interface.
-> 
-> I would defintively prefer the changed interface, and to me it also
-> looks like it would make your overall patch simpler.  If you disagree
-> feel free to keep it as-is for now and I'll do another pass later.
+Sreekanth,
 
-The less churn the better.  But honestly, not quite following the logic
-on why all this flag-day churn is needed.  BUT if it needs to happen,
-because we'll soon hit a wall on supported operations via REQ_*, now is
-as good a time as any -- but best to limit the change to the flags IMHO.
+Sreekanth> Last time we have posted a set of patches which combine the
+Sreekanth> mpt2sas and mpt3sas driver code. and we are generating two
+Sreekanth> driver modules (i.e. two separate .ko's) from this Combined
+Sreekanth> driver source.
+
+I have merged your combined driver.
+
+The patches in the single-module portion of the series did not compile
+individually and I gave up untangling them. They were fundamentally too
+intertwined and I squashed them into one commit. Since it's mostly
+boilerplate stuff it should not matter too much from a bisection
+perspective.
+
+Thanks for doing this work! This will make things much easier going
+forward.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
