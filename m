@@ -1,45 +1,39 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] mvsas: don't allow negative timeouts
-Date: Fri, 13 Nov 2015 17:23:23 +0300
-Message-ID: <20151113142323.GB1445@mwanda>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] mpt3sas: Fix use sas_is_tlr_enabled API before enabling
+ MPI2_SCSIIO_CONTROL_TLR_ON flag
+Date: Fri, 13 Nov 2015 16:05:28 +0100
+Message-ID: <5645FC38.2070201@redhat.com>
+References: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Hannes Reinecke <hare@suse.de>, Dan Williams <dan.j.williams@intel.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jack Wang <jinpu.wang@profitbricks.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38633 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932478AbbKMPFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Nov 2015 10:05:31 -0500
+In-Reply-To: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com
 
-There is a static checker warning here because "val" is controlled by
-the user and we have a upper bound on it but allow negative numbers.
-"val" appears to be a timeout in usec so this bug probably means we
-have a longer timeout than we should.  Let's fix this by changing "val"
-to unsigned.
+On 12.11.2015 19:10, Sreekanth Reddy wrote:
+> Before enabling MPI2_SCSIIO_CONTROL_TLR_ON flag in MPI SCSI IO
+> request message, check whether TLR is enabled on the drive using
+> 'sas_is_tlr_enabled' API.
+>
+> Actually in the driver code, driver is using below API's
+>
+> 1. sas_enable_tlr() - to enable the TLR
+> 2. sas_disable_tlr() - to disable the TLR
+> 3. sas_is_tlr_enabled() - to check whether TLR is enabled or not.
+>
+> but in scsih_qcmd() we have missed to use sas_is_tlr_enabled() API,
+> instead we checking for TLR bit from flag field of driver's
+> 'struct MPT3SAS_DEVIC' structure. which is corrected with this patch.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Checkpatch has several complaints about this code but I left it as-is.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 90fdf0e..675e7fa 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -758,7 +758,7 @@ mvs_store_interrupt_coalescing(struct device *cdev,
- 			struct device_attribute *attr,
- 			const char *buffer, size_t size)
- {
--	int val = 0;
-+	unsigned int val = 0;
- 	struct mvs_info *mvi = NULL;
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-@@ -766,7 +766,7 @@ mvs_store_interrupt_coalescing(struct device *cdev,
- 	if (buffer == NULL)
- 		return size;
- 
--	if (sscanf(buffer, "%d", &val) != 1)
-+	if (sscanf(buffer, "%u", &val) != 1)
- 		return -EINVAL;
- 
- 	if (val >= 0x10000) {
