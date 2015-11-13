@@ -1,131 +1,63 @@
-From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
-Date: Fri, 13 Nov 2015 10:16:04 -0600
-Message-ID: <56460CC4.3030001@opengridcomputing.com>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-4-git-send-email-hch@lst.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
+Date: Fri, 13 Nov 2015 10:51:14 -0600
+Message-ID: <56461502.70306@cs.wisc.edu>
+References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+ <56447FF7.40600@dev.mellanox.co.il> <5644FD6C.9070805@cs.wisc.edu>
+ <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1447422410-20891-4-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50560 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932444AbbKMQvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Nov 2015 11:51:31 -0500
+In-Reply-To: <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Or Gerlitz <gerlitz.or@gmail.com>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, mchristi@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Guilherme Piccoli <gpiccoli@linux.vnet.ibm.com>, Or Gerlitz <ogerlitz@mellanox.com>, Shlomo Pongratz <shlomopongratz@gmail.com>
 
-On 11/13/2015 7:46 AM, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> ---
->   drivers/infiniband/core/cq.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
->   include/rdma/ib_verbs.h      |  2 ++
->   2 files changed, 48 insertions(+)
->
-> diff --git a/drivers/infiniband/core/cq.c b/drivers/infiniband/core/cq.c
-> index d9eb796..bf2a079 100644
-> --- a/drivers/infiniband/core/cq.c
-> +++ b/drivers/infiniband/core/cq.c
-> @@ -206,3 +206,49 @@ void ib_free_cq(struct ib_cq *cq)
->   	WARN_ON_ONCE(ret);
->   }
->   EXPORT_SYMBOL(ib_free_cq);
-> +
-> +struct ib_stop_cqe {
-> +	struct ib_cqe	cqe;
-> +	struct completion done;
-> +};
-> +
-> +static void ib_stop_done(struct ib_cq *cq, struct ib_wc *wc)
-> +{
-> +	struct ib_stop_cqe *stop =
-> +		container_of(wc->wr_cqe, struct ib_stop_cqe, cqe);
-> +
-> +	complete(&stop->done);
-> +}
-> +
-> +/*
-> + * Change a queue pair into the error state and wait until all receive
-> + * completions have been processed before destroying it. This avoids that
-> + * the receive completion handler can access the queue pair while it is
-> + * being destroyed.
-> + */
-> +void ib_drain_qp(struct ib_qp *qp)
-> +{
-> +	struct ib_qp_attr attr = { .qp_state = IB_QPS_ERR };
-> +	struct ib_stop_cqe stop = { };
-> +	struct ib_recv_wr wr, *bad_wr;
-> +	int ret;
-> +
-> +	wr.wr_cqe = &stop.cqe;
-> +	stop.cqe.done = ib_stop_done;
-> +	init_completion(&stop.done);
-> +
-> +	ret = ib_modify_qp(qp, &attr, IB_QP_STATE);
-> +	if (ret) {
-> +		WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
-> +		return;
-> +	}
-> +
-> +	ret = ib_post_recv(qp, &wr, &bad_wr);
-> +	if (ret) {
-> +		WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
-> +		return;
-> +	}
-> +
-> +	wait_for_completion(&stop.done);
-> +}
-> +EXPORT_SYMBOL(ib_drain_qp);
+On 11/13/2015 09:06 AM, Or Gerlitz wrote:
+>> The patch has caused multiple regressions, did not even compile when
+>> > sent to me, and was poorly reviewed and I have not heard from you guys
+>> > in a week. Given the issues the patch has had and the current time, I do
+>> > not feel comfortable with it anymore. I want to re-review it and fix it
+>> > up when there is more time.
+> Mike (Hi),
+> 
+> It's a complex patch that touches all the iscsi transports, and yes,
+> when it was send to you the 1st time, there was build error on one of
+> the offload transports (bad! but happens) and yes, as you pointed, one
+> static checker fix + one bug fix for it went upstream after this has
+> been merged, happens too.
 
-This won't work with iwarp qps.  Once the QP is in ERROR state, 
-post_send/post_recv can return a synchronous error vs async via the 
-cq.   The IB spec explicitly states that posts while in ERROR will be 
-completed with "flushed" via the CQ.
+A patch should not cause this many issues.
 
->From http://tools.ietf.org/html/draft-hilland-rddp-verbs-00#section-6.2.4:
+> What makes you say it was poorly reviewed?
 
-    *   At some point in the execution of the flushing operation, the RI
-        MUST begin to return an Immediate Error for any attempt to post
-        a WR to a Work Queue; prior to that point, any WQEs posted to a
-        Work Queue MUST be enqueued and then flushed as described above
-        (e.g. The PostSQ is done in Non-Privileged Mode and the Non-
-        Privileged Mode portion of the RI has not yet been informed that
-        the QP is in the Error state).
+I just did not do a good job at looking at the patch. I should have
+caught all of these issues.
 
+- The bnx2i cleanup_task bug should have been obvious, especially for me
+because I had commented about the back lock and the abort path.
 
-Also pending send work requests can be completed with status "flushed", 
-and I would think we need to do something similar for send wrs.  We 
-definitely can see this with cxgb4 in the presence of unsignaled wrs 
-that aren't followed by a signaled wr at the time the QP is moved out of 
-RTS.   The driver has no way to know if these pending unsignaled wrs 
-completed or not.  So it completes them with "flushed" status.
+- This oops, was so basic. Incorrect locking around a linked list being
+accessed from 2 threads is really one of those 1st year kernel
+programmer things.
 
-So how can we do this for iwarp?  It seems like all that might be needed 
-is to modify the QP state to idle, retrying until it succeeds:
+- The iscsi_xmit_task static checker locking was really simple too.
 
-    If the QP is transitioning to the Error state, or has not yet
-    finished flushing the Work Queues, a Modify QP request to transition
-    to the IDLE state MUST fail with an Immediate Error. If none of the
-    prior conditions are true, a Modify QP to the Idle state MUST take
-    the QP to the Idle state. No other state transitions out of Error
-    are supported. Any attempt to transition the QP to a state other
-    than Idle MUST result in an Immediate Error.
+- There was the issue offlist I emailed you guys about where I started
+to try and fix/review it yesterday, and I found another race in the
+abort and completion path that can result in a null pointer reference.
 
+- I have not had time to fully review it again, but I think the the
+reset/recovery code looks shady too.
 
-Steve.
+> 
+> And now after few years in upstream a possibly real bug was found
+> (happens), why rush and revert? lets see if we can fix.
 
-> diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
-> index e11e038..f59a8d3 100644
-> --- a/include/rdma/ib_verbs.h
-> +++ b/include/rdma/ib_verbs.h
-> @@ -3075,4 +3075,6 @@ int ib_sg_to_pages(struct ib_mr *mr,
->   		   int sg_nents,
->   		   int (*set_page)(struct ib_mr *, u64));
->   
-> +void ib_drain_qp(struct ib_qp *qp);
-> +
->   #endif /* IB_VERBS_H */
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Send patches.
