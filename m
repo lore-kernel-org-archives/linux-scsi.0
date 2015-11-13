@@ -1,25 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] mvsas: don't allow negative timeouts
-Date: Fri, 13 Nov 2015 15:46:24 -0500
-Message-ID: <yq1k2plzkyn.fsf@sermon.lab.mkp.net>
-References: <20151113142323.GB1445@mwanda>
+Subject: Re: [PATCH] mpt3sas: Fix use sas_is_tlr_enabled API before enabling MPI2_SCSIIO_CONTROL_TLR_ON flag
+Date: Fri, 13 Nov 2015 15:46:02 -0500
+Message-ID: <yq1oaexzkz9.fsf@sermon.lab.mkp.net>
+References: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20151113142323.GB1445@mwanda> (Dan Carpenter's message of "Fri,
-	13 Nov 2015 17:23:23 +0300")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Hannes Reinecke <hare@suse.de>, Dan Williams <dan.j.williams@intel.com>, Bart Van Assche <bvanassche@acm.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jack Wang <jinpu.wang@profitbricks.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Thu, 12 Nov 2015 23:40:37 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Dan> There is a static checker warning here because "val" is controlled
-Dan> by the user and we have a upper bound on it but allow negative
-Dan> numbers.  "val" appears to be a timeout in usec so this bug
-Dan> probably means we have a longer timeout than we should.  Let's fix
-Dan> this by changing "val" to unsigned.
+Sreekanth> Before enabling MPI2_SCSIIO_CONTROL_TLR_ON flag in MPI SCSI
+Sreekanth> IO request message, check whether TLR is enabled on the drive
+Sreekanth> using 'sas_is_tlr_enabled' API.
 
 Applied.
 
