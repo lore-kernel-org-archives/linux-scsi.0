@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: [GIT PULL] target updates for v4.4-rc1
-Date: Fri, 13 Nov 2015 02:00:11 -0800
-Message-ID: <1447408811.23126.110.camel@haakon3.risingtidesystems.com>
+Date: Fri, 13 Nov 2015 01:59:50 -0800
+Message-ID: <1447408790.23126.109.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
