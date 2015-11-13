@@ -1,23 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 4.4 SCSI queue status
-Date: Fri, 13 Nov 2015 09:09:15 -0800
-Message-ID: <20151113170915.GA16741@infradead.org>
-References: <yq16117ub07.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [GIT PULL] target updates for v4.4-rc1
+Date: Fri, 13 Nov 2015 09:24:46 -0800
+Message-ID: <56461CDE.308@sandisk.com>
+References: <1447408811.23126.110.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq16117ub07.fsf@sermon.lab.mkp.net>
+In-Reply-To: <1447408811.23126.110.camel@haakon3.risingtidesystems.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Felipe Balbi <balbi@ti.com>, James Bottomley <james.bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 11, 2015 at 10:55:52PM -0500, Martin K. Petersen wrote:
-> 
-> As some of you may have noticed, I have been volunteered to help with
-> the SCSI tree going forward. Much like Christoph did for while. My
-> current tree is here:
+On 11/13/2015 02:00 AM, Nicholas A. Bellinger wrote:
+> Hello Linus,
+>
+> Apologies for the late PULL request.
+>
+> Please pull from:
+>
+>    git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+>
+> This series contains HCH's changes to absorb configfs attribute ->show()
+> + ->store() function pointer usage from it's original tree-wide
+> consumers, into common configfs code.
+>
+> It includes usb-gadget, target w/ drivers, netconsole and ocfs2 changes
+> to realize the improved simplicity, that now renders the original
+> include/target/configfs_macros.h CPP magic for fabric drivers and
+> others, unnecessary and obsolete.
+>
+> And with common code in place, new configfs attributes can be added
+> easier than ever before.
+>
+> Note, there are further improvements in-flight from other folks for v4.5
+> code in configfs land, plus number of target fixes for post -rc1 code.
 
-It would be good to update MAINTAINERS with your address and a pointer
-to the git tree so that people are less confused.
+Hello Nic,
+
+Although the first version of my patch series that makes ABORT and LUN 
+RESET handling synchronous was posted six months ago, although this 
+patch series significantly improves reliability of the target core and 
+also improves source code readability and although the entire patch 
+series has received positive reviews from three experienced kernel 
+developers I am still waiting for feedback from you about the technical 
+aspects of these patches. You are the maintainer of the in-tree SCSI 
+target subsystem so it is your role to provide feedback on patches for 
+this subsystem.
+
+The patch series I am referring to is "SCSI target patches for kernel 
+v4.4" (http://thread.gmane.org/gmane.linux.scsi.target.devel/10365).
+
+Bart.
