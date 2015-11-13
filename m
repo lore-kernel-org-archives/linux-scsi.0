@@ -1,39 +1,47 @@
 From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [GIT PULL] target updates for v4.4-rc1
-Date: Fri, 13 Nov 2015 09:38:13 -0800
-Message-ID: <CA+55aFwnX0VnRyZ5qJ-O4Dd5KZPxJP1bbSnJXbeyeTnZ-4dXvQ@mail.gmail.com>
-References: <1447408811.23126.110.camel@haakon3.risingtidesystems.com>
+Date: Fri, 13 Nov 2015 09:48:40 -0800
+Message-ID: <CA+55aFy0XCw5d4DVajRbG=jnR_VEUQNu2thf5VqAUsi1ihw3GQ@mail.gmail.com>
+References: <1447408790.23126.109.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447408811.23126.110.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <1447408790.23126.109.camel@haakon3.risingtidesystems.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Felipe Balbi <balbi@ti.com>
 List-Id: linux-scsi@vger.kernel.org
 
-What the hell is wrong with linux-scsi.org?
+On Fri, Nov 13, 2015 at 1:59 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+>
+> Please pull from:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-Your machine:
-   Date: Fri, 13 Nov 2015 02:00:11 -0800
+Ok, not only was this pull request late, it had a semantic conflict
+that causes the end result to not compile.
 
-linux-iscsi.org:
-    Received: from [192.168.1.69] ...
-         by linux-iscsi.org (Postfix) with ESMTPSA id 80B6822DA37;
-         Fri, 13 Nov 2015 09:55:48 +0000 (UTC)
+You must have known about that conflict, since it was reported for
+linux-next. Alexander Shishkin had a patch for it.
 
-mx.google.com:
-  Received: from linux-iscsi.org ...
-        Fri, 13 Nov 2015 02:00:23 -0800 (PST)
+This is the kind of thing you should talk about in your pull request.
+Yes, I find these things out. Yes, I can fix it up myself. But the
+whole point of linux-next is finding these things and making the
+parties aware of it.
 
-That stupid server clock is off by over four *minutes*. Notice the
-jump back from just after the hour, to almost five minutes before the
-hour?
+If you don't then use the linux-next information when you send my pull
+request, exactly *what* was the point of it ever being in linux-next
+in the first place?
 
-Please get it some maintenance love. I'm OCD when it comes to
-timekeeping, and something on the internet being off by four minutes
-just makes me go "Eww".
+I'm annoyed. This is not the kind of sh*t I want to deal with on the
+Friday before the merge window closes.
 
-ntp was invented, what, 35 years ago?
+I've unpulled it for now. And I'm not sure I want to pull it later
+when I'm less annoyed.
 
-                     Linus
+So just to make it really clear to people: if you ignore the reports
+from linux-next, then I will damn well ignore you. Comprende? Fair is
+fair.
+
+                       Linus
