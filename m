@@ -1,46 +1,67 @@
-From: zhongjun@asia.com
-Subject: BUSINESS VORSCHLAG.
-Date: Thu, 12 Nov 2015 21:09:43 +0100
-Message-ID: <20151113004935.B456514EE3E@ampsrv1.comunidad-ameripol.org>
-Reply-To: fuzhong348@gmail.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] mpt3sas: Fix use sas_is_tlr_enabled API before enabling
+ MPI2_SCSIIO_CONTROL_TLR_ON flag
+Date: Fri, 13 Nov 2015 08:24:05 +0100
+Message-ID: <56459015.7090305@suse.de>
+References: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Static-IP-cr200118122217.cable.net.co ([200.118.122.217]:35393
-	"EHLO ampsrv1.comunidad-ameripol.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S932259AbbKMBbe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Nov 2015 20:31:34 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447351837-31388-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, chaitra.basappa@avagotech.com, suganath-prabu.subramani@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <zhongjun@asia.com>
 
-Guten Tag,
+On 11/12/2015 07:10 PM, Sreekanth Reddy wrote:
+> Before enabling MPI2_SCSIIO_CONTROL_TLR_ON flag in MPI SCSI IO
+> request message, check whether TLR is enabled on the drive using
+> 'sas_is_tlr_enabled' API.
+>=20
+> Actually in the driver code, driver is using below API's
+>=20
+> 1. sas_enable_tlr() - to enable the TLR
+> 2. sas_disable_tlr() - to disable the TLR
+> 3. sas_is_tlr_enabled() - to check whether TLR is enabled or not.
+>=20
+> but in scsih_qcmd() we have missed to use sas_is_tlr_enabled() API,
+> instead we checking for TLR bit from flag field of driver's
+> 'struct MPT3SAS_DEVIC' structure. which is corrected with this patch.
+>=20
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3=
+sas/mpt3sas_scsih.c
+> index d95206b..9ab77b0 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -3905,8 +3905,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi=
+_cmnd *scmd)
+>  	 * We do not expose raid functionality to upper layer for warpdrive=
+=2E
+>  	 */
+>  	if (!ioc->is_warpdrive && !scsih_is_raid(&scmd->device->sdev_gendev=
+)
+> -	    && (sas_device_priv_data->flags & MPT_DEVICE_TLR_ON) &&
+> -	    scmd->cmd_len !=3D 32)
+> +	    && sas_is_tlr_enabled(scmd->device) && scmd->cmd_len !=3D 32)
+>  		mpi_control |=3D MPI2_SCSIIO_CONTROL_TLR_ON;
+> =20
+>  	smid =3D mpt3sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scm=
+d);
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Ich brauche einen ausl=E4ndischen Partner f=FCr einen gemeinsamen Gesch=
-=E4fts Vorschlag, der auf die =DCbertragung von einer gro=DFen Geldsumm=
-e an einem ausl=E4ndischen Konto bezieht, als Empf=E4nger der Mittel. A=
-lles an dieser Transaktion rechtlich ohne Br=FCcke der Finanzbeh=F6rde =
-sowohl in meinem Land und yours.I wil g=F6nnen Sie h=F6chste Diskretion=
- in allen Fragen rund um dieses Problem zu beobachten, durchgef=FChrt w=
-erden. Wenn Sie interessiert sind, antworten Sie bitte zur=FCck =FCber =
-meine private E-Mail-Adresse geschrieben unten, gebe ich Ihnen mehr =FC=
-ber mich selbst mit dem Finanzinstitut I dargestellt und tats=E4chliche=
-n Betr=E4ge beinhaltet zum Projekt, sobald ich Ihre positive Antwort er=
-halten.
+Cheers,
 
-Private E-Mail: fu.zhongjun@fuzhongjun.net
-
-=46reundlichen Gru=DF,
-
-
-Gesch=E4ftsf=FChrer.
-
-China-Bank.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
