@@ -1,300 +1,51 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/3] block/sd: Fix device-imposed transfer length limits
-Date: Fri, 13 Nov 2015 16:46:48 -0500
-Message-ID: <1447451209-30772-2-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 3/3] MAINTAINERS: Add myself as co-maintainer of the SCSI subsystem.
+Date: Fri, 13 Nov 2015 16:46:49 -0500
+Message-ID: <1447451209-30772-3-git-send-email-martin.petersen@oracle.com>
 References: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27234 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:27287 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbbKMVrM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2015 16:47:12 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id tADLlBiP029640
+	with ESMTP id S1750865AbbKMVrV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2015 16:47:21 -0500
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id tADLlLJI029714
 	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:12 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-	by aserv0021.oracle.com (8.13.8/8.13.8) with ESMTP id tADLlBJv018679
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:21 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+	by userv0022.oracle.com (8.13.8/8.13.8) with ESMTP id tADLlLhr006070
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:11 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-	by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id tADLlB5v011334
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:11 GMT
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:21 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+	by userv0121.oracle.com (8.13.8/8.13.8) with ESMTP id tADLlKLA032549
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2015 21:47:21 GMT
 In-Reply-To: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Commit 4f258a46346c ("sd: Fix maximum I/O size for BLOCK_PC requests")
-had the unfortunate side-effect of removing an implicit clamp to
-BLK_DEF_MAX_SECTORS for REQ_TYPE_FS requests in the block layer
-code. This caused problems for some SMR drives.
-
-Debugging this issue revealed a few problems with the existing
-infrastructure since the block layer didn't know how to deal with
-device-imposed limits, only limits set by the I/O controller.
-
- - Introduce a new queue limit, max_dev_sectors, which is used by the
-   ULD to signal the maximum sectors for a REQ_TYPE_FS request.
-
- - Ensure that max_dev_sectors is correctly stacked and taken into
-   account when overriding max_sectors through sysfs.
-
- - Rework sd_read_block_limits() so it saves the max_xfer and opt_xfer
-   values for later processing.
-
- - In sd_revalidate() set the queue's max_dev_sectors based on the
-   MAXIMUM TRANSFER LENGTH value in the Block Limits VPD. If this value
-   is not reported, fall back to a cap based on the CDB TRANSFER LENGTH
-   field size.
-
- - In sd_revalidate(), use OPTIMAL TRANSFER LENGTH from the Block Limits
-   VPD--if reported and sane--to signal the preferred device transfer
-   size for FS requests. Otherwise use BLK_DEF_MAX_SECTORS.
-
- - blk_limits_max_hw_sectors() is no longer used and can be removed.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=93581
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/blk-settings.c   | 36 ++++++++++++++++--------------------
- block/blk-sysfs.c      |  3 +++
- drivers/scsi/sd.c      | 46 ++++++++++++++++++++++++++++++----------------
- drivers/scsi/sd.h      |  1 +
- include/linux/blkdev.h |  2 +-
- 5 files changed, 51 insertions(+), 37 deletions(-)
+ MAINTAINERS | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 7d8f129a1516..dd4973583978 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -91,7 +91,8 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->seg_boundary_mask = BLK_SEG_BOUNDARY_MASK;
- 	lim->virt_boundary_mask = 0;
- 	lim->max_segment_size = BLK_MAX_SEGMENT_SIZE;
--	lim->max_sectors = lim->max_hw_sectors = BLK_SAFE_MAX_SECTORS;
-+	lim->max_sectors = lim->max_dev_sectors = lim->max_hw_sectors =
-+		BLK_SAFE_MAX_SECTORS;
- 	lim->chunk_sectors = 0;
- 	lim->max_write_same_sectors = 0;
- 	lim->max_discard_sectors = 0;
-@@ -127,6 +128,7 @@ void blk_set_stacking_limits(struct queue_limits *lim)
- 	lim->max_hw_sectors = UINT_MAX;
- 	lim->max_segment_size = UINT_MAX;
- 	lim->max_sectors = UINT_MAX;
-+	lim->max_dev_sectors = UINT_MAX;
- 	lim->max_write_same_sectors = UINT_MAX;
- }
- EXPORT_SYMBOL(blk_set_stacking_limits);
-@@ -214,8 +216,8 @@ void blk_queue_bounce_limit(struct request_queue *q, u64 max_addr)
- EXPORT_SYMBOL(blk_queue_bounce_limit);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9de185da5f5b..978df6e36ddf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9205,8 +9205,10 @@ F:	include/scsi/sg.h
  
- /**
-- * blk_limits_max_hw_sectors - set hard and soft limit of max sectors for request
-- * @limits: the queue limits
-+ * blk_queue_max_hw_sectors - set max sectors for a request for this queue
-+ * @q:  the request queue for the device
-  * @max_hw_sectors:  max hardware sectors in the usual 512b unit
-  *
-  * Description:
-@@ -224,13 +226,19 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
-  *    the device driver based upon the capabilities of the I/O
-  *    controller.
-  *
-+ *    max_dev_sectors is a hard limit imposed by the storage device for
-+ *    READ/WRITE requests. It is set by the disk driver.
-+ *
-  *    max_sectors is a soft limit imposed by the block layer for
-  *    filesystem type requests.  This value can be overridden on a
-  *    per-device basis in /sys/block/<device>/queue/max_sectors_kb.
-  *    The soft limit can not exceed max_hw_sectors.
-  **/
--void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_sectors)
-+void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_sectors)
- {
-+	struct queue_limits *limits = &q->limits;
-+	unsigned int max_sectors;
-+
- 	if ((max_hw_sectors << 9) < PAGE_CACHE_SIZE) {
- 		max_hw_sectors = 1 << (PAGE_CACHE_SHIFT - 9);
- 		printk(KERN_INFO "%s: set to minimum %d\n",
-@@ -238,22 +246,9 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
- 	}
- 
- 	limits->max_hw_sectors = max_hw_sectors;
--	limits->max_sectors = min_t(unsigned int, max_hw_sectors,
--				    BLK_DEF_MAX_SECTORS);
--}
--EXPORT_SYMBOL(blk_limits_max_hw_sectors);
--
--/**
-- * blk_queue_max_hw_sectors - set max sectors for a request for this queue
-- * @q:  the request queue for the device
-- * @max_hw_sectors:  max hardware sectors in the usual 512b unit
-- *
-- * Description:
-- *    See description for blk_limits_max_hw_sectors().
-- **/
--void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_sectors)
--{
--	blk_limits_max_hw_sectors(&q->limits, max_hw_sectors);
-+	max_sectors = min_not_zero(max_hw_sectors, limits->max_dev_sectors);
-+	max_sectors = min_t(unsigned int, max_sectors, BLK_DEF_MAX_SECTORS);
-+	limits->max_sectors = max_sectors;
- }
- EXPORT_SYMBOL(blk_queue_max_hw_sectors);
- 
-@@ -527,6 +522,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 
- 	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
- 	t->max_hw_sectors = min_not_zero(t->max_hw_sectors, b->max_hw_sectors);
-+	t->max_dev_sectors = min_not_zero(t->max_dev_sectors, b->max_dev_sectors);
- 	t->max_write_same_sectors = min(t->max_write_same_sectors,
- 					b->max_write_same_sectors);
- 	t->bounce_pfn = min_not_zero(t->bounce_pfn, b->bounce_pfn);
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 07b42f5ad797..ce34ec4f172e 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -205,6 +205,9 @@ queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
- 	if (ret < 0)
- 		return ret;
- 
-+	max_hw_sectors_kb = min_not_zero(max_hw_sectors_kb, (unsigned long)
-+					 q->limits.max_dev_sectors >> 1);
-+
- 	if (max_sectors_kb > max_hw_sectors_kb || max_sectors_kb < page_kb)
- 		return -EINVAL;
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c322969026bc..4b0d5fd536c3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2237,11 +2237,8 @@ got_data:
- 		}
- 	}
- 
--	if (sdkp->capacity > 0xffffffff) {
-+	if (sdkp->capacity > 0xffffffff)
- 		sdp->use_16_for_rw = 1;
--		sdkp->max_xfer_blocks = SD_MAX_XFER_BLOCKS;
--	} else
--		sdkp->max_xfer_blocks = SD_DEF_XFER_BLOCKS;
- 
- 	/* Rescale capacity to 512-byte units */
- 	if (sector_size == 4096)
-@@ -2558,7 +2555,6 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
- 	unsigned int sector_sz = sdkp->device->sector_size;
- 	const int vpd_len = 64;
--	u32 max_xfer_length;
- 	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
- 	if (!buffer ||
-@@ -2566,14 +2562,11 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	    scsi_get_vpd_page(sdkp->device, 0xb0, buffer, vpd_len))
- 		goto out;
- 
--	max_xfer_length = get_unaligned_be32(&buffer[8]);
--	if (max_xfer_length)
--		sdkp->max_xfer_blocks = max_xfer_length;
--
- 	blk_queue_io_min(sdkp->disk->queue,
- 			 get_unaligned_be16(&buffer[6]) * sector_sz);
--	blk_queue_io_opt(sdkp->disk->queue,
--			 get_unaligned_be32(&buffer[12]) * sector_sz);
-+
-+	sdkp->max_xfer_blocks = get_unaligned_be32(&buffer[8]);
-+	sdkp->opt_xfer_blocks = get_unaligned_be32(&buffer[12]);
- 
- 	if (buffer[3] == 0x3c) {
- 		unsigned int lba_count, desc_count;
-@@ -2722,6 +2715,11 @@ static int sd_try_extended_inquiry(struct scsi_device *sdp)
- 	return 0;
- }
- 
-+static inline u32 logical_to_sectors(struct scsi_device *sdev, u32 blocks)
-+{
-+	return blocks << (ilog2(sdev->sector_size) - 9);
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -2731,8 +2729,9 @@ static int sd_revalidate_disk(struct gendisk *disk)
- {
- 	struct scsi_disk *sdkp = scsi_disk(disk);
- 	struct scsi_device *sdp = sdkp->device;
-+	struct request_queue *q = sdkp->disk->queue;
- 	unsigned char *buffer;
--	unsigned int max_xfer;
-+	unsigned int dev_max, rw_max;
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
- 				      "sd_revalidate_disk\n"));
-@@ -2780,11 +2779,26 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 */
- 	sd_set_flush_flag(sdkp);
- 
--	max_xfer = sdkp->max_xfer_blocks;
--	max_xfer <<= ilog2(sdp->sector_size) - 9;
-+	/* Initial block count limit based on CDB TRANSFER LENGTH field size. */
-+	dev_max = sdp->use_16_for_rw ? SD_MAX_XFER_BLOCKS : SD_DEF_XFER_BLOCKS;
-+
-+	/* Some devices report a maximum block count for READ/WRITE requests. */
-+	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
-+	q->limits.max_dev_sectors = logical_to_sectors(sdp, dev_max);
-+
-+	/*
-+	 * Use the device's preferred I/O size for reads and writes
-+	 * unless the reported value is unreasonably large (or garbage).
-+	 */
-+	if (sdkp->opt_xfer_blocks && sdkp->opt_xfer_blocks <= dev_max &&
-+	    sdkp->opt_xfer_blocks <= SD_DEF_XFER_BLOCKS)
-+		rw_max = q->limits.io_opt =
-+			logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-+	else
-+		rw_max = BLK_DEF_MAX_SECTORS;
- 
--	sdkp->disk->queue->limits.max_sectors =
--		min_not_zero(queue_max_hw_sectors(sdkp->disk->queue), max_xfer);
-+	/* Combine with controller limits */
-+	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
- 
- 	set_capacity(disk, sdkp->capacity);
- 	sd_config_write_same(sdkp);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 63ba5ca7f9a1..5f2a84aff29f 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -67,6 +67,7 @@ struct scsi_disk {
- 	atomic_t	openers;
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u32		max_xfer_blocks;
-+	u32		opt_xfer_blocks;
- 	u32		max_ws_blocks;
- 	u32		max_unmap_blocks;
- 	u32		unmap_granularity;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 19c2e947d4d1..20c1925ec46e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -253,6 +253,7 @@ struct queue_limits {
- 	unsigned long		virt_boundary_mask;
- 
- 	unsigned int		max_hw_sectors;
-+	unsigned int		max_dev_sectors;
- 	unsigned int		chunk_sectors;
- 	unsigned int		max_sectors;
- 	unsigned int		max_segment_size;
-@@ -950,7 +951,6 @@ extern struct request_queue *blk_init_allocated_queue(struct request_queue *,
- extern void blk_cleanup_queue(struct request_queue *);
- extern void blk_queue_make_request(struct request_queue *, make_request_fn *);
- extern void blk_queue_bounce_limit(struct request_queue *, u64);
--extern void blk_limits_max_hw_sectors(struct queue_limits *, unsigned int);
- extern void blk_queue_max_hw_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_chunk_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_max_segments(struct request_queue *, unsigned short);
+ SCSI SUBSYSTEM
+ M:	"James E.J. Bottomley" <JBottomley@odin.com>
+-L:	linux-scsi@vger.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
++M:	"Martin K. Petersen" <martin.petersen@oracle.com>
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
++L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ F:	drivers/scsi/
+ F:	include/scsi/
 -- 
 2.4.3
 
