@@ -1,565 +1,985 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/9] srpt: use the new CQ API
-Date: Fri, 13 Nov 2015 14:46:46 +0100
-Message-ID: <1447422410-20891-6-git-send-email-hch@lst.de>
+Subject: [PATCH 1/9] move blk_iopoll to limit and make it generally available
+Date: Fri, 13 Nov 2015 14:46:42 +0100
+Message-ID: <1447422410-20891-2-git-send-email-hch@lst.de>
 References: <1447422410-20891-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51883 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754748AbbKMNvc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2015 08:51:32 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1447422410-20891-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-rdma@vger.kernel.org
 Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+
+The new name is irq_poll as iopoll is already taken.  Better suggestions
+welcome.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c | 327 +++++++++-------------------------
- drivers/infiniband/ulp/srpt/ib_srpt.h |  28 +--
- 2 files changed, 88 insertions(+), 267 deletions(-)
+ Documentation/kernel-per-CPU-kthreads.txt |   2 +-
+ block/Makefile                            |   2 +-
+ block/blk-iopoll.c                        | 224 ------------------------------
+ drivers/scsi/Kconfig                      |   1 +
+ drivers/scsi/be2iscsi/Kconfig             |   1 +
+ drivers/scsi/be2iscsi/be.h                |   4 +-
+ drivers/scsi/be2iscsi/be_iscsi.c          |   4 +-
+ drivers/scsi/be2iscsi/be_main.c           |  24 ++--
+ drivers/scsi/ipr.c                        |  28 ++--
+ drivers/scsi/ipr.h                        |   4 +-
+ include/linux/blk-iopoll.h                |  46 ------
+ include/linux/interrupt.h                 |   2 +-
+ include/linux/irq_poll.h                  |  46 ++++++
+ include/trace/events/irq.h                |   2 +-
+ lib/Kconfig                               |   5 +
+ lib/Makefile                              |   1 +
+ lib/irq_poll.c                            | 221 +++++++++++++++++++++++++++++
+ tools/lib/traceevent/event-parse.c        |   2 +-
+ tools/perf/util/trace-event-parse.c       |   2 +-
+ 19 files changed, 313 insertions(+), 308 deletions(-)
+ delete mode 100644 block/blk-iopoll.c
+ delete mode 100644 include/linux/blk-iopoll.h
+ create mode 100644 include/linux/irq_poll.h
+ create mode 100644 lib/irq_poll.c
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 2b6dd71..d4bbad3 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -95,6 +95,8 @@ MODULE_PARM_DESC(srpt_service_guid,
- static struct ib_client srpt_client;
- static void srpt_release_channel(struct srpt_rdma_ch *ch);
- static int srpt_queue_status(struct se_cmd *cmd);
-+static void srpt_recv_done(struct ib_cq *cq, struct ib_wc *wc);
-+static void srpt_send_done(struct ib_cq *cq, struct ib_wc *wc);
- 
- /**
-  * opposite_dma_dir() - Swap DMA_TO_DEVICE and DMA_FROM_DEVICE.
-@@ -780,12 +782,12 @@ static int srpt_post_recv(struct srpt_device *sdev,
- 	struct ib_recv_wr wr, *bad_wr;
- 
- 	BUG_ON(!sdev);
--	wr.wr_id = encode_wr_id(SRPT_RECV, ioctx->ioctx.index);
--
- 	list.addr = ioctx->ioctx.dma;
- 	list.length = srp_max_req_size;
- 	list.lkey = sdev->pd->local_dma_lkey;
- 
-+	ioctx->ioctx.cqe.done = srpt_recv_done;
-+	wr.wr_cqe = &ioctx->ioctx.cqe;
- 	wr.next = NULL;
- 	wr.sg_list = &list;
- 	wr.num_sge = 1;
-@@ -821,8 +823,9 @@ static int srpt_post_send(struct srpt_rdma_ch *ch,
- 	list.length = len;
- 	list.lkey = sdev->pd->local_dma_lkey;
- 
-+	ioctx->ioctx.cqe.done = srpt_send_done;
- 	wr.next = NULL;
--	wr.wr_id = encode_wr_id(SRPT_SEND, ioctx->ioctx.index);
-+	wr.wr_cqe = &ioctx->ioctx.cqe;
- 	wr.sg_list = &list;
- 	wr.num_sge = 1;
- 	wr.opcode = IB_WR_SEND;
-@@ -1385,116 +1388,44 @@ out:
- }
- 
- /**
-- * srpt_handle_send_err_comp() - Process an IB_WC_SEND error completion.
+diff --git a/Documentation/kernel-per-CPU-kthreads.txt b/Documentation/kernel-per-CPU-kthreads.txt
+index f4cbfe0..edec3a3 100644
+--- a/Documentation/kernel-per-CPU-kthreads.txt
++++ b/Documentation/kernel-per-CPU-kthreads.txt
+@@ -90,7 +90,7 @@ BLOCK_SOFTIRQ:  Do all of the following:
+ 	from being initiated from tasks that might run on the CPU to
+ 	be de-jittered.  (It is OK to force this CPU offline and then
+ 	bring it back online before you start your application.)
+-BLOCK_IOPOLL_SOFTIRQ:  Do all of the following:
++IRQ_POLL_SOFTIRQ:  Do all of the following:
+ 1.	Force block-device interrupts onto some other CPU.
+ 2.	Initiate any block I/O and block-I/O polling on other CPUs.
+ 3.	Once your application has started, prevent CPU-hotplug operations
+diff --git a/block/Makefile b/block/Makefile
+index 00ecc97..e850474 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -5,7 +5,7 @@
+ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
+ 			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
+ 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
+-			blk-iopoll.o blk-lib.o blk-mq.o blk-mq-tag.o \
++			blk-lib.o blk-mq.o blk-mq-tag.o \
+ 			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
+ 			genhd.o scsi_ioctl.o partition-generic.o ioprio.o \
+ 			partitions/
+diff --git a/block/blk-iopoll.c b/block/blk-iopoll.c
+deleted file mode 100644
+index 0736729..0000000
+--- a/block/blk-iopoll.c
++++ /dev/null
+@@ -1,224 +0,0 @@
+-/*
+- * Functions related to interrupt-poll handling in the block layer. This
+- * is similar to NAPI for network devices.
 - */
--static void srpt_handle_send_err_comp(struct srpt_rdma_ch *ch, u64 wr_id)
--{
--	struct srpt_send_ioctx *ioctx;
--	enum srpt_command_state state;
--	u32 index;
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/init.h>
+-#include <linux/bio.h>
+-#include <linux/blkdev.h>
+-#include <linux/interrupt.h>
+-#include <linux/cpu.h>
+-#include <linux/blk-iopoll.h>
+-#include <linux/delay.h>
 -
--	atomic_inc(&ch->sq_wr_avail);
+-#include "blk.h"
 -
--	index = idx_from_wr_id(wr_id);
--	ioctx = ch->ioctx_ring[index];
--	state = srpt_get_cmd_state(ioctx);
+-static unsigned int blk_iopoll_budget __read_mostly = 256;
 -
--	WARN_ON(state != SRPT_STATE_CMD_RSP_SENT
--		&& state != SRPT_STATE_MGMT_RSP_SENT
--		&& state != SRPT_STATE_NEED_DATA
--		&& state != SRPT_STATE_DONE);
--
--	/* If SRP_RSP sending failed, undo the ch->req_lim change. */
--	if (state == SRPT_STATE_CMD_RSP_SENT
--	    || state == SRPT_STATE_MGMT_RSP_SENT)
--		atomic_dec(&ch->req_lim);
--
--	srpt_abort_cmd(ioctx);
--}
+-static DEFINE_PER_CPU(struct list_head, blk_cpu_iopoll);
 -
 -/**
-- * srpt_handle_send_comp() - Process an IB send completion notification.
-- */
--static void srpt_handle_send_comp(struct srpt_rdma_ch *ch,
--				  struct srpt_send_ioctx *ioctx)
--{
--	enum srpt_command_state state;
--
--	atomic_inc(&ch->sq_wr_avail);
--
--	state = srpt_set_cmd_state(ioctx, SRPT_STATE_DONE);
--
--	if (WARN_ON(state != SRPT_STATE_CMD_RSP_SENT
--		    && state != SRPT_STATE_MGMT_RSP_SENT
--		    && state != SRPT_STATE_DONE))
--		pr_debug("state = %d\n", state);
--
--	if (state != SRPT_STATE_DONE) {
--		srpt_unmap_sg_to_ib_sge(ch, ioctx);
--		transport_generic_free_cmd(&ioctx->cmd, 0);
--	} else {
--		pr_err("IB completion has been received too late for"
--		       " wr_id = %u.\n", ioctx->ioctx.index);
--	}
--}
--
--/**
-- * srpt_handle_rdma_comp() - Process an IB RDMA completion notification.
+- * blk_iopoll_sched - Schedule a run of the iopoll handler
+- * @iop:      The parent iopoll structure
 - *
-  * XXX: what is now target_execute_cmd used to be asynchronous, and unmapping
-  * the data that has been transferred via IB RDMA had to be postponed until the
-  * check_stop_free() callback.  None of this is necessary anymore and needs to
-  * be cleaned up.
-  */
--static void srpt_handle_rdma_comp(struct srpt_rdma_ch *ch,
--				  struct srpt_send_ioctx *ioctx,
--				  enum srpt_opcode opcode)
-+static void srpt_rdma_read_done(struct ib_cq *cq, struct ib_wc *wc)
- {
-+	struct srpt_rdma_ch *ch = cq->cq_context;
-+	struct srpt_send_ioctx *ioctx =
-+		container_of(wc->wr_cqe, struct srpt_send_ioctx, ioctx.cqe);
-+
- 	WARN_ON(ioctx->n_rdma <= 0);
- 	atomic_add(ioctx->n_rdma, &ch->sq_wr_avail);
- 
--	if (opcode == SRPT_RDMA_READ_LAST) {
--		if (srpt_test_and_set_cmd_state(ioctx, SRPT_STATE_NEED_DATA,
--						SRPT_STATE_DATA_IN))
--			target_execute_cmd(&ioctx->cmd);
--		else
--			pr_err("%s[%d]: wrong state = %d\n", __func__,
--			       __LINE__, srpt_get_cmd_state(ioctx));
--	} else {
--		WARN(true, "unexpected opcode %d\n", opcode);
-+	if (unlikely(wc->status != IB_WC_SUCCESS)) {
-+		pr_info("RDMA_READ for ioctx 0x%p failed with status %d\n",
-+			ioctx, wc->status);
-+		srpt_abort_cmd(ioctx);
-+		return;
- 	}
-+
-+	if (srpt_test_and_set_cmd_state(ioctx, SRPT_STATE_NEED_DATA,
-+					SRPT_STATE_DATA_IN))
-+		target_execute_cmd(&ioctx->cmd);
-+	else
-+		pr_err("%s[%d]: wrong state = %d\n", __func__,
-+		       __LINE__, srpt_get_cmd_state(ioctx));
- }
- 
+- * Description:
+- *     Add this blk_iopoll structure to the pending poll list and trigger the
+- *     raise of the blk iopoll softirq. The driver must already have gotten a
+- *     successful return from blk_iopoll_sched_prep() before calling this.
+- **/
+-void blk_iopoll_sched(struct blk_iopoll *iop)
+-{
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	list_add_tail(&iop->list, this_cpu_ptr(&blk_cpu_iopoll));
+-	__raise_softirq_irqoff(BLOCK_IOPOLL_SOFTIRQ);
+-	local_irq_restore(flags);
+-}
+-EXPORT_SYMBOL(blk_iopoll_sched);
+-
 -/**
-- * srpt_handle_rdma_err_comp() - Process an IB RDMA error completion.
-- */
--static void srpt_handle_rdma_err_comp(struct srpt_rdma_ch *ch,
--				      struct srpt_send_ioctx *ioctx,
--				      enum srpt_opcode opcode)
-+static void srpt_rdma_write_done(struct ib_cq *cq, struct ib_wc *wc)
- {
--	enum srpt_command_state state;
-+	struct srpt_send_ioctx *ioctx =
-+		container_of(wc->wr_cqe, struct srpt_send_ioctx, ioctx.cqe);
- 
--	state = srpt_get_cmd_state(ioctx);
--	switch (opcode) {
--	case SRPT_RDMA_READ_LAST:
--		if (ioctx->n_rdma <= 0) {
--			pr_err("Received invalid RDMA read"
--			       " error completion with idx %d\n",
--			       ioctx->ioctx.index);
+- * __blk_iopoll_complete - Mark this @iop as un-polled again
+- * @iop:      The parent iopoll structure
+- *
+- * Description:
+- *     See blk_iopoll_complete(). This function must be called with interrupts
+- *     disabled.
+- **/
+-void __blk_iopoll_complete(struct blk_iopoll *iop)
+-{
+-	list_del(&iop->list);
+-	smp_mb__before_atomic();
+-	clear_bit_unlock(IOPOLL_F_SCHED, &iop->state);
+-}
+-EXPORT_SYMBOL(__blk_iopoll_complete);
+-
+-/**
+- * blk_iopoll_complete - Mark this @iop as un-polled again
+- * @iop:      The parent iopoll structure
+- *
+- * Description:
+- *     If a driver consumes less than the assigned budget in its run of the
+- *     iopoll handler, it'll end the polled mode by calling this function. The
+- *     iopoll handler will not be invoked again before blk_iopoll_sched_prep()
+- *     is called.
+- **/
+-void blk_iopoll_complete(struct blk_iopoll *iop)
+-{
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	__blk_iopoll_complete(iop);
+-	local_irq_restore(flags);
+-}
+-EXPORT_SYMBOL(blk_iopoll_complete);
+-
+-static void blk_iopoll_softirq(struct softirq_action *h)
+-{
+-	struct list_head *list = this_cpu_ptr(&blk_cpu_iopoll);
+-	int rearm = 0, budget = blk_iopoll_budget;
+-	unsigned long start_time = jiffies;
+-
+-	local_irq_disable();
+-
+-	while (!list_empty(list)) {
+-		struct blk_iopoll *iop;
+-		int work, weight;
+-
+-		/*
+-		 * If softirq window is exhausted then punt.
+-		 */
+-		if (budget <= 0 || time_after(jiffies, start_time)) {
+-			rearm = 1;
 -			break;
 -		}
--		atomic_add(ioctx->n_rdma, &ch->sq_wr_avail);
--		if (state == SRPT_STATE_NEED_DATA)
--			srpt_abort_cmd(ioctx);
--		else
--			pr_err("%s[%d]: wrong state = %d\n",
--			       __func__, __LINE__, state);
--		break;
--	case SRPT_RDMA_WRITE_LAST:
--		break;
--	default:
--		pr_err("%s[%d]: opcode = %u\n", __func__, __LINE__, opcode);
--		break;
-+	if (unlikely(wc->status != IB_WC_SUCCESS)) {
-+		pr_info("RDMA_WRITE for ioctx 0x%p failed with status %d\n",
-+			ioctx, wc->status);
-+		srpt_abort_cmd(ioctx);
- 	}
- }
- 
-@@ -1929,32 +1860,26 @@ out:
- 	return;
- }
- 
--static void srpt_process_rcv_completion(struct ib_cq *cq,
--					struct srpt_rdma_ch *ch,
--					struct ib_wc *wc)
-+static void srpt_recv_done(struct ib_cq *cq, struct ib_wc *wc)
- {
--	struct srpt_device *sdev = ch->sport->sdev;
--	struct srpt_recv_ioctx *ioctx;
--	u32 index;
-+	struct srpt_rdma_ch *ch = cq->cq_context;
-+	struct srpt_recv_ioctx *ioctx =
-+		container_of(wc->wr_cqe, struct srpt_recv_ioctx, ioctx.cqe);
- 
--	index = idx_from_wr_id(wc->wr_id);
- 	if (wc->status == IB_WC_SUCCESS) {
- 		int req_lim;
- 
- 		req_lim = atomic_dec_return(&ch->req_lim);
- 		if (unlikely(req_lim < 0))
- 			pr_err("req_lim = %d < 0\n", req_lim);
--		ioctx = sdev->ioctx_ring[index];
- 		srpt_handle_new_iu(ch, ioctx, NULL);
- 	} else {
--		pr_info("receiving failed for idx %u with status %d\n",
--			index, wc->status);
-+		pr_info("receiving failed for ioctx %p with status %d\n",
-+			ioctx, wc->status);
- 	}
- }
- 
- /**
-- * srpt_process_send_completion() - Process an IB send completion.
-- *
-  * Note: Although this has not yet been observed during tests, at least in
-  * theory it is possible that the srpt_get_send_ioctx() call invoked by
-  * srpt_handle_new_iu() fails. This is possible because the req_lim_delta
-@@ -1967,108 +1892,52 @@ static void srpt_process_rcv_completion(struct ib_cq *cq,
-  * are queued on cmd_wait_list. The code below processes these delayed
-  * requests one at a time.
-  */
--static void srpt_process_send_completion(struct ib_cq *cq,
--					 struct srpt_rdma_ch *ch,
--					 struct ib_wc *wc)
-+static void srpt_send_done(struct ib_cq *cq, struct ib_wc *wc)
- {
--	struct srpt_send_ioctx *send_ioctx;
--	uint32_t index;
--	enum srpt_opcode opcode;
-+	struct srpt_rdma_ch *ch = cq->cq_context;
-+	struct srpt_send_ioctx *ioctx =
-+		container_of(wc->wr_cqe, struct srpt_send_ioctx, ioctx.cqe);
-+	enum srpt_command_state state;
-+		
-+	state = srpt_set_cmd_state(ioctx, SRPT_STATE_DONE);
- 
--	index = idx_from_wr_id(wc->wr_id);
--	opcode = opcode_from_wr_id(wc->wr_id);
--	send_ioctx = ch->ioctx_ring[index];
--	if (wc->status == IB_WC_SUCCESS) {
--		if (opcode == SRPT_SEND)
--			srpt_handle_send_comp(ch, send_ioctx);
--		else {
--			WARN_ON(wc->opcode != IB_WC_RDMA_READ);
--			srpt_handle_rdma_comp(ch, send_ioctx, opcode);
--		}
-+	WARN_ON(state != SRPT_STATE_CMD_RSP_SENT &&
-+		state != SRPT_STATE_MGMT_RSP_SENT);
-+
-+	atomic_inc(&ch->sq_wr_avail);
-+
-+	if (wc->status != IB_WC_SUCCESS) {
-+		pr_info("sending response for ioctx 0x%p failed"
-+			" with status %d\n", ioctx, wc->status);
-+
-+		atomic_dec(&ch->req_lim);
-+		srpt_abort_cmd(ioctx);
-+		goto out;
-+	}
-+
-+	if (state != SRPT_STATE_DONE) {
-+		srpt_unmap_sg_to_ib_sge(ch, ioctx);
-+		transport_generic_free_cmd(&ioctx->cmd, 0);
- 	} else {
--		if (opcode == SRPT_SEND) {
--			pr_info("sending response for idx %u failed"
--				" with status %d\n", index, wc->status);
--			srpt_handle_send_err_comp(ch, wc->wr_id);
--		} else if (opcode != SRPT_RDMA_MID) {
--			pr_info("RDMA t %d for idx %u failed with"
--				" status %d\n", opcode, index, wc->status);
--			srpt_handle_rdma_err_comp(ch, send_ioctx, opcode);
--		}
-+		pr_err("IB completion has been received too late for"
-+		       " wr_id = %u.\n", ioctx->ioctx.index);
- 	}
- 
--	while (unlikely(opcode == SRPT_SEND
--			&& !list_empty(&ch->cmd_wait_list)
--			&& srpt_get_ch_state(ch) == CH_LIVE
--			&& (send_ioctx = srpt_get_send_ioctx(ch)) != NULL)) {
-+out:
-+	while (!list_empty(&ch->cmd_wait_list) &&
-+	       srpt_get_ch_state(ch) == CH_LIVE &&
-+	       (ioctx = srpt_get_send_ioctx(ch)) != NULL) {
- 		struct srpt_recv_ioctx *recv_ioctx;
- 
- 		recv_ioctx = list_first_entry(&ch->cmd_wait_list,
- 					      struct srpt_recv_ioctx,
- 					      wait_list);
- 		list_del(&recv_ioctx->wait_list);
--		srpt_handle_new_iu(ch, recv_ioctx, send_ioctx);
--	}
--}
 -
--static void srpt_process_completion(struct ib_cq *cq, struct srpt_rdma_ch *ch)
--{
--	struct ib_wc *const wc = ch->wc;
--	int i, n;
+-		local_irq_enable();
 -
--	WARN_ON(cq != ch->cq);
+-		/* Even though interrupts have been re-enabled, this
+-		 * access is safe because interrupts can only add new
+-		 * entries to the tail of this list, and only ->poll()
+-		 * calls can remove this head entry from the list.
+-		 */
+-		iop = list_entry(list->next, struct blk_iopoll, list);
 -
--	ib_req_notify_cq(cq, IB_CQ_NEXT_COMP);
--	while ((n = ib_poll_cq(cq, ARRAY_SIZE(ch->wc), wc)) > 0) {
--		for (i = 0; i < n; i++) {
--			if (opcode_from_wr_id(wc[i].wr_id) == SRPT_RECV)
--				srpt_process_rcv_completion(cq, ch, &wc[i]);
+-		weight = iop->weight;
+-		work = 0;
+-		if (test_bit(IOPOLL_F_SCHED, &iop->state))
+-			work = iop->poll(iop, weight);
+-
+-		budget -= work;
+-
+-		local_irq_disable();
+-
+-		/*
+-		 * Drivers must not modify the iopoll state, if they
+-		 * consume their assigned weight (or more, some drivers can't
+-		 * easily just stop processing, they have to complete an
+-		 * entire mask of commands).In such cases this code
+-		 * still "owns" the iopoll instance and therefore can
+-		 * move the instance around on the list at-will.
+-		 */
+-		if (work >= weight) {
+-			if (blk_iopoll_disable_pending(iop))
+-				__blk_iopoll_complete(iop);
 -			else
--				srpt_process_send_completion(cq, ch, &wc[i]);
+-				list_move_tail(&iop->list, list);
 -		}
-+		srpt_handle_new_iu(ch, recv_ioctx, ioctx);
- 	}
- }
- 
- /**
-- * srpt_completion() - IB completion queue callback function.
-- *
-- * Notes:
-- * - It is guaranteed that a completion handler will never be invoked
-- *   concurrently on two different CPUs for the same completion queue. See also
-- *   Documentation/infiniband/core_locking.txt and the implementation of
-- *   handle_edge_irq() in kernel/irq/chip.c.
-- * - When threaded IRQs are enabled, completion handlers are invoked in thread
-- *   context instead of interrupt context.
-- */
--static void srpt_completion(struct ib_cq *cq, void *ctx)
--{
--	struct srpt_rdma_ch *ch = ctx;
--
--	wake_up_interruptible(&ch->wait_queue);
--}
--
--static int srpt_compl_thread(void *arg)
--{
--	struct srpt_rdma_ch *ch;
--
--	/* Hibernation / freezing of the SRPT kernel thread is not supported. */
--	current->flags |= PF_NOFREEZE;
--
--	ch = arg;
--	BUG_ON(!ch);
--	pr_info("Session %s: kernel thread %s (PID %d) started\n",
--		ch->sess_name, ch->thread->comm, current->pid);
--	while (!kthread_should_stop()) {
--		wait_event_interruptible(ch->wait_queue,
--			(srpt_process_completion(ch->cq, ch),
--			 kthread_should_stop()));
 -	}
--	pr_info("Session %s: kernel thread %s (PID %d) stopped\n",
--		ch->sess_name, ch->thread->comm, current->pid);
--	return 0;
+-
+-	if (rearm)
+-		__raise_softirq_irqoff(BLOCK_IOPOLL_SOFTIRQ);
+-
+-	local_irq_enable();
 -}
 -
 -/**
-  * srpt_create_ch_ib() - Create receive and send completion queues.
-  */
- static int srpt_create_ch_ib(struct srpt_rdma_ch *ch)
-@@ -2077,7 +1946,6 @@ static int srpt_create_ch_ib(struct srpt_rdma_ch *ch)
- 	struct srpt_port *sport = ch->sport;
- 	struct srpt_device *sdev = sport->sdev;
- 	u32 srp_sq_size = sport->port_attrib.srp_sq_size;
--	struct ib_cq_init_attr cq_attr = {};
- 	int ret;
- 
- 	WARN_ON(ch->rq_size < 1);
-@@ -2088,9 +1956,8 @@ static int srpt_create_ch_ib(struct srpt_rdma_ch *ch)
- 		goto out;
- 
- retry:
--	cq_attr.cqe = ch->rq_size + srp_sq_size;
--	ch->cq = ib_create_cq(sdev->device, srpt_completion, NULL, ch,
--			      &cq_attr);
-+	ch->cq = ib_alloc_cq(sdev->device, ch, ch->rq_size + srp_sq_size,
-+			0 /* XXX: spread CQs */, IB_POLL_WORKQUEUE);
- 	if (IS_ERR(ch->cq)) {
- 		ret = PTR_ERR(ch->cq);
- 		pr_err("failed to create CQ cqe= %d ret= %d\n",
-@@ -2133,18 +2000,6 @@ retry:
- 	if (ret)
- 		goto err_destroy_qp;
- 
--	init_waitqueue_head(&ch->wait_queue);
+- * blk_iopoll_disable - Disable iopoll on this @iop
+- * @iop:      The parent iopoll structure
+- *
+- * Description:
+- *     Disable io polling and wait for any pending callbacks to have completed.
+- **/
+-void blk_iopoll_disable(struct blk_iopoll *iop)
+-{
+-	set_bit(IOPOLL_F_DISABLE, &iop->state);
+-	while (test_and_set_bit(IOPOLL_F_SCHED, &iop->state))
+-		msleep(1);
+-	clear_bit(IOPOLL_F_DISABLE, &iop->state);
+-}
+-EXPORT_SYMBOL(blk_iopoll_disable);
 -
--	pr_debug("creating thread for session %s\n", ch->sess_name);
+-/**
+- * blk_iopoll_enable - Enable iopoll on this @iop
+- * @iop:      The parent iopoll structure
+- *
+- * Description:
+- *     Enable iopoll on this @iop. Note that the handler run will not be
+- *     scheduled, it will only mark it as active.
+- **/
+-void blk_iopoll_enable(struct blk_iopoll *iop)
+-{
+-	BUG_ON(!test_bit(IOPOLL_F_SCHED, &iop->state));
+-	smp_mb__before_atomic();
+-	clear_bit_unlock(IOPOLL_F_SCHED, &iop->state);
+-}
+-EXPORT_SYMBOL(blk_iopoll_enable);
 -
--	ch->thread = kthread_run(srpt_compl_thread, ch, "ib_srpt_compl");
--	if (IS_ERR(ch->thread)) {
--		pr_err("failed to create kernel thread %ld\n",
--		       PTR_ERR(ch->thread));
--		ch->thread = NULL;
--		goto err_destroy_qp;
+-/**
+- * blk_iopoll_init - Initialize this @iop
+- * @iop:      The parent iopoll structure
+- * @weight:   The default weight (or command completion budget)
+- * @poll_fn:  The handler to invoke
+- *
+- * Description:
+- *     Initialize this blk_iopoll structure. Before being actively used, the
+- *     driver must call blk_iopoll_enable().
+- **/
+-void blk_iopoll_init(struct blk_iopoll *iop, int weight, blk_iopoll_fn *poll_fn)
+-{
+-	memset(iop, 0, sizeof(*iop));
+-	INIT_LIST_HEAD(&iop->list);
+-	iop->weight = weight;
+-	iop->poll = poll_fn;
+-	set_bit(IOPOLL_F_SCHED, &iop->state);
+-}
+-EXPORT_SYMBOL(blk_iopoll_init);
+-
+-static int blk_iopoll_cpu_notify(struct notifier_block *self,
+-				 unsigned long action, void *hcpu)
+-{
+-	/*
+-	 * If a CPU goes away, splice its entries to the current CPU
+-	 * and trigger a run of the softirq
+-	 */
+-	if (action == CPU_DEAD || action == CPU_DEAD_FROZEN) {
+-		int cpu = (unsigned long) hcpu;
+-
+-		local_irq_disable();
+-		list_splice_init(&per_cpu(blk_cpu_iopoll, cpu),
+-				 this_cpu_ptr(&blk_cpu_iopoll));
+-		__raise_softirq_irqoff(BLOCK_IOPOLL_SOFTIRQ);
+-		local_irq_enable();
 -	}
 -
- out:
- 	kfree(qp_init);
- 	return ret;
-@@ -2152,17 +2007,14 @@ out:
- err_destroy_qp:
- 	ib_destroy_qp(ch->qp);
- err_destroy_cq:
--	ib_destroy_cq(ch->cq);
-+	ib_free_cq(ch->cq);
- 	goto out;
- }
- 
- static void srpt_destroy_ch_ib(struct srpt_rdma_ch *ch)
- {
--	if (ch->thread)
--		kthread_stop(ch->thread);
+-	return NOTIFY_OK;
+-}
 -
- 	ib_destroy_qp(ch->qp);
--	ib_destroy_cq(ch->cq);
-+	ib_free_cq(ch->cq);
+-static struct notifier_block blk_iopoll_cpu_notifier = {
+-	.notifier_call	= blk_iopoll_cpu_notify,
+-};
+-
+-static __init int blk_iopoll_setup(void)
+-{
+-	int i;
+-
+-	for_each_possible_cpu(i)
+-		INIT_LIST_HEAD(&per_cpu(blk_cpu_iopoll, i));
+-
+-	open_softirq(BLOCK_IOPOLL_SOFTIRQ, blk_iopoll_softirq);
+-	register_hotcpu_notifier(&blk_iopoll_cpu_notifier);
+-	return 0;
+-}
+-subsys_initcall(blk_iopoll_setup);
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d2f480b..cea683e 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1103,6 +1103,7 @@ config SCSI_IPR
+ 	tristate "IBM Power Linux RAID adapter support"
+ 	depends on PCI && SCSI && ATA
+ 	select FW_LOADER
++	select IRQ_POLL
+ 	---help---
+ 	  This driver supports the IBM Power Linux family RAID adapters.
+ 	  This includes IBM pSeries 5712, 5703, 5709, and 570A, as well
+diff --git a/drivers/scsi/be2iscsi/Kconfig b/drivers/scsi/be2iscsi/Kconfig
+index 4e7cad2..bad5f32 100644
+--- a/drivers/scsi/be2iscsi/Kconfig
++++ b/drivers/scsi/be2iscsi/Kconfig
+@@ -3,6 +3,7 @@ config BE2ISCSI
+ 	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
+ 	select ISCSI_BOOT_SYSFS
++	select IRQ_POLL
+ 
+ 	help
+ 	This driver implements the iSCSI functionality for Emulex
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index 77f992e..a41c643 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -20,7 +20,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/if_vlan.h>
+-#include <linux/blk-iopoll.h>
++#include <linux/irq_poll.h>
+ #define FW_VER_LEN	32
+ #define MCC_Q_LEN	128
+ #define MCC_CQ_LEN	256
+@@ -101,7 +101,7 @@ struct be_eq_obj {
+ 	struct beiscsi_hba *phba;
+ 	struct be_queue_info *cq;
+ 	struct work_struct work_cqs; /* Work Item */
+-	struct blk_iopoll	iopoll;
++	struct irq_poll	iopoll;
+ };
+ 
+ struct be_mcc_obj {
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index b7087ba..022e87b 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1292,9 +1292,9 @@ static void beiscsi_flush_cq(struct beiscsi_hba *phba)
+ 
+ 	for (i = 0; i < phba->num_cpus; i++) {
+ 		pbe_eq = &phwi_context->be_eq[i];
+-		blk_iopoll_disable(&pbe_eq->iopoll);
++		irq_poll_disable(&pbe_eq->iopoll);
+ 		beiscsi_process_cq(pbe_eq);
+-		blk_iopoll_enable(&pbe_eq->iopoll);
++		irq_poll_enable(&pbe_eq->iopoll);
+ 	}
  }
  
- /**
-@@ -2824,9 +2676,7 @@ static int srpt_perform_rdmas(struct srpt_rdma_ch *ch,
- 			      struct srpt_send_ioctx *ioctx)
- {
- 	struct ib_send_wr *bad_wr;
--	int i;
--	int ret;
--	int sq_wr_avail;
-+	int sq_wr_avail, ret, i;
- 	enum dma_data_direction dir;
- 	const int n_rdma = ioctx->n_rdma;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 2e6abe7..7f0fdbe 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -910,8 +910,8 @@ static irqreturn_t be_isr_msix(int irq, void *dev_id)
+ 	num_eq_processed = 0;
+ 	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
+ 				& EQE_VALID_MASK) {
+-		if (!blk_iopoll_sched_prep(&pbe_eq->iopoll))
+-			blk_iopoll_sched(&pbe_eq->iopoll);
++		if (!irq_poll_sched_prep(&pbe_eq->iopoll))
++			irq_poll_sched(&pbe_eq->iopoll);
  
-@@ -2843,29 +2693,24 @@ static int srpt_perform_rdmas(struct srpt_rdma_ch *ch,
+ 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+ 		queue_tail_inc(eq);
+@@ -972,8 +972,8 @@ static irqreturn_t be_isr(int irq, void *dev_id)
+ 			spin_unlock_irqrestore(&phba->isr_lock, flags);
+ 			num_mcceq_processed++;
+ 		} else {
+-			if (!blk_iopoll_sched_prep(&pbe_eq->iopoll))
+-				blk_iopoll_sched(&pbe_eq->iopoll);
++			if (!irq_poll_sched_prep(&pbe_eq->iopoll))
++				irq_poll_sched(&pbe_eq->iopoll);
+ 			num_ioeq_processed++;
+ 		}
+ 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+@@ -2293,7 +2293,7 @@ void beiscsi_process_all_cqs(struct work_struct *work)
+ 	hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
+ }
+ 
+-static int be_iopoll(struct blk_iopoll *iop, int budget)
++static int be_iopoll(struct irq_poll *iop, int budget)
+ {
+ 	unsigned int ret;
+ 	struct beiscsi_hba *phba;
+@@ -2304,7 +2304,7 @@ static int be_iopoll(struct blk_iopoll *iop, int budget)
+ 	pbe_eq->cq_count += ret;
+ 	if (ret < budget) {
+ 		phba = pbe_eq->phba;
+-		blk_iopoll_complete(iop);
++		irq_poll_complete(iop);
+ 		beiscsi_log(phba, KERN_INFO,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
+ 			    "BM_%d : rearm pbe_eq->q.id =%d\n",
+@@ -5261,7 +5261,7 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
+ 
+ 	for (i = 0; i < phba->num_cpus; i++) {
+ 		pbe_eq = &phwi_context->be_eq[i];
+-		blk_iopoll_disable(&pbe_eq->iopoll);
++		irq_poll_disable(&pbe_eq->iopoll);
  	}
  
- 	for (i = 0; i < n_rdma; i++) {
--		struct ib_rdma_wr *wr = &ioctx->rdma_ius[i];
--
--		if (dir == DMA_FROM_DEVICE) {
--			wr->wr.opcode = IB_WR_RDMA_WRITE;
--			wr->wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
--						SRPT_RDMA_WRITE_LAST :
--						SRPT_RDMA_MID,
--						ioctx->ioctx.index);
--		} else {
--			wr->wr.opcode = IB_WR_RDMA_READ;
--			wr->wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
--						SRPT_RDMA_READ_LAST :
--						SRPT_RDMA_MID,
--						ioctx->ioctx.index);
--		}
-+		struct ib_send_wr *wr = &ioctx->rdma_ius[i].wr;
-+
-+		wr->opcode = (dir == DMA_FROM_DEVICE) ?
-+				IB_WR_RDMA_WRITE : IB_WR_RDMA_READ;
+ 	if (unload_state == BEISCSI_CLEAN_UNLOAD) {
+@@ -5547,9 +5547,9 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
  
- 		if (i == n_rdma - 1) {
- 			/* only get completion event for the last rdma read */
--			if (dir == DMA_TO_DEVICE)
--				wr->wr.send_flags = IB_SEND_SIGNALED;
--			wr->wr.next = NULL;
-+			if (dir == DMA_TO_DEVICE) {
-+				wr->send_flags = IB_SEND_SIGNALED;
-+				ioctx->rdma_cqe.done = srpt_rdma_read_done;
-+			} else {
-+				ioctx->rdma_cqe.done = srpt_rdma_write_done;
-+			}
-+			wr->wr_cqe = &ioctx->rdma_cqe;
-+			wr->next = NULL;
- 		} else {
--			wr->wr.next = &ioctx->rdma_ius[i + 1].wr;
-+			wr->wr_cqe = NULL;
-+			wr->next = &ioctx->rdma_ius[i + 1].wr;
+ 	for (i = 0; i < phba->num_cpus; i++) {
+ 		pbe_eq = &phwi_context->be_eq[i];
+-		blk_iopoll_init(&pbe_eq->iopoll, be_iopoll_budget,
++		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget,
+ 				be_iopoll);
+-		blk_iopoll_enable(&pbe_eq->iopoll);
++		irq_poll_enable(&pbe_eq->iopoll);
+ 	}
+ 
+ 	i = (phba->msix_enabled) ? i : 0;
+@@ -5720,9 +5720,9 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 
+ 	for (i = 0; i < phba->num_cpus; i++) {
+ 		pbe_eq = &phwi_context->be_eq[i];
+-		blk_iopoll_init(&pbe_eq->iopoll, be_iopoll_budget,
++		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget,
+ 				be_iopoll);
+-		blk_iopoll_enable(&pbe_eq->iopoll);
++		irq_poll_enable(&pbe_eq->iopoll);
+ 	}
+ 
+ 	i = (phba->msix_enabled) ? i : 0;
+@@ -5763,7 +5763,7 @@ free_blkenbld:
+ 	destroy_workqueue(phba->wq);
+ 	for (i = 0; i < phba->num_cpus; i++) {
+ 		pbe_eq = &phwi_context->be_eq[i];
+-		blk_iopoll_disable(&pbe_eq->iopoll);
++		irq_poll_disable(&pbe_eq->iopoll);
+ 	}
+ free_twq:
+ 	beiscsi_clean_port(phba);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b62836d..6b98e75 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3638,7 +3638,7 @@ static struct device_attribute ipr_ioa_reset_attr = {
+ 	.store = ipr_store_reset_adapter
+ };
+ 
+-static int ipr_iopoll(struct blk_iopoll *iop, int budget);
++static int ipr_iopoll(struct irq_poll *iop, int budget);
+  /**
+  * ipr_show_iopoll_weight - Show ipr polling mode
+  * @dev:	class device struct
+@@ -3681,34 +3681,34 @@ static ssize_t ipr_store_iopoll_weight(struct device *dev,
+ 	int i;
+ 
+ 	if (!ioa_cfg->sis64) {
+-		dev_info(&ioa_cfg->pdev->dev, "blk-iopoll not supported on this adapter\n");
++		dev_info(&ioa_cfg->pdev->dev, "irq_poll not supported on this adapter\n");
+ 		return -EINVAL;
+ 	}
+ 	if (kstrtoul(buf, 10, &user_iopoll_weight))
+ 		return -EINVAL;
+ 
+ 	if (user_iopoll_weight > 256) {
+-		dev_info(&ioa_cfg->pdev->dev, "Invalid blk-iopoll weight. It must be less than 256\n");
++		dev_info(&ioa_cfg->pdev->dev, "Invalid irq_poll weight. It must be less than 256\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	if (user_iopoll_weight == ioa_cfg->iopoll_weight) {
+-		dev_info(&ioa_cfg->pdev->dev, "Current blk-iopoll weight has the same weight\n");
++		dev_info(&ioa_cfg->pdev->dev, "Current irq_poll weight has the same weight\n");
+ 		return strlen(buf);
+ 	}
+ 
+ 	if (ioa_cfg->iopoll_weight && ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
+ 		for (i = 1; i < ioa_cfg->hrrq_num; i++)
+-			blk_iopoll_disable(&ioa_cfg->hrrq[i].iopoll);
++			irq_poll_disable(&ioa_cfg->hrrq[i].iopoll);
+ 	}
+ 
+ 	spin_lock_irqsave(shost->host_lock, lock_flags);
+ 	ioa_cfg->iopoll_weight = user_iopoll_weight;
+ 	if (ioa_cfg->iopoll_weight && ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
+ 		for (i = 1; i < ioa_cfg->hrrq_num; i++) {
+-			blk_iopoll_init(&ioa_cfg->hrrq[i].iopoll,
++			irq_poll_init(&ioa_cfg->hrrq[i].iopoll,
+ 					ioa_cfg->iopoll_weight, ipr_iopoll);
+-			blk_iopoll_enable(&ioa_cfg->hrrq[i].iopoll);
++			irq_poll_enable(&ioa_cfg->hrrq[i].iopoll);
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, lock_flags);
+@@ -5569,7 +5569,7 @@ static int ipr_process_hrrq(struct ipr_hrr_queue *hrr_queue, int budget,
+ 	return num_hrrq;
+ }
+ 
+-static int ipr_iopoll(struct blk_iopoll *iop, int budget)
++static int ipr_iopoll(struct irq_poll *iop, int budget)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg;
+ 	struct ipr_hrr_queue *hrrq;
+@@ -5585,7 +5585,7 @@ static int ipr_iopoll(struct blk_iopoll *iop, int budget)
+ 	completed_ops = ipr_process_hrrq(hrrq, budget, &doneq);
+ 
+ 	if (completed_ops < budget)
+-		blk_iopoll_complete(iop);
++		irq_poll_complete(iop);
+ 	spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
+ 
+ 	list_for_each_entry_safe(ipr_cmd, temp, &doneq, queue) {
+@@ -5693,8 +5693,8 @@ static irqreturn_t ipr_isr_mhrrq(int irq, void *devp)
+ 	if (ioa_cfg->iopoll_weight && ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
+ 		if ((be32_to_cpu(*hrrq->hrrq_curr) & IPR_HRRQ_TOGGLE_BIT) ==
+ 		       hrrq->toggle_bit) {
+-			if (!blk_iopoll_sched_prep(&hrrq->iopoll))
+-				blk_iopoll_sched(&hrrq->iopoll);
++			if (!irq_poll_sched_prep(&hrrq->iopoll))
++				irq_poll_sched(&hrrq->iopoll);
+ 			spin_unlock_irqrestore(hrrq->lock, hrrq_flags);
+ 			return IRQ_HANDLED;
+ 		}
+@@ -10285,9 +10285,9 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
+ 
+ 	if (ioa_cfg->iopoll_weight && ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
+ 		for (i = 1; i < ioa_cfg->hrrq_num; i++) {
+-			blk_iopoll_init(&ioa_cfg->hrrq[i].iopoll,
++			irq_poll_init(&ioa_cfg->hrrq[i].iopoll,
+ 					ioa_cfg->iopoll_weight, ipr_iopoll);
+-			blk_iopoll_enable(&ioa_cfg->hrrq[i].iopoll);
++			irq_poll_enable(&ioa_cfg->hrrq[i].iopoll);
  		}
  	}
  
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
-index fd6097e..f9568f5 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.h
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
-@@ -128,27 +128,6 @@ enum {
- 	DEFAULT_MAX_RDMA_SIZE = 65536,
+@@ -10316,7 +10316,7 @@ static void ipr_shutdown(struct pci_dev *pdev)
+ 	if (ioa_cfg->iopoll_weight && ioa_cfg->sis64 && ioa_cfg->nvectors > 1) {
+ 		ioa_cfg->iopoll_weight = 0;
+ 		for (i = 1; i < ioa_cfg->hrrq_num; i++)
+-			blk_iopoll_disable(&ioa_cfg->hrrq[i].iopoll);
++			irq_poll_disable(&ioa_cfg->hrrq[i].iopoll);
+ 	}
+ 
+ 	while (ioa_cfg->in_reset_reload) {
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index e4fb17a..022fc3c 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -32,7 +32,7 @@
+ #include <linux/libata.h>
+ #include <linux/list.h>
+ #include <linux/kref.h>
+-#include <linux/blk-iopoll.h>
++#include <linux/irq_poll.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ 
+@@ -510,7 +510,7 @@ struct ipr_hrr_queue {
+ 	u8 allow_cmds:1;
+ 	u8 removing_ioa:1;
+ 
+-	struct blk_iopoll iopoll;
++	struct irq_poll iopoll;
  };
  
--enum srpt_opcode {
--	SRPT_RECV,
--	SRPT_SEND,
--	SRPT_RDMA_MID,
--	SRPT_RDMA_READ_LAST,
--	SRPT_RDMA_WRITE_LAST,
+ /* Command packet structure */
+diff --git a/include/linux/blk-iopoll.h b/include/linux/blk-iopoll.h
+deleted file mode 100644
+index 77ae77c..0000000
+--- a/include/linux/blk-iopoll.h
++++ /dev/null
+@@ -1,46 +0,0 @@
+-#ifndef BLK_IOPOLL_H
+-#define BLK_IOPOLL_H
+-
+-struct blk_iopoll;
+-typedef int (blk_iopoll_fn)(struct blk_iopoll *, int);
+-
+-struct blk_iopoll {
+-	struct list_head list;
+-	unsigned long state;
+-	unsigned long data;
+-	int weight;
+-	int max;
+-	blk_iopoll_fn *poll;
 -};
 -
--static inline u64 encode_wr_id(u8 opcode, u32 idx)
+-enum {
+-	IOPOLL_F_SCHED		= 0,
+-	IOPOLL_F_DISABLE	= 1,
+-};
+-
+-/*
+- * Returns 0 if we successfully set the IOPOLL_F_SCHED bit, indicating
+- * that we were the first to acquire this iop for scheduling. If this iop
+- * is currently disabled, return "failure".
+- */
+-static inline int blk_iopoll_sched_prep(struct blk_iopoll *iop)
 -{
--	return ((u64)opcode << 32) | idx;
--}
--static inline enum srpt_opcode opcode_from_wr_id(u64 wr_id)
--{
--	return wr_id >> 32;
--}
--static inline u32 idx_from_wr_id(u64 wr_id)
--{
--	return (u32)wr_id;
+-	if (!test_bit(IOPOLL_F_DISABLE, &iop->state))
+-		return test_and_set_bit(IOPOLL_F_SCHED, &iop->state);
+-
+-	return 1;
 -}
 -
- /**
-  * enum srpt_command_state - SCSI command state managed by SRPT.
-  * @SRPT_STATE_NEW:           New command arrived and is being processed.
-@@ -180,6 +159,7 @@ enum srpt_command_state {
-  * @index: Index of the I/O context in its ioctx_ring array.
-  */
- struct srpt_ioctx {
-+	struct ib_cqe		cqe;
- 	void			*buf;
- 	dma_addr_t		dma;
- 	uint32_t		index;
-@@ -218,6 +198,7 @@ struct srpt_send_ioctx {
- 	struct srpt_ioctx	ioctx;
- 	struct srpt_rdma_ch	*ch;
- 	struct ib_rdma_wr	*rdma_ius;
-+	struct ib_cqe		rdma_cqe;
- 	struct srp_direct_buf	*rbufs;
- 	struct srp_direct_buf	single_rbuf;
- 	struct scatterlist	*sg;
-@@ -255,9 +236,6 @@ enum rdma_ch_state {
+-static inline int blk_iopoll_disable_pending(struct blk_iopoll *iop)
+-{
+-	return test_bit(IOPOLL_F_DISABLE, &iop->state);
+-}
+-
+-extern void blk_iopoll_sched(struct blk_iopoll *);
+-extern void blk_iopoll_init(struct blk_iopoll *, int, blk_iopoll_fn *);
+-extern void blk_iopoll_complete(struct blk_iopoll *);
+-extern void __blk_iopoll_complete(struct blk_iopoll *);
+-extern void blk_iopoll_enable(struct blk_iopoll *);
+-extern void blk_iopoll_disable(struct blk_iopoll *);
+-
+-#endif
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index ad16809..7ff98c2 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -412,7 +412,7 @@ enum
+ 	NET_TX_SOFTIRQ,
+ 	NET_RX_SOFTIRQ,
+ 	BLOCK_SOFTIRQ,
+-	BLOCK_IOPOLL_SOFTIRQ,
++	IRQ_POLL_SOFTIRQ,
+ 	TASKLET_SOFTIRQ,
+ 	SCHED_SOFTIRQ,
+ 	HRTIMER_SOFTIRQ, /* Unused, but kept as tools rely on the
+diff --git a/include/linux/irq_poll.h b/include/linux/irq_poll.h
+new file mode 100644
+index 0000000..0cf7c26
+--- /dev/null
++++ b/include/linux/irq_poll.h
+@@ -0,0 +1,46 @@
++#ifndef IRQ_POLL_H
++#define IRQ_POLL_H
++
++struct irq_poll;
++typedef int (irq_poll_fn)(struct irq_poll *, int);
++
++struct irq_poll {
++	struct list_head list;
++	unsigned long state;
++	unsigned long data;
++	int weight;
++	int max;
++	irq_poll_fn *poll;
++};
++
++enum {
++	IRQ_POLL_F_SCHED		= 0,
++	IRQ_POLL_F_DISABLE	= 1,
++};
++
++/*
++ * Returns 0 if we successfully set the IRQ_POLL_F_SCHED bit, indicating
++ * that we were the first to acquire this iop for scheduling. If this iop
++ * is currently disabled, return "failure".
++ */
++static inline int irq_poll_sched_prep(struct irq_poll *iop)
++{
++	if (!test_bit(IRQ_POLL_F_DISABLE, &iop->state))
++		return test_and_set_bit(IRQ_POLL_F_SCHED, &iop->state);
++
++	return 1;
++}
++
++static inline int irq_poll_disable_pending(struct irq_poll *iop)
++{
++	return test_bit(IRQ_POLL_F_DISABLE, &iop->state);
++}
++
++extern void irq_poll_sched(struct irq_poll *);
++extern void irq_poll_init(struct irq_poll *, int, irq_poll_fn *);
++extern void irq_poll_complete(struct irq_poll *);
++extern void __irq_poll_complete(struct irq_poll *);
++extern void irq_poll_enable(struct irq_poll *);
++extern void irq_poll_disable(struct irq_poll *);
++
++#endif
+diff --git a/include/trace/events/irq.h b/include/trace/events/irq.h
+index ff8f6c0..f95f25e 100644
+--- a/include/trace/events/irq.h
++++ b/include/trace/events/irq.h
+@@ -15,7 +15,7 @@ struct softirq_action;
+ 			 softirq_name(NET_TX)		\
+ 			 softirq_name(NET_RX)		\
+ 			 softirq_name(BLOCK)		\
+-			 softirq_name(BLOCK_IOPOLL)	\
++			 softirq_name(IRQ_POLL)		\
+ 			 softirq_name(TASKLET)		\
+ 			 softirq_name(SCHED)		\
+ 			 softirq_name(HRTIMER)		\
+diff --git a/lib/Kconfig b/lib/Kconfig
+index f0df318..e00e196 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -475,6 +475,11 @@ config DDR
+ 	  information. This data is useful for drivers handling
+ 	  DDR SDRAM controllers.
  
- /**
-  * struct srpt_rdma_ch - RDMA channel.
-- * @wait_queue:    Allows the kernel thread to wait for more work.
-- * @thread:        Kernel thread that processes the IB queues associated with
-- *                 the channel.
-  * @cm_id:         IB CM ID associated with the channel.
-  * @qp:            IB queue pair used for communicating over this channel.
-  * @cq:            IB completion queue for this channel.
-@@ -287,8 +265,6 @@ enum rdma_ch_state {
-  * @release_done:  Enables waiting for srpt_release_channel() completion.
-  */
- struct srpt_rdma_ch {
--	wait_queue_head_t	wait_queue;
--	struct task_struct	*thread;
- 	struct ib_cm_id		*cm_id;
- 	struct ib_qp		*qp;
- 	struct ib_cq		*cq;
++config IRQ_POLL
++	bool "IRQ polling library"
++	help
++	  Helper library to poll interrupt mitigation using polling.
++
+ config MPILIB
+ 	tristate
+ 	select CLZ_TAB
+diff --git a/lib/Makefile b/lib/Makefile
+index 7f1de26..1478ae2 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -164,6 +164,7 @@ obj-$(CONFIG_GENERIC_NET_UTILS) += net_utils.o
+ 
+ obj-$(CONFIG_SG_SPLIT) += sg_split.o
+ obj-$(CONFIG_STMP_DEVICE) += stmp_device.o
++obj-$(CONFIG_IRQ_POLL) += irq_poll.o
+ 
+ libfdt_files = fdt.o fdt_ro.o fdt_wip.o fdt_rw.o fdt_sw.o fdt_strerror.o \
+ 	       fdt_empty_tree.o
+diff --git a/lib/irq_poll.c b/lib/irq_poll.c
+new file mode 100644
+index 0000000..e6fd1dc
+--- /dev/null
++++ b/lib/irq_poll.c
+@@ -0,0 +1,221 @@
++/*
++ * Functions related to interrupt-poll handling in the block layer. This
++ * is similar to NAPI for network devices.
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/bio.h>
++#include <linux/interrupt.h>
++#include <linux/cpu.h>
++#include <linux/irq_poll.h>
++#include <linux/delay.h>
++
++static unsigned int irq_poll_budget __read_mostly = 256;
++
++static DEFINE_PER_CPU(struct list_head, blk_cpu_iopoll);
++
++/**
++ * irq_poll_sched - Schedule a run of the iopoll handler
++ * @iop:      The parent iopoll structure
++ *
++ * Description:
++ *     Add this irq_poll structure to the pending poll list and trigger the
++ *     raise of the blk iopoll softirq. The driver must already have gotten a
++ *     successful return from irq_poll_sched_prep() before calling this.
++ **/
++void irq_poll_sched(struct irq_poll *iop)
++{
++	unsigned long flags;
++
++	local_irq_save(flags);
++	list_add_tail(&iop->list, this_cpu_ptr(&blk_cpu_iopoll));
++	__raise_softirq_irqoff(IRQ_POLL_SOFTIRQ);
++	local_irq_restore(flags);
++}
++EXPORT_SYMBOL(irq_poll_sched);
++
++/**
++ * __irq_poll_complete - Mark this @iop as un-polled again
++ * @iop:      The parent iopoll structure
++ *
++ * Description:
++ *     See irq_poll_complete(). This function must be called with interrupts
++ *     disabled.
++ **/
++void __irq_poll_complete(struct irq_poll *iop)
++{
++	list_del(&iop->list);
++	smp_mb__before_atomic();
++	clear_bit_unlock(IRQ_POLL_F_SCHED, &iop->state);
++}
++EXPORT_SYMBOL(__irq_poll_complete);
++
++/**
++ * irq_poll_complete - Mark this @iop as un-polled again
++ * @iop:      The parent iopoll structure
++ *
++ * Description:
++ *     If a driver consumes less than the assigned budget in its run of the
++ *     iopoll handler, it'll end the polled mode by calling this function. The
++ *     iopoll handler will not be invoked again before irq_poll_sched_prep()
++ *     is called.
++ **/
++void irq_poll_complete(struct irq_poll *iop)
++{
++	unsigned long flags;
++
++	local_irq_save(flags);
++	__irq_poll_complete(iop);
++	local_irq_restore(flags);
++}
++EXPORT_SYMBOL(irq_poll_complete);
++
++static void irq_poll_softirq(struct softirq_action *h)
++{
++	struct list_head *list = this_cpu_ptr(&blk_cpu_iopoll);
++	int rearm = 0, budget = irq_poll_budget;
++	unsigned long start_time = jiffies;
++
++	local_irq_disable();
++
++	while (!list_empty(list)) {
++		struct irq_poll *iop;
++		int work, weight;
++
++		/*
++		 * If softirq window is exhausted then punt.
++		 */
++		if (budget <= 0 || time_after(jiffies, start_time)) {
++			rearm = 1;
++			break;
++		}
++
++		local_irq_enable();
++
++		/* Even though interrupts have been re-enabled, this
++		 * access is safe because interrupts can only add new
++		 * entries to the tail of this list, and only ->poll()
++		 * calls can remove this head entry from the list.
++		 */
++		iop = list_entry(list->next, struct irq_poll, list);
++
++		weight = iop->weight;
++		work = 0;
++		if (test_bit(IRQ_POLL_F_SCHED, &iop->state))
++			work = iop->poll(iop, weight);
++
++		budget -= work;
++
++		local_irq_disable();
++
++		/*
++		 * Drivers must not modify the iopoll state, if they
++		 * consume their assigned weight (or more, some drivers can't
++		 * easily just stop processing, they have to complete an
++		 * entire mask of commands).In such cases this code
++		 * still "owns" the iopoll instance and therefore can
++		 * move the instance around on the list at-will.
++		 */
++		if (work >= weight) {
++			if (irq_poll_disable_pending(iop))
++				__irq_poll_complete(iop);
++			else
++				list_move_tail(&iop->list, list);
++		}
++	}
++
++	if (rearm)
++		__raise_softirq_irqoff(IRQ_POLL_SOFTIRQ);
++
++	local_irq_enable();
++}
++
++/**
++ * irq_poll_disable - Disable iopoll on this @iop
++ * @iop:      The parent iopoll structure
++ *
++ * Description:
++ *     Disable io polling and wait for any pending callbacks to have completed.
++ **/
++void irq_poll_disable(struct irq_poll *iop)
++{
++	set_bit(IRQ_POLL_F_DISABLE, &iop->state);
++	while (test_and_set_bit(IRQ_POLL_F_SCHED, &iop->state))
++		msleep(1);
++	clear_bit(IRQ_POLL_F_DISABLE, &iop->state);
++}
++EXPORT_SYMBOL(irq_poll_disable);
++
++/**
++ * irq_poll_enable - Enable iopoll on this @iop
++ * @iop:      The parent iopoll structure
++ *
++ * Description:
++ *     Enable iopoll on this @iop. Note that the handler run will not be
++ *     scheduled, it will only mark it as active.
++ **/
++void irq_poll_enable(struct irq_poll *iop)
++{
++	BUG_ON(!test_bit(IRQ_POLL_F_SCHED, &iop->state));
++	smp_mb__before_atomic();
++	clear_bit_unlock(IRQ_POLL_F_SCHED, &iop->state);
++}
++EXPORT_SYMBOL(irq_poll_enable);
++
++/**
++ * irq_poll_init - Initialize this @iop
++ * @iop:      The parent iopoll structure
++ * @weight:   The default weight (or command completion budget)
++ * @poll_fn:  The handler to invoke
++ *
++ * Description:
++ *     Initialize this irq_poll structure. Before being actively used, the
++ *     driver must call irq_poll_enable().
++ **/
++void irq_poll_init(struct irq_poll *iop, int weight, irq_poll_fn *poll_fn)
++{
++	memset(iop, 0, sizeof(*iop));
++	INIT_LIST_HEAD(&iop->list);
++	iop->weight = weight;
++	iop->poll = poll_fn;
++	set_bit(IRQ_POLL_F_SCHED, &iop->state);
++}
++EXPORT_SYMBOL(irq_poll_init);
++
++static int irq_poll_cpu_notify(struct notifier_block *self,
++				 unsigned long action, void *hcpu)
++{
++	/*
++	 * If a CPU goes away, splice its entries to the current CPU
++	 * and trigger a run of the softirq
++	 */
++	if (action == CPU_DEAD || action == CPU_DEAD_FROZEN) {
++		int cpu = (unsigned long) hcpu;
++
++		local_irq_disable();
++		list_splice_init(&per_cpu(blk_cpu_iopoll, cpu),
++				 this_cpu_ptr(&blk_cpu_iopoll));
++		__raise_softirq_irqoff(IRQ_POLL_SOFTIRQ);
++		local_irq_enable();
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block irq_poll_cpu_notifier = {
++	.notifier_call	= irq_poll_cpu_notify,
++};
++
++static __init int irq_poll_setup(void)
++{
++	int i;
++
++	for_each_possible_cpu(i)
++		INIT_LIST_HEAD(&per_cpu(blk_cpu_iopoll, i));
++
++	open_softirq(IRQ_POLL_SOFTIRQ, irq_poll_softirq);
++	register_hotcpu_notifier(&irq_poll_cpu_notifier);
++	return 0;
++}
++subsys_initcall(irq_poll_setup);
+diff --git a/tools/lib/traceevent/event-parse.c b/tools/lib/traceevent/event-parse.c
+index 2a912df..af5a316 100644
+--- a/tools/lib/traceevent/event-parse.c
++++ b/tools/lib/traceevent/event-parse.c
+@@ -3746,7 +3746,7 @@ static const struct flag flags[] = {
+ 	{ "NET_TX_SOFTIRQ", 2 },
+ 	{ "NET_RX_SOFTIRQ", 3 },
+ 	{ "BLOCK_SOFTIRQ", 4 },
+-	{ "BLOCK_IOPOLL_SOFTIRQ", 5 },
++	{ "IRQ_POLL_SOFTIRQ", 5 },
+ 	{ "TASKLET_SOFTIRQ", 6 },
+ 	{ "SCHED_SOFTIRQ", 7 },
+ 	{ "HRTIMER_SOFTIRQ", 8 },
+diff --git a/tools/perf/util/trace-event-parse.c b/tools/perf/util/trace-event-parse.c
+index 8ff7d62..33b52ea 100644
+--- a/tools/perf/util/trace-event-parse.c
++++ b/tools/perf/util/trace-event-parse.c
+@@ -209,7 +209,7 @@ static const struct flag flags[] = {
+ 	{ "NET_TX_SOFTIRQ", 2 },
+ 	{ "NET_RX_SOFTIRQ", 3 },
+ 	{ "BLOCK_SOFTIRQ", 4 },
+-	{ "BLOCK_IOPOLL_SOFTIRQ", 5 },
++	{ "IRQ_POLL_SOFTIRQ", 5 },
+ 	{ "TASKLET_SOFTIRQ", 6 },
+ 	{ "SCHED_SOFTIRQ", 7 },
+ 	{ "HRTIMER_SOFTIRQ", 8 },
 -- 
 1.9.1
-
