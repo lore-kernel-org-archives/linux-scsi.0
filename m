@@ -1,60 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target updates for v4.4-rc1
-Date: Fri, 13 Nov 2015 11:55:35 -0800
-Message-ID: <1447444535.23126.119.camel@haakon3.risingtidesystems.com>
-References: <1447408790.23126.109.camel@haakon3.risingtidesystems.com>
-	 <CA+55aFy0XCw5d4DVajRbG=jnR_VEUQNu2thf5VqAUsi1ihw3GQ@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Fri, 13 Nov 2015 11:57:56 -0800
+Message-ID: <564640C4.3000603@sandisk.com>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+ <1447422410-20891-3-git-send-email-hch@lst.de>
+ <20151113182513.GB21808@obsidianresearch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFy0XCw5d4DVajRbG=jnR_VEUQNu2thf5VqAUsi1ihw3GQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrzej Pietrasiewicz <andrzej.p@samsung.com>, Felipe Balbi <balbi@ti.com>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20151113182513.GB21808-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-11-13 at 09:48 -0800, Linus Torvalds wrote:
-> On Fri, Nov 13, 2015 at 1:59 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> >
-> > Please pull from:
-> >
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-> 
-> Ok, not only was this pull request late, it had a semantic conflict
-> that causes the end result to not compile.
-> 
-> You must have known about that conflict, since it was reported for
-> linux-next. Alexander Shishkin had a patch for it.
-> 
-> This is the kind of thing you should talk about in your pull request.
-> Yes, I find these things out. Yes, I can fix it up myself. But the
-> whole point of linux-next is finding these things and making the
-> parties aware of it.
-> 
-> If you don't then use the linux-next information when you send my pull
-> request, exactly *what* was the point of it ever being in linux-next
-> in the first place?
+On 11/13/2015 10:25 AM, Jason Gunthorpe wrote:
+> On Fri, Nov 13, 2015 at 02:46:43PM +0100, Christoph Hellwig wrote:
+>> This adds an abstraction that allows ULP to simply pass a completion
+>> object and completion callback with each submitted WR and let the RDMA
+>> core handle the nitty gritty details of how to handle completion
+>> interrupts and poll the CQ.
+>
+> This looks pretty nice, I'd really like to look it over carefully
+> after SC|15..
+>
+> I know Bart and others have attempted to have switching between event
+> and polling driven operation, but there were problems resolving the
+> races. Would be nice to review that conversation.. Do you remember the
+> details Bart?
 
-Ugh.
+Hello Jason,
 
-> 
-> I'm annoyed. This is not the kind of sh*t I want to deal with on the
-> Friday before the merge window closes.
-> 
-> I've unpulled it for now. And I'm not sure I want to pull it later
-> when I'm less annoyed.
-> 
-> So just to make it really clear to people: if you ignore the reports
-> from linux-next, then I will damn well ignore you. Comprende? Fair is
-> fair.
+I think this is the conversation you are referring to: "About a 
+shortcoming of the verbs API" 
+(http://thread.gmane.org/gmane.linux.drivers.rdma/5028). That 
+conversation occurred five years ago, which means that you have an 
+excellent memory :-)
 
-Would you accept an updated PULL request with Alexander's patch, or
-prefer this whole series wait until v4.5..?
+I doesn't seem to me like Christoph wanted to support dynamic switching 
+between the IB_POLL_DIRECT, IB_POLL_SOFTIRQ and IB_POLL_WORKQUEUE 
+polling modes. I think this should have been mentioned in the patch 
+description.
 
-Certainly it's my fault for not getting it sent out earlier, but the
-patches themselves, minus Alexander's extra hwtracing fix-up, have seen
-enough review + build testing to be uncontroversial at this point.
+The implementation of this patch makes it clear that it is essential 
+that all polling is serialized. The WC array that is used for polling is 
+embedded in the CQ and is not protected against concurrent access. This 
+means that it is essential that _ib_process_cq() calls are serialized. I 
+need some more time to verify whether such serialization is always 
+guaranteed by this patch.
 
---nab
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
