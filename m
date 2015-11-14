@@ -1,47 +1,52 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: Re: [PATCH] scsi: hpsa: fix multiple issues in path_info_show
-Date: Sat, 14 Nov 2015 16:24:24 +0100
-Message-ID: <87mvuga9jr.fsf@rasmusvillemoes.dk>
-References: <1445984203-3288-1-git-send-email-linux@rasmusvillemoes.dk>
-	<56313105.3050805@pmcs.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-multipath test scripts
+Date: Sat, 14 Nov 2015 11:26:33 -0500
+Message-ID: <20151114162633.GA2252@redhat.com>
+References: <20151007053923.GA10749@xzibit.linux.bs1.fc.nec.co.jp>
+ <1447412106.2616.13.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56313105.3050805@pmcs.com> (Don Brace's message of "Wed, 28 Oct
-	2015 15:33:09 -0500")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Don Brace <brace77070@gmail.com>
-Cc: Joe Handzik <joseph.t.handzik@hp.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Kevin Barnett <kevin.barnett@pmcs.com>, Scott Teel <scott.teel@pmcs.com>, Tomas Henzl <thenzl@redhat.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59475 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074AbbKNQ0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Nov 2015 11:26:35 -0500
+Content-Disposition: inline
+In-Reply-To: <1447412106.2616.13.camel@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Junichi Nomura <j-nomura@ce.jp.nec.com>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 28 2015, Don Brace <brace77070@gmail.com> wrote:
+On Fri, Nov 13 2015 at  5:55am -0500,
+Johannes Thumshirn <jthumshirn@suse.de> wrote:
 
-> On 10/27/2015 05:16 PM, Rasmus Villemoes wrote:
->> I'm not familiar with this code, but path_info_show() (added in
->> 8270b86243658 "hpsa: add sysfs entry path_info to show box and
->> bay information") seems to be broken in multiple ways.
->>
-[snip]
->>
->> We can fix all of that and get rid of the 400 byte stack buffer by
->> simply writing directly to the given output buffer, which the upper
->> layer guarantees is at least PAGE_SIZE. s[c]nprintf doesn't care where
->> it is writing to, so this doesn't make the spin lock hold time any
->> longer. Using scnprintf ensures that output_len always represents the
->> number of bytes actually written to the buffer, so we'll report the
->> proper amount to the upper layer.
->>
->> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
->>
-> Thanks, I added this to my current patch set. This patch will be up
-> with you as the author soon.
+> On Wed, 2015-10-07 at 05:39 +0000, Junichi Nomura wrote:
+> > This is a set of scripts for kernel-side dm-multipath testing.
+> > Current
+> > set of scripts are stress testing of extreme situation and its
+> > coverage
+> > is limited. But recently found dm-mpath regressions should be
+> > detectable
+> > with this. I hope this helps people working on dm-multipath related
+> > code
+> > as a regression test set.
+> > 
+> > Though this is created as a patch for linux kernel source, it's just
+> > for
+> > convenience of kernel developers (I don't have a place to host this
+> > kind
+> > of scripts). If there are better place to contribute this, please let
+> > me know.
+> > 
+> > Please check README for how-to-run and possible improvements you
+> > could
+> > contribute in future.
+> 
+> Can you please resend the patch so it can be picked up? I'd really like
+> to have a in-tree test suite for dm-multipath.
 
-I see it in mainline now. May I ask why 6 out of 7 scnprintfs were
-changed (back) to snprintf? I don't think there's any functional
-difference as long as PAGE_SIZE is indeed sufficient, but mixing
-snprintf and scnprintf is pretty odd, and there's now a discrepancy
-between the commit log and the patch which wasn't in my original - I'd
-expect a "[use snprintf because xyz]" note added if the change was
-intentional.
+There is no need for a resend.  I just overlooked it for the 4.4 merge
+window.  But I'll review/test/merge for the 4.5 merge window.
 
-Rasmus
+Mike
