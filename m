@@ -1,40 +1,60 @@
-From: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/9] move blk_iopoll to limit and make it generally available
-Date: Sun, 15 Nov 2015 11:04:11 +0200
-Message-ID: <CAJ3xEMgvttM1D3bePz0CWhZAZ3gCSQsf_qgmq9Ny4gzK5d0bXw@mail.gmail.com>
+From: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 7/9] IB/iser: Use a dedicated descriptor for login
+Date: Sun, 15 Nov 2015 11:14:13 +0200
+Message-ID: <56484CE5.7050609@mellanox.com>
 References: <1447422410-20891-1-git-send-email-hch@lst.de>
-	<1447422410-20891-2-git-send-email-hch@lst.de>
-	<CAJ3xEMgj2ycv61K38ZOowTRbrri_UhQgBcaKT0ZnnMHiBrmL5A@mail.gmail.com>
-	<20151114070200.GA27738@lst.de>
-	<564846E9.9070301@dev.mellanox.co.il>
+ <1447422410-20891-8-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <564846E9.9070301-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+In-Reply-To: <1447422410-20891-8-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Nov 15, 2015 at 10:48 AM, Sagi Grimberg
-<sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org> wrote:
-> Or is correct,
+On 11/13/2015 3:46 PM, Christoph Hellwig wrote:
+> From: Sagi Grimberg<sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 >
-> I have attempted to convert iser to use blk_iopoll in the past, however
-> I've seen inconsistent performance and latency skews (comparing to
-> tasklets iser is using today). This was manifested in IOPs test cases
-> where I ran multiple threads with higher queue-depth and not in
-> sanitized pure latency (QD=1) test cases. Unfortunately I didn't have
-> the time to pick it up since.
->
-> I do have every intention of testing it again with this. If it still
-> exist we will need to find the root-cause of it before converting
-> drivers to use it.
+> Makes better sense and we'll need it later with CQ abstraction.
+> iser switch login bufs to void
 
-Good, this way (inconsistent performance and latency skews) or another
-(all shines up) -- please
-let us know your findings, best through commenting within V > 0 the
-cover letter posts of this series
+Sagi, few quick comments on this patch, please address for next version..
+
+The 2nd sentence of the change-log needs better phrasing.
+
+also multiple checkpatch hits on the patch, please fix
+
+CHECK: Please don't use multiple blank lines
+#26: FILE: drivers/infiniband/ulp/iser/iscsi_iser.h:329:
+
++
+
+WARNING: __packed is preferred over __attribute__((packed))
+#42: FILE: drivers/infiniband/ulp/iser/iscsi_iser.h:345:
++} __attribute__((packed));
+
+CHECK: Please don't use multiple blank lines
+#44: FILE: drivers/infiniband/ulp/iser/iscsi_iser.h:347:
++
++
+
+CHECK: Alignment should match open parenthesis
+#161: FILE: drivers/infiniband/ulp/iser/iser_initiator.c:209:
++       if (ib_dma_mapping_error(device->ib_device,
++                               desc->req_dma))
+
+CHECK: Alignment should match open parenthesis
+#172: FILE: drivers/infiniband/ulp/iser/iser_initiator.c:220:
++       if (ib_dma_mapping_error(device->ib_device,
++                               desc->rsp_dma))
+
+
+
+
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
