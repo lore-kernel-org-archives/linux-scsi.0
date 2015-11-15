@@ -1,66 +1,51 @@
 From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 1/9] move blk_iopoll to limit and make it generally
- available
-Date: Sun, 15 Nov 2015 15:16:46 +0200
-Message-ID: <564885BE.1080707@dev.mellanox.co.il>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Sun, 15 Nov 2015 15:21:00 +0200
+Message-ID: <564886BC.5020105@dev.mellanox.co.il>
 References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-2-git-send-email-hch@lst.de>
- <CAJ3xEMgj2ycv61K38ZOowTRbrri_UhQgBcaKT0ZnnMHiBrmL5A@mail.gmail.com>
- <20151114070200.GA27738@lst.de> <564846E9.9070301@dev.mellanox.co.il>
- <CAJ3xEMgvttM1D3bePz0CWhZAZ3gCSQsf_qgmq9Ny4gzK5d0bXw@mail.gmail.com>
+ <1447422410-20891-3-git-send-email-hch@lst.de>
+ <564852F2.5080602@dev.mellanox.co.il> <20151115125501.GB2218@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAJ3xEMgvttM1D3bePz0CWhZAZ3gCSQsf_qgmq9Ny4gzK5d0bXw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20151115125501.GB2218-jcswGhMUV9g@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 15/11/2015 11:04, Or Gerlitz wrote:
-> On Sun, Nov 15, 2015 at 10:48 AM, Sagi Grimberg
-> <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org> wrote:
->> Or is correct,
->>
->> I have attempted to convert iser to use blk_iopoll in the past, however
->> I've seen inconsistent performance and latency skews (comparing to
->> tasklets iser is using today). This was manifested in IOPs test cases
->> where I ran multiple threads with higher queue-depth and not in
->> sanitized pure latency (QD=1) test cases. Unfortunately I didn't have
->> the time to pick it up since.
->>
->> I do have every intention of testing it again with this. If it still
->> exist we will need to find the root-cause of it before converting
->> drivers to use it.
+On 15/11/2015 14:55, Christoph Hellwig wrote:
+> On Sun, Nov 15, 2015 at 11:40:02AM +0200, Sagi Grimberg wrote:
+>> I doubt INT_MAX is useful as a budget in any use-case. it can easily
+>> hog the CPU. If the consumer is given access to poll a CQ, it must be
+>> able to provide some way to budget it. Why not expose a budget argument
+>> to the consumer?
 >
-> Good, this way (inconsistent performance and latency skews) or another
-> (all shines up) -- please
-> let us know your findings, best through commenting within V > 0 the
-> cover letter posts of this series
+> Because in theory we could have a lot of sends completing before
+> we finally need to reap them.  I think that's more of a theoretical
+> than real issue.
+
+Still, processing a CQ possibly forever is not something we'd want to
+enable in an API, if a caller wants to do that anyway, it should loop
+this call...
+
 >
+> My preference would be to simply kill this mode though.  Allocate a IU
+> to each block request in SRP and only use the free_tx list for task
+> management and AEN/req_limit calls.  Then we can use a single CQ
+> and mark the regular I/O requests as unsignalled.
 
-Hi Or & Co,
+It might be better. I'd say that we keep this API and let Bart decide
+if he wants to do that in srp. If he wants to convert srp, we can
+always drop it.
 
-I ran some tests on the iser code with this patchset applied.
-I can confirm that I did not see any performance degradations.
-summary (on my test servers):
-1  LUN:   ~530K  (IOPs)
-2  LUNs:  ~1080K (IOPs)
-4  LUNs:  ~1350K (IOPs)
-8  LUNs:  ~1930K (IOPs)
-16 LUns:  ~2250K (IOPs)
+> AFAICS no other driver wants a similar polling mode as the SRP initiator
+> does for it's send queue.
 
-These results are true both for tasklet and iopoll.
-
-So, I don't have anything smart to say here, the IO
-stack (block, scsi) has gone through major changes since
-the last time I looked into this, so it'll be pretty hard to figure
-out what was the root cause back then...
-
-Sagi.
+iser worked in this mode in the past. But we changed that.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
