@@ -1,38 +1,38 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] [SCSI] st: Remove obsolete scsi_tape.max_pfn
-Date: Sun, 15 Nov 2015 12:48:33 +0100
-Message-ID: <1447588113-21117-1-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:59374 "EHLO
-	michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbbKOLsZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2015 06:48:25 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 1/9] move blk_iopoll to limit and make it generally
+	available
+Date: Sun, 15 Nov 2015 13:51:59 +0100
+Message-ID: <20151115125159.GA2218@lst.de>
+References: <1447422410-20891-1-git-send-email-hch@lst.de> <1447422410-20891-2-git-send-email-hch@lst.de> <CAJ3xEMgj2ycv61K38ZOowTRbrri_UhQgBcaKT0ZnnMHiBrmL5A@mail.gmail.com> <20151114070200.GA27738@lst.de> <564846E9.9070301@dev.mellanox.co.il>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <564846E9.9070301-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-Its last user was removed 10 years ago, in commit
-8b05b773b6030de5 ("[SCSI] convert st to use scsi_execute_async").
+On Sun, Nov 15, 2015 at 10:48:41AM +0200, Sagi Grimberg wrote:
+> I have attempted to convert iser to use blk_iopoll in the past, however
+> I've seen inconsistent performance and latency skews (comparing to
+> tasklets iser is using today). This was manifested in IOPs test cases
+> where I ran multiple threads with higher queue-depth and not in
+> sanitized pure latency (QD=1) test cases. Unfortunately I didn't have
+> the time to pick it up since.
+>
+> I do have every intention of testing it again with this. If it still
+> exist we will need to find the root-cause of it before converting
+> drivers to use it.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/scsi/st.h | 2 --
- 1 file changed, 2 deletions(-)
+Thanks.  If you see issue like that with high iops and high loads
+the next thing to check are:
 
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index b6486b5d86811227..8c732c8de0153eb1 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -148,8 +148,6 @@ struct scsi_tape {
- 	int tape_type;
- 	int long_timeout;	/* timeout for commands known to take long time */
- 
--	unsigned long max_pfn;	/* the maximum page number reachable by the HBA */
--
- 	/* Mode characteristics */
- 	struct st_modedef modes[ST_NBR_MODES];
- 	int current_mode;
--- 
-1.9.1
-
+ a) increasing the budget (both in the main poll loop and the IB
+    code)
+ b) try without the single jiffie time limit in the main softirq handler
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
