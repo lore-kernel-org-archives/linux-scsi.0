@@ -1,31 +1,41 @@
-From: zhongjun@asia.com
-Subject: Greetings.
-Date: Sat, 14 Nov 2015 20:10:06 +0100
-Message-ID: <SERVERcFBv13vEZ1fJT000026a6@plumbengineering.co.nz>
-Reply-To: fuzhong348@gmail.com
+From: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/9] move blk_iopoll to limit and make it generally available
+Date: Sun, 15 Nov 2015 11:04:11 +0200
+Message-ID: <CAJ3xEMgvttM1D3bePz0CWhZAZ3gCSQsf_qgmq9Ny4gzK5d0bXw@mail.gmail.com>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+	<1447422410-20891-2-git-send-email-hch@lst.de>
+	<CAJ3xEMgj2ycv61K38ZOowTRbrri_UhQgBcaKT0ZnnMHiBrmL5A@mail.gmail.com>
+	<20151114070200.GA27738@lst.de>
+	<564846E9.9070301@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 121-73-148-87.cable.telstraclear.net ([121.73.149.87]:11713
-	"EHLO plumbengineering.co.nz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752210AbbKOIv3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Nov 2015 03:51:29 -0500
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <564846E9.9070301-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, axboe-b10kYP2dOMg@public.gmane.org, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <zhongjun@asia.com>
 
-Good Day,
+On Sun, Nov 15, 2015 at 10:48 AM, Sagi Grimberg
+<sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org> wrote:
+> Or is correct,
+>
+> I have attempted to convert iser to use blk_iopoll in the past, however
+> I've seen inconsistent performance and latency skews (comparing to
+> tasklets iser is using today). This was manifested in IOPs test cases
+> where I ran multiple threads with higher queue-depth and not in
+> sanitized pure latency (QD=1) test cases. Unfortunately I didn't have
+> the time to pick it up since.
+>
+> I do have every intention of testing it again with this. If it still
+> exist we will need to find the root-cause of it before converting
+> drivers to use it.
 
-I need a foreign partner for a proposed mutual business, which refers to the transfer of a large sum of money to an account abroad, as the beneficiary of the funds. Everything about this operation, will be legally done without any bridge financial authority, both in my country and yours.I wil indulge you exercise the utmost discretion in all matters concerning this issue. If you are interested, please reply back through my private email address written down, I'll give you more information about myself with the financial institution I represented and the actual amounts involved about the project so I receive your positive response.
-
-Private E-mail: fu.zhong@fuzhongjun.net
-
-
-Friendly greeting,
-
-Executive director.
-
-China Bank.
+Good, this way (inconsistent performance and latency skews) or another
+(all shines up) -- please
+let us know your findings, best through commenting within V > 0 the
+cover letter posts of this series
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
