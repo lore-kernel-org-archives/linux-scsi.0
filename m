@@ -1,54 +1,97 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] ib_srp: initialize dma_length in srp_map_idb
-Date: Sun, 15 Nov 2015 20:20:51 +0200
-Message-ID: <5648CD03.4000206@dev.mellanox.co.il>
-References: <1447610393-2899-1-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:38210 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500AbbKOSU5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2015 13:20:57 -0500
-Received: by wmec201 with SMTP id c201so91830432wme.1
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2015 10:20:55 -0800 (PST)
-In-Reply-To: <1447610393-2899-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH] drivers/message/fusion: constify mpt_pci_driver structures
+Date: Sun, 15 Nov 2015 20:27:19 +0100
+Message-ID: <1447615639-7879-1-git-send-email-Julia.Lawall@lip6.fr>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: kernel-janitors@vger.kernel.org, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
+The mpt_pci_driver structures are never modified, so declare them as const.
 
+Done with the help of Coccinelle.
 
-On 15/11/2015 19:59, Christoph Hellwig wrote:
-> Without this sg_dma_len will return 0 on architectures tha have
-> the dma_length field.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/infiniband/ulp/srp/ib_srp.c | 3 +++
->   1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-> index 32f7962..445c0a6 100644
-> --- a/drivers/infiniband/ulp/srp/ib_srp.c
-> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> @@ -1520,6 +1520,9 @@ static int srp_map_idb(struct srp_rdma_ch *ch, struct srp_request *req,
->   		state.sg_nents = 1;
->   		sg_set_buf(idb_sg, req->indirect_desc, idb_len);
->   		idb_sg->dma_address = req->indirect_dma_addr; /* hack! */
-> +#ifdef CONFIG_NEED_SG_DMA_LENGTH
-> +		idb_sg->dma_length = idb_sg->length;	      /* hack^2 */
-> +#endif
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-:)
+---
+ drivers/message/fusion/mptbase.c |    8 +++++---
+ drivers/message/fusion/mptbase.h |    3 ++-
+ drivers/message/fusion/mptctl.c  |    2 +-
+ drivers/message/fusion/mptlan.c  |    2 +-
+ 4 files changed, 9 insertions(+), 6 deletions(-)
 
-We should really get this properly map/unmap per IO at some point.
-Probably do it in both code paths...
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 5dcc031..451e73c 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -140,7 +140,9 @@ static int			 MptDriverClass[MPT_MAX_PROTOCOL_DRIVERS];
+ static MPT_EVHANDLER		 MptEvHandlers[MPT_MAX_PROTOCOL_DRIVERS];
+ 					/* Reset handler lookup table */
+ static MPT_RESETHANDLER		 MptResetHandlers[MPT_MAX_PROTOCOL_DRIVERS];
+-static struct mpt_pci_driver 	*MptDeviceDriverHandlers[MPT_MAX_PROTOCOL_DRIVERS];
++
++static const
++struct mpt_pci_driver *MptDeviceDriverHandlers[MPT_MAX_PROTOCOL_DRIVERS];
+ 
+ #ifdef CONFIG_PROC_FS
+ static struct proc_dir_entry 	*mpt_proc_root_dir;
+@@ -826,7 +828,7 @@ mpt_reset_deregister(u8 cb_idx)
+  *	@cb_idx: MPT protocol driver index
+  */
+ int
+-mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
++mpt_device_driver_register(const struct mpt_pci_driver *dd_cbfunc, u8 cb_idx)
+ {
+ 	MPT_ADAPTER	*ioc;
+ 	const struct pci_device_id *id;
+@@ -855,7 +857,7 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ void
+ mpt_device_driver_deregister(u8 cb_idx)
+ {
+-	struct mpt_pci_driver *dd_cbfunc;
++	const struct mpt_pci_driver *dd_cbfunc;
+ 	MPT_ADAPTER	*ioc;
+ 
+ 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index 813d463..e29e4be 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -920,7 +920,8 @@ extern int	 mpt_event_register(u8 cb_idx, MPT_EVHANDLER ev_cbfunc);
+ extern void	 mpt_event_deregister(u8 cb_idx);
+ extern int	 mpt_reset_register(u8 cb_idx, MPT_RESETHANDLER reset_func);
+ extern void	 mpt_reset_deregister(u8 cb_idx);
+-extern int	 mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx);
++extern int	 mpt_device_driver_register(const struct mpt_pci_driver *dd_cbfunc,
++					      u8 cb_idx);
+ extern void	 mpt_device_driver_deregister(u8 cb_idx);
+ extern MPT_FRAME_HDR	*mpt_get_msg_frame(u8 cb_idx, MPT_ADAPTER *ioc);
+ extern void	 mpt_free_msg_frame(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf);
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 02b5f69..7d051af 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2990,7 +2990,7 @@ mptctl_remove(struct pci_dev *pdev)
+ {
+ }
+ 
+-static struct mpt_pci_driver mptctl_driver = {
++static const struct mpt_pci_driver mptctl_driver = {
+   .probe		= mptctl_probe,
+   .remove		= mptctl_remove,
+ };
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index cbe9607..4b20af4 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1443,7 +1443,7 @@ mptlan_remove(struct pci_dev *pdev)
+ 	}
+ }
+ 
+-static struct mpt_pci_driver mptlan_driver = {
++static const struct mpt_pci_driver mptlan_driver = {
+ 	.probe		= mptlan_probe,
+ 	.remove		= mptlan_remove,
+ };
 
-Having said that,
-
-Looks fine,
-
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
