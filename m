@@ -1,52 +1,39 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Sun, 15 Nov 2015 15:21:00 +0200
-Message-ID: <564886BC.5020105@dev.mellanox.co.il>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-3-git-send-email-hch@lst.de>
- <564852F2.5080602@dev.mellanox.co.il> <20151115125501.GB2218@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20151115125501.GB2218-jcswGhMUV9g@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] ib_srp: initialize dma_length in srp_map_idb
+Date: Sun, 15 Nov 2015 18:59:53 +0100
+Message-ID: <1447610393-2899-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:48284 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbbKOSEU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2015 13:04:20 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: sagig@dev.mellanox.co.il, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org
 
+Without this sg_dma_len will return 0 on architectures tha have
+the dma_length field.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-On 15/11/2015 14:55, Christoph Hellwig wrote:
-> On Sun, Nov 15, 2015 at 11:40:02AM +0200, Sagi Grimberg wrote:
->> I doubt INT_MAX is useful as a budget in any use-case. it can easily
->> hog the CPU. If the consumer is given access to poll a CQ, it must be
->> able to provide some way to budget it. Why not expose a budget argument
->> to the consumer?
->
-> Because in theory we could have a lot of sends completing before
-> we finally need to reap them.  I think that's more of a theoretical
-> than real issue.
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 32f7962..445c0a6 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1520,6 +1520,9 @@ static int srp_map_idb(struct srp_rdma_ch *ch, struct srp_request *req,
+ 		state.sg_nents = 1;
+ 		sg_set_buf(idb_sg, req->indirect_desc, idb_len);
+ 		idb_sg->dma_address = req->indirect_dma_addr; /* hack! */
++#ifdef CONFIG_NEED_SG_DMA_LENGTH
++		idb_sg->dma_length = idb_sg->length;	      /* hack^2 */
++#endif
+ 		ret = srp_map_finish_fr(&state, ch);
+ 		if (ret < 0)
+ 			return ret;
+-- 
+1.9.1
 
-Still, processing a CQ possibly forever is not something we'd want to
-enable in an API, if a caller wants to do that anyway, it should loop
-this call...
-
->
-> My preference would be to simply kill this mode though.  Allocate a IU
-> to each block request in SRP and only use the free_tx list for task
-> management and AEN/req_limit calls.  Then we can use a single CQ
-> and mark the regular I/O requests as unsignalled.
-
-It might be better. I'd say that we keep this API and let Bart decide
-if he wants to do that in srp. If he wants to convert srp, we can
-always drop it.
-
-> AFAICS no other driver wants a similar polling mode as the SRP initiator
-> does for it's send queue.
-
-iser worked in this mode in the past. But we changed that.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
