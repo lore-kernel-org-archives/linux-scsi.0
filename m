@@ -1,65 +1,41 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 13/32] scsi: hisi_sas: add hisi_hba workqueue
-Date: Mon, 16 Nov 2015 21:05:59 +0800
-Message-ID: <1447679178-220222-14-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v4 32/32] MAINTAINERS: add maintainer for HiSi SAS driver
+Date: Mon, 16 Nov 2015 21:06:18 +0800
+Message-ID: <1447679178-220222-33-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1447679178-220222-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- drivers/scsi/hisi_sas/hisi_sas.h      | 1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 ++++++++
- 2 files changed, 9 insertions(+)
+Add maintainer for HiSilicon SAS driver.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index c50384f..62bc6f3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -72,6 +72,7 @@ struct hisi_hba {
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e9caa4b..c7081bd 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5035,6 +5035,13 @@ F:	include/uapi/linux/if_hippi.h
+ F:	net/802/hippi.c
+ F:	drivers/net/hippi/
  
- 	int n_phy;
- 
-+	struct workqueue_struct *wq;
- 
- 	int slot_index_count;
- 	unsigned long *slot_index_tags;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index d7d9516..7f32c6b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -150,6 +150,12 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 
- 	hisi_sas_slot_index_init(hisi_hba);
- 
-+	hisi_hba->wq = create_singlethread_workqueue(dev_name(dev));
-+	if (!hisi_hba->wq) {
-+		dev_err(dev, "sas_alloc: failed to create workqueue\n");
-+		goto err_out;
-+	}
++HISILICON SAS Controller
++M:	John Garry <john.garry@huawei.com>
++W:	http://www.hisilicon.com
++S:	Supported
++F:	drivers/scsi/hisi_sas/
++F:	Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
 +
- 	return 0;
- err_out:
- 	return -ENOMEM;
-@@ -207,6 +213,8 @@ static void hisi_sas_free(struct hisi_hba *hisi_hba)
- 				  hisi_hba->sata_breakpoint,
- 				  hisi_hba->sata_breakpoint_dma);
- 
-+	if (hisi_hba->wq)
-+		destroy_workqueue(hisi_hba->wq);
- }
- 
- static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ HOST AP DRIVER
+ M:	Jouni Malinen <j@w1.fi>
+ L:	hostap@shmoo.com (subscribers-only)
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
