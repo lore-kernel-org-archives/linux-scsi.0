@@ -1,7 +1,7 @@
 From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 26/32] scsi: hisi_sas: add bcast interrupt handler
-Date: Mon, 16 Nov 2015 21:06:12 +0800
-Message-ID: <1447679178-220222-27-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 28/32] scsi: hisi_sas: add scan finished and start
+Date: Mon, 16 Nov 2015 21:06:14 +0800
+Message-ID: <1447679178-220222-29-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,68 +12,70 @@ To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@publ
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is for expander broadcast event.
+Add functions for scsi host template scan_finished
+and scan_start methods
 
 Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 1723dd4..ad50aed 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1333,6 +1333,35 @@ end:
- 	return res;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index f34f73b..15adeca 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -156,6 +156,7 @@ struct hisi_hba {
+ 	u8 sas_addr[SAS_ADDR_SIZE];
+ 
+ 	int n_phy;
++	int scan_finished;
+ 	spinlock_t lock;
+ 
+ 	struct timer_list timer;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 406ffa0..63ebaf3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -403,6 +403,29 @@ static int hisi_sas_dev_found(struct domain_device *device)
+ 	return 0;
  }
  
-+static irqreturn_t int_bcast_v1_hw(int irq, void *p)
++static void hisi_sas_scan_start(struct Scsi_Host *shost)
 +{
-+	struct hisi_sas_phy *phy = p;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_ha_struct *sha = &hisi_hba->sha;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	int phy_no = sas_phy->id;
-+	u32 irq_value;
-+	irqreturn_t res = IRQ_HANDLED;
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	int i;
 +
-+	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
++	for (i = 0; i < hisi_hba->n_phy; ++i)
++		hisi_sas_bytes_dmaed(hisi_hba, i);
 +
-+	if (!(irq_value & CHL_INT2_SL_RX_BC_ACK_MSK)) {
-+		dev_err(dev, "bcast: irq_value = %x not set enable bit",
-+			irq_value);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
-+
-+	sha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-+
-+end:
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
-+			     CHL_INT2_SL_RX_BC_ACK_MSK);
-+
-+	return res;
++	hisi_hba->scan_finished = 1;
 +}
 +
- static irqreturn_t int_abnormal_v1_hw(int irq, void *p)
++static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
++{
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	struct sas_ha_struct *sha = &hisi_hba->sha;
++
++	if (hisi_hba->scan_finished == 0)
++		return 0;
++
++	sas_drain_work(sha);
++	return 1;
++}
++
+ static void hisi_sas_phyup_work(struct work_struct *work)
  {
- 	struct hisi_sas_phy *phy = p;
-@@ -1438,12 +1467,14 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
- }
- 
- static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
-+	{"Bcast"},
- 	{"Phy Up"},
- 	{"Abnormal"},
- };
- 
- static const char cq_int_name[32] = "cq";
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
-+	int_bcast_v1_hw,
- 	int_phyup_v1_hw,
- 	int_abnormal_v1_hw
- };
+ 	struct hisi_sas_phy *phy =
+@@ -587,6 +610,8 @@ static struct scsi_host_template hisi_sas_sht = {
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+ 	.slave_configure	= sas_slave_configure,
++	.scan_finished		= hisi_sas_scan_finished,
++	.scan_start		= hisi_sas_scan_start,
+ 	.change_queue_depth	= sas_change_queue_depth,
+ 	.bios_param		= sas_bios_param,
+ 	.can_queue		= 1,
 -- 
 1.9.1
 
