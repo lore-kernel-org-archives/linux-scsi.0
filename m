@@ -1,140 +1,178 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 30/32] scsi: hisi_sas: add control phy handler
-Date: Mon, 16 Nov 2015 21:06:16 +0800
-Message-ID: <1447679178-220222-31-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 31/32] scsi: hisi_sas: add fatal irq handler
+Date: Mon, 16 Nov 2015 21:06:17 +0800
+Message-ID: <1447679178-220222-32-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:32279 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbbKPNgK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 08:36:10 -0500
-In-Reply-To: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447679178-220222-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 
-Add method for lldd_control_phy. Currently link rate
-control and spinup hold is unsupported.
+Add handlers for fatal interrupts
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  3 +++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 29 +++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 23 +++++++++++++++++++++++
- 3 files changed, 55 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 119 +++++++++++++++++++++++++++++++++
+ 1 file changed, 119 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 15adeca..5b790c9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -137,6 +137,9 @@ struct hisi_sas_hw {
- 			struct hisi_sas_slot *slot);
- 	int (*slot_complete)(struct hisi_hba *hisi_hba,
- 			     struct hisi_sas_slot *slot, int abort);
-+	void (*phy_enable)(struct hisi_hba *hisi_hba, int phy_no);
-+	void (*phy_disable)(struct hisi_hba *hisi_hba, int phy_no);
-+	void (*phy_hard_reset)(struct hisi_hba *hisi_hba, int phy_no);
- 	void (*free_device)(struct hisi_hba *hisi_hba,
- 			    struct hisi_sas_device *dev);
- 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4ee90eb..1377625 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -552,6 +552,34 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	return hisi_sas_task_exec(task, gfp_flags, 0, NULL);
- }
- 
-+static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
-+				void *funcdata)
-+{
-+	struct sas_ha_struct *sas_ha = sas_phy->ha;
-+	struct hisi_hba *hisi_hba = sas_ha->lldd_ha;
-+	int phy_no = sas_phy->id;
-+
-+	switch (func) {
-+	case PHY_FUNC_HARD_RESET:
-+		hisi_hba->hw->phy_hard_reset(hisi_hba, phy_no);
-+		break;
-+
-+	case PHY_FUNC_LINK_RESET:
-+		hisi_hba->hw->phy_enable(hisi_hba, phy_no);
-+		hisi_hba->hw->phy_hard_reset(hisi_hba, phy_no);
-+		break;
-+
-+	case PHY_FUNC_DISABLE:
-+		hisi_hba->hw->phy_disable(hisi_hba, phy_no);
-+		break;
-+
-+	case PHY_FUNC_SET_LINK_RATE:
-+	case PHY_FUNC_RELEASE_SPINUP_HOLD:
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+	return 0;
-+}
- 
- static void hisi_sas_task_done(struct sas_task *task)
- {
-@@ -932,6 +960,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
- 	.lldd_dev_found		= hisi_sas_dev_found,
- 	.lldd_dev_gone		= hisi_sas_dev_gone,
- 	.lldd_execute_task	= hisi_sas_queue_command,
-+	.lldd_control_phy	= hisi_sas_control_phy,
- 	.lldd_abort_task	= hisi_sas_abort_task,
- 	.lldd_abort_task_set	= hisi_sas_abort_task_set,
- 	.lldd_clear_aca		= hisi_sas_clear_aca,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 64b17a1..a95259c 100644
+index a95259c..e29b7c7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -764,6 +764,14 @@ static void enable_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+@@ -1573,6 +1573,93 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
+ 	return IRQ_HANDLED;
  }
  
-+static void disable_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
++static irqreturn_t fatal_ecc_int_v1_hw(int irq, void *p)
 +{
-+	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 ecc_int = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
 +
-+	cfg &= ~PHY_CFG_ENA_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
++	if (ecc_int & SAS_ECC_INTR_DQ_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal DQ 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_DQ_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_DQ_ECC_ADDR) &
++				HGC_DQ_ECC_ADDR_BAD_MSK) >>
++				HGC_DQ_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal DQ RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_IOST_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal IOST 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_IOST_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR) &
++				HGC_IOST_ECC_ADDR_BAD_MSK) >>
++				HGC_IOST_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal IOST RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_ITCT_ECCBAD_MSK) {
++		u32 addr = (hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR) &
++				HGC_ITCT_ECC_ADDR_BAD_MSK) >>
++				HGC_ITCT_ECC_ADDR_BAD_OFF;
++
++		panic("%s: Fatal TCT RAM ECC interrupt @ 0x%08x\n",
++		      dev_name(dev), addr);
++	}
++
++	if (ecc_int & SAS_ECC_INTR_ITCT_ECC1B_MSK) {
++		u32 ecc_err = hisi_sas_read32(hisi_hba, HGC_ECC_ERR);
++
++		panic("%s: Fatal ITCT 1b ECC interrupt (0x%x)\n",
++		      dev_name(dev), ecc_err);
++	}
++
++	hisi_sas_write32(hisi_hba, SAS_ECC_INTR, ecc_int | 0x3f);
++
++	return IRQ_HANDLED;
 +}
 +
- static void start_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
- {
- 	config_id_frame_v1_hw(hisi_hba, phy_no);
-@@ -772,6 +780,18 @@ static void start_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	enable_phy_v1_hw(hisi_hba, phy_no);
- }
- 
-+static void stop_phy_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
++static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
 +{
-+	disable_phy_v1_hw(hisi_hba, phy_no);
++	struct hisi_hba *hisi_hba = p;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 axi_int = hisi_sas_read32(hisi_hba, ENT_INT_SRC2);
++	u32 axi_info = hisi_sas_read32(hisi_hba, HGC_AXI_FIFO_ERR_INFO);
++
++	if (axi_int & ENT_INT_SRC2_DQ_CFG_ERR_MSK)
++		panic("%s: Fatal DQ_CFG_ERR interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_CQ_CFG_ERR_MSK)
++		panic("%s: Fatal CQ_CFG_ERR interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_AXI_WRONG_INT_MSK)
++		panic("%s: Fatal AXI_WRONG_INT interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	if (axi_int & ENT_INT_SRC2_AXI_OVERLF_INT_MSK)
++		panic("%s: Fatal AXI_OVERLF_INT incorrect interrupt (0x%x)\n",
++		      dev_name(dev), axi_info);
++
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, axi_int | 0x30000000);
++
++	return IRQ_HANDLED;
 +}
 +
-+static void phy_hard_reset_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	stop_phy_v1_hw(hisi_hba, phy_no);
-+	msleep(100);
-+	start_phy_v1_hw(hisi_hba, phy_no);
-+}
-+
- static void start_phys_v1_hw(unsigned long data)
- {
- 	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
-@@ -1687,6 +1707,9 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.get_free_slot = get_free_slot_v1_hw,
- 	.start_delivery = start_delivery_v1_hw,
- 	.slot_complete = slot_complete_v1_hw,
-+	.phy_enable = enable_phy_v1_hw,
-+	.phy_disable = disable_phy_v1_hw,
-+	.phy_hard_reset = phy_hard_reset_v1_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
+ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
+ 	{"Bcast"},
+ 	{"Phy Up"},
+@@ -1580,12 +1667,22 @@ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
  };
+ 
+ static const char cq_int_name[32] = "cq";
++static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
++	"fatal ecc",
++	"fatal axi"
++};
++
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_bcast_v1_hw,
+ 	int_phyup_v1_hw,
+ 	int_abnormal_v1_hw
+ };
+ 
++static irq_handler_t fatal_interrupts[HISI_SAS_MAX_QUEUES] = {
++	fatal_ecc_int_v1_hw,
++	fatal_axi_int_v1_hw
++};
++
+ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
+@@ -1646,6 +1743,28 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		}
+ 	}
+ 
++	idx = (hisi_hba->n_phy * HISI_SAS_PHY_INT_NR) + hisi_hba->queue_count;
++	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++, idx++) {
++		irq = irq_of_parse_and_map(np, idx);
++		if (!irq) {
++			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
++				idx);
++			return -ENOENT;
++		}
++		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
++			       HISI_SAS_NAME_LEN,
++			       "%s %s:%d", dev_name(dev), fatal_int_name[i], i);
++		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
++				      &int_names[idx * HISI_SAS_NAME_LEN],
++				      hisi_hba);
++		if (rc) {
++			dev_err(dev,
++				"irq init: could not request fatal interrupt %d, rc=%d\n",
++				irq, rc);
++			return -ENOENT;
++		}
++	}
++
+ 	return 0;
+ }
+ 
 -- 
 1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
