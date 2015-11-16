@@ -1,163 +1,254 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 03/32] scsi: hisi_sas: add initial bare main driver
-Date: Mon, 16 Nov 2015 21:05:49 +0800
-Message-ID: <1447679178-220222-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 24/32] scsi: hisi_sas: add dev_found and dev_gone
+Date: Mon, 16 Nov 2015 21:06:10 +0800
+Message-ID: <1447679178-220222-25-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:33350 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbbKPNir (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 08:38:47 -0500
 In-Reply-To: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
-List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the initial bare main driver for the
-HiSilicon SAS HBA. This only introduces the changes to
-build and load the main driver module.
-
-The complete driver consists of the core main module and
-also a module platform driver for driving the hw.
-
-The HBA is a platform device.
+Add functions to deal with lldd_dev_found and lldd_dev_gone.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
 ---
- drivers/scsi/Kconfig                  |  1 +
- drivers/scsi/Makefile                 |  1 +
- drivers/scsi/hisi_sas/Kconfig         |  6 +++++
- drivers/scsi/hisi_sas/Makefile        |  1 +
- drivers/scsi/hisi_sas/hisi_sas.h      | 26 +++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 43 +++++++++++++++++++++++++++++++++++
- 6 files changed, 78 insertions(+)
- create mode 100644 drivers/scsi/hisi_sas/Kconfig
- create mode 100644 drivers/scsi/hisi_sas/Makefile
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
+ drivers/scsi/hisi_sas/hisi_sas.h       | 13 +++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 88 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 41 ++++++++++++++++
+ 3 files changed, 142 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5f692ae..1a6a711 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1766,5 +1766,6 @@ source "drivers/scsi/pcmcia/Kconfig"
- source "drivers/scsi/device_handler/Kconfig"
- 
- source "drivers/scsi/osd/Kconfig"
-+source "drivers/scsi/hisi_sas/Kconfig"
- 
- endmenu
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index c14bca4..862ab4e 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -157,6 +157,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
- obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
- 
- obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
-+obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
- 
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-new file mode 100644
-index 0000000..37a0c71
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -0,0 +1,6 @@
-+config SCSI_HISI_SAS
-+	tristate "HiSilicon SAS"
-+	select SCSI_SAS_LIBSAS
-+	select BLK_DEV_INTEGRITY
-+	help
-+		This driver supports HiSilicon's SAS HBA
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-new file mode 100644
-index 0000000..d86b05e
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-new file mode 100644
-index 0000000..a5cec22
---- /dev/null
+index fe4055b..999f319 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -0,0 +1,26 @@
-+/*
-+ * Copyright (c) 2015 Linaro Ltd.
-+ * Copyright (c) 2015 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
+@@ -39,6 +39,7 @@
+ 
+ #define HISI_SAS_NAME_LEN 32
+ 
++struct hisi_hba;
+ 
+ enum {
+ 	PORT_TYPE_SAS = (1U << 1),
+@@ -49,6 +50,13 @@ enum dev_status {
+ 	HISI_SAS_DEV_NORMAL,
+ 	HISI_SAS_DEV_EH,
+ };
 +
-+#ifndef _HISI_SAS_H_
-+#define _HISI_SAS_H_
-+
-+#include <linux/dmapool.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <scsi/libsas.h>
-+
-+#define DRV_VERSION "v1.0"
-+
-+#endif
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-new file mode 100644
-index 0000000..7201363
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -0,0 +1,43 @@
-+/*
-+ * Copyright (c) 2015 Linaro Ltd.
-+ * Copyright (c) 2015 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas"
-+
-+static struct scsi_transport_template *hisi_sas_stt;
-+
-+static struct sas_domain_function_template hisi_sas_transport_ops = {
++enum hisi_sas_dev_type {
++	HISI_SAS_DEV_TYPE_STP = 0,
++	HISI_SAS_DEV_TYPE_SSP,
++	HISI_SAS_DEV_TYPE_SATA,
 +};
 +
-+static __init int hisi_sas_init(void)
+ struct hisi_sas_phy {
+ 	struct hisi_hba	*hisi_hba;
+ 	struct hisi_sas_port	*port;
+@@ -81,6 +89,9 @@ struct hisi_sas_cq {
+ 
+ struct hisi_sas_device {
+ 	enum sas_device_type	dev_type;
++	struct hisi_hba		*hisi_hba;
++	struct domain_device	*sas_device;
++	u64 attached_phy;
+ 	u64 device_id;
+ 	u64 running_req;
+ 	u8 dev_status;
+@@ -113,6 +124,8 @@ struct hisi_sas_tmf_task {
+ 
+ struct hisi_sas_hw {
+ 	int (*hw_init)(struct hisi_hba *hisi_hba);
++	void (*setup_itct)(struct hisi_hba *hisi_hba,
++			   struct hisi_sas_device *device);
+ 	void (*sl_notify)(struct hisi_hba *hisi_hba, int phy_no);
+ 	int (*get_free_slot)(struct hisi_hba *hisi_hba, int *q, int *s);
+ 	void (*start_delivery)(struct hisi_hba *hisi_hba);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index ddbd2b71..d8af4c6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -12,6 +12,9 @@
+ #include "hisi_sas.h"
+ #define DRV_NAME "hisi_sas"
+ 
++#define DEV_IS_EXPANDER(type) \
++	((type == SAS_EDGE_EXPANDER_DEVICE) || \
++	(type == SAS_FANOUT_EXPANDER_DEVICE))
+ 
+ #define DEV_IS_GONE(dev) \
+ 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
+@@ -325,6 +328,72 @@ static void hisi_sas_bytes_dmaed(struct hisi_hba *hisi_hba, int phy_no)
+ 	sas_ha->notify_port_event(sas_phy, PORTE_BYTES_DMAED);
+ }
+ 
++static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
 +{
-+	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct hisi_sas_device *sas_dev = NULL;
++	int i;
 +
-+	hisi_sas_stt = sas_domain_attach_transport(&hisi_sas_transport_ops);
-+	if (!hisi_sas_stt)
-+		return -ENOMEM;
++	spin_lock(&hisi_hba->lock);
++	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
++		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
++			hisi_hba->devices[i].device_id = i;
++			sas_dev = &hisi_hba->devices[i];
++			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++			sas_dev->dev_type = device->dev_type;
++			sas_dev->hisi_hba = hisi_hba;
++			sas_dev->sas_device = device;
++			break;
++		}
++	}
++	spin_unlock(&hisi_hba->lock);
++
++	return sas_dev;
++}
++
++static int hisi_sas_dev_found(struct domain_device *device)
++{
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct domain_device *parent_dev = device->parent;
++	struct hisi_sas_device *sas_dev;
++	struct device *dev = &hisi_hba->pdev->dev;
++
++	sas_dev = hisi_sas_alloc_dev(device);
++	if (!sas_dev) {
++		dev_err(dev, "fail alloc dev: max support %d devices\n",
++			HISI_SAS_MAX_DEVICES);
++		return -EINVAL;
++	}
++
++	device->lldd_dev = sas_dev;
++	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
++
++	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
++		int phy_no;
++		u8 phy_num = parent_dev->ex_dev.num_phys;
++		struct ex_phy *phy;
++
++		for (phy_no = 0; phy_no < phy_num; phy_no++) {
++			phy = &parent_dev->ex_dev.ex_phy[phy_no];
++			if (SAS_ADDR(phy->attached_sas_addr) ==
++				SAS_ADDR(device->sas_addr)) {
++				sas_dev->attached_phy = phy_no;
++				break;
++			}
++		}
++
++		if (phy_no == phy_num) {
++			dev_info(dev, "dev found: no attached "
++				 "dev:%016llx at ex:%016llx\n",
++				 SAS_ADDR(device->sas_addr),
++				 SAS_ADDR(parent_dev->sas_addr));
++			return -EINVAL;
++		}
++	}
 +
 +	return 0;
 +}
 +
-+static __exit void hisi_sas_exit(void)
+ static void hisi_sas_phyup_work(struct work_struct *work)
+ {
+ 	struct hisi_sas_phy *phy =
+@@ -362,6 +431,23 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ 	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
+ }
+ 
++static void hisi_sas_dev_gone(struct domain_device *device)
 +{
-+	sas_release_transport(hisi_sas_stt);
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct device *dev = &hisi_hba->pdev->dev;
++	u64 dev_id = sas_dev->device_id;
++
++	dev_info(dev, "found dev[%lld:%x] is gone\n",
++		 sas_dev->device_id, sas_dev->dev_type);
++
++	hisi_hba->hw->free_device(hisi_hba, sas_dev);
++	device->lldd_dev = NULL;
++	memset(sas_dev, 0, sizeof(*sas_dev));
++	sas_dev->device_id = dev_id;
++	sas_dev->dev_type = SAS_PHY_UNUSED;
++	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
 +}
+ 
+ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ {
+@@ -390,6 +476,8 @@ static struct scsi_host_template hisi_sas_sht = {
+ };
+ 
+ static struct sas_domain_function_template hisi_sas_transport_ops = {
++	.lldd_dev_found		= hisi_sas_dev_found,
++	.lldd_dev_gone		= hisi_sas_dev_gone,
+ 	.lldd_execute_task	= hisi_sas_queue_command,
+ };
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 6711c0a..530e771 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -498,6 +498,46 @@ static void init_id_frame_v1_hw(struct hisi_hba *hisi_hba)
+ 		config_id_frame_v1_hw(hisi_hba, i);
+ }
+ 
++static void setup_itct_v1_hw(struct hisi_hba *hisi_hba,
++			     struct hisi_sas_device *sas_dev)
++{
++	struct domain_device *device = sas_dev->sas_device;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u64 qw0, device_id = sas_dev->device_id;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
 +
-+module_init(hisi_sas_init);
-+module_exit(hisi_sas_exit);
++	memset(itct, 0, sizeof(*itct));
 +
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS controller driver");
-+MODULE_ALIAS("platform:" DRV_NAME);
++	/* qw0 */
++	qw0 = 0;
++	switch (sas_dev->dev_type) {
++	case SAS_END_DEVICE:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
++		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	default:
++		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
++			 sas_dev->dev_type);
++	}
++
++	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
++		(1 << ITCT_HDR_AWT_CONTROL_OFF) |
++		(device->max_linkrate << ITCT_HDR_MAX_CONN_RATE_OFF) |
++		(1 << ITCT_HDR_VALID_LINK_NUM_OFF) |
++		(device->port->id << ITCT_HDR_PORT_ID_OFF));
++	itct->qw0 = cpu_to_le64(qw0);
++
++	/* qw1 */
++	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
++	itct->sas_addr = __swab64(itct->sas_addr);
++
++	/* qw2 */
++	itct->qw2 = cpu_to_le64((500 < ITCT_HDR_IT_NEXUS_LOSS_TL_OFF) |
++				(0xff00 < ITCT_HDR_BUS_INACTIVE_TL_OFF) |
++				(0xff00 < ITCT_HDR_MAX_CONN_TL_OFF) |
++				(0xff00 < ITCT_HDR_REJ_OPEN_TL_OFF));
++}
+ 
+ static void free_device_v1_hw(struct hisi_hba *hisi_hba,
+ 			      struct hisi_sas_device *sas_dev)
+@@ -1452,6 +1492,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ 
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.hw_init = hisi_sas_v1_init,
++	.setup_itct = setup_itct_v1_hw,
+ 	.sl_notify = sl_notify_v1_hw,
+ 	.free_device = free_device_v1_hw,
+ 	.prep_ssp = prep_ssp_v1_hw,
 -- 
 1.9.1
+
