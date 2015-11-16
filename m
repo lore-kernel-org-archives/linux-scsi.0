@@ -1,204 +1,121 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 04/32] scsi: hisi_sas: add scsi host registration
-Date: Mon, 16 Nov 2015 21:05:50 +0800
-Message-ID: <1447679178-220222-5-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v4 08/32] scsi: hisi_sas: add hisi_sas_remove
+Date: Mon, 16 Nov 2015 21:05:54 +0800
+Message-ID: <1447679178-220222-9-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1447679178-220222-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add functionality to register device as a scsi host.
+This patch also includes relevant memory/pool
+free'ing and sas/scsi host removal
 
-The SAS domain transport ops are empty at this point.
-
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |  34 ++++++++++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 116 ++++++++++++++++++++++++++++++++++
- 2 files changed, 150 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 71 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 70 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index a5cec22..6f57fd1 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -23,4 +23,38 @@
- 
- #define DRV_VERSION "v1.0"
- 
-+#define HISI_SAS_MAX_PHYS	9
-+#define HISI_SAS_MAX_ITCT_ENTRIES 4096
-+#define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
-+#define HISI_SAS_COMMAND_ENTRIES 8192
-+
-+struct hisi_sas_phy {
-+	struct asd_sas_phy	sas_phy;
-+};
-+
-+struct hisi_sas_port {
-+	struct asd_sas_port	sas_port;
-+};
-+
-+struct hisi_sas_hw {
-+};
-+
-+struct hisi_hba {
-+	/* This must be the first element, used by SHOST_TO_SAS_HA */
-+	struct sas_ha_struct *p;
-+
-+	struct platform_device *pdev;
-+	u8 sas_addr[SAS_ADDR_SIZE];
-+
-+	int n_phy;
-+
-+	/* SCSI/SAS glue */
-+	struct sas_ha_struct sha;
-+	struct Scsi_Host *shost;
-+	struct hisi_sas_phy phy[HISI_SAS_MAX_PHYS];
-+	struct hisi_sas_port port[HISI_SAS_MAX_PHYS];
-+	const struct hisi_sas_hw *hw;	/* Low level hw interface */
-+};
-+
-+#define HISI_SAS_SGE_PAGE_CNT SCSI_MAX_SG_SEGMENTS
- #endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 7201363..4fd000e 100644
+index 97f5368..b96a2ab 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -14,9 +14,125 @@
+@@ -126,6 +126,59 @@ err_out:
+ 	return -ENOMEM;
+ }
  
- static struct scsi_transport_template *hisi_sas_stt;
- 
-+static struct scsi_host_template hisi_sas_sht = {
-+	.module			= THIS_MODULE,
-+	.name			= DRV_NAME,
-+	.queuecommand		= sas_queuecommand,
-+	.target_alloc		= sas_target_alloc,
-+	.slave_configure	= sas_slave_configure,
-+	.change_queue_depth	= sas_change_queue_depth,
-+	.bios_param		= sas_bios_param,
-+	.can_queue		= 1,
-+	.this_id		= -1,
-+	.sg_tablesize		= SG_ALL,
-+	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.eh_device_reset_handler = sas_eh_device_reset_handler,
-+	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
-+	.target_destroy		= sas_target_destroy,
-+	.ioctl			= sas_ioctl,
-+};
-+
- static struct sas_domain_function_template hisi_sas_transport_ops = {
- };
- 
-+static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
-+					      const struct hisi_sas_hw *hw)
++static void hisi_sas_free(struct hisi_hba *hisi_hba)
 +{
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
++	struct device *dev = &hisi_hba->pdev->dev;
++	int i, s;
 +
-+	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
-+	if (!shost)
-+		goto err_out;
-+	hisi_hba = shost_priv(shost);
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		s = sizeof(struct hisi_sas_cmd_hdr) * HISI_SAS_QUEUE_SLOTS;
++		if (hisi_hba->cmd_hdr[i])
++			dma_free_coherent(dev, s,
++					  hisi_hba->cmd_hdr[i],
++					  hisi_hba->cmd_hdr_dma[i]);
 +
-+	hisi_hba->hw = hw;
-+	hisi_hba->pdev = pdev;
-+	hisi_hba->shost = shost;
-+	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++		s = hisi_hba->hw->complete_hdr_size * HISI_SAS_QUEUE_SLOTS;
++		if (hisi_hba->complete_hdr[i])
++			dma_free_coherent(dev, s,
++					  hisi_hba->complete_hdr[i],
++					  hisi_hba->complete_hdr_dma[i]);
++	}
 +
-+	return shost;
-+err_out:
-+	dev_err(dev, "shost alloc failed\n");
-+	return NULL;
++	dma_pool_destroy(hisi_hba->status_buffer_pool);
++	dma_pool_destroy(hisi_hba->command_table_pool);
++	dma_pool_destroy(hisi_hba->sge_page_pool);
++
++	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
++	if (hisi_hba->itct)
++		dma_free_coherent(dev, s,
++				  hisi_hba->itct, hisi_hba->itct_dma);
++
++	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_iost);
++	if (hisi_hba->iost)
++		dma_free_coherent(dev, s,
++				  hisi_hba->iost, hisi_hba->iost_dma);
++
++	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint);
++	if (hisi_hba->breakpoint)
++		dma_free_coherent(dev, s,
++				  hisi_hba->breakpoint,
++				  hisi_hba->breakpoint_dma);
++
++
++	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
++	if (hisi_hba->initial_fis)
++		dma_free_coherent(dev, s,
++				  hisi_hba->initial_fis,
++				  hisi_hba->initial_fis_dma);
++
++	s = HISI_SAS_COMMAND_ENTRIES * sizeof(struct hisi_sas_breakpoint) * 2;
++	if (hisi_hba->sata_breakpoint)
++		dma_free_coherent(dev, s,
++				  hisi_hba->sata_breakpoint,
++				  hisi_hba->sata_breakpoint_dma);
++
 +}
-+
-+int hisi_sas_probe(struct platform_device *pdev,
-+			 const struct hisi_sas_hw *hw)
+ 
+ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 					      const struct hisi_sas_hw *hw)
+@@ -188,8 +241,10 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	if (IS_ERR(hisi_hba->ctrl))
+ 		goto err_out;
+ 
+-	if (hisi_sas_alloc(hisi_hba, shost))
++	if (hisi_sas_alloc(hisi_hba, shost)) {
++		hisi_sas_free(hisi_hba);
+ 		goto err_out;
++	}
+ 
+ 	return shost;
+ err_out:
+@@ -270,6 +325,20 @@ err_out_ha:
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_probe);
+ 
++int hisi_sas_remove(struct platform_device *pdev)
 +{
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
-+	struct asd_sas_phy **arr_phy;
-+	struct asd_sas_port **arr_port;
-+	struct sas_ha_struct *sha;
-+	int rc, phy_nr, port_nr, i;
++	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
 +
-+	shost = hisi_sas_shost_alloc(pdev, hw);
-+	if (!shost) {
-+		rc = -ENOMEM;
-+		goto err_out_ha;
-+	}
++	scsi_remove_host(sha->core.shost);
++	sas_unregister_ha(sha);
++	sas_remove_host(sha->core.shost);
 +
-+	sha = SHOST_TO_SAS_HA(shost);
-+	hisi_hba = shost_priv(shost);
-+	platform_set_drvdata(pdev, sha);
-+	hisi_hba->n_phy = HISI_SAS_MAX_PHYS;
-+	phy_nr = port_nr = hisi_hba->n_phy;
-+
-+	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
-+	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
-+	if (!arr_phy || !arr_port)
-+		return -ENOMEM;
-+
-+	sha->sas_phy = arr_phy;
-+	sha->sas_port = arr_port;
-+	sha->core.shost = shost;
-+	sha->lldd_ha = hisi_hba;
-+
-+	shost->transportt = hisi_sas_stt;
-+	shost->max_id = HISI_SAS_MAX_DEVICES;
-+	shost->max_lun = ~0;
-+	shost->max_channel = 1;
-+	shost->max_cmd_len = 16;
-+	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
-+	shost->can_queue = HISI_SAS_COMMAND_ENTRIES;
-+	shost->cmd_per_lun = HISI_SAS_COMMAND_ENTRIES;
-+
-+	sha->sas_ha_name = DRV_NAME;
-+	sha->dev = &hisi_hba->pdev->dev;
-+	sha->lldd_module = THIS_MODULE;
-+	sha->sas_addr = &hisi_hba->sas_addr[0];
-+	sha->num_phys = hisi_hba->n_phy;
-+	sha->core.shost = hisi_hba->shost;
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		sha->sas_phy[i] = &hisi_hba->phy[i].sas_phy;
-+		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
-+	}
-+
-+	rc = scsi_add_host(shost, &pdev->dev);
-+	if (rc)
-+		goto err_out_ha;
-+
-+	rc = sas_register_ha(sha);
-+	if (rc)
-+		goto err_out_register_ha;
-+
-+	scsi_scan_host(shost);
-+
++	hisi_sas_free(hisi_hba);
 +	return 0;
-+
-+err_out_register_ha:
-+	scsi_remove_host(shost);
-+err_out_ha:
-+	kfree(shost);
-+	return rc;
 +}
-+EXPORT_SYMBOL_GPL(hisi_sas_probe);
++EXPORT_SYMBOL_GPL(hisi_sas_remove);
 +
  static __init int hisi_sas_init(void)
  {
  	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
