@@ -1,109 +1,205 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 00/32] HiSilicon SAS driver
-Date: Mon, 16 Nov 2015 21:05:46 +0800
-Message-ID: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 01/32] [SCSI] sas: centralise ssp frame information units
+Date: Mon, 16 Nov 2015 21:05:47 +0800
+Message-ID: <1447679178-220222-2-git-send-email-john.garry@huawei.com>
+References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:17827 "EHLO
+Received: from szxga02-in.huawei.com ([119.145.14.65]:24814 "EHLO
 	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbbKPNBT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 08:01:19 -0500
+	with ESMTP id S1752116AbbKPNMy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 08:12:54 -0500
+In-Reply-To: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 
-This is the driver patchset for the HiSilicon SAS driver. The driver
-is a platform driver.
+The xfer_rdy, command, and task frame's iu structures
+are not available in <scsi/sas.h>, but only aic94xx
+driver folder.
+Add them to include/scsi/sas.h
 
-The driver will support multiple revisions of HW. Currently only "v1"
-HW is supported.
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/aic94xx/aic94xx_sas.h | 49 ++++---------------------
+ include/scsi/sas.h                 | 74 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+), 43 deletions(-)
 
-The driver uses libsas framework within the SCSI framework.
-
-The v1 HW supports SSP and SMP, but not STP/SATA.
-
-Differences to v3:
-- update dt bindings for syscon property
-- change SAS and SCSI deregister order
-- remove unused phy struct elements
-
-Differences to v2:
-- update device tree bindings
-- remove while loops when evaluating hba struct
-- remove _lo and _hi DMA struct fields
-- revised spinlock usage
-- fix error handling for when CMPLT_HDR_ERR_RCRD_XFRD set
-- general coding style and cosmetic fixes
-
-Differences to v1:
-- re-arch driver into main module and hw-specific driver module
-- allocate hisi_hba in scsi_host_alloc
-- use of_irq_count get irq count - depends on [1]
-- use syscon to handle ctrl reg access
-- get SAS address from device tree
-- do not set cmd_per_lun to 1
-- remove remove controller id
-- use static wq in phy struct
-- process control phy in caller context
-- fix port->port_attached issue for rmmod
-
-[1] http://www.spinics.net/lists/arm-kernel/msg452833.html
-
-John Garry (32):
-  [SCSI] sas: centralise ssp frame information units
-  devicetree: bindings: scsi: HiSi SAS
-  scsi: hisi_sas: add initial bare main driver
-  scsi: hisi_sas: add scsi host registration
-  scsi: hisi_sas: scan device tree
-  scsi: hisi_sas: add HW DMA structures
-  scsi: hisi_sas: allocate memories and create pools
-  scsi: hisi_sas: add hisi_sas_remove
-  scsi: hisi_sas: add slot init code
-  scsi: hisi_sas: add cq structure initialization
-  scsi: hisi_sas: add phy SAS ADDR initialization
-  scsi: hisi_sas: set dev DMA mask
-  scsi: hisi_sas: add hisi_hba workqueue
-  scsi: hisi_sas: add hisi sas device type
-  scsi: hisi_sas: add phy and port init
-  scsi: hisi_sas: add timer and spinlock init
-  scsi: hisi_sas: add v1 hw module init
-  scsi: hisi_sas: add v1 hardware register definitions
-  scsi: hisi_sas: add v1 HW initialisation code
-  scsi: hisi_sas: add v1 hw interrupt init
-  scsi: hisi_sas: add path from phyup irq to SAS framework
-  scsi: hisi_sas: add ssp command function
-  scsi: hisi_sas: add cq interrupt handler
-  scsi: hisi_sas: add dev_found and dev_gone
-  scsi: hisi_sas: add abnormal irq handler
-  scsi: hisi_sas: add bcast interrupt handler
-  scsi: hisi_sas: add smp protocol support
-  scsi: hisi_sas: add scan finished and start
-  scsi: hisi_sas: add tmf methods
-  scsi: hisi_sas: add control phy handler
-  scsi: hisi_sas: add fatal irq handler
-  MAINTAINERS: add maintainer for HiSi SAS driver
-
- .../devicetree/bindings/scsi/hisilicon-sas.txt     |   69 +
- MAINTAINERS                                        |    7 +
- drivers/scsi/Kconfig                               |    1 +
- drivers/scsi/Makefile                              |    1 +
- drivers/scsi/aic94xx/aic94xx_sas.h                 |   49 +-
- drivers/scsi/hisi_sas/Kconfig                      |    6 +
- drivers/scsi/hisi_sas/Makefile                     |    2 +
- drivers/scsi/hisi_sas/hisi_sas.h                   |  345 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c              | 1362 ++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             | 1866 ++++++++++++++++++++
- include/scsi/sas.h                                 |   74 +
- 11 files changed, 3739 insertions(+), 43 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
- create mode 100644 drivers/scsi/hisi_sas/Kconfig
- create mode 100644 drivers/scsi/hisi_sas/Makefile
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas.h
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_main.c
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-
+diff --git a/drivers/scsi/aic94xx/aic94xx_sas.h b/drivers/scsi/aic94xx/aic94xx_sas.h
+index 912e6b7..101072c 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sas.h
++++ b/drivers/scsi/aic94xx/aic94xx_sas.h
+@@ -327,46 +327,9 @@ struct scb_header {
+ 
+ #define LUN_SIZE                8
+ 
+-/* See SAS spec, task IU
+- */
+-struct ssp_task_iu {
+-	u8     lun[LUN_SIZE];	  /* BE */
+-	u16    _r_a;
+-	u8     tmf;
+-	u8     _r_b;
+-	__be16 tag;		  /* BE */
+-	u8     _r_c[14];
+-} __attribute__ ((packed));
+-
+-/* See SAS spec, command IU
+- */
+-struct ssp_command_iu {
+-	u8     lun[LUN_SIZE];
+-	u8     _r_a;
+-	u8     efb_prio_attr;	  /* enable first burst, task prio & attr */
+-#define EFB_MASK        0x80
+-#define TASK_PRIO_MASK	0x78
+-#define TASK_ATTR_MASK  0x07
+-
+-	u8    _r_b;
+-	u8     add_cdb_len;	  /* in dwords, since bit 0,1 are reserved */
+-	union {
+-		u8     cdb[16];
+-		struct {
+-			__le64 long_cdb_addr;	  /* bus address, LE */
+-			__le32 long_cdb_size;	  /* LE */
+-			u8     _r_c[3];
+-			u8     eol_ds;		  /* eol:6,6, ds:5,4 */
+-		} long_cdb;	  /* sequencer extension */
+-	};
+-} __attribute__ ((packed));
+-
+-struct xfer_rdy_iu {
+-	__be32 requested_offset;  /* BE */
+-	__be32 write_data_len;	  /* BE */
+-	__be32 _r_a;
+-} __attribute__ ((packed));
+-
++#define EFB_MASK                0x80
++#define TASK_PRIO_MASK          0x78
++#define TASK_ATTR_MASK          0x07
+ /* ---------- SCB tasks ---------- */
+ 
+ /* This is both ssp_task and long_ssp_task
+@@ -511,7 +474,7 @@ struct abort_task {
+ 	u8     proto_conn_rate;
+ 	__le32 _r_a;
+ 	struct ssp_frame_hdr ssp_frame;
+-	struct ssp_task_iu ssp_task;
++	struct ssp_tmf_iu ssp_task;
+ 	__le16 sister_scb;
+ 	__le16 conn_handle;
+ 	u8     flags;	  /* ovrd_itnl_timer:3,3, suspend_data_trans:2,2 */
+@@ -549,7 +512,7 @@ struct clear_nexus {
+ 	u8     _r_b[3];
+ 	u8     conn_mask;
+ 	u8     _r_c[19];
+-	struct ssp_task_iu ssp_task; /* LUN and TAG */
++	struct ssp_tmf_iu ssp_task; /* LUN and TAG */
+ 	__le16 _r_d;
+ 	__le16 conn_handle;
+ 	__le64 _r_e;
+@@ -562,7 +525,7 @@ struct initiate_ssp_tmf {
+ 	u8     proto_conn_rate;
+ 	__le32 _r_a;
+ 	struct ssp_frame_hdr ssp_frame;
+-	struct ssp_task_iu ssp_task;
++	struct ssp_tmf_iu ssp_task;
+ 	__le16 sister_scb;
+ 	__le16 conn_handle;
+ 	u8     flags;	  /* itnl override and suspend data tx */
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index 0d2607d..42a84ef 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -344,6 +344,43 @@ struct ssp_response_iu {
+ 	u8     sense_data[0];
+ } __attribute__ ((packed));
+ 
++struct ssp_command_iu {
++	u8     lun[8];
++	u8     _r_a;
++
++	union {
++		struct {
++			u8  attr:3;
++			u8  prio:4;
++			u8  efb:1;
++		};
++		u8 efb_prio_attr;
++	};
++
++	u8    _r_b;
++
++	u8    _r_c:2;
++	u8    add_cdb_len:6;
++
++	u8    cdb[16];
++	u8    add_cdb[0];
++} __attribute__ ((packed));
++
++struct xfer_rdy_iu {
++	__be32 requested_offset;
++	__be32 write_data_len;
++	__be32 _r_a;
++} __attribute__ ((packed));
++
++struct ssp_tmf_iu {
++	u8     lun[8];
++	u16    _r_a;
++	u8     tmf;
++	u8     _r_b;
++	__be16 tag;
++	u8     _r_c[14];
++} __attribute__ ((packed));
++
+ /* ---------- SMP ---------- */
+ 
+ struct report_general_resp {
+@@ -538,6 +575,43 @@ struct ssp_response_iu {
+ 	u8     sense_data[0];
+ } __attribute__ ((packed));
+ 
++struct ssp_command_iu {
++	u8     lun[8];
++	u8     _r_a;
++
++	union {
++		struct {
++			u8  efb:1;
++			u8  prio:4;
++			u8  attr:3;
++		};
++		u8 efb_prio_attr;
++	};
++
++	u8    _r_b;
++
++	u8    add_cdb_len:6;
++	u8    _r_c:2;
++
++	u8    cdb[16];
++	u8    add_cdb[0];
++} __attribute__ ((packed));
++
++struct xfer_rdy_iu {
++	__be32 requested_offset;
++	__be32 write_data_len;
++	__be32 _r_a;
++} __attribute__ ((packed));
++
++struct ssp_tmf_iu {
++	u8     lun[8];
++	u16    _r_a;
++	u8     tmf;
++	u8     _r_b;
++	__be16 tag;
++	u8     _r_c[14];
++} __attribute__ ((packed));
++
+ /* ---------- SMP ---------- */
+ 
+ struct report_general_resp {
 -- 
 1.9.1
 
