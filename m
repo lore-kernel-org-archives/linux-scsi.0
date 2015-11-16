@@ -1,57 +1,42 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 1/2] iscsi-target: Fix rx_login_comp hang after login
- failure
-Date: Mon, 16 Nov 2015 13:27:56 +0200
-Message-ID: <5649BDBC.5080601@dev.mellanox.co.il>
-References: <1447546903-15305-1-git-send-email-nab@daterainc.com>
- <1447546903-15305-2-git-send-email-nab@daterainc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
+ management
+Date: Mon, 16 Nov 2015 13:10:06 +0100
+Message-ID: <5649C79E.9070603@suse.de>
+References: <cover.1444241058.git.lduncan@suse.com>	<f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>	<1444830904.2220.28.camel@HansenPartnership.com>	<561EA018.7020700@suse.com>	<1444848835.2220.50.camel@HansenPartnership.com>	<5644BEE1.3010208@suse.com> <yq1ziyhy38c.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35898 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbbKPL2C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 06:28:02 -0500
-Received: by wmww144 with SMTP id w144so105722986wmw.1
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2015 03:28:00 -0800 (PST)
-In-Reply-To: <1447546903-15305-2-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1ziyhy38c.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Lee Duncan <lduncan@suse.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
 
+On 11/13/2015 10:54 PM, Martin K. Petersen wrote:
+>>>>>> "Lee" =3D=3D Lee Duncan <lduncan@suse.com> writes:
+>=20
+>>> Well, I'm a bit worried about the loss of a monotonically increasin=
+g
+>>> host number from the debugging perspective.  Right now, if you look
+>>> at any log, hostX always refers to one and only one incarnation
+>>> throughout the system lifetime for any given value of X.
+>=20
+> That's a feature that I would absolutely hate to lose. I spend a huge
+> amount of time looking at system logs.
+>=20
+Right. Then have it enabled via a modprobe parameters.
 
+We actually had customers running into a host_no overflow due to
+excessive host allocations and freeing done by iSCSI.
 
-On 15/11/2015 02:21, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> This patch addresses a case where iscsi_target_do_tx_login_io()
-> fails sending the last login response PDU, after the RX/TX
-> threads have already been started.
->
-> The case centers around iscsi_target_rx_thread() not invoking
-> allow_signal(SIGINT) before the send_sig(SIGINT, ...) occurs
-> from the failure path, resulting in RX thread hanging
-> indefinately on iscsi_conn->rx_login_comp.
->
-> Note this bug is a regression introduced by:
->
->    commit e54198657b65625085834847ab6271087323ffea
->    Author: Nicholas Bellinger <nab@linux-iscsi.org>
->    Date:   Wed Jul 22 23:14:19 2015 -0700
->
->        iscsi-target: Fix iscsit_start_kthreads failure OOPs
->
-> To address this bug, complete ->rx_login_complete for good
-> measure in the failure path, and immediately return from
-> RX thread context if connection state did not actually reach
-> full feature phase (TARG_CONN_STATE_LOGGED_IN).
+Cheers,
 
-Hey Nic,
-
-Will it make better sense to start the rx/tx threads after
-the login was completed (i.e. the conn is in state
-TARG_CONN_STATE_LOGGED_IN) instead?
-
-Sagi.
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
