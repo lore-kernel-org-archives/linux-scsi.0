@@ -1,7 +1,7 @@
 From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 15/32] scsi: hisi_sas: add phy and port init
-Date: Mon, 16 Nov 2015 21:06:01 +0800
-Message-ID: <1447679178-220222-16-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 04/32] scsi: hisi_sas: add scsi host registration
+Date: Mon, 16 Nov 2015 21:05:50 +0800
+Message-ID: <1447679178-220222-5-git-send-email-john.garry@huawei.com>
 References: <1447679178-220222-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,93 +12,189 @@ To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@publ
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+Add functionality to register device as a scsi host.
+
+The SAS domain transport ops are empty at this point.
+
 Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      | 15 +++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 31 +++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  34 ++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 116 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 150 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 5ac5a82..3a2400e 100644
+index a5cec22..6f57fd1 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -43,12 +43,27 @@ enum dev_status {
- 	HISI_SAS_DEV_EH,
- };
- struct hisi_sas_phy {
-+	struct hisi_hba	*hisi_hba;
-+	struct hisi_sas_port	*port;
- 	struct asd_sas_phy	sas_phy;
-+	struct sas_identify	identify;
-+	struct timer_list	timer;
-+	u64		port_id; /* from hw */
- 	u64		dev_sas_addr;
-+	u64		phy_type;
-+	u64		frame_rcvd_size;
-+	u8		frame_rcvd[32];
-+	u8		phy_attached;
-+	u8		reserved[3];
-+	enum sas_linkrate	minimum_linkrate;
-+	enum sas_linkrate	maximum_linkrate;
- };
+@@ -23,4 +23,38 @@
  
- struct hisi_sas_port {
- 	struct asd_sas_port	sas_port;
-+	u8	port_attached;
-+	u8	id; /* from hw */
-+	struct list_head	list;
- };
+ #define DRV_VERSION "v1.0"
  
- struct hisi_sas_cq {
++#define HISI_SAS_MAX_PHYS	9
++#define HISI_SAS_MAX_ITCT_ENTRIES 4096
++#define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
++#define HISI_SAS_COMMAND_ENTRIES 8192
++
++struct hisi_sas_phy {
++	struct asd_sas_phy	sas_phy;
++};
++
++struct hisi_sas_port {
++	struct asd_sas_port	sas_port;
++};
++
++struct hisi_sas_hw {
++};
++
++struct hisi_hba {
++	/* This must be the first element, used by SHOST_TO_SAS_HA */
++	struct sas_ha_struct *p;
++
++	struct platform_device *pdev;
++	u8 sas_addr[SAS_ADDR_SIZE];
++
++	int n_phy;
++
++	/* SCSI/SAS glue */
++	struct sas_ha_struct sha;
++	struct Scsi_Host *shost;
++	struct hisi_sas_phy phy[HISI_SAS_MAX_PHYS];
++	struct hisi_sas_port port[HISI_SAS_MAX_PHYS];
++	const struct hisi_sas_hw *hw;	/* Low level hw interface */
++};
++
++#define HISI_SAS_SGE_PAGE_CNT SCSI_MAX_SG_SEGMENTS
+ #endif
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 21111d4..bc41ce4 100644
+index 7201363..4fd000e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -27,6 +27,30 @@ static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
- 		hisi_sas_slot_index_clear(hisi_hba, i);
- }
+@@ -14,9 +14,125 @@
  
-+
-+static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+
-+	phy->hisi_hba = hisi_hba;
-+	phy->port = NULL;
-+	init_timer(&phy->timer);
-+	sas_phy->enabled = (phy_no < hisi_hba->n_phy) ? 1 : 0;
-+	sas_phy->class = SAS;
-+	sas_phy->iproto = SAS_PROTOCOL_ALL;
-+	sas_phy->tproto = 0;
-+	sas_phy->type = PHY_TYPE_PHYSICAL;
-+	sas_phy->role = PHY_ROLE_INITIATOR;
-+	sas_phy->oob_mode = OOB_NOT_CONNECTED;
-+	sas_phy->linkrate = SAS_LINK_RATE_UNKNOWN;
-+	sas_phy->id = phy_no;
-+	sas_phy->sas_addr = &hisi_hba->sas_addr[0];
-+	sas_phy->frame_rcvd = &phy->frame_rcvd[0];
-+	sas_phy->ha = (struct sas_ha_struct *)hisi_hba->shost->hostdata;
-+	sas_phy->lldd_phy = phy;
-+}
-+
  static struct scsi_transport_template *hisi_sas_stt;
  
- static struct scsi_host_template hisi_sas_sht = {
-@@ -57,6 +81,13 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- 	struct platform_device *pdev = hisi_hba->pdev;
- 	struct device *dev = &pdev->dev;
++static struct scsi_host_template hisi_sas_sht = {
++	.module			= THIS_MODULE,
++	.name			= DRV_NAME,
++	.queuecommand		= sas_queuecommand,
++	.target_alloc		= sas_target_alloc,
++	.slave_configure	= sas_slave_configure,
++	.change_queue_depth	= sas_change_queue_depth,
++	.bios_param		= sas_bios_param,
++	.can_queue		= 1,
++	.this_id		= -1,
++	.sg_tablesize		= SG_ALL,
++	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.eh_device_reset_handler = sas_eh_device_reset_handler,
++	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
++	.target_destroy		= sas_target_destroy,
++	.ioctl			= sas_ioctl,
++};
++
+ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ };
  
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		hisi_sas_phy_init(hisi_hba, i);
-+		hisi_hba->port[i].port_attached = 0;
-+		hisi_hba->port[i].id = -1;
-+		INIT_LIST_HEAD(&hisi_hba->port[i].list);
++static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
++					      const struct hisi_sas_hw *hw)
++{
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++
++	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
++	if (!shost)
++		goto err_out;
++	hisi_hba = shost_priv(shost);
++
++	hisi_hba->hw = hw;
++	hisi_hba->pdev = pdev;
++	hisi_hba->shost = shost;
++	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++
++	return shost;
++err_out:
++	dev_err(dev, "shost alloc failed\n");
++	return NULL;
++}
++
++int hisi_sas_probe(struct platform_device *pdev,
++			 const struct hisi_sas_hw *hw)
++{
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++	struct asd_sas_phy **arr_phy;
++	struct asd_sas_port **arr_port;
++	struct sas_ha_struct *sha;
++	int rc, phy_nr, port_nr, i;
++
++	shost = hisi_sas_shost_alloc(pdev, hw);
++	if (!shost) {
++		rc = -ENOMEM;
++		goto err_out_ha;
 +	}
 +
- 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
- 		hisi_hba->devices[i].dev_type = SAS_PHY_UNUSED;
- 		hisi_hba->devices[i].device_id = i;
++	sha = SHOST_TO_SAS_HA(shost);
++	hisi_hba = shost_priv(shost);
++	platform_set_drvdata(pdev, sha);
++	hisi_hba->n_phy = HISI_SAS_MAX_PHYS;
++	phy_nr = port_nr = hisi_hba->n_phy;
++
++	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
++	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
++	if (!arr_phy || !arr_port)
++		return -ENOMEM;
++
++	sha->sas_phy = arr_phy;
++	sha->sas_port = arr_port;
++	sha->core.shost = shost;
++	sha->lldd_ha = hisi_hba;
++
++	shost->transportt = hisi_sas_stt;
++	shost->max_id = HISI_SAS_MAX_DEVICES;
++	shost->max_lun = ~0;
++	shost->max_channel = 1;
++	shost->max_cmd_len = 16;
++	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
++	shost->can_queue = HISI_SAS_COMMAND_ENTRIES;
++	shost->cmd_per_lun = HISI_SAS_COMMAND_ENTRIES;
++
++	sha->sas_ha_name = DRV_NAME;
++	sha->dev = &hisi_hba->pdev->dev;
++	sha->lldd_module = THIS_MODULE;
++	sha->sas_addr = &hisi_hba->sas_addr[0];
++	sha->num_phys = hisi_hba->n_phy;
++	sha->core.shost = hisi_hba->shost;
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		sha->sas_phy[i] = &hisi_hba->phy[i].sas_phy;
++		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
++	}
++
++	rc = scsi_add_host(shost, &pdev->dev);
++	if (rc)
++		goto err_out_ha;
++
++	rc = sas_register_ha(sha);
++	if (rc)
++		goto err_out_register_ha;
++
++	scsi_scan_host(shost);
++
++	return 0;
++
++err_out_register_ha:
++	scsi_remove_host(shost);
++err_out_ha:
++	kfree(shost);
++	return rc;
++}
++EXPORT_SYMBOL_GPL(hisi_sas_probe);
++
+ static __init int hisi_sas_init(void)
+ {
+ 	pr_info("hisi_sas: driver version %s\n", DRV_VERSION);
 -- 
 1.9.1
 
