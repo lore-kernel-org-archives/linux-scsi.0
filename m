@@ -1,60 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH, resend] scsi: advansys: fix big-endian builds
-Date: Mon, 16 Nov 2015 17:49:23 +0100
-Message-ID: <4411376.blKgWIg75B@wuerfel>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH] ib_srp: initialize dma_length in srp_map_idb
+Date: Mon, 16 Nov 2015 09:16:06 -0800
+Message-ID: <564A0F56.8060408@sandisk.com>
+References: <1447610393-2899-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Matthew Wilcox <willy@linux.intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447610393-2899-1-git-send-email-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Building the advansys driver in a big-endian configuration such as
-ARM allmodconfig shows a warning:
+On 11/15/2015 09:59 AM, Christoph Hellwig wrote:
+> Without this sg_dma_len will return 0 on architectures tha have
+> the dma_length field.
+>
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>   drivers/infiniband/ulp/srp/ib_srp.c | 3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index 32f7962..445c0a6 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -1520,6 +1520,9 @@ static int srp_map_idb(struct srp_rdma_ch *ch, struct srp_request *req,
+>   		state.sg_nents = 1;
+>   		sg_set_buf(idb_sg, req->indirect_desc, idb_len);
+>   		idb_sg->dma_address = req->indirect_dma_addr; /* hack! */
+> +#ifdef CONFIG_NEED_SG_DMA_LENGTH
+> +		idb_sg->dma_length = idb_sg->length;	      /* hack^2 */
+> +#endif
+>   		ret = srp_map_finish_fr(&state, ch);
+>   		if (ret < 0)
+>   			return ret;
+>
 
- drivers/scsi/advansys.c: In function 'adv_build_req':
- include/uapi/linux/byteorder/big_endian.h:32:26: warning: large integer implicitly truncated to unsigned type [-Woverflow]
-  #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
- drivers/scsi/advansys.c:7806:22: note: in expansion of macro 'cpu_to_le32'
-   scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
+Hello Christoph,
 
-It turns out that the commit that introduced this used the cpu_to_le32()
-incorrectly on an 8-bit field, which results in the sense_len to always
-be set to zero, as the SCSI_SENSE_BUFFERSIZE value gets moved to upper
-byte of the 32-bit intermediate.
+How about adding "Cc: stable" to this patch such that it not only will 
+be integrated in kernel v4.4 but also in kernel v4.3.1 or later ?
 
-This removes the cpu_to_le32() call to restore the original version.
+Thanks,
 
-I found this only by looking at the compiler output and have not done
-a full review for possible further endianess bugs in the same driver.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 811ddc057aac ("advansys: use DMA-API for mapping sense buffer")
-Cc: stable@vger.kernel.org # v4.2+
----
-Using willy@linux.intel.com, as the address listed in MAINTAINERS
-failed:
-
-Failed to transport message. Message sending failed since the following recipients were rejected by the server: matthew@wil.cx (The server responded: Requested action not taken: mailbox unavailable invalid DNS MX or A/AAAA resource record)
-
-Geert found the same bug and submitted the same patch earlier:
-https://lkml.org/lkml/2015/6/24/89
-
-Neither one has been reviewed or accepted so far. Can we get one of the
-two merged please?
-
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 4305178e4e01..1c1cd657c380 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7803,7 +7803,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 		return ASC_BUSY;
- 	}
- 	scsiqp->sense_addr = cpu_to_le32(sense_addr);
--	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
-+	scsiqp->sense_len = SCSI_SENSE_BUFFERSIZE;
- 
- 	/* Build ADV_SCSI_REQ_Q */
- 
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
