@@ -1,47 +1,59 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCHv4 1/1] SCSI: hosts: update to use ida_simple for host_no
- management
-Date: Mon, 16 Nov 2015 13:47:08 -0800
-Message-ID: <564A4EDC.8060805@suse.com>
-References: <cover.1444241058.git.lduncan@suse.com>
- <f89fe3933ae899dc01f2eddd2a0cefac3383cf3c.1444241058.git.lduncan@suse.com>
- <1444830904.2220.28.camel@HansenPartnership.com> <561EA018.7020700@suse.com>
- <1444848835.2220.50.camel@HansenPartnership.com> <5644BEE1.3010208@suse.com>
- <yq1ziyhy38c.fsf@sermon.lab.mkp.net> <5649C79E.9070603@suse.de>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: [PATCH 2/2] qla2xxx: fix rwlock recursion
+Date: Mon, 16 Nov 2015 23:57:32 +0100
+Message-ID: <564A5F5C.4050209@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5649C79E.9070603@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38550 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbbKPW5e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2015 17:57:34 -0500
+Received: by wmec201 with SMTP id c201so1154156wme.1
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2015 14:57:33 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Himanshu Madhani <himanshu.madhani@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 11/16/2015 04:10 AM, Hannes Reinecke wrote:
-> On 11/13/2015 10:54 PM, Martin K. Petersen wrote:
->>>>>>> "Lee" == Lee Duncan <lduncan@suse.com> writes:
->>
->>>> Well, I'm a bit worried about the loss of a monotonically increasing
->>>> host number from the debugging perspective.  Right now, if you look
->>>> at any log, hostX always refers to one and only one incarnation
->>>> throughout the system lifetime for any given value of X.
->>
->> That's a feature that I would absolutely hate to lose. I spend a huge
->> amount of time looking at system logs.
->>
-> Right. Then have it enabled via a modprobe parameters.
-> 
-> We actually had customers running into a host_no overflow due to
-> excessive host allocations and freeing done by iSCSI.
-> 
-> Cheers,
-> 
-> Hannes
-> 
+Bart Van Assche wrote:
 
-Martin: I will be glad to update the patch, creating a modprobe
-parameter as suggested, if you find this acceptable.
--- 
-Lee Duncan
-SUSE Labs
+> [PATCH] qla2xxx: Fix rwlock recursion
+> 
+> Fixes: 8dfa4b5a9b44 ("qla2xxx: Fix sparse annotation")
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Reported-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_nx.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+> index eb0cc54..b6b4cfd 100644
+> --- a/drivers/scsi/qla2xxx/qla_nx.c
+> +++ b/drivers/scsi/qla2xxx/qla_nx.c
+> @@ -433,7 +433,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, 
+> ulong off_in,
+>   	if (off_in < QLA82XX_PCI_CRBSPACE)
+>   		return -1;
+> 
+> -	*off_out = (void __iomem *)(off_in - QLA82XX_PCI_CRBSPACE);
+> +	off_in -= QLA82XX_PCI_CRBSPACE;
+> 
+>   	/* Try direct map */
+>   	m = &crb_128M_2M_map[CRB_BLK(off_in)].sub_block[CRB_SUBBLK(off_in)];
+> @@ -443,6 +443,7 @@ qla82xx_pci_get_crb_addr_2M(struct qla_hw_data *ha, 
+> ulong off_in,
+>   		return 0;
+>   	}
+>   	/* Not in direct map, use crb window */
+> +	*off_out = (void __iomem *)off_in;
+>   	return 1;
+>   }
+> 
+> -- 
+> 2.1.4
+
+This patch is still pending or it was lost, could you please resend it ?
+
+-thanks-
