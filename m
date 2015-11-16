@@ -1,128 +1,60 @@
-From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
-Date: Mon, 16 Nov 2015 10:38:19 -0600
-Message-ID: <564A067B.8030504@opengridcomputing.com>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-4-git-send-email-hch@lst.de>
- <564851BB.1020004@dev.mellanox.co.il>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH, resend] scsi: advansys: fix big-endian builds
+Date: Mon, 16 Nov 2015 17:49:23 +0100
+Message-ID: <4411376.blKgWIg75B@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <564851BB.1020004-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Matthew Wilcox <willy@linux.intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/15/2015 3:34 AM, Sagi Grimberg wrote:
->
->> +
->> +struct ib_stop_cqe {
->> +    struct ib_cqe    cqe;
->> +    struct completion done;
->> +};
->> +
->> +static void ib_stop_done(struct ib_cq *cq, struct ib_wc *wc)
->> +{
->> +    struct ib_stop_cqe *stop =
->> +        container_of(wc->wr_cqe, struct ib_stop_cqe, cqe);
->> +
->> +    complete(&stop->done);
->> +}
->> +
->> +/*
->> + * Change a queue pair into the error state and wait until all receive
->> + * completions have been processed before destroying it. This avoids 
->> that
->> + * the receive completion handler can access the queue pair while it is
->> + * being destroyed.
->> + */
->> +void ib_drain_qp(struct ib_qp *qp)
->> +{
->> +    struct ib_qp_attr attr = { .qp_state = IB_QPS_ERR };
->> +    struct ib_stop_cqe stop = { };
->> +    struct ib_recv_wr wr, *bad_wr;
->> +    int ret;
->> +
->> +    wr.wr_cqe = &stop.cqe;
->> +    stop.cqe.done = ib_stop_done;
->> +    init_completion(&stop.done);
->> +
->> +    ret = ib_modify_qp(qp, &attr, IB_QP_STATE);
->> +    if (ret) {
->> +        WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
->> +        return;
->> +    }
->> +
->> +    ret = ib_post_recv(qp, &wr, &bad_wr);
->> +    if (ret) {
->> +        WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
->> +        return;
->> +    }
->> +
->> +    wait_for_completion(&stop.done);
->> +}
->
-> This is taken from srp, and srp drains using a recv wr due to a race
-> causing a use-after-free condition in srp which re-posts a recv buffer
-> in the recv completion handler. srp does not really care if there are
-> pending send flushes.
->
-> I'm not sure if there are ordering rules for send/recv queues in
-> terms of flush completions, meaning that even if all recv flushes
-> were consumed maybe there are send flushes still pending.
->
-> I think that for a general drain helper it would be useful to
-> make sure that both the recv _and_ send flushes were drained.
->
-> So, something like:
->
-> void ib_drain_qp(struct ib_qp *qp)
-> {
->     struct ib_qp_attr attr = { .qp_state = IB_QPS_ERR };
->     struct ib_stop_cqe rstop, sstop;
->     struct ib_recv_wr rwr = {}, *bad_rwr;
->     struct ib_send_wr swr = {}, *bad_swr;
->     int ret;
->
->     rwr.wr_cqe = &rstop.cqe;
->     rstop.cqe.done = ib_stop_done;
->     init_completion(&rstop.done);
->
->     swr.wr_cqe = &sstop.cqe;
->     sstop.cqe.done = ib_stop_done;
->     init_completion(&sstop.done);
->
->     ret = ib_modify_qp(qp, &attr, IB_QP_STATE);
->     if (ret) {
->         WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
->         return;
->     }
->
->     ret = ib_post_recv(qp, &rwr, &bad_rwr);
->     if (ret) {
->         WARN_ONCE(ret, "failed to drain recv queue: %d\n", ret);
->         return;
->     }
->
->     ret = ib_post_send(qp, &swr, &bad_swr);
->     if (ret) {
->         WARN_ONCE(ret, "failed to drain send queue: %d\n", ret);
->         return;
->     }
->
->     wait_for_completion(&rstop.done);
->     wait_for_completion(&sstop.done);
-> }
->
-> Thoughts?
+Building the advansys driver in a big-endian configuration such as
+ARM allmodconfig shows a warning:
 
-This won't work for iWARP as per my previous email.  But I will code 
-something up that will.
+ drivers/scsi/advansys.c: In function 'adv_build_req':
+ include/uapi/linux/byteorder/big_endian.h:32:26: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+  #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
+ drivers/scsi/advansys.c:7806:22: note: in expansion of macro 'cpu_to_le32'
+   scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
 
-Steve
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It turns out that the commit that introduced this used the cpu_to_le32()
+incorrectly on an 8-bit field, which results in the sense_len to always
+be set to zero, as the SCSI_SENSE_BUFFERSIZE value gets moved to upper
+byte of the 32-bit intermediate.
+
+This removes the cpu_to_le32() call to restore the original version.
+
+I found this only by looking at the compiler output and have not done
+a full review for possible further endianess bugs in the same driver.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 811ddc057aac ("advansys: use DMA-API for mapping sense buffer")
+Cc: stable@vger.kernel.org # v4.2+
+---
+Using willy@linux.intel.com, as the address listed in MAINTAINERS
+failed:
+
+Failed to transport message. Message sending failed since the following recipients were rejected by the server: matthew@wil.cx (The server responded: Requested action not taken: mailbox unavailable invalid DNS MX or A/AAAA resource record)
+
+Geert found the same bug and submitted the same patch earlier:
+https://lkml.org/lkml/2015/6/24/89
+
+Neither one has been reviewed or accepted so far. Can we get one of the
+two merged please?
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 4305178e4e01..1c1cd657c380 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -7803,7 +7803,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 		return ASC_BUSY;
+ 	}
+ 	scsiqp->sense_addr = cpu_to_le32(sense_addr);
+-	scsiqp->sense_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
++	scsiqp->sense_len = SCSI_SENSE_BUFFERSIZE;
+ 
+ 	/* Build ADV_SCSI_REQ_Q */
+ 
