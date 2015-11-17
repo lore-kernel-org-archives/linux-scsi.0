@@ -1,66 +1,167 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 11/32] scsi: hisi_sas: add phy SAS ADDR initialization
-Date: Wed, 18 Nov 2015 00:50:38 +0800
-Message-ID: <1447779059-136143-12-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v5 06/32] scsi: hisi_sas: add HW DMA structures
+Date: Wed, 18 Nov 2015 00:50:33 +0800
+Message-ID: <1447779059-136143-7-git-send-email-john.garry@huawei.com>
 References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447779059-136143-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-The SAS address for the HBA comes from the device tree.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 12 ++++++++++++
- 2 files changed, 13 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h | 131 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 131 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 315fe46..c50384f 100644
+index 87f4b61..19d40b7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -39,6 +39,7 @@
- 
- struct hisi_sas_phy {
- 	struct asd_sas_phy	sas_phy;
-+	u64		dev_sas_addr;
+@@ -66,5 +66,136 @@ struct hisi_hba {
+ 	const struct hisi_sas_hw *hw;	/* Low level hw interface */
  };
  
- struct hisi_sas_port {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index d10bf24..8cd1b55 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -281,6 +281,16 @@ err_out:
- 	return NULL;
- }
- 
-+static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
-+{
-+	int i;
++/* Generic HW DMA host memory structures */
++/* Delivery queue header */
++struct hisi_sas_cmd_hdr {
++	/* dw0 */
++	__le32 dw0;
 +
-+	for (i = 0; i < hisi_hba->n_phy; i++)
-+		memcpy(&hisi_hba->phy[i].dev_sas_addr,
-+		       hisi_hba->sas_addr,
-+		       SAS_ADDR_SIZE);
-+}
++	/* dw1 */
++	__le32 dw1;
 +
- int hisi_sas_probe(struct platform_device *pdev,
- 			 const struct hisi_sas_hw *hw)
- {
-@@ -334,6 +344,8 @@ int hisi_sas_probe(struct platform_device *pdev,
- 		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
- 	}
- 
-+	hisi_sas_init_add(hisi_hba);
++	/* dw2 */
++	__le32 dw2;
 +
- 	rc = scsi_add_host(shost, &pdev->dev);
- 	if (rc)
- 		goto err_out_ha;
++	/* dw3 */
++	__le32 transfer_tags;
++
++	/* dw4 */
++	__le32 data_transfer_len;
++
++	/* dw5 */
++	__le32 first_burst_num;
++
++	/* dw6 */
++	__le32 sg_len;
++
++	/* dw7 */
++	__le32 dw7;
++
++	/* dw8-9 */
++	__le64 cmd_table_addr;
++
++	/* dw10-11 */
++	__le64 sts_buffer_addr;
++
++	/* dw12-13 */
++	__le64 prd_table_addr;
++
++	/* dw14-15 */
++	__le64 dif_prd_table_addr;
++};
++
++struct hisi_sas_itct {
++	__le64 qw0;
++	__le64 sas_addr;
++	__le64 qw2;
++	__le64 qw3;
++	__le64 qw4;
++	__le64 qw_sata_ncq0_3;
++	__le64 qw_sata_ncq7_4;
++	__le64 qw_sata_ncq11_8;
++	__le64 qw_sata_ncq15_12;
++	__le64 qw_sata_ncq19_16;
++	__le64 qw_sata_ncq23_20;
++	__le64 qw_sata_ncq27_24;
++	__le64 qw_sata_ncq31_28;
++	__le64 qw_non_ncq_iptt;
++	__le64 qw_rsvd0;
++	__le64 qw_rsvd1;
++};
++
++struct hisi_sas_iost {
++	__le64 qw0;
++	__le64 qw1;
++	__le64 qw2;
++	__le64 qw3;
++};
++
++struct hisi_sas_err_record {
++	/* dw0 */
++	__le32 dma_err_type;
++
++	/* dw1 */
++	__le32 trans_tx_fail_type;
++
++	/* dw2 */
++	__le32 trans_rx_fail_type;
++
++	/* dw3 */
++	u32 rsvd;
++};
++
++struct hisi_sas_initial_fis {
++	struct hisi_sas_err_record err_record;
++	struct dev_to_host_fis fis;
++	u32 rsvd[3];
++};
++
++struct hisi_sas_breakpoint {
++	u8	data[128];	/*io128 byte*/
++};
++
++struct hisi_sas_sge {
++	__le64 addr;
++	__le32 page_ctrl_0;
++	__le32 page_ctrl_1;
++	__le32 data_len;
++	__le32 data_off;
++};
++
++struct hisi_sas_command_table_smp {
++	u8 bytes[44];
++};
++
++struct hisi_sas_command_table_stp {
++	struct	host_to_dev_fis command_fis;
++	u8	dummy[12];
++	u8	atapi_cdb[ATAPI_CDB_LEN];
++};
++
+ #define HISI_SAS_SGE_PAGE_CNT SCSI_MAX_SG_SEGMENTS
++struct hisi_sas_sge_page {
++	struct hisi_sas_sge sge[HISI_SAS_SGE_PAGE_CNT];
++};
++
++struct hisi_sas_command_table_ssp {
++	struct ssp_frame_hdr hdr;
++	union {
++		struct {
++			struct ssp_command_iu task;
++			u32 prot[6];
++		};
++		struct ssp_tmf_iu ssp_task;
++		struct xfer_rdy_iu xfer_rdy;
++		struct ssp_response_iu ssp_res;
++	} u;
++};
++
++union hisi_sas_command_table {
++	struct hisi_sas_command_table_ssp ssp;
++	struct hisi_sas_command_table_smp smp;
++	struct hisi_sas_command_table_stp stp;
++};
++
+ #endif
 -- 
 1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
