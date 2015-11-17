@@ -1,34 +1,41 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
-Date: Tue, 17 Nov 2015 09:06:05 -0800
-Message-ID: <564B5E7D.9030309@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 1/9] move blk_iopoll to limit and make it generally
+ available
+Date: Tue, 17 Nov 2015 09:16:28 -0800
+Message-ID: <564B60EC.3050106@sandisk.com>
 References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-4-git-send-email-hch@lst.de>
- <564851BB.1020004@dev.mellanox.co.il>
+ <1447422410-20891-2-git-send-email-hch@lst.de> <564637BC.7080604@sandisk.com>
+ <20151114070248.GB27738@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <564851BB.1020004-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2on0081.outbound.protection.outlook.com ([65.55.169.81]:31710
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751702AbbKQRQe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 12:16:34 -0500
+In-Reply-To: <20151114070248.GB27738@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-rdma@vger.kernel.org, sagig@dev.mellanox.co.il, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/15/2015 01:34 AM, Sagi Grimberg wrote:
-> This is taken from srp, and srp drains using a recv wr due to a race
-> causing a use-after-free condition in srp which re-posts a recv buffer
-> in the recv completion handler.
+On 11/13/2015 11:02 PM, Christoph Hellwig wrote:
+> On Fri, Nov 13, 2015 at 11:19:24AM -0800, Bart Van Assche wrote:
+>> On 11/13/2015 05:46 AM, Christoph Hellwig wrote:
+>>> The new name is irq_poll as iopoll is already taken.  Better suggestions
+>>> welcome.
+>>
+>> Would it be possible to provide more background information about this ?
+>> Which other kernel subsystem is using the name iopoll ?
+>
+> Take a look at include/linux/iopoll.h  - I can't reaplly make much sense
+> of it to be honest, but it's used in a quite a few places.
 
-Hello Sagi,
-
-Would it be possible to clarify this ? Does this refer to an existing 
-race or a race that would only occur if the code would be modified ?
-
-Thanks,
+How about renaming blk_iopoll into blk_poll ? That way the name still 
+refers to the block layer. And although the current implementation 
+performs polling from IRQ context future implementations maybe will 
+allow polling from thread context.
 
 Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
