@@ -1,88 +1,106 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 46/52] atp870u: Use pci_request_regions
-Date: Tue, 17 Nov 2015 19:24:22 +0100
-Message-ID: <1447784668-23713-47-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 12/52] atp870u: Untangle tmpcip #2
+Date: Tue, 17 Nov 2015 19:23:48 +0100
+Message-ID: <1447784668-23713-13-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56556 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56565 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932642AbbKQShl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:37:41 -0500
+	id S932513AbbKQShs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:37:48 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Use pci_request_regions and do it before accessing the I/O ports.
-Also add missing pci_disable_device() call to atp870u_remove().
+Untangle the tmpcip crap so it becomes obvious what ports are accessed.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/scsi/atp870u.c |   25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 4bb0f4f..87dd886 100644
+index 32544bb..4d840a5 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -1276,10 +1276,15 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-                 goto disable_device;
-         }
+@@ -645,7 +645,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 	unsigned int i;//,k;
+ 	unsigned char  j, target_id;
+ 	unsigned char *prd;
+-	unsigned short int tmpcip, w;
++	unsigned short int w;
+ 	unsigned long l, bttl = 0;
+ 	unsigned long  sg_count;
  
-+	err = pci_request_regions(pdev, "atp870u");
-+	if (err)
-+		goto disable_device;
-+	pci_set_master(pdev);
-+
-         err = -ENOMEM;
- 	shpnt = scsi_host_alloc(&atp870u_template, sizeof(struct atp_unit));
- 	if (!shpnt)
--		goto disable_device;
-+		goto release_region;
+@@ -813,7 +813,6 @@ oktosend:
+ 		dev->in_snd[c] = 0;
+ 		return;
+ 	}
+-	tmpcip = dev->pciport[c];
+ 	prd = dev->id[c][target_id].prd_table;
+ 	dev->id[c][target_id].prd_pos = prd;
  
- 	atpdev = shost_priv(shpnt);
- 
-@@ -1582,10 +1587,6 @@ flash_ok_885:
- 
- 	} 
- 		spin_unlock_irqrestore(shpnt->host_lock, flags);
--		if (!request_region(shpnt->io_port, shpnt->n_io_port, "atp870u")) {
--			err = -EBUSY;
--			goto request_io_fail;
--		}
- 		err = scsi_add_host(shpnt, &pdev->dev);
- 		if (err)
- 			goto scsi_add_fail;
-@@ -1596,16 +1597,13 @@ flash_ok_885:
- 		return 0;
- 
- scsi_add_fail:
--	printk("atp870u_prob:scsi_add_fail\n");
--	release_region(shpnt->io_port, shpnt->n_io_port);
--request_io_fail:
--	printk("atp870u_prob:request_io_fail\n");
- 	free_irq(shpnt->irq, shpnt);
- free_tables:
--	printk("atp870u_prob:free_table\n");
- 	atp870u_free_tables(shpnt);
- unregister:
- 	scsi_host_put(shpnt);
-+release_region:
-+	pci_release_regions(pdev);
- disable_device:
- 	pci_disable_device(pdev);
- fail:
-@@ -1696,7 +1694,8 @@ static void atp870u_remove (struct pci_dev *pdev)
- 	
- 	scsi_remove_host(pshost);
- 	free_irq(pshost->irq, pshost);
--	release_region(pshost->io_port, pshost->n_io_port);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
- 	atp870u_free_tables(pshost);
- 	scsi_host_put(pshost);
- }
+@@ -850,34 +849,28 @@ oktosend:
+ 		printk("2. bttl %x, l %x\n",bttl, l);
+ #endif			
+ 	}
+-	tmpcip += 4;
+ #ifdef ED_DBGP		
+-	printk("send_s870: prdaddr_2 0x%8x tmpcip %x target_id %d\n", dev->id[c][target_id].prdaddr,tmpcip,target_id);
++	printk("send_s870: prdaddr_2 0x%8x target_id %d\n", dev->id[c][target_id].prdaddr,target_id);
+ #endif	
+ 	dev->id[c][target_id].prdaddr = dev->id[c][target_id].prd_bus;
+-	outl(dev->id[c][target_id].prdaddr, tmpcip);
+-	tmpcip = tmpcip - 2;
+-	outb(0x06, tmpcip);
+-	outb(0x00, tmpcip);
++	outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
++	outb(0x06, dev->pciport[c] + 2);
++	outb(0x00, dev->pciport[c] + 2);
+ 	if (dev->dev_id == ATP885_DEVID) {
+-		tmpcip--;
+-		j=inb(tmpcip) & 0xf3;
++		j = inb(dev->pciport[c] + 1) & 0xf3;
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
+ 	    	(workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 	   		j |= 0x0c;
+ 		}
+-		outb(j,tmpcip);
+-		tmpcip--;	    	
++		outb(j, dev->pciport[c] + 1);
+ 	} else if ((dev->dev_id == ATP880_DEVID1) ||
+ 	    	   (dev->dev_id == ATP880_DEVID2)) {
+-		tmpcip =tmpcip -2;	
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 			outb((unsigned char) ((inb(dev->ioport[c] - 0x05) & 0x3f) | 0xc0), dev->ioport[c] - 0x05);
+ 		} else {
+ 			outb((unsigned char) (inb(dev->ioport[c] - 0x05) & 0x3f), dev->ioport[c] - 0x05);
+ 		}		
+ 	} else {		
+-		tmpcip =tmpcip -2;
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 			outb((inb(dev->ioport[c] + 0x3a) & 0xf3) | 0x08, dev->ioport[c] + 0x3a);
+ 		} else {
+@@ -889,7 +882,7 @@ oktosend:
+ 		dev->id[c][target_id].dirct = 0x20;
+ 		if (inb(dev->ioport[c] + 0x1c) == 0) {
+ 			outb(0x08, dev->ioport[c] + 0x18);
+-			outb(0x01, tmpcip);
++			outb(0x01, dev->pciport[c]);
+ #ifdef ED_DBGP		
+ 		printk( "start DMA(to target)\n");
+ #endif				
+@@ -901,7 +894,7 @@ oktosend:
+ 	}
+ 	if (inb(dev->ioport[c] + 0x1c) == 0) {
+ 		outb(0x08, dev->ioport[c] + 0x18);
+-		outb(0x09, tmpcip);
++		outb(0x09, dev->pciport[c]);
+ #ifdef ED_DBGP		
+ 		printk( "start DMA(to host)\n");
+ #endif			
 -- 
 Ondrej Zary
 
