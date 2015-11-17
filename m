@@ -1,147 +1,179 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 43/52] atp870u: Remove chip_ver from struct atp_unit
-Date: Tue, 17 Nov 2015 19:24:19 +0100
-Message-ID: <1447784668-23713-44-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 11/52] atp870u: Untangle tmpcip
+Date: Tue, 17 Nov 2015 19:23:47 +0100
+Message-ID: <1447784668-23713-12-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56520 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56508 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932126AbbKQSgo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:36:44 -0500
+	id S932132AbbKQSgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:36:33 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-chip_ver is used for wide chip detection only. Remove it and use a local
-variable instead (for 870; 880 and 885 are always wide).
+Untangle the tmpcip crap so it becomes obvious what ports are accessed.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   39 ++++++++++++++-------------------------
- drivers/scsi/atp870u.h |    1 -
- 2 files changed, 14 insertions(+), 26 deletions(-)
+ drivers/scsi/atp870u.c |   64 +++++++++++++++++-------------------------------
+ 1 file changed, 23 insertions(+), 41 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 128613e..f92eb00 100644
+index 993442d..32544bb 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -954,7 +954,7 @@ static unsigned char fun_scam(struct atp_unit *dev, unsigned short int *val)
- 	return j;
- }
- 
--static void tscam(struct Scsi_Host *host)
-+static void tscam(struct Scsi_Host *host, bool wide_chip)
+@@ -47,7 +47,7 @@ static void tscam_885(void);
+ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
  {
- 
- 	unsigned char i, j, k;
-@@ -983,7 +983,7 @@ static void tscam(struct Scsi_Host *host)
- 	m = 1;
- 	m <<= dev->host_id[0];
- 	j = 16;
--	if (dev->chip_ver < 4) {
-+	if (!wide_chip) {
- 		m |= 0xff00;
- 		j = 8;
- 	}
-@@ -1012,7 +1012,7 @@ static void tscam(struct Scsi_Host *host)
- 			k = i;
+ 	unsigned long flags;
+-	unsigned short int tmpcip, id;
++	unsigned short int id;
+ 	unsigned char i, j, c, target_id, lun,cmdp;
+ 	unsigned char *prd;
+ 	struct scsi_cmnd *workreq;
+@@ -79,30 +79,24 @@ ch_sel:
+ 			if ((inb(dev->ioport[c] + 0x16) & 0x80) == 0)
+ 				outb((inb(dev->ioport[c] + 0x16) | 0x80), dev->ioport[c] + 0x16);
+ 		}		
+-		tmpcip = dev->pciport[c];
+-		if ((inb(tmpcip) & 0x08) != 0)
++		if ((inb(dev->pciport[c]) & 0x08) != 0)
+ 		{
+-			tmpcip += 0x2;
+ 			for (k=0; k < 1000; k++) {
+-				if ((inb(tmpcip) & 0x08) == 0) {
++				if ((inb(dev->pciport[c] + 2) & 0x08) == 0) {
+ 					goto stop_dma;
+ 				}
+-				if ((inb(tmpcip) & 0x01) == 0) {
++				if ((inb(dev->pciport[c] + 2) & 0x01) == 0) {
+ 					goto stop_dma;
+ 				}
+ 			}
  		}
- 		atp_writeb_io(dev, 0, 0x15, k);
--		if (dev->chip_ver == 4)
-+		if (wide_chip)
- 			atp_writeb_io(dev, 0, 0x1b, 0x01);
- 		else
- 			atp_writeb_io(dev, 0, 0x1b, 0x00);
-@@ -1278,25 +1278,11 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	atpdev->pdev = pdev;
- 	pci_set_drvdata(pdev, atpdev);
+ stop_dma:
+-		tmpcip = dev->pciport[c];
+-		outb(0x00, tmpcip);
++		outb(0x00, dev->pciport[c]);
+ 		
+ 		i = inb(dev->ioport[c] + 0x17);
+ 		
+-		if (dev->dev_id == ATP885_DEVID) {
+-			tmpcip += 2;
+-			outb(0x06, tmpcip);
+-			tmpcip -= 2;
+-		}
++		if (dev->dev_id == ATP885_DEVID)
++			outb(0x06, dev->pciport[c] + 2);
  
--	switch (ent->device) {
--	case PCI_DEVICE_ID_ARTOP_AEC7610:
--		atpdev->chip_ver = pdev->revision;
--		break;
--	case PCI_DEVICE_ID_ARTOP_AEC7612UW:
--	case PCI_DEVICE_ID_ARTOP_AEC7612SUW:
--	case ATP880_DEVID1:	
--	case ATP880_DEVID2:	
--	case ATP885_DEVID:	
--		atpdev->chip_ver = 0x04;
--	default:
--		break;
--	}
- 	base_io = pci_resource_start(pdev, 0);
- 	base_io &= 0xfffffff8;
- 	atpdev->baseport = base_io;
+ 		target_id = inb(dev->ioport[c] + 0x15);
  
- 	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
--		atpdev->chip_ver = pdev->revision;
- 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
- 
- 		atpdev->ioport[0] = base_io + 0x40;
-@@ -1390,7 +1376,7 @@ flash_ok_880:
- 
- 		atp_set_host_id(atpdev, 0, host_id);
- 
--		tscam(shpnt);
-+		tscam(shpnt, true);
- 		atp_is(atpdev, 0, true, atp_readb_base(atpdev, 0x3f) & 0x40);
- 		atp_writeb_base(atpdev, 0x38, 0xb0);
- 		shpnt->max_id = 16;
-@@ -1536,6 +1522,11 @@ flash_ok_885:
- 		shpnt->irq = pdev->irq;
- 				
- 	} else {
-+		bool wide_chip =
-+			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7610 &&
-+			 pdev->revision == 4) ||
-+			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7612UW) ||
-+			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7612SUW);
- 		error = pci_read_config_byte(pdev, 0x49, &host_id);
- 
- 		printk(KERN_INFO "   ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: "
-@@ -1569,7 +1560,7 @@ flash_ok_885:
+@@ -303,13 +297,12 @@ stop_dma:
+ 			
+ 			/* enable 32 bit fifo transfer */	
+ 			if (dev->dev_id == ATP885_DEVID) {
+-				tmpcip = dev->pciport[c] + 1;
+-				i=inb(tmpcip) & 0xf3;
++				i=inb(dev->pciport[c] + 1) & 0xf3;
+ 				//j=workreq->cmnd[0];	    		    	
+ 				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+ 				   i |= 0x0c;
+ 				}
+-				outb(i,tmpcip);		    		    		
++				outb(i, dev->pciport[c] + 1);
+ 			} else if ((dev->dev_id == ATP880_DEVID1) ||
+ 	    		    	   (dev->dev_id == ATP880_DEVID2) ) {
+ 				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
+@@ -371,25 +364,20 @@ stop_dma:
+ 					}
+ 				}				
+ 			}
+-			tmpcip = dev->pciport[c] + 0x04;
+-			outl(dev->id[c][target_id].prdaddr, tmpcip);
++			outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 0x04);
+ #ifdef ED_DBGP
+ 			printk("dev->id[%d][%d].prdaddr 0x%8x\n", c, target_id, dev->id[c][target_id].prdaddr);
+ #endif
+-			if (dev->dev_id == ATP885_DEVID) {
+-				tmpcip -= 0x04;
+-			} else {
+-				tmpcip -= 0x02;
+-				outb(0x06, tmpcip);
+-				outb(0x00, tmpcip);
+-				tmpcip -= 0x02;
++			if (dev->dev_id != ATP885_DEVID) {
++				outb(0x06, dev->pciport[c] + 2);
++				outb(0x00, dev->pciport[c] + 2);
+ 			}
+ 			/*
+ 			 *	Check transfer direction
+ 			 */
+ 			if (dev->id[c][target_id].dirct != 0) {
+ 				outb(0x08, dev->ioport[c] + 0x18);
+-				outb(0x01, tmpcip);
++				outb(0x01, dev->pciport[c]);
+ 				dev->in_int[c] = 0;
+ #ifdef ED_DBGP
+ 				printk("status 0x80 return dirct != 0\n");
+@@ -397,7 +385,7 @@ stop_dma:
+ 				goto handled;
+ 			}
+ 			outb(0x08, dev->ioport[c] + 0x18);
+-			outb(0x09, tmpcip);
++			outb(0x09, dev->pciport[c]);
+ 			dev->in_int[c] = 0;
+ #ifdef ED_DBGP
+ 			printk("status 0x80 return dirct = 0\n");
+@@ -484,12 +472,9 @@ go_42:
  		}
- 
- 		spin_lock_irqsave(shpnt->host_lock, flags);
--		if (atpdev->chip_ver > 0x07)	/* check if atp876 chip then enable terminator */
-+		if (pdev->revision > 0x07)	/* check if atp876 chip then enable terminator */
- 			atp_writeb_base(atpdev, 0x3e, 0x00);
-  
- 		k = (atp_readb_base(atpdev, 0x3a) & 0xf3) | 0x10;
-@@ -1580,15 +1571,13 @@ flash_ok_885:
- 		mdelay(32);
- 		atp_set_host_id(atpdev, 0, host_id);
- 
--		tscam(shpnt);
-+
-+		tscam(shpnt, wide_chip);
- 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) | 0x10);
--		atp_is(atpdev, 0, atpdev->chip_ver == 4, 0);
-+		atp_is(atpdev, 0, wide_chip, 0);
- 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) & 0xef);
- 		atp_writeb_base(atpdev, 0x3b, atp_readb_base(atpdev, 0x3b) | 0x20);
--		if (atpdev->chip_ver == 4)
--			shpnt->max_id = 16;
--		else		
--			shpnt->max_id = 8;
-+		shpnt->max_id = wide_chip ? 16 : 8;
- 		shpnt->this_id = host_id;
- 		shpnt->unique_id = base_io;
- 		shpnt->io_port = base_io;
-diff --git a/drivers/scsi/atp870u.h b/drivers/scsi/atp870u.h
-index c3c6c13..8c47c53 100644
---- a/drivers/scsi/atp870u.h
-+++ b/drivers/scsi/atp870u.h
-@@ -32,7 +32,6 @@ struct atp_unit
- 	unsigned char quhd[2];
- 	unsigned char quend[2];
- 	unsigned char global_map[2];
--	unsigned char chip_ver;
- 	unsigned char scam_on;
- 	unsigned char host_id[2];
- 	unsigned int working[2];
+ 		i &= 0x0f;
+ 		if (i == 0x09) {
+-			tmpcip += 4;
+-			outl(dev->id[c][target_id].prdaddr, tmpcip);
+-			tmpcip = tmpcip - 2;
+-			outb(0x06, tmpcip);
+-			outb(0x00, tmpcip);
+-			tmpcip = tmpcip - 2;
++			outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
++			outb(0x06, dev->pciport[c] + 2);
++			outb(0x00, dev->pciport[c] + 2);
+ 			outb(0x41, dev->ioport[c] + 0x10);
+ 			if (dev->dev_id == ATP885_DEVID) {
+ 				k = dev->id[c][target_id].last_len;
+@@ -501,17 +486,14 @@ go_42:
+ 				dev->id[c][target_id].dirct = 0x00;
+ 			}
+ 			outb(0x08, dev->ioport[c] + 0x18);
+-			outb(0x09, tmpcip);
++			outb(0x09, dev->pciport[c]);
+ 			dev->in_int[c] = 0;
+ 			goto handled;
+ 		}
+ 		if (i == 0x08) {
+-			tmpcip += 4;
+-			outl(dev->id[c][target_id].prdaddr, tmpcip);
+-			tmpcip = tmpcip - 2;
+-			outb(0x06, tmpcip);
+-			outb(0x00, tmpcip);
+-			tmpcip = tmpcip - 2;
++			outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
++			outb(0x06, dev->pciport[c] + 2);
++			outb(0x00, dev->pciport[c] + 2);
+ 			outb(0x41, dev->ioport[c] + 0x10);
+ 			if (dev->dev_id == ATP885_DEVID) {		
+ 				k = dev->id[c][target_id].last_len;
+@@ -522,7 +504,7 @@ go_42:
+ 			outb((unsigned char) (inb(dev->ioport[c] + 0x15) | 0x20), dev->ioport[c] + 0x15);
+ 			dev->id[c][target_id].dirct = 0x20;
+ 			outb(0x08, dev->ioport[c] + 0x18);
+-			outb(0x01, tmpcip);
++			outb(0x01, dev->pciport[c]);
+ 			dev->in_int[c] = 0;
+ 			goto handled;
+ 		}
 -- 
 Ondrej Zary
 
