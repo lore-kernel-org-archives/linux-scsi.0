@@ -1,110 +1,117 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 48/52] atp870u: Remove scam_on from struct atp_unit
-Date: Tue, 17 Nov 2015 19:24:24 +0100
-Message-ID: <1447784668-23713-49-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 14/52] atp870u: Remove ugly gotos #2
+Date: Tue, 17 Nov 2015 19:23:50 +0100
+Message-ID: <1447784668-23713-15-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56562 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56571 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932570AbbKQShq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:37:46 -0500
+	id S1753645AbbKQSh4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:37:56 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-scam_on is used only during probe, no need to keep it later.
-
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   14 +++++++-------
- drivers/scsi/atp870u.h |    1 -
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ drivers/scsi/atp870u.c |   68 +++++++++++++++++++++---------------------------
+ 1 file changed, 30 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 4719df4..dd0b520 100644
+index 886e54b..999bf74 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -963,7 +963,7 @@ static unsigned char fun_scam(struct atp_unit *dev, unsigned short int *val)
- 	return j;
- }
- 
--static void tscam(struct Scsi_Host *host, bool wide_chip)
-+static void tscam(struct Scsi_Host *host, bool wide_chip, u8 scam_on)
+@@ -617,7 +617,7 @@ static DEF_SCSI_QCMD(atp870u_queuecommand)
+  */
+ static void send_s870(struct atp_unit *dev,unsigned char c)
  {
- 
- 	unsigned char i, j, k;
-@@ -986,7 +986,7 @@ static void tscam(struct Scsi_Host *host, bool wide_chip)
- 	atp_writeb_io(dev, 0, 2, 0x7f);
- 	atp_writeb_io(dev, 0, 0x11, 0x20);
- 
--	if ((dev->scam_on & 0x40) == 0) {
-+	if ((scam_on & 0x40) == 0) {
- 		return;
- 	}
- 	m = 1;
-@@ -1311,7 +1311,6 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 			"    IO:%lx, IRQ:%d.\n", shpnt->io_port, shpnt->irq);
- 		atpdev->host_id[0] = host_id;
- 
--		atpdev->scam_on = atp_readb_base(atpdev, 0x22);
- 		atpdev->global_map[0] = atp_readb_base(atpdev, 0x35);
- 		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x3c);
- 
-@@ -1384,7 +1383,7 @@ flash_ok_880:
- 
- 		atp_set_host_id(atpdev, 0, host_id);
- 
--		tscam(shpnt, true);
-+		tscam(shpnt, true, atp_readb_base(atpdev, 0x22));
- 		atp_is(atpdev, 0, true, atp_readb_base(atpdev, 0x3f) & 0x40);
- 		atp_writeb_base(atpdev, 0x38, 0xb0);
- 		shpnt->max_id = 16;
-@@ -1509,6 +1508,7 @@ flash_ok_885:
- 		shpnt->max_channel = 1;
- 		shpnt->this_id = atpdev->host_id[0];
- 	} else {
-+		u8 scam_on;
- 		bool wide_chip =
- 			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7610 &&
- 			 pdev->revision == 4) ||
-@@ -1523,12 +1523,12 @@ flash_ok_885:
- 		atpdev->pciport[0] = shpnt->io_port + 0x20;
- 		host_id &= 0x07;
- 		atpdev->host_id[0] = host_id;
--		atpdev->scam_on = atp_readb_pci(atpdev, 0, 2);
-+		scam_on = atp_readb_pci(atpdev, 0, 2);
- 		atpdev->global_map[0] = atp_readb_base(atpdev, 0x2d);
- 		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x2e);
- 
- 		if (atpdev->ultra_map[0] == 0) {
--			atpdev->scam_on = 0x00;
-+			scam_on = 0x00;
- 			atpdev->global_map[0] = 0x20;
- 			atpdev->ultra_map[0] = 0xffff;
+-	struct scsi_cmnd *workreq;
++	struct scsi_cmnd *workreq = NULL;
+ 	unsigned int i;//,k;
+ 	unsigned char  j, target_id;
+ 	unsigned char *prd;
+@@ -638,50 +638,42 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 	if ((dev->last_cmd[c] != 0xff) && ((dev->last_cmd[c] & 0x40) != 0)) {
+ 		dev->last_cmd[c] &= 0x0f;
+ 		workreq = dev->id[c][dev->last_cmd[c]].curr_req;
+-		if (workreq != NULL) {	/* check NULL pointer */
+-		   goto cmd_subp;
+-		}
+-		dev->last_cmd[c] = 0xff;	
+-		if (dev->quhd[c] == dev->quend[c]) {
+-		   	dev->in_snd[c] = 0;
+-		   	return ;
++		if (!workreq) {
++			dev->last_cmd[c] = 0xff;
++			if (dev->quhd[c] == dev->quend[c]) {
++				dev->in_snd[c] = 0;
++				return;
++			}
  		}
-@@ -1551,7 +1551,7 @@ flash_ok_885:
- 		atp_set_host_id(atpdev, 0, host_id);
- 
- 
--		tscam(shpnt, wide_chip);
-+		tscam(shpnt, wide_chip, scam_on);
- 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) | 0x10);
- 		atp_is(atpdev, 0, wide_chip, 0);
- 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) & 0xef);
-diff --git a/drivers/scsi/atp870u.h b/drivers/scsi/atp870u.h
-index f9d62a2..9b839b1 100644
---- a/drivers/scsi/atp870u.h
-+++ b/drivers/scsi/atp870u.h
-@@ -32,7 +32,6 @@ struct atp_unit
- 	unsigned char quhd[2];
- 	unsigned char quend[2];
- 	unsigned char global_map[2];
--	unsigned char scam_on;
- 	unsigned char host_id[2];
- 	unsigned int working[2];
- 	unsigned short wide_id[2];
+ 	}
+-	if ((dev->last_cmd[c] != 0xff) && (dev->working[c] != 0)) {
+-	     	dev->in_snd[c] = 0;
+-	     	return ;
+-	}
+-	dev->working[c]++;
+-	j = dev->quhd[c];
+-	dev->quhd[c]++;
+-	if (dev->quhd[c] >= qcnt) {
+-		dev->quhd[c] = 0;
+-	}
+-	workreq = dev->quereq[c][dev->quhd[c]];
+-	if (dev->id[c][scmd_id(workreq)].curr_req == NULL) {
++	if (!workreq) {
++		if ((dev->last_cmd[c] != 0xff) && (dev->working[c] != 0)) {
++			dev->in_snd[c] = 0;
++			return;
++		}
++		dev->working[c]++;
++		j = dev->quhd[c];
++		dev->quhd[c]++;
++		if (dev->quhd[c] >= qcnt)
++			dev->quhd[c] = 0;
++		workreq = dev->quereq[c][dev->quhd[c]];
++		if (dev->id[c][scmd_id(workreq)].curr_req != NULL) {
++			dev->quhd[c] = j;
++			dev->working[c]--;
++			dev->in_snd[c] = 0;
++			return;
++		}
+ 		dev->id[c][scmd_id(workreq)].curr_req = workreq;
+ 		dev->last_cmd[c] = scmd_id(workreq);
+-		goto cmd_subp;
+-	}	
+-	dev->quhd[c] = j;
+-	dev->working[c]--;
+-	dev->in_snd[c] = 0;
+-	return;
+-cmd_subp:
+-	if ((inb(dev->ioport[c] + 0x1f) & 0xb0) != 0) {
+-		goto abortsnd;
+-	}
+-	if (inb(dev->ioport[c] + 0x1c) == 0) {
+-		goto oktosend;
+ 	}
+-abortsnd:
++	if ((inb(dev->ioport[c] + 0x1f) & 0xb0) != 0 || inb(dev->ioport[c] + 0x1c) != 0) {
+ #ifdef ED_DBGP
+-	printk("Abort to Send\n");
++		printk("Abort to Send\n");
+ #endif
+-	dev->last_cmd[c] |= 0x40;
+-	dev->in_snd[c] = 0;
+-	return;
+-oktosend:
++		dev->last_cmd[c] |= 0x40;
++		dev->in_snd[c] = 0;
++		return;
++	}
+ #ifdef ED_DBGP
+ 	printk("OK to Send\n");
+ 	scmd_printk(KERN_DEBUG, workreq, "CDB");
 -- 
 Ondrej Zary
 
