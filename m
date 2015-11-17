@@ -1,82 +1,56 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 49/52] atp870u: Initialize tables earlier
-Date: Tue, 17 Nov 2015 19:24:25 +0100
-Message-ID: <1447784668-23713-50-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 33/52] atp870u: Fix incorrect writeb_io access to register 0x3a
+Date: Tue, 17 Nov 2015 19:24:09 +0100
+Message-ID: <1447784668-23713-34-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56472 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56475 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301AbbKQSf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:35:56 -0500
+	id S1752301AbbKQSf7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:35:59 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Call _init_tables before chip-specific initialization. This avoids code
-duplication and fixes a bug(?) in 880 init where the values read from flash
-into atpdev->sp are then overwritten by calling init_tables.
+The ioport region is 0x20 bytes long so accessing 0x3a register using
+writeb_io is incorrect. Use writeb_base instead.
+There's no change in behavior as 870 chips have ioport = baseport.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+ drivers/scsi/atp870u.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index dd0b520..3c66539 100644
+index c4a59cc..04b29d3 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -1298,6 +1298,12 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	shpnt->unique_id = shpnt->io_port;
- 	shpnt->irq = pdev->irq;
+@@ -364,9 +364,9 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ 					atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
+ 			} else {				
+ 				if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
+-					atp_writeb_io(dev, c, 0x3a, (atp_readb_io(dev, c, 0x3a) & 0xf3) | 0x08);
++					atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
+ 				else
+-					atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xf3);
++					atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
+ 			}	
+ 			j = 0;
+ 			id = 1;
+@@ -889,9 +889,9 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
+ 			atp_writeb_base(dev, 0x3b, atp_readb_base(dev, 0x3b) & 0x3f);
+ 	} else {		
+ 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a))
+-			atp_writeb_io(dev, c, 0x3a, (atp_readb_io(dev, c, 0x3a) & 0xf3) | 0x08);
++			atp_writeb_base(dev, 0x3a, (atp_readb_base(dev, 0x3a) & 0xf3) | 0x08);
+ 		else
+-			atp_writeb_io(dev, c, 0x3a, atp_readb_io(dev, c, 0x3a) & 0xf3);
++			atp_writeb_base(dev, 0x3a, atp_readb_base(dev, 0x3a) & 0xf3);
+ 	}	
  
-+	err = atp870u_init_tables(shpnt);
-+	if (err) {
-+		dev_err(&pdev->dev, "Unable to allocate tables for Acard controller\n");
-+		goto unregister;
-+	}
-+
- 	if (is880(atpdev)) {
- 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
- 
-@@ -1366,11 +1372,6 @@ flash_ok_880:
- 		atpdev->async[0] = ~(atpdev->async[0]);
- 		atp_writeb_base(atpdev, 0x35, atpdev->global_map[0]);
-  
--		if (atp870u_init_tables(shpnt) < 0) {
--			printk(KERN_ERR "Unable to allocate tables for Acard controller\n");
--			err = -ENOMEM;
--			goto unregister;
--		}
- 
- 		k = atp_readb_base(atpdev, 0x38) & 0x80;
- 		atp_writeb_base(atpdev, 0x38, k);
-@@ -1398,11 +1399,6 @@ flash_ok_880:
- 		atpdev->pciport[0] = shpnt->io_port + 0x40;
- 		atpdev->pciport[1] = shpnt->io_port + 0x50;
- 				
--		if (atp870u_init_tables(shpnt) < 0) {
--			err = -ENOMEM;
--			goto unregister;
--		}
--			
- 		c = atp_readb_base(atpdev, 0x29);
- 		atp_writeb_base(atpdev, 0x29, c | 0x04);
-         	
-@@ -1533,12 +1529,6 @@ flash_ok_885:
- 			atpdev->ultra_map[0] = 0xffff;
- 		}
- 
--
--		if (atp870u_init_tables(shpnt) < 0) {
--			err = -ENOMEM;
--			goto unregister;
--		}
--
- 		if (pdev->revision > 0x07)	/* check if atp876 chip then enable terminator */
- 			atp_writeb_base(atpdev, 0x3e, 0x00);
-  
+ 	if(workreq->sc_data_direction == DMA_TO_DEVICE) {
 -- 
 Ondrej Zary
 
