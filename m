@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 27/32] scsi: hisi_sas: add smp protocol support
-Date: Wed, 18 Nov 2015 00:50:54 +0800
-Message-ID: <1447779059-136143-28-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 25/32] scsi: hisi_sas: add abnormal irq handler
+Date: Wed, 18 Nov 2015 00:50:52 +0800
+Message-ID: <1447779059-136143-26-git-send-email-john.garry@huawei.com>
 References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,176 +12,286 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add support for smp function, which allows devices
-attached by expander to be controlled
+Add abnormal irq handler. This handler is concerned with
+phy down event.
+Also add port formed and port deformed handlers.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  9 ++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 88 ++++++++++++++++++++++++++++++++++
- 3 files changed, 100 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |   2 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 118 +++++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  70 +++++++++++++++++++
+ 3 files changed, 190 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e5ee3c9..f34f73b 100644
+index 999f319..e5ee3c9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -36,6 +36,7 @@
- 		(((sizeof(union hisi_sas_command_table)+3)/4)*4)
- 
- #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
-+#define HISI_SAS_MAX_SMP_RESP_SZ 1028
- 
- #define HISI_SAS_NAME_LEN 32
- 
-@@ -132,6 +133,8 @@ struct hisi_sas_hw {
- 	int (*prep_ssp)(struct hisi_hba *hisi_hba,
- 			struct hisi_sas_slot *slot, int is_tmf,
- 			struct hisi_sas_tmf_task *tmf);
-+	int (*prep_smp)(struct hisi_hba *hisi_hba,
-+			struct hisi_sas_slot *slot);
- 	int (*slot_complete)(struct hisi_hba *hisi_hba,
+@@ -136,6 +136,7 @@ struct hisi_sas_hw {
  			     struct hisi_sas_slot *slot, int abort);
  	void (*free_device)(struct hisi_hba *hisi_hba,
+ 			    struct hisi_sas_device *dev);
++	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
+ 	int complete_hdr_size;
+ };
+ 
+@@ -330,6 +331,7 @@ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+ 
++extern void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy);
+ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
+ 				    struct sas_task *task,
+ 				    struct hisi_sas_slot *slot);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1797851..406ffa0 100644
+index d8af4c6..1797851 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -98,6 +98,12 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+@@ -431,6 +431,72 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ 	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
  }
- EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
  
-+static int hisi_sas_task_prep_smp(struct hisi_hba *hisi_hba,
-+				  struct hisi_sas_slot *slot)
++static void hisi_sas_port_notify_formed(struct asd_sas_phy *sas_phy)
 +{
-+	return hisi_hba->hw->prep_smp(hisi_hba, slot);
++	struct sas_ha_struct *sas_ha = sas_phy->ha;
++	struct hisi_hba *hisi_hba = sas_ha->lldd_ha;
++	struct hisi_sas_phy *phy = sas_phy->lldd_phy;
++	struct asd_sas_port *sas_port = sas_phy->port;
++	struct hisi_sas_port *port = &hisi_hba->port[sas_phy->id];
++	unsigned long flags;
++
++	if (!sas_port)
++		return;
++
++	spin_lock_irqsave(&hisi_hba->lock, flags);
++	port->port_attached = 1;
++	port->id = phy->port_id;
++	phy->port = port;
++	sas_port->lldd_port = port;
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
 +}
 +
- static int hisi_sas_task_prep_ssp(struct hisi_hba *hisi_hba,
- 				  struct hisi_sas_slot *slot, int is_tmf,
- 				  struct hisi_sas_tmf_task *tmf)
-@@ -215,6 +221,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
- 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
++static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, int phy_no,
++				     struct domain_device *device)
++{
++	struct hisi_sas_phy *phy;
++	struct hisi_sas_port *port;
++	struct hisi_sas_slot *slot, *slot2;
++	struct device *dev = &hisi_hba->pdev->dev;
++
++	phy = &hisi_hba->phy[phy_no];
++	port = phy->port;
++	if (!port)
++		return;
++
++	list_for_each_entry_safe(slot, slot2, &port->list, entry) {
++		struct sas_task *task;
++
++		task = slot->task;
++		if (device && task->dev != device)
++			continue;
++
++		dev_info(dev, "Release slot [%d:%d], task [%p]:\n",
++			 slot->dlvry_queue, slot->dlvry_queue_slot, task);
++		hisi_hba->hw->slot_complete(hisi_hba, slot, 1);
++	}
++}
++
++static void hisi_sas_port_notify_deformed(struct asd_sas_phy *sas_phy)
++{
++	struct domain_device *device;
++	struct hisi_sas_phy *phy = sas_phy->lldd_phy;
++	struct asd_sas_port *sas_port = sas_phy->port;
++
++	list_for_each_entry(device, &sas_port->dev_list, dev_list_node)
++		hisi_sas_do_release_task(phy->hisi_hba, sas_phy->id, device);
++}
++
++static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
++			struct domain_device *device)
++{
++	struct asd_sas_port *port = device->port;
++	struct asd_sas_phy *sas_phy;
++
++	list_for_each_entry(sas_phy, &port->phy_list, port_phy_el)
++		hisi_sas_do_release_task(hisi_hba, sas_phy->id, device);
++}
++
+ static void hisi_sas_dev_gone(struct domain_device *device)
+ {
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+@@ -454,6 +520,56 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 	return hisi_sas_task_exec(task, gfp_flags, 0, NULL);
+ }
  
- 	switch (task->task_proto) {
-+	case SAS_PROTOCOL_SMP:
-+		rc = hisi_sas_task_prep_smp(hisi_hba, slot);
-+		break;
- 	case SAS_PROTOCOL_SSP:
- 		rc = hisi_sas_task_prep_ssp(hisi_hba, slot, is_tmf, tmf);
- 		break;
++
++static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
++{
++	hisi_sas_port_notify_formed(sas_phy);
++}
++
++static void hisi_sas_port_deformed(struct asd_sas_phy *sas_phy)
++{
++	hisi_sas_port_notify_deformed(sas_phy);
++}
++
++static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
++{
++	phy->phy_attached = 0;
++	phy->phy_type = 0;
++	phy->port = NULL;
++}
++
++void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
++
++	if (rdy) {
++		/* Phy down but ready */
++		hisi_sas_bytes_dmaed(hisi_hba, phy_no);
++		hisi_sas_port_notify_formed(sas_phy);
++	} else {
++		struct hisi_sas_port *port  = phy->port;
++
++		/* Phy down and not ready */
++		sas_ha->notify_phy_event(sas_phy, PHYE_LOSS_OF_SIGNAL);
++		sas_phy_disconnected(sas_phy);
++
++		if (port) {
++			if (phy->phy_type & PORT_TYPE_SAS) {
++				int port_id = port->id;
++
++				if (!hisi_hba->hw->get_wideport_bitmap(hisi_hba,
++								       port_id))
++					port->port_attached = 0;
++			} else if (phy->phy_type & PORT_TYPE_SATA)
++				port->port_attached = 0;
++		}
++		hisi_sas_phy_disconnected(phy);
++	}
++}
++EXPORT_SYMBOL_GPL(hisi_sas_phy_down);
++
+ static struct scsi_transport_template *hisi_sas_stt;
+ 
+ static struct scsi_host_template hisi_sas_sht = {
+@@ -479,6 +595,8 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_dev_found		= hisi_sas_dev_found,
+ 	.lldd_dev_gone		= hisi_sas_dev_gone,
+ 	.lldd_execute_task	= hisi_sas_queue_command,
++	.lldd_port_formed	= hisi_sas_port_formed,
++	.lldd_port_deformed	= hisi_sas_port_deformed,
+ };
+ 
+ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index ad50aed..64b17a1 100644
+index 530e771..1723dd4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -903,6 +903,74 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+@@ -810,6 +810,18 @@ static void sl_notify_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
-+static int prep_smp_v1_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
++static int get_wideport_bitmap_v1_hw(struct hisi_hba *hisi_hba, int port_id)
 +{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
++	int i, bitmap = 0;
++	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
 +
-+	/*
-+	* DMA-map SMP request, response buffers
-+	*/
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
++			bitmap |= 1 << i;
 +
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
-+	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
-+	}
-+
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (1 << CMD_HDR_MODE_OFF) | /* ini mode */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32(sas_dev->device_id << CMD_HDR_DEVICE_ID_OFF);
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len-4)/4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ/4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
++	return bitmap;
 +}
++
+ /**
+  * This function allocates across all queues to load balance.
+  * Slots are allocated from queues in a round-robin fashion.
+@@ -1321,6 +1333,61 @@ end:
+ 	return res;
+ }
  
- static int prep_ssp_v1_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot, int is_tmf,
-@@ -1223,6 +1291,25 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
- 		sas_ssp_task_response(dev, task, iu);
- 		break;
- 	}
-+	case SAS_PROTOCOL_SMP:
-+	{
-+		void *to;
-+		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
++static irqreturn_t int_abnormal_v1_hw(int irq, void *p)
++{
++	struct hisi_sas_phy *phy = p;
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	struct device *dev = &hisi_hba->pdev->dev;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	u32 irq_value, irq_mask_old;
++	int phy_no = sas_phy->id;
 +
-+		ts->stat = SAM_STAT_GOOD;
-+		to = kmap_atomic(sg_page(sg_resp));
++	/* mask_int0 */
++	irq_mask_old = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT0_MSK);
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK, 0x3fffff);
 +
-+		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
-+			     DMA_FROM_DEVICE);
-+		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
-+			     DMA_TO_DEVICE);
-+		memcpy(to + sg_resp->offset,
-+		       slot->status_buffer +
-+		       sizeof(struct hisi_sas_err_record),
-+		       sg_dma_len(sg_resp));
-+		kunmap_atomic(to);
-+		break;
++	/* read int0 */
++	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT0);
++
++	if (irq_value & CHL_INT0_PHYCTRL_NOTRDY_MSK) {
++		u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
++
++		hisi_sas_phy_down(hisi_hba, phy_no,
++				  (phy_state & 1 << phy_no) ? 1 : 0);
 +	}
- 	case SAS_PROTOCOL_SATA:
- 	case SAS_PROTOCOL_STP:
- 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
-@@ -1595,6 +1682,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.setup_itct = setup_itct_v1_hw,
- 	.sl_notify = sl_notify_v1_hw,
- 	.free_device = free_device_v1_hw,
-+	.prep_smp = prep_smp_v1_hw,
- 	.prep_ssp = prep_ssp_v1_hw,
++
++	if (irq_value & CHL_INT0_ID_TIMEOUT_MSK)
++		dev_dbg(dev, "abnormal: ID_TIMEOUT phy%d identify timeout\n",
++			phy_no);
++
++	if (irq_value & CHL_INT0_DWS_LOST_MSK)
++		dev_dbg(dev, "abnormal: DWS_LOST phy%d dws lost\n", phy_no);
++
++	if (irq_value & CHL_INT0_SN_FAIL_NGR_MSK)
++		dev_dbg(dev, "abnormal: SN_FAIL_NGR phy%d sn fail ngr\n",
++			phy_no);
++
++	if (irq_value & CHL_INT0_SL_IDAF_FAIL_MSK ||
++		irq_value & CHL_INT0_SL_OPAF_FAIL_MSK)
++		dev_dbg(dev, "abnormal: SL_ID/OPAF_FAIL phy%d check adr frm err\n",
++			phy_no);
++
++	if (irq_value & CHL_INT0_SL_PS_FAIL_OFF)
++		dev_dbg(dev, "abnormal: SL_PS_FAIL phy%d fail\n", phy_no);
++
++	/* write to zero */
++	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, irq_value);
++
++	if (irq_value & CHL_INT0_PHYCTRL_NOTRDY_MSK)
++		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK,
++				0x3fffff & ~CHL_INT0_MSK_PHYCTRL_NOTRDY_MSK);
++	else
++		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK,
++				irq_mask_old);
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
+ {
+ 	struct hisi_sas_cq *cq = p;
+@@ -1372,11 +1439,13 @@ static irqreturn_t cq_interrupt_v1_hw(int irq, void *p)
+ 
+ static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
+ 	{"Phy Up"},
++	{"Abnormal"},
+ };
+ 
+ static const char cq_int_name[32] = "cq";
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_phyup_v1_hw,
++	int_abnormal_v1_hw
+ };
+ 
+ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+@@ -1499,6 +1568,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
  	.get_free_slot = get_free_slot_v1_hw,
  	.start_delivery = start_delivery_v1_hw,
+ 	.slot_complete = slot_complete_v1_hw,
++	.get_wideport_bitmap = get_wideport_bitmap_v1_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
+ };
+ 
 -- 
 1.9.1
