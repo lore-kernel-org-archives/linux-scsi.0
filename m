@@ -1,85 +1,249 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 28/32] scsi: hisi_sas: add scan finished and start
-Date: Wed, 18 Nov 2015 00:50:55 +0800
-Message-ID: <1447779059-136143-29-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v5 24/32] scsi: hisi_sas: add dev_found and dev_gone
+Date: Wed, 18 Nov 2015 00:50:51 +0800
+Message-ID: <1447779059-136143-25-git-send-email-john.garry@huawei.com>
 References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1447779059-136143-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: JBottomley-wo1vFcy6AUs@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pawel.moll-5wv7dgnIgG8@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, hare-l3A5Bk7waGM@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add functions for scsi host template scan_finished
-and scan_start methods
+Add functions to deal with lldd_dev_found and lldd_dev_gone.
 
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       | 13 +++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 88 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 41 ++++++++++++++++
+ 3 files changed, 142 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index f34f73b..15adeca 100644
+index fe4055b..999f319 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -156,6 +156,7 @@ struct hisi_hba {
- 	u8 sas_addr[SAS_ADDR_SIZE];
+@@ -39,6 +39,7 @@
  
- 	int n_phy;
-+	int scan_finished;
- 	spinlock_t lock;
+ #define HISI_SAS_NAME_LEN 32
  
- 	struct timer_list timer;
++struct hisi_hba;
+ 
+ enum {
+ 	PORT_TYPE_SAS = (1U << 1),
+@@ -49,6 +50,13 @@ enum dev_status {
+ 	HISI_SAS_DEV_NORMAL,
+ 	HISI_SAS_DEV_EH,
+ };
++
++enum hisi_sas_dev_type {
++	HISI_SAS_DEV_TYPE_STP = 0,
++	HISI_SAS_DEV_TYPE_SSP,
++	HISI_SAS_DEV_TYPE_SATA,
++};
++
+ struct hisi_sas_phy {
+ 	struct hisi_hba	*hisi_hba;
+ 	struct hisi_sas_port	*port;
+@@ -81,6 +89,9 @@ struct hisi_sas_cq {
+ 
+ struct hisi_sas_device {
+ 	enum sas_device_type	dev_type;
++	struct hisi_hba		*hisi_hba;
++	struct domain_device	*sas_device;
++	u64 attached_phy;
+ 	u64 device_id;
+ 	u64 running_req;
+ 	u8 dev_status;
+@@ -113,6 +124,8 @@ struct hisi_sas_tmf_task {
+ 
+ struct hisi_sas_hw {
+ 	int (*hw_init)(struct hisi_hba *hisi_hba);
++	void (*setup_itct)(struct hisi_hba *hisi_hba,
++			   struct hisi_sas_device *device);
+ 	void (*sl_notify)(struct hisi_hba *hisi_hba, int phy_no);
+ 	int (*get_free_slot)(struct hisi_hba *hisi_hba, int *q, int *s);
+ 	void (*start_delivery)(struct hisi_hba *hisi_hba);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 406ffa0..63ebaf3 100644
+index ddbd2b71..d8af4c6 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -403,6 +403,29 @@ static int hisi_sas_dev_found(struct domain_device *device)
- 	return 0;
+@@ -12,6 +12,9 @@
+ #include "hisi_sas.h"
+ #define DRV_NAME "hisi_sas"
+ 
++#define DEV_IS_EXPANDER(type) \
++	((type == SAS_EDGE_EXPANDER_DEVICE) || \
++	(type == SAS_FANOUT_EXPANDER_DEVICE))
+ 
+ #define DEV_IS_GONE(dev) \
+ 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
+@@ -325,6 +328,72 @@ static void hisi_sas_bytes_dmaed(struct hisi_hba *hisi_hba, int phy_no)
+ 	sas_ha->notify_port_event(sas_phy, PORTE_BYTES_DMAED);
  }
  
-+static void hisi_sas_scan_start(struct Scsi_Host *shost)
++static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
 +{
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct hisi_sas_device *sas_dev = NULL;
 +	int i;
 +
-+	for (i = 0; i < hisi_hba->n_phy; ++i)
-+		hisi_sas_bytes_dmaed(hisi_hba, i);
++	spin_lock(&hisi_hba->lock);
++	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
++		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
++			hisi_hba->devices[i].device_id = i;
++			sas_dev = &hisi_hba->devices[i];
++			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++			sas_dev->dev_type = device->dev_type;
++			sas_dev->hisi_hba = hisi_hba;
++			sas_dev->sas_device = device;
++			break;
++		}
++	}
++	spin_unlock(&hisi_hba->lock);
 +
-+	hisi_hba->scan_finished = 1;
++	return sas_dev;
 +}
 +
-+static int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long time)
++static int hisi_sas_dev_found(struct domain_device *device)
 +{
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
-+	struct sas_ha_struct *sha = &hisi_hba->sha;
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct domain_device *parent_dev = device->parent;
++	struct hisi_sas_device *sas_dev;
++	struct device *dev = &hisi_hba->pdev->dev;
 +
-+	if (hisi_hba->scan_finished == 0)
-+		return 0;
++	sas_dev = hisi_sas_alloc_dev(device);
++	if (!sas_dev) {
++		dev_err(dev, "fail alloc dev: max support %d devices\n",
++			HISI_SAS_MAX_DEVICES);
++		return -EINVAL;
++	}
 +
-+	sas_drain_work(sha);
-+	return 1;
++	device->lldd_dev = sas_dev;
++	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
++
++	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
++		int phy_no;
++		u8 phy_num = parent_dev->ex_dev.num_phys;
++		struct ex_phy *phy;
++
++		for (phy_no = 0; phy_no < phy_num; phy_no++) {
++			phy = &parent_dev->ex_dev.ex_phy[phy_no];
++			if (SAS_ADDR(phy->attached_sas_addr) ==
++				SAS_ADDR(device->sas_addr)) {
++				sas_dev->attached_phy = phy_no;
++				break;
++			}
++		}
++
++		if (phy_no == phy_num) {
++			dev_info(dev, "dev found: no attached "
++				 "dev:%016llx at ex:%016llx\n",
++				 SAS_ADDR(device->sas_addr),
++				 SAS_ADDR(parent_dev->sas_addr));
++			return -EINVAL;
++		}
++	}
++
++	return 0;
 +}
 +
  static void hisi_sas_phyup_work(struct work_struct *work)
  {
  	struct hisi_sas_phy *phy =
-@@ -587,6 +610,8 @@ static struct scsi_host_template hisi_sas_sht = {
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
- 	.slave_configure	= sas_slave_configure,
-+	.scan_finished		= hisi_sas_scan_finished,
-+	.scan_start		= hisi_sas_scan_start,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.can_queue		= 1,
+@@ -362,6 +431,23 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ 	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
+ }
+ 
++static void hisi_sas_dev_gone(struct domain_device *device)
++{
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
++	struct device *dev = &hisi_hba->pdev->dev;
++	u64 dev_id = sas_dev->device_id;
++
++	dev_info(dev, "found dev[%lld:%x] is gone\n",
++		 sas_dev->device_id, sas_dev->dev_type);
++
++	hisi_hba->hw->free_device(hisi_hba, sas_dev);
++	device->lldd_dev = NULL;
++	memset(sas_dev, 0, sizeof(*sas_dev));
++	sas_dev->device_id = dev_id;
++	sas_dev->dev_type = SAS_PHY_UNUSED;
++	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++}
+ 
+ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ {
+@@ -390,6 +476,8 @@ static struct scsi_host_template hisi_sas_sht = {
+ };
+ 
+ static struct sas_domain_function_template hisi_sas_transport_ops = {
++	.lldd_dev_found		= hisi_sas_dev_found,
++	.lldd_dev_gone		= hisi_sas_dev_gone,
+ 	.lldd_execute_task	= hisi_sas_queue_command,
+ };
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 6711c0a..530e771 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -498,6 +498,46 @@ static void init_id_frame_v1_hw(struct hisi_hba *hisi_hba)
+ 		config_id_frame_v1_hw(hisi_hba, i);
+ }
+ 
++static void setup_itct_v1_hw(struct hisi_hba *hisi_hba,
++			     struct hisi_sas_device *sas_dev)
++{
++	struct domain_device *device = sas_dev->sas_device;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u64 qw0, device_id = sas_dev->device_id;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
++
++	memset(itct, 0, sizeof(*itct));
++
++	/* qw0 */
++	qw0 = 0;
++	switch (sas_dev->dev_type) {
++	case SAS_END_DEVICE:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
++		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	default:
++		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
++			 sas_dev->dev_type);
++	}
++
++	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
++		(1 << ITCT_HDR_AWT_CONTROL_OFF) |
++		(device->max_linkrate << ITCT_HDR_MAX_CONN_RATE_OFF) |
++		(1 << ITCT_HDR_VALID_LINK_NUM_OFF) |
++		(device->port->id << ITCT_HDR_PORT_ID_OFF));
++	itct->qw0 = cpu_to_le64(qw0);
++
++	/* qw1 */
++	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
++	itct->sas_addr = __swab64(itct->sas_addr);
++
++	/* qw2 */
++	itct->qw2 = cpu_to_le64((500 < ITCT_HDR_IT_NEXUS_LOSS_TL_OFF) |
++				(0xff00 < ITCT_HDR_BUS_INACTIVE_TL_OFF) |
++				(0xff00 < ITCT_HDR_MAX_CONN_TL_OFF) |
++				(0xff00 < ITCT_HDR_REJ_OPEN_TL_OFF));
++}
+ 
+ static void free_device_v1_hw(struct hisi_hba *hisi_hba,
+ 			      struct hisi_sas_device *sas_dev)
+@@ -1452,6 +1492,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ 
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.hw_init = hisi_sas_v1_init,
++	.setup_itct = setup_itct_v1_hw,
+ 	.sl_notify = sl_notify_v1_hw,
+ 	.free_device = free_device_v1_hw,
+ 	.prep_ssp = prep_ssp_v1_hw,
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
