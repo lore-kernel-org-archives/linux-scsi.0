@@ -1,229 +1,88 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 13/52] atp870u: Remove ugly gotos
-Date: Tue, 17 Nov 2015 19:23:49 +0100
-Message-ID: <1447784668-23713-14-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 46/52] atp870u: Use pci_request_regions
+Date: Tue, 17 Nov 2015 19:24:22 +0100
+Message-ID: <1447784668-23713-47-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56568 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56556 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932558AbbKQShy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:37:54 -0500
+	id S932642AbbKQShl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:37:41 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+Use pci_request_regions and do it before accessing the I/O ports.
+Also add missing pci_disable_device() call to atp870u_remove().
+
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   84 +++++++++++++++++-------------------------------
- 1 file changed, 30 insertions(+), 54 deletions(-)
+ drivers/scsi/atp870u.c |   21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 4d840a5..886e54b 100644
+index 4bb0f4f..87dd886 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -55,20 +55,17 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- #ifdef ED_DBGP
- 	unsigned long l;
- #endif
--	int errstus;
- 	struct Scsi_Host *host = dev_id;
- 	struct atp_unit *dev = (struct atp_unit *)&host->hostdata;
+@@ -1276,10 +1276,15 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+                 goto disable_device;
+         }
  
- 	for (c = 0; c < 2; c++) {
- 		j = inb(dev->ioport[c] + 0x1f);
- 		if ((j & 0x80) != 0)
--		{			
--	   		goto ch_sel;
--		}
-+			break;
- 		dev->in_int[c] = 0;
- 	}
--	return IRQ_NONE;
--ch_sel:
-+	if ((j & 0x80) == 0)
-+		return IRQ_NONE;
- #ifdef ED_DBGP	
- 	printk("atp870u_intr_handle enter\n");
- #endif	
-@@ -82,15 +79,12 @@ ch_sel:
- 		if ((inb(dev->pciport[c]) & 0x08) != 0)
- 		{
- 			for (k=0; k < 1000; k++) {
--				if ((inb(dev->pciport[c] + 2) & 0x08) == 0) {
--					goto stop_dma;
--				}
--				if ((inb(dev->pciport[c] + 2) & 0x01) == 0) {
--					goto stop_dma;
--				}
-+				if ((inb(dev->pciport[c] + 2) & 0x08) == 0)
-+					break;
-+				if ((inb(dev->pciport[c] + 2) & 0x01) == 0)
-+					break;
- 			}
- 		}
--stop_dma:
- 		outb(0x00, dev->pciport[c]);
- 		
- 		i = inb(dev->ioport[c] + 0x17);
-@@ -170,13 +164,13 @@ stop_dma:
- #ifdef ED_DBGP
- 				printk("Status 0x85 return\n");
- #endif				
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 
- 		if (i == 0x40) {
- 		     dev->last_cmd[c] |= 0x40;
- 		     dev->in_int[c] = 0;
--		     goto handled;
-+		     return IRQ_HANDLED;
- 		}
- 
- 		if (i == 0x21) {
-@@ -194,7 +188,7 @@ stop_dma:
- 			outb(0x41, dev->ioport[c] + 0x10);
- 			outb(0x08, dev->ioport[c] + 0x18);
- 			dev->in_int[c] = 0;
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 
- 		if (dev->dev_id == ATP885_DEVID) {
-@@ -231,7 +225,7 @@ stop_dma:
- 					dev->id[c][target_id].last_len = adrcnt;
- 					outb(0x08, dev->ioport[c] + 0x18);
- 					dev->in_int[c] = 0;
--					goto handled;
-+					return IRQ_HANDLED;
- 				} else {
- #ifdef ED_DBGP
- 					printk("cmdp != 0x41\n");
-@@ -243,7 +237,7 @@ stop_dma:
- 					outb(0x00, dev->ioport[c] + 0x14);
- 					outb(0x08, dev->ioport[c] + 0x18);
- 					dev->in_int[c] = 0;
--					goto handled;
-+					return IRQ_HANDLED;
- 				}
- 			}
- 			if (dev->last_cmd[c] != 0xff) {
-@@ -336,7 +330,7 @@ stop_dma:
- #ifdef ED_DBGP
- 				printk("dev->id[c][target_id].last_len = 0\n");
- #endif					
--				goto handled;
-+				return IRQ_HANDLED;
- 			}
- #ifdef ED_DBGP
- 			printk("target_id = %d adrcnt = %d\n",target_id,adrcnt);
-@@ -382,7 +376,7 @@ stop_dma:
- #ifdef ED_DBGP
- 				printk("status 0x80 return dirct != 0\n");
- #endif				
--				goto handled;
-+				return IRQ_HANDLED;
- 			}
- 			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x09, dev->pciport[c]);
-@@ -390,7 +384,7 @@ stop_dma:
- #ifdef ED_DBGP
- 			printk("status 0x80 return dirct = 0\n");
- #endif			
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 
- 		/*
-@@ -399,27 +393,19 @@ stop_dma:
- 
- 		workreq = dev->id[c][target_id].curr_req;
- 
--		if (i == 0x42) {
--			if ((dev->last_cmd[c] & 0xf0) != 0x40)
--			{
--			   dev->last_cmd[c] = 0xff;
--			}
--			errstus = 0x02;
--			workreq->result = errstus;
--			goto go_42;
--		}
--		if (i == 0x16) {
-+		if (i == 0x42 || i == 0x16) {
- 			if ((dev->last_cmd[c] & 0xf0) != 0x40) {
- 			   dev->last_cmd[c] = 0xff;
- 			}
--			errstus = 0;
--			errstus = inb(dev->ioport[c] + 0x0f);
--			if (((dev->r1f[c][target_id] & 0x10) != 0)&&(dev->dev_id==ATP885_DEVID)) {
--			   printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
--			   errstus = 0x02;
--			}
--			workreq->result = errstus;
--go_42:
-+			if (i == 0x16) {
-+				workreq->result = inb(dev->ioport[c] + 0x0f);
-+				if (((dev->r1f[c][target_id] & 0x10) != 0)&&(dev->dev_id==ATP885_DEVID)) {
-+					printk(KERN_WARNING "AEC67162 CRC ERROR !\n");
-+					workreq->result = 0x02;
-+				}
-+			} else
-+				workreq->result = 0x02;
++	err = pci_request_regions(pdev, "atp870u");
++	if (err)
++		goto disable_device;
++	pci_set_master(pdev);
 +
- 			if (dev->dev_id == ATP885_DEVID) {		
- 				j = inb(dev->baseport + 0x29) | 0x01;
- 				outb(j, dev->baseport + 0x29);
-@@ -462,7 +448,7 @@ go_42:
- 			}
- 			spin_unlock_irqrestore(dev->host->host_lock, flags);
- 			dev->in_int[c] = 0;
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 		if ((dev->last_cmd[c] & 0xf0) != 0x40) {
- 		   dev->last_cmd[c] = 0xff;
-@@ -488,7 +474,7 @@ go_42:
- 			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x09, dev->pciport[c]);
- 			dev->in_int[c] = 0;
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 		if (i == 0x08) {
- 			outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
-@@ -506,7 +492,7 @@ go_42:
- 			outb(0x08, dev->ioport[c] + 0x18);
- 			outb(0x01, dev->pciport[c]);
- 			dev->in_int[c] = 0;
--			goto handled;
-+			return IRQ_HANDLED;
- 		}
- 		if (i == 0x0a) {
- 			outb(0x30, dev->ioport[c] + 0x10);
-@@ -518,19 +504,9 @@ go_42:
- 		outb(0x00, dev->ioport[c] + 0x13);
- 		outb(0x00, dev->ioport[c] + 0x14);
- 		outb(0x08, dev->ioport[c] + 0x18);
--		dev->in_int[c] = 0;
--		goto handled;
--	} else {
--//		inb(dev->ioport[c] + 0x17);
--//		dev->working[c] = 0;
--		dev->in_int[c] = 0;
--		goto handled;
- 	}
--	
--handled:
--#ifdef ED_DBGP
--	printk("atp870u_intr_handle exit\n");
--#endif			
-+	dev->in_int[c] = 0;
-+
- 	return IRQ_HANDLED;
+         err = -ENOMEM;
+ 	shpnt = scsi_host_alloc(&atp870u_template, sizeof(struct atp_unit));
+ 	if (!shpnt)
+-		goto disable_device;
++		goto release_region;
+ 
+ 	atpdev = shost_priv(shpnt);
+ 
+@@ -1582,10 +1587,6 @@ flash_ok_885:
+ 
+ 	} 
+ 		spin_unlock_irqrestore(shpnt->host_lock, flags);
+-		if (!request_region(shpnt->io_port, shpnt->n_io_port, "atp870u")) {
+-			err = -EBUSY;
+-			goto request_io_fail;
+-		}
+ 		err = scsi_add_host(shpnt, &pdev->dev);
+ 		if (err)
+ 			goto scsi_add_fail;
+@@ -1596,16 +1597,13 @@ flash_ok_885:
+ 		return 0;
+ 
+ scsi_add_fail:
+-	printk("atp870u_prob:scsi_add_fail\n");
+-	release_region(shpnt->io_port, shpnt->n_io_port);
+-request_io_fail:
+-	printk("atp870u_prob:request_io_fail\n");
+ 	free_irq(shpnt->irq, shpnt);
+ free_tables:
+-	printk("atp870u_prob:free_table\n");
+ 	atp870u_free_tables(shpnt);
+ unregister:
+ 	scsi_host_put(shpnt);
++release_region:
++	pci_release_regions(pdev);
+ disable_device:
+ 	pci_disable_device(pdev);
+ fail:
+@@ -1696,7 +1694,8 @@ static void atp870u_remove (struct pci_dev *pdev)
+ 	
+ 	scsi_remove_host(pshost);
+ 	free_irq(pshost->irq, pshost);
+-	release_region(pshost->io_port, pshost->n_io_port);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
+ 	atp870u_free_tables(pshost);
+ 	scsi_host_put(pshost);
  }
- /**
 -- 
 Ondrej Zary
 
