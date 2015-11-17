@@ -1,106 +1,110 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 12/52] atp870u: Untangle tmpcip #2
-Date: Tue, 17 Nov 2015 19:23:48 +0100
-Message-ID: <1447784668-23713-13-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 48/52] atp870u: Remove scam_on from struct atp_unit
+Date: Tue, 17 Nov 2015 19:24:24 +0100
+Message-ID: <1447784668-23713-49-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56565 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56562 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932513AbbKQShs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:37:48 -0500
+	id S932570AbbKQShq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:37:46 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Untangle the tmpcip crap so it becomes obvious what ports are accessed.
+scam_on is used only during probe, no need to keep it later.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+ drivers/scsi/atp870u.c |   14 +++++++-------
+ drivers/scsi/atp870u.h |    1 -
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 32544bb..4d840a5 100644
+index 4719df4..dd0b520 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -645,7 +645,7 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	unsigned int i;//,k;
- 	unsigned char  j, target_id;
- 	unsigned char *prd;
--	unsigned short int tmpcip, w;
-+	unsigned short int w;
- 	unsigned long l, bttl = 0;
- 	unsigned long  sg_count;
+@@ -963,7 +963,7 @@ static unsigned char fun_scam(struct atp_unit *dev, unsigned short int *val)
+ 	return j;
+ }
  
-@@ -813,7 +813,6 @@ oktosend:
- 		dev->in_snd[c] = 0;
+-static void tscam(struct Scsi_Host *host, bool wide_chip)
++static void tscam(struct Scsi_Host *host, bool wide_chip, u8 scam_on)
+ {
+ 
+ 	unsigned char i, j, k;
+@@ -986,7 +986,7 @@ static void tscam(struct Scsi_Host *host, bool wide_chip)
+ 	atp_writeb_io(dev, 0, 2, 0x7f);
+ 	atp_writeb_io(dev, 0, 0x11, 0x20);
+ 
+-	if ((dev->scam_on & 0x40) == 0) {
++	if ((scam_on & 0x40) == 0) {
  		return;
  	}
--	tmpcip = dev->pciport[c];
- 	prd = dev->id[c][target_id].prd_table;
- 	dev->id[c][target_id].prd_pos = prd;
+ 	m = 1;
+@@ -1311,7 +1311,6 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			"    IO:%lx, IRQ:%d.\n", shpnt->io_port, shpnt->irq);
+ 		atpdev->host_id[0] = host_id;
  
-@@ -850,34 +849,28 @@ oktosend:
- 		printk("2. bttl %x, l %x\n",bttl, l);
- #endif			
- 	}
--	tmpcip += 4;
- #ifdef ED_DBGP		
--	printk("send_s870: prdaddr_2 0x%8x tmpcip %x target_id %d\n", dev->id[c][target_id].prdaddr,tmpcip,target_id);
-+	printk("send_s870: prdaddr_2 0x%8x target_id %d\n", dev->id[c][target_id].prdaddr,target_id);
- #endif	
- 	dev->id[c][target_id].prdaddr = dev->id[c][target_id].prd_bus;
--	outl(dev->id[c][target_id].prdaddr, tmpcip);
--	tmpcip = tmpcip - 2;
--	outb(0x06, tmpcip);
--	outb(0x00, tmpcip);
-+	outl(dev->id[c][target_id].prdaddr, dev->pciport[c] + 4);
-+	outb(0x06, dev->pciport[c] + 2);
-+	outb(0x00, dev->pciport[c] + 2);
- 	if (dev->dev_id == ATP885_DEVID) {
--		tmpcip--;
--		j=inb(tmpcip) & 0xf3;
-+		j = inb(dev->pciport[c] + 1) & 0xf3;
- 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) ||
- 	    	(workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
- 	   		j |= 0x0c;
+-		atpdev->scam_on = atp_readb_base(atpdev, 0x22);
+ 		atpdev->global_map[0] = atp_readb_base(atpdev, 0x35);
+ 		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x3c);
+ 
+@@ -1384,7 +1383,7 @@ flash_ok_880:
+ 
+ 		atp_set_host_id(atpdev, 0, host_id);
+ 
+-		tscam(shpnt, true);
++		tscam(shpnt, true, atp_readb_base(atpdev, 0x22));
+ 		atp_is(atpdev, 0, true, atp_readb_base(atpdev, 0x3f) & 0x40);
+ 		atp_writeb_base(atpdev, 0x38, 0xb0);
+ 		shpnt->max_id = 16;
+@@ -1509,6 +1508,7 @@ flash_ok_885:
+ 		shpnt->max_channel = 1;
+ 		shpnt->this_id = atpdev->host_id[0];
+ 	} else {
++		u8 scam_on;
+ 		bool wide_chip =
+ 			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7610 &&
+ 			 pdev->revision == 4) ||
+@@ -1523,12 +1523,12 @@ flash_ok_885:
+ 		atpdev->pciport[0] = shpnt->io_port + 0x20;
+ 		host_id &= 0x07;
+ 		atpdev->host_id[0] = host_id;
+-		atpdev->scam_on = atp_readb_pci(atpdev, 0, 2);
++		scam_on = atp_readb_pci(atpdev, 0, 2);
+ 		atpdev->global_map[0] = atp_readb_base(atpdev, 0x2d);
+ 		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x2e);
+ 
+ 		if (atpdev->ultra_map[0] == 0) {
+-			atpdev->scam_on = 0x00;
++			scam_on = 0x00;
+ 			atpdev->global_map[0] = 0x20;
+ 			atpdev->ultra_map[0] = 0xffff;
  		}
--		outb(j,tmpcip);
--		tmpcip--;	    	
-+		outb(j, dev->pciport[c] + 1);
- 	} else if ((dev->dev_id == ATP880_DEVID1) ||
- 	    	   (dev->dev_id == ATP880_DEVID2)) {
--		tmpcip =tmpcip -2;	
- 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
- 			outb((unsigned char) ((inb(dev->ioport[c] - 0x05) & 0x3f) | 0xc0), dev->ioport[c] - 0x05);
- 		} else {
- 			outb((unsigned char) (inb(dev->ioport[c] - 0x05) & 0x3f), dev->ioport[c] - 0x05);
- 		}		
- 	} else {		
--		tmpcip =tmpcip -2;
- 		if ((workreq->cmnd[0] == 0x08) || (workreq->cmnd[0] == 0x28) || (workreq->cmnd[0] == 0x0a) || (workreq->cmnd[0] == 0x2a)) {
- 			outb((inb(dev->ioport[c] + 0x3a) & 0xf3) | 0x08, dev->ioport[c] + 0x3a);
- 		} else {
-@@ -889,7 +882,7 @@ oktosend:
- 		dev->id[c][target_id].dirct = 0x20;
- 		if (inb(dev->ioport[c] + 0x1c) == 0) {
- 			outb(0x08, dev->ioport[c] + 0x18);
--			outb(0x01, tmpcip);
-+			outb(0x01, dev->pciport[c]);
- #ifdef ED_DBGP		
- 		printk( "start DMA(to target)\n");
- #endif				
-@@ -901,7 +894,7 @@ oktosend:
- 	}
- 	if (inb(dev->ioport[c] + 0x1c) == 0) {
- 		outb(0x08, dev->ioport[c] + 0x18);
--		outb(0x09, tmpcip);
-+		outb(0x09, dev->pciport[c]);
- #ifdef ED_DBGP		
- 		printk( "start DMA(to host)\n");
- #endif			
+@@ -1551,7 +1551,7 @@ flash_ok_885:
+ 		atp_set_host_id(atpdev, 0, host_id);
+ 
+ 
+-		tscam(shpnt, wide_chip);
++		tscam(shpnt, wide_chip, scam_on);
+ 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) | 0x10);
+ 		atp_is(atpdev, 0, wide_chip, 0);
+ 		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) & 0xef);
+diff --git a/drivers/scsi/atp870u.h b/drivers/scsi/atp870u.h
+index f9d62a2..9b839b1 100644
+--- a/drivers/scsi/atp870u.h
++++ b/drivers/scsi/atp870u.h
+@@ -32,7 +32,6 @@ struct atp_unit
+ 	unsigned char quhd[2];
+ 	unsigned char quend[2];
+ 	unsigned char global_map[2];
+-	unsigned char scam_on;
+ 	unsigned char host_id[2];
+ 	unsigned int working[2];
+ 	unsigned short wide_id[2];
 -- 
 Ondrej Zary
 
