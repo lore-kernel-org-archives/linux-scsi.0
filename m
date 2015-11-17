@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 20/32] scsi: hisi_sas: add v1 hw interrupt init
-Date: Wed, 18 Nov 2015 00:50:47 +0800
-Message-ID: <1447779059-136143-21-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 21/32] scsi: hisi_sas: add path from phyup irq to SAS framework
+Date: Wed, 18 Nov 2015 00:50:48 +0800
+Message-ID: <1447779059-136143-22-git-send-email-john.garry@huawei.com>
 References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,209 +12,139 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add code to interrupts, so now we can get a phy up
-interrupt when a disk is connected.
-
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |   5 +
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 161 +++++++++++++++++++++++++++++++++
- 2 files changed, 166 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 49 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 15 +++++++++++
+ 3 files changed, 66 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index ba3bf5e..938fa75 100644
+index 938fa75..837d139 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -38,6 +38,11 @@
- #define HISI_SAS_NAME_LEN 32
+@@ -53,6 +53,7 @@ struct hisi_sas_phy {
+ 	struct asd_sas_phy	sas_phy;
+ 	struct sas_identify	identify;
+ 	struct timer_list	timer;
++	struct work_struct	phyup_ws;
+ 	u64		port_id; /* from hw */
+ 	u64		dev_sas_addr;
+ 	u64		phy_type;
+@@ -87,6 +88,7 @@ struct hisi_sas_slot {
  
+ struct hisi_sas_hw {
+ 	int (*hw_init)(struct hisi_hba *hisi_hba);
++	void (*sl_notify)(struct hisi_hba *hisi_hba, int phy_no);
+ 	int complete_hdr_size;
+ };
  
-+enum {
-+	PORT_TYPE_SAS = (1U << 1),
-+	PORT_TYPE_SATA = (1U << 0),
-+};
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 6c13547..7bf6d2f 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -27,6 +27,53 @@ static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
+ 		hisi_sas_slot_index_clear(hisi_hba, i);
+ }
+ 
++static void hisi_sas_bytes_dmaed(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_ha_struct *sas_ha;
 +
- enum dev_status {
- 	HISI_SAS_DEV_NORMAL,
- 	HISI_SAS_DEV_EH,
++	if (!phy->phy_attached)
++		return;
++
++	sas_ha = &hisi_hba->sha;
++	sas_ha->notify_phy_event(sas_phy, PHYE_OOB_DONE);
++
++	if (sas_phy->phy) {
++		struct sas_phy *sphy = sas_phy->phy;
++
++		sphy->negotiated_linkrate = sas_phy->linkrate;
++		sphy->minimum_linkrate = phy->minimum_linkrate;
++		sphy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
++		sphy->maximum_linkrate = phy->maximum_linkrate;
++	}
++
++	if (phy->phy_type & PORT_TYPE_SAS) {
++		struct sas_identify_frame *id;
++
++		id = (struct sas_identify_frame *)phy->frame_rcvd;
++		id->dev_type = phy->identify.device_type;
++		id->initiator_bits = SAS_PROTOCOL_ALL;
++		id->target_bits = phy->identify.target_port_protocols;
++	} else if (phy->phy_type & PORT_TYPE_SATA) {
++		/*Nothing*/
++	}
++
++	sas_phy->frame_rcvd_size = phy->frame_rcvd_size;
++	sas_ha->notify_port_event(sas_phy, PORTE_BYTES_DMAED);
++}
++
++static void hisi_sas_phyup_work(struct work_struct *work)
++{
++	struct hisi_sas_phy *phy =
++		container_of(work, struct hisi_sas_phy, phyup_ws);
++	struct hisi_hba *hisi_hba = phy->hisi_hba;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	int phy_no = sas_phy->id;
++
++	hisi_hba->hw->sl_notify(hisi_hba, phy_no); /* This requires a sleep */
++	hisi_sas_bytes_dmaed(hisi_hba, phy_no);
++}
+ 
+ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ {
+@@ -49,6 +96,8 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
+ 	sas_phy->frame_rcvd = &phy->frame_rcvd[0];
+ 	sas_phy->ha = (struct sas_ha_struct *)hisi_hba->shost->hostdata;
+ 	sas_phy->lldd_phy = phy;
++
++	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
+ }
+ 
+ static struct scsi_transport_template *hisi_sas_stt;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 9bfe1aa..3ea666f 100644
+index 3ea666f..4364279 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -728,6 +728,159 @@ static void phys_init_v1_hw(struct hisi_hba *hisi_hba)
+@@ -728,6 +728,19 @@ static void phys_init_v1_hw(struct hisi_hba *hisi_hba)
  	mod_timer(timer, jiffies + HZ);
  }
  
-+/* Interrupts */
-+static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
++static void sl_notify_v1_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	struct hisi_sas_phy *phy = p;
-+	struct hisi_hba *hisi_hba = phy->hisi_hba;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	int i, phy_no = sas_phy->id;
-+	u32 irq_value, context, port_id, link_rate;
-+	u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
-+	struct sas_identify_frame *id = (struct sas_identify_frame *)frame_rcvd;
-+	irqreturn_t res = IRQ_HANDLED;
++	u32 sl_control;
 +
-+	irq_value = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2);
-+	if (!(irq_value & CHL_INT2_SL_PHY_ENA_MSK)) {
-+		dev_dbg(dev, "phyup: irq_value = %x not set enable bit\n",
-+			irq_value);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
-+
-+	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
-+	if (context & 1 << phy_no) {
-+		dev_err(dev, "phyup: phy%d SATA attached equipment\n",
-+			phy_no);
-+		goto end;
-+	}
-+
-+	port_id = (hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA) >> (4 * phy_no))
-+		  & 0xf;
-+	if (port_id == 0xf) {
-+		dev_err(dev, "phyup: phy%d invalid portid\n", phy_no);
-+		res = IRQ_NONE;
-+		goto end;
-+	}
-+
-+	for (i = 0; i < 6; i++) {
-+		u32 idaf = hisi_sas_phy_read32(hisi_hba, phy_no,
-+					RX_IDAF_DWORD0 + (i * 4));
-+		frame_rcvd[i] = __swab32(idaf);
-+	}
-+
-+	/* Get the linkrate */
-+	link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
-+	link_rate = (link_rate >> (phy_no * 4)) & 0xf;
-+	sas_phy->linkrate = link_rate;
-+	sas_phy->oob_mode = SAS_OOB_MODE;
-+	memcpy(sas_phy->attached_sas_addr,
-+		&id->sas_addr, SAS_ADDR_SIZE);
-+	dev_info(dev, "phyup: phy%d link_rate=%d\n",
-+		 phy_no, link_rate);
-+	phy->port_id = port_id;
-+	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
-+	phy->phy_type |= PORT_TYPE_SAS;
-+	phy->phy_attached = 1;
-+	phy->identify.device_type = id->dev_type;
-+	phy->frame_rcvd_size =	sizeof(struct sas_identify_frame);
-+	if (phy->identify.device_type == SAS_END_DEVICE)
-+		phy->identify.target_port_protocols =
-+			SAS_PROTOCOL_SSP;
-+	else if (phy->identify.device_type != SAS_PHY_UNUSED)
-+		phy->identify.target_port_protocols =
-+			SAS_PROTOCOL_SMP;
-+
-+end:
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
-+			     CHL_INT2_SL_PHY_ENA_MSK);
-+
-+	if (irq_value & CHL_INT2_SL_PHY_ENA_MSK) {
-+		u32 chl_int0 = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT0);
-+
-+		chl_int0 &= ~CHL_INT0_PHYCTRL_NOTRDY_MSK;
-+		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, chl_int0);
-+		hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0_MSK, 0x3ce3ee);
-+	}
-+
-+	return res;
-+}
-+static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
-+	{"Phy Up"},
-+};
-+static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
-+	int_phyup_v1_hw,
-+};
-+
-+static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	char *int_names = hisi_hba->int_names;
-+	int i, j, irq, rc, idx;
-+
-+	if (!np)
-+		return -ENOENT;
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+
-+		idx = i * HISI_SAS_PHY_INT_NR;
-+		for (j = 0; j < HISI_SAS_PHY_INT_NR; j++, idx++) {
-+			irq = irq_of_parse_and_map(np, idx);
-+			if (!irq) {
-+				dev_err(dev,
-+					"irq init: fail map phy interrupt %d\n",
-+					idx);
-+				return -ENOENT;
-+			}
-+
-+			(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
-+				       HISI_SAS_NAME_LEN,
-+				       "%s %s:%d", dev_name(dev),
-+				       phy_int_names[j], i);
-+			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
-+					&int_names[idx * HISI_SAS_NAME_LEN],
-+					phy);
-+			if (rc) {
-+				dev_err(dev, "irq init: could not request "
-+					"phy interrupt %d, rc=%d\n",
-+					irq, rc);
-+				return -ENOENT;
-+			}
-+		}
-+	}
-+	return 0;
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
++	msleep(1);
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
 +}
 +
-+static int interrupt_openall_v1_hw(struct hisi_hba *hisi_hba)
-+{
-+	int i;
-+	u32 val;
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		/* Clear interrupt status */
-+		val = hisi_sas_phy_read32(hisi_hba, i, CHL_INT0);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, val);
-+		val = hisi_sas_phy_read32(hisi_hba, i, CHL_INT1);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, val);
-+		val = hisi_sas_phy_read32(hisi_hba, i, CHL_INT2);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, val);
-+
-+		/* Unmask interrupt */
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0_MSK, 0x3ce3ee);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0x17fff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8000012a);
-+
-+		/* bypass chip bug mask abnormal intr */
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0_MSK,
-+				0x3fffff & ~CHL_INT0_MSK_PHYCTRL_NOTRDY_MSK);
-+	}
-+
-+	return 0;
-+}
-+
- static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
+ /* Interrupts */
+ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
  {
- 	int rc;
-@@ -736,6 +889,14 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
- 	if (rc)
- 		return rc;
+@@ -791,6 +804,7 @@ static irqreturn_t int_phyup_v1_hw(int irq_no, void *p)
+ 	else if (phy->identify.device_type != SAS_PHY_UNUSED)
+ 		phy->identify.target_port_protocols =
+ 			SAS_PROTOCOL_SMP;
++	queue_work(hisi_hba->wq, &phy->phyup_ws);
  
-+	rc = interrupt_init_v1_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
-+	rc = interrupt_openall_v1_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
- 	phys_init_v1_hw(hisi_hba);
+ end:
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2,
+@@ -904,6 +918,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
  
- 	return 0;
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.hw_init = hisi_sas_v1_init,
++	.sl_notify = sl_notify_v1_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v1_hdr),
+ };
+ 
 -- 
 1.9.1
