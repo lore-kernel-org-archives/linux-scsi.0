@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 24/32] scsi: hisi_sas: add dev_found and dev_gone
-Date: Wed, 18 Nov 2015 00:50:51 +0800
-Message-ID: <1447779059-136143-25-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 27/32] scsi: hisi_sas: add smp protocol support
+Date: Wed, 18 Nov 2015 00:50:54 +0800
+Message-ID: <1447779059-136143-28-git-send-email-john.garry@huawei.com>
 References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,238 +12,176 @@ To: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@ar
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, john.garry@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add functions to deal with lldd_dev_found and lldd_dev_gone.
+Add support for smp function, which allows devices
+attached by expander to be controlled
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 13 +++++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 88 ++++++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 41 ++++++++++++++++
- 3 files changed, 142 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  9 ++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 88 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 100 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index fe4055b..999f319 100644
+index e5ee3c9..f34f73b 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -39,6 +39,7 @@
+@@ -36,6 +36,7 @@
+ 		(((sizeof(union hisi_sas_command_table)+3)/4)*4)
+ 
+ #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
++#define HISI_SAS_MAX_SMP_RESP_SZ 1028
  
  #define HISI_SAS_NAME_LEN 32
  
-+struct hisi_hba;
- 
- enum {
- 	PORT_TYPE_SAS = (1U << 1),
-@@ -49,6 +50,13 @@ enum dev_status {
- 	HISI_SAS_DEV_NORMAL,
- 	HISI_SAS_DEV_EH,
- };
-+
-+enum hisi_sas_dev_type {
-+	HISI_SAS_DEV_TYPE_STP = 0,
-+	HISI_SAS_DEV_TYPE_SSP,
-+	HISI_SAS_DEV_TYPE_SATA,
-+};
-+
- struct hisi_sas_phy {
- 	struct hisi_hba	*hisi_hba;
- 	struct hisi_sas_port	*port;
-@@ -81,6 +89,9 @@ struct hisi_sas_cq {
- 
- struct hisi_sas_device {
- 	enum sas_device_type	dev_type;
-+	struct hisi_hba		*hisi_hba;
-+	struct domain_device	*sas_device;
-+	u64 attached_phy;
- 	u64 device_id;
- 	u64 running_req;
- 	u8 dev_status;
-@@ -113,6 +124,8 @@ struct hisi_sas_tmf_task {
- 
- struct hisi_sas_hw {
- 	int (*hw_init)(struct hisi_hba *hisi_hba);
-+	void (*setup_itct)(struct hisi_hba *hisi_hba,
-+			   struct hisi_sas_device *device);
- 	void (*sl_notify)(struct hisi_hba *hisi_hba, int phy_no);
- 	int (*get_free_slot)(struct hisi_hba *hisi_hba, int *q, int *s);
- 	void (*start_delivery)(struct hisi_hba *hisi_hba);
+@@ -132,6 +133,8 @@ struct hisi_sas_hw {
+ 	int (*prep_ssp)(struct hisi_hba *hisi_hba,
+ 			struct hisi_sas_slot *slot, int is_tmf,
+ 			struct hisi_sas_tmf_task *tmf);
++	int (*prep_smp)(struct hisi_hba *hisi_hba,
++			struct hisi_sas_slot *slot);
+ 	int (*slot_complete)(struct hisi_hba *hisi_hba,
+ 			     struct hisi_sas_slot *slot, int abort);
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ddbd2b71..d8af4c6 100644
+index 1797851..406ffa0 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -12,6 +12,9 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas"
- 
-+#define DEV_IS_EXPANDER(type) \
-+	((type == SAS_EDGE_EXPANDER_DEVICE) || \
-+	(type == SAS_FANOUT_EXPANDER_DEVICE))
- 
- #define DEV_IS_GONE(dev) \
- 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
-@@ -325,6 +328,72 @@ static void hisi_sas_bytes_dmaed(struct hisi_hba *hisi_hba, int phy_no)
- 	sas_ha->notify_port_event(sas_phy, PORTE_BYTES_DMAED);
+@@ -98,6 +98,12 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
  }
+ EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
  
-+static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
++static int hisi_sas_task_prep_smp(struct hisi_hba *hisi_hba,
++				  struct hisi_sas_slot *slot)
 +{
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-+	struct hisi_sas_device *sas_dev = NULL;
-+	int i;
-+
-+	spin_lock(&hisi_hba->lock);
-+	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
-+		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
-+			hisi_hba->devices[i].device_id = i;
-+			sas_dev = &hisi_hba->devices[i];
-+			sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
-+			sas_dev->dev_type = device->dev_type;
-+			sas_dev->hisi_hba = hisi_hba;
-+			sas_dev->sas_device = device;
-+			break;
-+		}
-+	}
-+	spin_unlock(&hisi_hba->lock);
-+
-+	return sas_dev;
++	return hisi_hba->hw->prep_smp(hisi_hba, slot);
 +}
 +
-+static int hisi_sas_dev_found(struct domain_device *device)
-+{
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_device *sas_dev;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+
-+	sas_dev = hisi_sas_alloc_dev(device);
-+	if (!sas_dev) {
-+		dev_err(dev, "fail alloc dev: max support %d devices\n",
-+			HISI_SAS_MAX_DEVICES);
-+		return -EINVAL;
-+	}
-+
-+	device->lldd_dev = sas_dev;
-+	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
-+
-+	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
-+		int phy_no;
-+		u8 phy_num = parent_dev->ex_dev.num_phys;
-+		struct ex_phy *phy;
-+
-+		for (phy_no = 0; phy_no < phy_num; phy_no++) {
-+			phy = &parent_dev->ex_dev.ex_phy[phy_no];
-+			if (SAS_ADDR(phy->attached_sas_addr) ==
-+				SAS_ADDR(device->sas_addr)) {
-+				sas_dev->attached_phy = phy_no;
-+				break;
-+			}
-+		}
-+
-+		if (phy_no == phy_num) {
-+			dev_info(dev, "dev found: no attached "
-+				 "dev:%016llx at ex:%016llx\n",
-+				 SAS_ADDR(device->sas_addr),
-+				 SAS_ADDR(parent_dev->sas_addr));
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static void hisi_sas_phyup_work(struct work_struct *work)
- {
- 	struct hisi_sas_phy *phy =
-@@ -362,6 +431,23 @@ static void hisi_sas_phy_init(struct hisi_hba *hisi_hba, int phy_no)
- 	INIT_WORK(&phy->phyup_ws, hisi_sas_phyup_work);
- }
+ static int hisi_sas_task_prep_ssp(struct hisi_hba *hisi_hba,
+ 				  struct hisi_sas_slot *slot, int is_tmf,
+ 				  struct hisi_sas_tmf_task *tmf)
+@@ -215,6 +221,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+ 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
  
-+static void hisi_sas_dev_gone(struct domain_device *device)
-+{
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	u64 dev_id = sas_dev->device_id;
-+
-+	dev_info(dev, "found dev[%lld:%x] is gone\n",
-+		 sas_dev->device_id, sas_dev->dev_type);
-+
-+	hisi_hba->hw->free_device(hisi_hba, sas_dev);
-+	device->lldd_dev = NULL;
-+	memset(sas_dev, 0, sizeof(*sas_dev));
-+	sas_dev->device_id = dev_id;
-+	sas_dev->dev_type = SAS_PHY_UNUSED;
-+	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
-+}
- 
- static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- {
-@@ -390,6 +476,8 @@ static struct scsi_host_template hisi_sas_sht = {
- };
- 
- static struct sas_domain_function_template hisi_sas_transport_ops = {
-+	.lldd_dev_found		= hisi_sas_dev_found,
-+	.lldd_dev_gone		= hisi_sas_dev_gone,
- 	.lldd_execute_task	= hisi_sas_queue_command,
- };
- 
+ 	switch (task->task_proto) {
++	case SAS_PROTOCOL_SMP:
++		rc = hisi_sas_task_prep_smp(hisi_hba, slot);
++		break;
+ 	case SAS_PROTOCOL_SSP:
+ 		rc = hisi_sas_task_prep_ssp(hisi_hba, slot, is_tmf, tmf);
+ 		break;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 6711c0a..530e771 100644
+index ad50aed..64b17a1 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -498,6 +498,46 @@ static void init_id_frame_v1_hw(struct hisi_hba *hisi_hba)
- 		config_id_frame_v1_hw(hisi_hba, i);
+@@ -903,6 +903,74 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
  
-+static void setup_itct_v1_hw(struct hisi_hba *hisi_hba,
-+			     struct hisi_sas_device *sas_dev)
++static int prep_smp_v1_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot)
 +{
-+	struct domain_device *device = sas_dev->sas_device;
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
 +	struct device *dev = &hisi_hba->pdev->dev;
-+	u64 qw0, device_id = sas_dev->device_id;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
++	struct hisi_sas_port *port = slot->port;
++	struct scatterlist *sg_req, *sg_resp;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	dma_addr_t req_dma_addr;
++	unsigned int req_len, resp_len;
++	int elem, rc;
 +
-+	memset(itct, 0, sizeof(*itct));
++	/*
++	* DMA-map SMP request, response buffers
++	*/
++	/* req */
++	sg_req = &task->smp_task.smp_req;
++	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
++	if (!elem)
++		return -ENOMEM;
++	req_len = sg_dma_len(sg_req);
++	req_dma_addr = sg_dma_address(sg_req);
 +
-+	/* qw0 */
-+	qw0 = 0;
-+	switch (sas_dev->dev_type) {
-+	case SAS_END_DEVICE:
-+	case SAS_EDGE_EXPANDER_DEVICE:
-+	case SAS_FANOUT_EXPANDER_DEVICE:
-+		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	default:
-+		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
-+			 sas_dev->dev_type);
++	/* resp */
++	sg_resp = &task->smp_task.smp_resp;
++	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
++	if (!elem) {
++		rc = -ENOMEM;
++		goto err_out_req;
++	}
++	resp_len = sg_dma_len(sg_resp);
++	if ((req_len & 0x3) || (resp_len & 0x3)) {
++		rc = -EINVAL;
++		goto err_out_resp;
 +	}
 +
-+	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
-+		(1 << ITCT_HDR_AWT_CONTROL_OFF) |
-+		(device->max_linkrate << ITCT_HDR_MAX_CONN_RATE_OFF) |
-+		(1 << ITCT_HDR_VALID_LINK_NUM_OFF) |
-+		(device->port->id << ITCT_HDR_PORT_ID_OFF));
-+	itct->qw0 = cpu_to_le64(qw0);
++	/* create header */
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
++			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
++			       (1 << CMD_HDR_MODE_OFF) | /* ini mode */
++			       (2 << CMD_HDR_CMD_OFF)); /* smp */
 +
-+	/* qw1 */
-+	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
-+	itct->sas_addr = __swab64(itct->sas_addr);
++	/* map itct entry */
++	hdr->dw1 = cpu_to_le32(sas_dev->device_id << CMD_HDR_DEVICE_ID_OFF);
 +
-+	/* qw2 */
-+	itct->qw2 = cpu_to_le64((500 < ITCT_HDR_IT_NEXUS_LOSS_TL_OFF) |
-+				(0xff00 < ITCT_HDR_BUS_INACTIVE_TL_OFF) |
-+				(0xff00 < ITCT_HDR_MAX_CONN_TL_OFF) |
-+				(0xff00 < ITCT_HDR_REJ_OPEN_TL_OFF));
++	/* dw2 */
++	hdr->dw2 = cpu_to_le32((((req_len-4)/4) << CMD_HDR_CFL_OFF) |
++			       (HISI_SAS_MAX_SMP_RESP_SZ/4 <<
++			       CMD_HDR_MRFL_OFF));
++
++	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
++
++	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	return 0;
++
++err_out_resp:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
++		     DMA_FROM_DEVICE);
++err_out_req:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
++		     DMA_TO_DEVICE);
++	return rc;
 +}
  
- static void free_device_v1_hw(struct hisi_hba *hisi_hba,
- 			      struct hisi_sas_device *sas_dev)
-@@ -1452,6 +1492,7 @@ static int hisi_sas_v1_init(struct hisi_hba *hisi_hba)
- 
- static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.hw_init = hisi_sas_v1_init,
-+	.setup_itct = setup_itct_v1_hw,
+ static int prep_ssp_v1_hw(struct hisi_hba *hisi_hba,
+ 			  struct hisi_sas_slot *slot, int is_tmf,
+@@ -1223,6 +1291,25 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 		sas_ssp_task_response(dev, task, iu);
+ 		break;
+ 	}
++	case SAS_PROTOCOL_SMP:
++	{
++		void *to;
++		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
++
++		ts->stat = SAM_STAT_GOOD;
++		to = kmap_atomic(sg_page(sg_resp));
++
++		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
++			     DMA_FROM_DEVICE);
++		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
++			     DMA_TO_DEVICE);
++		memcpy(to + sg_resp->offset,
++		       slot->status_buffer +
++		       sizeof(struct hisi_sas_err_record),
++		       sg_dma_len(sg_resp));
++		kunmap_atomic(to);
++		break;
++	}
+ 	case SAS_PROTOCOL_SATA:
+ 	case SAS_PROTOCOL_STP:
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+@@ -1595,6 +1682,7 @@ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+ 	.setup_itct = setup_itct_v1_hw,
  	.sl_notify = sl_notify_v1_hw,
  	.free_device = free_device_v1_hw,
++	.prep_smp = prep_smp_v1_hw,
  	.prep_ssp = prep_ssp_v1_hw,
+ 	.get_free_slot = get_free_slot_v1_hw,
+ 	.start_delivery = start_delivery_v1_hw,
 -- 
 1.9.1
