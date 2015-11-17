@@ -1,97 +1,155 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 32/52] atp870u: Replace port 0x80 delay by udelay
-Date: Tue, 17 Nov 2015 19:24:08 +0100
-Message-ID: <1447784668-23713-33-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 52/52] atp870u: Introduce atp870_init()
+Date: Tue, 17 Nov 2015 19:24:28 +0100
+Message-ID: <1447784668-23713-53-git-send-email-linux@rainbow-software.org>
 References: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56597 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56600 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754589AbbKQSiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2015 13:38:18 -0500
+	id S1754589AbbKQSiX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 13:38:23 -0500
 In-Reply-To: <1447784668-23713-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-tscam() is using port 0x80 access for delays but that's x86-only.
-Use udelay(2) instead.
+Move 870-specific init code to a separate function atp870_init()
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/atp870u.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/atp870u.c |  104 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 54 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index bccf872..c4a59cc 100644
+index 584b90f..8b52a9d 100644
 --- a/drivers/scsi/atp870u.c
 +++ b/drivers/scsi/atp870u.c
-@@ -1036,7 +1036,7 @@ static void tscam(struct Scsi_Host *host)
- 	atp_writeb_io(dev, 0, 0x02, 0x7f);
- 	atp_writeb_io(dev, 0, 0x1b, 0x02);
+@@ -1249,6 +1249,57 @@ static void atp_set_host_id(struct atp_unit *atp, u8 c, u8 host_id)
+ 	atp_writeb_io(atp, c, 0x11, 0x20);
+ }
  
--	outb(0, 0x80);
-+	udelay(2);
- 
- 	val = 0x0080;		/* bsy  */
- 	atp_writew_io(dev, 0, 0x1c, val);
-@@ -1044,7 +1044,7 @@ static void tscam(struct Scsi_Host *host)
- 	atp_writew_io(dev, 0, 0x1c, val);
- 	val |= 0x0004;		/* msg  */
- 	atp_writew_io(dev, 0, 0x1c, val);
--	inb(0x80);		/* 2 deskew delay(45ns*2=90ns) */
-+	udelay(2);		/* 2 deskew delay(45ns*2=90ns) */
- 	val &= 0x007f;		/* no bsy  */
- 	atp_writew_io(dev, 0, 0x1c, val);
- 	mdelay(128);
-@@ -1052,7 +1052,7 @@ static void tscam(struct Scsi_Host *host)
- 	atp_writew_io(dev, 0, 0x1c, val);
- 	while ((atp_readb_io(dev, 0, 0x1c) & 0x04) != 0)
- 		;
--	outb(1, 0x80);
-+	udelay(2);
- 	udelay(100);
- 	for (n = 0; n < 0x30000; n++)
- 		if ((atp_readb_io(dev, 0, 0x1c) & 0x80) != 0)	/* bsy ? */
-@@ -1060,13 +1060,13 @@ static void tscam(struct Scsi_Host *host)
- 	if (n < 0x30000)
- 		for (n = 0; n < 0x30000; n++)
- 			if ((atp_readb_io(dev, 0, 0x1c) & 0x81) == 0x0081) {
--				inb(0x80);
-+				udelay(2);
- 				val |= 0x8003;		/* io,cd,db7  */
- 				atp_writew_io(dev, 0, 0x1c, val);
--				inb(0x80);
-+				udelay(2);
- 				val &= 0x00bf;		/* no sel     */
- 				atp_writew_io(dev, 0, 0x1c, val);
--				outb(2, 0x80);
-+				udelay(2);
- 				break;
- 			}
- 	while (1) {
-@@ -1093,18 +1093,18 @@ static void tscam(struct Scsi_Host *host)
- 	val &= 0x00ff;		/* synchronization  */
- 	val |= 0x3f00;
- 	fun_scam(dev, &val);
--	outb(3, 0x80);
-+	udelay(2);
- 	val &= 0x00ff;		/* isolation        */
- 	val |= 0x2000;
- 	fun_scam(dev, &val);
--	outb(4, 0x80);
-+	udelay(2);
- 	i = 8;
- 	j = 0;
- 
- 	while (1) {
- 		if ((atp_readw_io(dev, 0, 0x1c) & 0x2000) == 0)
- 			continue;
--		outb(5, 0x80);
-+		udelay(2);
- 		val &= 0x00ff;		/* get ID_STRING */
- 		val |= 0x2000;
- 		k = fun_scam(dev, &val);
++static void atp870_init(struct Scsi_Host *shpnt)
++{
++	struct atp_unit *atpdev = shost_priv(shpnt);
++	struct pci_dev *pdev = atpdev->pdev;
++	unsigned char k, host_id;
++	u8 scam_on;
++	bool wide_chip =
++		(pdev->device == PCI_DEVICE_ID_ARTOP_AEC7610 &&
++		 pdev->revision == 4) ||
++		(pdev->device == PCI_DEVICE_ID_ARTOP_AEC7612UW) ||
++		(pdev->device == PCI_DEVICE_ID_ARTOP_AEC7612SUW);
++
++	pci_read_config_byte(pdev, 0x49, &host_id);
++
++	dev_info(&pdev->dev, "ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: IO:%lx, IRQ:%d.\n",
++		 shpnt->io_port, shpnt->irq);
++
++	atpdev->ioport[0] = shpnt->io_port;
++	atpdev->pciport[0] = shpnt->io_port + 0x20;
++	host_id &= 0x07;
++	atpdev->host_id[0] = host_id;
++	scam_on = atp_readb_pci(atpdev, 0, 2);
++	atpdev->global_map[0] = atp_readb_base(atpdev, 0x2d);
++	atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x2e);
++
++	if (atpdev->ultra_map[0] == 0) {
++		scam_on = 0x00;
++		atpdev->global_map[0] = 0x20;
++		atpdev->ultra_map[0] = 0xffff;
++	}
++
++	if (pdev->revision > 0x07)	/* check if atp876 chip */
++		atp_writeb_base(atpdev, 0x3e, 0x00); /* enable terminator */
++
++	k = (atp_readb_base(atpdev, 0x3a) & 0xf3) | 0x10;
++	atp_writeb_base(atpdev, 0x3a, k);
++	atp_writeb_base(atpdev, 0x3a, k & 0xdf);
++	mdelay(32);
++	atp_writeb_base(atpdev, 0x3a, k);
++	mdelay(32);
++	atp_set_host_id(atpdev, 0, host_id);
++
++	tscam(shpnt, wide_chip, scam_on);
++	atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) | 0x10);
++	atp_is(atpdev, 0, wide_chip, 0);
++	atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) & 0xef);
++	atp_writeb_base(atpdev, 0x3b, atp_readb_base(atpdev, 0x3b) | 0x20);
++	shpnt->max_id = wide_chip ? 16 : 8;
++	shpnt->this_id = host_id;
++}
++
+ static void atp880_init(struct Scsi_Host *shpnt)
+ {
+ 	struct atp_unit *atpdev = shost_priv(shpnt);
+@@ -1445,9 +1496,6 @@ static void atp885_init(struct Scsi_Host *shpnt)
+ /* return non-zero on detection */
+ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-	unsigned char k;
+-	unsigned int error;
+-	unsigned char host_id;
+ 	struct Scsi_Host *shpnt = NULL;
+ 	struct atp_unit *atpdev;
+ 	int err;
+@@ -1500,53 +1548,9 @@ static int atp870u_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		atp880_init(shpnt);
+ 	else if (is885(atpdev))
+ 		atp885_init(shpnt);
+-	else {
+-		u8 scam_on;
+-		bool wide_chip =
+-			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7610 &&
+-			 pdev->revision == 4) ||
+-			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7612UW) ||
+-			(ent->device == PCI_DEVICE_ID_ARTOP_AEC7612SUW);
+-		error = pci_read_config_byte(pdev, 0x49, &host_id);
+-
+-		printk(KERN_INFO "   ACARD AEC-671X PCI Ultra/W SCSI-2/3 Host Adapter: "
+-			"IO:%lx, IRQ:%d.\n", shpnt->io_port, shpnt->irq);
+-
+-		atpdev->ioport[0] = shpnt->io_port;
+-		atpdev->pciport[0] = shpnt->io_port + 0x20;
+-		host_id &= 0x07;
+-		atpdev->host_id[0] = host_id;
+-		scam_on = atp_readb_pci(atpdev, 0, 2);
+-		atpdev->global_map[0] = atp_readb_base(atpdev, 0x2d);
+-		atpdev->ultra_map[0] = atp_readw_base(atpdev, 0x2e);
+-
+-		if (atpdev->ultra_map[0] == 0) {
+-			scam_on = 0x00;
+-			atpdev->global_map[0] = 0x20;
+-			atpdev->ultra_map[0] = 0xffff;
+-		}
+-
+-		if (pdev->revision > 0x07)	/* check if atp876 chip then enable terminator */
+-			atp_writeb_base(atpdev, 0x3e, 0x00);
+- 
+-		k = (atp_readb_base(atpdev, 0x3a) & 0xf3) | 0x10;
+-		atp_writeb_base(atpdev, 0x3a, k);
+-		atp_writeb_base(atpdev, 0x3a, k & 0xdf);
+-		mdelay(32);
+-		atp_writeb_base(atpdev, 0x3a, k);
+-		mdelay(32);
+-		atp_set_host_id(atpdev, 0, host_id);
+-
+-
+-		tscam(shpnt, wide_chip, scam_on);
+-		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) | 0x10);
+-		atp_is(atpdev, 0, wide_chip, 0);
+-		atp_writeb_base(atpdev, 0x3a, atp_readb_base(atpdev, 0x3a) & 0xef);
+-		atp_writeb_base(atpdev, 0x3b, atp_readb_base(atpdev, 0x3b) | 0x20);
+-		shpnt->max_id = wide_chip ? 16 : 8;
+-		shpnt->this_id = host_id;
+-
+-	} 
++	else
++		atp870_init(shpnt);
++
+ 	err = request_irq(shpnt->irq, atp870u_intr_handle, IRQF_SHARED, "atp870u", shpnt);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Unable to allocate IRQ %d.\n", shpnt->irq);
 -- 
 Ondrej Zary
 
