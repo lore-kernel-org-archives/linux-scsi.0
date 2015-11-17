@@ -1,8 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] SCSI-aic94xx: Delete unnecessary checks before the function
- call "kmem_cache_destroy"
-Date: Tue, 17 Nov 2015 08:21:42 +0100
-Message-ID: <564AD586.5040606@users.sourceforge.net>
+Subject: [PATCH] scsi_lib: Delete unnecessary checks before two function calls
+Date: Tue, 17 Nov 2015 09:10:05 +0100
+Message-ID: <564AE0DD.6000300@users.sourceforge.net>
 References: <5307CAA2.8060406@users.sourceforge.net>
  <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
  <530A086E.8010901@users.sourceforge.net>
@@ -23,45 +22,43 @@ References: <5307CAA2.8060406@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "James E. J. Bottomley" <JBottomley@odin.com>
 Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 17 Nov 2015 08:14:52 +0100
+Date: Tue, 17 Nov 2015 09:00:31 +0100
 
-The kmem_cache_destroy() function tests whether its argument is NULL
-and then returns immediately. Thus the test around the calls is not needed.
+The functions kmem_cache_destroy() and mempool_destroy() test whether
+their argument is NULL and then return immediately.
+Thus the tests around their calls are not needed.
 
 This issue was detected by using the Coccinelle software.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 662b232..ab93049 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -660,12 +660,9 @@ Err:
- 
- static void asd_destroy_global_caches(void)
- {
--	if (asd_dma_token_cache)
--		kmem_cache_destroy(asd_dma_token_cache);
-+	kmem_cache_destroy(asd_dma_token_cache);
- 	asd_dma_token_cache = NULL;
--
--	if (asd_ascb_cache)
--		kmem_cache_destroy(asd_ascb_cache);
-+	kmem_cache_destroy(asd_ascb_cache);
- 	asd_ascb_cache = NULL;
- }
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dd8ad2a..13973a3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2298,10 +2298,8 @@ int __init scsi_init_queue(void)
+ cleanup_sdb:
+ 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
+ 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
+-		if (sgp->pool)
+-			mempool_destroy(sgp->pool);
+-		if (sgp->slab)
+-			kmem_cache_destroy(sgp->slab);
++		mempool_destroy(sgp->pool);
++		kmem_cache_destroy(sgp->slab);
+ 	}
+ 	kmem_cache_destroy(scsi_sdb_cache);
  
 -- 
 2.6.2
-
