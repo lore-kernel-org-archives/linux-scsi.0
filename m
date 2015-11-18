@@ -1,212 +1,250 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 58/71] ncr5380: Refactor command completion
-Date: Wed, 18 Nov 2015 19:35:53 +1100
-Message-ID: <20151118083515.119827172@telegraphics.com.au>
+Subject: [PATCH 24/71] ncr5380: Implement NCR5380_dma_xfer_len and remove LIMIT_TRANSFERSIZE macro
+Date: Wed, 18 Nov 2015 19:35:19 +1100
+Message-ID: <20151118083502.161717973@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-complete_cmd
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-implement-NCR5380_dma_xfer_len
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Implement a 'complete_cmd' function to complete commands. This is needed
-by the following patch; the new function provides a site for the logic
-needed to correctly handle REQUEST SENSE commands.
+Follow the example of the atari_NCR5380.c core driver and adopt the
+NCR5380_dma_xfer_len() hook. Implement NCR5380_dma_xfer_len() for dtc.c
+and g_NCR5380.c to take care of the limitations of these cards. Keep the
+default for drivers using PSEUDO_DMA.
+
+Eliminate the unused macro LIMIT_TRANSFERSIZE. 
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   31 ++++++++++++++++++++++------
- drivers/scsi/atari_NCR5380.c |   46 ++++++++++++++++++++++++++++---------------
- 2 files changed, 55 insertions(+), 22 deletions(-)
+ drivers/scsi/NCR5380.c       |   32 +++++---------------------------
+ drivers/scsi/arm/cumana_1.c  |    3 +++
+ drivers/scsi/arm/oak.c       |    2 ++
+ drivers/scsi/atari_NCR5380.c |    8 +++++---
+ drivers/scsi/dtc.c           |   14 ++++++++++++++
+ drivers/scsi/dtc.h           |    3 +++
+ drivers/scsi/g_NCR5380.c     |   15 +++++++++++++++
+ drivers/scsi/g_NCR5380.h     |    3 +++
+ drivers/scsi/mac_scsi.c      |    1 +
+ drivers/scsi/pas16.h         |    2 ++
+ drivers/scsi/t128.h          |    2 ++
+ 11 files changed, 55 insertions(+), 30 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:20.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:23.000000000 +1100
-@@ -762,6 +762,27 @@ static void NCR5380_exit(struct Scsi_Hos
- }
- 
- /**
-+ * complete_cmd - finish processing a command and return it to the SCSI ML
-+ * @instance: the host instance
-+ * @cmd: command to complete
-+ */
-+
-+static void complete_cmd(struct Scsi_Host *instance,
-+                         struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
-+
-+#ifdef SUPPORT_TAGS
-+	cmd_free_tag(cmd);
-+#else
-+	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
-+#endif
-+	cmd->scsi_done(cmd);
-+}
-+
-+/**
-  * NCR5380_queue_command - queue a command
-  * @instance: the relevant SCSI adapter
-  * @cmd: SCSI command
-@@ -1361,10 +1382,7 @@ static int NCR5380_select(struct Scsi_Ho
- 		spin_lock_irq(&hostdata->lock);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		cmd->result = DID_BAD_TARGET << 16;
--#ifdef SUPPORT_TAGS
--		cmd_free_tag(cmd);
--#endif
--		cmd->scsi_done(cmd);
-+		complete_cmd(instance, cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d: target did not respond within 250ms\n", HOSTNO);
- 		return 0;
-@@ -1875,7 +1893,7 @@ static void NCR5380_information_transfer
- 				sink = 1;
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
--				cmd->scsi_done(cmd);
-+				complete_cmd(instance, cmd);
- 				return;
- #endif
- 			case PHASE_DATAIN:
-@@ -1935,7 +1953,7 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else {
- #ifdef REAL_DMA
-@@ -1991,8 +2009,6 @@ static void NCR5380_information_transfer
- 						if (ta->queue_size > ta->nr_allocated)
- 							ta->queue_size = ta->nr_allocated;
- 					}
--#else
--					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
- #endif
- 
- 					/*
-@@ -2030,8 +2046,13 @@ static void NCR5380_information_transfer
- 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
- 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
- 						         cmd);
-+#ifdef SUPPORT_TAGS
-+						cmd_free_tag(cmd);
-+#else
-+						hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
-+#endif
- 					} else {
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 					}
- 
- 					/*
-@@ -2202,15 +2223,10 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
--#ifdef SUPPORT_TAGS
--					cmd_free_tag(cmd);
--#else
--					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
--#endif
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
-+					complete_cmd(instance, cmd);
- 					maybe_release_dma_irq(instance);
--					cmd->scsi_done(cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:34:20.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:34:23.000000000 +1100
-@@ -722,6 +722,24 @@ static void NCR5380_exit(struct Scsi_Hos
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:34.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:35.000000000 +1100
+@@ -201,11 +201,6 @@
+  * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
+  *      override-configure an IRQ.
+  *
+- * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
+- *      bytes at a time.  Since interrupts are disabled by default during
+- *      these transfers, we might need this to give reasonable interrupt
+- *      service time if the transfer size gets too large.
+- *
+  * LINKED - if defined, linked commands are supported.
+  *
+  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
+@@ -1993,29 +1988,12 @@ static void NCR5380_information_transfer
+ 				 */
+ 
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
+-				/* KLL
+-				 * PSEUDO_DMA is defined here. If this is the g_NCR5380
+-				 * driver then it will always be defined, so the
+-				 * FLAG_NO_PSEUDO_DMA is used to inhibit PDMA in the base
+-				 * NCR5380 case.  I think this is a fairly clean solution.
+-				 * We supplement these 2 if's with the flag.
+-				 */
+-#ifdef NCR5380_dma_xfer_len
+-				if (!cmd->device->borken && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && (transfersize = NCR5380_dma_xfer_len(instance, cmd)) != 0) {
+-#else
+-				transfersize = cmd->transfersize;
++				transfersize = 0;
++				if (!cmd->device->borken &&
++				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
++					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
+ 
+-#ifdef LIMIT_TRANSFERSIZE	/* If we have problems with interrupt service */
+-				if (transfersize > 512)
+-					transfersize = 512;
+-#endif				/* LIMIT_TRANSFERSIZE */
+-
+-				if (!cmd->device->borken && transfersize && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && cmd->SCp.this_residual && !(cmd->SCp.this_residual % transfersize)) {
+-					/* Limit transfers to 32K, for xx400 & xx406
+-					 * pseudoDMA that transfers in 128 bytes blocks. */
+-					if (transfersize > 32 * 1024)
+-						transfersize = 32 * 1024;
+-#endif
++				if (transfersize) {
+ 					len = transfersize;
+ 					if (NCR5380_transfer_dma(instance, &phase, &len, (unsigned char **) &cmd->SCp.ptr)) {
+ 						/*
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:34.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:35.000000000 +1100
+@@ -2164,11 +2164,13 @@ static void NCR5380_information_transfer
+ 				 */
+ 
+ #if defined(REAL_DMA)
+-				if (
+ #if !defined(CONFIG_SUN3)
+-				    !cmd->device->borken &&
++				transfersize = 0;
++				if (!cmd->device->borken)
+ #endif
+-				    (transfersize = NCR5380_dma_xfer_len(instance, cmd, phase)) >= DMA_MIN_SIZE) {
++					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
++
++				if (transfersize >= DMA_MIN_SIZE) {
+ 					len = transfersize;
+ 					cmd->SCp.phase = phase;
+ 					if (NCR5380_transfer_dma(instance, &phase,
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2015-11-18 19:33:27.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2015-11-18 19:33:35.000000000 +1100
+@@ -419,6 +419,20 @@ static inline int NCR5380_pwrite(struct
+ 	return (0);
  }
  
- /**
-+ * complete_cmd - finish processing a command and return it to the SCSI ML
-+ * @instance: the host instance
-+ * @cmd: command to complete
-+ */
-+
-+static void complete_cmd(struct Scsi_Host *instance,
-+                         struct scsi_cmnd *cmd)
++static int dtc_dma_xfer_len(struct scsi_cmnd *cmd)
 +{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	int transfersize = cmd->transfersize;
 +
-+	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
++	/* Limit transfers to 32K, for xx400 & xx406
++	 * pseudoDMA that transfers in 128 bytes blocks.
++	 */
++	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
++	    !(cmd->SCp.this_residual % transfersize))
++		transfersize = 32 * 1024;
 +
-+	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
-+
-+	cmd->scsi_done(cmd);
++	return transfersize;
 +}
 +
-+/**
-  * NCR5380_queue_command - queue a command
-  * @instance: the relevant SCSI adapter
-  * @cmd: SCSI command
-@@ -1178,7 +1196,7 @@ static int NCR5380_select(struct Scsi_Ho
- 		spin_lock_irq(&hostdata->lock);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		cmd->result = DID_BAD_TARGET << 16;
--		cmd->scsi_done(cmd);
-+		complete_cmd(instance, cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n",
- 		        instance->host_no);
-@@ -1766,7 +1784,7 @@ static void NCR5380_information_transfer
- 				sink = 1;
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
--				cmd->scsi_done(cmd);
-+				complete_cmd(instance, cmd);
- 				return;
+ MODULE_LICENSE("GPL");
+ 
+ #include "NCR5380.c"
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-11-18 19:33:27.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-11-18 19:33:35.000000000 +1100
+@@ -701,6 +701,21 @@ static inline int NCR5380_pwrite(struct
+ 		; 	// TIMEOUT
+ 	return 0;
+ }
++
++static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
++{
++	int transfersize = cmd->transfersize;
++
++	/* Limit transfers to 32K, for xx400 & xx406
++	 * pseudoDMA that transfers in 128 bytes blocks.
++	 */
++	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
++	    !(cmd->SCp.this_residual % transfersize))
++		transfersize = 32 * 1024;
++
++	return transfersize;
++}
++
+ #endif /* PSEUDO_DMA */
+ 
+ /*
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-11-18 19:33:12.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-11-18 19:33:35.000000000 +1100
+@@ -73,6 +73,9 @@
+ 
  #endif
- 			case PHASE_DATAIN:
-@@ -1811,7 +1829,7 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else
- 						cmd->SCp.this_residual -= transfersize - len;
-@@ -1841,7 +1859,6 @@ static void NCR5380_information_transfer
- 					         cmd, scmd_id(cmd), cmd->device->lun);
  
- 					hostdata->connected = NULL;
--					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        generic_NCR5380_dma_xfer_len(cmd)
++
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
+ #define NCR5380_abort generic_NCR5380_abort
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2015-11-18 19:33:05.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2015-11-18 19:33:35.000000000 +1100
+@@ -27,6 +27,9 @@
+ #define NCR5380_read(reg) (readb(DTC_address(reg)))
+ #define NCR5380_write(reg, value) (writeb(value, DTC_address(reg)))
  
- 					/* 
- 					 * I'm not sure what the correct thing to do here is : 
-@@ -1877,8 +1894,9 @@ static void NCR5380_information_transfer
- 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
- 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
- 						         cmd);
-+						hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
- 					} else {
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 					}
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        dtc_dma_xfer_len(cmd)
++
+ #define NCR5380_intr			dtc_intr
+ #define NCR5380_queue_command		dtc_queue_command
+ #define NCR5380_abort			dtc_abort
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2015-11-18 19:33:27.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2015-11-18 19:33:35.000000000 +1100
+@@ -22,6 +22,9 @@
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+ #define NCR5380_read(reg)		cumanascsi_read(instance, reg)
+ #define NCR5380_write(reg, value)	cumanascsi_write(instance, reg, value)
++
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr			cumanascsi_intr
+ #define NCR5380_queue_command		cumanascsi_queue_command
+ #define NCR5380_info			cumanascsi_info
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2015-11-18 19:33:27.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2015-11-18 19:33:35.000000000 +1100
+@@ -26,6 +26,8 @@
+ #define NCR5380_write(reg, value) \
+ 	writeb(value, priv(instance)->base + ((reg) << 2))
  
- 					/* 
-@@ -2025,10 +2043,9 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
--					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
--					cmd->scsi_done(cmd);
-+					complete_cmd(instance, cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+ #define NCR5380_show_info		oakscsi_show_info
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2015-11-18 19:33:27.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2015-11-18 19:33:35.000000000 +1100
+@@ -38,6 +38,7 @@
+ 
+ #define NCR5380_pread                   macscsi_pread
+ #define NCR5380_pwrite                  macscsi_pwrite
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
+ 
+ #define NCR5380_intr                    macscsi_intr
+ #define NCR5380_queue_command           macscsi_queue_command
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2015-11-18 19:33:05.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2015-11-18 19:33:35.000000000 +1100
+@@ -110,6 +110,8 @@
+ #define NCR5380_read(reg) ( inb(PAS16_io_port(reg)) )
+ #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
+ 
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr pas16_intr
+ #define NCR5380_queue_command pas16_queue_command
+ #define NCR5380_abort pas16_abort
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2015-11-18 19:33:05.000000000 +1100
++++ linux/drivers/scsi/t128.h	2015-11-18 19:33:35.000000000 +1100
+@@ -84,6 +84,8 @@
+ #define NCR5380_read(reg) readb(T128_address(reg))
+ #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+ 
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr t128_intr
+ #define NCR5380_queue_command t128_queue_command
+ #define NCR5380_abort t128_abort
