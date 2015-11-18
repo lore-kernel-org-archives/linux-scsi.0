@@ -1,379 +1,352 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 47/71] ncr5380: Fix and cleanup scsi_host_template initializers
-Date: Wed, 18 Nov 2015 19:35:42 +1100
-Message-ID: <20151118083510.132973326@telegraphics.com.au>
+Subject: [PATCH 51/71] ncr5380: Remove command list debug code
+Date: Wed, 18 Nov 2015 19:35:46 +1100
+Message-ID: <20151118083511.542334740@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-cleanup-scsi_host_template-initializers
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline; filename=ncr5380-remove-cmd-list-debug-code
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add missing .module initializer. Use distinct .proc_name values for the
-g_NCR5380 and g_NCR5380_mmio modules. Remove pointless CAN_QUEUE and
-CMD_PER_LUN override macros. Cleanup whitespace and code style.
+Some NCR5380 hosts offer a .show_info method to access the contents of
+the various command list data structures from a procfs file. When NDEBUG
+is set, the same information is sent to the console during EH.
+
+The two core drivers, atari_NCR5380.c and NCR5380.c differ here. Because
+it is just for debugging, the easiest way to fix the discrepancy is
+simply remove this code.
+
+The only remaining users of NCR5380_show_info() and NCR5380_write_info()
+are drivers that define PSEUDO_DMA. The others have no use for the
+.show_info method, so don't initialize it.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/atari_scsi.c |    2 +-
- drivers/scsi/dmx3191d.c   |    1 +
- drivers/scsi/dtc.c        |   32 ++++++++++++++++----------------
- drivers/scsi/dtc.h        |    8 --------
- drivers/scsi/g_NCR5380.c  |   26 +++++++++++++-------------
- drivers/scsi/g_NCR5380.h  |   10 ++--------
- drivers/scsi/mac_scsi.c   |   28 ++++++++++++++--------------
- drivers/scsi/pas16.c      |   32 ++++++++++++++++----------------
- drivers/scsi/pas16.h      |    8 --------
- drivers/scsi/sun3_scsi.c  |    6 +++---
- drivers/scsi/t128.c       |   32 ++++++++++++++++----------------
- drivers/scsi/t128.h       |    8 --------
- 12 files changed, 82 insertions(+), 111 deletions(-)
+ drivers/scsi/NCR5380.c       |   70 ++------------------------------
+ drivers/scsi/arm/oak.c       |    2 
+ drivers/scsi/atari_NCR5380.c |   94 +------------------------------------------
+ drivers/scsi/atari_scsi.c    |    2 
+ drivers/scsi/g_NCR5380.c     |    1 
+ drivers/scsi/sun3_scsi.c     |    2 
+ 6 files changed, 9 insertions(+), 162 deletions(-)
 
-Index: linux/drivers/scsi/dmx3191d.c
+Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2015-11-18 19:34:05.000000000 +1100
-@@ -49,6 +49,7 @@
- 
- 
- static struct scsi_host_template dmx3191d_driver_template = {
-+	.module			= THIS_MODULE,
- 	.proc_name		= DMX3191D_DRIVER_NAME,
- 	.name			= "Domex DMX3191D",
- 	.info			= NCR5380_info,
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-11-18 19:34:05.000000000 +1100
-@@ -436,21 +436,21 @@ static int dtc_release(struct Scsi_Host
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:34:10.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:34:12.000000000 +1100
+@@ -570,22 +570,6 @@ static void prepare_info(struct Scsi_Hos
+ 	         "");
  }
  
- static struct scsi_host_template driver_template = {
--	.name				= "DTC 3180/3280 ",
--	.detect				= dtc_detect,
--	.release			= dtc_release,
--	.proc_name			= "dtc3x80",
--	.show_info			= dtc_show_info,
--	.write_info			= dtc_write_info,
--	.info				= dtc_info,
--	.queuecommand			= dtc_queue_command,
--	.eh_abort_handler		= dtc_abort,
--	.eh_bus_reset_handler		= dtc_bus_reset,
--	.bios_param     		= dtc_biosparam,
--	.can_queue      		= CAN_QUEUE,
--	.this_id        		= 7,
--	.sg_tablesize   		= SG_ALL,
--	.cmd_per_lun    		= CMD_PER_LUN,
--	.use_clustering 		= DISABLE_CLUSTERING,
-+	.name			= "DTC 3180/3280",
-+	.detect			= dtc_detect,
-+	.release		= dtc_release,
-+	.proc_name		= "dtc3x80",
-+	.show_info		= dtc_show_info,
-+	.write_info		= dtc_write_info,
-+	.info			= dtc_info,
-+	.queuecommand		= dtc_queue_command,
-+	.eh_abort_handler	= dtc_abort,
-+	.eh_bus_reset_handler	= dtc_bus_reset,
-+	.bios_param		= dtc_biosparam,
-+	.can_queue		= 32,
-+	.this_id		= 7,
-+	.sg_tablesize		= SG_ALL,
-+	.cmd_per_lun		= 2,
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- #include "scsi_module.c"
-Index: linux/drivers/scsi/dtc.h
+-/**
+- *	NCR5380_print_status 	-	dump controller info
+- *	@instance: controller to dump
+- *
+- *	Print commands in the various queues, called from NCR5380_abort 
+- *	and NCR5380_debug to aid debugging.
+- *
+- *	Locks: called functions disable irqs
+- */
+-
+-static void __maybe_unused NCR5380_print_status(struct Scsi_Host *instance)
+-{
+-	NCR5380_dprint(NDEBUG_ANY, instance);
+-	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+-}
+-
+ #ifdef PSEUDO_DMA
+ /******************************************/
+ /*
+@@ -610,65 +594,19 @@ static int __maybe_unused NCR5380_write_
+ 	hostdata->spin_max_w = 0;
+ 	return 0;
+ }
+-#endif
+-
+-static
+-void lprint_Scsi_Cmnd(struct scsi_cmnd *cmd, struct seq_file *m);
+-static
+-void lprint_command(unsigned char *cmd, struct seq_file *m);
+-static
+-void lprint_opcode(int opcode, struct seq_file *m);
+ 
+ static int __maybe_unused NCR5380_show_info(struct seq_file *m,
+ 	struct Scsi_Host *instance)
+ {
+ 	struct NCR5380_hostdata *hostdata;
+-	struct scsi_cmnd *ptr;
+-	unsigned long flags;
+ 
+ 	hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 
+-#ifdef PSEUDO_DMA
+ 	seq_printf(m, "Highwater I/O busy spin counts: write %d, read %d\n",
+ 	        hostdata->spin_max_w, hostdata->spin_max_r);
+-#endif
+-	spin_lock_irqsave(&hostdata->lock, flags);
+-	if (!hostdata->connected)
+-		seq_printf(m, "scsi%d: no currently connected command\n", instance->host_no);
+-	else
+-		lprint_Scsi_Cmnd((struct scsi_cmnd *) hostdata->connected, m);
+-	seq_printf(m, "scsi%d: issue_queue\n", instance->host_no);
+-	for (ptr = (struct scsi_cmnd *) hostdata->issue_queue; ptr; ptr = (struct scsi_cmnd *) ptr->host_scribble)
+-		lprint_Scsi_Cmnd(ptr, m);
+-
+-	seq_printf(m, "scsi%d: disconnected_queue\n", instance->host_no);
+-	for (ptr = (struct scsi_cmnd *) hostdata->disconnected_queue; ptr; ptr = (struct scsi_cmnd *) ptr->host_scribble)
+-		lprint_Scsi_Cmnd(ptr, m);
+-	spin_unlock_irqrestore(&hostdata->lock, flags);
+ 	return 0;
+ }
+-
+-static void lprint_Scsi_Cmnd(struct scsi_cmnd *cmd, struct seq_file *m)
+-{
+-	seq_printf(m, "scsi%d : destination target %d, lun %llu\n", cmd->device->host->host_no, cmd->device->id, cmd->device->lun);
+-	seq_puts(m, "        command = ");
+-	lprint_command(cmd->cmnd, m);
+-}
+-
+-static void lprint_command(unsigned char *command, struct seq_file *m)
+-{
+-	int i, s;
+-	lprint_opcode(command[0], m);
+-	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
+-		seq_printf(m, "%02x ", command[i]);
+-	seq_putc(m, '\n');
+-}
+-
+-static void lprint_opcode(int opcode, struct seq_file *m)
+-{
+-	seq_printf(m, "%2d (0x%02x)", opcode, opcode);
+-}
+-
++#endif
+ 
+ /**
+  *	NCR5380_init	-	initialise an NCR5380
+@@ -2342,7 +2280,8 @@ static int NCR5380_abort(struct scsi_cmn
+ 
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+-	NCR5380_print_status(instance);
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ 
+ 	dprintk(NDEBUG_ABORT, "scsi%d : abort called\n", instance->host_no);
+ 	dprintk(NDEBUG_ABORT, "        basr 0x%X, sr 0x%X\n", NCR5380_read(BUS_AND_STATUS_REG), NCR5380_read(STATUS_REG));
+@@ -2497,8 +2436,9 @@ static int NCR5380_bus_reset(struct scsi
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+ 	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
+-	NCR5380_print_status(instance);
+ #endif
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ 
+ 	do_reset(instance);
+ 
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/dtc.h	2015-11-18 19:33:35.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2015-11-18 19:34:05.000000000 +1100
-@@ -10,14 +10,6 @@
- #ifndef DTC3280_H
- #define DTC3280_H
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:10.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:12.000000000 +1100
+@@ -669,94 +669,6 @@ static void prepare_info(struct Scsi_Hos
+ }
  
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
+ /**
+- * NCR5380_print_status - dump controller info
+- * @instance: controller to dump
+- *
+- * Print commands in the various queues, called from NCR5380_abort
+- * to aid debugging.
+- */
 -
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 32 
--#endif
+-static void lprint_Scsi_Cmnd(struct scsi_cmnd *cmd)
+-{
+-	int i, s;
+-	unsigned char *command;
+-	printk("scsi%d: destination target %d, lun %llu\n",
+-		H_NO(cmd), cmd->device->id, cmd->device->lun);
+-	printk(KERN_CONT "        command = ");
+-	command = cmd->cmnd;
+-	printk(KERN_CONT "%2d (0x%02x)", command[0], command[0]);
+-	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
+-		printk(KERN_CONT " %02x", command[i]);
+-	printk("\n");
+-}
 -
- #define NCR5380_implementation_fields \
-     void __iomem *base
+-static void __maybe_unused NCR5380_print_status(struct Scsi_Host *instance)
+-{
+-	struct NCR5380_hostdata *hostdata;
+-	struct scsi_cmnd *ptr;
+-
+-	NCR5380_dprint(NDEBUG_ANY, instance);
+-	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+-
+-	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+-
+-	if (!hostdata->connected)
+-		printk("scsi%d: no currently connected command\n", HOSTNO);
+-	else
+-		lprint_Scsi_Cmnd((struct scsi_cmnd *) hostdata->connected);
+-	printk("scsi%d: issue_queue\n", HOSTNO);
+-	for (ptr = (struct scsi_cmnd *)hostdata->issue_queue; ptr; ptr = NEXT(ptr))
+-		lprint_Scsi_Cmnd(ptr);
+-
+-	printk("scsi%d: disconnected_queue\n", HOSTNO);
+-	for (ptr = (struct scsi_cmnd *) hostdata->disconnected_queue; ptr;
+-	     ptr = NEXT(ptr))
+-		lprint_Scsi_Cmnd(ptr);
+-	printk("\n");
+-}
+-
+-static void show_Scsi_Cmnd(struct scsi_cmnd *cmd, struct seq_file *m)
+-{
+-	int i, s;
+-	unsigned char *command;
+-	seq_printf(m, "scsi%d: destination target %d, lun %llu\n",
+-		H_NO(cmd), cmd->device->id, cmd->device->lun);
+-	seq_puts(m, "        command = ");
+-	command = cmd->cmnd;
+-	seq_printf(m, "%2d (0x%02x)", command[0], command[0]);
+-	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
+-		seq_printf(m, " %02x", command[i]);
+-	seq_putc(m, '\n');
+-}
+-
+-static int __maybe_unused NCR5380_show_info(struct seq_file *m,
+-                                            struct Scsi_Host *instance)
+-{
+-	struct NCR5380_hostdata *hostdata;
+-	struct scsi_cmnd *ptr;
+-	unsigned long flags;
+-
+-	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+-
+-	spin_lock_irqsave(&hostdata->lock, flags);
+-	if (!hostdata->connected)
+-		seq_printf(m, "scsi%d: no currently connected command\n", HOSTNO);
+-	else
+-		show_Scsi_Cmnd((struct scsi_cmnd *) hostdata->connected, m);
+-	seq_printf(m, "scsi%d: issue_queue\n", HOSTNO);
+-	for (ptr = (struct scsi_cmnd *)hostdata->issue_queue; ptr; ptr = NEXT(ptr))
+-		show_Scsi_Cmnd(ptr, m);
+-
+-	seq_printf(m, "scsi%d: disconnected_queue\n", HOSTNO);
+-	for (ptr = (struct scsi_cmnd *) hostdata->disconnected_queue; ptr;
+-	     ptr = NEXT(ptr))
+-		show_Scsi_Cmnd(ptr, m);
+-
+-	spin_unlock_irqrestore(&hostdata->lock, flags);
+-	return 0;
+-}
+-
+-/**
+  * NCR5380_init - initialise an NCR5380
+  * @instance: adapter to configure
+  * @flags: control flags
+@@ -2627,7 +2539,8 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
  
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+-	NCR5380_print_status(instance);
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ 
+ 	dprintk(NDEBUG_ABORT, "scsi%d: abort called basr 0x%02x, sr 0x%02x\n", HOSTNO,
+ 		    NCR5380_read(BUS_AND_STATUS_REG),
+@@ -2825,8 +2738,9 @@ static int NCR5380_bus_reset(struct scsi
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+ 	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
+-	NCR5380_print_status(instance);
+ #endif
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ 
+ 	do_reset(instance);
+ 
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2015-11-18 19:34:01.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2015-11-18 19:34:12.000000000 +1100
+@@ -28,7 +28,6 @@
+ 
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+-#define NCR5380_show_info		oakscsi_show_info
+ 
+ #define NCR5380_implementation_fields	\
+ 	void __iomem *base
+@@ -104,7 +103,6 @@ printk("reading %p len %d\n", addr, len)
+ 
+ static struct scsi_host_template oakscsi_template = {
+ 	.module			= THIS_MODULE,
+-	.show_info		= oakscsi_show_info,
+ 	.name			= "Oak 16-bit SCSI",
+ 	.info			= oakscsi_info,
+ 	.queuecommand		= oakscsi_queue_command,
+Index: linux/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.c	2015-11-18 19:34:05.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2015-11-18 19:34:12.000000000 +1100
+@@ -97,7 +97,6 @@
+ 
+ #define NCR5380_queue_command           atari_scsi_queue_command
+ #define NCR5380_abort                   atari_scsi_abort
+-#define NCR5380_show_info               atari_scsi_show_info
+ #define NCR5380_info                    atari_scsi_info
+ 
+ #define NCR5380_dma_read_setup(instance, data, count) \
+@@ -774,7 +773,6 @@ static int atari_scsi_bus_reset(struct s
+ static struct scsi_host_template atari_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= DRV_MODULE_NAME,
+-	.show_info		= atari_scsi_show_info,
+ 	.name			= "Atari native SCSI",
+ 	.info			= atari_scsi_info,
+ 	.queuecommand		= atari_scsi_queue_command,
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-11-18 19:34:05.000000000 +1100
-@@ -305,7 +305,6 @@ static int __init generic_NCR5380_detect
- 		}
- 	}
- #endif
--	tpnt->proc_name = "g_NCR5380";
- 
- 	for (count = 0; current_override < NO_OVERRIDES; ++current_override) {
- 		if (!(overrides[current_override].NCR5380_map_name))
-@@ -716,20 +715,21 @@ static int generic_NCR5380_dma_xfer_len(
- #include "NCR5380.c"
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-11-18 19:34:05.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-11-18 19:34:12.000000000 +1100
+@@ -716,7 +716,6 @@ static int generic_NCR5380_dma_xfer_len(
  
  static struct scsi_host_template driver_template = {
--	.show_info      	= generic_NCR5380_show_info,
--	.name           	= "Generic NCR5380/NCR53C400 SCSI",
--	.detect         	= generic_NCR5380_detect,
--	.release        	= generic_NCR5380_release_resources,
--	.info           	= generic_NCR5380_info,
--	.queuecommand   	= generic_NCR5380_queue_command,
-+	.proc_name		= DRV_MODULE_NAME,
-+	.show_info		= generic_NCR5380_show_info,
-+	.name			= "Generic NCR5380/NCR53C400 SCSI",
-+	.detect			= generic_NCR5380_detect,
-+	.release		= generic_NCR5380_release_resources,
-+	.info			= generic_NCR5380_info,
-+	.queuecommand		= generic_NCR5380_queue_command,
- 	.eh_abort_handler	= generic_NCR5380_abort,
- 	.eh_bus_reset_handler	= generic_NCR5380_bus_reset,
--	.bios_param     	= NCR5380_BIOSPARAM,
--	.can_queue      	= CAN_QUEUE,
--        .this_id        	= 7,
--        .sg_tablesize   	= SG_ALL,
--	.cmd_per_lun    	= CMD_PER_LUN,
--        .use_clustering		= DISABLE_CLUSTERING,
-+	.bios_param		= NCR5380_BIOSPARAM,
-+	.can_queue		= 16,
-+	.this_id		= 7,
-+	.sg_tablesize		= SG_ALL,
-+	.cmd_per_lun		= 2,
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- 
- #include "scsi_module.c"
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2015-11-18 19:33:35.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2015-11-18 19:34:05.000000000 +1100
-@@ -21,18 +21,11 @@
- #define NCR5380_BIOSPARAM NULL
- #endif
- 
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
--
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 16
--#endif
--
- #define __STRVAL(x) #x
- #define STRVAL(x) __STRVAL(x)
- 
- #ifndef SCSI_G_NCR5380_MEM
-+#define DRV_MODULE_NAME "g_NCR5380"
- 
- #define NCR5380_map_type int
- #define NCR5380_map_name port
-@@ -53,6 +46,7 @@
- 
- #else 
- /* therefore SCSI_G_NCR5380_MEM */
-+#define DRV_MODULE_NAME "g_NCR5380_mmio"
- 
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2015-11-18 19:34:05.000000000 +1100
-@@ -309,20 +309,20 @@ static int macscsi_pwrite(struct Scsi_Ho
- #define PFX                     DRV_MODULE_NAME ": "
- 
- static struct scsi_host_template mac_scsi_template = {
--	.module				= THIS_MODULE,
--	.proc_name			= DRV_MODULE_NAME,
--	.show_info			= macscsi_show_info,
--	.write_info			= macscsi_write_info,
--	.name				= "Macintosh NCR5380 SCSI",
--	.info				= macscsi_info,
--	.queuecommand			= macscsi_queue_command,
--	.eh_abort_handler		= macscsi_abort,
--	.eh_bus_reset_handler		= macscsi_bus_reset,
--	.can_queue			= 16,
--	.this_id			= 7,
--	.sg_tablesize			= SG_ALL,
--	.cmd_per_lun			= 2,
--	.use_clustering			= DISABLE_CLUSTERING
-+	.module			= THIS_MODULE,
-+	.proc_name		= DRV_MODULE_NAME,
-+	.show_info		= macscsi_show_info,
-+	.write_info		= macscsi_write_info,
-+	.name			= "Macintosh NCR5380 SCSI",
-+	.info			= macscsi_info,
-+	.queuecommand		= macscsi_queue_command,
-+	.eh_abort_handler	= macscsi_abort,
-+	.eh_bus_reset_handler	= macscsi_bus_reset,
-+	.can_queue		= 16,
-+	.this_id		= 7,
-+	.sg_tablesize		= SG_ALL,
-+	.cmd_per_lun		= 2,
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- 
- static int __init mac_scsi_probe(struct platform_device *pdev)
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-11-18 19:34:05.000000000 +1100
-@@ -546,22 +546,22 @@ static int pas16_release(struct Scsi_Hos
- }
- 
- static struct scsi_host_template driver_template = {
--	.name           = "Pro Audio Spectrum-16 SCSI",
--	.detect         = pas16_detect,
--	.release        = pas16_release,
--	.proc_name      = "pas16",
--	.show_info      = pas16_show_info,
--	.write_info     = pas16_write_info,
--	.info           = pas16_info,
--	.queuecommand   = pas16_queue_command,
--	.eh_abort_handler = pas16_abort,
--	.eh_bus_reset_handler = pas16_bus_reset,
--	.bios_param     = pas16_biosparam, 
--	.can_queue      = CAN_QUEUE,
--	.this_id        = 7,
--	.sg_tablesize   = SG_ALL,
--	.cmd_per_lun    = CMD_PER_LUN,
--	.use_clustering = DISABLE_CLUSTERING,
-+	.name			= "Pro Audio Spectrum-16 SCSI",
-+	.detect			= pas16_detect,
-+	.release		= pas16_release,
-+	.proc_name		= "pas16",
-+	.show_info		= pas16_show_info,
-+	.write_info		= pas16_write_info,
-+	.info			= pas16_info,
-+	.queuecommand		= pas16_queue_command,
-+	.eh_abort_handler	= pas16_abort,
-+	.eh_bus_reset_handler	= pas16_bus_reset,
-+	.bios_param		= pas16_biosparam,
-+	.can_queue		= 32,
-+	.this_id		= 7,
-+	.sg_tablesize		= SG_ALL,
-+	.cmd_per_lun		= 2,
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- #include "scsi_module.c"
- 
-Index: linux/drivers/scsi/pas16.h
-===================================================================
---- linux.orig/drivers/scsi/pas16.h	2015-11-18 19:33:35.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2015-11-18 19:34:05.000000000 +1100
-@@ -95,14 +95,6 @@
- #define OPERATION_MODE_1 0xec03
- #define IO_CONFIG_3 0xf002
- 
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
--
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 32 
--#endif
--
- #define NCR5380_implementation_fields /* none */
- 
- #define PAS16_io_port(reg) (instance->io_port + pas16_offset[(reg)])
+ 	.proc_name		= DRV_MODULE_NAME,
+-	.show_info		= generic_NCR5380_show_info,
+ 	.name			= "Generic NCR5380/NCR53C400 SCSI",
+ 	.detect			= generic_NCR5380_detect,
+ 	.release		= generic_NCR5380_release_resources,
 Index: linux/drivers/scsi/sun3_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2015-11-18 19:33:27.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2015-11-18 19:34:05.000000000 +1100
-@@ -463,13 +463,13 @@ static struct scsi_host_template sun3_sc
+--- linux.orig/drivers/scsi/sun3_scsi.c	2015-11-18 19:34:05.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2015-11-18 19:34:12.000000000 +1100
+@@ -53,7 +53,6 @@
+ #define NCR5380_queue_command           sun3scsi_queue_command
+ #define NCR5380_bus_reset               sun3scsi_bus_reset
+ #define NCR5380_abort                   sun3scsi_abort
+-#define NCR5380_show_info               sun3scsi_show_info
+ #define NCR5380_info                    sun3scsi_info
+ 
+ #define NCR5380_dma_read_setup(instance, data, count) \
+@@ -459,7 +458,6 @@ static int sun3scsi_dma_finish(int write
+ static struct scsi_host_template sun3_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= DRV_MODULE_NAME,
+-	.show_info		= sun3scsi_show_info,
  	.name			= SUN3_SCSI_NAME,
  	.info			= sun3scsi_info,
  	.queuecommand		= sun3scsi_queue_command,
--	.eh_abort_handler      	= sun3scsi_abort,
--	.eh_bus_reset_handler  	= sun3scsi_bus_reset,
-+	.eh_abort_handler	= sun3scsi_abort,
-+	.eh_bus_reset_handler	= sun3scsi_bus_reset,
- 	.can_queue		= 16,
- 	.this_id		= 7,
- 	.sg_tablesize		= SG_NONE,
- 	.cmd_per_lun		= 2,
--	.use_clustering		= DISABLE_CLUSTERING
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- 
- static int __init sun3_scsi_probe(struct platform_device *pdev)
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2015-11-18 19:34:05.000000000 +1100
-@@ -390,21 +390,21 @@ MODULE_LICENSE("GPL");
- #include "NCR5380.c"
- 
- static struct scsi_host_template driver_template = {
--	.name           = "Trantor T128/T128F/T228",
--	.detect         = t128_detect,
--	.release        = t128_release,
--	.proc_name      = "t128",
--	.show_info      = t128_show_info,
--	.write_info     = t128_write_info,
--	.info           = t128_info,
--	.queuecommand   = t128_queue_command,
--	.eh_abort_handler = t128_abort,
--	.eh_bus_reset_handler    = t128_bus_reset,
--	.bios_param     = t128_biosparam,
--	.can_queue      = CAN_QUEUE,
--        .this_id        = 7,
--	.sg_tablesize   = SG_ALL,
--	.cmd_per_lun    = CMD_PER_LUN,
--	.use_clustering = DISABLE_CLUSTERING,
-+	.name			= "Trantor T128/T128F/T228",
-+	.detect			= t128_detect,
-+	.release		= t128_release,
-+	.proc_name		= "t128",
-+	.show_info		= t128_show_info,
-+	.write_info		= t128_write_info,
-+	.info			= t128_info,
-+	.queuecommand		= t128_queue_command,
-+	.eh_abort_handler	= t128_abort,
-+	.eh_bus_reset_handler	= t128_bus_reset,
-+	.bios_param		= t128_biosparam,
-+	.can_queue		= 32,
-+	.this_id		= 7,
-+	.sg_tablesize		= SG_ALL,
-+	.cmd_per_lun		= 2,
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- #include "scsi_module.c"
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2015-11-18 19:33:35.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2015-11-18 19:34:05.000000000 +1100
-@@ -67,14 +67,6 @@
- 
- #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
- 
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
--
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 32
--#endif
--
- #define NCR5380_implementation_fields \
-     void __iomem *base
- 
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-11-18 19:34:01.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2015-11-18 19:34:05.000000000 +1100
-@@ -781,7 +781,7 @@ static struct scsi_host_template atari_s
- 	.eh_abort_handler	= atari_scsi_abort,
- 	.eh_bus_reset_handler	= atari_scsi_bus_reset,
- 	.this_id		= 7,
--	.use_clustering		= DISABLE_CLUSTERING
-+	.use_clustering		= DISABLE_CLUSTERING,
- };
- 
- static int __init atari_scsi_probe(struct platform_device *pdev)
