@@ -1,95 +1,198 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 27/71] ncr5380: Add missing lock in eh_abort_handler
-Date: Wed, 18 Nov 2015 19:35:22 +1100
-Message-ID: <20151118083503.032800462@telegraphics.com.au>
+Subject: [PATCH 29/71] ncr5380: Remove references to linked commands
+Date: Wed, 18 Nov 2015 19:35:24 +1100
+Message-ID: <20151118083503.641706385@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-spin_unlock-crash
+Content-Disposition: inline; filename=ncr5380-remove-LINKED
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The host spin lock needs to be acquired by NCR5380_abort() before it calls
-NCR5380_select(). This patch doesn't actually fix the EH issues in this
-driver but it does avoid this:
+From: Hannes Reinecke <hare@suse.de>
 
-BUG: spinlock already unlocked on CPU#0, kworker/u4:1/14
- lock: 0xc0c0f834, .magic: dead4ead, .owner: <none>/-1, .owner_cpu: -1
- CPU: 0 PID: 14 Comm: kworker/u4:1 Not tainted 3.15.5 #5
- Workqueue: scsi_tmf_4 scmd_eh_abort_handler
- Call Trace:
- [ef885d70] [c0008acc] show_stack+0x70/0x1bc (unreliable)
- [ef885db0] [c0492a00] dump_stack+0x84/0x684
- [ef885dc0] [c006f314] spin_dump+0xd0/0xe8
- [ef885dd0] [c006f460] do_raw_spin_unlock+0xd4/0xd8
- [ef885df0] [c0491c8c] _raw_spin_unlock_irq+0x10/0x3c
- [ef885e00] [f381fe3c] NCR5380_select+0x3e4/0x6e8 [dmx3191d]
- [ef885e40] [f382026c] NCR5380_abort+0x12c/0x190 [dmx3191d]
- [ef885e60] [c02fec9c] scmd_eh_abort_handler+0x100/0x460
- [ef885e80] [c0046470] process_one_work+0x16c/0x420
- [ef885ea0] [c0046870] worker_thread+0x14c/0x430
- [ef885ed0] [c004e4f4] kthread+0xd8/0xec
- [ef885f40] [c00124d4] ret_from_kernel_thread+0x5c/0x64
+Some old drivers partially implemented support for linked commands using
+a "proposed" next_link pointer in struct scsi_cmnd that never actually
+existed. Remove this code.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+
+This is a modified version of Hannes' patch so I have dropped his
+signed-off-by tag. This version has a rewritten commit log and also
+removes additional references to linked commands from comments. This
+version also omits the sun3_NCR5380.c changes since that file no
+longer exists.
+
+---
+ drivers/scsi/NCR5380.c       |   42 ------------------------------
+ drivers/scsi/atari_NCR5380.c |   60 -------------------------------------------
+ 2 files changed, 102 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:40.000000000 +1100
-@@ -2367,6 +2367,7 @@ static int NCR5380_abort(struct scsi_cmn
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:41.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:42.000000000 +1100
+@@ -78,9 +78,6 @@
+  * 
+  * 4.  Test SCSI-II tagged queueing (I have no devices which support 
+  *      tagged queueing)
+- *
+- * 5.  Test linked command handling code after Eric is ready with 
+- *      the high level code.
+  */
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_transport_spi.h>
+@@ -94,7 +91,6 @@
+ #endif
  
- 	scmd_printk(KERN_WARNING, cmd, "aborting command\n");
+ #ifndef notyet
+-#undef LINKED
+ #undef REAL_DMA
+ #endif
  
-+	spin_lock_irq(instance->host_lock);
- 	NCR5380_print_status(instance);
+@@ -191,8 +187,6 @@
+  * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
+  *      override-configure an IRQ.
+  *
+- * LINKED - if defined, linked commands are supported.
+- *
+  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
+  *
+  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
+@@ -1916,42 +1910,6 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Message = tmp;
  
- 	dprintk(NDEBUG_ABORT, "scsi%d : abort called\n", instance->host_no);
-@@ -2413,6 +2414,7 @@ static int NCR5380_abort(struct scsi_cmn
- 			REMOVE(5, *prev, tmp, tmp->host_scribble);
- 			(*prev) = (struct scsi_cmnd *) tmp->host_scribble;
- 			tmp->host_scribble = NULL;
-+			spin_unlock_irq(instance->host_lock);
- 			tmp->result = DID_ABORT << 16;
- 			dprintk(NDEBUG_ABORT, "scsi%d : abort removed command from issue queue.\n", instance->host_no);
- 			tmp->scsi_done(tmp);
-@@ -2436,6 +2438,7 @@ static int NCR5380_abort(struct scsi_cmn
+ 				switch (tmp) {
+-					/*
+-					 * Linking lets us reduce the time required to get the 
+-					 * next command out to the device, hopefully this will
+-					 * mean we don't waste another revolution due to the delays
+-					 * required by ARBITRATION and another SELECTION.
+-					 *
+-					 * In the current implementation proposal, low level drivers
+-					 * merely have to start the next command, pointed to by 
+-					 * next_link, done() is called as with unlinked commands.
+-					 */
+-#ifdef LINKED
+-				case LINKED_CMD_COMPLETE:
+-				case LINKED_FLG_CMD_COMPLETE:
+-					/* Accept message by clearing ACK */
+-					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked command complete.\n", instance->host_no, cmd->device->id, cmd->device->lun);
+-					/* 
+-					 * Sanity check : A linked command should only terminate with
+-					 * one of these messages if there are more linked commands
+-					 * available.
+-					 */
+-					if (!cmd->next_link) {
+-					    printk("scsi%d : target %d lun %llu linked command complete, no next_link\n" instance->host_no, cmd->device->id, cmd->device->lun);
+-						sink = 1;
+-						do_abort(instance);
+-						return;
+-					}
+-					initialize_SCp(cmd->next_link);
+-					/* The next command is still part of this process */
+-					cmd->next_link->tag = cmd->tag;
+-					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked request done, calling scsi_done().\n", instance->host_no, cmd->device->id, cmd->device->lun);
+-					cmd->scsi_done(cmd);
+-					cmd = hostdata->connected;
+-					break;
+-#endif				/* def LINKED */
+ 				case ABORT:
+ 				case COMMAND_COMPLETE:
+ 					/* Accept message by clearing ACK */
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:41.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:42.000000000 +1100
+@@ -66,12 +66,6 @@
+  *
   */
  
- 	if (hostdata->connected) {
-+		spin_unlock_irq(instance->host_lock);
- 		dprintk(NDEBUG_ABORT, "scsi%d : abort failed, command connected.\n", instance->host_no);
- 		return FAILED;
- 	}
-@@ -2468,8 +2471,10 @@ static int NCR5380_abort(struct scsi_cmn
- 		if (cmd == tmp) {
- 			dprintk(NDEBUG_ABORT, "scsi%d : aborting disconnected command.\n", instance->host_no);
+-/*
+- * Further development / testing that should be done :
+- * 1.  Test linked command handling code after Eric is ready with
+- *     the high level code.
+- */
+-
+ /* Adapted for the sun3 by Sam Creasey. */
  
--			if (NCR5380_select(instance, cmd))
-+			if (NCR5380_select(instance, cmd)) {
-+				spin_unlock_irq(instance->host_lock);
- 				return FAILED;
-+			}
- 			dprintk(NDEBUG_ABORT, "scsi%d : nexus reestablished.\n", instance->host_no);
+ #include <scsi/scsi_dbg.h>
+@@ -98,10 +92,6 @@
+ #define REMOVE(w,x,y,z)
+ #endif
  
- 			do_abort(instance);
-@@ -2479,6 +2484,7 @@ static int NCR5380_abort(struct scsi_cmn
- 					REMOVE(5, *prev, tmp, tmp->host_scribble);
- 					*prev = (struct scsi_cmnd *) tmp->host_scribble;
- 					tmp->host_scribble = NULL;
-+					spin_unlock_irq(instance->host_lock);
- 					tmp->result = DID_ABORT << 16;
- 					tmp->scsi_done(tmp);
- 					return SUCCESS;
-@@ -2493,6 +2499,7 @@ static int NCR5380_abort(struct scsi_cmn
-  * so we won't panic, but we will notify the user in case something really
-  * broke.
-  */
-+	spin_unlock_irq(instance->host_lock);
- 	printk(KERN_WARNING "scsi%d : warning : SCSI command probably completed successfully\n"
- 			"         before abortion\n", instance->host_no);
- 	return FAILED;
+-#ifndef notyet
+-#undef LINKED
+-#endif
+-
+ /*
+  * Design
+  *
+@@ -172,8 +162,6 @@
+  * DIFFERENTIAL - if defined, NCR53c81 chips will use external differential
+  *	transceivers.
+  *
+- * LINKED - if defined, linked commands are supported.
+- *
+  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
+  *
+  * SUPPORT_TAGS - if defined, SCSI-2 tagged queuing is used where possible
+@@ -2210,54 +2198,6 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Message = tmp;
+ 
+ 				switch (tmp) {
+-				/*
+-				 * Linking lets us reduce the time required to get the
+-				 * next command out to the device, hopefully this will
+-				 * mean we don't waste another revolution due to the delays
+-				 * required by ARBITRATION and another SELECTION.
+-				 *
+-				 * In the current implementation proposal, low level drivers
+-				 * merely have to start the next command, pointed to by
+-				 * next_link, done() is called as with unlinked commands.
+-				 */
+-#ifdef LINKED
+-				case LINKED_CMD_COMPLETE:
+-				case LINKED_FLG_CMD_COMPLETE:
+-					/* Accept message by clearing ACK */
+-					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-
+-					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked command "
+-						   "complete.\n", HOSTNO, cmd->device->id, cmd->device->lun);
+-
+-					/* Enable reselect interrupts */
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-					/*
+-					 * Sanity check : A linked command should only terminate
+-					 * with one of these messages if there are more linked
+-					 * commands available.
+-					 */
+-
+-					if (!cmd->next_link) {
+-						 printk(KERN_NOTICE "scsi%d: target %d lun %llu "
+-							"linked command complete, no next_link\n",
+-							HOSTNO, cmd->device->id, cmd->device->lun);
+-						sink = 1;
+-						do_abort(instance);
+-						return;
+-					}
+-
+-					initialize_SCp(cmd->next_link);
+-					/* The next command is still part of this process; copy it
+-					 * and don't free it! */
+-					cmd->next_link->tag = cmd->tag;
+-					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked request "
+-						   "done, calling scsi_done().\n",
+-						   HOSTNO, cmd->device->id, cmd->device->lun);
+-					cmd->scsi_done(cmd);
+-					cmd = hostdata->connected;
+-					break;
+-#endif /* def LINKED */
+ 				case ABORT:
+ 				case COMMAND_COMPLETE:
+ 					/* Accept message by clearing ACK */
