@@ -1,81 +1,76 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v5 20/32] scsi: hisi_sas: add v1 hw interrupt init
-Date: Wed, 18 Nov 2015 16:13:10 +0000
-Message-ID: <564CA396.9010709@huawei.com>
-References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
- <1447779059-136143-21-git-send-email-john.garry@huawei.com>
- <CAL_Jsq+NEm_+cGYC6XG6_fprg1Gd7VG0dj8MKPAPUPqpBzL0pg@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 4/9] srpt: chain RDMA READ/WRITE requests
+Date: Wed, 18 Nov 2015 08:32:59 -0800
+Message-ID: <564CA83B.4060403@sandisk.com>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+ <1447422410-20891-5-git-send-email-hch@lst.de> <564BD1AF.60200@sandisk.com>
+ <564C41B8.2080904@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL_Jsq+NEm_+cGYC6XG6_fprg1Gd7VG0dj8MKPAPUPqpBzL0pg@mail.gmail.com>
+In-Reply-To: <564C41B8.2080904@dev.mellanox.co.il>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh+dt@kernel.org>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>, John Garry <john.garry2@mail.dcu.ie>, hare@suse.de, Wei Xu <xuwei5@hisilicon.com>, Zhangfei Gao <zhangfei.gao@linaro.org>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org
+Cc: axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 18/11/2015 15:26, Rob Herring wrote:
-> On Tue, Nov 17, 2015 at 10:50 AM, John Garry <john.garry@huawei.com> wrote:
->> Add code to interrupts, so now we can get a phy up
->> interrupt when a disk is connected.
-> So I started looking at why you are using of_irq_count which drivers
-> shouldn't need to. In patch 5 you use it to allocate memory to store
-> the irq names, then use them here...
-right
+On 11/18/2015 01:15 AM, Sagi Grimberg wrote:
+> On 18/11/2015 03:17, Bart Van Assche wrote:
+>> On 11/13/2015 05:46 AM, Christoph Hellwig wrote:
+>>> -        ret = ib_post_send(ch->qp, &wr.wr, &bad_wr);
+>>> -        if (ret)
+>>> -            break;
+>>> +        if (i == n_rdma - 1) {
+>>> +            /* only get completion event for the last rdma read */
+>>> +            if (dir == DMA_TO_DEVICE)
+>>> +                wr->wr.send_flags = IB_SEND_SIGNALED;
+>>> +            wr->wr.next = NULL;
+>>> +        } else {
+>>> +            wr->wr.next = &ioctx->rdma_ius[i + 1].wr;
+>>> +        }
+>>>       }
+>>>
+>>> +    ret = ib_post_send(ch->qp, &ioctx->rdma_ius->wr, &bad_wr);
+>>>       if (ret)
+>>>           pr_err("%s[%d]: ib_post_send() returned %d for %d/%d\n",
+>>>                    __func__, __LINE__, ret, i, n_rdma);
+>>
+>> Hello Christoph,
 >
->> +static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
->> +       {"Phy Up"},
->> +};
->> +static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
->> +       int_phyup_v1_hw,
->> +};
->> +
->> +static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
->> +{
->> +       struct device *dev = &hisi_hba->pdev->dev;
->> +       struct device_node *np = dev->of_node;
->> +       char *int_names = hisi_hba->int_names;
->> +       int i, j, irq, rc, idx;
->> +
->> +       if (!np)
->> +               return -ENOENT;
->> +
->> +       for (i = 0; i < hisi_hba->n_phy; i++) {
->> +               struct hisi_sas_phy *phy = &hisi_hba->phy[i];
->> +
->> +               idx = i * HISI_SAS_PHY_INT_NR;
->> +               for (j = 0; j < HISI_SAS_PHY_INT_NR; j++, idx++) {
->> +                       irq = irq_of_parse_and_map(np, idx);
-> It is also preferred that drivers don't use this either. You should
-> use platform_get_irq() instead.
+> Hi Bart,
 >
->> +                       if (!irq) {
->> +                               dev_err(dev,
->> +                                       "irq init: fail map phy interrupt %d\n",
->> +                                       idx);
->> +                               return -ENOENT;
->> +                       }
->> +
->> +                       (void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
->> +                                      HISI_SAS_NAME_LEN,
->> +                                      "%s %s:%d", dev_name(dev),
->> +                                      phy_int_names[j], i);
->> +                       rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
->> +                                       &int_names[idx * HISI_SAS_NAME_LEN],
->> +                                       phy);
-> There's no requirement for the name to match the name in the DT or
-> even that the name needs to be unique.
-It is desirable to be unique as we have so many instances of the same 
-types of interrupt sources:
-for hip05 chipset with v1 controller we have the following interrupts: 8 
-phyup, 8 abnormal, 8 broadcast, 32 completion, 2 fatal
-> If you really want the DT names used, then just call
-> of_property_read_string_index() on interrupt-names here. There is no
-> point to copy the string.
-We would not want to add so many strings, no?
-> Rob
-thanks,
-John
+>>
+>> Chaining RDMA requests is a great idea. But it seems to me that this
+>> patch is based on the assumption that posting multiple RDMA requests
+>> either succeeds as a whole or fails as a whole. Sorry but I'm not sure
+>> that the verbs API guarantees this. In the ib_srpt driver a QP can be
+>> changed at any time into the error state and there might be drivers that
+>> report an immediate failure in that case.
+>
+> I'm not so sure it actually matters if some WRs succeeded. In the normal
+> flow when srpt has enough available work requests (sq_wr_avail) they
+> should all succeed otherwise we're in trouble. If the QP transitioned
+> to ERROR state, then some failed, but those that succeeded will
+> generate flush completions, and srpt should handle it correctly
+> shouldn't it?
+>
+>> I think even when chaining
+>> RDMA requests that we still need a mechanism to wait until ongoing RDMA
+>> transfers have finished if some but not all RDMA requests have been
+>> posted.
+>
+> I'm not an expert on srpt, can you explain how this mechanism will help?
+
+Hello Sagi,
+
+As you know events like a cable pull can cause some of the RDMA work 
+requests to succeed and others to fail. It is essential that all RDMA 
+work requests related to the same SCSI command have finished before the 
+buffers these requests operate upon are reused. The purpose of the 
+SRPT_RDMA_ABORT request is to wait for the RDMA requests that were 
+posted without IB_SEND_SIGNALED and for which no error completion will 
+be received. BTW, I think this consideration applies to all SCSI target 
+drivers and not only to SRP target drivers.
+
+Bart.
