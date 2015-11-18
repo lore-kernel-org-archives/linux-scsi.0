@@ -1,86 +1,184 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 36/71] ncr5380: Use work_struct instead of delayed_work
-Date: Wed, 18 Nov 2015 19:35:31 +1100
-Message-ID: <20151118083505.611694468@telegraphics.com.au>
+Subject: [PATCH 37/71] ncr5380: Standardize work queueing algorithm
+Date: Wed, 18 Nov 2015 19:35:32 +1100
+Message-ID: <20151118083505.931718684@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-work_struct-instead
+Content-Disposition: inline; filename=atari_NCR5380-main_running-and-queue_main
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Each host instance now has it's own work queue so the main() work item can
-sleep when necessary. That means we can use a simple work item rather than
-a delayed work item. This brings NCR5380.c closer to atari_NCR5380.c.
+The complex main_running/queue_main mechanism is peculiar to
+atari_NCR5380.c. It isn't SMP safe and offers little value given that
+the work queue already offers concurrency management. Remove this
+complexity to bring atari_NCR5380.c closer to NCR5380.c.
+
+It is not a good idea to call the information transfer state machine from
+queuecommand because, according to Documentation/scsi/scsi_mid_low_api.txt
+that could happen in soft irq context. Fix this.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   12 +++++-------
- drivers/scsi/NCR5380.h |    1 -
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/scsi/NCR5380.h       |    1 
+ drivers/scsi/atari_NCR5380.c |   80 +++----------------------------------------
+ 2 files changed, 6 insertions(+), 75 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:48.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:49.000000000 +1100
-@@ -705,7 +705,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
- 	
--	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
-+	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
- 	                        WQ_CPU_INTENSIVE | WQ_UNBOUND | WQ_MEM_RECLAIM,
- 	                        1, instance->host_no);
-@@ -790,7 +790,7 @@ static void NCR5380_exit(struct Scsi_Hos
- {
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+--- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:33:49.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:33:51.000000000 +1100
+@@ -262,7 +262,6 @@ struct NCR5380_hostdata {
+ 	                                   * transfer to handle chip overruns */
+ 	int retain_dma_intr;
+ 	struct work_struct main_task;
+-	volatile int main_running;
+ #ifdef SUPPORT_TAGS
+ 	struct tag_alloc TagAlloc[8][8];	/* 8 targets and 8 LUNs */
+ #endif
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:48.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:51.000000000 +1100
+@@ -611,36 +611,6 @@ static void NCR5380_print_phase(struct S
  
--	cancel_delayed_work_sync(&hostdata->coroutine);
-+	cancel_work_sync(&hostdata->main_task);
- 	destroy_workqueue(hostdata->work_q);
- }
+ #endif
  
-@@ -852,9 +852,8 @@ static int NCR5380_queue_command(struct
+-/*
+- * ++roman: New scheme of calling NCR5380_main()
+- *
+- * If we're not in an interrupt, we can call our main directly, it cannot be
+- * already running. Else, we queue it on a task queue, if not 'main_running'
+- * tells us that a lower level is already executing it. This way,
+- * 'main_running' needs not be protected in a special way.
+- *
+- * queue_main() is a utility function for putting our main onto the task
+- * queue, if main_running is false. It should be called only from a
+- * interrupt or bottom half.
+- */
+-
+-#include <linux/gfp.h>
+-#include <linux/workqueue.h>
+-#include <linux/interrupt.h>
+-
+-static inline void queue_main(struct NCR5380_hostdata *hostdata)
+-{
+-	if (!hostdata->main_running) {
+-		/* If in interrupt and NCR5380_main() not already running,
+-		   queue it on the 'immediate' task queue, to be processed
+-		   immediately after the current interrupt processing has
+-		   finished. */
+-		queue_work(hostdata->work_q, &hostdata->main_task);
+-	}
+-	/* else: nothing to do: the running NCR5380_main() will pick up
+-	   any newly queued command. */
+-}
+-
+ /**
+  * NCR58380_info - report driver and host information
+  * @instance: relevant scsi host instance
+@@ -723,8 +693,6 @@ static void __maybe_unused NCR5380_print
+ 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
  
- 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
+ 	local_irq_save(flags);
+-	printk("NCR5380: coroutine is%s running.\n",
+-		hostdata->main_running ? "" : "n't");
+ 	if (!hostdata->connected)
+ 		printk("scsi%d: no currently connected command\n", HOSTNO);
+ 	else
+@@ -766,8 +734,6 @@ static int __maybe_unused NCR5380_show_i
+ 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
  
--	/* Run the coroutine if it isn't already running. */
- 	/* Kick off command processing */
--	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
+ 	local_irq_save(flags);
+-	seq_printf(m, "NCR5380: coroutine is%s running.\n",
+-		hostdata->main_running ? "" : "n't");
+ 	if (!hostdata->connected)
+ 		seq_printf(m, "scsi%d: no currently connected command\n", HOSTNO);
+ 	else
+@@ -991,17 +957,8 @@ static int NCR5380_queue_command(struct
+ 	dprintk(NDEBUG_QUEUES, "scsi%d: command added to %s of queue\n", H_NO(cmd),
+ 		  (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
+ 
+-	/* If queue_command() is called from an interrupt (real one or bottom
+-	 * half), we let queue_main() do the job of taking care about main. If it
+-	 * is already running, this is a no-op, else main will be queued.
+-	 *
+-	 * If we're not in an interrupt, we can call NCR5380_main()
+-	 * unconditionally, because it cannot be already running.
+-	 */
+-	if (in_interrupt() || irqs_disabled())
+-		queue_main(hostdata);
+-	else
+-		NCR5380_main(&hostdata->main_task);
++	/* Kick off command processing */
 +	queue_work(hostdata->work_q, &hostdata->main_task);
  	return 0;
  }
  
-@@ -873,7 +872,7 @@ static int NCR5380_queue_command(struct
- static void NCR5380_main(struct work_struct *work)
- {
- 	struct NCR5380_hostdata *hostdata =
--		container_of(work, struct NCR5380_hostdata, coroutine.work);
-+		container_of(work, struct NCR5380_hostdata, main_task);
- 	struct Scsi_Host *instance = hostdata->host;
- 	struct scsi_cmnd *tmp, *prev;
- 	int done;
-@@ -1030,8 +1029,7 @@ static irqreturn_t NCR5380_intr(int dumm
- 		}	/* if BASR_IRQ */
- 		spin_unlock_irqrestore(instance->host_lock, flags);
- 		if(!done)
--			queue_delayed_work(hostdata->work_q,
--			                   &hostdata->coroutine, 0);
-+			queue_work(hostdata->work_q, &hostdata->main_task);
+@@ -1038,30 +995,11 @@ static void NCR5380_main(struct work_str
+ 	unsigned long flags;
+ 
+ 	/*
+-	 * We run (with interrupts disabled) until we're sure that none of
+-	 * the host adapters have anything that can be done, at which point
+-	 * we set main_running to 0 and exit.
+-	 *
+-	 * Interrupts are enabled before doing various other internal
+-	 * instructions, after we've decided that we need to run through
+-	 * the loop again.
+-	 *
+-	 * this should prevent any race conditions.
+-	 *
+ 	 * ++roman: Just disabling the NCR interrupt isn't sufficient here,
+ 	 * because also a timer int can trigger an abort or reset, which can
+ 	 * alter queues and touch the Falcon lock.
+ 	 */
+ 
+-	/* Tell int handlers main() is now already executing.  Note that
+-	   no races are possible here. If an int comes in before
+-	   'main_running' is set here, and queues/executes main via the
+-	   task queue, it doesn't do any harm, just this instance of main
+-	   won't find any work left to do. */
+-	if (hostdata->main_running)
+-		return;
+-	hostdata->main_running = 1;
+-
+ 	local_save_flags(flags);
+ 	do {
+ 		local_irq_disable();	/* Freeze request queues */
+@@ -1176,11 +1114,6 @@ static void NCR5380_main(struct work_str
+ 			done = 0;
+ 		}
  	} while (!done);
- 	return IRQ_HANDLED;
+-
+-	/* Better allow ints _after_ 'main_running' has been cleared, else
+-	   an interrupt could believe we'll pick up the work it left for
+-	   us, but we won't see it anymore here... */
+-	hostdata->main_running = 0;
+ 	local_irq_restore(flags);
  }
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:33:38.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:33:49.000000000 +1100
-@@ -256,7 +256,6 @@ struct NCR5380_hostdata {
- 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
- 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
- 	int flags;
--	struct delayed_work coroutine;		/* our co-routine */
- 	struct scsi_eh_save ses;
- 	char info[256];
- 	int read_overruns;                /* number of bytes to cut from a
+ 
+@@ -1293,6 +1226,7 @@ static void NCR5380_dma_complete(struct
+ static irqreturn_t NCR5380_intr(int irq, void *dev_id)
+ {
+ 	struct Scsi_Host *instance = dev_id;
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int done = 1, handled = 0;
+ 	unsigned char basr;
+ 
+@@ -1361,11 +1295,9 @@ static irqreturn_t NCR5380_intr(int irq,
+ #endif
+ 	}
+ 
+-	if (!done) {
+-		dprintk(NDEBUG_INTR, "scsi%d: in int routine, calling main\n", HOSTNO);
+-		/* Put a call to NCR5380_main() on the queue... */
+-		queue_main(shost_priv(instance));
+-	}
++	if (!done)
++		queue_work(hostdata->work_q, &hostdata->main_task);
++
+ 	return IRQ_RETVAL(handled);
+ }
+ 
