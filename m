@@ -1,209 +1,279 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 41/71] ncr5380: Replace redundant flags with FLAG_NO_DMA_FIXUP
-Date: Wed, 18 Nov 2015 19:35:36 +1100
-Message-ID: <20151118083507.511702423@telegraphics.com.au>
+Subject: [PATCH 40/71] ncr5380: Introduce NCR5380_poll_politely2
+Date: Wed, 18 Nov 2015 19:35:35 +1100
+Message-ID: <20151118083507.181888695@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-FLAG_NCR53C400
+Content-Disposition: inline; filename=ncr5380-poll_politely2
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The flags DMA_WORKS_RIGHT, FLAG_NCR53C400 and FLAG_HAS_LAST_BYTE_SENT
-all mean the same thing, i.e. the chip is not a 538[01]. (More recent
-devices such as the 53C80 have a 'Last Byte Sent' bit in the Target
-Command Register as well as other fixes for End-of-DMA errata.)
-
-These flags have no additional meanings since previous cleanup patches
-eliminated the NCR53C400 macro, moved g_NCR5380-specific code out of the
-core driver and standardized interrupt handling.
-
-Use the FLAG_NO_DMA_FIXUP flag to suppress End-of-DMA errata workarounds,
-for those cards and drivers that make use of the TCR_LAST_BYTE_SENT bit.
-Remove the old flags.
+SCSI bus protocol sometimes requires monitoring two related conditions
+simultaneously. Enhance NCR5380_poll_politely() for this purpose, and
+put it to use in the arbitration algorithm. It will also find use in
+pseudo DMA.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |   68 +++++++++++++++--------------------------------
- drivers/scsi/NCR5380.h   |    4 --
- drivers/scsi/dtc.c       |    4 --
- drivers/scsi/g_NCR5380.c |    5 +--
- 4 files changed, 26 insertions(+), 55 deletions(-)
+ drivers/scsi/NCR5380.c       |   68 +++++++++++++++++++++++++------------------
+ drivers/scsi/atari_NCR5380.c |   64 ++++++++++++++++++++++++----------------
+ 2 files changed, 79 insertions(+), 53 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:55.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:56.000000000 +1100
-@@ -552,7 +552,7 @@ static void prepare_info(struct Scsi_Hos
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
--	         hostdata->flags & FLAG_NCR53C400     ? "NCR53C400 "     : "",
-+	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
- 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
-@@ -712,6 +712,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->connected = NULL;
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
-+	hostdata->flags = flags;
- 	
- 	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
-@@ -720,12 +721,6 @@ static int NCR5380_init(struct Scsi_Host
- 	if (!hostdata->work_q)
- 		return -ENOMEM;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:53.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:55.000000000 +1100
+@@ -457,11 +457,14 @@ static inline void initialize_SCp(struct
+ }
  
--	/* The CHECK code seems to break the 53C400. Will check it later maybe */
--	if (flags & FLAG_NCR53C400)
--		hostdata->flags = FLAG_HAS_LAST_BYTE_SENT | flags;
--	else
--		hostdata->flags = FLAG_CHECK_LAST_BYTE_SENT | flags;
--
- 	hostdata->host = instance;
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -469,11 +472,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
  
- 	prepare_info(instance);
-@@ -1609,7 +1604,7 @@ static int NCR5380_transfer_dma(struct S
- 	 * before the setting of DMA mode to after transfer of the last byte.
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	unsigned long start = jiffies;
+ 	unsigned long n;
+@@ -481,7 +485,9 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 1 jiffy */
+ 	n = loops_per_jiffy;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (--n > 0);
+@@ -493,7 +499,9 @@ static int NCR5380_poll_politely(struct
+ 	n = min(20000U, jiffies_to_usecs(wait));
+ 	do {
+ 		udelay(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (--n > 0);
+@@ -504,13 +512,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(start + wait)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
+ 
+ 	return -ETIMEDOUT;
+ }
+ 
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ #include <linux/delay.h>
+ 
+ #if NDEBUG
+@@ -1342,7 +1359,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	int len;
+ 	int err;
+ 	unsigned long flags;
+-	unsigned long timeout;
+ 
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
+@@ -1372,20 +1388,18 @@ static int NCR5380_select(struct Scsi_Ho
  	 */
  
--	if (hostdata->flags & FLAG_NCR53C400)
-+	if (hostdata->flags & FLAG_NO_DMA_FIXUP)
- 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
- 		                        MR_ENABLE_EOP_INTR);
- 	else
-@@ -1729,14 +1724,9 @@ static int NCR5380_transfer_dma(struct S
- 	return 0;
- #else				/* defined(REAL_DMA_POLL) */
- 	if (p & SR_IO) {
--#ifdef DMA_WORKS_RIGHT
--		foo = NCR5380_pread(instance, d, c);
--#else
--		int diff = 1;
--		if (hostdata->flags & FLAG_NCR53C400) {
--			diff = 0;
+ 	local_irq_restore(flags);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			return -1;
 -		}
--		if (!(foo = NCR5380_pread(instance, d, c - diff))) {
-+		foo = NCR5380_pread(instance, d,
-+			hostdata->flags & FLAG_NO_DMA_FIXUP ? c : c - 1);
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * We can't disable DMA mode after successfully transferring 
- 			 * what we plan to be the last byte, since that would open up
-@@ -1759,46 +1749,32 @@ static int NCR5380_transfer_dma(struct S
- 			 * byte.
- 			 */
- 
--			if (!(hostdata->flags & FLAG_NCR53C400)) {
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ));
--				/* Wait for clean handshake */
--				while (NCR5380_read(STATUS_REG) & SR_REQ);
--				d[c - 1] = NCR5380_read(INPUT_DATA_REG);
-+			if (NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
-+			                          BASR_DRQ, BASR_DRQ, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: DRQ timeout\n");
-+			}
-+			if (NCR5380_poll_politely(instance, STATUS_REG,
-+			                          SR_REQ, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: !REQ timeout\n");
- 			}
-+			d[c - 1] = NCR5380_read(INPUT_DATA_REG);
- 		}
--#endif
- 	} else {
--#ifdef DMA_WORKS_RIGHT
- 		foo = NCR5380_pwrite(instance, d, c);
--#else
--		int timeout;
--		dprintk(NDEBUG_C400_PWRITE, "About to pwrite %d bytes\n", c);
--		if (!(foo = NCR5380_pwrite(instance, d, c))) {
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * Wait for the last byte to be sent.  If REQ is being asserted for 
- 			 * the byte we're interested, we'll ACK it and it will go false.  
- 			 */
--			if (!(hostdata->flags & FLAG_HAS_LAST_BYTE_SENT)) {
--				timeout = 20000;
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) && (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH));
--
--				if (!timeout)
--					dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : timed out on last byte\n", instance->host_no);
--
--				if (hostdata->flags & FLAG_CHECK_LAST_BYTE_SENT) {
--					hostdata->flags &= ~FLAG_CHECK_LAST_BYTE_SENT;
--					if (NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT) {
--						hostdata->flags |= FLAG_HAS_LAST_BYTE_SENT;
--						dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : last byte sent works\n", instance->host_no);
--					}
--				}
--			} else {
--				dprintk(NDEBUG_C400_PWRITE, "Waiting for LASTBYTE\n");
--				while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT));
--				dprintk(NDEBUG_C400_PWRITE, "Got LASTBYTE\n");
-+			if (NCR5380_poll_politely2(instance,
-+			     BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
-+			     BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA write: DRQ and phase timeout\n");
- 			}
- 		}
--#endif
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
  	}
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-Index: linux/drivers/scsi/NCR5380.h
+ 
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
+Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:33:51.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:33:56.000000000 +1100
-@@ -226,9 +226,7 @@
- #define NO_IRQ		0
- #endif
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:53.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:55.000000000 +1100
+@@ -262,11 +262,14 @@ static inline void initialize_SCp(struct
+ }
  
--#define FLAG_HAS_LAST_BYTE_SENT		1	/* NCR53c81 or better */
--#define FLAG_CHECK_LAST_BYTE_SENT	2	/* Only test once */
--#define FLAG_NCR53C400			4	/* NCR53c400 */
-+#define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
- #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
- #define FLAG_DTC3181E			16	/* DTC3181E */
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-11-18 19:33:53.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-11-18 19:33:56.000000000 +1100
-@@ -1,7 +1,5 @@
- #define PSEUDO_DMA
- #define DONT_USE_INTR
--#define DMA_WORKS_RIGHT
--
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -274,11 +277,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
  
- /*
-  * DTC 3180/3280 driver, by
-@@ -233,7 +231,7 @@ found:
- 		instance->base = addr;
- 		((struct NCR5380_hostdata *)(instance)->hostdata)->base = base;
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	unsigned long start = jiffies;
+ 	unsigned long n;
+@@ -286,7 +290,9 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 1 jiffy */
+ 	n = loops_per_jiffy;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (--n > 0);
+@@ -298,7 +304,9 @@ static int NCR5380_poll_politely(struct
+ 	n = min(20000U, jiffies_to_usecs(wait));
+ 	do {
+ 		udelay(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (--n > 0);
+@@ -309,13 +317,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(start + wait)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
  
--		if (NCR5380_init(instance, 0))
-+		if (NCR5380_init(instance, FLAG_NO_DMA_FIXUP))
- 			goto out_unregister;
+ 	return -ETIMEDOUT;
+ }
  
- 		NCR5380_maybe_reset_bus(instance);
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-11-18 19:33:53.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-11-18 19:33:56.000000000 +1100
-@@ -320,9 +320,8 @@ static int __init generic_NCR5380_detect
- 			flags = FLAG_NO_PSEUDO_DMA;
- 			break;
- 		case BOARD_NCR53C400:
--#ifdef PSEUDO_DMA
--			flags = FLAG_NCR53C400;
--#else
-+			flags = FLAG_NO_DMA_FIXUP;
-+#ifndef PSEUDO_DMA
- 			flags = FLAG_NO_PSEUDO_DMA;
- #endif
- 			break;
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ static struct {
+ 	unsigned char value;
+ 	const char *name;
+@@ -1094,7 +1111,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned char *data;
+ 	int len;
+ 	int err;
+-	unsigned long timeout;
+ 
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
+@@ -1118,23 +1134,19 @@ static int NCR5380_select(struct Scsi_Ho
+ 	 */
+ 
+ 	spin_unlock_irq(instance->host_lock);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			spin_lock_irq(instance->host_lock);
+-			return -1;
+-		}
+-		spin_lock_irq(instance->host_lock);
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
+-		spin_unlock_irq(instance->host_lock);
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	spin_lock_irq(instance->host_lock);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
+ 	}
+ 
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
