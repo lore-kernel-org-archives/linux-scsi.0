@@ -1,36 +1,30 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 4/9] srpt: chain RDMA READ/WRITE requests
-Date: Wed, 18 Nov 2015 15:06:07 +0100
-Message-ID: <20151118140607.GH18820@lst.de>
-References: <1447422410-20891-1-git-send-email-hch@lst.de> <1447422410-20891-5-git-send-email-hch@lst.de> <564BD1AF.60200@sandisk.com>
+Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
+Date: Wed, 18 Nov 2015 15:06:45 +0100
+Message-ID: <20151118140645.GI18820@lst.de>
+References: <1447422410-20891-1-git-send-email-hch@lst.de> <1447422410-20891-4-git-send-email-hch@lst.de> <564C61C3.3050307@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <564BD1AF.60200-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <564C61C3.3050307-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Nov 17, 2015 at 05:17:35PM -0800, Bart Van Assche wrote:
-> Chaining RDMA requests is a great idea. But it seems to me that this patch 
-> is based on the assumption that posting multiple RDMA requests either 
-> succeeds as a whole or fails as a whole. Sorry but I'm not sure that the 
-> verbs API guarantees this. In the ib_srpt driver a QP can be changed at any 
-> time into the error state and there might be drivers that report an 
-> immediate failure in that case. I think even when chaining RDMA requests 
-> that we still need a mechanism to wait until ongoing RDMA transfers have 
-> finished if some but not all RDMA requests have been posted.
+On Wed, Nov 18, 2015 at 01:32:19PM +0200, Sagi Grimberg wrote:
+> Christoph,
+>
+> Given the discussion around this patch I think it would
+> be a good idea remove it from the patchset since it's not
+> mandatory for the CQ abstraction. I think that we should
+> take it with Steve to come up with a complete solution for
+> this bit.
+>
+> Thoughts?
 
-I'd have to look at where it's guaranteed that we get flushed errors,
-but if there were drivers that broke this assumption the iSER driver
-would already be badly broken by this.  So if we don't have the formal
-guaranteed yet we should add it and fix up the drivers.
-
-Once all drivers use the new-style complentions we could in fact just
-remove the return value from ->post_send_wr and require that all erorrs
-are reported through ->done.
+Yes, let's drop it for now.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
