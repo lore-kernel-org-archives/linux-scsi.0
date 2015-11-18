@@ -1,101 +1,86 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 35/71] ncr5380: Dont wait for BUS FREE after disconnect
-Date: Wed, 18 Nov 2015 19:35:30 +1100
-Message-ID: <20151118083505.311723501@telegraphics.com.au>
+Subject: [PATCH 36/71] ncr5380: Use work_struct instead of delayed_work
+Date: Wed, 18 Nov 2015 19:35:31 +1100
+Message-ID: <20151118083505.611694468@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-dont-wait-for-bus-free
+Content-Disposition: inline; filename=ncr5380-work_struct-instead
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When there is a queued command and no connected command, NCR5380_select()
-is called and arbitration begins. The chip waits for BUS FREE once the
-MR_ARBITRATE bit in the mode register is enabled. That means there is
-no need to wait for BUS FREE after disconnecting.
-
-There is presently no polling for BUS FREE after sending an ABORT or
-other message that might lead to disconnection. It only happens after
-COMMAND COMPLETE or DISCONNECT messages, which seems inconsistent.
-Remove the polling for !BSY in the COMMAND COMPLETE and DISCONNECT
-cases.
-
-BTW, the comments say "avoid nasty timeouts" and perhaps BUS FREE polling
-was somehow helpful back in Linux v0.99.14u, when it was introduced.
-The relevant timeout is presently 1 second (for bus arbitration).
+Each host instance now has it's own work queue so the main() work item can
+sleep when necessary. That means we can use a simple work item rather than
+a delayed work item. This brings NCR5380.c closer to atari_NCR5380.c.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |    7 -------
- drivers/scsi/atari_NCR5380.c |   11 -----------
- 2 files changed, 18 deletions(-)
+ drivers/scsi/NCR5380.c |   12 +++++-------
+ drivers/scsi/NCR5380.h |    1 -
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:47.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:48.000000000 +1100
-@@ -1969,9 +1969,6 @@ static void NCR5380_information_transfer
- 					 * arbitration can resume.
- 					 */
- 					NCR5380_write(TARGET_COMMAND_REG, 0);
--
--					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
--						barrier();
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -2004,10 +2001,6 @@ static void NCR5380_information_transfer
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:48.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:49.000000000 +1100
+@@ -705,7 +705,7 @@ static int NCR5380_init(struct Scsi_Host
+ 	hostdata->issue_queue = NULL;
+ 	hostdata->disconnected_queue = NULL;
+ 	
+-	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
++	INIT_WORK(&hostdata->main_task, NCR5380_main);
+ 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
+ 	                        WQ_CPU_INTENSIVE | WQ_UNBOUND | WQ_MEM_RECLAIM,
+ 	                        1, instance->host_no);
+@@ -790,7 +790,7 @@ static void NCR5380_exit(struct Scsi_Hos
+ {
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
  
- 						/* Enable reselect interrupts */
- 						NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--						/* Wait for bus free to avoid nasty timeouts - FIXME timeout !*/
--						/* NCR538_poll_politely(instance, STATUS_REG, SR_BSY, 0, 30 * HZ); */
--						while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
--							barrier();
- 						return;
- 					}
- 					/* 
-Index: linux/drivers/scsi/atari_NCR5380.c
+-	cancel_delayed_work_sync(&hostdata->coroutine);
++	cancel_work_sync(&hostdata->main_task);
+ 	destroy_workqueue(hostdata->work_q);
+ }
+ 
+@@ -852,9 +852,8 @@ static int NCR5380_queue_command(struct
+ 
+ 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
+ 
+-	/* Run the coroutine if it isn't already running. */
+ 	/* Kick off command processing */
+-	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
++	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	return 0;
+ }
+ 
+@@ -873,7 +872,7 @@ static int NCR5380_queue_command(struct
+ static void NCR5380_main(struct work_struct *work)
+ {
+ 	struct NCR5380_hostdata *hostdata =
+-		container_of(work, struct NCR5380_hostdata, coroutine.work);
++		container_of(work, struct NCR5380_hostdata, main_task);
+ 	struct Scsi_Host *instance = hostdata->host;
+ 	struct scsi_cmnd *tmp, *prev;
+ 	int done;
+@@ -1030,8 +1029,7 @@ static irqreturn_t NCR5380_intr(int dumm
+ 		}	/* if BASR_IRQ */
+ 		spin_unlock_irqrestore(instance->host_lock, flags);
+ 		if(!done)
+-			queue_delayed_work(hostdata->work_q,
+-			                   &hostdata->coroutine, 0);
++			queue_work(hostdata->work_q, &hostdata->main_task);
+ 	} while (!done);
+ 	return IRQ_HANDLED;
+ }
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:47.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:48.000000000 +1100
-@@ -2207,7 +2207,6 @@ static void NCR5380_information_transfer
- 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
- 
- 					local_irq_save(flags);
--					hostdata->retain_dma_intr++;
- 					hostdata->connected = NULL;
- #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
-@@ -2276,8 +2275,6 @@ static void NCR5380_information_transfer
- 						cmd->scsi_done(cmd);
- 					}
- 
--					local_irq_restore(flags);
--
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					/*
- 					 * Restore phase bits to 0 so an interrupted selection,
-@@ -2285,11 +2282,6 @@ static void NCR5380_information_transfer
- 					 */
- 					NCR5380_write(TARGET_COMMAND_REG, 0);
- 
--					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
--						barrier();
--
--					local_irq_save(flags);
--					hostdata->retain_dma_intr--;
- 					/* ++roman: For Falcon SCSI, release the lock on the
- 					 * ST-DMA here if no other commands are waiting on the
- 					 * disconnected queue.
-@@ -2343,9 +2335,6 @@ static void NCR5380_information_transfer
- 
- 					/* Enable reselect interrupts */
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--					/* Wait for bus free to avoid nasty timeouts */
--					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
--						barrier();
- #ifdef SUN3_SCSI_VME
- 					dregs->csr |= CSR_DMA_ENABLE;
- #endif
+--- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:33:38.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:33:49.000000000 +1100
+@@ -256,7 +256,6 @@ struct NCR5380_hostdata {
+ 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
+ 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
+ 	int flags;
+-	struct delayed_work coroutine;		/* our co-routine */
+ 	struct scsi_eh_save ses;
+ 	char info[256];
+ 	int read_overruns;                /* number of bytes to cut from a
