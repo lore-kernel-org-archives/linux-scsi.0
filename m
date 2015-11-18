@@ -1,67 +1,68 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Wed, 18 Nov 2015 10:20:14 -0800
-Message-ID: <564CC15E.7030602@sandisk.com>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-3-git-send-email-hch@lst.de> <564B697A.2020601@sandisk.com>
- <564C2F01.6020407@dev.mellanox.co.il>
+From: Don Brace <Don.Brace@pmcs.com>
+Subject: RE: [PATCH] scsi: hpsa: fix multiple issues in path_info_show
+Date: Wed, 18 Nov 2015 18:27:34 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB7D0546D2@BBYEXM01.pmc-sierra.internal>
+References: <1445984203-3288-1-git-send-email-linux@rasmusvillemoes.dk>
+	<56313105.3050805@pmcs.com> <87mvuga9jr.fsf@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <564C2F01.6020407-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87mvuga9jr.fsf@rasmusvillemoes.dk>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Don Brace <brace77070@gmail.com>
+Cc: Joe Handzik <joseph.t.handzik@hp.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, Scott Teel <Scott.Teel@pmcs.com>, Tomas Henzl <thenzl@redhat.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/17/2015 11:55 PM, Sagi Grimberg wrote:
->>> +static void ib_cq_poll_work(struct work_struct *work)
->>> +{
->>> +    struct ib_cq *cq = container_of(work, struct ib_cq, work);
->>> +    int completed;
->>> +
->>> +    completed = __ib_process_cq(cq, IB_POLL_BUDGET_WORKQUEUE);
->>> +    if (completed >= IB_POLL_BUDGET_WORKQUEUE ||
->>> +        ib_req_notify_cq(cq, IB_POLL_FLAGS) > 0)
->>> +        queue_work(ib_comp_wq, &cq->work);
->>> +}
->>> +
->>> +static void ib_cq_completion_workqueue(struct ib_cq *cq, void *private)
->>> +{
->>> +    queue_work(ib_comp_wq, &cq->work);
->>> +}
->>
->> The above code will cause all polling to occur on the context of the CPU
->> that received the completion interrupt. This approach is not powerful
->> enough. For certain workloads throughput is higher if work completions
->> are processed by another CPU core on the same CPU socket. Has it been
->> considered to make the CPU core on which work completions are processed
->> configurable ?
->
-> The workqueue is unbound. This means that the functionality you are
-> you are asking for exists.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Rasmus Villemoes
+> Sent: Saturday, November 14, 2015 9:24 AM
+> To: Don Brace
+> Cc: Joe Handzik; James E.J. Bottomley; Kevin Barnett; Scott Teel; Tomas Henzl;
+> iss_storagedev@hp.com; dl Team ESD Storage Dev Support; linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] scsi: hpsa: fix multiple issues in path_info_show
+> 
+> On Wed, Oct 28 2015, Don Brace <brace77070@gmail.com> wrote:
+> 
+> > On 10/27/2015 05:16 PM, Rasmus Villemoes wrote:
+> >> I'm not familiar with this code, but path_info_show() (added in
+> >> 8270b86243658 "hpsa: add sysfs entry path_info to show box and
+> >> bay information") seems to be broken in multiple ways.
+> >>
+> [snip]
+> >>
+> >> We can fix all of that and get rid of the 400 byte stack buffer by
+> >> simply writing directly to the given output buffer, which the upper
+> >> layer guarantees is at least PAGE_SIZE. s[c]nprintf doesn't care where
+> >> it is writing to, so this doesn't make the spin lock hold time any
+> >> longer. Using scnprintf ensures that output_len always represents the
+> >> number of bytes actually written to the buffer, so we'll report the
+> >> proper amount to the upper layer.
+> >>
+> >> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> >>
+> > Thanks, I added this to my current patch set. This patch will be up
+> > with you as the author soon.
+> 
+> I see it in mainline now. May I ask why 6 out of 7 scnprintfs were
+> changed (back) to snprintf? I don't think there's any functional
+> difference as long as PAGE_SIZE is indeed sufficient, but mixing
+> snprintf and scnprintf is pretty odd, and there's now a discrepancy
+> between the commit log and the patch which wasn't in my original - I'd
+> expect a "[use snprintf because xyz]" note added if the change was
+> intentional.
+> 
+> Rasmus
 
-Hello Sagi,
+Unintentional.
+I'll upload a fix soon.
 
-Are you perhaps referring to the sysfs CPU mask that allows to control 
-workqueue affinity ? I expect that setting the CPU mask for an entire 
-pool through sysfs will lead to suboptimal results. What I have learned 
-by tuning target systems is that there is a significant performance 
-difference (> 30% IOPS) between a configuration where each completion 
-thread is pinned to exactly one CPU compared to allowing the scheduler 
-to choose a CPU.
 
-Controlling the CPU affinity of worker threads with the taskset command 
-is not possible since the function create_worker() in kernel/workqueue.c 
-calls kthread_bind_mask(). That function sets PF_NO_SETAFFINITY. From 
-sched.h:
-
-#define PF_NO_SETAFFINITY 0x04000000 /* Userland is not allowed to 
-meddle with cpus_allowed */
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
