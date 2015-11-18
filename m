@@ -1,27 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 00/32] HiSilicon SAS driver
-Date: Wed, 18 Nov 2015 11:56:08 -0500
-Message-ID: <yq1egfns0uv.fsf@sermon.lab.mkp.net>
-References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] [SCSI] st: Remove obsolete scsi_tape.max_pfn
+Date: Wed, 18 Nov 2015 12:00:31 -0500
+Message-ID: <yq17flfs0nk.fsf@sermon.lab.mkp.net>
+References: <1447588113-21117-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447779059-136143-1-git-send-email-john.garry@huawei.com> (John
-	Garry's message of "Wed, 18 Nov 2015 00:50:27 +0800")
+In-Reply-To: <1447588113-21117-1-git-send-email-geert@linux-m68k.org> (Geert
+	Uytterhoeven's message of "Sun, 15 Nov 2015 12:48:33 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: JBottomley@odin.com, robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, hare@suse.de, xuwei5@hisilicon.com, zhangfei.gao@linaro.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Kai =?utf-8?Q?M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Ewan D. Milne" <emilne@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Geert" == Geert Uytterhoeven <geert@linux-m68k.org> writes:
 
-John> This is the driver patchset for the HiSilicon SAS driver. The
-John> driver is a platform driver.
+Geert> Its last user was removed 10 years ago, in commit
+Geert> 8b05b773b6030de5 ("[SCSI] convert st to use scsi_execute_async").
 
-I have staged this driver for 4.5.
-
-Changes as a result of Rob's comments to patch 20 should be made as an
-incremental patch.
+Applied to the 4.5 queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
