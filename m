@@ -1,65 +1,24 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] st: fix potential null pointer dereference.
-Date: Wed, 18 Nov 2015 16:19:00 +0100
-Message-ID: <564C96E4.4050405@redhat.com>
-References: <1447852689-28736-1-git-send-email-mlombard@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH, resend] scsi: advansys: fix big-endian builds
+Date: Wed, 18 Nov 2015 10:18:30 -0500
+Message-ID: <yq1mvubs5dl.fsf@sermon.lab.mkp.net>
+References: <4411376.blKgWIg75B@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49634 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755753AbbKRPTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Nov 2015 10:19:02 -0500
-In-Reply-To: <1447852689-28736-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4411376.blKgWIg75B@wuerfel> (Arnd Bergmann's message of "Mon, 16
+	Nov 2015 17:49:23 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James Bottomley <JBottomley@odin.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Matthew Wilcox <willy@linux.intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-Please ignore this one, I sent a V2
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
-On 11/18/2015 02:18 PM, Maurizio Lombardi wrote:
-> If cdev_add() returns an error, the code calls
-> cdev_del() passing the STm->cdevs[rew] pointer as parameter;
-> the problem is that the pointer has not been initialized yet.
-> 
-> This patch fixes the problem by moving the STm->cdevs[rew] pointer
-> initialization before the call to cdev_add().
-> It also sets STm->devs[rew] = NULL if device_create() fails, just to be
-> sure we won't end up calling device_unregister() with an invalid pointer.
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
->  drivers/scsi/st.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index e0a1e52..dff3bdb 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -4083,6 +4083,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
->  	}
->  	cdev->owner = THIS_MODULE;
->  	cdev->ops = &st_fops;
-> +	STm->cdevs[rew] = cdev;
->  
->  	error = cdev_add(cdev, cdev_devno, 1);
->  	if (error) {
-> @@ -4091,7 +4092,6 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
->  		pr_err("st%d: Device not attached.\n", dev_num);
->  		goto out_free;
->  	}
-> -	STm->cdevs[rew] = cdev;
->  
->  	i = mode << (4 - ST_NBR_MODE_BITS);
->  	snprintf(name, 10, "%s%s%s", rew ? "n" : "",
-> @@ -4102,6 +4102,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
->  	if (IS_ERR(dev)) {
->  		pr_err("st%d: device_create failed\n", dev_num);
->  		error = PTR_ERR(dev);
-> +		STm->devs[rew] = NULL;
->  		goto out_free;
->  	}
->  
-> 
+Arnd> Building the advansys driver in a big-endian configuration such as
+Arnd> ARM allmodconfig shows a warning:
+
+Applied to 4.4.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
