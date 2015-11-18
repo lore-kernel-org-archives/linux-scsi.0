@@ -1,32 +1,24 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] Fix a memory leak in scsi_host_dev_release()
-Date: Wed, 18 Nov 2015 14:56:36 -0800
-Message-ID: <564D0224.9040001@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH] IB/srp: Fix a memory leak
+Date: Wed, 18 Nov 2015 15:00:02 -0800
+Message-ID: <564D02F2.5080200@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0068.outbound.protection.outlook.com ([157.56.111.68]:31904
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755375AbbKRW4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Nov 2015 17:56:42 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Avoid that kmemleak reports the following memory leak if a
-SCSI LLD calls scsi_host_alloc() and scsi_host_put() but neither
-scsi_host_add() nor scsi_host_remove(). The following shell
-command triggers that scenario:
-
-for ((i=0; i<2; i++)); do
-  srp_daemon -oac |
-  while read line; do
-    echo $line >/sys/class/infiniband_srp/srp-mlx4_0-1/add_target
-  done
-done
+If srp_connect_ch() returns a positive value then that is considered
+by its caller as a connection failure but this does not result in a
+scsi_host_put() call and additionally causes the srp_create_target()
+function to return a positive value while it should return a negative
+value. Avoid all this confusion and additionally fix a memory leak by
+ensuring that srp_connect_ch() always returns a value that is <= 0.
+This patch avoids that a rejected login triggers the following memory
+leak:
 
 unreferenced object 0xffff88021b24a220 (size 8):
   comm "srp_daemon", pid 56421, jiffies 4295006762 (age 4240.750s)
@@ -49,36 +41,83 @@ unreferenced object 0xffff88021b24a220 (size 8):
     [<ffffffff81177c64>] SyS_write+0x54/0xc0
     [<ffffffff8151b257>] entry_SYSCALL_64_fastpath+0x12/0x6f
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: stable <stable@vger.kernel.org>
+Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: stable <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 ---
- drivers/scsi/hosts.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/infiniband/ulp/srp/ib_srp.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 323982f..82ac1cd 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -333,6 +333,17 @@ static void scsi_host_dev_release(struct device *dev)
- 		kfree(queuedata);
- 	}
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index eda427f8..3f4786a 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -993,16 +993,16 @@ static int srp_connect_ch(struct srp_rdma_ch *ch, bool multich)
  
-+	if (shost->shost_state == SHOST_CREATED) {
-+		/*
-+		 * Free the shost_dev device name here if scsi_host_alloc()
-+		 * and scsi_host_put() have been called but neither
-+		 * scsi_host_add() nor scsi_host_remove() has been called.
-+		 * This avoids that the memory allocated for the shost_dev
-+		 * name is leaked.
-+		 */
-+		kfree(dev_name(&shost->shost_dev));
-+	}
+ 	ret = srp_lookup_path(ch);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	while (1) {
+ 		init_completion(&ch->done);
+ 		ret = srp_send_req(ch, multich);
+ 		if (ret)
+-			return ret;
++			goto out;
+ 		ret = wait_for_completion_interruptible(&ch->done);
+ 		if (ret < 0)
+-			return ret;
++			goto out;
+ 
+ 		/*
+ 		 * The CM event handling code will set status to
+@@ -1010,15 +1010,16 @@ static int srp_connect_ch(struct srp_rdma_ch *ch, bool multich)
+ 		 * back, or SRP_DLID_REDIRECT if we get a lid/qp
+ 		 * redirect REJ back.
+ 		 */
+-		switch (ch->status) {
++		ret = ch->status;
++		switch (ret) {
+ 		case 0:
+ 			ch->connected = true;
+-			return 0;
++			goto out;
+ 
+ 		case SRP_PORT_REDIRECT:
+ 			ret = srp_lookup_path(ch);
+ 			if (ret)
+-				return ret;
++				goto out;
+ 			break;
+ 
+ 		case SRP_DLID_REDIRECT:
+@@ -1027,13 +1028,16 @@ static int srp_connect_ch(struct srp_rdma_ch *ch, bool multich)
+ 		case SRP_STALE_CONN:
+ 			shost_printk(KERN_ERR, target->scsi_host, PFX
+ 				     "giving up on stale connection\n");
+-			ch->status = -ECONNRESET;
+-			return ch->status;
++			ret = -ECONNRESET;
++			goto out;
+ 
+ 		default:
+-			return ch->status;
++			goto out;
+ 		}
+ 	}
 +
- 	scsi_destroy_command_freelist(shost);
- 	if (shost_use_blk_mq(shost)) {
- 		if (shost->tag_set.tags)
++out:
++	return ret <= 0 ? ret : -ENODEV;
+ }
+ 
+ static int srp_inv_rkey(struct srp_rdma_ch *ch, u32 rkey, u32 send_flags)
 -- 
 2.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
