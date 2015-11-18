@@ -1,110 +1,57 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 28/71] ncr5380: Drop DEF_SCSI_QCMD macro
-Date: Wed, 18 Nov 2015 19:35:23 +1100
-Message-ID: <20151118083503.331720388@telegraphics.com.au>
+Subject: [PATCH 23/71] ncr5380: Always retry arbitration and selection
+Date: Wed, 18 Nov 2015 19:35:18 +1100
+Message-ID: <20151118083501.871737103@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-drop-DEF_SCSI_QCMD
+Content-Disposition: inline; filename=ncr5380-retry-selection-phase
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the DEF_SCSI_QCMD macro (already removed from atari_NCR5380.c). The
-lock provided by DEF_SCSI_QCMD is only needed for queue data structures.
+If NCR5380_select() returns -1, it means arbitration was lost or selection
+failed and should be retried. If the main loop simply terminates when there
+are still commands on the issue queue, they will remain queued until they
+expire.
+
+Fix this by clearing the 'done' flag after selection failure or lost
+arbitration.
+
+The "else break" clause in NCR5380_main() that gets removed here appears
+to be a vestige of a long-gone loop that iterated over host instances.
+See commit 491447e1fcff ("[PATCH] next NCR5380 updates") in
+history/history.git.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   30 +++++++++++++++---------------
- drivers/scsi/atari_NCR5380.c |    2 +-
- 2 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/scsi/NCR5380.c       |    3 +--
+ drivers/scsi/atari_NCR5380.c |    1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:40.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:41.000000000 +1100
-@@ -801,22 +801,21 @@ static void NCR5380_exit(struct Scsi_Hos
- }
- 
- /**
-- *	NCR5380_queue_command 		-	queue a command
-- *	@cmd: SCSI command
-- *	@done: completion handler
-+ * NCR5380_queue_command - queue a command
-+ * @instance: the relevant SCSI adapter
-+ * @cmd: SCSI command
-  *
-- *      cmd is added to the per instance issue_queue, with minor 
-- *      twiddling done to the host specific fields of cmd.  If the 
-- *      main coroutine is not running, it is restarted.
-- *
-- *	Locks: host lock taken by caller
-+ * cmd is added to the per-instance issue queue, with minor
-+ * twiddling done to the host specific fields of cmd.  If the
-+ * main coroutine is not running, it is restarted.
-  */
- 
--static int NCR5380_queue_command_lck(struct scsi_cmnd *cmd, void (*done) (struct scsi_cmnd *))
-+static int NCR5380_queue_command(struct Scsi_Host *instance,
-+                                 struct scsi_cmnd *cmd)
- {
--	struct Scsi_Host *instance = cmd->device->host;
--	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	struct scsi_cmnd *tmp;
-+	unsigned long flags;
- 
- #if (NDEBUG & NDEBUG_NO_WRITE)
- 	switch (cmd->cmnd[0]) {
-@@ -824,7 +823,7 @@ static int NCR5380_queue_command_lck(str
- 	case WRITE_10:
- 		printk("scsi%d : WRITE attempted with NO_WRITE debugging flag set\n", instance->host_no);
- 		cmd->result = (DID_ERROR << 16);
--		done(cmd);
-+		cmd->scsi_done(cmd);
- 		return 0;
- 	}
- #endif				/* (NDEBUG & NDEBUG_NO_WRITE) */
-@@ -835,9 +834,10 @@ static int NCR5380_queue_command_lck(str
- 	 */
- 
- 	cmd->host_scribble = NULL;
--	cmd->scsi_done = done;
- 	cmd->result = 0;
- 
-+	spin_lock_irqsave(instance->host_lock, flags);
-+
- 	/* 
- 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE 
- 	 * commands are added to the head of the queue since any command will
-@@ -854,6 +854,8 @@ static int NCR5380_queue_command_lck(str
- 		LIST(cmd, tmp);
- 		tmp->host_scribble = (unsigned char *) cmd;
- 	}
-+	spin_unlock_irqrestore(instance->host_lock, flags);
-+
- 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
- 
- 	/* Run the coroutine if it isn't already running. */
-@@ -862,8 +864,6 @@ static int NCR5380_queue_command_lck(str
- 	return 0;
- }
- 
--static DEF_SCSI_QCMD(NCR5380_queue_command)
--
- /**
-  *	NCR5380_main	-	NCR state machines
-  *
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:33.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:34.000000000 +1100
+@@ -1045,8 +1045,7 @@ static void NCR5380_main(struct work_str
+ 			NCR5380_information_transfer(instance);
+ 			dprintk(NDEBUG_MAIN, "scsi%d : main() : done set false\n", instance->host_no);
+ 			done = 0;
+-		} else
+-			break;
++		}
+ 	} while (!done);
+ 	
+ 	spin_unlock_irq(instance->host_lock);
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:39.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:41.000000000 +1100
-@@ -924,7 +924,7 @@ static void NCR5380_exit(struct Scsi_Hos
-  * @instance: the relevant SCSI adapter
-  * @cmd: SCSI command
-  *
-- * cmd is added to the per instance issue_queue, with minor
-+ * cmd is added to the per-instance issue queue, with minor
-  * twiddling done to the host specific fields of cmd.  If the
-  * main coroutine is not running, it is restarted.
-  */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:33.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:34.000000000 +1100
+@@ -1175,6 +1175,7 @@ static void NCR5380_main(struct work_str
+ #endif
+ 						hostdata->retain_dma_intr--;
+ 						local_irq_restore(flags);
++						done = 0;
+ 						dprintk(NDEBUG_MAIN, "scsi%d: main(): select() failed, "
+ 							    "returned to issue_queue\n", HOSTNO);
+ 					}
