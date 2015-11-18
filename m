@@ -1,108 +1,153 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 16/71] ncr5380: Proceed with next command after NCR5380_select() calls scsi_done
-Date: Wed, 18 Nov 2015 19:35:11 +1100
-Message-ID: <20151118083459.541713432@telegraphics.com.au>
+Subject: [PATCH 15/71] ncr5380: Always escalate bad target time-out in NCR5380_select()
+Date: Wed, 18 Nov 2015 19:35:10 +1100
+Message-ID: <20151118083459.282154727@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-drop-completed-command
+Content-Disposition: inline; filename=ncr5380-escalate-selection-timeout
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If a target disappears from the SCSI bus, NCR5380_select() may
-subsequently fail with a time-out. In this situation, scsi_done is
-called and NCR5380_select() returns 0. Both hostdata->connected and
-hostdata->selecting are NULL and the main loop should proceed with
-the next command in the issue queue. Clarify this logic.
+Remove the restart_select and targets_present variables introduced in
+Linux v1.1.38. The former was used only for a questionable debug printk
+and the latter "so we can call a select failure a retryable condition".
+Well, retrying select failure in general is a different problem to a
+target that doesn't assert BSY. We need to handle these two cases
+differently; the latter case can be left to the SCSI ML.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
-
-Good code style would be,
-
-	if (this) {
-		/* do stuff */
-	}
-
-rather than,
-
-	if (!this) {
-	} else {
-		/* do stuff */
-	}
-
-But I've used the latter form at this point in the series for a cleaner
-diff between NCR5380.c and atari_NC5380.c, making it easier to gradually
-reduce discrepancies. Code style gets fixed up along the way.
-
----
- drivers/scsi/NCR5380.c       |    8 ++++++--
- drivers/scsi/atari_NCR5380.c |    8 ++++----
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/NCR5380.c       |   13 -------------
+ drivers/scsi/NCR5380.h       |    6 ------
+ drivers/scsi/atari_NCR5380.c |   13 -------------
+ 3 files changed, 32 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:21.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:23.000000000 +1100
-@@ -1007,14 +1007,18 @@ static void NCR5380_main(struct work_str
- 					 */
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:33:20.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:33:21.000000000 +1100
+@@ -790,7 +790,6 @@ static int NCR5380_init(struct Scsi_Host
+ #ifdef REAL_DMA
+ 	hostdata->dmalen = 0;
+ #endif
+-	hostdata->targets_present = 0;
+ 	hostdata->connected = NULL;
+ 	hostdata->issue_queue = NULL;
+ 	hostdata->disconnected_queue = NULL;
+@@ -1186,8 +1185,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	if (hostdata->selecting)
+ 		goto part2;
  
- 					if (!NCR5380_select(instance, tmp)) {
--						break;
-+						/* OK or bad target */
- 					} else {
-+						/* Need to retry */
- 						LIST(tmp, hostdata->issue_queue);
- 						tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
- 						hostdata->issue_queue = tmp;
- 						done = 0;
- 						dprintk(NDEBUG_MAIN|NDEBUG_QUEUES, "scsi%d : main(): select() failed, returned to issue_queue\n", instance->host_no);
- 					}
-+					if (hostdata->connected ||
-+					    hostdata->selecting)
-+						break;
- 					/* lock held here still */
- 				}	/* if target/lun is not busy */
- 			}	/* for */
-@@ -1024,7 +1028,7 @@ static void NCR5380_main(struct work_str
- 			tmp = (struct scsi_cmnd *) hostdata->selecting;
- 			/* Selection will drop and retake the lock */
- 			if (!NCR5380_select(instance, tmp)) {
--				/* Ok ?? */
-+				/* OK or bad target */
- 			} else {
- 				/* RvC: device failed, so we wait a long time
- 				   this is needed for Mustek scanners, that
+-	hostdata->restart_select = 0;
+-
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
+ 
+@@ -1363,21 +1360,12 @@ part2:
+ 
+ 	if (!(NCR5380_read(STATUS_REG) & SR_BSY)) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		if (hostdata->targets_present & (1 << scmd_id(cmd))) {
+-			printk(KERN_DEBUG "scsi%d : weirdness\n", instance->host_no);
+-			if (hostdata->restart_select)
+-				printk(KERN_DEBUG "\trestart select\n");
+-			NCR5380_dprint(NDEBUG_SELECTION, instance);
+-			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-			return -1;
+-		}
+ 		cmd->result = DID_BAD_TARGET << 16;
+ 		cmd->scsi_done(cmd);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n", instance->host_no);
+ 		return 0;
+ 	}
+-	hostdata->targets_present |= (1 << scmd_id(cmd));
+ 
+ 	/*
+ 	 * Since we followed the SCSI spec, and raised ATN while SEL 
+@@ -2382,7 +2370,6 @@ static void NCR5380_reselect(struct Scsi
+ 	 */
+ 
+ 	NCR5380_write(MODE_REG, MR_BASE);
+-	hostdata->restart_select = 1;
+ 
+ 	target_mask = NCR5380_read(CURRENT_SCSI_DATA_REG) & ~(hostdata->id_mask);
+ 	dprintk(NDEBUG_SELECTION, "scsi%d : reselect\n", instance->host_no);
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:21.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:23.000000000 +1100
-@@ -1139,13 +1139,13 @@ static void NCR5380_main(struct work_str
- 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:20.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:33:21.000000000 +1100
+@@ -826,7 +826,6 @@ static int __init NCR5380_init(struct Sc
+ #if defined (REAL_DMA)
+ 	hostdata->dma_len = 0;
  #endif
- 					if (!NCR5380_select(instance, tmp)) {
-+						/* OK or bad target */
- 						local_irq_disable();
- 						hostdata->retain_dma_intr--;
--						/* release if target did not response! */
- 						maybe_release_dma_irq(instance);
- 						local_irq_restore(flags);
--						break;
- 					} else {
-+						/* Need to retry */
- 						local_irq_disable();
- 						LIST(tmp, hostdata->issue_queue);
- 						SET_NEXT(tmp, hostdata->issue_queue);
-@@ -1157,9 +1157,9 @@ static void NCR5380_main(struct work_str
- 						local_irq_restore(flags);
- 						dprintk(NDEBUG_MAIN, "scsi%d: main(): select() failed, "
- 							    "returned to issue_queue\n", HOSTNO);
--						if (hostdata->connected)
--							break;
- 					}
-+					if (hostdata->connected)
-+						break;
- 				} /* if target/lun/target queue is not busy */
- 			} /* for issue_queue */
- 		} /* if (!hostdata->connected) */
+-	hostdata->targets_present = 0;
+ 	hostdata->connected = NULL;
+ 	hostdata->issue_queue = NULL;
+ 	hostdata->disconnected_queue = NULL;
+@@ -1409,7 +1408,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned long timeout;
+ 	unsigned long flags;
+ 
+-	hostdata->restart_select = 0;
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
+ 		   instance->this_id);
+@@ -1625,14 +1623,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 
+ 	if (!(NCR5380_read(STATUS_REG) & SR_BSY)) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-		if (hostdata->targets_present & (1 << cmd->device->id)) {
+-			printk(KERN_ERR "scsi%d: weirdness\n", HOSTNO);
+-			if (hostdata->restart_select)
+-				printk(KERN_NOTICE "\trestart select\n");
+-			NCR5380_dprint(NDEBUG_ANY, instance);
+-			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-			return -1;
+-		}
+ 		cmd->result = DID_BAD_TARGET << 16;
+ #ifdef SUPPORT_TAGS
+ 		cmd_free_tag(cmd);
+@@ -1643,8 +1633,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 		return 0;
+ 	}
+ 
+-	hostdata->targets_present |= (1 << cmd->device->id);
+-
+ 	/*
+ 	 * Since we followed the SCSI spec, and raised ATN while SEL
+ 	 * was true but before BSY was false during selection, the information
+@@ -2605,7 +2593,6 @@ static void NCR5380_reselect(struct Scsi
+ 	 */
+ 
+ 	NCR5380_write(MODE_REG, MR_BASE);
+-	hostdata->restart_select = 1;
+ 
+ 	target_mask = NCR5380_read(CURRENT_SCSI_DATA_REG) & ~(hostdata->id_mask);
+ 
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:33:18.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:33:21.000000000 +1100
+@@ -257,9 +257,6 @@ struct NCR5380_hostdata {
+ 	NCR5380_implementation_fields;		/* implementation specific */
+ 	struct Scsi_Host *host;			/* Host backpointer */
+ 	unsigned char id_mask, id_higher_mask;	/* 1 << id, all bits greater */
+-	unsigned char targets_present;		/* targets we have connected
+-						   to, so we can call a select
+-						   failure a retryable condition */
+ 	volatile unsigned char busy[8];		/* index = target, bit = lun */
+ #if defined(REAL_DMA) || defined(REAL_DMA_POLL)
+ 	volatile int dma_len;			/* requested length of DMA */
+@@ -268,9 +265,6 @@ struct NCR5380_hostdata {
+ 	volatile struct scsi_cmnd *connected;	/* currently connected command */
+ 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
+ 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
+-	volatile int restart_select;		/* we have disconnected,
+-						   used to restart 
+-						   NCR5380_select() */
+ 	int flags;
+ 	unsigned long time_expires;		/* in jiffies, set prior to sleeping */
+ 	int select_time;			/* timer in select for target response */
