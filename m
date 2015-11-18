@@ -1,42 +1,52 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH v2] qla2xxx: Remove unavailable firmware files
-Date: Wed, 18 Nov 2015 10:35:24 +1100
-Message-ID: <CAGRGNgUQBV=LhmurBiEMOuW9ZGRstj-XS+=Jx9tXQ2H79q_RzQ@mail.gmail.com>
-References: <1447793088-1619-1-git-send-email-himanshu.madhani@qlogic.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 4/9] srpt: chain RDMA READ/WRITE requests
+Date: Tue, 17 Nov 2015 17:17:35 -0800
+Message-ID: <564BD1AF.60200@sandisk.com>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+ <1447422410-20891-5-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:33544 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbbKQXfo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2015 18:35:44 -0500
-Received: by iouu10 with SMTP id u10so36782180iou.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2015 15:35:43 -0800 (PST)
-In-Reply-To: <1447793088-1619-1-git-send-email-himanshu.madhani@qlogic.com>
+Received: from mail-bn1bon0053.outbound.protection.outlook.com ([157.56.111.53]:20832
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751702AbbKRBRk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2015 20:17:40 -0500
+In-Reply-To: <1447422410-20891-5-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, linux-rdma@vger.kernel.org
+Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Himanshu,
-
-On Wed, Nov 18, 2015 at 7:44 AM, Himanshu Madhani
-<himanshu.madhani@qlogic.com> wrote:
-> Remove firmware binary names for the ISPs, which
-> are not submitted to linux-firmware
+On 11/13/2015 05:46 AM, Christoph Hellwig wrote:
+> -		ret = ib_post_send(ch->qp, &wr.wr, &bad_wr);
+> -		if (ret)
+> -			break;
+> +		if (i == n_rdma - 1) {
+> +			/* only get completion event for the last rdma read */
+> +			if (dir == DMA_TO_DEVICE)
+> +				wr->wr.send_flags = IB_SEND_SIGNALED;
+> +			wr->wr.next = NULL;
+> +		} else {
+> +			wr->wr.next = &ioctx->rdma_ius[i + 1].wr;
+> +		}
+>   	}
 >
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+> +	ret = ib_post_send(ch->qp, &ioctx->rdma_ius->wr, &bad_wr);
+>   	if (ret)
+>   		pr_err("%s[%d]: ib_post_send() returned %d for %d/%d\n",
+>   				 __func__, __LINE__, ret, i, n_rdma);
 
-The patch looks good so for what it's worth:
+Hello Christoph,
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Chaining RDMA requests is a great idea. But it seems to me that this 
+patch is based on the assumption that posting multiple RDMA requests 
+either succeeds as a whole or fails as a whole. Sorry but I'm not sure 
+that the verbs API guarantees this. In the ib_srpt driver a QP can be 
+changed at any time into the error state and there might be drivers that 
+report an immediate failure in that case. I think even when chaining 
+RDMA requests that we still need a mechanism to wait until ongoing RDMA 
+transfers have finished if some but not all RDMA requests have been posted.
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Bart.
