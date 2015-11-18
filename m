@@ -1,24 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [SCSI] st: Remove obsolete scsi_tape.max_pfn
-Date: Wed, 18 Nov 2015 12:00:31 -0500
-Message-ID: <yq17flfs0nk.fsf@sermon.lab.mkp.net>
-References: <1447588113-21117-1-git-send-email-geert@linux-m68k.org>
+Subject: Re: [PATCH v2] qla2xxx: Remove unavailable firmware files
+Date: Wed, 18 Nov 2015 12:04:47 -0500
+Message-ID: <yq137w3s0gg.fsf@sermon.lab.mkp.net>
+References: <1447793088-1619-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447588113-21117-1-git-send-email-geert@linux-m68k.org> (Geert
-	Uytterhoeven's message of "Sun, 15 Nov 2015 12:48:33 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Kai =?utf-8?Q?M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Ewan D. Milne" <emilne@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30145 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756485AbbKRREz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2015 12:04:55 -0500
+In-Reply-To: <1447793088-1619-1-git-send-email-himanshu.madhani@qlogic.com>
+	(Himanshu Madhani's message of "Tue, 17 Nov 2015 15:44:48 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: jbottomley@parallels.com, martin.petersen@oracle.com, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, Xose Vazquez Perez <xose.vazquez@gmail.com>, Julian Calaby <julian.calaby@gmail.com>
 
->>>>> "Geert" == Geert Uytterhoeven <geert@linux-m68k.org> writes:
+>>>>> "Himanshu" == Himanshu Madhani <himanshu.madhani@qlogic.com> writes:
 
-Geert> Its last user was removed 10 years ago, in commit
-Geert> 8b05b773b6030de5 ("[SCSI] convert st to use scsi_execute_async").
+Himanshu> Remove firmware binary names for the ISPs, which are not
+Himanshu> submitted to linux-firmware
 
-Applied to the 4.5 queue.
+Queued for 4.5.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
