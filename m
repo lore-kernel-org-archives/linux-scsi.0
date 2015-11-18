@@ -1,244 +1,226 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 52/71] ncr5380: Remove H_NO macro and introduce dsprintk
-Date: Wed, 18 Nov 2015 19:35:47 +1100
-Message-ID: <20151118083511.882411366@telegraphics.com.au>
+Subject: [PATCH 55/71] ncr5380: Remove LIST and REMOVE macros
+Date: Wed, 18 Nov 2015 19:35:50 +1100
+Message-ID: <20151118083513.512743408@telegraphics.com.au>
 References: <20151118083455.331768508@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:43857 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932749AbbKRIqf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2015 03:46:35 -0500
-Content-Disposition: inline; filename=atari_NCR5380-remove-H_NO-and-introduce-dsprintk
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-remove-LIST-and-REMOVE-macros
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Replace all H_NO and some HOSTNO macros (both peculiar to atari_NCR5380.c)
-with a new dsprintk macro that's more useful and more consistent. The new
-macro avoids a lot of boilerplate in new code in subsequent patches. Keep
-NCR5380.c in sync. Remaining HOSTNO macros are removed as side-effects
-of subsequent patches.
+Printing command pointers can be useful when debugging queues. Other than
+that, the LIST and REMOVE macros are just clutter. These macros are
+redundant now that NDEBUG_QUEUES causes pointers to be printed, so remove
+them.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   11 +++++---
- drivers/scsi/NCR5380.h       |    5 +++
- drivers/scsi/atari_NCR5380.c |   57 +++++++++++++++++++++----------------------
- 3 files changed, 40 insertions(+), 33 deletions(-)
+ drivers/scsi/NCR5380.c       |   19 -------------------
+ drivers/scsi/atari_NCR5380.c |   32 --------------------------------
+ 2 files changed, 51 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-11-18 19:34:10.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-11-18 19:34:14.000000000 +1100
-@@ -285,6 +285,11 @@ struct NCR5380_hostdata {
- 	do { if ((NDEBUG) & (flg)) \
- 		printk(KERN_DEBUG fmt, ## __VA_ARGS__); } while (0)
- 
-+#define dsprintk(flg, host, fmt, ...) \
-+	do { if ((NDEBUG) & (flg)) \
-+		shost_printk(KERN_DEBUG, host, fmt, ## __VA_ARGS__); \
-+	} while (0)
-+
- #if NDEBUG
- #define NCR5380_dprint(flg, arg) \
- 	do { if ((NDEBUG) & (flg)) NCR5380_print(arg); } while (0)
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:12.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:14.000000000 +1100
-@@ -207,7 +207,6 @@
- #define	NEXTADDR(cmd)		((struct scsi_cmnd **)&(cmd)->host_scribble)
- 
- #define	HOSTNO		instance->host_no
--#define	H_NO(cmd)	(cmd)->device->host->host_no
- 
- static int do_abort(struct Scsi_Host *);
- static void do_reset(struct Scsi_Host *);
-@@ -280,7 +279,8 @@ static void __init init_tags(struct NCR5
- static int is_lun_busy(struct scsi_cmnd *cmd, int should_be_tagged)
- {
- 	u8 lun = cmd->device->lun;
--	SETUP_HOSTDATA(cmd->device->host);
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	if (hostdata->busy[cmd->device->id] & (1 << lun))
- 		return 1;
-@@ -290,8 +290,8 @@ static int is_lun_busy(struct scsi_cmnd
- 		return 0;
- 	if (hostdata->TagAlloc[scmd_id(cmd)][lun].nr_allocated >=
- 	    hostdata->TagAlloc[scmd_id(cmd)][lun].queue_size) {
--		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d: no free tags\n",
--			   H_NO(cmd), cmd->device->id, lun);
-+		dsprintk(NDEBUG_TAGS, instance, "target %d lun %d: no free tags\n",
-+		         scmd_id(cmd), lun);
- 		return 1;
- 	}
- 	return 0;
-@@ -306,7 +306,8 @@ static int is_lun_busy(struct scsi_cmnd
- static void cmd_get_tag(struct scsi_cmnd *cmd, int should_be_tagged)
- {
- 	u8 lun = cmd->device->lun;
--	SETUP_HOSTDATA(cmd->device->host);
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	/* If we or the target don't support tagged queuing, allocate the LUN for
- 	 * an untagged command.
-@@ -316,18 +317,16 @@ static void cmd_get_tag(struct scsi_cmnd
- 	    !cmd->device->tagged_supported) {
- 		cmd->tag = TAG_NONE;
- 		hostdata->busy[cmd->device->id] |= (1 << lun);
--		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d now allocated by untagged "
--			   "command\n", H_NO(cmd), cmd->device->id, lun);
-+		dsprintk(NDEBUG_TAGS, instance, "target %d lun %d now allocated by untagged command\n",
-+		         scmd_id(cmd), lun);
- 	} else {
- 		struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][lun];
- 
- 		cmd->tag = find_first_zero_bit(ta->allocated, MAX_TAGS);
- 		set_bit(cmd->tag, ta->allocated);
- 		ta->nr_allocated++;
--		dprintk(NDEBUG_TAGS, "scsi%d: using tag %d for target %d lun %d "
--			   "(now %d tags in use)\n",
--			   H_NO(cmd), cmd->tag, cmd->device->id,
--			   lun, ta->nr_allocated);
-+		dsprintk(NDEBUG_TAGS, instance, "using tag %d for target %d lun %d (%d tags allocated)\n",
-+		         cmd->tag, scmd_id(cmd), lun, ta->nr_allocated);
- 	}
- }
- 
-@@ -339,21 +338,22 @@ static void cmd_get_tag(struct scsi_cmnd
- static void cmd_free_tag(struct scsi_cmnd *cmd)
- {
- 	u8 lun = cmd->device->lun;
--	SETUP_HOSTDATA(cmd->device->host);
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	if (cmd->tag == TAG_NONE) {
- 		hostdata->busy[cmd->device->id] &= ~(1 << lun);
--		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d untagged cmd finished\n",
--			   H_NO(cmd), cmd->device->id, lun);
-+		dsprintk(NDEBUG_TAGS, instance, "target %d lun %d untagged cmd freed\n",
-+		         scmd_id(cmd), lun);
- 	} else if (cmd->tag >= MAX_TAGS) {
--		printk(KERN_NOTICE "scsi%d: trying to free bad tag %d!\n",
--		       H_NO(cmd), cmd->tag);
-+		shost_printk(KERN_NOTICE, instance,
-+		             "trying to free bad tag %d!\n", cmd->tag);
- 	} else {
- 		struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][lun];
- 		clear_bit(cmd->tag, ta->allocated);
- 		ta->nr_allocated--;
--		dprintk(NDEBUG_TAGS, "scsi%d: freed tag %d for target %d lun %d\n",
--			   H_NO(cmd), cmd->tag, cmd->device->id, lun);
-+		dsprintk(NDEBUG_TAGS, instance, "freed tag %d for target %d lun %d\n",
-+		         cmd->tag, scmd_id(cmd), lun);
- 	}
- }
- 
-@@ -812,8 +812,7 @@ static int NCR5380_queue_command(struct
- 	switch (cmd->cmnd[0]) {
- 	case WRITE_6:
- 	case WRITE_10:
--		printk(KERN_NOTICE "scsi%d: WRITE attempted with NO_WRITE debugging flag set\n",
--		       H_NO(cmd));
-+		shost_printk(KERN_DEBUG, instance, "WRITE attempted with NDEBUG_NO_WRITE set\n");
- 		cmd->result = (DID_ERROR << 16);
- 		cmd->scsi_done(cmd);
- 		return 0;
-@@ -872,8 +871,8 @@ static int NCR5380_queue_command(struct
- 	}
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
--	dprintk(NDEBUG_QUEUES, "scsi%d: command added to %s of queue\n", H_NO(cmd),
--		  (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
-+	dsprintk(NDEBUG_QUEUES, instance, "command %p added to %s of queue\n",
-+	         cmd, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
- 
- 	/* Kick off command processing */
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-@@ -1319,8 +1318,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
- 		NCR5380_write(MODE_REG, MR_BASE);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		dprintk(NDEBUG_ARBITRATION, "scsi%d: lost arbitration, deasserting ICR_ASSERT_SEL\n",
--			   HOSTNO);
-+		dsprintk(NDEBUG_ARBITRATION, instance, "arbitration lost, negating SEL\n");
- 		spin_lock_irq(&hostdata->lock);
- 		return -1;
- 	}
-@@ -2089,8 +2087,9 @@ static void NCR5380_information_transfer
- 						LIST(cmd,hostdata->issue_queue);
- 						SET_NEXT(cmd, hostdata->issue_queue);
- 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
--						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
--							  "issue queue\n", H_NO(cmd));
-+						dsprintk(NDEBUG_QUEUES, instance,
-+						         "REQUEST SENSE cmd %p added to head of issue queue\n",
-+						         cmd);
- 					} else {
- 						cmd->scsi_done(cmd);
- 					}
-@@ -2756,11 +2755,11 @@ static int NCR5380_bus_reset(struct scsi
- 	 */
- 
- 	if (hostdata->issue_queue)
--		dprintk(NDEBUG_ABORT, "scsi%d: reset aborted issued command(s)\n", H_NO(cmd));
-+		dsprintk(NDEBUG_ABORT, instance, "reset aborted issued command(s)\n");
- 	if (hostdata->connected)
--		dprintk(NDEBUG_ABORT, "scsi%d: reset aborted a connected command\n", H_NO(cmd));
-+		dsprintk(NDEBUG_ABORT, instance, "reset aborted a connected command\n");
- 	if (hostdata->disconnected_queue)
--		dprintk(NDEBUG_ABORT, "scsi%d: reset aborted disconnected command(s)\n", H_NO(cmd));
-+		dsprintk(NDEBUG_ABORT, instance, "reset aborted disconnected command(s)\n");
- 
- 	hostdata->issue_queue = NULL;
- 	hostdata->connected = NULL;
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:34:12.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:34:14.000000000 +1100
-@@ -751,7 +751,7 @@ static int NCR5380_queue_command(struct
- 	switch (cmd->cmnd[0]) {
- 	case WRITE_6:
- 	case WRITE_10:
--		printk("scsi%d : WRITE attempted with NO_WRITE debugging flag set\n", instance->host_no);
-+		shost_printk(KERN_DEBUG, instance, "WRITE attempted with NDEBUG_NO_WRITE set\n");
- 		cmd->result = (DID_ERROR << 16);
- 		cmd->scsi_done(cmd);
- 		return 0;
-@@ -786,7 +786,8 @@ static int NCR5380_queue_command(struct
+--- linux.orig/drivers/scsi/NCR5380.c	2015-11-18 19:34:16.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-11-18 19:34:18.000000000 +1100
+@@ -80,14 +80,6 @@
+  *      tagged queueing)
+  */
+ 
+-#if (NDEBUG & NDEBUG_LISTS)
+-#define LIST(x,y) {printk("LINE:%d   Adding %p to %p\n", __LINE__, (void*)(x), (void*)(y)); if ((x)==(y)) udelay(5); }
+-#define REMOVE(w,x,y,z) {printk("LINE:%d   Removing: %p->%p  %p->%p \n", __LINE__, (void*)(w), (void*)(x), (void*)(y), (void*)(z)); if ((x)==(y)) udelay(5); }
+-#else
+-#define LIST(x,y)
+-#define REMOVE(w,x,y,z)
+-#endif
+-
+ #ifndef notyet
+ #undef REAL_DMA
+ #endif
+@@ -774,12 +766,10 @@ static int NCR5380_queue_command(struct
+ 	 */
+ 
+ 	if (!(hostdata->issue_queue) || (cmd->cmnd[0] == REQUEST_SENSE)) {
+-		LIST(cmd, hostdata->issue_queue);
+ 		cmd->host_scribble = (unsigned char *) hostdata->issue_queue;
+ 		hostdata->issue_queue = cmd;
+ 	} else {
+ 		for (tmp = (struct scsi_cmnd *) hostdata->issue_queue; tmp->host_scribble; tmp = (struct scsi_cmnd *) tmp->host_scribble);
+-		LIST(cmd, tmp);
+ 		tmp->host_scribble = (unsigned char *) cmd;
  	}
  	spin_unlock_irqrestore(&hostdata->lock, flags);
+@@ -831,10 +821,8 @@ static void NCR5380_main(struct work_str
+ 				if (!(hostdata->busy[tmp->device->id] &
+ 				      (1 << (u8)(tmp->device->lun & 0xff)))) {
+ 					if (prev) {
+-						REMOVE(prev, prev->host_scribble, tmp, tmp->host_scribble);
+ 						prev->host_scribble = tmp->host_scribble;
+ 					} else {
+-						REMOVE(-1, hostdata->issue_queue, tmp, tmp->host_scribble);
+ 						hostdata->issue_queue = (struct scsi_cmnd *) tmp->host_scribble;
+ 					}
+ 					tmp->host_scribble = NULL;
+@@ -859,7 +847,6 @@ static void NCR5380_main(struct work_str
+ 						/* OK or bad target */
+ 					} else {
+ 						/* Need to retry */
+-						LIST(tmp, hostdata->issue_queue);
+ 						tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
+ 						hostdata->issue_queue = tmp;
+ 						dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
+@@ -1895,7 +1882,6 @@ static void NCR5380_information_transfer
+ 					if ((cmd->cmnd[0] != REQUEST_SENSE) && (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
+ 						scsi_eh_prep_cmnd(cmd, &hostdata->ses, NULL, 0, ~0);
  
--	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
-+	dsprintk(NDEBUG_QUEUES, instance, "command %p added to %s of queue\n",
-+	         cmd, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
- 
- 	/* Kick off command processing */
- 	queue_work(hostdata->work_q, &hostdata->main_task);
-@@ -1101,7 +1102,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
- 		NCR5380_write(MODE_REG, MR_BASE);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		dprintk(NDEBUG_ARBITRATION, "scsi%d : lost arbitration, deasserting ICR_ASSERT_SEL\n", instance->host_no);
-+		dsprintk(NDEBUG_ARBITRATION, instance, "arbitration lost, negating SEL\n");
- 		spin_lock_irq(&hostdata->lock);
- 		return -1;
- 	}
-@@ -1895,7 +1896,9 @@ static void NCR5380_information_transfer
+-						LIST(cmd, hostdata->issue_queue);
  						cmd->host_scribble = (unsigned char *)
  						    hostdata->issue_queue;
  						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
--						dprintk(NDEBUG_QUEUES, "scsi%d : REQUEST SENSE added to head of issue queue\n", instance->host_no);
-+						dsprintk(NDEBUG_QUEUES, instance,
-+						         "REQUEST SENSE cmd %p added to head of issue queue\n",
-+						         cmd);
+@@ -1932,7 +1918,6 @@ static void NCR5380_information_transfer
+ 				case DISCONNECT:{
+ 						/* Accept message by clearing ACK */
+ 						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-						LIST(cmd, hostdata->disconnected_queue);
+ 						cmd->host_scribble = (unsigned char *)
+ 						    hostdata->disconnected_queue;
+ 						hostdata->connected = NULL;
+@@ -2182,10 +2167,8 @@ static void NCR5380_reselect(struct Scsi
+ 	     tmp; prev = tmp, tmp = (struct scsi_cmnd *) tmp->host_scribble) {
+ 		if ((target_mask == (1 << tmp->device->id)) && (lun == (u8)tmp->device->lun)) {
+ 			if (prev) {
+-				REMOVE(prev, prev->host_scribble, tmp, tmp->host_scribble);
+ 				prev->host_scribble = tmp->host_scribble;
+ 			} else {
+-				REMOVE(-1, hostdata->disconnected_queue, tmp, tmp->host_scribble);
+ 				hostdata->disconnected_queue =
+ 					(struct scsi_cmnd *) tmp->host_scribble;
+ 			}
+@@ -2336,7 +2319,6 @@ static int NCR5380_abort(struct scsi_cmn
+ 	dprintk(NDEBUG_ABORT, "scsi%d : abort going into loop.\n", instance->host_no);
+ 	for (prev = (struct scsi_cmnd **) &(hostdata->issue_queue), tmp = (struct scsi_cmnd *) hostdata->issue_queue; tmp; prev = (struct scsi_cmnd **) &(tmp->host_scribble), tmp = (struct scsi_cmnd *) tmp->host_scribble)
+ 		if (cmd == tmp) {
+-			REMOVE(5, *prev, tmp, tmp->host_scribble);
+ 			(*prev) = (struct scsi_cmnd *) tmp->host_scribble;
+ 			tmp->host_scribble = NULL;
+ 			spin_unlock_irqrestore(&hostdata->lock, flags);
+@@ -2406,7 +2388,6 @@ static int NCR5380_abort(struct scsi_cmn
+ 
+ 			for (prev = (struct scsi_cmnd **) &(hostdata->disconnected_queue), tmp = (struct scsi_cmnd *) hostdata->disconnected_queue; tmp; prev = (struct scsi_cmnd **) &(tmp->host_scribble), tmp = (struct scsi_cmnd *) tmp->host_scribble)
+ 				if (cmd == tmp) {
+-					REMOVE(5, *prev, tmp, tmp->host_scribble);
+ 					*prev = (struct scsi_cmnd *) tmp->host_scribble;
+ 					tmp->host_scribble = NULL;
+ 					spin_unlock_irqrestore(&hostdata->lock, flags);
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:16.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-11-18 19:34:18.000000000 +1100
+@@ -68,27 +68,6 @@
+ 
+ /* Adapted for the sun3 by Sam Creasey. */
+ 
+-#if (NDEBUG & NDEBUG_LISTS)
+-#define LIST(x, y)						\
+-	do {							\
+-		printk("LINE:%d   Adding %p to %p\n",		\
+-		       __LINE__, (void*)(x), (void*)(y));	\
+-		if ((x) == (y))					\
+-			udelay(5);				\
+-	} while (0)
+-#define REMOVE(w, x, y, z)					\
+-	do {							\
+-		printk("LINE:%d   Removing: %p->%p  %p->%p \n",	\
+-		       __LINE__, (void*)(w), (void*)(x),	\
+-		       (void*)(y), (void*)(z));			\
+-		if ((x) == (y))					\
+-			udelay(5);				\
+-	} while (0)
+-#else
+-#define LIST(x,y)
+-#define REMOVE(w,x,y,z)
+-#endif
+-
+ /*
+  * Design
+  *
+@@ -853,14 +832,12 @@ static int NCR5380_queue_command(struct
+ 	 */
+ 
+ 	if (!(hostdata->issue_queue) || (cmd->cmnd[0] == REQUEST_SENSE)) {
+-		LIST(cmd, hostdata->issue_queue);
+ 		SET_NEXT(cmd, hostdata->issue_queue);
+ 		hostdata->issue_queue = cmd;
+ 	} else {
+ 		for (tmp = (struct scsi_cmnd *)hostdata->issue_queue;
+ 		     NEXT(tmp); tmp = NEXT(tmp))
+ 			;
+-		LIST(cmd, tmp);
+ 		SET_NEXT(tmp, cmd);
+ 	}
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
+@@ -944,10 +921,8 @@ static void NCR5380_main(struct work_str
+ #endif
+ 				    ) {
+ 					if (prev) {
+-						REMOVE(prev, NEXT(prev), tmp, NEXT(tmp));
+ 						SET_NEXT(prev, NEXT(tmp));
  					} else {
- 						cmd->scsi_done(cmd);
+-						REMOVE(-1, hostdata->issue_queue, tmp, NEXT(tmp));
+ 						hostdata->issue_queue = NEXT(tmp);
  					}
-
-
+ 					SET_NEXT(tmp, NULL);
+@@ -982,7 +957,6 @@ static void NCR5380_main(struct work_str
+ 						maybe_release_dma_irq(instance);
+ 					} else {
+ 						/* Need to retry */
+-						LIST(tmp, hostdata->issue_queue);
+ 						SET_NEXT(tmp, hostdata->issue_queue);
+ 						hostdata->issue_queue = tmp;
+ 						dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES,
+@@ -2077,7 +2051,6 @@ static void NCR5380_information_transfer
+ 					    (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
+ 						scsi_eh_prep_cmnd(cmd, &hostdata->ses, NULL, 0, ~0);
+ 
+-						LIST(cmd,hostdata->issue_queue);
+ 						SET_NEXT(cmd, hostdata->issue_queue);
+ 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
+ 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
+@@ -2128,7 +2101,6 @@ static void NCR5380_information_transfer
+ 				case DISCONNECT:
+ 					/* Accept message by clearing ACK */
+ 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-					LIST(cmd,hostdata->disconnected_queue);
+ 					SET_NEXT(cmd, hostdata->disconnected_queue);
+ 					hostdata->connected = NULL;
+ 					hostdata->disconnected_queue = cmd;
+@@ -2424,10 +2396,8 @@ static void NCR5380_reselect(struct Scsi
+ #endif
+ 		    ) {
+ 			if (prev) {
+-				REMOVE(prev, NEXT(prev), tmp, NEXT(tmp));
+ 				SET_NEXT(prev, NEXT(tmp));
+ 			} else {
+-				REMOVE(-1, hostdata->disconnected_queue, tmp, NEXT(tmp));
+ 				hostdata->disconnected_queue = NEXT(tmp);
+ 			}
+ 			SET_NEXT(tmp, NULL);
+@@ -2597,7 +2567,6 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
+ 	     tmp = (struct scsi_cmnd *)hostdata->issue_queue;
+ 	     tmp; prev = NEXTADDR(tmp), tmp = NEXT(tmp)) {
+ 		if (cmd == tmp) {
+-			REMOVE(5, *prev, tmp, NEXT(tmp));
+ 			(*prev) = NEXT(tmp);
+ 			SET_NEXT(tmp, NULL);
+ 			tmp->result = DID_ABORT << 16;
+@@ -2671,7 +2640,6 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
+ 			     tmp = (struct scsi_cmnd *)hostdata->disconnected_queue;
+ 			     tmp; prev = NEXTADDR(tmp), tmp = NEXT(tmp)) {
+ 				if (cmd == tmp) {
+-					REMOVE(5, *prev, tmp, NEXT(tmp));
+ 					*prev = NEXT(tmp);
+ 					SET_NEXT(tmp, NULL);
+ 					tmp->result = DID_ABORT << 16;
