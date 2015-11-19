@@ -1,69 +1,76 @@
 From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: [PATCH RESEND_2] scsi_sysfs: protect against double execution of __scsi_remove_device()
-Date: Thu, 19 Nov 2015 14:02:19 +0100
-Message-ID: <1447938139-22072-1-git-send-email-vkuznets@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v3 RESEND_2] scsi: report 'INQUIRY result too short' once per host
+Date: Thu, 19 Nov 2015 14:17:06 +0100
+Message-ID: <1447939026-25306-1-git-send-email-vkuznets@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57213 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755455AbbKSNRK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2015 08:17:10 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>
 
-On some host errors storvsc module tries to remove sdev by scheduling a job
-which does the following:
-
-   sdev = scsi_device_lookup(wrk->host, 0, 0, wrk->lun);
-   if (sdev) {
-       scsi_remove_device(sdev);
-       scsi_device_put(sdev);
-   }
-
-While this code seems correct the following crash is observed:
-
- general protection fault: 0000 [#1] SMP DEBUG_PAGEALLOC
- RIP: 0010:[<ffffffff81169979>]  [<ffffffff81169979>] bdi_destroy+0x39/0x220
- ...
- [<ffffffff814aecdc>] ? _raw_spin_unlock_irq+0x2c/0x40
- [<ffffffff8127b7db>] blk_cleanup_queue+0x17b/0x270
- [<ffffffffa00b54c4>] __scsi_remove_device+0x54/0xd0 [scsi_mod]
- [<ffffffffa00b556b>] scsi_remove_device+0x2b/0x40 [scsi_mod]
- [<ffffffffa00ec47d>] storvsc_remove_lun+0x3d/0x60 [hv_storvsc]
- [<ffffffff81080791>] process_one_work+0x1b1/0x530
- ...
-
-The problem comes with the fact that many such jobs (for the same device)
-are being scheduled simultaneously. While scsi_remove_device() uses
-shost->scan_mutex and scsi_device_lookup() will fail for a device in
-SDEV_DEL state there is no protection against someone who did
-scsi_device_lookup() before we actually entered __scsi_remove_device(). So
-the whole scenario looks like that: two callers do simultaneous (or
-preemption happens) calls to scsi_device_lookup() ant these calls succeed
-for both of them, after that they try doing scsi_remove_device().
-shost->scan_mutex only serializes their calls to __scsi_remove_device()
-and we end up doing the cleanup path twice.
+Some host adapters (e.g. Hyper-V storvsc) are known for not respecting the
+SPC-2/3/4 requirement for 'INQUIRY data (see table ...) shall contain at
+least 36 bytes'. As a result we get tons on 'scsi 0:7:1:1: scsi scan:
+INQUIRY result too short (5), using 36' messages on console. This can be
+problematic for slow consoles. Introduce short_inquiry flag in struct
+Scsi_Host to print the message once per host.
 
 Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 ---
- drivers/scsi/scsi_sysfs.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Changes since v3 RESEND:
+- No changes, this is just a RESEND.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 8d23122..905dd1c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1102,6 +1102,14 @@ void __scsi_remove_device(struct scsi_device *sdev)
- {
- 	struct device *dev = &sdev->sdev_gendev;
+Changes since v3:
+- No changes, this is just a RESEND.
+
+Changes since v2:
+- This is a successor of previously sent (and still not merged) "scsi:
+  introduce short_inquiry flag for broken host adapters" patch. I'm not
+  particularly sure which solution is better but I'm leaning towards this
+  one as it doesn't require changes to adapter drivers.
+---
+ drivers/scsi/scsi_scan.c | 9 ++++++---
+ include/scsi/scsi_host.h | 3 +++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8324539..054923e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -701,9 +701,12 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "scsi scan: INQUIRY result too short (%d),"
+-			    " using 36\n", sdev->inquiry_len);
++		if (!sdev->host->short_inquiry) {
++			shost_printk(KERN_INFO, sdev->host,
++				    "scsi scan: INQUIRY result too short (%d),"
++				    " using 36\n", sdev->inquiry_len);
++			sdev->host->short_inquiry = 1;
++		}
+ 		sdev->inquiry_len = 36;
+ 	}
  
-+	/*
-+	 * This cleanup path is not reentrant and while it is impossible
-+	 * to get a new reference with scsi_device_get() someone can still
-+	 * hold a previously acquired one.
-+	 */
-+	if (sdev->sdev_state == SDEV_DEL)
-+		return;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index ed52712..fcfa3d7 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -668,6 +668,9 @@ struct Scsi_Host {
+ 	unsigned use_blk_mq:1;
+ 	unsigned use_cmd_list:1;
+ 
++	/* Host responded with short (<36 bytes) INQUIRY result */
++	unsigned short_inquiry:1;
 +
- 	if (sdev->is_visible) {
- 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
- 			return;
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
 -- 
 2.4.3
+
