@@ -1,42 +1,47 @@
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-Subject: Re: [BISECTED] v4.4-rc1 SCSI disk init crash
-Date: Thu, 19 Nov 2015 23:19:00 +0200
-Message-ID: <20151119211900.GG18138@blackmetal.musicnaut.iki.fi>
-References: <20151119192135.GD18138@blackmetal.musicnaut.iki.fi>
- <564E28DE.6010200@sandisk.com>
- <1447963712.2234.31.camel@HansenPartnership.com>
- <20151119202953.GE18138@blackmetal.musicnaut.iki.fi>
- <564E394A.7060705@sandisk.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: hpsa: select CONFIG_SCSI_SAS_ATTR
+Date: Thu, 19 Nov 2015 23:04:35 +0100
+Message-ID: <3970646.5sOyETUiWo@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60282 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789AbbKSVTo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2015 16:19:44 -0500
-Content-Disposition: inline
-In-Reply-To: <564E394A.7060705@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: Don Brace <don.brace@pmcs.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+The hpsa driver recently started using the sas transport class, but it
+does not ensure that the corresponding code is actually built, which
+may lead to a link error:
 
-On Thu, Nov 19, 2015 at 01:04:10PM -0800, Bart Van Assche wrote:
-> On 11/19/2015 12:30 PM, Aaro Koskinen wrote:
-> >FYI, this sequence is 100% reproducible on my setup. The disk is in
-> >Macally USB enclosure. On cold-boot it will stay on "Spinning up disk"
-> >phase until I manually press the ON button. And that's when the disconnect
-> >message appears, don't know why...
-> 
-> Hello Aaro,
-> 
-> Can you check whether reverting only patch "block: don't release bdi while
-> request_queue has live references" (commit
-> b02176f30cd30acccd3b633ab7d9aed8b5da52ff) also makes the OCTEON router boot
-> again ?
+drivers/built-in.o: In function `hpsa_free_sas_phy':
+(.text+0x1ce874): undefined reference to `sas_port_delete_phy'
+(.text+0x1ce87c): undefined reference to `sas_phy_free'
+drivers/built-in.o: In function `hpsa_alloc_sas_port':
+(.text+0x1ceb9c): undefined reference to `sas_port_alloc_num'
+(.text+0x1ceba8): undefined reference to `sas_port_add'
+drivers/built-in.o: In function `hpsa_init':
+(.init.text+0x8838): undefined reference to `sas_attach_transport'
+(.init.text+0x8868): undefined reference to `sas_release_transport
 
-No, it crashes pretty much in the same way.
+This adds 'select SCSI_SAS_ATTR' in the Kconfig entry, just like we do
+for all other drivers using those functions.
 
-A.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: d04e62b9d63a ("hpsa: add in sas transport class")
+---
+This showed up on the ARM randconfig builds today for the first time.
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 04a720686516..64eed87d34a8 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -364,6 +364,7 @@ config SCSI_HPSA
+ 	tristate "HP Smart Array SCSI driver"
+ 	depends on PCI && SCSI
+ 	select CHECK_SIGNATURE
++	select SCSI_SAS_ATTRS
+ 	help
+ 	  This driver supports HP Smart Array Controllers (circa 2009).
+ 	  It is a SCSI alternative to the cciss driver, which is a block
