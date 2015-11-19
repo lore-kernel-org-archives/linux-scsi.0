@@ -1,54 +1,64 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3] scsi: advansys needs ISA dma api for ISA support
-Date: Thu, 19 Nov 2015 15:22:23 +0100
-Message-ID: <4355540.BF55dNX7U7@wuerfel>
+Subject: [PATCH] [RESEND 2] SCSI: initio: remove duplicate module device table
+Date: Thu, 19 Nov 2015 15:33:41 +0100
+Message-ID: <5318263.D61echQrl2@wuerfel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-kernel@lists.infradead.org, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jbottomley@odin.com, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-The advansys drvier uses the request_dma function that is used on ISA
-machines for the internal DMA controller, which causes build errors
-on platforms that have ISA slots but do not provide the ISA DMA API:
+The initio driver has for many years had two copies of the
+same module device table. One of them is also used for registering
+the other driver, the other one is entirely useless after the
+large scale cleanup that Alan Cox did back in 2007.
 
-drivers/scsi/advansys.c: In function 'advansys_board_found':
-drivers/scsi/advansys.c:11300:10: error: implicit declaration of function 'request_dma' [-Werror=implicit-function-declaration]
+The compiler warns about this whenever the driver is built-in:
 
-The problem now showed up in ARM randconfig builds after commit
-6571fb3f8b7f ("advansys: Update to version 3.5 and remove compilation
-warning") made it possible to build on platforms that have neither
-VIRT_TO_BUS nor ISA_DMA_API but that do have ISA.
+drivers/scsi/initio.c:131:29: warning: 'i91u_pci_devices' defined but not used [-Wunused-variable]
 
-This adds the missing dependency.
+This removes the extraneous table and the warning.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 72d39fea901 ("[SCSI] initio: Convert into a real Linux driver and update to modern style")
 ---
-This is identical to v1 of the patch. We had gone through several iterations
-of this in October before concluding that everything else was more problematic.
+I sent this patch originally in January 2015, then again in May, but got no
+reply. Please apply.
 
-Please apply.
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5f692ae40749..04a720686516 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -499,6 +499,7 @@ config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
- 	depends on ISA || EISA || PCI
-+	depends on ISA_DMA_API || !ISA
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
- 	  AdvanSys. It is documented in the kernel source in
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 6a926bae76b2..7a91cf3ff173 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -110,11 +110,6 @@
+ #define i91u_MAXQUEUE		2
+ #define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
+ 
+-#define I950_DEVICE_ID	0x9500	/* Initio's inic-950 product ID   */
+-#define I940_DEVICE_ID	0x9400	/* Initio's inic-940 product ID   */
+-#define I935_DEVICE_ID	0x9401	/* Initio's inic-935 product ID   */
+-#define I920_DEVICE_ID	0x0002	/* Initio's other product ID      */
+-
+ #ifdef DEBUG_i91u
+ static unsigned int i91u_debug = DEBUG_DEFAULT;
+ #endif
+@@ -127,17 +122,6 @@ static int setup_debug = 0;
+ 
+ static void i91uSCBPost(u8 * pHcb, u8 * pScb);
+ 
+-/* PCI Devices supported by this driver */
+-static struct pci_device_id i91u_pci_devices[] = {
+-	{ PCI_VENDOR_ID_INIT,  I950_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I940_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I935_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_DOMEX, I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, i91u_pci_devices);
+-
+ #define DEBUG_INTERRUPT 0
+ #define DEBUG_QUEUE     0
+ #define DEBUG_STATE     0
