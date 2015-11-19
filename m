@@ -1,34 +1,34 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/71] ncr5380: Eliminate PDEBUG*, TDEBUG* and DTCDEBUG*
- macros
-Date: Thu, 19 Nov 2015 08:38:12 +0100
-Message-ID: <564D7C64.9060004@suse.de>
+Subject: Re: [PATCH 04/71] ncr5380: Remove more pointless macros
+Date: Thu, 19 Nov 2015 08:38:36 +0100
+Message-ID: <564D7C7C.4080002@suse.de>
 References: <20151118083455.331768508@telegraphics.com.au>
- <20151118083456.101681148@telegraphics.com.au>
+ <20151118083456.362586813@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151118083456.101681148@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20151118083456.362586813@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 11/18/2015 09:34 AM, Finn Thain wrote:
-> Replace {P,T,DTC}DEBUG_INIT with NDEBUG_INIT. Remove dead debugging
-> code, including code that's conditional upon *DEBUG_TRANSFER.
+> ASM macro is never defined. rtrc in pas16.c is not used.
+> NCR5380_map_config, do_NCR5380_intr, do_t128_intr and do_pas16_intr
+> are unused. NCR_NOT_SET harms readability. Remove them.
 >
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 >
 > ---
->   drivers/scsi/dtc.c   |   18 ++++++------------
->   drivers/scsi/dtc.h   |   27 ---------------------------
->   drivers/scsi/pas16.c |   21 +++++++--------------
->   drivers/scsi/pas16.h |   16 ----------------
->   drivers/scsi/t128.c  |   18 ++++++------------
->   drivers/scsi/t128.h  |   16 ----------------
->   6 files changed, 19 insertions(+), 97 deletions(-)
+>   drivers/scsi/NCR5380.h   |    3 ---
+>   drivers/scsi/g_NCR5380.c |   29 ++++++++++++++---------------
+>   drivers/scsi/g_NCR5380.h |    5 -----
+>   drivers/scsi/pas16.c     |   16 ----------------
+>   drivers/scsi/pas16.h     |    5 -----
+>   drivers/scsi/t128.h      |    4 ----
+>   6 files changed, 14 insertions(+), 48 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
