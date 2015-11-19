@@ -1,68 +1,29 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 10/71] atari_NCR5380: Remove RESET_BOOT, CONFIG_ATARI_SCSI_TOSHIBA_DELAY
- and CONFIG_ATARI_SCSI_RESET_BOOT
-Date: Thu, 19 Nov 2015 14:41:30 +0100
-Message-ID: <564DD18A.40909@suse.de>
-References: <20151118083455.331768508@telegraphics.com.au> <20151118083457.891774987@telegraphics.com.au>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 RESEND_2] scsi: report 'INQUIRY result too short' once per host
+Date: Thu, 19 Nov 2015 08:44:47 -0500
+Message-ID: <yq1wptenlww.fsf@sermon.lab.mkp.net>
+References: <1447939026-25306-1-git-send-email-vkuznets@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20151118083457.891774987@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447939026-25306-1-git-send-email-vkuznets@redhat.com> (Vitaly
+	Kuznetsov's message of "Thu, 19 Nov 2015 14:17:06 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/18/2015 09:35 AM, Finn Thain wrote:
-> The atari_NCR5380.c core driver now takes care of bus reset upon driv=
-er
-> initialization if required (same as NCR5380.c). Move the Toshiba CD-R=
-OM
-> support into the core driver, enabled with a host flag, so that all
-> NCR5380 drivers can make use of it.
->=20
-> Drop the RESET_BOOT macros and the ATARI_SCSI_RESET_BOOT and=20
-> ATARI_SCSI_TOSHIBA_DELAY Kconfig symbols, which are now redundant.
->=20
-> Remove the atari_scsi_reset_boot(), mac_scsi_reset_boot() and
-> sun3_scsi_reset_boot() routines. None of this duplicated code is need=
-ed
-> now that all drivers can use NCR5380_maybe_reset_bus().
->=20
-> This brings atari_scsi, mac_scsi and sun3_scsi into line with all of =
-the
-> other NCR5380 drivers.
->=20
-> The bus reset may raise an interrupt. That would be new behaviour for
-> atari_scsi only when CONFIG_ATARI_SCSI_RESET_BOOT=3Dn. The ST DMA int=
-errupt
-> is not assigned to atari_scsi at this stage, so
-> CONFIG_ATARI_SCSI_RESET_BOOT=3Dy may well be problematic already.
-> Regardless, do_reset() now raises and clears the interrupt within
-> local_irq_save/restore which should avoid problems.
->=20
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->=20
-> ---
->  drivers/scsi/Kconfig         |   17 -----------
->  drivers/scsi/NCR5380.c       |   17 +++++++++--
->  drivers/scsi/NCR5380.h       |    1=20
->  drivers/scsi/atari_NCR5380.c |   22 +++++++++-----
->  drivers/scsi/atari_scsi.c    |   60 +++++---------------------------=
--------
->  drivers/scsi/mac_scsi.c      |   65 ++++++--------------------------=
------------
->  drivers/scsi/sun3_scsi.c     |   47 -------------------------------
->  7 files changed, 51 insertions(+), 178 deletions(-)
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>>>>> "Vitaly" == Vitaly Kuznetsov <vkuznets@redhat.com> writes:
 
-Cheers,
+Vitaly> Some host adapters (e.g. Hyper-V storvsc) are known for not
+Vitaly> respecting the SPC-2/3/4 requirement for 'INQUIRY data (see
+Vitaly> table ...) shall contain at least 36 bytes'. As a result we get
+Vitaly> tons on 'scsi 0:7:1:1: scsi scan: INQUIRY result too short (5),
+Vitaly> using 36' messages on console. This can be problematic for slow
+Vitaly> consoles. Introduce short_inquiry flag in struct Scsi_Host to
+Vitaly> print the message once per host.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Applied to the 4.4 queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
