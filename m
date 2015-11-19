@@ -1,66 +1,42 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH for-next 05/10] iser: Have initiator and target to share
- protocol structures and definitions
-Date: Thu, 19 Nov 2015 10:40:51 +0200
-Message-ID: <564D8B13.8040800@dev.mellanox.co.il>
-References: <1447691861-3796-1-git-send-email-sagig@mellanox.com>
- <1447691861-3796-6-git-send-email-sagig@mellanox.com>
- <564D7835.4010407@mellanox.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 00/18] ALUA device handler update, part 1
+Date: Thu, 19 Nov 2015 10:42:02 +0100
+Message-ID: <564D996A.9080201@suse.de>
+References: <1447081703-110552-1-git-send-email-hare@suse.de> <20151119083541.GA27623@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <564D7835.4010407-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:37796 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755978AbbKSJmE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2015 04:42:04 -0500
+In-Reply-To: <20151119083541.GA27623@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Ewan Milne <emilne@redhat.com>
 
+On 11/19/2015 09:35 AM, Christoph Hellwig wrote:
+> Can you push out a git branch with this code for easier review as wel=
+l?
+>=20
+Pushed to kernel.org:hare/scsi-devel.git branch alua.v6
+Branch is based upon mkp/scsi.git branch 4.5/scsi-queue
 
+Thanks for reviewing.
 
-On 19/11/2015 09:20, Or Gerlitz wrote:
-> On 11/16/2015 6:37 PM, Sagi Grimberg wrote:
->> +/**
->> + * struct iser_hello - iSER Hello header
->> + *
->> + * @opcode:       opcode (must be set to ISER_HELLO)
->> + * @max_min_ver:  maximum and minimum iser versions
->> + * @iser_ird:     iSER IRD
->> + * @rsvd:         reserved
->> + */
->> +struct iser_hello {
->> +    u8      opcode;
->> +    u8    max_min_ver;
->> +    u16    iser_ird;
->> +    u8    rsvd[20];
->> +} __packed;
->> +
->> +/**
->> + * struct iser_hello_rep - iSER Hello reply header
->> + *
->> + * @opcode_rej:   opcode (must be set to ISER_HELLORPLY)
->> + *                lower bit is reject bit
->> + * @max_cur_ver:  maximum and current iser versions
->> + * @iser_ord:     iSER ORD
->> + * @rsvd:         reserved
->> + */
->> +struct iser_hello_rep {
->> +    u8      opcode_rej;
->> +    u8    max_cur_ver;
->> +    u16    iser_ord;
->> +    u8    rsvd[20];
->> +} __packed;
->> +
->
-> I don't see the point to include these two defs, we don't use them and
-> Steve even got iser to work
-> over iwarp without them, so why care? we should only leave
+Cheers,
 
-It's part of the protocol so I figured it should go here even if
-it's not used today.
-
-I can remove them if you like...
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
