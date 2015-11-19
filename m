@@ -1,147 +1,69 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: hisi_sas: remove dependency on of_irq_count
-Date: Thu, 19 Nov 2015 20:23:59 +0800
-Message-ID: <1447935839-212872-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: [PATCH RESEND_2] scsi_sysfs: protect against double execution of __scsi_remove_device()
+Date: Thu, 19 Nov 2015 14:02:19 +0100
+Message-ID: <1447938139-22072-1-git-send-email-vkuznets@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@odin.com, martin.petersen@oracle.com
-Cc: robh+dt@kernel.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
+To: "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Originally the driver would use of_irq_count to
-calculate how much memory is required for storing the
-interrupt names, since the number of interrupt sources
-for the controller is variable.
-Since of_irq_count cannot be used by the driver, use
-fixed names.
+On some host errors storvsc module tries to remove sdev by scheduling a job
+which does the following:
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+   sdev = scsi_device_lookup(wrk->host, 0, 0, wrk->lun);
+   if (sdev) {
+       scsi_remove_device(sdev);
+       scsi_device_put(sdev);
+   }
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 5b790c9..30a9ab9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -38,8 +38,6 @@
- #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
- #define HISI_SAS_MAX_SMP_RESP_SZ 1028
- 
--#define HISI_SAS_NAME_LEN 32
--
- struct hisi_hba;
- 
- enum {
-@@ -178,7 +176,6 @@ struct hisi_hba {
- 
- 	int	queue_count;
- 	int	queue;
--	char	*int_names;
- 	struct hisi_sas_slot	*slot_prep;
- 
- 	struct dma_pool *sge_page_pool;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 1377625..2929018 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1160,7 +1160,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = pdev->dev.of_node;
- 	struct property *sas_addr_prop;
--	int num;
- 
- 	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
- 	if (!shost)
-@@ -1197,13 +1196,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	if (of_property_read_u32(np, "queue-count", &hisi_hba->queue_count))
- 		goto err_out;
- 
--	num = of_irq_count(np);
--	hisi_hba->int_names = devm_kcalloc(dev, num,
--					   HISI_SAS_NAME_LEN,
--					   GFP_KERNEL);
--	if (!hisi_hba->int_names)
--		goto err_out;
--
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	hisi_hba->regs = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(hisi_hba->regs))
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index e29b7c7..0ed2f92 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1660,18 +1660,6 @@ static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
- 	return IRQ_HANDLED;
- }
- 
--static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
--	{"Bcast"},
--	{"Phy Up"},
--	{"Abnormal"},
--};
--
--static const char cq_int_name[32] = "cq";
--static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
--	"fatal ecc",
--	"fatal axi"
--};
--
- static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
- 	int_bcast_v1_hw,
- 	int_phyup_v1_hw,
-@@ -1687,7 +1675,6 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+While this code seems correct the following crash is observed:
+
+ general protection fault: 0000 [#1] SMP DEBUG_PAGEALLOC
+ RIP: 0010:[<ffffffff81169979>]  [<ffffffff81169979>] bdi_destroy+0x39/0x220
+ ...
+ [<ffffffff814aecdc>] ? _raw_spin_unlock_irq+0x2c/0x40
+ [<ffffffff8127b7db>] blk_cleanup_queue+0x17b/0x270
+ [<ffffffffa00b54c4>] __scsi_remove_device+0x54/0xd0 [scsi_mod]
+ [<ffffffffa00b556b>] scsi_remove_device+0x2b/0x40 [scsi_mod]
+ [<ffffffffa00ec47d>] storvsc_remove_lun+0x3d/0x60 [hv_storvsc]
+ [<ffffffff81080791>] process_one_work+0x1b1/0x530
+ ...
+
+The problem comes with the fact that many such jobs (for the same device)
+are being scheduled simultaneously. While scsi_remove_device() uses
+shost->scan_mutex and scsi_device_lookup() will fail for a device in
+SDEV_DEL state there is no protection against someone who did
+scsi_device_lookup() before we actually entered __scsi_remove_device(). So
+the whole scenario looks like that: two callers do simultaneous (or
+preemption happens) calls to scsi_device_lookup() ant these calls succeed
+for both of them, after that they try doing scsi_remove_device().
+shost->scan_mutex only serializes their calls to __scsi_remove_device()
+and we end up doing the cleanup path twice.
+
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+ drivers/scsi/scsi_sysfs.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 8d23122..905dd1c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1102,6 +1102,14 @@ void __scsi_remove_device(struct scsi_device *sdev)
  {
- 	struct device *dev = &hisi_hba->pdev->dev;
- 	struct device_node *np = dev->of_node;
--	char *int_names = hisi_hba->int_names;
- 	int i, j, irq, rc, idx;
+ 	struct device *dev = &sdev->sdev_gendev;
  
- 	if (!np)
-@@ -1706,13 +1693,8 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				return -ENOENT;
- 			}
- 
--			(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
--				       HISI_SAS_NAME_LEN,
--				       "%s %s:%d", dev_name(dev),
--				       phy_int_names[j], i);
- 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
--					&int_names[idx * HISI_SAS_NAME_LEN],
--					phy);
-+					      DRV_NAME " phy", phy);
- 			if (rc) {
- 				dev_err(dev, "irq init: could not request "
- 					"phy interrupt %d, rc=%d\n",
-@@ -1730,12 +1712,9 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				idx);
- 			return -ENOENT;
- 		}
--		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
--			       HISI_SAS_NAME_LEN,
--			       "%s %s:%d", dev_name(dev), cq_int_name, i);
++	/*
++	 * This cleanup path is not reentrant and while it is impossible
++	 * to get a new reference with scsi_device_get() someone can still
++	 * hold a previously acquired one.
++	 */
++	if (sdev->sdev_state == SDEV_DEL)
++		return;
 +
- 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
--				      &int_names[idx * HISI_SAS_NAME_LEN],
--				      &hisi_hba->cq[i]);
-+				      DRV_NAME " cq", &hisi_hba->cq[i]);
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
- 				irq, rc);
-@@ -1751,12 +1730,9 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				idx);
- 			return -ENOENT;
- 		}
--		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
--			       HISI_SAS_NAME_LEN,
--			       "%s %s:%d", dev_name(dev), fatal_int_name[i], i);
-+
- 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
--				      &int_names[idx * HISI_SAS_NAME_LEN],
--				      hisi_hba);
-+				      DRV_NAME " fatal", hisi_hba);
- 		if (rc) {
- 			dev_err(dev,
- 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+ 	if (sdev->is_visible) {
+ 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+ 			return;
 -- 
-1.9.1
+2.4.3
