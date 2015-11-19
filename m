@@ -1,24 +1,63 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND_2] scsi_sysfs: protect against double execution of __scsi_remove_device()
-Date: Thu, 19 Nov 2015 12:16:52 -0500
-Message-ID: <yq1h9khoqnv.fsf@sermon.lab.mkp.net>
-References: <1447938139-22072-1-git-send-email-vkuznets@redhat.com>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [PATCH] SCSI-libfc: Delete an unnecessary check before the
+ function call "kmem_cache_destroy"
+Date: Thu, 19 Nov 2015 10:21:28 -0800
+Message-ID: <1447957288.5825.83.camel@lin-nd1-054.jf.intel.com>
+References: <5307CAA2.8060406@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+	 <530A086E.8010901@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+	 <530A72AA.3000601@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+	 <530B5FB6.6010207@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402241710370.2074@hadrien>
+	 <530C5E18.1020800@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402251014170.2080@hadrien>
+	 <530CD2C4.4050903@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402251840450.7035@hadrien>
+	 <530CF8FF.8080600@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	 <530DD06F.4090703@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	 <5317A59D.4@users.sourceforge.net> <564997B5.6030703@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1447938139-22072-1-git-send-email-vkuznets@redhat.com> (Vitaly
-	Kuznetsov's message of "Thu, 19 Nov 2015 14:02:19 +0100")
+In-Reply-To: <564997B5.6030703@users.sourceforge.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: "James E. J. Bottomley" <JBottomley@odin.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Vitaly" == Vitaly Kuznetsov <vkuznets@redhat.com> writes:
+On Mon, 2015-11-16 at 09:45 +0100, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Mon, 16 Nov 2015 09:39:12 +0100
+> 
+> The kmem_cache_destroy() function tests whether its argument is NULL
+> and then returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/scsi/libfc/fc_fcp.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+> index 5121272..d377514 100644
+> --- a/drivers/scsi/libfc/fc_fcp.c
+> +++ b/drivers/scsi/libfc/fc_fcp.c
+> @@ -2216,8 +2216,7 @@ int fc_setup_fcp(void)
+>  
+>  void fc_destroy_fcp(void)
+>  {
+> -	if (scsi_pkt_cachep)
+> -		kmem_cache_destroy(scsi_pkt_cachep);
+> +	kmem_cache_destroy(scsi_pkt_cachep);
+>  }
+>  
+>  /**
+Looks good.
 
-Vitaly> On some host errors storvsc module tries to remove sdev by
-Vitaly> scheduling a job which does the following:
-
-Applied to 4.4.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Acked-by: Vasu Dev <vasu.dev@intel.com>
