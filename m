@@ -1,64 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [RESEND 2] SCSI: initio: remove duplicate module device table
-Date: Thu, 19 Nov 2015 15:33:41 +0100
-Message-ID: <5318263.D61echQrl2@wuerfel>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V2] st: fix potential null pointer dereference.
+Date: Thu, 19 Nov 2015 16:10:14 +0100
+Message-ID: <564DE656.3080101@redhat.com>
+References: <1447857164-2043-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@odin.com, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, martin.petersen@oracle.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38292 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750857AbbKSPKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2015 10:10:18 -0500
+In-Reply-To: <1447857164-2043-1-git-send-email-mlombard@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>, Kai.Makisara@kolumbus.fi
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-The initio driver has for many years had two copies of the
-same module device table. One of them is also used for registering
-the other driver, the other one is entirely useless after the
-large scale cleanup that Alan Cox did back in 2007.
+On 18.11.2015 15:32, Maurizio Lombardi wrote:
+> If cdev_add() returns an error, the code calls
+> cdev_del() passing the STm->cdevs[rew] pointer as parameter;
+> the problem is that the pointer has not been initialized yet.
+>
+> This patch fixes the problem by moving the STm->cdevs[rew] pointer
+> initialization before the call to cdev_add().
+> It also sets STm->devs[rew] and STm->cdevs[rew] to NULL in
+> case of failure.
+>
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/st.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index e0a1e52..2e52295 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -4083,6 +4083,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
+>  	}
+>  	cdev->owner = THIS_MODULE;
+>  	cdev->ops = &st_fops;
+> +	STm->cdevs[rew] = cdev;
+>  
+>  	error = cdev_add(cdev, cdev_devno, 1);
+>  	if (error) {
+> @@ -4091,7 +4092,6 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
+>  		pr_err("st%d: Device not attached.\n", dev_num);
+>  		goto out_free;
+>  	}
+> -	STm->cdevs[rew] = cdev;
+>  
+>  	i = mode << (4 - ST_NBR_MODE_BITS);
+>  	snprintf(name, 10, "%s%s%s", rew ? "n" : "",
+> @@ -4110,8 +4110,9 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
+>  	return 0;
+>  out_free:
+>  	cdev_del(STm->cdevs[rew]);
+> -	STm->cdevs[rew] = NULL;
+>  out:
+> +	STm->cdevs[rew] = NULL;
+> +	STm->devs[rew] = NULL;
 
-The compiler warns about this whenever the driver is built-in:
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-drivers/scsi/initio.c:131:29: warning: 'i91u_pci_devices' defined but not used [-Wunused-variable]
-
-This removes the extraneous table and the warning.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 72d39fea901 ("[SCSI] initio: Convert into a real Linux driver and update to modern style")
----
-I sent this patch originally in January 2015, then again in May, but got no
-reply. Please apply.
-
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 6a926bae76b2..7a91cf3ff173 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -110,11 +110,6 @@
- #define i91u_MAXQUEUE		2
- #define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
- 
--#define I950_DEVICE_ID	0x9500	/* Initio's inic-950 product ID   */
--#define I940_DEVICE_ID	0x9400	/* Initio's inic-940 product ID   */
--#define I935_DEVICE_ID	0x9401	/* Initio's inic-935 product ID   */
--#define I920_DEVICE_ID	0x0002	/* Initio's other product ID      */
--
- #ifdef DEBUG_i91u
- static unsigned int i91u_debug = DEBUG_DEFAULT;
- #endif
-@@ -127,17 +122,6 @@ static int setup_debug = 0;
- 
- static void i91uSCBPost(u8 * pHcb, u8 * pScb);
- 
--/* PCI Devices supported by this driver */
--static struct pci_device_id i91u_pci_devices[] = {
--	{ PCI_VENDOR_ID_INIT,  I950_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I940_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I935_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INIT,  I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_DOMEX, I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, i91u_pci_devices);
--
- #define DEBUG_INTERRUPT 0
- #define DEBUG_QUEUE     0
- #define DEBUG_STATE     0
