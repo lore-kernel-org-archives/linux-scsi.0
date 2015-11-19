@@ -1,41 +1,147 @@
 From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v5 00/32] HiSilicon SAS driver
-Date: Thu, 19 Nov 2015 09:46:56 +0000
-Message-ID: <564D9A90.2070304@huawei.com>
-References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
- <yq1egfns0uv.fsf@sermon.lab.mkp.net> <564CB40B.1050705@huawei.com>
- <yq1io4yptmi.fsf@sermon.lab.mkp.net>
+Subject: [PATCH] scsi: hisi_sas: remove dependency on of_irq_count
+Date: Thu, 19 Nov 2015 20:23:59 +0800
+Message-ID: <1447935839-212872-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1io4yptmi.fsf@sermon.lab.mkp.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "JBottomley@odin.com" <JBottomley@odin.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "galak@codeaurora.org" <galak@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>, "john.garry2@mail.dcu.ie" <john.garry2@mail.dcu.ie>, "hare@suse.de" <hare@suse.de>, "xuwei (O)" <xuwei5@hisilicon.com>, "zhangfei.gao@linaro.org" <zhangfei.gao@linaro.org>
+To: JBottomley@odin.com, martin.petersen@oracle.com
+Cc: robh+dt@kernel.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, john.garry2@mail.dcu.ie, xuwei5@hisilicon.com, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/11/2015 03:15, Martin K. Petersen wrote:
->>>>>> "John" == John Garry <john.garry@huawei.com> writes:
->
-> John> thanks, please note that we still have the dependency on
-> John> http://www.spinics.net/lists/arm-kernel/msg452833.html
->
-> John> Without it the driver can only be built into the kernel, and not
-> John> as a module.
->
-> I have your driver in a staging branch rather than the main 4.5 SCSI
-> queue because I wanted to see what kind of additional fallout I'd get
-> from the zeroday testing.
->
-> It's not a problem for me to wait for that patch to go in (or take it
-> through SCSI if that makes things easier).
->
+Originally the driver would use of_irq_count to
+calculate how much memory is required for storing the
+interrupt names, since the number of interrupt sources
+for the controller is variable.
+Since of_irq_count cannot be used by the driver, use
+fixed names.
 
-The issue is the I don't know if Rob will approve the requested patch.
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
 
-As an alternative I can make my driver not depend on it. So I could make 
-a v6 patchset or just send a supplementary patch on top of v5 patchset.
-
-Thanks,
-John
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 5b790c9..30a9ab9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -38,8 +38,6 @@
+ #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
+ #define HISI_SAS_MAX_SMP_RESP_SZ 1028
+ 
+-#define HISI_SAS_NAME_LEN 32
+-
+ struct hisi_hba;
+ 
+ enum {
+@@ -178,7 +176,6 @@ struct hisi_hba {
+ 
+ 	int	queue_count;
+ 	int	queue;
+-	char	*int_names;
+ 	struct hisi_sas_slot	*slot_prep;
+ 
+ 	struct dma_pool *sge_page_pool;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 1377625..2929018 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1160,7 +1160,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct property *sas_addr_prop;
+-	int num;
+ 
+ 	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+ 	if (!shost)
+@@ -1197,13 +1196,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	if (of_property_read_u32(np, "queue-count", &hisi_hba->queue_count))
+ 		goto err_out;
+ 
+-	num = of_irq_count(np);
+-	hisi_hba->int_names = devm_kcalloc(dev, num,
+-					   HISI_SAS_NAME_LEN,
+-					   GFP_KERNEL);
+-	if (!hisi_hba->int_names)
+-		goto err_out;
+-
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	hisi_hba->regs = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(hisi_hba->regs))
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index e29b7c7..0ed2f92 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1660,18 +1660,6 @@ static irqreturn_t fatal_axi_int_v1_hw(int irq, void *p)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static const char phy_int_names[HISI_SAS_PHY_INT_NR][32] = {
+-	{"Bcast"},
+-	{"Phy Up"},
+-	{"Abnormal"},
+-};
+-
+-static const char cq_int_name[32] = "cq";
+-static const char fatal_int_name[HISI_SAS_FATAL_INT_NR][32] = {
+-	"fatal ecc",
+-	"fatal axi"
+-};
+-
+ static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+ 	int_bcast_v1_hw,
+ 	int_phyup_v1_hw,
+@@ -1687,7 +1675,6 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	char *int_names = hisi_hba->int_names;
+ 	int i, j, irq, rc, idx;
+ 
+ 	if (!np)
+@@ -1706,13 +1693,8 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				return -ENOENT;
+ 			}
+ 
+-			(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
+-				       HISI_SAS_NAME_LEN,
+-				       "%s %s:%d", dev_name(dev),
+-				       phy_int_names[j], i);
+ 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
+-					&int_names[idx * HISI_SAS_NAME_LEN],
+-					phy);
++					      DRV_NAME " phy", phy);
+ 			if (rc) {
+ 				dev_err(dev, "irq init: could not request "
+ 					"phy interrupt %d, rc=%d\n",
+@@ -1730,12 +1712,9 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				idx);
+ 			return -ENOENT;
+ 		}
+-		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
+-			       HISI_SAS_NAME_LEN,
+-			       "%s %s:%d", dev_name(dev), cq_int_name, i);
++
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
+-				      &int_names[idx * HISI_SAS_NAME_LEN],
+-				      &hisi_hba->cq[i]);
++				      DRV_NAME " cq", &hisi_hba->cq[i]);
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+@@ -1751,12 +1730,9 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				idx);
+ 			return -ENOENT;
+ 		}
+-		(void)snprintf(&int_names[idx * HISI_SAS_NAME_LEN],
+-			       HISI_SAS_NAME_LEN,
+-			       "%s %s:%d", dev_name(dev), fatal_int_name[i], i);
++
+ 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
+-				      &int_names[idx * HISI_SAS_NAME_LEN],
+-				      hisi_hba);
++				      DRV_NAME " fatal", hisi_hba);
+ 		if (rc) {
+ 			dev_err(dev,
+ 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+-- 
+1.9.1
