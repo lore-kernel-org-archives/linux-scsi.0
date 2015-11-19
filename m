@@ -1,24 +1,20 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] MAINTAINERS: Add myself as co-maintainer of the SCSI
- subsystem.
-Date: Thu, 19 Nov 2015 00:32:52 -0800
-Message-ID: <20151119083252.GD11419@infradead.org>
-References: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
- <1447451209-30772-3-git-send-email-martin.petersen@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 00/18] ALUA device handler update, part 1
+Date: Thu, 19 Nov 2015 09:35:41 +0100
+Message-ID: <20151119083541.GA27623@lst.de>
+References: <1447081703-110552-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51183 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756816AbbKSIcw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2015 03:32:52 -0500
+Received: from verein.lst.de ([213.95.11.211]:36362 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754016AbbKSIfn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2015 03:35:43 -0500
 Content-Disposition: inline
-In-Reply-To: <1447451209-30772-3-git-send-email-martin.petersen@oracle.com>
+In-Reply-To: <1447081703-110552-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Ewan Milne <emilne@redhat.com>
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Can you push out a git branch with this code for easier review as well?
