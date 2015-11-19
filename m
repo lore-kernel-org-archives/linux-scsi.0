@@ -1,42 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/18] ALUA device handler update, part 1
-Date: Thu, 19 Nov 2015 10:42:02 +0100
-Message-ID: <564D996A.9080201@suse.de>
-References: <1447081703-110552-1-git-send-email-hare@suse.de> <20151119083541.GA27623@lst.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v5 00/32] HiSilicon SAS driver
+Date: Thu, 19 Nov 2015 09:46:56 +0000
+Message-ID: <564D9A90.2070304@huawei.com>
+References: <1447779059-136143-1-git-send-email-john.garry@huawei.com>
+ <yq1egfns0uv.fsf@sermon.lab.mkp.net> <564CB40B.1050705@huawei.com>
+ <yq1io4yptmi.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37796 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755978AbbKSJmE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Nov 2015 04:42:04 -0500
-In-Reply-To: <20151119083541.GA27623@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1io4yptmi.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "JBottomley@odin.com" <JBottomley@odin.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>, "galak@codeaurora.org" <galak@codeaurora.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>, "john.garry2@mail.dcu.ie" <john.garry2@mail.dcu.ie>, "hare@suse.de" <hare@suse.de>, "xuwei (O)" <xuwei5@hisilicon.com>, "zhangfei.gao@linaro.org" <zhangfei.gao@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Ewan Milne <emilne@redhat.com>
 
-On 11/19/2015 09:35 AM, Christoph Hellwig wrote:
-> Can you push out a git branch with this code for easier review as wel=
-l?
->=20
-Pushed to kernel.org:hare/scsi-devel.git branch alua.v6
-Branch is based upon mkp/scsi.git branch 4.5/scsi-queue
+On 19/11/2015 03:15, Martin K. Petersen wrote:
+>>>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>
+> John> thanks, please note that we still have the dependency on
+> John> http://www.spinics.net/lists/arm-kernel/msg452833.html
+>
+> John> Without it the driver can only be built into the kernel, and not
+> John> as a module.
+>
+> I have your driver in a staging branch rather than the main 4.5 SCSI
+> queue because I wanted to see what kind of additional fallout I'd get
+> from the zeroday testing.
+>
+> It's not a problem for me to wait for that patch to go in (or take it
+> through SCSI if that makes things easier).
+>
 
-Thanks for reviewing.
+The issue is the I don't know if Rob will approve the requested patch.
 
-Cheers,
+As an alternative I can make my driver not depend on it. So I could make 
+a v6 patchset or just send a supplementary patch on top of v5 patchset.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+John
