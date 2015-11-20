@@ -1,46 +1,22 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: linux kernel security issuse scsi_report_lun_scan report
-Date: Fri, 20 Nov 2015 13:24:38 -0800
-Message-ID: <CA+55aFwHzeWy8oqMkscR0OLnk8Cq3cFGvZCsaHR4iNWL98mqpQ@mail.gmail.com>
-References: <8159e011-35a9-4952-a0ef-be4dfb13983f.chengmiao.cj@alibaba-inc.com>
-	<CA+55aFyn44rDnv3E9sSg_YGfeqhExvGz8yeAANU-BVghDHRFdA@mail.gmail.com>
-	<1448044014.2168.34.camel@HansenPartnership.com>
-	<CA+55aFxuts9UQb3XAVzq8TWQbfgBvftn_iOvo5+qb10RT65mrg@mail.gmail.com>
-	<1448053036.2168.46.camel@HansenPartnership.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 0/2] Fix a scsi_host_dev_release() memory leak
+Date: Fri, 20 Nov 2015 13:30:54 -0800
+Message-ID: <564F910E.9070306@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:35884 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759825AbbKTVYi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2015 16:24:38 -0500
-Received: by iofh3 with SMTP id h3so137035610iof.3
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2015 13:24:38 -0800 (PST)
-In-Reply-To: <1448053036.2168.46.camel@HansenPartnership.com>
+Received: from mail-by2on0071.outbound.protection.outlook.com ([207.46.100.71]:8112
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758669AbbKTVa6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2015 16:30:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Nov 20, 2015 at 12:57 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> It's done under the scan mutex, so there can only be one thread in that
-> code at once.
-
-Hmm. Looking at the call chain seems to confirm that.
-
-But looking at the call chain I _also_ see that we have
-scsi_free_host_dev() there, which seems to be some stale frame data
-from a previous scan.
-
-I'm wondering if that is a clue.  I find exactly two callers of that
-functions, both in the gdth driver.
-
-Maybe this is some odd refcount bug, brought on by reuse of a sdev.
-Would that make more sense?
-
-Why is that scsi_free_host_dev() used only by that one driver, and
-nobody else wants it or needs it?
-
-         Linus
+This patch series consists of two patches:
+- A first patch that converts the code that accesses shost->shost_gendev 
+to manipulate the shost reference count into scsi_host_{get,put}() calls.
+- A second patch that fixes the actual memory leak.
