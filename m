@@ -1,138 +1,149 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380 drivers
-Date: Thu, 19 Nov 2015 23:50:57 +0100
-Message-ID: <201511192350.58253.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <201511181235.15663.linux@rainbow-software.org> <alpine.LNX.2.00.1511191321010.9967@nippy.intranet>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
+ drivers
+Date: Fri, 20 Nov 2015 12:41:19 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1511201238430.31133@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <201511181235.15663.linux@rainbow-software.org> <alpine.LNX.2.00.1511191321010.9967@nippy.intranet> <201511192350.58253.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1511191321010.9967@nippy.intranet>
-Content-Disposition: inline
+In-Reply-To: <201511192350.58253.linux@rainbow-software.org>
 Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
+To: Ondrej Zary <linux@rainbow-software.org>
 Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
+On Thu, 19 Nov 2015, Ondrej Zary wrote:
 
-On Thursday 19 November 2015 03:24:56 Finn Thain wrote:
-> On Wed, 18 Nov 2015, Ondrej Zary wrote:
-> > On Wednesday 18 November 2015, Finn Thain wrote:
-> > > Like my previous work on the NCR5380 drivers, this patch series has
-> > > bug fixes, code cleanup and modernization. These drivers suffer from
-> > > mistakes, poor style and neglect and this long series addresses the
-> > > worst of it, covering all ten wrapper drivers and both of the core
-> > > driver forks. The combined size of the drivers is reduced by about 750
-> > > LoC.
-> > >
-> > > This series continues to reduce divergence between the two core driver
-> > > forks, often by copying a bug fix from one to the other. Most patches
-> > > are larger for having to keep the two forks in sync. Making the same
-> > > change to both is churn if one of them is to be removed but neither
-> > > can be as yet. By the end of this series the diff between the two
-> > > forks is minimal, so it becomes clear what caused the fork and what
-> > > can be done about it.
-> > >
-> > > This patch series did benefit from scripts/checkpatch.pl but not too
-> > > much. Decades ago, these drivers started out with 4-space tabs and if
-> > > the 80 column limit were to be strictly enforced now, it would require
-> > > adding new functions and shortening identifiers. I would defer this
-> > > sort of activity until after the fork has been resolved.
-> > >
-> > > I have compile-tested all patches to all NCR5380 drivers (x86, ARM,
-> > > m68k) and regression tested mac_scsi and dmx3191d modules on suitable
-> > > hardware. Testing the mac_scsi and dmx3191d modules provides only
-> > > limited coverage. It would be good to see some testing of ISA cards
-> > > and Sun 3 and Atari hardware too (I don't have any).
-> >
-> > I have some NCR5380 ISA cards and can test them.
+> On Thursday 19 November 2015 03:24:56 Finn Thain wrote:
 >
-> Thanks Ondrej. I've no idea which ISA drivers are presently working in
-> mainline. Finding regressions may be more difficult than usual ;-)
+> > On Wed, 18 Nov 2015, Ondrej Zary wrote:
+> >
+> > >
+> > > I have some NCR5380 ISA cards and can test them.
+> >
+> > Thanks Ondrej. I've no idea which ISA drivers are presently working in 
+> > mainline. Finding regressions may be more difficult than usual ;-)
+> 
+> You're right... looks very broken:
+> 
+> [   62.577194] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
+> sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, USLEEP_POLL 3, USLEEP_WAITLONG 1250, options { AUTOPROBE_IRQ PSEUDO_DMA 
+> NCR53C400 }
+> [   62.796635] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
+> [   63.878494] sd 2:0:0:0: Attached scsi generic sg1 type 0
+> [   95.848260] sd 2:0:0:0: aborting command
+> 
+> And the system hangs completely.
+> 
 
-You're right... looks very broken:
+Yes. That was the usual failure mode. The old EH abort routine is fatal. 
+Up until I disabled PDMA by default for mac_scsi (in v3.19), that driver 
+would do the same thing.
 
-[   62.577194] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
-sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, USLEEP_POLL 3, USLEEP_WAITLONG 1250, options { AUTOPROBE_IRQ PSEUDO_DMA 
-NCR53C400 }
-[   62.796635] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
-[   63.878494] sd 2:0:0:0: Attached scsi generic sg1 type 0
-[   95.848260] sd 2:0:0:0: aborting command
+> It's much better with your patches, but still not great :)
+> 
 
-And the system hangs completely.
+Pleased to hear it :)
 
-It's much better with your patches, but still not great :)
+> [   93.963264] pnp 01:01.00: [io  0x0240-0x025f]
+> [   93.963493] pnp 01:01.00: [irq 5]
+> [   93.965768] pnp 01:01.00: activated
+> [   93.977147] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
+> sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, options { AUTOPROBE_IRQ PSEUDO_DMA }
+> [   93.987527] scsi host2: rejecting message
+> [   93.987647] Synchronous Data Transfer Request period = 100 ns offset = 12
+> [   94.001219] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
+> [  113.000794] sd 2:0:0:0: Attached scsi generic sg1 type 0
 
-[   93.963264] pnp 01:01.00: [io  0x0240-0x025f]
-[   93.963493] pnp 01:01.00: [irq 5]
-[   93.965768] pnp 01:01.00: activated
-[   93.977147] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
-sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, options { AUTOPROBE_IRQ PSEUDO_DMA }
-[   93.987527] scsi host2: rejecting message
-[   93.987647] Synchronous Data Transfer Request period = 100 ns offset = 12
-[   94.001219] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
-[  113.000794] sd 2:0:0:0: Attached scsi generic sg1 type 0
-[  144.852432] sd 2:0:0:0: [sdb] Unit Not Ready
-[  144.852574] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-[  144.852713] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-[  240.108292] INFO: task modprobe:1957 blocked for more than 120 seconds.
-[  240.108418]       Not tainted 4.3.0-rc1+ #74
-[  240.108501] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  240.108597] modprobe        D 0000001a     0  1957   1950 0x00000000
-[  240.108790]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-[  240.109246]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-[  240.109699]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-[  240.110156] Call Trace:
-[  240.110295]  [<c139c504>] ? schedule+0x5b/0x67
-[  240.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-[  240.110569]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-[  240.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-[  240.110824]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-[  240.110948]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-[  240.111068]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-[  240.852458] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
-[  240.852620] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-[  240.852760] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-[  272.852471] sd 2:0:0:0: [sdb] Write Protect is off
-[  272.852614] sd 2:0:0:0: [sdb] Mode Sense: 00 00 00 00
-[  304.084452] sd 2:0:0:0: [sdb] Asking for cache data failed
-[  304.084592] sd 2:0:0:0: [sdb] Assuming drive cache: write through
-[  360.108284] INFO: task modprobe:1957 blocked for more than 120 seconds.
-[  360.108409]       Not tainted 4.3.0-rc1+ #74
-[  360.108492] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  360.108591] modprobe        D 0000001a     0  1957   1950 0x00000000
-[  360.108787]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-[  360.109248]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-[  360.109703]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-[  360.110158] Call Trace:
-[  360.110296]  [<c139c504>] ? schedule+0x5b/0x67
-[  360.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-[  360.110568]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-[  360.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-[  360.110823]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-[  360.110945]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-[  360.111065]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-[  431.060488] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
-[  431.060650] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-[  431.060791] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-[  480.108282] INFO: task modprobe:1957 blocked for more than 120 seconds.
-[  480.108405]       Not tainted 4.3.0-rc1+ #74
-[  480.108488] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  480.108585] modprobe        D 0000001a     0  1957   1950 0x00000000
-[  480.108779]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-[  480.109236]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-[  480.109689]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-[  480.110145] Call Trace:
-[  480.110282]  [<c139c504>] ? schedule+0x5b/0x67
-[  480.110417]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-[  480.110556]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-[  480.110685]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-[  480.110810]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-[  480.110932]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-[  480.111052]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-[  495.062082] sd 2:0:0:0: [sdb] Attached SCSI disk
+I'd be interested to know what commands were in play in that 19 second 
+interval. Might need to use scsi_logging_level to figure that out.
+
+My tests involved 3 different scsi targets (two disks and a CD-ROM) but 
+none of these send a SDTR. Your log says the driver correctly rejected the 
+SDTR message but that doesn't mean the target actually went to MSG IN 
+phase and got the message. Do you have any older targets you can test?
+
+> [  144.852432] sd 2:0:0:0: [sdb] Unit Not Ready
+> [  144.852574] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
+> [  144.852713] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
+
+AFAIK, the target should not have to abort any commands. Moreover, the 
+target should never experience a select/reselect failure, because you have 
+irq == 0 (see above) and that implies that the target is never permitted 
+the disconnect privilege.
+
+> [  240.108292] INFO: task modprobe:1957 blocked for more than 120 seconds.
+> [  240.108418]       Not tainted 4.3.0-rc1+ #74
+
+Why not use v4.3?
+
+> [  240.108501] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  240.108597] modprobe        D 0000001a     0  1957   1950 0x00000000
+> [  240.108790]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
+> [  240.109246]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
+> [  240.109699]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
+> [  240.110156] Call Trace:
+> [  240.110295]  [<c139c504>] ? schedule+0x5b/0x67
+> [  240.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
+> [  240.110569]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
+> [  240.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
+> [  240.110824]  [<c107ddb5>] ? load_module+0x14de/0x18ca
+> [  240.110948]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
+> [  240.111068]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
+
+Not sure what module was being probed here. I presume it was g_NCR5380 or 
+g_NCR5380_mmio. Neither of these calls 'scsi_scan_host'. I'm not sure what 
+the implications are (?)
+
+> [  240.852458] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
+> [  240.852620] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
+> [  240.852760] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
+> [  272.852471] sd 2:0:0:0: [sdb] Write Protect is off
+> [  272.852614] sd 2:0:0:0: [sdb] Mode Sense: 00 00 00 00
+> [  304.084452] sd 2:0:0:0: [sdb] Asking for cache data failed
+> [  304.084592] sd 2:0:0:0: [sdb] Assuming drive cache: write through
+
+This looks like nonsense to me ... I don't think the target actually 
+aborted the reselection phase of a read capacity command. I'm out of ideas 
+here. Can anyone else make sense of this?
+
+> [  360.108284] INFO: task modprobe:1957 blocked for more than 120 seconds.
+> [  360.108409]       Not tainted 4.3.0-rc1+ #74
+> [  360.108492] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  360.108591] modprobe        D 0000001a     0  1957   1950 0x00000000
+> [  360.108787]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
+> [  360.109248]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
+> [  360.109703]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
+> [  360.110158] Call Trace:
+> [  360.110296]  [<c139c504>] ? schedule+0x5b/0x67
+> [  360.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
+> [  360.110568]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
+> [  360.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
+> [  360.110823]  [<c107ddb5>] ? load_module+0x14de/0x18ca
+> [  360.110945]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
+> [  360.111065]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
+> [  431.060488] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
+> [  431.060650] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
+> [  431.060791] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
+> [  480.108282] INFO: task modprobe:1957 blocked for more than 120 seconds.
+> [  480.108405]       Not tainted 4.3.0-rc1+ #74
+> [  480.108488] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  480.108585] modprobe        D 0000001a     0  1957   1950 0x00000000
+> [  480.108779]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
+> [  480.109236]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
+> [  480.109689]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
+> [  480.110145] Call Trace:
+> [  480.110282]  [<c139c504>] ? schedule+0x5b/0x67
+> [  480.110417]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
+> [  480.110556]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
+> [  480.110685]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
+> [  480.110810]  [<c107ddb5>] ? load_module+0x14de/0x18ca
+> [  480.110932]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
+> [  480.111052]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
+> [  495.062082] sd 2:0:0:0: [sdb] Attached SCSI disk
+> 
+> 
 
 -- 
-Ondrej Zary
