@@ -1,44 +1,36 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
- drivers
-Date: Fri, 20 Nov 2015 21:53:02 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1511202138240.16424@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <201511181235.15663.linux@rainbow-software.org> <alpine.LNX.2.00.1511191321010.9967@nippy.intranet> <201511192350.58253.linux@rainbow-software.org> <alpine.LNX.2.00.1511201238430.31133@nippy.intranet>
- <alpine.LNX.2.00.1511201820130.14450@nippy.intranet> <20151120073354.GA26080@infradead.org> <alpine.LNX.2.00.1511201909540.15006@nippy.intranet> <20151120100047.GA27842@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 00/18] ALUA device handler update, part 1
+Date: Fri, 20 Nov 2015 11:54:33 +0100
+Message-ID: <20151120105433.GA25084@lst.de>
+References: <1447081703-110552-1-git-send-email-hare@suse.de> <20151120104710.GA24871@lst.de> <564EFB65.6050603@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151120100047.GA27842@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ondrej Zary <linux@rainbow-software.org>, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:40999 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759577AbbKTKyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2015 05:54:40 -0500
+Content-Disposition: inline
+In-Reply-To: <564EFB65.6050603@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Ewan Milne <emilne@redhat.com>
 
-
-On Fri, 20 Nov 2015, Christoph Hellwig wrote:
-
-> On Fri, Nov 20, 2015 at 07:19:21PM +1100, Finn Thain wrote:
->
-> > Yes. I didn't do that conversion because I don't have ISA hardware and 
-> > I don't understand ISA probing.
-> > 
-> > The present patch set doesn't seek to resurrect the ISA drivers. But I 
-> > am trying to avoid regressions.
-> > 
-> > I have mixed feelings about the ISA drivers. ISA DMA support 
-> > complicates things (it was never completed) and DMA seems to be the 
-> > main obstacle to merging the two core driver forks.
+On Fri, Nov 20, 2015 at 11:52:21AM +0100, Hannes Reinecke wrote:
+> One thing, though: I don't really agree with Barts objection that
+> moving to a workqueue would tie in too many resources.
+> Thing is, I'm not convinces that using a work queue is allocating
+> too many resources (we're speaking of 460 vs 240 bytes here).
+> Also we have to retry commands for quite some time (cite the
+> infamous NetApp takeover/giveback, which can take minutes).
+> If we were to handle that without workqueue we'd have to initiate
+> the retry from the end_io callback, causing a quite deep stack
+> recursion. Which I'm not really fond of.
 > 
-> I'd love to be able to get rid of the ISA drivers to be honest.
+> But if anyone has a better idea on how to handle retries without the
+> need for workqueues I'm all ears :-)
 
-Is that because of their use of scsi_module.c or their general decrepitude 
-or something else?
-
-> Given that they appear to be gravely broken before your cleanups this 
-> might be an opportunity to get rid of them.
-
-At this stage, that's unclear (to me). It could be that g_NCR5380.c is not 
-broken. It could be that the core driver can't handle certain targets. I 
-think we need to do more testing.
-
--- 
+I tend to agree with you, but you better warm up that discussion again
+on the old thread that actually has Bart on Cc.  Or just resend once
+Martin has merged this patch, and have discussion around that version.
