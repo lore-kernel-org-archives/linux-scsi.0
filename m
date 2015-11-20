@@ -1,37 +1,33 @@
-From: Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
-Date: Fri, 20 Nov 2015 23:10:48 +1100
-Message-ID: <1448021448.14769.7.camel@ellerman.id.au>
-References: <1447838334.1564.2.camel@ellerman.id.au>
-	 <1447855399.3974.24.camel@redhat.com>
-	 <1447894964.15206.0.camel@ellerman.id.au>
-	 <20151119082325.GA11419@infradead.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380 drivers
+Date: Fri, 20 Nov 2015 13:23:17 +0100
+Message-ID: <CAMuHMdW5CT+Sbe7VP=AtjT5HHfQBm=HphQxKSOFxkjt1uvnAQw@mail.gmail.com>
+References: <20151118083455.331768508@telegraphics.com.au>
+	<20151120100047.GA27842@infradead.org>
+	<alpine.LNX.2.00.1511202138240.16424@nippy.intranet>
+	<201511201240.03828.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:44036 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757831AbbKTMKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2015 07:10:50 -0500
-In-Reply-To: <20151119082325.GA11419@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <201511201240.03828.linux@rainbow-software.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, Christoph Hellwig <hch@infradead.org>, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org, Laurent Dufour <ldufour@linux.vnet.ibm.com>
 
-On Thu, 2015-11-19 at 00:23 -0800, Christoph Hellwig wrote:
+On Fri, Nov 20, 2015 at 12:40 PM, Ondrej Zary
+<linux@rainbow-software.org> wrote:
+> Working ISA means more testing possibilities. It's much easier to get an ISA card than a Sun or Atari. Also faster CPU (such as 1 GHz P3) means quicker testing.
 
-> It's pretty much guaranteed a block layer bug, most likely in the
-> merge bios to request infrastucture where we don't obey the merging
-> limits properly.
-> 
-> Does either of you have a known good and first known bad kernel?
+Faster PCs without ISA slots? ;-)
 
-Not me, I've only hit it one or two times. All I can say is I have hit it in
-4.4-rc1.
+Gr{oetje,eeting}s,
 
-Laurent, can you narrow it down at all?
+                        Geert
 
-cheers
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
