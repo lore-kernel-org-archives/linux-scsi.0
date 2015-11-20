@@ -1,74 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Ewan Milne <emilne@redhat.com>
 Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
-Date: Fri, 20 Nov 2015 15:55:15 +0100
-Message-ID: <564F3453.9040603@suse.de>
-References: <1447838334.1564.2.camel@ellerman.id.au>	
- <1447855399.3974.24.camel@redhat.com>	
- <1447894964.15206.0.camel@ellerman.id.au>	
- <20151119082325.GA11419@infradead.org> <564DEC41.5010600@suse.de>
- <1448030316.4067.18.camel@localhost.localdomain>
+Date: Fri, 20 Nov 2015 10:28:43 -0500
+Message-ID: <1448033323.4067.24.camel@localhost.localdomain>
+References: <1447838334.1564.2.camel@ellerman.id.au>
+	 <1447855399.3974.24.camel@redhat.com>
+	 <1447894964.15206.0.camel@ellerman.id.au>
+	 <20151119082325.GA11419@infradead.org>  <564DEC41.5010600@suse.de>
+	 <1448030316.4067.18.camel@localhost.localdomain> <564F3453.9040603@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1448030316.4067.18.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: emilne@redhat.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, "James E. J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, brking <brking@us.ibm.com>, Mark Salter <msalter@redhat.com>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <564F3453.9040603@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTEvMjAvMjAxNSAwMzozOCBQTSwgRXdhbiBNaWxuZSB3cm90ZToKPiBPbiBUaHUsIDIwMTUt
-MTEtMTkgYXQgMTY6MzUgKzAxMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToKPj4gT24gMTEvMTkv
-MjAxNSAwOToyMyBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4+PiBJdCdzIHByZXR0eSBt
-dWNoIGd1YXJhbnRlZWQgYSBibG9jayBsYXllciBidWcsIG1vc3QgbGlrZWx5IGluIHRoZQo+Pj4g
-bWVyZ2UgYmlvcyB0byByZXF1ZXN0IGluZnJhc3R1Y3R1cmUgd2hlcmUgd2UgZG9uJ3Qgb2JleSB0
-aGUgbWVyZ2luZwo+Pj4gbGltaXRzIHByb3Blcmx5Lgo+Pj4KPj4+IERvZXMgZWl0aGVyIG9mIHlv
-dSBoYXZlIGEga25vd24gZ29vZCBhbmQgZmlyc3Qga25vd24gYmFkIGtlcm5lbD8KPj4KPj4gV2Vs
-bCwgSSBoYXZlIGJlZW4gZmlnaHRpbmcgYSBzaW1pbGFyIGlzc3VlIGZvciBzZXZlcmFsIG1vbnRo
-cyBub3csCj4+IGFsYmVpdCB3aXRoIG11bHRpcGF0aCBlbmFibGVkLiBIYXZlbid0IGhhZCBtdWNo
-IHByb2dyZXNzIHdpdGggdGhpcywKPj4gc2FkbHkuCj4+IFNlZWluZyB0aGF0IHRoaXMgaXMgb3Vy
-IGRpc3RybyBrZXJuZWwgaXQgbWlnaHQgb3IgbWlnaHQgbm90IGJlCj4+IHJlbGF0ZWQ7IGhvd2V2
-ZXIsIGFzIHRoZSBzeW1wdG9tcyBhcmUgaWRlbnRpY2FsIHRoZXJlIHN0aWxsIGlzIGEKPj4gY2hh
-bmNlIHRoYXQgdGhpcyBpcyBhY3R1YWxseSBhIGdlbmVyaWMgYmxvY2stbGF5ZXIgcHJvYmxlbS4K
-Pj4KPj4gQ2hlZXJzLAo+Pgo+PiBIYW5uZXMKPiAKPiBXZSBoYXZlIHNlZW4gdGhpcyBhbHNvLiAg
-KGUuZy4gIHJlcS0+bnJfcGh5c19zZWdtZW50cyB3YXMgMywgYnV0Cj4gYmxrX3JxX21hcF9zZygp
-IHJldHVybmVkIDQuKSAgSSB3YXMgc3VzcGljaW91cyBvZiB0aGUgcGF0Y2g6Cj4gCj4gYmlvOiBt
-b2RpZnkgX19iaW9fYWRkX3BhZ2UoKSB0byBhY2NlcHQgcGFnZXMgdGhhdCBkb24ndCBzdGFydCBh
-IG5ldyBzZWdtZW50Cj4gCj4gQnV0IHdlIHB1dCBzb21lIGRlYnVnZ2luZyBjb2RlIGluIGFuZCBk
-aWRuJ3QgaGl0IGl0LiAgV2UgaGF2ZW4ndAo+IGZvdW5kIHRoZSBwcm9ibGVtIHlldCwgZWl0aGVy
-LCB0aG91Z2guICBXZSdyZSBzdGlsbCBsb29raW5nLgo+IApDYW4ndCB3ZSBoYXZlIGEgam9pbnQg
-ZWZmb3J0IGhlcmU/CkkndmUgYmVlbiBzcGVuZGluZyBhIF9MT1RfIG9mIHRpbWUgdHJ5aW5nIHRv
-IGRlYnVnIHRoaW5ncyBoZXJlLCBidXQKbm9uZSBvZiB0aGUgaWRlYXMgSSd2ZSBjb21lIHVwIHdp
-dGggaGF2ZSBiZWVuIGFibGUgdG8gZml4IGFueXRoaW5nLgoKSSdtIGFsbW9zdCB0ZW1wdGVkIHRv
-IGluY3JlYXNlIHRoZSBjb3VudCBmcm9tIHNjc2lfYWxsb2Nfc2d0YWJsZSgpCmJ5IG9uZSBhbmQg
-YmUgZG9uZSB3aXRoIC4uLgoKPiBBcyBDaHJpc3RvcGggc2FpZCwgaXQgd291bGQgc2VlbSB0byBi
-ZSBhIHByb2JsZW0gd2l0aCB0aGUgYmxvY2sgbGF5ZXIKPiBtZXJnaW5nLgo+IAo+IFRoZSBBUEkg
-Zm9yIHRoaXMgc2VlbXMgZGVmZWN0aXZlLCBpbiB0aGF0IGJsa19ycV9tYXBfc2coKSBzaG91bGQK
-PiBuZXZlciBiZSByZXR1cm5pbmcgYSB2YWx1ZSBpbmRpY2F0aW5nIHRoYXQgaXQgb3Zlcndyb3Rl
-IHBhc3QgdGhlCj4gZW5kIG9mIHRoZSBzdXBwbGllZCBTRyBhcnJheSBhbmQgZGVwZW5kIG9uIHRo
-ZSBjYWxsZXIgdG8gY2hlY2sgaXQuCj4gKFdlIGNvdWxkIGdldCBkYXRhIGNvcnJ1cHRpb24gb24g
-YW5vdGhlciBJL08gaWYgaXQgdXNlZCBhZGphY2VudAo+IG1lbW9yeSBmb3IgYSBkaWZmZXJlbnQg
-U0cgbGlzdCwgZm9yIGV4YW1wbGUuKQo+IApZZWFoLCB0aGUgQVBJIGlzIGJsb29keSB1c2VsZXNz
-LgpCeSB0aGUgdGltZSB5b3UgaGl0IHRoZSBCVUdfT04geW91J3ZlIGFscmVhZHkgY2F1c2VkIGEg
-bWVtb3J5CmNvcnJ1cHRpb24sIHNvIG5vIHdheSB5b3UgY2FuIHJlY292ZXIgdGhlcmUuCgpBdCB0
-aGUgdmVyeSBsZWFzdCB3ZSBzaG91bGQgYmUgcGFzc2luZyBpbiB0aGUgc2cgbGlzdCBjb3VudCBp
-bnRvCmJsa19tYXBfcnFfc2coKSwgYnV0IHRoYXQncyBhIGNvcmUgYmxvY2tsYXllciBBUEkgYW5k
-IGNoYW5nZXMgaGVyZQp3b3VsZCByZXF1aXJlIGNoYW5nZXMgYnkgcXVpdGUgYSBzZXQgb2YgZHJp
-dmVycy4gUGx1cyBpdCB3b3VsZG4ndApoZWxwIG1lIGZvciBhIGRpc3RyaWJ1dGlvbiBrZXJuZWwg
-Li4uCgpDaGVlcnMsCgpIYW5uZXMKLS0gCkRyLiBIYW5uZXMgUmVpbmVja2UJCSAgICAgICAgICAg
-ICAgIHpTZXJpZXMgJiBTdG9yYWdlCmhhcmVAc3VzZS5kZQkJCSAgICAgICAgICAgICAgICs0OSA5
-MTEgNzQwNTMgNjg4ClNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5i
-ZXJnCkdGOiBGLiBJbWVuZMO2cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBtYW55
-dSwgRy4gTm9ydG9uCkhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0Ckxp
-bnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0
-aW5mby9saW51eHBwYy1kZXY=
+On Fri, 2015-11-20 at 15:55 +0100, Hannes Reinecke wrote:
+> Can't we have a joint effort here?
+> I've been spending a _LOT_ of time trying to debug things here, but
+> none of the ideas I've come up with have been able to fix anything.
+
+Yes.  I'm not the one primarily looking at it, and we don't have a
+reproducer in-house.  We just have the one dump right now.
+
+> 
+> I'm almost tempted to increase the count from scsi_alloc_sgtable()
+> by one and be done with ...
+> 
+
+That might not fix it if it is a problem with the merge code, though.
