@@ -1,149 +1,222 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
- drivers
-Date: Fri, 20 Nov 2015 12:41:19 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1511201238430.31133@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <201511181235.15663.linux@rainbow-software.org> <alpine.LNX.2.00.1511191321010.9967@nippy.intranet> <201511192350.58253.linux@rainbow-software.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [BISECTED] v4.4-rc1 SCSI disk init crash
+Date: Thu, 19 Nov 2015 17:45:00 -0800
+Message-ID: <564E7B1C.10509@sandisk.com>
+References: <20151119192135.GD18138@blackmetal.musicnaut.iki.fi>
+ <564E28DE.6010200@sandisk.com>
+ <1447963712.2234.31.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <201511192350.58253.linux@rainbow-software.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0087.outbound.protection.outlook.com ([157.56.110.87]:40864
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934401AbbKTBpI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2015 20:45:08 -0500
+In-Reply-To: <1447963712.2234.31.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaro Koskinen <aaro.koskinen@iki.fi>, linux-scsi <linux-scsi@vger.kernel.org>
 
-
-On Thu, 19 Nov 2015, Ondrej Zary wrote:
-
-> On Thursday 19 November 2015 03:24:56 Finn Thain wrote:
->
-> > On Wed, 18 Nov 2015, Ondrej Zary wrote:
-> >
-> > >
-> > > I have some NCR5380 ISA cards and can test them.
-> >
-> > Thanks Ondrej. I've no idea which ISA drivers are presently working in 
-> > mainline. Finding regressions may be more difficult than usual ;-)
+On 11/19/2015 12:08 PM, James Bottomley wrote:
+> On Thu, 2015-11-19 at 11:54 -0800, Bart Van Assche wrote:
+>> On 11/19/2015 11:22 AM, Aaro Koskinen wrote:
+>>> I get the below crash when cold booting OCTEON router with USB disk as
+>>> rootfs. Bisected to:
+>>>
+>>> 	commit bf2cf3baa20b0a6cd2d08707ef05dc0e992a8aa0
+>>> 	Author: Bart Van Assche <bart.vanassche@sandisk.com>
+>>> 	Date:   Fri Sep 18 17:23:42 2015 -0700
+>>>
+>>> 	    scsi: Fix a bdi reregistration race
+>>>
+>>> Reverting the patch makes the board boot fine again.
+>>>
+>>> A.
+>>>
+>>> Waiting for rootfs media to appear... Press ENTER to interrupt.
+>>> [    1.540522] usb 1-1: new high-speed USB device number 2 using ehci-platform
+>>> [    1.699752] usb-storage 1-1:1.0: USB Mass Storage device detected
+>>> [    1.706054] scsi host0: usb-storage 1-1:1.0
+>>> [    2.702105] scsi 0:0:0:0: Direct-Access     Ext Hard  Disk                 PQ: 0 ANSI: 5
+>>> [    2.714214] sd 0:0:0:0: [sda] Spinning up disk...
+>>> [    3.720503] ...
+>>> [    6.674040] usb 1-1: USB disconnect, device number 2
+>>> [    6.750508] .ready
+>>> [    6.752558] sd 0:0:0:0: [sda] Read Capacity(10) failed: Result: hostbyte=0x00 driverbyte=0x04
+>>> [    6.761112] sd 0:0:0:0: [sda] Sense not available.
+>>> [    6.765918] sd 0:0:0:0: [sda] Write Protect is off
+>>> [    6.770741] sd 0:0:0:0: [sda] Asking for cache data failed
+>>> [    6.776236] sd 0:0:0:0: [sda] Assuming drive cache: write through
+>>> [    6.782745] ------------[ cut here ]------------
+>>> [    6.787383] WARNING: CPU: 1 PID: 15 at /home/aaro/git/linux/block/genhd.c:626 add_disk+0x41c/0x478()
+>>> [    6.796549] Modules linked in:
+>>> [    6.799624] CPU: 1 PID: 15 Comm: kworker/u4:1 Not tainted 4.4.0-rc1-octeon-los_73f9f-00002-gd81c963 #1
+>>> [    6.808959] Workqueue: events_unbound async_run_entry_fn
+>>> [    6.814296] Stack : 0000000000000001 0000000000000004 ffffffff81760000 0000000000000000
+>>> 	  0000000000000001 0000000000000000 0000000000000000 0000000000000000
+>>> 	  ffffffff81f3abc8 ffffffff811893f8 0000000000000000 ffffffff81f3a758
+>>> 	  0000000000000000 0000000000000002 0000000000000001 ffffffff81f40000
+>>> 	  ffffffff816b78f8 80000000330e9000 0000000000000272 0000000000000009
+>>> 	  ffffffff813471cc 0000000000000000 80000000330086a0 8000000033008400
+>>> 	  80000000330e9000 ffffffff811cea44 800000003314bb68 8000000033008400
+>>> 	  80000000330e9000 800000003314ba70 800000003314bb88 ffffffff8135331c
+>>> 	  000000000000015f ffffffff813c0900 000000000000006e 0000000000000000
+>>> 	  735f756e626f756e ffffffff81124190 0000000000000000 0000000000000000
+>>> 	  ...
+>>> [    6.879950] Call Trace:
+>>> [    6.882414] [<ffffffff81124190>] show_stack+0x88/0xa8
+>>> [    6.887475] [<ffffffff8135331c>] dump_stack+0x6c/0x90
+>>> [    6.892549] [<ffffffff81141cb4>] warn_slowpath_common+0x94/0xd8
+>>> [    6.898481] [<ffffffff813471cc>] add_disk+0x41c/0x478
+>>> [    6.903552] [<ffffffff81400794>] sd_probe_async+0xfc/0x218
+>>> [    6.909047] [<ffffffff8116373c>] async_run_entry_fn+0x4c/0x120
+>>> [    6.914898] [<ffffffff8115a83c>] process_one_work+0x17c/0x438
+>>> [    6.920663] [<ffffffff8115ac60>] worker_thread+0x168/0x5e0
+>>> [    6.926159] [<ffffffff81160dc4>] kthread+0xd4/0xf0
+>>> [    6.930968] [<ffffffff8111e9d8>] ret_from_kernel_thread+0x14/0x1c
+>>> [    6.937069]
+>>
+>> Hello Aaro,
+>>
+>> The patch you mentioned changes the device removal code. The above
+>> output shows a warning triggered by the device probing code. That makes
+>> it unlikely that the above warning is caused by my patch. Please double
+>> check your bisect results.
 > 
-> You're right... looks very broken:
+> It's obviously caused by your patch ... look at the event sequence: it's
+> a disconnect triggering removal on an in-process probe.
 > 
-> [   62.577194] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
-> sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, USLEEP_POLL 3, USLEEP_WAITLONG 1250, options { AUTOPROBE_IRQ PSEUDO_DMA 
-> NCR53C400 }
-> [   62.796635] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
-> [   63.878494] sd 2:0:0:0: Attached scsi generic sg1 type 0
-> [   95.848260] sd 2:0:0:0: aborting command
-> 
-> And the system hangs completely.
-> 
+> The question is how to fix it.  The original problem is that we have a
+> set of three bound names that die at slightly different times.  The
+> solution: to extend the sd and bdi name beyond the queue one worked for
+> your use case, but caused this.  Ideally, we'd probably just like for
+> the scanning code to wait until all the names are gone before trying to
+> reacquire them, but that looks problematic too.
 
-Yes. That was the usual failure mode. The old EH abort routine is fatal. 
-Up until I disabled PDMA by default for mac_scsi (in v3.19), that driver 
-would do the same thing.
+Hello James and Aaro,
 
-> It's much better with your patches, but still not great :)
-> 
+How about reverting commit bf2cf3baa20b0a6cd2d08707ef05dc0e992a8aa0 and
+replacing it by something like the (very lightly tested so far) patch below ?
 
-Pleased to hear it :)
+Thanks,
 
-> [   93.963264] pnp 01:01.00: [io  0x0240-0x025f]
-> [   93.963493] pnp 01:01.00: [irq 5]
-> [   93.965768] pnp 01:01.00: activated
-> [   93.977147] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x240, n_io_port 16, base 0x0, irq 0, can_queue 16, cmd_per_lun 2, 
-> sg_tablesize 128, this_id 7, flags { DTC3181E NO_PSEUDO_DMA }, options { AUTOPROBE_IRQ PSEUDO_DMA }
-> [   93.987527] scsi host2: rejecting message
-> [   93.987647] Synchronous Data Transfer Request period = 100 ns offset = 12
-> [   94.001219] scsi 2:0:0:0: Direct-Access     IBM      0663             e    PQ: 0 ANSI: 2
-> [  113.000794] sd 2:0:0:0: Attached scsi generic sg1 type 0
+Bart.
 
-I'd be interested to know what commands were in play in that 19 second 
-interval. Might need to use scsi_logging_level to figure that out.
+---
+ drivers/scsi/scsi_sysfs.c        |  2 ++
+ include/linux/backing-dev-defs.h |  1 +
+ include/linux/backing-dev.h      |  1 +
+ mm/backing-dev.c                 | 28 ++++++++++++++++++++++++++--
+ 4 files changed, 30 insertions(+), 2 deletions(-)
 
-My tests involved 3 different scsi targets (two disks and a CD-ROM) but 
-none of these send a SDTR. Your log says the driver correctly rejected the 
-SDTR message but that doesn't mean the target actually went to MSG IN 
-phase and got the message. Do you have any older targets you can test?
-
-> [  144.852432] sd 2:0:0:0: [sdb] Unit Not Ready
-> [  144.852574] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-> [  144.852713] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-
-AFAIK, the target should not have to abort any commands. Moreover, the 
-target should never experience a select/reselect failure, because you have 
-irq == 0 (see above) and that implies that the target is never permitted 
-the disconnect privilege.
-
-> [  240.108292] INFO: task modprobe:1957 blocked for more than 120 seconds.
-> [  240.108418]       Not tainted 4.3.0-rc1+ #74
-
-Why not use v4.3?
-
-> [  240.108501] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  240.108597] modprobe        D 0000001a     0  1957   1950 0x00000000
-> [  240.108790]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-> [  240.109246]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-> [  240.109699]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-> [  240.110156] Call Trace:
-> [  240.110295]  [<c139c504>] ? schedule+0x5b/0x67
-> [  240.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-> [  240.110569]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-> [  240.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-> [  240.110824]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-> [  240.110948]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-> [  240.111068]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-
-Not sure what module was being probed here. I presume it was g_NCR5380 or 
-g_NCR5380_mmio. Neither of these calls 'scsi_scan_host'. I'm not sure what 
-the implications are (?)
-
-> [  240.852458] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
-> [  240.852620] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-> [  240.852760] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-> [  272.852471] sd 2:0:0:0: [sdb] Write Protect is off
-> [  272.852614] sd 2:0:0:0: [sdb] Mode Sense: 00 00 00 00
-> [  304.084452] sd 2:0:0:0: [sdb] Asking for cache data failed
-> [  304.084592] sd 2:0:0:0: [sdb] Assuming drive cache: write through
-
-This looks like nonsense to me ... I don't think the target actually 
-aborted the reselection phase of a read capacity command. I'm out of ideas 
-here. Can anyone else make sense of this?
-
-> [  360.108284] INFO: task modprobe:1957 blocked for more than 120 seconds.
-> [  360.108409]       Not tainted 4.3.0-rc1+ #74
-> [  360.108492] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  360.108591] modprobe        D 0000001a     0  1957   1950 0x00000000
-> [  360.108787]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-> [  360.109248]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-> [  360.109703]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-> [  360.110158] Call Trace:
-> [  360.110296]  [<c139c504>] ? schedule+0x5b/0x67
-> [  360.110430]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-> [  360.110568]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-> [  360.110699]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-> [  360.110823]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-> [  360.110945]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-> [  360.111065]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-> [  431.060488] sd 2:0:0:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_SENSE
-> [  431.060650] sd 2:0:0:0: [sdb] Sense Key : Aborted Command [current]
-> [  431.060791] sd 2:0:0:0: [sdb] Add. Sense: Select or reselect failure
-> [  480.108282] INFO: task modprobe:1957 blocked for more than 120 seconds.
-> [  480.108405]       Not tainted 4.3.0-rc1+ #74
-> [  480.108488] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  480.108585] modprobe        D 0000001a     0  1957   1950 0x00000000
-> [  480.108779]  ce0fad00 00000086 53881781 0000001a c1525f88 4edbe39c 0000001a 04ac33e5
-> [  480.109236]  00000000 ccd54000 ffffffff ffffffff d204b280 c139c504 00000000 c104416d
-> [  480.109689]  00000000 ce0fad00 c1054a45 c151fd8c c151fd8c d204b280 00000000 ccd6d100
-> [  480.110145] Call Trace:
-> [  480.110282]  [<c139c504>] ? schedule+0x5b/0x67
-> [  480.110417]  [<c104416d>] ? async_synchronize_cookie_domain+0x73/0x9f
-> [  480.110556]  [<c1054a45>] ? abort_exclusive_wait+0x6e/0x6e
-> [  480.110685]  [<c10ac9bc>] ? do_init_module+0xa4/0x1a3
-> [  480.110810]  [<c107ddb5>] ? load_module+0x14de/0x18ca
-> [  480.110932]  [<c107e2a0>] ? SyS_finit_module+0x47/0x56
-> [  480.111052]  [<c139e2c0>] ? sysenter_do_call+0x12/0x12
-> [  495.062082] sd 2:0:0:0: [sdb] Attached SCSI disk
-> 
-> 
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index f5ace2b..8d64518 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -12,6 +12,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/backing-dev.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -1110,6 +1111,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		device_unregister(&sdev->sdev_dev);
+ 		transport_remove_device(dev);
+ 		scsi_dh_remove_device(sdev);
++		bdi_sysfs_del(&sdev->request_queue->backing_dev_info);
+ 		device_del(dev);
+ 	} else
+ 		put_device(&sdev->sdev_dev);
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 1b4d69f..1a42ecb 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -135,6 +135,7 @@ struct bdi_writeback {
+ 
+ struct backing_dev_info {
+ 	struct list_head bdi_list;
++	bool is_visible;
+ 	unsigned long ra_pages;	/* max readahead in PAGE_CACHE_SIZE units */
+ 	unsigned int capabilities; /* Device capabilities */
+ 	congested_fn *congested_fn; /* Function pointer if device is md/dm */
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index c82794f..9004d90 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -24,6 +24,7 @@ __printf(3, 4)
+ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+ 		const char *fmt, ...);
+ int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev);
++void bdi_sysfs_del(struct backing_dev_info *bdi);
+ void bdi_unregister(struct backing_dev_info *bdi);
+ 
+ int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 8ed2ffd..b56971f 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -774,6 +774,7 @@ int bdi_init(struct backing_dev_info *bdi)
+ 	int ret;
+ 
+ 	bdi->dev = NULL;
++	bdi->is_visible = false;
+ 
+ 	bdi->min_ratio = 0;
+ 	bdi->max_ratio = 100;
+@@ -806,6 +807,7 @@ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+ 		return PTR_ERR(dev);
+ 
+ 	bdi->dev = dev;
++	bdi->is_visible = true;
+ 
+ 	bdi_debug_register(bdi, dev_name(dev));
+ 	set_bit(WB_registered, &bdi->wb.state);
+@@ -837,6 +839,28 @@ static void bdi_remove_from_list(struct backing_dev_info *bdi)
+ 	synchronize_rcu_expedited();
+ }
+ 
++/**
++ * bdi_sysfs_del - remove a BDI device from sysfs
++ * @bdi: BDI device pointer.
++ *
++ * It is safe to call this function more than once.
++ */
++void bdi_sysfs_del(struct backing_dev_info *bdi)
++{
++	bool is_visible = false;
++
++	spin_lock_bh(&bdi_lock);
++	swap(bdi->is_visible, is_visible);
++	spin_unlock_bh(&bdi_lock);
++
++	if (!is_visible)
++		return;
++
++	bdi_debug_unregister(bdi);
++	device_del(bdi->dev);
++}
++EXPORT_SYMBOL(bdi_sysfs_del);
++
+ void bdi_unregister(struct backing_dev_info *bdi)
+ {
+ 	/* make sure nobody finds us on the bdi_list anymore */
+@@ -845,8 +869,8 @@ void bdi_unregister(struct backing_dev_info *bdi)
+ 	cgwb_bdi_destroy(bdi);
+ 
+ 	if (bdi->dev) {
+-		bdi_debug_unregister(bdi);
+-		device_unregister(bdi->dev);
++		bdi_sysfs_del(bdi);
++		put_device(bdi->dev);
+ 		bdi->dev = NULL;
+ 	}
+ }
 -- 
+2.1.4
+
+
