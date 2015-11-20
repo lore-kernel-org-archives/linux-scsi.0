@@ -1,47 +1,29 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
- drivers
-Date: Fri, 20 Nov 2015 03:45:15 -0800
-Message-ID: <20151120114515.GA4651@infradead.org>
-References: <20151118083455.331768508@telegraphics.com.au>
- <20151120100047.GA27842@infradead.org>
- <alpine.LNX.2.00.1511202138240.16424@nippy.intranet>
- <201511201240.03828.linux@rainbow-software.org>
+Subject: Re: [PATCH] Fix a memory leak in scsi_host_dev_release()
+Date: Fri, 20 Nov 2015 03:52:12 -0800
+Message-ID: <20151120115212.GA23875@infradead.org>
+References: <564D0224.9040001@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:52696 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbbKTLwU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2015 06:52:20 -0500
 Content-Disposition: inline
-In-Reply-To: <201511201240.03828.linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Finn Thain <fthain@telegraphics.com.au>, Christoph Hellwig <hch@infradead.org>, Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <564D0224.9040001@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Fri, Nov 20, 2015 at 12:40:03PM +0100, Ondrej Zary wrote:
-> > > I'd love to be able to get rid of the ISA drivers to be honest.
-> > 
-> > Is that because of their use of scsi_module.c or their general decrepitude 
-> > or something else?
-> 
-> scsi_module.c usage shouldn't be hard to fix. I can do that after finding a working setup.
+Hi Bart,
 
-It's the general state of them.
+the memory leak looks real, and your fix looks corret, but I still
+don't like it.
 
-> 
-> > > Given that they appear to be gravely broken before your cleanups this 
-> > > might be an opportunity to get rid of them.
-> > 
-> > At this stage, that's unclear (to me). It could be that g_NCR5380.c is not 
-> > broken. It could be that the core driver can't handle certain targets. I 
-> > think we need to do more testing.
-> 
-> Maybe I was just unlucky and tested a drive that never worked with this driver.
-> 
-> Working ISA means more testing possibilities. It's much easier to get an ISA card than a Sun or Atari. Also faster CPU (such as 1 GHz P3) means quicker testing.
+I think it's reasonable for SCSI to assume that the final put_device
+fully frees the struct device including the name pointer that is
+assigned entirely behind the back of the caller.
 
-
-Well, if you volunteer to bring the NCR5380 ISA drivers up to date and
-maintain them it's obvuously fine to keep them around.
-
-I'm more worried about all the unmaintained ISA drivers in horrible
-shape.
+So I think the fix for this probably should be in the driver core.
