@@ -1,38 +1,48 @@
-From: "Jose Calvache" <josecalvach.e@posteo.de>
-Subject: Eure Hilfe
-Date: Sat, 21 Nov 2015 03:15:42 -0800
-Message-ID: <78c320980f2c392ea84b015489e67719.squirrel__703.033063519065$1448104800$gmane$org@gardeninghelpersforyou.com>
-Reply-To: josecalvach.e@aim.com
+From: Laurent Dufour <ldufour@linux.vnet.ibm.com>
+Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
+Date: Sat, 21 Nov 2015 12:30:14 +0100
+Message-ID: <565055C6.5040801@linux.vnet.ibm.com>
+References: <1447838334.1564.2.camel@ellerman.id.au>
+ <1447855399.3974.24.camel@redhat.com>
+ <1447894964.15206.0.camel@ellerman.id.au>
+ <20151119082325.GA11419@infradead.org>
+ <1448021448.14769.7.camel@ellerman.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vps7862.inmotionhosting.com ([173.247.243.10]:39324 "EHLO
-	vps7862.inmotionhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752876AbbKULTh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Nov 2015 06:19:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1448021448.14769.7.camel@ellerman.id.au>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Michael Ellerman <mpe@ellerman.id.au>, Ming Lei <ming.lei@canonical.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, "James E. J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, brking <brking@us.ibm.com>, Mark Salter <msalter@redhat.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-Guten Tag,
-
-Ich m=F6chte, dass Sie mich auf einem Geldtransfer zu unterst=FCtzen, w=
-enn Sie
-bereit und interessiert sind, antworten Sie mir bitte nach Erhalt diese=
-r
-E-Mails f=FCr mehr Klarheit und Modalit=E4ten f=FCr den erfolgreichen A=
-bschluss
-dieser Transaktion erforderlich.
-Dank und warten Sie Ihre dringende Antwort zu diesem Thema.
-
-=46reundliche Gr=FC=DFe,
-Herr. Jose Calvache.
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gMjAvMTEvMjAxNSAxMzoxMCwgTWljaGFlbCBFbGxlcm1hbiB3cm90ZToKPiBPbiBUaHUsIDIw
+MTUtMTEtMTkgYXQgMDA6MjMgLTA4MDAsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOgo+IAo+PiBJ
+dCdzIHByZXR0eSBtdWNoIGd1YXJhbnRlZWQgYSBibG9jayBsYXllciBidWcsIG1vc3QgbGlrZWx5
+IGluIHRoZQo+PiBtZXJnZSBiaW9zIHRvIHJlcXVlc3QgaW5mcmFzdHVjdHVyZSB3aGVyZSB3ZSBk
+b24ndCBvYmV5IHRoZSBtZXJnaW5nCj4+IGxpbWl0cyBwcm9wZXJseS4KPj4KPj4gRG9lcyBlaXRo
+ZXIgb2YgeW91IGhhdmUgYSBrbm93biBnb29kIGFuZCBmaXJzdCBrbm93biBiYWQga2VybmVsPwo+
+IAo+IE5vdCBtZSwgSSd2ZSBvbmx5IGhpdCBpdCBvbmUgb3IgdHdvIHRpbWVzLiBBbGwgSSBjYW4g
+c2F5IGlzIEkgaGF2ZSBoaXQgaXQgaW4KPiA0LjQtcmMxLgo+IAo+IExhdXJlbnQsIGNhbiB5b3Ug
+bmFycm93IGl0IGRvd24gYXQgYWxsPwoKSXQgc2VlbXMgdGhhdCB0aGUgcGFuaWMgaXMgdHJpZ2dl
+cmVkIGJ5IHRoZSBjb21taXQgYmRjZWQ0MzhhY2Q4ICgiYmxvY2s6CnNldHVwIGJpX3BoeXNfc2Vn
+bWVudHMgYWZ0ZXIgc3BsaXR0aW5nIikgd2hpY2ggaGFzIGJlZW4gcHVsbGVkIGJ5IHRoZQptZXJn
+ZSBkOTczNGUwZDFjY2YgKCJNZXJnZSBicmFuY2ggJ2Zvci00LjQvY29yZScgb2YKZ2l0Oi8vZ2l0
+Lmtlcm5lbC5kay9saW51eC1ibG9jayIpLgoKTXkgc3lzdGVtIGlzIHBhbmljaW5nIHByb21wdGx5
+IHdoZW4gcnVubmluZyBhIGtlcm5lbCBidWlsdCBhdApkOTczNGUwZDFjY2YsIHdoaWxlIHJldmVy
+dGluZyB0aGUgY29tbWl0IGJkY2VkNDM4YWNkOCwgaXQgY2FuIHJ1biBob3Vycwp3aXRob3V0IHBh
+bmljaW5nLgoKVGhpcyBiZWluZyBzYWlkLCBJIGNhbid0IGV4cGxhaW4gd2hhdCdzIGdvaW5nIHdy
+b25nLgoKTWF5IE1pbmcgc2hlZCBzb21lIGxpZ2h0IGhlcmUgPwoKQ2hlZXJzCgoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1haWxp
+bmcgbGlzdApMaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96bGFi
+cy5vcmcvbGlzdGluZm8vbGludXhwcGMtZGV2
