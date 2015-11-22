@@ -1,49 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix a memory leak in scsi_host_dev_release()
-Date: Sun, 22 Nov 2015 07:08:43 -0800
-Message-ID: <20151122150843.GA22822@infradead.org>
-References: <564D0224.9040001@sandisk.com>
- <20151120115212.GA23875@infradead.org>
- <564F5D36.8010402@sandisk.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Sun, 22 Nov 2015 08:55:54 -0800
+Message-ID: <5651F39A.2020003@acm.org>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+	<1447422410-20891-3-git-send-email-hch@lst.de>
+	<564B697A.2020601@sandisk.com>
+	<564C2F01.6020407@dev.mellanox.co.il> <564CC15E.7030602@sandisk.com>
+	<20151120101644.GC24298@lst.de> <564F4F38.9040505@sandisk.com>
+	<56519011.6060204@dev.mellanox.co.il> <20151122101308.GA12189@lst.de>
+	<56519A90.5010502@dev.mellanox.co.il> <20151122132352.GA14154@lst.de>
+	<5651D7D3.7030509@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58498 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbbKVPIp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2015 10:08:45 -0500
-Content-Disposition: inline
-In-Reply-To: <564F5D36.8010402@sandisk.com>
+Received: from sf1.bxl.stone.is ([87.238.167.214]:53918 "EHLO sf1.bxl.stone.is"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751930AbbKVQ4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Nov 2015 11:56:24 -0500
+In-Reply-To: <5651D7D3.7030509@dev.mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@lst.de>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Nov 20, 2015 at 09:49:42AM -0800, Bart Van Assche wrote:
-> On 11/20/2015 03:52 AM, Christoph Hellwig wrote:
-> >the memory leak looks real, and your fix looks corret, but I still
-> >don't like it.
-> >
-> >I think it's reasonable for SCSI to assume that the final put_device
-> >fully frees the struct device including the name pointer that is
-> >assigned entirely behind the back of the caller.
-> >
-> >So I think the fix for this probably should be in the driver core.
-> 
-> Hello Christoph,
-> 
-> Thanks for the feedback. However, I'm not sure this can be fixed by
-> modifying the driver core. If scsi_host_remove() is not called the SCSI core
-> doesn't call put_device(&shost->shost_dev). I will post a second version of
-> this patch that ensures that the SCSI core always calls
-> put_device(&shost->shost_dev).
+On 11/22/15 06:57, Sagi Grimberg wrote:
+>>> I think that bart wants to allow the caller to select cpu affinity
+>>> per CQ. In this case ib_alloc_cq in workqueue mode would need to
+>>> accept a affinity_hint from the caller (default to wild-card
+>>> WORK_CPU_UNBOUND).
+>>
+>> Hmm, true.  How would be set that hint from userspace?  I'd really prefer
+>> to see a practical justification for it first.
+>
+> In order to assign CPUs from user-space we'd need an ethtool like
+> interface for isert/srpt/<xxxt>. Given that this is something we don't
+> want to get into right now, I assumed that Bart meant that srpt
+> would take a "least used" approach from srpt driver (which isn't better
+> taking the wild-card option I'd say), So I'll let Bart answer...
 
+Hello Christoph and Sagi,
 
-Oh, I see.  The release method is called on shost_gendev, but the
-name that needs to be freed is in shost_dev.  I take my comment on the
-core back.
+My intention is indeed to allow to control CPU affinity per CQ. One use 
+case is to implement a least-used policy in RDMA drivers that use 
+multiple completion queues. Another use case is to make CPU affinity 
+configurable from user space through something similar to ethtool or via 
+sysfs.
 
-Let's get this patch in for now and see if we can do something about the
-creative driver model (ab-)use for struct Scsi_Host in the long run.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Bart.
