@@ -1,39 +1,29 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Sun, 22 Nov 2015 16:57:23 +0200
-Message-ID: <5651D7D3.7030509@dev.mellanox.co.il>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-3-git-send-email-hch@lst.de> <564B697A.2020601@sandisk.com>
- <564C2F01.6020407@dev.mellanox.co.il> <564CC15E.7030602@sandisk.com>
- <20151120101644.GC24298@lst.de> <564F4F38.9040505@sandisk.com>
- <56519011.6060204@dev.mellanox.co.il> <20151122101308.GA12189@lst.de>
- <56519A90.5010502@dev.mellanox.co.il> <20151122132352.GA14154@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
+Date: Sun, 22 Nov 2015 07:03:57 -0800
+Message-ID: <20151122150357.GA22575@infradead.org>
+References: <564F910E.9070306@sandisk.com>
+ <564F9190.5090103@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20151122132352.GA14154-jcswGhMUV9g@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58474 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbbKVPEE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2015 10:04:04 -0500
+Content-Disposition: inline
+In-Reply-To: <564F9190.5090103@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>
 
+On Fri, Nov 20, 2015 at 01:33:04PM -0800, Bart Van Assche wrote:
+> Use scsi_host_{get,put}() instead of open-coding these functions.
+> Compile-tested only.
 
->>
->> I think that bart wants to allow the caller to select cpu affinity
->> per CQ. In this case ib_alloc_cq in workqueue mode would need to
->> accept a affinity_hint from the caller (default to wild-card
->> WORK_CPU_UNBOUND).
->
-> Hmm, true.  How would be set that hint from userspace?  I'd really prefer
-> to see a practical justification for it first.
+s/Introdue/use/ in the subject?
 
-In order to assign CPUs from user-space we'd need an ethtool like
-interface for isert/srpt/<xxxt>. Given that this is something we don't
-want to get into right now, I assumed that Bart meant that srpt
-would take a "least used" approach from srpt driver (which isn't better
-taking the wild-card option I'd say), So I'll let Bart answer...
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Otherwise this looks fine:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
