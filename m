@@ -1,73 +1,48 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH RESEND] scsi_debug: fix prevent_allow+verify regressions
-Date: Sun, 22 Nov 2015 12:11:28 -0500
-Message-ID: <5651F740.3010707@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH v2 1/2] scsi: lpfc: Use kzalloc instead of kmalloc
+Date: Mon, 23 Nov 2015 00:10:06 +0100
+Message-ID: <20151123001006.00002fc3@localhost>
+References: <1445670416-3705-1-git-send-email-punitvara@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060507090407030308070706"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:60252 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751966AbbKVRLp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Nov 2015 12:11:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1445670416-3705-1-git-send-email-punitvara@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Punit Vara <punitvara@gmail.com>
+Cc: JBottomley@odin.com, don.brace@pmcs.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mrochs@linux.vnet.ibm.com, James Smart <james.smart@avagotech.com>, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@ORACLE.COM>, "James E.J. Bottomley" <jbottomley@odin.com>, SCSI development list <linux-scsi@vger.kernel.org>
-Cc: sweet_f_a@gmx.de, util-linux@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060507090407030308070706
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Punit Vara wrote:
+> This patch is to the lpfc_els.c which resolves following warning
+> reported by coccicheck:
+> 
+> WARNING: kzalloc should be used for rdp_context, instead of
+> kmalloc/memset
+> 
+> Signed-off-by: Punit Vara <punitvara@gmail.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_els.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 36bf58b..9729ab1 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -4990,13 +4990,12 @@ lpfc_els_rcv_rdp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+>  	if (RDP_NPORT_ID_SIZE !=
+>  			be32_to_cpu(rdp_req->nport_id_desc.length))
+>  		goto rjt_logerr;
+> -	rdp_context = kmalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
+> +	rdp_context = kzalloc(sizeof(struct lpfc_rdp_context), GFP_KERNEL);
+>  	if (!rdp_context) {
+>  		rjt_err = LSRJT_UNABLE_TPC;
+>  		goto error;
+>  	}
+>  
+> -	memset(rdp_context, 0, sizeof(struct lpfc_rdp_context));
+>  	cmd = &cmdiocb->iocb;
+>  	rdp_context->ndlp = lpfc_nlp_get(ndlp);
+>  	rdp_context->ox_id = cmd->unsli3.rcvsli3.ox_id;
 
-Ruediger Meier observed a regression with the PREVENT ALLOW
-MEDIUM REMOVAL command in lk 3.19:
-   http://www.spinics.net/lists/util-linux-ng/msg11448.html
-
-Inspection indicated the same regression with VERIFY(10).
-
-The patch is against lk 3.19.3 and also works with lk 4.3.0 .
-With this patch both commands are accepted and do nothing.
-
-ChangeLog:
-   - fix the lk 3.19 regression so that the PREVENT ALLOW
-     MEDIUM REMOVAL command is supported once again
-   - same fix for VERIFY(10)
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
---------------060507090407030308070706
-Content-Type: text/x-patch;
- name="sdebug319regr1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sdebug319regr1.patch"
-
---- a/drivers/scsi/scsi_debug.c	2015-02-11 17:47:09.276206425 -0500
-+++ b/drivers/scsi/scsi_debug.c	2015-04-03 22:42:36.343971372 -0400
-@@ -455,8 +455,9 @@ static const struct opcode_info_t opcode
- 	     0} },
- 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* MAINT OUT */
- 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
--	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* VERIFY */
--	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-+	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_DIRECT_IO, NULL, NULL, /* VERIFY(10) */
-+	    {10,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc7,
-+	     0, 0, 0, 0, 0, 0} },
- 	{1, 0x7f, 0x9, F_SA_HIGH | F_D_IN | FF_DIRECT_IO, resp_read_dt0,
- 	    vl_iarr, {32,  0xc7, 0, 0, 0, 0, 0x1f, 0x18, 0x0, 0x9, 0xfe, 0,
- 		      0xff, 0xff, 0xff, 0xff} },/* VARIABLE LENGTH, READ(32) */
-@@ -467,8 +468,8 @@ static const struct opcode_info_t opcode
- 	    {10,  0x13, 0xff, 0xff, 0, 0, 0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0,
- 	     0} },
- /* 20 */
--	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ALLOW REMOVAL */
--	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-+	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
-+	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
- 	{0, 0x1, 0, 0, resp_start_stop, NULL, /* REWIND ?? */
- 	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
- 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
-
---------------060507090407030308070706--
+Reviewed-by: Sebastian Herbszt <herbszt@gmx.de>
