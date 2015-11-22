@@ -1,50 +1,73 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Sun, 22 Nov 2015 08:55:54 -0800
-Message-ID: <5651F39A.2020003@acm.org>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
-	<1447422410-20891-3-git-send-email-hch@lst.de>
-	<564B697A.2020601@sandisk.com>
-	<564C2F01.6020407@dev.mellanox.co.il> <564CC15E.7030602@sandisk.com>
-	<20151120101644.GC24298@lst.de> <564F4F38.9040505@sandisk.com>
-	<56519011.6060204@dev.mellanox.co.il> <20151122101308.GA12189@lst.de>
-	<56519A90.5010502@dev.mellanox.co.il> <20151122132352.GA14154@lst.de>
-	<5651D7D3.7030509@dev.mellanox.co.il>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH RESEND] scsi_debug: fix prevent_allow+verify regressions
+Date: Sun, 22 Nov 2015 12:11:28 -0500
+Message-ID: <5651F740.3010707@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060507090407030308070706"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sf1.bxl.stone.is ([87.238.167.214]:53918 "EHLO sf1.bxl.stone.is"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751930AbbKVQ4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Nov 2015 11:56:24 -0500
-In-Reply-To: <5651D7D3.7030509@dev.mellanox.co.il>
+Received: from smtp.infotech.no ([82.134.31.41]:60252 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751966AbbKVRLp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Nov 2015 12:11:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@lst.de>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@ORACLE.COM>, "James E.J. Bottomley" <jbottomley@odin.com>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: sweet_f_a@gmx.de, util-linux@vger.kernel.org
 
-On 11/22/15 06:57, Sagi Grimberg wrote:
->>> I think that bart wants to allow the caller to select cpu affinity
->>> per CQ. In this case ib_alloc_cq in workqueue mode would need to
->>> accept a affinity_hint from the caller (default to wild-card
->>> WORK_CPU_UNBOUND).
->>
->> Hmm, true.  How would be set that hint from userspace?  I'd really prefer
->> to see a practical justification for it first.
->
-> In order to assign CPUs from user-space we'd need an ethtool like
-> interface for isert/srpt/<xxxt>. Given that this is something we don't
-> want to get into right now, I assumed that Bart meant that srpt
-> would take a "least used" approach from srpt driver (which isn't better
-> taking the wild-card option I'd say), So I'll let Bart answer...
+This is a multi-part message in MIME format.
+--------------060507090407030308070706
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello Christoph and Sagi,
+Ruediger Meier observed a regression with the PREVENT ALLOW
+MEDIUM REMOVAL command in lk 3.19:
+   http://www.spinics.net/lists/util-linux-ng/msg11448.html
 
-My intention is indeed to allow to control CPU affinity per CQ. One use 
-case is to implement a least-used policy in RDMA drivers that use 
-multiple completion queues. Another use case is to make CPU affinity 
-configurable from user space through something similar to ethtool or via 
-sysfs.
+Inspection indicated the same regression with VERIFY(10).
 
-Bart.
+The patch is against lk 3.19.3 and also works with lk 4.3.0 .
+With this patch both commands are accepted and do nothing.
+
+ChangeLog:
+   - fix the lk 3.19 regression so that the PREVENT ALLOW
+     MEDIUM REMOVAL command is supported once again
+   - same fix for VERIFY(10)
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+--------------060507090407030308070706
+Content-Type: text/x-patch;
+ name="sdebug319regr1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sdebug319regr1.patch"
+
+--- a/drivers/scsi/scsi_debug.c	2015-02-11 17:47:09.276206425 -0500
++++ b/drivers/scsi/scsi_debug.c	2015-04-03 22:42:36.343971372 -0400
+@@ -455,8 +455,9 @@ static const struct opcode_info_t opcode
+ 	     0} },
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* MAINT OUT */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+-	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* VERIFY */
+-	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
++	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_DIRECT_IO, NULL, NULL, /* VERIFY(10) */
++	    {10,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc7,
++	     0, 0, 0, 0, 0, 0} },
+ 	{1, 0x7f, 0x9, F_SA_HIGH | F_D_IN | FF_DIRECT_IO, resp_read_dt0,
+ 	    vl_iarr, {32,  0xc7, 0, 0, 0, 0, 0x1f, 0x18, 0x0, 0x9, 0xfe, 0,
+ 		      0xff, 0xff, 0xff, 0xff} },/* VARIABLE LENGTH, READ(32) */
+@@ -467,8 +468,8 @@ static const struct opcode_info_t opcode
+ 	    {10,  0x13, 0xff, 0xff, 0, 0, 0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0,
+ 	     0} },
+ /* 20 */
+-	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ALLOW REMOVAL */
+-	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
++	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
++	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0x1, 0, 0, resp_start_stop, NULL, /* REWIND ?? */
+ 	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
+
+--------------060507090407030308070706--
