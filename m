@@ -1,78 +1,54 @@
-From: Jan Engelhardt <jengelh@inai.de>
-Subject: [PATCH] target: fix a case of data corruption during COMPARE_AND_WRITE
-Date: Mon, 23 Nov 2015 17:46:32 +0100
-Message-ID: <1448297192-24937-1-git-send-email-jengelh@inai.de>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Mon, 23 Nov 2015 13:01:36 -0700
+Message-ID: <20151123200136.GA5640@obsidianresearch.com>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+ <1447422410-20891-3-git-send-email-hch@lst.de>
+ <20151113182513.GB21808@obsidianresearch.com>
+ <20151114070849.GD27738@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151114070849.GD27738@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-rdma@vger.kernel.org, sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-target_core_sbc's compare_and_write functionality suffers from taking
-data at the wrong memory location when writing a CAW request to disk.
+On Sat, Nov 14, 2015 at 08:08:49AM +0100, Christoph Hellwig wrote:
+> On Fri, Nov 13, 2015 at 11:25:13AM -0700, Jason Gunthorpe wrote:
+> > For instance, like this, not fulling draining the cq and then doing:
+> > 
+> > > +	completed = __ib_process_cq(cq, budget);
+> > > +	if (completed < budget) {
+> > > +		irq_poll_complete(&cq->iop);
+> > > +		if (ib_req_notify_cq(cq, IB_POLL_FLAGS) > 0) {
+> > 
+> > Doesn't seem entirely right? There is no point in calling
+> > ib_req_notify_cq if the code knows there is still stuff in the CQ and
+> > has already, independently, arranged for ib_poll_hander to be
+> > guarenteed called.
+> 
+> The code only calls ib_req_notify_cq if it knowns we finished earlier than
+> our budget.
 
-Given the following sample LIO subtopology,
+Okay, having now read the whole thing, I think I see the flow now. I don't
+see any holes in the above, other than it is doing a bit more work
+than it needs in some edges cases because it doesn't know if the CQ is
+actually empty or not.
 
-% targetcli ls /loopback/
-o- loopback ................................. [1 Target]
-  o- naa.6001405ebb8df14a ....... [naa.60014059143ed2b3]
-    o- luns ................................... [2 LUNs]
-      o- lun0 ................ [iblock/ram0 (/dev/ram0)]
-      o- lun1 ................ [iblock/ram1 (/dev/ram1)]
-% lsscsi -g
-[3:0:1:0]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdc   /dev/sg3
-[3:0:1:1]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdd   /dev/sg4
+> > > +	completed = __ib_process_cq(cq, IB_POLL_BUDGET_WORKQUEUE);
+> > > +	if (completed >= IB_POLL_BUDGET_WORKQUEUE ||
+> > > +	    ib_req_notify_cq(cq, IB_POLL_FLAGS) > 0)
+> > > +		queue_work(ib_comp_wq, &cq->work);
+> > 
+> > Same comment here..
+> 
+> Same here - we only requeue the work item if either we processed all of
+> our budget, or ib_req_notify_cq with IB_CQ_REPORT_MISSED_EVENTS told
+> us that we need to poll again.
 
-the following bug can be observed in Linux 4.3 and 4.4~rc1:
+I find the if construction hard to read, but yes, it looks OK.
 
-% perl -e 'print chr$_ for 0..255,reverse 0..255' >rand
-% perl -e 'print "\0" x 512' >zero
-% cat rand >/dev/sdd
-% sg_compare_and_write -i rand -D zero --lba 0 /dev/sdd
-% sg_compare_and_write -i zero -D rand --lba 0 /dev/sdd
-Miscompare reported
-% hexdump -Cn 512 /dev/sdd
-00000000  0f 0e 0d 0c 0b 0a 09 08  07 06 05 04 03 02 01 00
-00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-*
-00000200
-
-Rather than writing all-zeroes as instructed with the -D file, it
-corrupts the data in the sector by splicing some of the original
-bytes in. The page of the first entry of cmd->t_data_sg includes the
-CDB, and sg->offset is set to a position past the CDB. I presume that
-sg->offset is also the right choice to use for subsequent sglist
-members.
-
-Signed-off-by: Jan Engelhardt <jengelh@netitwork.de>
----
- The following changes since commit 8005c49d9aea74d382f474ce11afbbc7d7130bec:
-  Linux 4.4-rc1 (2015-11-15 17:00:27 -0800)
- are available in the git repository at:
-  git://git.inai.de/linux tcm
- for you to fetch changes up to 54d035e8349bdb547a4372ebe6a83710971052bb:
-  target: fix a case of data corruption during COMPARE_AND_WRITE
-
- drivers/target/target_core_sbc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 0b4b2a6..dc51cdc 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -556,11 +556,11 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 
- 		if (block_size < PAGE_SIZE) {
- 			sg_set_page(&write_sg[i], m.page, block_size,
--				    block_size);
-+				    m.piter.sg->offset + block_size);
- 		} else {
- 			sg_miter_next(&m);
- 			sg_set_page(&write_sg[i], m.page, block_size,
--				    0);
-+				    m.piter.sg->offset);
- 		}
- 		len -= block_size;
- 		i++;
--- 
-2.4.3
+Jason
