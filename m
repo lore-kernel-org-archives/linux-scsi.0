@@ -1,60 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
-Date: Mon, 23 Nov 2015 07:55:44 +0100
-Message-ID: <5652B870.70302@suse.de>
-References: <1447838334.1564.2.camel@ellerman.id.au>
- <1447855399.3974.24.camel@redhat.com>
- <1447894964.15206.0.camel@ellerman.id.au>
- <20151119082325.GA11419@infradead.org> <564DEC41.5010600@suse.de>
- <1448030316.4067.18.camel@localhost.localdomain> <564F3453.9040603@suse.de>
- <1448033323.4067.24.camel@localhost.localdomain>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
+Date: Mon, 23 Nov 2015 12:28:55 +0200
+Message-ID: <5652EA67.1000707@dev.mellanox.co.il>
+References: <1447422410-20891-1-git-send-email-hch@lst.de>
+ <1447422410-20891-4-git-send-email-hch@lst.de>
+ <564851BB.1020004@dev.mellanox.co.il>
+ <564A067B.8030504@opengridcomputing.com>
+ <003001d1209c$ecb70760$c6251620$@opengridcomputing.com>
+ <564A2270.1040004@dev.mellanox.co.il>
+ <003801d120a1$799338d0$6cb9aa70$@opengridcomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57556 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751417AbbKWGzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Nov 2015 01:55:50 -0500
-In-Reply-To: <1448033323.4067.24.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <003801d120a1$799338d0$6cb9aa70$@opengridcomputing.com>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, 'Christoph Hellwig' <hch-jcswGhMUV9g@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: Christoph Hellwig <hch@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org
 
-On 11/20/2015 04:28 PM, Ewan Milne wrote:
-> On Fri, 2015-11-20 at 15:55 +0100, Hannes Reinecke wrote:
->> Can't we have a joint effort here?
->> I've been spending a _LOT_ of time trying to debug things here, but
->> none of the ideas I've come up with have been able to fix anything.
->
-> Yes.  I'm not the one primarily looking at it, and we don't have a
-> reproducer in-house.  We just have the one dump right now.
->
-Oh, I got plenty of them :-(
 
->>
->> I'm almost tempted to increase the count from scsi_alloc_sgtable()
->> by one and be done with ...
->>
->
-> That might not fix it if it is a problem with the merge code, though.
->
-Of course not. But it'll be a band-aid to keep the customer happy.
+> That won't work for iWARP.  Is this code new?  I didn't see any errors that would result from this code when I tested iSER over
+> cxgb4 with the old iwarp support patches.
 
-Cheers,
+Steve,
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+I think I figured out why this works with iWARP.
 
+For iWARP, rdma_disconnect() calls iw_cm_disconnect() with abrupt=0
+which would make iw_cm_disconnect() move the QP into SQ_DRAIN state"
+
+int iw_cm_disconnect(struct iw_cm_id *cm_id, int abrupt)
+{
+	...
+
+         if (qp) {
+                 if (abrupt)
+                         ret = iwcm_modify_qp_err(qp);
+                 else
+                         ret = iwcm_modify_qp_sqd(qp);
+
+                 /*
+                  * If both sides are disconnecting the QP could
+                  * already be in ERR or SQD states
+                  */
+                 ret = 0;
+	}
+}
+
+IFAIK, SQD state allows the ULP to post work requests on the send
+queue and expect these work requests to FLUSH.
+
+So Maybe we should have:
+void ib_drain_qp(struct ib_qp *qp)
+{
+     struct ib_qp_attr attr = { };
+     struct ib_stop_cqe rstop, sstop;
+     struct ib_recv_wr rwr = {}, *bad_rwr;
+     struct ib_send_wr swr = {}, *bad_swr;
+     enum ib_qp_state state;
+     int ret;
+
+     if rdma_cap_ib_cm(id->device, id->port_num) {
+	state = IB_QPS_ERR;
+     else if rdma_cap_iw_cm(id->device, id->port_num)
+         state = IB_QPS_SQD;
+     else
+        return;
+
+     rwr.wr_cqe = &rstop.cqe;
+     rstop.cqe.done = ib_stop_done;
+     init_completion(&rstop.done);
+
+     swr.wr_cqe = &sstop.cqe;
+     sstop.cqe.done = ib_stop_done;
+     swr.send_flags = IB_SEND_SIGNALED;
+     init_completion(&sstop.done);
+
+     attr.qp_state = state;
+     ret = ib_modify_qp(qp, &attr, IB_QP_STATE);
+     if (ret) {
+         WARN_ONCE(ret, "failed to drain QP: %d\n", ret);
+         return;
+     }
+
+     ret = ib_post_recv(qp, &rwr, &bad_rwr);
+     if (ret) {
+         WARN_ONCE(ret, "failed to drain recv queue: %d\n", ret);
+         return;
+     }
+
+     ret = ib_post_send(qp, &swr, &bad_swr);
+     if (ret) {
+         WARN_ONCE(ret, "failed to drain send queue: %d\n", ret);
+         return;
+     }
+
+     wait_for_completion(&rstop.done);
+     wait_for_completion(&sstop.done);
+}
+
+Thoughts?
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
