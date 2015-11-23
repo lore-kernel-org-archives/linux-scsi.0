@@ -1,34 +1,80 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 3/9] IB: add a helper to safely drain a QP
-Date: Mon, 23 Nov 2015 12:35:44 +0200
-Message-ID: <5652EC00.8010705@dev.mellanox.co.il>
-References: <1447422410-20891-1-git-send-email-hch@lst.de>
- <1447422410-20891-4-git-send-email-hch@lst.de>
- <564851BB.1020004@dev.mellanox.co.il>
- <564A067B.8030504@opengridcomputing.com>
- <003001d1209c$ecb70760$c6251620$@opengridcomputing.com>
- <564A2270.1040004@dev.mellanox.co.il>
- <003801d120a1$799338d0$6cb9aa70$@opengridcomputing.com>
- <5652EA67.1000707@dev.mellanox.co.il>
+From: Laurent Dufour <ldufour@linux.vnet.ibm.com>
+Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
+Date: Mon, 23 Nov 2015 14:57:19 +0100
+Message-ID: <56531B3F.60503@linux.vnet.ibm.com>
+References: <1447838334.1564.2.camel@ellerman.id.au>
+ <1447855399.3974.24.camel@redhat.com>
+ <1447894964.15206.0.camel@ellerman.id.au>
+ <20151119082325.GA11419@infradead.org>
+ <1448021448.14769.7.camel@ellerman.id.au>
+ <565055C6.5040801@linux.vnet.ibm.com> <20151122005635.1b9ffbe1@tom-T450>
+ <1448234410.8209.3.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33842 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbbKWKft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2015 05:35:49 -0500
-Received: by wmvv187 with SMTP id v187so153748700wmv.1
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2015 02:35:48 -0800 (PST)
-In-Reply-To: <5652EA67.1000707@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1448234410.8209.3.camel@redhat.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Mark Salter <msalter@redhat.com>, Ming Lei <ming.lei@canonical.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, tom.leiming@gmail.com, "James E. J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, brking <brking@us.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Wise <swise@opengridcomputing.com>, 'Christoph Hellwig' <hch@lst.de>, linux-rdma@vger.kernel.org
-Cc: bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-> So Maybe we should have:
-> void ib_drain_qp(struct ib_qp *qp)
-
-Christoph suggested that this flushing would be taken care
-of by rdma_disconnect which sounds even better I think..
+T24gMjMvMTEvMjAxNSAwMDoyMCwgTWFyayBTYWx0ZXIgd3JvdGU6Cj4gT24gU3VuLCAyMDE1LTEx
+LTIyIGF0IDAwOjU2ICswODAwLCBNaW5nIExlaSB3cm90ZToKPj4gT24gU2F0LCAyMSBOb3YgMjAx
+NSAxMjozMDoxNCArMDEwMAo+PiBMYXVyZW50IER1Zm91ciA8bGR1Zm91ckBsaW51eC52bmV0Lmli
+bS5jb20+IHdyb3RlOgo+Pgo+Pj4gT24gMjAvMTEvMjAxNSAxMzoxMCwgTWljaGFlbCBFbGxlcm1h
+biB3cm90ZToKPj4+PiBPbiBUaHUsIDIwMTUtMTEtMTkgYXQgMDA6MjMgLTA4MDAsIENocmlzdG9w
+aCBIZWxsd2lnIHdyb3RlOgo+Pj4+Cj4+Pj4+IEl0J3MgcHJldHR5IG11Y2ggZ3VhcmFudGVlZCBh
+IGJsb2NrIGxheWVyIGJ1ZywgbW9zdCBsaWtlbHkgaW4gdGhlCj4+Pj4+IG1lcmdlIGJpb3MgdG8g
+cmVxdWVzdCBpbmZyYXN0dWN0dXJlIHdoZXJlIHdlIGRvbid0IG9iZXkgdGhlIG1lcmdpbmcKPj4+
+Pj4gbGltaXRzIHByb3Blcmx5Lgo+Pj4+Pgo+Pj4+PiBEb2VzIGVpdGhlciBvZiB5b3UgaGF2ZSBh
+IGtub3duIGdvb2QgYW5kIGZpcnN0IGtub3duIGJhZCBrZXJuZWw/Cj4+Pj4KPj4+PiBOb3QgbWUs
+IEkndmUgb25seSBoaXQgaXQgb25lIG9yIHR3byB0aW1lcy4gQWxsIEkgY2FuIHNheSBpcyBJIGhh
+dmUgaGl0IGl0IGluCj4+Pj4gNC40LXJjMS4KPj4+Pgo+Pj4+IExhdXJlbnQsIGNhbiB5b3UgbmFy
+cm93IGl0IGRvd24gYXQgYWxsPwo+Pj4KPj4+IEl0IHNlZW1zIHRoYXQgdGhlIHBhbmljIGlzIHRy
+aWdnZXJlZCBieSB0aGUgY29tbWl0IGJkY2VkNDM4YWNkOCAoImJsb2NrOgo+Pj4gc2V0dXAgYmlf
+cGh5c19zZWdtZW50cyBhZnRlciBzcGxpdHRpbmciKSB3aGljaCBoYXMgYmVlbiBwdWxsZWQgYnkg
+dGhlCj4+PiBtZXJnZSBkOTczNGUwZDFjY2YgKCJNZXJnZSBicmFuY2ggJ2Zvci00LjQvY29yZScg
+b2YKPj4+IGdpdDovL2dpdC5rZXJuZWwuZGsvbGludXgtYmxvY2siKS4KPj4+Cj4+PiBNeSBzeXN0
+ZW0gaXMgcGFuaWNpbmcgcHJvbXB0bHkgd2hlbiBydW5uaW5nIGEga2VybmVsIGJ1aWx0IGF0Cj4+
+PiBkOTczNGUwZDFjY2YsIHdoaWxlIHJldmVydGluZyB0aGUgY29tbWl0IGJkY2VkNDM4YWNkOCwg
+aXQgY2FuIHJ1biBob3Vycwo+Pj4gd2l0aG91dCBwYW5pY2luZy4KPj4+Cj4+PiBUaGlzIGJlaW5n
+IHNhaWQsIEkgY2FuJ3QgZXhwbGFpbiB3aGF0J3MgZ29pbmcgd3JvbmcuCj4+Pgo+Pj4gTWF5IE1p
+bmcgc2hlZCBzb21lIGxpZ2h0IGhlcmUgPwo+Pgo+PiBMYXVyZW50LCBsb29rcyB0aGVyZSBpcyBv
+bmUgYnVnIGluIGJsa19iaW9fc2VnbWVudF9zcGxpdCgpLCB3b3VsZCB5b3UKPj4gbWluZCB0ZXN0
+aW5nIHRoZSBmb2xsb3dpbmcgcGF0Y2ggdG8gc2VlIGlmIGl0IGZpeGVzIHlvdXIgaXNzdWU/Cj4+
+Cj4+IC0tLQo+PiBGcm9tIDZmYzcwMTIzMWRjYzAwMGJjOGJjNGI5MTA1NTgzMzgwZDlhYTMxZjQg
+TW9uIFNlcCAxNyAwMDowMDowMCAyMDAxCj4+IEZyb206IE1pbmcgTGVpIDxtaW5nLmxlaUBjYW5v
+bmljYWwuY29tPgo+PiBEYXRlOiBTdW4sIDIyIE5vdiAyMDE1IDAwOjQ3OjEzICswODAwCj4+IFN1
+YmplY3Q6IFtQQVRDSF0gYmxvY2s6IGZpeCBzZWdtZW50IHNwbGl0Cj4+Cj4+IEluc2lkZSBibGtf
+YmlvX3NlZ21lbnRfc3BsaXQoKSwgcHJldmlvdXMgYnZlYyBwb2ludGVyKCdidnBydnAnKQo+PiBh
+bHdheXMgcG9pbnRzIHRvIHRoZSBpdGVyYXRvciBsb2NhbCB2YXJpYWJsZSwgd2hpY2ggaXMgb2J2
+aW91c2x5Cj4+IHdyb25nLCBzbyBmaXggaXQgYnkgcG9pbnRpbmcgdG8gdGhlIGxvY2FsIHZhcmlh
+YmxlIG9mICdidnBydicuCj4+Cj4+IFNpZ25lZC1vZmYtYnk6IE1pbmcgTGVpIDxtaW5nLmxlaUBj
+YW5vbmljYWwuY29tPgo+PiAtLS0KPj4gIGJsb2NrL2Jsay1tZXJnZS5jIHwgNCArKy0tCj4+ICAx
+IGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+Pgo+PiBkaWZm
+IC0tZ2l0IGEvYmxvY2svYmxrLW1lcmdlLmMgYi9ibG9jay9ibGstbWVyZ2UuYwo+PiBpbmRleCBk
+ZTU3MTZkOC4uZjJlZmU4YSAxMDA2NDQKPj4gLS0tIGEvYmxvY2svYmxrLW1lcmdlLmMKPj4gKysr
+IGIvYmxvY2svYmxrLW1lcmdlLmMKPj4gQEAgLTk4LDcgKzk4LDcgQEAgc3RhdGljIHN0cnVjdCBi
+aW8gKmJsa19iaW9fc2VnbWVudF9zcGxpdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwKPj4gIAo+
+PiAgCQkJc2VnX3NpemUgKz0gYnYuYnZfbGVuOwo+PiAgCQkJYnZwcnYgPSBidjsKPj4gLQkJCWJ2
+cHJ2cCA9ICZidjsKPj4gKwkJCWJ2cHJ2cCA9ICZidnBydjsKPj4gIAkJCXNlY3RvcnMgKz0gYnYu
+YnZfbGVuID4+IDk7Cj4+ICAJCQljb250aW51ZTsKPj4gIAkJfQo+PiBAQCAtMTA4LDcgKzEwOCw3
+IEBAIG5ld19zZWdtZW50Ogo+PiAgCj4+ICAJCW5zZWdzKys7Cj4+ICAJCWJ2cHJ2ID0gYnY7Cj4+
+IC0JCWJ2cHJ2cCA9ICZidjsKPj4gKwkJYnZwcnZwID0gJmJ2cHJ2Owo+PiAgCQlzZWdfc2l6ZSA9
+IGJ2LmJ2X2xlbjsKPj4gIAkJc2VjdG9ycyArPSBidi5idl9sZW4gPj4gOTsKPj4gIAl9Cj4gCj4g
+SSdtIHN0aWxsIGhpdHRpbmcgdGhlIEJVRyBldmVuIHdpdGggdGhpcyBwYXRjaCBhcHBsaWVkIG9u
+IHRvcCBvZiA0LjQtcmMxLgoKT24gbXkgc2lkZSwgd2l0aCB0aGUgcGF0Y2ggYXBwbGllZCBvbiB0
+b3Agb2YgNC40LXJjMSwgSSBjYW4ndCBnZXQgdGhlCnBhbmljIGFueW1vcmUuCgoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1haWxp
+bmcgbGlzdApMaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96bGFi
+cy5vcmcvbGlzdGluZm8vbGludXhwcGMtZGV2
