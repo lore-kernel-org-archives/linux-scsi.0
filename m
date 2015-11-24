@@ -1,126 +1,78 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH 2/2] arcmsr: adds code for support areca new adapter ARC1203
-Date: Tue, 24 Nov 2015 16:17:04 +0800
-Message-ID: <1448353024.12861.56.camel@Centos6.3-64>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
+ drivers
+Date: Tue, 24 Nov 2015 20:13:17 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1511241932130.7196@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <201511232355.04017.linux@rainbow-software.org> <alpine.LNX.2.00.1511241219430.28883@nippy.intranet> <201511240904.55085.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: hch@lst.de
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <201511240904.55085.linux@rainbow-software.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ching Huang <ching2048@areca.com.tw>
 
-Support areca new PCIe to SATA RAID adapter ARC1203
+On Tue, 24 Nov 2015, Ondrej Zary wrote:
 
-Signed-of-by: Ching Huang<ching2048@areca.com.tw>
+> On Tuesday 24 November 2015, Finn Thain wrote:
+> > 
+> > On Mon, 23 Nov 2015, Ondrej Zary wrote:
+> > 
+> > > 
+> > > PDMA seems to be broken in multiple ways. NCR5380_pread cannot 
+> > > process less than 128 bytes. In fact, 53C400 datasheet says that 
+> > > it's HW limitation: non-modulo-128-byte transfers should use PIO.
+> > > 
+> > > Adding
+> > >         transfersize = round_down(transfersize, 128);
+> > > to generic_NCR5380_dma_xfer_len() improves the situation a bit.
+> > > 
+> > > After modprobe, some small reads (8, 4, 24 and 64 bytes) are done 
+> > > using PIO, then eight 512-byte reads using PDMA and then it fails on 
+> > > a 254-byte read. First 128 bytes are read using PDMA and the next 
+> > > PDMA operation hangs waiting forever for the host buffer to be 
+> > > ready.
+> > > 
+> > 
+> > A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't see 
+> > how that is possible given round_down(126, 128) == 0. Was this the 
+> > actual 'len' argument to NCR5380_pread() in g_NCR5380.c?
+> 
+> No 126-byte PDMA. The 126 bytes were probably lost (or mixed with the 
+> next read?).
 
----
+When you said, the "PDMA operation hangs waiting forever", I figured that 
+you had hit an infinite loop in NCR5380_pread()... but now I'm lost.
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2015-11-24 11:36:20.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2015-10-19 15:57:08.000000000 +0800
-@@ -74,6 +74,9 @@ struct device_attribute;
- #ifndef PCI_DEVICE_ID_ARECA_1214
- 	#define PCI_DEVICE_ID_ARECA_1214	0x1214
- #endif
-+#ifndef PCI_DEVICE_ID_ARECA_1203
-+	#define PCI_DEVICE_ID_ARECA_1203	0x1203
-+#endif
- /*
- **********************************************************************************
- **
-@@ -245,6 +248,12 @@ struct FIRMWARE_INFO
- /* window of "instruction flags" from iop to driver */
- #define ARCMSR_IOP2DRV_DOORBELL                       0x00020408
- #define ARCMSR_IOP2DRV_DOORBELL_MASK                  0x0002040C
-+/* window of "instruction flags" from iop to driver */
-+#define ARCMSR_IOP2DRV_DOORBELL_1203                  0x00021870
-+#define ARCMSR_IOP2DRV_DOORBELL_MASK_1203             0x00021874
-+/* window of "instruction flags" from driver to iop */
-+#define ARCMSR_DRV2IOP_DOORBELL_1203                  0x00021878
-+#define ARCMSR_DRV2IOP_DOORBELL_MASK_1203             0x0002187C
- /* ARECA FLAG LANGUAGE */
- /* ioctl transfer */
- #define ARCMSR_IOP2DRV_DATA_WRITE_OK                  0x00000001
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-24 11:35:26.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-23 18:03:30.000000000 +0800
-@@ -114,6 +114,7 @@ static void arcmsr_hardware_reset(struct
- static const char *arcmsr_info(struct Scsi_Host *);
- static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
- static void arcmsr_free_irq(struct pci_dev *, struct AdapterControlBlock *);
-+static void arcmsr_wait_firmware_ready(struct AdapterControlBlock *acb);
- static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev, int queue_depth)
- {
- 	if (queue_depth > ARCMSR_MAX_CMD_PERLUN)
-@@ -157,6 +158,8 @@ static struct pci_device_id arcmsr_devic
- 		.driver_data = ACB_ADAPTER_TYPE_B},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1202),
- 		.driver_data = ACB_ADAPTER_TYPE_B},
-+	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1203),
-+		.driver_data = ACB_ADAPTER_TYPE_B},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1210),
- 		.driver_data = ACB_ADAPTER_TYPE_A},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1214),
-@@ -2621,7 +2624,7 @@ static bool arcmsr_hbaA_get_config(struc
- }
- static bool arcmsr_hbaB_get_config(struct AdapterControlBlock *acb)
- {
--	struct MessageUnit_B *reg = acb->pmuB;
-+	struct MessageUnit_B *reg;
- 	struct pci_dev *pdev = acb->pdev;
- 	void *dma_coherent;
- 	dma_addr_t dma_coherent_handle;
-@@ -2649,10 +2652,17 @@ static bool arcmsr_hbaB_get_config(struc
- 	acb->dma_coherent2 = dma_coherent;
- 	reg = (struct MessageUnit_B *)dma_coherent;
- 	acb->pmuB = reg;
--	reg->drv2iop_doorbell= (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL);
--	reg->drv2iop_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL_MASK);
--	reg->iop2drv_doorbell = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL);
--	reg->iop2drv_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL_MASK);
-+	if (acb->pdev->device == PCI_DEVICE_ID_ARECA_1203) {
-+		reg->drv2iop_doorbell = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL_1203);
-+		reg->drv2iop_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL_MASK_1203);
-+		reg->iop2drv_doorbell = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL_1203);
-+		reg->iop2drv_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL_MASK_1203);
-+	} else {
-+		reg->drv2iop_doorbell= (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL);
-+		reg->drv2iop_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL_MASK);
-+		reg->iop2drv_doorbell = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL);
-+		reg->iop2drv_doorbell_mask = (uint32_t __iomem *)((unsigned long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL_MASK);
-+	}
- 	reg->message_wbuffer = (uint32_t __iomem *)((unsigned long)acb->mem_base1 + ARCMSR_MESSAGE_WBUFFER);
- 	reg->message_rbuffer =  (uint32_t __iomem *)((unsigned long)acb->mem_base1 + ARCMSR_MESSAGE_RBUFFER);
- 	reg->message_rwbuffer = (uint32_t __iomem *)((unsigned long)acb->mem_base1 + ARCMSR_MESSAGE_RWBUFFER);
-@@ -2660,10 +2670,19 @@ static bool arcmsr_hbaB_get_config(struc
- 	iop_firm_version = (char __iomem *)(&reg->message_rwbuffer[17]);	/*firm_version,17,68-83*/
- 	iop_device_map = (char __iomem *)(&reg->message_rwbuffer[21]);	/*firm_version,21,84-99*/
- 
-+	arcmsr_wait_firmware_ready(acb);
-+	writel(ARCMSR_MESSAGE_START_DRIVER_MODE, reg->drv2iop_doorbell);
-+	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
-+		printk(KERN_ERR "arcmsr%d: can't set driver mode.\n", acb->host->host_no);
-+		goto gcfg1;
-+	}
- 	writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
- 	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
- 			miscellaneous data' timeout \n", acb->host->host_no);
-+gcfg1:
-+		dma_free_coherent(&acb->pdev->dev, acb->roundup_ccbsize,
-+			acb->dma_coherent2, acb->dma_coherent_handle2);
- 		return false;
- 	}
- 	count = 8;
-@@ -3998,6 +4017,7 @@ static const char *arcmsr_info(struct Sc
- 	case PCI_DEVICE_ID_ARECA_1160:
- 	case PCI_DEVICE_ID_ARECA_1170:
- 	case PCI_DEVICE_ID_ARECA_1201:
-+	case PCI_DEVICE_ID_ARECA_1203:
- 	case PCI_DEVICE_ID_ARECA_1220:
- 	case PCI_DEVICE_ID_ARECA_1230:
- 	case PCI_DEVICE_ID_ARECA_1260:
+My main concern here is to confirm that I didn't break anything e.g. with 
+patch 24 or 41. It would be nice to know that this hang is not the result 
+of a new bug.
+
+> The next read was also 254 bytes so another 128-byte PDMA transfer.
+> 
+> Then modified NCR5380_information_transfer() to transfer the remaining 
+> data (126 bytes in this case) using PIO. It did not help, the next PDMA 
+> transfer failed too.
+> 
+
+AFAICT, no change to NCR5380_information_transfer() should be needed. It 
+was always meant to cope with the need to split a transfer between (P)DMA 
+and PIO.
+
+If the target is expecting the remaining 126 bytes, it will keep the bus 
+in DATA OUT phase, and the next iteration of the loop
+	while ((cmd = hostdata->connected)) { }
+will call NCR5380_transfer_pio() for the remaining bytes. If the target 
+never asserts REQ, that transfer will never happen, but then the command 
+should timeout and get aborted, to handle the possibility that a "PDMA 
+operation hangs waiting forever".
+
+A protocol analyzer would be useful to debug this. I get a lot of value 
+from a bus terminator block that has LEDs for the various control signals.
+Failing that, you might need to place,
+#define NDEBUG (NDEBUG_INFORMATION | NDEBUG_HANDSHAKE | NDEBUG_PIO | NDEBUG_DMA | NDEBUG_MAIN)
+at the top of g_NCR5380.c.
+
+-- 
