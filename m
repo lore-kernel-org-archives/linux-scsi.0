@@ -1,83 +1,113 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Reviews, please
-Date: Tue, 24 Nov 2015 07:37:39 -0500
-Message-ID: <yq1oaejlgj0.fsf@sermon.lab.mkp.net>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
+Date: Tue, 24 Nov 2015 13:43:32 +0100
+Message-ID: <1448369012.2877.28.camel@suse.de>
+References: <564F910E.9070306@sandisk.com> <564F9190.5090103@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34788 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753364AbbKXMhm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2015 07:37:42 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id tAOCbf4V028703
-	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:42 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-	by userv0022.oracle.com (8.13.8/8.13.8) with ESMTP id tAOCbfJn028605
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:41 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-	by userv0121.oracle.com (8.13.8/8.13.8) with ESMTP id tAOCbfta029211
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:41 GMT
+Received: from mx2.suse.de ([195.135.220.15]:52632 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752960AbbKXMnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 07:43:35 -0500
+In-Reply-To: <564F9190.5090103@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>
 
+On Fri, 2015-11-20 at 13:33 -0800, Bart Van Assche wrote:
+> Use scsi_host_{get,put}() instead of open-coding these functions.
+> Compile-tested only.
+>=20
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: James Smart <james.smart@emulex.com>
+> Cc: stable <stable@vger.kernel.org>
+> ---
+> =C2=A0drivers/scsi/scsi_transport_fc.c | 12 ++++++------
+> =C2=A01 file changed, 6 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_transport_fc.c
+> b/drivers/scsi/scsi_transport_fc.c
+> index 24eaaf6..8a88226 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -2586,7 +2586,7 @@ fc_rport_final_delete(struct work_struct *work)
+> =C2=A0	transport_remove_device(dev);
+> =C2=A0	device_del(dev);
+> =C2=A0	transport_destroy_device(dev);
+> -	put_device(&shost->shost_gendev);	/* for fc_host-
+> >rport list */
+> +	scsi_host_put(shost);			/* for fc_host-
+> >rport list */
+> =C2=A0	put_device(dev);			/* for self-
+> reference */
+> =C2=A0}
+> =C2=A0
+> @@ -2650,7 +2650,7 @@ fc_rport_create(struct Scsi_Host *shost, int
+> channel,
+> =C2=A0	else
+> =C2=A0		rport->scsi_target_id =3D -1;
+> =C2=A0	list_add_tail(&rport->peers, &fc_host->rports);
+> -	get_device(&shost->shost_gendev);	/* for fc_host-
+> >rport list */
+> +	scsi_host_get(shost);			/* for fc_host-
+> >rport list */
+> =C2=A0
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> =C2=A0
+> @@ -2685,7 +2685,7 @@ delete_rport:
+> =C2=A0	transport_destroy_device(dev);
+> =C2=A0	spin_lock_irqsave(shost->host_lock, flags);
+> =C2=A0	list_del(&rport->peers);
+> -	put_device(&shost->shost_gendev);	/* for fc_host-
+> >rport list */
+> +	scsi_host_put(shost);			/* for fc_host-
+> >rport list */
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> =C2=A0	put_device(dev->parent);
+> =C2=A0	kfree(rport);
+> @@ -3383,7 +3383,7 @@ fc_vport_setup(struct Scsi_Host *shost, int
+> channel, struct device *pdev,
+> =C2=A0	fc_host->npiv_vports_inuse++;
+> =C2=A0	vport->number =3D fc_host->next_vport_number++;
+> =C2=A0	list_add_tail(&vport->peers, &fc_host->vports);
+> -	get_device(&shost->shost_gendev);	/* for fc_host-
+> >vport list */
+> +	scsi_host_get(shost);			/* for fc_host-
+> >vport list */
+> =C2=A0
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> =C2=A0
+> @@ -3441,7 +3441,7 @@ delete_vport:
+> =C2=A0	transport_destroy_device(dev);
+> =C2=A0	spin_lock_irqsave(shost->host_lock, flags);
+> =C2=A0	list_del(&vport->peers);
+> -	put_device(&shost->shost_gendev);	/* for fc_host-
+> >vport list */
+> +	scsi_host_put(shost);			/* for fc_host-
+> >vport list */
+> =C2=A0	fc_host->npiv_vports_inuse--;
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> =C2=A0	put_device(dev->parent);
+> @@ -3504,7 +3504,7 @@ fc_vport_terminate(struct fc_vport *vport)
+> =C2=A0		vport->flags |=3D FC_VPORT_DELETED;
+> =C2=A0		list_del(&vport->peers);
+> =C2=A0		fc_host->npiv_vports_inuse--;
+> -		put_device(&shost->shost_gendev);=C2=A0=C2=A0/* for fc_host-
+> >vport list */
+> +		scsi_host_put(shost);		/* for fc_host-
+> >vport list */
+> =C2=A0	}
+> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
+> =C2=A0
 
-I spent last night cleaning up patchwork. Not entirely done yet but
-getting down to a manageable size:
-
-	https://patchwork.kernel.org/project/linux-scsi/list/
-
-
-These are 4.4 fixes that I'd like to get some more reviews for:
-
-	scsi_debug: fix prevent_allow+verify regressions
-	https://patchwork.kernel.org/patch/7676711/
-
-	Fix a bdi reregistration race, v2
-	https://patchwork.kernel.org/patch/7671671/
-
-	Revert "scsi: Fix a bdi reregistration race"
-	https://patchwork.kernel.org/patch/7671661/
-
-	[2/2] Fix a memory leak in scsi_host_dev_release()
-	https://patchwork.kernel.org/patch/7671391/
-
-	[1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
-	https://patchwork.kernel.org/patch/7671381/
-
-	[3/3] MAINTAINERS: Add myself as co-maintainer of the SCSI subsystem.
-	https://patchwork.kernel.org/patch/7614881/
-
-	[2/3] block/sd: Fix device-imposed transfer length limits
-	https://patchwork.kernel.org/patch/7614871/
-
-	[1/3] sd: Make discard granularity match logical block size when LBPRZ=1
-	https://patchwork.kernel.org/patch/7614861/
-
-
-And for 4.5 the following ones are low-hanging fruit.
-
-	scsi: hisi_sas: remove dependency on of_irq_count
-	https://patchwork.kernel.org/patch/7656691/
-
-	scsi: use sector_div instead of do_div
-	https://patchwork.kernel.org/patch/7669841/
-
-	mvsas: add SGPIO support to Marvell 94xx
-	https://patchwork.kernel.org/patch/7610411/
-
-	aacraid: aac_release_resources() can be static
-	https://patchwork.kernel.org/patch/7588331/
-
-I staged the reviewed portion of Finn's ncr5380 series last week but it
-looks like there is some issues to be worked out. So I'll let that
-simmer in a different branch for now.
-
-I will take a look at the ALUA series today. And then there's the
-mountain of UFS related patch series...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
