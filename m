@@ -1,109 +1,47 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
-Date: Tue, 24 Nov 2015 13:43:32 +0100
-Message-ID: <1448369012.2877.28.camel@suse.de>
-References: <564F910E.9070306@sandisk.com> <564F9190.5090103@sandisk.com>
+Subject: Re: [PATCH 3/3] MAINTAINERS: Add myself as co-maintainer of the
+ SCSI subsystem.
+Date: Tue, 24 Nov 2015 13:44:06 +0100
+Message-ID: <1448369046.2877.29.camel@suse.de>
+References: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
+	 <1447451209-30772-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52632 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52712 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbbKXMnf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2015 07:43:35 -0500
-In-Reply-To: <564F9190.5090103@sandisk.com>
+	id S1752966AbbKXMoI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 07:44:08 -0500
+In-Reply-To: <1447451209-30772-3-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Fri, 2015-11-20 at 13:33 -0800, Bart Van Assche wrote:
-> Use scsi_host_{get,put}() instead of open-coding these functions.
-> Compile-tested only.
->=20
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: James Smart <james.smart@emulex.com>
-> Cc: stable <stable@vger.kernel.org>
+On Fri, 2015-11-13 at 16:46 -0500, Martin K. Petersen wrote:
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 > ---
-> =C2=A0drivers/scsi/scsi_transport_fc.c | 12 ++++++------
-> =C2=A01 file changed, 6 insertions(+), 6 deletions(-)
+> =C2=A0MAINTAINERS | 4 +++-
+> =C2=A01 file changed, 3 insertions(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/scsi/scsi_transport_fc.c
-> b/drivers/scsi/scsi_transport_fc.c
-> index 24eaaf6..8a88226 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -2586,7 +2586,7 @@ fc_rport_final_delete(struct work_struct *work)
-> =C2=A0	transport_remove_device(dev);
-> =C2=A0	device_del(dev);
-> =C2=A0	transport_destroy_device(dev);
-> -	put_device(&shost->shost_gendev);	/* for fc_host-
-> >rport list */
-> +	scsi_host_put(shost);			/* for fc_host-
-> >rport list */
-> =C2=A0	put_device(dev);			/* for self-
-> reference */
-> =C2=A0}
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 9de185da5f5b..978df6e36ddf 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9205,8 +9205,10 @@ F:	include/scsi/sg.h
 > =C2=A0
-> @@ -2650,7 +2650,7 @@ fc_rport_create(struct Scsi_Host *shost, int
-> channel,
-> =C2=A0	else
-> =C2=A0		rport->scsi_target_id =3D -1;
-> =C2=A0	list_add_tail(&rport->peers, &fc_host->rports);
-> -	get_device(&shost->shost_gendev);	/* for fc_host-
-> >rport list */
-> +	scsi_host_get(shost);			/* for fc_host-
-> >rport list */
-> =C2=A0
-> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
-> =C2=A0
-> @@ -2685,7 +2685,7 @@ delete_rport:
-> =C2=A0	transport_destroy_device(dev);
-> =C2=A0	spin_lock_irqsave(shost->host_lock, flags);
-> =C2=A0	list_del(&rport->peers);
-> -	put_device(&shost->shost_gendev);	/* for fc_host-
-> >rport list */
-> +	scsi_host_put(shost);			/* for fc_host-
-> >rport list */
-> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
-> =C2=A0	put_device(dev->parent);
-> =C2=A0	kfree(rport);
-> @@ -3383,7 +3383,7 @@ fc_vport_setup(struct Scsi_Host *shost, int
-> channel, struct device *pdev,
-> =C2=A0	fc_host->npiv_vports_inuse++;
-> =C2=A0	vport->number =3D fc_host->next_vport_number++;
-> =C2=A0	list_add_tail(&vport->peers, &fc_host->vports);
-> -	get_device(&shost->shost_gendev);	/* for fc_host-
-> >vport list */
-> +	scsi_host_get(shost);			/* for fc_host-
-> >vport list */
-> =C2=A0
-> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
-> =C2=A0
-> @@ -3441,7 +3441,7 @@ delete_vport:
-> =C2=A0	transport_destroy_device(dev);
-> =C2=A0	spin_lock_irqsave(shost->host_lock, flags);
-> =C2=A0	list_del(&vport->peers);
-> -	put_device(&shost->shost_gendev);	/* for fc_host-
-> >vport list */
-> +	scsi_host_put(shost);			/* for fc_host-
-> >vport list */
-> =C2=A0	fc_host->npiv_vports_inuse--;
-> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
-> =C2=A0	put_device(dev->parent);
-> @@ -3504,7 +3504,7 @@ fc_vport_terminate(struct fc_vport *vport)
-> =C2=A0		vport->flags |=3D FC_VPORT_DELETED;
-> =C2=A0		list_del(&vport->peers);
-> =C2=A0		fc_host->npiv_vports_inuse--;
-> -		put_device(&shost->shost_gendev);=C2=A0=C2=A0/* for fc_host-
-> >vport list */
-> +		scsi_host_put(shost);		/* for fc_host-
-> >vport list */
-> =C2=A0	}
-> =C2=A0	spin_unlock_irqrestore(shost->host_lock, flags);
-> =C2=A0
+> =C2=A0SCSI SUBSYSTEM
+> =C2=A0M:	"James E.J. Bottomley" <JBottomley@odin.com>
+> -L:	linux-scsi@vger.kernel.org
+> =C2=A0T:	git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
+> +M:	"Martin K. Petersen" <martin.petersen@oracle.com>
+> +T:	git
+> git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+> +L:	linux-scsi@vger.kernel.org
+> =C2=A0S:	Maintained
+> =C2=A0F:	drivers/scsi/
+> =C2=A0F:	include/scsi/
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --
