@@ -1,59 +1,49 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 22/71] ncr5380: Eliminate selecting state
-Date: Tue, 24 Nov 2015 20:08:34 +0100
-Message-ID: <201511242008.35378.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <20151118083501.571002212@telegraphics.com.au>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
+Date: Tue, 24 Nov 2015 14:14:26 -0500
+Message-ID: <x498u5n1a7h.fsf@segfault.boston.devel.redhat.com>
+References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+	<x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+	<1448391837.27481.16.camel@intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20151118083501.571002212@telegraphics.com.au>
-Content-Disposition: inline
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1448391837.27481.16.camel@intel.com> (Vishal L. Verma's message
+	of "Tue, 24 Nov 2015 19:03:57 +0000")
+Sender: linux-raid-owner@vger.kernel.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wednesday 18 November 2015 09:35:17 Finn Thain wrote:
-> Linux v2.1.105 changed the algorithm for polling for the BSY signal
-> in NCR5380_select() and NCR5380_main().
-> 
-> Presently, this code has a bug. Back then, NCR5380_set_timer(hostdata, 1)
-> meant reschedule main() after sleeping for 10 ms. Repeated 25 times this
-> provided the recommended 250 ms selection time-out delay. This got broken
-> when HZ became configurable.
-> 
-> We could fix this but there's no need to reschedule the main loop. This
-> BSY polling presently happens when the NCR5380_main() work queue item
-> calls NCR5380_select(), which in turn schedules NCR5380_main(), which
-> calls NCR5380_select() again, and so on.
-> 
-> This algorithm is a deviation from the simpler one in atari_NCR5380.c.
-> The extra complexity and state is pointless. There's no reason to
-> stop selection half-way and return to to the main loop when the main
-> loop can do nothing useful until selection completes.
-> 
-> So just poll for BSY. We can sleep while polling now that we have a
-> suitable workqueue.
+"Verma, Vishal L" <vishal.l.verma@intel.com> writes:
 
-Bisecting slow module initialization pointed to this commit.
+> On Tue, 2015-11-24 at 10:34 -0500, Jeff Moyer wrote:
+>> Vishal Verma <vishal.l.verma@intel.com> writes:
+>> 
+>> > NVDIMM devices, which can behave more like DRAM rather than block
+>> > devices, may develop bad cache lines, or 'poison'. A block device
+>> > exposed by the pmem driver can then consume poison via a read (or
+>> > write), and cause a machine check. On platforms without machine
+>> > check recovery features, this would mean a crash.
+>> > 
+>> > The block device maintaining a runtime list of all known sectors
+>> > that
+>> > have poison can directly avoid this, and also provide a path forward
+>> > to enable proper handling/recovery for DAX faults on such a device.
+>> > 
+>> > Use the new badblock management interfaces to add a badblocks list
+>> > to
+>> > gendisks.
+>> 
+>> Because disk_alloc_badblocks can fail, you need to check for a NULL
+>> disk->bb in all of the utility functions you've defined.
+>> 
+>
+> Thanks, Jeff - I'll fix this. I have a handful of other fixes queued up
+> too, will send out a v2 soon.
 
-Before this commit (2 seconds):
-[   60.317374] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x0, n_io_port 0, base 0xd8000, irq 0, can_queue 16, cmd_per_lun 2, sg_tablesize 128, this_id 7, flags { NCR53C400 }, USLEEP_POLL 3, USLEEP_SLEEP 50, options { AUTOPROBE_IRQ PSEUDO_DMA }
-[   60.780715] scsi 2:0:1:0: Direct-Access     QUANTUM  LP240S GM240S01X 4.6  PQ: 0 ANSI: 2 CCS
-[   62.606260] sd 2:0:1:0: Attached scsi generic sg1 type 0
+I'm not sure whether it makes sense to continue without badblock
+management for the RAID code.  I was hoping Neil would comment on that.
 
-
-After this commit (22 seconds):
-[  137.511711] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x0, n_io_port 0, base 0xd8000, irq 0, can_queue 16, cmd_per_lun 2, sg_tablesize 128, this_id 7, flags { NCR53C400 }, USLEEP_POLL 3, USLEEP_SLEEP 50, options { AUTOPROBE_IRQ PSEUDO_DMA }
-[  145.028532] clocksource: timekeeping watchdog: Marking clocksource 'tsc' as unstable because the skew is too large:
-[  145.029767] clocksource:                       'acpi_pm' wd_now: a49738 wd_last: f4da04 mask: ffffff
-[  145.029828] clocksource:                       'tsc' cs_now: 2ea624698e cs_last: 2c710aa17f mask: ffffffffffffffff
-[  145.032733] clocksource: Switched to clocksource acpi_pm
-[  145.236951] scsi 2:0:1:0: Direct-Access     QUANTUM  LP240S GM240S01X 4.6  PQ: 0 ANSI: 2 CCS
-[  159.959308] sd 2:0:1:0: Attached scsi generic sg1 type 0
-
-
--- 
-Ondrej Zary
+-Jeff
