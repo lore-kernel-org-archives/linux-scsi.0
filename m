@@ -1,139 +1,216 @@
 From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 14/18] scsi_dh_alua: simplify sense code handling
-Date: Tue, 24 Nov 2015 13:17:16 +0100
-Message-ID: <1448367436.2877.23.camel@suse.com>
+Subject: Re: [PATCH 15/18] scsi: Add scsi_vpd_lun_id()
+Date: Tue, 24 Nov 2015 13:17:23 +0100
+Message-ID: <1448367443.2877.24.camel@suse.com>
 References: <1447081703-110552-1-git-send-email-hare@suse.de>
-	 <1447081703-110552-15-git-send-email-hare@suse.de>
+	 <1447081703-110552-16-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46692 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46700 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752228AbbKXMRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2015 07:17:18 -0500
-In-Reply-To: <1447081703-110552-15-git-send-email-hare@suse.de>
+	id S1752228AbbKXMRY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 07:17:24 -0500
+In-Reply-To: <1447081703-110552-16-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
 
 On Mon, 2015-11-09 at 16:08 +0100, Hannes Reinecke wrote:
-> Most sense code is already handled in the generic
-> code, so we shouldn't be adding special cases here.
-> However, when doing so we need to check for
-> unit attention whenever we're sending an internal
-> command.
+> Add a function scsi_vpd_lun_id() to return a unique device
+> identifcation based on the designation descriptors of
+> VPD page 0x83.
+>=20
+> As devices might implement several descriptors the order
+> of preference is:
+> - NAA IEE Registered Extended
+> - EUI-64 based 16-byte
+> - EUI-64 based 12-byte
+> - NAA IEEE Registered
+> - NAA IEEE Extended
+> A SCSI name string descriptor is preferred to all of them
+> if the identification is longer than 16 bytes.
+>=20
+> The returned unique device identification will be formatted
+> as a SCSI Name string to avoid clashes between different
+> designator types.
 >=20
 > Reviewed-by: Ewan Milne <emilne@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 45 +++++++++++----=
------
-> ----------
-> =C2=A01 file changed, 17 insertions(+), 28 deletions(-)
+> =C2=A0drivers/scsi/scsi_lib.c=C2=A0=C2=A0=C2=A0=C2=A0| 140
+> +++++++++++++++++++++++++++++++++++++++++++++
+> =C2=A0include/scsi/scsi_device.h |=C2=A0=C2=A0=C2=A01 +
+> =C2=A02 files changed, 141 insertions(+)
 >=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index c9751c9..abf05b4 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -85,7 +85,6 @@ struct alua_dh_data {
-> =C2=A0#define ALUA_POLICY_SWITCH_ALL		1
-> =C2=A0
-> =C2=A0static char print_alua_state(int);
-> -static int alua_check_sense(struct scsi_device *, struct
-> scsi_sense_hdr *);
-> =C2=A0
-> =C2=A0static int realloc_buffer(struct alua_dh_data *h, unsigned len)
-> =C2=A0{
-> @@ -189,8 +188,13 @@ static void stpg_endio(struct request *req, int
-> error)
-> =C2=A0
-> =C2=A0	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-> =C2=A0				=C2=A0&sense_hdr)) {
-> -		err =3D alua_check_sense(h->sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE) {
-> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
-> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
-q =3D=3D 0x0a)
-> {
-> +			/* ALUA state transition already in progress
-> */
-> +			err =3D SCSI_DH_OK;
-> +			goto done;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index cbfc599..3cb295c 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -3154,3 +3154,143 @@ void sdev_enable_disk_events(struct
+> scsi_device *sdev)
+> =C2=A0	atomic_dec(&sdev->disk_events_disable_depth);
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL(sdev_enable_disk_events);
+> +
+> +/*
+> + * scsi_vpd_lun_id - return a unique device identification
+> + * @sdev: SCSI device
+> + * @id:=C2=A0=C2=A0=C2=A0buffer for the identification
+> + * @id_len:=C2=A0=C2=A0length of the buffer
+> + *
+> + * Copies a unique device identification into @id based
+> + * on the information in the VPD page 0x83 of the device.
+> + * The string will be formatted as a SCSI name string.
+> + *
+> + * Returns the length of the identification or error on failure.
+> + * If the identifier is longer than the supplied buffer the actual
+> + * identifier length is returned and the buffer is not zero-padded.
+> + */
+> +int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t
+> id_len)
+> +{
+> +	u8 cur_id_type =3D 0xff;
+> +	u8 cur_id_size =3D 0;
+> +	unsigned char *d, *cur_id_str;
+> +	unsigned char __rcu *vpd_pg83;
+> +	int id_size =3D -EINVAL;
+> +
+> +	rcu_read_lock();
+> +	vpd_pg83 =3D rcu_dereference(sdev->vpd_pg83);
+> +	if (!vpd_pg83) {
+> +		rcu_read_unlock();
+> +		return -ENXIO;
+> +	}
+> +
+> +	/*
+> +	=C2=A0* Look for the correct descriptor.
+> +	=C2=A0* Order of preference for lun descriptor:
+> +	=C2=A0* - SCSI name string
+> +	=C2=A0* - NAA IEEE Registered Extended
+> +	=C2=A0* - EUI-64 based 16-byte
+> +	=C2=A0* - EUI-64 based 12-byte
+> +	=C2=A0* - NAA IEEE Registered
+> +	=C2=A0* - NAA IEEE Extended
+> +	=C2=A0* as longer descriptors reduce the likelyhood
+> +	=C2=A0* of identification clashes.
+> +	=C2=A0*/
+> +
+> +	/* The id string must be at least 20 bytes + terminating
+> NULL byte */
+> +	if (id_len < 21) {
+> +		rcu_read_unlock();
+> +		return -EINVAL;
+> +	}
+> +
+> +	memset(id, 0, id_len);
+> +	d =3D vpd_pg83 + 4;
+> +	while (d < vpd_pg83 + sdev->vpd_pg83_len) {
+> +		/* Skip designators not referring to the LUN */
+> +		if ((d[1] & 0x30) !=3D 0x00)
+> +			goto next_desig;
+> +
+> +		switch (d[1] & 0xf) {
+> +		case 0x2:
+> +			/* EUI-64 */
+> +			if (cur_id_size > d[3])
+> +				break;
+> +			/* Prefer NAA IEEE Registered Extended */
+> +			if (cur_id_type =3D=3D 0x3 &&
+> +			=C2=A0=C2=A0=C2=A0=C2=A0cur_id_size =3D=3D d[3])
+> +				break;
+> +			cur_id_size =3D d[3];
+> +			cur_id_str =3D d + 4;
+> +			cur_id_type =3D d[1] & 0xf;
+> +			switch (cur_id_size) {
+> +			case 8:
+> +				id_size =3D snprintf(id, id_len,
+> +						=C2=A0=C2=A0=C2=A0"eui.%8phN",
+> +						=C2=A0=C2=A0=C2=A0cur_id_str);
+> +				break;
+> +			case 12:
+> +				id_size =3D snprintf(id, id_len,
+> +						=C2=A0=C2=A0=C2=A0"eui.%12phN",
+> +						=C2=A0=C2=A0=C2=A0cur_id_str);
+> +				break;
+> +			case 16:
+> +				id_size =3D snprintf(id, id_len,
+> +						=C2=A0=C2=A0=C2=A0"eui.%16phN",
+> +						=C2=A0=C2=A0=C2=A0cur_id_str);
+> +				break;
+> +			default:
+> +				cur_id_size =3D 0;
+> +				break;
+> +			}
+> +			break;
+> +		case 0x3:
+> +			/* NAA */
+> +			if (cur_id_size > d[3])
+> +				break;
+> +			cur_id_size =3D d[3];
+> +			cur_id_str =3D d + 4;
+> +			cur_id_type =3D d[1] & 0xf;
+> +			switch (cur_id_size) {
+> +			case 8:
+> +				id_size =3D snprintf(id, id_len,
+> +						=C2=A0=C2=A0=C2=A0"naa.%8phN",
+> +						=C2=A0=C2=A0=C2=A0cur_id_str);
+> +				break;
+> +			case 16:
+> +				id_size =3D snprintf(id, id_len,
+> +						=C2=A0=C2=A0=C2=A0"naa.%16phN",
+> +						=C2=A0=C2=A0=C2=A0cur_id_str);
+> +				break;
+> +			default:
+> +				cur_id_size =3D 0;
+> +				break;
+> +			}
+> +			break;
+> +		case 0x8:
+> +			/* SCSI name string */
+> +			if (cur_id_size + 4 > d[3])
+> +				break;
+> +			/* Prefer others for truncated descriptor */
+> +			if (cur_id_size && d[3] > id_len)
+> +				break;
+> +			cur_id_size =3D id_size =3D d[3];
+> +			cur_id_str =3D d + 4;
+> +			cur_id_type =3D d[1] & 0xf;
+> +			if (cur_id_size >=3D id_len)
+> +				cur_id_size =3D id_len - 1;
+> +			memcpy(id, cur_id_str, cur_id_size);
+> +			/* Decrease priority for truncated
+> descriptor */
+> +			if (cur_id_size !=3D id_size)
+> +				cur_id_size =3D 6;
+> +			break;
+> +		default:
+> +			break;
 > +		}
-> +		if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION) {
-> =C2=A0			err =3D SCSI_DH_RETRY;
-> =C2=A0			goto done;
-> =C2=A0		}
-> @@ -399,28 +403,6 @@ static int alua_check_sense(struct scsi_device
-> *sdev,
-> =C2=A0			=C2=A0* LUN Not Accessible - ALUA state
-> transition
-> =C2=A0			=C2=A0*/
-> =C2=A0			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D
-> 0x0b)
-> -			/*
-> -			=C2=A0* LUN Not Accessible -- Target port in
-> standby state
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D
-> 0x0c)
-> -			/*
-> -			=C2=A0* LUN Not Accessible -- Target port in
-> unavailable state
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D
-> 0x12)
-> -			/*
-> -			=C2=A0* LUN Not Ready -- Offline
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sdev->allow_restart &&
-> -		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr->asc =3D=3D 0x04 && sense_hdr->a=
-scq =3D=3D
-> 0x02)
-> -			/*
-> -			=C2=A0* if the device is not started, we need to
-> wake
-> -			=C2=A0* the error handler to start the motor
-> -			=C2=A0*/
-> -			return FAILED;
-> =C2=A0		break;
-> =C2=A0	case UNIT_ATTENTION:
-> =C2=A0		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D
-> 0x00)
-> @@ -517,9 +499,16 @@ static int alua_rtpg(struct scsi_device *sdev,
-> struct alua_dh_data *h, int wait_
-> =C2=A0			h->flags |=3D ALUA_RTPG_EXT_HDR_UNSUPP;
-> =C2=A0			goto retry;
-> =C2=A0		}
-> -
-> -		err =3D alua_check_sense(sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE && time_before(jiffies,
-> expiry)) {
-> +		/*
-> +		=C2=A0* Retry on ALUA state transition or if any
-> +		=C2=A0* UNIT ATTENTION occurred.
-> +		=C2=A0*/
-> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
-> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
-q =3D=3D 0x0a)
-> +			err =3D SCSI_DH_RETRY;
-> +		else if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION)
-> +			err =3D SCSI_DH_RETRY;
-> +		if (err =3D=3D SCSI_DH_RETRY && time_before(jiffies,
-> expiry)) {
-> =C2=A0			sdev_printk(KERN_ERR, sdev, "%s: rtpg
-> retry\n",
-> =C2=A0				=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME);
-> =C2=A0			scsi_print_sense_hdr(sdev, ALUA_DH_NAME,
-> &sense_hdr);
+> +next_desig:
+> +		d +=3D d[3] + 4;
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	return id_size;
+> +}
+> +EXPORT_SYMBOL(scsi_vpd_lun_id);
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index bde4077..4c49cfa 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -415,6 +415,7 @@ static inline int scsi_execute_req(struct
+> scsi_device *sdev,
+> =C2=A0}
+> =C2=A0extern void sdev_disable_disk_events(struct scsi_device *sdev);
+> =C2=A0extern void sdev_enable_disk_events(struct scsi_device *sdev);
+> +extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+> =C2=A0
+> =C2=A0#ifdef CONFIG_PM
+> =C2=A0extern int scsi_autopm_get_device(struct scsi_device *);
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
