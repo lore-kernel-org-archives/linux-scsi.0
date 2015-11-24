@@ -1,103 +1,73 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH v2 1/3] scsi: make some Additional Sense strings more grep'able
-Date: Tue, 24 Nov 2015 10:42:25 +0100
-Message-ID: <1448358147-23663-2-git-send-email-linux@rasmusvillemoes.dk>
-References: <1448358147-23663-1-git-send-email-linux@rasmusvillemoes.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448358147-23663-1-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, "James E.J. Bottomley" <JBottomley@odin.com>, Julian Calaby <julian.calaby@gmail.com>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH 2/2] arcmsr: adds code for support areca new adapter
+ ARC1203
+Date: Tue, 24 Nov 2015 17:53:18 +0800
+Message-ID: <1448358798.14472.3.camel@Centos6.3-64>
+References: <1448353024.12861.56.camel@Centos6.3-64>
+	 <1448357586.14504.12.camel@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36675 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867AbbKXJxf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2015 04:53:35 -0500
+Received: by pacdm15 with SMTP id dm15so17509365pac.3
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 01:53:35 -0800 (PST)
+In-Reply-To: <1448357586.14504.12.camel@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de
 
-There's little point in breaking these strings over multiple lines.
+On Tue, 2015-11-24 at 01:33 -0800, Joe Perches wrote:
+> On Tue, 2015-11-24 at 16:17 +0800, Ching Huang wrote:
+> > From: Ching Huang <ching2048@areca.com.tw>
+> >=20
+> > Support areca new PCIe to SATA RAID adapter ARC1203
+>=20
+> Why add the dma_free_coherent to an old data path?
+> Is that a general bug fix that should be backported?
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- drivers/scsi/constants.c | 27 +++++++++------------------
- 1 file changed, 9 insertions(+), 18 deletions(-)
+That's right. It's need to release the allocated resource for failed co=
+ndition.
+>=20
+> btw: the printk above the dma_free_coherent use
+>      shouldn't use a \ line continuation.
+>      it adds undesired whitespace to the format.
+>=20
+> > diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr=
+/arcmsr_hba.c
+> []
+> > @@ -2660,10 +2670,19 @@ static bool arcmsr_hbaB_get_config(struc
+> >  	iop_firm_version =3D (char __iomem *)(=C2=AE->message_rwbuffer[17=
+]);> 	> /*firm_version,17,68-83*/
+> >  	iop_device_map =3D (char __iomem *)(=C2=AE->message_rwbuffer[21])=
+;> 	> /*firm_version,21,84-99*/
+> > =20
+> > +	arcmsr_wait_firmware_ready(acb);
+> > +	writel(ARCMSR_MESSAGE_START_DRIVER_MODE, reg->drv2iop_doorbell);
+> > +	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
+> > +		printk(KERN_ERR "arcmsr%d: can't set driver mode.\n", acb->host-=
+>host_no);
+> > +		goto gcfg1;
+> > +	}
+> >  	writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
+> >  	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
+> >  		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+> >  			miscellaneous data' timeout \n", acb->host->host_no);
+> > +gcfg1:
+> > +		dma_free_coherent(&acb->pdev->dev, acb->roundup_ccbsize,
+> > +			acb->dma_coherent2, acb->dma_coherent_handle2);
+> >  		return false;
+> >  	}
+> >  	count =3D 8;
+>=20
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index fa09d4be2b53..58d94e3c3713 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -346,11 +346,9 @@ static const struct error_info additional[] =
- 	{0x0407, "Logical unit not ready, operation in progress"},
- 	{0x0408, "Logical unit not ready, long write in progress"},
- 	{0x0409, "Logical unit not ready, self-test in progress"},
--	{0x040A, "Logical unit not accessible, asymmetric access state "
--	 "transition"},
-+	{0x040A, "Logical unit not accessible, asymmetric access state transition"},
- 	{0x040B, "Logical unit not accessible, target port in standby state"},
--	{0x040C, "Logical unit not accessible, target port in unavailable "
--	 "state"},
-+	{0x040C, "Logical unit not accessible, target port in unavailable state"},
- 	{0x040D, "Logical unit not ready, structure check required"},
- 	{0x040E, "Logical unit not ready, security session in progress"},
- 	{0x0410, "Logical unit not ready, auxiliary memory not accessible"},
-@@ -363,11 +361,9 @@ static const struct error_info additional[] =
- 	{0x0417, "Logical unit not ready, calibration required"},
- 	{0x0418, "Logical unit not ready, a door is open"},
- 	{0x0419, "Logical unit not ready, operating in sequential mode"},
--	{0x041A, "Logical unit not ready, start stop unit command in "
--	 "progress"},
-+	{0x041A, "Logical unit not ready, start stop unit command in progress"},
- 	{0x041B, "Logical unit not ready, sanitize in progress"},
--	{0x041C, "Logical unit not ready, additional power use not yet "
--	 "granted"},
-+	{0x041C, "Logical unit not ready, additional power use not yet granted"},
- 	{0x041D, "Logical unit not ready, configuration in progress"},
- 	{0x041E, "Logical unit not ready, microcode activation required"},
- 	{0x041F, "Logical unit not ready, microcode download required"},
-@@ -559,8 +555,7 @@ static const struct error_info additional[] =
- 	{0x2300, "Invalid token operation, cause not reportable"},
- 	{0x2301, "Invalid token operation, unsupported token type"},
- 	{0x2302, "Invalid token operation, remote token usage not supported"},
--	{0x2303, "Invalid token operation, remote rod token creation not "
--	 "supported"},
-+	{0x2303, "Invalid token operation, remote rod token creation not supported"},
- 	{0x2304, "Invalid token operation, token unknown"},
- 	{0x2305, "Invalid token operation, token corrupt"},
- 	{0x2306, "Invalid token operation, token revoked"},
-@@ -641,8 +636,7 @@ static const struct error_info additional[] =
- 	{0x2A0D, "Data encryption capabilities changed"},
- 	{0x2A10, "Timestamp changed"},
- 	{0x2A11, "Data encryption parameters changed by another i_t nexus"},
--	{0x2A12, "Data encryption parameters changed by vendor specific "
--		 "event"},
-+	{0x2A12, "Data encryption parameters changed by vendor specific event"},
- 	{0x2A13, "Data encryption key instance counter has changed"},
- 	{0x2A14, "SA creation capabilities data has changed"},
- 	{0x2A15, "Medium removal prevention preempted"},
-@@ -759,8 +753,7 @@ static const struct error_info additional[] =
- 	{0x3B19, "Element enabled"},
- 	{0x3B1A, "Data transfer device removed"},
- 	{0x3B1B, "Data transfer device inserted"},
--	{0x3B1C, "Too many logical objects on partition to support "
--	 "operation"},
-+	{0x3B1C, "Too many logical objects on partition to support operation"},
- 
- 	{0x3D00, "Invalid bits in identify message"},
- 
-@@ -957,8 +950,7 @@ static const struct error_info additional[] =
- 	{0x5D39, "Data channel impending failure throughput performance"},
- 	{0x5D3A, "Data channel impending failure seek time performance"},
- 	{0x5D3B, "Data channel impending failure spin-up retry count"},
--	{0x5D3C, "Data channel impending failure drive calibration retry "
--	 "count"},
-+	{0x5D3C, "Data channel impending failure drive calibration retry count"},
- 	{0x5D40, "Servo impending failure general hard drive failure"},
- 	{0x5D41, "Servo impending failure drive error rate too high"},
- 	{0x5D42, "Servo impending failure data error rate too high"},
-@@ -1070,8 +1062,7 @@ static const struct error_info additional[] =
- 
- 	{0x6E00, "Command to logical unit failed"},
- 
--	{0x6F00, "Copy protection key exchange failure - authentication "
--	 "failure"},
-+	{0x6F00, "Copy protection key exchange failure - authentication failure"},
- 	{0x6F01, "Copy protection key exchange failure - key not present"},
- 	{0x6F02, "Copy protection key exchange failure - key not established"},
- 	{0x6F03, "Read of scrambled sector without authentication"},
--- 
-2.6.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
