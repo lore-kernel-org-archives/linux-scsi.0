@@ -1,48 +1,94 @@
-From: Tom Talpey <tom-CLs1Zie5N5HQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Tue, 24 Nov 2015 07:52:40 -0500
-Message-ID: <56545D98.1020904@talpey.com>
-References: <20151123203712.GB5640@obsidianresearch.com>
- <56537F59.4080708@sandisk.com> <20151123212822.GE6062@obsidianresearch.com>
- <56538AFD.9080103@sandisk.com> <20151123221806.GA7152@obsidianresearch.com>
- <56539421.9050705@sandisk.com> <20151123230659.GA8287@obsidianresearch.com>
- <B24F4DDE-709A-4D2D-8B26-4E83325DBB1A@asomi.com>
- <20151124000011.GA9301@obsidianresearch.com> <5653CCF0.7050501@asomi.com>
- <20151124070301.GA23597@obsidianresearch.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/3] sd: Make discard granularity match logical block
+ size when LBPRZ=1
+Date: Tue, 24 Nov 2015 13:52:58 +0100
+Message-ID: <1448369578.2877.32.camel@suse.de>
+References: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20151124070301.GA23597-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Caitlin Bestler <cait-DpaxOq6QOWMAvxtiuMwx3w@public.gmane.org>
-Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org" <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:53774 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753406AbbKXMw7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 07:52:59 -0500
+In-Reply-To: <1447451209-30772-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On 11/24/2015 2:03 AM, Jason Gunthorpe wrote:
-> On Mon, Nov 23, 2015 at 06:35:28PM -0800, Caitlin Bestler wrote:
->> Are there actual HCAs that make this mistake?
->
-> All IB HCAs have this behavior and require apps to see a send CQ
-> completion before making any statements about the state of the send Q
-> or buffers handed over to the HCA. Tom and I have seen this in real
-> systems under proper stress conditions. [Which is why I am so certain
-> about this, because when I first hit it years ago I dug into the spec
-> and figured out it was not a HW bug I was looking at]
+On Fri, 2015-11-13 at 16:46 -0500, Martin K. Petersen wrote:
+> A device may report an OPTIMAL UNMAP GRANULARITY and UNMAP
+> GRANULARITY
+> ALIGNMENT in the Block Limits VPD. These parameters describe the
+> device's internal provisioning allocation units. By default the block
+> layer will round and align any discard requests based on these
+> limits.
+>=20
+> If a device reports LBPRZ=3D1 to guarantee zeroes after discard,
+> however,
+> it is imperative that the block layer does not leave out any parts of
+> the requested block range. Otherwise the device can not do the
+> required
+> zeroing of any partial allocation units and this can lead to data
+> corruption.
+>=20
+> Since the dm thinp personality relies on the block layer's current
+> behavior and is unable to deal with partial discard blocks we work
+> around the problem by setting the granularity to match the logical
+> block
+> size when LBPRZ is enabled.
+>=20
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+> =C2=A0drivers/scsi/sd.c | 23 ++++++++++++++++++-----
+> =C2=A01 file changed, 18 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3f370228bf31..c322969026bc 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -636,11 +636,24 @@ static void sd_config_discard(struct scsi_disk
+> *sdkp, unsigned int mode)
+> =C2=A0	unsigned int max_blocks =3D 0;
+> =C2=A0
+> =C2=A0	q->limits.discard_zeroes_data =3D 0;
+> -	q->limits.discard_alignment =3D sdkp->unmap_alignment *
+> -		logical_block_size;
+> -	q->limits.discard_granularity =3D
+> -		max(sdkp->physical_block_size,
+> -		=C2=A0=C2=A0=C2=A0=C2=A0sdkp->unmap_granularity * logical_block_si=
+ze);
+> +
+> +	/*
+> +	=C2=A0* When LBPRZ is reported, discard alignment and granularity
+> +	=C2=A0* must be fixed to the logical block size. Otherwise the
+> block
+> +	=C2=A0* layer will drop misaligned portions of the request which
+> can
+> +	=C2=A0* lead to data corruption. If LBPRZ is not set, we honor
+> the
+> +	=C2=A0* device preference.
+> +	=C2=A0*/
+> +	if (sdkp->lbprz) {
+> +		q->limits.discard_alignment =3D 0;
+> +		q->limits.discard_granularity =3D 1;
+> +	} else {
+> +		q->limits.discard_alignment =3D sdkp->unmap_alignment
+> *
+> +			logical_block_size;
+> +		q->limits.discard_granularity =3D
+> +			max(sdkp->physical_block_size,
+> +			=C2=A0=C2=A0=C2=A0=C2=A0sdkp->unmap_granularity *
+> logical_block_size);
+> +	}
+> =C2=A0
+> =C2=A0	sdkp->provisioning_mode =3D mode;
+> =C2=A0
 
-To be clear, I saw the reply-completion-before-request-completion on
-Windows, not Linux, but the principle is identical. It's simply a
-fact of life on a multiprocessor, unless you want to throw in locks
-and synchronization rules that drivers have to follow to enforce
-ordered completions across queues. Which trust me, you don't.
-
-In Windows SMB Direct, we added reference counts around pretty much
-every verb interaction associated with each upper layer operation,
-and did not retire them until all refcounts went to zero. It is
-excruciatingly correct yet performs incredibly well.
-
-Tom.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
