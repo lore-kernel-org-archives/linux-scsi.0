@@ -1,62 +1,93 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
-Date: Tue, 24 Nov 2015 13:31:58 -0800
-Message-ID: <CAPcyv4g13_6mS5uApb+3QUaGEf8630Znv3sq-2WrGiK5fKBs8Q@mail.gmail.com>
-References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
-	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
-	<x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
-	<1448391837.27481.16.camel@intel.com>
-	<x498u5n1a7h.fsf@segfault.boston.devel.redhat.com>
-	<1448395840.14996.8.camel@intel.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380 drivers
+Date: Tue, 24 Nov 2015 22:40:24 +0100
+Message-ID: <201511242240.24959.linux@rainbow-software.org>
+References: <20151118083455.331768508@telegraphics.com.au> <201511240904.55085.linux@rainbow-software.org> <alpine.LNX.2.00.1511241932130.7196@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448395840.14996.8.camel@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Cc: "jmoyer@redhat.com" <jmoyer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "neilb@suse.com" <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-1b.atlantis.sk ([80.94.52.26]:51759 "EHLO
+	smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058AbbKXVke (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2015 16:40:34 -0500
+In-Reply-To: <alpine.LNX.2.00.1511241932130.7196@nippy.intranet>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 24, 2015 at 12:10 PM, Verma, Vishal L
-<vishal.l.verma@intel.com> wrote:
-> On Tue, 2015-11-24 at 14:14 -0500, Jeff Moyer wrote:
->>
->> I'm not sure whether it makes sense to continue without badblock
->> management for the RAID code.  I was hoping Neil would comment on
->> that.
->>
->> -Jeff
->
-> Not sure I follow? I believe I've kept all the badblocks functionality
-> RAID already had..
->
->
-> On a related note, something I observed when testing with md:
->
-> md's badblock list is per-device, and can be seen at:
->         /sys/block/md0/md/dev-pmem0/bad_blocks
->
-> Now if we have badblocks in the gendisks too, there is also:
->         /sys/block/pmem0/bad_blocks
->
-> The two are separate 'accounts' maintained by separate drivers (md for
-> the former, and pmem for the latter). This can potentially be
-> confusing..
->
-> Should we consolidate the two, i.e. make md (re)use the gendisk
-> badblocks for its purposes too?
+On Tuesday 24 November 2015 10:13:17 Finn Thain wrote:
+> 
+> On Tue, 24 Nov 2015, Ondrej Zary wrote:
+> 
+> > On Tuesday 24 November 2015, Finn Thain wrote:
+> > > 
+> > > On Mon, 23 Nov 2015, Ondrej Zary wrote:
+> > > 
+> > > > 
+> > > > PDMA seems to be broken in multiple ways. NCR5380_pread cannot 
+> > > > process less than 128 bytes. In fact, 53C400 datasheet says that 
+> > > > it's HW limitation: non-modulo-128-byte transfers should use PIO.
+> > > > 
+> > > > Adding
+> > > >         transfersize = round_down(transfersize, 128);
+> > > > to generic_NCR5380_dma_xfer_len() improves the situation a bit.
+> > > > 
+> > > > After modprobe, some small reads (8, 4, 24 and 64 bytes) are done 
+> > > > using PIO, then eight 512-byte reads using PDMA and then it fails on 
+> > > > a 254-byte read. First 128 bytes are read using PDMA and the next 
+> > > > PDMA operation hangs waiting forever for the host buffer to be 
+> > > > ready.
+> > > > 
+> > > 
+> > > A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't see 
+> > > how that is possible given round_down(126, 128) == 0. Was this the 
+> > > actual 'len' argument to NCR5380_pread() in g_NCR5380.c?
+> > 
+> > No 126-byte PDMA. The 126 bytes were probably lost (or mixed with the 
+> > next read?).
+> 
+> When you said, the "PDMA operation hangs waiting forever", I figured that 
+> you had hit an infinite loop in NCR5380_pread()... but now I'm lost.
+> 
+> My main concern here is to confirm that I didn't break anything e.g. with 
+> patch 24 or 41. It would be nice to know that this hang is not the result 
+> of a new bug.
+> 
+> > The next read was also 254 bytes so another 128-byte PDMA transfer.
+> > 
+> > Then modified NCR5380_information_transfer() to transfer the remaining 
+> > data (126 bytes in this case) using PIO. It did not help, the next PDMA 
+> > transfer failed too.
+> > 
+> 
+> AFAICT, no change to NCR5380_information_transfer() should be needed. It 
+> was always meant to cope with the need to split a transfer between (P)DMA 
+> and PIO.
 
-If we get agreement that tracking bad blocks at the gendisk is useful
-for more than just nvdimms then yes, I think it makes sense to move md
-bad_blocks to the gendisk layer.  That is provided we can add a
-symlink to make the move transparent to existing md userspace tooling.
+Instead of fixing split transfers, simply forced everything non-modulo-128 to
+PIO:
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -703,6 +703,10 @@ static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
+ 	    !(cmd->SCp.this_residual % transfersize))
+ 		transfersize = 32 * 1024;
 
-The use cases I can envision being useful for other disks is:
++	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
++	if (transfersize % 128)
++		transfersize = 0;
++
+ 	return transfersize;
+ }
 
-1/ Bypassing / avoiding known bad blocks on disks / drivers that
-inject long completion latency for error handling.
+It seems to work and greatly improves performance:
+# hdparm -t --direct /dev/sdb
 
-2/ Simulating bad blocks for disks that can't store them locally.
-Similar to the md use case, if one encounters errors restoring a disk
-image from a backup it's useful to have the option to record the error
-in a bad block list and keep going.
+/dev/sdb:
+ Timing O_DIRECT disk reads:   4 MB in  4.84 seconds = 846.15 kB/sec
+
+-- 
+Ondrej Zary
