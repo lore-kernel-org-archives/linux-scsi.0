@@ -1,69 +1,42 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380 drivers
-Date: Tue, 24 Nov 2015 19:04:24 +0100
-Message-ID: <201511241904.26525.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <alpine.LNX.2.00.1511241932130.7196@nippy.intranet> <201511241303.17899.linux@rainbow-software.org>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
+Date: Tue, 24 Nov 2015 19:03:57 +0000
+Message-ID: <1448391837.27481.16.camel@intel.com>
+References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+	 <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201511241303.17899.linux@rainbow-software.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:11872 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753252AbbKXTD7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 14:03:59 -0500
+In-Reply-To: <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+Content-Language: en-US
+Content-ID: <444DD778B5AABC4F953B4DD77661D08F@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "jmoyer@redhat.com" <jmoyer@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>
 
-On Tuesday 24 November 2015 13:03:17 Ondrej Zary wrote:
-> On Tuesday 24 November 2015, Finn Thain wrote:
-> > 
-> > On Tue, 24 Nov 2015, Ondrej Zary wrote:
-> > 
-> > > On Tuesday 24 November 2015, Finn Thain wrote:
-> > > > 
-> > > > On Mon, 23 Nov 2015, Ondrej Zary wrote:
-> > > > 
-> > > > > 
-> > > > > PDMA seems to be broken in multiple ways. NCR5380_pread cannot 
-> > > > > process less than 128 bytes. In fact, 53C400 datasheet says that 
-> > > > > it's HW limitation: non-modulo-128-byte transfers should use PIO.
-> > > > > 
-> > > > > Adding
-> > > > >         transfersize = round_down(transfersize, 128);
-> > > > > to generic_NCR5380_dma_xfer_len() improves the situation a bit.
-> > > > > 
-> > > > > After modprobe, some small reads (8, 4, 24 and 64 bytes) are done 
-> > > > > using PIO, then eight 512-byte reads using PDMA and then it fails on 
-> > > > > a 254-byte read. First 128 bytes are read using PDMA and the next 
-> > > > > PDMA operation hangs waiting forever for the host buffer to be 
-> > > > > ready.
-> > > > > 
-> > > > 
-> > > > A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't see 
-> > > > how that is possible given round_down(126, 128) == 0. Was this the 
-> > > > actual 'len' argument to NCR5380_pread() in g_NCR5380.c?
-> > > 
-> > > No 126-byte PDMA. The 126 bytes were probably lost (or mixed with the 
-> > > next read?).
-> > 
-> > When you said, the "PDMA operation hangs waiting forever", I figured that 
-> > you had hit an infinite loop in NCR5380_pread()... but now I'm lost.
-> 
-> The first 128-byte PDMA ended successfully (ignoring what happened to the
-> remaining 126 bytes), then a next request for 254 bytes came. This resulted
-> in a new 128-byte PDMA and that hanged (in one of its possibly infinite loops
-> without a timeout).
-> 
-> > My main concern here is to confirm that I didn't break anything e.g. with 
-> > patch 24 or 41. It would be nice to know that this hang is not the result 
-> > of a new bug.
-> 
-> PDMA was already broken before so it's hard to tell. I can try to modify
-> the unpatched driver to see if PDMA is broken the same way.
-
-Just tested the driver without your patches and it's broken exactly the same
-way.
-
--- 
-Ondrej Zary
+T24gVHVlLCAyMDE1LTExLTI0IGF0IDEwOjM0IC0wNTAwLCBKZWZmIE1veWVyIHdyb3RlOg0KPiBW
+aXNoYWwgVmVybWEgPHZpc2hhbC5sLnZlcm1hQGludGVsLmNvbT4gd3JpdGVzOg0KPiANCj4gPiBO
+VkRJTU0gZGV2aWNlcywgd2hpY2ggY2FuIGJlaGF2ZSBtb3JlIGxpa2UgRFJBTSByYXRoZXIgdGhh
+biBibG9jaw0KPiA+IGRldmljZXMsIG1heSBkZXZlbG9wIGJhZCBjYWNoZSBsaW5lcywgb3IgJ3Bv
+aXNvbicuIEEgYmxvY2sgZGV2aWNlDQo+ID4gZXhwb3NlZCBieSB0aGUgcG1lbSBkcml2ZXIgY2Fu
+IHRoZW4gY29uc3VtZSBwb2lzb24gdmlhIGEgcmVhZCAob3INCj4gPiB3cml0ZSksIGFuZCBjYXVz
+ZSBhIG1hY2hpbmUgY2hlY2suIE9uIHBsYXRmb3JtcyB3aXRob3V0IG1hY2hpbmUNCj4gPiBjaGVj
+ayByZWNvdmVyeSBmZWF0dXJlcywgdGhpcyB3b3VsZCBtZWFuIGEgY3Jhc2guDQo+ID4gDQo+ID4g
+VGhlIGJsb2NrIGRldmljZSBtYWludGFpbmluZyBhIHJ1bnRpbWUgbGlzdCBvZiBhbGwga25vd24g
+c2VjdG9ycw0KPiA+IHRoYXQNCj4gPiBoYXZlIHBvaXNvbiBjYW4gZGlyZWN0bHkgYXZvaWQgdGhp
+cywgYW5kIGFsc28gcHJvdmlkZSBhIHBhdGggZm9yd2FyZA0KPiA+IHRvIGVuYWJsZSBwcm9wZXIg
+aGFuZGxpbmcvcmVjb3ZlcnkgZm9yIERBWCBmYXVsdHMgb24gc3VjaCBhIGRldmljZS4NCj4gPiAN
+Cj4gPiBVc2UgdGhlIG5ldyBiYWRibG9jayBtYW5hZ2VtZW50IGludGVyZmFjZXMgdG8gYWRkIGEg
+YmFkYmxvY2tzIGxpc3QNCj4gPiB0bw0KPiA+IGdlbmRpc2tzLg0KPiANCj4gQmVjYXVzZSBkaXNr
+X2FsbG9jX2JhZGJsb2NrcyBjYW4gZmFpbCwgeW91IG5lZWQgdG8gY2hlY2sgZm9yIGEgTlVMTA0K
+PiBkaXNrLT5iYiBpbiBhbGwgb2YgdGhlIHV0aWxpdHkgZnVuY3Rpb25zIHlvdSd2ZSBkZWZpbmVk
+Lg0KPiANCg0KVGhhbmtzLCBKZWZmIC0gSSdsbCBmaXggdGhpcy4gSSBoYXZlIGEgaGFuZGZ1bCBv
+ZiBvdGhlciBmaXhlcyBxdWV1ZWQgdXANCnRvbywgd2lsbCBzZW5kIG91dCBhIHYyIHNvb24uDQoN
+CgktVmlzaGFs
