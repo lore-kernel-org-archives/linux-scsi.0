@@ -1,10 +1,8 @@
 From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
-Date: Mon, 23 Nov 2015 16:06:59 -0700
-Message-ID: <20151123230659.GA8287@obsidianresearch.com>
-References: <20151113182513.GB21808@obsidianresearch.com>
- <564640C4.3000603@sandisk.com>
- <20151113220636.GA32133@obsidianresearch.com>
+Date: Mon, 23 Nov 2015 17:00:11 -0700
+Message-ID: <20151124000011.GA9301@obsidianresearch.com>
+References: <20151113220636.GA32133@obsidianresearch.com>
  <20151114071344.GE27738@lst.de>
  <20151123203712.GB5640@obsidianresearch.com>
  <56537F59.4080708@sandisk.com>
@@ -12,61 +10,50 @@ References: <20151113182513.GB21808@obsidianresearch.com>
  <56538AFD.9080103@sandisk.com>
  <20151123221806.GA7152@obsidianresearch.com>
  <56539421.9050705@sandisk.com>
+ <20151123230659.GA8287@obsidianresearch.com>
+ <B24F4DDE-709A-4D2D-8B26-4E83325DBB1A@asomi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56539421.9050705@sandisk.com>
+In-Reply-To: <B24F4DDE-709A-4D2D-8B26-4E83325DBB1A@asomi.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "sagig@dev.mellanox.co.il" <sagig@dev.mellanox.co.il>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Caitlin Bestler <cait@asomi.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "sagig@dev.mellanox.co.il" <sagig@dev.mellanox.co.il>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 23, 2015 at 02:33:05PM -0800, Bart Van Assche wrote:
-> On 11/23/2015 02:18 PM, Jason Gunthorpe wrote:
-> >On Mon, Nov 23, 2015 at 01:54:05PM -0800, Bart Van Assche wrote:
-> >What I don't see is how SRP handles things when the
-> >sendq fills up, ie the case where __srp_get_tx_iu() == NULL. It looks
-> >like the driver starts to panic and generates printks. I can't tell if
-> >it can survive that, but it doesn't look very good..
-> 
-> Hello Jason,
-> 
-> From srp_cm_rep_handler():
-> 
-> 		target->scsi_host->can_queue
-> 			= min(ch->req_lim - SRP_TSK_MGMT_SQ_SIZE,
-> 			      target->scsi_host->can_queue);
-> 
-> In other words, the SCSI core is told to ensure that the number of
-> outstanding SCSI commands is one less than the number of elements in the
-> ch->free_tx list. And since the SRP initiator serializes task management
-> requests it is guaranteed that __srp_get_tx_iu() won't fail due to
-> ch->free_tx being empty.
+On Mon, Nov 23, 2015 at 03:30:42PM -0800, Caitlin Bestler wrote:
+>    The receive completion can be safely assumed to indicate transmit
+>    completion over a reliable connection unless your peer has gone
+>    completely bonkers and is replying to a command that it did not
+>    receive.
 
-I realize that, and as I already explained, SRP cannot drive the sendq
-flow control from the recv side.
+Perhaps iWarp is different and does specify this ordering but IB does
+not.
 
-The SCSI core considers the command complete and will issue a new
-command as soon as the recv completion associated with the command is
-returned. (ie when the remote responds)
+The issue with IB is how the ACK protocol is designed. There is not
+strong ordering between ACKs and data transfers. A HCA can send
+ACK,DATA and the network could drop the ACK. The recevier side does
+not know the ACK was lost and goes ahead to process DATA.
 
-This *DOES NOT* say anything about the state of the sendq, it does not
-guarantee there is send CQ entry available for the associated send, it
-does not guarantee there is available space in the sendq. Verbs DOES
-NOT make ordering guarentees between queues, even if the queues are
-causally related.
+Since only ACK advances the sendq and DATA advances the recvq it is
+trivial to get a case where the recvq is advanced with a reply while
+the sendq continues to wait for the ACK to be resent.
 
-This is an important point in verbs and it is commonly done wrong.
+Further IB allows ACK coalescing and has no rules for how an ACK is
+placed. It is entirely valid for a HCA to RECV,REPLY,ACK - for
+instance.
 
-So, yes, __srp_get_tx_iu absolutely can fail due to ch->free_tx being
-empty, even though by observing the recv side SRP has inferred that
-the sendq should have space.
+>    I actually had a bug in an early iWARP emulation where the simulated
+>    peer, because it was simulated, responded
+>    instantly. The result was a TCP segment that both acked the
+>    transmission *and* contained the reply. The bug was
+>    that the code processed the reception before the transmission ack,
+>    causing the receive completion to be placed
+>    on the completion queue before transmit completion.
 
-Every ULP has to cope with this, and a direct poll API that doesn't
-account for the need to block on a predicate is broken by design.
-This is why I object.
-
-'ib_poll_cq_until' would correct all of this.
+I don't know if iWARP has the same lax ordering as IB, but certainly,
+what you describe is legal for IB verbs to do, and our kernel ULPs
+have to cope with it.
 
 Jason
