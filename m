@@ -1,42 +1,47 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
- drivers
-Date: Tue, 24 Nov 2015 12:21:18 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1511241219430.28883@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <201511211401.39957.linux@rainbow-software.org> <alpine.LNX.2.00.1511221001400.7671@nippy.intranet> <201511232355.04017.linux@rainbow-software.org>
+From: Mark Salter <msalter@redhat.com>
+Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
+Date: Mon, 23 Nov 2015 20:30:14 -0500
+Message-ID: <1448328614.8209.45.camel@redhat.com>
+References: <1447838334.1564.2.camel@ellerman.id.au>
+	 <1447855399.3974.24.camel@redhat.com>
+	 <1447894964.15206.0.camel@ellerman.id.au>
+	 <20151119082325.GA11419@infradead.org>
+	 <1448021448.14769.7.camel@ellerman.id.au>
+	 <565055C6.5040801@linux.vnet.ibm.com> <20151122005635.1b9ffbe1@tom-T450>
+	 <1448234410.8209.3.camel@redhat.com> <56531B3F.60503@linux.vnet.ibm.com>
+	 <20151123151330.GA10990@dhcppc13.redhat.com>
+	 <56532EC7.3060000@linux.vnet.ibm.com>
+	 <CACVXFVMNed2Liarx9FA16CERNAepNYdNFhDpn70kb3RBt0eRuQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <201511232355.04017.linux@rainbow-software.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVMNed2Liarx9FA16CERNAepNYdNFhDpn70kb3RBt0eRuQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>, Laurent Dufour <ldufour@linux.vnet.ibm.com>
+Cc: Pratyush Anand <panand@redhat.com>, linux-block@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E. J. Bottomley" <JBottomley@odin.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, brking <brking@us.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-On Mon, 23 Nov 2015, Ondrej Zary wrote:
-
+On Mon, 2015-11-23 at 23:27 +0800, Ming Lei wrote:
+> On Mon, Nov 23, 2015 at 11:20 PM, Laurent Dufour
+> <ldufour@linux.vnet.ibm.com> wrote:
+> > > 
+> > > Reverting above commit on top if 4.4-rc1 seems to fix the problem for me.
+> > 
+> > That's what I mentioned earlier ;)
+> > 
+> > Now Ming send an additional patch with seems to fix the bug introduced
+> > through the commit bdced438acd8. When testing with this new patch I
+> > can't get the panic anymore, but Mark reported he is still hitting it.
 > 
-> PDMA seems to be broken in multiple ways. NCR5380_pread cannot process 
-> less than 128 bytes. In fact, 53C400 datasheet says that it's HW 
-> limitation: non-modulo-128-byte transfers should use PIO.
+> Laurent, thanks for your test on the 1st patch, and looks there are at
+> least two problems, and my 2nd patch sent just now should address
+> Mark's issue which is caused by bdced438acd83a.
 > 
-> Adding
->         transfersize = round_down(transfersize, 128);
-> to generic_NCR5380_dma_xfer_len() improves the situation a bit.
+> Once the 2nd one is tested OK, I will send out the two together.
 > 
-> After modprobe, some small reads (8, 4, 24 and 64 bytes) are done using 
-> PIO, then eight 512-byte reads using PDMA and then it fails on a 
-> 254-byte read. First 128 bytes are read using PDMA and the next PDMA 
-> operation hangs waiting forever for the host buffer to be ready.
-> 
+> Thanks,
+> Ming
 
-A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't see how
-that is possible given round_down(126, 128) == 0. Was this the actual
-'len' argument to NCR5380_pread() in g_NCR5380.c?
-
-BTW, I presume that FLAG_NO_DMA_FIXUPS was set (which is the case if you
-pass ncr_53c400=1 option with modprobe). Otherwise you could see PDMA IO
-sizes like 127 etc.
-
--- 
+Thanks Ming.
+With both patches applied, I have been unable to reproduce the problem.
