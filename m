@@ -1,103 +1,83 @@
-From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 18/18] scsi_dh_alua: use scsi_vpd_tpg_id()
-Date: Tue, 24 Nov 2015 13:18:29 +0100
-Message-ID: <1448367509.2877.27.camel@suse.com>
-References: <1447081703-110552-1-git-send-email-hare@suse.de>
-	 <1447081703-110552-19-git-send-email-hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Reviews, please
+Date: Tue, 24 Nov 2015 07:37:39 -0500
+Message-ID: <yq1oaejlgj0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46968 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561AbbKXMSa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2015 07:18:30 -0500
-In-Reply-To: <1447081703-110552-19-git-send-email-hare@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34788 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364AbbKXMhm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2015 07:37:42 -0500
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id tAOCbf4V028703
+	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:42 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+	by userv0022.oracle.com (8.13.8/8.13.8) with ESMTP id tAOCbfJn028605
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:41 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+	by userv0121.oracle.com (8.13.8/8.13.8) with ESMTP id tAOCbfta029211
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 12:37:41 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2015-11-09 at 16:08 +0100, Hannes Reinecke wrote:
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 39 +++++----------=
------
-> ----------
-> =C2=A01 file changed, 6 insertions(+), 33 deletions(-)
->=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index abf05b4..20fe981 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -320,38 +320,10 @@ static int alua_check_tpgs(struct scsi_device
-> *sdev)
-> =C2=A0 */
-> =C2=A0static int alua_check_vpd(struct scsi_device *sdev, struct
-> alua_dh_data *h)
-> =C2=A0{
-> -	unsigned char *d;
-> -	unsigned char __rcu *vpd_pg83;
-> +	int rel_port =3D -1, group_id;
-> =C2=A0
-> -	rcu_read_lock();
-> -	if (!rcu_dereference(sdev->vpd_pg83)){
-> -		rcu_read_unlock();
-> -		return SCSI_DH_DEV_UNSUPP;
-> -	}
-> -
-> -	/*
-> -	=C2=A0* Look for the correct descriptor.
-> -	=C2=A0*/
-> -	vpd_pg83 =3D rcu_dereference(sdev->vpd_pg83);
-> -	d =3D vpd_pg83 + 4;
-> -	while (d < vpd_pg83 + sdev->vpd_pg83_len) {
-> -		switch (d[1] & 0xf) {
-> -		case 0x4:
-> -			/* Relative target port */
-> -			h->rel_port =3D get_unaligned_be16(&d[6]);
-> -			break;
-> -		case 0x5:
-> -			/* Target port group */
-> -			h->group_id =3D get_unaligned_be16(&d[6]);
-> -			break;
-> -		default:
-> -			break;
-> -		}
-> -		d +=3D d[3] + 4;
-> -	}
-> -	rcu_read_unlock();
-> -
-> -	if (h->group_id =3D=3D -1) {
-> +	group_id =3D scsi_vpd_tpg_id(sdev, &rel_port);
-> +	if (group_id < 0) {
-> =C2=A0		/*
-> =C2=A0		=C2=A0* Internal error; TPGS supported but required
-> =C2=A0		=C2=A0* VPD identification descriptors not present.
-> @@ -360,10 +332,11 @@ static int alua_check_vpd(struct scsi_device
-> *sdev, struct alua_dh_data *h)
-> =C2=A0		sdev_printk(KERN_INFO, sdev,
-> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0"%s: No target port descriptors
-> found\n",
-> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME);
-> -		h->state =3D TPGS_STATE_OPTIMIZED;
-> -		h->tpgs =3D TPGS_MODE_NONE;
-> =C2=A0		return SCSI_DH_DEV_UNSUPP;
-> =C2=A0	}
-> +	h->rel_port =3D rel_port;
-> +	h->group_id =3D group_id;
-> +
-> =C2=A0	sdev_printk(KERN_INFO, sdev,
-> =C2=A0		=C2=A0=C2=A0=C2=A0=C2=A0"%s: port group %02x rel port %02x\n"=
-,
-> =C2=A0		=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME, h->group_id, h->rel_por=
-t);
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+I spent last night cleaning up patchwork. Not entirely done yet but
+getting down to a manageable size:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	https://patchwork.kernel.org/project/linux-scsi/list/
+
+
+These are 4.4 fixes that I'd like to get some more reviews for:
+
+	scsi_debug: fix prevent_allow+verify regressions
+	https://patchwork.kernel.org/patch/7676711/
+
+	Fix a bdi reregistration race, v2
+	https://patchwork.kernel.org/patch/7671671/
+
+	Revert "scsi: Fix a bdi reregistration race"
+	https://patchwork.kernel.org/patch/7671661/
+
+	[2/2] Fix a memory leak in scsi_host_dev_release()
+	https://patchwork.kernel.org/patch/7671391/
+
+	[1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
+	https://patchwork.kernel.org/patch/7671381/
+
+	[3/3] MAINTAINERS: Add myself as co-maintainer of the SCSI subsystem.
+	https://patchwork.kernel.org/patch/7614881/
+
+	[2/3] block/sd: Fix device-imposed transfer length limits
+	https://patchwork.kernel.org/patch/7614871/
+
+	[1/3] sd: Make discard granularity match logical block size when LBPRZ=1
+	https://patchwork.kernel.org/patch/7614861/
+
+
+And for 4.5 the following ones are low-hanging fruit.
+
+	scsi: hisi_sas: remove dependency on of_irq_count
+	https://patchwork.kernel.org/patch/7656691/
+
+	scsi: use sector_div instead of do_div
+	https://patchwork.kernel.org/patch/7669841/
+
+	mvsas: add SGPIO support to Marvell 94xx
+	https://patchwork.kernel.org/patch/7610411/
+
+	aacraid: aac_release_resources() can be static
+	https://patchwork.kernel.org/patch/7588331/
+
+I staged the reviewed portion of Finn's ncr5380 series last week but it
+looks like there is some issues to be worked out. So I'll let that
+simmer in a different branch for now.
+
+I will take a look at the ALUA series today. And then there's the
+mountain of UFS related patch series...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
