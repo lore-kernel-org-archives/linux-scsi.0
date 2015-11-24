@@ -1,78 +1,196 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/18] ALUA device handler update, part 1
-Date: Tue, 24 Nov 2015 16:29:55 +0100
-Message-ID: <56548273.1080000@suse.de>
-References: <1447081703-110552-1-git-send-email-hare@suse.de> <20151120104710.GA24871@lst.de> <564EFB65.6050603@suse.de> <564FA58A.8040006@sandisk.com> <56533A86.2090109@suse.de> <56533C45.4040505@sandisk.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
+Date: Tue, 24 Nov 2015 10:34:49 -0500
+Message-ID: <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40255 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:49095 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753314AbbKXP34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2015 10:29:56 -0500
-In-Reply-To: <56533C45.4040505@sandisk.com>
+	id S1752496AbbKXPev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Nov 2015 10:34:51 -0500
+In-Reply-To: <1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+	(Vishal Verma's message of "Fri, 20 Nov 2015 17:49:19 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jamed Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.com>, Ewan Milne <emilne@redhat.com>
+To: Vishal Verma <vishal.l.verma@intel.com>
+Cc: linux-nvdimm@ml01.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>
 
-On 11/23/2015 05:18 PM, Bart Van Assche wrote:
->=20
->=20
-> On 11/23/2015 08:10 AM, Hannes Reinecke wrote:
->> On 11/20/2015 11:58 PM, Bart Van Assche wrote:
-[ .. ]
->>> BTW, not all storage arrays need STPG retries. Some arrays are able
->>> to process an STPG command quickly (this means within a few
->>> seconds).
->>>
->>> A previous discussion about this topic is available e.g. at
->>> http://thread.gmane.org/gmane.linux.scsi/105340/focus=3D105601.
->>>
->> Well, one could argue that the whole point of this patchset is to
->> allow you to serialize STPGs :-)
->>
->> We definitely need to serialize STPGs for the same target port
->> group; the current implementation is far too limited to take that
->> into account.
->>
->> But the main problem I'm facing with the current implementation is
->> that we cannot handle retries. An RTPG or an STPG might fail, at
->> which point we need to re-run RTPG to figure out the current status.
->> (We also need to send RTPGs when we receive an "ALUA state changed"
->>   UA, but that's slightly beside the point).
->> The retry cannot be send directly, as we're evaluating the status
->> from end_io context. So to instantiate a retry we need to move it
->> over to a workqueue.
->>
->> Or, at least, that's the solution I'm able to come up with.
->> If you have other ideas it'd be most welcome.
->=20
-> Hello Hannes,
->=20
-> I agree that retries have to be handled from workqueue context
-> instead of end_io context. But in workqueue context we can choose
-> whether to submit the retry synchronously or asynchronously. Unless
-> I overlooked something I don't see why the retry should be submitted
-> synchronously.
->=20
-Good point. Sure we can do this; the primary difference would be
-whether the workqueue is ordered or not.
-An unordered workqueue would be resulting in not serializing
-retries, hence achieving pretty much what you asked.
+Vishal Verma <vishal.l.verma@intel.com> writes:
+
+> NVDIMM devices, which can behave more like DRAM rather than block
+> devices, may develop bad cache lines, or 'poison'. A block device
+> exposed by the pmem driver can then consume poison via a read (or
+> write), and cause a machine check. On platforms without machine
+> check recovery features, this would mean a crash.
+>
+> The block device maintaining a runtime list of all known sectors that
+> have poison can directly avoid this, and also provide a path forward
+> to enable proper handling/recovery for DAX faults on such a device.
+>
+> Use the new badblock management interfaces to add a badblocks list to
+> gendisks.
+
+Because disk_alloc_badblocks can fail, you need to check for a NULL
+disk->bb in all of the utility functions you've defined.
 
 Cheers,
+Jeff
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+> ---
+>  block/genhd.c         | 64 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/genhd.h |  6 +++++
+>  2 files changed, 70 insertions(+)
+>
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 0c706f3..4209c32 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/idr.h>
+>  #include <linux/log2.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/badblocks.h>
+>  
+>  #include "blk.h"
+>  
+> @@ -505,6 +506,20 @@ static int exact_lock(dev_t devt, void *data)
+>  	return 0;
+>  }
+>  
+> +static void disk_alloc_badblocks(struct gendisk *disk)
+> +{
+> +	disk->bb = kzalloc(sizeof(disk->bb), GFP_KERNEL);
+> +	if (!disk->bb) {
+> +		pr_warn("%s: failed to allocate space for badblocks\n",
+> +			disk->disk_name);
+> +		return;
+> +	}
+> +
+> +	if (badblocks_init(disk->bb, 1))
+> +		pr_warn("%s: failed to initialize badblocks\n",
+> +			disk->disk_name);
+> +}
+> +
+>  static void register_disk(struct gendisk *disk)
+>  {
+>  	struct device *ddev = disk_to_dev(disk);
+> @@ -609,6 +624,7 @@ void add_disk(struct gendisk *disk)
+>  	disk->first_minor = MINOR(devt);
+>  
+>  	disk_alloc_events(disk);
+> +	disk_alloc_badblocks(disk);
+>  
+>  	/* Register BDI before referencing it from bdev */
+>  	bdi = &disk->queue->backing_dev_info;
+> @@ -657,6 +673,9 @@ void del_gendisk(struct gendisk *disk)
+>  	blk_unregister_queue(disk);
+>  	blk_unregister_region(disk_devt(disk), disk->minors);
+>  
+> +	badblocks_free(disk->bb);
+> +	kfree(disk->bb);
+> +
+>  	part_stat_set_all(&disk->part0, 0);
+>  	disk->part0.stamp = 0;
+>  
+> @@ -670,6 +689,48 @@ void del_gendisk(struct gendisk *disk)
+>  }
+>  EXPORT_SYMBOL(del_gendisk);
+>  
+> +/*
+> + * The gendisk usage of badblocks does not track acknowledgements for
+> + * badblocks. We always assume they are acknowledged.
+> + */
+> +int disk_check_badblocks(struct gendisk *disk, sector_t s, int sectors,
+> +		   sector_t *first_bad, int *bad_sectors)
+> +{
+> +	return badblocks_check(disk->bb, s, sectors, first_bad, bad_sectors);
+> +}
+> +EXPORT_SYMBOL(disk_check_badblocks);
+> +
+> +int disk_set_badblocks(struct gendisk *disk, sector_t s, int sectors)
+> +{
+> +	return badblocks_set(disk->bb, s, sectors, 1);
+> +}
+> +EXPORT_SYMBOL(disk_set_badblocks);
+> +
+> +int disk_clear_badblocks(struct gendisk *disk, sector_t s, int sectors)
+> +{
+> +	return badblocks_clear(disk->bb, s, sectors);
+> +}
+> +EXPORT_SYMBOL(disk_clear_badblocks);
+> +
+> +/* sysfs access to bad-blocks list. */
+> +static ssize_t disk_badblocks_show(struct device *dev,
+> +					struct device_attribute *attr,
+> +					char *page)
+> +{
+> +	struct gendisk *disk = dev_to_disk(dev);
+> +
+> +	return badblocks_show(disk->bb, page, 0);
+> +}
+> +
+> +static ssize_t disk_badblocks_store(struct device *dev,
+> +					struct device_attribute *attr,
+> +					const char *page, size_t len)
+> +{
+> +	struct gendisk *disk = dev_to_disk(dev);
+> +
+> +	return badblocks_store(disk->bb, page, len, 0);
+> +}
+> +
+>  /**
+>   * get_gendisk - get partitioning information for a given device
+>   * @devt: device to get partitioning information for
+> @@ -988,6 +1049,8 @@ static DEVICE_ATTR(discard_alignment, S_IRUGO, disk_discard_alignment_show,
+>  static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
+>  static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+>  static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
+> +static DEVICE_ATTR(badblocks, S_IRUGO | S_IWUSR, disk_badblocks_show,
+> +		disk_badblocks_store);
+>  #ifdef CONFIG_FAIL_MAKE_REQUEST
+>  static struct device_attribute dev_attr_fail =
+>  	__ATTR(make-it-fail, S_IRUGO|S_IWUSR, part_fail_show, part_fail_store);
+> @@ -1009,6 +1072,7 @@ static struct attribute *disk_attrs[] = {
+>  	&dev_attr_capability.attr,
+>  	&dev_attr_stat.attr,
+>  	&dev_attr_inflight.attr,
+> +	&dev_attr_badblocks.attr,
+>  #ifdef CONFIG_FAIL_MAKE_REQUEST
+>  	&dev_attr_fail.attr,
+>  #endif
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 2adbfa6..5563bde 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -162,6 +162,7 @@ struct disk_part_tbl {
+>  };
+>  
+>  struct disk_events;
+> +struct badblocks;
+>  
+>  struct gendisk {
+>  	/* major, first_minor and minors are input parameters only,
+> @@ -201,6 +202,7 @@ struct gendisk {
+>  	struct blk_integrity *integrity;
+>  #endif
+>  	int node_id;
+> +	struct badblocks *bb;
+>  };
+>  
+>  static inline struct gendisk *part_to_disk(struct hd_struct *part)
+> @@ -421,6 +423,10 @@ extern void add_disk(struct gendisk *disk);
+>  extern void del_gendisk(struct gendisk *gp);
+>  extern struct gendisk *get_gendisk(dev_t dev, int *partno);
+>  extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
+> +extern int disk_check_badblocks(struct gendisk *disk, sector_t s, int sectors,
+> +		   sector_t *first_bad, int *bad_sectors);
+> +extern int disk_set_badblocks(struct gendisk *disk, sector_t s, int sectors);
+> +extern int disk_clear_badblocks(struct gendisk *disk, sector_t s, int sectors);
+>  
+>  extern void set_device_ro(struct block_device *bdev, int flag);
+>  extern void set_disk_ro(struct gendisk *disk, int flag);
