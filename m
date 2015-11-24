@@ -1,196 +1,86 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
-Date: Tue, 24 Nov 2015 10:34:49 -0500
-Message-ID: <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
-References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
-	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Tue, 24 Nov 2015 10:52:26 -0700
+Message-ID: <20151124175226.GA10391@obsidianresearch.com>
+References: <20151124100839.48b52fb35c6f209c51bccbb9807b6df0.f113bf890f.wbe@email24.secureserver.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49095 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752496AbbKXPev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2015 10:34:51 -0500
-In-Reply-To: <1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
-	(Vishal Verma's message of "Fri, 20 Nov 2015 17:49:19 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151124100839.48b52fb35c6f209c51bccbb9807b6df0.f113bf890f.wbe-wCzC33v8tqnShzhksYgB+AejPw4fNl8p@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cait-DpaxOq6QOWMAvxtiuMwx3w@public.gmane.org
+Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org" <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: linux-nvdimm@ml01.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>
 
-Vishal Verma <vishal.l.verma@intel.com> writes:
+On Tue, Nov 24, 2015 at 10:08:39AM -0700, cait-DpaxOq6QOWMAvxtiuMwx3w@public.gmane.org wrote:
+>    >> My recollection of the IB verbs is that they were unlikely to have
+>    >> overlooked something like that. If it did slip through then there
+>    >> should be an errata.
+>    >verbs reflects the wire protocol and the wire protocol has no way to
+>    >create a linkage between the send and recv sides of a RC QP. It is not
+>    >a spec bug, there is no errata.
+> 
+>    No, verbs do not reflect the link layer. Verbs fulfill the contract
+>    with the end user - especially when the hardware cannot.
 
-> NVDIMM devices, which can behave more like DRAM rather than block
-> devices, may develop bad cache lines, or 'poison'. A block device
-> exposed by the pmem driver can then consume poison via a read (or
-> write), and cause a machine check. On platforms without machine
-> check recovery features, this would mean a crash.
->
-> The block device maintaining a runtime list of all known sectors that
-> have poison can directly avoid this, and also provide a path forward
-> to enable proper handling/recovery for DAX faults on such a device.
->
-> Use the new badblock management interfaces to add a badblocks list to
-> gendisks.
+Are you serious? You think verbs should specify things that cannot
+actually be implemented? IB verbs doesn't do that.
 
-Because disk_alloc_badblocks can fail, you need to check for a NULL
-disk->bb in all of the utility functions you've defined.
+>    Reporting a completion of a receive without having guaranteed
+>    that the acknowledgement will be sent before anything
+>    subsequently submitted is failing to implement a reliable
+>    connection.
 
-Cheers,
-Jeff
+As I've said repeatedly, the side receiving the request has no impact
+on this issue. Requiring it to generate an ack before delivering the
+recv completion *does nothing* to guarantee ordering on the other
+side in IB. The network can always drop the ack, and the receiver
+cannot tell.
 
->
-> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> ---
->  block/genhd.c         | 64 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/genhd.h |  6 +++++
->  2 files changed, 70 insertions(+)
->
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 0c706f3..4209c32 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -20,6 +20,7 @@
->  #include <linux/idr.h>
->  #include <linux/log2.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/badblocks.h>
->  
->  #include "blk.h"
->  
-> @@ -505,6 +506,20 @@ static int exact_lock(dev_t devt, void *data)
->  	return 0;
->  }
->  
-> +static void disk_alloc_badblocks(struct gendisk *disk)
-> +{
-> +	disk->bb = kzalloc(sizeof(disk->bb), GFP_KERNEL);
-> +	if (!disk->bb) {
-> +		pr_warn("%s: failed to allocate space for badblocks\n",
-> +			disk->disk_name);
-> +		return;
-> +	}
-> +
-> +	if (badblocks_init(disk->bb, 1))
-> +		pr_warn("%s: failed to initialize badblocks\n",
-> +			disk->disk_name);
-> +}
-> +
->  static void register_disk(struct gendisk *disk)
->  {
->  	struct device *ddev = disk_to_dev(disk);
-> @@ -609,6 +624,7 @@ void add_disk(struct gendisk *disk)
->  	disk->first_minor = MINOR(devt);
->  
->  	disk_alloc_events(disk);
-> +	disk_alloc_badblocks(disk);
->  
->  	/* Register BDI before referencing it from bdev */
->  	bdi = &disk->queue->backing_dev_info;
-> @@ -657,6 +673,9 @@ void del_gendisk(struct gendisk *disk)
->  	blk_unregister_queue(disk);
->  	blk_unregister_region(disk_devt(disk), disk->minors);
->  
-> +	badblocks_free(disk->bb);
-> +	kfree(disk->bb);
-> +
->  	part_stat_set_all(&disk->part0, 0);
->  	disk->part0.stamp = 0;
->  
-> @@ -670,6 +689,48 @@ void del_gendisk(struct gendisk *disk)
->  }
->  EXPORT_SYMBOL(del_gendisk);
->  
-> +/*
-> + * The gendisk usage of badblocks does not track acknowledgements for
-> + * badblocks. We always assume they are acknowledged.
-> + */
-> +int disk_check_badblocks(struct gendisk *disk, sector_t s, int sectors,
-> +		   sector_t *first_bad, int *bad_sectors)
-> +{
-> +	return badblocks_check(disk->bb, s, sectors, first_bad, bad_sectors);
-> +}
-> +EXPORT_SYMBOL(disk_check_badblocks);
-> +
-> +int disk_set_badblocks(struct gendisk *disk, sector_t s, int sectors)
-> +{
-> +	return badblocks_set(disk->bb, s, sectors, 1);
-> +}
-> +EXPORT_SYMBOL(disk_set_badblocks);
-> +
-> +int disk_clear_badblocks(struct gendisk *disk, sector_t s, int sectors)
-> +{
-> +	return badblocks_clear(disk->bb, s, sectors);
-> +}
-> +EXPORT_SYMBOL(disk_clear_badblocks);
-> +
-> +/* sysfs access to bad-blocks list. */
-> +static ssize_t disk_badblocks_show(struct device *dev,
-> +					struct device_attribute *attr,
-> +					char *page)
-> +{
-> +	struct gendisk *disk = dev_to_disk(dev);
-> +
-> +	return badblocks_show(disk->bb, page, 0);
-> +}
-> +
-> +static ssize_t disk_badblocks_store(struct device *dev,
-> +					struct device_attribute *attr,
-> +					const char *page, size_t len)
-> +{
-> +	struct gendisk *disk = dev_to_disk(dev);
-> +
-> +	return badblocks_store(disk->bb, page, len, 0);
-> +}
-> +
->  /**
->   * get_gendisk - get partitioning information for a given device
->   * @devt: device to get partitioning information for
-> @@ -988,6 +1049,8 @@ static DEVICE_ATTR(discard_alignment, S_IRUGO, disk_discard_alignment_show,
->  static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
->  static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
->  static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
-> +static DEVICE_ATTR(badblocks, S_IRUGO | S_IWUSR, disk_badblocks_show,
-> +		disk_badblocks_store);
->  #ifdef CONFIG_FAIL_MAKE_REQUEST
->  static struct device_attribute dev_attr_fail =
->  	__ATTR(make-it-fail, S_IRUGO|S_IWUSR, part_fail_show, part_fail_store);
-> @@ -1009,6 +1072,7 @@ static struct attribute *disk_attrs[] = {
->  	&dev_attr_capability.attr,
->  	&dev_attr_stat.attr,
->  	&dev_attr_inflight.attr,
-> +	&dev_attr_badblocks.attr,
->  #ifdef CONFIG_FAIL_MAKE_REQUEST
->  	&dev_attr_fail.attr,
->  #endif
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 2adbfa6..5563bde 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -162,6 +162,7 @@ struct disk_part_tbl {
->  };
->  
->  struct disk_events;
-> +struct badblocks;
->  
->  struct gendisk {
->  	/* major, first_minor and minors are input parameters only,
-> @@ -201,6 +202,7 @@ struct gendisk {
->  	struct blk_integrity *integrity;
->  #endif
->  	int node_id;
-> +	struct badblocks *bb;
->  };
->  
->  static inline struct gendisk *part_to_disk(struct hd_struct *part)
-> @@ -421,6 +423,10 @@ extern void add_disk(struct gendisk *disk);
->  extern void del_gendisk(struct gendisk *gp);
->  extern struct gendisk *get_gendisk(dev_t dev, int *partno);
->  extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
-> +extern int disk_check_badblocks(struct gendisk *disk, sector_t s, int sectors,
-> +		   sector_t *first_bad, int *bad_sectors);
-> +extern int disk_set_badblocks(struct gendisk *disk, sector_t s, int sectors);
-> +extern int disk_clear_badblocks(struct gendisk *disk, sector_t s, int sectors);
->  
->  extern void set_device_ro(struct block_device *bdev, int flag);
->  extern void set_disk_ro(struct gendisk *disk, int flag);
+I disagree that RC has anything to do with this causal ordering issue,
+this is not a property described in the IB spec for RC.
+
+>    One of the hardware designs I worked with over a decade ago
+>    actually had *two* completion queues, one from the left brain (receive)
+>    and the other from the right brain (transmit). Nevertheless we
+>    presented
+
+All verbs hardware has to have these two flows.
+
+>    a unified completion queue that followed ordering rules. We were not
+>    "reflecting" the hardware, we were implementing an interface in a
+>    combination of hardware and software.
+
+And how did you detect lost acks at the reciever to make this an
+actual guarentee? Maybe TCP can do this but IB cannot.
+
+I honestly don't know why you think verbs has this requirement. It is
+not in the IB spec, and can't be implemented by IB hardware. If
+one of the other flavours of verbs has this, then fine, but it is not
+part of the *Linux* verbs flavour.
+
+> I cannot think of a reason why that would not work here. Simply do
+> not report a completion to the user before guaranteeing that the
+> acks will be transmitted.
+
+I've already explained three times why this is not enough for IB.
+
+>    What would you do if the next user action had been to close the
+>    connection?  Would the acks have been lost?
+
+No acks will be lost. The IB termination process requires the closing
+side to drain it's sendq and stop injecting new traffic before sending
+the CM close message. The other must also drain the sendq before
+replying. This handshake ensures the QP is quiescent and all in flight
+traffic completed before the QP is destroyed.
+
+IB basically shifts the lingering close into the CM arena, where it
+costs less, and allows the QP and associated HW resources to be
+destroyed quickly.
+
+Jason
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
