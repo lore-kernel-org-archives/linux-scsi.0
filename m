@@ -1,61 +1,63 @@
-From: Geliang Tang <geliangtang@163.com>
-Subject: [PATCH] target: use offset_in_page macro
-Date: Wed, 25 Nov 2015 21:49:27 +0800
-Message-ID: <a4523a15b2ebf30e6eec6d04ab851a2c8d8bf041.1448459290.git.geliangtang@163.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v3 2/5] arcmsr: fixes not release allocated resource
+Date: Wed, 25 Nov 2015 14:55:09 +0100
+Message-ID: <5655BDBD.404@redhat.com>
+References: <1448451683.4670.35.camel@Centos6.3-64>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1448451683.4670.35.camel@Centos6.3-64>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Dan Carpenter <dan.carpenter@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, jthumshirn@suse.de
+Cc: hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
-Use offset_in_page macro instead of (addr & ~PAGE_MASK).
+On 25.11.2015 12:41, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
+>
+> Releasing allocated resource if get configuration data failed.
+>
+> Signed-of-by: Ching Huang <ching2048@areca.com.tw>
+>
+> ---
+>
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-24 11:35:26.000000000 +0800
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-25 19:04:44.590970000 +0800
+> @@ -2664,7 +2664,7 @@ static bool arcmsr_hbaB_get_config(struc
+>  	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
+>  		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+>  			miscellaneous data' timeout \n", acb->host->host_no);
+> -		return false;
+> +		goto err_free_dma;
+>  	}
+>  	count = 8;
+>  	while (count){
+> @@ -2707,6 +2707,10 @@ static bool arcmsr_hbaB_get_config(struc
+>  	acb->firm_cfg_version = readl(&reg->message_rwbuffer[25]);  /*firm_cfg_version,25,100-103*/
+>  	/*firm_ide_channels,4,16-19*/
+>  	return true;
+> +err_free_dma:
+> +	dma_free_coherent(&acb->pdev->dev, acb->roundup_ccbsize,
+> +			acb->dma_coherent2, acb->dma_coherent_handle2);
+> +	return false;
+>  }
+>  
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
- drivers/target/target_core_user.c | 2 +-
- drivers/target/tcm_fc/tfc_io.c    | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+The resource should be released here, that is okay. 
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 937cebf..d5477c0 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -194,7 +194,7 @@ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
- 
- static inline void tcmu_flush_dcache_range(void *vaddr, size_t size)
- {
--	unsigned long offset = (unsigned long) vaddr & ~PAGE_MASK;
-+	unsigned long offset = offset_in_page(vaddr);
- 
- 	size = round_up(size+offset, PAGE_SIZE);
- 	vaddr -= offset;
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 847c1aa..6f7c65a 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -154,9 +154,9 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 			BUG_ON(!page);
- 			from = kmap_atomic(page + (mem_off >> PAGE_SHIFT));
- 			page_addr = from;
--			from += mem_off & ~PAGE_MASK;
-+			from += offset_in_page(mem_off);
- 			tlen = min(tlen, (size_t)(PAGE_SIZE -
--						(mem_off & ~PAGE_MASK)));
-+						offset_in_page(mem_off)));
- 			memcpy(to, from, tlen);
- 			kunmap_atomic(page_addr);
- 			to += tlen;
-@@ -314,9 +314,9 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
- 
- 		to = kmap_atomic(page + (mem_off >> PAGE_SHIFT));
- 		page_addr = to;
--		to += mem_off & ~PAGE_MASK;
-+		to += offset_in_page(mem_off);
- 		tlen = min(tlen, (size_t)(PAGE_SIZE -
--					  (mem_off & ~PAGE_MASK)));
-+					  offset_in_page(mem_off)));
- 		memcpy(to, from, tlen);
- 		kunmap_atomic(page_addr);
- 
--- 
-2.5.0
+How works the resource management when the eh_bus_reset_handler
+is called ? It looks to me that you allocate a new 
+acb->dma_coherent2 without releasing it before.
+Btw. is it needed in that handler to re-read the firmware-spec?
+
+Tomas
+
+>  static bool arcmsr_hbaC_get_config(struct AdapterControlBlock *pACB)
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
