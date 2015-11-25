@@ -1,45 +1,110 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] Fix a bdi reregistration race, v2
-Date: Tue, 24 Nov 2015 15:23:21 -0800
-Message-ID: <5654F169.6070000@sandisk.com>
-References: <564F9AFF.3050605@sandisk.com>
- <20151124231331.GA25591@infradead.org>
+From: Alison Schofield <amsfield22@gmail.com>
+Subject: [PATCH v2] scsi: gdth: replace struct timeval with
+	ktime_get_real_seconds()
+Date: Tue, 24 Nov 2015 16:44:07 -0800
+Message-ID: <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
+References: <20151119214304.GA16713@d830.WORKGROUP>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20151124231331.GA25591@infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, Aaro Koskinen <aaro.koskinen@iki.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-mm@kvack.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20151119214304.GA16713@d830.WORKGROUP>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: achim_leubner@adaptec.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/24/2015 03:13 PM, Christoph Hellwig wrote:
-> What sort of re-registration is this? Seems like we should only
-> release the minor number once the bdi is released.
-
-Hello Christoph,
-
-As you most likely know the BDI device name for disks is based on the 
-device major and minor number:
-
-$ ls -l /dev/sda
-brw-rw---- 1 root disk 8, 0 Nov 24 14:53 /dev/sda
-$ ls -l /sys/block/sda/bdi
-lrwxrwxrwx 1 root root 0 Nov 24 15:17 /sys/block/sda/bdi -> 
-../../../../../../../../virtual/bdi/8:0
-
-So if a driver stops using a (major, minor) number pair and the same 
-device number is reused before the bdi device has been released the 
-warning mentioned in the patch description at the start of this thread 
-is triggered. This patch fixes that race by removing the bdi device from 
-sysfs during the __scsi_remove_device() call instead of when the bdi 
-device is released.
-
-Bart.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+c3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5MjAzOCBh
+bmQgaXMgYmVpbmcKcmVtb3ZlZCBmcm9tIHRoZSBrZXJuZWwuIFJlcGxhY2UgdGhlIHVzZSBvZiBz
+dHJ1Y3QgdGltZXZhbCBhbmQKZG9fZ2V0dGltZW9mZGF5KCkgd2l0aCBrdGltZV9nZXRfcmVhbF9z
+ZWNvbmRzKCkgd2hpY2ggcHJvdmlkZXMgYSA2NC1iaXQKc2Vjb25kcyB2YWx1ZSBhbmQgaXMgeTIw
+Mzggc2FmZS4KCmdkdGggZHJpdmVyIHJlcXVpcmVzIGNoYW5nZXMgaW4gdHdvIGFyZWFzOgoKMSkg
+Z2R0aF9zdG9yZV9ldmVudCgpIGxvYWRzIHR3byB1MzIgdGltZXN0YW1wIGZpZWxkcyBmb3IgaW9j
+dGwgR0RUSU9DVExfRVZFTlQKCiAgIFRoZXNlIHRpbWVzdGFtcCBmaWVsZHMgYXJlIHBhcnQgb2Yg
+c3RydWN0IGdkdGhfZXZ0X3N0ciB1c2VkIGZvciBwYXNzaW5nCiAgIGV2ZW50IGRhdGEgdG8gdXNl
+cnNwYWNlLiBBdCB0aGUgZmlyc3QgaW5zdGFuY2Ugb2YgYW4gZXZlbnQgd2UgZG8KICAgKGZpcnN0
+X3N0YW1wPWxhc3Rfc3RhbXA9ImN1cnJlbnQgdGltZSIpLiBJZiB0aGF0IHNhbWUgZXZlbnQgcmVw
+ZWF0cywKICAgd2UgZG8gKGxhc3Rfc3RhbXA9ImN1cnJlbnQgdGltZSIpIEFORCBpbmNyZW1lbnQg
+c2FtZV9jb3VudCB0byBpbmRpY2F0ZQogICBob3cgbWFueSB0aW1lcyB0aGUgZXZlbnQgaGFzIHJl
+cGVhdGVkIHNpbmNlIGZpcnN0X3N0YW1wLgoKICAgVGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNl
+IG9mIHRpbWV2YWwgYW5kIGRvX2dldHRpbWVvZmRheSgpIHdpdGgKICAga3RpbWVfZ2V0X3JlYWxf
+c2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGV4dGVuZCB0aGUgdGltZXN0YW1wIGZpZWxkcwogICB0
+byB5MjEwNi4KCiAgIEJleW9uZCB5MjEwNiwgdGhlIHVzZXJzcGFjZSB0b29scyAoaWUuIFJBSUQg
+Y29udHJvbGxlciBtb25pdG9ycykgY2FuCiAgIHdvcmsgYXJvdW5kIHRoZSB0aW1lIHJvbGxvdmVy
+IGFuZCB0aGlzIGRyaXZlciB3b3VsZCBzdGlsbCBub3QgbmVlZCB0bwogICBjaGFuZ2UuCgogICBB
+bHRlcm5hdGl2ZTogVGhlIGFsdGVybmF0aXZlIGFwcHJvYWNoIGlzIHRvIGludHJvZHVjZSBhIG5l
+dyBpb2N0bCBpbiBnZHRoCiAgIHdpdGggdGhlIHUzMiB0aW1lIGZpZWxkcyBkZWZpbmVkIGFzIHU2
+NC4gIFRoaXMgd291bGQgcmVxdWlyZSB1c2Vyc3BhY2UKICAgY2hhbmdlcyBub3csIGJ1dCBub3Qg
+aW4geTIxMDYuCgoyKSAgZ2R0aF9zaG93X2luZm8oKSBjYWxjdWxhdGVzIGVsYXBzZWQgdGltZSB1
+c2luZyB1MzIgZmlyc3Rfc3RhbXAKCiAgICBJdCBpcyBhZGRpbmcgZXZlbnRzIHdpdGggdGltZXN0
+YW1wcyB0byBhIHNlcV9maWxlLiAgVGltZXN0YW1wcyBhcmUKICAgIGNhbGN1bGF0ZWQgYXMgdGhl
+ICJjdXJyZW50IHRpbWUiIG1pbnVzIHRoZSBmaXJzdF9zdGFtcC4KCiAgICBUaGlzIHBhdGNoIHJl
+cGxhY2VzIHRoZSB1c2Ugb2YgdGltZXZhbCBhbmQgZG9fZ2V0dGltZW9mZGF5KCkgd2l0aAogICAg
+a3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGNhbGN1bGF0ZSB0aGUgdGlt
+ZXN0YW1wLgoKICAgIFRoaXMgZWxhcHNlZCB0aW1lIGNhbGN1bGF0aW9uIGlzIHNhZmUgZXZlbiB3
+aGVuIHRoZSB0aW1lIHdyYXBzIChiZXlvbmQKICAgIHkyMTA2KSBkdWUgdG8gaG93IHVuc2lnbmVk
+IHN1YnRyYWN0aW9uIHdvcmtzLiBBIGNvbW1lbnQgaGFzIGJlZW4gYWRkZWQKICAgIHRvIHRoZSBj
+b2RlIHRvIGluZGljYXRlIHRoaXMgc2FmZXR5LgoKICAgIEFsdGVybmF0aXZlOiBUaGlzIHBpZWNl
+IGl0c2VsZiBkb2Vzbid0IHdhcnJhbnQgYW4gYWx0ZXJuYXRpdmUsIGJ1dAogICAgaWYgd2UgZG8g
+aW50cm9kdWNlIGEgbmV3IHN0cnVjdHVyZSAmIGlvY3RsIHdpdGggdTY0IHRpbWVzdGFtcHMsIHRo
+aXMKICAgIHdvdWxkIGNoYW5nZSBhY2NvcmRpbmdseS4KClNpZ25lZC1vZmYtYnk6IEFsaXNvbiBT
+Y2hvZmllbGQgPGFtc2ZpZWxkMjJAZ21haWwuY29tPgotLS0KQ2hhbmdlcyBpbiB2MjoKLSByZW1v
+dmUgdW5uZWNlc3Nhcnkga3RpbWUuaCBpbmNsdWRlcwotIGFkZCBjb21tZW50IGluIGNvZGUgdG8g
+ZXhwbGFpbiBlbGFwc2VkIHRpbWUgY2FsY3VsYXRpb24KLSBhZGQgZGV0YWlsIGFuZCBhbHRlcm5h
+dGl2ZXMgdG8gY2hhbmdlbG9nCgoKIGRyaXZlcnMvc2NzaS9nZHRoLmMgICAgICB8ICA3ICsrLS0t
+LS0KIGRyaXZlcnMvc2NzaS9nZHRoX3Byb2MuYyB8IDExICsrKysrKysrLS0tCiAyIGZpbGVzIGNo
+YW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL2dkdGguYyBiL2RyaXZlcnMvc2NzaS9nZHRoLmMKaW5kZXggNzFlMTM4MC4uMGE3
+Njc3NCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL2dkdGguYworKysgYi9kcml2ZXJzL3Njc2kv
+Z2R0aC5jCkBAIC0yODM4LDcgKzI4MzgsNiBAQCBzdGF0aWMgZ2R0aF9ldnRfc3RyICpnZHRoX3N0
+b3JlX2V2ZW50KGdkdGhfaGFfc3RyICpoYSwgdTE2IHNvdXJjZSwKICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgdTE2IGlkeCwgZ2R0aF9ldnRfZGF0YSAqZXZ0KQogewogICAg
+IGdkdGhfZXZ0X3N0ciAqZTsKLSAgICBzdHJ1Y3QgdGltZXZhbCB0djsKIAogICAgIC8qIG5vIEdE
+VEhfTE9DS19IQSgpICEgKi8KICAgICBUUkFDRTIoKCJnZHRoX3N0b3JlX2V2ZW50KCkgc291cmNl
+ICVkIGlkeCAlZFxuIiwgc291cmNlLCBpZHgpKTsKQEAgLTI4NTQsOCArMjg1Myw3IEBAIHN0YXRp
+YyBnZHRoX2V2dF9zdHIgKmdkdGhfc3RvcmVfZXZlbnQoZ2R0aF9oYV9zdHIgKmhhLCB1MTYgc291
+cmNlLAogICAgICAgICAgICAgIXN0cmNtcCgoY2hhciAqKSZlYnVmZmVyW2VsYXN0aWR4XS5ldmVu
+dF9kYXRhLmV2ZW50X3N0cmluZywKICAgICAgICAgICAgIChjaGFyICopJmV2dC0+ZXZlbnRfc3Ry
+aW5nKSkpKSB7IAogICAgICAgICBlID0gJmVidWZmZXJbZWxhc3RpZHhdOwotICAgICAgICBkb19n
+ZXR0aW1lb2ZkYXkoJnR2KTsKLSAgICAgICAgZS0+bGFzdF9zdGFtcCA9IHR2LnR2X3NlYzsKKwll
+LT5sYXN0X3N0YW1wID0gKHUzMilrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCk7CiAgICAgICAgICsr
+ZS0+c2FtZV9jb3VudDsKICAgICB9IGVsc2UgewogICAgICAgICBpZiAoZWJ1ZmZlcltlbGFzdGlk
+eF0uZXZlbnRfc291cmNlICE9IDApIHsgIC8qIGVudHJ5IG5vdCBmcmVlID8gKi8KQEAgLTI4NzEs
+OCArMjg2OSw3IEBAIHN0YXRpYyBnZHRoX2V2dF9zdHIgKmdkdGhfc3RvcmVfZXZlbnQoZ2R0aF9o
+YV9zdHIgKmhhLCB1MTYgc291cmNlLAogICAgICAgICBlID0gJmVidWZmZXJbZWxhc3RpZHhdOwog
+ICAgICAgICBlLT5ldmVudF9zb3VyY2UgPSBzb3VyY2U7CiAgICAgICAgIGUtPmV2ZW50X2lkeCA9
+IGlkeDsKLSAgICAgICAgZG9fZ2V0dGltZW9mZGF5KCZ0dik7Ci0gICAgICAgIGUtPmZpcnN0X3N0
+YW1wID0gZS0+bGFzdF9zdGFtcCA9IHR2LnR2X3NlYzsKKwllLT5maXJzdF9zdGFtcCA9IGUtPmxh
+c3Rfc3RhbXAgPSAodTMyKWt0aW1lX2dldF9yZWFsX3NlY29uZHMoKTsKICAgICAgICAgZS0+c2Ft
+ZV9jb3VudCA9IDE7CiAgICAgICAgIGUtPmV2ZW50X2RhdGEgPSAqZXZ0OwogICAgICAgICBlLT5h
+cHBsaWNhdGlvbiA9IDA7CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZ2R0aF9wcm9jLmMgYi9k
+cml2ZXJzL3Njc2kvZ2R0aF9wcm9jLmMKaW5kZXggZTY2ZTk5Ny4uYmU2MDlkYiAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9zY3NpL2dkdGhfcHJvYy5jCisrKyBiL2RyaXZlcnMvc2NzaS9nZHRoX3Byb2Mu
+YwpAQCAtMTQ4LDcgKzE0OCw2IEBAIGludCBnZHRoX3Nob3dfaW5mbyhzdHJ1Y3Qgc2VxX2ZpbGUg
+Km0sIHN0cnVjdCBTY3NpX0hvc3QgKmhvc3QpCiAgICAgZ2R0aF9jbWRfc3RyICpnZHRjbWQ7CiAg
+ICAgZ2R0aF9ldnRfc3RyICplc3RyOwogICAgIGNoYXIgaHJlY1sxNjFdOwotICAgIHN0cnVjdCB0
+aW1ldmFsIHR2OwogCiAgICAgY2hhciAqYnVmOwogICAgIGdkdGhfZHNrc3RhdF9zdHIgKnBkczsK
+QEAgLTU0MCw4ICs1MzksMTQgQEAgaW50IGdkdGhfc2hvd19pbmZvKHN0cnVjdCBzZXFfZmlsZSAq
+bSwgc3RydWN0IFNjc2lfSG9zdCAqaG9zdCkKICAgICAgICAgaWYgKGVzdHItPmV2ZW50X2RhdGEu
+ZXUuZHJpdmVyLmlvbm9kZSA9PSBoYS0+aGFudW0gJiYKICAgICAgICAgICAgIGVzdHItPmV2ZW50
+X3NvdXJjZSA9PSBFU19BU1lOQykgeyAKICAgICAgICAgICAgIGdkdGhfbG9nX2V2ZW50KCZlc3Ry
+LT5ldmVudF9kYXRhLCBocmVjKTsKLSAgICAgICAgICAgIGRvX2dldHRpbWVvZmRheSgmdHYpOwot
+ICAgICAgICAgICAgc2VjID0gKGludCkodHYudHZfc2VjIC0gZXN0ci0+Zmlyc3Rfc3RhbXApOwor
+CisJICAgIC8qCisJICAgICAqIEVsYXBzZWQgc2Vjb25kcyBzdWJ0cmFjdGlvbiB3aXRoIHVuc2ln
+bmVkIG9wZXJhbmRzIGlzCisJICAgICAqIHNhZmUgZnJvbSB3cmFwIGFyb3VuZCBpbiB5ZWFyIDIx
+MDYuICBFeGVjdXRlcyBhczoKKwkgICAgICogb3BlcmFuZCBhICsgKDIncyBjb21wbGVtZW50IG9w
+ZXJhbmQgYikgKyAxCisJICAgICAqLworCisJICAgIHNlYyA9IChpbnQpKCh1MzIpa3RpbWVfZ2V0
+X3JlYWxfc2Vjb25kcygpIC0gZXN0ci0+Zmlyc3Rfc3RhbXApOwogICAgICAgICAgICAgaWYgKHNl
+YyA8IDApIHNlYyA9IDA7CiAgICAgICAgICAgICBzZXFfcHJpbnRmKG0sIiBkYXRlLSAlMDJkOiUw
+MmQ6JTAyZFx0JXNcbiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZWMvMzYwMCwgc2Vj
+JTM2MDAvNjAsIHNlYyU2MCwgaHJlYyk7Ci0tIAoyLjEuNAoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3Rz
+LmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIw
+MzgK
