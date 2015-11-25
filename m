@@ -1,17 +1,17 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v3 1/5] arcmsr: fixed getting wrong configuration data
-Date: Wed, 25 Nov 2015 19:36:02 +0800
-Message-ID: <1448451362.4670.29.camel@Centos6.3-64>
+Subject: [PATCH v3 2/5] arcmsr: fixes not release allocated resource
+Date: Wed, 25 Nov 2015 19:41:23 +0800
+Message-ID: <1448451683.4670.35.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35366 "EHLO
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35183 "EHLO
 	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044AbbKYLgF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2015 06:36:05 -0500
-Received: by pacej9 with SMTP id ej9so55229857pac.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2015 03:36:04 -0800 (PST)
+	with ESMTP id S1751935AbbKYLla (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2015 06:41:30 -0500
+Received: by pacej9 with SMTP id ej9so55363569pac.2
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2015 03:41:30 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, jthumshirn@suse.de
@@ -19,56 +19,34 @@ Cc: hch@lst.de
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-Fixed getting wrong configuration data of adapter type B and type D.
+Releasing allocated resource if get configuration data failed.
 
 Signed-of-by: Ching Huang <ching2048@areca.com.tw>
 
 ---
 
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-23 16:25:22.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-24 11:35:26.000000000 +0800
-@@ -2694,15 +2694,15 @@ static bool arcmsr_hbaB_get_config(struc
- 		acb->firm_model,
- 		acb->firm_version);
- 
--	acb->signature = readl(&reg->message_rwbuffer[1]);
-+	acb->signature = readl(&reg->message_rwbuffer[0]);
- 	/*firm_signature,1,00-03*/
--	acb->firm_request_len = readl(&reg->message_rwbuffer[2]);
-+	acb->firm_request_len = readl(&reg->message_rwbuffer[1]);
- 	/*firm_request_len,1,04-07*/
--	acb->firm_numbers_queue = readl(&reg->message_rwbuffer[3]);
-+	acb->firm_numbers_queue = readl(&reg->message_rwbuffer[2]);
- 	/*firm_numbers_queue,2,08-11*/
--	acb->firm_sdram_size = readl(&reg->message_rwbuffer[4]);
-+	acb->firm_sdram_size = readl(&reg->message_rwbuffer[3]);
- 	/*firm_sdram_size,3,12-15*/
--	acb->firm_hd_channels = readl(&reg->message_rwbuffer[5]);
-+	acb->firm_hd_channels = readl(&reg->message_rwbuffer[4]);
- 	/*firm_ide_channels,4,16-19*/
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-24 11:35:26.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-25 19:04:44.590970000 +0800
+@@ -2664,7 +2664,7 @@ static bool arcmsr_hbaB_get_config(struc
+ 	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
+ 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+ 			miscellaneous data' timeout \n", acb->host->host_no);
+-		return false;
++		goto err_free_dma;
+ 	}
+ 	count = 8;
+ 	while (count){
+@@ -2707,6 +2707,10 @@ static bool arcmsr_hbaB_get_config(struc
  	acb->firm_cfg_version = readl(&reg->message_rwbuffer[25]);  /*firm_cfg_version,25,100-103*/
  	/*firm_ide_channels,4,16-19*/
-@@ -2880,15 +2880,15 @@ static bool arcmsr_hbaD_get_config(struc
- 		iop_device_map++;
- 		count--;
- 	}
--	acb->signature = readl(&reg->msgcode_rwbuffer[1]);
-+	acb->signature = readl(&reg->msgcode_rwbuffer[0]);
- 	/*firm_signature,1,00-03*/
--	acb->firm_request_len = readl(&reg->msgcode_rwbuffer[2]);
-+	acb->firm_request_len = readl(&reg->msgcode_rwbuffer[1]);
- 	/*firm_request_len,1,04-07*/
--	acb->firm_numbers_queue = readl(&reg->msgcode_rwbuffer[3]);
-+	acb->firm_numbers_queue = readl(&reg->msgcode_rwbuffer[2]);
- 	/*firm_numbers_queue,2,08-11*/
--	acb->firm_sdram_size = readl(&reg->msgcode_rwbuffer[4]);
-+	acb->firm_sdram_size = readl(&reg->msgcode_rwbuffer[3]);
- 	/*firm_sdram_size,3,12-15*/
--	acb->firm_hd_channels = readl(&reg->msgcode_rwbuffer[5]);
-+	acb->firm_hd_channels = readl(&reg->msgcode_rwbuffer[4]);
- 	/*firm_hd_channels,4,16-19*/
- 	acb->firm_cfg_version = readl(&reg->msgcode_rwbuffer[25]);
- 	pr_notice("Areca RAID Controller%d: Model %s, F/W %s\n",
+ 	return true;
++err_free_dma:
++	dma_free_coherent(&acb->pdev->dev, acb->roundup_ccbsize,
++			acb->dma_coherent2, acb->dma_coherent_handle2);
++	return false;
+ }
+ 
+ static bool arcmsr_hbaC_get_config(struct AdapterControlBlock *pACB)
 
 
