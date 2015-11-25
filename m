@@ -1,110 +1,105 @@
-From: Alison Schofield <amsfield22@gmail.com>
-Subject: [PATCH v2] scsi: gdth: replace struct timeval with
-	ktime_get_real_seconds()
-Date: Tue, 24 Nov 2015 16:44:07 -0800
-Message-ID: <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
-References: <20151119214304.GA16713@d830.WORKGROUP>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380
+ drivers
+Date: Wed, 25 Nov 2015 13:10:49 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1511251246130.24439@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <201511240904.55085.linux@rainbow-software.org> <alpine.LNX.2.00.1511241932130.7196@nippy.intranet> <201511242240.24959.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <20151119214304.GA16713@d830.WORKGROUP>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: achim_leubner@adaptec.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, y2038@lists.linaro.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <201511242240.24959.linux@rainbow-software.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-c3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5MjAzOCBh
-bmQgaXMgYmVpbmcKcmVtb3ZlZCBmcm9tIHRoZSBrZXJuZWwuIFJlcGxhY2UgdGhlIHVzZSBvZiBz
-dHJ1Y3QgdGltZXZhbCBhbmQKZG9fZ2V0dGltZW9mZGF5KCkgd2l0aCBrdGltZV9nZXRfcmVhbF9z
-ZWNvbmRzKCkgd2hpY2ggcHJvdmlkZXMgYSA2NC1iaXQKc2Vjb25kcyB2YWx1ZSBhbmQgaXMgeTIw
-Mzggc2FmZS4KCmdkdGggZHJpdmVyIHJlcXVpcmVzIGNoYW5nZXMgaW4gdHdvIGFyZWFzOgoKMSkg
-Z2R0aF9zdG9yZV9ldmVudCgpIGxvYWRzIHR3byB1MzIgdGltZXN0YW1wIGZpZWxkcyBmb3IgaW9j
-dGwgR0RUSU9DVExfRVZFTlQKCiAgIFRoZXNlIHRpbWVzdGFtcCBmaWVsZHMgYXJlIHBhcnQgb2Yg
-c3RydWN0IGdkdGhfZXZ0X3N0ciB1c2VkIGZvciBwYXNzaW5nCiAgIGV2ZW50IGRhdGEgdG8gdXNl
-cnNwYWNlLiBBdCB0aGUgZmlyc3QgaW5zdGFuY2Ugb2YgYW4gZXZlbnQgd2UgZG8KICAgKGZpcnN0
-X3N0YW1wPWxhc3Rfc3RhbXA9ImN1cnJlbnQgdGltZSIpLiBJZiB0aGF0IHNhbWUgZXZlbnQgcmVw
-ZWF0cywKICAgd2UgZG8gKGxhc3Rfc3RhbXA9ImN1cnJlbnQgdGltZSIpIEFORCBpbmNyZW1lbnQg
-c2FtZV9jb3VudCB0byBpbmRpY2F0ZQogICBob3cgbWFueSB0aW1lcyB0aGUgZXZlbnQgaGFzIHJl
-cGVhdGVkIHNpbmNlIGZpcnN0X3N0YW1wLgoKICAgVGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNl
-IG9mIHRpbWV2YWwgYW5kIGRvX2dldHRpbWVvZmRheSgpIHdpdGgKICAga3RpbWVfZ2V0X3JlYWxf
-c2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGV4dGVuZCB0aGUgdGltZXN0YW1wIGZpZWxkcwogICB0
-byB5MjEwNi4KCiAgIEJleW9uZCB5MjEwNiwgdGhlIHVzZXJzcGFjZSB0b29scyAoaWUuIFJBSUQg
-Y29udHJvbGxlciBtb25pdG9ycykgY2FuCiAgIHdvcmsgYXJvdW5kIHRoZSB0aW1lIHJvbGxvdmVy
-IGFuZCB0aGlzIGRyaXZlciB3b3VsZCBzdGlsbCBub3QgbmVlZCB0bwogICBjaGFuZ2UuCgogICBB
-bHRlcm5hdGl2ZTogVGhlIGFsdGVybmF0aXZlIGFwcHJvYWNoIGlzIHRvIGludHJvZHVjZSBhIG5l
-dyBpb2N0bCBpbiBnZHRoCiAgIHdpdGggdGhlIHUzMiB0aW1lIGZpZWxkcyBkZWZpbmVkIGFzIHU2
-NC4gIFRoaXMgd291bGQgcmVxdWlyZSB1c2Vyc3BhY2UKICAgY2hhbmdlcyBub3csIGJ1dCBub3Qg
-aW4geTIxMDYuCgoyKSAgZ2R0aF9zaG93X2luZm8oKSBjYWxjdWxhdGVzIGVsYXBzZWQgdGltZSB1
-c2luZyB1MzIgZmlyc3Rfc3RhbXAKCiAgICBJdCBpcyBhZGRpbmcgZXZlbnRzIHdpdGggdGltZXN0
-YW1wcyB0byBhIHNlcV9maWxlLiAgVGltZXN0YW1wcyBhcmUKICAgIGNhbGN1bGF0ZWQgYXMgdGhl
-ICJjdXJyZW50IHRpbWUiIG1pbnVzIHRoZSBmaXJzdF9zdGFtcC4KCiAgICBUaGlzIHBhdGNoIHJl
-cGxhY2VzIHRoZSB1c2Ugb2YgdGltZXZhbCBhbmQgZG9fZ2V0dGltZW9mZGF5KCkgd2l0aAogICAg
-a3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGNhbGN1bGF0ZSB0aGUgdGlt
-ZXN0YW1wLgoKICAgIFRoaXMgZWxhcHNlZCB0aW1lIGNhbGN1bGF0aW9uIGlzIHNhZmUgZXZlbiB3
-aGVuIHRoZSB0aW1lIHdyYXBzIChiZXlvbmQKICAgIHkyMTA2KSBkdWUgdG8gaG93IHVuc2lnbmVk
-IHN1YnRyYWN0aW9uIHdvcmtzLiBBIGNvbW1lbnQgaGFzIGJlZW4gYWRkZWQKICAgIHRvIHRoZSBj
-b2RlIHRvIGluZGljYXRlIHRoaXMgc2FmZXR5LgoKICAgIEFsdGVybmF0aXZlOiBUaGlzIHBpZWNl
-IGl0c2VsZiBkb2Vzbid0IHdhcnJhbnQgYW4gYWx0ZXJuYXRpdmUsIGJ1dAogICAgaWYgd2UgZG8g
-aW50cm9kdWNlIGEgbmV3IHN0cnVjdHVyZSAmIGlvY3RsIHdpdGggdTY0IHRpbWVzdGFtcHMsIHRo
-aXMKICAgIHdvdWxkIGNoYW5nZSBhY2NvcmRpbmdseS4KClNpZ25lZC1vZmYtYnk6IEFsaXNvbiBT
-Y2hvZmllbGQgPGFtc2ZpZWxkMjJAZ21haWwuY29tPgotLS0KQ2hhbmdlcyBpbiB2MjoKLSByZW1v
-dmUgdW5uZWNlc3Nhcnkga3RpbWUuaCBpbmNsdWRlcwotIGFkZCBjb21tZW50IGluIGNvZGUgdG8g
-ZXhwbGFpbiBlbGFwc2VkIHRpbWUgY2FsY3VsYXRpb24KLSBhZGQgZGV0YWlsIGFuZCBhbHRlcm5h
-dGl2ZXMgdG8gY2hhbmdlbG9nCgoKIGRyaXZlcnMvc2NzaS9nZHRoLmMgICAgICB8ICA3ICsrLS0t
-LS0KIGRyaXZlcnMvc2NzaS9nZHRoX3Byb2MuYyB8IDExICsrKysrKysrLS0tCiAyIGZpbGVzIGNo
-YW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL2dkdGguYyBiL2RyaXZlcnMvc2NzaS9nZHRoLmMKaW5kZXggNzFlMTM4MC4uMGE3
-Njc3NCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL2dkdGguYworKysgYi9kcml2ZXJzL3Njc2kv
-Z2R0aC5jCkBAIC0yODM4LDcgKzI4MzgsNiBAQCBzdGF0aWMgZ2R0aF9ldnRfc3RyICpnZHRoX3N0
-b3JlX2V2ZW50KGdkdGhfaGFfc3RyICpoYSwgdTE2IHNvdXJjZSwKICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgdTE2IGlkeCwgZ2R0aF9ldnRfZGF0YSAqZXZ0KQogewogICAg
-IGdkdGhfZXZ0X3N0ciAqZTsKLSAgICBzdHJ1Y3QgdGltZXZhbCB0djsKIAogICAgIC8qIG5vIEdE
-VEhfTE9DS19IQSgpICEgKi8KICAgICBUUkFDRTIoKCJnZHRoX3N0b3JlX2V2ZW50KCkgc291cmNl
-ICVkIGlkeCAlZFxuIiwgc291cmNlLCBpZHgpKTsKQEAgLTI4NTQsOCArMjg1Myw3IEBAIHN0YXRp
-YyBnZHRoX2V2dF9zdHIgKmdkdGhfc3RvcmVfZXZlbnQoZ2R0aF9oYV9zdHIgKmhhLCB1MTYgc291
-cmNlLAogICAgICAgICAgICAgIXN0cmNtcCgoY2hhciAqKSZlYnVmZmVyW2VsYXN0aWR4XS5ldmVu
-dF9kYXRhLmV2ZW50X3N0cmluZywKICAgICAgICAgICAgIChjaGFyICopJmV2dC0+ZXZlbnRfc3Ry
-aW5nKSkpKSB7IAogICAgICAgICBlID0gJmVidWZmZXJbZWxhc3RpZHhdOwotICAgICAgICBkb19n
-ZXR0aW1lb2ZkYXkoJnR2KTsKLSAgICAgICAgZS0+bGFzdF9zdGFtcCA9IHR2LnR2X3NlYzsKKwll
-LT5sYXN0X3N0YW1wID0gKHUzMilrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCk7CiAgICAgICAgICsr
-ZS0+c2FtZV9jb3VudDsKICAgICB9IGVsc2UgewogICAgICAgICBpZiAoZWJ1ZmZlcltlbGFzdGlk
-eF0uZXZlbnRfc291cmNlICE9IDApIHsgIC8qIGVudHJ5IG5vdCBmcmVlID8gKi8KQEAgLTI4NzEs
-OCArMjg2OSw3IEBAIHN0YXRpYyBnZHRoX2V2dF9zdHIgKmdkdGhfc3RvcmVfZXZlbnQoZ2R0aF9o
-YV9zdHIgKmhhLCB1MTYgc291cmNlLAogICAgICAgICBlID0gJmVidWZmZXJbZWxhc3RpZHhdOwog
-ICAgICAgICBlLT5ldmVudF9zb3VyY2UgPSBzb3VyY2U7CiAgICAgICAgIGUtPmV2ZW50X2lkeCA9
-IGlkeDsKLSAgICAgICAgZG9fZ2V0dGltZW9mZGF5KCZ0dik7Ci0gICAgICAgIGUtPmZpcnN0X3N0
-YW1wID0gZS0+bGFzdF9zdGFtcCA9IHR2LnR2X3NlYzsKKwllLT5maXJzdF9zdGFtcCA9IGUtPmxh
-c3Rfc3RhbXAgPSAodTMyKWt0aW1lX2dldF9yZWFsX3NlY29uZHMoKTsKICAgICAgICAgZS0+c2Ft
-ZV9jb3VudCA9IDE7CiAgICAgICAgIGUtPmV2ZW50X2RhdGEgPSAqZXZ0OwogICAgICAgICBlLT5h
-cHBsaWNhdGlvbiA9IDA7CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZ2R0aF9wcm9jLmMgYi9k
-cml2ZXJzL3Njc2kvZ2R0aF9wcm9jLmMKaW5kZXggZTY2ZTk5Ny4uYmU2MDlkYiAxMDA2NDQKLS0t
-IGEvZHJpdmVycy9zY3NpL2dkdGhfcHJvYy5jCisrKyBiL2RyaXZlcnMvc2NzaS9nZHRoX3Byb2Mu
-YwpAQCAtMTQ4LDcgKzE0OCw2IEBAIGludCBnZHRoX3Nob3dfaW5mbyhzdHJ1Y3Qgc2VxX2ZpbGUg
-Km0sIHN0cnVjdCBTY3NpX0hvc3QgKmhvc3QpCiAgICAgZ2R0aF9jbWRfc3RyICpnZHRjbWQ7CiAg
-ICAgZ2R0aF9ldnRfc3RyICplc3RyOwogICAgIGNoYXIgaHJlY1sxNjFdOwotICAgIHN0cnVjdCB0
-aW1ldmFsIHR2OwogCiAgICAgY2hhciAqYnVmOwogICAgIGdkdGhfZHNrc3RhdF9zdHIgKnBkczsK
-QEAgLTU0MCw4ICs1MzksMTQgQEAgaW50IGdkdGhfc2hvd19pbmZvKHN0cnVjdCBzZXFfZmlsZSAq
-bSwgc3RydWN0IFNjc2lfSG9zdCAqaG9zdCkKICAgICAgICAgaWYgKGVzdHItPmV2ZW50X2RhdGEu
-ZXUuZHJpdmVyLmlvbm9kZSA9PSBoYS0+aGFudW0gJiYKICAgICAgICAgICAgIGVzdHItPmV2ZW50
-X3NvdXJjZSA9PSBFU19BU1lOQykgeyAKICAgICAgICAgICAgIGdkdGhfbG9nX2V2ZW50KCZlc3Ry
-LT5ldmVudF9kYXRhLCBocmVjKTsKLSAgICAgICAgICAgIGRvX2dldHRpbWVvZmRheSgmdHYpOwot
-ICAgICAgICAgICAgc2VjID0gKGludCkodHYudHZfc2VjIC0gZXN0ci0+Zmlyc3Rfc3RhbXApOwor
-CisJICAgIC8qCisJICAgICAqIEVsYXBzZWQgc2Vjb25kcyBzdWJ0cmFjdGlvbiB3aXRoIHVuc2ln
-bmVkIG9wZXJhbmRzIGlzCisJICAgICAqIHNhZmUgZnJvbSB3cmFwIGFyb3VuZCBpbiB5ZWFyIDIx
-MDYuICBFeGVjdXRlcyBhczoKKwkgICAgICogb3BlcmFuZCBhICsgKDIncyBjb21wbGVtZW50IG9w
-ZXJhbmQgYikgKyAxCisJICAgICAqLworCisJICAgIHNlYyA9IChpbnQpKCh1MzIpa3RpbWVfZ2V0
-X3JlYWxfc2Vjb25kcygpIC0gZXN0ci0+Zmlyc3Rfc3RhbXApOwogICAgICAgICAgICAgaWYgKHNl
-YyA8IDApIHNlYyA9IDA7CiAgICAgICAgICAgICBzZXFfcHJpbnRmKG0sIiBkYXRlLSAlMDJkOiUw
-MmQ6JTAyZFx0JXNcbiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZWMvMzYwMCwgc2Vj
-JTM2MDAvNjAsIHNlYyU2MCwgaHJlYyk7Ci0tIAoyLjEuNAoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3Rz
-LmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIw
-MzgK
+
+On Tue, 24 Nov 2015, Ondrej Zary wrote:
+
+> On Tuesday 24 November 2015 10:13:17 Finn Thain wrote:
+> > 
+> > On Tue, 24 Nov 2015, Ondrej Zary wrote:
+> > 
+> > > On Tuesday 24 November 2015, Finn Thain wrote:
+> > > > 
+> > > > On Mon, 23 Nov 2015, Ondrej Zary wrote:
+> > > > 
+> > > > > 
+> > > > > PDMA seems to be broken in multiple ways. NCR5380_pread cannot 
+> > > > > process less than 128 bytes. In fact, 53C400 datasheet says that 
+> > > > > it's HW limitation: non-modulo-128-byte transfers should use 
+> > > > > PIO.
+> > > > > 
+> > > > > Adding
+> > > > >         transfersize = round_down(transfersize, 128);
+> > > > > to generic_NCR5380_dma_xfer_len() improves the situation a bit.
+> > > > > 
+> > > > > After modprobe, some small reads (8, 4, 24 and 64 bytes) are 
+> > > > > done using PIO, then eight 512-byte reads using PDMA and then it 
+> > > > > fails on a 254-byte read. First 128 bytes are read using PDMA 
+> > > > > and the next PDMA operation hangs waiting forever for the host 
+> > > > > buffer to be ready.
+> > > > > 
+> > > > 
+> > > > A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't 
+> > > > see how that is possible given round_down(126, 128) == 0. Was this 
+> > > > the actual 'len' argument to NCR5380_pread() in g_NCR5380.c?
+> > > 
+> > > No 126-byte PDMA. The 126 bytes were probably lost (or mixed with 
+> > > the next read?).
+> > [...]
+> > > The next read was also 254 bytes so another 128-byte PDMA transfer.
+> > > 
+> > > Then modified NCR5380_information_transfer() to transfer the 
+> > > remaining data (126 bytes in this case) using PIO. It did not help, 
+> > > the next PDMA transfer failed too.
+> > > 
+> > 
+> > AFAICT, no change to NCR5380_information_transfer() should be needed. 
+> > It was always meant to cope with the need to split a transfer between 
+> > (P)DMA and PIO.
+> 
+> Instead of fixing split transfers, simply forced everything 
+> non-modulo-128 to PIO:
+
+The need to split a transfer arises from early chip errata relating to DMA 
+and the workarounds for them (see the comments in the source). That's why 
+I believe that the driver was meant to be cope with this. But I don't have 
+any experimental evidence for it.
+
+I'm almost certain that these errata aren't applicable to your hardware. 
+So I don't have any reason to think that your card will allow part of a 
+transfer to be performed with PDMA and the rest with PIO. So I don't 
+really object to the patch.
+
+But I don't understand the need for it either: I have no idea what state 
+the driver, chip and scsi bus were in when the 126-byte PIO transfer 
+failed. If the PIO transfer didn't succeed then the entire command should 
+have failed.
+
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -703,6 +703,10 @@ static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
+>  	    !(cmd->SCp.this_residual % transfersize))
+>  		transfersize = 32 * 1024;
+> 
+> +	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
+
+Do you have a download link for this datasheet?
+
+> +	if (transfersize % 128)
+> +		transfersize = 0;
+> +
+>  	return transfersize;
+>  }
+> 
+> It seems to work and greatly improves performance:
+> # hdparm -t --direct /dev/sdb
+> 
+> /dev/sdb:
+>  Timing O_DIRECT disk reads:   4 MB in  4.84 seconds = 846.15 kB/sec
+> 
+
+Sounds about right...
+
+-- 
