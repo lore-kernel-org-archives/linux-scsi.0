@@ -1,57 +1,59 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: iSCSI and scsi-mq
-Date: Wed, 25 Nov 2015 11:04:25 +0100
-Message-ID: <1448445865.2877.71.camel@suse.de>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBDVNRMMDUUIBBK4P22ZAKGQE5SL3TDA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Jayamohan Kallickal <jayamohan.kallickal-1wcpHE2jlwO1Z/+hSey0Gg@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Anup Limbu <anuplimbu14@gmail.com>
+Subject: [PATCH] scsi: aic7xxx: kfree() NULL pointer cleanups
+Date: Wed, 25 Nov 2015 15:54:42 +0530
+Message-ID: <1448447082-15920-1-git-send-email-anuplimbu14@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.com, JBottomley@odin.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Anup Limbu <anuplimbu14@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi iSCSI experts,
+kfree() handles NULL pointers fine - checking is redundant
 
-I've been starting to research possible implementations of a scsi-mq capabl=
-e
-iSCSI. With my research I found the following thread=C2=A0https://groups.go=
-ogle.com/
-forum/#!msg/open-iscsi/qLaXJh2Gqt4/A2NIDZ0fT9oJ=C2=A0and wondered what happ=
-ened to
-the efforts layed out there (and what have been the results of the discussi=
-on
-at LSF/MM).
+Signed-off-by: Anup Limbu <anuplimbu14@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-The one TCP connection per CPU or HW queue approach sounds particularly
-interesting to me when taking a SW iSCSI initiator. A problem Hannes pointe=
-d
-out here could be network topology changes which result in a different rout=
-e on
-a different NIC with a different number of HW queues, so it might not be th=
-e
-ultimate solution.
-
-With the offload cards we might need to do something else.
-
-Is there anyone else working on a scsi-mq for iSCSI at the moment and is
-willing to join efforts here?
-
-Byte,
-	Johannes
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 109e2c9..a710a35 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -3681,8 +3681,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id, char channel, int force)
+ 		return;
+ 
+ 	tstate = ahd->enabled_targets[scsi_id];
+-	if (tstate != NULL)
+-		kfree(tstate);
++	kfree(tstate);
+ 	ahd->enabled_targets[scsi_id] = NULL;
+ }
+ #endif
+@@ -6145,8 +6144,7 @@ ahd_set_unit(struct ahd_softc *ahd, int unit)
+ void
+ ahd_set_name(struct ahd_softc *ahd, char *name)
+ {
+-	if (ahd->name != NULL)
+-		kfree(ahd->name);
++	kfree(ahd->name);
+ 	ahd->name = name;
+ }
+ 
+@@ -6213,12 +6211,9 @@ ahd_free(struct ahd_softc *ahd)
+ 		kfree(ahd->black_hole);
+ 	}
+ #endif
+-	if (ahd->name != NULL)
+-		kfree(ahd->name);
+-	if (ahd->seep_config != NULL)
+-		kfree(ahd->seep_config);
+-	if (ahd->saved_stack != NULL)
+-		kfree(ahd->saved_stack);
++	kfree(ahd->name);
++	kfree(ahd->seep_config);
++	kfree(ahd->saved_stack);
+ #ifndef __FreeBSD__
+ 	kfree(ahd);
+ #endif
+-- 
+1.9.1
