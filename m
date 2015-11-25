@@ -1,66 +1,89 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2] scsi: gdth: replace struct timeval with
-	ktime_get_real_seconds()
-Date: Wed, 25 Nov 2015 10:03:57 +0100
-Message-ID: <3133545.iF2pfcmJbC@wuerfel>
-References: <20151119214304.GA16713@d830.WORKGROUP>
- <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
+Date: Wed, 25 Nov 2015 10:04:34 +0100
+Message-ID: <565579A2.4000005@suse.de>
+References: <1447838334.1564.2.camel@ellerman.id.au>	 <1447855399.3974.24.camel@redhat.com>	 <1447894964.15206.0.camel@ellerman.id.au>	 <20151119082325.GA11419@infradead.org>  <564DEC41.5010600@suse.de>	 <1448030316.4067.18.camel@localhost.localdomain> <564F3453.9040603@suse.de> <1448033323.4067.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: y2038@lists.linaro.org
-Cc: achim_leubner@adaptec.com, JBottomley@odin.com, Alison Schofield <amsfield22@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1448033323.4067.24.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: emilne@redhat.com
+Cc: Christoph Hellwig <hch@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Jens Axboe <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVHVlc2RheSAyNCBOb3ZlbWJlciAyMDE1IDE2OjQ0OjA3IEFsaXNvbiBTY2hvZmllbGQgd3Jv
-dGU6Cj4gc3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5
-MjAzOCBhbmQgaXMgYmVpbmcKPiByZW1vdmVkIGZyb20gdGhlIGtlcm5lbC4gUmVwbGFjZSB0aGUg
-dXNlIG9mIHN0cnVjdCB0aW1ldmFsIGFuZAo+IGRvX2dldHRpbWVvZmRheSgpIHdpdGgga3RpbWVf
-Z2V0X3JlYWxfc2Vjb25kcygpIHdoaWNoIHByb3ZpZGVzIGEgNjQtYml0Cj4gc2Vjb25kcyB2YWx1
-ZSBhbmQgaXMgeTIwMzggc2FmZS4KPiAKPiBnZHRoIGRyaXZlciByZXF1aXJlcyBjaGFuZ2VzIGlu
-IHR3byBhcmVhczoKPiAKPiAxKSBnZHRoX3N0b3JlX2V2ZW50KCkgbG9hZHMgdHdvIHUzMiB0aW1l
-c3RhbXAgZmllbGRzIGZvciBpb2N0bCBHRFRJT0NUTF9FVkVOVAo+IAo+ICAgIFRoZXNlIHRpbWVz
-dGFtcCBmaWVsZHMgYXJlIHBhcnQgb2Ygc3RydWN0IGdkdGhfZXZ0X3N0ciB1c2VkIGZvciBwYXNz
-aW5nCj4gICAgZXZlbnQgZGF0YSB0byB1c2Vyc3BhY2UuIEF0IHRoZSBmaXJzdCBpbnN0YW5jZSBv
-ZiBhbiBldmVudCB3ZSBkbwo+ICAgIChmaXJzdF9zdGFtcD1sYXN0X3N0YW1wPSJjdXJyZW50IHRp
-bWUiKS4gSWYgdGhhdCBzYW1lIGV2ZW50IHJlcGVhdHMsCj4gICAgd2UgZG8gKGxhc3Rfc3RhbXA9
-ImN1cnJlbnQgdGltZSIpIEFORCBpbmNyZW1lbnQgc2FtZV9jb3VudCB0byBpbmRpY2F0ZQo+ICAg
-IGhvdyBtYW55IHRpbWVzIHRoZSBldmVudCBoYXMgcmVwZWF0ZWQgc2luY2UgZmlyc3Rfc3RhbXAu
-Cj4gCj4gICAgVGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mIHRpbWV2YWwgYW5kIGRvX2dl
-dHRpbWVvZmRheSgpIHdpdGgKPiAgICBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkgY2FzdCB0byB1
-MzIgdG8gZXh0ZW5kIHRoZSB0aW1lc3RhbXAgZmllbGRzCj4gICAgdG8geTIxMDYuCj4gCj4gICAg
-QmV5b25kIHkyMTA2LCB0aGUgdXNlcnNwYWNlIHRvb2xzIChpZS4gUkFJRCBjb250cm9sbGVyIG1v
-bml0b3JzKSBjYW4KPiAgICB3b3JrIGFyb3VuZCB0aGUgdGltZSByb2xsb3ZlciBhbmQgdGhpcyBk
-cml2ZXIgd291bGQgc3RpbGwgbm90IG5lZWQgdG8KPiAgICBjaGFuZ2UuCj4gCj4gICAgQWx0ZXJu
-YXRpdmU6IFRoZSBhbHRlcm5hdGl2ZSBhcHByb2FjaCBpcyB0byBpbnRyb2R1Y2UgYSBuZXcgaW9j
-dGwgaW4gZ2R0aAo+ICAgIHdpdGggdGhlIHUzMiB0aW1lIGZpZWxkcyBkZWZpbmVkIGFzIHU2NC4g
-IFRoaXMgd291bGQgcmVxdWlyZSB1c2Vyc3BhY2UKPiAgICBjaGFuZ2VzIG5vdywgYnV0IG5vdCBp
-biB5MjEwNi4KPiAKPiAyKSAgZ2R0aF9zaG93X2luZm8oKSBjYWxjdWxhdGVzIGVsYXBzZWQgdGlt
-ZSB1c2luZyB1MzIgZmlyc3Rfc3RhbXAKPiAKPiAgICAgSXQgaXMgYWRkaW5nIGV2ZW50cyB3aXRo
-IHRpbWVzdGFtcHMgdG8gYSBzZXFfZmlsZS4gIFRpbWVzdGFtcHMgYXJlCj4gICAgIGNhbGN1bGF0
-ZWQgYXMgdGhlICJjdXJyZW50IHRpbWUiIG1pbnVzIHRoZSBmaXJzdF9zdGFtcC4KPiAKPiAgICAg
-VGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mIHRpbWV2YWwgYW5kIGRvX2dldHRpbWVvZmRh
-eSgpIHdpdGgKPiAgICAga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGNh
-bGN1bGF0ZSB0aGUgdGltZXN0YW1wLgo+IAo+ICAgICBUaGlzIGVsYXBzZWQgdGltZSBjYWxjdWxh
-dGlvbiBpcyBzYWZlIGV2ZW4gd2hlbiB0aGUgdGltZSB3cmFwcyAoYmV5b25kCj4gICAgIHkyMTA2
-KSBkdWUgdG8gaG93IHVuc2lnbmVkIHN1YnRyYWN0aW9uIHdvcmtzLiBBIGNvbW1lbnQgaGFzIGJl
-ZW4gYWRkZWQKPiAgICAgdG8gdGhlIGNvZGUgdG8gaW5kaWNhdGUgdGhpcyBzYWZldHkuCj4gCj4g
-ICAgIEFsdGVybmF0aXZlOiBUaGlzIHBpZWNlIGl0c2VsZiBkb2Vzbid0IHdhcnJhbnQgYW4gYWx0
-ZXJuYXRpdmUsIGJ1dAo+ICAgICBpZiB3ZSBkbyBpbnRyb2R1Y2UgYSBuZXcgc3RydWN0dXJlICYg
-aW9jdGwgd2l0aCB1NjQgdGltZXN0YW1wcywgdGhpcwo+ICAgICB3b3VsZCBjaGFuZ2UgYWNjb3Jk
-aW5nbHkuCj4gCj4gU2lnbmVkLW9mZi1ieTogQWxpc29uIFNjaG9maWVsZCA8YW1zZmllbGQyMkBn
-bWFpbC5jb20+CgpSZXZpZXdlZC1ieTogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4KX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGlu
-ZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21h
-aWxtYW4vbGlzdGluZm8veTIwMzgK
+On 11/20/2015 04:28 PM, Ewan Milne wrote:
+> On Fri, 2015-11-20 at 15:55 +0100, Hannes Reinecke wrote:
+>> Can't we have a joint effort here?
+>> I've been spending a _LOT_ of time trying to debug things here, but
+>> none of the ideas I've come up with have been able to fix anything.
+>=20
+> Yes.  I'm not the one primarily looking at it, and we don't have a
+> reproducer in-house.  We just have the one dump right now.
+>=20
+>>
+>> I'm almost tempted to increase the count from scsi_alloc_sgtable()
+>> by one and be done with ...
+>>
+>=20
+> That might not fix it if it is a problem with the merge code, though.
+>=20
+And indeed, it doesn't.
+Seems I finally found the culprit.
+
+What happens is this:
+We have two paths, with these seg_boundary_masks:
+
+path-1:    seg_boundary_mask =3D 65535,
+path-2:    seg_boundary_mask =3D 4294967295,
+
+consequently the DM request queue has this:
+
+md-1:    seg_boundary_mask =3D 65535,
+
+What happens now is that a request is being formatted, and sent
+to path 2. During submission req->nr_phys_segments is formatted
+with the limits of path 2, arriving at a count of 3.
+Now the request gets retried on path 1, but as the NOMERGE request
+flag is set req->nr_phys_segments is never updated.
+But blk_rq_map_sg() ignores all counters, and just uses the
+bi_vec directly, resulting in a count of 4 -> boom.
+
+So the culprit here is the NOMERGE flag, which is evaluated
+via
+->dm_dispatch_request()
+  ->blk_insert_cloned_request()
+    ->blk_rq_check_limits()
+
+If the above assessment is correct, the following patch should
+fix it:
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 801ced7..12cccd6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1928,7 +1928,7 @@ EXPORT_SYMBOL(submit_bio);
+  */
+ int blk_rq_check_limits(struct request_queue *q, struct request *rq)
+ {
+-       if (!rq_mergeable(rq))
++       if (rq->cmd_type !=3D REQ_TYPE_FS)
+                return 0;
+
+        if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q,
+rq->cmd_flags)) {
+
+
+Mike? Jens?
+Can you comment on it?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
