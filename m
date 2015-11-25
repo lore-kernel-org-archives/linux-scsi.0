@@ -1,89 +1,145 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
-Date: Wed, 25 Nov 2015 10:04:34 +0100
-Message-ID: <565579A2.4000005@suse.de>
-References: <1447838334.1564.2.camel@ellerman.id.au>	 <1447855399.3974.24.camel@redhat.com>	 <1447894964.15206.0.camel@ellerman.id.au>	 <20151119082325.GA11419@infradead.org>  <564DEC41.5010600@suse.de>	 <1448030316.4067.18.camel@localhost.localdomain> <564F3453.9040603@suse.de> <1448033323.4067.24.camel@localhost.localdomain>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 00/71] More fixes, cleanup and modernization for NCR5380 drivers
+Date: Wed, 25 Nov 2015 10:04:10 +0100
+Message-ID: <201511251004.10449.linux@rainbow-software.org>
+References: <20151118083455.331768508@telegraphics.com.au> <201511242240.24959.linux@rainbow-software.org> <alpine.LNX.2.00.1511251246130.24439@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448033323.4067.24.camel@localhost.localdomain>
+In-Reply-To: <alpine.LNX.2.00.1511251246130.24439@nippy.intranet>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: emilne@redhat.com
-Cc: Christoph Hellwig <hch@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Jens Axboe <axboe@fb.com>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Sam Creasey <sammy@sammy.net>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/20/2015 04:28 PM, Ewan Milne wrote:
-> On Fri, 2015-11-20 at 15:55 +0100, Hannes Reinecke wrote:
->> Can't we have a joint effort here?
->> I've been spending a _LOT_ of time trying to debug things here, but
->> none of the ideas I've come up with have been able to fix anything.
->=20
-> Yes.  I'm not the one primarily looking at it, and we don't have a
-> reproducer in-house.  We just have the one dump right now.
->=20
->>
->> I'm almost tempted to increase the count from scsi_alloc_sgtable()
->> by one and be done with ...
->>
->=20
-> That might not fix it if it is a problem with the merge code, though.
->=20
-And indeed, it doesn't.
-Seems I finally found the culprit.
+On Wednesday 25 November 2015, Finn Thain wrote:
+> 
+> On Tue, 24 Nov 2015, Ondrej Zary wrote:
+> 
+> > On Tuesday 24 November 2015 10:13:17 Finn Thain wrote:
+> > > 
+> > > On Tue, 24 Nov 2015, Ondrej Zary wrote:
+> > > 
+> > > > On Tuesday 24 November 2015, Finn Thain wrote:
+> > > > > 
+> > > > > On Mon, 23 Nov 2015, Ondrej Zary wrote:
+> > > > > 
+> > > > > > 
+> > > > > > PDMA seems to be broken in multiple ways. NCR5380_pread cannot 
+> > > > > > process less than 128 bytes. In fact, 53C400 datasheet says that 
+> > > > > > it's HW limitation: non-modulo-128-byte transfers should use 
+> > > > > > PIO.
+> > > > > > 
+> > > > > > Adding
+> > > > > >         transfersize = round_down(transfersize, 128);
+> > > > > > to generic_NCR5380_dma_xfer_len() improves the situation a bit.
+> > > > > > 
+> > > > > > After modprobe, some small reads (8, 4, 24 and 64 bytes) are 
+> > > > > > done using PIO, then eight 512-byte reads using PDMA and then it 
+> > > > > > fails on a 254-byte read. First 128 bytes are read using PDMA 
+> > > > > > and the next PDMA operation hangs waiting forever for the host 
+> > > > > > buffer to be ready.
+> > > > > > 
+> > > > > 
+> > > > > A 128-byte PDMA receive followed by 126-byte PDMA receive? I don't 
+> > > > > see how that is possible given round_down(126, 128) == 0. Was this 
+> > > > > the actual 'len' argument to NCR5380_pread() in g_NCR5380.c?
+> > > > 
+> > > > No 126-byte PDMA. The 126 bytes were probably lost (or mixed with 
+> > > > the next read?).
+> > > [...]
+> > > > The next read was also 254 bytes so another 128-byte PDMA transfer.
+> > > > 
+> > > > Then modified NCR5380_information_transfer() to transfer the 
+> > > > remaining data (126 bytes in this case) using PIO. It did not help, 
+> > > > the next PDMA transfer failed too.
+> > > > 
+> > > 
+> > > AFAICT, no change to NCR5380_information_transfer() should be needed. 
+> > > It was always meant to cope with the need to split a transfer between 
+> > > (P)DMA and PIO.
+> > 
+> > Instead of fixing split transfers, simply forced everything 
+> > non-modulo-128 to PIO:
+> 
+> The need to split a transfer arises from early chip errata relating to DMA 
+> and the workarounds for them (see the comments in the source). That's why 
+> I believe that the driver was meant to be cope with this. But I don't have 
+> any experimental evidence for it.
+> 
+> I'm almost certain that these errata aren't applicable to your hardware. 
+> So I don't have any reason to think that your card will allow part of a 
+> transfer to be performed with PDMA and the rest with PIO. So I don't 
+> really object to the patch.
+> 
+> But I don't understand the need for it either: I have no idea what state 
+> the driver, chip and scsi bus were in when the 126-byte PIO transfer 
+> failed. If the PIO transfer didn't succeed then the entire command should 
+> have failed.
 
-What happens is this:
-We have two paths, with these seg_boundary_masks:
+The patch was just a quick hack to confirm that PDMA is not completely broken.
+Now we know that it mostly works so I can investigate the partial PIO problem.
 
-path-1:    seg_boundary_mask =3D 65535,
-path-2:    seg_boundary_mask =3D 4294967295,
+> > --- a/drivers/scsi/g_NCR5380.c
+> > +++ b/drivers/scsi/g_NCR5380.c
+> > @@ -703,6 +703,10 @@ static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
+> >  	    !(cmd->SCp.this_residual % transfersize))
+> >  		transfersize = 32 * 1024;
+> > 
+> > +	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
+> 
+> Do you have a download link for this datasheet?
 
-consequently the DM request queue has this:
+http://bitsavers.trailing-edge.com/pdf/ncr/scsi/NCR_53C400.pdf
 
-md-1:    seg_boundary_mask =3D 65535,
+53C400A datasheet would be great too but haven't found any.
+I think that PDMA should work with 53C400A too but seems that the driver was
+never able to do it.
 
-What happens now is that a request is being formatted, and sent
-to path 2. During submission req->nr_phys_segments is formatted
-with the limits of path 2, arriving at a count of 3.
-Now the request gets retried on path 1, but as the NOMERGE request
-flag is set req->nr_phys_segments is never updated.
-But blk_rq_map_sg() ignores all counters, and just uses the
-bi_vec directly, resulting in a count of 4 -> boom.
+Although there is code for port-mapped transfer in NCR5380_pread(),
+NCR53C400_register_offset is defined to 0 in the port-mapped case. The C400_
+register offsets are thus defined with negative offset:
 
-So the culprit here is the NOMERGE flag, which is evaluated
-via
-->dm_dispatch_request()
-  ->blk_insert_cloned_request()
-    ->blk_rq_check_limits()
+#define C400_CONTROL_STATUS_REG NCR53C400_register_offset-8
+#define C400_BLOCK_COUNTER_REG   NCR53C400_register_offset-7
+#define C400_RESUME_TRANSFER_REG NCR53C400_register_offset-6
+#define C400_HOST_BUFFER         NCR53C400_register_offset-4
 
-If the above assessment is correct, the following patch should
-fix it:
+This is probably OK for a port-mapped 53C400 (such card must have some glue
+decoding logic as the 53C400 chip itself can do memory-mapping only) because:
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 801ced7..12cccd6 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1928,7 +1928,7 @@ EXPORT_SYMBOL(submit_bio);
-  */
- int blk_rq_check_limits(struct request_queue *q, struct request *rq)
- {
--       if (!rq_mergeable(rq))
-+       if (rq->cmd_type !=3D REQ_TYPE_FS)
-                return 0;
+                /*
+                 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
+                 * the base address.
+                 */
+                if (overrides[current_override].board == BOARD_NCR53C400)
+                        instance->io_port += 8;
 
-        if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q,
-rq->cmd_flags)) {
+This means that on a 53C400, first 5380 register will be at base+8 and first
+C400_ register at base.
 
+But on a 53C400A, the 5380 registers are mapped on the base address so the
+C400_ registers would be below the base, which is obviously wrong. I hope that
+PDMA will work if I fix the C400_ registers mapping.
 
-Mike? Jens?
-Can you comment on it?
+> > +	if (transfersize % 128)
+> > +		transfersize = 0;
+> > +
+> >  	return transfersize;
+> >  }
+> > 
+> > It seems to work and greatly improves performance:
+> > # hdparm -t --direct /dev/sdb
+> > 
+> > /dev/sdb:
+> >  Timing O_DIRECT disk reads:   4 MB in  4.84 seconds = 846.15 kB/sec
+> > 
+> 
+> Sounds about right...
+> 
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
+-- 
+Ondrej Zary
