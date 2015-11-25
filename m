@@ -1,34 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix a bdi reregistration race, v2
-Date: Wed, 25 Nov 2015 00:47:44 -0800
-Message-ID: <20151125084744.GA16429@infradead.org>
-References: <564F9AFF.3050605@sandisk.com>
- <20151124231331.GA25591@infradead.org>
- <5654F169.6070000@sandisk.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] scsi: gdth: replace struct timeval with
+	ktime_get_real_seconds()
+Date: Wed, 25 Nov 2015 10:03:57 +0100
+Message-ID: <3133545.iF2pfcmJbC@wuerfel>
+References: <20151119214304.GA16713@d830.WORKGROUP>
+ <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44059 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbbKYIrw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2015 03:47:52 -0500
-Content-Disposition: inline
-In-Reply-To: <5654F169.6070000@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+In-Reply-To: <1448412247-2716-1-git-send-email-amsfield22@gmail.com>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: y2038@lists.linaro.org
+Cc: achim_leubner@adaptec.com, JBottomley@odin.com, Alison Schofield <amsfield22@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, Aaro Koskinen <aaro.koskinen@iki.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-mm@kvack.org
 
-Hi Bart,
-
-On Tue, Nov 24, 2015 at 03:23:21PM -0800, Bart Van Assche wrote:
-> So if a driver stops using a (major, minor) number pair and the same device
-> number is reused before the bdi device has been released the warning
-> mentioned in the patch description at the start of this thread is triggered.
-> This patch fixes that race by removing the bdi device from sysfs during the
-> __scsi_remove_device() call instead of when the bdi device is released.
-
-that's why I suggested only releasing the minor number (or rather dev_t)
-once we release the BDI, similar to what MD and DM do.
-
-But what I really wanted to ask for is what your reproducer looks like.
+T24gVHVlc2RheSAyNCBOb3ZlbWJlciAyMDE1IDE2OjQ0OjA3IEFsaXNvbiBTY2hvZmllbGQgd3Jv
+dGU6Cj4gc3RydWN0IHRpbWV2YWwgd2lsbCBvdmVyZmxvdyBvbiAzMi1iaXQgc3lzdGVtcyBpbiB5
+MjAzOCBhbmQgaXMgYmVpbmcKPiByZW1vdmVkIGZyb20gdGhlIGtlcm5lbC4gUmVwbGFjZSB0aGUg
+dXNlIG9mIHN0cnVjdCB0aW1ldmFsIGFuZAo+IGRvX2dldHRpbWVvZmRheSgpIHdpdGgga3RpbWVf
+Z2V0X3JlYWxfc2Vjb25kcygpIHdoaWNoIHByb3ZpZGVzIGEgNjQtYml0Cj4gc2Vjb25kcyB2YWx1
+ZSBhbmQgaXMgeTIwMzggc2FmZS4KPiAKPiBnZHRoIGRyaXZlciByZXF1aXJlcyBjaGFuZ2VzIGlu
+IHR3byBhcmVhczoKPiAKPiAxKSBnZHRoX3N0b3JlX2V2ZW50KCkgbG9hZHMgdHdvIHUzMiB0aW1l
+c3RhbXAgZmllbGRzIGZvciBpb2N0bCBHRFRJT0NUTF9FVkVOVAo+IAo+ICAgIFRoZXNlIHRpbWVz
+dGFtcCBmaWVsZHMgYXJlIHBhcnQgb2Ygc3RydWN0IGdkdGhfZXZ0X3N0ciB1c2VkIGZvciBwYXNz
+aW5nCj4gICAgZXZlbnQgZGF0YSB0byB1c2Vyc3BhY2UuIEF0IHRoZSBmaXJzdCBpbnN0YW5jZSBv
+ZiBhbiBldmVudCB3ZSBkbwo+ICAgIChmaXJzdF9zdGFtcD1sYXN0X3N0YW1wPSJjdXJyZW50IHRp
+bWUiKS4gSWYgdGhhdCBzYW1lIGV2ZW50IHJlcGVhdHMsCj4gICAgd2UgZG8gKGxhc3Rfc3RhbXA9
+ImN1cnJlbnQgdGltZSIpIEFORCBpbmNyZW1lbnQgc2FtZV9jb3VudCB0byBpbmRpY2F0ZQo+ICAg
+IGhvdyBtYW55IHRpbWVzIHRoZSBldmVudCBoYXMgcmVwZWF0ZWQgc2luY2UgZmlyc3Rfc3RhbXAu
+Cj4gCj4gICAgVGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mIHRpbWV2YWwgYW5kIGRvX2dl
+dHRpbWVvZmRheSgpIHdpdGgKPiAgICBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkgY2FzdCB0byB1
+MzIgdG8gZXh0ZW5kIHRoZSB0aW1lc3RhbXAgZmllbGRzCj4gICAgdG8geTIxMDYuCj4gCj4gICAg
+QmV5b25kIHkyMTA2LCB0aGUgdXNlcnNwYWNlIHRvb2xzIChpZS4gUkFJRCBjb250cm9sbGVyIG1v
+bml0b3JzKSBjYW4KPiAgICB3b3JrIGFyb3VuZCB0aGUgdGltZSByb2xsb3ZlciBhbmQgdGhpcyBk
+cml2ZXIgd291bGQgc3RpbGwgbm90IG5lZWQgdG8KPiAgICBjaGFuZ2UuCj4gCj4gICAgQWx0ZXJu
+YXRpdmU6IFRoZSBhbHRlcm5hdGl2ZSBhcHByb2FjaCBpcyB0byBpbnRyb2R1Y2UgYSBuZXcgaW9j
+dGwgaW4gZ2R0aAo+ICAgIHdpdGggdGhlIHUzMiB0aW1lIGZpZWxkcyBkZWZpbmVkIGFzIHU2NC4g
+IFRoaXMgd291bGQgcmVxdWlyZSB1c2Vyc3BhY2UKPiAgICBjaGFuZ2VzIG5vdywgYnV0IG5vdCBp
+biB5MjEwNi4KPiAKPiAyKSAgZ2R0aF9zaG93X2luZm8oKSBjYWxjdWxhdGVzIGVsYXBzZWQgdGlt
+ZSB1c2luZyB1MzIgZmlyc3Rfc3RhbXAKPiAKPiAgICAgSXQgaXMgYWRkaW5nIGV2ZW50cyB3aXRo
+IHRpbWVzdGFtcHMgdG8gYSBzZXFfZmlsZS4gIFRpbWVzdGFtcHMgYXJlCj4gICAgIGNhbGN1bGF0
+ZWQgYXMgdGhlICJjdXJyZW50IHRpbWUiIG1pbnVzIHRoZSBmaXJzdF9zdGFtcC4KPiAKPiAgICAg
+VGhpcyBwYXRjaCByZXBsYWNlcyB0aGUgdXNlIG9mIHRpbWV2YWwgYW5kIGRvX2dldHRpbWVvZmRh
+eSgpIHdpdGgKPiAgICAga3RpbWVfZ2V0X3JlYWxfc2Vjb25kcygpIGNhc3QgdG8gdTMyIHRvIGNh
+bGN1bGF0ZSB0aGUgdGltZXN0YW1wLgo+IAo+ICAgICBUaGlzIGVsYXBzZWQgdGltZSBjYWxjdWxh
+dGlvbiBpcyBzYWZlIGV2ZW4gd2hlbiB0aGUgdGltZSB3cmFwcyAoYmV5b25kCj4gICAgIHkyMTA2
+KSBkdWUgdG8gaG93IHVuc2lnbmVkIHN1YnRyYWN0aW9uIHdvcmtzLiBBIGNvbW1lbnQgaGFzIGJl
+ZW4gYWRkZWQKPiAgICAgdG8gdGhlIGNvZGUgdG8gaW5kaWNhdGUgdGhpcyBzYWZldHkuCj4gCj4g
+ICAgIEFsdGVybmF0aXZlOiBUaGlzIHBpZWNlIGl0c2VsZiBkb2Vzbid0IHdhcnJhbnQgYW4gYWx0
+ZXJuYXRpdmUsIGJ1dAo+ICAgICBpZiB3ZSBkbyBpbnRyb2R1Y2UgYSBuZXcgc3RydWN0dXJlICYg
+aW9jdGwgd2l0aCB1NjQgdGltZXN0YW1wcywgdGhpcwo+ICAgICB3b3VsZCBjaGFuZ2UgYWNjb3Jk
+aW5nbHkuCj4gCj4gU2lnbmVkLW9mZi1ieTogQWxpc29uIFNjaG9maWVsZCA8YW1zZmllbGQyMkBn
+bWFpbC5jb20+CgpSZXZpZXdlZC1ieTogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4KX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGlu
+ZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21h
+aWxtYW4vbGlzdGluZm8veTIwMzgK
