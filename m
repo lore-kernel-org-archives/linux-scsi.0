@@ -1,27 +1,43 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 4/5] arcmsr: adds code for support areca new adapter
- ARC1203
-Date: Wed, 25 Nov 2015 13:08:37 +0100
-Message-ID: <5655A4C5.1080206@suse.de>
-References: <1448452173.4670.44.camel@Centos6.3-64>
+Subject: Re: [PATCH v3 5/5] arcmsr: changes driver version number
+Date: Wed, 25 Nov 2015 13:08:53 +0100
+Message-ID: <5655A4D5.1050606@suse.de>
+References: <1448452335.4670.47.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448452173.4670.44.camel@Centos6.3-64>
+In-Reply-To: <1448452335.4670.47.camel@Centos6.3-64>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de
 Cc: hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/25/2015 12:49 PM, Ching Huang wrote:
+On 11/25/2015 12:52 PM, Ching Huang wrote:
 > From: Ching Huang <ching2048@areca.com.tw>
 >=20
-> Support areca new PCIe to SATA RAID adapter ARC1203
+> Changes driver version number.
 >=20
 > Signed-of-by: Ching Huang <ching2048@areca.com.tw>
 >=20
 > ---
+>=20
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcms=
+r.h
+> --- a/drivers/scsi/arcmsr/arcmsr.h	2015-11-25 18:25:42.926038000 +080=
+0
+> +++ b/drivers/scsi/arcmsr/arcmsr.h	2015-11-25 18:04:27.400075000 +080=
+0
+> @@ -52,7 +52,7 @@ struct device_attribute;
+>  	#define ARCMSR_MAX_FREECCB_NUM	320
+>  #define ARCMSR_MAX_OUTSTANDING_CMD	255
+>  #endif
+> -#define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140919"
+> +#define ARCMSR_DRIVER_VERSION		"v1.30.00.21-20151019"
+>  #define ARCMSR_SCSI_INITIATOR_ID						255
+>  #define ARCMSR_MAX_XFER_SECTORS							512
+>  #define ARCMSR_MAX_XFER_SECTORS_B						4096
+>=20
 >=20
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
