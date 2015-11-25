@@ -1,41 +1,68 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v2 3/3] arcmsr: changes driver version number
-Date: Wed, 25 Nov 2015 11:40:54 +0800
-Message-ID: <1448422854.4698.38.camel@Centos6.3-64>
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [PATCH 2/9] IB: add a proper completion queue abstraction
+Date: Tue, 24 Nov 2015 23:21:13 -0700
+Message-ID: <20151125062113.GA29187@obsidianresearch.com>
+References: <20151124100839.48b52fb35c6f209c51bccbb9807b6df0.f113bf890f.wbe@email24.secureserver.net>
+ <20151124175226.GA10391@obsidianresearch.com>
+ <56552132.7090701@asomi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34548 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679AbbKYDk5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2015 22:40:57 -0500
-Received: by padhx2 with SMTP id hx2so43013881pad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2015 19:40:56 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <56552132.7090701-DpaxOq6QOWMAvxtiuMwx3w@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Caitlin Bestler <cait-DpaxOq6QOWMAvxtiuMwx3w@public.gmane.org>
+Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org" <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "axboe-b10kYP2dOMg@public.gmane.org" <axboe-b10kYP2dOMg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
-Cc: hch@lst.de
 
-From: Ching Huang <ching2048@areca.com.tw>
+On Tue, Nov 24, 2015 at 06:47:14PM -0800, Caitlin Bestler wrote:
+>         Acknowledge packet for the last packet of the request has been
+>         committed to the wire (including the appropriate fields for RDMA
+>         READ response).
 
-Changes driver version number.
+> The target side cannot generate a response before it receives the request.
+> The target side verbs cannot generate the completion before the acknowledge
+> packet has been
+> committed to the wire.
 
-Signed-of-by: Ching Huang <ching2048@areca.com.tw>
+Sure, but, I keep saying this, the responder behavior is largely
+irrelevant to what the target is able/required to do.
 
----
+> Therefore the initiating side cannot receive a response before the write
+> operation has completed.
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2015-11-25 10:52:13.334470000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2015-10-19 15:57:08.000000000 +0800
-@@ -52,7 +52,7 @@ struct device_attribute;
- 	#define ARCMSR_MAX_FREECCB_NUM	320
- #define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
--#define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140919"
-+#define ARCMSR_DRIVER_VERSION		"v1.30.00.21-20151019"
- #define ARCMSR_SCSI_INITIATOR_ID						255
- #define ARCMSR_MAX_XFER_SECTORS							512
- #define ARCMSR_MAX_XFER_SECTORS_B						4096
+Wrong. The ladder diagram would be
 
+Requestor          Responder           Responder Verbs
 
+SEND1 ----------->   Process
+         X---------  ACK (lost)
+	                     --------> recv1 CQ
+			     <-------   send2 WQE
+recv2 CQE <--------  SEND2 Packet
+[..]
+send1 CQE <--------  ACK (resent)
+
+The Ack may be lost, causing the send CQE to arrive after the recv
+CQE, even though the responder did everything in a specific order.
+
+The fundamental issue is that the responder cannot detect the lost
+ACK. The PSN of the ACK packet is part of the Requestor's PSN space,
+not part of the Responders:
+
+ 9.7.5.1.1 GENERATING PSNs FOR ACKNOWLEDGE MESSAGES
+
+ C9-95: For responses to SEND requests or RDMA WRITE requests the
+  responder shall insert in the PSN field of the response the PSN of the
+  most recent request packet being acknowledged.
+
+Or stated another way, the value of the AckReq bit in SEND1 has no
+impact on the contents of the SEND2 packet - thus there is no way for
+the requestor to detect the loss of the ACK and hold off delivering
+recv2 CQE.
+
+Jason
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
