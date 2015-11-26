@@ -1,67 +1,77 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: rescan VPD attributes
-Date: Thu, 26 Nov 2015 08:08:47 +0100
-Message-ID: <5656AFFF.3080403@suse.de>
-References: <1447071868-8509-1-git-send-email-hare@suse.de> <DDB9C85B850785449757F9914A034FCB444E0362@G4W3219.americas.hpqcorp.net>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH v3 2/5] arcmsr: fixes not release allocated resource
+Date: Thu, 26 Nov 2015 15:32:30 +0800
+Message-ID: <1448523150.4724.23.camel@Centos6.3-64>
+References: <1448451683.4670.35.camel@Centos6.3-64>
+	 <5655BDBD.404@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40170 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752562AbbKZHIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Nov 2015 02:08:50 -0500
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB444E0362@G4W3219.americas.hpqcorp.net>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36549 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590AbbKZHch (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2015 02:32:37 -0500
+Received: by pacdm15 with SMTP id dm15so82624990pac.3
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2015 23:32:37 -0800 (PST)
+In-Reply-To: <5655BDBD.404@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hpe.com>, "Martin K. Petersen" <martin.Petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@odin.com>, Johannes Thumshirn <jthumshirn@suse.com>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, jthumshirn@suse.de, hch@lst.de
 
-On 11/26/2015 06:07 AM, Seymour, Shane M wrote:
-> Hi Hannes,
->=20
-> I have one probably small nitpick about the patch. I'm not sure how l=
-ikely what I've put below is likely
-> to happen in real life though.
->=20
-> Is there any chance at all that sdev->vpd_pg83_len could change when =
-updated?
-> If there's any chance of that I'd have expected that both the
-length of and the pointer to the vpd data
-> would need to be protected not just the pointer so someone would
-have a consistent picture of the vpd
-> and its length. Without that there is a race where someone could
-be using a new length with the old vpd
-> data. That leaves the potential for a length that exceeds the vpd
-size if the new data is larger than
-> the old data - I don't know how likely it is but wanted to at
-least bring it up as something to consider.
->=20
-Accesses to vpd_pgXX are rcu-protected, so we're ensured that we
-always see a _valid_ copy. And we know that integer updates are
-atomic, so we will always see a valid number in vpd_pgXX_len.
-Both, vpd_pgXX and vpd_pgXX_len, are updated at the same place, and
-under the same locks/mutexes. And as we're calling
-'synchronize_rcu()' after updating vpd_pgXX, which needs to
-synchronize against all CPUs, I would think that this would take
-care of updating vpd_pgXX_len, too.
+On Wed, 2015-11-25 at 14:55 +0100, Tomas Henzl wrote:
+> On 25.11.2015 12:41, Ching Huang wrote:
+> > From: Ching Huang <ching2048@areca.com.tw>
+> >
+> > Releasing allocated resource if get configuration data failed.
+> >
+> > Signed-of-by: Ching Huang <ching2048@areca.com.tw>
+> >
+> > ---
+> >
+> > diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> > --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-24 11:35:26.000000000 +0800
+> > +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2015-11-25 19:04:44.590970000 +0800
+> > @@ -2664,7 +2664,7 @@ static bool arcmsr_hbaB_get_config(struc
+> >  	if (!arcmsr_hbaB_wait_msgint_ready(acb)) {
+> >  		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+> >  			miscellaneous data' timeout \n", acb->host->host_no);
+> > -		return false;
+> > +		goto err_free_dma;
+> >  	}
+> >  	count = 8;
+> >  	while (count){
+> > @@ -2707,6 +2707,10 @@ static bool arcmsr_hbaB_get_config(struc
+> >  	acb->firm_cfg_version = readl(&reg->message_rwbuffer[25]);  /*firm_cfg_version,25,100-103*/
+> >  	/*firm_ide_channels,4,16-19*/
+> >  	return true;
+> > +err_free_dma:
+> > +	dma_free_coherent(&acb->pdev->dev, acb->roundup_ccbsize,
+> > +			acb->dma_coherent2, acb->dma_coherent_handle2);
+> > +	return false;
+> >  }
+> >  
+> 
+> The resource should be released here, that is okay. 
+> 
+> How works the resource management when the eh_bus_reset_handler
+> is called ? It looks to me that you allocate a new 
+> acb->dma_coherent2 without releasing it before.
+> Btw. is it needed in that handler to re-read the firmware-spec?
+> 
+> Tomas
+> 
+You are right. In eh_bus_reset_handler, there may re-allocate a new dma resource if call get_config again.
+I will initiate a new patches for this bug after current 5 patches.
+Thanks Tomas.
+> >  static bool arcmsr_hbaC_get_config(struct AdapterControlBlock *pACB)
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-But you are right, we can get rid of vpd_pgXX_len and calculate it
-from the data.
-However, I'd like to do this with another patch after the ALUA
-changes are in.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
