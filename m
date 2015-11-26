@@ -1,34 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: use sector_div instead of do_div
-Date: Wed, 25 Nov 2015 22:28:34 -0500
-Message-ID: <yq1bnahjv6l.fsf@sermon.lab.mkp.net>
-References: <24882658.08y4bWL6tn@wuerfel>
+Subject: Re: [PATCH] scsi: rescan VPD attributes
+Date: Wed, 25 Nov 2015 22:34:33 -0500
+Message-ID: <yq17fl5juwm.fsf@sermon.lab.mkp.net>
+References: <1447071868-8509-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <24882658.08y4bWL6tn@wuerfel> (Arnd Bergmann's message of "Fri,
- 20 Nov 2015 17:38:28 +0100")
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, nico@fluxnic.net, jbottomley@odin.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35252 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbbKZDep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2015 22:34:45 -0500
+In-Reply-To: <1447071868-8509-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Mon, 9 Nov 2015 13:24:28 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.Petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@odin.com>, Johannes Thumshirn <jthumshirn@suse.com>
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Arnd> do_div is the wrong way to divide a sector_t, as it is less
-Arnd> efficient when sector_t is 32-bit wide. With the upcoming do_div
-Arnd> optimizations, the kernel starts warning about this:
+Hannes> The VPD page information might change, so we need to be able to
+Hannes> update it. This patch implements a VPD page rescan whenever the
+Hannes> 'rescan' sysfs attribute is triggered.
 
-Applied.
+I was looking into merging the ALUA series but this prerequisite patch
+is lacking reviews...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
