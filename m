@@ -1,27 +1,99 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/2] Fix a scsi_host_dev_release() memory leak
-Date: Wed, 25 Nov 2015 23:35:41 -0800
-Message-ID: <20151126073541.GA23925@infradead.org>
-References: <564F910E.9070306@sandisk.com>
- <yq137vtjumb.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56435 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151AbbKZHfp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2015 02:35:45 -0500
-Content-Disposition: inline
-In-Reply-To: <yq137vtjumb.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] block: Always check queue limits for cloned requests
+Date: Thu, 26 Nov 2015 08:46:57 +0100
+Message-ID: <1448524017-130967-1-git-send-email-hare@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>, Ewan Milne <emilne@redhat.com>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Nov 25, 2015 at 10:40:44PM -0500, Martin K. Petersen wrote:
-> I gave a bunch of reviews for v1 but no takers for v2 of the second
-> patch.
+When a cloned request is retried on other queues it always needs
+to be checked against the queue limits of that queue.
+Otherwise the calculations for nr_phys_segments might be wrong,
+leading to a crash in scsi_init_sgtable().
 
-I think v1 is the right thing to do.  Sorry for leading Bart in the
-wrong direction - the two different device structures in Scsi_Host
-confused me.
+To clarify this the patch renames blk_rq_check_limits()
+to blk_cloned_rq_check_limits() and removes the symbol
+export, as the new function should only be used for
+cloned requests and never exported.
+
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: Ewan Milne <emilne@redhat.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ block/blk-core.c       | 21 +++++++--------------
+ include/linux/blkdev.h |  1 -
+ 2 files changed, 7 insertions(+), 15 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5131993b..a0af404 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2114,7 +2114,8 @@ blk_qc_t submit_bio(int rw, struct bio *bio)
+ EXPORT_SYMBOL(submit_bio);
+ 
+ /**
+- * blk_rq_check_limits - Helper function to check a request for the queue limit
++ * blk_cloned_rq_check_limits - Helper function to check a cloned request
++ *                              for new the queue limits
+  * @q:  the queue
+  * @rq: the request being checked
+  *
+@@ -2125,20 +2126,13 @@ EXPORT_SYMBOL(submit_bio);
+  *    after it is inserted to @q, it should be checked against @q before
+  *    the insertion using this generic function.
+  *
+- *    This function should also be useful for request stacking drivers
+- *    in some cases below, so export this function.
+  *    Request stacking drivers like request-based dm may change the queue
+- *    limits while requests are in the queue (e.g. dm's table swapping).
+- *    Such request stacking drivers should check those requests against
+- *    the new queue limits again when they dispatch those requests,
+- *    although such checkings are also done against the old queue limits
+- *    when submitting requests.
++ *    limits when retrying requests on other queues. Those requests need
++ *    to be checked against the new queue limits again during dispatch.
+  */
+-int blk_rq_check_limits(struct request_queue *q, struct request *rq)
++static int blk_cloned_rq_check_limits(struct request_queue *q,
++				      struct request *rq)
+ {
+-	if (!rq_mergeable(rq))
+-		return 0;
+-
+ 	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
+ 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+ 		return -EIO;
+@@ -2158,7 +2152,6 @@ int blk_rq_check_limits(struct request_queue *q, struct request *rq)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(blk_rq_check_limits);
+ 
+ /**
+  * blk_insert_cloned_request - Helper for stacking drivers to submit a request
+@@ -2170,7 +2163,7 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
+ 	unsigned long flags;
+ 	int where = ELEVATOR_INSERT_BACK;
+ 
+-	if (blk_rq_check_limits(q, rq))
++	if (blk_cloned_rq_check_limits(q, rq))
+ 		return -EIO;
+ 
+ 	if (rq->rq_disk &&
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 3fe27f8..d14961b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -773,7 +773,6 @@ extern void blk_rq_set_block_pc(struct request *);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
+ extern void blk_add_request_payload(struct request *rq, struct page *page,
+ 		unsigned int len);
+-extern int blk_rq_check_limits(struct request_queue *q, struct request *rq);
+ extern int blk_lld_busy(struct request_queue *q);
+ extern int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
+ 			     struct bio_set *bs, gfp_t gfp_mask,
+-- 
+1.8.5.6
