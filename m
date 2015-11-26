@@ -1,62 +1,44 @@
-From: "Xue, Ken" <Ken.Xue@amd.com>
-Subject: Re: [PATCH 1/2]Revert "SCSI: Fix NULL pointer dereference in runtime
- PM"
-Date: Fri, 27 Nov 2015 03:01:42 +0000
-Message-ID: <1448593294.3216.11.camel@amd.com>
-References: <1441782131.5845.73.camel@kxue-X58A-UD3R>
-	 <1441851826.5845.105.camel@kxue-X58A-UD3R>
+From: "W-A-L M-A-R-T" <walmtshtask5@hyperlinkstudios.biz>
+Subject: T.A.S.K
+Date: Thu, 26 Nov 2015 14:29:47 -0900
+Message-ID: <E1a25z5-00056x-IA@vsds>
+Reply-To: tw4dly8sp3xqrqg@jetable.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1441851826.5845.105.camel@kxue-X58A-UD3R>
-Content-Language: en-US
-Content-ID: <029AFC1A769E5C49A22524F5EDBF8032@namprd12.prod.outlook.com>
-Sender: stable-owner@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mlin@kernel.org" <mlin@kernel.org>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>, SPG_Linux_Kernel <SPG_Linux_Kernel@amd.com>, "aaron.lu@intel.com" <aaron.lu@intel.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "JBottomley@Odin.com" <JBottomley@Odin.com>, "Yu, Xiangliang" <Xiangliang.Yu@amd.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from westernstatesglass.com ([12.111.83.11]:49107 "EHLO
+	mail.westernstatesglass.com" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751204AbbK0DYj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Nov 2015 22:24:39 -0500
+Received: from vsds (unknown [192.168.33.5])
+	(using TLSv1 with cipher AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.westernstatesglass.com (Postfix) with ESMTPS id 0C45861564
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2015 17:05:38 -0800 (PST)
+Received: from localhost ([127.0.0.1] helo=SE28ACCU6560)
+	by vsds with esmtp (Exim 4.76)
+	(envelope-from <walmtshtask5@hyperlinkstudios.biz>)
+	id 1a25z5-00056x-IA
+	for linux-scsi@vger.kernel.org; Thu, 26 Nov 2015 15:29:51 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-T24g5ZubLCAyMDE1LTA5LTEwIGF0IDEwOjIzICswODAwLCBLZW4gWHVlIHdyb3RlOg0KDQpDYW4g
-c29tZW9uZSBoZWxwIHRvIGFwcGx5IHRoaXMgcGF0Y2ggc2VyaWVzPyBUaGFua3MuDQpodHRwOi8v
-bWFyYy5pbmZvLz9sPWxpbnV4LXNjc2kmbT0xNDQxODUyMDY4MjU2MDkmdz0yDQpodHRwOi8vbWFy
-Yy5pbmZvLz9sPWxpbnV4LXNjc2kmbT0xNDQxODUyMDg1MjU2MTEmdz0yIA0KDQo+IFJldmVydCAi
-U0NTSTogRml4IE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBpbiBydW50aW1lIFBNIg0KPiANCj4g
-VGhpcyByZXZlcnRzIGNvbW1pdCA0OTcxOGYwZmI4YzkgKCJTQ1NJOiBGaXggTlVMTCBwb2ludGVy
-IGRlcmVmZXJlbmNlDQo+IGluDQo+IHJ1bnRpbWUgUE0iKQ0KPiANCj4gVGhlIG9sZCBjb21taXQg
-bWF5IGxlYWQgdG8gYSBpc3N1ZSB0aGF0DQo+IGJsa197cHJlfHBvc3R9X3J1bnRpbWVfc3VzcGVu
-ZCBhbmQNCj4gYmxrX3twcmV8cG9zdH1fcnVudGltZV9yZXN1bWUgY2FuIG5vdCBiZSBjYWxsZWQg
-aW4gcGFpcnMuDQo+IA0KPiBUYWtlIHNyIGRldmljZSBhcyBleGFtcGxlLCB3aGVuIHNyIGRldmlj
-ZSBnb2VzIHRvIHJ1bnRpbWUgc3VzcGVuZCwgDQo+IGJsa197cHJlfHBvc3R9X3J1bnRpbWVfc3Vz
-cGVuZCB3aWxsIGJlIGNhbGxlZCBzaW5jZSBzciBkZXZpY2UgZGVmaW5lZA0KPiBwbS0+cnVudGlt
-ZV9zdXNwZW5kLiBCdXQgYmxrX3twcmV8cG9zdH1fcnVudGltZV9yZXN1bWUgd2lsbCBub3QgYmUN
-Cj4gY2FsbGVkDQo+IHNpbmNlIHNyIGRldmljZSBkb2Vzbid0IGhhdmUgcG0tPnJ1bnRpbWVfcmVz
-dW1lLiBUaGVuIHNyIGRldmljZSBjYW4NCj4gbm90DQo+IHJlc3VtZSBjb3JyZWN0bHkgYW55bW9y
-ZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEtlbiBYdWUgPEtlbi5YdWVAYW1kLmNvbT4NCj4gQWNr
-ZWQtYnk6IEFsYW4gU3Rlcm4gPHN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHU+DQo+IENjOiBzdGFi
-bGVAdmdlci5rZXJuZWwub3JnDQo+IA0KPiAtLS0NCj4gIGRyaXZlcnMvc2NzaS9zY3NpX3BtLmMg
-fCAyMCArKysrKysrKysrLS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDEwIGluc2VydGlv
-bnMoKyksIDEwIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9z
-Y3NpX3BtLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9wbS5jDQo+IGluZGV4IGU0Yjc5OTguLjQ1OWFi
-ZTEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3BtLmMNCj4gKysrIGIvZHJpdmVy
-cy9zY3NpL3Njc2lfcG0uYw0KPiBAQCAtMjE5LDEzICsyMTksMTMgQEAgc3RhdGljIGludCBzZGV2
-X3J1bnRpbWVfc3VzcGVuZChzdHJ1Y3QgZGV2aWNlDQo+ICpkZXYpDQo+ICAJc3RydWN0IHNjc2lf
-ZGV2aWNlICpzZGV2ID0gdG9fc2NzaV9kZXZpY2UoZGV2KTsNCj4gIAlpbnQgZXJyID0gMDsNCj4g
-IA0KPiAtCWlmIChwbSAmJiBwbS0+cnVudGltZV9zdXNwZW5kKSB7DQo+IC0JCWVyciA9IGJsa19w
-cmVfcnVudGltZV9zdXNwZW5kKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiAtCQlpZiAoZXJyKQ0K
-PiAtCQkJcmV0dXJuIGVycjsNCj4gKwllcnIgPSBibGtfcHJlX3J1bnRpbWVfc3VzcGVuZChzZGV2
-LT5yZXF1ZXN0X3F1ZXVlKTsNCj4gKwlpZiAoZXJyKQ0KPiArCQlyZXR1cm4gZXJyOw0KPiArCWlm
-IChwbSAmJiBwbS0+cnVudGltZV9zdXNwZW5kKQ0KPiAgCQllcnIgPSBwbS0+cnVudGltZV9zdXNw
-ZW5kKGRldik7DQo+IC0JCWJsa19wb3N0X3J1bnRpbWVfc3VzcGVuZChzZGV2LT5yZXF1ZXN0X3F1
-ZXVlLCBlcnIpOw0KPiAtCX0NCj4gKwlibGtfcG9zdF9ydW50aW1lX3N1c3BlbmQoc2Rldi0+cmVx
-dWVzdF9xdWV1ZSwgZXJyKTsNCj4gKw0KPiAgCXJldHVybiBlcnI7DQo+ICB9DQo+ICANCj4gQEAg
-LTI0OCwxMSArMjQ4LDExIEBAIHN0YXRpYyBpbnQgc2Rldl9ydW50aW1lX3Jlc3VtZShzdHJ1Y3Qg
-ZGV2aWNlDQo+ICpkZXYpDQo+ICAJY29uc3Qgc3RydWN0IGRldl9wbV9vcHMgKnBtID0gZGV2LT5k
-cml2ZXIgPyBkZXYtPmRyaXZlci0+cG0NCj4gOiBOVUxMOw0KPiAgCWludCBlcnIgPSAwOw0KPiAg
-DQo+IC0JaWYgKHBtICYmIHBtLT5ydW50aW1lX3Jlc3VtZSkgew0KPiAtCQlibGtfcHJlX3J1bnRp
-bWVfcmVzdW1lKHNkZXYtPnJlcXVlc3RfcXVldWUpOw0KPiArCWJsa19wcmVfcnVudGltZV9yZXN1
-bWUoc2Rldi0+cmVxdWVzdF9xdWV1ZSk7DQo+ICsJaWYgKHBtICYmIHBtLT5ydW50aW1lX3Jlc3Vt
-ZSkNCj4gIAkJZXJyID0gcG0tPnJ1bnRpbWVfcmVzdW1lKGRldik7DQo+IC0JCWJsa19wb3N0X3J1
-bnRpbWVfcmVzdW1lKHNkZXYtPnJlcXVlc3RfcXVldWUsIGVycik7DQo+IC0JfQ0KPiArCWJsa19w
-b3N0X3J1bnRpbWVfcmVzdW1lKHNkZXYtPnJlcXVlc3RfcXVldWUsIGVycik7DQo+ICsNCj4gIAly
-ZXR1cm4gZXJyOw0KPiAgfQ0KPiAg
+We have a customer service Review Task in your City and we will pay US`200 per Review.The Review will come in the form of a Packet(Instruction and Check).The Task Involves visiting/Review Designated Stores in your area,e.t.c
+
+Applicants should forward Information below:
+
+
+|N.a-me |-
+|A d.d-ress|- 
+|C.i-t.y | -
+|S.t.a-t e |-
+|Z.i.p-C o de|-
+|C.e.ll# |Alt-E.m.a.i.l |Sex&Age|
+
+Thank you for participation.
+HR Manager
+Research Team
+
