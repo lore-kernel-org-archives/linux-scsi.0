@@ -1,40 +1,20 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block: Always check queue limits for cloned requests
-Date: Thu, 26 Nov 2015 08:11:05 -0500
-Message-ID: <20151126131104.GA24297@redhat.com>
-References: <1448524017-130967-1-git-send-email-hare@suse.de>
+From: Ruby Hotab <bybyru@Selflessaids.onmicrosoft.com>
+Subject: ++fyi
+Date: Thu, 26 Nov 2015 16:25:25 +0100
+Message-ID: <HE1PR09MB052193EE9CDE41387DF20E70E3040@HE1PR09MB0521.eurprd09.prod.outlook.com>
+Reply-To: <zhuproject@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1448524017-130967-1-git-send-email-hare@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Jeff Moyer <jmoyer@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-am1on0130.outbound.protection.outlook.com ([157.56.112.130]:38354
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751224AbbKZP5g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2015 10:57:36 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: me <bybyru@Selflessaids.onmicrosoft.com>
 
-On Thu, Nov 26 2015 at  2:46am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
-
-> When a cloned request is retried on other queues it always needs
-> to be checked against the queue limits of that queue.
-> Otherwise the calculations for nr_phys_segments might be wrong,
-> leading to a crash in scsi_init_sgtable().
-> 
-> To clarify this the patch renames blk_rq_check_limits()
-> to blk_cloned_rq_check_limits() and removes the symbol
-> export, as the new function should only be used for
-> cloned requests and never exported.
-> 
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: Ewan Milne <emilne@redhat.com>
-> Cc: Jeff Moyer <jmoyer@redhat.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-Patch looks good.  Thanks for getting to the bottom of this.
-
-Jens, please add these extra tags when you pick this up:
-
-Fixes: e2a60da74 ("block: Clean up special command handling logic")
-Cc: stable@vger.kernel.org # 3.7+
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+I have a charity proposition I want to entrust you with, kindly respond with the Ref ; SA 
