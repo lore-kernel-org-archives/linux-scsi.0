@@ -1,82 +1,84 @@
-From: Felix Matouschek <felix.matouschek@vipco.de>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Fri, 27 Nov 2015 11:28:28 +0100
-Message-ID: <5658304C.3060904@vipco.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: QUEUE_FLAG_NO_SG_MERGE and non-block-mq
+Date: Fri, 27 Nov 2015 15:29:59 +0100
+Message-ID: <565868E7.2010807@suse.de>
+References: <5656BF25.3000407@suse.de> <CACVXFVMSNmtcVN1zZ5f=xNbMfpnt7wiQ4U03f1Dk95rOMUQBSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.vipco.de ([89.238.67.2]:33164 "EHLO mail.vipco.de"
+Received: from mx2.suse.de ([195.135.220.15]:33804 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752154AbbK0K6e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Nov 2015 05:58:34 -0500
-Received: from [192.168.178.24] ([87.165.198.230])
-	(authenticated user felix.matouschek@vipco.de)
-	by mail.vipco.de (Kerio Connect 8.5.0)
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128 bits))
-	for linux-scsi@vger.kernel.org;
-	Fri, 27 Nov 2015 11:28:29 +0100
+	id S1752164AbbK0OaB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Nov 2015 09:30:01 -0500
+In-Reply-To: <CACVXFVMSNmtcVN1zZ5f=xNbMfpnt7wiQ4U03f1Dk95rOMUQBSw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
+On 11/26/2015 10:21 AM, Ming Lei wrote:
+> On Thu, Nov 26, 2015 at 4:13 PM, Hannes Reinecke <hare@suse.de> wrote=
+:
+>> Hi all,
+>>
+>> while investigating the crash in scsi_lib.c I found a rather curious
+>> behaviour for QUEUE_FLAG_NO_SG_MERGE.
+>>
+>> While the flag is evaluated in blk_recalc_rq_segments and
+>> blk_recount_segments (resulting in nr_phys_segments being
+>> computed based on that flag) it is completely ignored
+>> during blk_rq_map_sg() or the actual merging itself.
+>=20
+> Yes, I guess Jens introduced the flag for decreasing CPU
+> consumption when comuputing segments, but it is still
+> ignored by blk_rq_map_sg(), but it may not be used
+> by some drivers.
+>=20
+> After bio splitting is introduced, the flag is also ignored
+> when computing segments.
+>=20
+>>
+>> This typically shouldn't be an issue, seeing that with
+>> QUEUE_FLAG_NO_SG_MERGE nr_phys_segments will always be
+>> larger than the actual segment count.
+>>
+>> However, it still makes me wonder:
+>> What is the point of having a QUEUE_FLAG_NO_SG_MERGE
+>> which doesn't work as advertised?
+>> Or, to be precise, which only works for blk-mq?
+>> Should we make it work for non-block-mq, too?
+>=20
+> Thanks bio splitting, this flag has little effect on performance now,
+> so I think it can be removed if Jens has no objection.
+>=20
+As per your suggestion we've made some performance measurements,
+and 4k fio showed little if no impact:
 
-I've encountered a similiar error like Matthias Prager did in his first 
-mail in this thread in 2012.
+NO_SG_MERGE:
+  IOPS R/W: 148097.7+-125.7 / 148124.1+-123.1
+  BW   R/W: 592392.4+-502.7 / 592498.3+-492.3
+SG_MERGE:
+  IOPS R/W: 148054.4+-123.3 / 148082.6+-120.0
+  BW   R/W: 592219.2+-493.5 / 592332.3+-479.7
 
-I use Debian 8 Kernel 3.16 and also own a LSI 2008 card flashed to IT 
-mode (firmware P20) and have problems with disks that were spun down.
-Writing to them when they are spun down usually ends in the following 
-errors:
+So the performance benefit lies squarely within the
+error margin, making me wonder if it's worth bothering
+with having the NO_SG_MERGE flag at all.
 
-[59526.359997] sd 0:0:1:0: [sdc] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59526.360003] sd 0:0:1:0: [sdc] CDB:
-[59526.360006] Read(16): 88 00 00 00 00 00 31 28 fd 58 00 00 00 08 00 00
-[59526.360022] blk_update_request: I/O error, dev sdc, sector 824769880
-[59544.111090] sd 0:0:0:0: [sdb] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59544.111097] sd 0:0:0:0: [sdb] CDB:
-[59544.111100] Read(16): 88 00 00 00 00 00 31 28 fd 50 00 00 00 08 00 00
-[59544.111115] blk_update_request: I/O error, dev sdb, sector 824769872
-[59544.114465] sd 0:0:4:0: [sdf] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59544.114468] sd 0:0:4:0: [sdf] CDB:
-[59544.114469] Read(16): 88 00 00 00 00 00 31 28 fd 58 00 00 00 08 00 00
-[59544.114483] blk_update_request: I/O error, dev sdf, sector 824769880
-[59552.117436] sd 0:0:3:0: [sde] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59552.117443] sd 0:0:3:0: [sde] CDB:
-[59552.117446] Read(16): 88 00 00 00 00 00 31 28 fd b0 00 00 00 08 00 00
-[59552.117462] blk_update_request: I/O error, dev sde, sector 824769968
-[59572.951158] sd 0:0:2:0: [sdd] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59572.951167] sd 0:0:2:0: [sdd] CDB:
-[59572.951170] Read(16): 88 00 00 00 00 00 31 28 fd b0 00 00 00 08 00 00
-[59572.951192] blk_update_request: I/O error, dev sdd, sector 824769968
-[59572.955679] sd 0:0:5:0: [sdg] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[59572.955695] sd 0:0:5:0: [sdg] CDB:
-[59572.955701] Read(16): 88 00 00 00 00 00 31 28 fd b0 00 00 00 08 00 00
-[59572.955720] blk_update_request: I/O error, dev sdg, sector 824769968
-[70357.782677] sd 0:0:4:0: [sdf] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[70357.782686] sd 0:0:4:0: [sdf] CDB:
-[70357.782690] Read(16): 88 00 00 00 00 00 85 c1 c9 08 00 00 00 08 00 00
-[70357.782712] blk_update_request: I/O error, dev sdf, sector 2244069640
-[70368.087947] sd 0:0:0:0: [sdb] FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK
-[70368.087953] sd 0:0:0:0: [sdb] CDB:
-[70368.087955] Read(16): 88 00 00 00 00 00 85 c1 c9 00 00 00 00 08 00 00
-[70368.087969] blk_update_request: I/O error, dev sdb, sector 2244069632
+Thanks to Johannes for doing the measurements :-)
 
-Notice the lack of the "Device not ready" message, otherwise these 
-errors look very similiars to Matthias' errors.
+Cheers,
 
-I have no clue what to do to fix this problem. Any suggestions?
-
-Greetings,
-Felix
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
