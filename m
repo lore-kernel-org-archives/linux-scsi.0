@@ -1,44 +1,40 @@
-From: "W-A-L M-A-R-T" <walmtshtask5@hyperlinkstudios.biz>
-Subject: T.A.S.K
-Date: Thu, 26 Nov 2015 14:29:47 -0900
-Message-ID: <E1a25z5-00056x-IA@vsds>
-Reply-To: tw4dly8sp3xqrqg@jetable.org
+From: Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH RESEND] scsi_debug: fix prevent_allow+verify regressions
+Date: Fri, 27 Nov 2015 11:19:20 +0200
+Message-ID: <CAHp75Vf=-sn39rtBoqHudrdB2yWanOA=mavpu0AGAL6Bba5z8Q@mail.gmail.com>
+References: <5651F740.3010707@interlog.com>
+	<yq1k2p7kuvd.fsf@sermon.lab.mkp.net>
+	<CAHp75VfpMdjmoipaJg7f4fR=6Mbyf1J_qmdoRm=zJ1ZWUW8EwA@mail.gmail.com>
+	<yq1fuztjymb.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westernstatesglass.com ([12.111.83.11]:49107 "EHLO
-	mail.westernstatesglass.com" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751204AbbK0DYj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Nov 2015 22:24:39 -0500
-Received: from vsds (unknown [192.168.33.5])
-	(using TLSv1 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.westernstatesglass.com (Postfix) with ESMTPS id 0C45861564
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2015 17:05:38 -0800 (PST)
-Received: from localhost ([127.0.0.1] helo=SE28ACCU6560)
-	by vsds with esmtp (Exim 4.76)
-	(envelope-from <walmtshtask5@hyperlinkstudios.biz>)
-	id 1a25z5-00056x-IA
-	for linux-scsi@vger.kernel.org; Thu, 26 Nov 2015 15:29:51 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <yq1fuztjymb.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+Sender: util-linux-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jbottomley-wo1vFcy6AUs@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, sweet_f_a-Mmb7MZpHnFY@public.gmane.org, util-linux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-We have a customer service Review Task in your City and we will pay US`200 per Review.The Review will come in the form of a Packet(Instruction and Check).The Task Involves visiting/Review Designated Stores in your area,e.t.c
+On Thu, Nov 26, 2015 at 4:14 AM, Martin K. Petersen
+<martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>> "Andy" == Andy Shevchenko <andy.shevchenko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
+>
+> Andy,
+>
+> Andy> but can you pay a little attention to
+> Andy> http://www.spinics.net/lists/linux-scsi/msg81778.html ? It seems
+> Andy> it wasn't applied.
+>
+> Please resubmit to linux-scsi. We'll take a look.
 
-Applicants should forward Information below:
+Done:
 
+http://www.spinics.net/lists/linux-scsi/msg91207.html
 
-|N.a-me |-
-|A d.d-ress|- 
-|C.i-t.y | -
-|S.t.a-t e |-
-|Z.i.p-C o de|-
-|C.e.ll# |Alt-E.m.a.i.l |Sex&Age|
-
-Thank you for participation.
-HR Manager
-Research Team
-
+-- 
+With Best Regards,
+Andy Shevchenko
+--
+To unsubscribe from this list: send the line "unsubscribe util-linux" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
