@@ -1,28 +1,34 @@
-From: "HS09912HH3" <akva@comtv.ru>
-Subject: Reply Me For Details
-Date: Fri, 27 Nov 2015 20:13:52 -0800
-Message-ID: <auto-000047267783@fe02-cgp.akado.ru>
-Reply-To: <shu60w@qq.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fe02x03-cgp.akado.ru ([77.232.31.165]:55257 "EHLO akado.ru"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750821AbbK1FOD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Nov 2015 00:14:03 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: ufs: fix spelling mistake in error message
+Date: Sat, 28 Nov 2015 16:33:56 +0000
+Message-ID: <1448728436-9058-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Good day,
+From: Colin Ian King <colin.king@canonical.com>
 
-I wish to contact you personally for an important proposal that might be 
-of interest to you. I am sending this mail just to know if this email address
-is functional.
+Minor issue, fix spelling mistake, Intialization -> Initialization
 
-I have something absolutely essential to discuss with you. Contact me for 
-details through my private email: shu60w@qq.com
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-shu60w@qq.com
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 9714f2a..d2a7b12 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -333,7 +333,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+-		dev_err(dev, "Intialization failed\n");
++		dev_err(dev, "Initialization failed\n");
+ 		goto out_disable_rpm;
+ 	}
+ 
+-- 
+2.6.2
