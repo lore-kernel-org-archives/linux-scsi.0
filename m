@@ -1,56 +1,107 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] qla2xxx: Fix regression introduced by configFS changes
-Date: Sat, 28 Nov 2015 20:05:45 -0800
-Message-ID: <1448769945.579.4.camel@haakon3.risingtidesystems.com>
-References: <1448385615-18246-1-git-send-email-himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH] target: fix a case of data corruption during
+ COMPARE_AND_WRITE
+Date: Sat, 28 Nov 2015 20:10:42 -0800
+Message-ID: <1448770242.579.8.camel@haakon3.risingtidesystems.com>
+References: <1448297192-24937-1-git-send-email-jengelh@inai.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47412 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:59013 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbbK2EF5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2015 23:05:57 -0500
-In-Reply-To: <1448385615-18246-1-git-send-email-himanshu.madhani@qlogic.com>
+	with ESMTP id S1753052AbbK2EKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2015 23:10:43 -0500
+In-Reply-To: <1448297192-24937-1-git-send-email-jengelh@inai.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Cc: target-devel@vger.kernel.org, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+To: Jan Engelhardt <jengelh@inai.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Himanshu & Co,
+Hi Jan,
 
-On Tue, 2015-11-24 at 12:20 -0500, Himanshu Madhani wrote:
-> this patch fixes following regression
+Apologies for the delayed follow-up on this patch.
+
+Comments below.
+
+On Mon, 2015-11-23 at 17:46 +0100, Jan Engelhardt wrote:
+> target_core_sbc's compare_and_write functionality suffers from taking
+> data at the wrong memory location when writing a CAW request to disk.
 > 
->  # targetcli
->  [Errno 13] Permission denied: '/sys/kernel/config/target/qla2xxx/21:00:00:0e:1e:08:c7:20/tpgt_1/enable'
+> Given the following sample LIO subtopology,
 > 
-> Fixes: 2eafd72939fd ("target: use per-attribute show and store methods")
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> % targetcli ls /loopback/
+> o- loopback ................................. [1 Target]
+>   o- naa.6001405ebb8df14a ....... [naa.60014059143ed2b3]
+>     o- luns ................................... [2 LUNs]
+>       o- lun0 ................ [iblock/ram0 (/dev/ram0)]
+>       o- lun1 ................ [iblock/ram1 (/dev/ram1)]
+> % lsscsi -g
+> [3:0:1:0]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdc   /dev/sg3
+> [3:0:1:1]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdd   /dev/sg4
+> 
+> the following bug can be observed in Linux 4.3 and 4.4~rc1:
+> 
+> % perl -e 'print chr$_ for 0..255,reverse 0..255' >rand
+> % perl -e 'print "\0" x 512' >zero
+> % cat rand >/dev/sdd
+> % sg_compare_and_write -i rand -D zero --lba 0 /dev/sdd
+> % sg_compare_and_write -i zero -D rand --lba 0 /dev/sdd
+> Miscompare reported
+> % hexdump -Cn 512 /dev/sdd
+> 00000000  0f 0e 0d 0c 0b 0a 09 08  07 06 05 04 03 02 01 00
+> 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> *
+> 00000200
+> 
+> Rather than writing all-zeroes as instructed with the -D file, it
+> corrupts the data in the sector by splicing some of the original
+> bytes in. The page of the first entry of cmd->t_data_sg includes the
+> CDB, and sg->offset is set to a position past the CDB. I presume that
+> sg->offset is also the right choice to use for subsequent sglist
+> members.
+> 
+> Signed-off-by: Jan Engelhardt <jengelh@netitwork.de>
 > ---
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  The following changes since commit 8005c49d9aea74d382f474ce11afbbc7d7130bec:
+>   Linux 4.4-rc1 (2015-11-15 17:00:27 -0800)
+>  are available in the git repository at:
+>   git://git.inai.de/linux tcm
+>  for you to fetch changes up to 54d035e8349bdb547a4372ebe6a83710971052bb:
+>   target: fix a case of data corruption during COMPARE_AND_WRITE
 > 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index 3ba2e95..81af294 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -902,7 +902,7 @@ static ssize_t tcm_qla2xxx_tpg_fabric_prot_type_show(struct config_item *item,
->  	return sprintf(page, "%d\n", tpg->tpg_attrib.fabric_prot_type);
->  }
+>  drivers/target/target_core_sbc.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 0b4b2a6..dc51cdc 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -556,11 +556,11 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
 >  
-> -CONFIGFS_ATTR_WO(tcm_qla2xxx_tpg_, enable);
-> +CONFIGFS_ATTR(tcm_qla2xxx_tpg_, enable);
->  CONFIGFS_ATTR_RO(tcm_qla2xxx_tpg_, dynamic_sessions);
->  CONFIGFS_ATTR(tcm_qla2xxx_tpg_, fabric_prot_type);
->  
+>  		if (block_size < PAGE_SIZE) {
+>  			sg_set_page(&write_sg[i], m.page, block_size,
+> -				    block_size);
+> +				    m.piter.sg->offset + block_size);
+>  		} else {
+>  			sg_miter_next(&m);
+>  			sg_set_page(&write_sg[i], m.page, block_size,
+> -				    0);
+> +				    m.piter.sg->offset);
+>  		}
+>  		len -= block_size;
+>  		i++;
 
-Applied to target-pending/master, and including in v4.4-rc fixes PULL.
+Very nice catch on this bug.
 
-Thanks for reporting.
+AFAICT this effects loopback + vhost-scsi fabrics, because those are the
+two drivers that currently utilize SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC
+with COMPARE_AND_WRITE, and can result in a non zero SGL offset.
+
+Applied to target-pending/master with extra details in commit log to
+clarify this point.
+
+Thank you,
 
 --nab
 
