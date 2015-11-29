@@ -1,40 +1,56 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 22/71] ncr5380: Eliminate selecting state
-Date: Sun, 29 Nov 2015 11:46:03 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1511291034460.18868@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <201511262035.40920.linux@rainbow-software.org> <alpine.LNX.2.00.1511270930280.723@nippy.intranet> <201511290013.06581.linux@rainbow-software.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla2xxx: Fix regression introduced by configFS changes
+Date: Sat, 28 Nov 2015 20:05:45 -0800
+Message-ID: <1448769945.579.4.camel@haakon3.risingtidesystems.com>
+References: <1448385615-18246-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201511290013.06581.linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:47412 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952AbbK2EF5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2015 23:05:57 -0500
+In-Reply-To: <1448385615-18246-1-git-send-email-himanshu.madhani@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: target-devel@vger.kernel.org, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
+Hi Himanshu & Co,
 
-On Sun, 29 Nov 2015, Ondrej Zary wrote:
-
-> > [...] I think that this should solve the problem:
+On Tue, 2015-11-24 at 12:20 -0500, Himanshu Madhani wrote:
+> this patch fixes following regression
 > 
-> Yes, it does!
+>  # targetcli
+>  [Errno 13] Permission denied: '/sys/kernel/config/target/qla2xxx/21:00:00:0e:1e:08:c7:20/tpgt_1/enable'
 > 
-> [   48.119367] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x0, n_io_port 0, base 0xd8000, irq 0, can_queue 16, cmd_per_lun 2, sg_tablesize 128, this_id 7, flags { NO_DMA_FIXUP }, options { AUTOPROBE_IRQ PSEUDO_DMA }
-> [   49.715388] scsi 2:0:1:0: Direct-Access     QUANTUM  LP240S GM240S01X 4.6  PQ: 0 ANSI: 2 CCS
+> Fixes: 2eafd72939fd ("target: use per-attribute show and store methods")
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 3ba2e95..81af294 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -902,7 +902,7 @@ static ssize_t tcm_qla2xxx_tpg_fabric_prot_type_show(struct config_item *item,
+>  	return sprintf(page, "%d\n", tpg->tpg_attrib.fabric_prot_type);
+>  }
+>  
+> -CONFIGFS_ATTR_WO(tcm_qla2xxx_tpg_, enable);
+> +CONFIGFS_ATTR(tcm_qla2xxx_tpg_, enable);
+>  CONFIGFS_ATTR_RO(tcm_qla2xxx_tpg_, dynamic_sessions);
+>  CONFIGFS_ATTR(tcm_qla2xxx_tpg_, fabric_prot_type);
+>  
 
-That still takes about 1.6 seconds to scan a vacant bus ID. It should be 
-more like 0.25 seconds. Did you have the entire patch series applied?
+Applied to target-pending/master, and including in v4.4-rc fixes PULL.
 
-The code presently in mainline spins for 500 iterations in the relevant 
-busy-wait loop, with the comment, "8uS a cycle for the cpu access". That 
-doesn't help me much. Does that refer to an ISA bus cycle? Or one 
-iteration of the loop? Electrical conductance?
+Thanks for reporting.
 
-If we knew how many loops_per_jiffy your machine gets, and your CONFIG_HZ 
-value, we could figure out how long a chip register access takes (which 
-might be 8 us).
+--nab
 
-I'll try to figure out a similar timing for my Domex PCI card to see if 
-there is some sort of compromise to be found.
-
--- 
