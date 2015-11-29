@@ -1,114 +1,295 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 22/71] ncr5380: Eliminate selecting state
-Date: Sun, 29 Nov 2015 10:09:57 +0100
-Message-ID: <201511291009.57886.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <201511290013.06581.linux@rainbow-software.org> <alpine.LNX.2.00.1511291034460.18868@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:55791 "EHLO
-	smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbbK2JKJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2015 04:10:09 -0500
-In-Reply-To: <alpine.LNX.2.00.1511291034460.18868@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [RFC PATCH 73/71] ncr5380: Use runtime register mapping
+Date: Sun, 29 Nov 2015 10:39:39 +0100
+Message-ID: <1448789980-30094-1-git-send-email-linux@rainbow-software.org>
+References: <20151118083455.331768508@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151118083455.331768508@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 29 November 2015 01:46:03 Finn Thain wrote:
-> 
-> On Sun, 29 Nov 2015, Ondrej Zary wrote:
-> 
-> > > [...] I think that this should solve the problem:
-> > 
-> > Yes, it does!
-> > 
-> > [   48.119367] scsi host2: Generic NCR5380/NCR53C400 SCSI, io_port 0x0, n_io_port 0, base 0xd8000, irq 0, can_queue 16, cmd_per_lun 2, sg_tablesize 128, this_id 7, flags { NO_DMA_FIXUP }, options { AUTOPROBE_IRQ PSEUDO_DMA }
-> > [   49.715388] scsi 2:0:1:0: Direct-Access     QUANTUM  LP240S GM240S01X 4.6  PQ: 0 ANSI: 2 CCS
-> 
-> That still takes about 1.6 seconds to scan a vacant bus ID. It should be 
-> more like 0.25 seconds. Did you have the entire patch series applied?
-> 
-> The code presently in mainline spins for 500 iterations in the relevant 
-> busy-wait loop, with the comment, "8uS a cycle for the cpu access". That 
-> doesn't help me much. Does that refer to an ISA bus cycle? Or one 
-> iteration of the loop? Electrical conductance?
-> 
-> If we knew how many loops_per_jiffy your machine gets, and your CONFIG_HZ 
-> value, we could figure out how long a chip register access takes (which 
-> might be 8 us).
+Convert compile-time C400_ register mapping to runtime mapping.
+This removes the weird negative register offsets and allows adding
+additional mappings.
 
-loops_per_jiffy=4797252
-CONFIG_HZ=250
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/scsi/NCR5380.h   |   13 +---------
+ drivers/scsi/g_NCR5380.c |   61 ++++++++++++++++++++++++++--------------------
+ drivers/scsi/g_NCR5380.h |   12 ++++++---
+ 3 files changed, 43 insertions(+), 43 deletions(-)
 
-# cat /proc/cpuinfo
-processor       : 0
-vendor_id       : GenuineIntel
-cpu family      : 6
-model           : 11
-model name      : Intel(R) Celeron(TM) CPU                1200MHz
-stepping        : 1
-microcode       : 0x1c
-cpu MHz         : 1199.313
-cache size      : 256 KB
-physical id     : 0
-siblings        : 1
-core id         : 0
-cpu cores       : 1
-apicid          : 0
-initial apicid  : 0
-fdiv_bug        : no
-f00f_bug        : no
-coma_bug        : no
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 2
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 sep mtrr pge mca cmov pse36 mmx fxsr sse
-bugs            :
-bogomips        : 2398.62
-clflush size    : 32
-cache_alignment : 32
-address sizes   : 36 bits physical, 32 bits virtual
-power management:
-
-
-# cat iotest.c
-#include <stdio.h>
-#include <sys/io.h>
-
-int main(void) {
-        if (iopl(3)) {
-                perror("iopl");
-                return 1;
-        }
-        for (int i = 0; i < 10000000; i++)
-                inb(0x280);
-        return 0;
-}
-
-# cc --std=c99 iotest.c -o iotest
-# time ./iotest
-
-real    0m16.938s
-user    0m16.932s
-sys     0m0.000s
-
-outb() instead of inb():
-# time ./iotest
-
-real    0m17.210s
-user    0m17.204s
-sys     0m0.000s
-
-
-> I'll try to figure out a similar timing for my Domex PCI card to see if 
-> there is some sort of compromise to be found.
-
-
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index 36779df..0d8ec43 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -163,8 +163,7 @@
+ /* Write any value to this register to start an ini mode DMA receive */
+ #define START_DMA_INITIATOR_RECEIVE_REG 7	/* wo */
+ 
+-#define C400_CONTROL_STATUS_REG NCR53C400_register_offset-8	/* rw */
+-
++/* C400_CONTROL_STATUS_REG */
+ #define CSR_RESET              0x80	/* wo  Resets 53c400 */
+ #define CSR_53C80_REG          0x80	/* ro  5380 registers busy */
+ #define CSR_TRANS_DIR          0x40	/* rw  Data transfer direction */
+@@ -181,16 +180,6 @@
+ #define CSR_BASE CSR_53C80_INTR
+ #endif
+ 
+-/* Number of 128-byte blocks to be transferred */
+-#define C400_BLOCK_COUNTER_REG   NCR53C400_register_offset-7	/* rw */
+-
+-/* Resume transfer after disconnect */
+-#define C400_RESUME_TRANSFER_REG NCR53C400_register_offset-6	/* wo */
+-
+-/* Access to host buffer stack */
+-#define C400_HOST_BUFFER         NCR53C400_register_offset-4	/* rw */
+-
+-
+ /* Note : PHASE_* macros are based on the values of the STATUS register */
+ #define PHASE_MASK 	(SR_MSG | SR_CD | SR_IO)
+ 
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index a9a237f..ce444da 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -253,6 +253,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+ 	};
+ 	int flags;
+ 	struct Scsi_Host *instance;
++	struct NCR5380_hostdata *hostdata;
+ #ifdef SCSI_G_NCR5380_MEM
+ 	unsigned long base;
+ 	void __iomem *iomem;
+@@ -395,6 +396,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+ 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
+ 		if (instance == NULL)
+ 			goto out_release;
++		hostdata = shost_priv(instance);
+ 
+ #ifndef SCSI_G_NCR5380_MEM
+ 		instance->io_port = overrides[current_override].NCR5380_map_name;
+@@ -404,18 +406,27 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+ 		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
+ 		 * the base address.
+ 		 */
+-		if (overrides[current_override].board == BOARD_NCR53C400)
++		if (overrides[current_override].board == BOARD_NCR53C400) {
+ 			instance->io_port += 8;
++			hostdata->c400_ctl_status = 0;
++			hostdata->c400_blk_cnt = 1;
++			hostdata->c400_host_buf = 4;
++		}
+ #else
+ 		instance->base = overrides[current_override].NCR5380_map_name;
+-		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
++		hostdata->iomem = iomem;
++		if (overrides[current_override].board == BOARD_NCR53C400) {
++			hostdata->c400_ctl_status = 0x100;
++			hostdata->c400_blk_cnt = 0x101;
++			hostdata->c400_host_buf = 0x104;
++		}
+ #endif
+ 
+ 		if (NCR5380_init(instance, flags))
+ 			goto out_unregister;
+ 
+ 		if (overrides[current_override].board == BOARD_NCR53C400)
+-			NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
++			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+ 
+ 		NCR5380_maybe_reset_bus(instance);
+ 
+@@ -523,30 +534,28 @@ generic_NCR5380_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+  
+ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst, int len)
+ {
+-#ifdef SCSI_G_NCR5380_MEM
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-#endif
+ 	int blocks = len / 128;
+ 	int start = 0;
+ 	int bl;
+ 
+-	NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE | CSR_TRANS_DIR);
+-	NCR5380_write(C400_BLOCK_COUNTER_REG, blocks);
++	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE | CSR_TRANS_DIR);
++	NCR5380_write(hostdata->c400_blk_cnt, blocks);
+ 	while (1) {
+-		if ((bl = NCR5380_read(C400_BLOCK_COUNTER_REG)) == 0) {
++		if ((bl = NCR5380_read(hostdata->c400_blk_cnt)) == 0) {
+ 			break;
+ 		}
+-		if (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_GATED_53C80_IRQ) {
++		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
+ 			printk(KERN_ERR "53C400r: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
+ 			return -1;
+ 		}
+-		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY);
++		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY);
+ 
+ #ifndef SCSI_G_NCR5380_MEM
+ 		{
+ 			int i;
+ 			for (i = 0; i < 128; i++)
+-				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
++				dst[start + i] = NCR5380_read(hostdata->c400_host_buf);
+ 		}
+ #else
+ 		/* implies SCSI_G_NCR5380_MEM */
+@@ -558,7 +567,7 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
+ 	}
+ 
+ 	if (blocks) {
+-		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
++		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY)
+ 		{
+ 			// FIXME - no timeout
+ 		}
+@@ -567,7 +576,7 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
+ 		{
+ 			int i;	
+ 			for (i = 0; i < 128; i++)
+-				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
++				dst[start + i] = NCR5380_read(hostdata->c400_host_buf);
+ 		}
+ #else
+ 		/* implies SCSI_G_NCR5380_MEM */
+@@ -578,7 +587,7 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
+ 		blocks--;
+ 	}
+ 
+-	if (!(NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_GATED_53C80_IRQ))
++	if (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
+ 		printk("53C400r: no 53C80 gated irq after transfer");
+ 
+ #if 0
+@@ -586,7 +595,7 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
+ 	 *	DON'T DO THIS - THEY NEVER ARRIVE!
+ 	 */
+ 	printk("53C400r: Waiting for 53C80 registers\n");
+-	while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_53C80_REG)
++	while (NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)
+ 		;
+ #endif
+ 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
+@@ -607,31 +616,29 @@ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst,
+ 
+ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src, int len)
+ {
+-#ifdef SCSI_G_NCR5380_MEM
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-#endif
+ 	int blocks = len / 128;
+ 	int start = 0;
+ 	int bl;
+ 	int i;
+ 
+-	NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
+-	NCR5380_write(C400_BLOCK_COUNTER_REG, blocks);
++	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
++	NCR5380_write(hostdata->c400_blk_cnt, blocks);
+ 	while (1) {
+-		if (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_GATED_53C80_IRQ) {
++		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
+ 			printk(KERN_ERR "53C400w: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
+ 			return -1;
+ 		}
+ 
+-		if ((bl = NCR5380_read(C400_BLOCK_COUNTER_REG)) == 0) {
++		if ((bl = NCR5380_read(hostdata->c400_blk_cnt)) == 0) {
+ 			break;
+ 		}
+-		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
++		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY)
+ 			; // FIXME - timeout
+ #ifndef SCSI_G_NCR5380_MEM
+ 		{
+ 			for (i = 0; i < 128; i++)
+-				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
++				NCR5380_write(hostdata->c400_host_buf, src[start + i]);
+ 		}
+ #else
+ 		/* implies SCSI_G_NCR5380_MEM */
+@@ -642,13 +649,13 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
+ 		blocks--;
+ 	}
+ 	if (blocks) {
+-		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
++		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY)
+ 			; // FIXME - no timeout
+ 
+ #ifndef SCSI_G_NCR5380_MEM
+ 		{
+ 			for (i = 0; i < 128; i++)
+-				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
++				NCR5380_write(hostdata->c400_host_buf, src[start + i]);
+ 		}
+ #else
+ 		/* implies SCSI_G_NCR5380_MEM */
+@@ -661,7 +668,7 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
+ 
+ #if 0
+ 	printk("53C400w: waiting for registers to be available\n");
+-	THEY NEVER DO ! while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_53C80_REG);
++	THEY NEVER DO ! while (NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG);
+ 	printk("53C400w: Got em\n");
+ #endif
+ 
+@@ -669,7 +676,7 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
+ 	/* All documentation says to check for this. Maybe my hardware is too
+ 	 * fast. Waiting for it seems to work fine! KLL
+ 	 */
+-	while (!(i = NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_GATED_53C80_IRQ))
++	while (!(i = NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
+ 		;	// FIXME - no timeout
+ 
+ 	/*
+diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
+index fd201e9..633edd0 100644
+--- a/drivers/scsi/g_NCR5380.h
++++ b/drivers/scsi/g_NCR5380.h
+@@ -29,7 +29,6 @@
+ 
+ #define NCR5380_map_type int
+ #define NCR5380_map_name port
+-#define NCR53C400_register_offset 0
+ 
+ #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define NCR5380_region_size 16
+@@ -42,7 +41,10 @@
+ #define NCR5380_write(reg, value) \
+ 	outb(value, instance->io_port + (reg))
+ 
+-#define NCR5380_implementation_fields /* none */
++#define NCR5380_implementation_fields \
++	int c400_ctl_status;\
++	int c400_blk_cnt;\
++	int c400_host_buf;
+ 
+ #else 
+ /* therefore SCSI_G_NCR5380_MEM */
+@@ -50,7 +52,6 @@
+ 
+ #define NCR5380_map_type unsigned long
+ #define NCR5380_map_name base
+-#define NCR53C400_register_offset 0x108
+ #define NCR53C400_mem_base 0x3880
+ #define NCR53C400_host_buffer 0x3900
+ #define NCR5380_region_size 0x3a00
+@@ -63,7 +64,10 @@
+ 	       NCR53C400_mem_base + (reg))
+ 
+ #define NCR5380_implementation_fields \
+-    void __iomem *iomem;
++	void __iomem *iomem;\
++	int c400_ctl_status;\
++	int c400_blk_cnt;\
++	int c400_host_buf;
+ 
+ #endif
+ 
 -- 
 Ondrej Zary
