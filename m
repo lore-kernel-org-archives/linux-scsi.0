@@ -1,60 +1,51 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [RFC PATCH 74/71] ncr5380: Enable PDMA for NCR53C400A
-Date: Sun, 29 Nov 2015 10:39:40 +0100
-Message-ID: <1448789980-30094-2-git-send-email-linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20151118083455.331768508@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: block: Always check queue limits for cloned requests
+Date: Sun, 29 Nov 2015 12:49:56 +0100
+Message-ID: <20151129114956.GA321@x4>
+References: <1448524017-130967-1-git-send-email-hare@suse.de>
+ <20151126131104.GA24297@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151126131104.GA24297@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add I/O register mapping for NCR53C400A and enable PDMA mode to
-improve performance and fix non-working IRQ.
+On 2015.11.26 at 08:11 -0500, Mike Snitzer wrote:
+> On Thu, Nov 26 2015 at  2:46am -0500,
+> Hannes Reinecke <hare@suse.de> wrote:
+> 
+> > When a cloned request is retried on other queues it always needs
+> > to be checked against the queue limits of that queue.
+> > Otherwise the calculations for nr_phys_segments might be wrong,
+> > leading to a crash in scsi_init_sgtable().
+> > 
+> > To clarify this the patch renames blk_rq_check_limits()
+> > to blk_cloned_rq_check_limits() and removes the symbol
+> > export, as the new function should only be used for
+> > cloned requests and never exported.
+> > 
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> > Cc: Ewan Milne <emilne@redhat.com>
+> > Cc: Jeff Moyer <jmoyer@redhat.com>
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> Patch looks good.  Thanks for getting to the bottom of this.
+> 
+> Jens, please add these extra tags when you pick this up:
+> 
+> Fixes: e2a60da74 ("block: Clean up special command handling logic")
+> Cc: stable@vger.kernel.org # 3.7+
+> Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-Tested with HP C2502 (and user-space enabler).
+I'm still seeing the issue (BUG at drivers/scsi/scsi_lib.c:1096!) even
+with this patch applied.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
----
- drivers/scsi/g_NCR5380.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+markus@x4 linux % git describe
+v4.4-rc2-215-g081f3698e606
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index ce444da..c3abe48 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -324,7 +324,10 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- #endif
- 			break;
- 		case BOARD_NCR53C400A:
-+			flags = FLAG_NO_DMA_FIXUP;
-+#ifndef PSEUDO_DMA
- 			flags = FLAG_NO_PSEUDO_DMA;
-+#endif
- 			ports = ncr_53c400a_ports;
- 			break;
- 		case BOARD_DTC3181E:
-@@ -412,6 +415,11 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 			hostdata->c400_blk_cnt = 1;
- 			hostdata->c400_host_buf = 4;
- 		}
-+		if (overrides[current_override].board == BOARD_NCR53C400A) {
-+			hostdata->c400_ctl_status = 9;
-+			hostdata->c400_blk_cnt = 10;
-+			hostdata->c400_host_buf = 8;
-+		}
- #else
- 		instance->base = overrides[current_override].NCR5380_map_name;
- 		hostdata->iomem = iomem;
-@@ -425,7 +433,8 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 		if (NCR5380_init(instance, flags))
- 			goto out_unregister;
- 
--		if (overrides[current_override].board == BOARD_NCR53C400)
-+		if (overrides[current_override].board == BOARD_NCR53C400 ||
-+		    overrides[current_override].board == BOARD_NCR53C400A)
- 			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
- 
- 		NCR5380_maybe_reset_bus(instance);
 -- 
-Ondrej Zary
+Markus
