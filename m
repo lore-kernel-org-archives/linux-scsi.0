@@ -1,107 +1,72 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: fix a case of data corruption during
- COMPARE_AND_WRITE
-Date: Sat, 28 Nov 2015 20:10:42 -0800
-Message-ID: <1448770242.579.8.camel@haakon3.risingtidesystems.com>
-References: <1448297192-24937-1-git-send-email-jengelh@inai.de>
+Subject: [GIT PULL] target fixes for v4.4-rc3
+Date: Sat, 28 Nov 2015 22:02:53 -0800
+Message-ID: <1448776973.579.26.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59013 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052AbbK2EKn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2015 23:10:43 -0500
-In-Reply-To: <1448297192-24937-1-git-send-email-jengelh@inai.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@inai.de>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Jan,
+Hi Linus,
 
-Apologies for the delayed follow-up on this patch.
+Here are outstanding target-pending fixes queued for v4.4-rc3 code.
 
-Comments below.
+Please go ahead and pull from:
 
-On Mon, 2015-11-23 at 17:46 +0100, Jan Engelhardt wrote:
-> target_core_sbc's compare_and_write functionality suffers from taking
-> data at the wrong memory location when writing a CAW request to disk.
-> 
-> Given the following sample LIO subtopology,
-> 
-> % targetcli ls /loopback/
-> o- loopback ................................. [1 Target]
->   o- naa.6001405ebb8df14a ....... [naa.60014059143ed2b3]
->     o- luns ................................... [2 LUNs]
->       o- lun0 ................ [iblock/ram0 (/dev/ram0)]
->       o- lun1 ................ [iblock/ram1 (/dev/ram1)]
-> % lsscsi -g
-> [3:0:1:0]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdc   /dev/sg3
-> [3:0:1:1]    disk    LIO-ORG  IBLOCK           4.0   /dev/sdd   /dev/sg4
-> 
-> the following bug can be observed in Linux 4.3 and 4.4~rc1:
-> 
-> % perl -e 'print chr$_ for 0..255,reverse 0..255' >rand
-> % perl -e 'print "\0" x 512' >zero
-> % cat rand >/dev/sdd
-> % sg_compare_and_write -i rand -D zero --lba 0 /dev/sdd
-> % sg_compare_and_write -i zero -D rand --lba 0 /dev/sdd
-> Miscompare reported
-> % hexdump -Cn 512 /dev/sdd
-> 00000000  0f 0e 0d 0c 0b 0a 09 08  07 06 05 04 03 02 01 00
-> 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-> *
-> 00000200
-> 
-> Rather than writing all-zeroes as instructed with the -D file, it
-> corrupts the data in the sector by splicing some of the original
-> bytes in. The page of the first entry of cmd->t_data_sg includes the
-> CDB, and sg->offset is set to a position past the CDB. I presume that
-> sg->offset is also the right choice to use for subsequent sglist
-> members.
-> 
-> Signed-off-by: Jan Engelhardt <jengelh@netitwork.de>
-> ---
->  The following changes since commit 8005c49d9aea74d382f474ce11afbbc7d7130bec:
->   Linux 4.4-rc1 (2015-11-15 17:00:27 -0800)
->  are available in the git repository at:
->   git://git.inai.de/linux tcm
->  for you to fetch changes up to 54d035e8349bdb547a4372ebe6a83710971052bb:
->   target: fix a case of data corruption during COMPARE_AND_WRITE
-> 
->  drivers/target/target_core_sbc.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 0b4b2a6..dc51cdc 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -556,11 +556,11 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
->  
->  		if (block_size < PAGE_SIZE) {
->  			sg_set_page(&write_sg[i], m.page, block_size,
-> -				    block_size);
-> +				    m.piter.sg->offset + block_size);
->  		} else {
->  			sg_miter_next(&m);
->  			sg_set_page(&write_sg[i], m.page, block_size,
-> -				    0);
-> +				    m.piter.sg->offset);
->  		}
->  		len -= block_size;
->  		i++;
+   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-Very nice catch on this bug.
+This includes:
 
-AFAICT this effects loopback + vhost-scsi fabrics, because those are the
-two drivers that currently utilize SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC
-with COMPARE_AND_WRITE, and can result in a non zero SGL offset.
-
-Applied to target-pending/master with extra details in commit log to
-clarify this point.
+  - Fix tcm-user backend driver expired cmd time processing (agrover)
+  - Elimination of kref_put_spinlock_irqsave() for I/O completion (bart)
+  - Fix iscsi login kthread failure case hung task regression (nab)
+  - Fix COMPARE_AND_WRITE completion use-after-free race (nab)
+  - Fix COMPARE_AND_WRITE with SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC
+    non zero SGL offset data corruption.  (Jan + Doug)
+  - Fix >= v4.4-rc1 regression for tcm_qla2xxx enable configfs attribute
+    (Himanshu + HCH)
 
 Thank you,
 
 --nab
 
+Andy Grover (2):
+  target/user: Fix time calc in expired cmd processing
+  target/user: Do not set unused fields in tcmu_ops
+
+Bart Van Assche (2):
+  target: Invoke release_cmd() callback without holding a spinlock
+  kref: Remove kref_put_spinlock_irqsave()
+
+David Disseldorp (1):
+  target/stat: print full t10_wwn.model buffer
+
+Himanshu Madhani (1):
+  qla2xxx: Fix regression introduced by target configFS changes
+
+Jan Engelhardt (1):
+  target: fix COMPARE_AND_WRITE non zero SGL offset data corruption
+
+Luis de Bethencourt (1):
+  iscsi-target: return -ENOMEM instead of -1 in case of failed kmalloc()
+
+Nicholas Bellinger (2):
+  iscsi-target: Fix rx_login_comp hang after login failure
+  target: Fix race for SCF_COMPARE_AND_WRITE_POST checking
+
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c             |  2 +-
+ drivers/target/iscsi/iscsi_target.c            | 13 +++++++++-
+ drivers/target/iscsi/iscsi_target_nego.c       |  1 +
+ drivers/target/iscsi/iscsi_target_parameters.c | 10 ++++----
+ drivers/target/target_core_sbc.c               | 17 ++++++++-----
+ drivers/target/target_core_stat.c              |  2 +-
+ drivers/target/target_core_tmr.c               |  7 +++++-
+ drivers/target/target_core_transport.c         | 26 ++++++++++----------
+ drivers/target/target_core_user.c              |  4 +---
+ include/linux/kref.h                           | 33 --------------------------
+ include/target/target_core_base.h              |  2 +-
+ 11 files changed, 53 insertions(+), 64 deletions(-)
