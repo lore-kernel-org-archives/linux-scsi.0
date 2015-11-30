@@ -1,36 +1,28 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 108621] kernel BUG in drivers/scsi/scsi_lib.c
-Date: Mon, 30 Nov 2015 17:13:41 +0000
-Message-ID: <bug-108621-11613-sZO7sn63Cm@https.bugzilla.kernel.org/>
-References: <bug-108621-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v1 1/1] scsi_debug: check for bigger value first
+Date: Mon, 30 Nov 2015 12:14:21 -0500
+Message-ID: <yq1d1urif4i.fsf@sermon.lab.mkp.net>
+References: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43610 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751484AbbK3RNo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Nov 2015 12:13:44 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 3AFB420573
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2015 17:13:43 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 1BBF0205B1
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2015 17:13:42 +0000 (UTC)
-In-Reply-To: <bug-108621-11613@https.bugzilla.kernel.org/>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25097 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617AbbK3RPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2015 12:15:14 -0500
+In-Reply-To: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	(Andy Shevchenko's message of "Thu, 26 Nov 2015 20:22:50 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Ewan Milne <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=108621
+>>>>> "Andy" == Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
 
---- Comment #2 from Martin Ziegler <ziegler@uni-freiburg.de> ---
-So I better wait for 4.4-rc4...
+Andy> Even for signed types we have to check for bigger positive value
+Andy> first.  Otherwise it will be never happened.
 
-Thanks,
-
-Martin
+Applied to 4.5/scsi-queue.
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
