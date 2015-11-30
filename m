@@ -1,42 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: MPT2SAS boot fail... due to silently loosing the driver
-Date: Mon, 30 Nov 2015 09:27:32 -0800
-Message-ID: <1448904452.2204.24.camel@HansenPartnership.com>
-References: <20151123124621.GF7520@twins.programming.kicks-ass.net>
-	 <yq1wpt7li62.fsf@sermon.lab.mkp.net> <20151126104823.GA8745@gmail.com>
-	 <yq14mg3iesi.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 0/4] bfa: Patches for scsi "misc" branch
+Date: Mon, 30 Nov 2015 12:32:55 -0500
+Message-ID: <yq1zixvgzp4.fsf@sermon.lab.mkp.net>
+References: <1448528087-24989-1-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq14mg3iesi.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Sreekanth.Reddy@avagotech.com, hch@lst.de, hare@suse.de, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38055 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbbK3RdD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2015 12:33:03 -0500
+In-Reply-To: <1448528087-24989-1-git-send-email-anil.gurumurthy@qlogic.com>
+	(anil gurumurthy's message of "Thu, 26 Nov 2015 03:54:44 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: anil.gurumurthy@qlogic.com
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com, Johannes Thumshirn <jthumshirn@suse.de>
 
-[cc to linux-scsi added]
-On Mon, 2015-11-30 at 12:21 -0500, Martin K. Petersen wrote:
-> >>>>> "Ingo" == Ingo Molnar <mingo@kernel.org> writes:
-> 
-> Ingo> So you need to make it interactive, with a short help text that
-> Ingo> explains to users that this is legacy option only, and that they
-> Ingo> should enable the MPT3SAS option if they want to configure things
-> Ingo> manually.
-> 
-> +config SCSI_MPT2SAS
-> +	tristate "Legacy MPT2SAS config option"
-> +	default n
-> +	select SCSI_MPT3SAS
-> +	---help---
-> +	Dummy config option for backwards compatiblity: configure the MPT3SAS 
-> +	driver instead.
-> 
-> That's fine with me.
-> 
-> Sreekanth/Christoph/James: Any objections?
+>>>>> "Anil" ==   <anil.gurumurthy@qlogic.com> writes:
 
-Looks OK, we probably need a removal timeframe for it as well.  What
-about removal in 4.6?
+Anil,
 
-James
+Anil> Re-sending the patches that were submitted earlier, but appear to
+Anil> have fallen through the cracks. Addressed a comment regarding the
+Anil> commit message as well.
+
+Please add all existing review tags when you post an updated
+series. Patches 1, 3 and 4 got reviewed by Johannes.
+
+No need to resend, I'll try to remember this time (assuming patch 2 gets
+reviewed soon-ish).
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
