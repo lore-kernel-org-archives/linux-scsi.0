@@ -1,54 +1,52 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH v1 1/1] scsi_debug: check for bigger value first
-Date: Mon, 30 Nov 2015 08:55:03 -0500
-Message-ID: <1448891703.4067.79.camel@localhost.localdomain>
-References: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53962 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752962AbbK3NzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Nov 2015 08:55:05 -0500
-In-Reply-To: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [RESEND] scsi: mvsas: fix misleading indentation
+Date: Mon, 30 Nov 2015 14:32:17 +0000
+Message-ID: <1448893937-5252-1-git-send-email-luisbg@osg.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: vinholikatti@gmail.com, JBottomley@odin.com, jthumshirn@suse.de, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, Luis de Bethencourt <luisbg@osg.samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
 
-On Thu, 2015-11-26 at 20:22 +0200, Andy Shevchenko wrote:
-> From: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> Even for signed types we have to check for bigger positive value first.
-> Otherwise it will be never happened.
-> 
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> ---
->  drivers/scsi/scsi_debug.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index dfcc45b..f773b34 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -4846,10 +4846,10 @@ static int __init scsi_debug_init(void)
->  	/* play around with geometry, don't waste too much on track 0 */
->  	sdebug_heads = 8;
->  	sdebug_sectors_per = 32;
-> -	if (scsi_debug_dev_size_mb >= 16)
-> -		sdebug_heads = 32;
-> -	else if (scsi_debug_dev_size_mb >= 256)
-> +	if (scsi_debug_dev_size_mb >= 256)
->  		sdebug_heads = 64;
-> +	else if (scsi_debug_dev_size_mb >= 16)
-> +		sdebug_heads = 32;
->  	sdebug_cylinders_per = (unsigned long)sdebug_capacity /
->  			       (sdebug_sectors_per * sdebug_heads);
->  	if (sdebug_cylinders_per >= 1024) {
+Fix a smatch warning:
+drivers/scsi/mvsas/mv_sas.c:740 mvs_task_prep() warn: curly braces intended?
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+The code is correct, the indention is misleading. When the device is not
+ready we want to return SAS_PHY_DOWN. But current indentation makes it
+look like we only do so in the else branch of if (mvi_dev).
 
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
 
+Hi, 
+
+This is a resend of a patch from October 19th [0]
+
+Adding Andrew Morton to the CC list, as recommended at Korea Linux Forum.
+
+Thanks,
+Luis
+
+[0] https://lkml.org/lkml/2015/10/19/775
+
+ drivers/scsi/mvsas/mv_sas.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 9c78074..e712fe7 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -737,8 +737,8 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 			mv_dprintk("device %016llx not ready.\n",
+ 				SAS_ADDR(dev->sas_addr));
+ 
+-			rc = SAS_PHY_DOWN;
+-			return rc;
++		rc = SAS_PHY_DOWN;
++		return rc;
+ 	}
+ 	tei.port = dev->port->lldd_port;
+ 	if (tei.port && !tei.port->port_attached && !tmf) {
+-- 
+2.5.3
