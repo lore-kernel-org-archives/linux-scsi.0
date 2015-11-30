@@ -1,66 +1,54 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [RFC PATCH 74/71] ncr5380: Enable PDMA for NCR53C400A
-Date: Mon, 30 Nov 2015 14:40:04 +0100
-Message-ID: <201511301440.04626.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <1448789980-30094-2-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1511302255470.17483@nippy.intranet>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH v1 1/1] scsi_debug: check for bigger value first
+Date: Mon, 30 Nov 2015 08:55:03 -0500
+Message-ID: <1448891703.4067.79.camel@localhost.localdomain>
+References: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1511302255470.17483@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53962 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752962AbbK3NzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Nov 2015 08:55:05 -0500
+In-Reply-To: <1448562170-122075-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jbottomley@odin.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
 
-On Monday 30 November 2015, Finn Thain wrote:
+On Thu, 2015-11-26 at 20:22 +0200, Andy Shevchenko wrote:
+> From: Andy Shevchenko <andy.shevchenko@gmail.com>
 > 
-> On Sun, 29 Nov 2015, Ondrej Zary wrote:
+> Even for signed types we have to check for bigger positive value first.
+> Otherwise it will be never happened.
 > 
-> > Add I/O register mapping for NCR53C400A and enable PDMA mode to
-> > improve performance and fix non-working IRQ.
-> > 
+> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> ---
+>  drivers/scsi/scsi_debug.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> Is CONFIG_SCSI_GENERIC_NCR53C400 is still needed? Can the driver be fully 
-> configured at runtime now?
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index dfcc45b..f773b34 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -4846,10 +4846,10 @@ static int __init scsi_debug_init(void)
+>  	/* play around with geometry, don't waste too much on track 0 */
+>  	sdebug_heads = 8;
+>  	sdebug_sectors_per = 32;
+> -	if (scsi_debug_dev_size_mb >= 16)
+> -		sdebug_heads = 32;
+> -	else if (scsi_debug_dev_size_mb >= 256)
+> +	if (scsi_debug_dev_size_mb >= 256)
+>  		sdebug_heads = 64;
+> +	else if (scsi_debug_dev_size_mb >= 16)
+> +		sdebug_heads = 32;
+>  	sdebug_cylinders_per = (unsigned long)sdebug_capacity /
+>  			       (sdebug_sectors_per * sdebug_heads);
+>  	if (sdebug_cylinders_per >= 1024) {
 
-Things depending on CONFIG_SCSI_GENERIC_NCR53C400:
-
-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
-#define PSEUDO_DMA
-#endif
-
-Defining PSEUDO_DMA should not break anything, just makes code bigger a bit. We can probably just define it always in g_NCR5380.c.
-
-
-This looks weird. I don't have any card with a BIOS to test.
-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
-#define BIOSPARAM
-#define NCR5380_BIOSPARAM generic_NCR5380_biosparam
-#else
-#define NCR5380_BIOSPARAM NULL
-#endif
-
-
-This looks very wrong and should be done at runtime:
-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
-#define NCR5380_region_size 16
-#else
-#define NCR5380_region_size 8
-#endif
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
 
-> > Tested with HP C2502 (and user-space enabler).
-> > 
-> 
-> It would be nice if the enabler was documented.  
-> Documentation/scsi/g_NCR5380.txt might be a good place for that. That file 
-> could perhaps be updated (?) Certainly obsolete and misleading information 
-> should be removed if you see any.
- 
-I'll integrate the enabler into the driver. It's like "wakeup sequence for the NCR53C400A and DTC3181E */" in g_NCR5380.c, only the magic numbers are different.
-
--- 
-Ondrej Zary
