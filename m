@@ -1,170 +1,99 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [RFC PATCH 75/71] ncr5380: Remove FLAG_DTC3181E
-Date: Mon, 30 Nov 2015 15:56:56 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1511301349250.10574@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <1448791263-30357-1-git-send-email-linux@rainbow-software.org>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: block: Always check queue limits for cloned requests
+Date: Mon, 30 Nov 2015 14:11:41 +0800
+Message-ID: <20151130141141.6ce3fadb@tom-T450>
+References: <1448524017-130967-1-git-send-email-hare@suse.de>
+	<20151126131104.GA24297@redhat.com>
+	<20151129114956.GA321@x4>
+	<565B1D2A.5010603@suse.de>
+	<20151129161532.GA302@x4>
+	<20151129164947.GA15021@redhat.com>
+	<20151129170506.GB302@x4>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1448791263-30357-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151129170506.GB302@x4>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>, Jeff Moyer <jmoyer@redhat.com>, Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Sun, 29 Nov 2015 18:05:06 +0100
+Markus Trippelsdorf <markus@trippelsdorf.de> wrote:
 
-On Sun, 29 Nov 2015, Ondrej Zary wrote:
-
-> The FLAG_DTC3181E is used to activate a work-around for arbitration lost
-> condition that these chips see when ICR is written during arbitration.
+> On 2015.11.29 at 11:49 -0500, Mike Snitzer wrote:
+> > On Sun, Nov 29 2015 at 11:15am -0500,
+> > Markus Trippelsdorf <markus@trippelsdorf.de> wrote:
+> > 
+> > > On 2015.11.29 at 16:43 +0100, Hannes Reinecke wrote:
+> > > > On 11/29/2015 12:49 PM, Markus Trippelsdorf wrote:
+> > > > > 
+> > > > > I'm still seeing the issue (BUG at drivers/scsi/scsi_lib.c:1096!) even
+> > > > > with this patch applied.
+> > > > > 
+> > > > > markus@x4 linux % git describe
+> > > > > v4.4-rc2-215-g081f3698e606
+> > > > > 
+> > > > Can you generate a crashdump?
+> > > > I would need to cross-check with the other dumps I'm having to figure
+> > > > out if this really is the same issue.
+> > > > There have been other reports (and fixes) which show we're fighting
+> > > > several distinct issues here.
+> > > 
+> > > Unfortunately no. The crash happens on the disk where I store my log
+> > > files. And after it happened the magic SysRq keys don't work anymore.
+> > > 
+> > > The crash only happens on my spinning rust drive that uses the cfq
+> > > scheduler. The SSDs (deadline) are fine.
+> > > 
+> > > The BUG happens reproducibly when building http://www.sagemath.org/ on
+> > > that drive.
+> > 
+> > Are you using DM multipath?  If unsure, please let us know which
+> > device(s) map to the "spinning rust drive", and provide output from:
+> > lsblk
 > 
-> Move the ICR write (to set SEL and BSY) after the arbitration loss check
-> and remove FLAG_DTC3181E.
+> No, I'm not using DM multipath. 
 
-The first test for ICR_ARBITRATION_LOST happens after the required 
-arbitration delay, 2.4 us. The second test for ICR_ARBITRATION_LOST 
-happens after ICR_ASSERT_SEL.
 
-This second test seems to be pointless. It comes from the flow chart in 
-the NCR datasheet (see download link in patch 17). The spec does not 
-require this test but some 5380 devices may do. Who knows? It's almost 
-impossible to be sure, because it would mean losing a race with another 
-bus device right at the end of the arbitration delay (and we extend that 
-delay to 3 us anyway).
+OK, I guess it is still one block merge issue, care to test the
+following patch?
 
-Certainly one can find other datasheets with sample code and flow charts 
-that don't do this second check. The reason is that ICR_ARBITRATION_LOST 
-can be triggered when SEL is asserted by any device, so it may be 
-triggered after we've won arbitration (because we then set ICR_ASSERT_SEL 
-ourselves in order to enter selection phase).
+The patch can address one issue when bio->bi_seg_front_size
+is set as too small mistakenly, then fewer physical segment may
+be figured out.
 
-> 
-> ... Weird, we now have two consecutive checks for ICR_ARBITRATION_LOST 
-> and do different things when they fail...
+---
+>From 7aa725205f400ee6823a0d19bf9f41a2464725ce Mon Sep 17 00:00:00 2001
+From: Ming Lei <ming.lei@canonical.com>
+Date: Mon, 30 Nov 2015 13:10:12 +0800
+Subject: [PATCH] blk-merge: fix computing bio->bi_seg_front_size in case of
+ single segment
 
-They do different things because the second exit has to cleanup after the 
-ICR write.
+When bio has only one physical segment, we should set bio's
+bi_seg_front_size as the real(final) size of the single segment.
 
-I agree that it would be nice to remove the DTC3181E special case. It 
-would mean replacing patch 49.
+Fixes: 02e707424c2ea(blk-merge: fix blk_bio_segment_split)
+Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ block/blk-merge.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-The patch below is another version of your patch 75. It really needs to be 
-tested on all kinds of 5380 device, and if possible with a contested bus 
-(which would imply diconnection privileges, for which the driver still 
-requires that the chip has a working irq).
-
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-@@ -482,14 +482,13 @@ static void prepare_info(struct Scsi_Hos
- 	         "base 0x%lx, irq %d, "
- 	         "can_queue %d, cmd_per_lun %d, "
- 	         "sg_tablesize %d, this_id %d, "
--	         "flags { %s%s%s%s}, "
-+	         "flags { %s%s%s}, "
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
- 	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
--	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
- #ifdef AUTOPROBE_IRQ
-@@ -1085,18 +1084,6 @@ static struct scsi_cmnd *NCR5380_select(
- 	NCR5380_write(INITIATOR_COMMAND_REG,
- 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
- 
--	/* RvC: DTC3181E has some trouble with this so we simply removed it.
--	 * Seems to work with only Mustek scanner attached.
--	 */
--	if (!(hostdata->flags & FLAG_DTC3181E) &&
--	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
--		NCR5380_write(MODE_REG, MR_BASE);
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		dsprintk(NDEBUG_ARBITRATION, instance, "arbitration lost, negating SEL\n");
--		spin_lock_irq(&hostdata->lock);
--		goto out;
--	}
--
- 	/*
- 	 * Again, bus clear + bus settle time is 1.2us, however, this is
- 	 * a minimum so we'll udelay ceil(1.2)
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-11-30 15:34:36.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-11-30 15:34:39.000000000 +1100
-@@ -233,7 +233,6 @@
- 
- #define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
- #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
--#define FLAG_DTC3181E			16	/* DTC3181E */
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
- #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
- #define FLAG_TOSHIBA_DELAY		128	/* Allow for borken CD-ROMs */
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-@@ -586,13 +586,12 @@ static void prepare_info(struct Scsi_Hos
- 	         "base 0x%lx, irq %d, "
- 	         "can_queue %d, cmd_per_lun %d, "
- 	         "sg_tablesize %d, this_id %d, "
--	         "flags { %s%s%s}, "
-+	         "flags { %s%s}, "
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
--	         hostdata->flags & FLAG_DTC3181E       ? "DTC3181E "       : "",
- 	         hostdata->flags & FLAG_TAGGED_QUEUING ? "TAGGED_QUEUING " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY  ? "TOSHIBA_DELAY "  : "",
- #ifdef DIFFERENTIAL
-@@ -1286,18 +1285,6 @@ static struct scsi_cmnd *NCR5380_select(
- 	NCR5380_write(INITIATOR_COMMAND_REG,
- 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
- 
--	/* RvC: DTC3181E has some trouble with this so we simply removed it.
--	 * Seems to work with only Mustek scanner attached.
--	 */
--	if (!(hostdata->flags & FLAG_DTC3181E) &&
--	    (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_LOST)) {
--		NCR5380_write(MODE_REG, MR_BASE);
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		dsprintk(NDEBUG_ARBITRATION, instance, "arbitration lost, negating SEL\n");
--		spin_lock_irq(&hostdata->lock);
--		goto out;
--	}
--
- 	/*
- 	 * Again, bus clear + bus settle time is 1.2us, however, this is
- 	 * a minimum so we'll udelay ceil(1.2)
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-11-30 15:34:39.000000000 +1100
-@@ -326,7 +326,7 @@ static int __init generic_NCR5380_detect
- 			ports = ncr_53c400a_ports;
- 			break;
- 		case BOARD_DTC3181E:
--			flags = FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E;
-+			flags = FLAG_NO_PSEUDO_DMA;
- 			ports = dtc_3181e_ports;
- 			break;
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 41a55ba..e01405a 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -103,6 +103,9 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 			bvprv = bv;
+ 			bvprvp = &bvprv;
+ 			sectors += bv.bv_len >> 9;
++
++			if (nsegs == 1 && seg_size > front_seg_size)
++				front_seg_size = seg_size;
+ 			continue;
  		}
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2015-11-30 15:34:35.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2015-11-30 15:34:39.000000000 +1100
-@@ -92,7 +92,7 @@ static int dmx3191d_probe_one(struct pci
- 	 */
- 	shost->irq = NO_IRQ;
- 
--	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
-+	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA);
- 	if (error)
- 		goto out_host_put;
- 
+ new_segment:
+-- 
+1.9.1
