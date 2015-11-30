@@ -1,39 +1,29 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 108621] kernel BUG in drivers/scsi/scsi_lib.c
-Date: Mon, 30 Nov 2015 16:14:24 +0000
-Message-ID: <bug-108621-11613-hy6dsr6PUn@https.bugzilla.kernel.org/>
-References: <bug-108621-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: rescan VPD attributes
+Date: Mon, 30 Nov 2015 11:41:23 -0500
+Message-ID: <yq1lh9figng.fsf@sermon.lab.mkp.net>
+References: <1447071868-8509-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37097 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752523AbbK3QO2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Nov 2015 11:14:28 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4E052204D8
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2015 16:14:27 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D798020562
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2015 16:14:24 +0000 (UTC)
-In-Reply-To: <bug-108621-11613@https.bugzilla.kernel.org/>
+Received: from userp1040.oracle.com ([156.151.31.81]:25146 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbbK3Qlj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2015 11:41:39 -0500
+In-Reply-To: <1447071868-8509-1-git-send-email-hare@suse.de> (Hannes
+	Reinecke's message of "Mon, 9 Nov 2015 13:24:28 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.Petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@odin.com>, Johannes Thumshirn <jthumshirn@suse.com>, Shane Seymour <shane.seymour@hpe.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=108621
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Bart Van Assche <bvanassche@acm.org> changed:
+Hannes> The VPD page information might change, so we need to be able to
+Hannes> update it. This patch implements a VPD page rescan whenever the
+Hannes> 'rescan' sysfs attribute is triggered.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bvanassche@acm.org
-
---- Comment #1 from Bart Van Assche <bvanassche@acm.org> ---
-Please have a look at the following e-mail thread:
-http://thread.gmane.org/gmane.linux.kernel/2088075.
+Applied to 4.5/scsi-queue.
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
