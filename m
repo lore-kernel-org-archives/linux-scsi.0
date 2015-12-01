@@ -1,71 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 00/18] ALUA device handler update, part 1
-Date: Tue,  1 Dec 2015 10:16:40 +0100
-Message-ID: <1448961418-29013-1-git-send-email-hare@suse.de>
+Subject: [PATCH 02/18] scsi: ignore errors from scsi_dh_add_device()
+Date: Tue,  1 Dec 2015 10:16:42 +0100
+Message-ID: <1448961418-29013-3-git-send-email-hare@suse.de>
+References: <1448961418-29013-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41465 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41478 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755565AbbLAJRC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755906AbbLAJRC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 1 Dec 2015 04:17:02 -0500
+In-Reply-To: <1448961418-29013-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Johannes Thumshirn <jthumshirn@suse.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hi all,
+device handler initialisation might fail due to a number of
+reasons. But as device_handlers are optional this shouldn't
+cause us to disable the device entirely.
+So just ignore errors from scsi_dh_add_device().
 
-here's the first part of my ALUA device handler update.
-It's mainly bugfixes and minor improvements; the two important
-things are the addition of VPD parsing functions scsi_vpd_lun_id()
-and scsi_vpd_tpg_id().
-This series has been split off from the original 'Asynchronous ALUA'
-patchset, as these bits are pretty uncontroversial and have a good
-chance of being merged reasonably soon.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_sysfs.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-The second part of the ALUA device handler update will be posted
-(and, doubtlessly, discussed) once this part is in.
-
-Patchset is relative to 4.5/scsi-queue by mkp.
-The entire tree can be found at
-
-kernel.org:/pub/scm/linux/kernel/git/hare/scsi-devel.git
-branch alua.v7
-
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Update to 4.5/scsi-queue
-- Rename 'device_id' to 'wwid'
-
-Hannes Reinecke (18):
-  scsi_dh: move 'dh_state' sysfs attribute to generic code
-  scsi: ignore errors from scsi_dh_add_device()
-  scsi_dh_alua: Disable ALUA handling for non-disk devices
-  scsi_dh_alua: Use vpd_pg83 information
-  scsi_dh_alua: improved logging
-  scsi_dh_alua: sanitze sense code handling
-  scsi_dh_alua: use standard logging functions
-  scsi_dh_alua: return standard SCSI return codes in submit_rtpg
-  scsi_dh_alua: fixup description of stpg_endio()
-  scsi: remove scsi_show_sense_hdr()
-  scsi_dh_alua: use flag for RTPG extended header
-  scsi_dh_alua: use unaligned access macros
-  scsi_dh_alua: rework alua_check_tpgs() to return the tpgs mode
-  scsi_dh_alua: simplify sense code handling
-  scsi: Add scsi_vpd_lun_id()
-  scsi: export 'wwid' to sysfs
-  scsi: Add scsi_vpd_tpg_id()
-  scsi_dh_alua: use scsi_vpd_tpg_id()
-
- drivers/scsi/device_handler/scsi_dh_alua.c | 294 ++++++++++-------------------
- drivers/scsi/scsi_dh.c                     |  72 +------
- drivers/scsi/scsi_lib.c                    | 188 ++++++++++++++++++
- drivers/scsi/scsi_priv.h                   |   3 +-
- drivers/scsi/scsi_sysfs.c                  |  82 +++++++-
- include/scsi/scsi_dbg.h                    |   2 -
- include/scsi/scsi_device.h                 |   2 +
- 7 files changed, 374 insertions(+), 269 deletions(-)
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index fc3cd26..d015374 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1120,11 +1120,12 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	}
+ 
+ 	error = scsi_dh_add_device(sdev);
+-	if (error) {
++	if (error)
++		/*
++		 * device_handler is optional, so any error can be ignored
++		 */
+ 		sdev_printk(KERN_INFO, sdev,
+ 				"failed to add device handler: %d\n", error);
+-		return error;
+-	}
+ 
+ 	device_enable_async_suspend(&sdev->sdev_dev);
+ 	error = device_add(&sdev->sdev_dev);
 -- 
 1.8.5.6
 
