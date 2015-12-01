@@ -1,126 +1,54 @@
 From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 08/18] scsi_dh_alua: return standard SCSI return codes
- in submit_rtpg
-Date: Tue, 01 Dec 2015 11:07:16 +0100
-Message-ID: <1448964436.3103.7.camel@suse.com>
+Subject: Re: [PATCH 09/18] scsi_dh_alua: fixup description of stpg_endio()
+Date: Tue, 01 Dec 2015 11:09:00 +0100
+Message-ID: <1448964540.3103.8.camel@suse.com>
 References: <1448961418-29013-1-git-send-email-hare@suse.de>
-	 <1448961418-29013-9-git-send-email-hare@suse.de>
+	 <1448961418-29013-10-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45393 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45641 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753760AbbLAKHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:07:18 -0500
-In-Reply-To: <1448961418-29013-9-git-send-email-hare@suse.de>
+	id S1755565AbbLAKJB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Dec 2015 05:09:01 -0500
+In-Reply-To: <1448961418-29013-10-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
 On Tue, 2015-12-01 at 10:16 +0100, Hannes Reinecke wrote:
-> Fixup submit_rtpg() to always return a standard SCSI return code.
+> Fixup copy-and-paste error in the description of stpg_endio().
 >=20
-> Reviewed-by: Ewan Milne <emilne@redhat.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 > ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 33 +++++++++++++++=
--------------
-> --
-> =C2=A01 file changed, 17 insertions(+), 16 deletions(-)
+> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 6 ++----
+> =C2=A01 file changed, 2 insertions(+), 4 deletions(-)
 >=20
 > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
 > b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index b817963..50fe87c 100644
+> index 50fe87c..ea626732 100644
 > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -138,11 +138,13 @@ static unsigned submit_rtpg(struct scsi_device =
-*sdev,
-> struct alua_dh_data *h,
-> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0bool rtpg_ext_hdr_req)
+> @@ -171,13 +171,11 @@ done:
+> =C2=A0}
+> =C2=A0
+> =C2=A0/*
+> - * alua_stpg - Evaluate SET TARGET GROUP STATES
+> + * stpg_endio - Evaluate SET TARGET GROUP STATES
+> =C2=A0 * @sdev: the device to be evaluated
+> =C2=A0 * @state: the new target group state
+> =C2=A0 *
+> - * Send a SET TARGET GROUP STATES command to the device.
+> - * We only have to test here if we should resubmit the command;
+> - * any other error is assumed as a failure.
+> + * Evaluate a SET TARGET GROUP STATES command response.
+> =C2=A0 */
+> =C2=A0static void stpg_endio(struct request *req, int error)
 > =C2=A0{
-> =C2=A0	struct request *rq;
-> -	int err =3D SCSI_DH_RES_TEMP_UNAVAIL;
-> +	int err =3D 0;
-> =C2=A0
-> =C2=A0	rq =3D get_alua_req(sdev, h->buff, h->bufflen, READ);
-> -	if (!rq)
-> +	if (!rq) {
-> +		err =3D DRIVER_BUSY << 24;
-> =C2=A0		goto done;
-> +	}
-> =C2=A0
-> =C2=A0	/* Prepare the command. */
-> =C2=A0	rq->cmd[0] =3D MAINTENANCE_IN;
-> @@ -160,13 +162,9 @@ static unsigned submit_rtpg(struct scsi_device *=
-sdev,
-> struct alua_dh_data *h,
-> =C2=A0	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
-> =C2=A0	rq->sense_len =3D 0;
-> =C2=A0
-> -	err =3D blk_execute_rq(rq->q, NULL, rq, 1);
-> -	if (err =3D=3D -EIO) {
-> -		sdev_printk(KERN_INFO, sdev,
-> -			=C2=A0=C2=A0=C2=A0=C2=A0"%s: rtpg failed with %x\n",
-> -			=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME, rq->errors);
-> -		err =3D SCSI_DH_IO;
-> -	}
-> +	blk_execute_rq(rq->q, NULL, rq, 1);
-> +	if (rq->errors)
-> +		err =3D rq->errors;
-> =C2=A0	blk_put_request(rq);
-> =C2=A0done:
-> =C2=A0	return err;
-> @@ -493,7 +491,7 @@ static int alua_rtpg(struct scsi_device *sdev, st=
-ruct
-> alua_dh_data *h, int wait_
-> =C2=A0	struct scsi_sense_hdr sense_hdr;
-> =C2=A0	int len, k, off, valid_states =3D 0;
-> =C2=A0	unsigned char *ucp;
-> -	unsigned err;
-> +	unsigned err, retval;
-> =C2=A0	bool rtpg_ext_hdr_req =3D 1;
-> =C2=A0	unsigned long expiry, interval =3D 0;
-> =C2=A0	unsigned int tpg_desc_tbl_off;
-> @@ -505,12 +503,17 @@ static int alua_rtpg(struct scsi_device *sdev, =
-struct
-> alua_dh_data *h, int wait_
-> =C2=A0		expiry =3D round_jiffies_up(jiffies + h->transition_tmo * HZ)=
-;
-> =C2=A0
-> =C2=A0 retry:
-> -	err =3D submit_rtpg(sdev, h, rtpg_ext_hdr_req);
-> -
-> -	if (err =3D=3D SCSI_DH_IO) {
-> +	retval =3D submit_rtpg(sdev, h, rtpg_ext_hdr_req);
-> +	if (retval) {
-> =C2=A0		if (!scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-> -					=C2=A0=C2=A0&sense_hdr))
-> +					=C2=A0=C2=A0&sense_hdr)) {
-> +			sdev_printk(KERN_INFO, sdev,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0"%s: rtpg failed, result %d\n",
-> +				=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME, retval);
-> +			if (driver_byte(retval) =3D=3D DRIVER_BUSY)
-> +				return SCSI_DH_DEV_TEMP_BUSY;
-> =C2=A0			return SCSI_DH_IO;
-> +		}
-> =C2=A0
-> =C2=A0		/*
-> =C2=A0		=C2=A0* submit_rtpg() has failed on existing arrays
-> @@ -539,8 +542,6 @@ static int alua_rtpg(struct scsi_device *sdev, st=
-ruct
-> alua_dh_data *h, int wait_
-> =C2=A0		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-> =C2=A0		return SCSI_DH_IO;
-> =C2=A0	}
-> -	if (err !=3D SCSI_DH_OK)
-> -		return err;
-> =C2=A0
-> =C2=A0	len =3D (h->buff[0] << 24) + (h->buff[1] << 16) +
-> =C2=A0		(h->buff[2] << 8) + h->buff[3] + 4;
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --
