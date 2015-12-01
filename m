@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH 09/10] aacraid: Fix character device re initialization
-Date: Tue, 1 Dec 2015 04:39:48 -0800
-Message-ID: <1448973589-9216-11-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH 09/10] aacraid: Fix character device re-initialization
+Date: Tue, 1 Dec 2015 04:39:47 -0800
+Message-ID: <1448973589-9216-10-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48262 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754158AbbLATeY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:24 -0500
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55993 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754085AbbLATeX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:23 -0500
 In-Reply-To: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -32,7 +32,7 @@ Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
  1 file changed, 13 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 9076a95..e8c3606 100644
+index 2094842..7142578 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
 @@ -1123,6 +1123,13 @@ static void __aac_shutdown(struct aac_dev * aac)
@@ -59,7 +59,7 @@ index 9076a95..e8c3606 100644
  	aac = (struct aac_dev *)shost->hostdata;
  	aac->base_start = pci_resource_start(pdev, 0);
  	aac->scsi_host_ptr = shost;
-@@ -1534,7 +1544,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+@@ -1536,7 +1546,7 @@ static void aac_remove_one(struct pci_dev *pdev)
  	pci_disable_device(pdev);
  	if (list_empty(&aac_devices)) {
  		unregister_chrdev(aac_cfg_major, "aac");
@@ -68,7 +68,7 @@ index 9076a95..e8c3606 100644
  	}
  }
  
-@@ -1695,11 +1705,8 @@ static int __init aac_init(void)
+@@ -1697,11 +1707,8 @@ static int __init aac_init(void)
  	if (error < 0)
  		return error;
  
