@@ -1,47 +1,30 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] Fix a bdi reregistration race, v2
-Date: Mon, 30 Nov 2015 17:18:50 -0800
-Message-ID: <565CF57A.4090507@sandisk.com>
-References: <564F9AFF.3050605@sandisk.com>
- <20151124231331.GA25591@infradead.org> <5654F169.6070000@sandisk.com>
- <20151125084744.GA16429@infradead.org> <5655CCC0.9010107@sandisk.com>
- <yq1610jf0jk.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] Fix a memory leak in scsi_host_dev_release()
+Date: Mon, 30 Nov 2015 20:46:24 -0500
+Message-ID: <yq11tb7eya7.fsf@sermon.lab.mkp.net>
+References: <564D0224.9040001@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0077.outbound.protection.outlook.com ([65.55.169.77]:21584
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751324AbbLABSz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Nov 2015 20:18:55 -0500
-In-Reply-To: <yq1610jf0jk.fsf@sermon.lab.mkp.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20779 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbbLABq6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2015 20:46:58 -0500
+In-Reply-To: <564D0224.9040001@sandisk.com> (Bart Van Assche's message of
+	"Wed, 18 Nov 2015 14:56:36 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, Aaro Koskinen <aaro.koskinen@iki.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-mm@kvack.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/30/2015 04:57 PM, Martin K. Petersen wrote:
->>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
->
-> Bart> This race is hard to trigger. I can trigger it by repeatedly
-> Bart> removing and re-adding SRP SCSI devices. Enabling debug options
-> Bart> like SLUB debugging and kmemleak helps. I think that is because
-> Bart> these debug options slow down the SCSI device removal code and
-> Bart> thereby increase the chance that this race is triggered.
->
-> Any updates on this? Your updated patch has no reviews.
->
-> Should I just revert the original patch for 4.4?
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Hello Martin,
+Bart> Avoid that kmemleak reports the following memory leak if a SCSI
+Bart> LLD calls scsi_host_alloc() and scsi_host_put() but neither
+Bart> scsi_host_add() nor scsi_host_remove(). The following shell
+Bart> command triggers that scenario:
 
-Since the original patch caused a regression, please proceed with 
-reverting the original patch.
+Applied to 4.4/scsi-queue.
 
-Regarding this patch: is there anyone on the CC-list of this e-mail who 
-can review it ?
-
-Thanks,
-
-Bart.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
