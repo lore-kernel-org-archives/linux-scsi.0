@@ -1,31 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi_transport_fc: Introduce scsi_host_{get,put}()
-Date: Mon, 30 Nov 2015 17:47:18 -0500
-Message-ID: <yq1vb8jf6kp.fsf@sermon.lab.mkp.net>
-References: <564F910E.9070306@sandisk.com> <564F9190.5090103@sandisk.com>
-	<yq1vb8jgzlv.fsf@sermon.lab.mkp.net> <565C8963.7050009@sandisk.com>
+Subject: Re: [PATCH v3 1/5] arcmsr: fixed getting wrong configuration data
+Date: Mon, 30 Nov 2015 19:17:43 -0500
+Message-ID: <yq1egf7f2e0.fsf@sermon.lab.mkp.net>
+References: <1448451362.4670.29.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22349 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754884AbbK3Wr6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2015 17:47:58 -0500
-In-Reply-To: <565C8963.7050009@sandisk.com> (Bart Van Assche's message of
-	"Mon, 30 Nov 2015 09:37:39 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1448451362.4670.29.camel@Centos6.3-64> (Ching Huang's message of
+	"Wed, 25 Nov 2015 19:36:02 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de, jthumshirn@suse.de, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Smart <james.smart@avagotech.com>
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+>>>>> "Ching" == Ching Huang <ching2048@areca.com.tw> writes:
 
->> Do you want me to queue this as a general cleanup for 4.5
->> (independently of the leak patch)?
+Hello Ching,
 
-Bart> That would be appreciated.
+I applied both your series to 4.5/scsi-queue.
 
-OK. Done.
+In the future please run checkpatch before submitting. Warnings are OK
+but in this case there were several things flagged as errors that I had
+to fix up by hand.
+
+Also make sure you tag with "Signed-off-by:". Your signoff was mistyped
+in all the patches.
+
+Thank you!
+Martin
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
