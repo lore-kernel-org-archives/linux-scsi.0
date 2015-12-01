@@ -1,226 +1,68 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/18] scsi_dh: move 'dh_state' sysfs attribute to generic code
-Date: Tue,  1 Dec 2015 10:16:41 +0100
-Message-ID: <1448961418-29013-2-git-send-email-hare@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.com>
+Subject: Re: [PATCH 03/18] scsi_dh_alua: Disable ALUA handling for non-disk
+ devices
+Date: Tue, 01 Dec 2015 10:25:57 +0100
+Message-ID: <1448961957.3103.3.camel@suse.com>
 References: <1448961418-29013-1-git-send-email-hare@suse.de>
+	 <1448961418-29013-4-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41589 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42279 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755829AbbLAJRI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:17:08 -0500
-In-Reply-To: <1448961418-29013-1-git-send-email-hare@suse.de>
+	id S1755769AbbLAJZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Dec 2015 04:25:59 -0500
+In-Reply-To: <1448961418-29013-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Johannes Thumshirn <jthumshirn@suse.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-As scsi_dh.c is now always compiled in we should be moving
-the 'dh_state' attribute to the generic code.
+On Tue, 2015-12-01 at 10:16 +0100, Hannes Reinecke wrote:
+> Non-disk devices might support ALUA, but the firmware
+> implementation is untested and frequently broken.
+> As we're don't actually need it disable ALUA support
+> for non-disk device for now.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 12 ++++++++++++
+> =C2=A01 file changed, 12 insertions(+)
+>=20
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+> b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index cc2773b..7d01ef0 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -320,6 +320,18 @@ static int alua_check_tpgs(struct scsi_device *s=
+dev,
+> struct alua_dh_data *h)
+> =C2=A0{
+> =C2=A0	int err =3D SCSI_DH_OK;
+> =C2=A0
+> +	/*
+> +	=C2=A0* ALUA support for non-disk devices is fraught with
+> +	=C2=A0* difficulties, so disable it for now.
+> +	=C2=A0*/
+> +	if (sdev->type !=3D TYPE_DISK) {
+> +		h->tpgs =3D TPGS_MODE_NONE;
+> +		sdev_printk(KERN_INFO, sdev,
+> +			=C2=A0=C2=A0=C2=A0=C2=A0"%s: disable for non-disk devices\n",
+> +			=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME);
+> +		return SCSI_DH_DEV_UNSUPP;
+> +	}
+> +
+> =C2=A0	h->tpgs =3D scsi_device_tpgs(sdev);
+> =C2=A0	switch (h->tpgs) {
+> =C2=A0	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_dh.c    | 72 +----------------------------------------------
- drivers/scsi/scsi_priv.h  |  3 +-
- drivers/scsi/scsi_sysfs.c | 58 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 60 insertions(+), 73 deletions(-)
-
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index e7649ed..54d446c 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -153,76 +153,11 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
- 	module_put(sdev->handler->module);
- }
- 
--/*
-- * Functions for sysfs attribute 'dh_state'
-- */
--static ssize_t
--store_dh_state(struct device *dev, struct device_attribute *attr,
--	       const char *buf, size_t count)
--{
--	struct scsi_device *sdev = to_scsi_device(dev);
--	struct scsi_device_handler *scsi_dh;
--	int err = -EINVAL;
--
--	if (sdev->sdev_state == SDEV_CANCEL ||
--	    sdev->sdev_state == SDEV_DEL)
--		return -ENODEV;
--
--	if (!sdev->handler) {
--		/*
--		 * Attach to a device handler
--		 */
--		scsi_dh = scsi_dh_lookup(buf);
--		if (!scsi_dh)
--			return err;
--		err = scsi_dh_handler_attach(sdev, scsi_dh);
--	} else {
--		if (!strncmp(buf, "detach", 6)) {
--			/*
--			 * Detach from a device handler
--			 */
--			sdev_printk(KERN_WARNING, sdev,
--				    "can't detach handler %s.\n",
--				    sdev->handler->name);
--			err = -EINVAL;
--		} else if (!strncmp(buf, "activate", 8)) {
--			/*
--			 * Activate a device handler
--			 */
--			if (sdev->handler->activate)
--				err = sdev->handler->activate(sdev, NULL, NULL);
--			else
--				err = 0;
--		}
--	}
--
--	return err<0?err:count;
--}
--
--static ssize_t
--show_dh_state(struct device *dev, struct device_attribute *attr, char *buf)
--{
--	struct scsi_device *sdev = to_scsi_device(dev);
--
--	if (!sdev->handler)
--		return snprintf(buf, 20, "detached\n");
--
--	return snprintf(buf, 20, "%s\n", sdev->handler->name);
--}
--
--static struct device_attribute scsi_dh_state_attr =
--	__ATTR(dh_state, S_IRUGO | S_IWUSR, show_dh_state,
--	       store_dh_state);
--
- int scsi_dh_add_device(struct scsi_device *sdev)
- {
- 	struct scsi_device_handler *devinfo = NULL;
- 	const char *drv;
--	int err;
--
--	err = device_create_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
--	if (err)
--		return err;
-+	int err = 0;
- 
- 	drv = scsi_dh_find_driver(sdev);
- 	if (drv)
-@@ -238,11 +173,6 @@ void scsi_dh_release_device(struct scsi_device *sdev)
- 		scsi_dh_handler_detach(sdev);
- }
- 
--void scsi_dh_remove_device(struct scsi_device *sdev)
--{
--	device_remove_file(&sdev->sdev_gendev, &scsi_dh_state_attr);
--}
--
- /*
-  * scsi_register_device_handler - register a device handler personality
-  *      module.
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 4d01cdb1..27b4d0a 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -174,12 +174,11 @@ extern struct async_domain scsi_sd_probe_domain;
- #ifdef CONFIG_SCSI_DH
- int scsi_dh_add_device(struct scsi_device *sdev);
- void scsi_dh_release_device(struct scsi_device *sdev);
--void scsi_dh_remove_device(struct scsi_device *sdev);
- #else
- static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
- static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
--static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
- #endif
-+static inline void scsi_dh_remove_device(struct scsi_device *sdev) { }
- 
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 158f1b5..fc3cd26 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -17,6 +17,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_dh.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_driver.h>
- 
-@@ -904,6 +905,60 @@ sdev_show_function(queue_depth, "%d\n");
- static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
- 		   sdev_store_queue_depth);
- 
-+#ifdef CONFIG_SCSI_DH
-+static ssize_t
-+sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
-+		   char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	if (!sdev->handler)
-+		return snprintf(buf, 20, "detached\n");
-+
-+	return snprintf(buf, 20, "%s\n", sdev->handler->name);
-+}
-+
-+static ssize_t
-+sdev_store_dh_state(struct device *dev, struct device_attribute *attr,
-+		    const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int err = -EINVAL;
-+
-+	if (sdev->sdev_state == SDEV_CANCEL ||
-+	    sdev->sdev_state == SDEV_DEL)
-+		return -ENODEV;
-+
-+	if (!sdev->handler) {
-+		/*
-+		 * Attach to a device handler
-+		 */
-+		err = scsi_dh_attach(sdev->request_queue, buf);
-+	} else if (!strncmp(buf, "activate", 8)) {
-+		/*
-+		 * Activate a device handler
-+		 */
-+		if (sdev->handler->activate)
-+			err = sdev->handler->activate(sdev, NULL, NULL);
-+		else
-+			err = 0;
-+	} else if (!strncmp(buf, "detach", 6)) {
-+		/*
-+		 * Detach from a device handler
-+		 */
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "can't detach handler %s.\n",
-+			    sdev->handler->name);
-+		err = -EINVAL;
-+	}
-+
-+	return err < 0 ? err : count;
-+}
-+
-+static DEVICE_ATTR(dh_state, S_IRUGO | S_IWUSR, sdev_show_dh_state,
-+		   sdev_store_dh_state);
-+#endif
-+
- static ssize_t
- sdev_show_queue_ramp_up_period(struct device *dev,
- 			       struct device_attribute *attr,
-@@ -973,6 +1028,9 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_modalias.attr,
- 	&dev_attr_queue_depth.attr,
- 	&dev_attr_queue_type.attr,
-+#ifdef CONFIG_SCSI_DH
-+	&dev_attr_dh_state.attr,
-+#endif
- 	&dev_attr_queue_ramp_up_period.attr,
- 	REF_EVT(media_change),
- 	REF_EVT(inquiry_change_reported),
--- 
-1.8.5.6
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
