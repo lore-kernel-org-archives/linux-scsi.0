@@ -1,131 +1,87 @@
 From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 14/18] scsi_dh_alua: simplify sense code handling
-Date: Tue, 01 Dec 2015 11:31:27 +0100
-Message-ID: <1448965887.3103.12.camel@suse.com>
+Subject: Re: [PATCH 15/18] scsi: Add scsi_vpd_lun_id()
+Date: Tue, 01 Dec 2015 11:35:20 +0100
+Message-ID: <1448966120.3103.14.camel@suse.com>
 References: <1448961418-29013-1-git-send-email-hare@suse.de>
-	 <1448961418-29013-15-git-send-email-hare@suse.de>
+	 <1448961418-29013-16-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48037 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48344 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873AbbLAKb3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:31:29 -0500
-In-Reply-To: <1448961418-29013-15-git-send-email-hare@suse.de>
+	id S1750873AbbLAKfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Dec 2015 05:35:23 -0500
+In-Reply-To: <1448961418-29013-16-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
 On Tue, 2015-12-01 at 10:16 +0100, Hannes Reinecke wrote:
-> Most sense code is already handled in the generic
-> code, so we shouldn't be adding special cases here.
-> However, when doing so we need to check for
-> unit attention whenever we're sending an internal
-> command.
+> Add a function scsi_vpd_lun_id() to return a unique device
+> identifcation based on the designation descriptors of
+> VPD page 0x83.
+>=20
+> As devices might implement several descriptors the order
+> of preference is:
+> - NAA IEE Registered Extended
+> - EUI-64 based 16-byte
+> - EUI-64 based 12-byte
+> - NAA IEEE Registered
+> - NAA IEEE Extended
+> A SCSI name string descriptor is preferred to all of them
+> if the identification is longer than 16 bytes.
+>=20
+> The returned unique device identification will be formatted
+> as a SCSI Name string to avoid clashes between different
+> designator types.
 >=20
 > Reviewed-by: Ewan Milne <emilne@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 45 +++++++++++----=
--------------
-> --
-> =C2=A01 file changed, 17 insertions(+), 28 deletions(-)
+> =C2=A0drivers/scsi/scsi_lib.c=C2=A0=C2=A0=C2=A0=C2=A0| 140
+> +++++++++++++++++++++++++++++++++++++++++++++
+> =C2=A0include/scsi/scsi_device.h |=C2=A0=C2=A0=C2=A01 +
+> =C2=A02 files changed, 141 insertions(+)
 >=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index c9751c9..abf05b4 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -85,7 +85,6 @@ struct alua_dh_data {
-> =C2=A0#define ALUA_POLICY_SWITCH_ALL		1
-> =C2=A0
-> =C2=A0static char print_alua_state(int);
-> -static int alua_check_sense(struct scsi_device *, struct scsi_sense_=
-hdr *);
-> =C2=A0
-> =C2=A0static int realloc_buffer(struct alua_dh_data *h, unsigned len)
-> =C2=A0{
-> @@ -189,8 +188,13 @@ static void stpg_endio(struct request *req, int =
-error)
-> =C2=A0
-> =C2=A0	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-> =C2=A0				=C2=A0&sense_hdr)) {
-> -		err =3D alua_check_sense(h->sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE) {
-> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
-> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
-q =3D=3D 0x0a) {
-> +			/* ALUA state transition already in progress */
-> +			err =3D SCSI_DH_OK;
-> +			goto done;
-> +		}
-> +		if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION) {
-> =C2=A0			err =3D SCSI_DH_RETRY;
-> =C2=A0			goto done;
-> =C2=A0		}
-> @@ -399,28 +403,6 @@ static int alua_check_sense(struct scsi_device *=
-sdev,
-> =C2=A0			=C2=A0* LUN Not Accessible - ALUA state transition
-> =C2=A0			=C2=A0*/
-> =C2=A0			return ADD_TO_MLQUEUE;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0b)
-> -			/*
-> -			=C2=A0* LUN Not Accessible -- Target port in standby
-> state
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0c)
-> -			/*
-> -			=C2=A0* LUN Not Accessible -- Target port in unavailable
-> state
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x12)
-> -			/*
-> -			=C2=A0* LUN Not Ready -- Offline
-> -			=C2=A0*/
-> -			return SUCCESS;
-> -		if (sdev->allow_restart &&
-> -		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr->asc =3D=3D 0x04 && sense_hdr->a=
-scq =3D=3D 0x02)
-> -			/*
-> -			=C2=A0* if the device is not started, we need to wake
-> -			=C2=A0* the error handler to start the motor
-> -			=C2=A0*/
-> -			return FAILED;
-> =C2=A0		break;
-> =C2=A0	case UNIT_ATTENTION:
-> =C2=A0		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x00=
-)
-> @@ -517,9 +499,16 @@ static int alua_rtpg(struct scsi_device *sdev, s=
-truct
-> alua_dh_data *h, int wait_
-> =C2=A0			h->flags |=3D ALUA_RTPG_EXT_HDR_UNSUPP;
-> =C2=A0			goto retry;
-> =C2=A0		}
-> -
-> -		err =3D alua_check_sense(sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
-> +		/*
-> +		=C2=A0* Retry on ALUA state transition or if any
-> +		=C2=A0* UNIT ATTENTION occurred.
-> +		=C2=A0*/
-> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
-> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
-q =3D=3D 0x0a)
-> +			err =3D SCSI_DH_RETRY;
-> +		else if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION)
-> +			err =3D SCSI_DH_RETRY;
-> +		if (err =3D=3D SCSI_DH_RETRY && time_before(jiffies, expiry)) {
-> =C2=A0			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
-> =C2=A0				=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME);
-> =C2=A0			scsi_print_sense_hdr(sdev, ALUA_DH_NAME,
-> &sense_hdr);
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index dd8ad2a..5bd8a19 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -3154,3 +3154,143 @@ void sdev_enable_disk_events(struct scsi_devi=
+ce
+> *sdev)
+> =C2=A0	atomic_dec(&sdev->disk_events_disable_depth);
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL(sdev_enable_disk_events);
 
+Nitpick:
+kerneldoc comments start with /**
+
+> +
+> +/*
+> + * scsi_vpd_lun_id - return a unique device identification
+> + * @sdev: SCSI device
+> + * @id:=C2=A0=C2=A0=C2=A0buffer for the identification
+> + * @id_len:=C2=A0=C2=A0length of the buffer
+> + *
+> + * Copies a unique device identification into @id based
+> + * on the information in the VPD page 0x83 of the device.
+> + * The string will be formatted as a SCSI name string.
+> + *
+> + * Returns the length of the identification or error on failure.
+> + * If the identifier is longer than the supplied buffer the actual
+> + * identifier length is returned and the buffer is not zero-padded.
+> + */
+> +int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_le=
+n)
+> +{
+
+Otherwise
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
