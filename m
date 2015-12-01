@@ -1,48 +1,44 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v2 3/3] md: convert to use the generic badblocks code
-Date: Tue, 1 Dec 2015 10:55:18 -0800
-Message-ID: <20151201185518.GA13926@kernel.org>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
- <1448477013-9174-4-git-send-email-vishal.l.verma@intel.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH 00/10] aacraid: Patchset for aacraid driver version 41052
+Date: Tue, 1 Dec 2015 04:39:38 -0800
+Message-ID: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1448477013-9174-4-git-send-email-vishal.l.verma@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55949 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752798AbbLATeP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com, RaghavaAditya.Renukunta@pmcs.com
 
-On Wed, Nov 25, 2015 at 11:43:33AM -0700, Vishal Verma wrote:
-> Retain badblocks as part of rdev, but use the accessor functions from
-> include/linux/badblocks for all manipulation.
-> 
-> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> ---
->  drivers/md/md.c | 507 +++-----------------------------------------------------
->  drivers/md/md.h |  40 +----
->  2 files changed, 23 insertions(+), 524 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c702de1..63eab20 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -34,6 +34,7 @@
->  
->  #include <linux/kthread.h>
->  #include <linux/blkdev.h>
-> +#include <linux/badblocks.h>
->  #include <linux/sysctl.h>
->  #include <linux/seq_file.h>
->  #include <linux/fs.h>
-> @@ -707,8 +708,7 @@ void md_rdev_clear(struct md_rdev *rdev)
->  		put_page(rdev->bb_page);
->  		rdev->bb_page = NULL;
->  	}
-> -	kfree(rdev->badblocks.page);
-> -	rdev->badblocks.page = NULL;
-> +	badblocks_free(&rdev->badblocks);
->  }
+From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-why does rdev have extra badblocks? the gendisk already had one.
+This patchset includes the following changes (bug fixes and
+new feature support) specific to aacraid driver.
+
+Raghava Aditya Renukunta (10):
+  [SCSI] aacraid: SCSI blk tag support
+  [SCSI] aacraid: Fix RRQ overload
+  [SCSI] aacraid: Added EEH support
+  [SCSI] aacraid: Fix memory leak in aac_fib_map_free
+  [SCSI] aacraid: Set correct msix count for EEH recovery
+  [SCSI] aacraid: Fundamental reset support for Series 7
+  [SCSI] aacraid: Fix AIF triggered IOP_RESET
+  [SCSI] aacraid: Disable device ID wildcard
+  [SCSI] aacraid: Fix character device re-initialization
+  [SCSI] aacraid: Update driver version
+
+ drivers/scsi/aacraid/aachba.c  |  40 +++++----
+ drivers/scsi/aacraid/aacraid.h |   7 +-
+ drivers/scsi/aacraid/commsup.c |  70 +++++++++++++--
+ drivers/scsi/aacraid/dpcsup.c  |   4 +-
+ drivers/scsi/aacraid/linit.c   | 196 +++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/aacraid/src.c     |  30 ++-----
+ 6 files changed, 293 insertions(+), 54 deletions(-)
+
+-- 
+1.9.1
+
