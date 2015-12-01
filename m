@@ -1,28 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: fix spelling mistake in error message
-Date: Mon, 30 Nov 2015 20:53:23 -0500
-Message-ID: <yq1si3ndje4.fsf@sermon.lab.mkp.net>
-References: <1448728436-9058-1-git-send-email-colin.king@canonical.com>
+Subject: Re: [RESEND] scsi: mvsas: fix misleading indentation
+Date: Mon, 30 Nov 2015 20:55:59 -0500
+Message-ID: <yq1oaebdj9s.fsf@sermon.lab.mkp.net>
+References: <1448893937-5252-1-git-send-email-luisbg@osg.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1448728436-9058-1-git-send-email-colin.king@canonical.com>
-	(Colin King's message of "Sat, 28 Nov 2015 16:33:56 +0000")
+In-Reply-To: <1448893937-5252-1-git-send-email-luisbg@osg.samsung.com> (Luis
+	de Bethencourt's message of "Mon, 30 Nov 2015 14:32:17 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Luis de Bethencourt <luisbg@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org, vinholikatti@gmail.com, JBottomley@odin.com, jthumshirn@suse.de, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Luis" == Luis de Bethencourt <luisbg@osg.samsung.com> writes:
 
-Colin,
+Luis> Fix a smatch warning: drivers/scsi/mvsas/mv_sas.c:740
+Luis> mvs_task_prep() warn: curly braces intended?
 
-Colin> Minor issue, fix spelling mistake, Intialization ->
-Colin> Initialization
+Luis> The code is correct, the indention is misleading. When the device
+Luis> is not ready we want to return SAS_PHY_DOWN. But current
+Luis> indentation makes it look like we only do so in the else branch of
+Luis> if (mvi_dev).
 
 Applied to 4.5/scsi-queue.
 
-Thanks!
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
