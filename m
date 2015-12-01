@@ -1,125 +1,129 @@
 From: Johannes Thumshirn <jthumshirn@suse.com>
-Subject: Re: [PATCH 12/18] scsi_dh_alua: use unaligned access macros
-Date: Tue, 01 Dec 2015 11:28:09 +0100
-Message-ID: <1448965689.3103.11.camel@suse.com>
+Subject: Re: [PATCH 14/18] scsi_dh_alua: simplify sense code handling
+Date: Tue, 01 Dec 2015 11:31:27 +0100
+Message-ID: <1448965887.3103.12.camel@suse.com>
 References: <1448961418-29013-1-git-send-email-hare@suse.de>
-	 <1448961418-29013-13-git-send-email-hare@suse.de>
+	 <1448961418-29013-15-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47656 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48037 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790AbbLAK2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Dec 2015 05:28:11 -0500
-In-Reply-To: <1448961418-29013-13-git-send-email-hare@suse.de>
+	id S1750873AbbLAKb3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Dec 2015 05:31:29 -0500
+In-Reply-To: <1448961418-29013-15-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, James Bottomley <jbottomley@odin.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
 On Tue, 2015-12-01 at 10:16 +0100, Hannes Reinecke wrote:
-> Use 'get_unaligned_XX' and 'put_unaligned_XX' instead of
-> open-coding it.
+> Most sense code is already handled in the generic
+> code, so we shouldn't be adding special cases here.
+> However, when doing so we need to check for
+> unit attention whenever we're sending an internal
+> command.
 >=20
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reviewed-by: Ewan Milne <emilne@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 23 ++++++++-------=
---------
-> =C2=A01 file changed, 8 insertions(+), 15 deletions(-)
+> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 45 +++++++++++----=
+-------------
+> --
+> =C2=A01 file changed, 17 insertions(+), 28 deletions(-)
 >=20
 > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
 > b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 03f8190..d54f42e 100644
+> index c9751c9..abf05b4 100644
 > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -22,6 +22,7 @@
-> =C2=A0#include <linux/slab.h>
-> =C2=A0#include <linux/delay.h>
-> =C2=A0#include <linux/module.h>
-> +#include <asm/unaligned.h>
-> =C2=A0#include <scsi/scsi.h>
-> =C2=A0#include <scsi/scsi_dbg.h>
-> =C2=A0#include <scsi/scsi_eh.h>
-> @@ -152,10 +153,7 @@ static unsigned submit_rtpg(struct scsi_device *=
+> @@ -85,7 +85,6 @@ struct alua_dh_data {
+> =C2=A0#define ALUA_POLICY_SWITCH_ALL		1
+> =C2=A0
+> =C2=A0static char print_alua_state(int);
+> -static int alua_check_sense(struct scsi_device *, struct scsi_sense_=
+hdr *);
+> =C2=A0
+> =C2=A0static int realloc_buffer(struct alua_dh_data *h, unsigned len)
+> =C2=A0{
+> @@ -189,8 +188,13 @@ static void stpg_endio(struct request *req, int =
+error)
+> =C2=A0
+> =C2=A0	if (scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+> =C2=A0				=C2=A0&sense_hdr)) {
+> -		err =3D alua_check_sense(h->sdev, &sense_hdr);
+> -		if (err =3D=3D ADD_TO_MLQUEUE) {
+> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
+> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
+q =3D=3D 0x0a) {
+> +			/* ALUA state transition already in progress */
+> +			err =3D SCSI_DH_OK;
+> +			goto done;
+> +		}
+> +		if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION) {
+> =C2=A0			err =3D SCSI_DH_RETRY;
+> =C2=A0			goto done;
+> =C2=A0		}
+> @@ -399,28 +403,6 @@ static int alua_check_sense(struct scsi_device *=
 sdev,
-> struct alua_dh_data *h)
-> =C2=A0		rq->cmd[1] =3D MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-> =C2=A0	else
-> =C2=A0		rq->cmd[1] =3D MI_REPORT_TARGET_PGS;
-> -	rq->cmd[6] =3D (h->bufflen >> 24) & 0xff;
-> -	rq->cmd[7] =3D (h->bufflen >> 16) & 0xff;
-> -	rq->cmd[8] =3D (h->bufflen >>=C2=A0=C2=A08) & 0xff;
-> -	rq->cmd[9] =3D h->bufflen & 0xff;
-> +	put_unaligned_be32(h->bufflen, &rq->cmd[6]);
-> =C2=A0	rq->cmd_len =3D COMMAND_SIZE(MAINTENANCE_IN);
-> =C2=A0
-> =C2=A0	rq->sense =3D h->sense;
-> @@ -236,8 +234,7 @@ static unsigned submit_stpg(struct alua_dh_data *=
-h)
-> =C2=A0	/* Prepare the data buffer */
-> =C2=A0	memset(h->buff, 0, stpg_len);
-> =C2=A0	h->buff[4] =3D TPGS_STATE_OPTIMIZED & 0x0f;
-> -	h->buff[6] =3D (h->group_id >> 8) & 0xff;
-> -	h->buff[7] =3D h->group_id & 0xff;
-> +	put_unaligned_be16(h->group_id, &h->buff[6]);
-> =C2=A0
-> =C2=A0	rq =3D get_alua_req(sdev, h->buff, stpg_len, WRITE);
-> =C2=A0	if (!rq)
-> @@ -246,10 +243,7 @@ static unsigned submit_stpg(struct alua_dh_data =
-*h)
-> =C2=A0	/* Prepare the command. */
-> =C2=A0	rq->cmd[0] =3D MAINTENANCE_OUT;
-> =C2=A0	rq->cmd[1] =3D MO_SET_TARGET_PGS;
-> -	rq->cmd[6] =3D (stpg_len >> 24) & 0xff;
-> -	rq->cmd[7] =3D (stpg_len >> 16) & 0xff;
-> -	rq->cmd[8] =3D (stpg_len >>=C2=A0=C2=A08) & 0xff;
-> -	rq->cmd[9] =3D stpg_len & 0xff;
-> +	put_unaligned_be32(stpg_len, &rq->cmd[6]);
-> =C2=A0	rq->cmd_len =3D COMMAND_SIZE(MAINTENANCE_OUT);
-> =C2=A0
-> =C2=A0	rq->sense =3D h->sense;
-> @@ -343,11 +337,11 @@ static int alua_check_vpd(struct scsi_device *s=
-dev,
-> struct alua_dh_data *h)
-> =C2=A0		switch (d[1] & 0xf) {
-> =C2=A0		case 0x4:
-> =C2=A0			/* Relative target port */
-> -			h->rel_port =3D (d[6] << 8) + d[7];
-> +			h->rel_port =3D get_unaligned_be16(&d[6]);
-> =C2=A0			break;
-> =C2=A0		case 0x5:
-> =C2=A0			/* Target port group */
-> -			h->group_id =3D (d[6] << 8) + d[7];
-> +			h->group_id =3D get_unaligned_be16(&d[6]);
-> =C2=A0			break;
-> =C2=A0		default:
-> =C2=A0			break;
-> @@ -540,8 +534,7 @@ static int alua_rtpg(struct scsi_device *sdev, st=
-ruct
+> =C2=A0			=C2=A0* LUN Not Accessible - ALUA state transition
+> =C2=A0			=C2=A0*/
+> =C2=A0			return ADD_TO_MLQUEUE;
+> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0b)
+> -			/*
+> -			=C2=A0* LUN Not Accessible -- Target port in standby
+> state
+> -			=C2=A0*/
+> -			return SUCCESS;
+> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0c)
+> -			/*
+> -			=C2=A0* LUN Not Accessible -- Target port in unavailable
+> state
+> -			=C2=A0*/
+> -			return SUCCESS;
+> -		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x12)
+> -			/*
+> -			=C2=A0* LUN Not Ready -- Offline
+> -			=C2=A0*/
+> -			return SUCCESS;
+> -		if (sdev->allow_restart &&
+> -		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr->asc =3D=3D 0x04 && sense_hdr->a=
+scq =3D=3D 0x02)
+> -			/*
+> -			=C2=A0* if the device is not started, we need to wake
+> -			=C2=A0* the error handler to start the motor
+> -			=C2=A0*/
+> -			return FAILED;
+> =C2=A0		break;
+> =C2=A0	case UNIT_ATTENTION:
+> =C2=A0		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x00=
+)
+> @@ -517,9 +499,16 @@ static int alua_rtpg(struct scsi_device *sdev, s=
+truct
 > alua_dh_data *h, int wait_
-> =C2=A0		return SCSI_DH_IO;
-> =C2=A0	}
-> =C2=A0
-> -	len =3D (h->buff[0] << 24) + (h->buff[1] << 16) +
-> -		(h->buff[2] << 8) + h->buff[3] + 4;
-> +	len =3D get_unaligned_be32(&h->buff[0]) + 4;
-> =C2=A0
-> =C2=A0	if (len > h->bufflen) {
-> =C2=A0		/* Resubmit with the correct length */
-> @@ -576,7 +569,7 @@ static int alua_rtpg(struct scsi_device *sdev, st=
-ruct
-> alua_dh_data *h, int wait_
-> =C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0k < len;
-> =C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0k +=3D off, ucp +=3D off) {
-> =C2=A0
-> -		if (h->group_id =3D=3D (ucp[2] << 8) + ucp[3]) {
-> +		if (h->group_id =3D=3D get_unaligned_be16(&ucp[2])) {
-> =C2=A0			h->state =3D ucp[0] & 0x0f;
-> =C2=A0			h->pref =3D ucp[0] >> 7;
-> =C2=A0			valid_states =3D ucp[1];
+> =C2=A0			h->flags |=3D ALUA_RTPG_EXT_HDR_UNSUPP;
+> =C2=A0			goto retry;
+> =C2=A0		}
+> -
+> -		err =3D alua_check_sense(sdev, &sense_hdr);
+> -		if (err =3D=3D ADD_TO_MLQUEUE && time_before(jiffies, expiry)) {
+> +		/*
+> +		=C2=A0* Retry on ALUA state transition or if any
+> +		=C2=A0* UNIT ATTENTION occurred.
+> +		=C2=A0*/
+> +		if (sense_hdr.sense_key =3D=3D NOT_READY &&
+> +		=C2=A0=C2=A0=C2=A0=C2=A0sense_hdr.asc =3D=3D 0x04 && sense_hdr.asc=
+q =3D=3D 0x0a)
+> +			err =3D SCSI_DH_RETRY;
+> +		else if (sense_hdr.sense_key =3D=3D UNIT_ATTENTION)
+> +			err =3D SCSI_DH_RETRY;
+> +		if (err =3D=3D SCSI_DH_RETRY && time_before(jiffies, expiry)) {
+> =C2=A0			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
+> =C2=A0				=C2=A0=C2=A0=C2=A0=C2=A0ALUA_DH_NAME);
+> =C2=A0			scsi_print_sense_hdr(sdev, ALUA_DH_NAME,
+> &sense_hdr);
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --
