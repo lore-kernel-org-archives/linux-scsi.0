@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH 03/10] aacraid: Added EEH support
-Date: Tue, 1 Dec 2015 04:39:41 -0800
-Message-ID: <1448973589-9216-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH 08/10] aacraid: Disable device ID wildcard
+Date: Tue, 1 Dec 2015 04:39:46 -0800
+Message-ID: <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48239 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48258 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752798AbbLATeS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:18 -0500
+	by vger.kernel.org with ESMTP id S1754354AbbLATeW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:22 -0500
 In-Reply-To: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,196 +18,56 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Added support for PCI EEH(extended error handling).
+Added module parameter that disables device ID wild card binding.
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 ---
- drivers/scsi/aacraid/aacraid.h |   1 +
- drivers/scsi/aacraid/linit.c   | 138 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 139 insertions(+)
+ drivers/scsi/aacraid/aachba.c  | 5 +++++
+ drivers/scsi/aacraid/aacraid.h | 1 +
+ drivers/scsi/aacraid/linit.c   | 5 +++++
+ 3 files changed, 11 insertions(+)
 
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 06cbab8..87f4f21 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -315,6 +315,11 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the arrays:\n"
+ 	"\t1 - Array Meta Data Signature (default)\n"
+ 	"\t2 - Adapter Serial Number");
+ 
++int aac_disable_device_id_wildcards;
++module_param_named(disable_device_id_wildcards,
++	aac_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(disable_device_id_wildcards,
++	"Disable device ID wildcards");
+ 
+ static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
+ 		struct fib *fibptr) {
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index d133c4a..594de5f 100644
+index 594de5f..7708a2c 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1235,6 +1235,7 @@ struct aac_dev
- 	struct msix_entry	msixentry[AAC_MAX_MSIX];
- 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
- 	u8			adapter_shutdown;
-+	u32			handle_pci_error;
- };
- 
- #define aac_adapter_interrupt(dev) \
+@@ -2177,3 +2177,4 @@ extern int aac_commit;
+ extern int update_interval;
+ extern int check_interval;
+ extern int aac_check_reset;
++extern int aac_disable_device_id_wildcards;
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index fa0fc44..0147210 100644
+index 3a4dbe7..2094842 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -38,6 +38,7 @@
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/pci.h>
-+#include <linux/aer.h>
- #include <linux/pci-aspm.h>
- #include <linux/slab.h>
- #include <linux/mutex.h>
-@@ -1298,6 +1299,9 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_deinit;
- 	scsi_scan_host(shost);
+@@ -1135,6 +1135,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	u64 dmamask;
+ 	extern int aac_sync_mode;
  
-+	pci_enable_pcie_error_reporting(pdev);
-+	pci_save_state(pdev);
++	if (aac_disable_device_id_wildcards &&
++		id->subvendor == PCI_ANY_ID &&
++		id->subdevice == PCI_ANY_ID)
++		return -ENODEV;
 +
- 	return 0;
- 
-  out_deinit:
-@@ -1501,6 +1505,139 @@ static void aac_remove_one(struct pci_dev *pdev)
- 	}
- }
- 
-+void aac_flush_ios(struct aac_dev *aac)
-+{
-+	int i;
-+	struct scsi_cmnd *cmd;
-+
-+	for (i = 0; i < aac->scsi_host_ptr->can_queue; i++) {
-+		cmd = (struct scsi_cmnd *)aac->fibs[i].callback_data;
-+		if (cmd && (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
-+			scsi_dma_unmap(cmd);
-+			aac_fib_free_tag(&aac->fibs[i]);
-+
-+			if (aac->handle_pci_error)
-+				cmd->result = DID_NO_CONNECT << 16;
-+			else
-+				cmd->result = DID_RESET << 16;
-+
-+			cmd->scsi_done(cmd);
-+		}
-+	}
-+}
-+
-+pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
-+					enum pci_channel_state error)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct aac_dev *aac = shost_priv(shost);
-+
-+	dev_err(&pdev->dev, "aacraid: PCI error detected %x\n", error);
-+
-+	switch (error) {
-+	case pci_channel_io_normal:
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	case pci_channel_io_frozen:
-+
-+		aac->handle_pci_error = 1;
-+
-+		scsi_block_requests(aac->scsi_host_ptr);
-+		aac_flush_ios(aac);
-+		aac_release_resources(aac);
-+
-+		pci_disable_pcie_error_reporting(pdev);
-+		aac_adapter_ioremap(aac, 0);
-+
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	case pci_channel_io_perm_failure:
-+		aac->handle_pci_error = 1;
-+		aac_flush_ios(aac);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+pci_ers_result_t aac_pci_mmio_enabled(struct pci_dev *pdev)
-+{
-+	dev_err(&pdev->dev, "aacraid: PCI error - mmio enabled\n");
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
-+{
-+	dev_err(&pdev->dev, "aacraid: PCI error - slot reset\n");
-+	pci_restore_state(pdev);
-+	if (pci_enable_device(pdev)) {
-+		dev_warn(&pdev->dev,
-+			"aacraid: failed to enable slave\n");
-+		goto fail_device;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	if (pci_enable_device_mem(pdev)) {
-+		dev_err(&pdev->dev, "pci_enable_device_mem failed\n");
-+		goto fail_device;
-+	}
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+
-+fail_device:
-+	dev_err(&pdev->dev, "aacraid: PCI error - slot reset failed\n");
-+	return PCI_ERS_RESULT_DISCONNECT;
-+}
-+
-+
-+void aac_pci_resume(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct scsi_device *sdev = NULL;
-+	struct aac_dev *aac = (struct aac_dev *)shost_priv(shost);
-+
-+	pci_cleanup_aer_uncorrect_error_status(pdev);
-+
-+	if (aac_adapter_ioremap(aac, aac->base_size)) {
-+
-+		dev_err(&pdev->dev, "aacraid: ioremap failed\n");
-+		/* remap failed, go back ... */
-+		aac->comm_interface = AAC_COMM_PRODUCER;
-+		if (aac_adapter_ioremap(aac, AAC_MIN_FOOTPRINT_SIZE)) {
-+			dev_warn(&pdev->dev,
-+				"aacraid: unable to map adapter.\n");
-+
-+			return;
-+		}
-+	}
-+
-+	msleep(10000);
-+
-+	aac_acquire_resources(aac);
-+
-+	/*
-+	 * reset this flag to unblock ioctl() as it was set
-+	 * at aac_send_shutdown() to block ioctls from upperlayer
-+	 */
-+	aac->adapter_shutdown = 0;
-+	aac->handle_pci_error = 0;
-+
-+	shost_for_each_device(sdev, shost)
-+		if (sdev->sdev_state == SDEV_OFFLINE)
-+			sdev->sdev_state = SDEV_RUNNING;
-+	scsi_unblock_requests(aac->scsi_host_ptr);
-+	scsi_scan_host(aac->scsi_host_ptr);
-+	pci_save_state(pdev);
-+
-+	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
-+}
-+
-+static struct pci_error_handlers aac_pci_err_handler = {
-+	.error_detected		= aac_pci_error_detected,
-+	.mmio_enabled		= aac_pci_mmio_enabled,
-+	.slot_reset		= aac_pci_slot_reset,
-+	.resume			= aac_pci_resume,
-+};
-+
- static struct pci_driver aac_pci_driver = {
- 	.name		= AAC_DRIVERNAME,
- 	.id_table	= aac_pci_tbl,
-@@ -1511,6 +1648,7 @@ static struct pci_driver aac_pci_driver = {
- 	.resume		= aac_resume,
- #endif
- 	.shutdown	= aac_shutdown,
-+	.err_handler    = &aac_pci_err_handler,
- };
- 
- static int __init aac_init(void)
+ 	/*
+ 	 * Only series 7 needs freset.
+ 	 */
 -- 
 1.9.1
 
