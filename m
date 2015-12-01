@@ -1,34 +1,88 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix a bdi reregistration race, v2
-Date: Mon, 30 Nov 2015 23:23:15 -0800
-Message-ID: <20151201072315.GA12183@infradead.org>
-References: <564F9AFF.3050605@sandisk.com>
- <20151124231331.GA25591@infradead.org>
- <5654F169.6070000@sandisk.com>
- <20151125084744.GA16429@infradead.org>
- <5655CCC0.9010107@sandisk.com>
- <yq1610jf0jk.fsf@sermon.lab.mkp.net>
- <565CF57A.4090507@sandisk.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 2/4] bfa:Fix for crash when bfa_itnim is NULL
+Date: Tue, 01 Dec 2015 08:45:39 +0100
+Message-ID: <1448955939.3103.0.camel@suse.de>
+References: <1448528040-24954-1-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:55646 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331AbbLAHXX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 02:23:23 -0500
-Content-Disposition: inline
-In-Reply-To: <565CF57A.4090507@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1448528040-24954-1-git-send-email-anil.gurumurthy@qlogic.com>
+Sender: stable-owner@vger.kernel.org
+To: anil.gurumurthy@qlogic.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.de>, Aaro Koskinen <aaro.koskinen@iki.fi>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-mm@kvack.org
 
-On Mon, Nov 30, 2015 at 05:18:50PM -0800, Bart Van Assche wrote:
-> Since the original patch caused a regression, please proceed with reverting
-> the original patch.
-> 
-> Regarding this patch: is there anyone on the CC-list of this e-mail who can
-> review it ?
+On Thu, 2015-11-26 at 03:54 -0500, anil.gurumurthy@qlogic.com wrote:
+> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+>=20
+> Fix a very corner case when the port gets disconnected and the BFA an=
+d FCS
+> layers clean up references to the IT nexus.
+> During this window if a task management command is issued by the SCSI=
+-ML and
+> ends up
+> referencing a NULL itnim, it could lead to a crash.
+>=20
+> Signed-off-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+> Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> ---
+> =C2=A0drivers/scsi/bfa/bfad_im.c |=C2=A0=C2=A0=C2=A026 ++++++++++++++=
+++++++++++++
+> =C2=A01 files changed, 26 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+> index efcb247..2c0cf8a 100644
+> --- a/drivers/scsi/bfa/bfad_im.c
+> +++ b/drivers/scsi/bfa/bfad_im.c
+> @@ -272,6 +272,19 @@ bfad_im_target_reset_send(struct bfad_s *bfad, s=
+truct
+> scsi_cmnd *cmnd,
+> =C2=A0	cmnd->host_scribble =3D NULL;
+> =C2=A0	cmnd->SCp.Status =3D 0;
+> =C2=A0	bfa_itnim =3D bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
+> +	/*
+> +	=C2=A0* bfa_itnim can be NULL if the port gets disconnected and the=
+ bfa
+> +	=C2=A0* and fcs layers have cleaned up their nexus with the targets=
+ and
+> +	=C2=A0* the same has not been cleaned up by the shim
+> +	=C2=A0*/
+> +	if (bfa_itnim =3D=3D NULL) {
+> +		bfa_tskim_free(tskim);
+> +		BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+> +			"target reset, bfa_itnim is NULL\n");
+> +		rc =3D BFA_STATUS_FAILED;
+> +		goto out;
+> +	}
+> +
+> =C2=A0	memset(&scsilun, 0, sizeof(scsilun));
+> =C2=A0	bfa_tskim_start(tskim, bfa_itnim, scsilun,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0FCP_TM_TARGET_RESET, BFAD_TARGET_RES=
+ET_TMO);
+> @@ -327,6 +340,19 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd=
+)
+> =C2=A0	cmnd->SCp.ptr =3D (char *)&wq;
+> =C2=A0	cmnd->SCp.Status =3D 0;
+> =C2=A0	bfa_itnim =3D bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
+> +	/*
+> +	=C2=A0* bfa_itnim can be NULL if the port gets disconnected and the=
+ bfa
+> +	=C2=A0* and fcs layers have cleaned up their nexus with the targets=
+ and
+> +	=C2=A0* the same has not been cleaned up by the shim
+> +	=C2=A0*/
+> +	if (bfa_itnim =3D=3D NULL) {
+> +		bfa_tskim_free(tskim);
+> +		BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+> +			"lun reset, bfa_itnim is NULL\n");
+> +		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+> +		rc =3D FAILED;
+> +		goto out;
+> +	}
+> =C2=A0	int_to_scsilun(cmnd->device->lun, &scsilun);
+> =C2=A0	bfa_tskim_start(tskim, bfa_itnim, scsilun,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0FCP_TM_LUN_RESET, BFAD_LUN_RESET_TMO=
+);
 
-I'm not too fond of the approach.  I'd much prefer if SCSI would just
-release the dev_t later, similar to DM or MD.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
