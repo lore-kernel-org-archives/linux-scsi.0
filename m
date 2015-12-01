@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH 10/10] aacraid: Update driver version
-Date: Tue, 1 Dec 2015 04:39:49 -0800
-Message-ID: <1448973589-9216-12-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
+Date: Tue, 1 Dec 2015 04:39:42 -0800
+Message-ID: <1448973589-9216-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:56000 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754368AbbLATeZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:25 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48245 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754085AbbLATeS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:18 -0500
 In-Reply-To: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,26 +18,40 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-Updated diver version to 41052
+aac_fib_map_free() calls pci_free_consistent() without checking that
+dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
+are indeed NULL/0, this will result in a hang as pci_free_consistent()
+will attempt to invalidate cache for the entire 64-bit address space
+(which would take a very long time).
+
+Fixed by adding a check to make sure that dev->hw_fib_va and
+dev->max_fib_size are not NULL and 0 respectively.
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/commsup.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 7708a2c..bbb94ec 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -62,7 +62,7 @@ enum {
- #define	PMC_GLOBAL_INT_BIT0		0x00000001
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index b257d3b..9533f47 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
  
- #ifndef AAC_DRIVER_BUILD
--# define AAC_DRIVER_BUILD 41010
-+# define AAC_DRIVER_BUILD 41052
- # define AAC_DRIVER_BRANCH "-ms"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
+ void aac_fib_map_free(struct aac_dev *dev)
+ {
+-	pci_free_consistent(dev->pdev,
+-	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
+-	  dev->hw_fib_va, dev->hw_fib_pa);
++	if (dev->hw_fib_va && dev->max_fib_size) {
++		pci_free_consistent(dev->pdev,
++		(dev->max_fib_size *
++		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
++		dev->hw_fib_va, dev->hw_fib_pa);
++	}
+ 	dev->hw_fib_va = NULL;
+ 	dev->hw_fib_pa = 0;
+ }
 -- 
 1.9.1
 
