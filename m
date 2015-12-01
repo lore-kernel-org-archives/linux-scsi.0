@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-Date: Tue, 1 Dec 2015 04:39:42 -0800
-Message-ID: <1448973589-9216-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Subject: [PATCH 07/10] aacraid: Fix AIF triggered IOP_RESET
+Date: Tue, 1 Dec 2015 04:39:45 -0800
+Message-ID: <1448973589-9216-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48245 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48252 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754085AbbLATeS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:18 -0500
+	by vger.kernel.org with ESMTP id S1753760AbbLATeV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2015 14:34:21 -0500
 In-Reply-To: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,40 +18,29 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 
 From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 
-aac_fib_map_free() calls pci_free_consistent() without checking that
-dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
-are indeed NULL/0, this will result in a hang as pci_free_consistent()
-will attempt to invalidate cache for the entire 64-bit address space
-(which would take a very long time).
+while driver removal is in progress or PCI shutdown is invoked, driver
+kills AIF aacraid thread, but IOCTL requests from the management tools
+re-start AIF thread leading to IOP_RESET.
 
-Fixed by adding a check to make sure that dev->hw_fib_va and
-dev->max_fib_size are not NULL and 0 respectively.
+Fixed by setting adapter_shutdown flag when PCI shutdown is invoked.
 
 Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 ---
- drivers/scsi/aacraid/commsup.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/linit.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index b257d3b..9533f47 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 6912efd..3a4dbe7 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1454,6 +1454,7 @@ static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
  
- void aac_fib_map_free(struct aac_dev *dev)
- {
--	pci_free_consistent(dev->pdev,
--	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
--	  dev->hw_fib_va, dev->hw_fib_pa);
-+	if (dev->hw_fib_va && dev->max_fib_size) {
-+		pci_free_consistent(dev->pdev,
-+		(dev->max_fib_size *
-+		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
-+		dev->hw_fib_va, dev->hw_fib_pa);
-+	}
- 	dev->hw_fib_va = NULL;
- 	dev->hw_fib_pa = 0;
- }
+ 	scsi_block_requests(shost);
++	aac->adapter_shutdown = 1;
+ 	aac_send_shutdown(aac);
+ 
+ 	aac_release_resources(aac);
 -- 
 1.9.1
 
