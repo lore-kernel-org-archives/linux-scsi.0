@@ -1,50 +1,64 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 10/10] aacraid: Update driver version
-Date: Wed, 02 Dec 2015 11:14:21 +0100
-Message-ID: <1449051261.3103.57.camel@suse.de>
+Subject: Re: [PATCH 05/10] aacraid: Set correct msix count for EEH recovery
+Date: Wed, 02 Dec 2015 11:27:23 +0100
+Message-ID: <1449052043.3103.60.camel@suse.de>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-12-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	 <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60254 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35046 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932081AbbLBKOW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2015 05:14:22 -0500
-In-Reply-To: <1448973589-9216-12-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S1757770AbbLBK10 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2015 05:27:26 -0500
+In-Reply-To: <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com
 
+Hi Raghava,
+
 On Tue, 2015-12-01 at 04:39 -0800, Raghava Aditya Renukunta wrote:
 > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >=20
-> Updated diver version to 41052
+> During EEH recovery number of online CPU's might change thereby chang=
+ing
+> the number of MSIx vectors. Since each fib is allocated to a vector,
+> changes in the number of vectors causes fib to be sent thru invalid
+> vectors.In addition the correct number of MSIx vectors is not
+> updated in the INIT struct sent to the controller, when it is
+> reinitialized.
 >=20
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs=
-=2Ecom>
-> ---
-> =C2=A0drivers/scsi/aacraid/aacraid.h | 2 +-
-> =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
+> Fixed by reassigning vectors to fibs based on the updated number of M=
+SIx
+> vectors and updating the INIT structure before sending to controller.
 >=20
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
-craid.h
-> index 7708a2c..bbb94ec 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -62,7 +62,7 @@ enum {
-> =C2=A0#define	PMC_GLOBAL_INT_BIT0		0x00000001
-> =C2=A0
-> =C2=A0#ifndef AAC_DRIVER_BUILD
-> -# define AAC_DRIVER_BUILD 41010
-> +# define AAC_DRIVER_BUILD 41052
-> =C2=A0# define AAC_DRIVER_BRANCH "-ms"
-> =C2=A0#endif
-> =C2=A0#define MAXIMUM_NUM_CONTAINERS	32
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+[...]
+=C2=A0
+> -	if (!dev->sync_mode)
+> +	if (!dev->sync_mode) {
+> +		/* After EEH recovery or suspend resume, max_msix count
+> +		=C2=A0* may change, therfore updating in init as well.
+> +		=C2=A0*/
+> =C2=A0		aac_adapter_start(dev);
+> +		dev->init->Sa_MSIXVectors =3D cpu_to_le32(dev->max_msix);
+> +	}
+> =C2=A0	return 0;
+> =C2=A0
+> =C2=A0error_iounmap:
+
+
+This is for EEH and suspend/resume isn't it? If it fixes MSI-X vector
+calculation for suspend/resume as well you probably should tag it for i=
+nclusion
+into stable as well.
+
+Thanks,
+	Johannes
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
