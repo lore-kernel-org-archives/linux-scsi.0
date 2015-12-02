@@ -1,261 +1,172 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 108771] New: scsi: ses: kasan: ses_enclosure_data_process use
- after free on boot SAS2X28
-Date: Wed, 02 Dec 2015 10:57:34 +0000
-Message-ID: <bug-108771-11613@https.bugzilla.kernel.org/>
+From: Josh Boyer <jwboyer@fedoraproject.org>
+Subject: Re: [PATCH Resend] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
+Date: Wed, 2 Dec 2015 08:47:48 -0500
+Message-ID: <CA+5PVA6=7hJ5fYv8=B6gxRYoK05HFm5KZuTvtx-UM6ht4X5q5w@mail.gmail.com>
+References: <20151201163410.GB19092@hansolo.redhat.com>
+	<1449045763.3103.38.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59851 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757129AbbLBK5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2015 05:57:39 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D1C902063B
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Dec 2015 10:57:37 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 5D36B205E2
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Dec 2015 10:57:35 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1449045763.3103.38.camel@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Arvind Kumar <arvindkumar@vmware.com>, Thomas Hellstrom <thellstrom@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, VMware PV-Drivers <pv-drivers@vmware.com>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=108771
+On Wed, Dec 2, 2015 at 3:42 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+> Hi Josh,
+>
+> On Tue, 2015-12-01 at 11:34 -0500, Josh Boyer wrote:
+>> The driver is missing calls to pci_dma_mapping_error() after
+>> performing the DMA mapping, which caused DMA-API warning to
+>> show up in dmesg's output. Though that happens only when
+>> DMA_API_DEBUG option is enabled. This change fixes the issue
+>> and makes pvscsi_map_buffers() function more robust.
+>>
+>> Signed-off-by: Arvind Kumar <arvindkumar@vmware.com>
+>> Cc: Josh Boyer <jwboyer@fedoraproject.org>
+>> Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+>> Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
+>> ---
+>>
+>>  - Resend of patch that was never committed for some reason
+>>
+>>  drivers/scsi/vmw_pvscsi.c | 45 +++++++++++++++++++++++++++++++++++++++------
+>>  drivers/scsi/vmw_pvscsi.h |  2 +-
+>>  2 files changed, 40 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+>> index 0f133c1817de..19734494f9ec 100644
+>> --- a/drivers/scsi/vmw_pvscsi.c
+>> +++ b/drivers/scsi/vmw_pvscsi.c
+>> @@ -349,9 +349,9 @@ static void pvscsi_create_sg(struct pvscsi_ctx *ctx,
+>>   * Map all data buffers for a command into PCI space and
+>>   * setup the scatter/gather list if needed.
+>>   */
+>> -static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>> -                            struct pvscsi_ctx *ctx, struct scsi_cmnd
+>> *cmd,
+>> -                            struct PVSCSIRingReqDesc *e)
+>> +static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+>> +                           struct pvscsi_ctx *ctx, struct scsi_cmnd *cmd,
+>> +                           struct PVSCSIRingReqDesc *e)
+>>  {
+>>       unsigned count;
+>>       unsigned bufflen = scsi_bufflen(cmd);
+>> @@ -360,18 +360,30 @@ static void pvscsi_map_buffers(struct pvscsi_adapter
+>> *adapter,
+>>       e->dataLen = bufflen;
+>>       e->dataAddr = 0;
+>>       if (bufflen == 0)
+>> -             return;
+>> +             return 0;
+>>
+>>       sg = scsi_sglist(cmd);
+>>       count = scsi_sg_count(cmd);
+>>       if (count != 0) {
+>>               int segs = scsi_dma_map(cmd);
+>> -             if (segs > 1) {
+>> +
+>> +             if (segs == -ENOMEM) {
+>> +                     scmd_printk(KERN_ERR, cmd,
+>> +                                 "vmw_pvscsi: Failed to map cmd sglist
+>> for DMA.\n");
+>> +                     return -1;
+>
+> Please return -ENOMEM instead of -1
+>
+>> +             } else if (segs > 1) {
+>>                       pvscsi_create_sg(ctx, sg, segs);
+>>
+>>                       e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+>>                       ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
+>>                                                   SGL_SIZE,
+>> PCI_DMA_TODEVICE);
+>> +                     if (pci_dma_mapping_error(adapter->dev, ctx->sglPA))
+>> {
+>> +                             scmd_printk(KERN_ERR, cmd,
+>> +                                         "vmw_pvscsi: Failed to map ctx
+>> sglist for DMA.\n");
+>> +                             scsi_dma_unmap(cmd);
+>> +                             ctx->sglPA = 0;
+>> +                             return -1;
+>
+> Same here.
+>
+>> +                     }
+>>                       e->dataAddr = ctx->sglPA;
+>>               } else
+>>                       e->dataAddr = sg_dma_address(sg);
+>> @@ -382,8 +394,15 @@ static void pvscsi_map_buffers(struct pvscsi_adapter
+>> *adapter,
+>>                */
+>>               ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
+>>                                            cmd->sc_data_direction);
+>> +             if (pci_dma_mapping_error(adapter->dev, ctx->dataPA)) {
+>> +                     scmd_printk(KERN_ERR, cmd,
+>> +                                 "vmw_pvscsi: Failed to map direct data
+>> buffer for DMA.\n");
+>> +                     return -1;
+>
+> And here.
+>
+>> +             }
+>>               e->dataAddr = ctx->dataPA;
+>>       }
+>> +
+>> +     return 0;
+>>  }
+>>
+>>  static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+>> @@ -690,6 +709,12 @@ static int pvscsi_queue_ring(struct pvscsi_adapter
+>> *adapter,
+>>               ctx->sensePA = pci_map_single(adapter->dev, cmd-
+>> >sense_buffer,
+>>                                             SCSI_SENSE_BUFFERSIZE,
+>>                                             PCI_DMA_FROMDEVICE);
+>> +             if (pci_dma_mapping_error(adapter->dev, ctx->sensePA)) {
+>> +                     scmd_printk(KERN_ERR, cmd,
+>> +                                 "vmw_pvscsi: Failed to map sense buffer
+>> for DMA.\n");
+>> +                     ctx->sensePA = 0;
+>> +                     return -1;
+>
+> And here.
+>
+>> +             }
+>>               e->senseAddr = ctx->sensePA;
+>>               e->senseLen = SCSI_SENSE_BUFFERSIZE;
+>>       } else {
+>> @@ -711,7 +736,15 @@ static int pvscsi_queue_ring(struct pvscsi_adapter
+>> *adapter,
+>>       else
+>>               e->flags = 0;
+>>
+>> -     pvscsi_map_buffers(adapter, ctx, cmd, e);
+>> +     if (pvscsi_map_buffers(adapter, ctx, cmd, e) != 0) {
+>> +             if (cmd->sense_buffer) {
+>> +                     pci_unmap_single(adapter->dev, ctx->sensePA,
+>> +                                      SCSI_SENSE_BUFFERSIZE,
+>> +                                      PCI_DMA_FROMDEVICE);
+>> +                     ctx->sensePA = 0;
+>> +             }
+>> +             return -1;
+>
+> As pvscsi_map_buffers() only returns 0 or -ENOMEM please return -ENOMEM here as
+> well, or do
+>
+>         int err;
+>         [...]
+>         err = pvscsi_map_buffers(adapter, ctx, cmd, e);
+>         if (err) {
+>                 [...]
+>                 return err;
+>         }
+>
 
-            Bug ID: 108771
-           Summary: scsi: ses: kasan: ses_enclosure_data_process use after
-                    free on boot SAS2X28
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.3
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: ptikhomirov@virtuozzo.com
-        Regression: No
+Thanks for the suggestions.  They all seem reasonable to me.
 
-Created attachment 196301
-  --> https://bugzilla.kernel.org/attachment.cgi?id=196301&action=edit
-Full /var/log/messagess log and module ses.ko
+Arvind, since I was originally just resending your patch, do you want
+to make the changes Johannes suggests, or should I proceed with that?
 
-Here is my setup:
-Kernel: Linux 4.3 (tag:v4.3 commit:6a13feb9c8)
-SCSI ses device: Host: scsi0 Channel: 00 Id: 16 Lun: 00 Vendor: LSI Model:
-SAS2X28 Rev: 0e12 Type: Enclosure ANSI  SCSI revision: 05
-
-Full /var/log/messagess log in archive attached:
-debug-kernel-kasan-system-log.txt
-Module in archive attached: ses.ko
-
-On debug kernel on boot when attaching enclosure scsi device, KASan detects use
-after free in ses_enclosure_data_process+0xbe5(see kasan report in the end).
-
-
-nm -A ./drivers/scsi/ses.ko | grep ses_enclosure_data_process
-./drivers/scsi/ses.ko:0000000000002570 t ses_enclosure_data_process
-
-objdump -D -S -l ./drivers/scsi/ses.ko --start-address=0x0000000000002570
-
-
-On offset 0x3155(0x2570+0xbe5) there is code generated by kasan:
-
-
->    3144:       4c 89 5d a0             mov    %r11,-0x60(%rbp)
-    3148:       44 89 45 a8             mov    %r8d,-0x58(%rbp)
-    314c:       44 89 4d b0             mov    %r9d,-0x50(%rbp)
-/vzt/linux/drivers/scsi/ses.c:545
-            }
-            if (desc_ptr)
-                desc_ptr += len;
-
-            if (addl_desc_ptr)
-                addl_desc_ptr += addl_desc_ptr[1] + 2;
-    3150:    e8 00 00 00 00           callq  3155
-<ses_enclosure_data_process+0xbe5>
-    3155:    4c 8b 5d a0              mov    -0x60(%rbp),%r11
-    3159:    44 8b 45 a8              mov    -0x58(%rbp),%r8d
-    315d:    44 8b 4d b0              mov    -0x50(%rbp),%r9d
-    3161:    e9 34 f7 ff ff           jmpq   289a
-<ses_enclosure_data_process+0x32a>
-
-
-To witch we jump from:
-
-
-/vzt/linux/drivers/scsi/ses.c:545
-                                addl_desc_ptr += addl_desc_ptr[1] + 2;
-    2877:       49 8d 7c 24 01          lea    0x1(%r12),%rdi
-    287c:       48 89 f8                mov    %rdi,%rax
-    287f:       48 89 fa                mov    %rdi,%rdx
-    2882:       48 c1 e8 03             shr    $0x3,%rax
-    2886:       83 e2 07                and    $0x7,%edx
-    2889:       42 0f b6 04 28          movzbl (%rax,%r13,1),%eax
-    288e:       38 d0                   cmp    %dl,%al
-    2890:       7f 08                   jg     289a
-<ses_enclosure_data_process+0x32a>
-    2892:       84 c0                   test   %al,%al
->    2894:       0f 85 aa 08 00 00       jne    3144 <ses_enclosure_data_process+0xbd4>
-    289a:       41 0f b6 44 24 01       movzbl 0x1(%r12),%eax
-    28a0:       4d 8d 64 04 02          lea    0x2(%r12,%rax,1),%r12
-
-
-Address addl_desc_ptr[1] is not allocated here but we want to read it. Actualy
-we iterate through ses_dev->page10 here and it ends unexpectedly. We get number
-of iterations from ses_dev->page1_num_types and ses_dev->page1_types, so it
-seam that meta-data given by device is not consistent for page 1 and page 10.
-
-My ideas on this:
-a) In ses_process_descriptor we get enclosure_component->addr from
-addl_desc_ptr only for ENCLOSURE_COMPONENT_DEVICE and
-ENCLOSURE_COMPONENT_ARRAY_DEVICE but iterate for all entries of all types, may
-be we need to move to next entry in addl_desc_ptr for only those types?
-
-b) May be we need same check as we have for page 7, to stop when we hit a bufer
-end.
-
-Sorry I'm not too common with SCSI Enclosure Services specification and how it
-should work.
-
-Thanks in advance for your help, Pavel.
-
-Here is KASan output:
-
-================================================================== 
-BUG: KASan: use after free in ses_enclosure_data_process+0xbe5/0xe40 [ses] at
-addr ffff881fed1c8c01  
-Read of size 1 by task systemd-udevd/1348
-=============================================================================
-BUG kmalloc-512 (Not tainted): kasan: bad access detected 
------------------------------------------------------------------------------
-
-Disabling lock debugging due to kernel taint
-INFO: Slab 0xffffea007fb47200 objects=32 used=30 fp=0xffff881fed1c8800
-flags=0x2fffff80004080 
-INFO: Object 0xffff881fed1c8c00 @offset=3072 fp=0xffff881fed1c8e00 
-
-Bytes b4 ffff881fed1c8bf0: 0a 08 0b 09 0c 0a 0d 0b ff ff ff ff ff ff ff ff 
-................
-Object ffff881fed1c8c00: 00 8e 1c ed 1f 88 ff ff 08 8c 1c ed 1f 88 ff ff 
-................ 
-Object ffff881fed1c8c10: 08 8c 1c ed 1f 88 ff ff 18 8c 1c ed 1f 88 ff ff 
-................ 
-Object ffff881fed1c8c20: 18 8c 1c ed 1f 88 ff ff c0 ff ff ff 1f 00 00 00 
-................ 
-Object ffff881fed1c8c30: 30 8c 1c ed 1f 88 ff ff 30 8c 1c ed 1f 88 ff ff 
-0.......0....... 
-Object ffff881fed1c8c40: 70 9e dc 81 ff ff ff ff c0 aa 8a 84 ff ff ff ff 
-p...............
-Object ffff881fed1c8c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8c60: c0 dc 79 82 ff ff ff ff 00 00 00 00 00 00 00 00 
-..y.............
-Object ffff881fed1c8c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8c90: b0 a0 1b 81 ff ff ff ff 28 8c 1c ed 1f 88 ff ff 
-........(.......
-Object ffff881fed1c8ca0: 00 00 20 00 ff ff ff ff ff ff ff ff 00 00 00 00  ..
-.............
-Object ffff881fed1c8cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8cc0: 00 00 00 00 00 00 00 00 80 aa 8a 84 ff ff ff ff 
-................
-Object ffff881fed1c8cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8ce0: 00 dd 79 82 ff ff ff ff 00 00 00 00 00 00 00 00 
-..y.............
-Object ffff881fed1c8cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8d10: 00 00 00 00 00 00 00 00 ab 9e fb ff 00 00 00 00 
-................
-Object ffff881fed1c8d20: 00 00 00 00 03 00 00 00 00 00 00 00 06 00 00 00 
-................
-Object ffff881fed1c8d30: 02 00 00 00 00 00 00 00 08 81 9a ea 1f 88 ff ff 
-................
-Object ffff881fed1c8d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8d60: 00 00 00 00 c4 00 00 00 00 80 9a ea 1f 88 ff ff 
-................
-Object ffff881fed1c8d70: 00 19 b4 ef 37 88 ff ff a0 66 dd 81 ff ff ff ff 
-....7....f......
-Object ffff881fed1c8d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8dc0: 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 
-................
-Object ffff881fed1c8dd0: ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-Object ffff881fed1c8df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-................
-CPU: 0 PID: 1348 Comm: systemd-udevd Tainted: G    B           4.3.0 #3
-Hardware name: DEPO Computers X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS
-3.2 03/04/2015
-ffff881fed1c8c00 000000002924ed40 ffff8837ea77f6f8 ffffffff8199df07
-ffff881ffd007340 ffff8837ea77f728 ffffffff815af4e9 ffff881ffd007340
-ffffea007fb47200 ffff881fed1c8c00 ffff881fe85340c1 ffff8837ea77f750
-Call Trace:
-[<ffffffff8199df07>] dump_stack+0x4b/0x64
-[<ffffffff815af4e9>] print_trailer+0xf9/0x150
-[<ffffffff815b5e94>] object_err+0x34/0x40
-[<ffffffff815b8a28>] kasan_report_error+0x1e8/0x3f0
-[<ffffffff8125a53f>] ? __init_waitqueue_head+0x3f/0xa0
-[<ffffffff81d675a9>] ? pm_runtime_init+0x399/0x450
-[<ffffffff815b8c91>] __asan_report_load1_noabort+0x61/0x70
-[<ffffffffa11fb155>] ? ses_enclosure_data_process+0xbe5/0xe40 [ses]
-[<ffffffffa11fb155>] ses_enclosure_data_process+0xbe5/0xe40 [ses] 
-[<ffffffffa11fc1ce>] ses_intf_add+0x9ae/0xdf0 [ses] 
-[<ffffffff8127c100>] ? trace_hardirqs_on_caller+0x360/0x580
-[<ffffffff81d4d1bf>] class_interface_register+0x1ef/0x300
-[<ffffffff81d4cfd0>] ? class_dev_iter_exit+0x10/0x10
-[<ffffffff81a021a0>] ? debug_object_active_state+0x370/0x370
-[<ffffffff815b3b76>] ? kfree+0xe6/0x2a0
-[<ffffffff810021a1>] ? do_one_initcall+0x131/0x300
-[<ffffffffa1208000>] ? 0xffffffffa1208000
-[<ffffffff81de57b8>] scsi_register_interface+0x38/0x50
-[<ffffffffa1208013>] ses_init+0x13/0x1000 [ses]
-[<ffffffff810021b1>] do_one_initcall+0x141/0x300
-[<ffffffff81002070>] ? try_to_run_init_process+0x40/0x40
-[<ffffffff815b8156>] ? kasan_unpoison_shadow+0x36/0x50
-[<ffffffff815b8156>] ? kasan_unpoison_shadow+0x36/0x50
-[<ffffffff815b8267>] ? __asan_register_globals+0x87/0xa0
-[<ffffffff814b00ee>] do_init_module+0x1d0/0x5aa
-[<ffffffff81332b8f>] load_module+0x409f/0x61e0
-[<ffffffff81325e50>] ? __symbol_put+0xc0/0xc0
-[<ffffffff8132eaf0>] ? layout_and_allocate+0x3c80/0x3c80
-[<ffffffff81619ee0>] ? open_exec+0x50/0x50
-[<ffffffff813267ad>] ? copy_module_from_fd.isra.46+0x1dd/0x2f0
-[<ffffffff8133502b>] SyS_finit_module+0x12b/0x160
-[<ffffffff81334f00>] ? SyS_init_module+0x230/0x230
-[<ffffffff81004044>] ? lockdep_sys_exit_thunk+0x12/0x14
-[<ffffffff82523bb2>] entry_SYSCALL_64_fastpath+0x12/0x76
-Memory state around the buggy address:
-ffff881fed1c8b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-ffff881fed1c8b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->ffff881fed1c8c00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                  ^
-ffff881fed1c8c80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-ffff881fed1c8d00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-==================================================================
-```
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+josh
