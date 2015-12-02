@@ -1,85 +1,108 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 08/10] aacraid: Disable device ID wildcard
-Date: Wed, 02 Dec 2015 11:02:20 +0100
-Message-ID: <1449050540.3103.53.camel@suse.de>
+Subject: Re: [PATCH 09/10] aacraid: Fix character device re-initialization
+Date: Wed, 02 Dec 2015 11:13:43 +0100
+Message-ID: <1449051223.3103.56.camel@suse.de>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	 <1448973589-9216-10-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57129 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60150 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757119AbbLBKCW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2015 05:02:22 -0500
-In-Reply-To: <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S932081AbbLBKNp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2015 05:13:45 -0500
+In-Reply-To: <1448973589-9216-10-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com
 
+Hi Raghava,
+
 On Tue, 2015-12-01 at 04:39 -0800, Raghava Aditya Renukunta wrote:
 > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >=20
-> Added module parameter that disables device ID wild card binding.
+> During EEH PCI hotplug activity kernel unloads and loads the driver,
+> causing character device to be unregistered(aac_remove_one).When the
+> driver is loaded back using aac_probe_one the character device needs
+> to be registered again for the AIF management tools to work.
+>=20
+> Fixed by adding code to register character device in aac_probe_one if
+> it is unregistered in aac_remove_one.
 >=20
 > Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs=
 =2Ecom>
 > ---
-> =C2=A0drivers/scsi/aacraid/aachba.c=C2=A0=C2=A0| 5 +++++
-> =C2=A0drivers/scsi/aacraid/aacraid.h | 1 +
-> =C2=A0drivers/scsi/aacraid/linit.c=C2=A0=C2=A0=C2=A0| 5 +++++
-> =C2=A03 files changed, 11 insertions(+)
+> =C2=A0drivers/scsi/aacraid/linit.c | 19 +++++++++++++------
+> =C2=A01 file changed, 13 insertions(+), 6 deletions(-)
 >=20
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aac=
-hba.c
-> index 06cbab8..87f4f21 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -315,6 +315,11 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the
-> arrays:\n"
-> =C2=A0	"\t1 - Array Meta Data Signature (default)\n"
-> =C2=A0	"\t2 - Adapter Serial Number");
-> =C2=A0
-> +int aac_disable_device_id_wildcards;
-> +module_param_named(disable_device_id_wildcards,
-> +	aac_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
-> +MODULE_PARM_DESC(disable_device_id_wildcards,
-> +	"Disable device ID wildcards");
-> =C2=A0
-> =C2=A0static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
-> =C2=A0		struct fib *fibptr) {
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
-craid.h
-> index 594de5f..7708a2c 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -2177,3 +2177,4 @@ extern int aac_commit;
-> =C2=A0extern int update_interval;
-> =C2=A0extern int check_interval;
-> =C2=A0extern int aac_check_reset;
-> +extern int aac_disable_device_id_wildcards;
 > diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/lini=
 t.c
-> index 3a4dbe7..2094842 100644
+> index 2094842..7142578 100644
 > --- a/drivers/scsi/aacraid/linit.c
 > +++ b/drivers/scsi/aacraid/linit.c
-> @@ -1135,6 +1135,11 @@ static int aac_probe_one(struct pci_dev *pdev,=
- const
-> struct pci_device_id *id)
-> =C2=A0	u64 dmamask;
-> =C2=A0	extern int aac_sync_mode;
+> @@ -1123,6 +1123,13 @@ static void __aac_shutdown(struct aac_dev * aa=
+c)
+> =C2=A0	else if (aac->max_msix > 1)
+> =C2=A0		pci_disable_msix(aac->pdev);
+> =C2=A0}
+> +static void aac_init_char(void)
+> +{
+> +	aac_cfg_major =3D register_chrdev(0, "aac", &aac_cfg_fops);
+> +	if (aac_cfg_major < 0) {
+> +		pr_err("aacraid: unable to register \"aac\" device.\n");
+> +	}
+> +}
 > =C2=A0
-> +	if (aac_disable_device_id_wildcards &&
-> +		id->subvendor =3D=3D PCI_ANY_ID &&
-> +		id->subdevice =3D=3D PCI_ANY_ID)
-> +		return -ENODEV;
+> =C2=A0static int aac_probe_one(struct pci_dev *pdev, const struct pci=
+_device_id
+> *id)
+> =C2=A0{
+> @@ -1185,6 +1192,9 @@ static int aac_probe_one(struct pci_dev *pdev, =
+const
+> struct pci_device_id *id)
+> =C2=A0	shost->max_cmd_len =3D 16;
+> =C2=A0	shost->use_cmd_list =3D 1;
+> =C2=A0
+> +	if (aac_cfg_major =3D=3D -2)
+> +		aac_init_char();
 > +
-> =C2=A0	/*
-> =C2=A0	=C2=A0* Only series 7 needs freset.
-> =C2=A0	=C2=A0*/
+> =C2=A0	aac =3D (struct aac_dev *)shost->hostdata;
+> =C2=A0	aac->base_start =3D pci_resource_start(pdev, 0);
+> =C2=A0	aac->scsi_host_ptr =3D shost;
+> @@ -1536,7 +1546,7 @@ static void aac_remove_one(struct pci_dev *pdev=
+)
+> =C2=A0	pci_disable_device(pdev);
+> =C2=A0	if (list_empty(&aac_devices)) {
+> =C2=A0		unregister_chrdev(aac_cfg_major, "aac");
+> -		aac_cfg_major =3D -1;
+> +		aac_cfg_major =3D -2;
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Please add something like
+#define AAC_CHARDEV_UNREGISTERED -1
+#define AAC_CHARDEV_NEEDS_REINIT -2
+
+so it's obvious what you're doing.
+
+> =C2=A0	}
+> =C2=A0}
+> =C2=A0
+> @@ -1697,11 +1707,8 @@ static int __init aac_init(void)
+> =C2=A0	if (error < 0)
+> =C2=A0		return error;
+> =C2=A0
+> -	aac_cfg_major =3D register_chrdev( 0, "aac", &aac_cfg_fops);
+> -	if (aac_cfg_major < 0) {
+> -		printk(KERN_WARNING
+> -			"aacraid: unable to register \"aac\" device.\n");
+> -	}
+> +	aac_init_char();
+> +
+> =C2=A0
+> =C2=A0	return 0;
+> =C2=A0}
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
