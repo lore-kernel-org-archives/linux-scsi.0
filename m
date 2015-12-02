@@ -1,28 +1,70 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 0/4] bfa: Patches for scsi "misc" branch
-Date: Wed, 02 Dec 2015 17:10:03 -0500
-Message-ID: <yq18u5cbiys.fsf@sermon.lab.mkp.net>
-References: <1448528087-24989-1-git-send-email-anil.gurumurthy@qlogic.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: [PATCH 07/10] aacraid: Fix AIF triggered IOP_RESET
+Date: Wed, 2 Dec 2015 22:29:22 +0000
+Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EE83A@BBYEXM01.pmc-sierra.internal>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	 <1448973589-9216-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1449050432.3103.52.camel@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32663 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755237AbbLBWKO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2015 17:10:14 -0500
-In-Reply-To: <1448528087-24989-1-git-send-email-anil.gurumurthy@qlogic.com>
-	(anil gurumurthy's message of "Thu, 26 Nov 2015 03:54:44 -0500")
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:44535 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755237AbbLBW3Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2015 17:29:24 -0500
+In-Reply-To: <1449050432.3103.52.camel@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: anil.gurumurthy@qlogic.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, sudarsana.kalluru@qlogic.com, Giridhar Malavali <giridhar.malavali@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
->>>>> "Anil" ==   <anil.gurumurthy@qlogic.com> writes:
-
-Anil> Please apply the following patches to the scsi tree, misc branch
-Anil> at your earliest convenience.
-
-Series applied to 4.5/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGVsbG8gSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
+Sm9oYW5uZXMgVGh1bXNoaXJuIFttYWlsdG86anRodW1zaGlybkBzdXNlLmRlXQ0KPiBTZW50OiBX
+ZWRuZXNkYXksIERlY2VtYmVyIDIsIDIwMTUgMjowMSBBTQ0KPiBUbzogUmFnaGF2YSBBZGl0eWEg
+UmVudWt1bnRhOyBKQm90dG9tbGV5QFBhcmFsbGVscy5jb207IGxpbnV4LQ0KPiBzY3NpQHZnZXIu
+a2VybmVsLm9yZw0KPiBDYzogTWFoZXNoIFJhamFzaGVraGFyYTsgTXVydGh5IEJoYXQ7IFNhbnRv
+c2ggQWt1bGE7IEdhbmEgU3JpZGFyYW47DQo+IGFhY3JhaWRAcG1jLXNpZXJyYS5jb207IFJpY2gg
+Qm9ubw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDA3LzEwXSBhYWNyYWlkOiBGaXggQUlGIHRyaWdn
+ZXJlZCBJT1BfUkVTRVQNCj4gDQo+IEhpwqBSYWdoYXZhLA0KPiANCj4gT24gVHVlLCAyMDE1LTEy
+LTAxIGF0IDA0OjM5IC0wODAwLCBSYWdoYXZhIEFkaXR5YSBSZW51a3VudGEgd3JvdGU6DQo+ID4g
+RnJvbTogUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRhIDxyYWdoYXZhYWRpdHlhLnJlbnVrdW50YUBw
+bWNzLmNvbT4NCj4gPg0KPiA+IHdoaWxlIGRyaXZlciByZW1vdmFsIGlzIGluIHByb2dyZXNzIG9y
+IFBDSSBzaHV0ZG93biBpcyBpbnZva2VkLCBkcml2ZXINCj4gPiBraWxscyBBSUYgYWFjcmFpZCB0
+aHJlYWQsIGJ1dCBJT0NUTCByZXF1ZXN0cyBmcm9tIHRoZSBtYW5hZ2VtZW50IHRvb2xzDQo+ID4g
+cmUtc3RhcnQgQUlGIHRocmVhZCBsZWFkaW5nIHRvIElPUF9SRVNFVC4NCj4gPg0KPiA+IEZpeGVk
+IGJ5IHNldHRpbmcgYWRhcHRlcl9zaHV0ZG93biBmbGFnIHdoZW4gUENJIHNodXRkb3duIGlzIGlu
+dm9rZWQuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWdoYXZhIEFkaXR5YSBSZW51a3VudGEN
+Cj4gPiA8cmFnaGF2YWFkaXR5YS5yZW51a3VudGFAcG1jcy5jb20+DQo+ID4gLS0tDQo+ID4gwqBk
+cml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIHwgMSArDQo+ID4gwqAxIGZpbGUgY2hhbmdlZCwg
+MSBpbnNlcnRpb24oKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9saW5pdC5jDQo+ID4gYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGluZGV4IDY5MTJl
+ZmQuLjNhNGRiZTcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQu
+Yw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMNCj4gPiBAQCAtMTQ1NCw2
+ICsxNDU0LDcgQEAgc3RhdGljIGludCBhYWNfc3VzcGVuZChzdHJ1Y3QgcGNpX2RldiAqcGRldiwN
+Cj4gPiBwbV9tZXNzYWdlX3Qgc3RhdGUpDQo+ID4gwqAJc3RydWN0IGFhY19kZXYgKmFhYyA9IChz
+dHJ1Y3QgYWFjX2RldiAqKXNob3N0LT5ob3N0ZGF0YTsNCj4gPg0KPiA+IMKgCXNjc2lfYmxvY2tf
+cmVxdWVzdHMoc2hvc3QpOw0KPiA+ICsJYWFjLT5hZGFwdGVyX3NodXRkb3duID0gMTsNCj4gPiDC
+oAlhYWNfc2VuZF9zaHV0ZG93bihhYWMpOw0KPiA+DQo+ID4gwqAJYWFjX3JlbGVhc2VfcmVzb3Vy
+Y2VzKGFhYyk7DQo+IA0KPiBJIGRvbid0IHF1aXRlIHVuZGVzdGFuZCB0aGF0LCB0aGUgZm9sbG93
+aW5nIGlzIGZyb20gYWFjX3NlbmRfc2h1dGRvd24oKToNCj4gDQo+IA0KPiAyMjnCoMKgwqDCoMKg
+wqDCoMKgwqAvKiBGSUIgc2hvdWxkIGJlIGZyZWVkIG9ubHkgYWZ0ZXIgZ2V0dGluZyB0aGUgcmVz
+cG9uc2UgZnJvbSB0aGUgRi9XDQo+ICovDQo+IDIzMMKgwqDCoMKgwqDCoMKgwqDCoGlmIChzdGF0
+dXMgIT0gLUVSRVNUQVJUU1lTKQ0KPiAyMzHCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgYWFjX2ZpYl9mcmVlKGZpYmN0eCk7DQo+IDIzMsKgwqDCoMKgwqDCoMKgwqDCoGRldi0+YWRh
+cHRlcl9zaHV0ZG93biA9IDE7DQo+IDIzM8KgwqDCoMKgwqDCoMKgwqDCoGlmICgoZGV2LT5wZGV2
+LT5kZXZpY2UgPT0gUE1DX0RFVklDRV9TNyB8fA0KPiAyMzTCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgZGV2LT5wZGV2LT5kZXZpY2UgPT0gUE1DX0RFVklDRV9TOCB8fA0KPiANCj4gDQo+IA0K
+PiBpbiBsaW5lIDIzMiB5b3UncmUgYWxyZWFkeSBzZXR0aW5nIHRoZSBhZGFwdGVyIHNodXRkb3du
+IGZsYWcsIHdoeSBkbyB5b3UNCj4gbmVlZCB0byBwcmUtc2V0IGl0IGJlZm9yZSBjYWxsaW5nIGFh
+Y19zZW5kX3NodXRkb3duKCk/DQoNCk9yaWdpbmFsbHkgdGhlIHByb2JsZW0gd2FzIHRoYXQgZGV2
+LT5hZGFwdGVyX3NodXRkb3duIHdhcyBzZXQgYWZ0ZXIgdGhlDQpTaHV0ZG93biBjb21tYW5kIHdh
+cyBzZW50IHRvIHRoZSBjb250cm9sbGVyLCBsZWFkaW5nIHRvIGEgcmFjZQ0KY29uZGl0aW9uICBJ
+ZiBhZnRlciB0aGUgY29udHJvbGxlciB3YXMgc2h1dCBkb3duIGFuZCBiZWZvcmUNCiBkZXYtPmFk
+YXB0ZXJfc2h1dGRvd24gIHdhcyBzZXQgLCB0aGUgZHJpdmVyIHJlY2VpdmVkICBhIEFJRg0KIGNv
+bW1hbmQgZnJvbSBtYW5hZ2VtZW50IHRvb2wgLCBpdCAgd291bGQgc3RpbGwgYmUgc2VudCB0byB0
+aGUgDQpjb250cm9sbGVyIGluIGFhY19jZmdfaW9jdGwoKSBsZWFkaW5nIHRvIGEgIElPUF9SRVNF
+VC4NCg0KQSBmaXggd291bGQgIGJlIHRvIHNldCBkZXYtPmFkYXB0ZXJfc2h1dGRvd24gYXQgdGhl
+IHZlcnkgDQpiZWdpbm5pbmcgb2YgYWFjX3NlbmRfc2h1dGRvd24oKS4NCg0KPiANCj4gVGhhbmtz
+LA0KPiAJSm9oYW5uZXMNCg0KVGhhbmsgeW91LA0KCVJhZ2hhdmEgQWRpdHlhDQo=
