@@ -1,124 +1,261 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/10] aacraid: SCSI blk tag support
-Date: Wed, 02 Dec 2015 11:49:31 +0100
-Message-ID: <1449053371.3103.68.camel@suse.de>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 108771] New: scsi: ses: kasan: ses_enclosure_data_process use
+ after free on boot SAS2X28
+Date: Wed, 02 Dec 2015 10:57:34 +0000
+Message-ID: <bug-108771-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40054 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:59851 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754769AbbLBKte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2015 05:49:34 -0500
-In-Reply-To: <1448973589-9216-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S1757129AbbLBK5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2015 05:57:39 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D1C902063B
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Dec 2015 10:57:37 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 5D36B205E2
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Dec 2015 10:57:35 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2015-12-01 at 04:39 -0800, Raghava Aditya Renukunta wrote:
-> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->=20
-> The method to allocate and free FIB's in the present code utilizes
-> spinlocks.Multiple IO's have to wait on the spinlock to acquire or
-> free fibs creating a performance bottleneck.
->=20
-> An alternative solution would be to use block layer tags to keep trac=
-k
-> of the fibs allocated and freed. To this end 2 functions
-> aac_fib_alloc_tag and aac_fib_free_tag were created which utilize the
-> blk layer tags to plug into the Fib pool.These functions are used
-> exclusively in the IO path. 8 fibs are reserved for the use of AIF
-> management software and utilize the previous spinlock based
-> implementations.
->=20
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs=
-=2Ecom>
-> ---
-> =C2=A0drivers/scsi/aacraid/aachba.c=C2=A0=C2=A0| 35 +++++++++++++++++=
--------------
-> =C2=A0drivers/scsi/aacraid/aacraid.h |=C2=A0=C2=A02 ++
-> =C2=A0drivers/scsi/aacraid/commsup.c | 49 +++++++++++++++++++++++++++=
-++++++++++++-
-> --
-> =C2=A0drivers/scsi/aacraid/dpcsup.c=C2=A0=C2=A0|=C2=A0=C2=A04 ++--
-> =C2=A0drivers/scsi/aacraid/linit.c=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A02 ++
-> =C2=A05 files changed, 72 insertions(+), 20 deletions(-)
->=20
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aac=
-hba.c
-> index e4c2437..06cbab8 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -323,7 +323,7 @@ static inline int aac_valid_context(struct scsi_c=
-mnd=20
+https://bugzilla.kernel.org/show_bug.cgi?id=108771
 
-[...]
+            Bug ID: 108771
+           Summary: scsi: ses: kasan: ses_enclosure_data_process use after
+                    free on boot SAS2X28
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.3
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: ptikhomirov@virtuozzo.com
+        Regression: No
 
->=20
-> =C2=A0	return 0;
-> =C2=A0}
-> =C2=A0
-> @@ -166,6 +166,49 @@ int aac_fib_setup(struct aac_dev * dev)
-> =C2=A0 *	aac_fib_alloc	-	allocate a fib
+Created attachment 196301
+  --> https://bugzilla.kernel.org/attachment.cgi?id=196301&action=edit
+Full /var/log/messagess log and module ses.ko
 
-Nitpick/Typo aac_fib_alloc_tag
+Here is my setup:
+Kernel: Linux 4.3 (tag:v4.3 commit:6a13feb9c8)
+SCSI ses device: Host: scsi0 Channel: 00 Id: 16 Lun: 00 Vendor: LSI Model:
+SAS2X28 Rev: 0e12 Type: Enclosure ANSI  SCSI revision: 05
 
-> =C2=A0 *	@dev: Adapter to allocate the fib for
-> =C2=A0 *
-> + *	Allocate a fib from the adapter fib pool using tags
-> + *	from the blk layer.
-> + */
-> +
-> +struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd =
-*scmd)
-> +{
-> +	struct fib *fibptr;
-> +
-> +	fibptr =3D &dev->fibs[scmd->request->tag];
-> +	/*
-> +	=C2=A0*	Set the proper node type code and node byte size
-> +	=C2=A0*/
-> +	fibptr->type =3D FSAFS_NTC_FIB_CONTEXT;
-> +	fibptr->size =3D sizeof(struct fib);
-> +	/*
-> +	=C2=A0*	Null out fields that depend on being zero at the start of
-> +	=C2=A0*	each I/O
-> +	=C2=A0*/
-> +	fibptr->hw_fib_va->header.XferState =3D 0;
-> +	fibptr->flags =3D 0;
-> +	fibptr->callback =3D NULL;
-> +	fibptr->callback_data =3D NULL;
-> +
-> +	return fibptr;
-> +}
-> +
-> +/**
-> + *	aac_fib_free_tag	free a fib
-> + *	@fibptr: fib to free up
-> + *
-> + *	Placeholder to free tag allocated fibs
-> + *	Does not do anything
-> + */
-> +
-> +void aac_fib_free_tag(struct fib *fibptr)
-> +{
-> +	(void)fibptr;
-> +}
-> +
+Full /var/log/messagess log in archive attached:
+debug-kernel-kasan-system-log.txt
+Module in archive attached: ses.ko
 
-I'm not sure if I like this placeholder. Sure it's a NOP and doesn't co=
-st
-anything but it's dead code. But if I'm the only one objecting here I'm=
- fine
-with it.
+On debug kernel on boot when attaching enclosure scsi device, KASan detects use
+after free in ses_enclosure_data_process+0xbe5(see kasan report in the end).
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+nm -A ./drivers/scsi/ses.ko | grep ses_enclosure_data_process
+./drivers/scsi/ses.ko:0000000000002570 t ses_enclosure_data_process
+
+objdump -D -S -l ./drivers/scsi/ses.ko --start-address=0x0000000000002570
+
+
+On offset 0x3155(0x2570+0xbe5) there is code generated by kasan:
+
+
+>    3144:       4c 89 5d a0             mov    %r11,-0x60(%rbp)
+    3148:       44 89 45 a8             mov    %r8d,-0x58(%rbp)
+    314c:       44 89 4d b0             mov    %r9d,-0x50(%rbp)
+/vzt/linux/drivers/scsi/ses.c:545
+            }
+            if (desc_ptr)
+                desc_ptr += len;
+
+            if (addl_desc_ptr)
+                addl_desc_ptr += addl_desc_ptr[1] + 2;
+    3150:    e8 00 00 00 00           callq  3155
+<ses_enclosure_data_process+0xbe5>
+    3155:    4c 8b 5d a0              mov    -0x60(%rbp),%r11
+    3159:    44 8b 45 a8              mov    -0x58(%rbp),%r8d
+    315d:    44 8b 4d b0              mov    -0x50(%rbp),%r9d
+    3161:    e9 34 f7 ff ff           jmpq   289a
+<ses_enclosure_data_process+0x32a>
+
+
+To witch we jump from:
+
+
+/vzt/linux/drivers/scsi/ses.c:545
+                                addl_desc_ptr += addl_desc_ptr[1] + 2;
+    2877:       49 8d 7c 24 01          lea    0x1(%r12),%rdi
+    287c:       48 89 f8                mov    %rdi,%rax
+    287f:       48 89 fa                mov    %rdi,%rdx
+    2882:       48 c1 e8 03             shr    $0x3,%rax
+    2886:       83 e2 07                and    $0x7,%edx
+    2889:       42 0f b6 04 28          movzbl (%rax,%r13,1),%eax
+    288e:       38 d0                   cmp    %dl,%al
+    2890:       7f 08                   jg     289a
+<ses_enclosure_data_process+0x32a>
+    2892:       84 c0                   test   %al,%al
+>    2894:       0f 85 aa 08 00 00       jne    3144 <ses_enclosure_data_process+0xbd4>
+    289a:       41 0f b6 44 24 01       movzbl 0x1(%r12),%eax
+    28a0:       4d 8d 64 04 02          lea    0x2(%r12,%rax,1),%r12
+
+
+Address addl_desc_ptr[1] is not allocated here but we want to read it. Actualy
+we iterate through ses_dev->page10 here and it ends unexpectedly. We get number
+of iterations from ses_dev->page1_num_types and ses_dev->page1_types, so it
+seam that meta-data given by device is not consistent for page 1 and page 10.
+
+My ideas on this:
+a) In ses_process_descriptor we get enclosure_component->addr from
+addl_desc_ptr only for ENCLOSURE_COMPONENT_DEVICE and
+ENCLOSURE_COMPONENT_ARRAY_DEVICE but iterate for all entries of all types, may
+be we need to move to next entry in addl_desc_ptr for only those types?
+
+b) May be we need same check as we have for page 7, to stop when we hit a bufer
+end.
+
+Sorry I'm not too common with SCSI Enclosure Services specification and how it
+should work.
+
+Thanks in advance for your help, Pavel.
+
+Here is KASan output:
+
+================================================================== 
+BUG: KASan: use after free in ses_enclosure_data_process+0xbe5/0xe40 [ses] at
+addr ffff881fed1c8c01  
+Read of size 1 by task systemd-udevd/1348
+=============================================================================
+BUG kmalloc-512 (Not tainted): kasan: bad access detected 
+-----------------------------------------------------------------------------
+
+Disabling lock debugging due to kernel taint
+INFO: Slab 0xffffea007fb47200 objects=32 used=30 fp=0xffff881fed1c8800
+flags=0x2fffff80004080 
+INFO: Object 0xffff881fed1c8c00 @offset=3072 fp=0xffff881fed1c8e00 
+
+Bytes b4 ffff881fed1c8bf0: 0a 08 0b 09 0c 0a 0d 0b ff ff ff ff ff ff ff ff 
+................
+Object ffff881fed1c8c00: 00 8e 1c ed 1f 88 ff ff 08 8c 1c ed 1f 88 ff ff 
+................ 
+Object ffff881fed1c8c10: 08 8c 1c ed 1f 88 ff ff 18 8c 1c ed 1f 88 ff ff 
+................ 
+Object ffff881fed1c8c20: 18 8c 1c ed 1f 88 ff ff c0 ff ff ff 1f 00 00 00 
+................ 
+Object ffff881fed1c8c30: 30 8c 1c ed 1f 88 ff ff 30 8c 1c ed 1f 88 ff ff 
+0.......0....... 
+Object ffff881fed1c8c40: 70 9e dc 81 ff ff ff ff c0 aa 8a 84 ff ff ff ff 
+p...............
+Object ffff881fed1c8c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8c60: c0 dc 79 82 ff ff ff ff 00 00 00 00 00 00 00 00 
+..y.............
+Object ffff881fed1c8c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8c90: b0 a0 1b 81 ff ff ff ff 28 8c 1c ed 1f 88 ff ff 
+........(.......
+Object ffff881fed1c8ca0: 00 00 20 00 ff ff ff ff ff ff ff ff 00 00 00 00  ..
+.............
+Object ffff881fed1c8cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8cc0: 00 00 00 00 00 00 00 00 80 aa 8a 84 ff ff ff ff 
+................
+Object ffff881fed1c8cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8ce0: 00 dd 79 82 ff ff ff ff 00 00 00 00 00 00 00 00 
+..y.............
+Object ffff881fed1c8cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8d10: 00 00 00 00 00 00 00 00 ab 9e fb ff 00 00 00 00 
+................
+Object ffff881fed1c8d20: 00 00 00 00 03 00 00 00 00 00 00 00 06 00 00 00 
+................
+Object ffff881fed1c8d30: 02 00 00 00 00 00 00 00 08 81 9a ea 1f 88 ff ff 
+................
+Object ffff881fed1c8d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8d60: 00 00 00 00 c4 00 00 00 00 80 9a ea 1f 88 ff ff 
+................
+Object ffff881fed1c8d70: 00 19 b4 ef 37 88 ff ff a0 66 dd 81 ff ff ff ff 
+....7....f......
+Object ffff881fed1c8d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8dc0: 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 
+................
+Object ffff881fed1c8dd0: ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+Object ffff881fed1c8df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+CPU: 0 PID: 1348 Comm: systemd-udevd Tainted: G    B           4.3.0 #3
+Hardware name: DEPO Computers X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS
+3.2 03/04/2015
+ffff881fed1c8c00 000000002924ed40 ffff8837ea77f6f8 ffffffff8199df07
+ffff881ffd007340 ffff8837ea77f728 ffffffff815af4e9 ffff881ffd007340
+ffffea007fb47200 ffff881fed1c8c00 ffff881fe85340c1 ffff8837ea77f750
+Call Trace:
+[<ffffffff8199df07>] dump_stack+0x4b/0x64
+[<ffffffff815af4e9>] print_trailer+0xf9/0x150
+[<ffffffff815b5e94>] object_err+0x34/0x40
+[<ffffffff815b8a28>] kasan_report_error+0x1e8/0x3f0
+[<ffffffff8125a53f>] ? __init_waitqueue_head+0x3f/0xa0
+[<ffffffff81d675a9>] ? pm_runtime_init+0x399/0x450
+[<ffffffff815b8c91>] __asan_report_load1_noabort+0x61/0x70
+[<ffffffffa11fb155>] ? ses_enclosure_data_process+0xbe5/0xe40 [ses]
+[<ffffffffa11fb155>] ses_enclosure_data_process+0xbe5/0xe40 [ses] 
+[<ffffffffa11fc1ce>] ses_intf_add+0x9ae/0xdf0 [ses] 
+[<ffffffff8127c100>] ? trace_hardirqs_on_caller+0x360/0x580
+[<ffffffff81d4d1bf>] class_interface_register+0x1ef/0x300
+[<ffffffff81d4cfd0>] ? class_dev_iter_exit+0x10/0x10
+[<ffffffff81a021a0>] ? debug_object_active_state+0x370/0x370
+[<ffffffff815b3b76>] ? kfree+0xe6/0x2a0
+[<ffffffff810021a1>] ? do_one_initcall+0x131/0x300
+[<ffffffffa1208000>] ? 0xffffffffa1208000
+[<ffffffff81de57b8>] scsi_register_interface+0x38/0x50
+[<ffffffffa1208013>] ses_init+0x13/0x1000 [ses]
+[<ffffffff810021b1>] do_one_initcall+0x141/0x300
+[<ffffffff81002070>] ? try_to_run_init_process+0x40/0x40
+[<ffffffff815b8156>] ? kasan_unpoison_shadow+0x36/0x50
+[<ffffffff815b8156>] ? kasan_unpoison_shadow+0x36/0x50
+[<ffffffff815b8267>] ? __asan_register_globals+0x87/0xa0
+[<ffffffff814b00ee>] do_init_module+0x1d0/0x5aa
+[<ffffffff81332b8f>] load_module+0x409f/0x61e0
+[<ffffffff81325e50>] ? __symbol_put+0xc0/0xc0
+[<ffffffff8132eaf0>] ? layout_and_allocate+0x3c80/0x3c80
+[<ffffffff81619ee0>] ? open_exec+0x50/0x50
+[<ffffffff813267ad>] ? copy_module_from_fd.isra.46+0x1dd/0x2f0
+[<ffffffff8133502b>] SyS_finit_module+0x12b/0x160
+[<ffffffff81334f00>] ? SyS_init_module+0x230/0x230
+[<ffffffff81004044>] ? lockdep_sys_exit_thunk+0x12/0x14
+[<ffffffff82523bb2>] entry_SYSCALL_64_fastpath+0x12/0x76
+Memory state around the buggy address:
+ffff881fed1c8b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ffff881fed1c8b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff881fed1c8c00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                  ^
+ffff881fed1c8c80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ffff881fed1c8d00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+```
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
