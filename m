@@ -1,142 +1,62 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH 03/10] aacraid: Added EEH support
-Date: Wed, 2 Dec 2015 23:14:16 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EE97C@BBYEXM01.pmc-sierra.internal>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1449049290.3103.44.camel@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH RESEND] cxlflash: a couple off by one bugs
+Date: Wed,  2 Dec 2015 17:26:28 -0600
+Message-ID: <1449098788-21695-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:48543 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757973AbbLBXOS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2015 18:14:18 -0500
-In-Reply-To: <1449049290.3103.44.camel@suse.de>
-Content-Language: en-US
+Received: from e38.co.us.ibm.com ([32.97.110.159]:35403 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757245AbbLBX05 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2015 18:26:57 -0500
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+	Wed, 2 Dec 2015 16:26:56 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Michael Neuling <mikey@neuling.org>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-SGVsbG8gSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
-Sm9oYW5uZXMgVGh1bXNoaXJuIFttYWlsdG86anRodW1zaGlybkBzdXNlLmRlXQ0KPiBTZW50OiBX
-ZWRuZXNkYXksIERlY2VtYmVyIDIsIDIwMTUgMTo0MiBBTQ0KPiBUbzogUmFnaGF2YSBBZGl0eWEg
-UmVudWt1bnRhOyBKQm90dG9tbGV5QFBhcmFsbGVscy5jb207IGxpbnV4LQ0KPiBzY3NpQHZnZXIu
-a2VybmVsLm9yZw0KPiBDYzogTWFoZXNoIFJhamFzaGVraGFyYTsgTXVydGh5IEJoYXQ7IFNhbnRv
-c2ggQWt1bGE7IEdhbmEgU3JpZGFyYW47DQo+IGFhY3JhaWRAcG1jLXNpZXJyYS5jb207IFJpY2gg
-Qm9ubw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDAzLzEwXSBhYWNyYWlkOiBBZGRlZCBFRUggc3Vw
-cG9ydA0KPiANCj4gT24gVHVlLCAyMDE1LTEyLTAxIGF0IDA0OjM5IC0wODAwLCBSYWdoYXZhIEFk
-aXR5YSBSZW51a3VudGEgd3JvdGU6DQo+ID4gRnJvbTogUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRh
-IDxyYWdoYXZhYWRpdHlhLnJlbnVrdW50YUBwbWNzLmNvbT4NCj4gPg0KPiA+IEFkZGVkIHN1cHBv
-cnQgZm9yIFBDSSBFRUgoZXh0ZW5kZWQgZXJyb3IgaGFuZGxpbmcpLg0KPiA+DQo+ID4gU2lnbmVk
-LW9mZi1ieTogUmFnaGF2YSBBZGl0eWEgUmVudWt1bnRhDQo+ID4gPHJhZ2hhdmFhZGl0eWEucmVu
-dWt1bnRhQHBtY3MuY29tPg0KPiA+IC0tLQ0KPiA+IMKgZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFj
-cmFpZC5oIHzCoMKgwqAxICsNCj4gPiDCoGRyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmPCoMKg
-wqB8IDEzOA0KPiA+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+
-ID4gwqAyIGZpbGVzIGNoYW5nZWQsIDEzOSBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oDQo+ID4gYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmggaW5kZXggZDEzM2M0YS4uNTk0ZGU1ZiAxMDA2NDQNCj4gPiAtLS0g
-YS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmgNCj4gPiBAQCAtMTIzNSw2ICsxMjM1LDcgQEAgc3RydWN0IGFhY19k
-ZXYNCj4gPiDCoAlzdHJ1Y3QgbXNpeF9lbnRyeQltc2l4ZW50cnlbQUFDX01BWF9NU0lYXTsNCj4g
-PiDCoAlzdHJ1Y3QgYWFjX21zaXhfY3R4CWFhY19tc2l4W0FBQ19NQVhfTVNJWF07IC8qIGNvbnRl
-eHQgKi8NCj4gPiDCoAl1OAkJCWFkYXB0ZXJfc2h1dGRvd247DQo+ID4gKwl1MzIJCQloYW5kbGVf
-cGNpX2Vycm9yOw0KPiA+IMKgfTsNCj4gPg0KPiA+IMKgI2RlZmluZSBhYWNfYWRhcHRlcl9pbnRl
-cnJ1cHQoZGV2KSBcDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0
-LmMNCj4gPiBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMgaW5kZXggZmEwZmM0NC4uMDE0
-NzIxMCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jDQo+ID4g
-KysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYw0KPiA+IEBAIC0zOCw2ICszOCw3IEBA
-DQo+ID4gwqAjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+DQo+ID4gwqAjaW5jbHVkZSA8bGludXgv
-bW9kdWxlcGFyYW0uaD4NCj4gPiDCoCNpbmNsdWRlIDxsaW51eC9wY2kuaD4NCj4gPiArI2luY2x1
-ZGUgPGxpbnV4L2Flci5oPg0KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L3BjaS1hc3BtLmg+DQo+ID4g
-wqAjaW5jbHVkZSA8bGludXgvc2xhYi5oPg0KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L211dGV4Lmg+
-DQo+ID4gQEAgLTEyOTgsNiArMTI5OSw5IEBAIHN0YXRpYyBpbnQgYWFjX3Byb2JlX29uZShzdHJ1
-Y3QgcGNpX2RldiAqcGRldiwNCj4gPiBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpDQo+
-ID4gwqAJCWdvdG8gb3V0X2RlaW5pdDsNCj4gPiDCoAlzY3NpX3NjYW5faG9zdChzaG9zdCk7DQo+
-ID4NCj4gPiArCXBjaV9lbmFibGVfcGNpZV9lcnJvcl9yZXBvcnRpbmcocGRldik7DQo+ID4gKwlw
-Y2lfc2F2ZV9zdGF0ZShwZGV2KTsNCj4gPiArDQo+ID4gwqAJcmV0dXJuIDA7DQo+ID4NCj4gPiDC
-oCBvdXRfZGVpbml0Og0KPiA+IEBAIC0xNTAxLDYgKzE1MDUsMTM5IEBAIHN0YXRpYyB2b2lkIGFh
-Y19yZW1vdmVfb25lKHN0cnVjdCBwY2lfZGV2DQo+ICpwZGV2KQ0KPiA+IMKgCX0NCj4gPiDCoH0N
-Cj4gPg0KPiA+ICt2b2lkIGFhY19mbHVzaF9pb3Moc3RydWN0IGFhY19kZXYgKmFhYykgew0KPiA+
-ICsJaW50IGk7DQo+ID4gKwlzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQ7DQo+ID4gKw0KPiA+ICsJZm9y
-IChpID0gMDsgaSA8IGFhYy0+c2NzaV9ob3N0X3B0ci0+Y2FuX3F1ZXVlOyBpKyspIHsNCj4gPiAr
-CQljbWQgPSAoc3RydWN0IHNjc2lfY21uZCAqKWFhYy0+Zmlic1tpXS5jYWxsYmFja19kYXRhOw0K
-PiA+ICsJCWlmIChjbWQgJiYgKGNtZC0+U0NwLnBoYXNlID09IEFBQ19PV05FUl9GSVJNV0FSRSkp
-DQo+IHsNCj4gPiArCQkJc2NzaV9kbWFfdW5tYXAoY21kKTsNCj4gPiArCQkJYWFjX2ZpYl9mcmVl
-X3RhZygmYWFjLT5maWJzW2ldKTsNCj4gPiArDQo+ID4gKwkJCWlmIChhYWMtPmhhbmRsZV9wY2lf
-ZXJyb3IpDQo+ID4gKwkJCQljbWQtPnJlc3VsdCA9IERJRF9OT19DT05ORUNUIDw8IDE2Ow0KPiA+
-ICsJCQllbHNlDQo+ID4gKwkJCQljbWQtPnJlc3VsdCA9IERJRF9SRVNFVCA8PCAxNjsNCj4gPiAr
-DQo+ID4gKwkJCWNtZC0+c2NzaV9kb25lKGNtZCk7DQo+ID4gKwkJfQ0KPiA+ICsJfQ0KPiA+ICt9
-DQo+ID4gKw0KPiA+ICtwY2lfZXJzX3Jlc3VsdF90IGFhY19wY2lfZXJyb3JfZGV0ZWN0ZWQoc3Ry
-dWN0IHBjaV9kZXYgKnBkZXYsDQo+ID4gKwkJCQkJZW51bSBwY2lfY2hhbm5lbF9zdGF0ZSBlcnJv
-cikNCj4gPiArew0KPiA+ICsJc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QgPSBwY2lfZ2V0X2RydmRh
-dGEocGRldik7DQo+ID4gKwlzdHJ1Y3QgYWFjX2RldiAqYWFjID0gc2hvc3RfcHJpdihzaG9zdCk7
-DQo+ID4gKw0KPiA+ICsJZGV2X2VycigmcGRldi0+ZGV2LCAiYWFjcmFpZDogUENJIGVycm9yIGRl
-dGVjdGVkICV4XG4iLCBlcnJvcik7DQo+ID4gKw0KPiA+ICsJc3dpdGNoIChlcnJvcikgew0KPiA+
-ICsJY2FzZSBwY2lfY2hhbm5lbF9pb19ub3JtYWw6DQo+ID4gKwkJcmV0dXJuIFBDSV9FUlNfUkVT
-VUxUX0NBTl9SRUNPVkVSOw0KPiA+ICsJY2FzZSBwY2lfY2hhbm5lbF9pb19mcm96ZW46DQo+ID4g
-Kw0KPiA+ICsJCWFhYy0+aGFuZGxlX3BjaV9lcnJvciA9IDE7DQo+ID4gKw0KPiA+ICsJCXNjc2lf
-YmxvY2tfcmVxdWVzdHMoYWFjLT5zY3NpX2hvc3RfcHRyKTsNCj4gPiArCQlhYWNfZmx1c2hfaW9z
-KGFhYyk7DQo+ID4gKwkJYWFjX3JlbGVhc2VfcmVzb3VyY2VzKGFhYyk7DQo+ID4gKw0KPiA+ICsJ
-CXBjaV9kaXNhYmxlX3BjaWVfZXJyb3JfcmVwb3J0aW5nKHBkZXYpOw0KPiA+ICsJCWFhY19hZGFw
-dGVyX2lvcmVtYXAoYWFjLCAwKTsNCj4gPiArDQo+ID4gKwkJcmV0dXJuIFBDSV9FUlNfUkVTVUxU
-X05FRURfUkVTRVQ7DQo+ID4gKwljYXNlIHBjaV9jaGFubmVsX2lvX3Blcm1fZmFpbHVyZToNCj4g
-PiArCQlhYWMtPmhhbmRsZV9wY2lfZXJyb3IgPSAxOw0KPiA+ICsJCWFhY19mbHVzaF9pb3MoYWFj
-KTsNCj4gPiArCQlyZXR1cm4gUENJX0VSU19SRVNVTFRfRElTQ09OTkVDVDsNCj4gPiArCX0NCj4g
-PiArDQo+ID4gKwlyZXR1cm4gUENJX0VSU19SRVNVTFRfTkVFRF9SRVNFVDsNCj4gPiArfQ0KPiA+
-ICsNCj4gPiArcGNpX2Vyc19yZXN1bHRfdCBhYWNfcGNpX21taW9fZW5hYmxlZChzdHJ1Y3QgcGNp
-X2RldiAqcGRldikgew0KPiA+ICsJZGV2X2VycigmcGRldi0+ZGV2LCAiYWFjcmFpZDogUENJIGVy
-cm9yIC0gbW1pbyBlbmFibGVkXG4iKTsNCj4gPiArCXJldHVybiBQQ0lfRVJTX1JFU1VMVF9ORUVE
-X1JFU0VUOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtwY2lfZXJzX3Jlc3VsdF90IGFhY19wY2lfc2xv
-dF9yZXNldChzdHJ1Y3QgcGNpX2RldiAqcGRldikgew0KPiA+ICsJZGV2X2VycigmcGRldi0+ZGV2
-LCAiYWFjcmFpZDogUENJIGVycm9yIC0gc2xvdCByZXNldFxuIik7DQo+ID4gKwlwY2lfcmVzdG9y
-ZV9zdGF0ZShwZGV2KTsNCj4gPiArCWlmIChwY2lfZW5hYmxlX2RldmljZShwZGV2KSkgew0KPiA+
-ICsJCWRldl93YXJuKCZwZGV2LT5kZXYsDQo+ID4gKwkJCSJhYWNyYWlkOiBmYWlsZWQgdG8gZW5h
-YmxlIHNsYXZlXG4iKTsNCj4gPiArCQlnb3RvIGZhaWxfZGV2aWNlOw0KPiA+ICsJfQ0KPiA+ICsN
-Cj4gPiArCXBjaV9zZXRfbWFzdGVyKHBkZXYpOw0KPiA+ICsNCj4gPiArCWlmIChwY2lfZW5hYmxl
-X2RldmljZV9tZW0ocGRldikpIHsNCj4gPiArCQlkZXZfZXJyKCZwZGV2LT5kZXYsICJwY2lfZW5h
-YmxlX2RldmljZV9tZW0gZmFpbGVkXG4iKTsNCj4gPiArCQlnb3RvIGZhaWxfZGV2aWNlOw0KPiA+
-ICsJfQ0KPiA+ICsNCj4gPiArCXJldHVybiBQQ0lfRVJTX1JFU1VMVF9SRUNPVkVSRUQ7DQo+ID4g
-Kw0KPiA+ICtmYWlsX2RldmljZToNCj4gPiArCWRldl9lcnIoJnBkZXYtPmRldiwgImFhY3JhaWQ6
-IFBDSSBlcnJvciAtIHNsb3QgcmVzZXQgZmFpbGVkXG4iKTsNCj4gPiArCXJldHVybiBQQ0lfRVJT
-X1JFU1VMVF9ESVNDT05ORUNUOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICsNCj4gPiArdm9pZCBhYWNf
-cGNpX3Jlc3VtZShzdHJ1Y3QgcGNpX2RldiAqcGRldikgew0KPiA+ICsJc3RydWN0IFNjc2lfSG9z
-dCAqc2hvc3QgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7DQo+ID4gKwlzdHJ1Y3Qgc2NzaV9kZXZp
-Y2UgKnNkZXYgPSBOVUxMOw0KPiA+ICsJc3RydWN0IGFhY19kZXYgKmFhYyA9IChzdHJ1Y3QgYWFj
-X2RldiAqKXNob3N0X3ByaXYoc2hvc3QpOw0KPiA+ICsNCj4gPiArCXBjaV9jbGVhbnVwX2Flcl91
-bmNvcnJlY3RfZXJyb3Jfc3RhdHVzKHBkZXYpOw0KPiA+ICsNCj4gPiArCWlmIChhYWNfYWRhcHRl
-cl9pb3JlbWFwKGFhYywgYWFjLT5iYXNlX3NpemUpKSB7DQo+ID4gKw0KPiA+ICsJCWRldl9lcnIo
-JnBkZXYtPmRldiwgImFhY3JhaWQ6IGlvcmVtYXAgZmFpbGVkXG4iKTsNCj4gPiArCQkvKiByZW1h
-cCBmYWlsZWQsIGdvIGJhY2sgLi4uICovDQo+ID4gKwkJYWFjLT5jb21tX2ludGVyZmFjZSA9IEFB
-Q19DT01NX1BST0RVQ0VSOw0KPiA+ICsJCWlmIChhYWNfYWRhcHRlcl9pb3JlbWFwKGFhYywgQUFD
-X01JTl9GT09UUFJJTlRfU0laRSkpIHsNCj4gPiArCQkJZGV2X3dhcm4oJnBkZXYtPmRldiwNCj4g
-PiArCQkJCSJhYWNyYWlkOiB1bmFibGUgdG8gbWFwIGFkYXB0ZXIuXG4iKTsNCj4gPiArDQo+ID4g
-KwkJCXJldHVybjsNCj4gPiArCQl9DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJbXNsZWVwKDEwMDAw
-KTsNCj4gPiArDQo+ID4gKwlhYWNfYWNxdWlyZV9yZXNvdXJjZXMoYWFjKTsNCj4gPiArDQo+ID4g
-KwkvKg0KPiA+ICsJwqAqIHJlc2V0IHRoaXMgZmxhZyB0byB1bmJsb2NrIGlvY3RsKCkgYXMgaXQg
-d2FzIHNldA0KPiA+ICsJwqAqIGF0IGFhY19zZW5kX3NodXRkb3duKCkgdG8gYmxvY2sgaW9jdGxz
-IGZyb20gdXBwZXJsYXllcg0KPiA+ICsJwqAqLw0KPiA+ICsJYWFjLT5hZGFwdGVyX3NodXRkb3du
-ID0gMDsNCj4gPiArCWFhYy0+aGFuZGxlX3BjaV9lcnJvciA9IDA7DQo+ID4gKw0KPiA+ICsJc2hv
-c3RfZm9yX2VhY2hfZGV2aWNlKHNkZXYsIHNob3N0KQ0KPiA+ICsJCWlmIChzZGV2LT5zZGV2X3N0
-YXRlID09IFNERVZfT0ZGTElORSkNCj4gPiArCQkJc2Rldi0+c2Rldl9zdGF0ZSA9IFNERVZfUlVO
-TklORzsNCj4gPiArCXNjc2lfdW5ibG9ja19yZXF1ZXN0cyhhYWMtPnNjc2lfaG9zdF9wdHIpOw0K
-PiA+ICsJc2NzaV9zY2FuX2hvc3QoYWFjLT5zY3NpX2hvc3RfcHRyKTsNCj4gPiArCXBjaV9zYXZl
-X3N0YXRlKHBkZXYpOw0KPiA+ICsNCj4gPiArCWRldl9lcnIoJnBkZXYtPmRldiwgImFhY3JhaWQ6
-IFBDSSBlcnJvciAtIHJlc3VtZVxuIik7IH0NCj4gPiArDQo+ID4gK3N0YXRpYyBzdHJ1Y3QgcGNp
-X2Vycm9yX2hhbmRsZXJzIGFhY19wY2lfZXJyX2hhbmRsZXIgPSB7DQo+ID4gKwkuZXJyb3JfZGV0
-ZWN0ZWQJCT0gYWFjX3BjaV9lcnJvcl9kZXRlY3RlZCwNCj4gPiArCS5tbWlvX2VuYWJsZWQJCT0g
-YWFjX3BjaV9tbWlvX2VuYWJsZWQsDQo+ID4gKwkuc2xvdF9yZXNldAkJPSBhYWNfcGNpX3Nsb3Rf
-cmVzZXQsDQo+ID4gKwkucmVzdW1lCQkJPSBhYWNfcGNpX3Jlc3VtZSwNCj4gPiArfTsNCj4gPiAr
-DQo+ID4gwqBzdGF0aWMgc3RydWN0IHBjaV9kcml2ZXIgYWFjX3BjaV9kcml2ZXIgPSB7DQo+ID4g
-wqAJLm5hbWUJCT0gQUFDX0RSSVZFUk5BTUUsDQo+ID4gwqAJLmlkX3RhYmxlCT0gYWFjX3BjaV90
-YmwsDQo+ID4gQEAgLTE1MTEsNiArMTY0OCw3IEBAIHN0YXRpYyBzdHJ1Y3QgcGNpX2RyaXZlciBh
-YWNfcGNpX2RyaXZlciA9IHsNCj4gPiDCoAkucmVzdW1lCQk9IGFhY19yZXN1bWUsDQo+ID4gwqAj
-ZW5kaWYNCj4gPiDCoAkuc2h1dGRvd24JPSBhYWNfc2h1dGRvd24sDQo+ID4gKwkuZXJyX2hhbmRs
-ZXLCoMKgwqDCoD0gJmFhY19wY2lfZXJyX2hhbmRsZXIsDQo+ID4gwqB9Ow0KPiA+DQo+ID4gwqBz
-dGF0aWMgaW50IF9faW5pdCBhYWNfaW5pdCh2b2lkKQ0KPiANCj4gSSByZWFsbHkgdGhpbmsgdGhl
-IG5ldyBhYWNfZmx1c2hfaW8oKSBhbmQgcGNpIGVycm9yIGhhbmxlciBtZXRob2RzIHNob3VsZCBi
-ZQ0KPiBzdGF0aWMgYXMgdGhleSdyZSBub3doZXJlIHVzZWQgb3V0c2lkZSBvZiB0aGlzIGZpbGUn
-cyBzY29wZS4NCg0KWWVzLCBJIHdpbGwgbWFrZSB0aGVtIHN0YXRpYy4NCg0KUmVnYXJkcywNClJh
-Z2hhdmEgQWRpdHlhDQoNCg==
+From: Dan Carpenter <dan.carpenter@oracle.com>
+
+The "> MAX_CONTEXT" should be ">= MAX_CONTEXT".  Otherwise we go one
+step beyond the end of the cfg->ctx_tbl[] array.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+---
+This patch was originally sent by Dan Carpenter in September 2015. I had
+based my large patch series that went into 4.4 off of it but this patch
+appears to have not made it in. As a valid fix, I'd like to see this make
+it into 'next'. I've gone ahead and performed the rebase so that it
+applies cleanly.
+
+ drivers/scsi/cxlflash/superpipe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index cac2e6a..34b21a0 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -1380,7 +1380,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	}
+ 
+ 	ctxid = cxl_process_element(ctx);
+-	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
++	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+ 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
+ 		rc = -EPERM;
+ 		goto err2;
+@@ -1508,7 +1508,7 @@ static int recover_context(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
+ 	}
+ 
+ 	ctxid = cxl_process_element(ctx);
+-	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
++	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+ 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
+ 		rc = -EPERM;
+ 		goto err1;
+-- 
+2.1.0
+
