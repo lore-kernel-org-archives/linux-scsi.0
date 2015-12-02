@@ -1,17 +1,39 @@
-From: Josh Boyer <jwboyer@fedoraproject.org>
-Subject: Re: [PATCH Resend] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
-Date: Wed, 2 Dec 2015 08:47:48 -0500
-Message-ID: <CA+5PVA6=7hJ5fYv8=B6gxRYoK05HFm5KZuTvtx-UM6ht4X5q5w@mail.gmail.com>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: Re: [PATCH Resend] VMW_PVSCSI: Fix the issue of DMA-API related
+ warnings.
+Date: Wed, 2 Dec 2015 20:04:05 +0000
+Message-ID: <1449086615405.83952@vmware.com>
 References: <20151201163410.GB19092@hansolo.redhat.com>
-	<1449045763.3103.38.camel@suse.de>
+	<1449045763.3103.38.camel@suse.de>,<CA+5PVA6=7hJ5fYv8=B6gxRYoK05HFm5KZuTvtx-UM6ht4X5q5w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1449045763.3103.38.camel@suse.de>
+In-Reply-To: <CA+5PVA6=7hJ5fYv8=B6gxRYoK05HFm5KZuTvtx-UM6ht4X5q5w@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Arvind Kumar <arvindkumar@vmware.com>, Thomas Hellstrom <thellstrom@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, VMware PV-Drivers <pv-drivers@vmware.com>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+To: Josh Boyer <jwboyer@fedoraproject.org>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Thomas Hellstrom <thellstrom@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, VMware PV-Drivers <pv-drivers@vmware.com>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+The suggestions look reasonable to me too.
+
+>Arvind, since I was originally just resending your patch, do you want
+>to make the changes Johannes suggests, or should I proceed with that?
+> josh
+
+Hi Josh,
+
+Feel free to send out the updated patch if you would like.
+
+Thanks!
+Arvind
+________________________________________
+From: jwboyer@gmail.com <jwboyer@gmail.com> on behalf of Josh Boyer <jwboyer@fedoraproject.org>
+Sent: Wednesday, December 2, 2015 5:47 AM
+To: Johannes Thumshirn
+Cc: Jej B; Arvind Kumar; Thomas Hellstrom; linux-scsi@vger.kernel.org; VMware PV-Drivers; Linux-Kernel@Vger. Kernel. Org
+Subject: Re: [PATCH Resend] VMW_PVSCSI: Fix the issue of DMA-API related warnings.
 
 On Wed, Dec 2, 2015 at 3:42 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
 > Hi Josh,
