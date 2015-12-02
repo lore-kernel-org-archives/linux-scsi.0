@@ -1,18 +1,18 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 02/10] aacraid: Fix RRQ overload
-Date: Wed, 02 Dec 2015 10:26:41 +0100
-Message-ID: <1449048401.3103.42.camel@suse.de>
+Subject: Re: [PATCH 03/10] aacraid: Added EEH support
+Date: Wed, 02 Dec 2015 10:41:30 +0100
+Message-ID: <1449049290.3103.44.camel@suse.de>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	 <1448973589-9216-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49727 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53258 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753494AbbLBJ0n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2015 04:26:43 -0500
-In-Reply-To: <1448973589-9216-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S1754914AbbLBJld (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2015 04:41:33 -0500
+In-Reply-To: <1448973589-9216-4-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -21,149 +21,207 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 On Tue, 2015-12-01 at 04:39 -0800, Raghava Aditya Renukunta wrote:
 > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >=20
-> The driver utilizes an array of atomic variables to keep track of
-> IO submissions to each vector. To submit an IO multiple threads
-> iterate through the array to find a vector which has empty slots
-> to send an IO. The reading and updating of the variable is not atomic=
-,
-> causing race conditions when a thread uses a full vector to
-> submit an IO.
->=20
-> Fixed by mapping each FIB to a vector, the submission path then uses
-> said vector to submit IO thereby removing the possibly of a race
-> condition.The vector assignment is started from 1 since vector 0 is
-> reserved for the use of AIF management FIBS.If the number of MSIx
-> vectors is 1 (MSI or INTx mode) then all the fibs are allocated to
-> vector 0.
+> Added support for PCI EEH(extended error handling).
 >=20
 > Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs=
 =2Ecom>
 > ---
-> =C2=A0drivers/scsi/aacraid/aacraid.h |=C2=A0=C2=A01 +
-> =C2=A0drivers/scsi/aacraid/commsup.c | 12 ++++++++++++
-> =C2=A0drivers/scsi/aacraid/src.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0| 30 ++=
-+++++-----------------------
-> =C2=A03 files changed, 20 insertions(+), 23 deletions(-)
+> =C2=A0drivers/scsi/aacraid/aacraid.h |=C2=A0=C2=A0=C2=A01 +
+> =C2=A0drivers/scsi/aacraid/linit.c=C2=A0=C2=A0=C2=A0| 138
+> +++++++++++++++++++++++++++++++++++++++++
+> =C2=A02 files changed, 139 insertions(+)
 >=20
 > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
 craid.h
-> index da227e8..d133c4a 100644
+> index d133c4a..594de5f 100644
 > --- a/drivers/scsi/aacraid/aacraid.h
 > +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -944,6 +944,7 @@ struct fib {
-> =C2=A0	=C2=A0*/
-> =C2=A0	struct list_head	fiblink;
-> =C2=A0	void			*data;
-> +	u32			vector_no;
-> =C2=A0	struct hw_fib		*hw_fib_va;		/* Actual
-> shared object */
-> =C2=A0	dma_addr_t		hw_fib_pa;		/* physical
-> address of hw_fib*/
+> @@ -1235,6 +1235,7 @@ struct aac_dev
+> =C2=A0	struct msix_entry	msixentry[AAC_MAX_MSIX];
+> =C2=A0	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+> =C2=A0	u8			adapter_shutdown;
+> +	u32			handle_pci_error;
 > =C2=A0};
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/co=
-mmsup.c
-> index b5b653c..b257d3b 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -104,6 +104,7 @@ int aac_fib_setup(struct aac_dev * dev)
-> =C2=A0	struct hw_fib *hw_fib;
-> =C2=A0	dma_addr_t hw_fib_pa;
-> =C2=A0	int i;
-> +	u32 vector =3D 1;
 > =C2=A0
-> =C2=A0	while (((i =3D fib_map_alloc(dev)) =3D=3D -ENOMEM)
-> =C2=A0	=C2=A0&& (dev->scsi_host_ptr->can_queue > (64 - AAC_NUM_MGT_FI=
-B))) {
-> @@ -150,6 +151,17 @@ int aac_fib_setup(struct aac_dev * dev)
-> =C2=A0			dev->max_fib_size + sizeof(struct
-> aac_fib_xporthdr));
-> =C2=A0		hw_fib_pa =3D hw_fib_pa +
-> =C2=A0			dev->max_fib_size + sizeof(struct aac_fib_xporthdr);
+> =C2=A0#define aac_adapter_interrupt(dev) \
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/lini=
+t.c
+> index fa0fc44..0147210 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -38,6 +38,7 @@
+> =C2=A0#include <linux/module.h>
+> =C2=A0#include <linux/moduleparam.h>
+> =C2=A0#include <linux/pci.h>
+> +#include <linux/aer.h>
+> =C2=A0#include <linux/pci-aspm.h>
+> =C2=A0#include <linux/slab.h>
+> =C2=A0#include <linux/mutex.h>
+> @@ -1298,6 +1299,9 @@ static int aac_probe_one(struct pci_dev *pdev, =
+const
+> struct pci_device_id *id)
+> =C2=A0		goto out_deinit;
+> =C2=A0	scsi_scan_host(shost);
+> =C2=A0
+> +	pci_enable_pcie_error_reporting(pdev);
+> +	pci_save_state(pdev);
 > +
-> +		if ((dev->max_msix =3D=3D 1) ||
-> +		=C2=A0=C2=A0(i > ((dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB=
- -
-> 1)
-> +			- dev->vector_cap))) {
-> +			fibptr->vector_no =3D 0;
-> +		} else {
-> +			fibptr->vector_no =3D vector;
-> +			vector++;
-> +			if (vector =3D=3D dev->max_msix)
-> +				vector =3D 1;
+> =C2=A0	return 0;
+> =C2=A0
+> =C2=A0 out_deinit:
+> @@ -1501,6 +1505,139 @@ static void aac_remove_one(struct pci_dev *pd=
+ev)
+> =C2=A0	}
+> =C2=A0}
+> =C2=A0
+> +void aac_flush_ios(struct aac_dev *aac)
+> +{
+> +	int i;
+> +	struct scsi_cmnd *cmd;
+> +
+> +	for (i =3D 0; i < aac->scsi_host_ptr->can_queue; i++) {
+> +		cmd =3D (struct scsi_cmnd *)aac->fibs[i].callback_data;
+> +		if (cmd && (cmd->SCp.phase =3D=3D AAC_OWNER_FIRMWARE)) {
+> +			scsi_dma_unmap(cmd);
+> +			aac_fib_free_tag(&aac->fibs[i]);
+> +
+> +			if (aac->handle_pci_error)
+> +				cmd->result =3D DID_NO_CONNECT << 16;
+> +			else
+> +				cmd->result =3D DID_RESET << 16;
+> +
+> +			cmd->scsi_done(cmd);
 > +		}
-> =C2=A0	}
-> =C2=A0	/*
-> =C2=A0	=C2=A0*	Add the fib chain to the free list
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> index 2aa34ea..bc0203f 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -156,8 +156,8 @@ static irqreturn_t aac_src_intr_message(int irq, =
-void
-> *dev_id)
-> =C2=A0				break;
-> =C2=A0			if (dev->msi_enabled && dev->max_msix > 1)
-> =C2=A0				atomic_dec(&dev-
-> >rrq_outstanding[vector_no]);
-> -			aac_intr_normal(dev, handle-1, 0, isFastResponse,
-> NULL);
-> =C2=A0			dev->host_rrq[index++] =3D 0;
-> +			aac_intr_normal(dev, handle-1, 0, isFastResponse,
-> NULL);
-> =C2=A0			if (index =3D=3D (vector_no + 1) * dev->vector_cap)
-> =C2=A0				index =3D vector_no * dev->vector_cap;
-> =C2=A0			dev->host_rrq_idx[vector_no] =3D index;
-> @@ -452,36 +452,20 @@ static int aac_src_deliver_message(struct fib *=
-fib)
-> =C2=A0#endif
-> =C2=A0
-> =C2=A0	u16 hdr_size =3D le16_to_cpu(fib->hw_fib_va->header.Size);
-> +	u16 vector_no;
-> =C2=A0
-> =C2=A0	atomic_inc(&q->numpending);
-> =C2=A0
-> =C2=A0	if (dev->msi_enabled && fib->hw_fib_va->header.Command !=3D Ai=
-fRequest
-> &&
-> =C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0dev->max_msix > 1) {
-> -		u_int16_t vector_no, first_choice =3D 0xffff;
-> -
-> -		vector_no =3D dev->fibs_pushed_no % dev->max_msix;
-> -		do {
-> -			vector_no +=3D 1;
-> -			if (vector_no =3D=3D dev->max_msix)
-> -				vector_no =3D 1;
-> -			if (atomic_read(&dev->rrq_outstanding[vector_no]) <
-> -			=C2=A0=C2=A0=C2=A0=C2=A0dev->vector_cap)
-> -				break;
-> -			if (0xffff =3D=3D first_choice)
-> -				first_choice =3D vector_no;
-> -			else if (vector_no =3D=3D first_choice)
-> -				break;
-> -		} while (1);
-> -		if (vector_no =3D=3D first_choice)
-> -			vector_no =3D 0;
-> -		atomic_inc(&dev->rrq_outstanding[vector_no]);
-> -		if (dev->fibs_pushed_no =3D=3D 0xffffffff)
-> -			dev->fibs_pushed_no =3D 0;
-> -		else
-> -			dev->fibs_pushed_no++;
-> +		vector_no =3D fib->vector_no;
-> =C2=A0		fib->hw_fib_va->header.Handle +=3D (vector_no << 16);
-> +	} else {
-> +		vector_no =3D 0;
-> =C2=A0	}
-> =C2=A0
-> +	atomic_inc(&dev->rrq_outstanding[vector_no]);
+> +	}
+> +}
 > +
-> =C2=A0	if (dev->comm_interface =3D=3D AAC_COMM_MESSAGE_TYPE2) {
-> =C2=A0		/* Calculate the amount to the fibsize bits */
-> =C2=A0		fibsize =3D (hdr_size + 127) / 128 - 1;
+> +pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+> +					enum pci_channel_state error)
+> +{
+> +	struct Scsi_Host *shost =3D pci_get_drvdata(pdev);
+> +	struct aac_dev *aac =3D shost_priv(shost);
+> +
+> +	dev_err(&pdev->dev, "aacraid: PCI error detected %x\n", error);
+> +
+> +	switch (error) {
+> +	case pci_channel_io_normal:
+> +		return PCI_ERS_RESULT_CAN_RECOVER;
+> +	case pci_channel_io_frozen:
+> +
+> +		aac->handle_pci_error =3D 1;
+> +
+> +		scsi_block_requests(aac->scsi_host_ptr);
+> +		aac_flush_ios(aac);
+> +		aac_release_resources(aac);
+> +
+> +		pci_disable_pcie_error_reporting(pdev);
+> +		aac_adapter_ioremap(aac, 0);
+> +
+> +		return PCI_ERS_RESULT_NEED_RESET;
+> +	case pci_channel_io_perm_failure:
+> +		aac->handle_pci_error =3D 1;
+> +		aac_flush_ios(aac);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	return PCI_ERS_RESULT_NEED_RESET;
+> +}
+> +
+> +pci_ers_result_t aac_pci_mmio_enabled(struct pci_dev *pdev)
+> +{
+> +	dev_err(&pdev->dev, "aacraid: PCI error - mmio enabled\n");
+> +	return PCI_ERS_RESULT_NEED_RESET;
+> +}
+> +
+> +pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
+> +{
+> +	dev_err(&pdev->dev, "aacraid: PCI error - slot reset\n");
+> +	pci_restore_state(pdev);
+> +	if (pci_enable_device(pdev)) {
+> +		dev_warn(&pdev->dev,
+> +			"aacraid: failed to enable slave\n");
+> +		goto fail_device;
+> +	}
+> +
+> +	pci_set_master(pdev);
+> +
+> +	if (pci_enable_device_mem(pdev)) {
+> +		dev_err(&pdev->dev, "pci_enable_device_mem failed\n");
+> +		goto fail_device;
+> +	}
+> +
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +
+> +fail_device:
+> +	dev_err(&pdev->dev, "aacraid: PCI error - slot reset failed\n");
+> +	return PCI_ERS_RESULT_DISCONNECT;
+> +}
+> +
+> +
+> +void aac_pci_resume(struct pci_dev *pdev)
+> +{
+> +	struct Scsi_Host *shost =3D pci_get_drvdata(pdev);
+> +	struct scsi_device *sdev =3D NULL;
+> +	struct aac_dev *aac =3D (struct aac_dev *)shost_priv(shost);
+> +
+> +	pci_cleanup_aer_uncorrect_error_status(pdev);
+> +
+> +	if (aac_adapter_ioremap(aac, aac->base_size)) {
+> +
+> +		dev_err(&pdev->dev, "aacraid: ioremap failed\n");
+> +		/* remap failed, go back ... */
+> +		aac->comm_interface =3D AAC_COMM_PRODUCER;
+> +		if (aac_adapter_ioremap(aac, AAC_MIN_FOOTPRINT_SIZE)) {
+> +			dev_warn(&pdev->dev,
+> +				"aacraid: unable to map adapter.\n");
+> +
+> +			return;
+> +		}
+> +	}
+> +
+> +	msleep(10000);
+> +
+> +	aac_acquire_resources(aac);
+> +
+> +	/*
+> +	=C2=A0* reset this flag to unblock ioctl() as it was set
+> +	=C2=A0* at aac_send_shutdown() to block ioctls from upperlayer
+> +	=C2=A0*/
+> +	aac->adapter_shutdown =3D 0;
+> +	aac->handle_pci_error =3D 0;
+> +
+> +	shost_for_each_device(sdev, shost)
+> +		if (sdev->sdev_state =3D=3D SDEV_OFFLINE)
+> +			sdev->sdev_state =3D SDEV_RUNNING;
+> +	scsi_unblock_requests(aac->scsi_host_ptr);
+> +	scsi_scan_host(aac->scsi_host_ptr);
+> +	pci_save_state(pdev);
+> +
+> +	dev_err(&pdev->dev, "aacraid: PCI error - resume\n");
+> +}
+> +
+> +static struct pci_error_handlers aac_pci_err_handler =3D {
+> +	.error_detected		=3D aac_pci_error_detected,
+> +	.mmio_enabled		=3D aac_pci_mmio_enabled,
+> +	.slot_reset		=3D aac_pci_slot_reset,
+> +	.resume			=3D aac_pci_resume,
+> +};
+> +
+> =C2=A0static struct pci_driver aac_pci_driver =3D {
+> =C2=A0	.name		=3D AAC_DRIVERNAME,
+> =C2=A0	.id_table	=3D aac_pci_tbl,
+> @@ -1511,6 +1648,7 @@ static struct pci_driver aac_pci_driver =3D {
+> =C2=A0	.resume		=3D aac_resume,
+> =C2=A0#endif
+> =C2=A0	.shutdown	=3D aac_shutdown,
+> +	.err_handler=C2=A0=C2=A0=C2=A0=C2=A0=3D &aac_pci_err_handler,
+> =C2=A0};
+> =C2=A0
+> =C2=A0static int __init aac_init(void)
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-=46ixes:=C2=A0495c0217 "aacraid: MSI-x support"
-Cc: stable@vger.kernel.org=C2=A0# v4.1
+I really think the new aac_flush_io() and pci error hanler methods shou=
+ld be
+static as they're nowhere used outside of this file's scope.=C2=A0
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
