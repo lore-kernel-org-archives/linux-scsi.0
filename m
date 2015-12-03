@@ -1,53 +1,54 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/10] aacraid: Fix AIF triggered IOP_RESET
-Date: Thu, 03 Dec 2015 09:03:32 +0100
-Message-ID: <1449129812.3311.3.camel@suse.de>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1448973589-9216-8-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
-	 <1449050432.3103.52.camel@suse.de>
-	 <198D06D448A18D4E93F08FB849C4E39D7D1EE83A@BBYEXM01.pmc-sierra.internal>
+Subject: Re: [PATCH 1/5] libsas: allow async aborts
+Date: Thu, 03 Dec 2015 09:17:02 +0100
+Message-ID: <1449130622.3311.4.camel@suse.de>
+References: <1449127063-94512-1-git-send-email-hare@suse.de>
+	 <1449127063-94512-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57522 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58044 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757675AbbLCIDe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2015 03:03:34 -0500
-In-Reply-To: <198D06D448A18D4E93F08FB849C4E39D7D1EE83A@BBYEXM01.pmc-sierra.internal>
+	id S1751355AbbLCIRD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Dec 2015 03:17:03 -0500
+In-Reply-To: <1449127063-94512-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org
 
-Hi Raghava,
-
-On Wed, 2015-12-02 at 22:29 +0000, Raghava Aditya Renukunta wrote:
-> Hello Johannes,
+On Thu, 2015-12-03 at 08:17 +0100, Hannes Reinecke wrote:
+> From: Christoph Hellwig <hch@lst.de>
 >=20
-> > -----Original Message-----
-
-[...]
-
-> Originally the problem was that dev->adapter_shutdown was set after t=
-he
-> Shutdown command was sent to the controller, leading to a race
-> condition=C2=A0=C2=A0If after the controller was shut down and before
-> =C2=A0dev->adapter_shutdown=C2=A0=C2=A0was set , the driver received=C2=
-=A0=C2=A0a AIF
-> =C2=A0command from management tool , it=C2=A0=C2=A0would still be sen=
-t to the=20
-> controller in aac_cfg_ioctl() leading to a=C2=A0=C2=A0IOP_RESET.
+> We now first try to call ->eh_abort_handler from a work queue, but li=
+bsas
+> was always failing that for no good reason.=C2=A0=C2=A0Allow async ab=
+orts.
 >=20
-> A fix would=C2=A0=C2=A0be to set dev->adapter_shutdown at the very=20
-> beginning of aac_send_shutdown().
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> =C2=A0drivers/scsi/libsas/sas_scsi_host.c | 3 ---
+> =C2=A01 file changed, 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+> b/drivers/scsi/libsas/sas_scsi_host.c
+> index 519dac4..37a2a84 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -491,9 +491,6 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+> =C2=A0	struct Scsi_Host *host =3D cmd->device->host;
+> =C2=A0	struct sas_internal *i =3D to_sas_internal(host->transportt);
+> =C2=A0
+> -	if (current !=3D host->ehandler)
+> -		return FAILED;
+> -
+> =C2=A0	if (!i->dft->lldd_abort_task)
+> =C2=A0		return FAILED;
+> =C2=A0
 
-
-That's what I though as well
-
-	Johannes
-
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
