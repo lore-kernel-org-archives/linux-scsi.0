@@ -1,51 +1,56 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: Remove stale variables
-Date: Thu, 03 Dec 2015 10:23:23 +0100
-Message-ID: <1449134603.3311.12.camel@suse.de>
-References: <1449125855-66372-1-git-send-email-hare@suse.de>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Linux kernels 4.3+ mess up MPT2SAS configs
+Date: Thu, 3 Dec 2015 07:32:49 -0500
+Message-ID: <22112.13937.759625.629277@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33654 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759415AbbLCJXY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2015 04:23:24 -0500
-In-Reply-To: <1449125855-66372-1-git-send-email-hare@suse.de>
+Received: from mailrelay.lanline.com ([216.187.10.16]:56273 "EHLO
+	mailrelay.lanline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757526AbbLCMuq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2015 07:50:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@odin.com>, linux-scsi@vger.kernel.org
+To: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+Cc: nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com
 
-On Thu, 2015-12-03 at 07:57 +0100, Hannes Reinecke wrote:
-> With commit 83ea0e5e3501 these variables became obsolete,
-> but weren't removed.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
-> =C2=A0drivers/scsi/device_handler/scsi_dh_alua.c | 2 --
-> =C2=A01 file changed, 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index f100cbb..5a328bf 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -320,8 +320,6 @@ static int alua_check_tpgs(struct scsi_device *sd=
-ev)
-> =C2=A0 */
-> =C2=A0static int alua_check_vpd(struct scsi_device *sdev, struct alua=
-_dh_data *h)
-> =C2=A0{
-> -	unsigned char *d;
-> -	unsigned char __rcu *vpd_pg83;
-> =C2=A0	int rel_port =3D -1, group_id;
-> =C2=A0
-> =C2=A0	group_id =3D scsi_vpd_tpg_id(sdev, &rel_port);
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi,
+
+I've got an LSI MPT2SAS controller in my home system, great board,
+running well.  When I try to use kernels newer than approximately
+4.3.0, the default Kconfig entry goes away because of what looks like
+a merge of the mpt2sas and mpt3sas drivers.
+
+In my hand made 4.2.6 config I have:
+
+   CONFIG_SCSI_MPT2SAS=m
+   CONFIG_SCSI_MPT2SAS_MAX_SGE=128
+   # CONFIG_SCSI_MPT2SAS_LOGGING is not set
+   # CONFIG_SCSI_MPT3SAS is not set
+
+But when I pull down the 4.4-rc3 release and do:
+
+    make mrproper
+    cp /boot/config-4.2.6 .config
+    make oldconfig
+
+I silently get my CONFIG_SCSI_MPT2SAS entry removed, and the
+CONFIG_SCSI_MPT3SAS is still left unconfigured!  This is a pain when
+you boot up and your home directory and other data files aren't
+available...
+
+    > grep MPT .config
+    CONFIG_PREEMPT_NOTIFIERS=y
+    # CONFIG_PREEMPT_NONE is not set
+    CONFIG_PREEMPT_VOLUNTARY=y
+    # CONFIG_PREEMPT is not set
+    CONFIG_CB710_DEBUG_ASSUMPTIONS=y
+    # CONFIG_SCSI_MPT3SAS is not set
+
+Can we please get this fixed so that moving forward this is setup
+properly?
+
+Thanks,
+John
