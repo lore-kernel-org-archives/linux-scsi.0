@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/5] scsi: make scsi_eh_scmd_add() always succeed
-Date: Thu,  3 Dec 2015 08:17:40 +0100
-Message-ID: <1449127063-94512-3-git-send-email-hare@suse.de>
+Subject: [PATCH 3/5] scsi: make eh_eflags persistent
+Date: Thu,  3 Dec 2015 08:17:41 +0100
+Message-ID: <1449127063-94512-4-git-send-email-hare@suse.de>
 References: <1449127063-94512-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56196 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56198 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753709AbbLCHRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754278AbbLCHRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 3 Dec 2015 02:17:46 -0500
 In-Reply-To: <1449127063-94512-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,133 +14,87 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-scsi_eh_scmd_add() currently only will fail if no
-error handler thread is started (which will never be the
-case) or if the state machine encounters an illegal transition.
-
-But if we're encountering an invalid state transition
-chances is we cannot fixup things with the error handler.
-So better add a WARN_ON for illegal host states and
-make scsi_dh_scmd_add() a void function.
+To detect if a failed command has been retried we must not
+clear scmd->eh_eflags when EH finishes.
+The flag should be persistent throughout the lifetime
+of the command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 39 +++++++++++++--------------------------
- drivers/scsi/scsi_lib.c   |  4 ++--
- drivers/scsi/scsi_priv.h  |  2 +-
- 3 files changed, 16 insertions(+), 29 deletions(-)
+ Documentation/scsi/scsi_eh.txt | 3 ---
+ drivers/scsi/scsi_error.c      | 4 ++--
+ include/scsi/scsi_eh.h         | 1 +
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
+diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+index 8638f61..745eed5 100644
+--- a/Documentation/scsi/scsi_eh.txt
++++ b/Documentation/scsi/scsi_eh.txt
+@@ -264,7 +264,6 @@ scmd->allowed.
+  3. scmd recovered
+     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
+ 	- shost->host_failed--
+-	- clear scmd->eh_eflags
+ 	- scsi_setup_cmd_retry()
+ 	- move from local eh_work_q to local eh_done_q
+     LOCKING: none
+@@ -452,8 +451,6 @@ except for #1 must be implemented by eh_strategy_handler().
+ 
+  - shost->host_failed is zero.
+ 
+- - Each scmd's eh_eflags field is cleared.
+-
+  - Each scmd is in such a state that scsi_setup_cmd_retry() on the
+    scmd doesn't make any difference.
+ 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 984ddcb..deb35737 100644
+index deb35737..eb0f19f 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -162,13 +162,7 @@ scmd_eh_abort_handler(struct work_struct *work)
- 		}
- 	}
+@@ -182,7 +182,6 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+ 		/*
+ 		 * Retry after abort failed, escalate to next level.
+ 		 */
+-		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			scmd_printk(KERN_INFO, scmd,
+ 				    "previous abort failed\n"));
+@@ -919,6 +918,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
+ 	ses->result = scmd->result;
+ 	ses->underflow = scmd->underflow;
+ 	ses->prot_op = scmd->prot_op;
++	ses->eh_eflags = scmd->eh_eflags;
  
--	if (!scsi_eh_scmd_add(scmd, 0)) {
--		SCSI_LOG_ERROR_RECOVERY(3,
--			scmd_printk(KERN_WARNING, scmd,
--				    "terminate aborted command\n"));
--		set_host_byte(scmd, DID_TIME_OUT);
--		scsi_finish_command(scmd);
--	}
-+	scsi_eh_scmd_add(scmd, 0);
+ 	scmd->prot_op = SCSI_PROT_NORMAL;
+ 	scmd->eh_eflags = 0;
+@@ -982,6 +982,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
+ 	scmd->result = ses->result;
+ 	scmd->underflow = ses->underflow;
+ 	scmd->prot_op = ses->prot_op;
++	scmd->eh_eflags = ses->eh_eflags;
  }
+ EXPORT_SYMBOL(scsi_eh_restore_cmnd);
  
- /**
-@@ -224,37 +218,32 @@ scsi_abort_command(struct scsi_cmnd *scmd)
-  * scsi_eh_scmd_add - add scsi cmd to error handling.
-  * @scmd:	scmd to run eh on.
-  * @eh_flag:	optional SCSI_EH flag.
-- *
-- * Return value:
-- *	0 on failure.
-  */
--int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
-+void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+@@ -1115,7 +1116,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+ void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
  {
- 	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
--	int ret = 0;
- 
--	if (!shost->ehandler)
--		return 0;
-+	WARN_ON(!shost->ehandler);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-+	WARN_ON(shost->shost_state != SHOST_RUNNING &&
-+		shost->shost_state != SHOST_CANCEL &&
-+		shost->shost_state != SHOST_RECOVERY &&
-+		shost->shost_state != SHOST_CANCEL_RECOVERY);
- 	if (scsi_host_set_state(shost, SHOST_RECOVERY))
--		if (scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY))
--			goto out_unlock;
-+		scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY);
- 
- 	if (shost->eh_deadline != -1 && !shost->last_reset)
- 		shost->last_reset = jiffies;
- 
--	ret = 1;
- 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
- 		eh_flag &= ~SCSI_EH_CANCEL_CMD;
- 	scmd->eh_eflags |= eh_flag;
- 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
- 	shost->host_failed++;
- 	scsi_eh_wakeup(shost);
-- out_unlock:
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	return ret;
+ 	scmd->device->host->host_failed--;
+-	scmd->eh_eflags = 0;
+ 	list_move_tail(&scmd->eh_entry, done_q);
  }
- 
- /**
-@@ -285,13 +274,11 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 		rtn = host->hostt->eh_timed_out(scmd);
- 
- 	if (rtn == BLK_EH_NOT_HANDLED) {
--		if (!host->hostt->no_async_abort &&
--		    scsi_abort_command(scmd) == SUCCESS)
--			return BLK_EH_NOT_HANDLED;
--
--		set_host_byte(scmd, DID_TIME_OUT);
--		if (!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))
--			rtn = BLK_EH_HANDLED;
-+		if (host->hostt->no_async_abort ||
-+		    scsi_abort_command(scmd) != SUCCESS) {
-+			set_host_byte(scmd, DID_TIME_OUT);
-+			scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD);
-+		}
- 	}
- 
- 	return rtn;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fa6b2c4..2dd7d0a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1647,8 +1647,8 @@ static void scsi_softirq_done(struct request *rq)
- 			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
- 			break;
- 		default:
--			if (!scsi_eh_scmd_add(cmd, 0))
--				scsi_finish_command(cmd);
-+			scsi_eh_scmd_add(cmd, 0);
-+			break;
- 	}
- }
- 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 27b4d0a..8c26823 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -71,7 +71,7 @@ extern enum blk_eh_timer_return scsi_times_out(struct request *req);
- extern int scsi_error_handler(void *host);
- extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
- extern void scsi_eh_wakeup(struct Scsi_Host *shost);
--extern int scsi_eh_scmd_add(struct scsi_cmnd *, int);
-+extern void scsi_eh_scmd_add(struct scsi_cmnd *, int);
- void scsi_eh_ready_devs(struct Scsi_Host *shost,
- 			struct list_head *work_q,
- 			struct list_head *done_q);
+ EXPORT_SYMBOL(scsi_eh_finish_cmd);
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index dbb8c64..f2f876c 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -30,6 +30,7 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
+ struct scsi_eh_save {
+ 	/* saved state */
+ 	int result;
++	int eh_eflags;
+ 	enum dma_data_direction data_direction;
+ 	unsigned underflow;
+ 	unsigned char cmd_len;
 -- 
 1.8.5.6
 
