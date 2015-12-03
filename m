@@ -1,100 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] scsi: make eh_eflags persistent
-Date: Thu,  3 Dec 2015 08:17:41 +0100
-Message-ID: <1449127063-94512-4-git-send-email-hare@suse.de>
+Subject: [PATCH 1/5] libsas: allow async aborts
+Date: Thu,  3 Dec 2015 08:17:39 +0100
+Message-ID: <1449127063-94512-2-git-send-email-hare@suse.de>
 References: <1449127063-94512-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56198 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56195 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754278AbbLCHRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752465AbbLCHRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 3 Dec 2015 02:17:46 -0500
 In-Reply-To: <1449127063-94512-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org
 
-To detect if a failed command has been retried we must not
-clear scmd->eh_eflags when EH finishes.
-The flag should be persistent throughout the lifetime
-of the command.
+From: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+We now first try to call ->eh_abort_handler from a work queue, but libsas
+was always failing that for no good reason.  Allow async aborts.
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/scsi/scsi_eh.txt | 3 ---
- drivers/scsi/scsi_error.c      | 4 ++--
- include/scsi/scsi_eh.h         | 1 +
- 3 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-index 8638f61..745eed5 100644
---- a/Documentation/scsi/scsi_eh.txt
-+++ b/Documentation/scsi/scsi_eh.txt
-@@ -264,7 +264,6 @@ scmd->allowed.
-  3. scmd recovered
-     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
- 	- shost->host_failed--
--	- clear scmd->eh_eflags
- 	- scsi_setup_cmd_retry()
- 	- move from local eh_work_q to local eh_done_q
-     LOCKING: none
-@@ -452,8 +451,6 @@ except for #1 must be implemented by eh_strategy_handler().
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 519dac4..37a2a84 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -491,9 +491,6 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
  
-  - shost->host_failed is zero.
- 
-- - Each scmd's eh_eflags field is cleared.
+-	if (current != host->ehandler)
+-		return FAILED;
 -
-  - Each scmd is in such a state that scsi_setup_cmd_retry() on the
-    scmd doesn't make any difference.
+ 	if (!i->dft->lldd_abort_task)
+ 		return FAILED;
  
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index deb35737..eb0f19f 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -182,7 +182,6 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 		/*
- 		 * Retry after abort failed, escalate to next level.
- 		 */
--		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "previous abort failed\n"));
-@@ -919,6 +918,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	ses->result = scmd->result;
- 	ses->underflow = scmd->underflow;
- 	ses->prot_op = scmd->prot_op;
-+	ses->eh_eflags = scmd->eh_eflags;
- 
- 	scmd->prot_op = SCSI_PROT_NORMAL;
- 	scmd->eh_eflags = 0;
-@@ -982,6 +982,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	scmd->result = ses->result;
- 	scmd->underflow = ses->underflow;
- 	scmd->prot_op = ses->prot_op;
-+	scmd->eh_eflags = ses->eh_eflags;
- }
- EXPORT_SYMBOL(scsi_eh_restore_cmnd);
- 
-@@ -1115,7 +1116,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
- void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
- {
- 	scmd->device->host->host_failed--;
--	scmd->eh_eflags = 0;
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
- EXPORT_SYMBOL(scsi_eh_finish_cmd);
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index dbb8c64..f2f876c 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -30,6 +30,7 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
- struct scsi_eh_save {
- 	/* saved state */
- 	int result;
-+	int eh_eflags;
- 	enum dma_data_direction data_direction;
- 	unsigned underflow;
- 	unsigned char cmd_len;
 -- 
 1.8.5.6
 
