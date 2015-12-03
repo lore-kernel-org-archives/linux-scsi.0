@@ -1,106 +1,93 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH 08/10] aacraid: Disable device ID wildcard
-Date: Thu, 3 Dec 2015 21:32:18 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EF169@BBYEXM01.pmc-sierra.internal>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <566065C2.7090603@redhat.com>
+From: Andrea Gelmini <andrea.gelmini@gelma.net>
+Subject: Re: BUG: KASAN: slab-out-of-bounds in
+ ses_enclosure_data_process+0x900/0xe50
+Date: Thu, 3 Dec 2015 23:20:04 +0100
+Message-ID: <20151203222004.GA22311@glen>
+References: <20151201202053.GA4753@glen>
+ <1449097101.2203.67.camel@HansenPartnership.com>
+ <20151203203656.GA9278@glen>
+ <1449176346.2187.19.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:38339 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750780AbbLCVcT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2015 16:32:19 -0500
-In-Reply-To: <566065C2.7090603@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="4Ckj6UjgE2iN1+kY"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1449176346.2187.19.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
-
-Hello Tomas,
 
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Thursday, December 3, 2015 7:55 AM
-> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
-> scsi@vger.kernel.org
-> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
-> aacraid@pmc-sierra.com; Rich Bono
-> Subject: Re: [PATCH 08/10] aacraid: Disable device ID wildcard
-> 
-> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
-> > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> >
-> > Added module parameter that disables device ID wild card binding.
-> 
-> What is the use case for this?
-> 
-> It looks like something which could be solved in the modprobe config,
-> without a module option.
+--4Ckj6UjgE2iN1+kY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This will enable us to prevent aacraid from loading for PCI devices that match
-device ID wildcards. Enabling us to use say a new driver for future devices.
+On Thu, Dec 03, 2015 at 12:59:06PM -0800, James Bottomley wrote:
+> sg_map -i
+>=20
+> in your system, you should see something with an inquiry string like
+> enclosure.  It's the /dev/sg<n> of that you need to run sg_ses on.
 
-> Cheers,
-> Tomas
-> 
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <raghavaaditya.renukunta@pmcs.com>
-> > ---
-> >  drivers/scsi/aacraid/aachba.c  | 5 +++++
-> >  drivers/scsi/aacraid/aacraid.h | 1 +
-> >  drivers/scsi/aacraid/linit.c   | 5 +++++
-> >  3 files changed, 11 insertions(+)
-> >
-> > diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> > index 06cbab8..87f4f21 100644
-> > --- a/drivers/scsi/aacraid/aachba.c
-> > +++ b/drivers/scsi/aacraid/aachba.c
-> > @@ -315,6 +315,11 @@ MODULE_PARM_DESC(wwn, "Select a WWN type
-> for the arrays:\n"
-> >  	"\t1 - Array Meta Data Signature (default)\n"
-> >  	"\t2 - Adapter Serial Number");
-> >
-> > +int aac_disable_device_id_wildcards;
-> > +module_param_named(disable_device_id_wildcards,
-> > +	aac_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
-> > +MODULE_PARM_DESC(disable_device_id_wildcards,
-> > +	"Disable device ID wildcards");
-> >
-> >  static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
-> >  		struct fib *fibptr) {
-> > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> > index 594de5f..7708a2c 100644
-> > --- a/drivers/scsi/aacraid/aacraid.h
-> > +++ b/drivers/scsi/aacraid/aacraid.h
-> > @@ -2177,3 +2177,4 @@ extern int aac_commit;
-> >  extern int update_interval;
-> >  extern int check_interval;
-> >  extern int aac_check_reset;
-> > +extern int aac_disable_device_id_wildcards;
-> > diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> > index 3a4dbe7..2094842 100644
-> > --- a/drivers/scsi/aacraid/linit.c
-> > +++ b/drivers/scsi/aacraid/linit.c
-> > @@ -1135,6 +1135,11 @@ static int aac_probe_one(struct pci_dev *pdev,
-> const struct pci_device_id *id)
-> >  	u64 dmamask;
-> >  	extern int aac_sync_mode;
-> >
-> > +	if (aac_disable_device_id_wildcards &&
-> > +		id->subvendor == PCI_ANY_ID &&
-> > +		id->subdevice == PCI_ANY_ID)
-> > +		return -ENODEV;
-> > +
-> >  	/*
-> >  	 * Only series 7 needs freset.
-> >  	 */
+root@glen:/home/gelma# sg_map -i
+/dev/sg0  /dev/sda  ATA       Samsung SSD 850   1B6Q
+/dev/sg1  /dev/sr0  HL-DT-ST  DVDRAM GU40N      QX23
+/dev/sg2  /dev/sdb  WD        My Passport 0820  1007
+/dev/sg3  WD        SES Device        1007
 
-Regards,
-Raghava Aditya
+And following Douglas' instructions:
+
+root@glen:/home/gelma# lsscsi -gs
+[0:0:0:0]    disk    ATA      Samsung SSD 850  1B6Q  /dev/sda   /dev/sg0   =
+1.02TB
+[1:0:0:0]    cd/dvd  HL-DT-ST DVDRAM GU40N     QX23  /dev/sr0   /dev/sg1   =
+     -
+[8:0:0:0]    disk    WD       My Passport 0820 1007  /dev/sdb   /dev/sg2   =
+2.00TB
+[8:0:0:1]    enclosu WD       SES Device       1007  -          /dev/sg3   =
+   =20
+
+root@glen:/home/gelma# sg_ses /dev/sg3
+  WD        SES Device        1007
+Supported diagnostic pages:
+  Supported Diagnostic Pages [sdp] [0x0]
+  Short Enclosure Status (SES) [ses] [0x8]
+  <unknown> [0x80]
+  <unknown> [0x83]
+  <unknown> [0x84]
+  <unknown> [0x85]
+
+
+Well, if it's better for you, I can give you root access to a machine with =
+this device
+connected to.
+
+Thanks a lot for your time,
+Andrea
+
+--4Ckj6UjgE2iN1+kY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQJ8BAEBCgBmBQJWYMAUXxSAAAAAAC4AKGlzc3Vlci1mcHJAbm90YXRpb25zLm9w
+ZW5wZ3AuZmlmdGhob3JzZW1hbi5uZXRFQTQyRTkzNjBCNzVERDZFODMyNTQ3RjdB
+NDMwOTA3NUYwNTk2MEY2AAoJEKQwkHXwWWD2+KQP/jMHBp2xdcYSr+CbHlLPERLC
+7IOkYIFi8/S8SLAD2nwHQ1Mc/MWnZLLSLlDfEEQofND99OcdYHuUgdEl/1EpPAqO
+jU9jw6pMHQAvqcS2mtJuWWNyr2fIRgnyArKTkH6rXP78ui016ZInzTVCx2lc4s1L
+ttUjaTuN/i4d2OrnQozLIlGHLGpXrSRrfAFXIjOLIwK1yQHfnA42uay30WoGajdo
+qHIyW5lxJL2AI8BIfEC9Z0YJckCaqWyn7rAuDWqh3ElAR5cbX3YVoF9r46hPU5QX
+GIUReJlnoBcI+Mxui6zj0yT0PfLfuL4XVtNcnx/gfmuYyER2dNp2u30vpgdCd1qM
+CY8mVW/GgguTq0bOK0LC/IPESdqvu8hIjaoGgMO/0zOIna2SEEMwbVU6jtntKApJ
+Tb7R8KcoBQzDp+WoCOXGV5Su9Ew9530RHBgLtLweASYJFq7u+iNv73rjPQzHX0ah
+2SAsNjiVQ8AQNGj04/DVoaEsHPkglAESJCUUQaDDmhDa2o/LVjkLgaOIDifvHK7J
+qeP1oxSxFPfkx5cCJ1mNNBnSxGIMPgyWSsOd9Hc6MbbloolGJblcwN5ZT0RCj98H
+Dh3Hx6ml6kDvYZDglSRfI1BXFsJpSbKVnwlzz9oDdgErQQB1WWtLgsNgxL1Vpp3h
+22Iq0/q5D36IjXGxp5Lq
+=efcr
+-----END PGP SIGNATURE-----
+
+--4Ckj6UjgE2iN1+kY--
