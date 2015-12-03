@@ -1,83 +1,22 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 08/10] aacraid: Disable device ID wildcard
-Date: Thu, 3 Dec 2015 16:54:42 +0100
-Message-ID: <566065C2.7090603@redhat.com>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi_dh_alua: Remove stale variables
+Date: Thu, 3 Dec 2015 17:43:30 +0100
+Message-ID: <20151203164330.GA14775@lst.de>
+References: <1449125855-66372-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56154 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:35629 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757189AbbLCPyp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2015 10:54:45 -0500
-In-Reply-To: <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S1751790AbbLCQnb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Dec 2015 11:43:31 -0500
+Content-Disposition: inline
+In-Reply-To: <1449125855-66372-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
-Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@odin.com>, linux-scsi@vger.kernel.org
 
-On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
-> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
->
-> Added module parameter that disables device ID wild card binding.
+Looks fine,
 
-What is the use case for this?
-
-It looks like something which could be solved in the modprobe config,
-without a module option.
-
-Cheers,
-Tomas
-
->
-> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> ---
->  drivers/scsi/aacraid/aachba.c  | 5 +++++
->  drivers/scsi/aacraid/aacraid.h | 1 +
->  drivers/scsi/aacraid/linit.c   | 5 +++++
->  3 files changed, 11 insertions(+)
->
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> index 06cbab8..87f4f21 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -315,6 +315,11 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the arrays:\n"
->  	"\t1 - Array Meta Data Signature (default)\n"
->  	"\t2 - Adapter Serial Number");
->  
-> +int aac_disable_device_id_wildcards;
-> +module_param_named(disable_device_id_wildcards,
-> +	aac_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
-> +MODULE_PARM_DESC(disable_device_id_wildcards,
-> +	"Disable device ID wildcards");
->  
->  static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
->  		struct fib *fibptr) {
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 594de5f..7708a2c 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -2177,3 +2177,4 @@ extern int aac_commit;
->  extern int update_interval;
->  extern int check_interval;
->  extern int aac_check_reset;
-> +extern int aac_disable_device_id_wildcards;
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 3a4dbe7..2094842 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -1135,6 +1135,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	u64 dmamask;
->  	extern int aac_sync_mode;
->  
-> +	if (aac_disable_device_id_wildcards &&
-> +		id->subvendor == PCI_ANY_ID &&
-> +		id->subdevice == PCI_ANY_ID)
-> +		return -ENODEV;
-> +
->  	/*
->  	 * Only series 7 needs freset.
->  	 */
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
