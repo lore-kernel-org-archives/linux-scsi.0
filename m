@@ -1,62 +1,38 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH RESEND] cxlflash: a couple off by one bugs
-Date: Wed,  2 Dec 2015 17:26:28 -0600
-Message-ID: <1449098788-21695-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_dh_alua: Remove stale variables
+Date: Thu,  3 Dec 2015 07:57:35 +0100
+Message-ID: <1449125855-66372-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:35403 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757245AbbLBX05 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2015 18:26:57 -0500
-Received: from localhost
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Wed, 2 Dec 2015 16:26:56 -0700
+Received: from mx2.suse.de ([195.135.220.15]:55596 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751418AbbLCG5h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Dec 2015 01:57:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Michael Neuling <mikey@neuling.org>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@odin.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+With commit 83ea0e5e3501 these variables became obsolete,
+but weren't removed.
 
-The "> MAX_CONTEXT" should be ">= MAX_CONTEXT".  Otherwise we go one
-step beyond the end of the cfg->ctx_tbl[] array.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
-This patch was originally sent by Dan Carpenter in September 2015. I had
-based my large patch series that went into 4.4 off of it but this patch
-appears to have not made it in. As a valid fix, I'd like to see this make
-it into 'next'. I've gone ahead and performed the rebase so that it
-applies cleanly.
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 --
+ 1 file changed, 2 deletions(-)
 
- drivers/scsi/cxlflash/superpipe.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index cac2e6a..34b21a0 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -1380,7 +1380,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 	}
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index f100cbb..5a328bf 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -320,8 +320,6 @@ static int alua_check_tpgs(struct scsi_device *sdev)
+  */
+ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+-	unsigned char *d;
+-	unsigned char __rcu *vpd_pg83;
+ 	int rel_port = -1, group_id;
  
- 	ctxid = cxl_process_element(ctx);
--	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
-+	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
- 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
- 		rc = -EPERM;
- 		goto err2;
-@@ -1508,7 +1508,7 @@ static int recover_context(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
- 	}
- 
- 	ctxid = cxl_process_element(ctx);
--	if (unlikely((ctxid > MAX_CONTEXT) || (ctxid < 0))) {
-+	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
- 		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
- 		rc = -EPERM;
- 		goto err1;
+ 	group_id = scsi_vpd_tpg_id(sdev, &rel_port);
 -- 
-2.1.0
+1.8.5.6
 
