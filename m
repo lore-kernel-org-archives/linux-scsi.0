@@ -1,79 +1,124 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: BUG: KASAN: slab-out-of-bounds in
- ses_enclosure_data_process+0x900/0xe50
-Date: Thu, 03 Dec 2015 13:20:04 -0800
-Message-ID: <1449177604.2187.20.camel@HansenPartnership.com>
-References: <20151201202053.GA4753@glen>
-	 <1449097101.2203.67.camel@HansenPartnership.com>
-	 <20151203203656.GA9278@glen>
-	 <1449176346.2187.19.camel@HansenPartnership.com>
-	 <5660B015.5050804@interlog.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: [PATCH 01/10] aacraid: SCSI blk tag support
+Date: Thu, 3 Dec 2015 21:25:23 +0000
+Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EF153@BBYEXM01.pmc-sierra.internal>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-2-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <5660652D.8080501@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5660B015.5050804@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53014 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754019AbbLCVZZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Dec 2015 16:25:25 -0500
+In-Reply-To: <5660652D.8080501@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-On Thu, 2015-12-03 at 16:11 -0500, Douglas Gilbert wrote:
-> On 15-12-03 03:59 PM, James Bottomley wrote:
-> > On Thu, 2015-12-03 at 21:36 +0100, Andrea Gelmini wrote:
-> >> On Wed, Dec 02, 2015 at 02:58:21PM -0800, James Bottomley wrote:
-> >>> On Tue, 2015-12-01 at 21:20 +0100, Andrea Gelmini wrote:
-> >>> OK, this looks like some type of problem with a USB enclosure.  It's
-> >>> probably misreporting something in the mode pages.  can you run sg_ses
-> >>> on whatever /dev/sg<n> the enclosure turns up as?
-> >>
-> >>
-> >> root@glen:/tmp/report# cat sg_ses_usb_hd.txt
-> >>    WD        My Passport 0820  1007
-> >>      disk device (not an enclosure)
-> >> Supported diagnostic pages:
-> >>    Supported Diagnostic Pages [sdp] [0x0]
-> >>    Short Enclosure Status (SES) [ses] [0x8]
-> >>    <unknown> [0x80]
-> >>    <unknown> [0x83]
-> >>    <unknown> [0x84]
-> >>    <unknown> [0x85]
-> >
-> > Actually, I'm afraid that's the wrong device; it's the disk not the
-> > enclosure (that's why sg_ses says not an enclosure)
-> >
-> > If you do
-> >
-> > sg_map -i
-> >
-> > in your system, you should see something with an inquiry string like
-> > enclosure.  It's the /dev/sg<n> of that you need to run sg_ses on.
+Hello Tomas,
+
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Thursday, December 3, 2015 7:52 AM
+> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
+> scsi@vger.kernel.org
+> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
+> aacraid@pmc-sierra.com; Rich Bono
+> Subject: Re: [PATCH 01/10] aacraid: SCSI blk tag support
 > 
-> Or use lsscsi like this and look for lines with 'enclosu' in
-> its output:
->    # lsscsi -gs
-> [3:0:0:0]  disk    ATA     ST3160812AS      D     /dev/sda  /dev/sg0  160GB
-> [6:0:0:0]  disk    SEAGATE ST200FM0073      0007  /dev/sdb  /dev/sg1  200GB
-> [6:0:1:0]  enclosu Areca   ARC-802801.13.1D 0113  -         /dev/sg2      -
+> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
+> > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+> >
+> > The method to allocate and free FIB's in the present code utilizes
+> > spinlocks.Multiple IO's have to wait on the spinlock to acquire or
+> > free fibs creating a performance bottleneck.
+> >
+> > An alternative solution would be to use block layer tags to keep track
+> > of the fibs allocated and freed. To this end 2 functions
+> > aac_fib_alloc_tag and aac_fib_free_tag were created which utilize the
+> > blk layer tags to plug into the Fib pool.These functions are used
+> > exclusively in the IO path. 8 fibs are reserved for the use of AIF
+> > management software and utilize the previous spinlock based
+> > implementations.
+> >
+
+
+[....]
+
+> >
+> > @@ -166,6 +166,49 @@ int aac_fib_setup(struct aac_dev * dev)
+> >   *	aac_fib_alloc	-	allocate a fib
+> >   *	@dev: Adapter to allocate the fib for
+> >   *
+> > + *	Allocate a fib from the adapter fib pool using tags
+> > + *	from the blk layer.
+> > + */
+> > +
+> > +struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd
+> *scmd)
+> > +{
+> > +	struct fib *fibptr;
+> > +
+> > +	fibptr = &dev->fibs[scmd->request->tag];
+> > +	/*
+> > +	 *	Set the proper node type code and node byte size
+> > +	 */
 > 
-> Then:
->    # sg_ses /dev/sg2
->    Areca     ARC-802801.13.1D  0113
-> Supported diagnostic pages:
->    Supported Diagnostic Pages [sdp] [0x0]
->    Configuration (SES) [cf] [0x1]
->    Enclosure Status/Control (SES) [ec,es] [0x2]
->    String In/Out (SES) [str] [0x4]
->    Threshold In/Out (SES) [th] [0x5]
->    Element Descriptor (SES) [ed] [0x7]
->    Additional Element Status (SES-2) [aes] [0xa]
->    Supported SES Diagnostic Pages (SES-2) [ssp] [0xd]
->    Download Microcode (SES-2) [dm] [0xe]
->    Subenclosure Nickname (SES-2) [snic] [0xf]
->    Protocol Specific (SAS transport) [] [0x3f]
+> Can't you just make most of the initialisation below just once when the driver
+> starts?
+> 
+> > +	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
+> > +	fibptr->size = sizeof(struct fib);
+> > +	/*
+> > +	 *	Null out fields that depend on being zero at the start of
+> > +	 *	each I/O
+> > +	 */
+> > +	fibptr->hw_fib_va->header.XferState = 0;
+> > +	fibptr->flags = 0;
+> 
+> For example the flags field is initialised  here to '0', then
+> in aac_fib_send again to zero and later is 'fibptr->flags =
+> FIB_CONTEXT_FLAG;'
+> Removing part of it would help I think.
+> The code here is not new so, if I am right, please plan it for a next series.
 
-Actually I need a hex dump of pages 1 7 and 0xa ... how do you get that?
+I will look into it and see where the code is being duplicated and will remove it,
+If it does not do anything new.
 
-Thanks,
+> 
+> > +	fibptr->callback = NULL;
+> > +	fibptr->callback_data = NULL;
+> > +
+> > +	return fibptr;
+> > +}
+> > +
+> > +/**
+> > + *	aac_fib_free_tag	free a fib
+> > + *	@fibptr: fib to free up
+> > + *
+> > + *	Placeholder to free tag allocated fibs
+> > + *	Does not do anything
+> > + */
+> > +
+> > +void aac_fib_free_tag(struct fib *fibptr)
+> > +{
+> > +	(void)fibptr;
+> > +}
+> 
+> I agree with Johannes, I also don't like the aac_fib_free_tag as it is.
+> With the aac_fib_free_tag you may add -
 
-James
+The reason it is still there is that , future versions can use it to add 
+something meaningful(set flags etc).I could remove it now since 
+it serves no purpose
+
+> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Regards,
+Raghava Aditya
