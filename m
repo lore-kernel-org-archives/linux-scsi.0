@@ -1,29 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/5] scsi: make eh_eflags persistent
-Date: Thu, 3 Dec 2015 17:55:42 +0100
-Message-ID: <20151203165542.GC14775@lst.de>
-References: <1449127063-94512-1-git-send-email-hare@suse.de> <1449127063-94512-4-git-send-email-hare@suse.de>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Linux kernels 4.3+ mess up MPT2SAS configs
+Date: Thu, 3 Dec 2015 12:54:58 -0500
+Message-ID: <22112.33266.955528.209926@quad.stoffel.home>
+References: <22112.13937.759625.629277@quad.stoffel.home>
+	<yq1lh9ba9a1.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35685 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009AbbLCQzn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2015 11:55:43 -0500
-Content-Disposition: inline
-In-Reply-To: <1449127063-94512-4-git-send-email-hare@suse.de>
+Received: from mailrelay.lanline.com ([216.187.10.16]:32628 "EHLO
+	mailrelay.lanline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867AbbLCRzE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2015 12:55:04 -0500
+In-Reply-To: <yq1lh9ba9a1.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@odin.com>, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: John Stoffel <john@stoffel.org>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com
 
-On Thu, Dec 03, 2015 at 08:17:41AM +0100, Hannes Reinecke wrote:
-> To detect if a failed command has been retried we must not
-> clear scmd->eh_eflags when EH finishes.
-> The flag should be persistent throughout the lifetime
-> of the command.
+>>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
 
-So we save away eh_eflags before potentially reusing the command and
-the restore it.  Seems seems fine, but an explanation of what this
-fixes would be very helpful as the behavior seems to be around basically
-forever.
+>>>>> "John" == John Stoffel <john@stoffel.org> writes:
+John> I've got an LSI MPT2SAS controller in my home system, great board,
+John> running well.  When I try to use kernels newer than approximately
+John> 4.3.0, the default Kconfig entry goes away because of what looks
+John> like a merge of the mpt2sas and mpt3sas drivers.
+
+Martin> http://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/commit/?h=4.4/scsi-queue
+
+Thanks, I'll test that out in a bit.  Now chasing another problem
+where the system crashes quickly on bootup.  4.2.x has been stable,
+but nothing since 4.3-rc1 has successfully booted up and lasted for
+me.
+
+No idea why, and not looking forward to git bisect to try and figure
+out since it's my home NFS server with home dirs and other data which
+needs to be rebooted to check.
+
+
