@@ -1,50 +1,79 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH RESEND] cxlflash: drop unlikely before IS_ERR_OR_NULL
-Date: Thu,  3 Dec 2015 15:18:49 -0600
-Message-ID: <1449177529-58863-1-git-send-email-mrochs@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: BUG: KASAN: slab-out-of-bounds in
+ ses_enclosure_data_process+0x900/0xe50
+Date: Thu, 03 Dec 2015 13:20:04 -0800
+Message-ID: <1449177604.2187.20.camel@HansenPartnership.com>
+References: <20151201202053.GA4753@glen>
+	 <1449097101.2203.67.camel@HansenPartnership.com>
+	 <20151203203656.GA9278@glen>
+	 <1449176346.2187.19.camel@HansenPartnership.com>
+	 <5660B015.5050804@interlog.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5660B015.5050804@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Geliang Tang <geliangtang@163.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Wen Xiong <wenxiong@linux.vnet.ibm.com>, Michael Neuling <mikey@neuling.org>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Geliang Tang <geliangtang@163.com>
+On Thu, 2015-12-03 at 16:11 -0500, Douglas Gilbert wrote:
+> On 15-12-03 03:59 PM, James Bottomley wrote:
+> > On Thu, 2015-12-03 at 21:36 +0100, Andrea Gelmini wrote:
+> >> On Wed, Dec 02, 2015 at 02:58:21PM -0800, James Bottomley wrote:
+> >>> On Tue, 2015-12-01 at 21:20 +0100, Andrea Gelmini wrote:
+> >>> OK, this looks like some type of problem with a USB enclosure.  It's
+> >>> probably misreporting something in the mode pages.  can you run sg_ses
+> >>> on whatever /dev/sg<n> the enclosure turns up as?
+> >>
+> >>
+> >> root@glen:/tmp/report# cat sg_ses_usb_hd.txt
+> >>    WD        My Passport 0820  1007
+> >>      disk device (not an enclosure)
+> >> Supported diagnostic pages:
+> >>    Supported Diagnostic Pages [sdp] [0x0]
+> >>    Short Enclosure Status (SES) [ses] [0x8]
+> >>    <unknown> [0x80]
+> >>    <unknown> [0x83]
+> >>    <unknown> [0x84]
+> >>    <unknown> [0x85]
+> >
+> > Actually, I'm afraid that's the wrong device; it's the disk not the
+> > enclosure (that's why sg_ses says not an enclosure)
+> >
+> > If you do
+> >
+> > sg_map -i
+> >
+> > in your system, you should see something with an inquiry string like
+> > enclosure.  It's the /dev/sg<n> of that you need to run sg_ses on.
+> 
+> Or use lsscsi like this and look for lines with 'enclosu' in
+> its output:
+>    # lsscsi -gs
+> [3:0:0:0]  disk    ATA     ST3160812AS      D     /dev/sda  /dev/sg0  160GB
+> [6:0:0:0]  disk    SEAGATE ST200FM0073      0007  /dev/sdb  /dev/sg1  200GB
+> [6:0:1:0]  enclosu Areca   ARC-802801.13.1D 0113  -         /dev/sg2      -
+> 
+> Then:
+>    # sg_ses /dev/sg2
+>    Areca     ARC-802801.13.1D  0113
+> Supported diagnostic pages:
+>    Supported Diagnostic Pages [sdp] [0x0]
+>    Configuration (SES) [cf] [0x1]
+>    Enclosure Status/Control (SES) [ec,es] [0x2]
+>    String In/Out (SES) [str] [0x4]
+>    Threshold In/Out (SES) [th] [0x5]
+>    Element Descriptor (SES) [ed] [0x7]
+>    Additional Element Status (SES-2) [aes] [0xa]
+>    Supported SES Diagnostic Pages (SES-2) [ssp] [0xd]
+>    Download Microcode (SES-2) [dm] [0xe]
+>    Subenclosure Nickname (SES-2) [snic] [0xf]
+>    Protocol Specific (SAS transport) [] [0x3f]
 
-IS_ERR_OR_NULL already contain an unlikely compiler flag. Drop it.
+Actually I need a hex dump of pages 1 7 and 0xa ... how do you get that?
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
-Acked-by: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
-This patch was originally sent by Geliang Tang in October 2015. As a
-valid simplification, I'd like to see this make it into 'next'. I've
-gone ahead and performed the rebase so that it applies cleanly.
+Thanks,
 
- drivers/scsi/cxlflash/superpipe.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 34b21a0..f4020db 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -1372,7 +1372,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
- 	}
- 
- 	ctx = cxl_dev_context_init(cfg->dev);
--	if (unlikely(IS_ERR_OR_NULL(ctx))) {
-+	if (IS_ERR_OR_NULL(ctx)) {
- 		dev_err(dev, "%s: Could not initialize context %p\n",
- 			__func__, ctx);
- 		rc = -ENODEV;
-@@ -1500,7 +1500,7 @@ static int recover_context(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
- 	struct afu *afu = cfg->afu;
- 
- 	ctx = cxl_dev_context_init(cfg->dev);
--	if (unlikely(IS_ERR_OR_NULL(ctx))) {
-+	if (IS_ERR_OR_NULL(ctx)) {
- 		dev_err(dev, "%s: Could not initialize context %p\n",
- 			__func__, ctx);
- 		rc = -ENODEV;
--- 
-2.1.0
+James
