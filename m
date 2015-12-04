@@ -1,69 +1,105 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [RFC PATCH 76/71] ncr5380: Enable PDMA for DTC chips
-Date: Fri, 4 Dec 2015 10:32:34 +0100
-Message-ID: <201512041032.34466.linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au> <1449183781-2163-1-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1512041951470.13680@nippy.intranet>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH] storvsc: add more logging for error and warning messages
+Date: Fri, 04 Dec 2015 10:52:49 +0100
+Message-ID: <87vb8e5ymm.fsf@vitty.brq.redhat.com>
+References: <1449200865-20694-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1512041951470.13680@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1449200865-20694-1-git-send-email-longli@microsoft.com> (Long
+ Li's message of "Thu, 3 Dec 2015 19:47:45 -0800")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 04 December 2015, Finn Thain wrote:
-> 
-> On Fri, 4 Dec 2015, Ondrej Zary wrote:
-> 
-> > Add I/O register mapping for DTC chips and enable PDMA mode.
-> > 
-> > These chips have 16-bit wide HOST BUFFER register (counter register at 
-> > offset 0x0d increments by 2 on each HOST BUFFER read).
-> > 
-> > Large PIO transfers crash at least the DTCT-436P chip (all reads result 
-> > in 0xFF) so this patch actually makes it work.
-> > 
-> > The chip also crashes when we bang the C400 host status register too
-> > heavily after PDMA write - a small udelay is needed.
-> > 
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > ---
-> > # hdparm -t --direct /dev/sdb
-> > 
-> > /dev/sdb:
-> >  Timing O_DIRECT disk reads:   4 MB in  3.78 seconds =   1.06 MB/sec
-> > 
-> > 
-> >  drivers/scsi/NCR5380.h   |    1 +
-> >  drivers/scsi/g_NCR5380.c |   47 +++++++++++++++++++++++-----------------------
-> >  2 files changed, 25 insertions(+), 23 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-> > index 5092580..e3b8149 100644
-> > --- a/drivers/scsi/NCR5380.h
-> > +++ b/drivers/scsi/NCR5380.h
-> > @@ -222,6 +222,7 @@
-> >  
-> >  #define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
-> >  #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
-> > +#define FLAG_16BIT			16	/* 16-bit PDMA */
-> 
-> Can we give this a better name? FLAG_16BIT could be taken to mean "16-bit 
-> ISA card" but do we really want a flag for that? How about 
-> FLAG_16BIT_BUF_REG or FLAG_WORD_IO_BUF?
-> 
-> All active flags appear in the console log, thanks to prepare_info(). It 
-> might be helpful to include this one; FLAG_DTC3181E is likely to 
-> disappear.
+Long Li <longli@microsoft.com> writes:
 
-Thinking more about this, we can probably detect the host buffer register
-width instead of adding another flag. Read the counter, then read once from
-the host buffer and read the counter again to see if it increments by 1 or 2.
-Or maybe even 4 for PCI cards.
+> Introduce a logging level for storvsc to log certain error/warning
+> messages. Those messages are helpful in some environments,
+> e.g. Microsoft Azure, for customer support and troubleshooting
+> purposes.
+
+I have an alternative suggestion: let's use dynamic debug! Basically, we
+need to convert all non-error logging to using dev_dbg() and this can be
+enabled dynamically when needed, even reboot won't be required.
+
+>
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 30 +++++++++++++++++++++++++++++-
+>  1 file changed, 29 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 40c43ae..afa1647 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -164,6 +164,21 @@ static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
+>  */
+>  static int vmstor_proto_version;
+>
+> +#define STORVSC_LOGGING_NONE	0
+> +#define STORVSC_LOGGING_ERROR	1
+> +#define STORVSC_LOGGING_WARN	2
+> +
+> +static int logging_level = STORVSC_LOGGING_ERROR;
+> +module_param(logging_level, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(logging_level,
+> +	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
+> +
+> +static inline bool do_logging(int level)
+> +{
+> +	return (logging_level >= level) ? true : false;
+> +}
+> +
+> +
+>  struct vmscsi_win8_extension {
+>  	/*
+>  	 * The following were added in Windows 8
+> @@ -1183,7 +1198,7 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+>
+>  	scmnd->result = vm_srb->scsi_status;
+>
+> -	if (scmnd->result) {
+> +	if (scmnd->result && do_logging(STORVSC_LOGGING_ERROR)) {
+>  		if (scsi_normalize_sense(scmnd->sense_buffer,
+>  				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
+>  			scsi_print_sense_hdr(scmnd->device, "storvsc",
+> @@ -1239,12 +1254,25 @@ static void storvsc_on_io_completion(struct hv_device *device,
+>  	stor_pkt->vm_srb.sense_info_length =
+>  	vstor_packet->vm_srb.sense_info_length;
+>
+> +	if (vstor_packet->vm_srb.scsi_status != 0 ||
+> +		vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
+> +		if (do_logging(STORVSC_LOGGING_WARN))
+> +			dev_warn(&device->device,
+> +				"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
+> +				stor_pkt->vm_srb.cdb[0],
+> +				vstor_packet->vm_srb.scsi_status,
+> +				vstor_packet->vm_srb.srb_status);
+>
+>  	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
+>  		/* CHECK_CONDITION */
+>  		if (vstor_packet->vm_srb.srb_status &
+>  			SRB_STATUS_AUTOSENSE_VALID) {
+>  			/* autosense data available */
+> +			if (do_logging(STORVSC_LOGGING_WARN))
+> +				dev_warn(&device->device,
+> +					"stor pkt %p autosense data valid - len %d\n",
+> +					request,
+> +					vstor_packet->vm_srb.sense_info_length);
+>
+>  			memcpy(request->cmd->sense_buffer,
+>  			       vstor_packet->vm_srb.sense_data,
 
 -- 
-Ondrej Zary
+  Vitaly
