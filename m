@@ -1,31 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/10] aacraid: Disable device ID wildcard
-Date: Fri, 4 Dec 2015 00:33:16 -0800
-Message-ID: <20151204083316.GA32285@infradead.org>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <566065C2.7090603@redhat.com>
- <198D06D448A18D4E93F08FB849C4E39D7D1EF169@BBYEXM01.pmc-sierra.internal>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [RFC PATCH 76/71] ncr5380: Enable PDMA for DTC chips
+Date: Fri, 4 Dec 2015 19:38:03 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1512041857160.13680@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <1449183781-2163-1-git-send-email-linux@rainbow-software.org> <CAGRGNgU=6=XBGxpwe+Z+uU-Pq-L=aTyG2GukkWAqFVnJHTY3Og@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52560 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755588AbbLDIdT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2015 03:33:19 -0500
-Content-Disposition: inline
-In-Reply-To: <198D06D448A18D4E93F08FB849C4E39D7D1EF169@BBYEXM01.pmc-sierra.internal>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGRGNgU=6=XBGxpwe+Z+uU-Pq-L=aTyG2GukkWAqFVnJHTY3Og@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-On Thu, Dec 03, 2015 at 09:32:18PM +0000, Raghava Aditya Renukunta wrote:
-> This will enable us to prevent aacraid from loading for PCI devices that match
-> device ID wildcards. Enabling us to use say a new driver for future devices.
 
-This looks like a bogus reason.  The same PCI ID should always be
-compatible and mathed by the same driver.  Even if you add a new driver
-to expose additional feature and break these semantics there is no point
-to do a) reject them conditionally on a module option and b) do this
-before said driver is merged.
+On Fri, 4 Dec 2015, Julian Calaby wrote:
+
+> > -               if (overrides[current_override].board == BOARD_NCR53C400A) {
+> > +               if (overrides[current_override].board == BOARD_NCR53C400A ||
+> > +                   overrides[current_override].board == BOARD_DTC3181E) {
+> 
+> These if statements are starting to get a bit long, would it make
+> sense to replace them with a flag or equivalent?
+
+To what end? Shorter lines? As in,
+
+	if (board_is_ncr53c400a || board_is_dtc3181e) {
+		/* ... */
+	}
+
+I suppose that could be an improvement if new flags would entirely replace 
+the override.board struct member and the existing switch statement,
+
+	switch (overrides[current_override].board) {
+		/* ... */
+	}
+
+Or maybe you meant testing a new flag something like this,
+
+	if (hostdata->ncr53c400_compatible) {
+		/* ... */
+	}
+
+If your concern is the Don't Repeat Yourself rule, I'm not sure that new 
+flag would get tested more than once (?) And it would still have to be 
+assigned using an "objectionably" long expression, e.g.
+
+	hostdata->ncr53c400_compatible =
+		overrides[current_override].board == BOARD_NCR53C400 ||
+		overrides[current_override].board == BOARD_NCR53C400A ||
+		overrides[current_override].board == BOARD_DTC3181E;
+
+Rather than add new flags, perhaps a 'switch' statement instead of an 'if' 
+statement would be shorter (if the size of the expression is the problem).
+
+-- 
