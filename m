@@ -1,128 +1,63 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: add more logging for error and warning messages
-Date: Fri, 4 Dec 2015 18:41:28 +0000
-Message-ID: <SN1PR0301MB19830398425D5ABA4A7564C9CE0C0@SN1PR0301MB1983.namprd03.prod.outlook.com>
-References: <1449200865-20694-1-git-send-email-longli@microsoft.com>
- <87vb8e5ymm.fsf@vitty.brq.redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: BUG: KASAN: slab-out-of-bounds in
+ ses_enclosure_data_process+0x900/0xe50
+Date: Fri, 04 Dec 2015 11:04:07 -0800
+Message-ID: <1449255847.27077.8.camel@HansenPartnership.com>
+References: <20151201202053.GA4753@glen>
+	 <1449097101.2203.67.camel@HansenPartnership.com>
+	 <20151203203656.GA9278@glen>
+	 <1449176346.2187.19.camel@HansenPartnership.com>
+	 <20151203222004.GA22311@glen>
+	 <1449248972.27077.7.camel@HansenPartnership.com>
+	 <20151204174616.GA28160@glen>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <87vb8e5ymm.fsf@vitty.brq.redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-WOVb+VOibuueWwXNYlCF"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151204174616.GA28160@glen>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrea Gelmini <andrea.gelmini@gelma.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
-> Sent: Friday, December 4, 2015 1:53 AM
-> To: Long Li <longli@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; James E.J. Bottomley <JBottomley@odin.com>;
-> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH] storvsc: add more logging for error and warning
-> messages
-> 
-> Long Li <longli@microsoft.com> writes:
-> 
-> > Introduce a logging level for storvsc to log certain error/warning
-> > messages. Those messages are helpful in some environments, e.g.
-> > Microsoft Azure, for customer support and troubleshooting purposes.
-> 
-> I have an alternative suggestion: let's use dynamic debug! Basically, we need
-> to convert all non-error logging to using dev_dbg() and this can be enabled
-> dynamically when needed, even reboot won't be required.
 
-This is great idea for debugging!
+--=-WOVb+VOibuueWwXNYlCF
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I think the messages (srb errors) we want to log in this patch are real errors. They are not for debugging, but for customer support in production environment.
+On Fri, 2015-12-04 at 18:46 +0100, Andrea Gelmini wrote:
+> On Fri, Dec 04, 2015 at 09:09:32AM -0800, James Bottomley wrote:
+> > Actually, that would be really helpful, since I only have access to one=
+,
+> > very old, enclosure device.  My ssh key is
+>=20
+> Ok.
+> Do you need same PC/Kernel of the report, or is it enough if I plug the U=
+SB in any PC and give you access?
 
-Those errors can be ignored in certain specific storage configurations due to some quirks. They are real errors on Azure, so we want to always log them.
- 
-> 
-> >
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 30 +++++++++++++++++++++++++++++-
-> >  1 file changed, 29 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index 40c43ae..afa1647 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -164,6 +164,21 @@ static int sense_buffer_size =
-> > PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
-> >  */
-> >  static int vmstor_proto_version;
-> >
-> > +#define STORVSC_LOGGING_NONE	0
-> > +#define STORVSC_LOGGING_ERROR	1
-> > +#define STORVSC_LOGGING_WARN	2
-> > +
-> > +static int logging_level = STORVSC_LOGGING_ERROR;
-> > +module_param(logging_level, int, S_IRUGO|S_IWUSR);
-> > +MODULE_PARM_DESC(logging_level,
-> > +	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
-> > +
-> > +static inline bool do_logging(int level) {
-> > +	return (logging_level >= level) ? true : false; }
-> > +
-> > +
-> >  struct vmscsi_win8_extension {
-> >  	/*
-> >  	 * The following were added in Windows 8 @@ -1183,7 +1198,7 @@
-> > static void storvsc_command_completion(struct storvsc_cmd_request
-> > *cmd_request)
-> >
-> >  	scmnd->result = vm_srb->scsi_status;
-> >
-> > -	if (scmnd->result) {
-> > +	if (scmnd->result && do_logging(STORVSC_LOGGING_ERROR)) {
-> >  		if (scsi_normalize_sense(scmnd->sense_buffer,
-> >  				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
-> >  			scsi_print_sense_hdr(scmnd->device, "storvsc", @@
-> -1239,12
-> > +1254,25 @@ static void storvsc_on_io_completion(struct hv_device
-> *device,
-> >  	stor_pkt->vm_srb.sense_info_length =
-> >  	vstor_packet->vm_srb.sense_info_length;
-> >
-> > +	if (vstor_packet->vm_srb.scsi_status != 0 ||
-> > +		vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-> > +		if (do_logging(STORVSC_LOGGING_WARN))
-> > +			dev_warn(&device->device,
-> > +				"cmd 0x%x scsi status 0x%x srb status
-> 0x%x\n",
-> > +				stor_pkt->vm_srb.cdb[0],
-> > +				vstor_packet->vm_srb.scsi_status,
-> > +				vstor_packet->vm_srb.srb_status);
-> >
-> >  	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
-> >  		/* CHECK_CONDITION */
-> >  		if (vstor_packet->vm_srb.srb_status &
-> >  			SRB_STATUS_AUTOSENSE_VALID) {
-> >  			/* autosense data available */
-> > +			if (do_logging(STORVSC_LOGGING_WARN))
-> > +				dev_warn(&device->device,
-> > +					"stor pkt %p autosense data valid -
-> len %d\n",
-> > +					request,
-> > +					vstor_packet-
-> >vm_srb.sense_info_length);
-> >
-> >  			memcpy(request->cmd->sense_buffer,
-> >  			       vstor_packet->vm_srb.sense_data,
-> 
-> --
->   Vitaly
+I think, since we suspect the device, it's enough to plug it into any PC
+running a current kernel.
+
+Thanks,
+
+James
+
+
+--=-WOVb+VOibuueWwXNYlCF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAABCAAGBQJWYeOnAAoJEDeqqVYsXL0Mj1AIALtAXM9xr/8uEMjF4OgYcM4f
+ttZd1zYECnaIE84A/TNkI7xHTk10WCKI7ILXBNL9STrKRIqLAAdUx5euGIBL2ELK
+lAbhvUEad799m1xWgKUUWsqC4L+B/XryqXa9AYc/C7uIr02UM72sRNeU7TY+k6MN
+J42GpUnqsxzS7XdtCW8sr7k+EZnaxL97RRJgmLKAsCl8dUXF7TNMDQCQcPacUK4o
+bnf3SxF4F1ucJc+vVknQ0POnDrl8I3xxMx7n9U8reokTmm4e1fRv9MdyOoLilP80
+vOTRsa+05X6TA04JpxAlwGTbYvs0clT7vPXuORl5Du3lADWpAcWbvvNjSKi9Ckk=
+=f1iv
+-----END PGP SIGNATURE-----
+
+--=-WOVb+VOibuueWwXNYlCF--
