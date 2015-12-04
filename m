@@ -1,96 +1,31 @@
-From: Long Li <longli@microsoft.com>
-Subject: [PATCH v2] storvsc: add logging for error/warning messages
-Date: Fri,  4 Dec 2015 00:07:24 -0800
-Message-ID: <1449216444-21553-1-git-send-email-longli@microsoft.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 08/10] aacraid: Disable device ID wildcard
+Date: Fri, 4 Dec 2015 00:33:16 -0800
+Message-ID: <20151204083316.GA32285@infradead.org>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-9-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <566065C2.7090603@redhat.com>
+ <198D06D448A18D4E93F08FB849C4E39D7D1EF169@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:52560 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755588AbbLDIdT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2015 03:33:19 -0500
+Content-Disposition: inline
+In-Reply-To: <198D06D448A18D4E93F08FB849C4E39D7D1EF169@BBYEXM01.pmc-sierra.internal>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-Introduce a logging level for storvsc to log certain error/warning messages. Those messages are helpful in some environments, e.g. Microsoft Azure, for customer support and troubleshooting purposes.
+On Thu, Dec 03, 2015 at 09:32:18PM +0000, Raghava Aditya Renukunta wrote:
+> This will enable us to prevent aacraid from loading for PCI devices that match
+> device ID wildcards. Enabling us to use say a new driver for future devices.
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 40c43ae..f46ed2c 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -164,6 +164,26 @@ static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
- */
- static int vmstor_proto_version;
- 
-+#define STORVSC_LOGGING_NONE	0
-+#define STORVSC_LOGGING_ERROR	1
-+#define STORVSC_LOGGING_WARN	2
-+
-+static int logging_level = STORVSC_LOGGING_ERROR;
-+module_param(logging_level, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(logging_level,
-+	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
-+
-+static inline bool do_logging(int level)
-+{
-+	return logging_level >= level;
-+}
-+
-+#define storvsc_log(dev, level, fmt, ...)			\
-+do {								\
-+	if (do_logging(level))					\
-+		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
-+} while (0)
-+
- struct vmscsi_win8_extension {
- 	/*
- 	 * The following were added in Windows 8
-@@ -1185,7 +1205,8 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
- 
- 	if (scmnd->result) {
- 		if (scsi_normalize_sense(scmnd->sense_buffer,
--				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
-+				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
-+		    do_logging(STORVSC_LOGGING_ERROR))
- 			scsi_print_sense_hdr(scmnd->device, "storvsc",
- 					     &sense_hdr);
- 	}
-@@ -1239,6 +1260,13 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 	stor_pkt->vm_srb.sense_info_length =
- 	vstor_packet->vm_srb.sense_info_length;
- 
-+	if (vstor_packet->vm_srb.scsi_status != 0 ||
-+	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-+		storvsc_log(device, STORVSC_LOGGING_WARN,
-+			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
-+			stor_pkt->vm_srb.cdb[0],
-+			vstor_packet->vm_srb.scsi_status,
-+			vstor_packet->vm_srb.srb_status);
- 
- 	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
- 		/* CHECK_CONDITION */
-@@ -1246,6 +1274,10 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 			SRB_STATUS_AUTOSENSE_VALID) {
- 			/* autosense data available */
- 
-+			storvsc_log(device, STORVSC_LOGGING_WARN,
-+				"stor pkt %p autosense data valid - len %d\n",
-+				request, vstor_packet->vm_srb.sense_info_length);
-+
- 			memcpy(request->cmd->sense_buffer,
- 			       vstor_packet->vm_srb.sense_data,
- 			       vstor_packet->vm_srb.sense_info_length);
--- 
-1.8.5.6
+This looks like a bogus reason.  The same PCI ID should always be
+compatible and mathed by the same driver.  Even if you add a new driver
+to expose additional feature and break these semantics there is no point
+to do a) reject them conditionally on a module option and b) do this
+before said driver is merged.
