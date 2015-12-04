@@ -1,101 +1,96 @@
 From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: add more logging for error and warning messages
-Date: Fri, 4 Dec 2015 02:55:41 +0000
-Message-ID: <SN1PR0301MB19835DD28CCB381DCA384DC9CE0C0@SN1PR0301MB1983.namprd03.prod.outlook.com>
-References: <1449200865-20694-1-git-send-email-longli@microsoft.com>
- <1449196093.17296.36.camel@perches.com>
+Subject: [PATCH v2] storvsc: add logging for error/warning messages
+Date: Fri,  4 Dec 2015 00:07:24 -0800
+Message-ID: <1449216444-21553-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1449196093.17296.36.camel@perches.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Joe.
+Introduce a logging level for storvsc to log certain error/warning messages. Those messages are helpful in some environments, e.g. Microsoft Azure, for customer support and troubleshooting purposes.
 
-I'll send out another patch.
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
 
-> -----Original Message-----
-> From: Joe Perches [mailto:joe@perches.com]
-> Sent: Thursday, December 3, 2015 6:28 PM
-> To: Long Li <longli@microsoft.com>; KY Srinivasan <kys@microsoft.com>=
-;
-> Haiyang Zhang <haiyangz@microsoft.com>; James E.J. Bottomley
-> <JBottomley@odin.com>
-> Cc: devel@linuxdriverproject.org; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: Re: [PATCH] storvsc: add more logging for error and warning
-> messages
->=20
-> On Thu, 2015-12-03 at 19:47 -0800, Long Li wrote:
-> > Introduce a logging level for storvsc to log certain error/warning
-> > messages. Those messages are helpful in some environments, e.g.
-> > Microsoft Azure, for customer support and troubleshooting purposes.
-> []
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.=
-c
-> []
-> > +static inline bool do_logging(int level) {
-> > +	return (logging_level >=3D level) ? true : false;
->=20
-> The ternary is not necessary
->=20
-> 	return logging_level >=3D level;
->=20
-> is enough
->=20
-> > +}
-> > +
-> > +
-> > =A0struct vmscsi_win8_extension {
-> > =A0	/*
-> > =A0	=A0* The following were added in Windows 8 @@ -1183,7 +1198,7 @=
-@
-> > static void storvsc_command_completion(struct storvsc_cmd_request
-> > *cmd_request)
-> >
-> > =A0	scmnd->result =3D vm_srb->scsi_status;
-> >
-> > -	if (scmnd->result) {
-> > +	if (scmnd->result && do_logging(STORVSC_LOGGING_ERROR)) {
-> > =A0		if (scsi_normalize_sense(scmnd->sense_buffer,
-> > =A0				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
-> > =A0			scsi_print_sense_hdr(scmnd->device, "storvsc",
->=20
-> Is it appropriate to make this scsi_normalize_sense call conditional =
-on
-> do_logging here?
->=20
-> > @@ -1239,12 +1254,25 @@ static void storvsc_on_io_completion(struct
-> hv_device *device,
-> > =A0	stor_pkt->vm_srb.sense_info_length =3D
-> > =A0	vstor_packet->vm_srb.sense_info_length;
-> >
-> > +	if (vstor_packet->vm_srb.scsi_status !=3D 0 ||
-> > +		vstor_packet->vm_srb.srb_status !=3D SRB_STATUS_SUCCESS)
-> > +		if (do_logging(STORVSC_LOGGING_WARN))
-> > +			dev_warn(&device->device,
-> > +				"cmd 0x%x scsi status 0x%x srb status
-> 0x%x\n",
-> > +				stor_pkt->vm_srb.cdb[0],
-> > +				vstor_packet->vm_srb.scsi_status,
-> > +				vstor_packet->vm_srb.srb_status);
->=20
-> It might make some sense to use another macro indirection like
->=20
-> #define svc_log_warn(dev, level, fmt, ...)			\
-> do {								\
-> 	if (do_logging(STORSVC_LOGGING_##level)			\
-> 		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
-> } while (0)
->=20
-> So a use could be:
->=20
-> 	if (vstore_packet...)
-> 		svc_log_warn(device, WARN, ...);
->=20
-> >
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 40c43ae..f46ed2c 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -164,6 +164,26 @@ static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
+ */
+ static int vmstor_proto_version;
+ 
++#define STORVSC_LOGGING_NONE	0
++#define STORVSC_LOGGING_ERROR	1
++#define STORVSC_LOGGING_WARN	2
++
++static int logging_level = STORVSC_LOGGING_ERROR;
++module_param(logging_level, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(logging_level,
++	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
++
++static inline bool do_logging(int level)
++{
++	return logging_level >= level;
++}
++
++#define storvsc_log(dev, level, fmt, ...)			\
++do {								\
++	if (do_logging(level))					\
++		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
++} while (0)
++
+ struct vmscsi_win8_extension {
+ 	/*
+ 	 * The following were added in Windows 8
+@@ -1185,7 +1205,8 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ 
+ 	if (scmnd->result) {
+ 		if (scsi_normalize_sense(scmnd->sense_buffer,
+-				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
++				SCSI_SENSE_BUFFERSIZE, &sense_hdr) &&
++		    do_logging(STORVSC_LOGGING_ERROR))
+ 			scsi_print_sense_hdr(scmnd->device, "storvsc",
+ 					     &sense_hdr);
+ 	}
+@@ -1239,6 +1260,13 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 	stor_pkt->vm_srb.sense_info_length =
+ 	vstor_packet->vm_srb.sense_info_length;
+ 
++	if (vstor_packet->vm_srb.scsi_status != 0 ||
++	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
++		storvsc_log(device, STORVSC_LOGGING_WARN,
++			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
++			stor_pkt->vm_srb.cdb[0],
++			vstor_packet->vm_srb.scsi_status,
++			vstor_packet->vm_srb.srb_status);
+ 
+ 	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
+ 		/* CHECK_CONDITION */
+@@ -1246,6 +1274,10 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 			SRB_STATUS_AUTOSENSE_VALID) {
+ 			/* autosense data available */
+ 
++			storvsc_log(device, STORVSC_LOGGING_WARN,
++				"stor pkt %p autosense data valid - len %d\n",
++				request, vstor_packet->vm_srb.sense_info_length);
++
+ 			memcpy(request->cmd->sense_buffer,
+ 			       vstor_packet->vm_srb.sense_data,
+ 			       vstor_packet->vm_srb.sense_info_length);
+-- 
+1.8.5.6
