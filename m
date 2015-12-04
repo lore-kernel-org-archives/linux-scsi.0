@@ -1,88 +1,77 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 2/3] block: Add badblock management for gendisks
-Date: Fri, 04 Dec 2015 15:33:38 -0800
-Message-ID: <1449272018.27077.29.camel@HansenPartnership.com>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Fri, 4 Dec 2015 23:58:44 +0000
+Message-ID: <1449273524.16905.103.camel@intel.com>
 References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448477013-9174-3-git-send-email-vishal.l.verma@intel.com>
+	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
+	 <1449271801.27077.25.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448477013-9174-3-git-send-email-vishal.l.verma@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:18564 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753792AbbLDX6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Dec 2015 18:58:48 -0500
+In-Reply-To: <1449271801.27077.25.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <F74FD3224A10AE4D8C0C0A2FA453AF93@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "neilb@suse.com" <neilb@suse.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 
-On Wed, 2015-11-25 at 11:43 -0700, Vishal Verma wrote:
-> NVDIMM devices, which can behave more like DRAM rather than block
-> devices, may develop bad cache lines, or 'poison'. A block device
-> exposed by the pmem driver can then consume poison via a read (or
-> write), and cause a machine check. On platforms without machine
-> check recovery features, this would mean a crash.
-> 
-> The block device maintaining a runtime list of all known sectors that
-> have poison can directly avoid this, and also provide a path forward
-> to enable proper handling/recovery for DAX faults on such a device.
-> 
-> Use the new badblock management interfaces to add a badblocks list to
-> gendisks.
-> 
-> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> ---
->  block/genhd.c         | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/genhd.h |  6 ++++
->  2 files changed, 87 insertions(+)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 0c706f3..84fd65c 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -20,6 +20,7 @@
->  #include <linux/idr.h>
->  #include <linux/log2.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/badblocks.h>
->  
->  #include "blk.h"
->  
-> @@ -505,6 +506,20 @@ static int exact_lock(dev_t devt, void *data)
->  	return 0;
->  }
->  
-> +static void disk_alloc_badblocks(struct gendisk *disk)
-> +{
-> +	disk->bb = kzalloc(sizeof(*(disk->bb)), GFP_KERNEL);
-> +	if (!disk->bb) {
-> +		pr_warn("%s: failed to allocate space for badblocks\n",
-> +			disk->disk_name);
-> +		return;
-> +	}
-> +
-> +	if (badblocks_init(disk->bb, 1))
-> +		pr_warn("%s: failed to initialize badblocks\n",
-> +			disk->disk_name);
-> +}
-> +
->  static void register_disk(struct gendisk *disk)
->  {
->  	struct device *ddev = disk_to_dev(disk);
-> @@ -609,6 +624,7 @@ void add_disk(struct gendisk *disk)
->  	disk->first_minor = MINOR(devt);
->  
->  	disk_alloc_events(disk);
-> +	disk_alloc_badblocks(disk);
-
-Why unconditionally do this?  No-one currently uses the interface, but
-every disk will now pay the price of an additional structure plus a page
-for no benefit.  You should probably either export the initializer for
-those who want to use it or, perhaps even better, make it lazily
-allocated the first time anyone tries to set a bad block.
-
-If you come up with a really good reason for allocating it
-unconditionally, then it should probably be an embedded structure in the
-gendisk.
-
-James
-
-
+T24gRnJpLCAyMDE1LTEyLTA0IGF0IDE1OjMwIC0wODAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
+DQpbLi4uXQ0KPiA+ICsgKiBXZSByZXR1cm4NCj4gPiArICrCoMKgMCBpZiB0aGVyZSBhcmUgbm8g
+a25vd24gYmFkIGJsb2NrcyBpbiB0aGUgcmFuZ2UNCj4gPiArICrCoMKgMSBpZiB0aGVyZSBhcmUg
+a25vd24gYmFkIGJsb2NrIHdoaWNoIGFyZSBhbGwgYWNrbm93bGVkZ2VkDQo+ID4gKyAqIC0xIGlm
+IHRoZXJlIGFyZSBiYWQgYmxvY2tzIHdoaWNoIGhhdmUgbm90IHlldCBiZWVuIGFja25vd2xlZGdl
+ZA0KPiA+IGluIG1ldGFkYXRhLg0KPiA+ICsgKiBwbHVzIHRoZSBzdGFydC9sZW5ndGggb2YgdGhl
+IGZpcnN0IGJhZCBzZWN0aW9uIHdlIG92ZXJsYXAuDQo+ID4gKyAqLw0KPiANCj4gVGhpcyBjb21t
+ZW50IHNob3VsZCBiZSBkb2Nib29rLg0KDQpBcHBsaWNhYmxlIHRvIGFsbCB5b3VyIGNvbW1lbnRz
+IC0gKGFuZCB0aGV5IGFyZSBhbGwgdmFsaWQpLCBJIHNpbXBseQ0KY29waWVkIG92ZXIgYWxsIHRo
+aXMgZnJvbSBtZC4gSSdtIGhhcHB5IHRvIG1ha2UgdGhlIGNoYW5nZXMgdG8gY29tbWVudHMsDQph
+bmQgdGhlIG90aGVyIHR3byB0aGluZ3MgKHNlZSBiZWxvdykgaWYgdGhhdCdzIHRoZSByaWdodCB0
+aGluZyB0byBkbyAtLQ0KSSBqdXN0IHRyaWVkIHRvIGtlZXAgbXkgb3duIGNoYW5nZXMgdG8gdGhl
+IG9yaWdpbmFsIG1kIGJhZGJsb2NrcyBjb2RlDQptaW5pbWFsLg0KV291bGQgaXQgYmUgYmV0dGVy
+IChmb3IgcmV2aWV3LWFiaWxpdHkpIGlmIEkgbWFkZSB0aGVzZSBjaGFuZ2VzIGluIGEgbmV3DQpw
+YXRjaCBvbiB0b3Agb2YgdGhpcywgb3Igc2hvdWxkIEkganVzdCBzcXVhc2ggdGhlbSBpbnRvIHRo
+aXMgb25lPw0KDQo+IA0KPiA+ICtpbnQgYmFkYmxvY2tzX2NoZWNrKHN0cnVjdCBiYWRibG9ja3Mg
+KmJiLCBzZWN0b3JfdCBzLCBpbnQgc2VjdG9ycywNCj4gPiArCQkJc2VjdG9yX3QgKmZpcnN0X2Jh
+ZCwgaW50ICpiYWRfc2VjdG9ycykNCj4gWy4uLl0NCj4gPiArDQo+ID4gKy8qDQo+ID4gKyAqIEFk
+ZCBhIHJhbmdlIG9mIGJhZCBibG9ja3MgdG8gdGhlIHRhYmxlLg0KPiA+ICsgKiBUaGlzIG1pZ2h0
+IGV4dGVuZCB0aGUgdGFibGUsIG9yIG1pZ2h0IGNvbnRyYWN0IGl0DQo+ID4gKyAqIGlmIHR3byBh
+ZGphY2VudCByYW5nZXMgY2FuIGJlIG1lcmdlZC4NCj4gPiArICogV2UgYmluYXJ5LXNlYXJjaCB0
+byBmaW5kIHRoZSAnaW5zZXJ0aW9uJyBwb2ludCwgdGhlbg0KPiA+ICsgKiBkZWNpZGUgaG93IGJl
+c3QgdG8gaGFuZGxlIGl0Lg0KPiA+ICsgKi8NCj4gDQo+IEFuZCB0aGlzIG9uZSwgcGx1cyB5b3Ug
+ZG9uJ3QgZG9jdW1lbnQgcmV0dXJucy7CoMKgSXQgbG9va3MgbGlrZSB0aGlzDQo+IGZ1bmN0aW9u
+IHJldHVybnMgMSBvbiBzdWNjZXNzIGFuZCB6ZXJvIG9uIGZhaWx1cmUsIHdoaWNoIGlzIHJlYWxs
+eQ0KPiBjb3VudGVyLWludHVpdGl2ZSBmb3IgdGhlIGtlcm5lbDogemVybyBpcyB1c3VhbGx5IHJl
+dHVybmVkIG9uIHN1Y2Nlc3MNCj4gYW5kIG5lZ2F0aXZlIGVycm9yIG9uIGZhaWx1cmUuDQo+IA0K
+PiA+ICtpbnQgYmFkYmxvY2tzX3NldChzdHJ1Y3QgYmFkYmxvY2tzICpiYiwgc2VjdG9yX3Qgcywg
+aW50IHNlY3RvcnMsDQo+ID4gKwkJCWludCBhY2tub3dsZWRnZWQpDQo+IFsuLi5dDQo+ID4gKw0K
+PiA+ICsvKg0KPiA+ICsgKiBSZW1vdmUgYSByYW5nZSBvZiBiYWQgYmxvY2tzIGZyb20gdGhlIHRh
+YmxlLg0KPiA+ICsgKiBUaGlzIG1heSBpbnZvbHZlIGV4dGVuZGluZyB0aGUgdGFibGUgaWYgd2Ug
+c3BpbHQgYSByZWdpb24sDQo+ID4gKyAqIGJ1dCBpdCBtdXN0IG5vdCBmYWlsLsKgwqBTbyBpZiB0
+aGUgdGFibGUgYmVjb21lcyBmdWxsLCB3ZSBqdXN0DQo+ID4gKyAqIGRyb3AgdGhlIHJlbW92ZSBy
+ZXF1ZXN0Lg0KPiA+ICsgKi8NCj4gDQo+IERvY2Jvb2sgYW5kIGRvY3VtZW50IHJldHVybnMuwqDC
+oFRoaXMgdGltZSB0aGV5J3JlIHRoZSBrZXJuZWwgc3RhbmRhcmQNCj4gb2YNCj4gMCBvbiBzdWNj
+ZXNzIGFuZCBuZWdhdGl2ZSBlcnJvciBvbiBmYWlsdXJlIG1ha2luZyB0aGUgY29udmVudGlvbiBm
+b3INCj4gYmFkYmxvY2tzX3NldCBldmVuIG1vcmUgY291bnRlcmludHVpdGl2ZS4NCj4gDQo+ID4g
+K2ludCBiYWRibG9ja3NfY2xlYXIoc3RydWN0IGJhZGJsb2NrcyAqYmIsIHNlY3Rvcl90IHMsIGlu
+dCBzZWN0b3JzKQ0KPiA+ICt7DQo+IFsuLi5dDQo+ID4gKyNkZWZpbmUgRE9fREVCVUcgMQ0KPiAN
+Cj4gV2h5IGhhdmUgdGhpcyBhdCBhbGwgaWYgaXQncyB1bmNvbmRpdGlvbmFsbHkgZGVmaW5lZCBh
+bmQgYWx3YXlzIHNldC4NCg0KTmVpbCAtIGFueSByZWFzb24gb3IgYW55dGhpbmcgeW91IGhhZCBp
+biBtaW5kIGZvciB0aGlzPyBPciBpcyBpdCBqdXN0IGFuDQphcnRpZmFjdCBhbmQgY2FuIGJlIHJl
+bW92ZWQuDQoNCj4gDQo+ID4gK3NzaXplX3QgYmFkYmxvY2tzX3N0b3JlKHN0cnVjdCBiYWRibG9j
+a3MgKmJiLCBjb25zdCBjaGFyICpwYWdlLA0KPiA+IHNpemVfdCBsZW4sDQo+ID4gKwkJCWludCB1
+bmFjaykNCj4gWy4uLl0NCj4gPiAraW50IGJhZGJsb2Nrc19pbml0KHN0cnVjdCBiYWRibG9ja3Mg
+KmJiLCBpbnQgZW5hYmxlKQ0KPiA+ICt7DQo+ID4gKwliYi0+Y291bnQgPSAwOw0KPiA+ICsJaWYg
+KGVuYWJsZSkNCj4gPiArCQliYi0+c2hpZnQgPSAwOw0KPiA+ICsJZWxzZQ0KPiA+ICsJCWJiLT5z
+aGlmdCA9IC0xOw0KPiA+ICsJYmItPnBhZ2UgPSBrbWFsbG9jKFBBR0VfU0laRSwgR0ZQX0tFUk5F
+TCk7DQo+IA0KPiBXaHkgbm90IF9fZ2V0X2ZyZWVfcGFnZShHRlBfS0VSTkVMKT/CoMKgVGhlIHBy
+b2JsZW0gd2l0aCBrbWFsbG9jIG9mIGFuDQo+IGV4YWN0bHkga25vd24gcGFnZSBzaXplZCBxdWFu
+dGl0eSBpcyB0aGF0IHRoZSBzbGFiIHRyYWNrZXIgZm9yIHRoaXMNCj4gcmVxdWlyZXMgdHdvIGNv
+bnRpZ3VvdXMgcGFnZXMgZm9yIGVhY2ggcGFnZSBiZWNhdXNlIG9mIHRoZSBvdmVyaGVhZC4NCg0K
+Q29vbCwgSSBkaWRuJ3Qga25vdyBhYm91dCBfX2dldF9mcmVlX3BhZ2UgLSBJIGNhbiBmaXggdGhp
+cyB1cCB0b28uDQoNCj4gDQo+IEphbWVzDQo+IA0KPiA=
