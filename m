@@ -1,105 +1,89 @@
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: [PATCH] storvsc: add more logging for error and warning messages
-Date: Fri, 04 Dec 2015 10:52:49 +0100
-Message-ID: <87vb8e5ymm.fsf@vitty.brq.redhat.com>
-References: <1449200865-20694-1-git-send-email-longli@microsoft.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 05/10] aacraid: Set correct msix count for EEH recovery
+Date: Fri, 4 Dec 2015 15:10:27 +0100
+Message-ID: <56619ED3.40409@redhat.com>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1449200865-20694-1-git-send-email-longli@microsoft.com> (Long
- Li's message of "Thu, 3 Dec 2015 19:47:45 -0800")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52889 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751159AbbLDOKb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Dec 2015 09:10:31 -0500
+In-Reply-To: <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, Gana.Sridaran@pmcs.com, aacraid@pmc-sierra.com, Rich.Bono@pmcs.com
 
-Long Li <longli@microsoft.com> writes:
-
-> Introduce a logging level for storvsc to log certain error/warning
-> messages. Those messages are helpful in some environments,
-> e.g. Microsoft Azure, for customer support and troubleshooting
-> purposes.
-
-I have an alternative suggestion: let's use dynamic debug! Basically, we
-need to convert all non-error logging to using dev_dbg() and this can be
-enabled dynamically when needed, even reboot won't be required.
-
+On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
+> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >
-> Signed-off-by: Long Li <longli@microsoft.com>
+> During EEH recovery number of online CPU's might change thereby changing
+> the number of MSIx vectors. Since each fib is allocated to a vector,
+> changes in the number of vectors causes fib to be sent thru invalid
+> vectors.In addition the correct number of MSIx vectors is not
+> updated in the INIT struct sent to the controller, when it is
+> reinitialized.
+>
+> Fixed by reassigning vectors to fibs based on the updated number of MSIx
+> vectors and updating the INIT structure before sending to controller.
+>
+> Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 > ---
->  drivers/scsi/storvsc_drv.c | 30 +++++++++++++++++++++++++++++-
->  1 file changed, 29 insertions(+), 1 deletion(-)
+>  drivers/scsi/aacraid/linit.c | 25 ++++++++++++++++++++++++-
+>  1 file changed, 24 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 40c43ae..afa1647 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -164,6 +164,21 @@ static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
->  */
->  static int vmstor_proto_version;
->
-> +#define STORVSC_LOGGING_NONE	0
-> +#define STORVSC_LOGGING_ERROR	1
-> +#define STORVSC_LOGGING_WARN	2
-> +
-> +static int logging_level = STORVSC_LOGGING_ERROR;
-> +module_param(logging_level, int, S_IRUGO|S_IWUSR);
-> +MODULE_PARM_DESC(logging_level,
-> +	"Logging level, 0 - None, 1 - Error (default), 2 - Warning.");
-> +
-> +static inline bool do_logging(int level)
-> +{
-> +	return (logging_level >= level) ? true : false;
-> +}
-> +
-> +
->  struct vmscsi_win8_extension {
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index 0147210..f88f1132 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -1355,6 +1355,7 @@ static int aac_acquire_resources(struct aac_dev *dev)
+>  	int i, j;
+>  	int instance = dev->id;
+>  	const char *name = dev->name;
+> +	int vector = 0;
+>  	unsigned long status;
 >  	/*
->  	 * The following were added in Windows 8
-> @@ -1183,7 +1198,7 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
->
->  	scmnd->result = vm_srb->scsi_status;
->
-> -	if (scmnd->result) {
-> +	if (scmnd->result && do_logging(STORVSC_LOGGING_ERROR)) {
->  		if (scsi_normalize_sense(scmnd->sense_buffer,
->  				SCSI_SENSE_BUFFERSIZE, &sense_hdr))
->  			scsi_print_sense_hdr(scmnd->device, "storvsc",
-> @@ -1239,12 +1254,25 @@ static void storvsc_on_io_completion(struct hv_device *device,
->  	stor_pkt->vm_srb.sense_info_length =
->  	vstor_packet->vm_srb.sense_info_length;
->
-> +	if (vstor_packet->vm_srb.scsi_status != 0 ||
-> +		vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-> +		if (do_logging(STORVSC_LOGGING_WARN))
-> +			dev_warn(&device->device,
-> +				"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
-> +				stor_pkt->vm_srb.cdb[0],
-> +				vstor_packet->vm_srb.scsi_status,
-> +				vstor_packet->vm_srb.srb_status);
->
->  	if ((vstor_packet->vm_srb.scsi_status & 0xFF) == 0x02) {
->  		/* CHECK_CONDITION */
->  		if (vstor_packet->vm_srb.srb_status &
->  			SRB_STATUS_AUTOSENSE_VALID) {
->  			/* autosense data available */
-> +			if (do_logging(STORVSC_LOGGING_WARN))
-> +				dev_warn(&device->device,
-> +					"stor pkt %p autosense data valid - len %d\n",
-> +					request,
-> +					vstor_packet->vm_srb.sense_info_length);
->
->  			memcpy(request->cmd->sense_buffer,
->  			       vstor_packet->vm_srb.sense_data,
+>  	 *	First clear out all interrupts.  Then enable the one's that we
+> @@ -1409,9 +1410,31 @@ static int aac_acquire_resources(struct aac_dev *dev)
+>  	}
+>  
+>  	aac_adapter_enable_int(dev);
+> +	/*max msix may change  after EEH
+> +	 * Re-assign vectors to fibs
+> +	 */
+> +	 for (i = 0;
+> +		i < (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB);
+> +		i++) {
+> +		if ((dev->max_msix == 1) ||
+> +		   (i > ((dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1)
+> +			- dev->vector_cap))) {
+> +			dev->fibs[i].vector_no = 0;
+> +		} else {
+> +			dev->fibs[i].vector_no = vector;
+> +			vector++;
+> +			if (vector == dev->max_msix)
+> +				vector = 1;
+> +		}
+> +	}
 
--- 
-  Vitaly
+The above hunk added code looks identical to the part you have just added
+in 02/10 "aacraid: Fix RRQ overload" could you make this to function ?
+Thanks, tomash
+
+>  
+> -	if (!dev->sync_mode)
+> +	if (!dev->sync_mode) {
+> +		/* After EEH recovery or suspend resume, max_msix count
+> +		 * may change, therfore updating in init as well.
+> +		 */
+>  		aac_adapter_start(dev);
+> +		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
+> +	}
+>  	return 0;
+>  
+>  error_iounmap:
+
