@@ -1,18 +1,18 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 05/10] aacraid: Set correct msix count for EEH recovery
-Date: Fri, 4 Dec 2015 15:10:27 +0100
-Message-ID: <56619ED3.40409@redhat.com>
+Subject: Re: [PATCH 02/10] aacraid: Fix RRQ overload
+Date: Fri, 4 Dec 2015 15:11:50 +0100
+Message-ID: <56619F26.70708@redhat.com>
 References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52889 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53422 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159AbbLDOKb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Dec 2015 09:10:31 -0500
-In-Reply-To: <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+	id S1751185AbbLDOLx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Dec 2015 09:11:53 -0500
+In-Reply-To: <1448973589-9216-3-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
@@ -21,69 +21,23 @@ Cc: Mahesh.Rajashekhara@pmcs.com, Murthy.Bhat@pmcs.com, Santosh.Akula@pmcs.com, 
 On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
 > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
 >
-> During EEH recovery number of online CPU's might change thereby changing
-> the number of MSIx vectors. Since each fib is allocated to a vector,
-> changes in the number of vectors causes fib to be sent thru invalid
-> vectors.In addition the correct number of MSIx vectors is not
-> updated in the INIT struct sent to the controller, when it is
-> reinitialized.
+> The driver utilizes an array of atomic variables to keep track of
+> IO submissions to each vector. To submit an IO multiple threads
+> iterate through the array to find a vector which has empty slots
+> to send an IO. The reading and updating of the variable is not atomic,
+> causing race conditions when a thread uses a full vector to
+> submit an IO.
 >
-> Fixed by reassigning vectors to fibs based on the updated number of MSIx
-> vectors and updating the INIT structure before sending to controller.
+> Fixed by mapping each FIB to a vector, the submission path then uses
+> said vector to submit IO thereby removing the possibly of a race
+> condition.The vector assignment is started from 1 since vector 0 is
+> reserved for the use of AIF management FIBS.If the number of MSIx
+> vectors is 1 (MSI or INTx mode) then all the fibs are allocated to
+> vector 0.
 >
 > Signed-off-by: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> ---
->  drivers/scsi/aacraid/linit.c | 25 ++++++++++++++++++++++++-
->  1 file changed, 24 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 0147210..f88f1132 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -1355,6 +1355,7 @@ static int aac_acquire_resources(struct aac_dev *dev)
->  	int i, j;
->  	int instance = dev->id;
->  	const char *name = dev->name;
-> +	int vector = 0;
->  	unsigned long status;
->  	/*
->  	 *	First clear out all interrupts.  Then enable the one's that we
-> @@ -1409,9 +1410,31 @@ static int aac_acquire_resources(struct aac_dev *dev)
->  	}
->  
->  	aac_adapter_enable_int(dev);
-> +	/*max msix may change  after EEH
-> +	 * Re-assign vectors to fibs
-> +	 */
-> +	 for (i = 0;
-> +		i < (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB);
-> +		i++) {
-> +		if ((dev->max_msix == 1) ||
-> +		   (i > ((dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1)
-> +			- dev->vector_cap))) {
-> +			dev->fibs[i].vector_no = 0;
-> +		} else {
-> +			dev->fibs[i].vector_no = vector;
-> +			vector++;
-> +			if (vector == dev->max_msix)
-> +				vector = 1;
-> +		}
-> +	}
 
-The above hunk added code looks identical to the part you have just added
-in 02/10 "aacraid: Fix RRQ overload" could you make this to function ?
-Thanks, tomash
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
->  
-> -	if (!dev->sync_mode)
-> +	if (!dev->sync_mode) {
-> +		/* After EEH recovery or suspend resume, max_msix count
-> +		 * may change, therfore updating in init as well.
-> +		 */
->  		aac_adapter_start(dev);
-> +		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
-> +	}
->  	return 0;
->  
->  error_iounmap:
+Tomas
 
