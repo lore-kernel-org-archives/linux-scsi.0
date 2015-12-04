@@ -1,165 +1,98 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: kernel BUG at drivers/scsi/scsi_lib.c:1096!
-Date: Fri, 4 Dec 2015 10:02:58 -0700
-Message-ID: <5661C742.8020604@fb.com>
-References: <1447838334.1564.2.camel@ellerman.id.au>
- <1447855399.3974.24.camel@redhat.com>
- <1447894964.15206.0.camel@ellerman.id.au>
- <20151119082325.GA11419@infradead.org> <564DEC41.5010600@suse.de>
- <1448030316.4067.18.camel@localhost.localdomain> <564F3453.9040603@suse.de>
- <1448033323.4067.24.camel@localhost.localdomain> <565579A2.4000005@suse.de>
- <20151125180133.GA18839@redhat.com> <5656059B.9010102@suse.de>
- <s5h37vi40be.wl-tiwai@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: BUG: KASAN: slab-out-of-bounds in
+ ses_enclosure_data_process+0x900/0xe50
+Date: Fri, 04 Dec 2015 09:09:32 -0800
+Message-ID: <1449248972.27077.7.camel@HansenPartnership.com>
+References: <20151201202053.GA4753@glen>
+	 <1449097101.2203.67.camel@HansenPartnership.com>
+	 <20151203203656.GA9278@glen>
+	 <1449176346.2187.19.camel@HansenPartnership.com>
+	 <20151203222004.GA22311@glen>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-iAX8eb+/9xaLca6k8xg5"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <s5h37vi40be.wl-tiwai@suse.de>
+In-Reply-To: <20151203222004.GA22311@glen>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Takashi Iwai <tiwai@suse.de>, Hannes Reinecke <hare@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, emilne@redhat.com, Christoph Hellwig <hch@infradead.org>, Michael Ellerman <mpe@ellerman.id.au>, Mark Salter <msalter@redhat.com>, "James E. J. Bottomley" <JBottomley@odin.com>, brking <brking@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+To: Andrea Gelmini <andrea.gelmini@gelma.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/04/2015 09:59 AM, Takashi Iwai wrote:
-> On Wed, 25 Nov 2015 20:01:47 +0100,
-> Hannes Reinecke wrote:
->>
->> On 11/25/2015 07:01 PM, Mike Snitzer wrote:
->>> On Wed, Nov 25 2015 at  4:04am -0500,
->>> Hannes Reinecke <hare@suse.de> wrote:
->>>
->>>> On 11/20/2015 04:28 PM, Ewan Milne wrote:
->>>>> On Fri, 2015-11-20 at 15:55 +0100, Hannes Reinecke wrote:
->>>>>> Can't we have a joint effort here?
->>>>>> I've been spending a _LOT_ of time trying to debug things here, but
->>>>>> none of the ideas I've come up with have been able to fix anything.
->>>>>
->>>>> Yes.  I'm not the one primarily looking at it, and we don't have a
->>>>> reproducer in-house.  We just have the one dump right now.
->>>>>
->>>>>>
->>>>>> I'm almost tempted to increase the count from scsi_alloc_sgtable()
->>>>>> by one and be done with ...
->>>>>>
->>>>>
->>>>> That might not fix it if it is a problem with the merge code, though.
->>>>>
->>>> And indeed, it doesn't.
->>>
->>> How did you arrive at that?  Do you have a reproducer now?
->>>
->> Not a reproducer, but several dumps for analysis.
->>
->>>> Seems I finally found the culprit.
->>>>
->>>> What happens is this:
->>>> We have two paths, with these seg_boundary_masks:
->>>>
->>>> path-1:    seg_boundary_mask = 65535,
->>>> path-2:    seg_boundary_mask = 4294967295,
->>>>
->>>> consequently the DM request queue has this:
->>>>
->>>> md-1:    seg_boundary_mask = 65535,
->>>>
->>>> What happens now is that a request is being formatted, and sent
->>>> to path 2. During submission req->nr_phys_segments is formatted
->>>> with the limits of path 2, arriving at a count of 3.
->>>> Now the request gets retried on path 1, but as the NOMERGE request
->>>> flag is set req->nr_phys_segments is never updated.
->>>> But blk_rq_map_sg() ignores all counters, and just uses the
->>>> bi_vec directly, resulting in a count of 4 -> boom.
->>>>
->>>> So the culprit here is the NOMERGE flag,
->>>
->>> NOMERGE is always set in __blk_rq_prep_clone() for cloned requests.
->>>
->> Yes.
->>
->>>> which is evaluated via
->>>> ->dm_dispatch_request()
->>>>     ->blk_insert_cloned_request()
->>>>       ->blk_rq_check_limits()
->>>
->>> blk_insert_cloned_request() is the only caller of blk_rq_check_limits();
->>> anyway after reading your mail I'm still left wondering if your proposed
->>> patch is correct.
->>>
->>>> If the above assessment is correct, the following patch should
->>>> fix it:
->>>>
->>>> diff --git a/block/blk-core.c b/block/blk-core.c
->>>> index 801ced7..12cccd6 100644
->>>> --- a/block/blk-core.c
->>>> +++ b/block/blk-core.c
->>>> @@ -1928,7 +1928,7 @@ EXPORT_SYMBOL(submit_bio);
->>>>     */
->>>>    int blk_rq_check_limits(struct request_queue *q, struct request *rq)
->>>>    {
->>>> -       if (!rq_mergeable(rq))
->>>> +       if (rq->cmd_type != REQ_TYPE_FS)
->>>>                   return 0;
->>>>
->>>>           if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q,
->>>> rq->cmd_flags)) {
->>>>
->>>>
->>>> Mike? Jens?
->>>> Can you comment on it?
->>>
->>> You're not explaining the actual change in the patch very well; I think
->>> you're correct but you're leaving the justification as an exercise to
->>> the reviewer:
->>>
->>> blk_rq_check_limits() will call blk_recalc_rq_segments() after the
->>> !rq_mergeable() check but you're saying for this case in question we
->>> never get there -- due to the cloned request having NOMERGE set.
->>>
->>> So in blk_rq_check_limits() you've unrolled rq_mergeable() and
->>> open-coded the lone remaining check (rq->cmd_type != REQ_TYPE_FS)
->>>
->>> I agree that the (rq->cmd_flags & REQ_NOMERGE_FLAGS) check in
->>> the blk_insert_cloned_request() call-chain (via rq_mergeable()) makes no
->>> sense for cloned requests that always have NOMERGE set.
->>>
->>> So you're saying that by having blk_rq_check_limits() go on to call
->>> blk_recalc_rq_segments() this bug will be fixed?
->>>
->> That is the idea.
->>
->> I've already established that in all instances I have seen so far
->> req->nr_phys_segments is _less_ than req->bio->bi_phys_segments.
->>
->> As it turns out, req->nr_phys_segemnts _would_ have been updated in
->> blk_rq_check_limits(), but isn't due to the NOMERGE flag being set
->> for the cloned request.
->> So each cloned request inherits the values from the original request,
->> despite the fact that req->nr_phys_segments _has_ to be evaluated in
->> the final request_queue context, as the queue limits _might_ be
->> different from the original (merged) queue limits of the multipath
->> request queue.
->>
->>> BTW, I think blk_rq_check_limits()'s export should be removed and the
->>> function made static and renamed to blk_clone_rq_check_limits(), again:
->>> blk_insert_cloned_request() is the only caller of blk_rq_check_limits()
->>>
->> Actually, seeing Jens' last comment the check for REQ_TYPE_FS is
->> pointless, too, so we might as well remove the entire if-clause.
->>
->>> Seems prudent to make that change now to be clear that this code is only
->>> used by cloned requests.
->>>
->> Yeah, that would make sense. I'll be preparing a patch.
->> With a more detailed description :-)
->
-> Do we have already a fix?  Right now I got (likely) this kernel BUG()
-> on the almost latest Linus tree (commit 25364a9e54fb8296).  It
-> happened while I started a KVM right after a fresh boot.  The machine
-> paniced even before that, so I hit this twice today.
 
-Update to the tree as-of yesterday (or today) and it should work. 
-25364a9e54fb8296 doesn't include the latest block fixes that were sent 
-in yesterday, that should fix it. You need commit a88d32af18b8 or newer.
+--=-iAX8eb+/9xaLca6k8xg5
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+On Thu, 2015-12-03 at 23:20 +0100, Andrea Gelmini wrote:
+> On Thu, Dec 03, 2015 at 12:59:06PM -0800, James Bottomley wrote:
+> > sg_map -i
+> >=20
+> > in your system, you should see something with an inquiry string like
+> > enclosure.  It's the /dev/sg<n> of that you need to run sg_ses on.
+>=20
+> root@glen:/home/gelma# sg_map -i
+> /dev/sg0  /dev/sda  ATA       Samsung SSD 850   1B6Q
+> /dev/sg1  /dev/sr0  HL-DT-ST  DVDRAM GU40N      QX23
+> /dev/sg2  /dev/sdb  WD        My Passport 0820  1007
+> /dev/sg3  WD        SES Device        1007
+>=20
+> And following Douglas' instructions:
+>=20
+> root@glen:/home/gelma# lsscsi -gs
+> [0:0:0:0]    disk    ATA      Samsung SSD 850  1B6Q  /dev/sda   /dev/sg0 =
+  1.02TB
+> [1:0:0:0]    cd/dvd  HL-DT-ST DVDRAM GU40N     QX23  /dev/sr0   /dev/sg1 =
+       -
+> [8:0:0:0]    disk    WD       My Passport 0820 1007  /dev/sdb   /dev/sg2 =
+  2.00TB
+> [8:0:0:1]    enclosu WD       SES Device       1007  -          /dev/sg3 =
+     =20
+>=20
+> root@glen:/home/gelma# sg_ses /dev/sg3
+>   WD        SES Device        1007
+> Supported diagnostic pages:
+>   Supported Diagnostic Pages [sdp] [0x0]
+>   Short Enclosure Status (SES) [ses] [0x8]
+>   <unknown> [0x80]
+>   <unknown> [0x83]
+>   <unknown> [0x84]
+>   <unknown> [0x85]
+>=20
+>=20
+> Well, if it's better for you, I can give you root access to a machine wit=
+h this device
+> connected to.
+
+Actually, that would be really helpful, since I only have access to one,
+very old, enclosure device.  My ssh key is
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnSsL4HoG8CXrJKA2CDAFJi+Ry8EUYgLluzX+=
+zQ21iShnlCelp8djuoe+q+96WX2VGTnxQPJGAYUXNIW+rT9g3g8mgbjLAxYec4AHOgir/LlEBCA=
+RHo4SWue9L2if0nl6nLu1PudCQIKM747Pfzj1R4VfWboMU4m6KvkaFgP3rwJkZ96aNHI4ssRDh3=
+EXvlD/vix6DZx0T7UEDpD3icc6ZyA2kmymtGCg1+nAWRTWImsnyhRFTIJvVw+xL7iR6GBoIJND8=
+2SpzP13Z95owuLm6QGPWow5Xgp3FLgoh+KezU7qXZh17Wh5ANRbgCNZJDc4fDBhXO+oNZmaU8bc=
+0AW8R
+
+Thanks,
+
+James
+
+
+--=-iAX8eb+/9xaLca6k8xg5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAABCAAGBQJWYcjMAAoJEDeqqVYsXL0MvQcH/RxnNZUQl/5V72XWsmPmO8AR
+tH/L//U6AztS8vSMoyn1nAgXhMODoH0cQEVw1N/aCOJAp/kIyDIJHmLfZV/tw5MN
+IWRnuQ61w/K5SRvsEW7st4MK219Ur8i1Qh3DKHkxyJqDEmJLndNtfpuKYT4Q4BYN
+3fENluo8K4KTDLj8/AMxJI5w7UUj2kGOoxIROlrNP6sCKk8jkxd2ZChWr/iNad1D
+YLeQ8+LMt7tqi9wAzaH+5hLlJ+BoFiwfwBzK/ZAj/+8YQ0Hc04iAYDyp/XXPiiha
+tRvRISGolj0Hpa6vSqBAqOF8WiS60JWCYjIITk5GEbqFL1zmoJ5XbA/OexEPavw=
+=Q++T
+-----END PGP SIGNATURE-----
+
+--=-iAX8eb+/9xaLca6k8xg5--
