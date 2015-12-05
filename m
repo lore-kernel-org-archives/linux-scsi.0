@@ -1,12 +1,14 @@
 From: Lars-Peter Clausen <lars@metafoo.de>
-Subject: [PATCH 1/2] be2iscsi: Remove unnecessary synchronize_irq() before free_irq()
-Date: Sat,  5 Dec 2015 11:53:47 +0100
-Message-ID: <1449312828-24539-1-git-send-email-lars@metafoo.de>
+Subject: [PATCH 2/2] mpt3sas: Remove unnecessary synchronize_irq() before free_irq()
+Date: Sat,  5 Dec 2015 11:53:48 +0100
+Message-ID: <1449312828-24539-2-git-send-email-lars@metafoo.de>
+References: <1449312828-24539-1-git-send-email-lars@metafoo.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out-198.synserver.de ([212.40.185.198]:1108 "EHLO
+Received: from smtp-out-198.synserver.de ([212.40.185.198]:1192 "EHLO
 	smtp-out-188.synserver.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753897AbbLELAn (ORCPT
+	by vger.kernel.org with ESMTP id S1753901AbbLELAn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2015 06:00:43 -0500
+In-Reply-To: <1449312828-24539-1-git-send-email-lars@metafoo.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,30 +30,21 @@ expression irq;
 
 Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
 ---
- drivers/scsi/be2iscsi/be_main.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index fe0c514..c4dd858 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5279,15 +5279,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
- 	if (phba->msix_enabled) {
- 		for (i = 0; i <= phba->num_cpus; i++) {
- 			msix_vec = phba->msix_entries[i].vector;
--			synchronize_irq(msix_vec);
- 			free_irq(msix_vec, &phwi_context->be_eq[i]);
- 			kfree(phba->msi_name[i]);
- 		}
- 	} else
--		if (phba->pcidev->irq) {
--			synchronize_irq(phba->pcidev->irq);
-+		if (phba->pcidev->irq)
- 			free_irq(phba->pcidev->irq, phba);
--		}
- 	pci_disable_msix(phba->pcidev);
- 	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
- 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 11393eb..943fbfd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1799,7 +1799,6 @@ _base_free_irq(struct MPT3SAS_ADAPTER *ioc)
+ 		list_del(&reply_q->list);
+ 		irq_set_affinity_hint(reply_q->vector, NULL);
+ 		free_cpumask_var(reply_q->affinity_hint);
+-		synchronize_irq(reply_q->vector);
+ 		free_irq(reply_q->vector, reply_q);
+ 		kfree(reply_q);
+ 	}
 -- 
 2.1.4
 
