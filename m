@@ -1,47 +1,112 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
-Date: Sat, 5 Dec 2015 00:11:22 +0000
-Message-ID: <1449274282.16905.107.camel@intel.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
-	 <1449271801.27077.25.camel@HansenPartnership.com>
-	 <1449273524.16905.103.camel@intel.com>
-	 <1449273995.27077.32.camel@HansenPartnership.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
+Subject: RE: [PATCH 05/10] aacraid: Set correct msix count for EEH recovery
+Date: Sat, 5 Dec 2015 00:15:47 +0000
+Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EF704@BBYEXM01.pmc-sierra.internal>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-6-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <56619ED3.40409@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449273995.27077.32.camel@HansenPartnership.com>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:35145 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932150AbbLEAPu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Dec 2015 19:15:50 -0500
+In-Reply-To: <56619ED3.40409@redhat.com>
 Content-Language: en-US
-Content-ID: <5241250A30FA2A47B745697897F6A4D0@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "neilb@suse.com" <neilb@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-T24gRnJpLCAyMDE1LTEyLTA0IGF0IDE2OjA2IC0wODAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-DQo+IE9uIEZyaSwgMjAxNS0xMi0wNCBhdCAyMzo1OCArMDAwMCwgVmVybWEsIFZpc2hhbCBMIHdy
-b3RlOg0KPiA+IE9uIEZyaSwgMjAxNS0xMi0wNCBhdCAxNTozMCAtMDgwMCwgSmFtZXMgQm90dG9t
-bGV5IHdyb3RlOg0KPiA+IFsuLi5dDQo+ID4gPiA+ICsgKiBXZSByZXR1cm4NCj4gPiA+ID4gKyAq
-wqDCoDAgaWYgdGhlcmUgYXJlIG5vIGtub3duIGJhZCBibG9ja3MgaW4gdGhlIHJhbmdlDQo+ID4g
-PiA+ICsgKsKgwqAxIGlmIHRoZXJlIGFyZSBrbm93biBiYWQgYmxvY2sgd2hpY2ggYXJlIGFsbCBh
-Y2tub3dsZWRnZWQNCj4gPiA+ID4gKyAqIC0xIGlmIHRoZXJlIGFyZSBiYWQgYmxvY2tzIHdoaWNo
-IGhhdmUgbm90IHlldCBiZWVuDQo+ID4gPiA+IGFja25vd2xlZGdlZA0KPiA+ID4gPiBpbiBtZXRh
-ZGF0YS4NCj4gPiA+ID4gKyAqIHBsdXMgdGhlIHN0YXJ0L2xlbmd0aCBvZiB0aGUgZmlyc3QgYmFk
-IHNlY3Rpb24gd2Ugb3ZlcmxhcC4NCj4gPiA+ID4gKyAqLw0KPiA+ID4gDQo+ID4gPiBUaGlzIGNv
-bW1lbnQgc2hvdWxkIGJlIGRvY2Jvb2suDQo+ID4gDQo+ID4gQXBwbGljYWJsZSB0byBhbGwgeW91
-ciBjb21tZW50cyAtIChhbmQgdGhleSBhcmUgYWxsIHZhbGlkKSwgSSBzaW1wbHkNCj4gPiBjb3Bp
-ZWQgb3ZlciBhbGwgdGhpcyBmcm9tIG1kLiBJJ20gaGFwcHkgdG8gbWFrZSB0aGUgY2hhbmdlcyB0
-bw0KPiA+IGNvbW1lbnRzLA0KPiA+IGFuZCB0aGUgb3RoZXIgdHdvIHRoaW5ncyAoc2VlIGJlbG93
-KSBpZiB0aGF0J3MgdGhlIHJpZ2h0IHRoaW5nIHRvIGRvDQo+ID4gLS0NCj4gPiBJIGp1c3QgdHJp
-ZWQgdG8ga2VlcCBteSBvd24gY2hhbmdlcyB0byB0aGUgb3JpZ2luYWwgbWQgYmFkYmxvY2tzDQo+
-ID4gY29kZQ0KPiA+IG1pbmltYWwuDQo+ID4gV291bGQgaXQgYmUgYmV0dGVyIChmb3IgcmV2aWV3
-LWFiaWxpdHkpIGlmIEkgbWFkZSB0aGVzZSBjaGFuZ2VzIGluIGENCj4gPiBuZXcNCj4gPiBwYXRj
-aCBvbiB0b3Agb2YgdGhpcywgb3Igc2hvdWxkIEkganVzdCBzcXVhc2ggdGhlbSBpbnRvIHRoaXMg
-b25lPw0KPiANCj4gSWYgeW91IHdlcmUgbW92aW5nIGl0LCB0aGF0IG1pZ2h0IGJlIGFwcHJvcHJp
-YXRlLsKgwqBIb3dldmVyLCB0aGlzIGlzDQo+IGVmZmVjdGl2ZWx5IG5ldyBjb2RlIGJlY2F1c2Ug
-eW91J3JlIG5vdCByZW1vdmluZyB0aGUgb3JpZ2luYWwsIHNvIHdlDQo+IHNob3VsZCBiZWdpbiBh
-dCBsZWFzdCB3aXRoIGEgY29oZXJlbnQgQVBJLiAoaS5lLiBjb3JyZWN0aW9ucyB0byB0aGUNCj4g
-b3JpZ2luYWwgcGF0Y2ggcmF0aGVyIHRoYW4gaW5jcmVtZW50YWwpLg0KPiANCg0KUGF0Y2ggMyBk
-b2VzIHJlbW92ZSB0aGUgb3JpZ2luYWwgY29kZSwgYnV0IHllcywgSSBhZ3JlZS4gV2lsbCBzZW5k
-DQphbm90aGVyIHZlcnNpb24uDQoNClRoYW5rcyBmb3IgdGhlIHJldmlldy4NCg0KCS1WaXNoYWw=
+Hello Tomas,
+
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Friday, December 4, 2015 6:10 AM
+> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
+> scsi@vger.kernel.org
+> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
+> aacraid@pmc-sierra.com; Rich Bono
+> Subject: Re: [PATCH 05/10] aacraid: Set correct msix count for EEH recovery
+> 
+> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
+> > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+> >
+> > During EEH recovery number of online CPU's might change thereby
+> changing
+> > the number of MSIx vectors. Since each fib is allocated to a vector,
+> > changes in the number of vectors causes fib to be sent thru invalid
+> > vectors.In addition the correct number of MSIx vectors is not
+> > updated in the INIT struct sent to the controller, when it is
+> > reinitialized.
+> >
+> > Fixed by reassigning vectors to fibs based on the updated number of MSIx
+> > vectors and updating the INIT structure before sending to controller.
+> >
+> > Signed-off-by: Raghava Aditya Renukunta
+> <raghavaaditya.renukunta@pmcs.com>
+> > ---
+> >  drivers/scsi/aacraid/linit.c | 25 ++++++++++++++++++++++++-
+> >  1 file changed, 24 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> > index 0147210..f88f1132 100644
+> > --- a/drivers/scsi/aacraid/linit.c
+> > +++ b/drivers/scsi/aacraid/linit.c
+> > @@ -1355,6 +1355,7 @@ static int aac_acquire_resources(struct aac_dev
+> *dev)
+> >  	int i, j;
+> >  	int instance = dev->id;
+> >  	const char *name = dev->name;
+> > +	int vector = 0;
+> >  	unsigned long status;
+> >  	/*
+> >  	 *	First clear out all interrupts.  Then enable the one's that we
+> > @@ -1409,9 +1410,31 @@ static int aac_acquire_resources(struct aac_dev
+> *dev)
+> >  	}
+> >
+> >  	aac_adapter_enable_int(dev);
+> > +	/*max msix may change  after EEH
+> > +	 * Re-assign vectors to fibs
+> > +	 */
+> > +	 for (i = 0;
+> > +		i < (dev->scsi_host_ptr->can_queue +
+> AAC_NUM_MGT_FIB);
+> > +		i++) {
+> > +		if ((dev->max_msix == 1) ||
+> > +		   (i > ((dev->scsi_host_ptr->can_queue +
+> AAC_NUM_MGT_FIB - 1)
+> > +			- dev->vector_cap))) {
+> > +			dev->fibs[i].vector_no = 0;
+> > +		} else {
+> > +			dev->fibs[i].vector_no = vector;
+> > +			vector++;
+> > +			if (vector == dev->max_msix)
+> > +				vector = 1;
+> > +		}
+> > +	}
+> 
+> The above hunk added code looks identical to the part you have just added
+> in 02/10 "aacraid: Fix RRQ overload" could you make this to function ?
+> Thanks, tomash
+
+Yes, I will make the necessary changes.
+> >
+> > -	if (!dev->sync_mode)
+> > +	if (!dev->sync_mode) {
+> > +		/* After EEH recovery or suspend resume, max_msix count
+> > +		 * may change, therfore updating in init as well.
+> > +		 */
+> >  		aac_adapter_start(dev);
+> > +		dev->init->Sa_MSIXVectors = cpu_to_le32(dev->max_msix);
+> > +	}
+> >  	return 0;
+> >
+> >  error_iounmap:
+
+Regards,
+Raghava Aditya
