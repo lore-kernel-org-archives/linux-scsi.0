@@ -1,91 +1,80 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-Date: Sat, 5 Dec 2015 00:40:34 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EF725@BBYEXM01.pmc-sierra.internal>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <5661A493.90603@redhat.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [RFC PATCH 76/71] ncr5380: Enable PDMA for DTC chips
+Date: Sat, 5 Dec 2015 12:32:16 +1100
+Message-ID: <CAGRGNgVMOuWbeq8B-hrwtLvwdsVqdLV5UvCw8K6+JF5p0DHRoQ@mail.gmail.com>
+References: <20151118083455.331768508@telegraphics.com.au> <1449183781-2163-1-git-send-email-linux@rainbow-software.org>
+ <CAGRGNgU=6=XBGxpwe+Z+uU-Pq-L=aTyG2GukkWAqFVnJHTY3Og@mail.gmail.com> <alpine.LNX.2.00.1512041857160.13680@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:37039 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754295AbbLEAkg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Dec 2015 19:40:36 -0500
-In-Reply-To: <5661A493.90603@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1512041857160.13680@nippy.intranet>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Ondrej Zary <linux@rainbow-software.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-Hello Tomas,
+Hi Finn,
 
+On Fri, Dec 4, 2015 at 7:38 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>
+> On Fri, 4 Dec 2015, Julian Calaby wrote:
+>
+>> > -               if (overrides[current_override].board == BOARD_NCR53C400A) {
+>> > +               if (overrides[current_override].board == BOARD_NCR53C400A ||
+>> > +                   overrides[current_override].board == BOARD_DTC3181E) {
+>>
+>> These if statements are starting to get a bit long, would it make
+>> sense to replace them with a flag or equivalent?
+>
+> To what end? Shorter lines? As in,
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Friday, December 4, 2015 6:35 AM
-> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
-> scsi@vger.kernel.org
-> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
-> aacraid@pmc-sierra.com; Rich Bono
-> Subject: Re: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-> 
-> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
-> > From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
-> >
-> > aac_fib_map_free() calls pci_free_consistent() without checking that
-> > dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
-> > are indeed NULL/0, this will result in a hang as pci_free_consistent()
-> > will attempt to invalidate cache for the entire 64-bit address space
-> > (which would take a very long time).
-> >
-> > Fixed by adding a check to make sure that dev->hw_fib_va and
-> > dev->max_fib_size are not NULL and 0 respectively.
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <raghavaaditya.renukunta@pmcs.com>
-> 
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> 
-> Is the can_queue constant during the driver's life, or is it possible
-> to manipulate it (aac_change_queue_depth)?
-> 
-> Tomas
+Pretty much, each expression is quite long and they seem to be growing
+fairly rapidly as you and Ondrej discover similar boards.
 
-can_queue is only changed in aac_init_adapter. Do you want to save 
- (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) in a variable
-So that the whole can_queue dereference need not be used?
+>
+>         if (board_is_ncr53c400a || board_is_dtc3181e) {
+>                 /* ... */
+>         }
+>
+> I suppose that could be an improvement if new flags would entirely replace
+> the override.board struct member and the existing switch statement,
+>
+>         switch (overrides[current_override].board) {
+>                 /* ... */
+>         }
+>
+> Or maybe you meant testing a new flag something like this,
+>
+>         if (hostdata->ncr53c400_compatible) {
+>                 /* ... */
+>         }
+>
+> If your concern is the Don't Repeat Yourself rule, I'm not sure that new
+> flag would get tested more than once (?) And it would still have to be
+> assigned using an "objectionably" long expression, e.g.
+>
+>         hostdata->ncr53c400_compatible =
+>                 overrides[current_override].board == BOARD_NCR53C400 ||
+>                 overrides[current_override].board == BOARD_NCR53C400A ||
+>                 overrides[current_override].board == BOARD_DTC3181E;
+>
+> Rather than add new flags, perhaps a 'switch' statement instead of an 'if'
+> statement would be shorter (if the size of the expression is the problem).
 
-Regards,
-Raghava Aditya
+I think switch statements would be cleaner in this particular
+instance. I was thinking something like:
 
-> > ---
-> >  drivers/scsi/aacraid/commsup.c | 9 ++++++---
-> >  1 file changed, 6 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/scsi/aacraid/commsup.c
-> b/drivers/scsi/aacraid/commsup.c
-> > index b257d3b..9533f47 100644
-> > --- a/drivers/scsi/aacraid/commsup.c
-> > +++ b/drivers/scsi/aacraid/commsup.c
-> > @@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
-> >
-> >  void aac_fib_map_free(struct aac_dev *dev)
-> >  {
-> > -	pci_free_consistent(dev->pdev,
-> > -	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue +
-> AAC_NUM_MGT_FIB),
-> > -	  dev->hw_fib_va, dev->hw_fib_pa);
-> > +	if (dev->hw_fib_va && dev->max_fib_size) {
-> > +		pci_free_consistent(dev->pdev,
-> > +		(dev->max_fib_size *
-> > +		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
-> > +		dev->hw_fib_va, dev->hw_fib_pa);
-> > +	}
-> >  	dev->hw_fib_va = NULL;
-> >  	dev->hw_fib_pa = 0;
-> >  }
+if (somthing->flags & NCR53C400_COMPATIBLE) {
+    /* ... */
+}
 
+but if it's only ever going to be used once, then it's pretty
+pointless and switch statements are cleaner.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
