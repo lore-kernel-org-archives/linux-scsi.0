@@ -1,59 +1,57 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [RFC PATCH 76/71] ncr5380: Enable PDMA for DTC chips
-Date: Sat, 5 Dec 2015 13:38:03 +1100
-Message-ID: <CAGRGNgXPV20xkfk-crubLJjoGhoZPpfdCu2kvHAmnpoDvNLb4A@mail.gmail.com>
-References: <20151118083455.331768508@telegraphics.com.au> <1449183781-2163-1-git-send-email-linux@rainbow-software.org>
- <CAGRGNgU=6=XBGxpwe+Z+uU-Pq-L=aTyG2GukkWAqFVnJHTY3Og@mail.gmail.com>
- <alpine.LNX.2.00.1512041857160.13680@nippy.intranet> <CAGRGNgVMOuWbeq8B-hrwtLvwdsVqdLV5UvCw8K6+JF5p0DHRoQ@mail.gmail.com>
- <alpine.LNX.2.00.1512051246540.31458@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1512051246540.31458@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Ondrej Zary <linux@rainbow-software.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: Lars-Peter Clausen <lars@metafoo.de>
+Subject: [PATCH 1/2] be2iscsi: Remove unnecessary synchronize_irq() before free_irq()
+Date: Sat,  5 Dec 2015 11:53:47 +0100
+Message-ID: <1449312828-24539-1-git-send-email-lars@metafoo.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-out-198.synserver.de ([212.40.185.198]:1108 "EHLO
+	smtp-out-188.synserver.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753897AbbLELAn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2015 06:00:43 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, Lars-Peter Clausen <lars@metafoo.de>
 
-Hi Finn,
+Calling synchronize_irq() right before free_irq() is quite useless. On one
+hand the IRQ can easily fire again before free_irq() is entered, on the
+other hand free_irq() itself calls synchronize_irq() internally (in a race
+condition free way), before any state associated with the IRQ is freed.
 
-On Sat, Dec 5, 2015 at 1:12 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
->
-> On Sat, 5 Dec 2015, Julian Calaby wrote:
->
->> Hi Finn,
->>
->> On Fri, Dec 4, 2015 at 7:38 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
->> >
->> > On Fri, 4 Dec 2015, Julian Calaby wrote:
->> >
->> >> > -               if (overrides[current_override].board == BOARD_NCR53C400A) {
->> >> > +               if (overrides[current_override].board == BOARD_NCR53C400A ||
->> >> > +                   overrides[current_override].board == BOARD_DTC3181E) {
->> >>
->> >> These if statements are starting to get a bit long, would it make
->> >> sense to replace them with a flag or equivalent?
->> >
->> > To what end? Shorter lines? As in,
->>
->> Pretty much, each expression is quite long and they seem to be growing
->> fairly rapidly as you and Ondrej discover similar boards.
->
-> Each BOARD_* macro actually refers to a whole category of devices. No new
-> boards, devices or categories of devices have been discovered.
->
-> Ondrej is enabling and/or fixing PDMA functionality for three existing
-> device categories, for which the driver already has a nominally compatible
-> PDMA implementation.
+Patch was generated using the following semantic patch:
+// <smpl>
+@@
+expression irq;
+@@
+-synchronize_irq(irq);
+ free_irq(irq, ...);
+// </smpl>
 
-I meant discovering boards which are similar.
+Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+---
+ drivers/scsi/be2iscsi/be_main.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Either way, I'm not sure it matters that much.
-
-Thanks,
-
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fe0c514..c4dd858 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5279,15 +5279,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
+ 	if (phba->msix_enabled) {
+ 		for (i = 0; i <= phba->num_cpus; i++) {
+ 			msix_vec = phba->msix_entries[i].vector;
+-			synchronize_irq(msix_vec);
+ 			free_irq(msix_vec, &phwi_context->be_eq[i]);
+ 			kfree(phba->msi_name[i]);
+ 		}
+ 	} else
+-		if (phba->pcidev->irq) {
+-			synchronize_irq(phba->pcidev->irq);
++		if (phba->pcidev->irq)
+ 			free_irq(phba->pcidev->irq, phba);
+-		}
+ 	pci_disable_msix(phba->pcidev);
+ 	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
+ 
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
