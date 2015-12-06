@@ -1,169 +1,164 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 62/72] ncr5380: Implement new eh_bus_reset_handler
-Date: Sun, 06 Dec 2015 12:32:28 +1100
-Message-ID: <20151206013142.325498687@telegraphics.com.au>
+Subject: [PATCH v2 63/72] atari_NCR5380: Remove HOSTNO macro from printk() and seq_printf() calls
+Date: Sun, 06 Dec 2015 12:32:29 +1100
+Message-ID: <20151206013142.575495701@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-new-eh_bus_reset_handler
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=atari_NCR5380-remove-HOSTNO-printk
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-NCR5380.c lacks a sane eh_bus_reset_handler. The atari_NCR5380.c code is
-much better but it should not throw out the issue queue (that would be
-a host reset) and it neglects to set the result code for commands that it
-throws out. Fix these bugs and keep the two core drivers in sync.
+Remove the HOSTNO macro that is peculiar to atari_NCR5380.c and
+contributes to the problem of divergence of the NCR5380 core drivers.
+Keep NCR5380.c in sync.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   50 ++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/atari_NCR5380.c |   39 +++++++++++++++++++--------------
- 2 files changed, 72 insertions(+), 17 deletions(-)
+ drivers/scsi/NCR5380.c       |   17 +++++++++--------
+ drivers/scsi/atari_NCR5380.c |   23 +++++++++--------------
+ 2 files changed, 18 insertions(+), 22 deletions(-)
 
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:07.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:08.000000000 +1100
-@@ -2689,11 +2689,12 @@ static int NCR5380_bus_reset(struct scsi
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
- 	unsigned long flags;
-+	struct NCR5380_cmd *ncmd;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:08.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:09.000000000 +1100
+@@ -569,12 +569,12 @@ static void NCR5380_print_phase(struct S
  
- 	spin_lock_irqsave(&hostdata->lock, flags);
+ 	status = NCR5380_read(STATUS_REG);
+ 	if (!(status & SR_REQ))
+-		printk(KERN_DEBUG "scsi%d: REQ not asserted, phase unknown.\n", HOSTNO);
++		shost_printk(KERN_DEBUG, instance, "REQ not asserted, phase unknown.\n");
+ 	else {
+ 		for (i = 0; (phases[i].value != PHASE_UNKNOWN) &&
+ 		     (phases[i].value != (status & PHASE_MASK)); ++i)
+ 			;
+-		printk(KERN_DEBUG "scsi%d: phase %s\n", HOSTNO, phases[i].name);
++		shost_printk(KERN_DEBUG, instance, "phase %s\n", phases[i].name);
+ 	}
+ }
  
- #if (NDEBUG & NDEBUG_ANY)
--	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
-+	scmd_printk(KERN_INFO, cmd, __func__);
- #endif
- 	NCR5380_dprint(NDEBUG_ANY, instance);
- 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
-@@ -2713,27 +2714,32 @@ static int NCR5380_bus_reset(struct scsi
- 
- 	hostdata->selecting = NULL;
- 
--	if (hostdata->connected)
--		dsprintk(NDEBUG_ABORT, instance, "reset aborted a connected command\n");
--	hostdata->connected = NULL;
-+	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
-+		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-+
-+		set_host_byte(cmd, DID_RESET);
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	list_for_each_entry(ncmd, &hostdata->autosense, list) {
-+		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-+
-+		set_host_byte(cmd, DID_RESET);
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	if (hostdata->connected) {
-+		set_host_byte(hostdata->connected, DID_RESET);
-+		complete_cmd(instance, hostdata->connected);
-+		hostdata->connected = NULL;
-+	}
- 
- 	if (hostdata->sensing) {
-+		set_host_byte(hostdata->connected, DID_RESET);
- 		complete_cmd(instance, hostdata->sensing);
- 		hostdata->sensing = NULL;
+@@ -1423,8 +1423,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 		NCR5380_reselect(instance);
+ 		if (!hostdata->connected)
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		printk(KERN_ERR "scsi%d: reselection after won arbitration?\n",
+-		       HOSTNO);
++		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+ 		goto out;
  	}
  
--	if (!list_empty(&hostdata->autosense))
--		dsprintk(NDEBUG_ABORT, instance, "reset aborted autosense list\n");
--	INIT_LIST_HEAD(&hostdata->autosense);
--
--	if (!list_empty(&hostdata->unissued))
--		dsprintk(NDEBUG_ABORT, instance, "reset aborted unissued list\n");
--	INIT_LIST_HEAD(&hostdata->unissued);
--
--	if (!list_empty(&hostdata->disconnected))
--		dsprintk(NDEBUG_ABORT, instance, "reset aborted disconnected list\n");
--	INIT_LIST_HEAD(&hostdata->disconnected);
--
- #ifdef SUPPORT_TAGS
- 	free_all_tags(hostdata);
- #endif
-@@ -2743,6 +2749,7 @@ static int NCR5380_bus_reset(struct scsi
- 	hostdata->dma_len = 0;
- #endif
+@@ -1952,8 +1951,7 @@ static void NCR5380_information_transfer
+ 			switch (phase) {
+ 			case PHASE_DATAOUT:
+ #if (NDEBUG & NDEBUG_NO_DATAOUT)
+-				printk("scsi%d: NDEBUG_NO_DATAOUT set, attempted DATAOUT "
+-				       "aborted\n", HOSTNO);
++				shost_printk(KERN_DEBUG, instance, "NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n");
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+@@ -2214,13 +2212,11 @@ static void NCR5380_information_transfer
+ 							tmp = 0;
+ 						}
+ 					} else if (len) {
+-						printk(KERN_NOTICE "scsi%d: error receiving "
+-						       "extended message\n", HOSTNO);
++						shost_printk(KERN_ERR, instance, "error receiving extended message\n");
+ 						tmp = 0;
+ 					} else {
+-						printk(KERN_NOTICE "scsi%d: extended message "
+-							   "code %02x length %d is too long\n",
+-							   HOSTNO, extended_msg[2], extended_msg[1]);
++						shost_printk(KERN_NOTICE, instance, "extended message code %02x length %d is too long\n",
++						             extended_msg[2], extended_msg[1]);
+ 						tmp = 0;
+ 					}
  
-+	queue_work(hostdata->work_q, &hostdata->main_task);
- 	maybe_release_dma_irq(instance);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
+@@ -2236,8 +2232,7 @@ static void NCR5380_information_transfer
+ 					 */
+ 				default:
+ 					if (!tmp) {
+-						printk(KERN_INFO "scsi%d: rejecting message ",
+-						       instance->host_no);
++						shost_printk(KERN_ERR, instance, "rejecting message ");
+ 						spi_print_msg(extended_msg);
+ 						printk("\n");
+ 					} else if (tmp != EXTENDED_MESSAGE)
+@@ -2286,7 +2281,7 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Status = tmp;
+ 				break;
+ 			default:
+-				printk("scsi%d: unknown phase\n", HOSTNO);
++				shost_printk(KERN_ERR, instance, "unknown phase\n");
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			} /* switch(phase) */
+ 		} else {
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:31:06.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:08.000000000 +1100
-@@ -2477,18 +2477,66 @@ static int NCR5380_bus_reset(struct scsi
- {
- 	struct Scsi_Host *instance = cmd->device->host;
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+	int i;
- 	unsigned long flags;
-+	struct NCR5380_cmd *ncmd;
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:31:08.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:09.000000000 +1100
+@@ -418,10 +418,10 @@ static void NCR5380_print_phase(struct S
  
- 	spin_lock_irqsave(&hostdata->lock, flags);
- 
- #if (NDEBUG & NDEBUG_ANY)
--	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
-+	scmd_printk(KERN_INFO, cmd, __func__);
+ 	status = NCR5380_read(STATUS_REG);
+ 	if (!(status & SR_REQ))
+-		printk("scsi%d : REQ not asserted, phase unknown.\n", instance->host_no);
++		shost_printk(KERN_DEBUG, instance, "REQ not asserted, phase unknown.\n");
+ 	else {
+ 		for (i = 0; (phases[i].value != PHASE_UNKNOWN) && (phases[i].value != (status & PHASE_MASK)); ++i);
+-		printk("scsi%d : phase %s\n", instance->host_no, phases[i].name);
++		shost_printk(KERN_DEBUG, instance, "phase %s\n", phases[i].name);
+ 	}
+ }
  #endif
- 	NCR5380_dprint(NDEBUG_ANY, instance);
- 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+@@ -1242,7 +1242,7 @@ static struct scsi_cmnd *NCR5380_select(
+ 		NCR5380_reselect(instance);
+ 		if (!hostdata->connected)
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-		printk("scsi%d : reselection after won arbitration?\n", instance->host_no);
++		shost_printk(KERN_ERR, instance, "reselection after won arbitration?\n");
+ 		goto out;
+ 	}
  
- 	do_reset(instance);
+@@ -1847,7 +1847,7 @@ static void NCR5380_information_transfer
+ 			switch (phase) {
+ 			case PHASE_DATAOUT:
+ #if (NDEBUG & NDEBUG_NO_DATAOUT)
+-				printk("scsi%d : NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n", instance->host_no);
++				shost_printk(KERN_DEBUG, instance, "NDEBUG_NO_DATAOUT set, attempted DATAOUT aborted\n");
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+@@ -2048,10 +2048,11 @@ static void NCR5380_information_transfer
+ 							tmp = 0;
+ 						}
+ 					} else if (len) {
+-						printk("scsi%d: error receiving extended message\n", instance->host_no);
++						shost_printk(KERN_ERR, instance, "error receiving extended message\n");
+ 						tmp = 0;
+ 					} else {
+-						printk("scsi%d: extended message code %02x length %d is too long\n", instance->host_no, extended_msg[2], extended_msg[1]);
++						shost_printk(KERN_NOTICE, instance, "extended message code %02x length %d is too long\n",
++						             extended_msg[2], extended_msg[1]);
+ 						tmp = 0;
+ 					}
  
-+	/* reset NCR registers */
-+	NCR5380_write(MODE_REG, MR_BASE);
-+	NCR5380_write(TARGET_COMMAND_REG, 0);
-+	NCR5380_write(SELECT_ENABLE_REG, 0);
-+
-+	/* After the reset, there are no more connected or disconnected commands
-+	 * and no busy units; so clear the low-level status here to avoid
-+	 * conflicts when the mid-level code tries to wake up the affected
-+	 * commands!
-+	 */
-+
-+	hostdata->selecting = NULL;
-+
-+	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
-+		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-+
-+		set_host_byte(cmd, DID_RESET);
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	list_for_each_entry(ncmd, &hostdata->autosense, list) {
-+		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-+
-+		set_host_byte(cmd, DID_RESET);
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	if (hostdata->connected) {
-+		set_host_byte(hostdata->connected, DID_RESET);
-+		complete_cmd(instance, hostdata->connected);
-+		hostdata->connected = NULL;
-+	}
-+
-+	if (hostdata->sensing) {
-+		set_host_byte(hostdata->connected, DID_RESET);
-+		complete_cmd(instance, hostdata->sensing);
-+		hostdata->sensing = NULL;
-+	}
-+
-+	for (i = 0; i < 8; ++i)
-+		hostdata->busy[i] = 0;
-+#ifdef REAL_DMA
-+	hostdata->dma_len = 0;
-+#endif
-+
-+	queue_work(hostdata->work_q, &hostdata->main_task);
- 	spin_unlock_irqrestore(&hostdata->lock, flags);
- 
- 	return SUCCESS;
+@@ -2067,7 +2068,7 @@ static void NCR5380_information_transfer
+ 					 */
+ 				default:
+ 					if (!tmp) {
+-						printk("scsi%d: rejecting message ", instance->host_no);
++						shost_printk(KERN_ERR, instance, "rejecting message ");
+ 						spi_print_msg(extended_msg);
+ 						printk("\n");
+ 					} else if (tmp != EXTENDED_MESSAGE)
+@@ -2113,7 +2114,7 @@ static void NCR5380_information_transfer
+ 				cmd->SCp.Status = tmp;
+ 				break;
+ 			default:
+-				printk("scsi%d : unknown phase\n", instance->host_no);
++				shost_printk(KERN_ERR, instance, "unknown phase\n");
+ 				NCR5380_dprint(NDEBUG_ANY, instance);
+ 			}	/* switch(phase) */
+ 		} else {
