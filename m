@@ -1,188 +1,101 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 08/72] ncr5380: Move NCR53C400-specific code
-Date: Sun, 06 Dec 2015 12:31:34 +1100
-Message-ID: <20151206013128.975504599@telegraphics.com.au>
+Subject: [PATCH v2 35/72] ncr5380: Dont wait for BUS FREE after disconnect
+Date: Sun, 06 Dec 2015 12:32:01 +1100
+Message-ID: <20151206013135.715461964@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-NCR53C400-macro
+Content-Disposition: inline; filename=ncr5380-dont-wait-for-bus-free
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Move board-specific code like this,
-	NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
-from the core driver to the board driver. Eliminate the NCR53C400 macro
-from the core driver. Removal of all macros like this one will be
-necessary in order to have one core driver that can support all kinds of
-boards.
+When there is a queued command and no connected command, NCR5380_select()
+is called and arbitration begins. The chip waits for BUS FREE once the
+MR_ARBITRATE bit in the mode register is enabled. That means there is
+no need to wait for BUS FREE after disconnecting.
+
+There is presently no polling for BUS FREE after sending an ABORT or
+other message that might lead to disconnection. It only happens after
+COMMAND COMPLETE or DISCONNECT messages, which seems inconsistent.
+Remove the polling for !BSY in the COMMAND COMPLETE and DISCONNECT
+cases.
+
+BTW, the comments say "avoid nasty timeouts" and perhaps BUS FREE polling
+was somehow helpful back in Linux v0.99.14u, when it was introduced.
+The relevant timeout is presently 1 second (for bus arbitration).
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
-
-Changed since v1:
-- Don't set FLAG_NO_PSEUDO_DMA when !defined(PSEUDO_DMA). It's pointless.
-
----
- drivers/scsi/NCR5380.c   |   18 ------------------
- drivers/scsi/g_NCR5380.c |   21 ++++++++++++++++-----
- drivers/scsi/g_NCR5380.h |    6 ++----
- 3 files changed, 18 insertions(+), 27 deletions(-)
+ drivers/scsi/NCR5380.c       |    7 -------
+ drivers/scsi/atari_NCR5380.c |   11 -----------
+ 2 files changed, 18 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:30.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:33.000000000 +1100
-@@ -654,9 +654,6 @@ static void prepare_info(struct Scsi_Hos
- #ifdef UNSAFE
- 	         "UNSAFE "
- #endif
--#ifdef NCR53C400
--	         "NCR53C400 "
--#endif
- 	         "");
- }
- 
-@@ -782,15 +779,6 @@ static int NCR5380_init(struct Scsi_Host
- 
- 	if(in_interrupt())
- 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
--	/* 
--	 * On NCR53C400 boards, NCR5380 registers are mapped 8 past 
--	 * the base address.
--	 */
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:23.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:24.000000000 +1100
+@@ -1971,9 +1971,6 @@ static void NCR5380_information_transfer
+ 					 * arbitration can resume.
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
 -
--#ifdef NCR53C400
--	if (flags & FLAG_NCR53C400)
--		instance->io_port += NCR53C400_address_adjust;
--#endif
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+ 					return;
+ 				case MESSAGE_REJECT:
+ 					/* Accept message by clearing ACK */
+@@ -2006,10 +2003,6 @@ static void NCR5380_information_transfer
  
- 	hostdata->aborted = 0;
- 	hostdata->id_mask = 1 << instance->this_id;
-@@ -824,12 +812,6 @@ static int NCR5380_init(struct Scsi_Host
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
- 	NCR5380_write(SELECT_ENABLE_REG, 0);
+ 						/* Enable reselect interrupts */
+ 						NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-						/* Wait for bus free to avoid nasty timeouts - FIXME timeout !*/
+-						/* NCR538_poll_politely(instance, STATUS_REG, SR_BSY, 0, 30 * HZ); */
+-						while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-							barrier();
+ 						return;
+ 					}
+ 					/* 
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:23.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:24.000000000 +1100
+@@ -2208,7 +2208,6 @@ static void NCR5380_information_transfer
+ 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
+ 
+ 					local_irq_save(flags);
+-					hostdata->retain_dma_intr++;
+ 					hostdata->connected = NULL;
+ #ifdef SUPPORT_TAGS
+ 					cmd_free_tag(cmd);
+@@ -2277,8 +2276,6 @@ static void NCR5380_information_transfer
+ 						cmd->scsi_done(cmd);
+ 					}
+ 
+-					local_irq_restore(flags);
 -
--#ifdef NCR53C400
--	if (hostdata->flags & FLAG_NCR53C400) {
--		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
--	}
--#endif
- 	return 0;
- }
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					/*
+ 					 * Restore phase bits to 0 so an interrupted selection,
+@@ -2286,11 +2283,6 @@ static void NCR5380_information_transfer
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
  
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:30.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:33.000000000 +1100
-@@ -64,9 +64,7 @@
- #define AUTOPROBE_IRQ
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+-
+-					local_irq_save(flags);
+-					hostdata->retain_dma_intr--;
+ 					/* ++roman: For Falcon SCSI, release the lock on the
+ 					 * ST-DMA here if no other commands are waiting on the
+ 					 * disconnected queue.
+@@ -2344,9 +2336,6 @@ static void NCR5380_information_transfer
  
- #ifdef CONFIG_SCSI_GENERIC_NCR53C400
--#define NCR53C400_PSEUDO_DMA 1
- #define PSEUDO_DMA
--#define NCR53C400
+ 					/* Enable reselect interrupts */
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+-					/* Wait for bus free to avoid nasty timeouts */
+-					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+-						barrier();
+ #ifdef SUN3_SCSI_VME
+ 					dregs->csr |= CSR_DMA_ENABLE;
  #endif
- 
- #include <asm/io.h>
-@@ -263,7 +261,7 @@ static int __init generic_NCR5380_detect
- 	static unsigned int __initdata dtc_3181e_ports[] = {
- 		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
- 	};
--	int flags = 0;
-+	int flags;
- 	struct Scsi_Host *instance;
- #ifdef SCSI_G_NCR5380_MEM
- 	unsigned long base;
-@@ -324,12 +322,15 @@ static int __init generic_NCR5380_detect
- 			continue;
- 
- 		ports = NULL;
-+		flags = 0;
- 		switch (overrides[current_override].board) {
- 		case BOARD_NCR5380:
- 			flags = FLAG_NO_PSEUDO_DMA;
- 			break;
- 		case BOARD_NCR53C400:
-+#ifdef PSEUDO_DMA
- 			flags = FLAG_NCR53C400;
-+#endif
- 			break;
- 		case BOARD_NCR53C400A:
- 			flags = FLAG_NO_PSEUDO_DMA;
-@@ -415,6 +416,13 @@ static int __init generic_NCR5380_detect
- #ifndef SCSI_G_NCR5380_MEM
- 		instance->io_port = overrides[current_override].NCR5380_map_name;
- 		instance->n_io_port = region_size;
-+
-+		/*
-+		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
-+		 * the base address.
-+		 */
-+		if (overrides[current_override].board == BOARD_NCR53C400)
-+			instance->io_port += 8;
- #else
- 		instance->base = overrides[current_override].NCR5380_map_name;
- 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
-@@ -422,6 +430,9 @@ static int __init generic_NCR5380_detect
- 
- 		NCR5380_init(instance, flags);
- 
-+		if (overrides[current_override].board == BOARD_NCR53C400)
-+			NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
-+
- 		NCR5380_maybe_reset_bus(instance);
- 
- 		if (overrides[current_override].irq != IRQ_AUTO)
-@@ -506,7 +517,7 @@ generic_NCR5380_biosparam(struct scsi_de
- }
- #endif
- 
--#ifdef NCR53C400_PSEUDO_DMA
-+#ifdef PSEUDO_DMA
- 
- /**
-  *	NCR5380_pread		-	pseudo DMA read
-@@ -690,7 +701,7 @@ static inline int NCR5380_pwrite(struct
- 		; 	// TIMEOUT
- 	return 0;
- }
--#endif				/* PSEUDO_DMA */
-+#endif /* PSEUDO_DMA */
- 
- /*
-  *	Include the NCR5380 core code that we build our driver around	
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:29.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:33.000000000 +1100
-@@ -14,7 +14,7 @@
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
--#ifdef NCR53C400
-+#ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define BIOSPARAM
- #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
- #else
-@@ -37,9 +37,8 @@
- #define NCR5380_map_type int
- #define NCR5380_map_name port
- #define NCR53C400_register_offset 0
--#define NCR53C400_address_adjust 8
- 
--#ifdef NCR53C400
-+#ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define NCR5380_region_size 16
- #else
- #define NCR5380_region_size 8
-@@ -58,7 +57,6 @@
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
- #define NCR53C400_register_offset 0x108
--#define NCR53C400_address_adjust 0
- #define NCR53C400_mem_base 0x3880
- #define NCR53C400_host_buffer 0x3900
- #define NCR5380_region_size 0x3a00
