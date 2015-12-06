@@ -1,206 +1,212 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 41/72] ncr5380: Replace redundant flags with FLAG_NO_DMA_FIXUP
-Date: Sun, 06 Dec 2015 12:32:07 +1100
-Message-ID: <20151206013137.175476187@telegraphics.com.au>
+Subject: [PATCH v2 58/72] ncr5380: Refactor command completion
+Date: Sun, 06 Dec 2015 12:32:24 +1100
+Message-ID: <20151206013141.355677245@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-FLAG_NCR53C400
+Content-Disposition: inline; filename=ncr5380-complete_cmd
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The flags DMA_WORKS_RIGHT, FLAG_NCR53C400 and FLAG_HAS_LAST_BYTE_SENT
-all mean the same thing, i.e. the chip is not a 538[01]. (More recent
-devices such as the 53C80 have a 'Last Byte Sent' bit in the Target
-Command Register as well as other fixes for End-of-DMA errata.)
-
-These flags have no additional meanings since previous cleanup patches
-eliminated the NCR53C400 macro, moved g_NCR5380-specific code out of the
-core driver and standardized interrupt handling.
-
-Use the FLAG_NO_DMA_FIXUP flag to suppress End-of-DMA errata workarounds,
-for those cards and drivers that make use of the TCR_LAST_BYTE_SENT bit.
-Remove the old flags.
+Implement a 'complete_cmd' function to complete commands. This is needed
+by the following patch; the new function provides a site for the logic
+needed to correctly handle REQUEST SENSE commands.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |   68 +++++++++++++++--------------------------------
- drivers/scsi/NCR5380.h   |    4 --
- drivers/scsi/dtc.c       |    4 --
- drivers/scsi/g_NCR5380.c |    2 -
- 4 files changed, 25 insertions(+), 53 deletions(-)
+ drivers/scsi/NCR5380.c       |   31 ++++++++++++++++++++++------
+ drivers/scsi/atari_NCR5380.c |   46 ++++++++++++++++++++++++++++---------------
+ 2 files changed, 55 insertions(+), 22 deletions(-)
 
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:58.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:01.000000000 +1100
+@@ -760,6 +760,27 @@ static void NCR5380_exit(struct Scsi_Hos
+ }
+ 
+ /**
++ * complete_cmd - finish processing a command and return it to the SCSI ML
++ * @instance: the host instance
++ * @cmd: command to complete
++ */
++
++static void complete_cmd(struct Scsi_Host *instance,
++                         struct scsi_cmnd *cmd)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
++
++#ifdef SUPPORT_TAGS
++	cmd_free_tag(cmd);
++#else
++	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
++#endif
++	cmd->scsi_done(cmd);
++}
++
++/**
+  * NCR5380_queue_command - queue a command
+  * @instance: the relevant SCSI adapter
+  * @cmd: SCSI command
+@@ -1347,10 +1368,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		cmd->result = DID_BAD_TARGET << 16;
+-#ifdef SUPPORT_TAGS
+-		cmd_free_tag(cmd);
+-#endif
+-		cmd->scsi_done(cmd);
++		complete_cmd(instance, cmd);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		dprintk(NDEBUG_SELECTION, "scsi%d: target did not respond within 250ms\n", HOSTNO);
+ 		return 0;
+@@ -1861,7 +1879,7 @@ static void NCR5380_information_transfer
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+-				cmd->scsi_done(cmd);
++				complete_cmd(instance, cmd);
+ 				return;
+ #endif
+ 			case PHASE_DATAIN:
+@@ -1921,7 +1939,7 @@ static void NCR5380_information_transfer
+ 						sink = 1;
+ 						do_abort(instance);
+ 						cmd->result = DID_ERROR << 16;
+-						cmd->scsi_done(cmd);
++						complete_cmd(instance, cmd);
+ 						/* XXX - need to source or sink data here, as appropriate */
+ 					} else {
+ #ifdef REAL_DMA
+@@ -1977,8 +1995,6 @@ static void NCR5380_information_transfer
+ 						if (ta->queue_size > ta->nr_allocated)
+ 							ta->queue_size = ta->nr_allocated;
+ 					}
+-#else
+-					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
+ #endif
+ 
+ 					/*
+@@ -2016,8 +2032,13 @@ static void NCR5380_information_transfer
+ 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
+ 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
+ 						         cmd);
++#ifdef SUPPORT_TAGS
++						cmd_free_tag(cmd);
++#else
++						hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
++#endif
+ 					} else {
+-						cmd->scsi_done(cmd);
++						complete_cmd(instance, cmd);
+ 					}
+ 
+ 					/*
+@@ -2188,15 +2209,10 @@ static void NCR5380_information_transfer
+ 				hostdata->last_message = msgout;
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data);
+ 				if (msgout == ABORT) {
+-#ifdef SUPPORT_TAGS
+-					cmd_free_tag(cmd);
+-#else
+-					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
+-#endif
+ 					hostdata->connected = NULL;
+ 					cmd->result = DID_ERROR << 16;
++					complete_cmd(instance, cmd);
+ 					maybe_release_dma_irq(instance);
+-					cmd->scsi_done(cmd);
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					return;
+ 				}
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:32.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:34.000000000 +1100
-@@ -541,7 +541,7 @@ static void prepare_info(struct Scsi_Hos
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
--	         hostdata->flags & FLAG_NCR53C400     ? "NCR53C400 "     : "",
-+	         hostdata->flags & FLAG_NO_DMA_FIXUP  ? "NO_DMA_FIXUP "  : "",
- 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
-@@ -702,6 +702,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->connected = NULL;
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
-+	hostdata->flags = flags;
- 	
- 	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
-@@ -710,12 +711,6 @@ static int NCR5380_init(struct Scsi_Host
- 	if (!hostdata->work_q)
- 		return -ENOMEM;
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:58.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:01.000000000 +1100
+@@ -721,6 +721,24 @@ static void NCR5380_exit(struct Scsi_Hos
+ }
  
--	/* The CHECK code seems to break the 53C400. Will check it later maybe */
--	if (flags & FLAG_NCR53C400)
--		hostdata->flags = FLAG_HAS_LAST_BYTE_SENT | flags;
--	else
--		hostdata->flags = FLAG_CHECK_LAST_BYTE_SENT | flags;
--
- 	hostdata->host = instance;
- 
- 	prepare_info(instance);
-@@ -1609,7 +1604,7 @@ static int NCR5380_transfer_dma(struct S
- 	 * before the setting of DMA mode to after transfer of the last byte.
- 	 */
- 
--	if (hostdata->flags & FLAG_NCR53C400)
-+	if (hostdata->flags & FLAG_NO_DMA_FIXUP)
- 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
- 		                        MR_ENABLE_EOP_INTR);
- 	else
-@@ -1729,14 +1724,9 @@ static int NCR5380_transfer_dma(struct S
- 	return 0;
- #else				/* defined(REAL_DMA_POLL) */
- 	if (p & SR_IO) {
--#ifdef DMA_WORKS_RIGHT
--		foo = NCR5380_pread(instance, d, c);
--#else
--		int diff = 1;
--		if (hostdata->flags & FLAG_NCR53C400) {
--			diff = 0;
--		}
--		if (!(foo = NCR5380_pread(instance, d, c - diff))) {
-+		foo = NCR5380_pread(instance, d,
-+			hostdata->flags & FLAG_NO_DMA_FIXUP ? c : c - 1);
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * We can't disable DMA mode after successfully transferring 
- 			 * what we plan to be the last byte, since that would open up
-@@ -1759,46 +1749,32 @@ static int NCR5380_transfer_dma(struct S
- 			 * byte.
- 			 */
- 
--			if (!(hostdata->flags & FLAG_NCR53C400)) {
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ));
--				/* Wait for clean handshake */
--				while (NCR5380_read(STATUS_REG) & SR_REQ);
--				d[c - 1] = NCR5380_read(INPUT_DATA_REG);
-+			if (NCR5380_poll_politely(instance, BUS_AND_STATUS_REG,
-+			                          BASR_DRQ, BASR_DRQ, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: DRQ timeout\n");
-+			}
-+			if (NCR5380_poll_politely(instance, STATUS_REG,
-+			                          SR_REQ, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA read: !REQ timeout\n");
- 			}
-+			d[c - 1] = NCR5380_read(INPUT_DATA_REG);
- 		}
--#endif
- 	} else {
--#ifdef DMA_WORKS_RIGHT
- 		foo = NCR5380_pwrite(instance, d, c);
--#else
--		int timeout;
--		dprintk(NDEBUG_C400_PWRITE, "About to pwrite %d bytes\n", c);
--		if (!(foo = NCR5380_pwrite(instance, d, c))) {
-+		if (!foo && !(hostdata->flags & FLAG_NO_DMA_FIXUP)) {
- 			/*
- 			 * Wait for the last byte to be sent.  If REQ is being asserted for 
- 			 * the byte we're interested, we'll ACK it and it will go false.  
- 			 */
--			if (!(hostdata->flags & FLAG_HAS_LAST_BYTE_SENT)) {
--				timeout = 20000;
--				while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) && (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH));
--
--				if (!timeout)
--					dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : timed out on last byte\n", instance->host_no);
--
--				if (hostdata->flags & FLAG_CHECK_LAST_BYTE_SENT) {
--					hostdata->flags &= ~FLAG_CHECK_LAST_BYTE_SENT;
--					if (NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT) {
--						hostdata->flags |= FLAG_HAS_LAST_BYTE_SENT;
--						dprintk(NDEBUG_LAST_BYTE_SENT, "scsi%d : last byte sent works\n", instance->host_no);
--					}
--				}
--			} else {
--				dprintk(NDEBUG_C400_PWRITE, "Waiting for LASTBYTE\n");
--				while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT));
--				dprintk(NDEBUG_C400_PWRITE, "Got LASTBYTE\n");
-+			if (NCR5380_poll_politely2(instance,
-+			     BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
-+			     BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, HZ) < 0) {
-+				foo = -1;
-+				shost_printk(KERN_ERR, instance, "PDMA write: DRQ and phase timeout\n");
- 			}
- 		}
--#endif
- 	}
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:30:27.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:30:34.000000000 +1100
-@@ -226,9 +226,7 @@
- #define NO_IRQ		0
+ /**
++ * complete_cmd - finish processing a command and return it to the SCSI ML
++ * @instance: the host instance
++ * @cmd: command to complete
++ */
++
++static void complete_cmd(struct Scsi_Host *instance,
++                         struct scsi_cmnd *cmd)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
++
++	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
++
++	cmd->scsi_done(cmd);
++}
++
++/**
+  * NCR5380_queue_command - queue a command
+  * @instance: the relevant SCSI adapter
+  * @cmd: SCSI command
+@@ -1166,7 +1184,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 		spin_lock_irq(&hostdata->lock);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		cmd->result = DID_BAD_TARGET << 16;
+-		cmd->scsi_done(cmd);
++		complete_cmd(instance, cmd);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n",
+ 		        instance->host_no);
+@@ -1754,7 +1772,7 @@ static void NCR5380_information_transfer
+ 				sink = 1;
+ 				do_abort(instance);
+ 				cmd->result = DID_ERROR << 16;
+-				cmd->scsi_done(cmd);
++				complete_cmd(instance, cmd);
+ 				return;
  #endif
+ 			case PHASE_DATAIN:
+@@ -1799,7 +1817,7 @@ static void NCR5380_information_transfer
+ 						sink = 1;
+ 						do_abort(instance);
+ 						cmd->result = DID_ERROR << 16;
+-						cmd->scsi_done(cmd);
++						complete_cmd(instance, cmd);
+ 						/* XXX - need to source or sink data here, as appropriate */
+ 					} else
+ 						cmd->SCp.this_residual -= transfersize - len;
+@@ -1829,7 +1847,6 @@ static void NCR5380_information_transfer
+ 					         cmd, scmd_id(cmd), cmd->device->lun);
  
--#define FLAG_HAS_LAST_BYTE_SENT		1	/* NCR53c81 or better */
--#define FLAG_CHECK_LAST_BYTE_SENT	2	/* Only test once */
--#define FLAG_NCR53C400			4	/* NCR53c400 */
-+#define FLAG_NO_DMA_FIXUP		1	/* No DMA errata workarounds */
- #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
- #define FLAG_DTC3181E			16	/* DTC3181E */
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-06 12:30:30.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-06 12:30:34.000000000 +1100
-@@ -1,7 +1,5 @@
- #define PSEUDO_DMA
- #define DONT_USE_INTR
--#define DMA_WORKS_RIGHT
--
+ 					hostdata->connected = NULL;
+-					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
  
- /*
-  * DTC 3180/3280 driver, by
-@@ -233,7 +231,7 @@ found:
- 		instance->base = addr;
- 		((struct NCR5380_hostdata *)(instance)->hostdata)->base = base;
+ 					/* 
+ 					 * I'm not sure what the correct thing to do here is : 
+@@ -1865,8 +1882,9 @@ static void NCR5380_information_transfer
+ 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
+ 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
+ 						         cmd);
++						hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
+ 					} else {
+-						cmd->scsi_done(cmd);
++						complete_cmd(instance, cmd);
+ 					}
  
--		if (NCR5380_init(instance, 0))
-+		if (NCR5380_init(instance, FLAG_NO_DMA_FIXUP))
- 			goto out_unregister;
- 
- 		NCR5380_maybe_reset_bus(instance);
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:30:30.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:30:34.000000000 +1100
-@@ -321,7 +321,7 @@ static int __init generic_NCR5380_detect
- 			break;
- 		case BOARD_NCR53C400:
- #ifdef PSEUDO_DMA
--			flags = FLAG_NCR53C400;
-+			flags = FLAG_NO_DMA_FIXUP;
- #endif
- 			break;
- 		case BOARD_NCR53C400A:
+ 					/* 
+@@ -2013,10 +2031,9 @@ static void NCR5380_information_transfer
+ 				hostdata->last_message = msgout;
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data);
+ 				if (msgout == ABORT) {
+-					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
+ 					hostdata->connected = NULL;
+ 					cmd->result = DID_ERROR << 16;
+-					cmd->scsi_done(cmd);
++					complete_cmd(instance, cmd);
+ 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					return;
+ 				}
