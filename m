@@ -1,151 +1,184 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 33/72] atari_NCR5380: Set do_abort() timeouts
-Date: Sun, 06 Dec 2015 12:31:59 +1100
-Message-ID: <20151206013135.076587285@telegraphics.com.au>
+Subject: [PATCH v2 34/72] atari_NCR5380: Use arbitration timeout
+Date: Sun, 06 Dec 2015 12:32:00 +1100
+Message-ID: <20151206013135.465461178@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-do_abort-timeouts
+Content-Disposition: inline; filename=atari_NCR5380-use-arbitration-timeout
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use timeouts in do_abort() in atari_NCR5380.c instead of infinite loops.
-Also fix the kernel-doc comment. Keep the two core driver forks in sync.
+Allow target selection to fail with a timeout instead of waiting in
+infinite loops. This gets rid of the unused NCR_TIMEOUT macro, it is more
+defensive and has proved helpful in debugging.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   26 +++++++++++++-------------
- drivers/scsi/atari_NCR5380.c |   34 +++++++++++++++++++++-------------
- 2 files changed, 34 insertions(+), 26 deletions(-)
+ drivers/scsi/NCR5380.c       |   44 ++++++++++++++++++---------------
+ drivers/scsi/atari_NCR5380.c |   57 ++++++++++++++++++-------------------------
+ 2 files changed, 49 insertions(+), 52 deletions(-)
 
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:17.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:21.000000000 +1100
-@@ -1830,19 +1830,19 @@ static void do_reset(struct Scsi_Host *i
- 	local_irq_restore(flags);
- }
- 
--/*
-- * Function : do_abort (Scsi_Host *host)
-+/**
-+ * do_abort - abort the currently established nexus by going to
-+ * MESSAGE OUT phase and sending an ABORT message.
-+ * @instance: relevant scsi host instance
-  *
-- * Purpose : abort the currently established nexus.  Should only be
-- *	called from a routine which can drop into a
-- *
-- * Returns : 0 on success, -1 on failure.
-+ * Returns 0 on success, -1 on failure.
-  */
- 
- static int do_abort(struct Scsi_Host *instance)
- {
- 	unsigned char tmp, *msgptr, phase;
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:21.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:23.000000000 +1100
+@@ -1407,6 +1407,7 @@ static int NCR5380_select(struct Scsi_Ho
  	int len;
-+	int rc;
+ 	int err;
+ 	unsigned long flags;
++	unsigned long timeout;
  
- 	/* Request message out phase */
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
-@@ -1857,16 +1857,20 @@ static int do_abort(struct Scsi_Host *in
- 	 * the target sees, so we just handshake.
- 	 */
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
+@@ -1431,42 +1432,28 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
+ 	NCR5380_write(MODE_REG, MR_ARBITRATE);
  
--	while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ))
--		;
-+	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
-+	if (rc < 0)
-+		goto timeout;
-+
-+	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
+-	local_irq_restore(flags);
++	/* The chip now waits for BUS FREE phase. Then after the 800 ns
++	 * Bus Free Delay, arbitration will begin.
++	 */
  
- 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
- 
--	if ((tmp & PHASE_MASK) != PHASE_MSGOUT) {
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN |
--			      ICR_ASSERT_ACK);
--		while (NCR5380_read(STATUS_REG) & SR_REQ)
+-	/* Wait for arbitration logic to complete */
+-#if defined(NCR_TIMEOUT)
+-	{
+-		unsigned long timeout = jiffies + 2*NCR_TIMEOUT;
+-
+-		while (!(NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS) &&
+-		       time_before(jiffies, timeout) && !hostdata->connected)
 -			;
-+	if (tmp != PHASE_MSGOUT) {
-+		NCR5380_write(INITIATOR_COMMAND_REG,
-+		              ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
-+		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
-+		if (rc < 0)
-+			goto timeout;
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
+-		if (time_after_eq(jiffies, timeout)) {
+-			printk("scsi : arbitration timeout at %d\n", __LINE__);
++	local_irq_restore(flags);
++	timeout = jiffies + HZ;
++	while (1) {
++		if (time_is_before_jiffies(timeout)) {
+ 			NCR5380_write(MODE_REG, MR_BASE);
+-			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++			shost_printk(KERN_ERR, instance,
++			             "select: arbitration timeout\n");
+ 			return -1;
+ 		}
++		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++			/* Reselection interrupt */
++			return -1;
++		}
++		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
++			break;
  	}
+-#else /* NCR_TIMEOUT */
+-	while (!(NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS) &&
+-	       !hostdata->connected)
+-		;
+-#endif
+-
+-	dprintk(NDEBUG_ARBITRATION, "scsi%d: arbitration complete\n", HOSTNO);
+-
+-	if (hostdata->connected) {
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		return -1;
+-	}
+-	/*
+-	 * The arbitration delay is 2.2us, but this is a minimum and there is
+-	 * no maximum so we can safely sleep for ceil(2.2) usecs to accommodate
+-	 * the integral nature of udelay().
+-	 *
+-	 */
  
-@@ -1882,6 +1886,10 @@ static int do_abort(struct Scsi_Host *in
++	/* The SCSI-2 arbitration delay is 2.4 us */
+ 	udelay(3);
+ 
+ 	/* Check for lost arbitration */
+@@ -1629,8 +1616,14 @@ static int NCR5380_select(struct Scsi_Ho
  	 */
  
- 	return len ? -1 : 0;
+ 	/* Wait for start of REQ/ACK handshake */
+-	while (!(NCR5380_read(STATUS_REG) & SR_REQ))
+-		;
 +
-+timeout:
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	return -1;
- }
++	err = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
++	if (err < 0) {
++		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
++		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++		return -1;
++	}
  
- #if defined(REAL_DMA)
+ 	dprintk(NDEBUG_SELECTION, "scsi%d: target %d selected, going into MESSAGE OUT phase.\n",
+ 		   HOSTNO, cmd->device->id);
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:20.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:21.000000000 +1100
-@@ -1453,16 +1453,12 @@ static void do_reset(struct Scsi_Host *i
- 	local_irq_restore(flags);
- }
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:21.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:23.000000000 +1100
+@@ -1078,6 +1078,7 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned char *data;
+ 	int len;
+ 	int err;
++	unsigned long timeout;
  
--/*
-- * Function : do_abort (Scsi_Host *host)
-- * 
-- * Purpose : abort the currently established nexus.  Should only be 
-- *      called from a routine which can drop into a 
-- * 
-- * Returns : 0 on success, -1 on failure.
-+/**
-+ * do_abort - abort the currently established nexus by going to
-+ * MESSAGE OUT phase and sending an ABORT message.
-+ * @instance: relevant scsi host instance
-  *
-- * Locks: queue lock held by caller
-- *	FIXME: sort this out and get new_eh running
-+ * Returns 0 on success, -1 on failure.
-  */
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
+@@ -1096,28 +1097,31 @@ static int NCR5380_select(struct Scsi_Ho
+ 	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
+ 	NCR5380_write(MODE_REG, MR_ARBITRATE);
  
- static int do_abort(struct Scsi_Host *instance)
-@@ -1484,9 +1480,9 @@ static int do_abort(struct Scsi_Host *in
- 	 * the target sees, so we just handshake.
- 	 */
++	/* The chip now waits for BUS FREE phase. Then after the 800 ns
++	 * Bus Free Delay, arbitration will begin.
++	 */
  
--	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 60 * HZ);
-+	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 10 * HZ);
- 	if (rc < 0)
+-	/* We can be relaxed here, interrupts are on, we are
+-	   in workqueue context, the birds are singing in the trees */
+ 	spin_unlock_irq(instance->host_lock);
+-	err = NCR5380_poll_politely(instance, INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS, ICR_ARBITRATION_PROGRESS, 5*HZ);
+-	spin_lock_irq(instance->host_lock);
+-	if (err < 0) {
+-		printk(KERN_DEBUG "scsi: arbitration timeout at %d\n", __LINE__);
+-		NCR5380_write(MODE_REG, MR_BASE);
+-		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
 -		return -1;
-+		goto timeout;
- 
- 	tmp = NCR5380_read(STATUS_REG) & PHASE_MASK;
- 	
-@@ -1495,9 +1491,9 @@ static int do_abort(struct Scsi_Host *in
- 	if (tmp != PHASE_MSGOUT) {
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
- 		if (rc < 0)
--			return -1;
-+			goto timeout;
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
++	timeout = jiffies + HZ;
++	while (1) {
++		if (time_is_before_jiffies(timeout)) {
++			NCR5380_write(MODE_REG, MR_BASE);
++			shost_printk(KERN_ERR, instance,
++			             "select: arbitration timeout\n");
++			spin_lock_irq(instance->host_lock);
++			return -1;
++		}
++		spin_lock_irq(instance->host_lock);
++		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++			/* Reselection interrupt */
++			return -1;
++		}
++		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
++			break;
++		spin_unlock_irq(instance->host_lock);
  	}
- 	tmp = ABORT;
- 	msgptr = &tmp;
-@@ -1511,6 +1507,10 @@ static int do_abort(struct Scsi_Host *in
- 	 */
  
- 	return len ? -1 : 0;
-+
-+timeout:
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	return -1;
- }
+-	dprintk(NDEBUG_ARBITRATION, "scsi%d : arbitration complete\n", instance->host_no);
+-
+-	/* 
+-	 * The arbitration delay is 2.2us, but this is a minimum and there is 
+-	 * no maximum so we can safely sleep for ceil(2.2) usecs to accommodate
+-	 * the integral nature of udelay().
+-	 *
+-	 */
+-
++	/* The SCSI-2 arbitration delay is 2.4 us */
+ 	udelay(3);
  
- #if defined(REAL_DMA) || defined(PSEUDO_DMA) || defined (REAL_DMA_POLL)
+ 	/* Check for lost arbitration */
+@@ -1265,9 +1269,9 @@ static int NCR5380_select(struct Scsi_Ho
+ 	spin_unlock_irq(instance->host_lock);
+ 	err = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
+ 	spin_lock_irq(instance->host_lock);
+-	
+ 	if (err < 0) {
+-		printk(KERN_ERR "scsi%d: timeout at NCR5380.c:%d\n", instance->host_no, __LINE__);
++		shost_printk(KERN_ERR, instance, "select: REQ timeout\n");
++		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		return -1;
+ 	}
