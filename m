@@ -1,50 +1,37 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 21/72] ncr5380: Sleep when polling, if possible
-Date: Mon, 7 Dec 2015 09:07:22 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512070906540.9090@nippy.intranet>
-References: <20151206013126.995379403@telegraphics.com.au> <20151206013132.155478463@telegraphics.com.au> <CAMuHMdVYVHShsnghK4rOvvCy8ab3yGaxO-Vm44xhE4LMbfGcww@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdVYVHShsnghK4rOvvCy8ab3yGaxO-Vm44xhE4LMbfGcww@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] cciss: print max outstanding commands as a hex value
+Date: Sun,  6 Dec 2015 22:19:40 +0000
+Message-ID: <1449440380-6161-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
-On Sun, 6 Dec 2015, Geert Uytterhoeven wrote:
+The max outstanding commands is being printed with a 0x prefix
+to suggest it is a hex value, when in fact the integer decimal %d
+format specifier is being used and this is a bit confusing. Use
+%x instead to match the proceeding 0x prefix.
 
-> 
-> As the caller of NCR5380_poll_politely() passes a timeout value in 
-> jiffies, calculations may become simpler if you store the number of 
-> accesses per jiffy instead of per ms.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/block/cciss.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes, I thought of that too. However, the number of accesses per jiffy 
-could vanish or become imprecise depending on the speed of the hardware 
-and the HZ setting. I chose milliseconds because it seemed to provide a 
-good compromise between precision and range.
-
-> 
-> Unlike the historical calibrating-delay-loop code, you don't wait for a 
-> jiffy change before starting the calibration. At first I thought that 
-> was OK, but on some platforms, HZ can be as low as 24, which means the 
-> result can vary by 33% (based on 100 ms -> 3 jiffies).
-
-Oops. I shall have to fix that.
-
-> 
-> The same change is made to atari_NCR5380.c. I guess you plan to 
-> deduplicate this code when merging the drivers, i.e. after this series?
-
-One of the two forks will have to go. That churn is discussed in patch 0.
-
-Thanks for your review.
-
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 0422c47..2758982 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3854,7 +3854,7 @@ static void print_cfg_table(ctlr_info_t *h)
+ 	       readl(&(tb->HostWrite.CoalIntDelay)));
+ 	dev_dbg(&h->pdev->dev, "   Coalesce Interrupt Count = 0x%x\n",
+ 	       readl(&(tb->HostWrite.CoalIntCount)));
+-	dev_dbg(&h->pdev->dev, "   Max outstanding commands = 0x%d\n",
++	dev_dbg(&h->pdev->dev, "   Max outstanding commands = 0x%x\n",
+ 	       readl(&(tb->CmdsOutMax)));
+ 	dev_dbg(&h->pdev->dev, "   Bus Types = 0x%x\n",
+ 		readl(&(tb->BusTypes)));
 -- 
-
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
+2.6.2
