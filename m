@@ -1,71 +1,61 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 74/71] ncr5380: Enable PDMA for NCR53C400A
-Date: Sun, 6 Dec 2015 14:41:09 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512051000250.31458@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <1449262922-4580-1-git-send-email-linux@rainbow-software.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1449262922-4580-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 00/72] More fixes, cleanup and modernization for NCR5380 drivers
+Date: Sun, 06 Dec 2015 12:31:26 +1100
+Message-ID: <20151206013126.995379403@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-On Fri, 4 Dec 2015, Ondrej Zary wrote:
+Like my previous work on the NCR5380 drivers, this patch series has bug
+fixes, code cleanup and modernization. These drivers suffer from mistakes,
+poor style and neglect and this long series addresses the worst of it,
+covering all ten wrapper drivers and both of the core driver forks. The
+combined size of the drivers is reduced by about 750 LoC.
 
-> Add I/O register mapping for NCR53C400A and enable PDMA mode to
-> improve performance and fix non-working IRQ.
-> 
-> Tested with HP C2502 (and user-space enabler).
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> ---
->  drivers/scsi/g_NCR5380.c |   10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> index ce444da..cd483c6 100644
-> --- a/drivers/scsi/g_NCR5380.c
-> +++ b/drivers/scsi/g_NCR5380.c
-> @@ -324,7 +324,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  #endif
->  			break;
->  		case BOARD_NCR53C400A:
-> -			flags = FLAG_NO_PSEUDO_DMA;
-> +			flags = FLAG_NO_DMA_FIXUP;
+This series continues to reduce divergence between the two core driver
+forks, often by copying a bug fix from one to the other. Most patches are
+larger for having to keep the two forks in sync. Making the same change to
+both is churn if one of them is to be removed but neither can be as yet.
+By the end of this series the diff between the two forks is minimal, so it
+becomes clear what caused the fork and what can be done about it.
 
-Nice!
+This patch series did benefit from scripts/checkpatch.pl but not too much.
+Decades ago, these drivers started out with 4-space tabs and if the 80
+column limit were to be strictly enforced now, it would require adding new
+functions and shortening identifiers. I would defer this sort of activity
+until after the fork has been resolved.
 
->  			ports = ncr_53c400a_ports;
->  			break;
->  		case BOARD_DTC3181E:
-> @@ -412,6 +412,11 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  			hostdata->c400_blk_cnt = 1;
->  			hostdata->c400_host_buf = 4;
->  		}
-> +		if (overrides[current_override].board == BOARD_NCR53C400A) {
+All patches to all NCR5380 drivers (x86, ARM, m68k) have been compile-
+tested. The mac_scsi, dmx3191d, g_NCR5380 and atari_scsi modules were
+regression tested on suitable hardware.
 
-Please use an 'else' here. Or a switch statement.
+Changes since v1:
+- Patch 8 omits a pointless assignment.
+- Patch 10 gets a better error message.
+- Patch 20 drops the WQ_CPU_INTENSIVE flag.
+- Patch 21 adds timing calibration for the register polling loop.
+- Patch 49 is replaced by a new one that removes FLAG_DTC3181E.
+- Patch 72 by Ondrej Zary was added to fix pseudo DMA on 53C400.
 
-> +			hostdata->c400_ctl_status = 9;
-> +			hostdata->c400_blk_cnt = 10;
-> +			hostdata->c400_host_buf = 8;
-> +		}
->  #else
->  		instance->base = overrides[current_override].NCR5380_map_name;
->  		hostdata->iomem = iomem;
-> @@ -425,7 +430,8 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  		if (NCR5380_init(instance, flags))
->  			goto out_unregister;
->  
-> -		if (overrides[current_override].board == BOARD_NCR53C400)
-> +		if (overrides[current_override].board == BOARD_NCR53C400 ||
-> +		    overrides[current_override].board == BOARD_NCR53C400A)
->  			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
->  
->  		NCR5380_maybe_reset_bus(instance);
-> 
-
--- 
+---
+ drivers/scsi/Kconfig         |   17 
+ drivers/scsi/NCR5380.c       | 2867 +++++++++++++++++++------------------------
+ drivers/scsi/NCR5380.h       |   74 -
+ drivers/scsi/arm/cumana_1.c  |   30 
+ drivers/scsi/arm/oak.c       |   26 
+ drivers/scsi/atari_NCR5380.c | 2289 +++++++++++++++-------------------
+ drivers/scsi/atari_scsi.c    |  102 -
+ drivers/scsi/dmx3191d.c      |   32 
+ drivers/scsi/dtc.c           |  114 -
+ drivers/scsi/dtc.h           |   45 
+ drivers/scsi/g_NCR5380.c     |  183 +-
+ drivers/scsi/g_NCR5380.h     |   56 
+ drivers/scsi/mac_scsi.c      |  116 -
+ drivers/scsi/pas16.c         |  115 -
+ drivers/scsi/pas16.h         |   40 
+ drivers/scsi/sun3_scsi.c     |  141 --
+ drivers/scsi/t128.c          |  101 -
+ drivers/scsi/t128.h          |   39 
+ 18 files changed, 2801 insertions(+), 3586 deletions(-)
