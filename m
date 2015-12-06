@@ -1,13 +1,14 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 07/72] ncr5380: Split NCR5380_init() into two functions
-Date: Sun, 06 Dec 2015 12:31:33 +1100
-Message-ID: <20151206013128.725501578@telegraphics.com.au>
+Subject: [PATCH v2 24/72] ncr5380: Implement NCR5380_dma_xfer_len and remove
+ LIMIT_TRANSFERSIZE macro
+Date: Sun, 06 Dec 2015 12:31:50 +1100
+Message-ID: <20151206013132.886681432@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline; filename=ncr5380-bus-wedge
+Content-Disposition: inline; filename=ncr5380-implement-NCR5380_dma_xfer_len
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,197 +21,242 @@ Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch splits the NCR5380_init() function into two parts, similar
-to the scheme used with atari_NCR5380.c. This avoids two problems.
+Follow the example of the atari_NCR5380.c core driver and adopt the
+NCR5380_dma_xfer_len() hook. Implement NCR5380_dma_xfer_len() for dtc.c
+and g_NCR5380.c to take care of the limitations of these cards. Keep the
+default for drivers using PSEUDO_DMA.
 
-Firstly, NCR5380_init() may perform a bus reset, which would cause the
-chip to assert IRQ. The chip is unable to mask its bus reset interrupt.
-Drivers can't call request_irq() before calling NCR5380_init(), because
-initialization must happen before the interrupt handler executes. If
-driver initialization causes an interrupt it may be problematic on some
-platforms. To avoid that, first move the bus reset code into
-NCR5380_maybe_reset_bus().
-
-Secondly, NCR5380_init() contains some board-specific interrupt setup code
-for the NCR53C400 that does not belong in the core driver. In moving this
-code, better not re-order interrupt initialization and bus reset. Again,
-the solution is to move the bus reset code into NCR5380_maybe_reset_bus().
+Eliminate the unused macro LIMIT_TRANSFERSIZE. 
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c      |   34 ++++++++++++++++++++--------------
- drivers/scsi/NCR5380.h      |    1 +
- drivers/scsi/arm/cumana_1.c |    2 ++
- drivers/scsi/arm/oak.c      |    2 ++
- drivers/scsi/dmx3191d.c     |    2 ++
- drivers/scsi/dtc.c          |    2 ++
- drivers/scsi/g_NCR5380.c    |    2 ++
- drivers/scsi/pas16.c        |    2 ++
- drivers/scsi/t128.c         |    2 ++
- 9 files changed, 35 insertions(+), 14 deletions(-)
+ drivers/scsi/NCR5380.c       |   32 +++++---------------------------
+ drivers/scsi/arm/cumana_1.c  |    3 +++
+ drivers/scsi/arm/oak.c       |    2 ++
+ drivers/scsi/atari_NCR5380.c |    8 +++++---
+ drivers/scsi/dtc.c           |   14 ++++++++++++++
+ drivers/scsi/dtc.h           |    3 +++
+ drivers/scsi/g_NCR5380.c     |   15 +++++++++++++++
+ drivers/scsi/g_NCR5380.h     |    3 +++
+ drivers/scsi/mac_scsi.c      |    1 +
+ drivers/scsi/pas16.h         |    2 ++
+ drivers/scsi/t128.h          |    2 ++
+ 11 files changed, 55 insertions(+), 30 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:29.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:30.000000000 +1100
-@@ -777,8 +777,7 @@ static void lprint_opcode(int opcode, st
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:00.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:02.000000000 +1100
+@@ -201,11 +201,6 @@
+  * DONT_USE_INTR - if defined, never use interrupts, even if we probe or
+  *      override-configure an IRQ.
+  *
+- * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
+- *      bytes at a time.  Since interrupts are disabled by default during
+- *      these transfers, we might need this to give reasonable interrupt
+- *      service time if the transfer size gets too large.
+- *
+  * LINKED - if defined, linked commands are supported.
+  *
+  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
+@@ -1995,29 +1990,12 @@ static void NCR5380_information_transfer
+ 				 */
  
- static int NCR5380_init(struct Scsi_Host *instance, int flags)
- {
--	int i, pass;
--	unsigned long timeout;
-+	int i;
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA_POLL)
+-				/* KLL
+-				 * PSEUDO_DMA is defined here. If this is the g_NCR5380
+-				 * driver then it will always be defined, so the
+-				 * FLAG_NO_PSEUDO_DMA is used to inhibit PDMA in the base
+-				 * NCR5380 case.  I think this is a fairly clean solution.
+-				 * We supplement these 2 if's with the flag.
+-				 */
+-#ifdef NCR5380_dma_xfer_len
+-				if (!cmd->device->borken && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && (transfersize = NCR5380_dma_xfer_len(instance, cmd)) != 0) {
+-#else
+-				transfersize = cmd->transfersize;
++				transfersize = 0;
++				if (!cmd->device->borken &&
++				    !(hostdata->flags & FLAG_NO_PSEUDO_DMA))
++					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
  
- 	if(in_interrupt())
-@@ -831,18 +830,26 @@ static int NCR5380_init(struct Scsi_Host
- 		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
- 	}
+-#ifdef LIMIT_TRANSFERSIZE	/* If we have problems with interrupt service */
+-				if (transfersize > 512)
+-					transfersize = 512;
+-#endif				/* LIMIT_TRANSFERSIZE */
+-
+-				if (!cmd->device->borken && transfersize && !(hostdata->flags & FLAG_NO_PSEUDO_DMA) && cmd->SCp.this_residual && !(cmd->SCp.this_residual % transfersize)) {
+-					/* Limit transfers to 32K, for xx400 & xx406
+-					 * pseudoDMA that transfers in 128 bytes blocks. */
+-					if (transfersize > 32 * 1024)
+-						transfersize = 32 * 1024;
+-#endif
++				if (transfersize) {
+ 					len = transfersize;
+ 					if (NCR5380_transfer_dma(instance, &phase, &len, (unsigned char **) &cmd->SCp.ptr)) {
+ 						/*
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:00.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:02.000000000 +1100
+@@ -2165,11 +2165,13 @@ static void NCR5380_information_transfer
+ 				 */
+ 
+ #if defined(REAL_DMA)
+-				if (
+ #if !defined(CONFIG_SUN3)
+-				    !cmd->device->borken &&
++				transfersize = 0;
++				if (!cmd->device->borken)
  #endif
-+	return 0;
-+}
- 
--	/* 
--	 * Detect and correct bus wedge problems.
--	 *
--	 * If the system crashed, it may have crashed in a state 
--	 * where a SCSI command was still executing, and the 
--	 * SCSI bus is not in a BUS FREE STATE.
--	 *
--	 * If this is the case, we'll try to abort the currently
--	 * established nexus which we know nothing about, and that
--	 * failing, do a hard reset of the SCSI bus 
--	 */
-+/**
-+ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
-+ * @instance: adapter to check
-+ *
-+ * If the system crashed, it may have crashed with a connected target and
-+ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
-+ * currently established nexus, which we know nothing about. Failing that
-+ * do a bus reset.
-+ *
-+ * Note that a bus reset will cause the chip to assert IRQ.
-+ *
-+ * Returns 0 if successful, otherwise -ENXIO.
-+ */
+-				    (transfersize = NCR5380_dma_xfer_len(instance, cmd, phase)) >= DMA_MIN_SIZE) {
++					transfersize = NCR5380_dma_xfer_len(instance, cmd, phase);
 +
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
-+{
-+	int pass;
- 
- 	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
- 		switch (pass) {
-@@ -850,7 +857,6 @@ static int NCR5380_init(struct Scsi_Host
- 		case 3:
- 		case 5:
- 			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
--			timeout = jiffies + 5 * HZ;
- 			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
- 			break;
- 		case 2:
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:29:23.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:29:30.000000000 +1100
-@@ -318,6 +318,7 @@ static void NCR5380_print(struct Scsi_Ho
- static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
- #endif
- static int NCR5380_init(struct Scsi_Host *instance, int flags);
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
- static void NCR5380_exit(struct Scsi_Host *instance);
- static void NCR5380_information_transfer(struct Scsi_Host *instance);
- #ifndef DONT_USE_INTR
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2015-12-06 12:29:30.000000000 +1100
-@@ -240,6 +240,8 @@ static int cumanascsi1_probe(struct expa
- 
- 	NCR5380_init(host, 0);
- 
-+	NCR5380_maybe_reset_bus(host);
-+
-         priv(host)->ctrl = 0;
-         writeb(0, priv(host)->base + CTRL);
- 
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2015-12-06 12:29:30.000000000 +1100
-@@ -145,6 +145,8 @@ static int oakscsi_probe(struct expansio
- 
- 	NCR5380_init(host, 0);
- 
-+	NCR5380_maybe_reset_bus(host);
-+
- 	ret = scsi_add_host(host, &ec->dev);
- 	if (ret)
- 		goto out_unmap;
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2015-12-06 12:29:30.000000000 +1100
-@@ -97,6 +97,8 @@ static int dmx3191d_probe_one(struct pci
- 
- 	NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
- 
-+	NCR5380_maybe_reset_bus(shost);
-+
- 	pci_set_drvdata(pdev, shost);
- 
- 	error = scsi_add_host(shost, &pdev->dev);
++				if (transfersize >= DMA_MIN_SIZE) {
+ 					len = transfersize;
+ 					cmd->SCp.phase = phase;
+ 					if (NCR5380_transfer_dma(instance, &phase,
 Index: linux/drivers/scsi/dtc.c
 ===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-06 12:29:30.000000000 +1100
-@@ -237,6 +237,8 @@ found:
+--- linux.orig/drivers/scsi/dtc.c	2015-12-06 12:29:51.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2015-12-06 12:30:02.000000000 +1100
+@@ -419,6 +419,20 @@ static inline int NCR5380_pwrite(struct
+ 	return (0);
+ }
  
- 		NCR5380_init(instance, 0);
- 
-+		NCR5380_maybe_reset_bus(instance);
++static int dtc_dma_xfer_len(struct scsi_cmnd *cmd)
++{
++	int transfersize = cmd->transfersize;
 +
- 		NCR5380_write(DTC_CONTROL_REG, CSR_5380_INTR);	/* Enable int's */
- 		if (overrides[current_override].irq != IRQ_AUTO)
- 			instance->irq = overrides[current_override].irq;
++	/* Limit transfers to 32K, for xx400 & xx406
++	 * pseudoDMA that transfers in 128 bytes blocks.
++	 */
++	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
++	    !(cmd->SCp.this_residual % transfersize))
++		transfersize = 32 * 1024;
++
++	return transfersize;
++}
++
+ MODULE_LICENSE("GPL");
+ 
+ #include "NCR5380.c"
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:29.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:30.000000000 +1100
-@@ -422,6 +422,8 @@ static int __init generic_NCR5380_detect
- 
- 		NCR5380_init(instance, flags);
- 
-+		NCR5380_maybe_reset_bus(instance);
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:51.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:30:02.000000000 +1100
+@@ -699,6 +699,21 @@ static inline int NCR5380_pwrite(struct
+ 		; 	// TIMEOUT
+ 	return 0;
+ }
 +
- 		if (overrides[current_override].irq != IRQ_AUTO)
- 			instance->irq = overrides[current_override].irq;
- 		else
-Index: linux/drivers/scsi/pas16.c
++static int generic_NCR5380_dma_xfer_len(struct scsi_cmnd *cmd)
++{
++	int transfersize = cmd->transfersize;
++
++	/* Limit transfers to 32K, for xx400 & xx406
++	 * pseudoDMA that transfers in 128 bytes blocks.
++	 */
++	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
++	    !(cmd->SCp.this_residual % transfersize))
++		transfersize = 32 * 1024;
++
++	return transfersize;
++}
++
+ #endif /* PSEUDO_DMA */
+ 
+ /*
+Index: linux/drivers/scsi/g_NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-06 12:29:30.000000000 +1100
-@@ -384,6 +384,8 @@ static int __init pas16_detect(struct sc
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:33.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 12:30:02.000000000 +1100
+@@ -73,6 +73,9 @@
  
- 	NCR5380_init(instance, 0);
+ #endif
  
-+	NCR5380_maybe_reset_bus(instance);
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        generic_NCR5380_dma_xfer_len(cmd)
 +
- 	if (overrides[current_override].irq != IRQ_AUTO)
- 	    instance->irq = overrides[current_override].irq;
- 	else 
-Index: linux/drivers/scsi/t128.c
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
+ #define NCR5380_abort generic_NCR5380_abort
+Index: linux/drivers/scsi/dtc.h
 ===================================================================
---- linux.orig/drivers/scsi/t128.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2015-12-06 12:29:30.000000000 +1100
-@@ -215,6 +215,8 @@ found:
+--- linux.orig/drivers/scsi/dtc.h	2015-12-06 12:29:25.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2015-12-06 12:30:02.000000000 +1100
+@@ -27,6 +27,9 @@
+ #define NCR5380_read(reg) (readb(DTC_address(reg)))
+ #define NCR5380_write(reg, value) (writeb(value, DTC_address(reg)))
  
- 	NCR5380_init(instance, 0);
- 
-+	NCR5380_maybe_reset_bus(instance);
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        dtc_dma_xfer_len(cmd)
 +
- 	if (overrides[current_override].irq != IRQ_AUTO)
- 	    instance->irq = overrides[current_override].irq;
- 	else 
+ #define NCR5380_intr			dtc_intr
+ #define NCR5380_queue_command		dtc_queue_command
+ #define NCR5380_abort			dtc_abort
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2015-12-06 12:29:51.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2015-12-06 12:30:02.000000000 +1100
+@@ -22,6 +22,9 @@
+ #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
+ #define NCR5380_read(reg)		cumanascsi_read(instance, reg)
+ #define NCR5380_write(reg, value)	cumanascsi_write(instance, reg, value)
++
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr			cumanascsi_intr
+ #define NCR5380_queue_command		cumanascsi_queue_command
+ #define NCR5380_info			cumanascsi_info
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2015-12-06 12:29:51.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2015-12-06 12:30:02.000000000 +1100
+@@ -26,6 +26,8 @@
+ #define NCR5380_write(reg, value) \
+ 	writeb(value, priv(instance)->base + ((reg) << 2))
+ 
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+ #define NCR5380_show_info		oakscsi_show_info
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2015-12-06 12:29:51.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2015-12-06 12:30:02.000000000 +1100
+@@ -38,6 +38,7 @@
+ 
+ #define NCR5380_pread                   macscsi_pread
+ #define NCR5380_pwrite                  macscsi_pwrite
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
+ 
+ #define NCR5380_intr                    macscsi_intr
+ #define NCR5380_queue_command           macscsi_queue_command
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2015-12-06 12:29:25.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2015-12-06 12:30:02.000000000 +1100
+@@ -110,6 +110,8 @@
+ #define NCR5380_read(reg) ( inb(PAS16_io_port(reg)) )
+ #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
+ 
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr pas16_intr
+ #define NCR5380_queue_command pas16_queue_command
+ #define NCR5380_abort pas16_abort
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2015-12-06 12:29:25.000000000 +1100
++++ linux/drivers/scsi/t128.h	2015-12-06 12:30:02.000000000 +1100
+@@ -84,6 +84,8 @@
+ #define NCR5380_read(reg) readb(T128_address(reg))
+ #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+ 
++#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
++
+ #define NCR5380_intr t128_intr
+ #define NCR5380_queue_command t128_queue_command
+ #define NCR5380_abort t128_abort
