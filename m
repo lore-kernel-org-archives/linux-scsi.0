@@ -1,86 +1,188 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 36/72] ncr5380: Use work_struct instead of delayed_work
-Date: Sun, 06 Dec 2015 12:32:02 +1100
-Message-ID: <20151206013135.955488017@telegraphics.com.au>
+Subject: [PATCH v2 08/72] ncr5380: Move NCR53C400-specific code
+Date: Sun, 06 Dec 2015 12:31:34 +1100
+Message-ID: <20151206013128.975504599@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-work_struct-instead
+Content-Disposition: inline; filename=ncr5380-remove-NCR53C400-macro
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Each host instance now has it's own work queue so the main() work item can
-sleep when necessary. That means we can use a simple work item rather than
-a delayed work item. This brings NCR5380.c closer to atari_NCR5380.c.
+Move board-specific code like this,
+	NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
+from the core driver to the board driver. Eliminate the NCR53C400 macro
+from the core driver. Removal of all macros like this one will be
+necessary in order to have one core driver that can support all kinds of
+boards.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c |   12 +++++-------
- drivers/scsi/NCR5380.h |    1 -
- 2 files changed, 5 insertions(+), 8 deletions(-)
+
+Changed since v1:
+- Don't set FLAG_NO_PSEUDO_DMA when !defined(PSEUDO_DMA). It's pointless.
+
+---
+ drivers/scsi/NCR5380.c   |   18 ------------------
+ drivers/scsi/g_NCR5380.c |   21 ++++++++++++++++-----
+ drivers/scsi/g_NCR5380.h |    6 ++----
+ 3 files changed, 18 insertions(+), 27 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:24.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:26.000000000 +1100
-@@ -697,7 +697,7 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->issue_queue = NULL;
- 	hostdata->disconnected_queue = NULL;
- 	
--	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
-+	INIT_WORK(&hostdata->main_task, NCR5380_main);
- 	hostdata->work_q = alloc_workqueue("ncr5380_%d",
- 	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
- 	                        1, instance->host_no);
-@@ -792,7 +792,7 @@ static void NCR5380_exit(struct Scsi_Hos
- {
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 
--	cancel_delayed_work_sync(&hostdata->coroutine);
-+	cancel_work_sync(&hostdata->main_task);
- 	destroy_workqueue(hostdata->work_q);
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:30.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:33.000000000 +1100
+@@ -654,9 +654,6 @@ static void prepare_info(struct Scsi_Hos
+ #ifdef UNSAFE
+ 	         "UNSAFE "
+ #endif
+-#ifdef NCR53C400
+-	         "NCR53C400 "
+-#endif
+ 	         "");
  }
  
-@@ -854,9 +854,8 @@ static int NCR5380_queue_command(struct
+@@ -782,15 +779,6 @@ static int NCR5380_init(struct Scsi_Host
  
- 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
+ 	if(in_interrupt())
+ 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
+-	/* 
+-	 * On NCR53C400 boards, NCR5380 registers are mapped 8 past 
+-	 * the base address.
+-	 */
+-
+-#ifdef NCR53C400
+-	if (flags & FLAG_NCR53C400)
+-		instance->io_port += NCR53C400_address_adjust;
+-#endif
  
--	/* Run the coroutine if it isn't already running. */
- 	/* Kick off command processing */
--	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
-+	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	hostdata->aborted = 0;
+ 	hostdata->id_mask = 1 << instance->this_id;
+@@ -824,12 +812,6 @@ static int NCR5380_init(struct Scsi_Host
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+ 	NCR5380_write(SELECT_ENABLE_REG, 0);
+-
+-#ifdef NCR53C400
+-	if (hostdata->flags & FLAG_NCR53C400) {
+-		NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
+-	}
+-#endif
  	return 0;
  }
  
-@@ -875,7 +874,7 @@ static int NCR5380_queue_command(struct
- static void NCR5380_main(struct work_struct *work)
- {
- 	struct NCR5380_hostdata *hostdata =
--		container_of(work, struct NCR5380_hostdata, coroutine.work);
-+		container_of(work, struct NCR5380_hostdata, main_task);
- 	struct Scsi_Host *instance = hostdata->host;
- 	struct scsi_cmnd *tmp, *prev;
- 	int done;
-@@ -1032,8 +1031,7 @@ static irqreturn_t NCR5380_intr(int dumm
- 		}	/* if BASR_IRQ */
- 		spin_unlock_irqrestore(instance->host_lock, flags);
- 		if(!done)
--			queue_delayed_work(hostdata->work_q,
--			                   &hostdata->coroutine, 0);
-+			queue_work(hostdata->work_q, &hostdata->main_task);
- 	} while (!done);
- 	return IRQ_HANDLED;
- }
-Index: linux/drivers/scsi/NCR5380.h
+Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:30:09.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:30:26.000000000 +1100
-@@ -256,7 +256,6 @@ struct NCR5380_hostdata {
- 	volatile struct scsi_cmnd *issue_queue;	/* waiting to be issued */
- 	volatile struct scsi_cmnd *disconnected_queue;	/* waiting for reconnect */
- 	int flags;
--	struct delayed_work coroutine;		/* our co-routine */
- 	struct scsi_eh_save ses;
- 	char info[256];
- 	int read_overruns;                /* number of bytes to cut from a
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:30.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:33.000000000 +1100
+@@ -64,9 +64,7 @@
+ #define AUTOPROBE_IRQ
+ 
+ #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+-#define NCR53C400_PSEUDO_DMA 1
+ #define PSEUDO_DMA
+-#define NCR53C400
+ #endif
+ 
+ #include <asm/io.h>
+@@ -263,7 +261,7 @@ static int __init generic_NCR5380_detect
+ 	static unsigned int __initdata dtc_3181e_ports[] = {
+ 		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
+ 	};
+-	int flags = 0;
++	int flags;
+ 	struct Scsi_Host *instance;
+ #ifdef SCSI_G_NCR5380_MEM
+ 	unsigned long base;
+@@ -324,12 +322,15 @@ static int __init generic_NCR5380_detect
+ 			continue;
+ 
+ 		ports = NULL;
++		flags = 0;
+ 		switch (overrides[current_override].board) {
+ 		case BOARD_NCR5380:
+ 			flags = FLAG_NO_PSEUDO_DMA;
+ 			break;
+ 		case BOARD_NCR53C400:
++#ifdef PSEUDO_DMA
+ 			flags = FLAG_NCR53C400;
++#endif
+ 			break;
+ 		case BOARD_NCR53C400A:
+ 			flags = FLAG_NO_PSEUDO_DMA;
+@@ -415,6 +416,13 @@ static int __init generic_NCR5380_detect
+ #ifndef SCSI_G_NCR5380_MEM
+ 		instance->io_port = overrides[current_override].NCR5380_map_name;
+ 		instance->n_io_port = region_size;
++
++		/*
++		 * On NCR53C400 boards, NCR5380 registers are mapped 8 past
++		 * the base address.
++		 */
++		if (overrides[current_override].board == BOARD_NCR53C400)
++			instance->io_port += 8;
+ #else
+ 		instance->base = overrides[current_override].NCR5380_map_name;
+ 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
+@@ -422,6 +430,9 @@ static int __init generic_NCR5380_detect
+ 
+ 		NCR5380_init(instance, flags);
+ 
++		if (overrides[current_override].board == BOARD_NCR53C400)
++			NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
++
+ 		NCR5380_maybe_reset_bus(instance);
+ 
+ 		if (overrides[current_override].irq != IRQ_AUTO)
+@@ -506,7 +517,7 @@ generic_NCR5380_biosparam(struct scsi_de
+ }
+ #endif
+ 
+-#ifdef NCR53C400_PSEUDO_DMA
++#ifdef PSEUDO_DMA
+ 
+ /**
+  *	NCR5380_pread		-	pseudo DMA read
+@@ -690,7 +701,7 @@ static inline int NCR5380_pwrite(struct
+ 		; 	// TIMEOUT
+ 	return 0;
+ }
+-#endif				/* PSEUDO_DMA */
++#endif /* PSEUDO_DMA */
+ 
+ /*
+  *	Include the NCR5380 core code that we build our driver around	
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:29.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:33.000000000 +1100
+@@ -14,7 +14,7 @@
+ #ifndef GENERIC_NCR5380_H
+ #define GENERIC_NCR5380_H
+ 
+-#ifdef NCR53C400
++#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define BIOSPARAM
+ #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
+ #else
+@@ -37,9 +37,8 @@
+ #define NCR5380_map_type int
+ #define NCR5380_map_name port
+ #define NCR53C400_register_offset 0
+-#define NCR53C400_address_adjust 8
+ 
+-#ifdef NCR53C400
++#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define NCR5380_region_size 16
+ #else
+ #define NCR5380_region_size 8
+@@ -58,7 +57,6 @@
+ #define NCR5380_map_type unsigned long
+ #define NCR5380_map_name base
+ #define NCR53C400_register_offset 0x108
+-#define NCR53C400_address_adjust 0
+ #define NCR53C400_mem_base 0x3880
+ #define NCR53C400_host_buffer 0x3900
+ #define NCR5380_region_size 0x3a00
