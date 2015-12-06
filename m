@@ -1,239 +1,217 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 09/72] atari_NCR5380: Reset bus on driver initialization if required
-Date: Sun, 06 Dec 2015 12:31:35 +1100
-Message-ID: <20151206013129.215468214@telegraphics.com.au>
+Subject: [PATCH v2 04/72] ncr5380: Remove more pointless macros
+Date: Sun, 06 Dec 2015 12:31:30 +1100
+Message-ID: <20151206013127.995515314@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-merge-do_reset
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-remove-pointless-macros
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Merge the bus reset code from NCR5380.c into atari_NCR5380.c. This allows
-for removal of a lot of duplicated code conditional on the RESET_BOOT
-macro (in the next patch).
-
-The atari_NCR5380.c fork lacks the do_reset() and NCR5380_poll_politely()
-routines from NCR5380.c, so introduce them. They are indispensible. Keep
-the two implementations in sync.
+ASM macro is never defined. rtrc in pas16.c is not used.
+NCR5380_map_config, do_NCR5380_intr, do_t128_intr and do_pas16_intr
+are unused. NCR_NOT_SET harms readability. Remove them.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c       |   33 +++++++-----
- drivers/scsi/atari_NCR5380.c |  113 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 134 insertions(+), 12 deletions(-)
+ drivers/scsi/NCR5380.h   |    3 ---
+ drivers/scsi/g_NCR5380.c |   29 ++++++++++++++---------------
+ drivers/scsi/g_NCR5380.h |    5 -----
+ drivers/scsi/pas16.c     |   16 ----------------
+ drivers/scsi/pas16.h     |    5 -----
+ drivers/scsi/t128.h      |    4 ----
+ 6 files changed, 14 insertions(+), 48 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:33.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:34.000000000 +1100
-@@ -838,19 +838,20 @@ static int NCR5380_maybe_reset_bus(struc
- 		case 1:
- 		case 3:
- 		case 5:
--			printk(KERN_INFO "scsi%d: SCSI bus busy, waiting up to five seconds\n", instance->host_no);
--			NCR5380_poll_politely(instance, STATUS_REG, SR_BSY, 0, 5*HZ);
-+			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
-+			NCR5380_poll_politely(instance,
-+			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
- 			break;
- 		case 2:
--			printk(KERN_WARNING "scsi%d: bus busy, attempting abort\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
- 			do_abort(instance);
- 			break;
- 		case 4:
--			printk(KERN_WARNING "scsi%d: bus busy, attempting reset\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
- 			do_reset(instance);
- 			break;
- 		case 6:
--			printk(KERN_ERR "scsi%d: bus locked solid or invalid override\n", instance->host_no);
-+			shost_printk(KERN_ERR, instance, "bus locked solid\n");
- 			return -ENXIO;
- 		}
- 	}
-@@ -1579,21 +1580,29 @@ static int NCR5380_transfer_pio(struct S
- }
+--- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:29:18.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:29:23.000000000 +1100
+@@ -244,8 +244,6 @@
+ #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
+ #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
  
- /**
-- *	do_reset	-	issue a reset command
-- *	@host: adapter to reset
-+ * do_reset - issue a reset command
-+ * @instance: adapter to reset
-  *
-- *	Issue a reset sequence to the NCR5380 and try and get the bus
-- *	back into sane shape.
-+ * Issue a reset sequence to the NCR5380 and try and get the bus
-+ * back into sane shape.
-  *
-- *	Locks: caller holds queue lock
-+ * This clears the reset interrupt flag because there may be no handler for
-+ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
-+ * been installed. And when in EH we may have released the ST DMA interrupt.
-  */
-  
- static void do_reset(struct Scsi_Host *instance)
- {
--	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
-+	NCR5380_write(TARGET_COMMAND_REG,
-+	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
--	udelay(25);
-+	udelay(50);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+	local_irq_restore(flags);
- }
- 
- /*
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:18.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:34.000000000 +1100
-@@ -234,6 +234,9 @@
- #define	HOSTNO		instance->host_no
- #define	H_NO(cmd)	(cmd)->device->host->host_no
- 
-+static int do_abort(struct Scsi_Host *);
-+static void do_reset(struct Scsi_Host *);
-+
+-#ifndef ASM
+-
  #ifdef SUPPORT_TAGS
- 
- /*
-@@ -475,6 +478,47 @@ static inline void initialize_SCp(struct
- 	}
- }
- 
-+/**
-+ * NCR5380_poll_politely - wait for NCR5380 status bits
-+ * @instance: controller to poll
-+ * @reg: 5380 register to poll
-+ * @bit: Bitmask to check
-+ * @val: Value required to exit
-+ *
-+ * Polls the NCR5380 in a reasonably efficient manner waiting for
-+ * an event to occur, after a short quick poll we begin giving the
-+ * CPU back in non IRQ contexts
-+ *
-+ * Returns the value of the register or a negative error code.
-+ */
-+
-+static int NCR5380_poll_politely(struct Scsi_Host *instance,
-+                                 int reg, int bit, int val, int t)
-+{
-+	int n = 500;
-+	unsigned long end = jiffies + t;
-+	int r;
-+
-+	while (n-- > 0) {
-+		r = NCR5380_read(reg);
-+		if ((r & bit) == val)
-+			return 0;
-+		cpu_relax();
-+	}
-+
-+	/* t time yet ? */
-+	while (time_before(jiffies, end)) {
-+		r = NCR5380_read(reg);
-+		if ((r & bit) == val)
-+			return 0;
-+		if (!in_interrupt())
-+			cond_resched();
-+		else
-+			cpu_relax();
-+	}
-+	return -ETIMEDOUT;
-+}
-+
+ struct tag_alloc {
+ 	DECLARE_BITMAP(allocated, MAX_TAGS);
+@@ -443,5 +441,4 @@ static __inline__ int NCR5380_pc_dma_res
+ #endif				/* defined(i386) || defined(__alpha__) */
+ #endif				/* defined(REAL_DMA)  */
+ #endif				/* __KERNEL__ */
+-#endif				/* ndef ASM */
+ #endif				/* NCR5380_H */
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:19.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:23.000000000 +1100
+@@ -82,14 +82,13 @@
  #include <linux/delay.h>
+ #include <linux/interrupt.h>
  
- #if NDEBUG
-@@ -801,6 +845,49 @@ static int __init NCR5380_init(struct Sc
- }
+-#define NCR_NOT_SET 0
+-static int ncr_irq = NCR_NOT_SET;
+-static int ncr_dma = NCR_NOT_SET;
+-static int ncr_addr = NCR_NOT_SET;
+-static int ncr_5380 = NCR_NOT_SET;
+-static int ncr_53c400 = NCR_NOT_SET;
+-static int ncr_53c400a = NCR_NOT_SET;
+-static int dtc_3181e = NCR_NOT_SET;
++static int ncr_irq;
++static int ncr_dma;
++static int ncr_addr;
++static int ncr_5380;
++static int ncr_53c400;
++static int ncr_53c400a;
++static int dtc_3181e;
  
- /**
-+ * NCR5380_maybe_reset_bus - Detect and correct bus wedge problems.
-+ * @instance: adapter to check
-+ *
-+ * If the system crashed, it may have crashed with a connected target and
-+ * the SCSI bus busy. Check for BUS FREE phase. If not, try to abort the
-+ * currently established nexus, which we know nothing about. Failing that
-+ * do a bus reset.
-+ *
-+ * Note that a bus reset will cause the chip to assert IRQ.
-+ *
-+ * Returns 0 if successful, otherwise -ENXIO.
-+ */
-+
-+static int NCR5380_maybe_reset_bus(struct Scsi_Host *instance)
-+{
-+	int pass;
-+
-+	for (pass = 1; (NCR5380_read(STATUS_REG) & SR_BSY) && pass <= 6; ++pass) {
-+		switch (pass) {
-+		case 1:
-+		case 3:
-+		case 5:
-+			shost_printk(KERN_ERR, instance, "SCSI bus busy, waiting up to five seconds\n");
-+			NCR5380_poll_politely(instance,
-+			                      STATUS_REG, SR_BSY, 0, 5 * HZ);
-+			break;
-+		case 2:
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting abort\n");
-+			do_abort(instance);
-+			break;
-+		case 4:
-+			shost_printk(KERN_ERR, instance, "bus busy, attempting reset\n");
-+			do_reset(instance);
-+			break;
-+		case 6:
-+			shost_printk(KERN_ERR, instance, "bus locked solid\n");
-+			return -ENXIO;
-+		}
-+	}
-+	return 0;
-+}
-+
-+/**
-  * NCR5380_exit - remove an NCR5380
-  * @instance: adapter to remove
-  *
-@@ -1741,6 +1828,32 @@ static int NCR5380_transfer_pio(struct S
- 		return -1;
- }
+ static struct override {
+ 	NCR5380_map_type NCR5380_map_name;
+@@ -271,19 +270,19 @@ static int __init generic_NCR5380_detect
+ 	void __iomem *iomem;
+ #endif
  
-+/**
-+ * do_reset - issue a reset command
-+ * @instance: adapter to reset
-+ *
-+ * Issue a reset sequence to the NCR5380 and try and get the bus
-+ * back into sane shape.
-+ *
-+ * This clears the reset interrupt flag because there may be no handler for
-+ * it. When the driver is initialized, the NCR5380_intr() handler has not yet
-+ * been installed. And when in EH we may have released the ST DMA interrupt.
-+ */
-+
-+static void do_reset(struct Scsi_Host *instance)
-+{
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
-+	NCR5380_write(TARGET_COMMAND_REG,
-+	              PHASE_SR_TO_TCR(NCR5380_read(STATUS_REG) & PHASE_MASK));
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_RST);
-+	udelay(50);
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+	local_irq_restore(flags);
-+}
-+
+-	if (ncr_irq != NCR_NOT_SET)
++	if (ncr_irq)
+ 		overrides[0].irq = ncr_irq;
+-	if (ncr_dma != NCR_NOT_SET)
++	if (ncr_dma)
+ 		overrides[0].dma = ncr_dma;
+-	if (ncr_addr != NCR_NOT_SET)
++	if (ncr_addr)
+ 		overrides[0].NCR5380_map_name = (NCR5380_map_type) ncr_addr;
+-	if (ncr_5380 != NCR_NOT_SET)
++	if (ncr_5380)
+ 		overrides[0].board = BOARD_NCR5380;
+-	else if (ncr_53c400 != NCR_NOT_SET)
++	else if (ncr_53c400)
+ 		overrides[0].board = BOARD_NCR53C400;
+-	else if (ncr_53c400a != NCR_NOT_SET)
++	else if (ncr_53c400a)
+ 		overrides[0].board = BOARD_NCR53C400A;
+-	else if (dtc_3181e != NCR_NOT_SET)
++	else if (dtc_3181e)
+ 		overrides[0].board = BOARD_DTC3181E;
+ #ifndef SCSI_G_NCR5380_MEM
+ 	if (!current_override && isapnp_present()) {
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:18.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:23.000000000 +1100
+@@ -21,8 +21,6 @@
+ #define NCR5380_BIOSPARAM NULL
+ #endif
+ 
+-#ifndef ASM
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+@@ -36,7 +34,6 @@
+ 
+ #ifndef SCSI_G_NCR5380_MEM
+ 
+-#define NCR5380_map_config port
+ #define NCR5380_map_type int
+ #define NCR5380_map_name port
+ #define NCR5380_instance_name io_port
+@@ -64,7 +61,6 @@
+ #else 
+ /* therefore SCSI_G_NCR5380_MEM */
+ 
+-#define NCR5380_map_config memory
+ #define NCR5380_map_type unsigned long
+ #define NCR5380_map_name base
+ #define NCR5380_instance_name base
+@@ -103,6 +99,5 @@
+ #define BOARD_NCR53C400A 2
+ #define BOARD_DTC3181E	3
+ 
+-#endif /* ndef ASM */
+ #endif /* GENERIC_NCR5380_H */
+ 
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2015-12-06 12:29:21.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2015-12-06 12:29:23.000000000 +1100
+@@ -145,22 +145,6 @@ static const unsigned short  pas16_offse
+ 		    * START_DMA_INITIATOR_RECEIVE_REG wo
+ 		    */
+     };
+-/*----------------------------------------------------------------*/
+-/* the following will set the monitor border color (useful to find
+- where something crashed or gets stuck at */
+-/* 1 = blue
+- 2 = green
+- 3 = cyan
+- 4 = red
+- 5 = magenta
+- 6 = yellow
+- 7 = white
+-*/
+-#if 1
+-#define rtrc(i) {inb(0x3da); outb(0x31, 0x3c0); outb((i), 0x3c0);}
+-#else
+-#define rtrc(i) {}
+-#endif
+ 
+ 
  /*
-  * Function : do_abort (Scsi_Host *host)
-  *
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2015-12-06 12:29:21.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2015-12-06 12:29:23.000000000 +1100
+@@ -95,9 +95,6 @@
+ #define OPERATION_MODE_1 0xec03
+ #define IO_CONFIG_3 0xf002
+ 
+-
+-#ifndef ASM
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+@@ -121,7 +118,6 @@
+ #define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
+ 
+ #define NCR5380_intr pas16_intr
+-#define do_NCR5380_intr do_pas16_intr
+ #define NCR5380_queue_command pas16_queue_command
+ #define NCR5380_abort pas16_abort
+ #define NCR5380_bus_reset pas16_bus_reset
+@@ -134,5 +130,4 @@
+    
+ #define PAS16_IRQS 0xd4a8 
+ 
+-#endif /* ndef ASM */
+ #endif /* PAS16_H */
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2015-12-06 12:29:21.000000000 +1100
++++ linux/drivers/scsi/t128.h	2015-12-06 12:29:23.000000000 +1100
+@@ -67,8 +67,6 @@
+ 
+ #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
+ 
+-#ifndef ASM
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+@@ -92,7 +90,6 @@
+ #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+ 
+ #define NCR5380_intr t128_intr
+-#define do_NCR5380_intr do_t128_intr
+ #define NCR5380_queue_command t128_queue_command
+ #define NCR5380_abort t128_abort
+ #define NCR5380_bus_reset t128_bus_reset
+@@ -105,5 +102,4 @@
+ 
+ #define T128_IRQS 0xc4a8
+ 
+-#endif /* ndef ASM */
+ #endif /* T128_H */
