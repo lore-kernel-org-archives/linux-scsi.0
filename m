@@ -1,212 +1,169 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 58/72] ncr5380: Refactor command completion
-Date: Sun, 06 Dec 2015 12:32:24 +1100
-Message-ID: <20151206013141.355677245@telegraphics.com.au>
+Subject: [PATCH v2 62/72] ncr5380: Implement new eh_bus_reset_handler
+Date: Sun, 06 Dec 2015 12:32:28 +1100
+Message-ID: <20151206013142.325498687@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-complete_cmd
+Content-Disposition: inline; filename=ncr5380-new-eh_bus_reset_handler
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Implement a 'complete_cmd' function to complete commands. This is needed
-by the following patch; the new function provides a site for the logic
-needed to correctly handle REQUEST SENSE commands.
+NCR5380.c lacks a sane eh_bus_reset_handler. The atari_NCR5380.c code is
+much better but it should not throw out the issue queue (that would be
+a host reset) and it neglects to set the result code for commands that it
+throws out. Fix these bugs and keep the two core drivers in sync.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   31 ++++++++++++++++++++++------
- drivers/scsi/atari_NCR5380.c |   46 ++++++++++++++++++++++++++++---------------
- 2 files changed, 55 insertions(+), 22 deletions(-)
+ drivers/scsi/NCR5380.c       |   50 ++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/atari_NCR5380.c |   39 +++++++++++++++++++--------------
+ 2 files changed, 72 insertions(+), 17 deletions(-)
 
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:58.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:01.000000000 +1100
-@@ -760,6 +760,27 @@ static void NCR5380_exit(struct Scsi_Hos
- }
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:07.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:08.000000000 +1100
+@@ -2689,11 +2689,12 @@ static int NCR5380_bus_reset(struct scsi
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int i;
+ 	unsigned long flags;
++	struct NCR5380_cmd *ncmd;
  
- /**
-+ * complete_cmd - finish processing a command and return it to the SCSI ML
-+ * @instance: the host instance
-+ * @cmd: command to complete
-+ */
-+
-+static void complete_cmd(struct Scsi_Host *instance,
-+                         struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
-+
-+#ifdef SUPPORT_TAGS
-+	cmd_free_tag(cmd);
-+#else
-+	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
-+#endif
-+	cmd->scsi_done(cmd);
-+}
-+
-+/**
-  * NCR5380_queue_command - queue a command
-  * @instance: the relevant SCSI adapter
-  * @cmd: SCSI command
-@@ -1347,10 +1368,7 @@ static int NCR5380_select(struct Scsi_Ho
- 		spin_lock_irq(&hostdata->lock);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		cmd->result = DID_BAD_TARGET << 16;
--#ifdef SUPPORT_TAGS
--		cmd_free_tag(cmd);
--#endif
--		cmd->scsi_done(cmd);
-+		complete_cmd(instance, cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d: target did not respond within 250ms\n", HOSTNO);
- 		return 0;
-@@ -1861,7 +1879,7 @@ static void NCR5380_information_transfer
- 				sink = 1;
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
--				cmd->scsi_done(cmd);
-+				complete_cmd(instance, cmd);
- 				return;
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+-	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
++	scmd_printk(KERN_INFO, cmd, __func__);
  #endif
- 			case PHASE_DATAIN:
-@@ -1921,7 +1939,7 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else {
- #ifdef REAL_DMA
-@@ -1977,8 +1995,6 @@ static void NCR5380_information_transfer
- 						if (ta->queue_size > ta->nr_allocated)
- 							ta->queue_size = ta->nr_allocated;
- 					}
--#else
--					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
+ 	NCR5380_dprint(NDEBUG_ANY, instance);
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+@@ -2713,27 +2714,32 @@ static int NCR5380_bus_reset(struct scsi
+ 
+ 	hostdata->selecting = NULL;
+ 
+-	if (hostdata->connected)
+-		dsprintk(NDEBUG_ABORT, instance, "reset aborted a connected command\n");
+-	hostdata->connected = NULL;
++	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
++		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
++
++		set_host_byte(cmd, DID_RESET);
++		cmd->scsi_done(cmd);
++	}
++
++	list_for_each_entry(ncmd, &hostdata->autosense, list) {
++		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
++
++		set_host_byte(cmd, DID_RESET);
++		cmd->scsi_done(cmd);
++	}
++
++	if (hostdata->connected) {
++		set_host_byte(hostdata->connected, DID_RESET);
++		complete_cmd(instance, hostdata->connected);
++		hostdata->connected = NULL;
++	}
+ 
+ 	if (hostdata->sensing) {
++		set_host_byte(hostdata->connected, DID_RESET);
+ 		complete_cmd(instance, hostdata->sensing);
+ 		hostdata->sensing = NULL;
+ 	}
+ 
+-	if (!list_empty(&hostdata->autosense))
+-		dsprintk(NDEBUG_ABORT, instance, "reset aborted autosense list\n");
+-	INIT_LIST_HEAD(&hostdata->autosense);
+-
+-	if (!list_empty(&hostdata->unissued))
+-		dsprintk(NDEBUG_ABORT, instance, "reset aborted unissued list\n");
+-	INIT_LIST_HEAD(&hostdata->unissued);
+-
+-	if (!list_empty(&hostdata->disconnected))
+-		dsprintk(NDEBUG_ABORT, instance, "reset aborted disconnected list\n");
+-	INIT_LIST_HEAD(&hostdata->disconnected);
+-
+ #ifdef SUPPORT_TAGS
+ 	free_all_tags(hostdata);
+ #endif
+@@ -2743,6 +2749,7 @@ static int NCR5380_bus_reset(struct scsi
+ 	hostdata->dma_len = 0;
  #endif
  
- 					/*
-@@ -2016,8 +2032,13 @@ static void NCR5380_information_transfer
- 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
- 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
- 						         cmd);
-+#ifdef SUPPORT_TAGS
-+						cmd_free_tag(cmd);
-+#else
-+						hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
-+#endif
- 					} else {
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 					}
++	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	maybe_release_dma_irq(instance);
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
  
- 					/*
-@@ -2188,15 +2209,10 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
--#ifdef SUPPORT_TAGS
--					cmd_free_tag(cmd);
--#else
--					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
--#endif
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
-+					complete_cmd(instance, cmd);
- 					maybe_release_dma_irq(instance);
--					cmd->scsi_done(cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:58.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:01.000000000 +1100
-@@ -721,6 +721,24 @@ static void NCR5380_exit(struct Scsi_Hos
- }
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:31:06.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:08.000000000 +1100
+@@ -2477,18 +2477,66 @@ static int NCR5380_bus_reset(struct scsi
+ {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	int i;
+ 	unsigned long flags;
++	struct NCR5380_cmd *ncmd;
  
- /**
-+ * complete_cmd - finish processing a command and return it to the SCSI ML
-+ * @instance: the host instance
-+ * @cmd: command to complete
-+ */
-+
-+static void complete_cmd(struct Scsi_Host *instance,
-+                         struct scsi_cmnd *cmd)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	dsprintk(NDEBUG_QUEUES, instance, "complete_cmd: cmd %p\n", cmd);
-+
-+	hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
-+
-+	cmd->scsi_done(cmd);
-+}
-+
-+/**
-  * NCR5380_queue_command - queue a command
-  * @instance: the relevant SCSI adapter
-  * @cmd: SCSI command
-@@ -1166,7 +1184,7 @@ static int NCR5380_select(struct Scsi_Ho
- 		spin_lock_irq(&hostdata->lock);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		cmd->result = DID_BAD_TARGET << 16;
--		cmd->scsi_done(cmd);
-+		complete_cmd(instance, cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n",
- 		        instance->host_no);
-@@ -1754,7 +1772,7 @@ static void NCR5380_information_transfer
- 				sink = 1;
- 				do_abort(instance);
- 				cmd->result = DID_ERROR << 16;
--				cmd->scsi_done(cmd);
-+				complete_cmd(instance, cmd);
- 				return;
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+-	scmd_printk(KERN_INFO, cmd, "performing bus reset\n");
++	scmd_printk(KERN_INFO, cmd, __func__);
  #endif
- 			case PHASE_DATAIN:
-@@ -1799,7 +1817,7 @@ static void NCR5380_information_transfer
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 						/* XXX - need to source or sink data here, as appropriate */
- 					} else
- 						cmd->SCp.this_residual -= transfersize - len;
-@@ -1829,7 +1847,6 @@ static void NCR5380_information_transfer
- 					         cmd, scmd_id(cmd), cmd->device->lun);
+ 	NCR5380_dprint(NDEBUG_ANY, instance);
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
  
- 					hostdata->connected = NULL;
--					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
+ 	do_reset(instance);
  
- 					/* 
- 					 * I'm not sure what the correct thing to do here is : 
-@@ -1865,8 +1882,9 @@ static void NCR5380_information_transfer
- 						dsprintk(NDEBUG_AUTOSENSE | NDEBUG_QUEUES,
- 						         instance, "REQUEST SENSE cmd %p added to head of issue queue\n",
- 						         cmd);
-+						hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
- 					} else {
--						cmd->scsi_done(cmd);
-+						complete_cmd(instance, cmd);
- 					}
++	/* reset NCR registers */
++	NCR5380_write(MODE_REG, MR_BASE);
++	NCR5380_write(TARGET_COMMAND_REG, 0);
++	NCR5380_write(SELECT_ENABLE_REG, 0);
++
++	/* After the reset, there are no more connected or disconnected commands
++	 * and no busy units; so clear the low-level status here to avoid
++	 * conflicts when the mid-level code tries to wake up the affected
++	 * commands!
++	 */
++
++	hostdata->selecting = NULL;
++
++	list_for_each_entry(ncmd, &hostdata->disconnected, list) {
++		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
++
++		set_host_byte(cmd, DID_RESET);
++		cmd->scsi_done(cmd);
++	}
++
++	list_for_each_entry(ncmd, &hostdata->autosense, list) {
++		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
++
++		set_host_byte(cmd, DID_RESET);
++		cmd->scsi_done(cmd);
++	}
++
++	if (hostdata->connected) {
++		set_host_byte(hostdata->connected, DID_RESET);
++		complete_cmd(instance, hostdata->connected);
++		hostdata->connected = NULL;
++	}
++
++	if (hostdata->sensing) {
++		set_host_byte(hostdata->connected, DID_RESET);
++		complete_cmd(instance, hostdata->sensing);
++		hostdata->sensing = NULL;
++	}
++
++	for (i = 0; i < 8; ++i)
++		hostdata->busy[i] = 0;
++#ifdef REAL_DMA
++	hostdata->dma_len = 0;
++#endif
++
++	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
  
- 					/* 
-@@ -2013,10 +2031,9 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
--					hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xFF));
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
--					cmd->scsi_done(cmd);
-+					complete_cmd(instance, cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				}
+ 	return SUCCESS;
