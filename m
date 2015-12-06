@@ -1,63 +1,110 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 31/72] ncr5380: Fix !REQ timeout in do_abort()
-Date: Sun, 06 Dec 2015 12:31:57 +1100
-Message-ID: <20151206013134.585485868@telegraphics.com.au>
+Subject: [PATCH v2 28/72] ncr5380: Drop DEF_SCSI_QCMD macro
+Date: Sun, 06 Dec 2015 12:31:54 +1100
+Message-ID: <20151206013133.855492620@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-do_abort-vs-poll_politely
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-drop-DEF_SCSI_QCMD
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-NCR5380_poll_politely() never returns -1. That means do_abort() can fail
-to handle a timeout after waiting for the target to negate REQ. Fix this
-and cleanup other NCR5380_poll_politely() call sites.
+Remove the DEF_SCSI_QCMD macro (already removed from atari_NCR5380.c). The
+lock provided by DEF_SCSI_QCMD is only needed for queue data structures.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/NCR5380.c       |   30 +++++++++++++++---------------
+ drivers/scsi/atari_NCR5380.c |    2 +-
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:18.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:19.000000000 +1100
-@@ -1266,7 +1266,7 @@ static int NCR5380_select(struct Scsi_Ho
- 	err = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, HZ);
- 	spin_lock_irq(instance->host_lock);
- 	
--	if(err) {
-+	if (err < 0) {
- 		printk(KERN_ERR "scsi%d: timeout at NCR5380.c:%d\n", instance->host_no, __LINE__);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return -1;
-@@ -1485,8 +1485,7 @@ static int do_abort(struct Scsi_Host *in
- 	 */
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:15.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:16.000000000 +1100
+@@ -803,22 +803,21 @@ static void NCR5380_exit(struct Scsi_Hos
+ }
  
- 	rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 60 * HZ);
--	
--	if(rc < 0)
-+	if (rc < 0)
- 		return -1;
+ /**
+- *	NCR5380_queue_command 		-	queue a command
+- *	@cmd: SCSI command
+- *	@done: completion handler
++ * NCR5380_queue_command - queue a command
++ * @instance: the relevant SCSI adapter
++ * @cmd: SCSI command
+  *
+- *      cmd is added to the per instance issue_queue, with minor 
+- *      twiddling done to the host specific fields of cmd.  If the 
+- *      main coroutine is not running, it is restarted.
+- *
+- *	Locks: host lock taken by caller
++ * cmd is added to the per-instance issue queue, with minor
++ * twiddling done to the host specific fields of cmd.  If the
++ * main coroutine is not running, it is restarted.
+  */
  
- 	tmp = (unsigned char)rc;
-@@ -1497,7 +1496,7 @@ static int do_abort(struct Scsi_Host *in
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN | ICR_ASSERT_ACK);
- 		rc = NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, 0, 3 * HZ);
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
--		if(rc == -1)
-+		if (rc < 0)
- 			return -1;
+-static int NCR5380_queue_command_lck(struct scsi_cmnd *cmd, void (*done) (struct scsi_cmnd *))
++static int NCR5380_queue_command(struct Scsi_Host *instance,
++                                 struct scsi_cmnd *cmd)
+ {
+-	struct Scsi_Host *instance = cmd->device->host;
+-	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	struct scsi_cmnd *tmp;
++	unsigned long flags;
+ 
+ #if (NDEBUG & NDEBUG_NO_WRITE)
+ 	switch (cmd->cmnd[0]) {
+@@ -826,7 +825,7 @@ static int NCR5380_queue_command_lck(str
+ 	case WRITE_10:
+ 		printk("scsi%d : WRITE attempted with NO_WRITE debugging flag set\n", instance->host_no);
+ 		cmd->result = (DID_ERROR << 16);
+-		done(cmd);
++		cmd->scsi_done(cmd);
+ 		return 0;
  	}
- 	tmp = ABORT;
-@@ -2194,7 +2193,8 @@ static void NCR5380_reselect(struct Scsi
- 	 * FIXME: timeout needed and fail to work queeu
+ #endif				/* (NDEBUG & NDEBUG_NO_WRITE) */
+@@ -837,9 +836,10 @@ static int NCR5380_queue_command_lck(str
  	 */
  
--	if(NCR5380_poll_politely(instance, STATUS_REG, SR_REQ, SR_REQ, 2*HZ))
-+	if (NCR5380_poll_politely(instance,
-+	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0)
- 		abort = 1;
+ 	cmd->host_scribble = NULL;
+-	cmd->scsi_done = done;
+ 	cmd->result = 0;
  
- 	len = 1;
++	spin_lock_irqsave(instance->host_lock, flags);
++
+ 	/* 
+ 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE 
+ 	 * commands are added to the head of the queue since any command will
+@@ -856,6 +856,8 @@ static int NCR5380_queue_command_lck(str
+ 		LIST(cmd, tmp);
+ 		tmp->host_scribble = (unsigned char *) cmd;
+ 	}
++	spin_unlock_irqrestore(instance->host_lock, flags);
++
+ 	dprintk(NDEBUG_QUEUES, "scsi%d : command added to %s of queue\n", instance->host_no, (cmd->cmnd[0] == REQUEST_SENSE) ? "head" : "tail");
+ 
+ 	/* Run the coroutine if it isn't already running. */
+@@ -864,8 +866,6 @@ static int NCR5380_queue_command_lck(str
+ 	return 0;
+ }
+ 
+-static DEF_SCSI_QCMD(NCR5380_queue_command)
+-
+ /**
+  *	NCR5380_main	-	NCR state machines
+  *
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:12.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:16.000000000 +1100
+@@ -925,7 +925,7 @@ static void NCR5380_exit(struct Scsi_Hos
+  * @instance: the relevant SCSI adapter
+  * @cmd: SCSI command
+  *
+- * cmd is added to the per instance issue_queue, with minor
++ * cmd is added to the per-instance issue queue, with minor
+  * twiddling done to the host specific fields of cmd.  If the
+  * main coroutine is not running, it is restarted.
+  */
