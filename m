@@ -1,200 +1,160 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [RFC PATCH 78/71] ncr5380: Add support for HP 53C400A-based cards (C2502)
-Date: Sat,  5 Dec 2015 22:18:51 +0100
-Message-ID: <1449350331-28874-1-git-send-email-linux@rainbow-software.org>
-References: <20151118083455.331768508@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151118083455.331768508@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [RFC PATCH 74/71] ncr5380: Enable PDMA for NCR53C400A
+Date: Sun, 6 Dec 2015 14:20:05 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1512061319210.2536@nippy.intranet>
+References: <20151118083455.331768508@telegraphics.com.au> <1448789980-30094-2-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1511302255470.17483@nippy.intranet> <201511301440.04626.linux@rainbow-software.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <201511301440.04626.linux@rainbow-software.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-HP C2502 cards (based on 53C400A chips) use different magic numbers for
-software-based I/O address configuration than other cards.
-The configuration is also extended to allow setting the IRQ.
 
-Move the configuration to a new function magic_configure() and move
-magic the magic numbers into an array. Add new magic numbers for these
-HP cards and hp_53c400a module parameter to use them.
+On Mon, 30 Nov 2015, Ondrej Zary wrote:
 
-Tested with HP C2502 and DTCT-436P.
+> On Monday 30 November 2015, Finn Thain wrote:
+> > 
+> > On Sun, 29 Nov 2015, Ondrej Zary wrote:
+> > 
+> > > Add I/O register mapping for NCR53C400A and enable PDMA mode to
+> > > improve performance and fix non-working IRQ.
+> > > 
+> > 
+> > Is CONFIG_SCSI_GENERIC_NCR53C400 is still needed? Can the driver be fully 
+> > configured at runtime now?
+> 
+> Things depending on CONFIG_SCSI_GENERIC_NCR53C400:
+> 
+> #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+> #define PSEUDO_DMA
+> #endif
+> 
+> Defining PSEUDO_DMA should not break anything, just makes code bigger a 
+> bit. We can probably just define it always in g_NCR5380.c.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
----
- drivers/scsi/g_NCR5380.c |   69 +++++++++++++++++++++++++++++++++++-----------
- drivers/scsi/g_NCR5380.h |    1 +
- 2 files changed, 54 insertions(+), 16 deletions(-)
+Based on your test results, I think so.
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 38579b0..52110e0 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -80,6 +80,7 @@ static int ncr_5380;
- static int ncr_53c400;
- static int ncr_53c400a;
- static int dtc_3181e;
-+static int hp_53c400a;
+> 
+> 
+> This looks weird. I don't have any card with a BIOS to test.
+> #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+> #define BIOSPARAM
+> #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
+> #else
+> #define NCR5380_BIOSPARAM NULL
+> #endif
+> 
+
+I'm guessing that when you said "weird", you meant that it is weird to tie 
+BIOSPARAM to CONFIG_SCSI_GENERIC_NCR53C400, because a 53C400-compatible 
+device does not imply a card ROM, and generic_NCR5380_biosparam() does not 
+require any particular device...
+
+Regardless, the Kconfig help text doesn't say anything about bios_param, 
+so I think that the weirdness you referred to should not prevent removal 
+of CONFIG_SCSI_GENERIC_NCR53C400. I'm happy to let users manually #define 
+BIOSPARAM if the default scsicam_bios_param() doesn't work. See patch 
+below for example.
+
+But if scsicam_bios_param() is adequate, or if generic_NCR5380_biosparam() 
+is inadequate, then we should also remove generic_NCR5380_biosparam(), 
+NCR5380_BIOSPARAM and BIOSPARAM. I'm not sufficiently familiar with this 
+platform to say one way or the other.
+
+> 
+> This looks very wrong and should be done at runtime:
+> #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+> #define NCR5380_region_size 16
+> #else
+> #define NCR5380_region_size 8
+> #endif
+> 
+
+I'll have to leave that fix to you.
+
+Thanks.
+
+
+Index: linux/drivers/scsi/Kconfig
+===================================================================
+--- linux.orig/drivers/scsi/Kconfig	2015-12-06 12:29:36.000000000 +1100
++++ linux/drivers/scsi/Kconfig	2015-12-06 13:47:50.000000000 +1100
+@@ -816,17 +816,6 @@ config SCSI_GENERIC_NCR5380_MMIO
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called g_NCR5380_mmio.
  
- static struct override {
- 	NCR5380_map_type NCR5380_map_name;
-@@ -225,6 +226,26 @@ static int __init do_DTC3181E_setup(char *str)
+-config SCSI_GENERIC_NCR53C400
+-	bool "Enable NCR53c400 extensions"
+-	depends on SCSI_GENERIC_NCR5380
+-	help
+-	  This enables certain optimizations for the NCR53c400 SCSI cards.
+-	  You might as well try it out.  Note that this driver will only probe
+-	  for the Trantor T130B in its default configuration; you might have
+-	  to pass a command line option to the kernel at boot time if it does
+-	  not detect your card.  See the file
+-	  <file:Documentation/scsi/g_NCR5380.txt> for details.
+-
+ config SCSI_IPS
+ 	tristate "IBM ServeRAID support"
+ 	depends on PCI && SCSI
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:31:23.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 13:45:42.000000000 +1100
+@@ -57,10 +57,7 @@
+  */
  
+ #define AUTOPROBE_IRQ
+-
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define PSEUDO_DMA
+-#endif
+ 
+ #include <asm/io.h>
+ #include <linux/blkdev.h>
+@@ -506,6 +503,9 @@ generic_NCR5380_biosparam(struct scsi_de
+ 	ip[2] = capacity >> 11;
+ 	return 0;
+ }
++#define NCR5380_BIOSPARAM generic_NCR5380_biosparam
++#else
++#define NCR5380_BIOSPARAM NULL
  #endif
  
-+#ifndef SCSI_G_NCR5380_MEM
-+static void magic_configure(int idx, u8 irq, u8 magic[])
-+{
-+	u8 cfg = 0;
-+
-+	outb(magic[0], 0x779);
-+	outb(magic[1], 0x379);
-+	outb(magic[2], 0x379);
-+	outb(magic[3], 0x379);
-+	outb(magic[4], 0x379);
-+
-+	/* allowed IRQs for HP 53C400A */
-+	if (irq != 2 && irq != 3 && irq != 4 && irq != 5 && irq != 7)
-+		irq = 0;
-+	if (idx >= 0 && idx <= 7)
-+		cfg = 0x80 | idx | (irq << 4);
-+	outb(cfg, 0x379);
-+}
-+#endif
-+
- /**
-  * 	generic_NCR5380_detect	-	look for NCR5380 controllers
-  *	@tpnt: the scsi template
-@@ -241,8 +262,9 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 	static int current_override;
- 	int count;
- 	unsigned int *ports;
-+	u8 *magic;
- #ifndef SCSI_G_NCR5380_MEM
--	int i;
-+	int i, port_idx;
- 	unsigned long region_size = 16;
- #endif
- 	static unsigned int __initdata ncr_53c400a_ports[] = {
-@@ -251,6 +273,12 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 	static unsigned int __initdata dtc_3181e_ports[] = {
- 		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
- 	};
-+	static u8 ncr_53c400a_magic[] __initdata = {
-+		0x59, 0xb9, 0xc5, 0xae, 0xa6
-+	};
-+	static u8 hp_53c400a_magic[] __initdata = {
-+		0x0f, 0x22, 0xf0, 0x20, 0x80
-+	};
- 	int flags;
- 	struct Scsi_Host *instance;
- 	struct NCR5380_hostdata *hostdata;
-@@ -273,6 +301,8 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 		overrides[0].board = BOARD_NCR53C400A;
- 	else if (dtc_3181e)
- 		overrides[0].board = BOARD_DTC3181E;
-+	else if (hp_53c400a)
-+		overrides[0].board = BOARD_HP53C400A;
- #ifndef SCSI_G_NCR5380_MEM
- 	if (!current_override && isapnp_present()) {
- 		struct pnp_dev *dev = NULL;
-@@ -323,13 +353,21 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 			flags = FLAG_NO_PSEUDO_DMA;
- #endif
- 			break;
-+		case BOARD_HP53C400A:
-+			flags = FLAG_NO_DMA_FIXUP;
-+			ports = ncr_53c400a_ports;
-+			magic = hp_53c400a_magic;
-+			overrides[current_override].board = BOARD_NCR53C400A;
-+			break;
- 		case BOARD_NCR53C400A:
- 			flags = FLAG_NO_DMA_FIXUP;
- 			ports = ncr_53c400a_ports;
-+			magic = ncr_53c400a_magic;
- 			break;
- 		case BOARD_DTC3181E:
- 			flags = FLAG_NO_DMA_FIXUP;
- 			ports = dtc_3181e_ports;
-+			magic = ncr_53c400a_magic;
- 			break;
- 		}
+ #ifdef PSEUDO_DMA
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:30:42.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 13:47:12.000000000 +1100
+@@ -14,13 +14,6 @@
+ #ifndef GENERIC_NCR5380_H
+ #define GENERIC_NCR5380_H
  
-@@ -338,12 +376,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 			/* wakeup sequence for the NCR53C400A and DTC3181E */
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+-#define BIOSPARAM
+-#define NCR5380_BIOSPARAM generic_NCR5380_biosparam
+-#else
+-#define NCR5380_BIOSPARAM NULL
+-#endif
+-
+ #define __STRVAL(x) #x
+ #define STRVAL(x) __STRVAL(x)
  
- 			/* Disable the adapter and look for a free io port */
--			outb(0x59, 0x779);
--			outb(0xb9, 0x379);
--			outb(0xc5, 0x379);
--			outb(0xae, 0x379);
--			outb(0xa6, 0x379);
--			outb(0x00, 0x379);
-+			magic_configure(-1, 0, magic);
+@@ -31,11 +24,9 @@
+ #define NCR5380_map_name port
+ #define NCR53C400_register_offset 0
  
- 			if (overrides[current_override].NCR5380_map_name != PORT_AUTO)
- 				for (i = 0; ports[i]; i++) {
-@@ -362,17 +395,14 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 				}
- 			if (ports[i]) {
- 				/* At this point we have our region reserved */
--				outb(0x59, 0x779);
--				outb(0xb9, 0x379);
--				outb(0xc5, 0x379);
--				outb(0xae, 0x379);
--				outb(0xa6, 0x379);
--				outb(0x80 | i, 0x379);	/* set io port to be used */
-+				magic_configure(i, 0, magic); /* no IRQ yet */
- 				outb(0xc0, ports[i] + 9);
--				if (inb(ports[i] + 9) != 0x80)
-+				if (inb(ports[i] + 9) != 0x80) {
- 					continue;
--				else
-+				} else {
- 					overrides[current_override].NCR5380_map_name = ports[i];
-+					port_idx = i;
-+				}
- 			} else
- 				continue;
- 		}
-@@ -464,12 +494,18 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- 		if (instance->irq == 255)
- 			instance->irq = NO_IRQ;
+-#ifdef CONFIG_SCSI_GENERIC_NCR53C400
+-#define NCR5380_region_size 16
+-#else
+-#define NCR5380_region_size 8
+-#endif
++// FIXME
++// #define NCR5380_region_size 16
++// #define NCR5380_region_size 8
  
--		if (instance->irq != NO_IRQ)
-+		if (instance->irq != NO_IRQ) {
-+#ifndef SCSI_G_NCR5380_MEM
-+			/* set IRQ for HP 53C400A */
-+			if (magic == hp_53c400a_magic)
-+				magic_configure(port_idx, instance->irq, magic);
-+#endif
- 			if (request_irq(instance->irq, generic_NCR5380_intr,
- 					0, "NCR5380", instance)) {
- 				printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
- 				instance->irq = NO_IRQ;
- 			}
-+		}
- 
- 		if (instance->irq == NO_IRQ) {
- 			printk(KERN_INFO "scsi%d : interrupts not enabled. for better interactive performance,\n", instance->host_no);
-@@ -763,6 +799,7 @@ module_param(ncr_5380, int, 0);
- module_param(ncr_53c400, int, 0);
- module_param(ncr_53c400a, int, 0);
- module_param(dtc_3181e, int, 0);
-+module_param(hp_53c400a, int, 0);
- MODULE_LICENSE("GPL");
- 
- #if !defined(SCSI_G_NCR5380_MEM) && defined(MODULE)
-diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
-index b3936aa..369ab9e 100644
---- a/drivers/scsi/g_NCR5380.h
-+++ b/drivers/scsi/g_NCR5380.h
-@@ -89,6 +89,7 @@
- #define BOARD_NCR53C400	1
- #define BOARD_NCR53C400A 2
- #define BOARD_DTC3181E	3
-+#define BOARD_HP53C400A 4
- 
- #endif /* GENERIC_NCR5380_H */
- 
--- 
-Ondrej Zary
+ #define NCR5380_read(reg) \
+ 	inb(instance->io_port + (reg))
