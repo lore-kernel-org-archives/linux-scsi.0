@@ -1,263 +1,621 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 40/72] ncr5380: Introduce NCR5380_poll_politely2
-Date: Sun, 06 Dec 2015 12:32:06 +1100
-Message-ID: <20151206013136.935455721@telegraphics.com.au>
+Subject: [PATCH v2 39/72] ncr5380: Standardize interrupt handling
+Date: Sun, 06 Dec 2015 12:32:05 +1100
+Message-ID: <20151206013136.685490834@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-poll_politely2
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:53158 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754290AbbLFDoI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2015 22:44:08 -0500
+Content-Disposition: inline; filename=ncr5380-standardize-interrupt-handling
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-SCSI bus protocol sometimes requires monitoring two related conditions
-simultaneously. Enhance NCR5380_poll_politely() for this purpose, and
-put it to use in the arbitration algorithm. It will also find use in
-pseudo DMA.
+Because interrupt handling is crucial to the core driver(s), all wrapper
+drivers need to agree on this code. This patch removes discrepancies.
+
+NCR5380_intr() in NCR5380.c has the following pointless loop that differs
+from the code in atari_NCR5380.c.
+
+	done = 1;
+	do {
+		/* ... */
+	} while (!done);
+
+The 'done' flag gets cleared when a reconnected command is to be processed
+from the work queue. But in NCR5380.c, the flag is also used to cause the
+interrupt conditions to be re-examined. Perhaps this was because
+NCR5380_reselect() was expected to cause another interrupt, or perhaps
+the remaining present interrupt conditions need to be handled after the
+NCR5380_reselect() call?
+
+Actually, both possibilities are bogus, as is the loop itself. It seems
+have been overlooked in the hit-and-miss removal of scsi host instance
+list iteration many years ago; see history/history.git commit 491447e1fcff
+("[PATCH] next NCR5380 updates") and commit 69e1a9482e57 ("[PATCH] fix up
+NCR5380 private data"). See also my earlier patch, "Always retry
+arbitration and selection".
+
+The datasheet says, "IRQ can be reset simply by reading the Reset
+Parity/Interrupt Register". So don't treat the chip IRQ like a
+level-triggered interrupt. Of the conditions that set the IRQ flag,
+some are level-triggered and some are edge-triggered, which means IRQ
+itself must be edge-triggered.
+
+Some interrupt conditions are latched and some are not. Before clearing
+the chip IRQ flag, clear all state that may cause it to be raised. That
+means clearing the DMA Mode and Busy Monitor bits in the Mode Register
+and clearing the host ID in the Select Enable register.
+
+Also clean up some printk's and some comments. Keep atari_NCR5380.c and
+NCR5380.c in agreement.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   66 ++++++++++++++++++++++++-------------------
- drivers/scsi/atari_NCR5380.c |   62 ++++++++++++++++++++++++----------------
- 2 files changed, 75 insertions(+), 53 deletions(-)
+ drivers/scsi/NCR5380.c       |  187 +++++++++++++++++++++++--------------------
+ drivers/scsi/atari_NCR5380.c |  156 +++++++++++++++++------------------
+ drivers/scsi/dtc.c           |    8 -
+ drivers/scsi/g_NCR5380.c     |    2 
+ 4 files changed, 180 insertions(+), 173 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:30.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:32.000000000 +1100
-@@ -457,11 +457,14 @@ static inline void initialize_SCp(struct
- }
- 
- /**
-- * NCR5380_poll_politely - wait for chip register value
-+ * NCR5380_poll_politely2 - wait for two chip register values
-  * @instance: controller to poll
-- * @reg: 5380 register to poll
-- * @bit: Bitmask to check
-- * @val: Value required to exit
-+ * @reg1: 5380 register to poll
-+ * @bit1: Bitmask to check
-+ * @val1: Expected value
-+ * @reg2: Second 5380 register to poll
-+ * @bit2: Second bitmask to check
-+ * @val2: Second expected value
-  * @wait: Time-out in jiffies
-  *
-  * Polls the chip in a reasonably efficient manner waiting for an
-@@ -469,11 +472,12 @@ static inline void initialize_SCp(struct
-  * (if possible). In irq contexts the time-out is arbitrarily limited.
-  * Callers may hold locks as long as they are held in irq mode.
-  *
-- * Returns 0 if event occurred otherwise -ETIMEDOUT.
-+ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
-  */
- 
--static int NCR5380_poll_politely(struct Scsi_Host *instance,
--                                 int reg, int bit, int val, int wait)
-+static int NCR5380_poll_politely2(struct Scsi_Host *instance,
-+                                  int reg1, int bit1, int val1,
-+                                  int reg2, int bit2, int val2, int wait)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned long deadline = jiffies + wait;
-@@ -482,9 +486,11 @@ static int NCR5380_poll_politely(struct
- 	/* Busy-wait for up to 10 ms */
- 	n = min(10000U, jiffies_to_usecs(wait));
- 	n *= hostdata->accesses_per_ms;
--	n /= 1000;
-+	n /= 2000;
- 	do {
--		if ((NCR5380_read(reg) & bit) == val)
-+		if ((NCR5380_read(reg1) & bit1) == val1)
-+			return 0;
-+		if ((NCR5380_read(reg2) & bit2) == val2)
- 			return 0;
- 		cpu_relax();
- 	} while (n--);
-@@ -495,13 +501,22 @@ static int NCR5380_poll_politely(struct
- 	/* Repeatedly sleep for 1 ms until deadline */
- 	while (time_is_after_jiffies(deadline)) {
- 		schedule_timeout_uninterruptible(1);
--		if ((NCR5380_read(reg) & bit) == val)
-+		if ((NCR5380_read(reg1) & bit1) == val1)
-+			return 0;
-+		if ((NCR5380_read(reg2) & bit2) == val2)
- 			return 0;
- 	}
- 
- 	return -ETIMEDOUT;
- }
- 
-+static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
-+                                        int reg, int bit, int val, int wait)
-+{
-+	return NCR5380_poll_politely2(instance, reg, bit, val,
-+	                                        reg, bit, val, wait);
-+}
-+
- #include <linux/delay.h>
- 
- #if NDEBUG
-@@ -1343,7 +1358,6 @@ static int NCR5380_select(struct Scsi_Ho
- 	int len;
- 	int err;
- 	unsigned long flags;
--	unsigned long timeout;
- 
- 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
- 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
-@@ -1373,20 +1387,18 @@ static int NCR5380_select(struct Scsi_Ho
- 	 */
- 
- 	local_irq_restore(flags);
--	timeout = jiffies + HZ;
--	while (1) {
--		if (time_is_before_jiffies(timeout)) {
--			NCR5380_write(MODE_REG, MR_BASE);
--			shost_printk(KERN_ERR, instance,
--			             "select: arbitration timeout\n");
--			return -1;
--		}
--		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
--			/* Reselection interrupt */
--			return -1;
--		}
--		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
--			break;
-+	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
-+	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
-+	                                       ICR_ARBITRATION_PROGRESS, HZ);
-+	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
-+		/* Reselection interrupt */
-+		return -1;
-+	}
-+	if (err < 0) {
-+		NCR5380_write(MODE_REG, MR_BASE);
-+		shost_printk(KERN_ERR, instance,
-+		             "select: arbitration timeout\n");
-+		return -1;
- 	}
- 
- 	/* The SCSI-2 arbitration delay is 2.4 us */
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:30.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:32.000000000 +1100
-@@ -262,11 +262,14 @@ static inline void initialize_SCp(struct
- }
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:29.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:30.000000000 +1100
+@@ -946,85 +946,114 @@ static void NCR5380_main(struct work_str
+ #ifndef DONT_USE_INTR
  
  /**
-- * NCR5380_poll_politely - wait for chip register value
-+ * NCR5380_poll_politely2 - wait for two chip register values
-  * @instance: controller to poll
-- * @reg: 5380 register to poll
-- * @bit: Bitmask to check
-- * @val: Value required to exit
-+ * @reg1: 5380 register to poll
-+ * @bit1: Bitmask to check
-+ * @val1: Expected value
-+ * @reg2: Second 5380 register to poll
-+ * @bit2: Second bitmask to check
-+ * @val2: Second expected value
-  * @wait: Time-out in jiffies
-  *
-  * Polls the chip in a reasonably efficient manner waiting for an
-@@ -274,11 +277,12 @@ static inline void initialize_SCp(struct
-  * (if possible). In irq contexts the time-out is arbitrarily limited.
-  * Callers may hold locks as long as they are held in irq mode.
-  *
-- * Returns 0 if event occurred otherwise -ETIMEDOUT.
-+ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+- * 	NCR5380_intr	-	generic NCR5380 irq handler
+- *	@irq: interrupt number
+- *	@dev_id: device info
+- *
+- *	Handle interrupts, reestablishing I_T_L or I_T_L_Q nexuses
+- *      from the disconnected queue, and restarting NCR5380_main() 
+- *      as required.
+- *
+- *	Locks: takes the needed instance locks
++ * NCR5380_intr - generic NCR5380 irq handler
++ * @irq: interrupt number
++ * @dev_id: device info
++ *
++ * Handle interrupts, reestablishing I_T_L or I_T_L_Q nexuses
++ * from the disconnected queue, and restarting NCR5380_main()
++ * as required.
++ *
++ * The chip can assert IRQ in any of six different conditions. The IRQ flag
++ * is then cleared by reading the Reset Parity/Interrupt Register (RPIR).
++ * Three of these six conditions are latched in the Bus and Status Register:
++ * - End of DMA (cleared by ending DMA Mode)
++ * - Parity error (cleared by reading RPIR)
++ * - Loss of BSY (cleared by reading RPIR)
++ * Two conditions have flag bits that are not latched:
++ * - Bus phase mismatch (non-maskable in DMA Mode, cleared by ending DMA Mode)
++ * - Bus reset (non-maskable)
++ * The remaining condition has no flag bit at all:
++ * - Selection/reselection
++ *
++ * Hence, establishing the cause(s) of any interrupt is partly guesswork.
++ * In "The DP8490 and DP5380 Comparison Guide", National Semiconductor
++ * claimed that "the design of the [DP8490] interrupt logic ensures
++ * interrupts will not be lost (they can be on the DP5380)."
++ * The L5380/53C80 datasheet from LOGIC Devices has more details.
++ *
++ * Checking for bus reset by reading RST is futile because of interrupt
++ * latency, but a bus reset will reset chip logic. Checking for parity error
++ * is unnecessary because that interrupt is never enabled. A Loss of BSY
++ * condition will clear DMA Mode. We can tell when this occurs because the
++ * the Busy Monitor interrupt is enabled together with DMA Mode.
   */
  
--static int NCR5380_poll_politely(struct Scsi_Host *instance,
--                                 int reg, int bit, int val, int wait)
-+static int NCR5380_poll_politely2(struct Scsi_Host *instance,
-+                                  int reg1, int bit1, int val1,
-+                                  int reg2, int bit2, int val2, int wait)
+-static irqreturn_t NCR5380_intr(int dummy, void *dev_id)
++static irqreturn_t NCR5380_intr(int irq, void *dev_id)
  {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned long deadline = jiffies + wait;
-@@ -287,9 +291,11 @@ static int NCR5380_poll_politely(struct
- 	/* Busy-wait for up to 10 ms */
- 	n = min(10000U, jiffies_to_usecs(wait));
- 	n *= hostdata->accesses_per_ms;
--	n /= 1000;
-+	n /= 2000;
- 	do {
--		if ((NCR5380_read(reg) & bit) == val)
-+		if ((NCR5380_read(reg1) & bit1) == val1)
-+			return 0;
-+		if ((NCR5380_read(reg2) & bit2) == val2)
- 			return 0;
- 		cpu_relax();
- 	} while (n--);
-@@ -300,13 +306,22 @@ static int NCR5380_poll_politely(struct
- 	/* Repeatedly sleep for 1 ms until deadline */
- 	while (time_is_after_jiffies(deadline)) {
- 		schedule_timeout_uninterruptible(1);
--		if ((NCR5380_read(reg) & bit) == val)
-+		if ((NCR5380_read(reg1) & bit1) == val1)
-+			return 0;
-+		if ((NCR5380_read(reg2) & bit2) == val2)
- 			return 0;
- 	}
+ 	struct Scsi_Host *instance = dev_id;
+-	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+-	int done;
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	int handled = 0;
+ 	unsigned char basr;
+ 	unsigned long flags;
  
- 	return -ETIMEDOUT;
+-	dprintk(NDEBUG_INTR, "scsi : NCR5380 irq %d triggered\n",
+-		instance->irq);
++	spin_lock_irqsave(instance->host_lock, flags);
++
++	basr = NCR5380_read(BUS_AND_STATUS_REG);
++	if (basr & BASR_IRQ) {
++		unsigned char mr = NCR5380_read(MODE_REG);
++		unsigned char sr = NCR5380_read(STATUS_REG);
++
++		dprintk(NDEBUG_INTR, "scsi%d: IRQ %d, BASR 0x%02x, SR 0x%02x, MR 0x%02x\n",
++		        instance->host_no, irq, basr, sr, mr);
+ 
+-	do {
+-		done = 1;
+-		spin_lock_irqsave(instance->host_lock, flags);
+-		/* Look for pending interrupts */
+-		basr = NCR5380_read(BUS_AND_STATUS_REG);
+-		/* XXX dispatch to appropriate routine if found and done=0 */
+-		if (basr & BASR_IRQ) {
+-			NCR5380_dprint(NDEBUG_INTR, instance);
+-			if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) == (SR_SEL | SR_IO)) {
+-				done = 0;
+-				dprintk(NDEBUG_INTR, "scsi%d : SEL interrupt\n", instance->host_no);
+-				NCR5380_reselect(instance);
+-				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-			} else if (basr & BASR_PARITY_ERROR) {
+-				dprintk(NDEBUG_INTR, "scsi%d : PARITY interrupt\n", instance->host_no);
+-				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-			} else if ((NCR5380_read(STATUS_REG) & SR_RST) == SR_RST) {
+-				dprintk(NDEBUG_INTR, "scsi%d : RESET interrupt\n", instance->host_no);
+-				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-			} else {
+ #if defined(REAL_DMA)
+-				/*
+-				 * We should only get PHASE MISMATCH and EOP interrupts
+-				 * if we have DMA enabled, so do a sanity check based on
+-				 * the current setting of the MODE register.
+-				 */
++		if ((mr & MR_DMA_MODE) || (mr & MR_MONITOR_BSY)) {
++			/* Probably End of DMA, Phase Mismatch or Loss of BSY.
++			 * We ack IRQ after clearing Mode Register. Workarounds
++			 * for End of DMA errata need to happen in DMA Mode.
++			 */
+ 
+-				if ((NCR5380_read(MODE_REG) & MR_DMA) && ((basr & BASR_END_DMA_TRANSFER) || !(basr & BASR_PHASE_MATCH))) {
+-					int transferred;
++			dprintk(NDEBUG_INTR, "scsi%d: interrupt in DMA mode\n", intance->host_no);
+ 
+-					if (!hostdata->connected)
+-						panic("scsi%d : received end of DMA interrupt with no connected cmd\n", instance->hostno);
++			int transferred;
+ 
+-					transferred = (hostdata->dmalen - NCR5380_dma_residual(instance));
+-					hostdata->connected->SCp.this_residual -= transferred;
+-					hostdata->connected->SCp.ptr += transferred;
+-					hostdata->dmalen = 0;
+-
+-					(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-							
+-					/* FIXME: we need to poll briefly then defer a workqueue task ! */
+-					NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG, BASR_ACK, 0, 2*HZ);
++			if (!hostdata->connected)
++				panic("scsi%d : DMA interrupt with no connected cmd\n",
++				      instance->hostno);
+ 
+-					NCR5380_write(MODE_REG, MR_BASE);
+-					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-				}
+-#else
+-				dprintk(NDEBUG_INTR, "scsi : unknown interrupt, BASR 0x%X, MR 0x%X, SR 0x%x\n", basr, NCR5380_read(MODE_REG), NCR5380_read(STATUS_REG));
+-				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-#endif
++			transferred = hostdata->dmalen - NCR5380_dma_residual(instance);
++			hostdata->connected->SCp.this_residual -= transferred;
++			hostdata->connected->SCp.ptr += transferred;
++			hostdata->dmalen = 0;
++
++			/* FIXME: we need to poll briefly then defer a workqueue task ! */
++			NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG, BASR_ACK, 0, 2 * HZ);
++
++			NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++			NCR5380_write(MODE_REG, MR_BASE);
++			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++		} else
++#endif /* REAL_DMA */
++		if ((NCR5380_read(CURRENT_SCSI_DATA_REG) & hostdata->id_mask) &&
++		    (sr & (SR_SEL | SR_IO | SR_BSY | SR_RST)) == (SR_SEL | SR_IO)) {
++			/* Probably reselected */
++			NCR5380_write(SELECT_ENABLE_REG, 0);
++			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++
++			dprintk(NDEBUG_INTR, "scsi%d: interrupt with SEL and IO\n",
++			        instance->host_no);
++
++			if (!hostdata->connected) {
++				NCR5380_reselect(instance);
++				queue_work(hostdata->work_q, &hostdata->main_task);
+ 			}
+-		}	/* if BASR_IRQ */
+-		spin_unlock_irqrestore(instance->host_lock, flags);
+-		if(!done)
+-			queue_work(hostdata->work_q, &hostdata->main_task);
+-	} while (!done);
+-	return IRQ_HANDLED;
++			if (!hostdata->connected)
++				NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++		} else {
++			/* Probably Bus Reset */
++			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++
++			dprintk(NDEBUG_INTR, "scsi%d: unknown interrupt\n", instance->host_no);
++		}
++		handled = 1;
++	} else {
++		shost_printk(KERN_NOTICE, instance, "interrupt without IRQ bit\n");
++	}
++
++	spin_unlock_irqrestore(instance->host_lock, flags);
++
++	return IRQ_RETVAL(handled);
  }
  
-+static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
-+                                        int reg, int bit, int val, int wait)
-+{
-+	return NCR5380_poll_politely2(instance, reg, bit, val,
-+	                                        reg, bit, val, wait);
-+}
-+
- static struct {
- 	unsigned char value;
- 	const char *name;
-@@ -1096,7 +1111,6 @@ static int NCR5380_select(struct Scsi_Ho
- 	unsigned char *data;
- 	int len;
- 	int err;
--	unsigned long timeout;
- 
- 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
- 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
-@@ -1120,23 +1134,19 @@ static int NCR5380_select(struct Scsi_Ho
- 	 */
- 
- 	spin_unlock_irq(instance->host_lock);
--	timeout = jiffies + HZ;
--	while (1) {
--		if (time_is_before_jiffies(timeout)) {
--			NCR5380_write(MODE_REG, MR_BASE);
--			shost_printk(KERN_ERR, instance,
--			             "select: arbitration timeout\n");
--			spin_lock_irq(instance->host_lock);
--			return -1;
--		}
--		spin_lock_irq(instance->host_lock);
--		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
--			/* Reselection interrupt */
--			return -1;
--		}
--		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
--			break;
--		spin_unlock_irq(instance->host_lock);
-+	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
-+	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
-+	                                       ICR_ARBITRATION_PROGRESS, HZ);
-+	spin_lock_irq(instance->host_lock);
-+	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
-+		/* Reselection interrupt */
-+		return -1;
-+	}
-+	if (err < 0) {
-+		NCR5380_write(MODE_REG, MR_BASE);
-+		shost_printk(KERN_ERR, instance,
-+		             "select: arbitration timeout\n");
-+		return -1;
+ #endif 
+@@ -1213,8 +1242,9 @@ static int NCR5380_select(struct Scsi_Ho
+ 	if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) == (SR_SEL | SR_IO)) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_reselect(instance);
++		if (!hostdata->connected)
++			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		printk("scsi%d : reselection after won arbitration?\n", instance->host_no);
+-		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		return -1;
  	}
  
- 	/* The SCSI-2 arbitration delay is 2.4 us */
+@@ -1558,9 +1588,10 @@ static int NCR5380_transfer_dma(struct S
+ 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(p));
+ 
+ #ifdef REAL_DMA
+-	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
++	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
++	                        MR_ENABLE_EOP_INTR);
+ #elif defined(REAL_DMA_POLL)
+-	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
++	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY);
+ #else
+ 	/*
+ 	 * Note : on my sample board, watch-dog timeouts occurred when interrupts
+@@ -1568,13 +1599,11 @@ static int NCR5380_transfer_dma(struct S
+ 	 * before the setting of DMA mode to after transfer of the last byte.
+ 	 */
+ 
+-	/* KLL May need eop and parity in 53c400 */
+ 	if (hostdata->flags & FLAG_NCR53C400)
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
+-				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
+-				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
++		                        MR_ENABLE_EOP_INTR);
+ 	else
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY);
+ #endif				/* def REAL_DMA */
+ 
+ 	dprintk(NDEBUG_DMA, "scsi%d : mode reg = 0x%X\n", instance->host_no, NCR5380_read(MODE_REG));
+@@ -1763,16 +1792,7 @@ static int NCR5380_transfer_dma(struct S
+ 	}
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+-
+-	if ((!(p & SR_IO)) && (hostdata->flags & FLAG_NCR53C400)) {
+-		dprintk(NDEBUG_C400_PWRITE, "53C400w: Checking for IRQ\n");
+-		if (NCR5380_read(BUS_AND_STATUS_REG) & BASR_IRQ) {
+-			dprintk(NDEBUG_C400_PWRITE, "53C400w:    got it, reading reset interrupt reg\n");
+-			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-		} else {
+-			printk("53C400w:    IRQ NOT THERE!\n");
+-		}
+-	}
++	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 	*data = d + c;
+ 	*count = 0;
+ 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
+@@ -2264,7 +2284,6 @@ static void NCR5380_dma_complete(NCR5380
+ 
+ 	NCR5380_poll_politely(instance, BUS_AND_STATUS_REG, BASR_ACK, 0, 5*HZ);
+ 
+-	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 
+ 	/*
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:27.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:30.000000000 +1100
+@@ -1139,12 +1139,6 @@ static void NCR5380_dma_complete(struct
+ 	int saved_data = 0, overrun = 0;
+ 	unsigned char p;
+ 
+-	if (!hostdata->connected) {
+-		printk(KERN_WARNING "scsi%d: received end of DMA interrupt with "
+-		       "no connected cmd\n", HOSTNO);
+-		return;
+-	}
+-
+ 	if (hostdata->read_overruns) {
+ 		p = hostdata->connected->SCp.phase;
+ 		if (p & SR_IO) {
+@@ -1159,10 +1153,6 @@ static void NCR5380_dma_complete(struct
+ 		}
+ 	}
+ 
+-	dprintk(NDEBUG_DMA, "scsi%d: real DMA transfer complete, basr 0x%X, sr 0x%X\n",
+-		   HOSTNO, NCR5380_read(BUS_AND_STATUS_REG),
+-		   NCR5380_read(STATUS_REG));
+-
+ #if defined(CONFIG_SUN3)
+ 	if ((sun3scsi_dma_finish(rq_data_dir(hostdata->connected->request)))) {
+ 		pr_err("scsi%d: overrun in UDC counter -- not prepared to deal with this!\n",
+@@ -1181,9 +1171,9 @@ static void NCR5380_dma_complete(struct
+ 	}
+ #endif
+ 
+-	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 
+ 	transferred = hostdata->dma_len - NCR5380_dma_residual(instance);
+ 	hostdata->dma_len = 0;
+@@ -1222,83 +1212,97 @@ static void NCR5380_dma_complete(struct
+  * Handle interrupts, reestablishing I_T_L or I_T_L_Q nexuses
+  * from the disconnected queue, and restarting NCR5380_main()
+  * as required.
++ *
++ * The chip can assert IRQ in any of six different conditions. The IRQ flag
++ * is then cleared by reading the Reset Parity/Interrupt Register (RPIR).
++ * Three of these six conditions are latched in the Bus and Status Register:
++ * - End of DMA (cleared by ending DMA Mode)
++ * - Parity error (cleared by reading RPIR)
++ * - Loss of BSY (cleared by reading RPIR)
++ * Two conditions have flag bits that are not latched:
++ * - Bus phase mismatch (non-maskable in DMA Mode, cleared by ending DMA Mode)
++ * - Bus reset (non-maskable)
++ * The remaining condition has no flag bit at all:
++ * - Selection/reselection
++ *
++ * Hence, establishing the cause(s) of any interrupt is partly guesswork.
++ * In "The DP8490 and DP5380 Comparison Guide", National Semiconductor
++ * claimed that "the design of the [DP8490] interrupt logic ensures
++ * interrupts will not be lost (they can be on the DP5380)."
++ * The L5380/53C80 datasheet from LOGIC Devices has more details.
++ *
++ * Checking for bus reset by reading RST is futile because of interrupt
++ * latency, but a bus reset will reset chip logic. Checking for parity error
++ * is unnecessary because that interrupt is never enabled. A Loss of BSY
++ * condition will clear DMA Mode. We can tell when this occurs because the
++ * the Busy Monitor interrupt is enabled together with DMA Mode.
+  */
+ 
+ static irqreturn_t NCR5380_intr(int irq, void *dev_id)
+ {
+ 	struct Scsi_Host *instance = dev_id;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-	int done = 1, handled = 0;
++	int handled = 0;
+ 	unsigned char basr;
+ 
+-	dprintk(NDEBUG_INTR, "scsi%d: NCR5380 irq triggered\n", HOSTNO);
+-
+-	/* Look for pending interrupts */
+ 	basr = NCR5380_read(BUS_AND_STATUS_REG);
+-	dprintk(NDEBUG_INTR, "scsi%d: BASR=%02x\n", HOSTNO, basr);
+-	/* dispatch to appropriate routine if found and done=0 */
+ 	if (basr & BASR_IRQ) {
+-		NCR5380_dprint(NDEBUG_INTR, instance);
+-		if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
+-			done = 0;
+-			dprintk(NDEBUG_INTR, "scsi%d: SEL interrupt\n", HOSTNO);
+-			NCR5380_reselect(instance);
+-			(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-		} else if (basr & BASR_PARITY_ERROR) {
+-			dprintk(NDEBUG_INTR, "scsi%d: PARITY interrupt\n", HOSTNO);
+-			(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-		} else if ((NCR5380_read(STATUS_REG) & SR_RST) == SR_RST) {
+-			dprintk(NDEBUG_INTR, "scsi%d: RESET interrupt\n", HOSTNO);
+-			(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-		} else {
+-			/*
+-			 * The rest of the interrupt conditions can occur only during a
+-			 * DMA transfer
+-			 */
++		unsigned char mr = NCR5380_read(MODE_REG);
++		unsigned char sr = NCR5380_read(STATUS_REG);
++
++		dprintk(NDEBUG_INTR, "scsi%d: IRQ %d, BASR 0x%02x, SR 0x%02x, MR 0x%02x\n",
++		        HOSTNO, irq, basr, sr, mr);
+ 
+ #if defined(REAL_DMA)
+-			/*
+-			 * We should only get PHASE MISMATCH and EOP interrupts if we have
+-			 * DMA enabled, so do a sanity check based on the current setting
+-			 * of the MODE register.
++		if ((mr & MR_DMA_MODE) || (mr & MR_MONITOR_BSY)) {
++			/* Probably End of DMA, Phase Mismatch or Loss of BSY.
++			 * We ack IRQ after clearing Mode Register. Workarounds
++			 * for End of DMA errata need to happen in DMA Mode.
+ 			 */
+ 
+-			if ((NCR5380_read(MODE_REG) & MR_DMA_MODE) &&
+-			    ((basr & BASR_END_DMA_TRANSFER) ||
+-			     !(basr & BASR_PHASE_MATCH))) {
+-
+-				dprintk(NDEBUG_INTR, "scsi%d: PHASE MISM or EOP interrupt\n", HOSTNO);
+-				NCR5380_dma_complete( instance );
+-				done = 0;
+-			} else
++			dprintk(NDEBUG_INTR, "scsi%d: interrupt in DMA mode\n", HOSTNO);
++
++			if (hostdata->connected) {
++				NCR5380_dma_complete(instance);
++				queue_work(hostdata->work_q, &hostdata->main_task);
++			} else {
++				NCR5380_write(MODE_REG, MR_BASE);
++				NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++			}
++		} else
+ #endif /* REAL_DMA */
+-			{
+-/* MS: Ignore unknown phase mismatch interrupts (caused by EOP interrupt) */
+-				if (basr & BASR_PHASE_MATCH)
+-					dprintk(NDEBUG_INTR, "scsi%d: unknown interrupt, "
+-					       "BASR 0x%x, MR 0x%x, SR 0x%x\n",
+-					       HOSTNO, basr, NCR5380_read(MODE_REG),
+-					       NCR5380_read(STATUS_REG));
+-				(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++		if ((NCR5380_read(CURRENT_SCSI_DATA_REG) & hostdata->id_mask) &&
++		    (sr & (SR_SEL | SR_IO | SR_BSY | SR_RST)) == (SR_SEL | SR_IO)) {
++			/* Probably reselected */
++			NCR5380_write(SELECT_ENABLE_REG, 0);
++			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++
++			dprintk(NDEBUG_INTR, "scsi%d: interrupt with SEL and IO\n",
++			        HOSTNO);
++
++			if (!hostdata->connected) {
++				NCR5380_reselect(instance);
++				queue_work(hostdata->work_q, &hostdata->main_task);
++			}
++			if (!hostdata->connected)
++				NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++		} else {
++			/* Probably Bus Reset */
++			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++
++			dprintk(NDEBUG_INTR, "scsi%d: unknown interrupt\n", HOSTNO);
+ #ifdef SUN3_SCSI_VME
+-				dregs->csr |= CSR_DMA_ENABLE;
++			dregs->csr |= CSR_DMA_ENABLE;
+ #endif
+-			}
+-		} /* if !(SELECTION || PARITY) */
++		}
+ 		handled = 1;
+-	} /* BASR & IRQ */ else {
+-		printk(KERN_NOTICE "scsi%d: interrupt without IRQ bit set in BASR, "
+-		       "BASR 0x%X, MR 0x%X, SR 0x%x\n", HOSTNO, basr,
+-		       NCR5380_read(MODE_REG), NCR5380_read(STATUS_REG));
+-		(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++	} else {
++		shost_printk(KERN_NOTICE, instance, "interrupt without IRQ bit\n");
+ #ifdef SUN3_SCSI_VME
+ 		dregs->csr |= CSR_DMA_ENABLE;
+ #endif
+ 	}
+ 
+-	if (!done)
+-		queue_work(hostdata->work_q, &hostdata->main_task);
+-
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+@@ -1504,9 +1508,10 @@ static int NCR5380_select(struct Scsi_Ho
+ 	if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) == (SR_SEL | SR_IO)) {
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 		NCR5380_reselect(instance);
++		if (!hostdata->connected)
++			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		printk(KERN_ERR "scsi%d: reselection after won arbitration?\n",
+ 		       HOSTNO);
+-		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 		return -1;
+ 	}
+ 
+@@ -1866,19 +1871,14 @@ static int NCR5380_transfer_dma(struct S
+ 	/* send start chain */
+ 	sun3scsi_dma_start(c, *data);
+ 
++	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(p));
++	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
++	                        MR_ENABLE_EOP_INTR);
+ 	if (p & SR_IO) {
+-		NCR5380_write(TARGET_COMMAND_REG, 1);
+-		NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, 0);
+-		NCR5380_write(MODE_REG,
+-			      (NCR5380_read(MODE_REG) | MR_DMA_MODE | MR_ENABLE_EOP_INTR));
+ 		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
+ 	} else {
+-		NCR5380_write(TARGET_COMMAND_REG, 0);
+-		NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_ASSERT_DATA);
+-		NCR5380_write(MODE_REG,
+-			      (NCR5380_read(MODE_REG) | MR_DMA_MODE | MR_ENABLE_EOP_INTR));
+ 		NCR5380_write(START_DMA_SEND_REG, 0);
+ 	}
+ 
+@@ -1907,10 +1907,8 @@ static int NCR5380_transfer_dma(struct S
+ 		   c, (p & SR_IO) ? "to" : "from", d);
+ 
+ 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(p));
+-
+-#ifdef REAL_DMA
+-	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+-#endif /* def REAL_DMA  */
++	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_MONITOR_BSY |
++	                        MR_ENABLE_EOP_INTR);
+ 
+ 	if (!(hostdata->flags & FLAG_LATE_DMA_SETUP)) {
+ 		/* On the Medusa, it is a must to initialize the DMA before
+@@ -2384,10 +2382,10 @@ static void NCR5380_information_transfer
+ #endif
+ 					hostdata->connected = NULL;
+ 					cmd->result = DID_ERROR << 16;
+-					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					maybe_release_dma_irq(instance);
+ 					local_irq_restore(flags);
+ 					cmd->scsi_done(cmd);
++					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 					return;
+ 				}
+ 				msgout = NOP;
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2015-12-06 12:30:29.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2015-12-06 12:30:30.000000000 +1100
+@@ -334,8 +334,6 @@ static inline int NCR5380_pread(struct S
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+ 	i = 0;
+-	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-	NCR5380_write(MODE_REG, MR_ENABLE_EOP_INTR | MR_DMA_MODE);
+ 	if (instance->irq == NO_IRQ)
+ 		NCR5380_write(DTC_CONTROL_REG, CSR_DIR_READ);
+ 	else
+@@ -357,9 +355,7 @@ static inline int NCR5380_pread(struct S
+ 	rtrc(4);
+ 	while (!(NCR5380_read(DTC_CONTROL_REG) & D_CR_ACCESS))
+ 		++i;
+-	NCR5380_write(MODE_REG, 0);	/* Clear the operating mode */
+ 	rtrc(0);
+-	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 	if (i > hostdata->spin_max_r)
+ 		hostdata->spin_max_r = i;
+ 	return (0);
+@@ -383,9 +379,6 @@ static inline int NCR5380_pwrite(struct
+ 	int i;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+-	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-	NCR5380_write(MODE_REG, MR_ENABLE_EOP_INTR | MR_DMA_MODE);
+-	/* set direction (write) */
+ 	if (instance->irq == NO_IRQ)
+ 		NCR5380_write(DTC_CONTROL_REG, 0);
+ 	else
+@@ -410,7 +403,6 @@ static inline int NCR5380_pwrite(struct
+ 		++i;
+ 	rtrc(7);
+ 	/* Check for parity error here. fixme. */
+-	NCR5380_write(MODE_REG, 0);	/* Clear the operating mode */
+ 	rtrc(0);
+ 	if (i > hostdata->spin_max_w)
+ 		hostdata->spin_max_w = i;
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:30:09.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:30:30.000000000 +1100
+@@ -594,8 +594,6 @@ static inline int NCR5380_pread(struct S
+ 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
+ 		printk(KERN_ERR "53C400r: no end dma signal\n");
+ 		
+-	NCR5380_write(MODE_REG, MR_BASE);
+-	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 	return 0;
+ }
+ 
+
+
