@@ -1,66 +1,74 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 13/72] ncr5380: Remove redundant register writes
-Date: Sun, 06 Dec 2015 12:31:39 +1100
-Message-ID: <20151206013130.195476356@telegraphics.com.au>
+Subject: [PATCH v2 12/72] ncr5380: Remove unused hostdata->aborted flag
+Date: Sun, 06 Dec 2015 12:31:38 +1100
+Message-ID: <20151206013129.945485558@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-double-register-writes
+Content-Disposition: inline; filename=ncr5380-remove-unused-aborted-flag
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the duplicate write to the Select Enable Register that appeared
-in v1.1.38.
-
-Also remove the redundant write to Initiator Command Register prior to
-calling do_abort().
+The aborted flag was introduced in v1.1.38 but never used. Remove it.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
  drivers/scsi/NCR5380.c       |    2 --
- drivers/scsi/atari_NCR5380.c |    3 ---
- 2 files changed, 5 deletions(-)
+ drivers/scsi/NCR5380.h       |    1 -
+ drivers/scsi/atari_NCR5380.c |    2 --
+ 3 files changed, 5 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:40.000000000 +1100
-@@ -1384,7 +1384,6 @@ part2:
- 		cmd->scsi_done(cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d : target did not respond within 250ms\n", instance->host_no);
--		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return 0;
- 	}
- 	hostdata->targets_present |= (1 << scmd_id(cmd));
-@@ -2076,7 +2075,6 @@ static void NCR5380_information_transfer
- 						scmd_printk(KERN_INFO, cmd,
- 							    "switching to slow handshake\n");
- 						cmd->device->borken = 1;
--						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ATN);
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:38.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:39.000000000 +1100
+@@ -781,7 +781,6 @@ static int NCR5380_init(struct Scsi_Host
+ 	if(in_interrupt())
+ 		printk(KERN_ERR "NCR5380_init called with interrupts off!\n");
+ 
+-	hostdata->aborted = 0;
+ 	hostdata->id_mask = 1 << instance->this_id;
+ 	for (i = hostdata->id_mask; i <= 0x80; i <<= 1)
+ 		if (i > hostdata->id_mask)
+@@ -2574,7 +2573,6 @@ static int NCR5380_abort(struct scsi_cmn
+ 
+ 	if (hostdata->connected == cmd) {
+ 		dprintk(NDEBUG_ABORT, "scsi%d : aborting connected command\n", instance->host_no);
+-		hostdata->aborted = 1;
+ /*
+  * We should perform BSY checking, and make sure we haven't slipped
+  * into BUS FREE.
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:39.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:40.000000000 +1100
-@@ -1640,7 +1640,6 @@ static int NCR5380_select(struct Scsi_Ho
- 		cmd->scsi_done(cmd);
- 		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		dprintk(NDEBUG_SELECTION, "scsi%d: target did not respond within 250ms\n", HOSTNO);
--		NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 		return 0;
- 	}
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:38.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:39.000000000 +1100
+@@ -813,7 +813,6 @@ static int __init NCR5380_init(struct Sc
+ 	SETUP_HOSTDATA(instance);
  
-@@ -2192,8 +2191,6 @@ static void NCR5380_information_transfer
- 						scmd_printk(KERN_INFO, cmd,
- 							"switching to slow handshake\n");
- 						cmd->device->borken = 1;
--						NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE |
--							ICR_ASSERT_ATN);
- 						sink = 1;
- 						do_abort(instance);
- 						cmd->result = DID_ERROR << 16;
+ 	hostdata->host = instance;
+-	hostdata->aborted = 0;
+ 	hostdata->id_mask = 1 << instance->this_id;
+ 	hostdata->id_higher_mask = 0;
+ 	for (i = hostdata->id_mask; i <= 0x80; i <<= 1)
+@@ -2834,7 +2833,6 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
+ 		 */
+ 
+ 		if (do_abort(instance) == 0) {
+-			hostdata->aborted = 1;
+ 			hostdata->connected = NULL;
+ 			cmd->result = DID_ABORT << 16;
+ #ifdef SUPPORT_TAGS
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:29:36.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:29:39.000000000 +1100
+@@ -271,7 +271,6 @@ struct NCR5380_hostdata {
+ 	volatile int restart_select;		/* we have disconnected,
+ 						   used to restart 
+ 						   NCR5380_select() */
+-	volatile unsigned aborted:1;		/* flag, says aborted */
+ 	int flags;
+ 	unsigned long time_expires;		/* in jiffies, set prior to sleeping */
+ 	int select_time;			/* timer in select for target response */
