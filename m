@@ -1,85 +1,263 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 06/72] ncr5380: Remove NCR5380_instance_name macro
-Date: Sun, 06 Dec 2015 12:31:32 +1100
-Message-ID: <20151206013128.485502134@telegraphics.com.au>
+Subject: [PATCH v2 40/72] ncr5380: Introduce NCR5380_poll_politely2
+Date: Sun, 06 Dec 2015 12:32:06 +1100
+Message-ID: <20151206013136.935455721@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-NCR5380_instance_name
+Content-Disposition: inline; filename=ncr5380-poll_politely2
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This macro makes the code cryptic. Remove it.
+SCSI bus protocol sometimes requires monitoring two related conditions
+simultaneously. Enhance NCR5380_poll_politely() for this purpose, and
+put it to use in the arbitration algorithm. It will also find use in
+pseudo DMA.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 ---
- drivers/scsi/NCR5380.c   |    2 +-
- drivers/scsi/g_NCR5380.c |    7 ++++---
- drivers/scsi/g_NCR5380.h |    2 --
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/NCR5380.c       |   66 ++++++++++++++++++++++++-------------------
+ drivers/scsi/atari_NCR5380.c |   62 ++++++++++++++++++++++++----------------
+ 2 files changed, 75 insertions(+), 53 deletions(-)
 
-Index: linux/drivers/scsi/g_NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:29.000000000 +1100
-@@ -412,10 +412,11 @@ static int __init generic_NCR5380_detect
- 			continue;
- 		}
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:30.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:32.000000000 +1100
+@@ -457,11 +457,14 @@ static inline void initialize_SCp(struct
+ }
  
--		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
- #ifndef SCSI_G_NCR5380_MEM
-+		instance->io_port = overrides[current_override].NCR5380_map_name;
- 		instance->n_io_port = region_size;
- #else
-+		instance->base = overrides[current_override].NCR5380_map_name;
- 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
- #endif
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -469,11 +472,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
  
-@@ -464,10 +465,10 @@ static int generic_NCR5380_release_resou
- 	NCR5380_exit(instance);
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long deadline = jiffies + wait;
+@@ -482,9 +486,11 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 10 ms */
+ 	n = min(10000U, jiffies_to_usecs(wait));
+ 	n *= hostdata->accesses_per_ms;
+-	n /= 1000;
++	n /= 2000;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (n--);
+@@ -495,13 +501,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(deadline)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
  
- #ifndef SCSI_G_NCR5380_MEM
--	release_region(instance->NCR5380_instance_name, instance->n_io_port);
-+	release_region(instance->io_port, instance->n_io_port);
- #else
- 	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
--	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
-+	release_mem_region(instance->base, NCR5380_region_size);
- #endif
+ 	return -ETIMEDOUT;
+ }
  
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ #include <linux/delay.h>
  
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2015-12-06 12:29:29.000000000 +1100
-@@ -36,7 +36,6 @@
+ #if NDEBUG
+@@ -1343,7 +1358,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	int len;
+ 	int err;
+ 	unsigned long flags;
+-	unsigned long timeout;
  
- #define NCR5380_map_type int
- #define NCR5380_map_name port
--#define NCR5380_instance_name io_port
- #define NCR53C400_register_offset 0
- #define NCR53C400_address_adjust 8
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d: starting arbitration, id = %d\n", HOSTNO,
+@@ -1373,20 +1387,18 @@ static int NCR5380_select(struct Scsi_Ho
+ 	 */
  
-@@ -58,7 +57,6 @@
+ 	local_irq_restore(flags);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			return -1;
+-		}
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
+ 	}
  
- #define NCR5380_map_type unsigned long
- #define NCR5380_map_name base
--#define NCR5380_instance_name base
- #define NCR53C400_register_offset 0x108
- #define NCR53C400_address_adjust 0
- #define NCR53C400_mem_base 0x3880
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:25.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:29.000000000 +1100
-@@ -790,7 +790,7 @@ static int NCR5380_init(struct Scsi_Host
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:30.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:32.000000000 +1100
+@@ -262,11 +262,14 @@ static inline void initialize_SCp(struct
+ }
  
- #ifdef NCR53C400
- 	if (flags & FLAG_NCR53C400)
--		instance->NCR5380_instance_name += NCR53C400_address_adjust;
-+		instance->io_port += NCR53C400_address_adjust;
- #endif
+ /**
+- * NCR5380_poll_politely - wait for chip register value
++ * NCR5380_poll_politely2 - wait for two chip register values
+  * @instance: controller to poll
+- * @reg: 5380 register to poll
+- * @bit: Bitmask to check
+- * @val: Value required to exit
++ * @reg1: 5380 register to poll
++ * @bit1: Bitmask to check
++ * @val1: Expected value
++ * @reg2: Second 5380 register to poll
++ * @bit2: Second bitmask to check
++ * @val2: Second expected value
+  * @wait: Time-out in jiffies
+  *
+  * Polls the chip in a reasonably efficient manner waiting for an
+@@ -274,11 +277,12 @@ static inline void initialize_SCp(struct
+  * (if possible). In irq contexts the time-out is arbitrarily limited.
+  * Callers may hold locks as long as they are held in irq mode.
+  *
+- * Returns 0 if event occurred otherwise -ETIMEDOUT.
++ * Returns 0 if either or both event(s) occurred otherwise -ETIMEDOUT.
+  */
  
- 	hostdata->aborted = 0;
+-static int NCR5380_poll_politely(struct Scsi_Host *instance,
+-                                 int reg, int bit, int val, int wait)
++static int NCR5380_poll_politely2(struct Scsi_Host *instance,
++                                  int reg1, int bit1, int val1,
++                                  int reg2, int bit2, int val2, int wait)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long deadline = jiffies + wait;
+@@ -287,9 +291,11 @@ static int NCR5380_poll_politely(struct
+ 	/* Busy-wait for up to 10 ms */
+ 	n = min(10000U, jiffies_to_usecs(wait));
+ 	n *= hostdata->accesses_per_ms;
+-	n /= 1000;
++	n /= 2000;
+ 	do {
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 		cpu_relax();
+ 	} while (n--);
+@@ -300,13 +306,22 @@ static int NCR5380_poll_politely(struct
+ 	/* Repeatedly sleep for 1 ms until deadline */
+ 	while (time_is_after_jiffies(deadline)) {
+ 		schedule_timeout_uninterruptible(1);
+-		if ((NCR5380_read(reg) & bit) == val)
++		if ((NCR5380_read(reg1) & bit1) == val1)
++			return 0;
++		if ((NCR5380_read(reg2) & bit2) == val2)
+ 			return 0;
+ 	}
+ 
+ 	return -ETIMEDOUT;
+ }
+ 
++static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
++                                        int reg, int bit, int val, int wait)
++{
++	return NCR5380_poll_politely2(instance, reg, bit, val,
++	                                        reg, bit, val, wait);
++}
++
+ static struct {
+ 	unsigned char value;
+ 	const char *name;
+@@ -1096,7 +1111,6 @@ static int NCR5380_select(struct Scsi_Ho
+ 	unsigned char *data;
+ 	int len;
+ 	int err;
+-	unsigned long timeout;
+ 
+ 	NCR5380_dprint(NDEBUG_ARBITRATION, instance);
+ 	dprintk(NDEBUG_ARBITRATION, "scsi%d : starting arbitration, id = %d\n", instance->host_no, instance->this_id);
+@@ -1120,23 +1134,19 @@ static int NCR5380_select(struct Scsi_Ho
+ 	 */
+ 
+ 	spin_unlock_irq(instance->host_lock);
+-	timeout = jiffies + HZ;
+-	while (1) {
+-		if (time_is_before_jiffies(timeout)) {
+-			NCR5380_write(MODE_REG, MR_BASE);
+-			shost_printk(KERN_ERR, instance,
+-			             "select: arbitration timeout\n");
+-			spin_lock_irq(instance->host_lock);
+-			return -1;
+-		}
+-		spin_lock_irq(instance->host_lock);
+-		if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
+-			/* Reselection interrupt */
+-			return -1;
+-		}
+-		if (NCR5380_read(INITIATOR_COMMAND_REG) & ICR_ARBITRATION_PROGRESS)
+-			break;
+-		spin_unlock_irq(instance->host_lock);
++	err = NCR5380_poll_politely2(instance, MODE_REG, MR_ARBITRATE, 0,
++	                INITIATOR_COMMAND_REG, ICR_ARBITRATION_PROGRESS,
++	                                       ICR_ARBITRATION_PROGRESS, HZ);
++	spin_lock_irq(instance->host_lock);
++	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE)) {
++		/* Reselection interrupt */
++		return -1;
++	}
++	if (err < 0) {
++		NCR5380_write(MODE_REG, MR_BASE);
++		shost_printk(KERN_ERR, instance,
++		             "select: arbitration timeout\n");
++		return -1;
+ 	}
+ 
+ 	/* The SCSI-2 arbitration delay is 2.4 us */
