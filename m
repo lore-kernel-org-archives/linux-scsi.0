@@ -1,507 +1,399 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 20/72] ncr5380: Introduce unbound workqueue
-Date: Sun, 06 Dec 2015 12:31:46 +1100
-Message-ID: <20151206013131.905495556@telegraphics.com.au>
+Subject: [PATCH v2 60/72] ncr5380: Implement new eh_abort_handler
+Date: Sun, 06 Dec 2015 12:32:26 +1100
+Message-ID: <20151206013141.845622231@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline; filename=ncr5380-new-workqueue
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-new-eh_abort_handler
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Allocate a work queue that will permit busy waiting and sleeping. This
-means NCR5380_init() can potentially fail, so add this error path.
+Introduce a new eh_abort_handler implementation. This one attempts to
+follow all of the rules relating to EH handlers. There is still a known
+bug: during selection, a command becomes invisible to the EH handlers
+because it only appears in a pointer on the stack of a different thread.
+This bug is addressed in a subsequent patch.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
+ drivers/scsi/NCR5380.c       |  155 ++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/atari_NCR5380.c |  157 ++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 282 insertions(+), 30 deletions(-)
 
-In subsequent patches, the work function adopts this work queue so it
-can sleep while polling, which allows the removal of some flawed and
-complicated code in NCR5380_select() in NCR5380.c.
-
-Changed since v1:
-- Dropped WQ_CPU_INTENSIVE flag because Documentation/workqueue.txt says it
-  "is meaningless for unbound wq".
-
----
- drivers/scsi/NCR5380.c       |   15 +++++++++++----
- drivers/scsi/NCR5380.h       |    1 +
- drivers/scsi/arm/cumana_1.c  |    8 ++++++--
- drivers/scsi/arm/oak.c       |    8 ++++++--
- drivers/scsi/atari_NCR5380.c |    8 +++++++-
- drivers/scsi/atari_scsi.c    |    5 ++++-
- drivers/scsi/dmx3191d.c      |   17 +++++++++++------
- drivers/scsi/dtc.c           |   11 +++++++++--
- drivers/scsi/g_NCR5380.c     |   31 +++++++++++++++----------------
- drivers/scsi/mac_scsi.c      |    5 ++++-
- drivers/scsi/pas16.c         |   10 ++++++++--
- drivers/scsi/sun3_scsi.c     |    5 ++++-
- drivers/scsi/t128.c          |   13 ++++++++++---
- 13 files changed, 96 insertions(+), 41 deletions(-)
-
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:48.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:51.000000000 +1100
-@@ -514,7 +514,7 @@ static int should_disconnect(unsigned ch
- static void NCR5380_set_timer(struct NCR5380_hostdata *hostdata, unsigned long timeout)
- {
- 	hostdata->time_expires = jiffies + timeout;
--	schedule_delayed_work(&hostdata->coroutine, timeout);
-+	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, timeout);
- }
- 
- 
-@@ -791,7 +791,12 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->disconnected_queue = NULL;
- 	
- 	INIT_DELAYED_WORK(&hostdata->coroutine, NCR5380_main);
--	
-+	hostdata->work_q = alloc_workqueue("ncr5380_%d",
-+	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
-+	                        1, instance->host_no);
-+	if (!hostdata->work_q)
-+		return -ENOMEM;
-+
- 	/* The CHECK code seems to break the 53C400. Will check it later maybe */
- 	if (flags & FLAG_NCR53C400)
- 		hostdata->flags = FLAG_HAS_LAST_BYTE_SENT | flags;
-@@ -872,6 +877,7 @@ static void NCR5380_exit(struct Scsi_Hos
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 
- 	cancel_delayed_work_sync(&hostdata->coroutine);
-+	destroy_workqueue(hostdata->work_q);
- }
- 
- /**
-@@ -932,7 +938,7 @@ static int NCR5380_queue_command_lck(str
- 
- 	/* Run the coroutine if it isn't already running. */
- 	/* Kick off command processing */
--	schedule_delayed_work(&hostdata->coroutine, 0);
-+	queue_delayed_work(hostdata->work_q, &hostdata->coroutine, 0);
- 	return 0;
- }
- 
-@@ -1128,7 +1134,8 @@ static irqreturn_t NCR5380_intr(int dumm
- 		}	/* if BASR_IRQ */
- 		spin_unlock_irqrestore(instance->host_lock, flags);
- 		if(!done)
--			schedule_delayed_work(&hostdata->coroutine, 0);
-+			queue_delayed_work(hostdata->work_q,
-+			                   &hostdata->coroutine, 0);
- 	} while (!done);
- 	return IRQ_HANDLED;
- }
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2015-12-06 12:29:44.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2015-12-06 12:29:51.000000000 +1100
-@@ -284,6 +284,7 @@ struct NCR5380_hostdata {
- 	unsigned spin_max_r;
- 	unsigned spin_max_w;
- #endif
-+	struct workqueue_struct *work_q;
- };
- 
- #ifdef __KERNEL__
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2015-12-06 12:29:50.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2015-12-06 12:29:51.000000000 +1100
-@@ -238,7 +238,9 @@ static int cumanascsi1_probe(struct expa
- 
- 	host->irq = ec->irq;
- 
--	NCR5380_init(host, 0);
-+	ret = NCR5380_init(host, 0);
-+	if (ret)
-+		goto out_unmap;
- 
- 	NCR5380_maybe_reset_bus(host);
- 
-@@ -250,7 +252,7 @@ static int cumanascsi1_probe(struct expa
- 	if (ret) {
- 		printk("scsi%d: IRQ%d not free: %d\n",
- 		    host->host_no, host->irq, ret);
--		goto out_unmap;
-+		goto out_exit;
- 	}
- 
- 	ret = scsi_add_host(host, &ec->dev);
-@@ -262,6 +264,8 @@ static int cumanascsi1_probe(struct expa
- 
-  out_free_irq:
- 	free_irq(host->irq, host);
-+ out_exit:
-+	NCR5380_exit(host);
-  out_unmap:
- 	iounmap(priv(host)->base);
- 	iounmap(priv(host)->dma);
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2015-12-06 12:29:30.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2015-12-06 12:29:51.000000000 +1100
-@@ -143,17 +143,21 @@ static int oakscsi_probe(struct expansio
- 	host->irq = NO_IRQ;
- 	host->n_io_port = 255;
- 
--	NCR5380_init(host, 0);
-+	ret = NCR5380_init(host, 0);
-+	if (ret)
-+		goto out_unmap;
- 
- 	NCR5380_maybe_reset_bus(host);
- 
- 	ret = scsi_add_host(host, &ec->dev);
- 	if (ret)
--		goto out_unmap;
-+		goto out_exit;
- 
- 	scsi_scan_host(host);
- 	goto out;
- 
-+ out_exit:
-+	NCR5380_exit(host);
-  out_unmap:
- 	iounmap(priv(host)->base);
-  unreg:
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:47.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:51.000000000 +1100
-@@ -643,7 +643,7 @@ static inline void queue_main(struct NCR
- 		   queue it on the 'immediate' task queue, to be processed
- 		   immediately after the current interrupt processing has
- 		   finished. */
--		schedule_work(&hostdata->main_task);
-+		queue_work(hostdata->work_q, &hostdata->main_task);
- 	}
- 	/* else: nothing to do: the running NCR5380_main() will pick up
- 	   any newly queued command. */
-@@ -832,6 +832,11 @@ static int __init NCR5380_init(struct Sc
- 	hostdata->flags = flags;
- 
- 	INIT_WORK(&hostdata->main_task, NCR5380_main);
-+	hostdata->work_q = alloc_workqueue("ncr5380_%d",
-+	                        WQ_UNBOUND | WQ_MEM_RECLAIM,
-+	                        1, instance->host_no);
-+	if (!hostdata->work_q)
-+		return -ENOMEM;
- 
- 	prepare_info(instance);
- 
-@@ -907,6 +912,7 @@ static void NCR5380_exit(struct Scsi_Hos
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 
- 	cancel_work_sync(&hostdata->main_task);
-+	destroy_workqueue(hostdata->work_q);
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:02.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:31:05.000000000 +1100
+@@ -2475,41 +2475,168 @@ static void NCR5380_reselect(struct Scsi
  }
  
- /**
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2015-12-06 12:29:36.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2015-12-06 12:29:51.000000000 +1100
-@@ -885,7 +885,9 @@ static int __init atari_scsi_probe(struc
- #endif
- 	host_flags |= setup_toshiba_delay > 0 ? FLAG_TOSHIBA_DELAY : 0;
  
--	NCR5380_init(instance, host_flags);
-+	error = NCR5380_init(instance, host_flags);
-+	if (error)
-+		goto fail_init;
- 
- 	if (IS_A_TT()) {
- 		error = request_irq(instance->irq, scsi_tt_intr, 0,
-@@ -947,6 +949,7 @@ fail_host:
- 		free_irq(instance->irq, instance);
- fail_irq:
- 	NCR5380_exit(instance);
-+fail_init:
- 	scsi_host_put(instance);
- fail_alloc:
- 	if (atari_dma_buffer)
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2015-12-06 12:29:30.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2015-12-06 12:29:51.000000000 +1100
-@@ -95,7 +95,9 @@ static int dmx3191d_probe_one(struct pci
- 	 */
- 	shost->irq = NO_IRQ;
- 
--	NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
-+	error = NCR5380_init(shost, FLAG_NO_PSEUDO_DMA | FLAG_DTC3181E);
-+	if (error)
-+		goto out_host_put;
- 
- 	NCR5380_maybe_reset_bus(shost);
- 
-@@ -103,11 +105,15 @@ static int dmx3191d_probe_one(struct pci
- 
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
--		goto out_release_region;
-+		goto out_exit;
- 
- 	scsi_scan_host(shost);
- 	return 0;
- 
-+out_exit:
-+	NCR5380_exit(shost);
-+out_host_put:
-+	scsi_host_put(shost);
-  out_release_region:
- 	release_region(io, DMX3191D_REGION_LEN);
-  out_disable_device:
-@@ -119,15 +125,14 @@ static int dmx3191d_probe_one(struct pci
- static void dmx3191d_remove_one(struct pci_dev *pdev)
- {
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	unsigned long io = shost->io_port;
- 
- 	scsi_remove_host(shost);
- 
- 	NCR5380_exit(shost);
--
--	release_region(shost->io_port, DMX3191D_REGION_LEN);
--	pci_disable_device(pdev);
--
- 	scsi_host_put(shost);
-+	release_region(io, DMX3191D_REGION_LEN);
-+	pci_disable_device(pdev);
- }
- 
- static struct pci_device_id dmx3191d_pci_tbl[] = {
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2015-12-06 12:29:50.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2015-12-06 12:29:51.000000000 +1100
-@@ -230,12 +230,13 @@ static int __init dtc_detect(struct scsi
- found:
- 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
- 		if (instance == NULL)
--			break;
-+			goto out_unmap;
- 
- 		instance->base = addr;
- 		((struct NCR5380_hostdata *)(instance)->hostdata)->base = base;
- 
--		NCR5380_init(instance, 0);
-+		if (NCR5380_init(instance, 0))
-+			goto out_unregister;
- 
- 		NCR5380_maybe_reset_bus(instance);
- 
-@@ -275,6 +276,12 @@ found:
- 		++count;
- 	}
- 	return count;
+-/*
+- * Function : int NCR5380_abort (struct scsi_cmnd *cmd)
++/**
++ * list_find_cmd - test for presence of a command in a linked list
++ * @haystack: list of commands
++ * @needle: command to search for
++ */
 +
-+out_unregister:
-+	scsi_unregister(instance);
-+out_unmap:
-+	iounmap(base);
-+	return count;
- }
- 
- /*
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:48.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:51.000000000 +1100
-@@ -239,9 +239,6 @@ static int __init do_DTC3181E_setup(char
-  *	and DTC436(ISAPnP) controllers. If overrides have been set we use
-  *	them.
++static bool list_find_cmd(struct list_head *haystack,
++                          struct scsi_cmnd *needle)
++{
++	struct NCR5380_cmd *ncmd;
++
++	list_for_each_entry(ncmd, haystack, list)
++		if (NCR5380_to_scmd(ncmd) == needle)
++			return true;
++	return false;
++}
++
++/**
++ * list_remove_cmd - remove a command from linked list
++ * @haystack: list of commands
++ * @needle: command to remove
++ */
++
++static bool list_del_cmd(struct list_head *haystack,
++                         struct scsi_cmnd *needle)
++{
++	if (list_find_cmd(haystack, needle)) {
++		struct NCR5380_cmd *ncmd = scsi_cmd_priv(needle);
++
++		list_del(&ncmd->list);
++		return true;
++	}
++	return false;
++}
++
++/**
++ * NCR5380_abort - scsi host eh_abort_handler() method
++ * @cmd: the command to be aborted
   *
-- *	The caller supplied NCR5380_init function is invoked from here, before
-- *	the interrupt line is taken.
-- *
-  *	Locks: none
+- * Purpose : abort a command
++ * Try to abort a given command by removing it from queues and/or sending
++ * the target an abort message. This may not succeed in causing a target
++ * to abort the command. Nonetheless, the low-level driver must forget about
++ * the command because the mid-layer reclaims it and it may be re-issued.
+  *
+- * Inputs : cmd - the scsi_cmnd to abort, code - code to set the
+- *	host byte of the result field to, if zero DID_ABORTED is
+- *	used.
++ * The normal path taken by a command is as follows. For EH we trace this
++ * same path to locate and abort the command.
+  *
+- * Returns : SUCCESS - success, FAILED on failure.
++ * unissued -> selecting -> [unissued -> selecting ->]... connected ->
++ * [disconnected -> connected ->]...
++ * [autosense -> connected ->] done
+  *
+- * XXX - there is no way to abort the command that is currently
+- *	 connected, you have to wait for it to complete.  If this is
+- *	 a problem, we could implement longjmp() / setjmp(), setjmp()
+- *	 called where the loop started in NCR5380_main().
++ * If cmd is unissued then just remove it.
++ * If cmd is disconnected, try to select the target.
++ * If cmd is connected, try to send an abort message.
++ * If cmd is waiting for autosense, give it a chance to complete but check
++ * that it isn't left connected.
++ * If cmd was not found at all then presumably it has already been completed,
++ * in which case return SUCCESS to try to avoid further EH measures.
++ * If the command has not completed yet, we must not fail to find it.
   */
  
-@@ -402,15 +399,8 @@ static int __init generic_NCR5380_detect
- 		}
+-static
+-int NCR5380_abort(struct scsi_cmnd *cmd)
++static int NCR5380_abort(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long flags;
++	int result = SUCCESS;
+ 
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+-	scmd_printk(KERN_INFO, cmd, "aborting command\n");
++	scmd_printk(KERN_INFO, cmd, __func__);
  #endif
- 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
--		if (instance == NULL) {
--#ifndef SCSI_G_NCR5380_MEM
--			release_region(overrides[current_override].NCR5380_map_name, region_size);
--#else
--			iounmap(iomem);
--			release_mem_region(base, NCR5380_region_size);
--#endif
--			continue;
--		}
-+		if (instance == NULL)
-+			goto out_release;
+ 	NCR5380_dprint(NDEBUG_ANY, instance);
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
  
- #ifndef SCSI_G_NCR5380_MEM
- 		instance->io_port = overrides[current_override].NCR5380_map_name;
-@@ -427,7 +417,8 @@ static int __init generic_NCR5380_detect
- 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
- #endif
- 
--		NCR5380_init(instance, flags);
-+		if (NCR5380_init(instance, flags))
-+			goto out_unregister;
- 
- 		if (overrides[current_override].board == BOARD_NCR53C400)
- 			NCR5380_write(C400_CONTROL_STATUS_REG, CSR_BASE);
-@@ -459,6 +450,17 @@ static int __init generic_NCR5380_detect
- 		++count;
- 	}
- 	return count;
++	if (list_del_cmd(&hostdata->unissued, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: removed %p from issue queue\n", cmd);
++		cmd->result = DID_ABORT << 16;
++		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
++	}
 +
-+out_unregister:
-+	scsi_unregister(instance);
-+out_release:
-+#ifndef SCSI_G_NCR5380_MEM
-+	release_region(overrides[current_override].NCR5380_map_name, region_size);
-+#else
-+	iounmap(iomem);
-+	release_mem_region(base, NCR5380_region_size);
++	if (list_del_cmd(&hostdata->disconnected, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: removed %p from disconnected list\n", cmd);
++		cmd->result = DID_ERROR << 16;
++		if (!hostdata->connected)
++			NCR5380_select(instance, cmd);
++		if (hostdata->connected != cmd) {
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++	}
++
++	if (hostdata->connected == cmd) {
++		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
++		hostdata->connected = NULL;
++		if (do_abort(instance)) {
++			set_host_byte(cmd, DID_ERROR);
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++		set_host_byte(cmd, DID_ABORT);
++#ifdef REAL_DMA
++		hostdata->dma_len = 0;
 +#endif
-+	return count;
- }
- 
- /**
-@@ -475,15 +477,12 @@ static int generic_NCR5380_release_resou
- 	if (instance->irq != NO_IRQ)
- 		free_irq(instance->irq, instance);
- 	NCR5380_exit(instance);
--
- #ifndef SCSI_G_NCR5380_MEM
- 	release_region(instance->io_port, instance->n_io_port);
- #else
- 	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
- 	release_mem_region(instance->base, NCR5380_region_size);
- #endif
--
--
- 	return 0;
- }
- 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2015-12-06 12:29:36.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2015-12-06 12:29:51.000000000 +1100
-@@ -382,7 +382,9 @@ static int __init mac_scsi_probe(struct
- #endif
- 	host_flags |= setup_toshiba_delay > 0 ? FLAG_TOSHIBA_DELAY : 0;
- 
--	NCR5380_init(instance, host_flags);
-+	error = NCR5380_init(instance, host_flags);
-+	if (error)
-+		goto fail_init;
- 
- 	if (instance->irq != NO_IRQ) {
- 		error = request_irq(instance->irq, macscsi_intr, IRQF_SHARED,
-@@ -407,6 +409,7 @@ fail_host:
- 		free_irq(instance->irq, instance);
- fail_irq:
- 	NCR5380_exit(instance);
-+fail_init:
- 	scsi_host_put(instance);
- 	return error;
- }
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2015-12-06 12:29:50.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2015-12-06 12:29:51.000000000 +1100
-@@ -378,11 +378,12 @@ static int __init pas16_detect(struct sc
- 
- 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
- 	if(instance == NULL)
--		break;
-+		goto out;
- 		
- 	instance->io_port = io_port;
- 
--	NCR5380_init(instance, 0);
-+	if (NCR5380_init(instance, 0))
-+		goto out_unregister;
- 
- 	NCR5380_maybe_reset_bus(instance);
- 
-@@ -418,6 +419,11 @@ static int __init pas16_detect(struct sc
- 	++count;
-     }
-     return count;
++		if (cmd->cmnd[0] == REQUEST_SENSE)
++			complete_cmd(instance, cmd);
++		else {
++			struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
 +
-+out_unregister:
-+	scsi_unregister(instance);
++			/* Perform autosense for this command */
++			list_add(&ncmd->list, &hostdata->autosense);
++		}
++	}
++
++	if (list_find_cmd(&hostdata->autosense, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: found %p on sense queue\n", cmd);
++		spin_unlock_irqrestore(&hostdata->lock, flags);
++		queue_work(hostdata->work_q, &hostdata->main_task);
++		msleep(1000);
++		spin_lock_irqsave(&hostdata->lock, flags);
++		if (list_del_cmd(&hostdata->autosense, cmd)) {
++			dsprintk(NDEBUG_ABORT, instance,
++			         "abort: removed %p from sense queue\n", cmd);
++			set_host_byte(cmd, DID_ABORT);
++			complete_cmd(instance, cmd);
++			goto out;
++		}
++	}
++
++	if (hostdata->connected == cmd) {
++		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
++		hostdata->connected = NULL;
++		if (do_abort(instance)) {
++			set_host_byte(cmd, DID_ERROR);
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++		set_host_byte(cmd, DID_ABORT);
++#ifdef REAL_DMA
++		hostdata->dma_len = 0;
++#endif
++		complete_cmd(instance, cmd);
++	}
++
 +out:
-+	return count;
++	if (result == FAILED)
++		dsprintk(NDEBUG_ABORT, instance, "abort: failed to abort %p\n", cmd);
++	else
++		dsprintk(NDEBUG_ABORT, instance, "abort: successfully aborted %p\n", cmd);
++
++	queue_work(hostdata->work_q, &hostdata->main_task);
++	maybe_release_dma_irq(instance);
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
+ 
+-	return FAILED;
++	return result;
  }
  
- /*
-Index: linux/drivers/scsi/sun3_scsi.c
+ 
+Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2015-12-06 12:29:36.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2015-12-06 12:29:51.000000000 +1100
-@@ -557,7 +557,9 @@ static int __init sun3_scsi_probe(struct
- 	host_flags |= setup_use_tagged_queuing > 0 ? FLAG_TAGGED_QUEUING : 0;
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:31:02.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:31:05.000000000 +1100
+@@ -2264,23 +2264,65 @@ static void NCR5380_dma_complete(NCR5380
+ }
+ #endif				/* def REAL_DMA */
+ 
+-/*
+- * Function : int NCR5380_abort (struct scsi_cmnd *cmd)
+- *
+- * Purpose : abort a command
++/**
++ * list_find_cmd - test for presence of a command in a linked list
++ * @haystack: list of commands
++ * @needle: command to search for
++ */
++
++static bool list_find_cmd(struct list_head *haystack,
++                          struct scsi_cmnd *needle)
++{
++	struct NCR5380_cmd *ncmd;
++
++	list_for_each_entry(ncmd, haystack, list)
++		if (NCR5380_to_scmd(ncmd) == needle)
++			return true;
++	return false;
++}
++
++/**
++ * list_remove_cmd - remove a command from linked list
++ * @haystack: list of commands
++ * @needle: command to remove
++ */
++
++static bool list_del_cmd(struct list_head *haystack,
++                         struct scsi_cmnd *needle)
++{
++	if (list_find_cmd(haystack, needle)) {
++		struct NCR5380_cmd *ncmd = scsi_cmd_priv(needle);
++
++		list_del(&ncmd->list);
++		return true;
++	}
++	return false;
++}
++
++/**
++ * NCR5380_abort - scsi host eh_abort_handler() method
++ * @cmd: the command to be aborted
+  *
+- * Inputs : cmd - the scsi_cmnd to abort, code - code to set the
+- *      host byte of the result field to, if zero DID_ABORTED is
+- *      used.
++ * Try to abort a given command by removing it from queues and/or sending
++ * the target an abort message. This may not succeed in causing a target
++ * to abort the command. Nonetheless, the low-level driver must forget about
++ * the command because the mid-layer reclaims it and it may be re-issued.
+  *
+- * Returns : SUCCESS - success, FAILED on failure.
++ * The normal path taken by a command is as follows. For EH we trace this
++ * same path to locate and abort the command.
+  *
+- *	XXX - there is no way to abort the command that is currently
+- *	connected, you have to wait for it to complete.  If this is
+- *	a problem, we could implement longjmp() / setjmp(), setjmp()
+- *	called where the loop started in NCR5380_main().
++ * unissued -> selecting -> [unissued -> selecting ->]... connected ->
++ * [disconnected -> connected ->]...
++ * [autosense -> connected ->] done
+  *
+- * Locks: host lock taken by caller
++ * If cmd is unissued then just remove it.
++ * If cmd is disconnected, try to select the target.
++ * If cmd is connected, try to send an abort message.
++ * If cmd is waiting for autosense, give it a chance to complete but check
++ * that it isn't left connected.
++ * If cmd was not found at all then presumably it has already been completed,
++ * in which case return SUCCESS to try to avoid further EH measures.
++ * If the command has not completed yet, we must not fail to find it.
+  */
+ 
+ static int NCR5380_abort(struct scsi_cmnd *cmd)
+@@ -2288,18 +2330,101 @@ static int NCR5380_abort(struct scsi_cmn
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned long flags;
++	int result = SUCCESS;
+ 
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
+ #if (NDEBUG & NDEBUG_ANY)
+-	scmd_printk(KERN_INFO, cmd, "aborting command\n");
++	scmd_printk(KERN_INFO, cmd, __func__);
  #endif
+ 	NCR5380_dprint(NDEBUG_ANY, instance);
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
  
--	NCR5380_init(instance, host_flags);
-+	error = NCR5380_init(instance, host_flags);
-+	if (error)
-+		goto fail_init;
- 
- 	error = request_irq(instance->irq, scsi_sun3_intr, 0,
- 	                    "NCR5380", instance);
-@@ -604,6 +606,7 @@ fail_host:
- 		free_irq(instance->irq, instance);
- fail_irq:
- 	NCR5380_exit(instance);
-+fail_init:
- 	scsi_host_put(instance);
- fail_alloc:
- 	if (udc_regs)
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2015-12-06 12:29:50.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2015-12-06 12:29:51.000000000 +1100
-@@ -208,12 +208,13 @@ static int __init t128_detect(struct scs
- found:
- 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
- 	if(instance == NULL)
--		break;
--		
-+		goto out_unmap;
++	if (list_del_cmd(&hostdata->unissued, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: removed %p from issue queue\n", cmd);
++		cmd->result = DID_ABORT << 16;
++		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
++	}
 +
- 	instance->base = base;
- 	((struct NCR5380_hostdata *)instance->hostdata)->base = p;
- 
--	NCR5380_init(instance, 0);
-+	if (NCR5380_init(instance, 0))
-+		goto out_unregister;
- 
- 	NCR5380_maybe_reset_bus(instance);
- 
-@@ -246,6 +247,12 @@ found:
- 	++count;
-     }
-     return count;
++	if (list_del_cmd(&hostdata->disconnected, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: removed %p from disconnected list\n", cmd);
++		cmd->result = DID_ERROR << 16;
++		if (!hostdata->connected)
++			NCR5380_select(instance, cmd);
++		if (hostdata->connected != cmd) {
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++	}
 +
-+out_unregister:
-+	scsi_unregister(instance);
-+out_unmap:
-+	iounmap(p);
-+	return count;
++	if (hostdata->connected == cmd) {
++		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
++		hostdata->connected = NULL;
++		if (do_abort(instance)) {
++			set_host_byte(cmd, DID_ERROR);
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++		set_host_byte(cmd, DID_ABORT);
++#ifdef REAL_DMA
++		hostdata->dma_len = 0;
++#endif
++		if (cmd->cmnd[0] == REQUEST_SENSE)
++			complete_cmd(instance, cmd);
++		else {
++			struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
++
++			/* Perform autosense for this command */
++			list_add(&ncmd->list, &hostdata->autosense);
++		}
++	}
++
++	if (list_find_cmd(&hostdata->autosense, cmd)) {
++		dsprintk(NDEBUG_ABORT, instance,
++		         "abort: found %p on sense queue\n", cmd);
++		spin_unlock_irqrestore(&hostdata->lock, flags);
++		queue_work(hostdata->work_q, &hostdata->main_task);
++		msleep(1000);
++		spin_lock_irqsave(&hostdata->lock, flags);
++		if (list_del_cmd(&hostdata->autosense, cmd)) {
++			dsprintk(NDEBUG_ABORT, instance,
++			         "abort: removed %p from sense queue\n", cmd);
++			set_host_byte(cmd, DID_ABORT);
++			complete_cmd(instance, cmd);
++			goto out;
++		}
++	}
++
++	if (hostdata->connected == cmd) {
++		dsprintk(NDEBUG_ABORT, instance, "abort: cmd %p is connected\n", cmd);
++		hostdata->connected = NULL;
++		if (do_abort(instance)) {
++			set_host_byte(cmd, DID_ERROR);
++			complete_cmd(instance, cmd);
++			result = FAILED;
++			goto out;
++		}
++		set_host_byte(cmd, DID_ABORT);
++#ifdef REAL_DMA
++		hostdata->dma_len = 0;
++#endif
++		complete_cmd(instance, cmd);
++	}
++
++out:
++	if (result == FAILED)
++		dsprintk(NDEBUG_ABORT, instance, "abort: failed to abort %p\n", cmd);
++	else
++		dsprintk(NDEBUG_ABORT, instance, "abort: successfully aborted %p\n", cmd);
++
++	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
+ 
+-	return FAILED;
++	return result;
  }
  
- static int t128_release(struct Scsi_Host *shost)
+ 
