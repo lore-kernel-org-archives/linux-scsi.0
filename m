@@ -1,330 +1,93 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 43/72] ncr5380: Standardize reselection handling
-Date: Sun, 06 Dec 2015 12:32:09 +1100
-Message-ID: <20151206013137.665492062@telegraphics.com.au>
+Subject: [PATCH v2 42/72] ncr5380: Replace READ_OVERRUNS macro with FLAG_NO_DMA_FIXUPS
+Date: Sun, 06 Dec 2015 12:32:08 +1100
+Message-ID: <20151206013137.425505259@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-standardize-reselection-handling
+Content-Disposition: inline; filename=ncr5380-remove-READ_OVERRUNS
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Bring the two NCR5380_reselect() implementations into agreement.
-
-Replace infinite loops in atari_NCR5380.c with timeouts, as per NCR5380.c.
-
-Remove 'abort' flag in NCR5380.c as per atari_NCR5380.c -- if reselection
-fails, there may be no MESSAGE IN phase so don't attempt data transfer.
-
-During selection, don't interfere with the chip registers after a
-reselection interrupt intervenes.
-
-Clean up some trivial issues with code style, comments and printk.
+The workarounds for chip errata appear twice, in slightly different
+forms. One is used when defined(REAL_DMA) || defined(REAL_DMA_POLL), the
+other when defined(PSEUDO_DMA). In the PDMA case, the workarounds have
+been made conditional on FLAG_NO_DMA_FIXUPS. Do the same for the DMA case,
+to eliminate the READ_OVERRUNS macro.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |  115 +++++++++++++++++++++++--------------------
- drivers/scsi/atari_NCR5380.c |   50 ++++++++++--------
- 2 files changed, 93 insertions(+), 72 deletions(-)
+ drivers/scsi/NCR5380.c |   28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:35.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:36.000000000 +1100
-@@ -1177,6 +1177,10 @@ static int NCR5380_select(struct Scsi_Ho
- 	else
- 		udelay(2);
- 
-+	/* NCR5380_reselect() clears MODE_REG after a reselection interrupt */
-+	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE))
-+		return -1;
-+
- 	dprintk(NDEBUG_ARBITRATION, "scsi%d : won arbitration\n", instance->host_no);
- 
- 	/* 
-@@ -1948,12 +1952,14 @@ static void NCR5380_information_transfer
- 						cmd->scsi_done(cmd);
- 					}
- 
--					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					/* 
- 					 * Restore phase bits to 0 so an interrupted selection, 
- 					 * arbitration can resume.
- 					 */
- 					NCR5380_write(TARGET_COMMAND_REG, 0);
-+
-+					/* Enable reselect interrupts */
-+					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -2139,7 +2145,6 @@ static void NCR5380_reselect(struct Scsi
- 	unsigned char msg[3];
- 	unsigned char *data;
- 	struct scsi_cmnd *tmp = NULL, *prev;
--	int abort = 0;
- 
- 	/*
- 	 * Disable arbitration, etc. since the host adapter obviously
-@@ -2149,7 +2154,7 @@ static void NCR5380_reselect(struct Scsi
- 	NCR5380_write(MODE_REG, MR_BASE);
- 
- 	target_mask = NCR5380_read(CURRENT_SCSI_DATA_REG) & ~(hostdata->id_mask);
--	dprintk(NDEBUG_SELECTION, "scsi%d : reselect\n", instance->host_no);
-+	dprintk(NDEBUG_RESELECTION, "scsi%d : reselect\n", instance->host_no);
- 
- 	/* 
- 	 * At this point, we have detected that our SCSI ID is on the bus,
-@@ -2161,77 +2166,85 @@ static void NCR5380_reselect(struct Scsi
- 	 */
- 
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_BSY);
--
--	/* FIXME: timeout too long, must fail to workqueue */	
--	if(NCR5380_poll_politely(instance, STATUS_REG, SR_SEL, 0, 2*HZ)<0)
--		abort = 1;
--		
-+	if (NCR5380_poll_politely(instance,
-+	                          STATUS_REG, SR_SEL, 0, 2 * HZ) < 0) {
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+		return;
-+	}
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 
- 	/*
- 	 * Wait for target to go into MSGIN.
--	 * FIXME: timeout needed and fail to work queeu
- 	 */
- 
- 	if (NCR5380_poll_politely(instance,
--	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0)
--		abort = 1;
-+	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0) {
-+		do_abort(instance);
-+		return;
-+	}
- 
- 	len = 1;
- 	data = msg;
- 	phase = PHASE_MSGIN;
- 	NCR5380_transfer_pio(instance, &phase, &len, &data);
- 
-+	if (len) {
-+		do_abort(instance);
-+		return;
-+	}
-+
- 	if (!(msg[0] & 0x80)) {
--		printk(KERN_ERR "scsi%d : expecting IDENTIFY message, got ", instance->host_no);
-+		shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
- 		spi_print_msg(msg);
--		abort = 1;
--	} else {
--		/* Accept message by clearing ACK */
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		lun = (msg[0] & 0x07);
--
--		/* 
--		 * We need to add code for SCSI-II to track which devices have
--		 * I_T_L_Q nexuses established, and which have simple I_T_L
--		 * nexuses so we can chose to do additional data transfer.
--		 */
-+		printk("\n");
-+		do_abort(instance);
-+		return;
-+	}
-+	lun = msg[0] & 0x07;
- 
--		/* 
--		 * Find the command corresponding to the I_T_L or I_T_L_Q  nexus we 
--		 * just reestablished, and remove it from the disconnected queue.
--		 */
-+	/*
-+	 * We need to add code for SCSI-II to track which devices have
-+	 * I_T_L_Q nexuses established, and which have simple I_T_L
-+	 * nexuses so we can chose to do additional data transfer.
-+	 */
- 
-+	/*
-+	 * Find the command corresponding to the I_T_L or I_T_L_Q  nexus we
-+	 * just reestablished, and remove it from the disconnected queue.
-+	 */
- 
--		for (tmp = (struct scsi_cmnd *) hostdata->disconnected_queue, prev = NULL; tmp; prev = tmp, tmp = (struct scsi_cmnd *) tmp->host_scribble)
--			if ((target_mask == (1 << tmp->device->id)) && (lun == (u8)tmp->device->lun)
--			    ) {
--				if (prev) {
--					REMOVE(prev, prev->host_scribble, tmp, tmp->host_scribble);
--					prev->host_scribble = tmp->host_scribble;
--				} else {
--					REMOVE(-1, hostdata->disconnected_queue, tmp, tmp->host_scribble);
--					hostdata->disconnected_queue = (struct scsi_cmnd *) tmp->host_scribble;
--				}
--				tmp->host_scribble = NULL;
--				break;
-+	for (tmp = (struct scsi_cmnd *) hostdata->disconnected_queue, prev = NULL;
-+	     tmp; prev = tmp, tmp = (struct scsi_cmnd *) tmp->host_scribble) {
-+		if ((target_mask == (1 << tmp->device->id)) && (lun == (u8)tmp->device->lun)) {
-+			if (prev) {
-+				REMOVE(prev, prev->host_scribble, tmp, tmp->host_scribble);
-+				prev->host_scribble = tmp->host_scribble;
-+			} else {
-+				REMOVE(-1, hostdata->disconnected_queue, tmp, tmp->host_scribble);
-+				hostdata->disconnected_queue =
-+					(struct scsi_cmnd *) tmp->host_scribble;
- 			}
--		if (!tmp) {
--			printk(KERN_ERR "scsi%d : warning : target bitmask %02x lun %d not in disconnect_queue.\n", instance->host_no, target_mask, lun);
--			/* 
--			 * Since we have an established nexus that we can't do anything with,
--			 * we must abort it.  
--			 */
--			abort = 1;
-+			tmp->host_scribble = NULL;
-+			break;
- 		}
- 	}
--
--	if (abort) {
-+	if (!tmp) {
-+		shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d not in disconnected queue.\n",
-+		             target_mask, lun);
-+		/*
-+		 * Since we have an established nexus that we can't do anything with,
-+		 * we must abort it.
-+		 */
- 		do_abort(instance);
--	} else {
--		hostdata->connected = tmp;
--		dprintk(NDEBUG_RESELECTION, "scsi%d : nexus established, target = %d, lun = %llu, tag = %d\n", instance->host_no, tmp->device->id, tmp->device->lun, tmp->tag);
-+		return;
- 	}
-+
-+	/* Accept message by clearing ACK */
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+
-+	hostdata->connected = tmp;
-+	dprintk(NDEBUG_RESELECTION, "scsi%d : nexus established, target = %d, lun = %llu, tag = %d\n",
-+	        instance->host_no, tmp->device->id, tmp->device->lun, tmp->tag);
- }
- 
- /*
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:32.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:30:36.000000000 +1100
-@@ -1441,11 +1441,9 @@ static int NCR5380_select(struct Scsi_Ho
- 	else
- 		udelay(2);
- 
--	if (hostdata->connected) {
--		NCR5380_write(MODE_REG, MR_BASE);
--		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+	/* NCR5380_reselect() clears MODE_REG after a reselection interrupt */
-+	if (!(NCR5380_read(MODE_REG) & MR_ARBITRATE))
- 		return -1;
--	}
- 
- 	dprintk(NDEBUG_ARBITRATION, "scsi%d: won arbitration\n", HOSTNO);
- 
-@@ -2218,13 +2216,15 @@ static void NCR5380_information_transfer
- 						cmd->scsi_done(cmd);
- 					}
- 
--					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					/*
- 					 * Restore phase bits to 0 so an interrupted selection,
- 					 * arbitration can resume.
- 					 */
- 					NCR5380_write(TARGET_COMMAND_REG, 0);
- 
-+					/* Enable reselect interrupts */
-+					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
-+
- 					/* ++roman: For Falcon SCSI, release the lock on the
- 					 * ST-DMA here if no other commands are waiting on the
- 					 * disconnected queue.
-@@ -2477,17 +2477,22 @@ static void NCR5380_reselect(struct Scsi
- 	 */
- 
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_BSY);
--
--	while (NCR5380_read(STATUS_REG) & SR_SEL)
--		;
-+	if (NCR5380_poll_politely(instance,
-+	                          STATUS_REG, SR_SEL, 0, 2 * HZ) < 0) {
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+		return;
-+	}
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 
- 	/*
- 	 * Wait for target to go into MSGIN.
- 	 */
- 
--	while (!(NCR5380_read(STATUS_REG) & SR_REQ))
--		;
-+	if (NCR5380_poll_politely(instance,
-+	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0) {
-+		do_abort(instance);
-+		return;
-+	}
- 
- #if defined(CONFIG_SUN3) && defined(REAL_DMA)
- 	/* acknowledge toggle to MSGIN */
-@@ -2500,15 +2505,21 @@ static void NCR5380_reselect(struct Scsi
- 	data = msg;
- 	phase = PHASE_MSGIN;
- 	NCR5380_transfer_pio(instance, &phase, &len, &data);
-+
-+	if (len) {
-+		do_abort(instance);
-+		return;
-+	}
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:30:34.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:30:35.000000000 +1100
+@@ -94,11 +94,6 @@
+ #undef REAL_DMA
  #endif
  
- 	if (!(msg[0] & 0x80)) {
--		printk(KERN_DEBUG "scsi%d: expecting IDENTIFY message, got ", HOSTNO);
-+		shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
- 		spi_print_msg(msg);
-+		printk("\n");
- 		do_abort(instance);
- 		return;
- 	}
--	lun = (msg[0] & 0x07);
-+	lun = msg[0] & 0x07;
- 
- #if defined(SUPPORT_TAGS) && !defined(CONFIG_SUN3)
- 	/* If the phase is still MSGIN, the target wants to send some more
-@@ -2536,7 +2547,7 @@ static void NCR5380_reselect(struct Scsi
- 
- 	for (tmp = (struct scsi_cmnd *) hostdata->disconnected_queue, prev = NULL;
- 	     tmp; prev = tmp, tmp = NEXT(tmp)) {
--		if ((target_mask == (1 << tmp->device->id)) && (lun == tmp->device->lun)
-+		if ((target_mask == (1 << tmp->device->id)) && (lun == (u8)tmp->device->lun)
- #ifdef SUPPORT_TAGS
- 		    && (tag == tmp->tag)
- #endif
-@@ -2554,16 +2565,13 @@ static void NCR5380_reselect(struct Scsi
- 	}
- 
- 	if (!tmp) {
--		printk(KERN_WARNING "scsi%d: warning: target bitmask %02x lun %d "
- #ifdef SUPPORT_TAGS
--		       "tag %d "
+-#ifdef REAL_DMA_POLL
+-#undef READ_OVERRUNS
+-#define READ_OVERRUNS
 -#endif
--		       "not in disconnected_queue.\n",
--		       HOSTNO, target_mask, lun
--#ifdef SUPPORT_TAGS
--		       , tag
-+		shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d tag %d not in disconnected queue.\n",
-+		             target_mask, lun, tag);
-+#else
-+		shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d not in disconnected queue.\n",
-+		             target_mask, lun);
+-
+ #ifdef BOARD_REQUIRES_NO_DELAY
+ #define io_recovery_delay(x)
+ #else
+@@ -1581,11 +1576,10 @@ static int NCR5380_transfer_dma(struct S
+ 		return -1;
+ 	}
+ #if defined(REAL_DMA) || defined(REAL_DMA_POLL)
+-#ifdef READ_OVERRUNS
+ 	if (p & SR_IO) {
+-		c -= 2;
++		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS))
++			c -= 2;
+ 	}
+-#endif
+ 	dprintk(NDEBUG_DMA, "scsi%d : initializing DMA channel %d for %s, %d bytes %s %0x\n", instance->host_no, instance->dma_channel, (p & SR_IO) ? "reading" : "writing", c, (p & SR_IO) ? "to" : "from", (unsigned) d);
+ 	hostdata->dma_len = (p & SR_IO) ? NCR5380_dma_read_setup(instance, d, c) : NCR5380_dma_write_setup(instance, d, c);
  #endif
--			);
- 		/*
- 		 * Since we have an established nexus that we can't do anything
- 		 * with, we must abort it.
+@@ -1671,13 +1665,14 @@ static int NCR5380_transfer_dma(struct S
+  */
+ 
+ 	if (p & SR_IO) {
+-#ifdef READ_OVERRUNS
+-		udelay(10);
+-		if (((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) == (BASR_PHASE_MATCH | BASR_ACK))) {
+-			saved_data = NCR5380_read(INPUT_DATA_REGISTER);
+-			overrun = 1;
++		if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS)) {
++			udelay(10);
++			if ((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) ==
++			    (BASR_PHASE_MATCH | BASR_ACK)) {
++				saved_data = NCR5380_read(INPUT_DATA_REGISTER);
++				overrun = 1;
++			}
+ 		}
+-#endif
+ 	} else {
+ 		int limit = 100;
+ 		while (((tmp = NCR5380_read(BUS_AND_STATUS_REG)) & BASR_ACK) || (NCR5380_read(STATUS_REG) & SR_REQ)) {
+@@ -1699,8 +1694,8 @@ static int NCR5380_transfer_dma(struct S
+ 	*data += c;
+ 	*phase = NCR5380_read(STATUS_REG) & PHASE_MASK;
+ 
+-#ifdef READ_OVERRUNS
+-	if (*phase == p && (p & SR_IO) && residue == 0) {
++	if (!(hostdata->flags & FLAG_NO_DMA_FIXUPS) &&
++	    *phase == p && (p & SR_IO) && residue == 0) {
+ 		if (overrun) {
+ 			dprintk(NDEBUG_DMA, "Got an input overrun, using saved byte\n");
+ 			**data = saved_data;
+@@ -1715,7 +1710,6 @@ static int NCR5380_transfer_dma(struct S
+ 		NCR5380_transfer_pio(instance, phase, &cnt, data);
+ 		*count -= toPIO - cnt;
+ 	}
+-#endif
+ 
+ 	dprintk(NDEBUG_DMA, "Return with data ptr = 0x%X, count %d, last 0x%X, next 0x%X\n", *data, *count, *(*data + *count - 1), *(*data + *count));
+ 	return 0;
