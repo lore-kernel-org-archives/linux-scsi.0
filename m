@@ -1,116 +1,67 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 18/72] ncr5380: Eliminate USLEEP_WAITLONG delay
-Date: Sun, 06 Dec 2015 12:31:44 +1100
-Message-ID: <20151206013131.415472069@telegraphics.com.au>
+Subject: [PATCH v2 17/72] ncr5380: Keep BSY asserted when entering SELECTION phase
+Date: Sun, 06 Dec 2015 12:31:43 +1100
+Message-ID: <20151206013131.165491817@telegraphics.com.au>
 References: <20151206013126.995379403@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-eliminate-USLEEP_WAITLONG
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-assert-BSY-during-selection
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@odin.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Linux 2.1.105 introduced the USLEEP_WAITLONG delay, apparently "needed for
-Mustek scanners". It is intended to stall the issue queue for 5 seconds.
-There are a number of problems with this.
-
-1. Only g_NCR5380 enables the delay, which implies that the other five
-   drivers using the NCR5380.c core driver remain incompatible with
-   Mustek scanners.
-
-2. The delay is not implemented by atari_NCR5380.c, which is problematic
-   for re-unifying the two core driver forks.
-
-3. The delay is implemented using NCR5380_set_timer() which makes it
-   unreliable. A new command queued by the mid-layer cancels the delay.
-
-4. The delay is applied indiscriminately in several situations in which
-   NCR5380_select() returns -1. These are-- reselection by the target,
-   failure of the target to assert BSY, and failure of the target to
-   assert REQ. It's clear from the comments that USLEEP_WAITLONG is not
-   relevant to the reselection case. And reportedly, these scanners do
-   not disconnect.
-
-5. atari_NCR5380.c was forked before Linux 2.1.105, so it was spared some
-   of the damage done to NCR5380.c. In this case, the atari_NCR5380.c core
-   driver was more standard-compliant and may not have needed any
-   workaround like the USLEEP_WAITLONG kludge. The compliance issue was
-   addressed in the previous patch.
-
-If these scanners still don't work, we need a better solution. Retrying
-selection until EH aborts a command offers equivalent robustness. Bugs in
-the existing driver prevent EH working correctly but this is addressed in
-a subsequent patch. Remove USLEEP_WAITLONG.
+NCR5380.c is not compliant with the SCSI-2 standard (at least, not with
+the draft revision 10L that I have to refer to). The selection algorithm
+in atari_NCR5380.c is correct, so use that.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c   |   19 +++++--------------
- drivers/scsi/g_NCR5380.c |    1 -
- 2 files changed, 5 insertions(+), 15 deletions(-)
+
+The NCR 5380 Family datasheet has a flow chart to support this. Please see
+http://pdf.datasheetarchive.com/indexerfiles/Scans-001/Scans-0031883.pdf
+
+This is another old bug fix that was unfortunately never applied to the
+original NCR5380.c core driver.
+
+---
+ drivers/scsi/NCR5380.c       |    8 +++++++-
+ drivers/scsi/atari_NCR5380.c |    7 ++++---
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:47.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:48.000000000 +1100
-@@ -468,10 +468,6 @@ static void NCR5380_print_phase(struct S
- #ifndef USLEEP_POLL
- #define USLEEP_POLL msecs_to_jiffies(200)
- #endif
--#ifndef USLEEP_WAITLONG
--/* RvC: (reasonable time to wait on select error) */
--#define USLEEP_WAITLONG USLEEP_SLEEP
--#endif
+--- linux.orig/drivers/scsi/NCR5380.c	2015-12-06 12:29:46.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2015-12-06 12:29:47.000000000 +1100
+@@ -1236,7 +1236,13 @@ static int NCR5380_select(struct Scsi_Ho
+ 		dprintk(NDEBUG_ARBITRATION, "scsi%d : lost arbitration, deasserting MR_ARBITRATE\n", instance->host_no);
+ 		return -1;
+ 	}
+-	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_SEL);
++
++	/* After/during arbitration, BSY should be asserted.
++	 * IBM DPES-31080 Version S31Q works now
++	 * Tnx to Thomas_Roesch@m2.maus.de for finding this! (Roman)
++	 */
++	NCR5380_write(INITIATOR_COMMAND_REG,
++		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
- /* 
-  * Function : int should_disconnect (unsigned char cmd)
-@@ -619,8 +615,8 @@ static void prepare_info(struct Scsi_Hos
- 	         "can_queue %d, cmd_per_lun %d, "
- 	         "sg_tablesize %d, this_id %d, "
- 	         "flags { %s%s%s%s}, "
--#if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
-+#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
-+		 "USLEEP_POLL %lu, USLEEP_SLEEP %lu, "
- #endif
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
-@@ -631,8 +627,8 @@ static void prepare_info(struct Scsi_Hos
- 	         hostdata->flags & FLAG_DTC3181E      ? "DTC3181E "      : "",
- 	         hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
- 	         hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY "  : "",
--#if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--	         USLEEP_POLL, USLEEP_WAITLONG,
-+#if defined(USLEEP_POLL) && defined(USLEEP_SLEEP)
-+	         USLEEP_POLL, USLEEP_SLEEP,
- #endif
- #ifdef AUTOPROBE_IRQ
- 	         "AUTOPROBE_IRQ "
-@@ -1030,15 +1026,10 @@ static void NCR5380_main(struct work_str
- 			if (!NCR5380_select(instance, tmp)) {
- 				/* OK or bad target */
- 			} else {
--				/* RvC: device failed, so we wait a long time
--				   this is needed for Mustek scanners, that
--				   do not respond to commands immediately
--				   after a scan */
--				printk(KERN_DEBUG "scsi%d: device %d did not respond in time\n", instance->host_no, tmp->device->id);
- 				LIST(tmp, hostdata->issue_queue);
- 				tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
- 				hostdata->issue_queue = tmp;
--				NCR5380_set_timer(hostdata, USLEEP_WAITLONG);
-+				done = 0;
- 			}
- 		}	/* if hostdata->selecting */
- 		if (hostdata->connected
-Index: linux/drivers/scsi/g_NCR5380.c
+ 	if (!(hostdata->flags & FLAG_DTC3181E) &&
+ 	    /* RvC: DTC3181E has some trouble with this
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:33.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2015-12-06 12:29:48.000000000 +1100
-@@ -59,7 +59,6 @@
- /* settings for DTC3181E card with only Mustek scanner attached */
- #define USLEEP_POLL	msecs_to_jiffies(10)
- #define USLEEP_SLEEP	msecs_to_jiffies(200)
--#define USLEEP_WAITLONG	msecs_to_jiffies(5000)
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:46.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2015-12-06 12:29:47.000000000 +1100
+@@ -1480,9 +1480,10 @@ static int NCR5380_select(struct Scsi_Ho
+ 		return -1;
+ 	}
  
- #define AUTOPROBE_IRQ
+-	/* after/during arbitration, BSY should be asserted.
+-	   IBM DPES-31080 Version S31Q works now */
+-	/* Tnx to Thomas_Roesch@m2.maus.de for finding this! (Roman) */
++	/* After/during arbitration, BSY should be asserted.
++	 * IBM DPES-31080 Version S31Q works now
++	 * Tnx to Thomas_Roesch@m2.maus.de for finding this! (Roman)
++	 */
+ 	NCR5380_write(INITIATOR_COMMAND_REG,
+ 		      ICR_BASE | ICR_ASSERT_SEL | ICR_ASSERT_BSY);
  
