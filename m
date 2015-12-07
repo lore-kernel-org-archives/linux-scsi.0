@@ -1,56 +1,100 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 108771] scsi: ses: kasan: ses_enclosure_data_process use after
- free on boot SAS2X28
-Date: Mon, 07 Dec 2015 14:01:41 +0000
-Message-ID: <bug-108771-11613-NEJGozmw2J@https.bugzilla.kernel.org/>
-References: <bug-108771-11613@https.bugzilla.kernel.org/>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
+Date: Mon, 7 Dec 2015 15:05:34 +0100
+Message-ID: <5665922E.40501@redhat.com>
+References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <1448973589-9216-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
+ <5661A493.90603@redhat.com>
+ <198D06D448A18D4E93F08FB849C4E39D7D1EF725@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34695 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:40208 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753619AbbLGOBp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Dec 2015 09:01:45 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 0E4AE203F3
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Dec 2015 14:01:44 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id C1F29203B8
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Dec 2015 14:01:41 +0000 (UTC)
-In-Reply-To: <bug-108771-11613@https.bugzilla.kernel.org/>
+	id S932120AbbLGOFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Dec 2015 09:05:38 -0500
+In-Reply-To: <198D06D448A18D4E93F08FB849C4E39D7D1EF725@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=108771
+On 5.12.2015 01:40, Raghava Aditya Renukunta wrote:
+> Hello Tomas,
+>
+>
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com]
+>> Sent: Friday, December 4, 2015 6:35 AM
+>> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
+>> scsi@vger.kernel.org
+>> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
+>> aacraid@pmc-sierra.com; Rich Bono
+>> Subject: Re: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
+>>
+>> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
+>>> From: Raghava Aditya Renukunta <raghavaaditya.renukunta@pmcs.com>
+>>>
+>>> aac_fib_map_free() calls pci_free_consistent() without checking that
+>>> dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
+>>> are indeed NULL/0, this will result in a hang as pci_free_consistent()
+>>> will attempt to invalidate cache for the entire 64-bit address space
+>>> (which would take a very long time).
+>>>
+>>> Fixed by adding a check to make sure that dev->hw_fib_va and
+>>> dev->max_fib_size are not NULL and 0 respectively.
+>>>
+>>> Signed-off-by: Raghava Aditya Renukunta
+>> <raghavaaditya.renukunta@pmcs.com>
+>>
+>> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+>>
+>> Is the can_queue constant during the driver's life, or is it possible
+>> to manipulate it (aac_change_queue_depth)?
+>>
+>> Tomas
+> can_queue is only changed in aac_init_adapter. Do you want to save 
+>  (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) in a variable
+> So that the whole can_queue dereference need not be used?
 
---- Comment #1 from Pavel Tikhomirov <ptikhomirov@virtuozzo.com> ---
-Aditional info about enclosue(from that node, but older 3.10 based kernel):
+It's fine as it is, (I thought it may change elsewhere in your code
+but now I think that I was wrong).
 
-[root@p9 crash]# modprobe sg
-[root@p9 crash]#  sg_map -i
-/dev/sg0  LSI       SAS2X28           0e12
-/dev/sg1  /dev/sda  LSI  MR9260-4i  2.13
-[root@p9 crash]# lsscsi -gs
-[1:0:16:0]   enclosu LSI      SAS2X28          0e12  -          /dev/sg0       
--
-[1:2:0:0]    disk    LSI      MR9260-4i        2.13  /dev/sda   /dev/sg1  
-3.99TB
-[root@p9 crash]#  sg_ses /dev/sg0
-  LSI       SAS2X28           0e12
-Supported diagnostic pages:
-  Supported Diagnostic Pages [sdp] [0x0]
-  Configuration (SES) [cf] [0x1]
-  Enclosure Status/Control (SES) [ec,es] [0x2]
-  Element Descriptor (SES) [ed] [0x7]
-  Additional Element Status (SES-2) [aes] [0xa]
-  Download Microcode (SES-2) [dm] [0xe]
-[root@p9 crash]#  sg_ses /dev/sg1
-  LSI  MR9260-4i  2.13
-    disk device (not an enclosure)
-Supported diagnostic pages:
+--tm
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+>
+> Regards,
+> Raghava Aditya
+>
+>>> ---
+>>>  drivers/scsi/aacraid/commsup.c | 9 ++++++---
+>>>  1 file changed, 6 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/aacraid/commsup.c
+>> b/drivers/scsi/aacraid/commsup.c
+>>> index b257d3b..9533f47 100644
+>>> --- a/drivers/scsi/aacraid/commsup.c
+>>> +++ b/drivers/scsi/aacraid/commsup.c
+>>> @@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
+>>>
+>>>  void aac_fib_map_free(struct aac_dev *dev)
+>>>  {
+>>> -	pci_free_consistent(dev->pdev,
+>>> -	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue +
+>> AAC_NUM_MGT_FIB),
+>>> -	  dev->hw_fib_va, dev->hw_fib_pa);
+>>> +	if (dev->hw_fib_va && dev->max_fib_size) {
+>>> +		pci_free_consistent(dev->pdev,
+>>> +		(dev->max_fib_size *
+>>> +		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
+>>> +		dev->hw_fib_va, dev->hw_fib_pa);
+>>> +	}
+>>>  	dev->hw_fib_va = NULL;
+>>>  	dev->hw_fib_pa = 0;
+>>>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
