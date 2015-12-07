@@ -1,119 +1,39 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@pmcs.com>
-Subject: RE: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-Date: Mon, 7 Dec 2015 19:07:49 +0000
-Message-ID: <198D06D448A18D4E93F08FB849C4E39D7D1EFEEE@BBYEXM01.pmc-sierra.internal>
-References: <1448973589-9216-1-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <1448973589-9216-5-git-send-email-RaghavaAditya.Renukunta@pmcs.com>
- <5661A493.90603@redhat.com>
- <198D06D448A18D4E93F08FB849C4E39D7D1EF725@BBYEXM01.pmc-sierra.internal>
- <5665922E.40501@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49861 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932415AbbLGTHu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Dec 2015 14:07:50 -0500
-In-Reply-To: <5665922E.40501@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: completion queue abstraction V2
+Date: Mon,  7 Dec 2015 12:51:39 -0800
+Message-ID: <1449521512-22921-1-git-send-email-hch@lst.de>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org, bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org, axboe-b10kYP2dOMg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, Murthy Bhat <Murthy.Bhat@pmcs.com>, Santosh Akula <Santosh.Akula@pmcs.com>, Gana Sridaran <Gana.Sridaran@pmcs.com>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-Hello Tomas,
+This series adds a new RDMA core abstraction that insulated the
+ULPs from the nitty gritty details of CQ polling.  See the individual
+patches for more details.
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Monday, December 7, 2015 6:06 AM
-> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
-> scsi@vger.kernel.org
-> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
-> aacraid@pmc-sierra.com; Rich Bono
-> Subject: Re: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-> 
-> On 5.12.2015 01:40, Raghava Aditya Renukunta wrote:
-> > Hello Tomas,
-> >
-> >
-> >> -----Original Message-----
-> >> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> >> Sent: Friday, December 4, 2015 6:35 AM
-> >> To: Raghava Aditya Renukunta; JBottomley@Parallels.com; linux-
-> >> scsi@vger.kernel.org
-> >> Cc: Mahesh Rajashekhara; Murthy Bhat; Santosh Akula; Gana Sridaran;
-> >> aacraid@pmc-sierra.com; Rich Bono
-> >> Subject: Re: [PATCH 04/10] aacraid: Fix memory leak in aac_fib_map_free
-> >>
-> >> On 1.12.2015 13:39, Raghava Aditya Renukunta wrote:
-> >>> From: Raghava Aditya Renukunta
-> <raghavaaditya.renukunta@pmcs.com>
-> >>>
-> >>> aac_fib_map_free() calls pci_free_consistent() without checking that
-> >>> dev->hw_fib_va is not NULL and dev->max_fib_size is not zero.If they
-> >>> are indeed NULL/0, this will result in a hang as pci_free_consistent()
-> >>> will attempt to invalidate cache for the entire 64-bit address space
-> >>> (which would take a very long time).
-> >>>
-> >>> Fixed by adding a check to make sure that dev->hw_fib_va and
-> >>> dev->max_fib_size are not NULL and 0 respectively.
-> >>>
-> >>> Signed-off-by: Raghava Aditya Renukunta
-> >> <raghavaaditya.renukunta@pmcs.com>
-> >>
-> >> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> >>
-> >> Is the can_queue constant during the driver's life, or is it possible
-> >> to manipulate it (aac_change_queue_depth)?
-> >>
-> >> Tomas
-> > can_queue is only changed in aac_init_adapter. Do you want to save
-> >  (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) in a variable
-> > So that the whole can_queue dereference need not be used?
-> 
-> It's fine as it is, (I thought it may change elsewhere in your code
-> but now I think that I was wrong).
-> 
-> --tm
+Note that this series should be applied on top of my
+"IB: merge struct ib_device_attr into struct ib_device" patch and the
+MR cleanups.
 
-I will leave it as it is then.
+A git tree is also available:
 
+	git://git.infradead.org/users/hch/rdma.git rdma-cq
 
-> 
-> >
-> > Regards,
-> > Raghava Aditya
-> >
-> >>> ---
-> >>>  drivers/scsi/aacraid/commsup.c | 9 ++++++---
-> >>>  1 file changed, 6 insertions(+), 3 deletions(-)
-> >>>
-> >>> diff --git a/drivers/scsi/aacraid/commsup.c
-> >> b/drivers/scsi/aacraid/commsup.c
-> >>> index b257d3b..9533f47 100644
-> >>> --- a/drivers/scsi/aacraid/commsup.c
-> >>> +++ b/drivers/scsi/aacraid/commsup.c
-> >>> @@ -83,9 +83,12 @@ static int fib_map_alloc(struct aac_dev *dev)
-> >>>
-> >>>  void aac_fib_map_free(struct aac_dev *dev)
-> >>>  {
-> >>> -	pci_free_consistent(dev->pdev,
-> >>> -	  dev->max_fib_size * (dev->scsi_host_ptr->can_queue +
-> >> AAC_NUM_MGT_FIB),
-> >>> -	  dev->hw_fib_va, dev->hw_fib_pa);
-> >>> +	if (dev->hw_fib_va && dev->max_fib_size) {
-> >>> +		pci_free_consistent(dev->pdev,
-> >>> +		(dev->max_fib_size *
-> >>> +		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
-> >>> +		dev->hw_fib_va, dev->hw_fib_pa);
-> >>> +	}
-> >>>  	dev->hw_fib_va = NULL;
-> >>>  	dev->hw_fib_pa = 0;
-> >>>  }
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As well as gitweb:
+	http://git.infradead.org/users/hch/rdma.git/shortlog/refs/heads/rdma-cq
 
+Changes since V1:
+ - rebased
+ - some additional irq_work cleanups
+ - early exit from the polling loop (Jason)
+ - changed ib_process_cq_direct API (Sagi / Jason / Bart)
+ - dropped the ib_drain_qp helper for now, to be revisited later
+ - cosmetic iser cleanups (or)
+ - cosmetic srp changes (Bart)
+ 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
