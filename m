@@ -1,312 +1,286 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/13] IB/iser: Use a dedicated descriptor for login
-Date: Mon,  7 Dec 2015 12:51:50 -0800
-Message-ID: <1449521512-22921-12-git-send-email-hch@lst.de>
+Subject: [PATCH 08/13] IB/srpt: chain RDMA READ/WRITE requests
+Date: Mon,  7 Dec 2015 12:51:47 -0800
+Message-ID: <1449521512-22921-9-git-send-email-hch@lst.de>
 References: <1449521512-22921-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1449521512-22921-1-git-send-email-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-rdma@vger.kernel.org
-Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>
+Cc: sagig@dev.mellanox.co.il, bart.vanassche@sandisk.com, axboe@fb.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Sagi Grimberg <sagig@mellanox.com>
+Remove struct rdma_iu and instead allocate the struct ib_rdma_wr array
+early and fill out directly.  This allows us to chain the WRs, and thus
+archive both less lock contention on the HCA workqueue as well as much
+simpler error handling.
 
-We'll need it later with the new CQ abstraction. also switch
-login bufs to void pointers.
-
-Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.h     |  30 +++++--
- drivers/infiniband/ulp/iser/iser_initiator.c | 128 +++++++++++++--------------
- drivers/infiniband/ulp/iser/iser_verbs.c     |  14 +--
- 3 files changed, 89 insertions(+), 83 deletions(-)
+ drivers/infiniband/ulp/srpt/ib_srpt.c | 100 +++++++++++++---------------------
+ drivers/infiniband/ulp/srpt/ib_srpt.h |  14 +----
+ 2 files changed, 39 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.h b/drivers/infiniband/ulp/iser/iscsi_iser.h
-index 502063b..5648409 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.h
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.h
-@@ -326,6 +326,25 @@ struct iser_rx_desc {
- 	char		             pad[ISER_RX_PAD_SIZE];
- } __attribute__((packed));
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index b8b654c..b5544b2 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -1055,7 +1055,7 @@ static void srpt_unmap_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 	BUG_ON(ioctx->n_rdma && !ioctx->rdma_ius);
  
-+
-+/**
-+ * struct iser_login_desc - iSER login descriptor
-+ *
-+ * @req:           pointer to login request buffer
-+ * @resp:          pointer to login response buffer
-+ * @req_dma:       DMA address of login request buffer
-+ * @rsp_dma:      DMA address of login response buffer
-+ * @sge:           IB sge for login post recv
-+ */
-+struct iser_login_desc {
-+	void                         *req;
-+	void                         *rsp;
-+	u64                          req_dma;
-+	u64                          rsp_dma;
-+	struct ib_sge                sge;
-+} __attribute__((packed));
-+
-+
- struct iser_conn;
- struct ib_conn;
- struct iscsi_iser_task;
-@@ -512,11 +531,7 @@ struct ib_conn {
-  * @up_completion:    connection establishment completed
-  *                    (state is ISER_CONN_UP)
-  * @conn_list:        entry in ig conn list
-- * @login_buf:        login data buffer (stores login parameters)
-- * @login_req_buf:    login request buffer
-- * @login_req_dma:    login request buffer dma address
-- * @login_resp_buf:   login response buffer
-- * @login_resp_dma:   login response buffer dma address
-+ * @login_desc:       login descriptor
-  * @rx_desc_head:     head of rx_descs cyclic buffer
-  * @rx_descs:         rx buffers array (cyclic buffer)
-  * @num_rx_descs:     number of rx descriptors
-@@ -539,10 +554,7 @@ struct iser_conn {
- 	struct completion	     ib_completion;
- 	struct completion	     up_completion;
- 	struct list_head	     conn_list;
--
--	char  			     *login_buf;
--	char			     *login_req_buf, *login_resp_buf;
--	u64			     login_req_dma, login_resp_dma;
-+	struct iser_login_desc       login_desc;
- 	unsigned int 		     rx_desc_head;
- 	struct iser_rx_desc	     *rx_descs;
- 	u32                          num_rx_descs;
-diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
-index ffd00c4..21f28c8 100644
---- a/drivers/infiniband/ulp/iser/iser_initiator.c
-+++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-@@ -174,73 +174,63 @@ static void iser_create_send_desc(struct iser_conn	*iser_conn,
- static void iser_free_login_buf(struct iser_conn *iser_conn)
- {
- 	struct iser_device *device = iser_conn->ib_conn.device;
-+	struct iser_login_desc *desc = &iser_conn->login_desc;
+ 	while (ioctx->n_rdma)
+-		kfree(ioctx->rdma_ius[--ioctx->n_rdma].sge);
++		kfree(ioctx->rdma_ius[--ioctx->n_rdma].wr.sg_list);
  
--	if (!iser_conn->login_buf)
-+	if (!desc->req)
- 		return;
+ 	kfree(ioctx->rdma_ius);
+ 	ioctx->rdma_ius = NULL;
+@@ -1082,7 +1082,7 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 	struct scatterlist *sg, *sg_orig;
+ 	int sg_cnt;
+ 	enum dma_data_direction dir;
+-	struct rdma_iu *riu;
++	struct ib_rdma_wr *riu;
+ 	struct srp_direct_buf *db;
+ 	dma_addr_t dma_addr;
+ 	struct ib_sge *sge;
+@@ -1115,7 +1115,8 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 		nrdma = (count + SRPT_DEF_SG_PER_WQE - 1) / SRPT_DEF_SG_PER_WQE
+ 			+ ioctx->n_rbuf;
  
--	if (iser_conn->login_req_dma)
--		ib_dma_unmap_single(device->ib_device,
--				    iser_conn->login_req_dma,
--				    ISCSI_DEF_MAX_RECV_SEG_LEN, DMA_TO_DEVICE);
-+	ib_dma_unmap_single(device->ib_device, desc->req_dma,
-+			    ISCSI_DEF_MAX_RECV_SEG_LEN, DMA_TO_DEVICE);
+-		ioctx->rdma_ius = kzalloc(nrdma * sizeof *riu, GFP_KERNEL);
++		ioctx->rdma_ius = kcalloc(nrdma, sizeof(*ioctx->rdma_ius),
++				GFP_KERNEL);
+ 		if (!ioctx->rdma_ius)
+ 			goto free_mem;
  
--	if (iser_conn->login_resp_dma)
--		ib_dma_unmap_single(device->ib_device,
--				    iser_conn->login_resp_dma,
--				    ISER_RX_LOGIN_SIZE, DMA_FROM_DEVICE);
-+	ib_dma_unmap_single(device->ib_device, desc->rsp_dma,
-+			    ISER_RX_LOGIN_SIZE, DMA_FROM_DEVICE);
+@@ -1139,9 +1140,9 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 	     j < count && i < ioctx->n_rbuf && tsize > 0; ++i, ++riu, ++db) {
+ 		rsize = be32_to_cpu(db->len);
+ 		raddr = be64_to_cpu(db->va);
+-		riu->raddr = raddr;
++		riu->remote_addr = raddr;
+ 		riu->rkey = be32_to_cpu(db->key);
+-		riu->sge_cnt = 0;
++		riu->wr.num_sge = 0;
  
--	kfree(iser_conn->login_buf);
-+	kfree(desc->req);
-+	kfree(desc->rsp);
+ 		/* calculate how many sge required for this remote_buf */
+ 		while (rsize > 0 && tsize > 0) {
+@@ -1165,27 +1166,29 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 				rsize = 0;
+ 			}
  
- 	/* make sure we never redo any unmapping */
--	iser_conn->login_req_dma = 0;
--	iser_conn->login_resp_dma = 0;
--	iser_conn->login_buf = NULL;
-+	desc->req = NULL;
-+	desc->rsp = NULL;
- }
+-			++riu->sge_cnt;
++			++riu->wr.num_sge;
  
- static int iser_alloc_login_buf(struct iser_conn *iser_conn)
- {
- 	struct iser_device *device = iser_conn->ib_conn.device;
--	int			req_err, resp_err;
--
--	BUG_ON(device == NULL);
--
--	iser_conn->login_buf = kmalloc(ISCSI_DEF_MAX_RECV_SEG_LEN +
--				     ISER_RX_LOGIN_SIZE, GFP_KERNEL);
--	if (!iser_conn->login_buf)
--		goto out_err;
--
--	iser_conn->login_req_buf  = iser_conn->login_buf;
--	iser_conn->login_resp_buf = iser_conn->login_buf +
--						ISCSI_DEF_MAX_RECV_SEG_LEN;
--
--	iser_conn->login_req_dma = ib_dma_map_single(device->ib_device,
--						     iser_conn->login_req_buf,
--						     ISCSI_DEF_MAX_RECV_SEG_LEN,
--						     DMA_TO_DEVICE);
--
--	iser_conn->login_resp_dma = ib_dma_map_single(device->ib_device,
--						      iser_conn->login_resp_buf,
--						      ISER_RX_LOGIN_SIZE,
--						      DMA_FROM_DEVICE);
--
--	req_err  = ib_dma_mapping_error(device->ib_device,
--					iser_conn->login_req_dma);
--	resp_err = ib_dma_mapping_error(device->ib_device,
--					iser_conn->login_resp_dma);
--
--	if (req_err || resp_err) {
--		if (req_err)
--			iser_conn->login_req_dma = 0;
--		if (resp_err)
--			iser_conn->login_resp_dma = 0;
--		goto free_login_buf;
--	}
-+	struct iser_login_desc *desc = &iser_conn->login_desc;
-+
-+	desc->req = kmalloc(ISCSI_DEF_MAX_RECV_SEG_LEN, GFP_KERNEL);
-+	if (!desc->req)
-+		return -ENOMEM;
-+
-+	desc->req_dma = ib_dma_map_single(device->ib_device, desc->req,
-+					  ISCSI_DEF_MAX_RECV_SEG_LEN,
-+					  DMA_TO_DEVICE);
-+	if (ib_dma_mapping_error(device->ib_device,
-+				desc->req_dma))
-+		goto free_req;
-+
-+	desc->rsp = kmalloc(ISER_RX_LOGIN_SIZE, GFP_KERNEL);
-+	if (!desc->rsp)
-+		goto unmap_req;
-+
-+	desc->rsp_dma = ib_dma_map_single(device->ib_device, desc->rsp,
-+					   ISER_RX_LOGIN_SIZE,
-+					   DMA_FROM_DEVICE);
-+	if (ib_dma_mapping_error(device->ib_device,
-+				desc->rsp_dma))
-+		goto free_rsp;
-+
- 	return 0;
+-			if (rsize > 0 && riu->sge_cnt == SRPT_DEF_SG_PER_WQE) {
++			if (rsize > 0 &&
++			    riu->wr.num_sge == SRPT_DEF_SG_PER_WQE) {
+ 				++ioctx->n_rdma;
+-				riu->sge =
+-				    kmalloc(riu->sge_cnt * sizeof *riu->sge,
+-					    GFP_KERNEL);
+-				if (!riu->sge)
++				riu->wr.sg_list = kmalloc_array(riu->wr.num_sge,
++						sizeof(*riu->wr.sg_list),
++						GFP_KERNEL);
++				if (!riu->wr.sg_list)
+ 					goto free_mem;
  
--free_login_buf:
--	iser_free_login_buf(iser_conn);
-+free_rsp:
-+	kfree(desc->rsp);
-+unmap_req:
-+	ib_dma_unmap_single(device->ib_device, desc->req_dma,
-+			    ISCSI_DEF_MAX_RECV_SEG_LEN,
-+			    DMA_TO_DEVICE);
-+free_req:
-+	kfree(desc->req);
- 
--out_err:
--	iser_err("unable to alloc or map login buf\n");
- 	return -ENOMEM;
- }
- 
-@@ -520,25 +510,25 @@ int iser_send_control(struct iscsi_conn *conn,
- 	data_seg_len = ntoh24(task->hdr->dlength);
- 
- 	if (data_seg_len > 0) {
-+		struct iser_login_desc *desc = &iser_conn->login_desc;
- 		struct ib_sge *tx_dsg = &mdesc->tx_sg[1];
-+
- 		if (task != conn->login_task) {
- 			iser_err("data present on non login task!!!\n");
- 			goto send_control_error;
+ 				++riu;
+-				riu->sge_cnt = 0;
+-				riu->raddr = raddr;
++				riu->wr.num_sge = 0;
++				riu->remote_addr = raddr;
+ 				riu->rkey = be32_to_cpu(db->key);
+ 			}
  		}
  
--		ib_dma_sync_single_for_cpu(device->ib_device,
--			iser_conn->login_req_dma, task->data_count,
--			DMA_TO_DEVICE);
-+		ib_dma_sync_single_for_cpu(device->ib_device, desc->req_dma,
-+					   task->data_count, DMA_TO_DEVICE);
- 
--		memcpy(iser_conn->login_req_buf, task->data, task->data_count);
-+		memcpy(desc->req, task->data, task->data_count);
- 
--		ib_dma_sync_single_for_device(device->ib_device,
--			iser_conn->login_req_dma, task->data_count,
--			DMA_TO_DEVICE);
-+		ib_dma_sync_single_for_device(device->ib_device, desc->req_dma,
-+					      task->data_count, DMA_TO_DEVICE);
- 
--		tx_dsg->addr    = iser_conn->login_req_dma;
--		tx_dsg->length  = task->data_count;
--		tx_dsg->lkey    = device->pd->local_dma_lkey;
-+		tx_dsg->addr = desc->req_dma;
-+		tx_dsg->length = task->data_count;
-+		tx_dsg->lkey = device->pd->local_dma_lkey;
- 		mdesc->num_sge = 2;
+ 		++ioctx->n_rdma;
+-		riu->sge = kmalloc(riu->sge_cnt * sizeof *riu->sge,
+-				   GFP_KERNEL);
+-		if (!riu->sge)
++		riu->wr.sg_list = kmalloc_array(riu->wr.num_sge,
++					sizeof(*riu->wr.sg_list),
++					GFP_KERNEL);
++		if (!riu->wr.sg_list)
+ 			goto free_mem;
  	}
  
-@@ -572,27 +562,31 @@ void iser_rcv_completion(struct iser_rx_desc *rx_desc,
- 	struct iser_conn *iser_conn = container_of(ib_conn, struct iser_conn,
- 						   ib_conn);
- 	struct iscsi_hdr *hdr;
-+	char *data;
- 	u64 rx_dma;
- 	int rx_buflen, outstanding, count, err;
+@@ -1200,7 +1203,7 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 	for (i = 0, j = 0;
+ 	     j < count && i < ioctx->n_rbuf && tsize > 0; ++i, ++riu, ++db) {
+ 		rsize = be32_to_cpu(db->len);
+-		sge = riu->sge;
++		sge = riu->wr.sg_list;
+ 		k = 0;
  
- 	/* differentiate between login to all other PDUs */
--	if ((char *)rx_desc == iser_conn->login_resp_buf) {
--		rx_dma = iser_conn->login_resp_dma;
-+	if (rx_desc == (void *)&iser_conn->login_desc) {
-+		rx_dma = iser_conn->login_desc.rsp_dma;
- 		rx_buflen = ISER_RX_LOGIN_SIZE;
-+		hdr = iser_conn->login_desc.rsp + sizeof(struct iser_hdr);
-+		data = iser_conn->login_desc.rsp + ISER_HEADERS_LEN;
+ 		while (rsize > 0 && tsize > 0) {
+@@ -1232,9 +1235,9 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
+ 			}
+ 
+ 			++k;
+-			if (k == riu->sge_cnt && rsize > 0 && tsize > 0) {
++			if (k == riu->wr.num_sge && rsize > 0 && tsize > 0) {
+ 				++riu;
+-				sge = riu->sge;
++				sge = riu->wr.sg_list;
+ 				k = 0;
+ 			} else if (rsize > 0 && tsize > 0)
+ 				++sge;
+@@ -1455,8 +1458,6 @@ static void srpt_handle_rdma_comp(struct srpt_rdma_ch *ch,
+ 		else
+ 			pr_err("%s[%d]: wrong state = %d\n", __func__,
+ 			       __LINE__, srpt_get_cmd_state(ioctx));
+-	} else if (opcode == SRPT_RDMA_ABORT) {
+-		ioctx->rdma_aborted = true;
  	} else {
- 		rx_dma = rx_desc->dma_addr;
- 		rx_buflen = ISER_RX_PAYLOAD_SIZE;
-+		hdr = &rx_desc->iscsi_header;
-+		data = rx_desc->data;
+ 		WARN(true, "unexpected opcode %d\n", opcode);
+ 	}
+@@ -1979,8 +1980,7 @@ static void srpt_process_send_completion(struct ib_cq *cq,
+ 		if (opcode == SRPT_SEND)
+ 			srpt_handle_send_comp(ch, send_ioctx);
+ 		else {
+-			WARN_ON(opcode != SRPT_RDMA_ABORT &&
+-				wc->opcode != IB_WC_RDMA_READ);
++			WARN_ON(wc->opcode != IB_WC_RDMA_READ);
+ 			srpt_handle_rdma_comp(ch, send_ioctx, opcode);
+ 		}
+ 	} else {
+@@ -2821,9 +2821,7 @@ static int srpt_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event)
+ static int srpt_perform_rdmas(struct srpt_rdma_ch *ch,
+ 			      struct srpt_send_ioctx *ioctx)
+ {
+-	struct ib_rdma_wr wr;
+ 	struct ib_send_wr *bad_wr;
+-	struct rdma_iu *riu;
+ 	int i;
+ 	int ret;
+ 	int sq_wr_avail;
+@@ -2842,59 +2840,37 @@ static int srpt_perform_rdmas(struct srpt_rdma_ch *ch,
+ 		}
  	}
  
- 	ib_dma_sync_single_for_cpu(ib_conn->device->ib_device, rx_dma,
- 				   rx_buflen, DMA_FROM_DEVICE);
+-	ioctx->rdma_aborted = false;
+-	ret = 0;
+-	riu = ioctx->rdma_ius;
+-	memset(&wr, 0, sizeof wr);
++	for (i = 0; i < n_rdma; i++) {
++		struct ib_rdma_wr *wr = &ioctx->rdma_ius[i];
  
--	hdr = &rx_desc->iscsi_header;
+-	for (i = 0; i < n_rdma; ++i, ++riu) {
+ 		if (dir == DMA_FROM_DEVICE) {
+-			wr.wr.opcode = IB_WR_RDMA_WRITE;
+-			wr.wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
++			wr->wr.opcode = IB_WR_RDMA_WRITE;
++			wr->wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
+ 						SRPT_RDMA_WRITE_LAST :
+ 						SRPT_RDMA_MID,
+ 						ioctx->ioctx.index);
+ 		} else {
+-			wr.wr.opcode = IB_WR_RDMA_READ;
+-			wr.wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
++			wr->wr.opcode = IB_WR_RDMA_READ;
++			wr->wr.wr_id = encode_wr_id(i == n_rdma - 1 ?
+ 						SRPT_RDMA_READ_LAST :
+ 						SRPT_RDMA_MID,
+ 						ioctx->ioctx.index);
+ 		}
+-		wr.wr.next = NULL;
+-		wr.remote_addr = riu->raddr;
+-		wr.rkey = riu->rkey;
+-		wr.wr.num_sge = riu->sge_cnt;
+-		wr.wr.sg_list = riu->sge;
+-
+-		/* only get completion event for the last rdma write */
+-		if (i == (n_rdma - 1) && dir == DMA_TO_DEVICE)
+-			wr.wr.send_flags = IB_SEND_SIGNALED;
  
- 	iser_dbg("op 0x%x itt 0x%x dlen %d\n", hdr->opcode,
- 			hdr->itt, (int)(rx_xfer_len - ISER_HEADERS_LEN));
+-		ret = ib_post_send(ch->qp, &wr.wr, &bad_wr);
+-		if (ret)
+-			break;
++		if (i == n_rdma - 1) {
++			/* only get completion event for the last rdma read */
++			if (dir == DMA_TO_DEVICE)
++				wr->wr.send_flags = IB_SEND_SIGNALED;
++			wr->wr.next = NULL;
++		} else {
++			wr->wr.next = &ioctx->rdma_ius[i + 1].wr;
++		}
+ 	}
  
--	iscsi_iser_recv(iser_conn->iscsi_conn, hdr, rx_desc->data,
-+	iscsi_iser_recv(iser_conn->iscsi_conn, hdr, data,
- 			rx_xfer_len - ISER_HEADERS_LEN);
++	ret = ib_post_send(ch->qp, &ioctx->rdma_ius->wr, &bad_wr);
+ 	if (ret)
+ 		pr_err("%s[%d]: ib_post_send() returned %d for %d/%d\n",
+ 				 __func__, __LINE__, ret, i, n_rdma);
+-	if (ret && i > 0) {
+-		wr.wr.num_sge = 0;
+-		wr.wr.wr_id = encode_wr_id(SRPT_RDMA_ABORT, ioctx->ioctx.index);
+-		wr.wr.send_flags = IB_SEND_SIGNALED;
+-		while (ch->state == CH_LIVE &&
+-			ib_post_send(ch->qp, &wr.wr, &bad_wr) != 0) {
+-			pr_info("Trying to abort failed RDMA transfer [%d]\n",
+-				ioctx->ioctx.index);
+-			msleep(1000);
+-		}
+-		while (ch->state != CH_RELEASING && !ioctx->rdma_aborted) {
+-			pr_info("Waiting until RDMA abort finished [%d]\n",
+-				ioctx->ioctx.index);
+-			msleep(1000);
+-		}
+-	}
+ out:
+ 	if (unlikely(dir == DMA_TO_DEVICE && ret < 0))
+ 		atomic_add(n_rdma, &ch->sq_wr_avail);
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
+index 0df7d61..fd6097e 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.h
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
+@@ -132,7 +132,6 @@ enum srpt_opcode {
+ 	SRPT_RECV,
+ 	SRPT_SEND,
+ 	SRPT_RDMA_MID,
+-	SRPT_RDMA_ABORT,
+ 	SRPT_RDMA_READ_LAST,
+ 	SRPT_RDMA_WRITE_LAST,
+ };
+@@ -150,14 +149,6 @@ static inline u32 idx_from_wr_id(u64 wr_id)
+ 	return (u32)wr_id;
+ }
  
- 	ib_dma_sync_single_for_device(ib_conn->device->ib_device, rx_dma,
-@@ -604,7 +598,7 @@ void iser_rcv_completion(struct iser_rx_desc *rx_desc,
- 	 * for the posted rx bufs refcount to become zero handles everything   */
- 	ib_conn->post_recv_buf_count--;
- 
--	if (rx_dma == iser_conn->login_resp_dma)
-+	if (rx_desc == (void *)&iser_conn->login_desc)
- 		return;
- 
- 	outstanding = ib_conn->post_recv_buf_count;
-diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-index bf29ddf..ee4cebc 100644
---- a/drivers/infiniband/ulp/iser/iser_verbs.c
-+++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-@@ -1041,17 +1041,17 @@ int iser_post_recvl(struct iser_conn *iser_conn)
- {
- 	struct ib_recv_wr rx_wr, *rx_wr_failed;
- 	struct ib_conn *ib_conn = &iser_conn->ib_conn;
--	struct ib_sge	  sge;
-+	struct iser_login_desc *desc = &iser_conn->login_desc;
- 	int ib_ret;
- 
--	sge.addr   = iser_conn->login_resp_dma;
--	sge.length = ISER_RX_LOGIN_SIZE;
--	sge.lkey   = ib_conn->device->pd->local_dma_lkey;
-+	desc->sge.addr = desc->rsp_dma;
-+	desc->sge.length = ISER_RX_LOGIN_SIZE;
-+	desc->sge.lkey = ib_conn->device->pd->local_dma_lkey;
- 
--	rx_wr.wr_id   = (uintptr_t)iser_conn->login_resp_buf;
--	rx_wr.sg_list = &sge;
-+	rx_wr.wr_id = (uintptr_t)desc;
-+	rx_wr.sg_list = &desc->sge;
- 	rx_wr.num_sge = 1;
--	rx_wr.next    = NULL;
-+	rx_wr.next = NULL;
- 
- 	ib_conn->post_recv_buf_count++;
- 	ib_ret	= ib_post_recv(ib_conn->qp, &rx_wr, &rx_wr_failed);
+-struct rdma_iu {
+-	u64		raddr;
+-	u32		rkey;
+-	struct ib_sge	*sge;
+-	u32		sge_cnt;
+-	int		mem_id;
+-};
+-
+ /**
+  * enum srpt_command_state - SCSI command state managed by SRPT.
+  * @SRPT_STATE_NEW:           New command arrived and is being processed.
+@@ -220,22 +211,19 @@ struct srpt_recv_ioctx {
+  * @tag:         Tag of the received SRP information unit.
+  * @spinlock:    Protects 'state'.
+  * @state:       I/O context state.
+- * @rdma_aborted: If initiating a multipart RDMA transfer failed, whether
+- * 		 the already initiated transfers have finished.
+  * @cmd:         Target core command data structure.
+  * @sense_data:  SCSI sense data.
+  */
+ struct srpt_send_ioctx {
+ 	struct srpt_ioctx	ioctx;
+ 	struct srpt_rdma_ch	*ch;
+-	struct rdma_iu		*rdma_ius;
++	struct ib_rdma_wr	*rdma_ius;
+ 	struct srp_direct_buf	*rbufs;
+ 	struct srp_direct_buf	single_rbuf;
+ 	struct scatterlist	*sg;
+ 	struct list_head	free_list;
+ 	spinlock_t		spinlock;
+ 	enum srpt_command_state	state;
+-	bool			rdma_aborted;
+ 	struct se_cmd		cmd;
+ 	struct completion	tx_done;
+ 	int			sg_cnt;
 -- 
 1.9.1
