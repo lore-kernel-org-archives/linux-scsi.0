@@ -1,226 +1,436 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 12/20] target/tmr: LUN reset cause cmd premature free.
-Date: Mon, 7 Dec 2015 19:48:59 -0500
-Message-ID: <1449535747-2850-13-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 16/20] qla2xxx: Move atioq to a different lock to reduce lock contention
+Date: Mon, 7 Dec 2015 19:49:03 -0500
+Message-ID: <1449535747-2850-17-git-send-email-himanshu.madhani@qlogic.com>
 References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:47724 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932579AbbLHB3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2015 20:29:32 -0500
 In-Reply-To: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
-List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@qlogic.com>
 
-During LUN/Target reset, the TMR code attempt to intercept
-cmds and try to aborted them.  Current code assume cmds are
-always intercepted at the back end device.  The cleanup code
-would issue a "queue_status() & check_stop_free()" to terminate
-the command.  However, when a cmd is intercepted at the front
-end/Fabric layer, current code introduce premature free or
-cause Fabric to double free.
-
-When command is intercepted at Fabric layer, it means a
-check_stop_free(cmd_kref--) has been called.  The extra
-check_stop_free in the Lun Reset cleanup code causes early
-free.  When a cmd in the Fabric layer is completed, the normal
-free code adds another another free which introduce a double free.
-
-To fix the issue:
-- add a new flag/CMD_T_SENT_STATUS to track command that have
- made it down to fabric layer after back end good/bad completion.
-- if cmd reach Fabric Layer at Lun Reset time, add an extra
- cmd_kref count to prevent premature free.
+99% of the time the ATIOQ has SCSI command.  The other 1% of time
+is something else.  Most of the time this interrupt does not need
+to hold the hardware_lock.  We're moving the ATIO interrupt thread
+to a different lock to reduce lock contention.
 
 Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/target/target_core_tmr.c       |   33 +++++++++++++++++++++++++++++++-
- drivers/target/target_core_transport.c |   30 +++++++++++++++++++++++++++++
- include/target/target_core_base.h      |    1 +
- 3 files changed, 63 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |    1 +
+ drivers/scsi/qla2xxx/qla_gbl.h    |    1 +
+ drivers/scsi/qla2xxx/qla_init.c   |    6 ++-
+ drivers/scsi/qla2xxx/qla_isr.c    |   44 +++++++++++++----
+ drivers/scsi/qla2xxx/qla_os.c     |    2 +
+ drivers/scsi/qla2xxx/qla_target.c |   97 +++++++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.h |    4 +-
+ 7 files changed, 127 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 28fb301..41f8b57 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -243,7 +243,9 @@ static void core_tmr_drain_state_list(
- {
- 	LIST_HEAD(drain_task_list);
- 	struct se_cmd *cmd, *next;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 9165732..0ddb2de 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2936,6 +2936,7 @@ struct qlt_hw_data {
+ 	uint32_t leak_exchg_thresh_hold;
+ 	spinlock_t sess_lock;
+ 	int rspq_vector_cpuid;
++	spinlock_t atio_lock ____cacheline_aligned;
+ };
+ 
+ #define MAX_QFULL_CMDS_ALLOC	8192
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 2e91966..5496e0a 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -779,5 +779,6 @@ extern int qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr);
+ extern int qla_get_exchoffld_status(scsi_qla_host_t *, uint16_t *, uint16_t *);
+ extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *vha,
+     dma_addr_t phys_addr);
++extern void qlt_handle_abts_recv(struct scsi_qla_host *, response_t *);
+ 
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 35d1ea8..993dd25 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4919,7 +4919,7 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	struct rsp_que *rsp = ha->rsp_q_map[0];
 -	unsigned long flags;
 +	unsigned long flags, flags2;
-+	int rmkref;
-+	struct se_session *se_sess;
  
- 	/*
- 	 * Complete outstanding commands with TASK_ABORTED SAM status.
-@@ -282,6 +284,16 @@ static void core_tmr_drain_state_list(
- 		if (prout_cmd == cmd)
- 			continue;
+ 	/* If firmware needs to be loaded */
+ 	if (qla2x00_isp_firmware(vha)) {
+@@ -4948,8 +4948,10 @@ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ 			 * while we weren't online.
+ 			 */
+ 			spin_lock_irqsave(&ha->hardware_lock, flags);
++			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
+ 			if (qla_tgt_mode_enabled(vha))
+-				qlt_24xx_process_atio_queue(vha);
++				qlt_24xx_process_atio_queue(vha, 1);
++			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
  
-+		se_sess = cmd->se_sess;
-+		/* take an extra kref to prevent cmd free race condition. */
-+		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags2);
-+		if (!kref_get_unless_zero(&cmd->cmd_kref)) {
-+			/* cmd is already in the free process */
-+			spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags2);
-+			continue;
+ 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 26fa4d8..72d1cdc 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2605,8 +2605,14 @@ process_err:
+ 			qla24xx_els_ct_entry(vha, rsp->req, pkt, ELS_IOCB_TYPE);
+ 			break;
+ 		case ABTS_RECV_24XX:
+-			/* ensure that the ATIO queue is empty */
+-			qlt_24xx_process_atio_queue(vha);
++			if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
++				/* ensure that the ATIO queue is empty */
++				qlt_handle_abts_recv(vha, (response_t *)pkt);
++				break;
++			} else {
++				/* drop through */
++				qlt_24xx_process_atio_queue(vha, 1);
++			}
+ 		case ABTS_RESP_24XX:
+ 		case CTIO_TYPE7:
+ 		case NOTIFY_ACK_TYPE:
+@@ -2773,13 +2779,22 @@ qla24xx_intr_handler(int irq, void *dev_id)
+ 		case INTR_RSP_QUE_UPDATE_83XX:
+ 			qla24xx_process_response_queue(vha, rsp);
+ 			break;
+-		case INTR_ATIO_QUE_UPDATE:
+-			qlt_24xx_process_atio_queue(vha);
++		case INTR_ATIO_QUE_UPDATE:{
++			unsigned long flags2;
++			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
++			qlt_24xx_process_atio_queue(vha, 1);
++			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
+ 			break;
+-		case INTR_ATIO_RSP_QUE_UPDATE:
+-			qlt_24xx_process_atio_queue(vha);
 +		}
-+		spin_unlock_irqrestore(&se_sess->sess_cmd_lock,	flags2);
++		case INTR_ATIO_RSP_QUE_UPDATE: {
++			unsigned long flags2;
++			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
++			qlt_24xx_process_atio_queue(vha, 1);
++			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
 +
- 		list_move_tail(&cmd->state_list, &drain_task_list);
- 		cmd->state_active = false;
- 	}
-@@ -320,9 +332,28 @@ static void core_tmr_drain_state_list(
- 		target_stop_cmd(cmd, &flags);
+ 			qla24xx_process_response_queue(vha, rsp);
+ 			break;
++		}
+ 		default:
+ 			ql_dbg(ql_dbg_async, vha, 0x504f,
+ 			    "Unrecognized interrupt type (%d).\n", stat * 0xff);
+@@ -2938,13 +2953,22 @@ qla24xx_msix_default(int irq, void *dev_id)
+ 		case INTR_RSP_QUE_UPDATE_83XX:
+ 			qla24xx_process_response_queue(vha, rsp);
+ 			break;
+-		case INTR_ATIO_QUE_UPDATE:
+-			qlt_24xx_process_atio_queue(vha);
++		case INTR_ATIO_QUE_UPDATE:{
++			unsigned long flags2;
++			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
++			qlt_24xx_process_atio_queue(vha, 1);
++			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
+ 			break;
+-		case INTR_ATIO_RSP_QUE_UPDATE:
+-			qlt_24xx_process_atio_queue(vha);
++		}
++		case INTR_ATIO_RSP_QUE_UPDATE: {
++			unsigned long flags2;
++			spin_lock_irqsave(&ha->tgt.atio_lock, flags2);
++			qlt_24xx_process_atio_queue(vha, 1);
++			spin_unlock_irqrestore(&ha->tgt.atio_lock, flags2);
++
+ 			qla24xx_process_response_queue(vha, rsp);
+ 			break;
++		}
+ 		default:
+ 			ql_dbg(ql_dbg_async, vha, 0x5051,
+ 			    "Unrecognized interrupt type (%d).\n", stat & 0xff);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8b45642..b350905 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2337,6 +2337,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&ha->tgt.q_full_list);
+ 	spin_lock_init(&ha->tgt.q_full_lock);
+ 	spin_lock_init(&ha->tgt.sess_lock);
++	spin_lock_init(&ha->tgt.atio_lock);
++
  
- 		cmd->transport_state |= CMD_T_ABORTED;
-+
-+		/* CMD_T_SENT_STATUS: cmd is down in fabric layer.
-+		 * A check stop has been called.  Keep the extra kref
-+		 * from above because core_tmr_handle_tas_abort will
-+		 * generate another check_stop.
-+		 *
-+		 * !CMD_T_SENT_STATUS: cmd intercepted at back end.
-+		 * Remove the extra kref from above because only
-+		 * 1 check_stop is required or generated by
-+		 * core_tmr_handle_tas_abort()
-+		 */
-+		rmkref = 0;
-+		if (!((cmd->t_state == TRANSPORT_COMPLETE) &&
-+		    (cmd->transport_state & CMD_T_SENT_STATUS)))
-+			rmkref = 1;
-+
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
- 		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas);
-+
-+		if (rmkref)
-+			target_put_sess_cmd(cmd);
- 	}
+ 	/* Clear our data area */
+ 	ha->bars = bars;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b33c018..69f88d3 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -100,7 +100,7 @@ enum fcp_resp_rsp_codes {
+  */
+ /* Predefs for callbacks handed to qla2xxx LLD */
+ static void qlt_24xx_atio_pkt(struct scsi_qla_host *ha,
+-	struct atio_from_isp *pkt);
++	struct atio_from_isp *pkt, uint8_t);
+ static void qlt_response_pkt(struct scsi_qla_host *ha, response_t *pkt);
+ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
+ 	int fn, void *iocb, int flags);
+@@ -230,7 +230,7 @@ static inline void qlt_decr_num_pend_cmds(struct scsi_qla_host *vha)
  }
  
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 4fdcee2..cdd18bf 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -639,9 +639,14 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
- static void target_complete_failure_work(struct work_struct *work)
+ static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+-	struct atio_from_isp *atio)
++	struct atio_from_isp *atio, uint8_t ha_locked)
  {
- 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
-+	unsigned long flags;
- 
- 	transport_generic_request_failure(cmd,
- 			TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE);
-+
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	cmd->transport_state |= CMD_T_SENT_STATUS;
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- }
- 
- /*
-@@ -1659,6 +1664,7 @@ void transport_generic_request_failure(struct se_cmd *cmd,
- 		sense_reason_t sense_reason)
- {
- 	int ret = 0, post_ret = 0;
-+	unsigned long flags;
- 
- 	pr_debug("-----[ Storage Engine Exception for cmd: %p ITT: 0x%08llx"
- 		" CDB: 0x%02x\n", cmd, cmd->tag, cmd->t_task_cdb[0]);
-@@ -1670,6 +1676,10 @@ void transport_generic_request_failure(struct se_cmd *cmd,
- 		(cmd->transport_state & CMD_T_STOP) != 0,
- 		(cmd->transport_state & CMD_T_SENT) != 0);
- 
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	cmd->transport_state |= CMD_T_SENT_STATUS;
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+
- 	/*
- 	 * For SAM Task Attribute emulation for failed struct se_cmd
- 	 */
-@@ -1951,6 +1961,7 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
- static void transport_complete_qf(struct se_cmd *cmd)
- {
- 	int ret = 0;
-+	unsigned long flags;
- 
- 	transport_complete_task_attr(cmd);
- 
-@@ -1986,6 +1997,10 @@ out:
- 	}
- 	transport_lun_remove_cmd(cmd);
- 	transport_cmd_check_stop_to_fabric(cmd);
-+
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	cmd->transport_state |= CMD_T_SENT_STATUS;
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- }
- 
- static void transport_handle_queue_full(
-@@ -2032,6 +2047,7 @@ static void target_complete_ok_work(struct work_struct *work)
- {
- 	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
- 	int ret;
-+	unsigned long flags;
- 
- 	/*
- 	 * Check if we need to move delayed/dormant tasks from cmds on the
-@@ -2060,6 +2076,10 @@ static void target_complete_ok_work(struct work_struct *work)
- 
- 		transport_lun_remove_cmd(cmd);
- 		transport_cmd_check_stop_to_fabric(cmd);
-+
-+		spin_lock_irqsave(&cmd->t_state_lock, flags);
-+		cmd->transport_state |= CMD_T_SENT_STATUS;
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 		return;
- 	}
- 	/*
-@@ -2086,6 +2106,11 @@ static void target_complete_ok_work(struct work_struct *work)
- 
- 			transport_lun_remove_cmd(cmd);
- 			transport_cmd_check_stop_to_fabric(cmd);
-+
-+			spin_lock_irqsave(&cmd->t_state_lock, flags);
-+			cmd->transport_state |= CMD_T_SENT_STATUS;
-+			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+
- 			return;
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe072,
+ 		"%s: qla_target(%d): type %x ox_id %04x\n",
+@@ -251,7 +251,7 @@ static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			    atio->u.isp24.fcp_hdr.d_id[2]);
+ 			break;
  		}
+-		qlt_24xx_atio_pkt(host, atio);
++		qlt_24xx_atio_pkt(host, atio, ha_locked);
+ 		break;
  	}
-@@ -2136,6 +2161,7 @@ queue_rsp:
- 		ret = cmd->se_tfo->queue_status(cmd);
- 		if (ret == -EAGAIN || ret == -ENOMEM)
- 			goto queue_full;
-+
- 		break;
- 	default:
- 		break;
-@@ -2143,6 +2169,10 @@ queue_rsp:
  
- 	transport_lun_remove_cmd(cmd);
- 	transport_cmd_check_stop_to_fabric(cmd);
-+
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	cmd->transport_state |= CMD_T_SENT_STATUS;
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 	return;
+@@ -274,7 +274,7 @@ static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 				break;
+ 			}
+ 		}
+-		qlt_24xx_atio_pkt(host, atio);
++		qlt_24xx_atio_pkt(host, atio, ha_locked);
+ 		break;
+ 	}
  
- queue_full:
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index aabf0ac..efccd71 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -490,6 +490,7 @@ struct se_cmd {
- #define CMD_T_DEV_ACTIVE	(1 << 7)
- #define CMD_T_REQUEST_STOP	(1 << 8)
- #define CMD_T_BUSY		(1 << 9)
-+#define CMD_T_SENT_STATUS (1 << 10)
- 	spinlock_t		t_state_lock;
- 	struct kref		cmd_kref;
- 	struct completion	t_transport_stop_comp;
+@@ -1209,7 +1209,7 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
+ 
+ 	mutex_lock(&vha->vha_tgt.tgt_mutex);
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	while (tgt->irq_cmd_count != 0) {
++	while ((tgt->irq_cmd_count != 0) || (tgt->atio_irq_cmd_count != 0)) {
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 		udelay(2);
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -5372,11 +5372,12 @@ qlt_chk_qfull_thresh_hold(struct scsi_qla_host *vha,
+ /* ha->hardware_lock supposed to be held on entry */
+ /* called via callback from qla2xxx */
+ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+-	struct atio_from_isp *atio)
++	struct atio_from_isp *atio, uint8_t ha_locked)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
+ 	int rc;
++	unsigned long flags;
+ 
+ 	if (unlikely(tgt == NULL)) {
+ 		ql_dbg(ql_dbg_io, vha, 0x3064,
+@@ -5388,7 +5389,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 	 * Otherwise, some commands can stuck.
+ 	 */
+ 
+-	tgt->irq_cmd_count++;
++	tgt->atio_irq_cmd_count++;
+ 
+ 	switch (atio->u.raw.entry_type) {
+ 	case ATIO_TYPE7:
+@@ -5398,7 +5399,11 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 			    "qla_target(%d): ATIO_TYPE7 "
+ 			    "received with UNKNOWN exchange address, "
+ 			    "sending QUEUE_FULL\n", vha->vp_idx);
++			if (!ha_locked)
++				spin_lock_irqsave(&ha->hardware_lock, flags);
+ 			qlt_send_busy(vha, atio, SAM_STAT_TASK_SET_FULL);
++			if (!ha_locked)
++				spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 			break;
+ 		}
+ 
+@@ -5407,7 +5412,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 		if (likely(atio->u.isp24.fcp_cmnd.task_mgmt_flags == 0)) {
+ 			rc = qlt_chk_qfull_thresh_hold(vha, atio);
+ 			if (rc != 0) {
+-				tgt->irq_cmd_count--;
++				tgt->atio_irq_cmd_count--;
+ 				return;
+ 			}
+ 			rc = qlt_handle_cmd_for_atio(vha, atio);
+@@ -5416,11 +5421,18 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 		}
+ 		if (unlikely(rc != 0)) {
+ 			if (rc == -ESRCH) {
++				if (!ha_locked)
++					spin_lock_irqsave(&ha->hardware_lock, flags);
++
+ #if 1 /* With TERM EXCHANGE some FC cards refuse to boot */
+ 				qlt_send_busy(vha, atio, SAM_STAT_BUSY);
+ #else
+ 				qlt_send_term_exchange(vha, NULL, atio, 1, 0);
+ #endif
++
++				if (!ha_locked)
++					spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
+ 			} else {
+ 				if (tgt->tgt_stop) {
+ 					ql_dbg(ql_dbg_tgt, vha, 0xe059,
+@@ -5432,7 +5444,13 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 					    "qla_target(%d): Unable to send "
+ 					    "command to target, sending BUSY "
+ 					    "status.\n", vha->vp_idx);
++					if (!ha_locked)
++						spin_lock_irqsave(
++						    &ha->hardware_lock, flags);
+ 					qlt_send_busy(vha, atio, SAM_STAT_BUSY);
++					if (!ha_locked)
++						spin_unlock_irqrestore(
++						    &ha->hardware_lock, flags);
+ 				}
+ 			}
+ 		}
+@@ -5449,7 +5467,12 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 			break;
+ 		}
+ 		ql_dbg(ql_dbg_tgt, vha, 0xe02e, "%s", "IMMED_NOTIFY ATIO");
++
++		if (!ha_locked)
++			spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		qlt_handle_imm_notify(vha, (struct imm_ntfy_from_isp *)atio);
++		if (!ha_locked)
++			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 		break;
+ 	}
+ 
+@@ -5460,7 +5483,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 		break;
+ 	}
+ 
+-	tgt->irq_cmd_count--;
++	tgt->atio_irq_cmd_count--;
+ }
+ 
+ /* ha->hardware_lock supposed to be held on entry */
+@@ -6405,7 +6428,7 @@ qlt_init_atio_q_entries(struct scsi_qla_host *vha)
+  * @ha: SCSI driver HA context
+  */
+ void
+-qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
++qlt_24xx_process_atio_queue(struct scsi_qla_host *vha, uint8_t ha_locked)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct atio_from_isp *pkt;
+@@ -6418,7 +6441,8 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha)
+ 		pkt = (struct atio_from_isp *)ha->tgt.atio_ring_ptr;
+ 		cnt = pkt->u.raw.entry_count;
+ 
+-		qlt_24xx_atio_pkt_all_vps(vha, (struct atio_from_isp *)pkt);
++		qlt_24xx_atio_pkt_all_vps(vha, (struct atio_from_isp *)pkt,
++		    ha_locked);
+ 
+ 		for (i = 0; i < cnt; i++) {
+ 			ha->tgt.atio_ring_index++;
+@@ -6702,16 +6726,59 @@ qla83xx_msix_atio_q(int irq, void *dev_id)
+ 	ha = rsp->hw;
+ 	vha = pci_get_drvdata(ha->pdev);
+ 
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
++	spin_lock_irqsave(&ha->tgt.atio_lock, flags);
+ 
+-	qlt_24xx_process_atio_queue(vha);
+-	qla24xx_process_response_queue(vha, rsp);
++	qlt_24xx_process_atio_queue(vha, 0);
+ 
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+ }
+ 
++static void
++qlt_handle_abts_recv_work(struct work_struct *work)
++{
++	struct qla_tgt_sess_op *op = container_of(work,
++		struct qla_tgt_sess_op, work);
++	scsi_qla_host_t *vha = op->vha;
++	struct qla_hw_data *ha = vha->hw;
++	unsigned long flags;
++
++	if (qla2x00_reset_active(vha) || (op->chip_reset != ha->chip_reset))
++		return;
++
++	spin_lock_irqsave(&ha->tgt.atio_lock, flags);
++	qlt_24xx_process_atio_queue(vha, 0);
++	spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	qlt_response_pkt_all_vps(vha, (response_t *)&op->atio);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++}
++
++void
++qlt_handle_abts_recv(struct scsi_qla_host *vha, response_t *pkt)
++{
++	struct qla_tgt_sess_op *op;
++
++	op = kzalloc(sizeof(*op), GFP_ATOMIC);
++
++	if (!op) {
++		/* do not reach for ATIO queue here.  This is best effort err
++		 * recovery at this point.
++		 */
++		qlt_response_pkt_all_vps(vha, pkt);
++		return;
++	}
++
++	memcpy(&op->atio, pkt, sizeof(*pkt));
++	op->vha = vha;
++	op->chip_reset = vha->hw->chip_reset;
++	INIT_WORK(&op->work, qlt_handle_abts_recv_work);
++	queue_work(qla_tgt_wq, &op->work);
++	return;
++}
++
+ int
+ qlt_mem_alloc(struct qla_hw_data *ha)
+ {
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index a079c237..22a6a76 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -835,6 +835,7 @@ struct qla_tgt {
+ 	 * HW lock.
+ 	 */
+ 	int irq_cmd_count;
++	int atio_irq_cmd_count;
+ 
+ 	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
+ 
+@@ -883,6 +884,7 @@ struct qla_tgt {
+ 
+ struct qla_tgt_sess_op {
+ 	struct scsi_qla_host *vha;
++	uint32_t chip_reset;
+ 	struct atio_from_isp atio;
+ 	struct work_struct work;
+ 	struct list_head cmd_list;
+@@ -1164,7 +1166,7 @@ extern void qlt_enable_vha(struct scsi_qla_host *);
+ extern void qlt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
+ extern void qlt_rff_id(struct scsi_qla_host *, struct ct_sns_req *);
+ extern void qlt_init_atio_q_entries(struct scsi_qla_host *);
+-extern void qlt_24xx_process_atio_queue(struct scsi_qla_host *);
++extern void qlt_24xx_process_atio_queue(struct scsi_qla_host *, uint8_t);
+ extern void qlt_24xx_config_rings(struct scsi_qla_host *);
+ extern void qlt_24xx_config_nvram_stage1(struct scsi_qla_host *,
+ 	struct nvram_24xx *);
 -- 
 1.7.7
+
