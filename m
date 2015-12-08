@@ -1,63 +1,691 @@
 From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v2 0/3] Badblock tracking for gendisks
-Date: Mon,  7 Dec 2015 19:52:34 -0700
-Message-ID: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Mon,  7 Dec 2015 19:52:35 -0700
+Message-ID: <1449543157-5905-2-git-send-email-vishal.l.verma@intel.com>
+References: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:45104 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932360AbbLHCwq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Dec 2015 21:52:46 -0500
+In-Reply-To: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-nvdimm@lists.01.org
 Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-List-Id: linux-scsi@vger.kernel.org
 
-v3:
-  - Add kernel-doc style comments to all exported functions in badblocks.c (James)
-  - Make return values from badblocks functions consistent with themselves
-    and the kernel style. Change the polarity of badblocks_set, and update
-    all callers accordingly (James)
-  - In gendisk, don't unconditionally allocate badblocks, export the initializer.
-    This also allows the initializer to be a non-void return type, so that the
-    badblocks user can act upon failures better (James)
+Take the core badblocks implementation from md, and make it generally
+available. This follows the same style as kernel implementations of
+linked lists, rb-trees etc, where you can have a structure that can be
+embedded anywhere, and accessor functions to manipulate the data.
 
+The only changes in this copy of the code are ones to generalize
+function/variable names from md-specific ones. Also add init and free
+functions.
 
-v2:
-  - In badblocks_free, make 'page' NULL (patch 1)
-  - Move the core badblocks code to a new .c file (patch 1) (Jens)
-  - Fix a sizeof usage in disk_alloc_badblocks (patch 2) (Dan)
-  - Since disk_alloc_badblocks can fail, check disk->bb for NULL in the
-    genhd wrappers (patch 2) (Jeff)
-  - Update the md conversion to also ise the badblocks init and free
-    functions (patch 3)
-  - Remove the BB_* macros from md.h as they are now in badblocks.h (patch 3)
-
-Patch 1 copies badblock management code into a header of its own,
-making it generally available. It follows common libraries of code
-such as linked lists, where anyone may embed a core data structure
-in another place, and use the provided accessor functions to
-manipulate the data.
-
-Patch 2 adds badblock tracking to gendisks (in preparation for use
-by NVDIMM devices).
-
-Patch 3 converts md over to use the new badblocks 'library'. I have
-done some pretty simple testing on this - created a raid 1 device,
-made sure the sysfs entries show up, and can be used to add and view
-badblocks. A closer look by the md folks would be nice here.
-
-Vishal Verma (3):
-  badblocks: Add core badblock management code
-  block: Add badblock management for gendisks
-  md: convert to use the generic badblocks code
-
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+---
  block/Makefile            |   2 +-
  block/badblocks.c         | 576 ++++++++++++++++++++++++++++++++++++++++++++++
- block/genhd.c             |  76 ++++++
- drivers/md/md.c           | 516 ++---------------------------------------
- drivers/md/md.h           |  40 +---
  include/linux/badblocks.h |  53 +++++
- include/linux/genhd.h     |   7 +
- 7 files changed, 741 insertions(+), 529 deletions(-)
+ 3 files changed, 630 insertions(+), 1 deletion(-)
  create mode 100644 block/badblocks.c
  create mode 100644 include/linux/badblocks.h
 
+diff --git a/block/Makefile b/block/Makefile
+index 00ecc97..db5f622 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -8,7 +8,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
+ 			blk-iopoll.o blk-lib.o blk-mq.o blk-mq-tag.o \
+ 			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
+ 			genhd.o scsi_ioctl.o partition-generic.o ioprio.o \
+-			partitions/
++			badblocks.o partitions/
+ 
+ obj-$(CONFIG_BOUNCE)	+= bounce.o
+ obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
+diff --git a/block/badblocks.c b/block/badblocks.c
+new file mode 100644
+index 0000000..f0ac279
+--- /dev/null
++++ b/block/badblocks.c
+@@ -0,0 +1,576 @@
++/*
++ * Bad block management
++ *
++ * - Heavily based on MD badblocks code from Neil Brown
++ *
++ * Copyright (c) 2015, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#include <linux/badblocks.h>
++#include <linux/seqlock.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/stddef.h>
++#include <linux/types.h>
++#include <linux/slab.h>
++
++/**
++ * badblocks_check() - check a given range for bad sectors
++ * @bb:		the badblocks structure that holds all badblock information
++ * @s:		sector (start) at which to check for badblocks
++ * @sectors:	number of sectors to check for badblocks
++ * @first_bad:	pointer to store location of the first badblock
++ * @bad_sectors: pointer to store number of badblocks after @first_bad
++ *
++ * We can record which blocks on each device are 'bad' and so just
++ * fail those blocks, or that stripe, rather than the whole device.
++ * Entries in the bad-block table are 64bits wide.  This comprises:
++ * Length of bad-range, in sectors: 0-511 for lengths 1-512
++ * Start of bad-range, sector offset, 54 bits (allows 8 exbibytes)
++ *  A 'shift' can be set so that larger blocks are tracked and
++ *  consequently larger devices can be covered.
++ * 'Acknowledged' flag - 1 bit. - the most significant bit.
++ *
++ * Locking of the bad-block table uses a seqlock so badblocks_check
++ * might need to retry if it is very unlucky.
++ * We will sometimes want to check for bad blocks in a bi_end_io function,
++ * so we use the write_seqlock_irq variant.
++ *
++ * When looking for a bad block we specify a range and want to
++ * know if any block in the range is bad.  So we binary-search
++ * to the last range that starts at-or-before the given endpoint,
++ * (or "before the sector after the target range")
++ * then see if it ends after the given start.
++ *
++ * Return:
++ *  0: there are no known bad blocks in the range
++ *  1: there are known bad block which are all acknowledged
++ * -1: there are bad blocks which have not yet been acknowledged in metadata.
++ * plus the start/length of the first bad section we overlap.
++ */
++int badblocks_check(struct badblocks *bb, sector_t s, int sectors,
++			sector_t *first_bad, int *bad_sectors)
++{
++	int hi;
++	int lo;
++	u64 *p = bb->page;
++	int rv;
++	sector_t target = s + sectors;
++	unsigned seq;
++
++	if (bb->shift > 0) {
++		/* round the start down, and the end up */
++		s >>= bb->shift;
++		target += (1<<bb->shift) - 1;
++		target >>= bb->shift;
++		sectors = target - s;
++	}
++	/* 'target' is now the first block after the bad range */
++
++retry:
++	seq = read_seqbegin(&bb->lock);
++	lo = 0;
++	rv = 0;
++	hi = bb->count;
++
++	/* Binary search between lo and hi for 'target'
++	 * i.e. for the last range that starts before 'target'
++	 */
++	/* INVARIANT: ranges before 'lo' and at-or-after 'hi'
++	 * are known not to be the last range before target.
++	 * VARIANT: hi-lo is the number of possible
++	 * ranges, and decreases until it reaches 1
++	 */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++
++		if (a < target)
++			/* This could still be the one, earlier ranges
++			 * could not.
++			 */
++			lo = mid;
++		else
++			/* This and later ranges are definitely out. */
++			hi = mid;
++	}
++	/* 'lo' might be the last that started before target, but 'hi' isn't */
++	if (hi > lo) {
++		/* need to check all range that end after 's' to see if
++		 * any are unacknowledged.
++		 */
++		while (lo >= 0 &&
++		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
++			if (BB_OFFSET(p[lo]) < target) {
++				/* starts before the end, and finishes after
++				 * the start, so they must overlap
++				 */
++				if (rv != -1 && BB_ACK(p[lo]))
++					rv = 1;
++				else
++					rv = -1;
++				*first_bad = BB_OFFSET(p[lo]);
++				*bad_sectors = BB_LEN(p[lo]);
++			}
++			lo--;
++		}
++	}
++
++	if (read_seqretry(&bb->lock, seq))
++		goto retry;
++
++	return rv;
++}
++EXPORT_SYMBOL_GPL(badblocks_check);
++
++/**
++ * badblocks_set() - Add a range of bad blocks to the table.
++ * @bb:		the badblocks structure that holds all badblock information
++ * @s:		first sector to mark as bad
++ * @sectors:	number of sectors to mark as bad
++ * @acknowledged: weather to mark the bad sectors as acknowledged
++ *
++ * This might extend the table, or might contract it if two adjacent ranges
++ * can be merged. We binary-search to find the 'insertion' point, then
++ * decide how best to handle it.
++ *
++ * Return:
++ *  0: success
++ *  1: failed to set badblocks (out of space)
++ */
++int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
++			int acknowledged)
++{
++	u64 *p;
++	int lo, hi;
++	int rv = 0;
++	unsigned long flags;
++
++	if (bb->shift < 0)
++		/* badblocks are disabled */
++		return 0;
++
++	if (bb->shift) {
++		/* round the start down, and the end up */
++		sector_t next = s + sectors;
++
++		s >>= bb->shift;
++		next += (1<<bb->shift) - 1;
++		next >>= bb->shift;
++		sectors = next - s;
++	}
++
++	write_seqlock_irqsave(&bb->lock, flags);
++
++	p = bb->page;
++	lo = 0;
++	hi = bb->count;
++	/* Find the last range that starts at-or-before 's' */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++
++		if (a <= s)
++			lo = mid;
++		else
++			hi = mid;
++	}
++	if (hi > lo && BB_OFFSET(p[lo]) > s)
++		hi = lo;
++
++	if (hi > lo) {
++		/* we found a range that might merge with the start
++		 * of our new range
++		 */
++		sector_t a = BB_OFFSET(p[lo]);
++		sector_t e = a + BB_LEN(p[lo]);
++		int ack = BB_ACK(p[lo]);
++
++		if (e >= s) {
++			/* Yes, we can merge with a previous range */
++			if (s == a && s + sectors >= e)
++				/* new range covers old */
++				ack = acknowledged;
++			else
++				ack = ack && acknowledged;
++
++			if (e < s + sectors)
++				e = s + sectors;
++			if (e - a <= BB_MAX_LEN) {
++				p[lo] = BB_MAKE(a, e-a, ack);
++				s = e;
++			} else {
++				/* does not all fit in one range,
++				 * make p[lo] maximal
++				 */
++				if (BB_LEN(p[lo]) != BB_MAX_LEN)
++					p[lo] = BB_MAKE(a, BB_MAX_LEN, ack);
++				s = a + BB_MAX_LEN;
++			}
++			sectors = e - s;
++		}
++	}
++	if (sectors && hi < bb->count) {
++		/* 'hi' points to the first range that starts after 's'.
++		 * Maybe we can merge with the start of that range
++		 */
++		sector_t a = BB_OFFSET(p[hi]);
++		sector_t e = a + BB_LEN(p[hi]);
++		int ack = BB_ACK(p[hi]);
++
++		if (a <= s + sectors) {
++			/* merging is possible */
++			if (e <= s + sectors) {
++				/* full overlap */
++				e = s + sectors;
++				ack = acknowledged;
++			} else
++				ack = ack && acknowledged;
++
++			a = s;
++			if (e - a <= BB_MAX_LEN) {
++				p[hi] = BB_MAKE(a, e-a, ack);
++				s = e;
++			} else {
++				p[hi] = BB_MAKE(a, BB_MAX_LEN, ack);
++				s = a + BB_MAX_LEN;
++			}
++			sectors = e - s;
++			lo = hi;
++			hi++;
++		}
++	}
++	if (sectors == 0 && hi < bb->count) {
++		/* we might be able to combine lo and hi */
++		/* Note: 's' is at the end of 'lo' */
++		sector_t a = BB_OFFSET(p[hi]);
++		int lolen = BB_LEN(p[lo]);
++		int hilen = BB_LEN(p[hi]);
++		int newlen = lolen + hilen - (s - a);
++
++		if (s >= a && newlen < BB_MAX_LEN) {
++			/* yes, we can combine them */
++			int ack = BB_ACK(p[lo]) && BB_ACK(p[hi]);
++
++			p[lo] = BB_MAKE(BB_OFFSET(p[lo]), newlen, ack);
++			memmove(p + hi, p + hi + 1,
++				(bb->count - hi - 1) * 8);
++			bb->count--;
++		}
++	}
++	while (sectors) {
++		/* didn't merge (it all).
++		 * Need to add a range just before 'hi'
++		 */
++		if (bb->count >= MAX_BADBLOCKS) {
++			/* No room for more */
++			rv = 1;
++			break;
++		} else {
++			int this_sectors = sectors;
++
++			memmove(p + hi + 1, p + hi,
++				(bb->count - hi) * 8);
++			bb->count++;
++
++			if (this_sectors > BB_MAX_LEN)
++				this_sectors = BB_MAX_LEN;
++			p[hi] = BB_MAKE(s, this_sectors, acknowledged);
++			sectors -= this_sectors;
++			s += this_sectors;
++		}
++	}
++
++	bb->changed = 1;
++	if (!acknowledged)
++		bb->unacked_exist = 1;
++	write_sequnlock_irqrestore(&bb->lock, flags);
++
++	return rv;
++}
++EXPORT_SYMBOL_GPL(badblocks_set);
++
++/**
++ * badblocks_clear() - Remove a range of bad blocks to the table.
++ * @bb:		the badblocks structure that holds all badblock information
++ * @s:		first sector to mark as bad
++ * @sectors:	number of sectors to mark as bad
++ *
++ * This may involve extending the table if we spilt a region,
++ * but it must not fail.  So if the table becomes full, we just
++ * drop the remove request.
++ *
++ * Return:
++ *  0: success
++ *  1: failed to clear badblocks
++ */
++int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
++{
++	u64 *p;
++	int lo, hi;
++	sector_t target = s + sectors;
++	int rv = 0;
++
++	if (bb->shift > 0) {
++		/* When clearing we round the start up and the end down.
++		 * This should not matter as the shift should align with
++		 * the block size and no rounding should ever be needed.
++		 * However it is better the think a block is bad when it
++		 * isn't than to think a block is not bad when it is.
++		 */
++		s += (1<<bb->shift) - 1;
++		s >>= bb->shift;
++		target >>= bb->shift;
++		sectors = target - s;
++	}
++
++	write_seqlock_irq(&bb->lock);
++
++	p = bb->page;
++	lo = 0;
++	hi = bb->count;
++	/* Find the last range that starts before 'target' */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++
++		if (a < target)
++			lo = mid;
++		else
++			hi = mid;
++	}
++	if (hi > lo) {
++		/* p[lo] is the last range that could overlap the
++		 * current range.  Earlier ranges could also overlap,
++		 * but only this one can overlap the end of the range.
++		 */
++		if (BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > target) {
++			/* Partial overlap, leave the tail of this range */
++			int ack = BB_ACK(p[lo]);
++			sector_t a = BB_OFFSET(p[lo]);
++			sector_t end = a + BB_LEN(p[lo]);
++
++			if (a < s) {
++				/* we need to split this range */
++				if (bb->count >= MAX_BADBLOCKS) {
++					rv = -ENOSPC;
++					goto out;
++				}
++				memmove(p+lo+1, p+lo, (bb->count - lo) * 8);
++				bb->count++;
++				p[lo] = BB_MAKE(a, s-a, ack);
++				lo++;
++			}
++			p[lo] = BB_MAKE(target, end - target, ack);
++			/* there is no longer an overlap */
++			hi = lo;
++			lo--;
++		}
++		while (lo >= 0 &&
++		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
++			/* This range does overlap */
++			if (BB_OFFSET(p[lo]) < s) {
++				/* Keep the early parts of this range. */
++				int ack = BB_ACK(p[lo]);
++				sector_t start = BB_OFFSET(p[lo]);
++
++				p[lo] = BB_MAKE(start, s - start, ack);
++				/* now low doesn't overlap, so.. */
++				break;
++			}
++			lo--;
++		}
++		/* 'lo' is strictly before, 'hi' is strictly after,
++		 * anything between needs to be discarded
++		 */
++		if (hi - lo > 1) {
++			memmove(p+lo+1, p+hi, (bb->count - hi) * 8);
++			bb->count -= (hi - lo - 1);
++		}
++	}
++
++	bb->changed = 1;
++out:
++	write_sequnlock_irq(&bb->lock);
++	return rv;
++}
++EXPORT_SYMBOL_GPL(badblocks_clear);
++
++/**
++ * ack_all_badblocks() - Acknowledge all bad blocks in a list.
++ * @bb:		the badblocks structure that holds all badblock information
++ *
++ * This only succeeds if ->changed is clear.  It is used by
++ * in-kernel metadata updates
++ */
++void ack_all_badblocks(struct badblocks *bb)
++{
++	if (bb->page == NULL || bb->changed)
++		/* no point even trying */
++		return;
++	write_seqlock_irq(&bb->lock);
++
++	if (bb->changed == 0 && bb->unacked_exist) {
++		u64 *p = bb->page;
++		int i;
++
++		for (i = 0; i < bb->count ; i++) {
++			if (!BB_ACK(p[i])) {
++				sector_t start = BB_OFFSET(p[i]);
++				int len = BB_LEN(p[i]);
++
++				p[i] = BB_MAKE(start, len, 1);
++			}
++		}
++		bb->unacked_exist = 0;
++	}
++	write_sequnlock_irq(&bb->lock);
++}
++EXPORT_SYMBOL_GPL(ack_all_badblocks);
++
++/**
++ * badblocks_show() - sysfs access to bad-blocks list
++ * @bb:		the badblocks structure that holds all badblock information
++ * @page:	buffer received from sysfs
++ * @unack:	weather to show unacknowledged badblocks
++ *
++ * Return:
++ *  Length of returned data
++ */
++ssize_t badblocks_show(struct badblocks *bb, char *page, int unack)
++{
++	size_t len;
++	int i;
++	u64 *p = bb->page;
++	unsigned seq;
++
++	if (bb->shift < 0)
++		return 0;
++
++retry:
++	seq = read_seqbegin(&bb->lock);
++
++	len = 0;
++	i = 0;
++
++	while (len < PAGE_SIZE && i < bb->count) {
++		sector_t s = BB_OFFSET(p[i]);
++		unsigned int length = BB_LEN(p[i]);
++		int ack = BB_ACK(p[i]);
++
++		i++;
++
++		if (unack && ack)
++			continue;
++
++		len += snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
++				(unsigned long long)s << bb->shift,
++				length << bb->shift);
++	}
++	if (unack && len == 0)
++		bb->unacked_exist = 0;
++
++	if (read_seqretry(&bb->lock, seq))
++		goto retry;
++
++	return len;
++}
++EXPORT_SYMBOL_GPL(badblocks_show);
++
++/**
++ * badblocks_store() - sysfs access to bad-blocks list
++ * @bb:		the badblocks structure that holds all badblock information
++ * @page:	buffer received from sysfs
++ * @len:	length of data received from sysfs
++ * @unack:	weather to show unacknowledged badblocks
++ *
++ * Return:
++ *  Length of the buffer processed or -ve error.
++ */
++ssize_t badblocks_store(struct badblocks *bb, const char *page, size_t len,
++			int unack)
++{
++	unsigned long long sector;
++	int length;
++	char newline;
++
++	/* Allow clearing via sysfs *only* for testing/debugging.
++	 * Normally only a successful write may clear a badblock
++	 */
++	int clear = 0;
++
++	if (page[0] == '-') {
++		clear = 1;
++		page++;
++	}
++
++	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) {
++	case 3:
++		if (newline != '\n')
++			return -EINVAL;
++	case 2:
++		if (length <= 0)
++			return -EINVAL;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	if (clear) {
++		badblocks_clear(bb, sector, length);
++		return len;
++	}
++
++	if (badblocks_set(bb, sector, length, !unack))
++		return -ENOSPC;
++	else
++		return len;
++}
++EXPORT_SYMBOL_GPL(badblocks_store);
++
++/**
++ * badblocks_init() - initialize the badblocks structure
++ * @bb:		the badblocks structure that holds all badblock information
++ * @enable:	weather to enable badblocks accounting
++ *
++ * Return:
++ *  0: success
++ *  -ve errno: on error
++ */
++int badblocks_init(struct badblocks *bb, int enable)
++{
++	bb->count = 0;
++	if (enable)
++		bb->shift = 0;
++	else
++		bb->shift = -1;
++	bb->page = (u64 *)__get_free_page(GFP_KERNEL);
++	if (bb->page == (u64 *)0) {
++		bb->shift = -1;
++		return -ENOMEM;
++	}
++	seqlock_init(&bb->lock);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(badblocks_init);
++
++/**
++ * badblocks_free() - free the badblocks structure
++ * @bb:		the badblocks structure that holds all badblock information
++ */
++void badblocks_free(struct badblocks *bb)
++{
++	free_page((unsigned long)bb->page);
++	bb->page = NULL;
++}
++EXPORT_SYMBOL_GPL(badblocks_free);
+diff --git a/include/linux/badblocks.h b/include/linux/badblocks.h
+new file mode 100644
+index 0000000..9293446
+--- /dev/null
++++ b/include/linux/badblocks.h
+@@ -0,0 +1,53 @@
++#ifndef _LINUX_BADBLOCKS_H
++#define _LINUX_BADBLOCKS_H
++
++#include <linux/seqlock.h>
++#include <linux/kernel.h>
++#include <linux/stddef.h>
++#include <linux/types.h>
++
++#define BB_LEN_MASK	(0x00000000000001FFULL)
++#define BB_OFFSET_MASK	(0x7FFFFFFFFFFFFE00ULL)
++#define BB_ACK_MASK	(0x8000000000000000ULL)
++#define BB_MAX_LEN	512
++#define BB_OFFSET(x)	(((x) & BB_OFFSET_MASK) >> 9)
++#define BB_LEN(x)	(((x) & BB_LEN_MASK) + 1)
++#define BB_ACK(x)	(!!((x) & BB_ACK_MASK))
++#define BB_MAKE(a, l, ack) (((a)<<9) | ((l)-1) | ((u64)(!!(ack)) << 63))
++
++/* Bad block numbers are stored sorted in a single page.
++ * 64bits is used for each block or extent.
++ * 54 bits are sector number, 9 bits are extent size,
++ * 1 bit is an 'acknowledged' flag.
++ */
++#define MAX_BADBLOCKS	(PAGE_SIZE/8)
++
++struct badblocks {
++	int count;		/* count of bad blocks */
++	int unacked_exist;	/* there probably are unacknowledged
++				 * bad blocks.  This is only cleared
++				 * when a read discovers none
++				 */
++	int shift;		/* shift from sectors to block size
++				 * a -ve shift means badblocks are
++				 * disabled.*/
++	u64 *page;		/* badblock list */
++	int changed;
++	seqlock_t lock;
++	sector_t sector;
++	sector_t size;		/* in sectors */
++};
++
++int badblocks_check(struct badblocks *bb, sector_t s, int sectors,
++		   sector_t *first_bad, int *bad_sectors);
++int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
++			int acknowledged);
++int badblocks_clear(struct badblocks *bb, sector_t s, int sectors);
++void ack_all_badblocks(struct badblocks *bb);
++ssize_t badblocks_show(struct badblocks *bb, char *page, int unack);
++ssize_t badblocks_store(struct badblocks *bb, const char *page, size_t len,
++			int unack);
++int badblocks_init(struct badblocks *bb, int enable);
++void badblocks_free(struct badblocks *bb);
++
++#endif
 -- 
 2.5.0
 
