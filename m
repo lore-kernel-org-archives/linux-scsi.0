@@ -1,60 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/20] ALUA device handler update, part II
-Date: Tue, 8 Dec 2015 16:06:10 +0100
-Message-ID: <5666F1E2.5090801@suse.de>
-References: <1449560260-53407-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 01/20] qla2xxx: Enable Extended Login support
+Date: Tue, 8 Dec 2015 16:51:41 +0100
+Message-ID: <5666FC8D.6060606@suse.de>
+References: <1449535747-2850-1-git-send-email-himanshu.madhani@qlogic.com>
+ <1449535747-2850-2-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35626 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756702AbbLHPGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Dec 2015 10:06:11 -0500
-In-Reply-To: <1449560260-53407-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1449535747-2850-2-git-send-email-himanshu.madhani@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@qlogic.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 12/08/2015 08:37 AM, Hannes Reinecke wrote:
-> Hi all,
->
-> as promised here is now the second part of my ALUA device handler upd=
-ate.
-> This contains a major rework of the ALUA device handler as execution =
-is
-> moved onto a workqueue. This has the advantage that we avoid having t=
-o
-> do multiple calls to the same LUN (as happens frequently when failing
-> over a LUN with several paths) and finally retries are handled correc=
-tly.
-> As some arrays are only capable of handling one STPG at a time I've a=
-dded
-> a module parameter 'sync_stpg' which switches to a singlethreaded
-> workqueue, thereby effectively synchronize STPG handling.
-> Thanks to Bart for this suggestion.
->
-> As usual, comments and reviews are welcome.
->
-As I've been reminded a git reference would be welcome for review.
-So you can find the entire patchset at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
-branch alua.v8
+On 12/08/2015 01:48 AM, Himanshu Madhani wrote:
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+A patch description would be nice; ATM it doesn't look
+as if this interface is used anywhere...
 
 Cheers,
 
 Hannes
 --=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
