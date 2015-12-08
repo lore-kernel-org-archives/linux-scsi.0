@@ -1,64 +1,75 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 108771] scsi: ses: kasan: ses_enclosure_data_process use
- after free on boot SAS2X28
-Date: Tue, 08 Dec 2015 08:16:26 -0800
-Message-ID: <1449591386.2219.5.camel@HansenPartnership.com>
-References: <bug-108771-11613@https.bugzilla.kernel.org/>
-	 <bug-108771-11613-NEJGozmw2J@https.bugzilla.kernel.org/>
+Subject: [PATCH] ses: Fix problems with simple enclosures
+Date: Tue, 08 Dec 2015 09:00:31 -0800
+Message-ID: <1449594031.2219.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47374 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47746 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757001AbbLHQQ2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 11:16:28 -0500
-In-Reply-To: <bug-108771-11613-NEJGozmw2J@https.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1750715AbbLHRAd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 12:00:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, "Ewan D. Milne" <emilne@redhat.com>
 
-On Mon, 2015-12-07 at 14:01 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=108771
-> 
-> --- Comment #1 from Pavel Tikhomirov <ptikhomirov@virtuozzo.com> ---
-> Aditional info about enclosue(from that node, but older 3.10 based kernel):
-> 
-> [root@p9 crash]# modprobe sg
-> [root@p9 crash]#  sg_map -i
-> /dev/sg0  LSI       SAS2X28           0e12
-> /dev/sg1  /dev/sda  LSI  MR9260-4i  2.13
-> [root@p9 crash]# lsscsi -gs
-> [1:0:16:0]   enclosu LSI      SAS2X28          0e12  -          /dev/sg0       
-> -
-> [1:2:0:0]    disk    LSI      MR9260-4i        2.13  /dev/sda   /dev/sg1  
-> 3.99TB
-> [root@p9 crash]#  sg_ses /dev/sg0
->   LSI       SAS2X28           0e12
-> Supported diagnostic pages:
->   Supported Diagnostic Pages [sdp] [0x0]
->   Configuration (SES) [cf] [0x1]
->   Enclosure Status/Control (SES) [ec,es] [0x2]
->   Element Descriptor (SES) [ed] [0x7]
->   Additional Element Status (SES-2) [aes] [0xa]
->   Download Microcode (SES-2) [dm] [0xe]
-> [root@p9 crash]#  sg_ses /dev/sg1
->   LSI  MR9260-4i  2.13
->     disk device (not an enclosure)
-> Supported diagnostic pages:
+Simple enclosure implementations (mostly USB) are allowed to return only
+page 8 to every diagnostic query.  That really confuses our
+implementation because we assume the return is the page we asked for and
+end up doing incorrect offsets based on bogus information leading to
+accesses outside of allocated ranges.  Fix that by checking the page
+code of the return and giving an error if it isn't the one we asked for.
+This should fix reported bugs with USB storage by simply refusing to
+attach to enclosures that behave like this.  It's also good defensive
+practise now that we're starting to see more USB enclosures.
 
-OK, can you give us the contents of pages 1, 2 and 10 with
+Reported-by: Andrea Gelmini <andrea.gelmini@gelma.net>
+Cc: stable@vger.kernel.org
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-sg_ses --page=1 --hex /dev/sg0
-sg_ses --page=2 --hex /dev/sg0
-sg_ses --page=10 --hex /dev/sg0
+---
 
-The version of the kernel you do this on doesn't really matter.
-
-Thanks,
-
-James
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index dcb0d76..7d9cec5 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -84,6 +84,7 @@ static void init_device_slot_control(unsigned char *dest_desc,
+ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 			 void *buf, int bufflen)
+ {
++	int ret;
+ 	unsigned char cmd[] = {
+ 		RECEIVE_DIAGNOSTIC,
+ 		1,		/* Set PCV bit */
+@@ -92,9 +93,26 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 		bufflen & 0xff,
+ 		0
+ 	};
++	unsigned char recv_page_code;
+ 
+-	return scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
++	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
+ 				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
++	if (unlikely(!ret))
++		return ret;
++
++	recv_page_code = ((unsigned char *)buf)[0];
++
++	if (likely(recv_page_code == page_code))
++		return ret;
++
++	/* successful diagnostic but wrong page code.  This happens to some
++	 * USB devices, just print a message and pretend there was an error */
++
++	sdev_printk(KERN_ERR, sdev,
++		    "Wrong diagnostic page; asked for %d got %u\n",
++		    page_code, recv_page_code);
++
++	return -EINVAL;
+ }
+ 
+ static int ses_send_diag(struct scsi_device *sdev, int page_code,
 
 
