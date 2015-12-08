@@ -1,41 +1,48 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
-Date: Wed, 09 Dec 2015 07:30:38 +1100
-Message-ID: <87poygsmxd.fsf@notabene.neil.brown.name>
-References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Wed, 09 Dec 2015 08:03:05 +1100
+Message-ID: <87egewslfa.fsf@notabene.neil.brown.name>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com> <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com> <1449271801.27077.25.camel@HansenPartnership.com> <1449273524.16905.103.camel@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41025 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44464 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752631AbbLHUav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Dec 2015 15:30:51 -0500
-In-Reply-To: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
+	id S1752634AbbLHVDQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Dec 2015 16:03:16 -0500
+In-Reply-To: <1449273524.16905.103.camel@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-nvdimm@lists.01.org
-Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 09 2015, Vishal Verma <vishal.l.verma@intel.com> wrote:
-
+On Sat, Dec 05 2015, Verma, Vishal L wrote:
+>>=20
+>> > +int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
+>> > +{
+>> [...]
+>> > +#define DO_DEBUG 1
+>>=20
+>> Why have this at all if it's unconditionally defined and always set.
 >
-> Patch 3 converts md over to use the new badblocks 'library'. I have
-> done some pretty simple testing on this - created a raid 1 device,
-> made sure the sysfs entries show up, and can be used to add and view
-> badblocks. A closer look by the md folks would be nice here.
+> Neil - any reason or anything you had in mind for this? Or is it just an
+> artifact and can be removed.
 
-Hi,
- this all looks reasonably sensible.  I haven't gone over it with a
- fine toothed comb (I wonder where that analogy comes from....) but
- nothing is obviously wrong.
+Like the comment says:
 
- Acked-by: NeilBrown <neilb@suse.com>
+	/* Allow clearing via sysfs *only* for testing/debugging.
+	 * Normally only a successful write may clear a badblock
+	 */
 
-Thanks,
+The DO_DEBUG define and ifdefs are documentation identifying bits of
+code that should be removed when it all seems to be working.
+Maybe now is a good time to remove that code.
+
 NeilBrown
 
 --=-=-=
@@ -44,18 +51,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWZz3vAAoJEDnsnt1WYoG5S84P+wVCYzirtIkAFpLxJ7XrXc2w
-lsKy2lcS/fVkcNWtaVch9D6y8rdi7RQ2Y/vGcW1wYahJLPd9eDsYVfl2L0IZqijL
-Ug78ll9yFT/tRYXvr3Lx83+vMqKXtyjSaZ9OirNhzs+w3OOb8oDDeH4cdUJDYXUs
-IfwK64WNc3Ng8YrR31VbPT/BbQLyLp1FZjmwR0JFeKz+wtQkz2gbRE1IZlOy8s7j
-OTFvVo4DtR40glra/cZH/geCRpsueCfp+R0vw1+p5Y/aedoPXvGFxubWHMXjzyVk
-V+OgI3Ie2fiF0lxRNPZa6aDtJ1V9o98bw8BOO2JJqQu42ZOJr6kKfDi0M14+fcpy
-L5ngGW3O2wKSvRQ+PrLS4+oWCg3emyKhJ7mcjwmdH/b6EH5BSPocMOJHaNPezMuk
-kUDYHjcQrlB6cDf0ZHufyx8Sq9eUI/mPa70nYCiSi3TeI7/Ot28aZxmT104ilcyT
-ncwY+o9It+B3u2OmpxJYKkEij8pYHLoZfPhIYEUt+4GDcgfHE5zaWsXs/VtwuTPW
-LdfkEcSerlAlOUBz0tSmPsgGHTuUgTGJ3dPNv7jyNx+E9JemIFX/vgpDwlCIHVyK
-/zXZ6qZL4ZfVH1s0ScLrUCSjeuw7wNGwH40ETv3xsI8yMN8H/8kaQMfBrqigcHdy
-4fbxCtceYP7poSy2jniL
-=kkub
+iQIcBAEBCAAGBQJWZ0WJAAoJEDnsnt1WYoG5VIwP/RQ7NcwmQhxay2CaQnPWImzb
+KpPvoiRx//S0sY67STeoCpw/Y68tQstmQAwJCtXB8r/8vHPTHcLxbAz0IHN6zZA8
+irWWoBQab2bkNTu0PW4kqfPyRomrUyhBRujQrtkSGn4Q+kVsl3RgGHXlwzat93nZ
+p+Y0gBHiWdTJae6aoOJyy/qMVs3eZCjDEPSOUkZg7cKLFQodsCamyqlPpo0TNaN3
+fcrbTdeLw261RYZUxv/AuKdYBfPW+Uj7wAN36w8DgYo9gq6ibBBg7ISmmksTMEHa
+gLmIwLJhVUlNh4hcLvgGpiHPMcsAOPVc8eP2thh+pJ5IFggKZ2ScJX+BlJ/CtZYd
+0067gQD/Go7S4JCozcLx5x6KqLAk9zgwwPJ9QOMbZ1/+nr+5QsgidLLNViFrRrla
+JwhJT3stTeTF4IfVHRFMKii3Byixhx+ywDS1PwfPhX54SCg7KDMtLMg3w432eF6H
+EF0vm70buJVE4ea7PjNH8biPku+Wvn+4JuY3UzYGtL5tm/YXYpGMtiLoqzwAf3gQ
+mbQQHFX9NysiBYmuwOksERBXU1e1UdDAdS3RX964cmrYJuMGPaZnyjRdvRveBDJk
+cbWZc9ffygr6E8CqV8DRmqKLBrTPRpLcQP0hw3Id9dCf5qDisDo8tINYRQE9YC2C
+6im0r2joWK92LwT84p+t
+=4ogt
 -----END PGP SIGNATURE-----
 --=-=-=--
