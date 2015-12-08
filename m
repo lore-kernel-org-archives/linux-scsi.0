@@ -1,252 +1,163 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 78/71] ncr5380: Add support for HP 53C400A-based cards
- (C2502)
-Date: Tue, 8 Dec 2015 22:40:18 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512082137380.24631@nippy.intranet>
-References: <20151118083455.331768508@telegraphics.com.au> <1449561099-9981-1-git-send-email-linux@rainbow-software.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1449561099-9981-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH RFC 0/2] avoid crashing when reading /proc/scsi/scsi and simultaneously removing devices
+Date: Tue,  8 Dec 2015 09:08:22 -0500
+Message-ID: <1449583704-32400-1-git-send-email-emilne@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46173 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756118AbbLHOIZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Dec 2015 09:08:25 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 8C22C935F7
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Dec 2015 14:08:25 +0000 (UTC)
+Received: from emilne.csb (dhcp-25-104.bos.redhat.com [10.18.25.104])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id tB8E8OxQ005638
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Dec 2015 09:08:25 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-On Tue, 8 Dec 2015, Ondrej Zary wrote:
+The klist traversal used by the reading of /proc/scsi/scsi is not interlocked
+against device removal.  It takes a reference on the containing object, but
+this does not prevent the device from being removed from the list.  Thus, we
+get errors and eventually panic, as shown in the traces below.  Fix this by
+keeping a klist iterator in the seq_file private data.
 
-> HP C2502 cards (based on 53C400A chips) use different magic numbers for 
-> software-based I/O address configuration than other cards. The 
-> configuration is also extended to allow setting the IRQ.
-> 
-> Move the configuration to a new function magic_configure() and move 
-> magic the magic numbers into an array. Add new magic numbers for these 
-> HP cards and hp_53c400a module parameter to use them.
-> 
-> Tested with HP C2502 and DTCT-436P.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> ---
->  drivers/scsi/g_NCR5380.c |   76 ++++++++++++++++++++++++++++++++++++----------
->  drivers/scsi/g_NCR5380.h |    1 +
->  2 files changed, 61 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> index 42fdeaf..121d143 100644
-> --- a/drivers/scsi/g_NCR5380.c
-> +++ b/drivers/scsi/g_NCR5380.c
-> @@ -80,6 +80,7 @@ static int ncr_5380;
->  static int ncr_53c400;
->  static int ncr_53c400a;
->  static int dtc_3181e;
-> +static int hp_53c400a;
+The problem can be easily reproduced by repeatedly increasing scsi_debug's
+max_luns to 30 and then deleting the devices via sysfs, while simulatenously
+accessing /proc/scsi/scsi.
+    
+>From a patch originally developed by David Jeffery <djeffery@redhat.com>
 
->From the photos that I've seen, the HP cards have either NCR or SYMBIOS 
-53C400A devices.
+Dec  3 13:22:02 localhost kernel: WARNING: CPU: 2 PID: 28073 at include/linux/kref.h:47 klist_iter_init_node+0x3d/0x50()
+Dec  3 13:22:02 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
+Dec  3 13:22:02 localhost kernel: CPU: 2 PID: 28073 Comm: cat Not tainted 4.4.0-rc1+ #2
+Dec  3 13:22:02 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+Dec  3 13:22:02 localhost kernel: ffffffff81a20e77 ffff880613acfd18 ffffffff81321eef 0000000000000000
+Dec  3 13:22:02 localhost kernel: ffff880613acfd50 ffffffff8107ca52 ffff88061176b198 0000000000000000
+Dec  3 13:22:02 localhost kernel: ffffffff814542b0 ffff880610cfb100 ffff88061176b198 ffff880613acfd60
+Dec  3 13:22:02 localhost kernel: Call Trace:
+Dec  3 13:22:02 localhost kernel: [<ffffffff81321eef>] dump_stack+0x44/0x55
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107ca52>] warn_slowpath_common+0x82/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107cb4a>] warn_slowpath_null+0x1a/0x20
+Dec  3 13:22:02 localhost kernel: [<ffffffff8167225d>] klist_iter_init_node+0x3d/0x50
+Dec  3 13:22:02 localhost kernel: [<ffffffff81421d41>] bus_find_device+0x51/0xb0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
+Dec  3 13:22:02 localhost kernel: [<ffffffff811e2e50>] seq_read+0x290/0x370
+Dec  3 13:22:02 localhost kernel: [<ffffffff81225be8>] proc_reg_read+0x48/0x70
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c07c8>] __vfs_read+0x28/0xd0
+Dec  3 13:22:02 localhost kernel: [<ffffffff812b5323>] ? security_file_permission+0xa3/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0cf3>] ? rw_verify_area+0x53/0xf0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0e16>] vfs_read+0x86/0x130
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c1bb6>] SyS_read+0x46/0xa0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8167c717>] entry_SYSCALL_64_fastpath+0x12/0x6a
+Dec  3 13:22:02 localhost kernel: ---[ end trace 99a60fb1c41fc8c9 ]---
+Dec  3 13:22:02 localhost kernel: ------------[ cut here ]------------
+Dec  3 13:22:02 localhost kernel: WARNING: CPU: 2 PID: 28073 at lib/klist.c:189 klist_release+0xa8/0xb0()
+Dec  3 13:22:02 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
+Dec  3 13:22:02 localhost kernel: CPU: 2 PID: 28073 Comm: cat Tainted: G        W       4.4.0-rc1+ #2
+Dec  3 13:22:02 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+Dec  3 13:22:02 localhost kernel: ffffffff81aaa040 ffff880613acfcc0 ffffffff81321eef 0000000000000000
+Dec  3 13:22:02 localhost kernel: ffff880613acfcf8 ffffffff8107ca52 dead0000000000f8 ffff880613acfd80
+Dec  3 13:22:02 localhost kernel: ffff88060f7aa368 ffff88060f7aa380 ffff88061176b198 ffff880613acfd08
+Dec  3 13:22:02 localhost kernel: Call Trace:
+Dec  3 13:22:02 localhost kernel: [<ffffffff81321eef>] dump_stack+0x44/0x55
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107ca52>] warn_slowpath_common+0x82/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107cb4a>] warn_slowpath_null+0x1a/0x20
+Dec  3 13:22:02 localhost kernel: [<ffffffff816720a8>] klist_release+0xa8/0xb0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814220a0>] ? bus_uevent_store+0x50/0x50
+Dec  3 13:22:02 localhost kernel: [<ffffffff816723f5>] klist_next+0x95/0xf0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
+Dec  3 13:22:02 localhost kernel: [<ffffffff81421d62>] bus_find_device+0x72/0xb0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
+Dec  3 13:22:02 localhost kernel: [<ffffffff811e2e50>] seq_read+0x290/0x370
+Dec  3 13:22:02 localhost kernel: [<ffffffff81225be8>] proc_reg_read+0x48/0x70
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c07c8>] __vfs_read+0x28/0xd0
+Dec  3 13:22:02 localhost kernel: [<ffffffff812b5323>] ? security_file_permission+0xa3/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0cf3>] ? rw_verify_area+0x53/0xf0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0e16>] vfs_read+0x86/0x130
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c1bb6>] SyS_read+0x46/0xa0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8167c717>] entry_SYSCALL_64_fastpath+0x12/0x6a
+Dec  3 13:22:02 localhost kernel: ---[ end trace 99a60fb1c41fc8ca ]---
+Dec  3 13:22:02 localhost kernel: ------------[ cut here ]------------
+Dec  3 13:22:02 localhost kernel: WARNING: CPU: 2 PID: 28073 at lib/list_debug.c:53 __list_del_entry+0x61/0xc0()
+Dec  3 13:22:02 localhost kernel: list_del corruption, ffff88060f7aa370->next is LIST_POISON1 (dead000000000100)
+Dec  3 13:22:02 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
+Dec  3 13:22:02 localhost kernel: CPU: 2 PID: 28073 Comm: cat Tainted: G        W       4.4.0-rc1+ #2
+Dec  3 13:22:02 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+Dec  3 13:22:02 localhost kernel: ffffffff81a516b1 ffff880613acfc48 ffffffff81321eef ffff880613acfc90
+Dec  3 13:22:02 localhost kernel: ffff880613acfc80 ffffffff8107ca52 ffff88060f7aa370 ffff880613acfd80
+Dec  3 13:22:02 localhost kernel: ffff88060f7aa368 ffff88060f7aa380 ffff88061176b198 ffff880613acfce0
+Dec  3 13:22:02 localhost kernel: Call Trace:
+Dec  3 13:22:02 localhost kernel: [<ffffffff81321eef>] dump_stack+0x44/0x55
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107ca52>] warn_slowpath_common+0x82/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8107cadc>] warn_slowpath_fmt+0x4c/0x50
+Dec  3 13:22:02 localhost kernel: [<ffffffff8133e581>] __list_del_entry+0x61/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8133e5ed>] list_del+0xd/0x30
+Dec  3 13:22:02 localhost kernel: [<ffffffff81672021>] klist_release+0x21/0xb0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814220a0>] ? bus_uevent_store+0x50/0x50
+Dec  3 13:22:02 localhost kernel: [<ffffffff816723f5>] klist_next+0x95/0xf0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
+Dec  3 13:22:02 localhost kernel: [<ffffffff81421d62>] bus_find_device+0x72/0xb0
+Dec  3 13:22:02 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
+Dec  3 13:22:02 localhost kernel: [<ffffffff811e2e50>] seq_read+0x290/0x370
+Dec  3 13:22:02 localhost kernel: [<ffffffff81225be8>] proc_reg_read+0x48/0x70
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c07c8>] __vfs_read+0x28/0xd0
+Dec  3 13:22:02 localhost kernel: [<ffffffff812b5323>] ? security_file_permission+0xa3/0xc0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0cf3>] ? rw_verify_area+0x53/0xf0
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c0e16>] vfs_read+0x86/0x130
+Dec  3 13:22:02 localhost kernel: [<ffffffff811c1bb6>] SyS_read+0x46/0xa0
+Dec  3 13:22:02 localhost kernel: [<ffffffff8167c717>] entry_SYSCALL_64_fastpath+0x12/0x6a
+Dec  3 13:22:02 localhost kernel: ---[ end trace 99a60fb1c41fc8cb ]---
+Dec  3 13:22:03 localhost kernel: general protection fault: 0000 [#1] SMP
+Dec  3 13:22:03 localhost kernel: Modules linked in: scsi_debug x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel joydev iTCO_wdt dcdbas ipmi_devintf acpi_power_meter iTCO_vendor_support ipmi_si imsghandler pcspkr wmi acpi_cpufreq tpm_tis tpm shpchp lpc_ich mfd_core nfsd nfs_acl lockd grace sunrpc tg3 ptp pps_core
+Dec  3 13:22:03 localhost kernel: CPU: 2 PID: 28073 Comm: cat Tainted: G        W       4.4.0-rc1+ #2
+Dec  3 13:22:03 localhost kernel: Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+Dec  3 13:22:03 localhost kernel: task: ffff8806090ef080 ti: ffff880613acc000 task.ti: ffff880613acc000
+Dec  3 13:22:03 localhost kernel: RIP: 0010:[<ffffffff816723b2>]  [<ffffffff816723b2>] klist_next+0x52/0xf0
+Dec  3 13:22:03 localhost kernel: RSP: 0018:ffff880613acfd48  EFLAGS: 00010287
+Dec  3 13:22:03 localhost kernel: RAX: ffff880612ea2ea8 RBX: dead0000000000f8 RCX: 0000000000000000
+Dec  3 13:22:03 localhost kernel: RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffffffff81cfcab0
+Dec  3 13:22:03 localhost kernel: RBP: ffff880613acfd70 R08: 0000000000000001 R09: 000000000000fffe
+Dec  3 13:22:03 localhost kernel: R10: 0000000000002a81 R11: 0000000000000002 R12: ffff880613acfd80
+Dec  3 13:22:03 localhost kernel: R13: ffffffff814220a0 R14: ffff88060f7aa368 R15: ffff88061176b101
+Dec  3 13:22:03 localhost kernel: FS:  00007f47e9ca4700(0000) GS:ffff880617040000(0000) knlGS:0000000000000000
+Dec  3 13:22:03 localhost kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+Dec  3 13:22:03 localhost kernel: CR2: 0000000001d22038 CR3: 000000060724c000 CR4: 00000000000406e0
+Dec  3 13:22:03 localhost kernel: Stack:
+Dec  3 13:22:03 localhost kernel: ffff88061176b198 0000000000000000 ffffffff814542b0 ffff880610cfb100
+Dec  3 13:22:03 localhost kernel: ffff88061176b198 ffff880613acfda8 ffffffff81421d62 ffff880612ea2ea8
+Dec  3 13:22:03 localhost kernel: 0000000000000000 ffff88061176b198 ffff880613acff20 ffff880035f39b00
+Dec  3 13:22:03 localhost kernel: Call Trace:
+Dec  3 13:22:03 localhost kernel: [<ffffffff814542b0>] ? proc_scsi_show+0x20/0x20
+Dec  3 13:22:03 localhost kernel: [<ffffffff81421d62>] bus_find_device+0x72/0xb0
+Dec  3 13:22:03 localhost kernel: [<ffffffff814545ad>] scsi_seq_next+0x2d/0x40
+Dec  3 13:22:03 localhost kernel: [<ffffffff811e2e50>] seq_read+0x290/0x370
+Dec  3 13:22:03 localhost kernel: [<ffffffff81225be8>] proc_reg_read+0x48/0x70
+Dec  3 13:22:03 localhost kernel: [<ffffffff811c07c8>] __vfs_read+0x28/0xd0
+Dec  3 13:22:03 localhost kernel: [<ffffffff812b5323>] ? security_file_permission+0xa3/0xc0
+Dec  3 13:22:03 localhost kernel: [<ffffffff811c0cf3>] ? rw_verify_area+0x53/0xf0
+Dec  3 13:22:03 localhost kernel: [<ffffffff811c0e16>] vfs_read+0x86/0x130
+Dec  3 13:22:03 localhost kernel: [<ffffffff811c1bb6>] SyS_read+0x46/0xa0
+Dec  3 13:22:03 localhost kernel: [<ffffffff8167c717>] entry_SYSCALL_64_fastpath+0x12/0x6a
+Dec  3 13:22:03 localhost kernel: Code: 8b 46 08 49 8d 7e 18 48 8d 58 f8 f0 41 83 6e 18 01 74 56 49 8b 04 24 45 31 ff 45 31 ed 48 39 c3 49 c7 44 24 08 00 00 00 00 74 20 <f6> 03 01 75 5c b8 01 00 00 00 f0 1 43 18 83 c0 01 83 f8 01
+Dec  3 13:22:03 localhost kernel: RIP  [<ffffffff816723b2>] klist_next+0x52/0xf0
+Dec  3 13:22:03 localhost kernel: RSP <ffff880613acfd48>
+Dec  3 13:22:03 localhost kernel: ---[ end trace 99a60fb1c41fc8cc ]---
 
-You've added a new setup option and a new board type, but the name you've 
-chosen is neither the board type nor the device type. It is a combination.
+Ewan D. Milne (2):
+  drivers/base: add bus_device_iter_init, bus_device_iter_next,
+    bus_device_iter_exit
+  scsi_proc: Change /proc/scsi/scsi to use bus device iterator
 
->  
->  static struct override {
->  	NCR5380_map_type NCR5380_map_name;
-> @@ -225,6 +226,32 @@ static int __init do_DTC3181E_setup(char *str)
->  
->  #endif
->  
-> +#ifndef SCSI_G_NCR5380_MEM
-> +/*
-> + * Configure I/O address of 53C400A or DTC 3181 by writing magic numbers
-> + * to ports 0x779 and 0x379. Two magic number sequences are known:
-> + *  1. for generic NCR 53C400A-based cards and DTC436 chips
-> + *  2. for HP C2502 card (also based on 53C400A but different decode logic)
-
-Forgive my ignorance of ISA card design, but that suggests that these 
-magic numbers are only relevant to HP C2502 boards and not SYM 53C400A 
-devices in general (?) ...
-
-> + */
-> +static void magic_configure(int idx, u8 irq, u8 magic[])
-> +{
-> +	u8 cfg = 0;
-> +
-> +	outb(magic[0], 0x779);
-> +	outb(magic[1], 0x379);
-> +	outb(magic[2], 0x379);
-> +	outb(magic[3], 0x379);
-> +	outb(magic[4], 0x379);
-> +
-> +	/* allowed IRQs for HP 53C400A */
-> +	if (irq != 2 && irq != 3 && irq != 4 && irq != 5 && irq != 7)
-> +		irq = 0;
-> +	if (idx >= 0 && idx <= 7)
-> +		cfg = 0x80 | idx | (irq << 4);
-> +	outb(cfg, 0x379);
-> +}
-> +#endif
-> +
->  /**
->   * 	generic_NCR5380_detect	-	look for NCR5380 controllers
->   *	@tpnt: the scsi template
-> @@ -241,8 +268,9 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  	static int current_override;
->  	int count;
->  	unsigned int *ports;
-> +	u8 *magic;
->  #ifndef SCSI_G_NCR5380_MEM
-> -	int i;
-> +	int i, port_idx;
->  	unsigned long region_size = 16;
->  #endif
->  	static unsigned int __initdata ncr_53c400a_ports[] = {
-> @@ -251,6 +279,12 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  	static unsigned int __initdata dtc_3181e_ports[] = {
->  		0x220, 0x240, 0x280, 0x2a0, 0x2c0, 0x300, 0x320, 0x340, 0
->  	};
-> +	static u8 ncr_53c400a_magic[] __initdata = {	/* 53C400A & DTC 3181 */
-> +		0x59, 0xb9, 0xc5, 0xae, 0xa6
-> +	};
-> +	static u8 hp_53c400a_magic[] __initdata = {	/* HP C2502 */
-> +		0x0f, 0x22, 0xf0, 0x20, 0x80
-> +	};
-
-... so maybe that should be called 'hp_c2502_magic'?
-
-
->  	int flags;
->  	struct Scsi_Host *instance;
->  	struct NCR5380_hostdata *hostdata;
-> @@ -273,6 +307,8 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  		overrides[0].board = BOARD_NCR53C400A;
->  	else if (dtc_3181e)
->  		overrides[0].board = BOARD_DTC3181E;
-> +	else if (hp_53c400a)
-> +		overrides[0].board = BOARD_HP53C400A;
->  #ifndef SCSI_G_NCR5380_MEM
->  	if (!current_override && isapnp_present()) {
->  		struct pnp_dev *dev = NULL;
-> @@ -326,10 +362,17 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  		case BOARD_NCR53C400A:
->  			flags = FLAG_NO_DMA_FIXUP;
->  			ports = ncr_53c400a_ports;
-> +			magic = ncr_53c400a_magic;
-> +			break;
-> +		case BOARD_HP53C400A:
-> +			flags = FLAG_NO_DMA_FIXUP;
-> +			ports = ncr_53c400a_ports;
-> +			magic = hp_53c400a_magic;
->  			break;
->  		case BOARD_DTC3181E:
->  			flags = FLAG_NO_DMA_FIXUP;
->  			ports = dtc_3181e_ports;
-> +			magic = ncr_53c400a_magic;
->  			break;
->  		}
->  
-> @@ -338,12 +381,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  			/* wakeup sequence for the NCR53C400A and DTC3181E */
->  
->  			/* Disable the adapter and look for a free io port */
-> -			outb(0x59, 0x779);
-> -			outb(0xb9, 0x379);
-> -			outb(0xc5, 0x379);
-> -			outb(0xae, 0x379);
-> -			outb(0xa6, 0x379);
-> -			outb(0x00, 0x379);
-> +			magic_configure(-1, 0, magic);
->  
->  			if (overrides[current_override].NCR5380_map_name != PORT_AUTO)
->  				for (i = 0; ports[i]; i++) {
-> @@ -362,17 +400,14 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  				}
->  			if (ports[i]) {
->  				/* At this point we have our region reserved */
-> -				outb(0x59, 0x779);
-> -				outb(0xb9, 0x379);
-> -				outb(0xc5, 0x379);
-> -				outb(0xae, 0x379);
-> -				outb(0xa6, 0x379);
-> -				outb(0x80 | i, 0x379);	/* set io port to be used */
-> +				magic_configure(i, 0, magic); /* no IRQ yet */
->  				outb(0xc0, ports[i] + 9);
-> -				if (inb(ports[i] + 9) != 0x80)
-> +				if (inb(ports[i] + 9) != 0x80) {
->  					continue;
-> -				else
-> +				} else {
->  					overrides[current_override].NCR5380_map_name = ports[i];
-> +					port_idx = i;
-> +				}
->  			} else
->  				continue;
->  		}
-> @@ -418,6 +453,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  			hostdata->io_width = 2;	/* 16-bit PDMA */
->  			/* fall through */
->  		case BOARD_NCR53C400A:
-> +		case BOARD_HP53C400A:
->  			hostdata->c400_ctl_status = 9;
->  			hostdata->c400_blk_cnt = 10;
->  			hostdata->c400_host_buf = 8;
-> @@ -438,6 +474,7 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  
->  		if (overrides[current_override].board == BOARD_NCR53C400 ||
->  		    overrides[current_override].board == BOARD_NCR53C400A ||
-> +		    overrides[current_override].board == BOARD_HP53C400A ||
->  		    overrides[current_override].board == BOARD_DTC3181E)
->  			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
->  
-> @@ -452,12 +489,18 @@ static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
->  		if (instance->irq == 255)
->  			instance->irq = NO_IRQ;
->  
-> -		if (instance->irq != NO_IRQ)
-> +		if (instance->irq != NO_IRQ) {
-> +#ifndef SCSI_G_NCR5380_MEM
-> +			/* set IRQ for HP 53C400A */
-> +			if (overrides[current_override].board == BOARD_HP53C400A)
-> +				magic_configure(port_idx, instance->irq, magic);
-> +#endif
->  			if (request_irq(instance->irq, generic_NCR5380_intr,
->  					0, "NCR5380", instance)) {
->  				printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
->  				instance->irq = NO_IRQ;
->  			}
-> +		}
->  
->  		if (instance->irq == NO_IRQ) {
->  			printk(KERN_INFO "scsi%d : interrupts not enabled. for better interactive performance,\n", instance->host_no);
-> @@ -743,6 +786,7 @@ module_param(ncr_5380, int, 0);
->  module_param(ncr_53c400, int, 0);
->  module_param(ncr_53c400a, int, 0);
->  module_param(dtc_3181e, int, 0);
-> +module_param(hp_53c400a, int, 0);
-
-Any reason you did not add the corresponding __setup option?
-
-Did you consider re-using the existing ncr_53c400a option (for port & irq 
-settings) and adding a new setup option and module param for card magic?
-
-(I like orthogonal command line options. dtc_3181e doesn't really bother 
-me because the dtc-436 device seems to correspond to the 3181e card and 
-vice versa.)
-
->  MODULE_LICENSE("GPL");
->  
->  #if !defined(SCSI_G_NCR5380_MEM) && defined(MODULE)
-> diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
-> index 5ab64d9..4fbae53 100644
-> --- a/drivers/scsi/g_NCR5380.h
-> +++ b/drivers/scsi/g_NCR5380.h
-> @@ -88,6 +88,7 @@
->  #define BOARD_NCR53C400	1
->  #define BOARD_NCR53C400A 2
->  #define BOARD_DTC3181E	3
-> +#define BOARD_HP53C400A 4
->  
->  #endif /* GENERIC_NCR5380_H */
->  
-> 
+ drivers/base/bus.c       | 48 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_proc.c | 49 ++++++++++++++++++++++++++++--------------------
+ include/linux/device.h   | 14 ++++++++++++++
+ 3 files changed, 91 insertions(+), 20 deletions(-)
 
 -- 
+2.1.0
+
