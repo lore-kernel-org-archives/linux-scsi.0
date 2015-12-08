@@ -1,45 +1,50 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
-Date: Wed, 9 Dec 2015 08:52:35 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1512090848001.2126@nippy.intranet>
-References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com> <87poygsmxd.fsf@notabene.neil.brown.name>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH] [SCSI] osd: fix signed char versus %02x issue
+Date: Wed, 09 Dec 2015 00:21:12 +0200
+Message-ID: <566757D8.4060400@electrozaur.com>
+References: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:55410 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbbLHVwt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2015 16:52:49 -0500
-In-Reply-To: <87poygsmxd.fsf@notabene.neil.brown.name>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1449584716-21093-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, "James E.J. Bottomley" <JBottomley@odin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-
-On Wed, 9 Dec 2015, NeilBrown wrote:
-
-> On Wed, Dec 09 2015, Vishal Verma <vishal.l.verma@intel.com> wrote:
-> 
-> >
-> > Patch 3 converts md over to use the new badblocks 'library'. I have 
-> > done some pretty simple testing on this - created a raid 1 device, 
-> > made sure the sysfs entries show up, and can be used to add and view 
-> > badblocks. A closer look by the md folks would be nice here.
-> 
-> Hi,
->  this all looks reasonably sensible.  I haven't gone over it with a
->  fine toothed comb (I wonder where that analogy comes from....)
-
-Delousing. (Not debugging.)
-
-> but
->  nothing is obviously wrong.
-> 
->  Acked-by: NeilBrown <neilb@suse.com>
-> 
-> Thanks,
-> NeilBrown
+On 12/08/2015 04:25 PM, Rasmus Villemoes wrote:
+> If char is signed and one of these bytes happen to have a value
+> outside the ascii range, the corresponding output will consist of
+> "ffffff" followed by the two hex chars that were actually
+> intended. One way to fix it would be to change the casts to (u8*) aka
+> (unsigned char*), but it is much simpler (and generates smaller code)
+> to use the %ph extension which was created for such short hexdumps.
 > 
 
--- 
+Ha real cool, thanks I hated that crap
+
+ACK-by: Boaz Harrosh <ooo@electrozaur.com>
+
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> ---
+>  drivers/scsi/osd/osd_initiator.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+> index 0cccd6033feb..d8a2b5185f56 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -170,10 +170,7 @@ static int _osd_get_print_system_info(struct osd_dev *od,
+>  
+>  	/* FIXME: Where are the time utilities */
+>  	pFirst = get_attrs[a++].val_ptr;
+> -	OSD_INFO("CLOCK                  [0x%02x%02x%02x%02x%02x%02x]\n",
+> -		((char *)pFirst)[0], ((char *)pFirst)[1],
+> -		((char *)pFirst)[2], ((char *)pFirst)[3],
+> -		((char *)pFirst)[4], ((char *)pFirst)[5]);
+> +	OSD_INFO("CLOCK                  [0x%6phN]\n", pFirst);
+>  
+>  	if (a < nelem) { /* IBM-OSD-SIM bug, Might not have it */
+>  		unsigned len = get_attrs[a].len;
+> 
