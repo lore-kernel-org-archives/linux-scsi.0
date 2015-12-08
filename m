@@ -1,65 +1,183 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 0/3] Badblock tracking for gendisks
-Date: Tue, 8 Dec 2015 02:54:58 +0000
-Message-ID: <1449543298.16905.117.camel@intel.com>
-References: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
-Content-Language: en-US
-Content-ID: <B1A538054FDBC5439D1137E8E299E883@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "jmoyer@redhat.com" <jmoyer@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 07/20] scsi_dh_alua: allocate RTPG buffer separately
+Date: Tue,  8 Dec 2015 08:37:27 +0100
+Message-ID: <1449560260-53407-8-git-send-email-hare@suse.de>
+References: <1449560260-53407-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46045 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932835AbbLHHho (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Dec 2015 02:37:44 -0500
+In-Reply-To: <1449560260-53407-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <jbottomley@odin.com>, Christoph Hellwig <hch@lst.de>, Ewan Milne <emilne@redhat.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-T29wcywgc29ycnksIHNob3VsZCd2ZSBiZWVuIFBBVENIIHYzLi4NClRoZSBjb250ZW50cyBhcmUg
-cmlnaHQsIGp1c3QgdGhlIHN1YmplY3QgbGluZSBpcyBvZmYuDQoNCgktVmlzaGFsDQoNCg0KT24g
-TW9uLCAyMDE1LTEyLTA3IGF0IDE5OjUyIC0wNzAwLCBWaXNoYWwgVmVybWEgd3JvdGU6DQo+IHYz
-Og0KPiDCoCAtIEFkZCBrZXJuZWwtZG9jIHN0eWxlIGNvbW1lbnRzIHRvIGFsbCBleHBvcnRlZCBm
-dW5jdGlvbnMgaW4NCj4gYmFkYmxvY2tzLmMgKEphbWVzKQ0KPiDCoCAtIE1ha2UgcmV0dXJuIHZh
-bHVlcyBmcm9tIGJhZGJsb2NrcyBmdW5jdGlvbnMgY29uc2lzdGVudCB3aXRoDQo+IHRoZW1zZWx2
-ZXMNCj4gwqDCoMKgwqBhbmQgdGhlIGtlcm5lbCBzdHlsZS4gQ2hhbmdlIHRoZSBwb2xhcml0eSBv
-ZiBiYWRibG9ja3Nfc2V0LCBhbmQNCj4gdXBkYXRlDQo+IMKgwqDCoMKgYWxsIGNhbGxlcnMgYWNj
-b3JkaW5nbHkgKEphbWVzKQ0KPiDCoCAtIEluIGdlbmRpc2ssIGRvbid0IHVuY29uZGl0aW9uYWxs
-eSBhbGxvY2F0ZSBiYWRibG9ja3MsIGV4cG9ydCB0aGUNCj4gaW5pdGlhbGl6ZXIuDQo+IMKgwqDC
-oMKgVGhpcyBhbHNvIGFsbG93cyB0aGUgaW5pdGlhbGl6ZXIgdG8gYmUgYSBub24tdm9pZCByZXR1
-cm4gdHlwZSwgc28NCj4gdGhhdCB0aGUNCj4gwqDCoMKgwqBiYWRibG9ja3MgdXNlciBjYW4gYWN0
-IHVwb24gZmFpbHVyZXMgYmV0dGVyIChKYW1lcykNCj4gDQo+IA0KPiB2MjoNCj4gwqAgLSBJbiBi
-YWRibG9ja3NfZnJlZSwgbWFrZSAncGFnZScgTlVMTCAocGF0Y2ggMSkNCj4gwqAgLSBNb3ZlIHRo
-ZSBjb3JlIGJhZGJsb2NrcyBjb2RlIHRvIGEgbmV3IC5jIGZpbGUgKHBhdGNoIDEpIChKZW5zKQ0K
-PiDCoCAtIEZpeCBhIHNpemVvZiB1c2FnZSBpbiBkaXNrX2FsbG9jX2JhZGJsb2NrcyAocGF0Y2gg
-MikgKERhbikNCj4gwqAgLSBTaW5jZSBkaXNrX2FsbG9jX2JhZGJsb2NrcyBjYW4gZmFpbCwgY2hl
-Y2sgZGlzay0+YmIgZm9yIE5VTEwgaW4NCj4gdGhlDQo+IMKgwqDCoMKgZ2VuaGQgd3JhcHBlcnMg
-KHBhdGNoIDIpIChKZWZmKQ0KPiDCoCAtIFVwZGF0ZSB0aGUgbWQgY29udmVyc2lvbiB0byBhbHNv
-IGlzZSB0aGUgYmFkYmxvY2tzIGluaXQgYW5kIGZyZWUNCj4gwqDCoMKgwqBmdW5jdGlvbnMgKHBh
-dGNoIDMpDQo+IMKgIC0gUmVtb3ZlIHRoZSBCQl8qIG1hY3JvcyBmcm9tIG1kLmggYXMgdGhleSBh
-cmUgbm93IGluIGJhZGJsb2Nrcy5oDQo+IChwYXRjaCAzKQ0KPiANCj4gUGF0Y2ggMSBjb3BpZXMg
-YmFkYmxvY2sgbWFuYWdlbWVudCBjb2RlIGludG8gYSBoZWFkZXIgb2YgaXRzIG93biwNCj4gbWFr
-aW5nIGl0IGdlbmVyYWxseSBhdmFpbGFibGUuIEl0IGZvbGxvd3MgY29tbW9uIGxpYnJhcmllcyBv
-ZiBjb2RlDQo+IHN1Y2ggYXMgbGlua2VkIGxpc3RzLCB3aGVyZSBhbnlvbmUgbWF5IGVtYmVkIGEg
-Y29yZSBkYXRhIHN0cnVjdHVyZQ0KPiBpbiBhbm90aGVyIHBsYWNlLCBhbmQgdXNlIHRoZSBwcm92
-aWRlZCBhY2Nlc3NvciBmdW5jdGlvbnMgdG8NCj4gbWFuaXB1bGF0ZSB0aGUgZGF0YS4NCj4gDQo+
-IFBhdGNoIDIgYWRkcyBiYWRibG9jayB0cmFja2luZyB0byBnZW5kaXNrcyAoaW4gcHJlcGFyYXRp
-b24gZm9yIHVzZQ0KPiBieSBOVkRJTU0gZGV2aWNlcykuDQo+IA0KPiBQYXRjaCAzIGNvbnZlcnRz
-IG1kIG92ZXIgdG8gdXNlIHRoZSBuZXcgYmFkYmxvY2tzICdsaWJyYXJ5Jy4gSSBoYXZlDQo+IGRv
-bmUgc29tZSBwcmV0dHkgc2ltcGxlIHRlc3Rpbmcgb24gdGhpcyAtIGNyZWF0ZWQgYSByYWlkIDEg
-ZGV2aWNlLA0KPiBtYWRlIHN1cmUgdGhlIHN5c2ZzIGVudHJpZXMgc2hvdyB1cCwgYW5kIGNhbiBi
-ZSB1c2VkIHRvIGFkZCBhbmQgdmlldw0KPiBiYWRibG9ja3MuIEEgY2xvc2VyIGxvb2sgYnkgdGhl
-IG1kIGZvbGtzIHdvdWxkIGJlIG5pY2UgaGVyZS4NCj4gDQo+IFZpc2hhbCBWZXJtYSAoMyk6DQo+
-IMKgIGJhZGJsb2NrczogQWRkIGNvcmUgYmFkYmxvY2sgbWFuYWdlbWVudCBjb2RlDQo+IMKgIGJs
-b2NrOiBBZGQgYmFkYmxvY2sgbWFuYWdlbWVudCBmb3IgZ2VuZGlza3MNCj4gwqAgbWQ6IGNvbnZl
-cnQgdG8gdXNlIHRoZSBnZW5lcmljIGJhZGJsb2NrcyBjb2RlDQo+IA0KPiDCoGJsb2NrL01ha2Vm
-aWxlwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqDCoDIgKy0NCj4gwqBibG9jay9iYWRibG9j
-a3MuY8KgwqDCoMKgwqDCoMKgwqDCoHwgNTc2DQo+ICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysNCj4gwqBibG9jay9nZW5oZC5jwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqB8wqDCoDc2ICsrKysrKw0KPiDCoGRyaXZlcnMvbWQvbWQuY8KgwqDCoMKgwqDCoMKg
-wqDCoMKgwqB8IDUxNiArKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IC0t
-LS0NCj4gwqBkcml2ZXJzL21kL21kLmjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqA0MCArLS0t
-DQo+IMKgaW5jbHVkZS9saW51eC9iYWRibG9ja3MuaCB8wqDCoDUzICsrKysrDQo+IMKgaW5jbHVk
-ZS9saW51eC9nZW5oZC5owqDCoMKgwqDCoHzCoMKgwqA3ICsNCj4gwqA3IGZpbGVzIGNoYW5nZWQs
-IDc0MSBpbnNlcnRpb25zKCspLCA1MjkgZGVsZXRpb25zKC0pDQo+IMKgY3JlYXRlIG1vZGUgMTAw
-NjQ0IGJsb2NrL2JhZGJsb2Nrcy5jDQo+IMKgY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvbGlu
-dXgvYmFkYmxvY2tzLmgNCj4g
+The RTPG buffer will only evaluated within alua_rtpg(),
+so we can allocate it locally there and avoid having to
+put it into the global structure.
+
+Reviewed-by: Ewan Milne <emilne@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 56 +++++++++++-------------------
+ 1 file changed, 21 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index f3191f7..ca6322d 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -56,7 +56,7 @@
+ #define TPGS_MODE_IMPLICIT		0x1
+ #define TPGS_MODE_EXPLICIT		0x2
+ 
+-#define ALUA_INQUIRY_SIZE		36
++#define ALUA_RTPG_SIZE			128
+ #define ALUA_FAILOVER_TIMEOUT		60
+ #define ALUA_FAILOVER_RETRIES		5
+ 
+@@ -75,9 +75,6 @@ struct alua_port_group {
+ 	int			state;
+ 	int			pref;
+ 	unsigned		flags; /* used for optimizing STPG */
+-	unsigned char		inq[ALUA_INQUIRY_SIZE];
+-	unsigned char		*buff;
+-	int			bufflen;
+ 	unsigned char		transition_tmo;
+ };
+ 
+@@ -95,21 +92,6 @@ struct alua_dh_data {
+ 
+ static char print_alua_state(int);
+ 
+-static int realloc_buffer(struct alua_port_group *pg, unsigned len)
+-{
+-	if (pg->buff && pg->buff != pg->inq)
+-		kfree(pg->buff);
+-
+-	pg->buff = kmalloc(len, GFP_NOIO);
+-	if (!pg->buff) {
+-		pg->buff = pg->inq;
+-		pg->bufflen = ALUA_INQUIRY_SIZE;
+-		return 1;
+-	}
+-	pg->bufflen = len;
+-	return 0;
+-}
+-
+ static void release_port_group(struct kref *kref)
+ {
+ 	struct alua_port_group *pg;
+@@ -118,8 +100,6 @@ static void release_port_group(struct kref *kref)
+ 	spin_lock(&port_group_lock);
+ 	list_del(&pg->node);
+ 	spin_unlock(&port_group_lock);
+-	if (pg->buff && pg->inq != pg->buff)
+-		kfree(pg->buff);
+ 	kfree(pg);
+ }
+ 
+@@ -201,8 +181,6 @@ struct alua_port_group *alua_get_pg(struct scsi_device *sdev,
+ 		return NULL;
+ 
+ 	pg->group_id = group_id;
+-	pg->buff = pg->inq;
+-	pg->bufflen = ALUA_INQUIRY_SIZE;
+ 	pg->tpgs = tpgs;
+ 	pg->state = TPGS_STATE_OPTIMIZED;
+ 	kref_init(&pg->kref);
+@@ -387,8 +365,8 @@ static int alua_check_sense(struct scsi_device *sdev,
+ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int wait_for_transition)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+-	int len, k, off, valid_states = 0;
+-	unsigned char *ucp;
++	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
++	unsigned char *ucp, *buff;
+ 	unsigned err, retval;
+ 	unsigned long expiry, interval = 0;
+ 	unsigned int tpg_desc_tbl_off;
+@@ -399,15 +377,19 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 	else
+ 		expiry = round_jiffies_up(jiffies + pg->transition_tmo * HZ);
+ 
++	buff = kzalloc(bufflen, GFP_KERNEL);
++	if (!buff)
++		return SCSI_DH_DEV_TEMP_BUSY;
++
+  retry:
+-	retval = submit_rtpg(sdev, pg->buff, pg->bufflen,
+-			     &sense_hdr, pg->flags);
++	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
+ 
+ 	if (retval) {
+ 		if (!scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
++			kfree(buff);
+ 			if (driver_byte(retval) == DRIVER_ERROR)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
+@@ -445,14 +427,18 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
+ 			    ALUA_DH_NAME);
+ 		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
++		kfree(buff);
+ 		return SCSI_DH_IO;
+ 	}
+ 
+-	len = get_unaligned_be32(&pg->buff[0]) + 4;
++	len = get_unaligned_be32(&buff[0]) + 4;
+ 
+-	if (len > pg->bufflen) {
++	if (len > bufflen) {
+ 		/* Resubmit with the correct length */
+-		if (realloc_buffer(pg, len)) {
++		kfree(buff);
++		bufflen = len;
++		buff = kmalloc(bufflen, GFP_KERNEL);
++		if (!buff) {
+ 			sdev_printk(KERN_WARNING, sdev,
+ 				    "%s: kmalloc buffer failed\n",__func__);
+ 			/* Temporary failure, bypass */
+@@ -462,9 +448,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 	}
+ 
+ 	orig_transition_tmo = pg->transition_tmo;
+-	if ((pg->buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR &&
+-	    pg->buff[5] != 0)
+-		pg->transition_tmo = pg->buff[5];
++	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR && buff[5] != 0)
++		pg->transition_tmo = buff[5];
+ 	else
+ 		pg->transition_tmo = ALUA_FAILOVER_TIMEOUT;
+ 
+@@ -476,12 +461,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 		expiry = jiffies + pg->transition_tmo * HZ;
+ 	}
+ 
+-	if ((pg->buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR)
++	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR)
+ 		tpg_desc_tbl_off = 8;
+ 	else
+ 		tpg_desc_tbl_off = 4;
+ 
+-	for (k = tpg_desc_tbl_off, ucp = pg->buff + tpg_desc_tbl_off;
++	for (k = tpg_desc_tbl_off, ucp = buff + tpg_desc_tbl_off;
+ 	     k < len;
+ 	     k += off, ucp += off) {
+ 
+@@ -531,6 +516,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg, int w
+ 		err = SCSI_DH_OK;
+ 		break;
+ 	}
++	kfree(buff);
+ 	return err;
+ }
+ 
+-- 
+1.8.5.6
+
